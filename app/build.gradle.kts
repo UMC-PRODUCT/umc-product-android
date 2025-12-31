@@ -38,6 +38,9 @@ android {
     hilt {
         enableAggregatingTask = false
     }
+    buildFeatures {
+        dataBinding = true
+    }
 }
 
 dependencies {

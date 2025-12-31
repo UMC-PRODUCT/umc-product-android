@@ -1,22 +1,36 @@
 package com.umc.presentation
 
-import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.activity.viewModels
+import com.umc.presentation.base.BaseActivity
+import com.umc.presentation.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, MainActivityEvent, MainActivityViewModel>(
+    ActivityMainBinding::inflate
+) {
+    override val viewModel: MainActivityViewModel by viewModels()
+
+    override fun initView() {
+        binding.apply {
+            vm = viewModel
+        }
+    }
+
+    override fun initState() {
+        repeatOnStarted {
+            launch {
+                viewModel.uiEvent.collect{
+                    // TODO 이벤트 처리
+                }
+            }
+
+            launch {
+                viewModel.uiState.collect {
+                    // TODO 상태 관리
+                }
+            }
         }
     }
 }
