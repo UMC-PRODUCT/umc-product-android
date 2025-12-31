@@ -1,4 +1,4 @@
-package com.umc.data.base
+package com.umc.domain.model
 
 sealed class ApiState<out T> {
     object Loading : ApiState<Nothing>()

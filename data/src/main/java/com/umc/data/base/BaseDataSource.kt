@@ -1,5 +1,6 @@
 package com.umc.data.base
 
+import com.umc.domain.model.ApiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
