@@ -1,6 +1,7 @@
-package com.stable.scoi.data.dto.response
+package com.umc.data.dto.response
 
-import com.stable.scoi.domain.model.Model
+import com.umc.domain.model.Model
+
 
 interface Response {
     fun toModel() : Model

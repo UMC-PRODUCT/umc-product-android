@@ -4,7 +4,7 @@ import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class ScoiApp: Application() {
+class UMCApp: Application() {
     override fun onCreate() {
         super.onCreate()
     }

@@ -35,9 +35,13 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    hilt {
+        enableAggregatingTask = false
+    }
 }
 
 dependencies {
+    implementation(project(":presentation"))
     implementation(project(":data"))
     implementation(project(":domain"))
 

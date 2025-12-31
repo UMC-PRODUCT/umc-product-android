@@ -1,10 +1,12 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.android.ksp)
+    alias(libs.plugins.hilt.android)
 }
 
 android {
-    namespace = "com.umc.data"
+    namespace = "com.umc.presentation"
     compileSdk = 36
 
     defaultConfig {
@@ -30,6 +32,9 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    buildFeatures {
+        dataBinding = true
+    }
 }
 
 dependencies {
@@ -38,15 +43,20 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    // RETROFIT
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.retrofit.android)
+    // HILT
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
-    // OKHTTP
-    implementation(libs.okhttp.android)
-    implementation(libs.okhttp.log)
+    // COROUTINE
+    implementation(libs.kotlinx.coroutines.android)
+
+    // NAVIGATION
+    implementation(libs.navigation.fragment)
+    implementation(libs.navigation.ui)
 }

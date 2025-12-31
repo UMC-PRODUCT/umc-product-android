@@ -1,3 +1,3 @@
-package com.stable.scoi.data.dto.request
+package com.umc.data.dto.request
 
 interface Request {}
