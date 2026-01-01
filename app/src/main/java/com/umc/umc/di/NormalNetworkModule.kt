@@ -19,7 +19,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object NetworkModule {
+object NormalNetworkModule {
     @Provides
     @Singleton
     fun provideHttpClient(
