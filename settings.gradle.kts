@@ -21,3 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "UMC product"
 include(":app")
+include(":data")
+include(":domain")
+include(":presentation")

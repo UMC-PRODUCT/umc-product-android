@@ -1,22 +1,17 @@
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.android.ksp)
-    alias(libs.plugins.hilt.android)
 }
 
 android {
-    namespace = "com.umc.umc"
+    namespace = "com.umc.data"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.umc.umc"
         minSdk = 24
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -35,31 +30,17 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    hilt {
-        enableAggregatingTask = false
-    }
-    buildFeatures {
-        dataBinding = true
-    }
 }
 
 dependencies {
-    implementation(project(":presentation"))
-    implementation(project(":data"))
     implementation(project(":domain"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.androidx.activity)
-    implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
-    // HILT
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
 
     // RETROFIT
     implementation(libs.retrofit.converter.gson)

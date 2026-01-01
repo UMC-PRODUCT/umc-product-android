@@ -1,22 +1,19 @@
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.android.ksp)
     alias(libs.plugins.hilt.android)
 }
 
 android {
-    namespace = "com.umc.umc"
+    namespace = "com.umc.presentation"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.umc.umc"
         minSdk = 24
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -35,17 +32,12 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    hilt {
-        enableAggregatingTask = false
-    }
     buildFeatures {
         dataBinding = true
     }
 }
 
 dependencies {
-    implementation(project(":presentation"))
-    implementation(project(":data"))
     implementation(project(":domain"))
 
     implementation(libs.androidx.core.ktx)
@@ -61,11 +53,10 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
-    // RETROFIT
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.retrofit.android)
+    // COROUTINE
+    implementation(libs.kotlinx.coroutines.android)
 
-    // OKHTTP
-    implementation(libs.okhttp.android)
-    implementation(libs.okhttp.log)
+    // NAVIGATION
+    implementation(libs.navigation.fragment)
+    implementation(libs.navigation.ui)
 }
