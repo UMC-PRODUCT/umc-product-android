@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="colorBackgroundSemantic" format="color"/>
+    <attr name="colorBorderSemantic" format="color"/>
+    <attr name="colorTextPrimarySemantic" format="color"/>
+    <attr name="colorTextSecondarySemantic" format="color"/>
+    <attr name="colorTextDisablePlaceholderSemantic" format="color"/>
+</resources>

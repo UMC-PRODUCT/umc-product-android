@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="LargeTitle">
+        <item name="android:textSize">34sp</item>
+        <item name="lineHeight">41sp</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+
+    <style name="Title1">
+        <item name="android:textSize">28sp</item>
+        <item name="lineHeight">34sp</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+
+    <style name="Title2">
+        <item name="android:textSize">22sp</item>
+        <item name="lineHeight">28sp</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:letterSpacing">0.015</item>
+    </style>
+
+    <style name="Title3">
+        <item name="android:textSize">20sp</item>
+        <item name="lineHeight">25sp</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:letterSpacing">0.019</item>
+    </style>
+
+    <style name="Headline">
+        <item name="android:textSize">17sp</item>
+        <item name="lineHeight">22sp</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="Body">
+        <item name="android:textSize">17sp</item>
+        <item name="lineHeight">21sp</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="Callout">
+        <item name="android:textSize">16sp</item>
+        <item name="lineHeight">21sp</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="Subheadline">
+        <item name="android:textSize">15sp</item>
+        <item name="lineHeight">20sp</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:letterSpacing">-0.0016</item>
+    </style>
+
+    <style name="Footnote">
+        <item name="android:textSize">13sp</item>
+        <item name="lineHeight">18sp</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:letterSpacing">-0.006</item>
+    </style>
+
+    <style name="Caption1">
+        <item name="android:textSize">12sp</item>
+        <item name="lineHeight">16sp</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="Caption2">
+        <item name="android:textSize">11sp</item>
+        <item name="lineHeight">13sp</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:letterSpacing">0.0005</item>
+    </style>
+
+
+
+    <style name="LargeTitleBold">
+        <item name="android:textSize">34sp</item>
+        <item name="lineHeight">41sp</item>
+        <item name="android:fontFamily">@font/pretendard_bold</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+
+    <style name="Title1Bold">
+        <item name="android:textSize">28sp</item>
+        <item name="lineHeight">34sp</item>
+        <item name="android:fontFamily">@font/pretendard_bold</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+
+    <style name="Title2Bold">
+        <item name="android:textSize">22sp</item>
+        <item name="lineHeight">28sp</item>
+        <item name="android:fontFamily">@font/pretendard_bold</item>
+        <item name="android:letterSpacing">0.015</item>
+    </style>
+
+    <style name="Title3Bold">
+        <item name="android:textSize">20sp</item>
+        <item name="lineHeight">25sp</item>
+        <item name="android:fontFamily">@font/pretendard_bold</item>
+        <item name="android:letterSpacing">0.019</item>
+    </style>
+
+    <style name="HeadlineBold">
+        <item name="android:textSize">17sp</item>
+        <item name="lineHeight">22sp</item>
+        <item name="android:fontFamily">@font/pretendard_bold</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="BodyBold">
+        <item name="android:textSize">17sp</item>
+        <item name="lineHeight">21sp</item>
+        <item name="android:fontFamily">@font/pretendard_bold</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="CalloutBold">
+        <item name="android:textSize">16sp</item>
+        <item name="lineHeight">21sp</item>
+        <item name="android:fontFamily">@font/pretendard_bold</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="SubheadlineBold">
+        <item name="android:textSize">15sp</item>
+        <item name="lineHeight">20sp</item>
+        <item name="android:fontFamily">@font/pretendard_bold</item>
+        <item name="android:letterSpacing">-0.0016</item>
+    </style>
+
+    <style name="FootnoteBold">
+        <item name="android:textSize">13sp</item>
+        <item name="lineHeight">18sp</item>
+        <item name="android:fontFamily">@font/pretendard_bold</item>
+        <item name="android:letterSpacing">-0.006</item>
+    </style>
+
+    <style name="Caption1Bold">
+        <item name="android:textSize">12sp</item>
+        <item name="lineHeight">16sp</item>
+        <item name="android:fontFamily">@font/pretendard_bold</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="Caption2Bold">
+        <item name="android:textSize">11sp</item>
+        <item name="lineHeight">13sp</item>
+        <item name="android:fontFamily">@font/pretendard_bold</item>
+        <item name="android:letterSpacing">0.0005</item>
+    </style>
+
+</resources>
