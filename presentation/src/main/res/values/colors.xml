@@ -2,5 +2,59 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="gray">#FF888888</color>
+
+    <color name="primary100">#EBEFFF</color>
+    <color name="primary200">#CCD6FF</color>
+    <color name="primary300">#99ABFF</color>
+    <color name="primary400">#6683FF</color>
+    <color name="primary500">#4869F0</color>
+    <color name="primary600">#3A5AD9</color>
+    <color name="primary700">#324BB9</color>
+    <color name="primary800">#26398C</color>
+    <color name="primary900">#1D2C6C</color>
+
+
+    <color name="accent100">#FFF0E5</color>
+    <color name="accent200">#FFD1B2</color>
+    <color name="accent300">#FFA870</color>
+    <color name="accent400">#FF7F2D</color>
+    <color name="accent500">#FF6400</color>
+    <color name="accent600">#E85A00</color>
+    <color name="accent700">#CC5000</color>
+    <color name="accent800">#A34000</color>
+    <color name="accent900">#7A3000</color>
+
+
+    <color name="neutral000">#FFFFFF</color>
+    <color name="neutral100">#F4F5F7</color>
+    <color name="neutral200">#E7E8EA</color>
+    <color name="neutral300">#CDD1D5</color>
+    <color name="neutral400">#B2B8BF</color>
+    <color name="neutral500">#8A949E</color>
+    <color name="neutral600">#6D7882</color>
+    <color name="neutral700">#464C54</color>
+    <color name="neutral800">#34363E</color>
+    <color name="neutral900">#1F2124</color>
+
+
+    <color name="success100">#DDF8EF</color>
+    <color name="success300">#8FE0C8</color>
+    <color name="success500">#0CA678</color>
+    <color name="success700">#087C5B</color>
+    <color name="success900">#055741</color>
+
+
+    <color name="warning100">#FFF7D1</color>
+    <color name="warning300">#FFD180</color>
+    <color name="warning500">#FFA500</color>
+    <color name="warning700">#C97F00</color>
+    <color name="warning900">#A36800</color>
+
+
+    <color name="danger100">#FDECEC</color>
+    <color name="danger300">#F29B9B</color>
+    <color name="danger500">#E03131</color>
+    <color name="danger700">#A82424</color>
+    <color name="danger900">#751A1A</color>
+
 </resources>

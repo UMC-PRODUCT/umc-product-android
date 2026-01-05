@@ -2,8 +2,14 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.UMCProduct" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
     </style>
 
-    <style name="Theme.UMCProduct" parent="Base.Theme.UMCProduct" />
+    <style name="Theme.UMCProduct" parent="Base.Theme.UMCProduct">
+        <item name="colorBackgroundSemantic">@color/neutral100</item>
+        <item name="colorBorderSemantic">@color/neutral200</item>
+        <item name="colorTextPrimarySemantic">@color/neutral800</item>
+        <item name="colorTextSecondarySemantic">@color/neutral600</item>
+        <item name="colorTextDisablePlaceholderSemantic">@color/neutral400</item>
+    </style>
 </resources>
