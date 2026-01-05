@@ -3,7 +3,6 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-
     <color name="primary100">#EBEFFF</color>
     <color name="primary200">#CCD6FF</color>
     <color name="primary300">#99ABFF</color>
@@ -57,6 +56,5 @@
     <color name="danger500">#E03131</color>
     <color name="danger700">#A82424</color>
     <color name="danger900">#751A1A</color>
-
 
 </resources>
