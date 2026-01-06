@@ -5,4 +5,22 @@
     <attr name="colorTextPrimarySemantic" format="color"/>
     <attr name="colorTextSecondarySemantic" format="color"/>
     <attr name="colorTextDisablePlaceholderSemantic" format="color"/>
+
+    <!-- 공통 TextField -->
+    <declare-styleable name="UTextField">
+        <attr name="text" format="string" />
+        <attr name="textColor" format="color" />
+        <attr name="textAppearance" format="reference"/>
+
+        <attr name="prevIcon" format="reference"/>
+        <attr name="prevIconTint" format="color|reference" />
+        <attr name="prevIconSize" format="dimension" />
+        <attr name="prevIconPadding" format="dimension" />
+
+        <attr name="backgroundColor" format="color" />
+
+        <attr name="borderColor" format="color" />
+        <attr name="borderWidth" format="dimension" />
+        <attr name="cornerRadius" format="dimension" />
+    </declare-styleable>
 </resources>
