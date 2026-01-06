@@ -20,7 +20,7 @@ object AuthNetworkModule {
     fun provideHttpClient(
         authenticator: TokenAuthenticator,
         authenticationInterceptor: AuthenticationInterceptor,
-        loggingInterceptor: HttpLoggingInterceptor
+        loggingInterceptor: HttpLoggingInterceptor,
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .readTimeout(30, TimeUnit.SECONDS)
@@ -37,7 +37,7 @@ object AuthNetworkModule {
     @AuthRetrofit
     fun provideAuthRetrofit(
         @AuthOkHttpClient okHttpClient: OkHttpClient,
-        gsonConverterFactory: GsonConverterFactory
+        gsonConverterFactory: GsonConverterFactory,
     ): Retrofit {
         return Retrofit.Builder()
             .baseUrl("BASE_URL")

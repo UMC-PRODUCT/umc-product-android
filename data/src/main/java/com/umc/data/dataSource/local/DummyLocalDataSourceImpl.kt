@@ -1,4 +1,3 @@
 package com.umc.data.dataSource.local
 
-class DummyLocalDataSourceImpl {
-}
+class DummyLocalDataSourceImpl

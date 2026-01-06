@@ -22,9 +22,7 @@ import javax.inject.Singleton
 object NormalNetworkModule {
     @Provides
     @Singleton
-    fun provideHttpClient(
-        loggingInterceptor: HttpLoggingInterceptor
-    ): OkHttpClient {
+    fun provideHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
             .readTimeout(30, TimeUnit.SECONDS)
             .connectTimeout(30, TimeUnit.SECONDS)
@@ -42,18 +40,24 @@ object NormalNetworkModule {
     @Provides
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
-        val loggingInterceptor = HttpLoggingInterceptor { message ->
-            when {
-                !message.isJsonObject() && !message.isJsonArray() ->
-                    Log.d("RETROFIT1","CONNECTION INFO -> $message")
-                else ->  try {
-                    Log.d("RETROFIT2", GsonBuilder().setPrettyPrinting().create().toJson(
-                        JsonParser().parse(message)))
-                } catch (m: JsonSyntaxException) {
-                    Log.d("RETROFIT3", message)
+        val loggingInterceptor =
+            HttpLoggingInterceptor { message ->
+                when {
+                    !message.isJsonObject() && !message.isJsonArray() ->
+                        Log.d("RETROFIT1", "CONNECTION INFO -> $message")
+                    else ->
+                        try {
+                            Log.d(
+                                "RETROFIT2",
+                                GsonBuilder().setPrettyPrinting().create().toJson(
+                                    JsonParser().parse(message),
+                                ),
+                            )
+                        } catch (m: JsonSyntaxException) {
+                            Log.d("RETROFIT3", message)
+                        }
                 }
             }
-        }
         loggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
         return loggingInterceptor
     }
@@ -63,7 +67,7 @@ object NormalNetworkModule {
     @NormalRetrofit
     fun provideRetrofit(
         okHttpClient: OkHttpClient,
-        gsonConverterFactory: GsonConverterFactory
+        gsonConverterFactory: GsonConverterFactory,
     ): Retrofit {
         return Retrofit.Builder()
             .baseUrl("BASE_URL")

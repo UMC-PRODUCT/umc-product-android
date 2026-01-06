@@ -19,7 +19,7 @@ import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-abstract class BaseFragment<B : ViewDataBinding, STATE: UiState, EVENT: UiEvent, VM: BaseViewModel<STATE, EVENT>>(
+abstract class BaseFragment<B : ViewDataBinding, STATE : UiState, EVENT : UiEvent, VM : BaseViewModel<STATE, EVENT>>(
     private val inflater: (LayoutInflater, ViewGroup?, Boolean) -> B,
 ) : Fragment() {
     private var backPressedOnce = false
@@ -29,7 +29,6 @@ abstract class BaseFragment<B : ViewDataBinding, STATE: UiState, EVENT: UiEvent,
     private var _binding: B? = null
     protected val binding
         get() = _binding!!
-
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -44,7 +43,10 @@ abstract class BaseFragment<B : ViewDataBinding, STATE: UiState, EVENT: UiEvent,
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         binding.lifecycleOwner = viewLifecycleOwner
@@ -54,20 +56,21 @@ abstract class BaseFragment<B : ViewDataBinding, STATE: UiState, EVENT: UiEvent,
         initStates()
     }
 
-    private val onBackPressedCallback = object : OnBackPressedCallback(true) {
-        override fun handleOnBackPressed() {
-            if (navController.currentDestination?.id != navController.graph.startDestinationId) {
-                navController.popBackStack()
-                return
+    private val onBackPressedCallback =
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (navController.currentDestination?.id != navController.graph.startDestinationId) {
+                    navController.popBackStack()
+                    return
+                }
+                if (backPressedOnce) {
+                    requireActivity().finish()
+                    return
+                }
+                backPressedOnce = true
+                Handler(Looper.getMainLooper()).postDelayed({ backPressedOnce = false }, 2000)
             }
-            if(backPressedOnce){
-                requireActivity().finish()
-                return
-            }
-            backPressedOnce = true
-            Handler(Looper.getMainLooper()).postDelayed({ backPressedOnce = false }, 2000)
         }
-    }
 
     protected abstract fun initView()
 
@@ -77,7 +80,10 @@ abstract class BaseFragment<B : ViewDataBinding, STATE: UiState, EVENT: UiEvent,
         }
     }
 
-    protected fun LifecycleOwner.repeatOnStarted(viewLifecycleOwner: LifecycleOwner, block: suspend CoroutineScope.() -> Unit) {
+    protected fun LifecycleOwner.repeatOnStarted(
+        viewLifecycleOwner: LifecycleOwner,
+        block: suspend CoroutineScope.() -> Unit,
+    ) {
         viewLifecycleOwner.lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED, block)
         }
