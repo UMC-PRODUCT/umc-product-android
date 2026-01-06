@@ -16,6 +16,8 @@
     <attr name="borderColor" format="color" />
     <attr name="borderWidth" format="dimension" />
     <attr name="cornerRadius" format="dimension" />
+
+    <attr name="buttonElevation" format="integer" />
     <!-- 공통 TextField -->
     <declare-styleable name="UTextField">
         <attr name="text"/>
@@ -45,5 +47,8 @@
         <attr name="borderColor"/>
         <attr name="borderWidth"/>
         <attr name="cornerRadius"/>
+
+        <attr name="buttonElevation"/>
+        <attr name="pressedColor" format="reference"/>
     </declare-styleable>
 </resources>

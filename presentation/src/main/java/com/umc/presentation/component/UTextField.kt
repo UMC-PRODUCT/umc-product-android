@@ -15,7 +15,7 @@ class UTextField @JvmOverloads constructor(
     defStyle: Int = 0
 ) : MaterialCardView(mContext, attrs, defStyle) {
 
-    private val binding = CustomTextFieldBinding.inflate(LayoutInflater.from(context), this, true)
+    private val binding = CustomTextFieldBinding.inflate(LayoutInflater.from(context), this)
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.UTextField, defStyle, 0)
@@ -58,7 +58,7 @@ class UTextField @JvmOverloads constructor(
                 )
 
                 // 배경색
-                cardView.setCardBackgroundColor(
+                setCardBackgroundColor(
                     a.getColor(
                         R.styleable.UTextField_backgroundColor,
                         resources.getColor(R.color.neutral500)
@@ -66,11 +66,11 @@ class UTextField @JvmOverloads constructor(
                 )
 
                 // 코너
-                cardView.radius = a.getDimension(R.styleable.UTextField_cornerRadius, 14.toFloat())
+                radius = a.getDimension(R.styleable.UTextField_cornerRadius, 14.toFloat())
 
                 // Border
-                cardView.strokeWidth = a.getDimensionPixelSize(R.styleable.UTextField_borderWidth, 0)
-                cardView.strokeColor = a.getColor(R.styleable.UTextField_borderColor, Color.TRANSPARENT)
+                strokeWidth = a.getDimensionPixelSize(R.styleable.UTextField_borderWidth, 0)
+                strokeColor = a.getColor(R.styleable.UTextField_borderColor, Color.TRANSPARENT)
             }
         } finally {
             a.recycle()
