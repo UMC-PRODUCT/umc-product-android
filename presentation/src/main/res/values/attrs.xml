@@ -6,21 +6,44 @@
     <attr name="colorTextSecondarySemantic" format="color"/>
     <attr name="colorTextDisablePlaceholderSemantic" format="color"/>
 
+
+    <attr name="text" format="string" />
+    <attr name="textColor" format="color" />
+    <attr name="textAppearance" format="reference"/>
+
+    <attr name="backgroundColor" format="color" />
+
+    <attr name="borderColor" format="color" />
+    <attr name="borderWidth" format="dimension" />
+    <attr name="cornerRadius" format="dimension" />
     <!-- 공통 TextField -->
     <declare-styleable name="UTextField">
-        <attr name="text" format="string" />
-        <attr name="textColor" format="color" />
-        <attr name="textAppearance" format="reference"/>
+        <attr name="text"/>
+        <attr name="textColor"/>
+        <attr name="textAppearance"/>
 
         <attr name="prevIcon" format="reference"/>
         <attr name="prevIconTint" format="color|reference" />
         <attr name="prevIconSize" format="dimension" />
         <attr name="prevIconPadding" format="dimension" />
 
-        <attr name="backgroundColor" format="color" />
+        <attr name="backgroundColor"/>
 
-        <attr name="borderColor" format="color" />
-        <attr name="borderWidth" format="dimension" />
-        <attr name="cornerRadius" format="dimension" />
+        <attr name="borderColor"/>
+        <attr name="borderWidth"/>
+        <attr name="cornerRadius"/>
+    </declare-styleable>
+
+    <!-- 공통 Button -->
+    <declare-styleable name="UButton">
+        <attr name="text"/>
+        <attr name="textColor"/>
+        <attr name="textAppearance"/>
+
+        <attr name="backgroundColor"/>
+
+        <attr name="borderColor"/>
+        <attr name="borderWidth"/>
+        <attr name="cornerRadius"/>
     </declare-styleable>
 </resources>
