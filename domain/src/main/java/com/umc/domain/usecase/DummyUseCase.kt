@@ -1,4 +1,3 @@
 package com.umc.domain.usecase
 
-class DummyUseCase {
-}
+class DummyUseCase
