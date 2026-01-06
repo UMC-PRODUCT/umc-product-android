@@ -1,5 +1,3 @@
 package com.umc.data.repository
 
-class DummyRepositoryImpl {
-
-}
+class DummyRepositoryImpl

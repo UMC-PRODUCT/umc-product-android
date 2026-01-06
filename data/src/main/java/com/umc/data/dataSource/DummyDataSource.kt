@@ -1,4 +1,3 @@
 package com.umc.data.dataSource
 
-interface DummyDataSource {
-}
+interface DummyDataSource

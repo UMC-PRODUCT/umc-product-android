@@ -7,11 +7,9 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 object ApiModule {
-
-//    @Singleton
+    //    @Singleton
 //    @Provides
 //    fun provide머시기머시기(retrofit: Retrofit): API Interface {
 //        return retrofit.create(API Interface::class.java)
 //    }
-
 }
