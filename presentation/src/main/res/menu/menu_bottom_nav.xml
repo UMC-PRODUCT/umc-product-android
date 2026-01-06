@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_home"
+        android:title="홈"/>
+
+    <item
+        android:id="@+id/nav_notice"
+        android:title="공지"/>
+
+    <item
+        android:id="@+id/nav_act"
+        android:title="활동"/>
+
+    <item
+        android:id="@+id/nav_community"
+        android:title="커뮤니티"/>
+
+    <item
+        android:id="@+id/nav_mypage"
+        android:title="마이페이지"/>
+
+
+</menu>

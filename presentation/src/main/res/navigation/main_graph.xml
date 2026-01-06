@@ -3,6 +3,28 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main_graph">
+    android:id="@+id/main_graph"
+    app:startDestination="@id/nav_home"
+    >
+
+    <include
+        android:id="@+id/nav_home"
+        app:graph="@navigation/nav_home"/>
+
+    <include
+        android:id="@+id/nav_notice"
+        app:graph="@navigation/nav_notice"/>
+
+    <include
+        android:id="@+id/nav_act"
+        app:graph="@navigation/nav_act"/>
+
+    <include
+        android:id="@+id/nav_community"
+        app:graph="@navigation/nav_community"/>
+
+    <include
+        android:id="@+id/nav_mypage"
+        app:graph="@navigation/nav_mypage"/>
 
 </navigation>
