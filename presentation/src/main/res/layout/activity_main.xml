@@ -19,29 +19,37 @@
         >
 
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="test Button"
-            android:textAppearance="@style/Caption1"
-            android:backgroundTint="@color/primary100"
-            android:textColor="@color/neutral800"
-            android:layout_marginTop="20dp"
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/main_fragmentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:name="androidx.navigation.fragment.NavHostFragment"
+            app:defaultNavHost="true"
+            app:navGraph="@navigation/main_graph"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/main_bnv"
             />
 
-        <TextView
-            android:layout_width="wrap_content"
+
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/main_bnv"
+            android:background="@color/neutral000"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Hello World!"
-            android:textAppearance="@style/Title1Bold"
-            android:textColor="@color/neutral800"
+            android:paddingHorizontal="15dp"
+            android:paddingTop="5dp"
+            app:menu="@menu/menu_bottom_nav"
+            app:itemIconSize="29dp"
+            app:labelVisibilityMode="labeled"
+            app:itemRippleColor="@android:color/transparent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
