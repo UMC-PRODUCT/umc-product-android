@@ -1,6 +1,8 @@
 package com.umc.presentation
 
 import androidx.activity.viewModels
+import androidx.navigation.findNavController
+import androidx.navigation.ui.setupWithNavController
 import com.umc.presentation.base.BaseActivity
 import com.umc.presentation.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,6 +25,9 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
             launch {
                 viewModel.uiEvent.collect{
                     // TODO 이벤트 처리
+                    val navController = findNavController(R.id.main_fragmentContainer)
+                    binding.mainBnv.setupWithNavController(navController)
+
                 }
             }
 
