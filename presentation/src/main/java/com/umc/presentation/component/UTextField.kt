@@ -5,78 +5,73 @@ import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.FrameLayout
-import android.widget.ImageView
-import androidx.appcompat.widget.AppCompatEditText
 import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
+import com.umc.presentation.databinding.CustomTextFieldBinding
 
 class UTextField @JvmOverloads constructor(
     mContext: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0
-) : FrameLayout(mContext, attrs, defStyle) {
+) : MaterialCardView(mContext, attrs, defStyle) {
 
-    private val card: MaterialCardView
-    private val prevIcon: ImageView
-    private val editText: AppCompatEditText
+    private val binding = CustomTextFieldBinding.inflate(LayoutInflater.from(context), this, true)
 
     init {
-        LayoutInflater.from(context).inflate(R.layout.custom_text_field, this, true)
-        card = findViewById(R.id.card_view)
-        prevIcon = findViewById(R.id.image_prev_icon)
-        editText = findViewById(R.id.edit_text)
-
         val a = context.obtainStyledAttributes(attrs, R.styleable.UTextField, defStyle, 0)
 
         try {
+            binding.apply {
+                // 선행 아이콘
+                val icon = a.getResourceId(R.styleable.UTextField_prevIcon, 0)
+                if (icon != 0) {
+                    imagePrevIcon.visibility = View.VISIBLE
+                    imagePrevIcon.setImageResource(icon)
 
-            // 선행 아이콘
-            val icon = a.getResourceId(R.styleable.UTextField_prevIcon, 0)
-            if (icon != 0) {
-                prevIcon.visibility = View.VISIBLE
-                prevIcon.setImageResource(icon)
+                    if (a.hasValue(R.styleable.UTextField_prevIconTint)) {
+                        val tint = a.getColorStateList(R.styleable.UTextField_prevIconTint)
+                        imagePrevIcon.imageTintList = tint
+                    } else {
+                        imagePrevIcon.imageTintList = null
+                    }
 
-                if (a.hasValue(R.styleable.UTextField_prevIconTint)) {
-                    val tint = a.getColorStateList(R.styleable.UTextField_prevIconTint)
-                    prevIcon.imageTintList = tint
+                    val iconSize = a.getDimensionPixelSize(R.styleable.UTextField_prevIconSize, 0)
+                    imagePrevIcon.layoutParams = imagePrevIcon.layoutParams.apply {
+                        width = iconSize
+                        height = iconSize
+                    }
+
+                    val iconPadding =
+                        a.getDimensionPixelSize(R.styleable.UTextField_prevIconPadding, 0)
+                    imagePrevIcon.setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
                 } else {
-                    prevIcon.imageTintList = null
+                    imagePrevIcon.visibility = View.GONE
                 }
 
-                val iconSize = a.getDimensionPixelSize(R.styleable.UTextField_prevIconSize, 0)
-                prevIcon.layoutParams = prevIcon.layoutParams.apply {
-                    width = iconSize
-                    height = iconSize
-                }
+                // 텍스트
+                editText.setText(a.getString(R.styleable.UTextField_text) ?: editText.text)
+                editText.setTextColor(
+                    a.getColor(R.styleable.UTextField_textColor, editText.currentTextColor)
+                )
+                editText.setTextAppearance(
+                    a.getResourceId(R.styleable.UTextField_textAppearance, R.style.Callout)
+                )
 
-                val iconPadding = a.getDimensionPixelSize(R.styleable.UTextField_prevIconPadding, 0)
-                prevIcon.setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
-            } else {
-                prevIcon.visibility = View.GONE
+                // 배경색
+                cardView.setCardBackgroundColor(
+                    a.getColor(
+                        R.styleable.UTextField_backgroundColor,
+                        resources.getColor(R.color.neutral500)
+                    ) //TODO 확정 아님
+                )
+
+                // 코너
+                cardView.radius = a.getDimension(R.styleable.UTextField_cornerRadius, 14.toFloat())
+
+                // Border
+                cardView.strokeWidth = a.getDimensionPixelSize(R.styleable.UTextField_borderWidth, 0)
+                cardView.strokeColor = a.getColor(R.styleable.UTextField_borderColor, Color.TRANSPARENT)
             }
-
-            // 텍스트
-            editText.setText(a.getString(R.styleable.UTextField_text) ?: editText.text)
-            editText.setTextColor(
-                a.getColor(R.styleable.UTextField_textColor, editText.currentTextColor)
-            )
-            editText.setTextAppearance(
-                a.getResourceId(R.styleable.UTextField_textAppearance, R.style.Callout)
-            )
-
-            // 배경색
-            card.setCardBackgroundColor(
-                a.getColor(R.styleable.UTextField_backgroundColor, resources.getColor(R.color.neutral500)) //TODO 확정 아님
-            )
-
-            // 코너
-            card.radius = a.getDimension(R.styleable.UTextField_cornerRadius, 14.toFloat())
-
-            // Border
-            card.strokeWidth = a.getDimensionPixelSize(R.styleable.UTextField_borderWidth, 0)
-            card.strokeColor = a.getColor(R.styleable.UTextField_borderColor, Color.TRANSPARENT)
-
         } finally {
             a.recycle()
         }
