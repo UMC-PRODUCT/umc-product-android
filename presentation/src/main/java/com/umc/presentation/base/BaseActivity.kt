@@ -11,10 +11,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-abstract class BaseActivity<B : ViewDataBinding, STATE: UiState, EVENT: UiEvent, VM: BaseViewModel<STATE, EVENT>>(
+abstract class BaseActivity<B : ViewDataBinding, STATE : UiState, EVENT : UiEvent, VM : BaseViewModel<STATE, EVENT>>(
     private val inflater: (LayoutInflater) -> B,
 ) : AppCompatActivity() {
-
     protected lateinit var binding: B
     protected abstract val viewModel: VM
 
@@ -30,7 +29,6 @@ abstract class BaseActivity<B : ViewDataBinding, STATE: UiState, EVENT: UiEvent,
     }
 
     protected abstract fun initView()
-
 
     protected abstract fun initState()
 

@@ -1,7 +1,7 @@
 package com.umc.umc.di
 
 import android.util.Log
-import kotlinx.coroutines.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import okhttp3.Authenticator
@@ -36,7 +36,7 @@ class TokenAuthenticator
                             .removeHeader("Authorization")
                             .header(
                                 "Authorization",
-                                "Bearer ", // + repository.getAccessToken().first()
+                                "Bearer repository.getAccessToken().first()",
                             )
                             .build()
                     } else {

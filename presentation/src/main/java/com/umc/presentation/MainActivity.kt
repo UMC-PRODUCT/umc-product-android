@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, MainActivityEvent, MainActivityViewModel>(
-    ActivityMainBinding::inflate
+    ActivityMainBinding::inflate,
 ) {
     override val viewModel: MainActivityViewModel by viewModels()
 
@@ -23,11 +23,10 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
     override fun initState() {
         repeatOnStarted {
             launch {
-                viewModel.uiEvent.collect{
+                viewModel.uiEvent.collect {
                     // TODO 이벤트 처리
                     val navController = findNavController(R.id.main_fragmentContainer)
                     binding.mainBnv.setupWithNavController(navController)
-
                 }
             }
 

@@ -12,20 +12,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-abstract class BaseViewModel<STATE: UiState, EVENT : UiEvent>(
-    initialPageState : STATE,
+abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
+    initialPageState: STATE,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(initialPageState)
     val uiState: StateFlow<STATE>
         get() = _uiState.asStateFlow()
 
-    private val _uiEvent =  MutableSharedFlow<EVENT>()
+    private val _uiEvent = MutableSharedFlow<EVENT>()
     val uiEvent: SharedFlow<EVENT>
         get() = _uiEvent.asSharedFlow()
 
-    protected fun updateState(
-        state: STATE.() -> STATE
-    ) {
+    protected fun updateState(state: STATE.() -> STATE) {
         _uiState.update { it.state() }
     }
 
@@ -35,8 +33,12 @@ abstract class BaseViewModel<STATE: UiState, EVENT : UiEvent>(
         }
     }
 
-    protected fun<D> resultResponse(response: ApiState<D>, successCallback : (D) -> Unit, errorCallback : ((String) -> Unit)? = null){
-        when(response){
+    protected fun <D> resultResponse(
+        response: ApiState<D>,
+        successCallback: (D) -> Unit,
+        errorCallback: ((String) -> Unit)? = null,
+    ) {
+        when (response) {
             is ApiState.Error -> {
                 errorCallback?.invoke(response.errorCode)
             }
@@ -44,7 +46,7 @@ abstract class BaseViewModel<STATE: UiState, EVENT : UiEvent>(
                 successCallback.invoke(response.result)
             }
             is ApiState.Loading -> {
-                //TODO 로딩 화면 같은거
+                // TODO 로딩 화면 같은거
             }
         }
     }
