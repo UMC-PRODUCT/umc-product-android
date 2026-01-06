@@ -20,6 +20,7 @@ jetbrainsKotlinJvm = "2.2.21"
 legacySupportV4 = "1.0.0"
 lifecycleLivedataKtx = "2.6.1"
 fragmentKtx = "1.5.6"
+materialCalendarView = "2.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -43,6 +44,7 @@ navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version
 androidx-legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacySupportV4" }
 androidx-lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycleLivedataKtx" }
 androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
+material-calendarview = { group = "com.github.prolificinteractive", name = "material-calendarview", version.ref = "materialCalendarView" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

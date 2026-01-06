@@ -63,4 +63,7 @@ dependencies {
     // NAVIGATION
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+
+    // materialCalendarView
+    implementation(libs.material.calendarview)
 }
