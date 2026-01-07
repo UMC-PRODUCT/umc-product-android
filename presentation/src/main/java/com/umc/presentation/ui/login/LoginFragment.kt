@@ -8,7 +8,6 @@ import com.kakao.sdk.common.model.ClientErrorCause
 import com.kakao.sdk.user.UserApiClient
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentLoginBinding
-import com.umc.presentation.databinding.FragmentSplashBinding
 import com.umc.presentation.util.ULog
 import kotlinx.coroutines.launch
 
@@ -21,7 +20,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEven
         if (error != null) {
             ULog.d("실패~!")
         } else if (token != null) {
-            ULog.d("성공~!")
+            viewModel.kakaoLogin()
         }
     }
 
@@ -52,7 +51,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEven
     private fun handleLoginEvent(event: LoginEvent) {
         when(event) {
             LoginEvent.KakaoLoginEvent -> signInKakao()
-            LoginEvent.MoveToLoginEvent -> {}
+            LoginEvent.MoveToSignUpEvent -> moveToSignUp()
             LoginEvent.MoveToMainEvent -> moveToHome()
         }
     }
@@ -62,8 +61,9 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEven
         findNavController().navigate(action)
     }
 
-    private fun moveToLogin() {
-
+    private fun moveToSignUp() {
+        val action = LoginFragmentDirections.actionLoginToSignUp()
+        findNavController().navigate(action)
     }
 
     fun signInKakao() {
@@ -80,7 +80,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEven
                     UserApiClient.instance.loginWithKakaoAccount(requireActivity(), callback = callback)
                 } else if (token != null) {
                     // 로그인 성공
-                    ULog.d("성공~!")
+                    viewModel.kakaoLogin()
                 }
             }
         } else {

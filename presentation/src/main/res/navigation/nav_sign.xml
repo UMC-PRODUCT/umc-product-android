@@ -30,6 +30,21 @@
         <action
             android:id="@+id/action_login_to_home"
             app:destination="@id/nav_home"/>
+
+        <action
+            android:id="@+id/action_login_to_sign_up"
+            app:destination="@id/signUpFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/signUpFragment"
+        android:name="com.umc.presentation.ui.signUp.SignUpFragment"
+        android:label="회원가입"
+        tools:layout="@layout/fragment_sign_up">
+
+        <action
+            android:id="@+id/action_login_to_home"
+            app:destination="@id/nav_home"/>
     </fragment>
 
 </navigation>

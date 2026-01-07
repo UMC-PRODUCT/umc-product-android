@@ -14,6 +14,11 @@ constructor() : BaseViewModel<LoginUiState, LoginEvent>(
     fun onClickKakaoLogin() {
         emitEvent(LoginEvent.KakaoLoginEvent)
     }
+
+    fun kakaoLogin() {
+        // TODO 서버 연결 해야함
+        emitEvent(LoginEvent.MoveToSignUpEvent)
+    }
 }
 
 data class LoginUiState(
@@ -23,5 +28,5 @@ data class LoginUiState(
 sealed class LoginEvent : UiEvent {
     object KakaoLoginEvent : LoginEvent()
     object MoveToMainEvent : LoginEvent()
-    object MoveToLoginEvent : LoginEvent()
+    object MoveToSignUpEvent : LoginEvent()
 }
