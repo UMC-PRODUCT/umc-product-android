@@ -1,4 +1,4 @@
-package com.umc.umc
+package com.umc.product
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

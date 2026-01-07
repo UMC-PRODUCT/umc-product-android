@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.umc.umc"
+    namespace = "com.umc.product"
     compileSdk = 36
 
     defaultConfig {
