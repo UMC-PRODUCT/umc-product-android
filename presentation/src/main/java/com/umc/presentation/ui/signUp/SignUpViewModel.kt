@@ -27,7 +27,7 @@ constructor() : BaseViewModel<SignUpState, SignUpEvent>(
 }
 
 data class SignUpState(
-    val dummy: String = "",
+    var name: String = "",
 ) : UiState
 
 sealed class SignUpEvent : UiEvent {
