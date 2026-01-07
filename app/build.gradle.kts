@@ -68,8 +68,5 @@ dependencies {
     // OKHTTP
     implementation(libs.okhttp.android)
     implementation(libs.okhttp.log)
-
-    // materialCalendarView
-    implementation(libs.material.calendarview)
 }
 
