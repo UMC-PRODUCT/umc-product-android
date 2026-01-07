@@ -1,15 +1,16 @@
-package com.umc.presentation.ui.splash
+package com.umc.presentation.ui.login
 
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.umc.presentation.base.BaseFragment
+import com.umc.presentation.databinding.FragmentLoginBinding
 import com.umc.presentation.databinding.FragmentSplashBinding
 import kotlinx.coroutines.launch
 
-class SplashFragment : BaseFragment<FragmentSplashBinding, SplashUiState, SplashEvent, SplashViewModel>(
-    FragmentSplashBinding::inflate,
+class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEvent, LoginViewModel>(
+    FragmentLoginBinding::inflate,
 ) {
-    override val viewModel: SplashViewModel by viewModels()
+    override val viewModel: LoginViewModel by viewModels()
 
     override fun initView() {
         binding.apply {
@@ -23,7 +24,6 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, SplashUiState, Splash
         repeatOnStarted(viewLifecycleOwner) {
             launch {
                 viewModel.uiEvent.collect {
-                    handleSplashEvent(it)
                 }
             }
 
@@ -35,20 +35,12 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, SplashUiState, Splash
         }
     }
 
-    private fun handleSplashEvent(event: SplashEvent) {
-        when(event) {
-            SplashEvent.MoveToLoginEvent -> moveToLogin()
-            SplashEvent.MoveToMainEvent -> moveToHome()
-        }
-    }
-
     private fun moveToHome() {
-        val action = SplashFragmentDirections.actionSplashToHome()
+        val action = LoginFragmentDirections.actionLoginToHome()
         findNavController().navigate(action)
     }
 
     private fun moveToLogin() {
-        val action = SplashFragmentDirections.actionSplashToLogin()
-        findNavController().navigate(action)
+
     }
 }
