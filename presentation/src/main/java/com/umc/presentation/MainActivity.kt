@@ -1,7 +1,10 @@
 package com.umc.presentation
 
+import android.view.View
 import androidx.activity.viewModels
+import androidx.navigation.NavController
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.umc.presentation.base.BaseActivity
 import com.umc.presentation.databinding.ActivityMainBinding
@@ -13,10 +16,12 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
     ActivityMainBinding::inflate,
 ) {
     override val viewModel: MainActivityViewModel by viewModels()
+    private lateinit var navController: NavController
 
     override fun initView() {
         binding.apply {
             vm = viewModel
+            initNavigation()
         }
     }
 
@@ -25,8 +30,6 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
             launch {
                 viewModel.uiEvent.collect {
                     // TODO 이벤트 처리
-                    val navController = findNavController(R.id.main_fragmentContainer)
-                    binding.mainBnv.setupWithNavController(navController)
                 }
             }
 
@@ -35,6 +38,26 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
                     // TODO 상태 관리
                 }
             }
+        }
+    }
+
+    // Navigation 세팅
+    private fun initNavigation() {
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.main_fragmentContainer) as NavHostFragment
+        navController = navHostFragment.navController
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            changeBottomNavigationView(destination.id)
+        }
+    }
+
+    private fun changeBottomNavigationView(id: Int) {
+        //TODO 다른 화면들도 정의해야 함.
+        when (id) {
+            R.id.homeFragment -> {
+                binding.mainBnv.visibility = View.VISIBLE
+            }
+            else -> binding.mainBnv.visibility = View.GONE
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.umc.presentation
+package com.umc.presentation.ui.home
 
 import androidx.fragment.app.viewModels
 import com.umc.presentation.base.BaseFragment
