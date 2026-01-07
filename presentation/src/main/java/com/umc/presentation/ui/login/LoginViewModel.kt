@@ -10,8 +10,9 @@ class LoginViewModel
 constructor() : BaseViewModel<LoginUiState, LoginEvent>(
     LoginUiState(),
 ) {
-    init {
 
+    fun onClickKakaoLogin() {
+        emitEvent(LoginEvent.KakaoLoginEvent)
     }
 }
 
@@ -20,6 +21,7 @@ data class LoginUiState(
 ) : UiState
 
 sealed class LoginEvent : UiEvent {
+    object KakaoLoginEvent : LoginEvent()
     object MoveToMainEvent : LoginEvent()
     object MoveToLoginEvent : LoginEvent()
 }

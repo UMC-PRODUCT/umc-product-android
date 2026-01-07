@@ -65,4 +65,7 @@ dependencies {
     // NAVIGATION
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+
+    // KAKAO
+    implementation(libs.kakao.user)
 }
