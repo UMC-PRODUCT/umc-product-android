@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
 import com.umc.presentation.databinding.CustomButtonBinding
+import com.umc.presentation.extension.px
 
 class UButton
     @JvmOverloads
@@ -34,16 +35,15 @@ class UButton
                     textView.setTextColor(
                         a.getColor(R.styleable.UButton_textColor, ContextCompat.getColor(context, R.color.white)),
                     )
-                    // TODO 확정 아님
                     textView.setTextAppearance(
-                        a.getResourceId(R.styleable.UButton_textAppearance, R.style.Callout),
+                        a.getResourceId(R.styleable.UButton_textAppearance, R.style.SubheadlineBold),
                     )
 
                     // 코너
-                    radius = a.getDimension(R.styleable.UButton_cornerRadius, 14.toFloat())
+                    radius = a.getDimension(R.styleable.UButton_cornerRadius, 8.px.toFloat())
 
                     // Border
-                    strokeWidth = a.getDimensionPixelSize(R.styleable.UButton_borderWidth, 0)
+                    strokeWidth = a.getDimensionPixelSize(R.styleable.UButton_borderWidth, 0.px)
                     strokeColor = a.getColor(R.styleable.UButton_borderColor, Color.TRANSPARENT)
 
                     // 배경색

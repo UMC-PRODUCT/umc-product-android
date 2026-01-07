@@ -28,6 +28,8 @@ constructor() : BaseViewModel<SignUpState, SignUpEvent>(
 
 data class SignUpState(
     var name: String = "",
+    var nickname: String = "",
+    var email: String = "",
 ) : UiState
 
 sealed class SignUpEvent : UiEvent {
