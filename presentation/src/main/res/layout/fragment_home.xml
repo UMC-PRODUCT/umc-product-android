@@ -10,50 +10,331 @@
             type="com.umc.presentation.HomeFragmentViewModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        >
+        android:fillViewport="true">
 
-        <com.prolificinteractive.materialcalendarview.MaterialCalendarView
-            android:id="@+id/calendar_calendar_view"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginHorizontal="24dp"
-            android:layout_marginTop="30dp"
-            android:paddingTop="16dp"
-            android:background="@drawable/bg_calendar_corner_radius16"
-            android:elevation="2dp"
-            app:mcv_selectionColor="@color/neutral000"
-            app:mcv_selectionMode="single"
-            app:mcv_showOtherDates="none"
-            app:mcv_firstDayOfWeek="sunday"
-            app:mcv_headerTextAppearance="@style/HeadlineBold"
-            app:mcv_weekDayTextAppearance="@style/Caption1"
-            app:mcv_dateTextAppearance="@style/Footnote"
-            app:layout_constraintDimensionRatio="1:1"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+
+            <!-- 상단 부분 (다가오는 알림 이전)-->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/home_layout_top"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp"
+                android:paddingTop="64dp"
+                android:paddingBottom="32dp"
+                android:background="@color/neutral000"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                >
+
+                <!--상단 바 (아이콘 / OB&YB / 알람)-->
+                <ImageView
+                    android:id="@+id/home_imv_umcicon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_logo_umc"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    />
+
+                <ImageButton
+                    android:id="@+id/home_btn_alarm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/sl_bottom_nav_home"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/home_imv_umcicon"
+                    app:layout_constraintBottom_toBottomOf="@id/home_imv_umcicon"/>
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/home_"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="24dp"
+                    app:text=""
+                    app:layout_constraintEnd_toStartOf="@id/home_btn_alarm"
+                    app:layout_constraintTop_toTopOf="@id/home_imv_umcicon"
+                    app:layout_constraintBottom_toBottomOf="@id/home_imv_umcicon"/>
 
 
-        <com.umc.presentation.component.UButton
-            android:layout_width="wrap_content"
+                <!-- 기수 프로필 카드-->
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/home_cdv_profile"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:background="@color/primary100"
+                    app:backgroundColor="@color/primary100"
+                    app:text=""
+                    app:borderWidth="0dp"
+                    app:cornerRadius="16dp"
+                    app:buttonElevation="0"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/home_imv_umcicon">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/home_layout_user_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="12기"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/home_tv_username"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="홍길동님"
+                            android:textAppearance="@style/Headline"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/home_layout_user_badge" />
+
+                        <TextView
+                            android:id="@+id/home_tv_userstatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="수료한 지 어쩌구"
+                            android:textAppearance="@style/Title3Bold"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/home_tv_username" />
+
+                        <ImageView
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:src="@drawable/sl_bottom_nav_home"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </com.umc.presentation.component.UButton>
+
+                <!-- ACTIVE 전용 활동 상태 카드 -->
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/home_cdv_now_doing"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@color/neutral100"
+                    app:backgroundColor="@color/neutral100"
+                    app:borderWidth="0dp"
+                    app:cornerRadius="16dp"
+                    app:text=""
+                    app:buttonElevation="0"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/home_cdv_profile">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/home_tv_now_doing"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="start"
+                        android:textAppearance="@style/BodyBold"
+                        android:text="@string/home_now_card_main_title"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/home_tv_now_doing_alert_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/Footnote"
+                        android:layout_marginTop="8dp"
+                        android:gravity="start"
+                        android:text="경고가 블라블라"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/home_tv_now_doing" />
+
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </com.umc.presentation.component.UButton>
+
+                <!-- 최근 받은 알림 카드 -->
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/home_cdv_recent_alarm"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:backgroundColor="@color/accent100"
+                    app:borderWidth="1dp"
+                    app:borderColor="@color/accent200"
+                    app:cornerRadius="16dp"
+                    app:buttonElevation="0"
+                    app:text=""
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/home_cdv_now_doing">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp">
+
+                        <com.umc.presentation.component.UButton
+                            android:id="@+id/home_cdv_recent_alarm_tag"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:backgroundColor="@color/accent500"
+                            app:borderWidth="0dp"
+                            app:text="블라"
+                            app:textAppearance="@style/Caption1Bold"
+                            app:textColor="@color/neutral000"
+                            app:cornerRadius="16dp"
+                            app:buttonElevation="0"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            />
+
+                        <TextView
+                            android:id="@+id/home_tv_recent_alarm_content"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="테스트 블라블라"
+                            android:gravity="start"
+                            android:textAppearance="@style/Subheadline"
+                            android:textColor="@color/accent700"
+                            android:layout_marginStart="8dp"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/home_cdv_recent_alarm_tag"/>
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </com.umc.presentation.component.UButton>
+
+                <!-- ACTIVE 전용 현재 기수 가이드라인-->
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/home_cdv_guideline"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@color/neutral800"
+                    app:backgroundColor="@color/neutral800"
+                    app:borderWidth="0dp"
+                    app:cornerRadius="16dp"
+                    app:buttonElevation="0"
+                    app:text=""
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/home_cdv_recent_alarm">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:id="@+id/home_imv_guideline_icon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/sl_bottom_nav_home"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"/>
+
+                        <TextView
+                            android:id="@+id/home_tv_guideline_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="12기 블라블라"
+                            android:gravity="start"
+                            android:layout_marginBottom="2dp"
+                            android:textAppearance="@style/SubheadlineBold"
+                            android:textColor="@color/neutral000"
+                            android:layout_marginStart="8dp"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            app:layout_constraintStart_toEndOf="@id/home_imv_guideline_icon"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toTopOf="@id/home_tv_guideline_content"
+                            />
+
+                        <TextView
+                            android:id="@+id/home_tv_guideline_content"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="12기 내용 블라블라"
+                            android:gravity="start"
+                            android:layout_marginTop="2dp"
+                            android:textAppearance="@style/Footnote"
+                            android:textColor="@color/neutral000"
+                            android:layout_marginStart="8dp"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            app:layout_constraintStart_toEndOf="@id/home_imv_guideline_icon"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/home_tv_guideline_title"
+                            />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </com.umc.presentation.component.UButton>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+        <!-- 하단 부분 (다가오는 알림 파트)-->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/home_layout_bottom"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="20dp"
-            app:text="예시"
-            app:contentPadding="20dp"
-            app:textAppearance="@style/Footnote"
-            app:backgroundColor="@color/primary500"
-            app:cornerRadius="10dp"
-            app:pressedColor="@color/primary600"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="64dp"
+            android:paddingTop="32dp"
+            android:background="@color/neutral100"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/home_layout_top"
+            >
 
-            />
+            <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+                android:id="@+id/home_calendar_view"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginTop="30dp"
+                android:paddingTop="16dp"
+                android:background="@drawable/bg_calendar_corner_radius16"
+                android:elevation="2dp"
+                app:mcv_selectionColor="@color/neutral000"
+                app:mcv_selectionMode="single"
+                app:mcv_showOtherDates="none"
+                app:mcv_firstDayOfWeek="sunday"
+                app:mcv_headerTextAppearance="@style/HeadlineBold"
+                app:mcv_weekDayTextAppearance="@style/Caption1"
+                app:mcv_dateTextAppearance="@style/Footnote"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
 
 </layout>

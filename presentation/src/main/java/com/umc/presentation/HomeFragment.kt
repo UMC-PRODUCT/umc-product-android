@@ -36,7 +36,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
 
     //MaterialCalendar 초기화
     fun initCalendar(){
-        binding.calendarCalendarView.apply {
+        binding.homeCalendarView.apply {
             //달력 제목 커스텀
             setTitleFormatter { day ->
                 val year = day.year
