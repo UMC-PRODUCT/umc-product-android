@@ -5,6 +5,10 @@
 
     <data>
 
+        <import type="android.view.View" />
+
+        <import type="com.umc.domain.model.enums.EmailVerifyType" />
+
         <variable
             name="vm"
             type="com.umc.presentation.ui.signUp.SignUpViewModel" />
@@ -89,6 +93,8 @@
             app:layout_constraintTop_toBottomOf="@id/text_name"
             app:onTextChanged="@{vm::onNameChanged}"
             app:placeholderText="@string/sign_up_name_placeholder"
+            app:strokeColor="@color/neutral300"
+            app:strokeWidth="1dp"
             app:text="@{vm.uiState.name}"
             app:textAppearance="@style/Subheadline" />
 
@@ -131,6 +137,8 @@
             app:layout_constraintTop_toBottomOf="@id/text_nickname"
             app:onTextChanged="@{vm::onNicknameChanged}"
             app:placeholderText="@string/sign_up_nickname_placeholder"
+            app:strokeColor="@color/neutral300"
+            app:strokeWidth="1dp"
             app:text="@{vm.uiState.nickname}"
             app:textAppearance="@style/Subheadline" />
 
@@ -177,8 +185,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="30dp"
                 android:layout_weight="1"
+                app:backgroundColor="@{vm.uiState.verifyType == EmailVerifyType.ERROR ? @color/danger100 : @color/neutral000}"
+                app:cornerRadius="8dp"
                 app:onTextChanged="@{vm::onEmailChanged}"
                 app:placeholderText="@string/sign_up_email_placeholder"
+                app:strokeColor="@{vm.uiState.verifyType == EmailVerifyType.ERROR ? @color/danger500 : @color/neutral300}"
+                app:strokeWidth="1dp"
                 app:text="@{vm.uiState.email}"
                 app:textAppearance="@style/Subheadline" />
 
@@ -186,8 +198,9 @@
                 android:id="@+id/button_verify"
                 android:layout_width="71dp"
                 android:layout_height="42dp"
-                android:enabled="false"
-                app:backgroundColor="@color/neutral300"
+                android:enabled="@{!vm.uiState.email.empty &amp;&amp; vm.uiState.verifyType != EmailVerifyType.ERROR}"
+                android:onClick="@{()->vm.onClickVerify()}"
+                app:backgroundColor="@{vm.uiState.email.empty || vm.uiState.verifyType == EmailVerifyType.ERROR ? @color/neutral300 : @color/primary500}"
                 app:pressedColor="@color/primary700"
                 app:text="@string/sign_up_verify_request"
                 app:textColor="@color/neutral000" />
@@ -199,12 +212,12 @@
             android:id="@+id/text_error"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
             android:layout_marginTop="4dp"
+            android:text="@string/sign_up_error_email"
             android:textAppearance="@style/Footnote"
             android:textColor="@color/danger500"
-            android:visibility="gone"
-            app:layout_constraintStart_toStartOf="@id/text_field_email"
-            app:layout_constraintTop_toBottomOf="@id/text_field_email" />
+            android:visibility="@{vm.uiState.verifyType == EmailVerifyType.ERROR ? View.VISIBLE : View.GONE}" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -213,7 +226,8 @@
             android:layout_marginTop="16dp"
             android:layout_marginEnd="24dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:visibility="@{vm.uiState.verifyType == EmailVerifyType.REQUEST ? View.VISIBLE : View.GONE}">
 
             <com.umc.presentation.component.UTextField
                 android:id="@+id/text_field_verify_code"
@@ -223,6 +237,8 @@
                 android:layout_weight="1"
                 app:onTextChanged="@{vm::onCodeChanged}"
                 app:placeholderText="@string/sign_up_verify_code_placeholder"
+                app:strokeColor="@color/neutral300"
+                app:strokeWidth="1dp"
                 app:text="@{vm.uiState.code}"
                 app:textAppearance="@style/Subheadline" />
 
@@ -230,7 +246,7 @@
                 android:id="@+id/button_confirm_verify"
                 android:layout_width="71dp"
                 android:layout_height="42dp"
-                android:onClick="@{()->vm.onClick()}"
+                android:onClick="@{()->vm.onClickConfirm()}"
                 app:backgroundColor="@color/neutral000"
                 app:borderColor="@color/success500"
                 app:borderWidth="1dp"
@@ -282,9 +298,11 @@
                 android:id="@+id/text_school"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="학교를 선택하세요"
+                android:hint="@string/sign_up_select_school_placeholder"
+                android:text="@{vm.uiState.school}"
                 android:textAppearance="@style/Subheadline"
                 android:textColor="@color/neutral300"
+                android:textColorHint="@color/neutral300"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -311,7 +329,7 @@
             android:layout_marginHorizontal="24dp"
             android:layout_marginBottom="24dp"
             android:enabled="@{!vm.uiState.name.empty}"
-            android:onClick="@{()->vm.onClick()}"
+            android:onClick="@{()->vm.onClickConfirm()}"
             app:backgroundColor="@{vm.uiState.enableNextButton == true ? @color/primary500 : @color/neutral300}"
             app:cornerRadius="8dp"
             app:pressedColor="@color/primary700"

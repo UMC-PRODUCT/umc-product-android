@@ -31,10 +31,6 @@
         <attr name="prevIconSize" format="dimension" />
         <attr name="prevIconPadding" format="dimension" />
 
-        <attr name="backgroundColor"/>
-
-        <attr name="borderColor"/>
-        <attr name="borderWidth"/>
         <attr name="cornerRadius"/>
     </declare-styleable>
 

@@ -94,23 +94,8 @@ class UTextField @JvmOverloads constructor(
                     }
                 }
 
-                // 배경색
-                setCardBackgroundColor(
-                    a.getColor(
-                        R.styleable.UTextField_backgroundColor,
-                        ContextCompat.getColor(context, R.color.neutral000),
-                    ),
-                )
-
                 // 코너
                 radius = a.getDimension(R.styleable.UTextField_cornerRadius, 8.px.toFloat())
-
-                // Border
-                strokeWidth = a.getDimensionPixelSize(R.styleable.UTextField_borderWidth, 1.px)
-                strokeColor = a.getColor(
-                    R.styleable.UTextField_borderColor,
-                    ContextCompat.getColor(context, R.color.neutral300),
-                )
 
                 elevation = 0f
             }
@@ -133,5 +118,9 @@ class UTextField @JvmOverloads constructor(
 
     fun setOnTextChangedListener(listener: ((String) -> Unit)?) {
         onTextChangedListener = listener
+    }
+
+    override fun setBackgroundColor(color: Int) {
+        setCardBackgroundColor(color)
     }
 }
