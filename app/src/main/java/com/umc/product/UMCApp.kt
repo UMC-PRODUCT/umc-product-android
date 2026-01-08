@@ -1,11 +1,13 @@
-package com.umc.umc
+package com.umc.product
 
 import android.app.Application
+import com.kakao.sdk.common.KakaoSdk
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class UMCApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        KakaoSdk.init(this, BuildConfig.KAKAO_APP_KEY)
     }
 }

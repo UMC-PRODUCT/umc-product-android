@@ -23,6 +23,8 @@
         <attr name="text"/>
         <attr name="textColor"/>
         <attr name="textAppearance"/>
+        <attr name="placeholderText"/>
+        <attr name="placeholderTextColor"/>
 
         <attr name="prevIcon" format="reference"/>
         <attr name="prevIconTint" format="color|reference" />

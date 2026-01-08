@@ -1,4 +1,4 @@
-package com.umc.umc.di
+package com.umc.product.di
 
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -6,10 +6,10 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
-object UseCaseModule {
+object ApiModule {
     //    @Singleton
 //    @Provides
-//    fun provides머시기머시기(repository: Repository): UseCase명 {
-//        return UseCase명(repository)
+//    fun provide머시기머시기(retrofit: Retrofit): API Interface {
+//        return retrofit.create(API Interface::class.java)
 //    }
 }
