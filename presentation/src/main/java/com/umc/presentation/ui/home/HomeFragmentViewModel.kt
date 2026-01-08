@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.home
 
 import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.umc.domain.model.home.SchedulePlan
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -11,20 +12,40 @@ class HomeFragmentViewModel
     constructor() : BaseViewModel<HomeFragmentUiState, HomeFragmentEvent>(
             HomeFragmentUiState()){
 
-    // 날짜 정보를 업데이트 함수
-    fun setSelectedDate(date: CalendarDay) {
-        // updateState를 통해 UiState의 selectedDate 변경
-        updateState {
-            copy(selectedDate = date)
-        }
-    }
 
-    // 뷰모드(달력/리스트) 전환 함수
-    fun onChangeViewMode(mode: ViewMode) {
-        updateState {
-            copy(viewMode = mode)
+        //테스트용 데이터
+        private val dummySchedules = listOf(
+            SchedulePlan( "중앙 해커톤", "10:00", "2026-01-27", "TUE", "27", "D-19", false),
+            SchedulePlan( "아이디어톤", "14:00", "2026-01-08", "WED", "08", "", true),
+            SchedulePlan( "기획 파트 회의", "19:00", "2026-01-27", "TUE", "27", "D-19", false),
+            SchedulePlan( "데모 데이", "13:00", "2026-02-15", "SUN", "15", "D-38", false)
+        )
+        init{
+            updateState {
+                copy(
+                    allPlans = dummySchedules,
+                    // 초기 실행 시 오늘 날짜(27일 가정)로 필터링된 리스트를 보여줌
+                    dailyPlans = dummySchedules.filter { it.date == "2026-01-27" }
+                )
+            }
         }
-    }
+
+
+        // 날짜 정보를 업데이트 함수
+        fun setSelectedDate(date: CalendarDay) {
+            // updateState를 통해 UiState의 selectedDate 변경
+            updateState {
+                copy(selectedDate = date)
+            }
+        }
+
+        // 뷰모드(달력/리스트) 전환 함수
+        fun onChangeViewMode(mode: ViewMode) {
+            updateState {
+                copy(viewMode = mode)
+            }
+        }
+
     }
 
 data class HomeFragmentUiState(
@@ -38,6 +59,13 @@ data class HomeFragmentUiState(
     val userType: UserType = UserType.ACTIVE,
     //val profileInfo: ProfileInfo? = null,
     val warningStatus: WarningStatus = WarningStatus.NORMAL,
+
+    //알람 존재 관련
+    val alarmExist: Boolean = false,
+
+    //임시 데이터
+    val dailyPlans: List<SchedulePlan> = emptyList(),
+    val allPlans: List<SchedulePlan> = emptyList()
 
 /*
 
@@ -53,4 +81,4 @@ sealed class HomeFragmentEvent : UiEvent {
 
 enum class ViewMode { CALENDAR, LIST }
 enum class UserType {ACTIVE, OB}
-enum class WarningStatus {NORMAL, WARNING, CRITICAL}
+enum class WarningStatus {NORMAL, WARNING, DANGER}

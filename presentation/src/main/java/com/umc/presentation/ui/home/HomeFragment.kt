@@ -23,21 +23,44 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
     private lateinit var todayDec : TodayDecorator
     private lateinit var selectedDec : SelectedDecorator
 
+    //리사이클러뷰 어댑터
+    private val dailyAdapter by lazy { ScheduleAdapter { plan ->  } }
+    private val allAdapter by lazy { ScheduleAdapter { plan -> } }
+
     override fun initView() {
         binding.apply {
             vm = viewModel
+            lifecycleOwner = viewLifecycleOwner
         }
         todayDec = TodayDecorator(requireContext())
         selectedDec = SelectedDecorator(requireContext())
         initCalendar()
+
+        binding.homeRcvDailyPlan.adapter = dailyAdapter
+        binding.homeRcvAllPlanList.adapter = allAdapter
     }
 
     override fun initStates() {
         super.initStates()
+
+        //임시로 뷰모델에서 가져와서 연결시키기
+        repeatOnStarted(viewLifecycleOwner) {
+            viewModel.uiState.collect { state ->
+                // 변수명 수정: 모드에 따라 각 어댑터에 데이터 주입
+                if (state.viewMode == ViewMode.CALENDAR) {
+                    dailyAdapter.submitList(state.dailyPlans)
+                } else {
+                    allAdapter.submitList(state.allPlans)
+                }
+            }
+        }
     }
 
+
+
+
     //MaterialCalendar 초기화
-    fun initCalendar(){
+    private fun initCalendar(){
         binding.homeCalendarView.apply {
             //달력 제목 커스텀
             setTitleFormatter { day ->
