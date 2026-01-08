@@ -1,4 +1,4 @@
-package com.umc.presentation
+package com.umc.presentation.ui.home
 
 import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.umc.presentation.base.BaseViewModel
@@ -19,32 +19,38 @@ class HomeFragmentViewModel
         }
     }
 
+    // 뷰모드(달력/리스트) 전환 함수
+    fun onChangeViewMode(mode: ViewMode) {
+        updateState {
+            copy(viewMode = mode)
+        }
+    }
     }
 
 data class HomeFragmentUiState(
-    val dummy: String = "",
     // 달력 관련
     val selectedDate: CalendarDay = CalendarDay.today(), // 선택한 날짜
     val eventDates: Set<CalendarDay> = emptySet(), // 일정 있는 날짜들
 
-    /*
-    // 1. 유저 정보 영역
+    // 달력 <-> 일정 전환
+    val viewMode: ViewMode = ViewMode.CALENDAR,
+    // 유저 정보 영역
     val userType: UserType = UserType.ACTIVE,
-    val profileInfo: ProfileInfo? = null,
+    //val profileInfo: ProfileInfo? = null,
     val warningStatus: WarningStatus = WarningStatus.NORMAL,
 
-    // 2. 일정 보기 모드
-    val viewMode: HomeViewMode = HomeViewMode.CALENDAR,
-    val selectedDate: LocalDate = LocalDate.now(),
+/*
+
 
     // 3. 필터링된 일정 데이터
     val schedules: List<Schedule> = emptyList(),
-
-    // 4. 로딩 및 에러 상태
-    val isLoading: Boolean = false
     */
 ) : UiState
 
 sealed class HomeFragmentEvent : UiEvent {
     object DummyEvent : HomeFragmentEvent()
 }
+
+enum class ViewMode { CALENDAR, LIST }
+enum class UserType {ACTIVE, OB}
+enum class WarningStatus {NORMAL, WARNING, CRITICAL}

@@ -1,15 +1,17 @@
-package com.umc.presentation
+package com.umc.presentation.ui.home
 
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
+import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.calendar.SelectedDecorator
 import com.umc.presentation.component.calendar.TodayDecorator
 import com.umc.presentation.databinding.FragmentHomeBinding
 import dagger.hilt.android.AndroidEntryPoint
+import org.threeten.bp.DayOfWeek
 
 @AndroidEntryPoint
 class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, HomeFragmentEvent, HomeFragmentViewModel>(
@@ -49,10 +51,15 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
                 val labels = listOf("일", "월", "화", "수", "목", "금", "토")
                 val text = labels[dayOfWeek.value % 7] // 일요일이 7(또는 0)이므로 이에 맞춰 인덱싱
 
-                if (dayOfWeek == org.threeten.bp.DayOfWeek.SUNDAY) {
+                if (dayOfWeek == DayOfWeek.SUNDAY) {
                     SpannableString(text).apply {
                         setSpan(
-                            ForegroundColorSpan(ContextCompat.getColor(requireContext(), R.color.danger500)),
+                            ForegroundColorSpan(
+                                ContextCompat.getColor(
+                                    requireContext(),
+                                    R.color.danger500
+                                )
+                            ),
                             0, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                         )
                     }

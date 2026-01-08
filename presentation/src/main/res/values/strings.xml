@@ -6,5 +6,6 @@
 
     <!-- Home -->
     <string name="home_now_card_main_title">내 활동 상태</string>
+    <string name="home_plan_title">다가오는 일정</string>
 
 </resources>
