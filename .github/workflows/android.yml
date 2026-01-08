@@ -31,10 +31,17 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Prepare dummy local.properties
+      - name: Create local.properties for CI (avoid NPE)
+        env:
+          MY_LOCAL_KEY: ${{ "1" }}
+          ANOTHER_KEY: ${{ "1" }}
         run: |
-          echo "kakao.native.key=dummyValue" > local.properties
-          echo "kakao.app.key=dummyValue" > local.properties
+         SDK_DIR="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
+          {
+            echo "sdk.dir=$SDK_DIR"
+            echo "kakao.native.key=${MY_LOCAL_KEY:-}"
+            echo "kakao.app.key=${ANOTHER_KEY:-}"
+          } > local.properties
 
       - name: Ktlint check
         run: ./gradlew ktlintCheck --stacktrace
