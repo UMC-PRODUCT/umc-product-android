@@ -10,10 +10,11 @@
             type="com.umc.presentation.ui.signUp.SignUpViewModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/neutral000">
+        android:background="@color/neutral000"
+        android:orientation="vertical">
 
         <ImageView
             android:id="@+id/image_back"
@@ -50,27 +51,34 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/text_title" />
 
-        <TextView
-            android:id="@+id/text_name"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="48dp"
-            android:text="@string/name"
-            android:textAppearance="@style/HeadlineBold"
-            android:textColor="@color/neutral800"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/text_sub_title" />
+            android:orientation="horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:text="*"
-            android:textAppearance="@style/HeadlineBold"
-            android:textColor="@color/danger500"
-            app:layout_constraintStart_toEndOf="@id/text_name"
-            app:layout_constraintTop_toTopOf="@id/text_name" />
+            <TextView
+                android:id="@+id/text_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/name"
+                android:textAppearance="@style/HeadlineBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_sub_title" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="*"
+                android:textAppearance="@style/HeadlineBold"
+                android:textColor="@color/danger500"
+                app:layout_constraintStart_toEndOf="@id/text_name"
+                app:layout_constraintTop_toTopOf="@id/text_name" />
+
+        </LinearLayout>
 
         <com.umc.presentation.component.UTextField
             android:id="@+id/text_field_name"
@@ -83,27 +91,35 @@
             app:text="@={vm.uiState.name}"
             app:textAppearance="@style/Subheadline" />
 
-        <TextView
-            android:id="@+id/text_nickname"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="16dp"
-            android:text="@string/nickname"
-            android:textAppearance="@style/HeadlineBold"
-            android:textColor="@color/neutral800"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/text_field_name" />
+            android:orientation="horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:text="*"
-            android:textAppearance="@style/HeadlineBold"
-            android:textColor="@color/danger500"
-            app:layout_constraintStart_toEndOf="@id/text_nickname"
-            app:layout_constraintTop_toTopOf="@id/text_nickname" />
+            <TextView
+                android:id="@+id/text_nickname"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/nickname"
+                android:textAppearance="@style/HeadlineBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_field_name" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="*"
+                android:textAppearance="@style/HeadlineBold"
+                android:textColor="@color/danger500"
+                app:layout_constraintStart_toEndOf="@id/text_nickname"
+                app:layout_constraintTop_toTopOf="@id/text_nickname" />
+
+        </LinearLayout>
+
 
         <com.umc.presentation.component.UTextField
             android:id="@+id/text_field_nickname"
@@ -116,56 +132,185 @@
             app:text="@={vm.uiState.nickname}"
             app:textAppearance="@style/Subheadline" />
 
-        <TextView
-            android:id="@+id/text_email"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="16dp"
-            android:text="@string/email"
-            android:textAppearance="@style/HeadlineBold"
-            android:textColor="@color/neutral800"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/text_field_nickname" />
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/text_email"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/email"
+                android:textAppearance="@style/HeadlineBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_field_nickname" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="*"
+                android:textAppearance="@style/HeadlineBold"
+                android:textColor="@color/danger500"
+                app:layout_constraintStart_toEndOf="@id/text_email"
+                app:layout_constraintTop_toTopOf="@id/text_email" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="24dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.umc.presentation.component.UTextField
+                android:id="@+id/text_field_email"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="30dp"
+                android:layout_weight="1"
+                app:placeholderText="@string/sign_up_email_placeholder"
+                app:text="@={vm.uiState.email}"
+                app:textAppearance="@style/Subheadline" />
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/button_verify"
+                android:layout_width="71dp"
+                android:layout_height="42dp"
+                app:backgroundColor="@color/neutral300"
+                app:pressedColor="@color/primary700"
+                app:text="@string/sign_up_verify_request"
+                app:textColor="@color/neutral000" />
+
+        </LinearLayout>
+
 
         <TextView
+            android:id="@+id/text_error"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:text="*"
-            android:textAppearance="@style/HeadlineBold"
+            android:layout_marginTop="4dp"
+            android:textAppearance="@style/Footnote"
             android:textColor="@color/danger500"
-            app:layout_constraintStart_toEndOf="@id/text_email"
-            app:layout_constraintTop_toTopOf="@id/text_email" />
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="@id/text_field_email"
+            app:layout_constraintTop_toBottomOf="@id/text_field_email" />
 
-        <com.umc.presentation.component.UTextField
-            android:id="@+id/text_field_email"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="16dp"
-            android:layout_marginEnd="30dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/button_verify"
-            app:layout_constraintTop_toBottomOf="@id/text_email"
-            app:placeholderText="@string/sign_up_email_placeholder"
-            app:text="@={vm.uiState.email}"
-            app:textAppearance="@style/Subheadline" />
+            android:layout_marginEnd="24dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.umc.presentation.component.UTextField
+                android:id="@+id/text_field_verify_code"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="30dp"
+                android:layout_weight="1"
+                app:placeholderText="@string/sign_up_verify_code_placeholder"
+                app:text="@={vm.uiState.email}"
+                app:textAppearance="@style/Subheadline" />
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/button_confirm_verify"
+                android:layout_width="71dp"
+                android:layout_height="42dp"
+                app:backgroundColor="@color/neutral000"
+                app:borderColor="@color/success500"
+                app:borderWidth="1dp"
+                app:pressedColor="@color/success100"
+                app:text="@string/sign_up_verify_confirm"
+                app:textColor="@color/success500" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/text_univ"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/school"
+                android:textAppearance="@style/HeadlineBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_field_nickname" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="*"
+                android:textAppearance="@style/HeadlineBold"
+                android:textColor="@color/danger500"
+                app:layout_constraintStart_toEndOf="@id/text_email"
+                app:layout_constraintTop_toTopOf="@id/text_email" />
+        </LinearLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_school"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_rectangle_neutral100_stroke_neutral300_radius8"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="14dp">
+
+            <TextView
+                android:id="@+id/text_school"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="학교를 선택하세요"
+                android:textAppearance="@style/Subheadline"
+                android:textColor="@color/neutral300"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_dropdown"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
 
         <com.umc.presentation.component.UButton
-            android:id="@+id/button_verify"
-            android:layout_width="71dp"
-            android:layout_height="0dp"
-            android:layout_marginEnd="24dp"
-            android:layout_marginVertical="3dp"
-            app:text="@string/sign_up_verify_request"
-            app:textColor="@color/neutral000"
+            android:id="@+id/button_next"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginBottom="24dp"
             app:backgroundColor="@color/neutral300"
-            app:layout_constraintBottom_toBottomOf="@id/text_field_email"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/text_field_email" />
+            app:pressedColor="@color/primary700"
+            app:textAppearance="@style/HeadlineBold"
+            app:text="@string/next"
+            app:textColor="@color/neutral000" />
 
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
 </layout>

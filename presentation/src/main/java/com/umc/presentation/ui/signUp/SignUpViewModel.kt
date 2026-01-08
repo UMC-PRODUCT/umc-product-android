@@ -30,6 +30,7 @@ data class SignUpState(
     var name: String = "",
     var nickname: String = "",
     var email: String = "",
+    var code: String = "",
 ) : UiState
 
 sealed class SignUpEvent : UiEvent {
