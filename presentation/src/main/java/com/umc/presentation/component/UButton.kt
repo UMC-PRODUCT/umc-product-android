@@ -6,12 +6,10 @@ import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.core.content.ContextCompat
-import androidx.databinding.BindingAdapter
 import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
 import com.umc.presentation.databinding.CustomButtonBinding
 import com.umc.presentation.extension.px
-import com.umc.presentation.util.ULog
 
 class UButton
 @JvmOverloads
@@ -63,7 +61,6 @@ constructor(
 
     override fun setEnabled(enabled: Boolean) {
         super.setEnabled(enabled)
-        ULog.d(enabled.toString())
     }
 
     override fun setBackgroundColor(color: Int) {

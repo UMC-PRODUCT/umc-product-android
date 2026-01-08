@@ -187,6 +187,7 @@
                 android:layout_weight="1"
                 app:backgroundColor="@{vm.uiState.verifyType == EmailVerifyType.ERROR ? @color/danger100 : @color/neutral000}"
                 app:cornerRadius="8dp"
+                app:focusStrokeColor="@color/primary500"
                 app:onTextChanged="@{vm::onEmailChanged}"
                 app:placeholderText="@string/sign_up_email_placeholder"
                 app:strokeColor="@{vm.uiState.verifyType == EmailVerifyType.ERROR ? @color/danger500 : @color/neutral300}"

@@ -32,6 +32,8 @@
         <attr name="prevIconPadding" format="dimension" />
 
         <attr name="cornerRadius"/>
+
+        <attr name="focusStrokeColor" format="color"/>
     </declare-styleable>
 
     <!-- 공통 Button -->

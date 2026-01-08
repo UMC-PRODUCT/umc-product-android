@@ -1,6 +1,7 @@
 package com.umc.presentation.component
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -41,6 +42,10 @@ class UTextField @JvmOverloads constructor(
     private val binding = CustomTextFieldBinding.inflate(LayoutInflater.from(context), this)
     private var suppressCallback = false
     private var onTextChangedListener: ((String) -> Unit)? = null
+
+    private var focusStrokeColor: Int = ContextCompat.getColor(context, R.color.primary500)
+    private var defaultStrokeColor: Int = ContextCompat.getColor(context, R.color.neutral300)
+    private var isFocus: Boolean = false
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.UTextField, defStyle, 0)
@@ -94,9 +99,18 @@ class UTextField @JvmOverloads constructor(
                     }
                 }
 
+                editText.setOnFocusChangeListener { _, hasFocus ->
+                    isFocus = hasFocus
+                    updateStrokeColor()
+                }
+
                 // 코너
                 radius = a.getDimension(R.styleable.UTextField_cornerRadius, 8.px.toFloat())
 
+                focusStrokeColor = a.getColor(
+                    R.styleable.UTextField_focusStrokeColor,
+                    ContextCompat.getColor(context, R.color.primary500)
+                )
                 elevation = 0f
             }
         } finally {
@@ -122,5 +136,17 @@ class UTextField @JvmOverloads constructor(
 
     override fun setBackgroundColor(color: Int) {
         setCardBackgroundColor(color)
+    }
+
+    private fun updateStrokeColor() {
+        strokeColor = if (isFocus) {
+            focusStrokeColor
+        } else {
+            defaultStrokeColor
+        }
+    }
+
+    override fun setStrokeColor(strokeColor: ColorStateList?) {
+        super.setStrokeColor(if(isFocus) ColorStateList.valueOf(focusStrokeColor) else strokeColor)
     }
 }
