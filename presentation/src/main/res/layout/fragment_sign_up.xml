@@ -87,8 +87,9 @@
             android:layout_marginHorizontal="24dp"
             android:layout_marginTop="16dp"
             app:layout_constraintTop_toBottomOf="@id/text_name"
+            app:onTextChanged="@{vm::onNameChanged}"
             app:placeholderText="@string/sign_up_name_placeholder"
-            app:text="@={vm.uiState.name}"
+            app:text="@{vm.uiState.name}"
             app:textAppearance="@style/Subheadline" />
 
         <LinearLayout
@@ -128,8 +129,9 @@
             android:layout_marginHorizontal="24dp"
             android:layout_marginTop="16dp"
             app:layout_constraintTop_toBottomOf="@id/text_nickname"
+            app:onTextChanged="@{vm::onNicknameChanged}"
             app:placeholderText="@string/sign_up_nickname_placeholder"
-            app:text="@={vm.uiState.nickname}"
+            app:text="@{vm.uiState.nickname}"
             app:textAppearance="@style/Subheadline" />
 
         <LinearLayout
@@ -175,14 +177,16 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="30dp"
                 android:layout_weight="1"
+                app:onTextChanged="@{vm::onEmailChanged}"
                 app:placeholderText="@string/sign_up_email_placeholder"
-                app:text="@={vm.uiState.email}"
+                app:text="@{vm.uiState.email}"
                 app:textAppearance="@style/Subheadline" />
 
             <com.umc.presentation.component.UButton
                 android:id="@+id/button_verify"
                 android:layout_width="71dp"
                 android:layout_height="42dp"
+                android:enabled="false"
                 app:backgroundColor="@color/neutral300"
                 app:pressedColor="@color/primary700"
                 app:text="@string/sign_up_verify_request"
@@ -217,14 +221,16 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="30dp"
                 android:layout_weight="1"
+                app:onTextChanged="@{vm::onCodeChanged}"
                 app:placeholderText="@string/sign_up_verify_code_placeholder"
-                app:text="@={vm.uiState.email}"
+                app:text="@{vm.uiState.code}"
                 app:textAppearance="@style/Subheadline" />
 
             <com.umc.presentation.component.UButton
                 android:id="@+id/button_confirm_verify"
                 android:layout_width="71dp"
                 android:layout_height="42dp"
+                android:onClick="@{()->vm.onClick()}"
                 app:backgroundColor="@color/neutral000"
                 app:borderColor="@color/success500"
                 app:borderWidth="1dp"
@@ -304,10 +310,13 @@
             android:layout_height="52dp"
             android:layout_marginHorizontal="24dp"
             android:layout_marginBottom="24dp"
-            app:backgroundColor="@color/neutral300"
+            android:enabled="@{!vm.uiState.name.empty}"
+            android:onClick="@{()->vm.onClick()}"
+            app:backgroundColor="@{vm.uiState.enableNextButton == true ? @color/primary500 : @color/neutral300}"
+            app:cornerRadius="8dp"
             app:pressedColor="@color/primary700"
-            app:textAppearance="@style/HeadlineBold"
             app:text="@string/next"
+            app:textAppearance="@style/HeadlineBold"
             app:textColor="@color/neutral000" />
 
 

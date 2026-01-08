@@ -28,7 +28,6 @@ class SignUpFragment : BaseFragment<FragmentSignUpBinding, SignUpState, SignUpEv
 
             launch {
                 viewModel.uiState.collect {
-                    // TODO 상태 관리
                 }
             }
         }

@@ -6,66 +6,87 @@ import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.core.content.ContextCompat
+import androidx.databinding.BindingAdapter
 import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
 import com.umc.presentation.databinding.CustomButtonBinding
 import com.umc.presentation.extension.px
+import com.umc.presentation.util.ULog
 
 class UButton
-    @JvmOverloads
-    constructor(
-        mContext: Context,
-        attrs: AttributeSet? = null,
-        defStyle: Int = 0,
-    ) : MaterialCardView(mContext, attrs, defStyle) {
-        private val binding = CustomButtonBinding.inflate(LayoutInflater.from(context), this)
+@JvmOverloads
+constructor(
+    mContext: Context,
+    attrs: AttributeSet? = null,
+    defStyle: Int = 0,
+) : MaterialCardView(mContext, attrs, defStyle) {
 
-        init {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.UButton, defStyle, 0)
+    private val binding = CustomButtonBinding.inflate(LayoutInflater.from(context), this)
+    private var normalColor: Int = ContextCompat.getColor(context, R.color.black)
+    private var pressedColor: Int = normalColor
 
-            try {
-                isClickable = true
-                isFocusable = true
-                binding.apply {
+    init {
+        val a = context.obtainStyledAttributes(attrs, R.styleable.UButton, defStyle, 0)
 
-                    elevation = a.getInt(R.styleable.UButton_buttonElevation, 0).toFloat()
+        try {
+            binding.apply {
 
-                    // 텍스트
-                    textView.text = a.getString(R.styleable.UButton_text) ?: textView.text
-                    textView.setTextColor(
-                        a.getColor(R.styleable.UButton_textColor, ContextCompat.getColor(context, R.color.white)),
-                    )
-                    textView.setTextAppearance(
-                        a.getResourceId(R.styleable.UButton_textAppearance, R.style.SubheadlineBold),
-                    )
+                elevation = a.getInt(R.styleable.UButton_buttonElevation, 0).toFloat()
 
-                    // 코너
-                    radius = a.getDimension(R.styleable.UButton_cornerRadius, 8.px.toFloat())
+                // 텍스트
+                textView.text = a.getString(R.styleable.UButton_text) ?: textView.text
+                textView.setTextColor(
+                    a.getColor(
+                        R.styleable.UButton_textColor,
+                        ContextCompat.getColor(context, R.color.white)
+                    ),
+                )
+                textView.setTextAppearance(
+                    a.getResourceId(R.styleable.UButton_textAppearance, R.style.SubheadlineBold),
+                )
 
-                    // Border
-                    strokeWidth = a.getDimensionPixelSize(R.styleable.UButton_borderWidth, 0.px)
-                    strokeColor = a.getColor(R.styleable.UButton_borderColor, Color.TRANSPARENT)
+                // 코너
+                radius = a.getDimension(R.styleable.UButton_cornerRadius, 8.px.toFloat())
 
-                    // 배경색
-                    val backgroundColor = a.getColor(R.styleable.UButton_backgroundColor, ContextCompat.getColor(context, R.color.black))
-                    val pressedColor = a.getColor(R.styleable.UButton_pressedColor, backgroundColor)
-                    rippleColor = ColorStateList.valueOf(Color.TRANSPARENT)
+                // Border
+                strokeWidth = a.getDimensionPixelSize(R.styleable.UButton_borderWidth, 0.px)
+                strokeColor = a.getColor(R.styleable.UButton_borderColor, Color.TRANSPARENT)
 
-                    val bg =
-                        ColorStateList(
-                            arrayOf(
-                                intArrayOf(android.R.attr.state_pressed),
-                                intArrayOf(),
-                            ),
-                            intArrayOf(
-                                pressedColor,
-                                a.getColor(R.styleable.UButton_backgroundColor, ContextCompat.getColor(context, R.color.black)),
-                            ),
-                        )
-                    setCardBackgroundColor(bg)
-                }
-            } finally {
-                a.recycle()
+                // 배경색
+                pressedColor = a.getColor(R.styleable.UButton_pressedColor, normalColor)
+                rippleColor = ColorStateList.valueOf(Color.TRANSPARENT)
             }
+        } finally {
+            a.recycle()
         }
     }
+
+    override fun setEnabled(enabled: Boolean) {
+        super.setEnabled(enabled)
+        ULog.d(enabled.toString())
+    }
+
+    override fun setBackgroundColor(color: Int) {
+        normalColor = color
+        updateBackgroundColors()
+    }
+
+    private fun updateBackgroundColors() {
+        if (!isEnabled) {
+            setCardBackgroundColor(normalColor)
+        } else {
+            val bg = ColorStateList(
+                arrayOf(
+                    intArrayOf(android.R.attr.state_pressed),
+                    intArrayOf(),
+                ),
+                intArrayOf(
+                    pressedColor,
+                    normalColor,
+                ),
+            )
+            setCardBackgroundColor(bg)
+        }
+    }
+
+}

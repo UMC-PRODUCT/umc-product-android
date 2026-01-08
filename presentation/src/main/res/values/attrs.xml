@@ -44,8 +44,6 @@
         <attr name="textColor"/>
         <attr name="textAppearance"/>
 
-        <attr name="backgroundColor"/>
-
         <attr name="borderColor"/>
         <attr name="borderWidth"/>
         <attr name="cornerRadius"/>
