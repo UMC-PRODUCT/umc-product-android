@@ -23,7 +23,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
             vm = viewModel
             initNavigation()
         }
-        
+
 
     }
 
@@ -59,6 +59,10 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
         when (id) {
             R.id.homeFragment -> {
                 binding.mainBnv.visibility = View.VISIBLE
+            }
+            R.id.mypageFragment -> {
+                binding.mainBnv.visibility = View.VISIBLE
+
             }
             else -> binding.mainBnv.visibility = View.GONE
         }
