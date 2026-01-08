@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,11 +8,17 @@ plugins {
 }
 
 android {
-    namespace = "com.umc.umc"
+    namespace = "com.umc.product"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.umc.umc"
+        buildConfigField(
+            "String",
+            "KAKAO_APP_KEY",
+            getApiKey("kakao.native.key"),
+        )
+        manifestPlaceholders["KAKAO_APP_KEY"] = getApiKey("kakao.app.key")
+        applicationId = "com.umc.product"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -40,6 +48,7 @@ android {
     }
     buildFeatures {
         dataBinding = true
+        buildConfig = true
     }
 }
 
@@ -68,5 +77,12 @@ dependencies {
     // OKHTTP
     implementation(libs.okhttp.android)
     implementation(libs.okhttp.log)
+
+    // KAKAO
+    implementation(libs.kakao.user)
+}
+
+fun getApiKey(propertyKey: String): String {
+    return gradleLocalProperties(rootDir, providers).getProperty(propertyKey) ?: ""
 }
 

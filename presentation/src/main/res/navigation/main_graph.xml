@@ -4,8 +4,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_graph"
-    app:startDestination="@id/nav_home"
+    app:startDestination="@id/nav_sign"
     >
+
+    <include
+        android:id="@+id/nav_sign"
+        app:graph="@navigation/nav_sign"/>
 
     <include
         android:id="@+id/nav_home"

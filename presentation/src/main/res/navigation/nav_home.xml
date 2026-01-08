@@ -11,8 +11,6 @@
         android:name="com.umc.presentation.ui.home.HomeFragment"
         android:label="홈 화면"
         tools:layout="@layout/fragment_home">
-
-
     </fragment>
 
 </navigation>
