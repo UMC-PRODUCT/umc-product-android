@@ -6,20 +6,19 @@ import com.umc.presentation.base.UiState
 import javax.inject.Inject
 
 class LoginViewModel
-@Inject
-constructor() : BaseViewModel<LoginUiState, LoginEvent>(
-    LoginUiState(),
-) {
+    @Inject
+    constructor() : BaseViewModel<LoginUiState, LoginEvent>(
+            LoginUiState(),
+        ) {
+        fun onClickKakaoLogin() {
+            emitEvent(LoginEvent.KakaoLoginEvent)
+        }
 
-    fun onClickKakaoLogin() {
-        emitEvent(LoginEvent.KakaoLoginEvent)
+        fun kakaoLogin() {
+            // TODO 서버 연결 해야함
+            emitEvent(LoginEvent.MoveToSignUpEvent)
+        }
     }
-
-    fun kakaoLogin() {
-        // TODO 서버 연결 해야함
-        emitEvent(LoginEvent.MoveToSignUpEvent)
-    }
-}
 
 data class LoginUiState(
     val dummy: String = "",
@@ -27,6 +26,8 @@ data class LoginUiState(
 
 sealed class LoginEvent : UiEvent {
     object KakaoLoginEvent : LoginEvent()
+
     object MoveToMainEvent : LoginEvent()
+
     object MoveToSignUpEvent : LoginEvent()
 }

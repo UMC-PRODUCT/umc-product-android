@@ -23,7 +23,7 @@ android {
         buildConfigField(
             "String",
             "KAKAO_APP_KEY",
-            getApiKey("kakao.native.key")
+            getApiKey("kakao.native.key"),
         )
         manifestPlaceholders["KAKAO_APP_KEY"] = getApiKey("kakao.app.key")
         applicationId = "com.umc.product"

@@ -10,21 +10,21 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
 class SplashViewModel
-@Inject
-constructor() : BaseViewModel<SplashUiState, SplashEvent>(
-    SplashUiState(),
-) {
-    init {
-        initFun()
-    }
+    @Inject
+    constructor() : BaseViewModel<SplashUiState, SplashEvent>(
+            SplashUiState(),
+        ) {
+        init {
+            initFun()
+        }
 
-    private fun initFun() {
-        viewModelScope.launch {
-            delay(3.seconds)
-            emitEvent(SplashEvent.MoveToLoginEvent)
+        private fun initFun() {
+            viewModelScope.launch {
+                delay(3.seconds)
+                emitEvent(SplashEvent.MoveToLoginEvent)
+            }
         }
     }
-}
 
 data class SplashUiState(
     val dummy: String = "",
@@ -32,5 +32,6 @@ data class SplashUiState(
 
 sealed class SplashEvent : UiEvent {
     object MoveToMainEvent : SplashEvent()
+
     object MoveToLoginEvent : SplashEvent()
 }

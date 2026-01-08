@@ -10,21 +10,21 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
 class SignUpViewModel
-@Inject
-constructor() : BaseViewModel<SignUpState, SignUpEvent>(
-    SignUpState(),
-) {
-    init {
-        initFun()
-    }
+    @Inject
+    constructor() : BaseViewModel<SignUpState, SignUpEvent>(
+            SignUpState(),
+        ) {
+        init {
+            initFun()
+        }
 
-    private fun initFun() {
-        viewModelScope.launch {
-            delay(3.seconds)
-            emitEvent(SignUpEvent.MoveToLoginEvent)
+        private fun initFun() {
+            viewModelScope.launch {
+                delay(3.seconds)
+                emitEvent(SignUpEvent.MoveToLoginEvent)
+            }
         }
     }
-}
 
 data class SignUpState(
     var name: String = "",
@@ -34,5 +34,6 @@ data class SignUpState(
 
 sealed class SignUpEvent : UiEvent {
     object MoveToMainEvent : SignUpEvent()
+
     object MoveToLoginEvent : SignUpEvent()
 }

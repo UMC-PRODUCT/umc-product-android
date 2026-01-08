@@ -49,7 +49,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEven
     }
 
     private fun handleLoginEvent(event: LoginEvent) {
-        when(event) {
+        when (event) {
             LoginEvent.KakaoLoginEvent -> signInKakao()
             LoginEvent.MoveToSignUpEvent -> moveToSignUp()
             LoginEvent.MoveToMainEvent -> moveToHome()

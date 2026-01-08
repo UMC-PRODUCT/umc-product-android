@@ -36,7 +36,7 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, SplashUiState, Splash
     }
 
     private fun handleSplashEvent(event: SplashEvent) {
-        when(event) {
+        when (event) {
             SplashEvent.MoveToLoginEvent -> moveToLogin()
             SplashEvent.MoveToMainEvent -> moveToHome()
         }

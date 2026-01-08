@@ -3,9 +3,7 @@ package com.umc.presentation
 import android.view.View
 import androidx.activity.viewModels
 import androidx.navigation.NavController
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.setupWithNavController
 import com.umc.presentation.base.BaseActivity
 import com.umc.presentation.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -52,7 +50,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
     }
 
     private fun changeBottomNavigationView(id: Int) {
-        //TODO 다른 화면들도 정의해야 함.
+        // TODO 다른 화면들도 정의해야 함.
         when (id) {
             R.id.homeFragment -> {
                 binding.mainBnv.visibility = View.VISIBLE
