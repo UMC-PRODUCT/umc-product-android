@@ -13,12 +13,6 @@ android {
     namespace = "com.umc.product"
     compileSdk = 36
 
-    val localPropsFile = rootProject.file("local.properties")
-    val localProps = Properties()
-    if (localPropsFile.exists()) {
-        localProps.load(FileInputStream(localPropsFile))
-    }
-
     defaultConfig {
         buildConfigField(
             "String",

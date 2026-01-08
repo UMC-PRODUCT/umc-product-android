@@ -31,6 +31,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
+      - name: Prepare dummy local.properties
+        run: |
+          echo "kakao.native.key=dummyValue" > local.properties
+          echo "kakao.app.key=dummyValue" > local.properties
+
       - name: Ktlint check
         run: ./gradlew ktlintCheck --stacktrace
 
