@@ -12,7 +12,57 @@
         android:label="홈 화면"
         tools:layout="@layout/fragment_home">
 
+        <action
+            android:id="@+id/action_home_to_notice"
+            app:destination="@id/noticeFragment"/>
+
+        <action
+            android:id="@+id/action_home_to_notification"
+            app:destination="@id/notificationFragment"/>
+
+        <action
+            android:id="@+id/action_home_to_planAdd"
+            app:destination="@id/planCreateFragment"/>
+
+        <action
+            android:id="@+id/action_home_to_planDetail"
+            app:destination="@id/planDetailFragment"/>
 
     </fragment>
 
+    <fragment
+        android:id="@+id/noticeFragment"
+        android:name="com.umc.presentation.ui.home.NoticeFragment"
+        android:label="공지 화면"
+        tools:layout="@layout/fragment_notice">
+
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/notificationFragment"
+        android:name="com.umc.presentation.ui.home.NotificationFragment"
+        android:label="알림 보관함 화면"
+        tools:layout="@layout/fragment_notification">
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/planDetailFragment"
+        android:name="com.umc.presentation.ui.home.PlanDetailFragment"
+        android:label="일정 상세 화면"
+        tools:layout="@layout/fragment_plan_detail">
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/planCreateFragment"
+        android:name="com.umc.presentation.ui.home.PlanAddFragment"
+        android:label="일정 생성 화면"
+        tools:layout="@layout/fragment_plan_add">
+
+    </fragment>
+
+
 </navigation>
+

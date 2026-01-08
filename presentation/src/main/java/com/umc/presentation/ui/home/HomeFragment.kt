@@ -5,12 +5,14 @@ import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.calendar.SelectedDecorator
 import com.umc.presentation.component.calendar.TodayDecorator
 import com.umc.presentation.databinding.FragmentHomeBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import org.threeten.bp.DayOfWeek
 
 @AndroidEntryPoint
@@ -45,19 +47,46 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
 
         //임시로 뷰모델에서 가져와서 연결시키기
         repeatOnStarted(viewLifecycleOwner) {
-            viewModel.uiState.collect { state ->
-                // 변수명 수정: 모드에 따라 각 어댑터에 데이터 주입
-                if (state.viewMode == ViewMode.CALENDAR) {
-                    dailyAdapter.submitList(state.dailyPlans)
-                } else {
-                    allAdapter.submitList(state.allPlans)
+
+            launch {
+                viewModel.uiState.collect { state ->
+                    // 변수명 수정: 모드에 따라 각 어댑터에 데이터 주입
+                    if (state.viewMode == ViewMode.CALENDAR) {
+                        dailyAdapter.submitList(state.dailyPlans)
+                    } else {
+                        allAdapter.submitList(state.allPlans)
+                    }
+                }
+            }
+
+            //여기서 이자식이 event 수신
+            launch {
+                viewModel.uiEvent.collect {
+
                 }
             }
         }
     }
 
 
+    //이벤트 핸들링
+    private fun handleMoveEvent(event: HomeFragmentEvent){
+        when (event){
+            HomeFragmentEvent.MoveNoticeEvent -> {}
+            HomeFragmentEvent.MoveNotificationEvent -> {}
+            HomeFragmentEvent.MovePlanDetailEvent -> {}
+            HomeFragmentEvent.MovePlanAddEvent -> {}
 
+            else -> {}
+        }
+    }
+
+    //이동 함수들
+    private fun moveToNotice(){
+        //val action = HomeFragmentDirections.actionHomeFragmentToNoticeFragment()
+        //findNavController().navigate(action)
+
+    }
 
     //MaterialCalendar 초기화
     private fun initCalendar(){

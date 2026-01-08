@@ -7,6 +7,7 @@ import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import javax.inject.Inject
 
+//뷰모델에서는 xml에서 이벤트 의도 전달 -> fragment한테 이거 로직 처리하삼
 class HomeFragmentViewModel
     @Inject
     constructor() : BaseViewModel<HomeFragmentUiState, HomeFragmentEvent>(
@@ -46,6 +47,27 @@ class HomeFragmentViewModel
             }
         }
 
+        // 공시사항 (운영바침) 이동 --> 얘를 보내면 Fragment에서 수신
+        fun onClickNotice(){
+            emitEvent(HomeFragmentEvent.MoveNoticeEvent)
+        }
+
+        // 알림 이동
+        fun onClickNotification(){
+            emitEvent(HomeFragmentEvent.MoveNotificationEvent)
+        }
+
+        // 일정 추가 이동
+        fun onClickPlanAdd(){
+            emitEvent(HomeFragmentEvent.MovePlanAddEvent)
+        }
+    
+        // 일정 상세 이동
+        fun onClickPlanDetail(){
+            emitEvent(HomeFragmentEvent.MovePlanDetailEvent)
+        }
+    
+
     }
 
 data class HomeFragmentUiState(
@@ -76,7 +98,10 @@ data class HomeFragmentUiState(
 ) : UiState
 
 sealed class HomeFragmentEvent : UiEvent {
-    object DummyEvent : HomeFragmentEvent()
+    object MoveNoticeEvent : HomeFragmentEvent() //공시사항 이동
+    object MoveNotificationEvent : HomeFragmentEvent() //알림 이동
+    object MovePlanDetailEvent : HomeFragmentEvent() //일정 상세 이동
+    object MovePlanAddEvent : HomeFragmentEvent() //일정 추가 이동
 }
 
 enum class ViewMode { CALENDAR, LIST }

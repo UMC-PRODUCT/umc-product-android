@@ -1,4 +1,4 @@
-package com.umc.presentation.ui.home
+package com.umc.presentation.ui.mypage
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -8,14 +8,13 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
-import com.umc.presentation.databinding.FragmentNoticeBinding
+import com.umc.presentation.databinding.FragmentMypageBinding
 
 
-//공지사항 내용
-class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeFragmentUiState, NoticeFragmentEvent, NoticeFragmentViewModel>(
-    FragmentNoticeBinding::inflate,
+class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState, MypageFragmentEvent, MypageFragmentViewModel>(
+    FragmentMypageBinding::inflate,
 ) {
-    override val viewModel: NoticeFragmentViewModel by viewModels()
+    override val viewModel : MypageFragmentViewModel by viewModels()
 
     override fun initView() {
         binding.apply {
@@ -24,9 +23,9 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeFragmentUiState
         }
     }
 
+
     override fun initStates() {
         super.initStates()
     }
-
 
 }

@@ -10,6 +10,8 @@ import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentNotificationBinding
 
+
+//알람 내용
 class NotificationFragment : BaseFragment<FragmentNotificationBinding, NotificationFragmentUiState, NotificationFragmentEvent, NotificationFragmentViewModel>(
     FragmentNotificationBinding::inflate,
 ){
