@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_sign"
+    app:startDestination="@id/splashFragment"
+    >
+
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.umc.presentation.ui.splash.SplashFragment"
+        android:label="스플래쉬"
+        tools:layout="@layout/fragment_splash">
+
+        <action
+            android:id="@+id/action_splash_to_home"
+            app:destination="@id/nav_home"/>
+
+        <action
+            android:id="@+id/action_splash_to_login"
+            app:destination="@id/loginFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.umc.presentation.ui.login.LoginFragment"
+        android:label="로그인"
+        tools:layout="@layout/fragment_login">
+
+        <action
+            android:id="@+id/action_login_to_home"
+            app:destination="@id/nav_home"/>
+
+        <action
+            android:id="@+id/action_login_to_sign_up"
+            app:destination="@id/signUpFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/signUpFragment"
+        android:name="com.umc.presentation.ui.signUp.SignUpFragment"
+        android:label="회원가입"
+        tools:layout="@layout/fragment_sign_up">
+
+        <action
+            android:id="@+id/action_login_to_home"
+            app:destination="@id/nav_home"/>
+    </fragment>
+
+</navigation>

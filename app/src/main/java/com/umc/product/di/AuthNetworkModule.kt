@@ -1,4 +1,4 @@
-package com.umc.umc.di
+package com.umc.product.di
 
 import dagger.Module
 import dagger.Provides

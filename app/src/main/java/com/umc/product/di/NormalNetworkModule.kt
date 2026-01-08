@@ -1,11 +1,11 @@
-package com.umc.umc.di
+package com.umc.product.di
 
 import android.util.Log
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
-import com.umc.umc.extension.isJsonArray
-import com.umc.umc.extension.isJsonObject
+import com.umc.product.extension.isJsonArray
+import com.umc.product.extension.isJsonObject
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

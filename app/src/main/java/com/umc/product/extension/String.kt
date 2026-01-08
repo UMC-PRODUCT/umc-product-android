@@ -1,4 +1,4 @@
-package com.umc.umc.extension
+package com.umc.product.extension
 
 import kotlin.text.endsWith
 import kotlin.text.startsWith

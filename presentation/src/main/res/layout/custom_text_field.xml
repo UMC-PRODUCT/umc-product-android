@@ -5,6 +5,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:orientation="horizontal">
 
         <ImageView
@@ -17,9 +19,8 @@
             android:id="@+id/edit_text"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="center_vertical"
-            android:text="TEXT"
-            android:textSize="22sp" />
+            android:background="@null"
+            android:layout_gravity="center_vertical" />
 
     </LinearLayout>
 

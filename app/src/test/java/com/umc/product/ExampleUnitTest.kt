@@ -1,4 +1,4 @@
-package com.umc.umc
+package com.umc.product
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

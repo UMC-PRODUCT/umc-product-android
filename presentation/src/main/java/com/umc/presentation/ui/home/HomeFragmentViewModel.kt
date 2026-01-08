@@ -1,4 +1,4 @@
-package com.umc.presentation
+package com.umc.presentation.ui.home
 
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
