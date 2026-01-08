@@ -1,5 +1,6 @@
 package com.umc.presentation
 
+import android.graphics.drawable.ColorDrawable
 import android.view.View
 import androidx.activity.viewModels
 import androidx.navigation.NavController
@@ -8,6 +9,7 @@ import com.umc.presentation.base.BaseActivity
 import com.umc.presentation.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import androidx.core.graphics.drawable.toDrawable
 
 @AndroidEntryPoint
 class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, MainActivityEvent, MainActivityViewModel>(
@@ -20,6 +22,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
         binding.apply {
             vm = viewModel
             initNavigation()
+            window.setBackgroundDrawable(getColor(R.color.neutral000).toDrawable())
         }
     }
 

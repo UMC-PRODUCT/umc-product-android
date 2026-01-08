@@ -6,6 +6,7 @@
     tools:context=".MainActivity">
 
     <data>
+
         <variable
             name="vm"
             type="com.umc.presentation.MainActivityViewModel" />
@@ -16,39 +17,36 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="?attr/colorBackgroundSemantic"
-        >
+        android:fitsSystemWindows="true">
 
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/main_fragmentContainer"
+            android:name="androidx.navigation.fragment.NavHostFragment"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:name="androidx.navigation.fragment.NavHostFragment"
             app:defaultNavHost="true"
-            app:navGraph="@navigation/main_graph"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toTopOf="@id/main_bnv"
-            />
-
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:navGraph="@navigation/main_graph" />
 
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/main_bnv"
-            android:background="@color/neutral000"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/neutral000"
             android:paddingHorizontal="15dp"
             android:paddingTop="5dp"
-            app:menu="@menu/menu_bottom_nav"
             app:itemIconSize="29dp"
-            app:labelVisibilityMode="labeled"
             app:itemRippleColor="@android:color/transparent"
+            app:labelVisibilityMode="labeled"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            />
+            app:layout_constraintStart_toStartOf="parent"
+            app:menu="@menu/menu_bottom_nav" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
