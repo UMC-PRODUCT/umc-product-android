@@ -1,8 +1,5 @@
 <resources>
     <string name="app_name">UMC product</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
 
     <!-- Home -->
     <string name="home_now_card_main_title">내 활동 상태</string>
@@ -29,4 +26,17 @@
     <string name="sign_up_error_email">유효하지 않은 계정입니다</string>
     <string name="sign_up_verify_code_placeholder">인증번호 4자리 입력</string>
     <string name="sign_up_select_school_placeholder">학교를 선택하세요</string>
+    <string name="sign_up_complete">가입 완료</string>
+
+    <!-- Permission -->
+    <string name="permission_title">권한 요청</string>
+    <string name="permission_subtitle">원활한 앱 사용을 위해 권한을 허용해주세요.</string>
+    <string name="permission_notification">알림 (필수)</string>
+    <string name="permission_location">위치 (선택)</string>
+    <string name="permission_photo">사진 (선택)</string>
+    <string name="permission_notification_content">공지사항 및 일정 알림을 받습니다.</string>
+    <string name="permission_location_content">출석 체크를 위해 위치 정보를 사용합니다.</string>
+    <string name="permission_photo_content">게시글 작성을 위해 사진을 접근합니다.</string>
+    <string name="permission_accept_all">모두 허용합니다.</string>
+
 </resources>

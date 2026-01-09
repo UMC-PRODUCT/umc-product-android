@@ -36,7 +36,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="16dp"
             android:text="@string/sign_up"
             android:textAppearance="@style/Title1Bold"
             android:textColor="@color/neutral800"

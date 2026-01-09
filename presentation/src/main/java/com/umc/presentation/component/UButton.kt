@@ -57,11 +57,11 @@ constructor(
         } finally {
             a.recycle()
         }
+    }
 
-        //setter
-        fun setText(text: String?) {
-            binding.textView.text = text ?: ""
-        }
+    //setter
+    fun setText(text: String?) {
+        binding.textView.text = text ?: ""
     }
 
     override fun setEnabled(enabled: Boolean) {
