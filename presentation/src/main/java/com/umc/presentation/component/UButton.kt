@@ -68,4 +68,9 @@ class UButton
                 a.recycle()
             }
         }
+
+        //setter
+        fun setText(text: String?) {
+            binding.textView.text = text ?: ""
+        }
     }
