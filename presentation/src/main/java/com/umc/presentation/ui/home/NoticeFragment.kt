@@ -20,7 +20,6 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeFragmentUiState
     override fun initView() {
         binding.apply {
             vm = viewModel
-            lifecycleOwner = viewLifecycleOwner
         }
     }
 

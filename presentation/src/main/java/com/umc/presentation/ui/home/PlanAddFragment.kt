@@ -17,8 +17,6 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
     override fun initView() {
         binding.apply {
-            vm = viewModel
-            lifecycleOwner = viewLifecycleOwner
         }
     }
 

@@ -9,7 +9,12 @@ import com.umc.domain.model.home.SchedulePlan
 import com.umc.presentation.databinding.ItemHomePlanActiveBinding
 import com.umc.presentation.databinding.ItemHomePlanDefaultBinding
 
-class ScheduleAdapter(private val onItemClick: (SchedulePlan) -> Unit) :
+//delete 만들기
+interface ScheduleItemDelegate{
+    fun onItemClicked(item: SchedulePlan)
+}
+
+class ScheduleAdapter(private val delegate: ScheduleItemDelegate) :
     ListAdapter<SchedulePlan, RecyclerView.ViewHolder>(ScheduleDiffCallback) {
 
     override fun getItemViewType(position: Int): Int {
@@ -27,35 +32,12 @@ class ScheduleAdapter(private val onItemClick: (SchedulePlan) -> Unit) :
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
         when (holder) {
-            is ActiveViewHolder -> holder.bind(item)
-            is DefaultViewHolder -> holder.bind(item)
+            is ActiveViewHolder -> holder.bind(item, delegate)
+            is DefaultViewHolder -> holder.bind(item, delegate)
         }
     }
 
-    inner class ActiveViewHolder(private val binding: ItemHomePlanActiveBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: SchedulePlan) {
-            binding.apply {
-                cardTvDayweek.text = item.dayOfWeek
-                cardTvDay.text = item.day
-                cardTvTitle.text = item.title
-                cardTvTime.text = item.time
-                cardCdvLeftdate.setText(item.dDay)
-                root.setOnClickListener { onItemClick(item) }
-            }
-        }
-    }
 
-    inner class DefaultViewHolder(private val binding: ItemHomePlanDefaultBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: SchedulePlan) {
-            binding.apply {
-                cardTvDayweek.text = item.dayOfWeek
-                cardTvDay.text = item.day
-                cardTvTitle.text = item.title
-                cardTvTime.text = item.time
-                root.setOnClickListener { onItemClick(item) }
-            }
-        }
-    }
 
     companion object {
         private const val TYPE_ACTIVE = 0
@@ -72,6 +54,32 @@ class ScheduleAdapter(private val onItemClick: (SchedulePlan) -> Unit) :
                 // 내용 전체가 같은지 비교
                 return oldItem == newItem
             }
+        }
+    }
+}
+
+//각 ViewHolder 클래스 정의
+public class ActiveViewHolder(private val binding: ItemHomePlanActiveBinding) : RecyclerView.ViewHolder(binding.root) {
+    fun bind(item: SchedulePlan, delegate: ScheduleItemDelegate) {
+        binding.apply {
+            cardTvDayweek.text = item.dayOfWeek
+            cardTvDay.text = item.day
+            cardTvTitle.text = item.title
+            cardTvTime.text = item.time
+            cardCdvLeftdate.setText(item.dDay)
+            root.setOnClickListener { delegate.onItemClicked(item) }
+        }
+    }
+}
+
+public class DefaultViewHolder(private val binding: ItemHomePlanDefaultBinding) : RecyclerView.ViewHolder(binding.root) {
+    fun bind(item: SchedulePlan, delegate: ScheduleItemDelegate) {
+        binding.apply {
+            cardTvDayweek.text = item.dayOfWeek
+            cardTvDay.text = item.day
+            cardTvTitle.text = item.title
+            cardTvTime.text = item.time
+            root.setOnClickListener { delegate.onItemClicked(item) }
         }
     }
 }

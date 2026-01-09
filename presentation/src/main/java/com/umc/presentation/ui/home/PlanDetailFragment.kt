@@ -18,7 +18,6 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
     override fun initView() {
         binding.apply {
             vm = viewModel
-            lifecycleOwner = viewLifecycleOwner
         }
 
     }

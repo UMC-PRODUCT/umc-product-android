@@ -1,6 +1,9 @@
 package com.umc.presentation.ui.home
 
 import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.umc.domain.model.enums.HomeViewMode
+import com.umc.domain.model.enums.UserType
+import com.umc.domain.model.enums.WarningStatus
 import com.umc.domain.model.home.SchedulePlan
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -41,7 +44,7 @@ class HomeFragmentViewModel
         }
 
         // 뷰모드(달력/리스트) 전환 함수
-        fun onChangeViewMode(mode: ViewMode) {
+        fun onChangeViewMode(mode: HomeViewMode) {
             updateState {
                 copy(viewMode = mode)
             }
@@ -63,8 +66,8 @@ class HomeFragmentViewModel
         }
     
         // 일정 상세 이동
-        fun onClickPlanDetail(){
-            emitEvent(HomeFragmentEvent.MovePlanDetailEvent)
+        fun onClickPlanDetail(plan : SchedulePlan){
+            emitEvent(HomeFragmentEvent.MovePlanDetailEvent(plan))
         }
     
 
@@ -76,7 +79,7 @@ data class HomeFragmentUiState(
     val eventDates: Set<CalendarDay> = emptySet(), // 일정 있는 날짜들
 
     // 달력 <-> 일정 전환
-    val viewMode: ViewMode = ViewMode.CALENDAR,
+    val viewMode: HomeViewMode = HomeViewMode.CALENDAR,
     // 유저 정보 영역
     val userType: UserType = UserType.ACTIVE,
     //val profileInfo: ProfileInfo? = null,
@@ -89,21 +92,18 @@ data class HomeFragmentUiState(
     val dailyPlans: List<SchedulePlan> = emptyList(),
     val allPlans: List<SchedulePlan> = emptyList()
 
-/*
+    /*
 
 
-    // 3. 필터링된 일정 데이터
-    val schedules: List<Schedule> = emptyList(),
-    */
+        // 3. 필터링된 일정 데이터
+        val schedules: List<Schedule> = emptyList(),
+        */
 ) : UiState
 
 sealed class HomeFragmentEvent : UiEvent {
     object MoveNoticeEvent : HomeFragmentEvent() //공시사항 이동
     object MoveNotificationEvent : HomeFragmentEvent() //알림 이동
-    object MovePlanDetailEvent : HomeFragmentEvent() //일정 상세 이동
+    data class MovePlanDetailEvent(val plan: SchedulePlan) : HomeFragmentEvent() //일정 상세 이동
     object MovePlanAddEvent : HomeFragmentEvent() //일정 추가 이동
 }
 
-enum class ViewMode { CALENDAR, LIST }
-enum class UserType {ACTIVE, OB}
-enum class WarningStatus {NORMAL, WARNING, DANGER}

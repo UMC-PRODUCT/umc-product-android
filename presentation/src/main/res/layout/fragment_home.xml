@@ -5,9 +5,9 @@
     tools:context=".ui.home.HomeFragment">
 
     <data>
-        <import type="com.umc.presentation.ui.home.ViewMode" />
-        <import type="com.umc.presentation.ui.home.UserType" />
-        <import type="com.umc.presentation.ui.home.WarningStatus" />
+        <import type="com.umc.domain.model.enums.HomeViewMode" />
+        <import type="com.umc.domain.model.enums.UserType" />
+        <import type="com.umc.domain.model.enums.WarningStatus" />
         <import type="android.view.View"/>
 
         <variable
@@ -54,6 +54,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@{vm.uiState.alarmExist ? @drawable/ic_alarm_with_dot : @drawable/ic_alarm}"
+                    android:onClick="@{()->vm.onClickNotification()}"
                     app:tint="@color/neutral500"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="@id/home_imv_umcicon"
@@ -351,6 +352,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:background="@color/accent100"
+                    android:onClick="@{()->vm.onClickNotice()}"
                     app:cardBackgroundColor="@color/accent100"
                     app:cardElevation="0dp"
                     app:strokeWidth="1dp"
@@ -554,6 +556,7 @@
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_add_filled"
                 android:layout_marginEnd="16dp"
+                android:onClick="@{()->vm.onClickPlanAdd()}"
                 app:tint="@color/primary500"
                 app:layout_constraintTop_toTopOf="@id/home_cdv_plan_select"
                 app:layout_constraintBottom_toBottomOf="@id/home_cdv_plan_select"
@@ -583,17 +586,17 @@
                         android:id="@+id/home_btn_calendar"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@{vm.uiState.viewMode == ViewMode.CALENDAR ? @drawable/ic_home_grid_on : @drawable/ic_home_grid_off}"
-                        android:onClick="@{() -> vm.onChangeViewMode(ViewMode.CALENDAR)}"
+                        android:src="@{vm.uiState.viewMode == HomeViewMode.CALENDAR ? @drawable/ic_home_grid_on : @drawable/ic_home_grid_off}"
+                        android:onClick="@{() -> vm.onChangeViewMode(HomeViewMode.CALENDAR)}"
                         />
 
                     <ImageView
                         android:id="@+id/home_btn_plan_list"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@{vm.uiState.viewMode == ViewMode.LIST ? @drawable/ic_home_list_on : @drawable/ic_home_list_off}"
+                        android:src="@{vm.uiState.viewMode == HomeViewMode.LIST ? @drawable/ic_home_list_on : @drawable/ic_home_list_off}"
                         android:layout_marginStart="8dp"
-                        android:onClick="@{() -> vm.onChangeViewMode(ViewMode.LIST)}"
+                        android:onClick="@{() -> vm.onChangeViewMode(HomeViewMode.LIST)}"
                         />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -608,7 +611,7 @@
                 android:orientation="vertical"
                 android:background="@drawable/bg_calendar_corner_radius16"
                 android:layout_marginTop="32dp"
-                android:visibility="@{vm.uiState.viewMode == ViewMode.CALENDAR ? View.VISIBLE : View.GONE}"
+                android:visibility="@{vm.uiState.viewMode == HomeViewMode.CALENDAR ? View.VISIBLE : View.GONE}"
                 app:layout_constraintTop_toBottomOf="@id/home_tv_plan_title">
 
                 <com.prolificinteractive.materialcalendarview.MaterialCalendarView
@@ -654,7 +657,7 @@
                 android:id="@+id/home_rcv_all_plan_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:visibility="@{vm.uiState.viewMode == ViewMode.LIST ? View.VISIBLE : View.GONE}"
+                android:visibility="@{vm.uiState.viewMode == HomeViewMode.LIST ? View.VISIBLE : View.GONE}"
                 android:layout_marginTop="32dp"
                 android:nestedScrollingEnabled="false"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
