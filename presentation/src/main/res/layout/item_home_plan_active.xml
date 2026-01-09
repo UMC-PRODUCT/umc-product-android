@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="@color/neutral000"
+    app:cardCornerRadius="16dp"
+    app:strokeWidth="0dp"
+    app:cardElevation="0dp"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_date"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            app:cardBackgroundColor="@color/primary100"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/card_tv_dayweek"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MON"
+                    android:textColor="@color/primary500"
+                    android:textAppearance="@style/Caption2Bold"/>
+
+                <TextView
+                    android:id="@+id/card_tv_day"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="@color/primary500"
+                    android:textAppearance="@style/CalloutBold" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/card_tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:text="아이디어톤"
+            android:textAppearance="@style/SubheadlineBold"
+            android:textColor="@color/neutral800"
+            app:layout_constraintStart_toEndOf="@id/card_date"
+            app:layout_constraintTop_toTopOf="@id/card_date"
+            app:layout_constraintBottom_toTopOf="@id/card_tv_time"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <TextView
+            android:id="@+id/card_tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="10:00"
+            android:textAppearance="@style/Caption1"
+            android:textColor="@color/neutral600"
+            app:layout_constraintStart_toStartOf="@id/card_tv_title"
+            app:layout_constraintTop_toBottomOf="@id/card_tv_title"
+            app:layout_constraintBottom_toBottomOf="@id/card_date" />
+
+        <ImageView
+            android:id="@+id/card_imv_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_arrow_next"
+            app:tint="@color/neutral400"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    <com.umc.presentation.component.UButton
+        android:id="@+id/card_cdv_leftdate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        app:backgroundColor="@color/neutral200"
+        app:borderWidth="0dp"
+        app:text="D-1"
+        app:textAppearance="@style/Caption1Bold"
+        app:textColor="@color/neutral700"
+        app:buttonElevation="0"
+        app:contentPaddingBottom="4dp"
+        app:contentPaddingTop="4dp"
+        app:contentPaddingLeft="8dp"
+        app:contentPaddingRight="8dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/card_imv_next"
+        />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

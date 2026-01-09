@@ -4,7 +4,9 @@ import android.graphics.drawable.ColorDrawable
 import android.view.View
 import androidx.activity.viewModels
 import androidx.navigation.NavController
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
 import com.umc.presentation.base.BaseActivity
 import com.umc.presentation.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,6 +26,8 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
             initNavigation()
             window.setBackgroundDrawable(getColor(R.color.neutral000).toDrawable())
         }
+
+
     }
 
     override fun initState() {
@@ -47,6 +51,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.main_fragmentContainer) as NavHostFragment
         navController = navHostFragment.navController
+        binding.mainBnv.setupWithNavController(navController)
         navController.addOnDestinationChangedListener { _, destination, _ ->
             changeBottomNavigationView(destination.id)
         }
@@ -57,6 +62,10 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
         when (id) {
             R.id.homeFragment -> {
                 binding.mainBnv.visibility = View.VISIBLE
+            }
+            R.id.mypageFragment -> {
+                binding.mainBnv.visibility = View.VISIBLE
+
             }
             else -> binding.mainBnv.visibility = View.GONE
         }

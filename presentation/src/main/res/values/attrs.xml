@@ -49,4 +49,8 @@
         <attr name="buttonElevation"/>
         <attr name="pressedColor" format="reference"/>
     </declare-styleable>
+
+
+    <!-- 공통 Tag -->
+
 </resources>
