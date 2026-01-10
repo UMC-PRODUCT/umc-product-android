@@ -1,13 +1,9 @@
 package com.umc.presentation.ui.signUp.permission
 
-import androidx.lifecycle.viewModelScope
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 class PermissionViewModel
 @Inject
@@ -25,6 +21,10 @@ constructor() : BaseViewModel<PermissionUiState, PermissionEvent>(
 
     fun onClickPhotoCheck() {
         updateState { copy(isPhotoCheck = !isPhotoCheck) }
+    }
+
+    fun onClickBack() {
+        emitEvent(PermissionEvent.MoveToBack)
     }
 
     fun onClickAllCheck() {
@@ -56,7 +56,7 @@ data class PermissionUiState(
 ) : UiState
 
 sealed class PermissionEvent : UiEvent {
+    object MoveToBack : PermissionEvent()
     object MoveToMainEvent : PermissionEvent()
 
-    object MoveToLoginEvent : PermissionEvent()
 }

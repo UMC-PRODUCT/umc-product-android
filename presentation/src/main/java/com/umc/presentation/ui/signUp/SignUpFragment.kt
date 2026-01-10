@@ -1,13 +1,15 @@
 package com.umc.presentation.ui.signUp
 
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentSignUpBinding
 import kotlinx.coroutines.launch
 
-class SignUpFragment : BaseFragment<FragmentSignUpBinding, SignUpState, SignUpEvent, SignUpViewModel>(
-    FragmentSignUpBinding::inflate,
-) {
+class SignUpFragment :
+    BaseFragment<FragmentSignUpBinding, SignUpState, SignUpEvent, SignUpViewModel>(
+        FragmentSignUpBinding::inflate,
+    ) {
     override val viewModel: SignUpViewModel by viewModels()
 
     override fun initView() {
@@ -22,7 +24,7 @@ class SignUpFragment : BaseFragment<FragmentSignUpBinding, SignUpState, SignUpEv
         repeatOnStarted(viewLifecycleOwner) {
             launch {
                 viewModel.uiEvent.collect {
-                    // TODO 이벤트 처리
+                    handleSplashEvent(it)
                 }
             }
 
@@ -30,6 +32,14 @@ class SignUpFragment : BaseFragment<FragmentSignUpBinding, SignUpState, SignUpEv
                 viewModel.uiState.collect {
                 }
             }
+        }
+    }
+
+    private fun handleSplashEvent(event: SignUpEvent) {
+        when (event) {
+            SignUpEvent.MoveToBack -> findNavController().popBackStack()
+            SignUpEvent.MoveToLoginEvent -> {}
+            SignUpEvent.MoveToMainEvent -> {}
         }
     }
 }

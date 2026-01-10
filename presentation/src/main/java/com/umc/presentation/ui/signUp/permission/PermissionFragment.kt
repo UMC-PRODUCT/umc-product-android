@@ -7,9 +7,10 @@ import com.umc.presentation.databinding.FragmentPermissionBinding
 import com.umc.presentation.databinding.FragmentSplashBinding
 import kotlinx.coroutines.launch
 
-class PermissionFragment : BaseFragment<FragmentPermissionBinding, PermissionUiState, PermissionEvent, PermissionViewModel>(
-    FragmentPermissionBinding::inflate,
-) {
+class PermissionFragment :
+    BaseFragment<FragmentPermissionBinding, PermissionUiState, PermissionEvent, PermissionViewModel>(
+        FragmentPermissionBinding::inflate,
+    ) {
     override val viewModel: PermissionViewModel by viewModels()
 
     override fun initView() {
@@ -24,7 +25,7 @@ class PermissionFragment : BaseFragment<FragmentPermissionBinding, PermissionUiS
         repeatOnStarted(viewLifecycleOwner) {
             launch {
                 viewModel.uiEvent.collect {
-
+                    handleEvent(it)
                 }
             }
 
@@ -33,6 +34,13 @@ class PermissionFragment : BaseFragment<FragmentPermissionBinding, PermissionUiS
                     // TODO 상태 관리
                 }
             }
+        }
+    }
+
+    override fun handleEvent(event: PermissionEvent) {
+        when (event) {
+            PermissionEvent.MoveToBack -> findNavController().popBackStack()
+            PermissionEvent.MoveToMainEvent -> {}
         }
     }
 }

@@ -1,31 +1,22 @@
 package com.umc.presentation.ui.signUp
 
-import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.EmailVerifyType
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import com.umc.presentation.util.Const
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 class SignUpViewModel
 @Inject
 constructor() : BaseViewModel<SignUpState, SignUpEvent>(
     SignUpState(),
 ) {
-    init {
-        initFun()
+
+    fun onClickBack() {
+        emitEvent(SignUpEvent.MoveToBack)
     }
 
-    private fun initFun() {
-        viewModelScope.launch {
-            delay(3.seconds)
-            emitEvent(SignUpEvent.MoveToLoginEvent)
-        }
-    }
 
     fun onClickConfirm() {
         // TODO 서버 연결 필요
@@ -97,4 +88,5 @@ sealed class SignUpEvent : UiEvent {
     object MoveToMainEvent : SignUpEvent()
 
     object MoveToLoginEvent : SignUpEvent()
+    object MoveToBack : SignUpEvent()
 }
