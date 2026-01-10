@@ -12,13 +12,8 @@ import javax.inject.Inject
 class ActViewModel @Inject constructor() : BaseViewModel<ActViewModel.ActivityManagementUiState, ActViewModel.ActivityManagementEvent>(
     ActivityManagementUiState()
 ) {
-    private val _isAdminMode = MutableStateFlow(false)
-    val isAdminMode = _isAdminMode.asStateFlow()
+    val isAdminMode = MutableStateFlow(false)
 
-    fun switchAdminMode(isChecked: Boolean) {
-        _isAdminMode.value = isChecked
-    }
-    
     data class ActivityManagementUiState(val temp: String = "") : UiState
     sealed class ActivityManagementEvent : UiEvent
 }

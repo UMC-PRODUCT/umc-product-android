@@ -22,10 +22,6 @@ class ActFragment : BaseFragment<FragmentActBinding, ActViewModel.ActivityManage
     override fun initView() {
         binding.vm = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
-
-        binding.switchAdmin.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.switchAdminMode(isChecked)
-        }
     }
 
     override fun initStates() {
@@ -40,17 +36,12 @@ class ActFragment : BaseFragment<FragmentActBinding, ActViewModel.ActivityManage
     }
 
     private fun setupViewPager(isAdmin: Boolean) {
-        // 기존 어댑터가 있고 모드가 같으면 재생성하지 않음
-        if (currentAdapter?.isAdmin == isAdmin) {
-            return
-        }
+        if (currentAdapter?.isAdmin == isAdmin) return
 
-        // 어댑터 설정
         val adapter = ActViewPagerAdapter(this, isAdmin)
         currentAdapter = adapter
         binding.viewPager.adapter = adapter
 
-        // 탭 레이아웃 연결
         tabLayoutMediator?.detach()
         tabLayoutMediator = TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             tab.text = if (isAdmin) {

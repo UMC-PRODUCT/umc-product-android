@@ -50,7 +50,7 @@
                 android:id="@+id/switch_admin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:checked="@{vm.isAdminMode}" />
+                android:checked="@={vm.isAdminMode}" />
 
         </LinearLayout>
 
