@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="vm"
+            type="com.umc.presentation.ui.act.ActViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/neutral000"
+        tools:context=".ui.act.ActFragment">
+
+        <!-- Header Section -->
+        <LinearLayout
+            android:id="@+id/header_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:layout_marginTop="56dp"
+            android:gravity="center_vertical"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/tv_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/activity_management_title"
+                android:textColor="@color/neutral800"
+                style="@style/Title2Bold" />
+
+            <TextView
+                android:id="@+id/tv_admin_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/admin_label"
+                android:textColor="@color/neutral600"
+                android:layout_marginEnd="8dp"
+                style="@style/Subheadline" />
+
+            <com.umc.presentation.component.USwitch
+                android:id="@+id/switch_admin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="@{vm.isAdminMode}" />
+
+        </LinearLayout>
+
+        <!-- Tab Layout -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_layout"
+            android:layout_width="0dp"
+            android:layout_height="55dp"
+            android:background="@color/neutral000"
+            app:tabMode="fixed"
+            app:tabGravity="fill"
+            app:tabIndicator="@drawable/tap_indicator_rect"
+            app:tabIndicatorHeight="2dp"
+            app:tabIndicatorFullWidth="true"
+            app:tabIndicatorColor="@color/neutral800"
+            app:tabSelectedTextColor="@color/neutral800"
+            app:tabTextColor="@color/neutral400"
+            app:tabTextAppearance="@style/SubheadlineBold"
+            app:tabRippleColor="@android:color/transparent"
+            app:layout_constraintTop_toBottomOf="@+id/header_layout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- ViewPager2 -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/view_pager"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="?attr/colorBackgroundSemantic"
+            app:layout_constraintTop_toBottomOf="@+id/tab_layout"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
