@@ -1,4 +1,4 @@
-package com.umc.presentation.ui.home
+package com.umc.presentation.component
 
 import android.view.LayoutInflater
 import androidx.databinding.BindingAdapter
