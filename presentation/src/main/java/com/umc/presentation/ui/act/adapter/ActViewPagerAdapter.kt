@@ -1,4 +1,4 @@
-package com.umc.presentation.ui.act
+package com.umc.presentation.ui.act.adapter
 
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter

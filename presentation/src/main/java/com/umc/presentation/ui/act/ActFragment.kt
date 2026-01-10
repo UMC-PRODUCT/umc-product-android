@@ -8,6 +8,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentActBinding
+import com.umc.presentation.ui.act.adapter.ActViewPagerAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
