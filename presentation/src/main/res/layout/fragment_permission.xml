@@ -64,7 +64,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:src="@drawable/ic_alarm_filled"
-                android:tint="@{vm.uiState.alarmCheck ? @color/primary600 : @color/black}"
+                android:tint="@{vm.uiState.alarmCheck ? @color/primary600 : @color/neutral400}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"

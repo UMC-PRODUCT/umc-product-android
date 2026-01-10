@@ -38,5 +38,11 @@
     <string name="permission_location_content">출석 체크를 위해 위치 정보를 사용합니다.</string>
     <string name="permission_photo_content">게시글 작성을 위해 사진을 접근합니다.</string>
     <string name="permission_accept_all">모두 허용합니다.</string>
+    
+    <!-- Fail -->
+    <string name="sign_up_fail_title">UMC 챌린저 인증 실패</string>
+    <string name="sign_up_fail_content">죄송합니다. 입력하신 정보로 등록된\nUMC 챌린저 정보를 찾을 수 없습니다.</string>
+    <string name="sign_up_fail_homepage">UMC 공식 홈페이지 방문</string>
+    <string name="sign_up_fail_qa_email">문의사항: umc.official.korea@gmail.com</string>
 
 </resources>
