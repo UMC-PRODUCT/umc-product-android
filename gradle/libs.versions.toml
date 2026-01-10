@@ -24,6 +24,7 @@ materialCalendarView = "2.0.1"
 ktlintPlugin = "12.1.2"
 threetenabp = "1.3.1"
 kakao = "2.11.0"
+flexbox = "3.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -47,8 +48,13 @@ navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version
 androidx-legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacySupportV4" }
 androidx-lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycleLivedataKtx" }
 androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
+
+#material calendar
 material-calendarview = { group = "com.github.prolificinteractive", name = "material-calendarview", version.ref = "materialCalendarView" }
 threeten-abp = { group = "com.jakewharton.threetenabp", name = "threetenabp", version.ref = "threetenabp" }
+
+#flexboxlayout
+google-flexbox = { group = "com.google.android.flexbox", name = "flexbox", version.ref = "flexbox" }
 
 # kakao login
 kakao-user = { group = "com.kakao.sdk", name = "v2-all", version.ref = "kakao" }

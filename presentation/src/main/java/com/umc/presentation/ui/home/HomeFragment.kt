@@ -7,7 +7,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.umc.domain.model.enums.HomeViewMode
-import com.umc.domain.model.home.SchedulePlan
+import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.calendar.SelectedDecorator
@@ -73,7 +73,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
     }
 
     //얻배터에 delegate 정의하기!
-    override fun onItemClicked(item: SchedulePlan) {
+    override fun onItemClicked(item: SchedulePlanItem) {
         //여기서 뷰모델의 onClick을 정의 -> 그럼 아이템 터치한 리스너를 viewModel에 전달하고
         //이벤트 발생을 보내고, 이를 다시 Fragment에서 수신한다.
         viewModel.onClickPlanDetail(item)
@@ -109,7 +109,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
         findNavController().navigate(action)
     }
 
-    private fun moveToPlanDetail(plan : SchedulePlan){
+    private fun moveToPlanDetail(plan : SchedulePlanItem){
         val action = HomeFragmentDirections.actionHomeToPlanDetail()
         findNavController().navigate(action)
     }

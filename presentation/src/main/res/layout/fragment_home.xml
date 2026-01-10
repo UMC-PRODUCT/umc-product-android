@@ -121,14 +121,20 @@
                         android:layout_height="wrap_content"
                         android:padding="16dp">
 
-                        <TextView
-                            android:id="@+id/home_layout_user_badge"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="12기"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
 
+                        <com.google.android.flexbox.FlexboxLayout
+                            android:id="@+id/home_flexbox_badge"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            app:flexDirection="row"
+                            app:flexWrap="wrap"
+                            app:justifyContent="flex_start"
+                            app:alignItems="stretch"
+                            app:alignContent="flex_start"
+                            app:tagItems="@{vm.uiState.tmptag}"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            />
 
 
                         <TextView
@@ -137,9 +143,10 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="16dp"
                             android:text="홍길동님"
+                            android:textColor="@color/neutral600"
                             android:textAppearance="@style/Headline"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@id/home_layout_user_badge" />
+                            app:layout_constraintTop_toBottomOf="@id/home_flexbox_badge" />
 
                         <TextView
                             android:id="@+id/home_tv_userstatus"
@@ -147,6 +154,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             android:text="수료한 지 어쩌구"
+                            android:textColor="@color/neutral600"
                             android:textAppearance="@style/Title3Bold"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toBottomOf="@id/home_tv_username" />
@@ -154,7 +162,7 @@
                         <ImageView
                             android:layout_width="80dp"
                             android:layout_height="80dp"
-                            android:src="@drawable/sl_bottom_nav_home"
+                            android:src="@{vm.uiState.userType == UserType.ACTIVE ? @drawable/ic_home_active : @drawable/ic_home_ob}"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
@@ -188,6 +196,7 @@
                         android:layout_height="wrap_content"
                         android:gravity="start"
                         android:textAppearance="@style/BodyBold"
+                        android:textColor="@color/neutral800"
                         android:text="@string/home_now_card_main_title"
                         android:layout_marginEnd="8dp"
                         app:layout_constraintStart_toStartOf="parent"
@@ -202,7 +211,8 @@
                         android:textAppearance="@style/Footnote"
                         android:layout_marginTop="4dp"
                         android:gravity="start"
-                        android:text="경고가 블라블라"
+                        android:textColor="@color/neutral600"
+                        android:text="@{vm.uiState.warningStatusText}"
                         android:layout_marginEnd="8dp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/home_tv_now_doing"

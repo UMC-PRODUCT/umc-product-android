@@ -4,7 +4,7 @@ import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.enums.WarningStatus
-import com.umc.domain.model.home.SchedulePlan
+import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -18,18 +18,20 @@ class HomeFragmentViewModel
 
 
         //테스트용 데이터
-        private val dummySchedules = listOf(
-            SchedulePlan( "중앙 해커톤", "10:00", "2026-01-27", "TUE", "27", "D-19", false),
-            SchedulePlan( "아이디어톤", "14:00", "2026-01-08", "WED", "08", "", true),
-            SchedulePlan( "기획 파트 회의", "19:00", "2026-01-27", "TUE", "27", "D-19", false),
-            SchedulePlan( "데모 데이", "13:00", "2026-02-15", "SUN", "15", "D-38", false)
-        )
+
         init{
             updateState {
                 copy(
-                    allPlans = dummySchedules,
+                    schedules = listOf(
+                        SchedulePlanItem( "중앙 해커톤", "10:00", "2026-01-27", "TUE", "27", "D-19", false),
+                        SchedulePlanItem( "아이디어톤", "14:00", "2026-01-08", "WED", "08", "", true),
+                        SchedulePlanItem( "기획 파트 회의", "19:00", "2026-01-27", "TUE", "27", "D-19", false),
+                        SchedulePlanItem( "데모 데이", "13:00", "2026-02-15", "SUN", "15", "D-38", false)
+                    ),
+
+                    allPlans = schedules,
                     // 초기 실행 시 오늘 날짜(27일 가정)로 필터링된 리스트를 보여줌
-                    dailyPlans = dummySchedules.filter { it.date == "2026-01-27" }
+                    dailyPlans = schedules.filter { it.date == "2026-01-27" }
                 )
             }
         }
@@ -66,7 +68,7 @@ class HomeFragmentViewModel
         }
     
         // 일정 상세 이동
-        fun onClickPlanDetail(plan : SchedulePlan){
+        fun onClickPlanDetail(plan : SchedulePlanItem){
             emitEvent(HomeFragmentEvent.MovePlanDetailEvent(plan))
         }
     
@@ -83,27 +85,37 @@ data class HomeFragmentUiState(
     // 유저 정보 영역
     val userType: UserType = UserType.ACTIVE,
     //val profileInfo: ProfileInfo? = null,
-    val warningStatus: WarningStatus = WarningStatus.NORMAL,
+    val warningStatus: WarningStatus = WarningStatus.WARNING,
 
     //알람 존재 관련
     val alarmExist: Boolean = false,
 
+    //상태에 따른 텍스트
+    val warningStatusText: String
+        = when(warningStatus){
+            WarningStatus.DANGER -> "경고가 2회 누적되었습니다."
+            WarningStatus.WARNING -> "경고가 1회 누적되었습니다."
+            WarningStatus.NORMAL -> "누적된 경고가 없습니다."
+        },
+
+    // 3. 필터링된 일정 데이터
+    val schedules: List<SchedulePlanItem> = emptyList(),
+
+
+
     //임시 데이터
-    val dailyPlans: List<SchedulePlan> = emptyList(),
-    val allPlans: List<SchedulePlan> = emptyList()
+    val dailyPlans: List<SchedulePlanItem> = emptyList(),
+    val allPlans: List<SchedulePlanItem> = emptyList(),
+    val tmptag: List<String> = listOf("11기", "12기", "13기")
 
-    /*
 
 
-        // 3. 필터링된 일정 데이터
-        val schedules: List<Schedule> = emptyList(),
-        */
 ) : UiState
 
 sealed class HomeFragmentEvent : UiEvent {
     object MoveNoticeEvent : HomeFragmentEvent() //공시사항 이동
     object MoveNotificationEvent : HomeFragmentEvent() //알림 이동
-    data class MovePlanDetailEvent(val plan: SchedulePlan) : HomeFragmentEvent() //일정 상세 이동
+    data class MovePlanDetailEvent(val plan: SchedulePlanItem) : HomeFragmentEvent() //일정 상세 이동
     object MovePlanAddEvent : HomeFragmentEvent() //일정 추가 이동
 }
 

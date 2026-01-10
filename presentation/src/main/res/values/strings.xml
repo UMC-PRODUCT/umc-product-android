@@ -7,6 +7,7 @@
     <!-- Home -->
     <string name="home_now_card_main_title">내 활동 상태</string>
     <string name="home_plan_title">다가오는 일정</string>
+    <string name="home_notification_title">알림 보관함</string>
 
     <!-- Word -->
     <string name="sign_up">회원가입</string>

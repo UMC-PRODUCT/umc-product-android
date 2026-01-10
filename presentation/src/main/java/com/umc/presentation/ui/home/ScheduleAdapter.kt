@@ -5,17 +5,17 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.home.SchedulePlan
+import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.presentation.databinding.ItemHomePlanActiveBinding
 import com.umc.presentation.databinding.ItemHomePlanDefaultBinding
 
-//delete 만들기
+//delegate 만들기
 interface ScheduleItemDelegate{
-    fun onItemClicked(item: SchedulePlan)
+    fun onItemClicked(item: SchedulePlanItem)
 }
 
 class ScheduleAdapter(private val delegate: ScheduleItemDelegate) :
-    ListAdapter<SchedulePlan, RecyclerView.ViewHolder>(ScheduleDiffCallback) {
+    ListAdapter<SchedulePlanItem, RecyclerView.ViewHolder>(ScheduleDiffCallback) {
 
     override fun getItemViewType(position: Int): Int {
         return if (getItem(position).isPast) TYPE_DEFAULT else TYPE_ACTIVE
@@ -42,15 +42,15 @@ class ScheduleAdapter(private val delegate: ScheduleItemDelegate) :
     companion object {
         private const val TYPE_ACTIVE = 0
         private const val TYPE_DEFAULT = 1
-        private val ScheduleDiffCallback = object : DiffUtil.ItemCallback<SchedulePlan>() {
-            override fun areItemsTheSame(oldItem: SchedulePlan, newItem: SchedulePlan): Boolean {
+        private val ScheduleDiffCallback = object : DiffUtil.ItemCallback<SchedulePlanItem>() {
+            override fun areItemsTheSame(oldItem: SchedulePlanItem, newItem: SchedulePlanItem): Boolean {
                 // 제목과 날짜와 시간이 모두 같으면 같은 아이템으로 간주
                 return oldItem.title == newItem.title &&
                         oldItem.date == newItem.date &&
                         oldItem.time == newItem.time
             }
 
-            override fun areContentsTheSame(oldItem: SchedulePlan, newItem: SchedulePlan): Boolean {
+            override fun areContentsTheSame(oldItem: SchedulePlanItem, newItem: SchedulePlanItem): Boolean {
                 // 내용 전체가 같은지 비교
                 return oldItem == newItem
             }
@@ -60,7 +60,7 @@ class ScheduleAdapter(private val delegate: ScheduleItemDelegate) :
 
 //각 ViewHolder 클래스 정의
 public class ActiveViewHolder(private val binding: ItemHomePlanActiveBinding) : RecyclerView.ViewHolder(binding.root) {
-    fun bind(item: SchedulePlan, delegate: ScheduleItemDelegate) {
+    fun bind(item: SchedulePlanItem, delegate: ScheduleItemDelegate) {
         binding.apply {
             cardTvDayweek.text = item.dayOfWeek
             cardTvDay.text = item.day
@@ -73,7 +73,7 @@ public class ActiveViewHolder(private val binding: ItemHomePlanActiveBinding) : 
 }
 
 public class DefaultViewHolder(private val binding: ItemHomePlanDefaultBinding) : RecyclerView.ViewHolder(binding.root) {
-    fun bind(item: SchedulePlan, delegate: ScheduleItemDelegate) {
+    fun bind(item: SchedulePlanItem, delegate: ScheduleItemDelegate) {
         binding.apply {
             cardTvDayweek.text = item.dayOfWeek
             cardTvDay.text = item.day
