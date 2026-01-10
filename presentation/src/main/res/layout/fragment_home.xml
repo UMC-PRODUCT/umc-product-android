@@ -12,7 +12,7 @@
 
         <variable
             name="vm"
-            type="com.umc.presentation.ui.home.HomeFragmentViewModel" />
+            type="com.umc.presentation.ui.home.HomeViewModel" />
     </data>
 
     <androidx.core.widget.NestedScrollView

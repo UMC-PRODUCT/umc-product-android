@@ -3,9 +3,12 @@ package com.umc.presentation.ui.home
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
-class PlanDetailFragmentViewModel @Inject
+
+@HiltViewModel
+class PlanDetailViewModel @Inject
 constructor() : BaseViewModel<PlanDetailFragmentUiState, PlanDetailFragmentEvent>(
     PlanDetailFragmentUiState()){
 

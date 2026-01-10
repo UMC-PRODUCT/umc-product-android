@@ -18,11 +18,11 @@ import kotlinx.coroutines.launch
 import org.threeten.bp.DayOfWeek
 
 @AndroidEntryPoint
-class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, HomeFragmentEvent, HomeFragmentViewModel>
+class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, HomeFragmentEvent, HomeViewModel>
     (
     FragmentHomeBinding::inflate,
 ), ScheduleItemDelegate {
-    override val viewModel: HomeFragmentViewModel by viewModels()
+    override val viewModel: HomeViewModel by viewModels()
 
     //달력 데코레이터
     private lateinit var todayDec : TodayDecorator

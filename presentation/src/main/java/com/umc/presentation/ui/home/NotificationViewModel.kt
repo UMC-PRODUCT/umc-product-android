@@ -4,9 +4,12 @@ import com.umc.domain.model.home.NotificationItem
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
-class NotificationFragmentViewModel @Inject
+
+@HiltViewModel
+class NotificationViewModel @Inject
 constructor() : BaseViewModel<NotificationFragmentUiState, NotificationFragmentEvent>(
     NotificationFragmentUiState()){
 

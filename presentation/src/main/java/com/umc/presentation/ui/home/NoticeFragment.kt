@@ -12,10 +12,10 @@ import com.umc.presentation.databinding.FragmentNoticeBinding
 
 
 //공지사항 내용
-class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeFragmentUiState, NoticeFragmentEvent, NoticeFragmentViewModel>(
+class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeFragmentUiState, NoticeFragmentEvent, NoticeViewModel>(
     FragmentNoticeBinding::inflate,
 ) {
-    override val viewModel: NoticeFragmentViewModel by viewModels()
+    override val viewModel: NoticeViewModel by viewModels()
 
     override fun initView() {
         binding.apply {

@@ -10,10 +10,10 @@ import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPlanAddBinding
 
-class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiState, PlanAddFragmentEvent, PlanAddFragmentViewModel>(
+class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiState, PlanAddFragmentEvent, PlanAddViewModel>(
     FragmentPlanAddBinding::inflate,
 ) {
-    override val viewModel: PlanAddFragmentViewModel by viewModels()
+    override val viewModel: PlanAddViewModel by viewModels()
 
     override fun initView() {
         binding.apply {

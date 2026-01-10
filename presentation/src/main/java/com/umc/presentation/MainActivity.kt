@@ -19,6 +19,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
     private lateinit var navController: NavController
 
     override fun initView() {
+
         binding.apply {
             vm = viewModel
             initNavigation()

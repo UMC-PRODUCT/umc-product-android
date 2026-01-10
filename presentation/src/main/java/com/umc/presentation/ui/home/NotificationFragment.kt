@@ -13,10 +13,10 @@ import kotlinx.coroutines.launch
 
 
 //알람 내용
-class NotificationFragment : BaseFragment<FragmentNotificationBinding, NotificationFragmentUiState, NotificationFragmentEvent, NotificationFragmentViewModel>(
+class NotificationFragment : BaseFragment<FragmentNotificationBinding, NotificationFragmentUiState, NotificationFragmentEvent, NotificationViewModel>(
     FragmentNotificationBinding::inflate,
 ){
-    override val viewModel: NotificationFragmentViewModel by viewModels()
+    override val viewModel: NotificationViewModel by viewModels()
 
     //리사이클러 어댑터
     private val adapter by lazy { NotificationAdapter() }

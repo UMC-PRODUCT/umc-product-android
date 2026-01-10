@@ -8,10 +8,12 @@ import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 //뷰모델에서는 xml에서 이벤트 의도 전달 -> fragment한테 이거 로직 처리하삼
-class HomeFragmentViewModel
+@HiltViewModel
+class HomeViewModel
     @Inject
     constructor() : BaseViewModel<HomeFragmentUiState, HomeFragmentEvent>(
             HomeFragmentUiState()){

@@ -5,7 +5,7 @@ import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import javax.inject.Inject
 
-class MypageFragmentViewModel @Inject
+class MypageViewModel @Inject
 constructor() : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
 }

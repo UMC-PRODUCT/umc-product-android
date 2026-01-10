@@ -28,12 +28,12 @@ object HomeTagBindingAdapters {
         layoutId: Int,
         onTagClick: (() -> Unit)?
     ) {
-        // 기존에 추가된 뷰들 제거 (데이터 갱신 시 중복 방지)
+        // 기존에 추가된 뷰들 제거
         flexboxLayout.removeAllViews()
         if (items.isNullOrEmpty()) return
 
         items.forEach { tagText ->
-            // DataBinding을 사용하여 item을 인플레이트
+            // DataBinding을 사용하여 item을 inflate
             val binding: ViewDataBinding = DataBindingUtil.inflate(
                 LayoutInflater.from(flexboxLayout.context),
                 layoutId,

@@ -8,7 +8,7 @@
 
         <variable
             name="vm"
-            type="com.umc.presentation.ui.home.NotificationFragmentViewModel" />
+            type="com.umc.presentation.ui.home.NotificationViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
