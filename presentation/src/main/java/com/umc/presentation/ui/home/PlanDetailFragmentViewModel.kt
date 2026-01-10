@@ -8,6 +8,12 @@ import javax.inject.Inject
 class PlanDetailFragmentViewModel @Inject
 constructor() : BaseViewModel<PlanDetailFragmentUiState, PlanDetailFragmentEvent>(
     PlanDetailFragmentUiState()){
+
+
+    fun onClickBackPressed(){
+        emitEvent(PlanDetailFragmentEvent.MoveBackPressedEvent)
+    }
+
 }
 
 data class PlanDetailFragmentUiState(
@@ -15,5 +21,5 @@ data class PlanDetailFragmentUiState(
 ) : UiState
 
 sealed class PlanDetailFragmentEvent : UiEvent {
-    object DummyEvent : HomeFragmentEvent()
+    object MoveBackPressedEvent : PlanDetailFragmentEvent()
 }

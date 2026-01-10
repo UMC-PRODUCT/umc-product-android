@@ -40,7 +40,28 @@ class NotificationFragment : BaseFragment<FragmentNotificationBinding, Notificat
                 }
 
             }
+            
+            launch { 
+                viewModel.uiEvent.collect {
+                    handleMoveEvent(it)
+                }
+            }
         }
+    }
+
+    //이벤트 핸들링(얘를 observing 해서 쭈욱 보고 이벤트 처리)
+    private fun handleMoveEvent(event: NotificationFragmentEvent){
+        when (event){
+            is NotificationFragmentEvent.MoveBackPressedEvent -> moveBackPressed()
+
+            else -> {}
+        }
+    }
+    
+    //뒤로 가기 고우
+    private fun moveBackPressed(){
+        requireActivity().onBackPressedDispatcher.onBackPressed()
+    
     }
 
 

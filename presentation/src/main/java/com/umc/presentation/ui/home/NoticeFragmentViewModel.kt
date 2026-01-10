@@ -9,6 +9,16 @@ class NoticeFragmentViewModel @Inject
 constructor() : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
     NoticeFragmentUiState()){
 
+    init {
+        updateState {
+            copy()
+        }
+    }
+
+    fun onClickBackPressed(){
+        emitEvent(NoticeFragmentEvent.MoveBackPressedEvent)
+    }
+
 }
 
 
@@ -18,5 +28,5 @@ data class NoticeFragmentUiState(
 ) : UiState
 
 sealed class NoticeFragmentEvent : UiEvent {
-    object DummyEvent : HomeFragmentEvent()
+    object MoveBackPressedEvent : NoticeFragmentEvent()
 }

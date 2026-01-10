@@ -27,6 +27,7 @@
             android:layout_marginStart="16dp"
             android:src="@drawable/ic_back"
             android:tint="@color/neutral800"
+            android:onClick="@{()->vm.onClickBackPressed()}"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             />

@@ -22,6 +22,10 @@ constructor() : BaseViewModel<NotificationFragmentUiState, NotificationFragmentE
         }
     }
 
+    //뒤로가기
+    fun onClickBackPressed(){
+        emitEvent(NotificationFragmentEvent.MoveBackPressedEvent)
+    }
 
     /**여기서 서버에서 가져오는 데이터 정의**/
     private fun getNotifications(){
@@ -43,5 +47,5 @@ data class NotificationFragmentUiState(
 ) : UiState
 
 sealed class NotificationFragmentEvent : UiEvent {
-    object DummyEvent : HomeFragmentEvent()
+    object MoveBackPressedEvent : NotificationFragmentEvent()
 }

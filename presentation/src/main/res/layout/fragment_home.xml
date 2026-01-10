@@ -132,6 +132,7 @@
                             app:alignItems="stretch"
                             app:alignContent="flex_start"
                             app:tagItems="@{vm.uiState.tmptag}"
+                            app:tagLayoutId="@{@layout/item_home_tag}"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
                             />

@@ -18,6 +18,12 @@ class HomeFragmentViewModel
 
 
         //테스트용 데이터
+        var tmpSchedules = listOf(
+            SchedulePlanItem( "중앙 해커톤", "10:00", "2026-01-27", "TUE", "27", "D-19", false),
+            SchedulePlanItem( "아이디어톤", "14:00", "2026-01-08", "WED", "08", "", true),
+            SchedulePlanItem( "기획 파트 회의", "19:00", "2026-01-27", "TUE", "27", "D-19", false),
+            SchedulePlanItem( "데모 데이", "13:00", "2026-02-15", "SUN", "15", "D-38", false)
+        )
 
         init{
             updateState {
@@ -29,9 +35,10 @@ class HomeFragmentViewModel
                         SchedulePlanItem( "데모 데이", "13:00", "2026-02-15", "SUN", "15", "D-38", false)
                     ),
 
-                    allPlans = schedules,
+                    //임시로 tmp 넣기
+                    allPlans = tmpSchedules,
                     // 초기 실행 시 오늘 날짜(27일 가정)로 필터링된 리스트를 보여줌
-                    dailyPlans = schedules.filter { it.date == "2026-01-27" }
+                    dailyPlans = tmpSchedules.filter { it.date == "2026-01-27" }
                 )
             }
         }
