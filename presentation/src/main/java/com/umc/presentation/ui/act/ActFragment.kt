@@ -40,9 +40,13 @@ class ActFragment : BaseFragment<FragmentActBinding, ActViewModel.ActivityManage
     private fun setupViewPager(isAdmin: Boolean) {
         if (currentAdapter?.isAdmin == isAdmin) return
 
+        val currentTabPosition = binding.viewPager.currentItem
+
         val adapter = ActViewPagerAdapter(this, isAdmin)
         currentAdapter = adapter
         binding.viewPager.adapter = adapter
+
+        binding.viewPager.setCurrentItem(currentTabPosition, false)
 
         tabLayoutMediator?.detach()
         tabLayoutMediator = TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
