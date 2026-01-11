@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="tagText"
+            type="String" />
+    </data>
+
+    <com.umc.presentation.component.UButton
+        android:id="@+id/item_home_tag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        app:backgroundColor="@color/primary100"
+        app:borderWidth="1dp"
+        app:borderColor="@color/primary200"
+        app:text="@{tagText}"
+        app:textAppearance="@style/Caption1Bold"
+        app:textColor="@color/primary600"
+        app:contentPaddingBottom="4dp"
+        app:contentPaddingTop="4dp"
+        app:contentPaddingLeft="8dp"
+        app:contentPaddingRight="8dp"/>
+
+</layout>
