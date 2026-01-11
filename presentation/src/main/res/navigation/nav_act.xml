@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/nav_act">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_act"
+    app:startDestination="@id/activityManagementFragment">
+
+    <fragment
+        android:id="@+id/activityManagementFragment"
+        android:name="com.umc.presentation.ui.act.ActFragment"
+        android:label="활동 관리 화면"
+        tools:layout="@layout/fragment_act" />
 
 </navigation>

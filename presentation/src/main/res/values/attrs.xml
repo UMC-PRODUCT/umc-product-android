@@ -55,6 +55,13 @@
     </declare-styleable>
 
 
-    <!-- 공통 Tag -->
+    <!-- 공통 Switch -->
+    <declare-styleable name="USwitch">
+        <attr name="android:checked" />
+        <attr name="backgroundColorOn" format="color" />
+        <attr name="backgroundColorOff" format="color" />
+        <attr name="thumbColorOn" format="color" />
+        <attr name="thumbColorOff" format="color" />
+    </declare-styleable>
 
 </resources>
