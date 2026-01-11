@@ -1,9 +1,6 @@
 package com.umc.presentation.ui.act
 
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.tabs.TabLayoutMediator
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
@@ -22,15 +19,19 @@ class ActFragment : BaseFragment<FragmentActBinding, ActViewModel.ActivityManage
 
     override fun initView() {
         binding.vm = viewModel
-        binding.lifecycleOwner = viewLifecycleOwner
+
+        binding.switchAdmin.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setAdminMode(isChecked)
+        }
     }
 
     override fun initStates() {
         super.initStates()
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.isAdminMode.collect { isAdmin ->
-                    setupViewPager(isAdmin)
+        repeatOnStarted(viewLifecycleOwner) {
+            launch {
+                viewModel.uiState.collect { state ->
+                    setupViewPager(state.isAdmin)
+                    // TODO: 그 외 다른 상태 관리
                 }
             }
         }
