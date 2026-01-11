@@ -1,6 +1,7 @@
 package com.umc.presentation
 
 import android.view.View
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
@@ -19,6 +20,8 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
     private lateinit var navController: NavController
 
     override fun initView() {
+
+        enableEdgeToEdge()
 
         binding.apply {
             vm = viewModel
@@ -58,12 +61,10 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
     private fun changeBottomNavigationView(id: Int) {
         // TODO 다른 화면들도 정의해야 함.
         when (id) {
-            R.id.homeFragment -> {
+            R.id.homeFragment,
+            R.id.mypageFragment,
+            R.id.activityManagementFragment -> {
                 binding.mainBnv.visibility = View.VISIBLE
-            }
-            R.id.mypageFragment -> {
-                binding.mainBnv.visibility = View.VISIBLE
-
             }
             else -> binding.mainBnv.visibility = View.GONE
         }
