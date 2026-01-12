@@ -11,10 +11,10 @@ import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentMypageBinding
 
 
-class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState, MypageFragmentEvent, MypageFragmentViewModel>(
+class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState, MypageFragmentEvent, MypageViewModel>(
     FragmentMypageBinding::inflate,
 ) {
-    override val viewModel : MypageFragmentViewModel by viewModels()
+    override val viewModel : MypageViewModel by viewModels()
 
     override fun initView() {
         binding.apply {

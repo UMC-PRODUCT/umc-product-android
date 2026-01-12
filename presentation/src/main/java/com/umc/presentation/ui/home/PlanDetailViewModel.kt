@@ -3,11 +3,20 @@ package com.umc.presentation.ui.home
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
-class PlanDetailFragmentViewModel @Inject
+
+@HiltViewModel
+class PlanDetailViewModel @Inject
 constructor() : BaseViewModel<PlanDetailFragmentUiState, PlanDetailFragmentEvent>(
     PlanDetailFragmentUiState()){
+
+
+    fun onClickBackPressed(){
+        emitEvent(PlanDetailFragmentEvent.MoveBackPressedEvent)
+    }
+
 }
 
 data class PlanDetailFragmentUiState(
@@ -15,5 +24,5 @@ data class PlanDetailFragmentUiState(
 ) : UiState
 
 sealed class PlanDetailFragmentEvent : UiEvent {
-    object DummyEvent : HomeFragmentEvent()
+    object MoveBackPressedEvent : PlanDetailFragmentEvent()
 }

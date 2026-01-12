@@ -7,7 +7,7 @@
 
         <variable
             name="vm"
-            type="com.umc.presentation.ui.home.PlanAddFragmentViewModel" />
+            type="com.umc.presentation.ui.home.PlanAddViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
