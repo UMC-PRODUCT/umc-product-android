@@ -5,8 +5,10 @@ import androidx.navigation.fragment.findNavController
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.base.UiState
 import com.umc.presentation.databinding.FragmentSignUpFailBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class SignUpFailFragment : BaseFragment<FragmentSignUpFailBinding, UiState, SignUpFailEvent, SignUpFailViewModel>(
     FragmentSignUpFailBinding::inflate,
 ) {

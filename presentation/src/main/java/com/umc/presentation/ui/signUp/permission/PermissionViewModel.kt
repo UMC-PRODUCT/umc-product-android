@@ -3,8 +3,10 @@ package com.umc.presentation.ui.signUp.permission
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
+@HiltViewModel
 class PermissionViewModel
 @Inject
 constructor() : BaseViewModel<PermissionUiState, PermissionEvent>(
@@ -47,6 +49,18 @@ constructor() : BaseViewModel<PermissionUiState, PermissionEvent>(
         }
     }
 
+    fun onClickSignUp() {
+        emitEvent(PermissionEvent.ShowPermissionDialog)
+    }
+
+    fun signUp() {
+        //TODO 서버 통신 성공 시
+        emitEvent(PermissionEvent.MoveToMainEvent)
+
+        //TODO 실패 시
+        //emitEvent(PermissionEvent.MoveToFailEvent)
+    }
+
 }
 
 data class PermissionUiState(
@@ -58,5 +72,7 @@ data class PermissionUiState(
 sealed class PermissionEvent : UiEvent {
     object MoveToBack : PermissionEvent()
     object MoveToMainEvent : PermissionEvent()
+    object MoveToFailEvent : PermissionEvent()
+    object ShowPermissionDialog : PermissionEvent()
 
 }

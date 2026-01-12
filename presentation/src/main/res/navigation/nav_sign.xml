@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_sign"
-    app:startDestination="@id/signUpFailFragment"
+    app:startDestination="@id/permissionFragment"
     >
 
     <fragment
@@ -57,6 +57,14 @@
         android:label="권한"
         tools:layout="@layout/fragment_permission">
 
+        <action
+            android:id="@+id/action_permission_to_home"
+            app:destination="@id/nav_home"/>
+
+        <action
+            android:id="@+id/action_permission_to_fail"
+            app:destination="@id/signUpFailFragment"/>
+
     </fragment>
 
     <fragment
@@ -64,7 +72,6 @@
         android:name="com.umc.presentation.ui.signUp.fail.SignUpFailFragment"
         android:label="인증 실패"
         tools:layout="@layout/fragment_sign_up_fail">
-
     </fragment>
 
 

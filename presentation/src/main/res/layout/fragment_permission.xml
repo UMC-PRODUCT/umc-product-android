@@ -285,6 +285,7 @@
             android:layout_height="52dp"
             android:layout_marginHorizontal="24dp"
             android:layout_marginBottom="24dp"
+            android:onClick="@{()->vm.onClickSignUp()}"
             android:enabled="@{vm.uiState.alarmCheck}"
             app:backgroundColor="@{vm.uiState.alarmCheck ? @color/primary500 : @color/neutral300}"
             app:cornerRadius="8dp"

@@ -5,8 +5,10 @@ import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import com.umc.presentation.util.Const
+import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
+@HiltViewModel
 class SignUpViewModel
 @Inject
 constructor() : BaseViewModel<SignUpState, SignUpEvent>(

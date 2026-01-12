@@ -1,11 +1,9 @@
 package com.umc.presentation
 
-import android.graphics.drawable.ColorDrawable
 import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.navigation.NavController
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.umc.presentation.base.BaseActivity
