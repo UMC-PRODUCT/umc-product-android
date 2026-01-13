@@ -143,7 +143,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="16dp"
-                            android:text="홍길동님"
+                            android:text="@{vm.uiState.userName}"
                             android:textColor="@color/neutral600"
                             android:textAppearance="@style/Headline"
                             app:layout_constraintStart_toStartOf="parent"
@@ -154,15 +154,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:text="수료한 지 어쩌구"
+                            android:text=""
                             android:textColor="@color/neutral600"
                             android:textAppearance="@style/Title3Bold"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toBottomOf="@id/home_tv_username" />
 
                         <ImageView
-                            android:layout_width="80dp"
-                            android:layout_height="80dp"
+                            android:layout_width="90dp"
+                            android:layout_height="90dp"
                             android:src="@{vm.uiState.userType == UserType.ACTIVE ? @drawable/ic_home_active : @drawable/ic_home_ob}"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"

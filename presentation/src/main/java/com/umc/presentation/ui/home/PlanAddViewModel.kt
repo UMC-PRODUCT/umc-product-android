@@ -16,6 +16,7 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
 
 data class PlanAddFragmentUiState(
     val dummyData: String = "",
+    val isAllDay: Boolean = false,
 ) : UiState
 
 sealed class PlanAddFragmentEvent : UiEvent {

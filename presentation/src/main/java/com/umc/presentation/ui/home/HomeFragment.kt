@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.home
 
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import androidx.core.content.ContextCompat
@@ -60,6 +61,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
                     } else {
                         allAdapter.submitList(state.allPlans)
                     }
+
+                    //커스텀 텍스트뷰
+                    updateGrowthDaysText(state.growDay)
                 }
             }
 
@@ -117,6 +121,16 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
         findNavController().navigate(action)
     }
 
+    //텍스트 뷰 색깔 변경 (000일째 성장하고 있어요)
+    private fun updateGrowthDaysText(days: Int) {
+        val highlight = "${days}일째"
+        val fullText = "$highlight 성장하고 있어요"
+        val color = ContextCompat.getColor(requireContext(), R.color.primary600) // 다크모드 대응
+
+        binding.homeTvUserstatus.text = SpannableStringBuilder(fullText).apply {
+            setSpan(ForegroundColorSpan(color), 0, highlight.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+    }
 
     //MaterialCalendar 초기화
     private fun initCalendar(){

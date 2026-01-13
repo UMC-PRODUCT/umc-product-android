@@ -5,6 +5,7 @@
     tools:context=".ui.home.PlanDetailFragment">
 
     <data>
+        <import type="android.view.View"/>
 
         <variable
             name="vm"
@@ -26,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_back"
-            android:tint="@color/neutral800"
+            app:tint="@color/neutral800"
             android:onClick="@{()->vm.onClickBackPressed()}"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -50,7 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_menu_kebab"
-            android:tint="@color/neutral800"
+            app:tint="@color/neutral800"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             />
@@ -291,8 +292,8 @@
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginBottom="24dp"
-            android:visibility="@{vm.uiState.isToday == true ? View.VISIBLE : View.INVISIBLE}"
-            android:onClick="@{vm.onClickConfirmAttention()}"
+            android:visibility="@{vm.uiState.isToday == true ? View.VISIBLE : View.GONE}"
+            android:onClick="@{()->vm.onClickConfirmAttention()}"
             app:backgroundColor="@color/accent500"
             app:cornerRadius="16dp"
             app:pressedColor="@color/accent700"

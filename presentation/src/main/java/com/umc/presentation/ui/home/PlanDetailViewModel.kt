@@ -25,8 +25,17 @@ constructor() : BaseViewModel<PlanDetailFragmentUiState, PlanDetailFragmentEvent
 }
 
 data class PlanDetailFragmentUiState(
-    val dummyData: String = "",
     val isToday : Boolean = true,
+
+    //일정 관련
+    /**TODO 차후 SchedulePlanItem 관련해서 세팅을 해야 할 거 같음**/
+    val title : String = "정기 세션 3주차",
+    val date : String = "",
+    val dateWithDay : String ="",
+    val time : String = "",
+    val place : String = "",
+    val detail : String = "",
+
 ) : UiState
 
 sealed class PlanDetailFragmentEvent : UiEvent {
