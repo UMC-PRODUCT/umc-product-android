@@ -360,7 +360,7 @@
                         app:layout_constraintTop_toTopOf="@id/planadd_tv_plan_title_attend" />
 
 
-                    
+
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.core.widget.NestedScrollView>
