@@ -20,7 +20,7 @@ class UChip @JvmOverloads constructor(
 {
     private val binding = CustomChipBinding.inflate(LayoutInflater.from(context), this)
     // 리스너 설정
-    private var onCloseClickListener: (() -> Unit)? = null
+    private var onCloseClickListener: ((String) -> Unit)? = null
     
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.UChip, defStyle, 0)
@@ -83,7 +83,7 @@ class UChip @JvmOverloads constructor(
                 imvClose.setOnClickListener {
                     // 아이템이 사라지는 기본 로직 수행 후 콜백 호출
                     this@UChip.visibility = View.GONE
-                    onCloseClickListener?.invoke()
+                    onCloseClickListener?.invoke(binding.tvChipText.text.toString())
                 }
 
 
@@ -99,7 +99,7 @@ class UChip @JvmOverloads constructor(
     }
 
     // X 버튼 클릭 리스너 등록 (데이터 삭제나 기타 로직 수행)
-    fun setOnCloseClickListener(listener: () -> Unit) {
+    fun setOnCloseClickListener(listener: (String) -> Unit) {
         this.onCloseClickListener = listener
     }
 
