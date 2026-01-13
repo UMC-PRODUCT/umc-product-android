@@ -216,7 +216,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:text="승인 대기중"
+                            android:text="@string/attendance_status_pending_title"
                             android:textAppearance="@style/HeadlineBold"
                             android:textColor="@color/warning900" />
 
@@ -224,9 +224,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:text="스터디장님이 출석 정보를 확인하고 있습니다."
+                            android:text="@{@string/attendance_status_pending_description(uiModel.session.admin)}"
                             android:textAppearance="@style/Footnote"
-                            android:textColor="@color/warning700" />
+                            android:textColor="@color/warning700"
+                            tools:text="스터디장님이 출석 정보를 확인하고 있습니다."/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -258,7 +259,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:text="출석 처리가 완료 되었습니다."
+                            android:text="@string/attendance_status_completed_description"
                             android:textAppearance="@style/FootnoteBold"
                             android:textColor="@color/success700" />
                     </LinearLayout>

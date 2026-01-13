@@ -63,7 +63,8 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
 
                     if (state.availableSessions.isEmpty()) {
                         availableEmptyAdapter.submitList(listOf(EmptyStateUIModel(
-                            R.drawable.ic_people, "아직 출석 가능한 세션이 없어요"
+                            R.drawable.ic_people,
+                            getString(R.string.attendance_empty_available)
                         )))
                     } else {
                         availableEmptyAdapter.submitList(emptyList<EmptyStateUIModel>())
@@ -73,7 +74,8 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
 
                     if (state.attendanceHistories.isEmpty()) {
                         historyEmptyAdapter.submitList(listOf(EmptyStateUIModel(
-                            R.drawable.ic_document, "아직 진행된 세션이 없어요"
+                            R.drawable.ic_document,
+                            getString(R.string.attendance_empty_history)
                         )))
                     } else {
                         historyEmptyAdapter.submitList(emptyList<EmptyStateUIModel>())

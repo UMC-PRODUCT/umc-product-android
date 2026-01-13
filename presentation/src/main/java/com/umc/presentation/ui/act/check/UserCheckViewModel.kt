@@ -20,9 +20,9 @@ class UserCheckViewModel @Inject constructor() :
 
     private fun loadInitialData() {
         val availableList = listOf(
-            CheckAvailable(1, "스터디", "14:00", "18:00", CheckAvailableStatus.BEFORE),
-            CheckAvailable(2, "정기 세션 3주차", "14:00", "18:00", CheckAvailableStatus.COMPLETED),
-            CheckAvailable(3, "UMCON", "14:00", "18:00", CheckAvailableStatus.PENDING)
+            CheckAvailable(1, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE),
+            CheckAvailable(2, "정기 세션 3주차", "14:00", "18:00", "운영진", CheckAvailableStatus.COMPLETED),
+            CheckAvailable(3, "UMCON", "14:00", "18:00", "스터디장", CheckAvailableStatus.PENDING)
         ).map { CheckAvailableUIModel(it) }
 
         val rawHistoryList = listOf(

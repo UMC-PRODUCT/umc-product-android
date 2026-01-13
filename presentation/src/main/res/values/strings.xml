@@ -48,4 +48,11 @@
     <string name="attendance_request_button">현 위치로 출석 요청</string>
     <string name="attendance_fail_reason_question">위치 인증이 안 되나요?</string>
     <string name="attendance_fail_reason_action">사유 제출하기</string>
+
+    <string name="attendance_status_pending_title">승인 대기중</string>
+    <string name="attendance_status_pending_description">%1$s님이 출석 정보를 확인하고 있습니다.</string>
+    <string name="attendance_status_completed_description">출석 처리가 완료 되었습니다.</string>
+
+    <string name="attendance_empty_available">아직 출석 가능한 세션이 없어요</string>
+    <string name="attendance_empty_history">아직 진행된 세션이 없어요</string>
 </resources>
