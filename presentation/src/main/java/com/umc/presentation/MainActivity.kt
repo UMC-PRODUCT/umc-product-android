@@ -20,6 +20,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
     private lateinit var navController: NavController
 
     override fun initView() {
+
         enableEdgeToEdge()
 
         binding.apply {

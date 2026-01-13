@@ -76,5 +76,8 @@ dependencies {
 
     // RECYCLER VIEW
     implementation(libs.androidx.recyclerview)
+    
+    // flexboxLayout
+    implementation(libs.google.flexbox)
 }
 
