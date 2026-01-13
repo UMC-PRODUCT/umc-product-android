@@ -36,6 +36,7 @@ class CheckAvailableAdapter(
             binding.uiModel = uiModel
 
             binding.root.setOnClickListener {
+                // 확장/축소 시 애니메이션 효과
                 val parent = itemView.parent as? ViewGroup
                 if (parent != null) {
                     val transition = AutoTransition().apply { duration = 300 }

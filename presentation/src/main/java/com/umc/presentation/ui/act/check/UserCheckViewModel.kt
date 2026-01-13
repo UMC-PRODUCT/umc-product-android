@@ -46,6 +46,9 @@ class UserCheckViewModel @Inject constructor() :
         }
     }
 
+    /**
+     * 특정 아이템을 클릭했을 때 확장 상태를 토글
+     */
     fun toggleSessionExpansion(sessionId: Int) {
         updateState {
             val newList = availableSessions.map { uiModel ->

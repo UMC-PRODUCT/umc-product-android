@@ -18,6 +18,7 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
 ) {
     override val viewModel: UserCheckViewModel by viewModels()
 
+    // 각각의 섹션을 담당하는 어댑터들을 개별 생성
     private val availableHeaderAdapter by lazy { SectionHeaderAdapter(getString(R.string.attendance_header_available)) }
     private val availableAdapter by lazy {
         CheckAvailableAdapter { sessionId -> viewModel.toggleSessionExpansion(sessionId) }
@@ -29,6 +30,9 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
         setupMainRecyclerView()
     }
 
+    /**
+     * ConcatAdapter를 사용하여 헤더-리스트-헤더-리스트 순서로 결합
+     */
     private fun setupMainRecyclerView() {
         val concatAdapter = ConcatAdapter(
             availableHeaderAdapter,
@@ -44,11 +48,10 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
     }
 
     override fun initStates() {
-        // HomeFragment의 패턴을 따라 상태 수집
         repeatOnStarted(viewLifecycleOwner) {
+            // StateFlow를 구독하여 데이터 변경 시 UI 업데이트
             launch {
                 viewModel.uiState.collect { state ->
-                    // 뷰모델의 상태에 따라 어댑터 데이터 갱신
                     availableAdapter.submitList(state.availableSessions)
                     availableHeaderAdapter.updateCount(state.availableCount)
                     historyAdapter.submitList(state.attendanceHistories)
