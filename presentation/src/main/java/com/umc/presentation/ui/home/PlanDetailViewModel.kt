@@ -17,12 +17,20 @@ constructor() : BaseViewModel<PlanDetailFragmentUiState, PlanDetailFragmentEvent
         emitEvent(PlanDetailFragmentEvent.MoveBackPressedEvent)
     }
 
+    fun onClickConfirmAttention(){
+        emitEvent(PlanDetailFragmentEvent.TouchConfirmAttention)
+    }
+
+
 }
 
 data class PlanDetailFragmentUiState(
     val dummyData: String = "",
+    val isToday : Boolean = true,
 ) : UiState
 
 sealed class PlanDetailFragmentEvent : UiEvent {
     object MoveBackPressedEvent : PlanDetailFragmentEvent()
+    object TouchConfirmAttention : PlanDetailFragmentEvent()
+
 }

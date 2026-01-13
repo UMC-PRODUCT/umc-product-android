@@ -620,7 +620,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_calendar_corner_radius16"
+                android:background="@drawable/bg_neutral000_radius16"
                 android:layout_marginTop="32dp"
                 android:visibility="@{vm.uiState.viewMode == HomeViewMode.CALENDAR ? View.VISIBLE : View.GONE}"
                 app:layout_constraintTop_toBottomOf="@id/home_tv_plan_title">
@@ -631,7 +631,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:padding="16dp"
-                    android:background="@drawable/bg_calendar_corner_radius16"
+                    android:background="@drawable/bg_neutral000_radius16"
                     android:elevation="0dp"
                     app:mcv_selectionColor="@color/neutral000"
                     app:mcv_selectionMode="single"

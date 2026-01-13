@@ -93,9 +93,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
     }
 
     //이동 함수들
+    /**TODO 조나단이 작성한 공지 상세 페이지로 이동하도록 로직 수정 필요
+     *
+     * **/
     private fun moveToNotice(){
-        val action = HomeFragmentDirections.actionHomeToNotice()
-        findNavController().navigate(action)
+        //val action = HomeFragmentDirections.actionHomeToNotice()
+        //findNavController().navigate(action)
 
     }
 

@@ -12,6 +12,9 @@
     <string name="home_plan_detail_title">일정 상세</string>
     <string name="home_plan_detail_calendar">일시</string>
     <string name="home_plan_detail_location">장소</string>
+    <string name="home_plan_detail_show_map">지도 보기</string>
+    <string name="home_plan_detail_plan_notice">상세 안내</string>
+    <string name="home_plan_detail_check_confirm">출석 체크 하러가기</string>
 
     <!-- Word -->
     <string name="sign_up">회원가입</string>
