@@ -57,4 +57,19 @@
     <string name="tab_attendance_admin">출석 관리</string>
     <string name="tab_study_admin">스터디 관리</string>
     <string name="tab_challenge_admin">챌린저 관리</string>
+
+    <string name="attendance_header_available">출석 가능한 세션</string>
+    <string name="attendance_header_history">나의 출석 현황</string>
+    <string name="attendance_count_remaining_format">%d개 남음</string>
+
+    <string name="attendance_request_button">현 위치로 출석 요청</string>
+    <string name="attendance_fail_reason_question">위치 인증이 안 되나요?</string>
+    <string name="attendance_fail_reason_action">사유 제출하기</string>
+
+    <string name="attendance_status_pending_title">승인 대기중</string>
+    <string name="attendance_status_pending_description">%1$s님이 출석 정보를 확인하고 있습니다.</string>
+    <string name="attendance_status_completed_description">출석 처리가 완료 되었습니다.</string>
+
+    <string name="attendance_empty_available">아직 출석 가능한 세션이 없어요</string>
+    <string name="attendance_empty_history">아직 진행된 세션이 없어요</string>
 </resources>
