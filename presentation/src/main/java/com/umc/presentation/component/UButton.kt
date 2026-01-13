@@ -73,4 +73,8 @@ class UButton
         fun setText(text: String?) {
             binding.textView.text = text ?: ""
         }
+
+        fun setTextColor(color: Int) {
+            binding.textView.setTextColor(color)
+        }
     }
