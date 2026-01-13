@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="12dp">
+
+        <TextView
+            android:id="@+id/tv_section_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/Title3Bold"
+            android:textColor="@color/neutral800"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="@string/attendance_header_available" />
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/btn_section_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:backgroundColor="@color/primary100"
+            app:buttonElevation="0"
+            app:cornerRadius="4dp"
+            app:contentPaddingBottom="4dp"
+            app:contentPaddingTop="4dp"
+            app:contentPaddingLeft="8dp"
+            app:contentPaddingRight="8dp"
+            app:borderWidth="1dp"
+            app:borderColor="@color/primary200"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_section_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tv_section_title"
+            app:textAppearance="@style/FootnoteBold"
+            app:textColor="@color/primary500"
+            tools:text="@string/attendance_count_remaining_format"
+            tools:visibility="visible" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
