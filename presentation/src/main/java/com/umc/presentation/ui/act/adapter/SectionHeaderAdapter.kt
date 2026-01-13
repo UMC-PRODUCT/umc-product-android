@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.presentation.R // R 클래스 임포트 필수
+import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemSectionHeaderBinding
 
 class SectionHeaderAdapter(
@@ -18,7 +18,7 @@ class SectionHeaderAdapter(
             binding.tvSectionTitle.text = title
 
             val currentCount = count
-            if (currentCount != null) {
+            if (currentCount != null && currentCount > 0) {
                 binding.btnSectionCount.visibility = View.VISIBLE
                 val formattedText = binding.root.context.getString(
                     R.string.attendance_count_remaining_format,
@@ -40,8 +40,8 @@ class SectionHeaderAdapter(
 
     override fun getItemCount(): Int = 1
 
-    fun updateCount(count: Int) {
-        this.count = count
+    fun updateCount(newCount: Int) {
+        this.count = newCount
         notifyItemChanged(0)
     }
 }

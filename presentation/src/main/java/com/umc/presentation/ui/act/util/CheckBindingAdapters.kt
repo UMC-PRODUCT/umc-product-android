@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.act.util
 
+import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
 import com.google.android.material.card.MaterialCardView
@@ -57,5 +58,12 @@ object CheckBindingAdapters {
             .setBottomLeftCorner(CornerFamily.ROUNDED, bottomRadius)
             .setBottomRightCorner(CornerFamily.ROUNDED, bottomRadius)
             .build()
+    }
+}
+
+@BindingAdapter("imageResource")
+fun setImageResource(imageView: ImageView, resId: Int) {
+    if (resId != 0) {
+        imageView.setImageResource(resId)
     }
 }
