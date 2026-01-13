@@ -1,7 +1,18 @@
 package com.umc.domain.model.act.check
 
-enum class AttendanceStatus(val text: String) {
+/**
+ * 출석 가능 세션의 Enum값
+ */
+enum class CheckAvailableStatus(val text: String) {
     BEFORE("출석 전"),
+    PENDING("승인 대기"),
+    COMPLETED("출석 완료")
+}
+
+/**
+ * 출석 기록의 Enumr값
+ */
+enum class CheckHistoryStatus(val text: String) {
     SUCCESS("출석"),
     LATE("지각"),
     ABSENT("결석")
@@ -15,7 +26,7 @@ data class CheckAvailable(
     val title: String,
     val startTime: String,
     val endTime: String,
-    val status: AttendanceStatus
+    val status: CheckAvailableStatus
 )
 
 /**
@@ -27,5 +38,5 @@ data class CheckHistory(
     val title: String,
     val startTime: String,
     val endTime: String,
-    val status: AttendanceStatus
+    val status: CheckHistoryStatus
 )
