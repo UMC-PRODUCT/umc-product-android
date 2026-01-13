@@ -4,25 +4,25 @@
     <color name="white">#FFFFFFFF</color>
 
 
-    <color name="primary100">#1B2964</color>
-    <color name="primary200">#243684</color>
+    <color name="primary100">#1B2965</color>
+    <color name="primary200">#253888</color>
     <color name="primary300">#3149B5</color>
-    <color name="primary400">#3656D8</color>
+    <color name="primary400">#3657D8</color>
     <color name="primary500">#4264F0</color>
     <color name="primary600">#617FFF</color>
-    <color name="primary700">#94A6FF</color>
-    <color name="primary800">#C2CEFF</color>
-    <color name="primary900">#DBE2FF</color>
+    <color name="primary700">#94A7FF</color>
+    <color name="primary800">#C7D2FF</color>
+    <color name="primary900">#E0E7FF</color>
 
 
-    <color name="accent100">#6B2A00</color>
-    <color name="accent200">#993C00</color>
-    <color name="accent300">#C74E00</color>
-    <color name="accent400">#E05700</color>
-    <color name="accent500">#F56000</color>
-    <color name="accent600">#FF7924</color>
-    <color name="accent700">#FFA266</color>
-    <color name="accent800">#FFCAA8</color>
+    <color name="accent100">#4D1E00</color>
+    <color name="accent200">#7A3000</color>
+    <color name="accent300">#A84200</color>
+    <color name="accent400">#DB5500</color>
+    <color name="accent500">#FF6C0F</color>
+    <color name="accent600">#FF924D</color>
+    <color name="accent700">#FFAA75</color>
+    <color name="accent800">#FFCDAD</color>
     <color name="accent900">#FFEDE0</color>
 
 
@@ -38,25 +38,25 @@
     <color name="neutral900">#F7F7F7</color>
 
 
-    <color name="success100">#044836</color>
-    <color name="success300">#076E51</color>
-    <color name="success500">#0B9D71</color>
-    <color name="success700">#87DEC4</color>
-    <color name="success900">#D4F7EB</color>
+    <color name="success100">#174A39</color>
+    <color name="success300">#288163</color>
+    <color name="success500">#31A07B</color>
+    <color name="success700">#96DFC6</color>
+    <color name="success900">#E8F8F2</color>
 
 
-    <color name="warning100">#9E6500</color>
-    <color name="warning300">#C77E00</color>
-    <color name="warning500">#FFA500</color>
+    <color name="warning100">#5C3A00</color>
+    <color name="warning300">#A86B00</color>
+    <color name="warning500">#F59E00</color>
     <color name="warning700">#FFCD75</color>
-    <color name="warning900">#FFF4BD</color>
+    <color name="warning900">#FFFAE0</color>
 
 
-    <color name="danger100">#751A1A</color>
-    <color name="danger300">#A82424</color>
-    <color name="danger500">#E03131</color>
-    <color name="danger700">#F29B9B</color>
-    <color name="danger900">#FDECEC</color>
+    <color name="danger100">#520F0F</color>
+    <color name="danger300">#8E1A1A</color>
+    <color name="danger500">#DB3E3E</color>
+    <color name="danger700">#EA8B8B</color>
+    <color name="danger900">#FAE5E5</color>
 
 
 

@@ -12,6 +12,23 @@
     <string name="home_plan_detail_title">일정 상세</string>
     <string name="home_plan_detail_calendar">일시</string>
     <string name="home_plan_detail_location">장소</string>
+    <string name="home_plan_detail_show_map">지도 보기</string>
+    <string name="home_plan_detail_plan_notice">상세 안내</string>
+    <string name="home_plan_detail_check_confirm">출석 체크 하러가기</string>
+    <string name="home_plan_add_title">일정 등록</string>
+    <string name="home_plan_add_plan_name">일정 제목</string>
+    <string name="home_plan_add_plan_name_placeholder">일정 제목을 입력하세요</string>
+    <string name="home_plan_add_plan_location_placeholder">장소를 입력하세요</string>
+    <string name="home_plan_add_plan_detail_placeholder">상세 내용을 입력하세요</string>
+    <string name="home_plan_add_plan_search_placeholder">이름, 닉네임 또는 학교 검색</string>
+    <string name="home_plan_add_plan_attend">참여자 명단</string>
+    <string name="home_plan_add_plan_detail_information">상세 안내</string>
+    <string name="home_plan_add_plan_category">카테고리</string>
+    <string name="allday">하루 종일</string>
+    <string name="start">시작</string>
+    <string name="end">종료</string>
+
+
 
     <!-- Word -->
     <string name="sign_up">회원가입</string>

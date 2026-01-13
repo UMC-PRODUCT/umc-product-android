@@ -1,5 +1,7 @@
 package com.umc.presentation.ui.home
 
+import android.R
+import android.text.Spanned
 import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
@@ -91,9 +93,13 @@ data class HomeFragmentUiState(
 
     // 달력 <-> 일정 전환
     val viewMode: HomeViewMode = HomeViewMode.CALENDAR,
+
     // 유저 정보 영역
+    val userName: String = "홍길동",
+    val growDay: Int = 731,
+
     val userType: UserType = UserType.ACTIVE,
-    //val profileInfo: ProfileInfo? = null,
+
     val warningStatus: WarningStatus = WarningStatus.WARNING,
 
     //알람 존재 관련
@@ -120,6 +126,7 @@ data class HomeFragmentUiState(
 
 
 ) : UiState
+
 
 sealed class HomeFragmentEvent : UiEvent {
     object MoveNoticeEvent : HomeFragmentEvent() //공시사항 이동

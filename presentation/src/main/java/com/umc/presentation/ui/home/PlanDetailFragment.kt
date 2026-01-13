@@ -27,4 +27,20 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
     }
 
 
+    private fun handleMoveEvent(event: PlanDetailFragmentEvent){
+        when (event){
+            is PlanDetailFragmentEvent.TouchConfirmAttention -> clickConfirmAttention()
+
+            else -> {}
+        }
+    }
+
+
+    //해당 탭을 닫고 이동하는 로직
+    /**TODO 로직 작성 필요**/
+    private fun clickConfirmAttention(){
+
+    }
+
+
 }
