@@ -7,7 +7,10 @@ enum class AttendanceStatus(val text: String) {
     ABSENT("결석")
 }
 
-data class AvailableSession(
+/**
+ * 현재 출석 가능한 세션 정보
+ */
+data class CheckAvailable(
     val id: Int,
     val title: String,
     val startTime: String,
@@ -15,7 +18,10 @@ data class AvailableSession(
     val status: AttendanceStatus
 )
 
-data class AttendanceHistory(
+/**
+ * 과거 출석 기록 정보
+ */
+data class CheckHistory(
     val id: Int,
     val week: String,
     val title: String,

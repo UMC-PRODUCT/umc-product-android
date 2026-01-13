@@ -1,9 +1,9 @@
 package com.umc.presentation.ui.act.check
 
-import com.umc.domain.model.act.check.AvailableSession
+import com.umc.domain.model.act.check.CheckAvailable
 
 data class CheckAvailableUIModel(
-    val session: AvailableSession,
+    val session: CheckAvailable,
     val isExpanded: Boolean = false
 ) {
     val formattedTime: String = "${session.startTime} - ${session.endTime}"
