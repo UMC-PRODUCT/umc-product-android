@@ -37,14 +37,14 @@
     <color name="neutral900">#1F2124</color>
 
 
-    <color name="success100">#DDF8EF</color>
+    <color name="success100">#EBF9F5</color>
     <color name="success300">#8FE0C8</color>
     <color name="success500">#0CA678</color>
     <color name="success700">#087C5B</color>
     <color name="success900">#055741</color>
 
 
-    <color name="warning100">#FFF7D1</color>
+    <color name="warning100">#FFFBE5</color>
     <color name="warning300">#FFD180</color>
     <color name="warning500">#FFA500</color>
     <color name="warning700">#C97F00</color>
