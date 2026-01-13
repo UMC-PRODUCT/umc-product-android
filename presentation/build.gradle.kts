@@ -73,5 +73,8 @@ dependencies {
 
     // KAKAO
     implementation(libs.kakao.user)
+
+    // RECYCLER VIEW
+    implementation(libs.androidx.recyclerview)
 }
 
