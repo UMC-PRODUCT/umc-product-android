@@ -68,7 +68,7 @@ class UChip @JvmOverloads constructor(
                         ),
                         intArrayOf(
                             pressedColor,
-                            a.getColor(R.styleable.UChip_backgroundColor, ContextCompat.getColor(context, R.color.black)),
+                            backgroundColor,
                         ),
                     )
                 setCardBackgroundColor(bg)

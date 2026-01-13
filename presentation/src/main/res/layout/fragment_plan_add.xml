@@ -58,7 +58,7 @@
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="wrap_content">
 
                     <!--일정 제목-->
 
@@ -89,14 +89,14 @@
                         android:layout_marginTop="16dp"
                         android:background="@color/neutral000"
                         app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_name"
-                        app:placeholderText="@string/sign_up_name_placeholder"
-                        app:text="이름"
+                        app:layout_constraintStart_toStartOf="@id/planadd_tv_plan_title_name"
+                        app:placeholderText="@string/home_plan_add_plan_name_placeholder"
                         app:textAppearance="@style/Subheadline" />
 
 
                     <!--일시-->
                     <TextView
-                        android:id="@+id/planadd_tv_plan_date_name"
+                        android:id="@+id/planadd_tv_plan_title_date"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="32dp"
@@ -113,8 +113,8 @@
                         android:text="*"
                         android:textAppearance="@style/HeadlineBold"
                         android:textColor="@color/danger500"
-                        app:layout_constraintStart_toEndOf="@id/planadd_tv_plan_date_name"
-                        app:layout_constraintTop_toTopOf="@id/planadd_tv_plan_date_name" />
+                        app:layout_constraintStart_toEndOf="@id/planadd_tv_plan_title_date"
+                        app:layout_constraintTop_toTopOf="@id/planadd_tv_plan_title_date" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/plandetail_cdv_cover"
@@ -129,7 +129,7 @@
                     app:strokeColor="@color/neutral300"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_date_name">
+                    app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_date">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
@@ -198,7 +198,6 @@
                         app:borderWidth="1dp"
                         app:textAppearance="@style/SubheadlineBold"
                         app:textColor="@color/neutral500"
-                        app:showCloseIcon="true"
                         app:layout_constraintEnd_toStartOf="@id/plandetail_cdv_start_time"
                         app:layout_constraintTop_toTopOf="@id/plandetail_tv_start"
                         app:layout_constraintBottom_toBottomOf="@id/plandetail_tv_start"/>
@@ -220,9 +219,7 @@
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/plandetail_tv_start"
                         app:layout_constraintBottom_toBottomOf="@id/plandetail_tv_start"/>
-
                         />
-
 
 
 
@@ -250,9 +247,120 @@
                         app:layout_constraintTop_toBottomOf="@id/plandetail_view_divide2"
                         />
 
+                    <com.umc.presentation.component.UChip
+                        android:id="@+id/plandetail_cdv_end_date"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        app:text="2025년 2월 2일"
+                        app:backgroundColor="@color/neutral000"
+                        app:pressedColor="@color/neutral300"
+                        app:borderColor="@color/neutral200"
+                        app:borderWidth="1dp"
+                        app:textAppearance="@style/SubheadlineBold"
+                        app:textColor="@color/neutral500"
+                        app:layout_constraintEnd_toStartOf="@id/plandetail_cdv_end_time"
+                        app:layout_constraintTop_toTopOf="@id/plandetail_tv_end"
+                        app:layout_constraintBottom_toBottomOf="@id/plandetail_tv_end"/>
+
+                    />
+
+                    <com.umc.presentation.component.UChip
+                        android:id="@+id/plandetail_cdv_end_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        app:text="오후 4:00"
+                        app:backgroundColor="@color/neutral000"
+                        app:pressedColor="@color/neutral300"
+                        app:borderColor="@color/neutral200"
+                        app:borderWidth="1dp"
+                        app:textAppearance="@style/SubheadlineBold"
+                        app:textColor="@color/neutral500"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/plandetail_tv_end"
+                        app:layout_constraintBottom_toBottomOf="@id/plandetail_tv_end"/>
+
+                    />
+
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
                 </com.google.android.material.card.MaterialCardView>
+
+                    <!--장소-->
+
+                    <TextView
+                        android:id="@+id/planadd_tv_plan_title_location"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="32dp"
+                        android:text="@string/home_plan_detail_location"
+                        android:textAppearance="@style/HeadlineBold"
+                        android:textColor="@color/neutral800"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/plandetail_cdv_cover" />
+
+
+                    <com.umc.presentation.component.UTextField
+                        android:id="@+id/planadd_textfield_plan_location"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:background="@color/neutral000"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_location"
+                        app:layout_constraintStart_toStartOf="@id/planadd_tv_plan_title_location"
+                        app:placeholderText="@string/home_plan_add_plan_location_placeholder"
+                        app:textAppearance="@style/Subheadline" />
+
+                    <!--상세 안내-->
+
+                    <TextView
+                        android:id="@+id/planadd_tv_plan_title_detail"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="32dp"
+                        android:text="@string/home_plan_add_plan_detail_information"
+                        android:textAppearance="@style/HeadlineBold"
+                        android:textColor="@color/neutral800"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_textfield_plan_location" />
+
+                    <com.umc.presentation.component.UTextField
+                        android:id="@+id/planadd_textfield_plan_detail"
+                        android:layout_width="match_parent"
+                        android:layout_height="144dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@color/neutral000"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_detail"
+                        app:layout_constraintStart_toStartOf="@id/planadd_tv_plan_title_detail"
+                        app:placeholderText="@string/home_plan_add_plan_detail_placeholder"
+                        app:textAppearance="@style/Subheadline" />
+
+
+                <!-- 참여자 명단-->
+                    <TextView
+                        android:id="@+id/planadd_tv_plan_title_attend"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="32dp"
+                        android:text="@string/home_plan_add_plan_attend"
+                        android:textAppearance="@style/HeadlineBold"
+                        android:textColor="@color/neutral800"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_textfield_plan_detail" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="*"
+                        android:textAppearance="@style/HeadlineBold"
+                        android:textColor="@color/danger500"
+                        app:layout_constraintStart_toEndOf="@id/planadd_tv_plan_title_attend"
+                        app:layout_constraintTop_toTopOf="@id/planadd_tv_plan_title_attend" />
+
+
+                    
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.core.widget.NestedScrollView>
