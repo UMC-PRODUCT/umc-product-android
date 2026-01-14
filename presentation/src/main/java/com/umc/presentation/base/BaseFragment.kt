@@ -80,6 +80,8 @@ abstract class BaseFragment<B : ViewDataBinding, STATE : UiState, EVENT : UiEven
         }
     }
 
+    protected open fun handleEvent(event: EVENT) {}
+
     protected fun LifecycleOwner.repeatOnStarted(
         viewLifecycleOwner: LifecycleOwner,
         block: suspend CoroutineScope.() -> Unit,

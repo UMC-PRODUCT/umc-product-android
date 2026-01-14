@@ -1,16 +1,15 @@
 package com.umc.presentation
 
 import android.view.View
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.navigation.NavController
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.umc.presentation.base.BaseActivity
 import com.umc.presentation.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import androidx.core.graphics.drawable.toDrawable
 
 @AndroidEntryPoint
 class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, MainActivityEvent, MainActivityViewModel>(
@@ -20,12 +19,13 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
     private lateinit var navController: NavController
 
     override fun initView() {
-
-        enableEdgeToEdge()
+        //enableEdgeToEdge()
 
         binding.apply {
             vm = viewModel
             initNavigation()
+
+            window.setBackgroundDrawable(getColor(R.color.neutral000).toDrawable())
         }
 
 

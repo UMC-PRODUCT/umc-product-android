@@ -4,11 +4,13 @@ import androidx.lifecycle.viewModelScope
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
+@HiltViewModel
 class SplashViewModel
     @Inject
     constructor() : BaseViewModel<SplashUiState, SplashEvent>(
@@ -30,8 +32,8 @@ data class SplashUiState(
     val dummy: String = "",
 ) : UiState
 
-sealed class SplashEvent : UiEvent {
-    object MoveToMainEvent : SplashEvent()
+sealed interface SplashEvent : UiEvent {
+    object MoveToMainEvent : SplashEvent
 
-    object MoveToLoginEvent : SplashEvent()
+    object MoveToLoginEvent : SplashEvent
 }
