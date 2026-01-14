@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="vm"
+            type="com.umc.presentation.ui.signUp.permission.PermissionViewModel" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/neutral000"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/image_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="8dp"
+            android:onClick="@{()->vm.onClickBack()}"
+            android:padding="16dp"
+            android:src="@drawable/ic_back"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/text_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/permission_title"
+            android:textAppearance="@style/Title1Bold"
+            android:textColor="@color/neutral800" />
+
+
+        <TextView
+            android:id="@+id/text_sub_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/permission_subtitle"
+            android:textAppearance="@style/Subheadline"
+            android:textColor="@color/neutral600" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_notification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="48dp"
+            android:background="@{vm.uiState.alarmCheck ? @drawable/bg_rectangle_primary100_radius8 : @drawable/bg_rectangle_neutral100_radius8}"
+            android:paddingVertical="8dp">
+
+            <ImageView
+                android:id="@+id/image_alarm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/ic_alarm_filled"
+                android:tint="@{vm.uiState.alarmCheck ? @color/primary600 : @color/neutral400}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="UseAppTint" />
+
+            <TextView
+                android:id="@+id/text_notification_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="3dp"
+                android:text="@string/permission_notification"
+                android:textAppearance="@style/SubheadlineBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintStart_toEndOf="@id/image_alarm"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/text_notification_content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="3dp"
+                android:text="@string/permission_notification_content"
+                android:textAppearance="@style/Footnote"
+                android:textColor="@color/neutral600"
+                app:layout_constraintStart_toEndOf="@id/image_alarm"
+                app:layout_constraintTop_toBottomOf="@id/text_notification_title" />
+
+            <ImageView
+                android:id="@+id/image_alarm_check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:onClick="@{()->vm.onClickAlarmCheck()}"
+                android:padding="12dp"
+                android:src="@drawable/ic_check_box"
+                android:tint="@{vm.uiState.alarmCheck ? @color/primary500 : @color/neutral300}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="UseAppTint" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="16dp"
+            android:background="@{vm.uiState.locationCheck ? @drawable/bg_rectangle_primary100_radius8 : @drawable/bg_rectangle_neutral100_radius8}"
+            android:paddingVertical="8dp">
+
+            <ImageView
+                android:id="@+id/image_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/ic_location"
+                android:tint="@{vm.uiState.locationCheck ? @color/primary600 : @color/neutral400}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="UseAppTint" />
+
+            <TextView
+                android:id="@+id/text_location_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="3dp"
+                android:text="@string/permission_location"
+                android:textAppearance="@style/SubheadlineBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintStart_toEndOf="@id/image_location"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/text_location_content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="3dp"
+                android:text="@string/permission_location_content"
+                android:textAppearance="@style/Footnote"
+                android:textColor="@color/neutral600"
+                app:layout_constraintStart_toEndOf="@id/image_location"
+                app:layout_constraintTop_toBottomOf="@id/text_location_title" />
+
+            <ImageView
+                android:id="@+id/image_location_check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:onClick="@{()->vm.onClickLocationCheck()}"
+                android:padding="12dp"
+                android:src="@drawable/ic_check_box"
+                android:tint="@{vm.uiState.locationCheck ? @color/primary500 : @color/neutral300}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="UseAppTint" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_photo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="16dp"
+            android:background="@{vm.uiState.photoCheck ? @drawable/bg_rectangle_primary100_radius8 : @drawable/bg_rectangle_neutral100_radius8}"
+            android:paddingVertical="8dp">
+
+            <ImageView
+                android:id="@+id/image_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/ic_photo"
+                android:tint="@{vm.uiState.photoCheck ? @color/primary600 : @color/neutral400}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="UseAppTint" />
+
+            <TextView
+                android:id="@+id/text_photo_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="3dp"
+                android:text="@string/permission_photo"
+                android:textAppearance="@style/SubheadlineBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintStart_toEndOf="@id/image_photo"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/text_photo_content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="3dp"
+                android:text="@string/permission_photo_content"
+                android:textAppearance="@style/Footnote"
+                android:textColor="@color/neutral600"
+                app:layout_constraintStart_toEndOf="@id/image_photo"
+                app:layout_constraintTop_toBottomOf="@id/text_photo_title" />
+
+            <ImageView
+                android:id="@+id/image_photo_check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:onClick="@{()->vm.onClickPhotoCheck()}"
+                android:padding="12dp"
+                android:src="@drawable/ic_check_box"
+                android:tint="@{vm.uiState.photoCheck ? @color/primary500 : @color/neutral300}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="UseAppTint" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_all_check"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="16dp"
+            android:background="@{vm.uiState.alarmCheck &amp;&amp; vm.uiState.locationCheck &amp;&amp; vm.uiState.photoCheck ? @drawable/bg_rectangle_neutral000_stroke_primary500_radius8 : @drawable/bg_rectangle_neutral000_stroke_neutral300_radius8}"
+            android:paddingVertical="8dp">
+
+
+            <TextView
+                android:id="@+id/text_all_check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="@string/permission_accept_all"
+                android:textAppearance="@style/SubheadlineBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+
+            <ImageView
+                android:id="@+id/image_all_check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:onClick="@{()->vm.onClickAllCheck()}"
+                android:padding="12dp"
+                android:src="@drawable/ic_check_box"
+                android:tint="@{vm.uiState.alarmCheck &amp;&amp; vm.uiState.locationCheck &amp;&amp; vm.uiState.photoCheck ? @color/primary500 : @color/neutral300}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="UseAppTint" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/button_next"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginBottom="24dp"
+            android:onClick="@{()->vm.onClickSignUp()}"
+            android:enabled="@{vm.uiState.alarmCheck}"
+            app:backgroundColor="@{vm.uiState.alarmCheck ? @color/primary500 : @color/neutral300}"
+            app:cornerRadius="8dp"
+            app:pressedColor="@color/primary700"
+            app:text="@string/sign_up_complete"
+            app:textAppearance="@style/HeadlineBold"
+            app:textColor="@color/neutral000" />
+
+    </LinearLayout>
+
+</layout>

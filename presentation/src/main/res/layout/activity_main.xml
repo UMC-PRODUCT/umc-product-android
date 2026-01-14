@@ -6,6 +6,7 @@
     tools:context=".MainActivity">
 
     <data>
+
         <variable
             name="vm"
             type="com.umc.presentation.MainActivityViewModel" />
@@ -15,8 +16,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?attr/colorBackgroundSemantic"
-        >
+        android:background="@color/neutral000"
+        android:fitsSystemWindows="true">
 
 
         <androidx.fragment.app.FragmentContainerView

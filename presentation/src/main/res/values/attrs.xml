@@ -34,11 +34,9 @@
         <attr name="prevIconSize" format="dimension" />
         <attr name="prevIconPadding" format="dimension" />
 
-        <attr name="backgroundColor"/>
-
-        <attr name="borderColor"/>
-        <attr name="borderWidth"/>
         <attr name="cornerRadius"/>
+
+        <attr name="focusStrokeColor" format="color"/>
     </declare-styleable>
 
     <!-- 공통 Button -->
@@ -46,8 +44,6 @@
         <attr name="text"/>
         <attr name="textColor"/>
         <attr name="textAppearance"/>
-
-        <attr name="backgroundColor"/>
 
         <attr name="borderColor"/>
         <attr name="borderWidth"/>
