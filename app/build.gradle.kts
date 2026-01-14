@@ -80,6 +80,9 @@ dependencies {
 
     // KAKAO
     implementation(libs.kakao.user)
+
+    // flexboxLayout
+    implementation(libs.google.flexbox)
 }
 
 fun getApiKey(propertyKey: String): String {

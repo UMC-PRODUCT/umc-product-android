@@ -1,11 +1,14 @@
 package com.umc.presentation.ui.home
 
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.umc.domain.model.enums.HomeViewMode
+import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.calendar.SelectedDecorator
@@ -16,23 +19,24 @@ import kotlinx.coroutines.launch
 import org.threeten.bp.DayOfWeek
 
 @AndroidEntryPoint
-class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, HomeFragmentEvent, HomeFragmentViewModel>(
+class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, HomeFragmentEvent, HomeViewModel>
+    (
     FragmentHomeBinding::inflate,
-) {
-    override val viewModel: HomeFragmentViewModel by viewModels()
+), ScheduleItemDelegate {
+    override val viewModel: HomeViewModel by viewModels()
 
     //달력 데코레이터
     private lateinit var todayDec : TodayDecorator
     private lateinit var selectedDec : SelectedDecorator
 
     //리사이클러뷰 어댑터
-    private val dailyAdapter by lazy { ScheduleAdapter { plan ->  } }
-    private val allAdapter by lazy { ScheduleAdapter { plan -> } }
+    private val dailyAdapter by lazy { ScheduleAdapter(this) }
+    private val allAdapter by lazy { ScheduleAdapter(this) }
 
     override fun initView() {
         binding.apply {
             vm = viewModel
-            lifecycleOwner = viewLifecycleOwner
+
         }
         todayDec = TodayDecorator(requireContext())
         selectedDec = SelectedDecorator(requireContext())
@@ -50,42 +54,82 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
 
             launch {
                 viewModel.uiState.collect { state ->
-                    // 변수명 수정: 모드에 따라 각 어댑터에 데이터 주입
-                    if (state.viewMode == ViewMode.CALENDAR) {
+                    // 변수명 수정: Diffiui가 자동으로 해준대요 그래서 submitList 사용
+                    // notifiydatasetChanged() 쓸 필요가 없대요.
+                    if (state.viewMode == HomeViewMode.CALENDAR) {
                         dailyAdapter.submitList(state.dailyPlans)
                     } else {
                         allAdapter.submitList(state.allPlans)
                     }
+
+                    //커스텀 텍스트뷰
+                    updateGrowthDaysText(state.growDay)
                 }
             }
 
             //여기서 이자식이 event 수신
             launch {
                 viewModel.uiEvent.collect {
-
+                    handleMoveEvent(it)
                 }
             }
         }
     }
 
+    //얻배터에 delegate 정의하기!
+    override fun onItemClicked(item: SchedulePlanItem) {
+        //여기서 뷰모델의 onClick을 정의 -> 그럼 아이템 터치한 리스너를 viewModel에 전달하고
+        //이벤트 발생을 보내고, 이를 다시 Fragment에서 수신한다.
+        viewModel.onClickPlanDetail(item)
+    }
 
-    //이벤트 핸들링
+
+    //이벤트 핸들링(얘를 observing 해서 쭈욱 보고 이벤트 처리)
     private fun handleMoveEvent(event: HomeFragmentEvent){
         when (event){
-            HomeFragmentEvent.MoveNoticeEvent -> {}
-            HomeFragmentEvent.MoveNotificationEvent -> {}
-            HomeFragmentEvent.MovePlanDetailEvent -> {}
-            HomeFragmentEvent.MovePlanAddEvent -> {}
+            is HomeFragmentEvent.MoveNoticeEvent -> moveToNotice()
+            is HomeFragmentEvent.MoveNotificationEvent -> moveToNotification()
+            is HomeFragmentEvent.MovePlanDetailEvent -> moveToPlanDetail(event.plan)
+            is HomeFragmentEvent.MovePlanAddEvent -> moveToPlanAdd()
 
             else -> {}
         }
     }
 
     //이동 함수들
+    /**TODO 조나단이 작성한 공지 상세 페이지로 이동하도록 로직 수정 필요
+     *
+     * **/
     private fun moveToNotice(){
-        //val action = HomeFragmentDirections.actionHomeFragmentToNoticeFragment()
+        //val action = HomeFragmentDirections.actionHomeToNotice()
         //findNavController().navigate(action)
 
+    }
+
+    private fun moveToNotification(){
+        val action = HomeFragmentDirections.actionHomeToNotification()
+        findNavController().navigate(action)
+    }
+
+    private fun moveToPlanAdd(){
+        val action = HomeFragmentDirections.actionHomeToPlanAdd()
+        findNavController().navigate(action)
+    }
+
+    private fun moveToPlanDetail(plan : SchedulePlanItem){
+        val action = HomeFragmentDirections.actionHomeToPlanDetail()
+        findNavController().navigate(action)
+    }
+
+    //텍스트 뷰 색깔 변경 (000일째 성장하고 있어요)
+    private fun updateGrowthDaysText(days: Int) {
+        val highlight = "${days}일째"
+        val fullText = "$highlight 성장하고 있어요"
+        val color = ContextCompat.getColor(requireContext(), R.color.primary600) // 다크모드 대응
+
+        binding.homeTvUserstatus.text = SpannableStringBuilder(fullText).apply {
+            setSpan(ForegroundColorSpan(color), 0, highlight.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
     }
 
     //MaterialCalendar 초기화
@@ -140,4 +184,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
             }
         }
     }
+
+
 }

@@ -53,6 +53,7 @@
         android:label="일정 상세 화면"
         tools:layout="@layout/fragment_plan_detail">
 
+
     </fragment>
 
     <fragment

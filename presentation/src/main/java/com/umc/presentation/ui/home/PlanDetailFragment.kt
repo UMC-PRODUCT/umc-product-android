@@ -10,21 +10,36 @@ import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPlanDetailBinding
 
-class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFragmentUiState, PlanDetailFragmentEvent, PlanDetailFragmentViewModel>(
+class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFragmentUiState, PlanDetailFragmentEvent, PlanDetailViewModel>(
     FragmentPlanDetailBinding::inflate,
 ) {
-    override val viewModel: PlanDetailFragmentViewModel by viewModels()
+    override val viewModel: PlanDetailViewModel by viewModels()
 
     override fun initView() {
         binding.apply {
             vm = viewModel
-            lifecycleOwner = viewLifecycleOwner
         }
 
     }
 
     override fun initStates() {
         super.initStates()
+    }
+
+
+    private fun handleMoveEvent(event: PlanDetailFragmentEvent){
+        when (event){
+            is PlanDetailFragmentEvent.TouchConfirmAttention -> clickConfirmAttention()
+
+            else -> {}
+        }
+    }
+
+
+    //해당 탭을 닫고 이동하는 로직
+    /**TODO 로직 작성 필요**/
+    private fun clickConfirmAttention(){
+
     }
 
 

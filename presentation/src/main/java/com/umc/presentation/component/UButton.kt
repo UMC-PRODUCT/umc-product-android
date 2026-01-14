@@ -57,6 +57,10 @@ constructor(
         } finally {
             a.recycle()
         }
+
+        fun setTextColor(color: Int) {
+            binding.textView.setTextColor(color)
+        }
     }
 
     //setter

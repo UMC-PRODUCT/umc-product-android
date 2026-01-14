@@ -15,14 +15,14 @@
 
 
     <color name="accent100">#FFF0E5</color>
-    <color name="accent200">#FFD1B2</color>
-    <color name="accent300">#FFA870</color>
-    <color name="accent400">#FF7F2D</color>
-    <color name="accent500">#FF6400</color>
-    <color name="accent600">#E85A00</color>
-    <color name="accent700">#CC5000</color>
-    <color name="accent800">#A34000</color>
-    <color name="accent900">#7A3000</color>
+    <color name="accent200">#FFD0B2</color>
+    <color name="accent300">#FFB180</color>
+    <color name="accent400">#FF924D</color>
+    <color name="accent500">#FF731A</color>
+    <color name="accent600">#E55900</color>
+    <color name="accent700">#B24600</color>
+    <color name="accent800">#803200</color>
+    <color name="accent900">#4D1E00</color>
 
 
     <color name="neutral000">#FFFFFF</color>
@@ -37,24 +37,24 @@
     <color name="neutral900">#1F2124</color>
 
 
-    <color name="success100">#DDF8EF</color>
-    <color name="success300">#8FE0C8</color>
-    <color name="success500">#0CA678</color>
-    <color name="success700">#087C5B</color>
-    <color name="success900">#055741</color>
+    <color name="success100">#EBF9F5</color>
+    <color name="success300">#9DE1CB</color>
+    <color name="success500">#33A881</color>
+    <color name="success700">#2A8969</color>
+    <color name="success900">#184E3C</color>
 
 
-    <color name="warning100">#FFF7D1</color>
+    <color name="warning100">#FFFBE5</color>
     <color name="warning300">#FFD180</color>
     <color name="warning500">#FFA500</color>
-    <color name="warning700">#C97F00</color>
-    <color name="warning900">#A36800</color>
+    <color name="warning700">#B27100</color>
+    <color name="warning900">#664100</color>
 
 
-    <color name="danger100">#FDECEC</color>
-    <color name="danger300">#F29B9B</color>
-    <color name="danger500">#E03131</color>
-    <color name="danger700">#A82424</color>
-    <color name="danger900">#751A1A</color>
+    <color name="danger100">#FBE9E9</color>
+    <color name="danger300">#EB9393</color>
+    <color name="danger500">#DD4646</color>
+    <color name="danger700">#971C1C</color>
+    <color name="danger900">#561010</color>
 
 </resources>

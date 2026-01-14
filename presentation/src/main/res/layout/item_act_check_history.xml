@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="uiModel"
+            type="com.umc.presentation.ui.act.check.CheckHistoryUIModel" />
+    </data>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        app:cardBackgroundColor="@color/neutral000"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
+        app:isFirst="@{uiModel.isFirst}"
+        app:isLast="@{uiModel.isLast}"
+        app:cornerRadius="@{16f}">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/btn_history_week"
+                android:layout_width="54dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginVertical="24dp"
+                android:clickable="false"
+                android:focusable="false"
+                app:backgroundColor="@color/neutral000"
+                app:borderColor="@color/neutral200"
+                app:borderWidth="1dp"
+                app:cornerRadius="6dp"
+                app:text="@{uiModel.history.week}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:textAppearance="@style/FootnoteBold"
+                app:textColor="@color/neutral700"
+                tools:text="3주차" />
+
+            <TextView
+                android:id="@+id/tv_history_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="@{uiModel.history.title}"
+                android:textAppearance="@style/BodyBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintBottom_toTopOf="@+id/layout_history_time_group"
+                app:layout_constraintEnd_toStartOf="@+id/btn_history_status"
+                app:layout_constraintStart_toEndOf="@+id/btn_history_week"
+                app:layout_constraintTop_toTopOf="@+id/btn_history_week"
+                app:layout_constraintVertical_chainStyle="packed"
+                tools:text="정기 세션" />
+
+            <LinearLayout
+                android:id="@+id/layout_history_time_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="@+id/btn_history_week"
+                app:layout_constraintStart_toStartOf="@+id/tv_history_title"
+                app:layout_constraintTop_toBottomOf="@+id/tv_history_title">
+
+                <ImageView
+                    android:id="@+id/iv_history_clock"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_clock" />
+
+                <TextView
+                    android:id="@+id/tv_history_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="@{uiModel.formattedTime}"
+                    android:textAppearance="@style/Caption1"
+                    android:textColor="@color/neutral600"
+                    tools:text="14:00 - 18:00" />
+            </LinearLayout>
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/btn_history_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                app:buttonElevation="0"
+                app:cornerRadius="4dp"
+                app:contentPaddingBottom="4dp"
+                app:contentPaddingTop="4dp"
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:text="@{uiModel.history.status.text}"
+                app:attendanceStatusColor="@{uiModel.history.status}"
+                app:textColor="@color/neutral000"
+                app:textAppearance="@style/Caption1Bold"
+                tools:text="출석" />
+
+            <View
+                android:id="@+id/view_divider"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:background="@color/neutral200"
+                android:layout_marginHorizontal="16dp"
+                android:visibility="@{uiModel.isLast ? View.GONE : View.VISIBLE}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+</layout>
