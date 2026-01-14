@@ -4,8 +4,10 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentSplashBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class SplashFragment : BaseFragment<FragmentSplashBinding, SplashUiState, SplashEvent, SplashViewModel>(
     FragmentSplashBinding::inflate,
 ) {

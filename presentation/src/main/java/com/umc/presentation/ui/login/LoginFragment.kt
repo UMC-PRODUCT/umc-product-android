@@ -9,8 +9,10 @@ import com.kakao.sdk.user.UserApiClient
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentLoginBinding
 import com.umc.presentation.util.ULog
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEvent, LoginViewModel>(
     FragmentLoginBinding::inflate,
 ) {
