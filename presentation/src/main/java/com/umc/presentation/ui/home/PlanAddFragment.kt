@@ -2,6 +2,7 @@ package com.umc.presentation.ui.home
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -65,12 +66,26 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
     private fun showTimePicker(isStart: Boolean) {
         val cal = if (isStart) viewModel.uiState.value.startTime else viewModel.uiState.value.endTime
 
-        TimePickerDialog(requireContext(), { _, hour, minute ->
+        // 다크모드 라이드 모드 확인
+        val isDarkMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
+        val themeResId = if (isDarkMode) {
+            android.R.style.Theme_Holo_Dialog_NoActionBar
+        } else {
+            android.R.style.Theme_Holo_Light_Dialog_NoActionBar
+        }
+
+        val dialog = TimePickerDialog(requireContext(),
+            themeResId,
+            { _, hour, minute ->
             val event = if (isStart) PlanAddFragmentEvent.UpdateStartTime(hour, minute)
             else PlanAddFragmentEvent.UpdateEndTime(hour, minute)
             viewModel.processDateTime(event)
         },
-            cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), false).show()
+            cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), false)
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
     }
 
 
