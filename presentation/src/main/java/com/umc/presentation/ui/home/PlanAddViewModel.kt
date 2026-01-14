@@ -66,7 +66,6 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
     //날짜 조정 (얘는 Fragment에서 날짜 받아온 후 수행하는 이벤트입니다)
     private fun handleDateTime(event: PlanAddFragmentEvent){
         when(event){
-
             //시작 날짜 바꾸기
             is PlanAddFragmentEvent.UpdateStartDate -> {
                 val newCalendar = (uiState.value.startDate.clone() as Calendar).apply {
@@ -142,7 +141,7 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
                 updateState {
                     // event에서 전달해준 string name을 뺀 data list를 새로 성성
                     val newList = selectedParticipants.filter { it.name != event.user.name }
-                    copy(selectedParticipants = newList)
+                    copy(selectedParticipants = newList.toList())
                 }
                 Log.d("log_home", "삭제 결과: ${uiState.value.selectedParticipants}")
             }
