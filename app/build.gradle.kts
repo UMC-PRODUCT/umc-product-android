@@ -81,8 +81,8 @@ dependencies {
     // KAKAO
     implementation(libs.kakao.user)
 
-    // flexboxLayout
-    implementation(libs.google.flexbox)
+    //opencsv
+    implementation(libs.opencsv)
 }
 
 fun getApiKey(propertyKey: String): String {

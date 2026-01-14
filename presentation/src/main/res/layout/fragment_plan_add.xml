@@ -5,6 +5,7 @@
     tools:context=".ui.home.PlanAddFragment">
 
     <data>
+        <import type="android.view.View"/>
 
         <variable
             name="vm"
@@ -18,7 +19,10 @@
             android:layout_height="match_parent"
             android:paddingTop="64dp"
             android:paddingHorizontal="16dp"
+            android:background="@color/neutral000"
             >
+
+
 
             <!-- 상단 바 -->
             <ImageView
@@ -91,7 +95,9 @@
                         app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_name"
                         app:layout_constraintStart_toStartOf="@id/planadd_tv_plan_title_name"
                         app:placeholderText="@string/home_plan_add_plan_name_placeholder"
-                        app:textAppearance="@style/Subheadline" />
+                        app:textAppearance="@style/Subheadline"
+                        app:text="@{vm.uiState.planTitle}"
+                        />
 
 
                     <!--일시-->
@@ -310,7 +316,9 @@
                         app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_location"
                         app:layout_constraintStart_toStartOf="@id/planadd_tv_plan_title_location"
                         app:placeholderText="@string/home_plan_add_plan_location_placeholder"
-                        app:textAppearance="@style/Subheadline" />
+                        app:textAppearance="@style/Subheadline"
+                        app:text="@{vm.uiState.planLocation}"
+                        />
 
                     <!--상세 안내-->
 
@@ -334,7 +342,9 @@
                         app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_detail"
                         app:layout_constraintStart_toStartOf="@id/planadd_tv_plan_title_detail"
                         app:placeholderText="@string/home_plan_add_plan_detail_placeholder"
-                        app:textAppearance="@style/Subheadline" />
+                        app:textAppearance="@style/Subheadline"
+                        app:text="@{vm.uiState.planDetail}"
+                        />
 
 
                 <!-- 참여자 명단-->
@@ -359,6 +369,192 @@
                         app:layout_constraintStart_toEndOf="@id/planadd_tv_plan_title_attend"
                         app:layout_constraintTop_toTopOf="@id/planadd_tv_plan_title_attend" />
 
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/planadd_btn_upload_csv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/select_color_accent500"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="0dp"
+                        app:rippleColor="@android:color/transparent"
+                        app:strokeWidth="0dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/planadd_tv_plan_title_attend"
+                        app:layout_constraintBottom_toBottomOf="@id/planadd_tv_plan_title_attend"
+                        >
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="6dp">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_upload"
+                                app:tint="@color/neutral000" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:text="@string/csv_upload"
+                                android:textColor="@color/neutral000"
+                                android:textAppearance="@style/SubheadlineBold" />
+
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/planadd_rcv_selected"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:visibility="@{vm.uiState.selectedParticipants.empty ? View.GONE : View.VISIBLE}"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintStart_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_btn_upload_csv" />
+
+                    <com.umc.presentation.component.UTextField
+                        android:id="@+id/planadd_textifield_search"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        app:textAppearance="@style/Callout"
+                        app:backgroundColor="@color/neutral100"
+                        app:prevIcon="@drawable/ic_search"
+                        app:prevIconSize="24dp"
+                        app:prevIconTint="@color/neutral400"
+                        app:borderWidth="0dp"
+                        app:placeholderText="@string/home_plan_add_plan_search_placeholder"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_rcv_selected" />
+
+
+                    <!--검색 결과창 (이 부분은 겹치는 곳으로 표시)-->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/planadd_layout_search_overlay"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:elevation="10dp"
+                        android:background="@color/neutral100"
+                        android:visibility="@{vm.uiState.isSearchOverlayVisible ? View.VISIBLE : View.GONE}"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_textifield_search"
+                        >
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/planadd_rcv_search_results"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+
+                            />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+                    <!--카테고리-->
+
+                    <TextView
+                        android:id="@+id/planadd_tv_plan_title_category"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="32dp"
+                        android:text="@string/home_plan_add_plan_category"
+                        android:textAppearance="@style/HeadlineBold"
+                        android:textColor="@color/neutral800"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_layout_search_overlay" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/planadd_rcv_search_category"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_category"
+                        />
+
+
+                    <androidx.constraintlayout.widget.Guideline
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/planadd_guideline_bottom"
+                        app:layout_constraintGuide_percent="0.5"
+                        android:orientation="vertical"/>
+
+                    <com.umc.presentation.component.UButton
+                        android:id="@+id/planadd_btn_cancel_plan"
+                        android:layout_width="0dp"
+                        android:layout_height="52dp"
+                        android:layout_marginBottom="24dp"
+                        android:layout_marginEnd="8dp"
+                        app:backgroundColor="@color/neutral000"
+                        app:cornerRadius="16dp"
+                        app:pressedColor="@color/neutral200"
+                        app:text="@string/cancel"
+                        app:textAppearance="@style/HeadlineBold"
+                        app:textColor="@color/neutral800"
+                        app:borderWidth="1dp"
+                        app:borderColor="@color/neutral300"
+                        app:layout_constraintEnd_toStartOf="@id/planadd_guideline_bottom"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_rcv_search_category"
+                        />
+
+                    <com.umc.presentation.component.UButton
+                        android:id="@+id/planadd_btn_register_plan"
+                        android:layout_width="0dp"
+                        android:layout_height="52dp"
+                        android:layout_marginBottom="24dp"
+                        android:layout_marginStart="8dp"
+                        android:visibility="@{vm.uiState.registerOk == true ? View.VISIBLE : View.GONE}"
+                        app:backgroundColor="@color/primary500"
+                        app:cornerRadius="16dp"
+                        app:pressedColor="@color/primary700"
+                        app:text="@string/home_plan_add_plan_register"
+                        app:textAppearance="@style/HeadlineBold"
+                        app:textColor="@color/neutral000"
+                        app:layout_constraintStart_toEndOf="@id/planadd_guideline_bottom"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_rcv_search_category"
+                        />
+
+                    <com.umc.presentation.component.UButton
+                        android:id="@+id/planadd_btn_register_plan_cancel"
+                        android:layout_width="0dp"
+                        android:layout_height="52dp"
+                        android:layout_marginBottom="24dp"
+                        android:layout_marginStart="8dp"
+                        android:visibility="@{vm.uiState.registerOk == false ? View.VISIBLE : View.GONE}"
+                        app:backgroundColor="@color/neutral300"
+                        app:cornerRadius="16dp"
+                        app:pressedColor="@color/neutral300"
+                        app:text="@string/home_plan_add_plan_register"
+                        app:textAppearance="@style/HeadlineBold"
+                        app:textColor="@color/neutral000"
+                        app:layout_constraintStart_toEndOf="@id/planadd_guideline_bottom"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_rcv_search_category"
+                        />
+
+
+
+                    <View
+                        android:layout_width="wrap_content"
+                        android:layout_height="200dp"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_btn_register_plan"
+                        app:layout_constraintStart_toStartOf="parent"/>
 
 
 

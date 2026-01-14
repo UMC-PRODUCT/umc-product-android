@@ -76,7 +76,10 @@ dependencies {
 
     // RECYCLER VIEW
     implementation(libs.androidx.recyclerview)
-    
+
+    //opencsv
+    implementation(libs.opencsv)
+
     // flexboxLayout
     implementation(libs.google.flexbox)
 }
