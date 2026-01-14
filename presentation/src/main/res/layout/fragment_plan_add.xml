@@ -53,6 +53,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:fillViewport="true"
+                android:isScrollContainer="true"
                 android:layout_marginTop="24dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -412,15 +413,34 @@
                     </com.google.android.material.card.MaterialCardView>
 
 
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/planadd_rcv_selected"
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/planadd_cdv_selected"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:visibility="@{vm.uiState.selectedParticipants.empty ? View.GONE : View.VISIBLE}"
+                        android:visibility="@{vm.uiState.isSelectedParticipant == true ? View.VISIBLE : View.GONE}"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="@color/neutral300"
+                        app:cardBackgroundColor="@color/neutral000"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintStart_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_btn_upload_csv" />
+                        app:layout_constraintTop_toBottomOf="@id/planadd_btn_upload_csv"
+                        >
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/planadd_rcv_selected"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="16dp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintStart_toEndOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/planadd_btn_upload_csv" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+
 
                     <com.umc.presentation.component.UTextField
                         android:id="@+id/planadd_textifield_search"
@@ -436,7 +456,7 @@
                         app:placeholderText="@string/home_plan_add_plan_search_placeholder"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_rcv_selected" />
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_selected" />
 
 
                     <!--검색 결과창 (이 부분은 겹치는 곳으로 표시)-->
@@ -444,8 +464,8 @@
                         android:id="@+id/planadd_layout_search_overlay"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:elevation="10dp"
-                        android:background="@color/neutral100"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_neutral100_radius16"
                         android:visibility="@{vm.uiState.isSearchOverlayVisible ? View.VISIBLE : View.GONE}"
                         app:layout_constraintTop_toBottomOf="@id/planadd_textifield_search"
                         >
@@ -497,7 +517,7 @@
                         android:id="@+id/planadd_btn_cancel_plan"
                         android:layout_width="0dp"
                         android:layout_height="52dp"
-                        android:layout_marginBottom="24dp"
+                        android:layout_marginTop="48dp"
                         android:layout_marginEnd="8dp"
                         app:backgroundColor="@color/neutral000"
                         app:cornerRadius="16dp"
@@ -516,7 +536,7 @@
                         android:id="@+id/planadd_btn_register_plan"
                         android:layout_width="0dp"
                         android:layout_height="52dp"
-                        android:layout_marginBottom="24dp"
+                        android:layout_marginTop="48dp"
                         android:layout_marginStart="8dp"
                         android:visibility="@{vm.uiState.registerOk == true ? View.VISIBLE : View.GONE}"
                         app:backgroundColor="@color/primary500"
@@ -534,7 +554,7 @@
                         android:id="@+id/planadd_btn_register_plan_cancel"
                         android:layout_width="0dp"
                         android:layout_height="52dp"
-                        android:layout_marginBottom="24dp"
+                        android:layout_marginTop="48dp"
                         android:layout_marginStart="8dp"
                         android:visibility="@{vm.uiState.registerOk == false ? View.VISIBLE : View.GONE}"
                         app:backgroundColor="@color/neutral300"
@@ -553,6 +573,7 @@
                     <View
                         android:layout_width="wrap_content"
                         android:layout_height="200dp"
+                        android:layout_marginTop="64dp"
                         app:layout_constraintTop_toBottomOf="@id/planadd_btn_register_plan"
                         app:layout_constraintStart_toStartOf="parent"/>
 
