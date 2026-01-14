@@ -21,7 +21,7 @@ constructor() : BaseViewModel<UiState, SignUpFailEvent>(
     }
 }
 
-sealed class SignUpFailEvent : UiEvent {
-    object MoveToBack : SignUpFailEvent()
-    object MoveToHomePage : SignUpFailEvent()
+sealed interface SignUpFailEvent : UiEvent {
+    object MoveToBack : SignUpFailEvent
+    object MoveToHomePage : SignUpFailEvent
 }

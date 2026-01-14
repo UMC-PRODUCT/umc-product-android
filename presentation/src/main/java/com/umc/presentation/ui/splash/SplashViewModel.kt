@@ -32,8 +32,8 @@ data class SplashUiState(
     val dummy: String = "",
 ) : UiState
 
-sealed class SplashEvent : UiEvent {
-    object MoveToMainEvent : SplashEvent()
+sealed interface SplashEvent : UiEvent {
+    object MoveToMainEvent : SplashEvent
 
-    object MoveToLoginEvent : SplashEvent()
+    object MoveToLoginEvent : SplashEvent
 }

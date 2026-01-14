@@ -20,16 +20,17 @@ class PermissionFragment :
     ) {
     override val viewModel: PermissionViewModel by viewModels()
 
-    private lateinit var requestPermissionsLauncher : ActivityResultLauncher<Array<String>>
+    //private lateinit var requestPermissionsLauncher : ActivityResultLauncher<Array<String>>
+
+    private val requestPermissionsLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+            viewModel.signUp()
+            // TODO 권한 허용 실패 시 어떻게 처리할지?
+        }
 
     override fun initView() {
         binding.apply {
             vm = viewModel
         }
-        requestPermissionsLauncher =
-            requireActivity().registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
-                viewModel.signUp()
-            }
     }
 
     override fun initStates() {

@@ -26,7 +26,7 @@ class SignUpFragment :
         repeatOnStarted(viewLifecycleOwner) {
             launch {
                 viewModel.uiEvent.collect {
-                    handleSplashEvent(it)
+                    handleEvent(it)
                 }
             }
 
@@ -37,7 +37,7 @@ class SignUpFragment :
         }
     }
 
-    private fun handleSplashEvent(event: SignUpEvent) {
+    override fun handleEvent(event: SignUpEvent) {
         when (event) {
             SignUpEvent.MoveToBack -> findNavController().popBackStack()
             SignUpEvent.MoveToLoginEvent -> {}

@@ -86,9 +86,9 @@ data class SignUpState(
                 && school.isNotEmpty() && verifyType == EmailVerifyType.VERIFY
 }
 
-sealed class SignUpEvent : UiEvent {
-    object MoveToMainEvent : SignUpEvent()
+sealed interface SignUpEvent : UiEvent {
+    object MoveToMainEvent : SignUpEvent
 
-    object MoveToLoginEvent : SignUpEvent()
-    object MoveToBack : SignUpEvent()
+    object MoveToLoginEvent : SignUpEvent
+    object MoveToBack : SignUpEvent
 }

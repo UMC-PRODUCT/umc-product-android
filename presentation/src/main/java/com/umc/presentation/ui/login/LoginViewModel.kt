@@ -26,10 +26,10 @@ data class LoginUiState(
     val dummy: String = "",
 ) : UiState
 
-sealed class LoginEvent : UiEvent {
-    object KakaoLoginEvent : LoginEvent()
+sealed interface LoginEvent : UiEvent {
+    object KakaoLoginEvent : LoginEvent
 
-    object MoveToMainEvent : LoginEvent()
+    object MoveToMainEvent : LoginEvent
 
-    object MoveToSignUpEvent : LoginEvent()
+    object MoveToSignUpEvent : LoginEvent
 }

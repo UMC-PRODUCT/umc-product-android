@@ -69,10 +69,10 @@ data class PermissionUiState(
     val isPhotoCheck: Boolean = false,
 ) : UiState
 
-sealed class PermissionEvent : UiEvent {
-    object MoveToBack : PermissionEvent()
-    object MoveToMainEvent : PermissionEvent()
-    object MoveToFailEvent : PermissionEvent()
-    object ShowPermissionDialog : PermissionEvent()
+sealed interface PermissionEvent : UiEvent {
+    object MoveToBack : PermissionEvent
+    object MoveToMainEvent : PermissionEvent
+    object MoveToFailEvent : PermissionEvent
+    object ShowPermissionDialog : PermissionEvent
 
 }
