@@ -18,6 +18,7 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
     private val dateSdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
     private val timeSdf = SimpleDateFormat("a h:mm", Locale.KOREAN)
 
+
     //날짜 조정 (얘는 Fragment에서 날짜 받아온 후 수행하는 이벤트입니다)
     fun processDateTime(event: PlanAddFragmentEvent){
         when(event){
@@ -70,6 +71,20 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
         }
     }
 
+    //값 업데이트
+    fun processParticipants(event: PlanAddFragmentEvent) {
+        when(event){
+            is PlanAddFragmentEvent.UpdateParticipants -> {
+                updateState {
+                    copy(selectedParticipants = event.participants)
+                }
+            }
+
+            else -> {}
+        }
+
+    }
+
 
 }
 
@@ -108,11 +123,17 @@ data class PlanAddFragmentUiState(
     
     ) : UiState
 
-sealed class PlanAddFragmentEvent : UiEvent {
-    object DummyEvent : HomeFragmentEvent()
-    data class UpdateStartDate(val year: Int, val month: Int, val day: Int) : PlanAddFragmentEvent()
-    data class UpdateStartTime(val hour: Int, val minute: Int) : PlanAddFragmentEvent()
-    data class UpdateEndDate(val year: Int, val month: Int, val day: Int) : PlanAddFragmentEvent()
-    data class UpdateEndTime(val hour: Int, val minute: Int) : PlanAddFragmentEvent()
+sealed interface PlanAddFragmentEvent : UiEvent {
+
+    //TIME 및 DATE Picker로 값을 가져오는 이벤트
+    data class UpdateStartDate(val year: Int, val month: Int, val day: Int) : PlanAddFragmentEvent
+    data class UpdateStartTime(val hour: Int, val minute: Int) : PlanAddFragmentEvent
+    data class UpdateEndDate(val year: Int, val month: Int, val day: Int) : PlanAddFragmentEvent
+    data class UpdateEndTime(val hour: Int, val minute: Int) : PlanAddFragmentEvent
+
+    //CSV 파일 파싱 결과를 가져오느 이벤트
+    data class UpdateParticipants(val participants: List<String>) : PlanAddFragmentEvent
+
+
 
 }
