@@ -83,8 +83,3 @@ class UButton
             setCardBackgroundColor(ColorStateList.valueOf(color))
         }
     }
-
-@BindingAdapter("backgroundColor")
-fun setUBackgroundColor(view: UButton, color: Int) {
-    view.setUBackgroundColor(color)
-}

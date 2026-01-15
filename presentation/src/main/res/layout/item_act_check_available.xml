@@ -169,7 +169,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:enabled="@{uiModel.withinRange}"
-                        app:backgroundColor="@{uiModel.withinRange ? @color/primary500 : @color/neutral300}"
+                        app:UBackgroundColor="@{uiModel.withinRange ? @color/primary500 : @color/neutral300}"
                         app:cornerRadius="8dp"
                         app:contentPaddingTop="13dp"
                         app:contentPaddingBottom="13dp"
