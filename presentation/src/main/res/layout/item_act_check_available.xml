@@ -166,14 +166,17 @@
                     <com.umc.presentation.component.UButton
                         android:id="@+id/btn_attendance_request"
                         android:layout_width="match_parent"
-                        android:layout_height="42dp"
+                        android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:enabled="@{uiModel.withinRange}"
                         app:backgroundColor="@{uiModel.withinRange ? @color/primary500 : @color/neutral300}"
                         app:cornerRadius="8dp"
+                        app:contentPaddingTop="13dp"
+                        app:contentPaddingBottom="13dp"
+                        app:contentPaddingLeft="8dp"
+                        app:contentPaddingRight="8dp"
                         app:text="@string/attendance_request_button"
-                        app:textAppearance="@style/SubheadlineBold"
-                        app:textColor="@color/neutral000" />
+                        app:textAppearance="@style/CalloutBold" />
 
                     <LinearLayout
                         android:id="@+id/layout_fail_reason_container"
