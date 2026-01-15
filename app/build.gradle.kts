@@ -17,6 +17,11 @@ android {
             "KAKAO_APP_KEY",
             getApiKey("kakao.native.key"),
         )
+        buildConfigField(
+            "String",
+            "NAVER_CLIENT_ID",
+            "\"${getApiKey("naver.client.id")}\""
+        )
         manifestPlaceholders["KAKAO_APP_KEY"] = getApiKey("kakao.app.key")
         applicationId = "com.umc.product"
         minSdk = 24
@@ -83,6 +88,9 @@ dependencies {
 
     // flexboxLayout
     implementation(libs.google.flexbox)
+
+    // NAVER
+    implementation("com.naver.maps:map-sdk:3.23.0")
 }
 
 fun getApiKey(propertyKey: String): String {
