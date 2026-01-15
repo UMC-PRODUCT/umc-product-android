@@ -122,11 +122,14 @@ class CheckAvailableAdapter(
                 this.map = map
             }
 
-            //  카메라 설정
-            val latOffset = 0.00015
-            val cameraTarget = LatLng(sessionPos.latitude - latOffset, sessionPos.longitude)
-            map.moveCamera(CameraUpdate.scrollAndZoomTo(cameraTarget, 16.0))
+            binding.layoutLocationStatus.root.post {
+                val bottomUiHeight = binding.layoutLocationStatus.root.height
+                val density = binding.root.context.resources.displayMetrics.density
+                val marginPx = (6 * density).toInt()
 
+                map.setContentPadding(0, 0, 0, bottomUiHeight + marginPx)
+                map.moveCamera(CameraUpdate.scrollTo(sessionPos))
+            }
             // UI 및 제스처 설정
             map.uiSettings.apply {
                 isZoomControlEnabled = false
