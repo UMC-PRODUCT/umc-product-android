@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.core.content.ContextCompat
+import androidx.databinding.BindingAdapter
 import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
 import com.umc.presentation.databinding.CustomButtonBinding
@@ -77,4 +78,13 @@ class UButton
         fun setTextColor(color: Int) {
             binding.textView.setTextColor(color)
         }
+
+        fun setUBackgroundColor(color: Int) {
+            setCardBackgroundColor(ColorStateList.valueOf(color))
+        }
     }
+
+@BindingAdapter("backgroundColor")
+fun setUBackgroundColor(view: UButton, color: Int) {
+    view.setUBackgroundColor(color)
+}
