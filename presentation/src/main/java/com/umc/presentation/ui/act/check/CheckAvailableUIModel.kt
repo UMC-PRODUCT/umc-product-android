@@ -2,6 +2,7 @@ package com.umc.presentation.ui.act.check
 
 import com.umc.domain.model.act.check.CheckAvailable
 import com.umc.domain.model.act.check.CheckAvailableStatus
+import com.umc.presentation.util.UTime
 
 data class CheckAvailableUIModel(
     val session: CheckAvailable,
@@ -9,7 +10,7 @@ data class CheckAvailableUIModel(
     val isWithinRange: Boolean = false,
     val address: String = ""
 ) {
-    val formattedTime: String = "${session.startTime} - ${session.endTime}"
+    val formattedTime: String = UTime.formatDuration(session.startTime, session.endTime)
 
     val isCertified: Boolean
         get() = if (session.status == CheckAvailableStatus.BEFORE) {
