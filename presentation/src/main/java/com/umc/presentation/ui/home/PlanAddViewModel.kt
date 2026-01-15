@@ -177,6 +177,7 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
                     }
                     copy(selectedParticipants = newList.toList())
                 }
+                Log.d("log_home", "토글 결과: ${uiState.value.selectedParticipants}")
             }
 
             //검색 결과 초기화

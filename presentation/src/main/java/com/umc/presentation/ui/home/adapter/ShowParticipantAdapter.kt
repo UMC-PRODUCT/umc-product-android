@@ -39,7 +39,7 @@ class ShowParticipantAdapter(
 
     companion object ParticipantDiffCallback : DiffUtil.ItemCallback<ParticipantItem>() {
         override fun areItemsTheSame(oldItem: ParticipantItem, newItem: ParticipantItem): Boolean {
-            return oldItem.name == newItem.name // 문자열 자체가 고유값이므로 동일성 비교
+            return oldItem.id == newItem.id // 문자열 자체가 고유값이므로 동일성 비교
         }
 
         override fun areContentsTheSame(oldItem: ParticipantItem, newItem: ParticipantItem): Boolean {
