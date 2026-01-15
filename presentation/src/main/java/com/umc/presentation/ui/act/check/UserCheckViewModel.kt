@@ -20,10 +20,16 @@ class UserCheckViewModel @Inject constructor() :
 
     private fun loadInitialData() {
         val availableList = listOf(
-            CheckAvailable(1, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE),
-            CheckAvailable(2, "정기 세션 3주차", "14:00", "18:00", "운영진", CheckAvailableStatus.COMPLETED),
-            CheckAvailable(3, "UMCON", "14:00", "18:00", "스터디장", CheckAvailableStatus.PENDING)
-        ).map { CheckAvailableUIModel(it) }
+            CheckAvailable(1, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE, 37.021877, 127.080960, "경기도 평택시 지제동삭1로 어쩌구저쩌구 주소를 길게 쓰기 위한 발악"),
+            CheckAvailable(2, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE, 37.582568, 127.001488, "서울특별시 종로구 명륜4가 88-2번지 주소를 길게 써보자ㅏㅏㅏㅏㅏㅏㅏ"),
+            CheckAvailable(3, "정기 세션 3주차", "14:00", "18:00", "운영진", CheckAvailableStatus.COMPLETED, 37.5665, 126.9780,"서울특별시 중구 소공동 세종대로18길 2", true),
+            CheckAvailable(4, "UMCON", "14:00", "18:00", "스터디장", CheckAvailableStatus.PENDING, 37.5665, 126.9780, "서울특별시 중구 소공동 세종대로18길 2", false)
+        ).map {
+            CheckAvailableUIModel(
+                session = it,
+                address = it.address
+            )
+        }
 
         val rawHistoryList = listOf(
             CheckHistory(1, "3주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.SUCCESS),
@@ -45,6 +51,25 @@ class UserCheckViewModel @Inject constructor() :
                 attendanceHistories = historyUIList,
                 availableCount = availableList.size
             )
+        }
+    }
+
+    fun updateLocation(userLat: Double, userLng: Double) {
+        updateState {
+            val updatedList = availableSessions.map { uiModel ->
+                if (uiModel.session.status == CheckAvailableStatus.BEFORE) {
+                    val results = FloatArray(1)
+                    android.location.Location.distanceBetween(
+                        userLat, userLng,
+                        uiModel.session.latitude, uiModel.session.longitude,
+                        results
+                    )
+                    uiModel.copy(isWithinRange = results[0] <= 50)
+                } else {
+                    uiModel.copy(isWithinRange = false)
+                }
+            }
+            copy(availableSessions = updatedList)
         }
     }
 
