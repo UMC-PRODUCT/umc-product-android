@@ -18,6 +18,9 @@
     <attr name="cornerRadius" format="dimension" />
 
     <attr name="buttonElevation" format="integer" />
+
+    <attr name="pressedColor" format="reference"/>
+
     <!-- 공통 TextField -->
     <declare-styleable name="UTextField">
         <attr name="text"/>
@@ -31,11 +34,9 @@
         <attr name="prevIconSize" format="dimension" />
         <attr name="prevIconPadding" format="dimension" />
 
-        <attr name="backgroundColor"/>
-
-        <attr name="borderColor"/>
-        <attr name="borderWidth"/>
         <attr name="cornerRadius"/>
+
+        <attr name="focusStrokeColor" format="color"/>
     </declare-styleable>
 
     <!-- 공통 Button -->
@@ -44,14 +45,12 @@
         <attr name="textColor"/>
         <attr name="textAppearance"/>
 
-        <attr name="backgroundColor"/>
-
         <attr name="borderColor"/>
         <attr name="borderWidth"/>
         <attr name="cornerRadius"/>
 
         <attr name="buttonElevation"/>
-        <attr name="pressedColor" format="reference"/>
+        <attr name="pressedColor"/>
     </declare-styleable>
 
 
@@ -62,6 +61,18 @@
         <attr name="backgroundColorOff" format="color" />
         <attr name="thumbColorOn" format="color" />
         <attr name="thumbColorOff" format="color" />
+    </declare-styleable>
+
+    <!-- 공통 Chip -->
+    <declare-styleable name="UChip">
+        <attr name="text"/>
+        <attr name="textColor"/>
+        <attr name="textAppearance"/>
+        <attr name="backgroundColor"/>
+        <attr name="borderColor"/>
+        <attr name="borderWidth"/>
+        <attr name="pressedColor"/>
+        <attr name="showCloseIcon" format="boolean"/>
     </declare-styleable>
 
 </resources>

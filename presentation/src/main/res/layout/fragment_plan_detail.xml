@@ -5,6 +5,7 @@
     tools:context=".ui.home.PlanDetailFragment">
 
     <data>
+        <import type="android.view.View"/>
 
         <variable
             name="vm"
@@ -26,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_back"
-            android:tint="@color/neutral800"
+            app:tint="@color/neutral800"
             android:onClick="@{()->vm.onClickBackPressed()}"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -50,7 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_menu_kebab"
-            android:tint="@color/neutral800"
+            app:tint="@color/neutral800"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             />
@@ -94,7 +95,7 @@
             android:textColor="@color/neutral600"
             android:text="2026.01.01"
             android:gravity="start"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             app:layout_constraintStart_toStartOf="@id/plandetail_tv_title"
             app:layout_constraintTop_toBottomOf="@id/plandetail_tv_title"
             app:layout_constraintEnd_toEndOf="parent"
@@ -227,7 +228,7 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral600"
-                    android:text="@string/home_plan_detail_location"
+                    android:text="서울 동작구 사당로 50"
                     android:layout_marginTop="8dp"
                     android:gravity="start"
                     android:layout_marginEnd="16dp"
@@ -237,17 +238,20 @@
 
                 <TextView
                     android:id="@+id/plandetail_tv_location_map"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/primary500"
-                    android:text="@string/home_plan_detail_calendar"
+                    android:text="@string/home_plan_detail_show_map"
                     android:layout_marginTop="4dp"
                     android:gravity="start"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground"
                     android:layout_marginEnd="16dp"
-                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@id/plandetail_tv_location_title"
                     app:layout_constraintTop_toBottomOf="@id/plandetail_tv_location_place"/>
+
 
 
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -256,19 +260,58 @@
 
         <!--상세 안내 파트-->
         <TextView
-            android:id="@+id/plandetail_tv_detail_title"
-            android:layout_width="0dp"
+            android:id="@+id/plandetail_tv_plan_information_title"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/Footnote"
-            android:textColor="@color/primary500"
-            android:text="@string/home_plan_detail_calendar"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="40dp"
+            android:textAppearance="@style/Title3Bold"
+            android:textColor="@color/neutral800"
+            android:text="@string/home_plan_detail_plan_notice"
             android:gravity="start"
-            android:layout_marginEnd="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@id/plandetail_tv_location_title"
-            app:layout_constraintTop_toBottomOf="@id/plandetail_tv_location_place"/>
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/plandetail_cdv_cover"
+            />
 
+        <TextView
+            android:id="@+id/plandetail_tv_plan_information_content"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:textAppearance="@style/Body"
+            android:textColor="@color/neutral600"
+            android:text="끼하하하핳하하하하하하하하하하하하하하하하하하하하하하ㅏ하핳핳"
+            android:gravity="start"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/plandetail_tv_plan_information_title"
+            app:layout_constraintBottom_toTopOf="@id/plandetail_button_check"
+            />
+
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/plandetail_button_check"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginBottom="24dp"
+            android:visibility="@{vm.uiState.isToday == true ? View.VISIBLE : View.GONE}"
+            android:onClick="@{()->vm.onClickConfirmAttention()}"
+            app:backgroundColor="@color/accent500"
+            app:cornerRadius="16dp"
+            app:pressedColor="@color/accent700"
+            app:text="@string/home_plan_detail_check_confirm"
+            app:textAppearance="@style/HeadlineBold"
+            app:textColor="@color/neutral000"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            />
+
+
+        <!--
+        android:onClick="@{}"
+            android:enabled="@{}"
+        -->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

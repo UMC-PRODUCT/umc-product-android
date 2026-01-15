@@ -91,6 +91,9 @@ dependencies {
 
     // NAVER
     implementation("com.naver.maps:map-sdk:3.23.0")
+    
+    //opencsv
+    implementation(libs.opencsv)
 }
 
 fun getApiKey(propertyKey: String): String {

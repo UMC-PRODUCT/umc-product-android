@@ -4,7 +4,7 @@ import android.util.Log
 
 object ULog {
     fun d(msg: String) {
-        Log.d("UMC", msg)
+        Log.d("UMC LOG", msg)
     }
 
     fun d(
