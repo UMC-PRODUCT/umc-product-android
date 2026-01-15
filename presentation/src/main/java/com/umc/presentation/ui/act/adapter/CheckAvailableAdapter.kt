@@ -50,8 +50,7 @@ class CheckAvailableAdapter(
         fun bind(uiModel: CheckAvailableUIModel) {
             currentModel = uiModel
             binding.uiModel = uiModel
-            binding.mapContainer.removeAllViews()
-            mapView = null
+            cleanupMapView()
 
             if (uiModel.isExpanded) {
                 initMapView()
@@ -98,6 +97,16 @@ class CheckAvailableAdapter(
             binding.mapContainer.addView(mapView)
         }
 
+        fun cleanupMapView() {
+            mapView?.let {
+                it.onPause()
+                it.onStop()
+                it.onDestroy()
+            }
+            binding.mapContainer.removeAllViews()
+            mapView = null
+        }
+
         override fun onMapReady(map: NaverMap) {
             val model = currentModel ?: return
             val sessionPos = LatLng(model.session.latitude, model.session.longitude)
@@ -136,6 +145,11 @@ class CheckAvailableAdapter(
                 map.locationTrackingMode = LocationTrackingMode.None
             }
         }
+    }
+
+    override fun onViewRecycled(holder: ViewHolder) {
+        holder.cleanupMapView()
+        super.onViewRecycled(holder)
     }
 
     class AvailableSessionDiffCallback : DiffUtil.ItemCallback<CheckAvailableUIModel>() {
