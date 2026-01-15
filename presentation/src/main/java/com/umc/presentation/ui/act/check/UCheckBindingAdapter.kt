@@ -1,4 +1,4 @@
-package com.umc.presentation.util
+package com.umc.presentation.ui.act.check
 
 import android.view.Gravity
 import android.view.View
