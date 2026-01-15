@@ -17,8 +17,32 @@ constructor() : BaseViewModel<PlanDetailFragmentUiState, PlanDetailFragmentEvent
         emitEvent(PlanDetailFragmentEvent.MoveBackPressedEvent)
     }
 
+    //출석 체크 로직
     fun onClickConfirmAttention(){
         emitEvent(PlanDetailFragmentEvent.TouchConfirmAttention)
+    }
+
+    //상단 케밥 메뉴 열기
+    fun toggleKebabMenu(){
+        updateState { copy(isMenuVisible = !isMenuVisible) }
+    }
+
+    //신고 로직 수행
+    fun reportPlan(){
+        updateState { copy(isMenuVisible = false) }
+        emitEvent(PlanDetailFragmentEvent.ReportPlan)
+    }
+
+    //수정 로직 수행
+    fun editPlan(){
+        updateState { copy(isMenuVisible = false) }
+        emitEvent(PlanDetailFragmentEvent.EditPlan)
+    }
+
+    //삭제 로직 수행
+    fun deletePlan(){
+        updateState { copy(isMenuVisible = false) }
+        emitEvent(PlanDetailFragmentEvent.DeletePlan)
     }
 
 
@@ -36,10 +60,30 @@ data class PlanDetailFragmentUiState(
     val place : String = "",
     val detail : String = "",
 
+    //내가 작성한 것인지 여부
+    val isAuthor: Boolean = true,
+
+    //케밥 메뉴 아이콘 보이기 여부
+    val isMenuVisible : Boolean = false,
+
+
 ) : UiState
 
 sealed class PlanDetailFragmentEvent : UiEvent {
+
     object MoveBackPressedEvent : PlanDetailFragmentEvent()
+
+    //토글 이벤트
+    object ToggleMenu : PlanDetailFragmentEvent()
+    //신고하기 이벤트
+    object ReportPlan : PlanDetailFragmentEvent()
+    //수정하기 이벤트
+    object EditPlan : PlanDetailFragmentEvent()
+    //삭제하기 이벤트
+    object DeletePlan : PlanDetailFragmentEvent()
+
+
+    //출석 체크 이벤트
     object TouchConfirmAttention : PlanDetailFragmentEvent()
 
 }
