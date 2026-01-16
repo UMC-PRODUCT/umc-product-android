@@ -6,9 +6,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentMypageBinding
+import com.umc.presentation.ui.home.HomeFragmentDirections
 import kotlinx.coroutines.launch
 
 
@@ -42,8 +44,26 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             }
         }
 
-
-
     }
+
+    override fun handleEvent(event: MypageFragmentEvent) {
+        super.handleEvent(event)
+        when(event) {
+            is MypageFragmentEvent.goGithub -> {}
+            is MypageFragmentEvent.goBlog -> {}
+            is MypageFragmentEvent.goLinkedin -> {}
+            is MypageFragmentEvent.goEditProfile -> {
+                val action = MypageFragmentDirections.actionMypageToProfile()
+                findNavController().navigate(action)
+            }
+            is MypageFragmentEvent.goSuggetion -> {}
+            is MypageFragmentEvent.goMypost -> {}
+            is MypageFragmentEvent.goMyComment -> {}
+
+            else -> {}
+        }
+    }
+
+
 
 }
