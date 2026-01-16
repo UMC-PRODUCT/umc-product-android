@@ -12,4 +12,7 @@
         <item name="colorTextSecondarySemantic">@color/neutral600</item>
         <item name="colorTextDisablePlaceholderSemantic">@color/neutral400</item>
     </style>
+
+    <style name="CircleImageAppearance">
+        <item name="cornerSize">50%</item> </style>
 </resources>

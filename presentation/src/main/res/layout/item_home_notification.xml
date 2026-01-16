@@ -18,7 +18,7 @@
         android:id="@+id/item_tv_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textAppearance="@style/CalloutBold"
+        android:textAppearance="@style/HeadlineBold"
         android:textColor="@color/neutral800"
         android:text="중앙 어쩌구 참전!"
         android:gravity="start"

@@ -1,4 +1,4 @@
-package com.umc.presentation.ui.mypage
+package com.umc.presentation.ui.mypage.mypost
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -8,14 +8,16 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
-import com.umc.presentation.databinding.FragmentMypageBinding
+import com.umc.presentation.databinding.FragmentMypostBinding
 import kotlinx.coroutines.launch
+import kotlin.getValue
 
 
-class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState, MypageFragmentEvent, MypageViewModel>(
-    FragmentMypageBinding::inflate,
+class MypostFragment : BaseFragment<FragmentMypostBinding, MypostFragmentUiState, MypostFragmentEvent, MypostViewModel>(
+FragmentMypostBinding::inflate,
 ) {
-    override val viewModel : MypageViewModel by viewModels()
+
+    override val viewModel : MypostViewModel by viewModels()
 
     override fun initView() {
         binding.apply {
@@ -37,7 +39,7 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
 
             launch {
                 viewModel.uiEvent.collect { event ->
-                    handleEvent(event)
+
                 }
             }
         }

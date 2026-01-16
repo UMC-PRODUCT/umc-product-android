@@ -16,7 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/neutral100"
-        android:paddingTop="64dp"
+        android:paddingTop="56dp"
         android:paddingHorizontal="16dp"
         android:paddingBottom="32dp"
         >
@@ -51,10 +51,139 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_menu_kebab"
+            android:onClick="@{() -> vm.toggleKebabMenu()}"
             app:tint="@color/neutral800"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             />
+
+        <!--사이드메뉴-->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/plandetail_layout_kebab_menu"
+            android:layout_width="180dp"
+            android:layout_height="wrap_content"
+            android:visibility="@{vm.uiState.isMenuVisible == true ? View.VISIBLE : View.GONE}"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/neutral000"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="8dp"
+            app:layout_constraintTop_toBottomOf="@id/plandetail_btn_menu"
+            app:layout_constraintEnd_toEndOf="@id/plandetail_btn_menu">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <LinearLayout
+                    android:id="@+id/layout_menu_report"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="@{vm.uiState.isAuthor ? View.GONE : View.VISIBLE}">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:onClick="@{() -> vm.reportPlan()}"
+                        >
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_error_filled"
+                            app:tint="@color/danger500"/>
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:layout_height="wrap_content"
+                            android:text="신고하기"
+                            android:textColor="@color/danger500"
+                            android:textAppearance="@style/Subheadline"/>
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_next_small"
+                            app:tint="@color/danger500"/>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layout_menu_edit_delete"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="@{vm.uiState.isAuthor ? View.VISIBLE : View.GONE}">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:onClick="@{() -> vm.editPlan()}"
+                        >
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_edit"
+                            app:tint="@color/neutral800"/>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="수정하기"
+                            android:textColor="@color/neutral800"
+                            android:textAppearance="@style/Subheadline"/>
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_next_small"
+                            app:tint="@color/neutral800"/>
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/neutral200" android:layout_marginVertical="4dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:onClick="@{() -> vm.deletePlan()}"
+                        >
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_trash_can"
+                            app:tint="@color/danger500"/>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:layout_height="wrap_content"
+                            android:text="삭제하기"
+                            android:textColor="@color/danger500"
+                            android:textAppearance="@style/Subheadline"/>
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_next_small"
+                            app:tint="@color/danger500"/>
+                    </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+
+
 
         <!--일정 상세 내용-->
         <com.umc.presentation.component.UButton
@@ -62,7 +191,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="36dp"
-            app:backgroundColor="@color/primary100"
+            app:cardBackgroundColor="@color/primary100"
             app:text = "ACTIVE"
             app:textAppearance="@style/FootnoteBold"
             app:textColor="@color/primary600"
@@ -78,7 +207,7 @@
             android:id="@+id/plandetail_tv_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/Title3Bold"
+            android:textAppearance="@style/Title2Bold"
             android:textColor="@color/neutral800"
             android:layout_marginTop="16dp"
             android:text="TEST"
@@ -143,7 +272,7 @@
                     android:id="@+id/plandetail_tv_calendar_title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/SubheadlineBold"
+                    android:textAppearance="@style/BodyBold"
                     android:textColor="@color/neutral800"
                     android:text="@string/home_plan_detail_calendar"
                     android:layout_marginStart="16dp"
@@ -157,7 +286,7 @@
                     android:id="@+id/plandetail_tv_calendar_day"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/Footnote"
+                    android:textAppearance="@style/Subheadline"
                     android:textColor="@color/neutral600"
                     android:text="@string/home_plan_detail_calendar"
                     android:layout_marginTop="8dp"
@@ -171,7 +300,7 @@
                     android:id="@+id/plandetail_tv_calendar_time"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/Footnote"
+                    android:textAppearance="@style/Subheadline"
                     android:textColor="@color/neutral600"
                     android:text="@string/home_plan_detail_calendar"
                     android:layout_marginTop="4dp"
@@ -211,7 +340,7 @@
                     android:id="@+id/plandetail_tv_location_title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/SubheadlineBold"
+                    android:textAppearance="@style/BodyBold"
                     android:textColor="@color/neutral800"
                     android:text="@string/home_plan_detail_location"
                     android:layout_marginStart="16dp"
@@ -226,7 +355,7 @@
                     android:id="@+id/plandetail_tv_location_place"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/Footnote"
+                    android:textAppearance="@style/Subheadline"
                     android:textColor="@color/neutral600"
                     android:text="서울 동작구 사당로 50"
                     android:layout_marginTop="8dp"
@@ -296,7 +425,7 @@
             android:layout_marginBottom="24dp"
             android:visibility="@{vm.uiState.isToday == true ? View.VISIBLE : View.GONE}"
             android:onClick="@{()->vm.onClickConfirmAttention()}"
-            app:backgroundColor="@color/accent500"
+            app:cardBackgroundColor="@color/accent500"
             app:cornerRadius="16dp"
             app:pressedColor="@color/accent700"
             app:text="@string/home_plan_detail_check_confirm"

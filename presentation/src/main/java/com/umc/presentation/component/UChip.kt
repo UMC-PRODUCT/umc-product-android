@@ -103,4 +103,43 @@ class UChip @JvmOverloads constructor(
         this.onCloseClickListener = listener
     }
 
+    // 텍스트 색상 변경
+    fun setUChipTextColor(color: Int) {
+        binding.tvChipText.setTextColor(color)
+        // 텍스트 색상과 X 버튼 색상을 같이 변경
+        binding.imvClose.imageTintList = ColorStateList.valueOf(color)
+    }
+
+    // 배경색 변경 (단일 색상)
+    fun setUChipBackgroundColor(color: Int) {
+        setCardBackgroundColor(ColorStateList.valueOf(color))
+    }
+
+    /** 배경색 변경 (눌림 효과 유지 버전)
+     * @param backgroundColor 기본 배경색
+     * @param pressedColor 눌렸을 때 배경색
+     */
+    fun setUChipBackgroundStateList(backgroundColor: Int, pressedColor: Int = backgroundColor) {
+        val bg = ColorStateList(
+            arrayOf(
+                intArrayOf(android.R.attr.state_pressed),
+                intArrayOf(),
+            ),
+            intArrayOf(
+                pressedColor,
+                backgroundColor,
+            ),
+        )
+        setCardBackgroundColor(bg)
+    }
+
+    /** 외곽선 설정 변경
+     * @param color 외곽선 색상
+     * @param width 외곽선 두께 (기본값은 현재 두께 유지)
+     */
+    fun setUChipBorder(color: Int, width: Int = strokeWidth) {
+        strokeColor = color
+        strokeWidth = width
+    }
+
 }
