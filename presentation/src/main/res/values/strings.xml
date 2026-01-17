@@ -39,8 +39,16 @@
     <string name="mypage_kakao">카카오</string>
     <string name="mypage_google">Google</string>
     <string name="mypage_opensource">오픈소스 라이선스</string>
-
-
+    <string name="profile_connect_account">연동된 계정</string>
+    <string name="profile_give_login">로그인 제공자</string>
+    <string name="profile_name_nickname">이름/닉네임</string>
+    <string name="profile_school">학교</string>
+    <string name="profile_part">기수/파트</string>
+    <string name="profile_active_summary">활동 이력</string>
+    <string name="profile_github_url">Github URL</string>
+    <string name="profile_linkedin_url">LinkedIn URL</string>
+    <string name="profile_blog_url">Blog URL</string>
+    <string name="profile_http_start_placeholder">http://-</string>
 
 
     <!-- Word -->
@@ -60,6 +68,7 @@
     <string name="setting">설정</string>
     <string name="information">정보</string>
     <string name="logout">로그아웃</string>
+    <string name="complete">완료</string>
 
     <!-- Login -->
     <string name="login_title">UMC 활동을 더 편하게 관리해보세요</string>

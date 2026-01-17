@@ -64,6 +64,11 @@ data class MypageFragmentUiState(
 
     // 알람을 송수신할건지
     val isAlarmOn : Boolean = false,
+
+    // 임시 더ㅣㅁ 데이터
+    val tmpgithub : String = "https://github.com/UMC-PRODUCT/umc-product-android",
+    val tmpblog : String = "https://velog.io/",
+    val tmplinkedin : String = "https://kr.linkedin.com/",
     
 ) : UiState
 

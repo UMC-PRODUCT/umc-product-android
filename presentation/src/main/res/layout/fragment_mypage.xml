@@ -29,18 +29,6 @@
         android:paddingBottom="64dp"
         >
 
-        <!-- 상단 바 -->
-        <!--
-        <ImageView
-            android:id="@+id/mypage_btn_back"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_back"
-            app:tint="@color/neutral800"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            />
-           -->
 
         <TextView
             android:id="@+id/mypage_tv_title"
