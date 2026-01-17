@@ -13,6 +13,7 @@ import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPlanDetailBinding
 import com.umc.presentation.util.UToast
+import kotlinx.coroutines.launch
 import java.net.URLEncoder
 
 class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFragmentUiState, PlanDetailFragmentEvent, PlanDetailViewModel>(
@@ -35,16 +36,59 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
 
     override fun initStates() {
         super.initStates()
+
+        repeatOnStarted(viewLifecycleOwner){
+            launch {
+                viewModel.uiState.collect { state ->
+                    handleKebabAnimation(state.isMenuVisible)
+                }
+            }
+
+            launch {
+                viewModel.uiEvent.collect { event ->
+                    handleEvent(event)
+                }
+            }
+        }
     }
 
 
-    private fun handleMoveEvent(event: PlanDetailFragmentEvent){
+    //실질적인 로직 수행 이벤트 맞춰서
+    override fun handleEvent(event: PlanDetailFragmentEvent){
         when (event){
             is PlanDetailFragmentEvent.TouchConfirmAttention -> clickConfirmAttention()
 
             else -> {}
         }
     }
+
+    //탭 애니메이션으로 쫘라락
+    private fun handleKebabAnimation(isVisible: Boolean) {
+        binding.plandetailLayoutKebabMenu.apply {
+            if (isVisible) {
+                //위에서 아래로 내려오며 나타남
+                visibility = View.VISIBLE
+                alpha = 0f
+                translationY = -30f
+                animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(250L)
+                    .setInterpolator(android.view.animation.DecelerateInterpolator())
+                    .start()
+            } else {
+                //위로 올라가며 사라짐
+                animate()
+                    .alpha(0f)
+                    .translationY(-30f)
+                    .setDuration(200L)
+                    .withEndAction { visibility = View.GONE }
+                    .start()
+            }
+        }
+    }
+
+
 
     //네이버 지도 or 웹 열기
     private fun openNaverMap(address: String) {

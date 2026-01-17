@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        app:backgroundColor="@color/primary100"
+        app:cardBackgroundColor="@color/primary100"
         app:borderWidth="1dp"
         app:borderColor="@color/primary200"
         app:text="@{tagText}"

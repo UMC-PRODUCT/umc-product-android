@@ -25,8 +25,6 @@
     <string name="home_plan_add_plan_register">일정 등록하기</string>
 
 
-
-
     <!-- Word -->
     <string name="sign_up">회원가입</string>
     <string name="name">이름</string>
@@ -101,4 +99,7 @@
 
     <string name="location_certified">위치 인증됨</string>
     <string name="location_certification_failed">위치 인증 실패</string>
+  
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

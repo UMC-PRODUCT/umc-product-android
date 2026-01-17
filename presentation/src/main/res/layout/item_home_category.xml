@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="8dp">
+
+    <com.umc.presentation.component.UChip
+        android:id="@+id/item_chip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:backgroundColor="@color/neutral000"
+        app:borderColor="@color/neutral200"
+        app:borderWidth="1dp"
+        app:textAppearance="@style/CalloutBold"
+        app:textColor="@color/neutral500"
+        />
+
+    <!--
+    select 되면
+    strokecolor = primary500
+    background = primary500
+    textcolor= neutral000
+
+
+    -->
+
+</FrameLayout>
