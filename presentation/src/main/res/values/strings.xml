@@ -96,6 +96,10 @@
 
     <string name="attendance_empty_available">아직 출석 가능한 세션이 없어요</string>
     <string name="attendance_empty_history">아직 진행된 세션이 없어요</string>
+
+    <string name="location_certified">위치 인증됨</string>
+    <string name="location_certification_failed">위치 인증 실패</string>
+  
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
