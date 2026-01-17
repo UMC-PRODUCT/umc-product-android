@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.core.content.ContextCompat
+import androidx.databinding.BindingAdapter
 import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
 import com.umc.presentation.databinding.CustomButtonBinding
@@ -57,15 +58,19 @@ constructor(
         } finally {
             a.recycle()
         }
-
-        fun setTextColor(color: Int) {
-            binding.textView.setTextColor(color)
-        }
     }
 
     //setter
     fun setText(text: String?) {
         binding.textView.text = text ?: ""
+    }
+
+    fun setTextColor(color: Int) {
+        binding.textView.setTextColor(color)
+    }
+
+    fun setUBackgroundColor(color: Int) {
+        setCardBackgroundColor(ColorStateList.valueOf(color))
     }
 
     override fun setEnabled(enabled: Boolean) {
