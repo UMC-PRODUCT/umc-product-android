@@ -1,11 +1,11 @@
 package com.umc.presentation.ui.act.check
 
-import com.umc.domain.model.act.check.CheckAvailable
-import com.umc.domain.model.act.check.CheckAvailableStatus
+import com.umc.domain.model.act.check.UserCheckAvailable
+import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.presentation.util.UTime
 
 data class CheckAvailableUIModel(
-    val session: CheckAvailable,
+    val session: UserCheckAvailable,
     val isExpanded: Boolean = false,
     val isWithinRange: Boolean = false,
     val address: String = ""
