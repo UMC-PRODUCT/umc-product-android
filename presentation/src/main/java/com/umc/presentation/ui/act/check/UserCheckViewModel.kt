@@ -64,7 +64,7 @@ class UserCheckViewModel @Inject constructor() :
                         uiModel.session.latitude, uiModel.session.longitude,
                         results
                     )
-                    uiModel.copy(isWithinRange = results[0] <= 50)
+                    uiModel.copy(isWithinRange = results[0] <= geofenceRadius)
                 } else {
                     uiModel.copy(isWithinRange = false)
                 }
@@ -93,9 +93,9 @@ class UserCheckViewModel @Inject constructor() :
 data class UserCheckUiState(
     val availableSessions: List<CheckAvailableUIModel> = emptyList(),
     val attendanceHistories: List<CheckHistoryUIModel> = emptyList(),
-    val availableCount: Int = 0
+    val availableCount: Int = 0,
+    val geofenceRadius: Float = 50f
 ) : UiState
-
 sealed class UserCheckEvent : UiEvent {
     data class ShowToast(val message: String) : UserCheckEvent()
     data class NavigateToFailureReason(val sessionId: Int) : UserCheckEvent()
