@@ -58,19 +58,19 @@ constructor(
         } finally {
             a.recycle()
         }
-
-        fun setTextColor(color: Int) {
-            binding.textView.setTextColor(color)
-        }
-
-        fun setUBackgroundColor(color: Int) {
-            setCardBackgroundColor(ColorStateList.valueOf(color))
-        }
     }
 
     //setter
     fun setText(text: String?) {
         binding.textView.text = text ?: ""
+    }
+
+    fun setTextColor(color: Int) {
+        binding.textView.setTextColor(color)
+    }
+
+    fun setUBackgroundColor(color: Int) {
+        setCardBackgroundColor(ColorStateList.valueOf(color))
     }
 
     override fun setEnabled(enabled: Boolean) {
