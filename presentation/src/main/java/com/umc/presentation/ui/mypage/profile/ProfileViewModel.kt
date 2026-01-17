@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.mypage.profile
 
+import android.net.Uri
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.mypage.UserActiveItem
 import com.umc.presentation.base.BaseViewModel
@@ -13,6 +14,30 @@ import javax.inject.Inject
 class ProfileViewModel @Inject
 constructor() : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     ProfileFragmentUiState()){
+
+    //프로필 이미지 수정했을 때 이벤트
+    fun onClickProfileImage(){
+        emitEvent(ProfileFragmentEvent.ClickProfileImage)
+    }
+
+    //viewModel에서 갤러리->이미지 가져온 후 처리 이벤트
+    fun updateProfileImage(uri: Uri){
+        //이미지 업데이트하고 이벤트 쏘기
+        updateState { copy(profileImageUri = uri) }
+    }
+
+    //완료 누르고 뒤로 가기
+    fun onClickComplete(){
+        emitEvent(ProfileFragmentEvent.ClickComplete)
+    }
+
+    //그냥 뒤로 가기
+    fun onClickBackPressed(){
+        emitEvent(ProfileFragmentEvent.ClickBackPressed)
+    }
+
+
+
 }
 
 
@@ -27,6 +52,7 @@ data class ProfileFragmentUiState(
     val githubLink: String = "",
     val linkedinLink: String = "",
     val blogLink: String = "",
+    val profileImageUri : Uri? = null,
 
     //임시 정보
     val myActiveHistory: List<UserActiveItem> = listOf(
@@ -47,5 +73,16 @@ data class ProfileFragmentUiState(
 ) : UiState
 
 sealed interface ProfileFragmentEvent : UiEvent {
-    object DummyEvent : ProfileFragmentEvent
+    
+    //갤러리 터치 이벤트
+    object ClickProfileImage : ProfileFragmentEvent
+
+    //이미지 업데이트 이벤트
+    data class UpdateProfileImage(val uri: Uri) : ProfileFragmentEvent
+
+    //완료 버튼을 눌렀을 때
+    object ClickComplete : ProfileFragmentEvent
+
+    //그냥 뒤로 가기
+    object ClickBackPressed : ProfileFragmentEvent
 }
