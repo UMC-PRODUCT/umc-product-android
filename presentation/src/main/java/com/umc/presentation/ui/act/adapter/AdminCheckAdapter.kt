@@ -13,6 +13,16 @@ class AdminCheckAdapter(
     private val onChangeLocation: (Int) -> Unit
 ) : ListAdapter<AdminSessionUIModel, AdminCheckAdapter.ViewHolder>(AdminCheckDiffCallback()) {
 
+    override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isEmpty()) {
+            // 페이로드가 없으면 전체 바인딩 수행
+            super.onBindViewHolder(holder, position, payloads)
+        } else {
+            // 페이로드가 있으면 데이터만 갱신
+            holder.bind(getItem(position))
+        }
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemAdminCheckSessionBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
@@ -62,5 +72,17 @@ class AdminCheckAdapter(
 
         override fun areContentsTheSame(oldItem: AdminSessionUIModel, newItem: AdminSessionUIModel) =
             oldItem == newItem
+
+        override fun getChangePayload(oldItem: AdminSessionUIModel, newItem: AdminSessionUIModel): Any? {
+            return if (oldItem.isExpanded != newItem.isExpanded) {
+                PAYLOAD_EXPAND
+            } else {
+                super.getChangePayload(oldItem, newItem)
+            }
+        }
+
+        companion object {
+            private const val PAYLOAD_EXPAND = "PAYLOAD_EXPAND"
+        }
     }
 }
