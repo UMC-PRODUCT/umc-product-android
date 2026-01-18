@@ -1,8 +1,13 @@
 package com.umc.presentation
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
@@ -20,13 +25,27 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
     override val viewModel: MainActivityViewModel by viewModels()
     private lateinit var navController: NavController
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // 권한 허용
+            Log.d("log_fcm", "알림 권한이 허용되었습니다.")
+        } else {
+            // 권한 거부
+            Log.d("log_fcm", "알림 권한이 거부되었습니다.")
+        }
+    }
+
+
     override fun initView() {
         //enableEdgeToEdge()
 
         binding.apply {
             vm = viewModel
             initNavigation()
-            checkFCMToken()
+            checkFCMToken() //FCM 토큰 체크
+            checkPermissionNotification() //알람 권한 체크
 
             window.setBackgroundDrawable(getColor(R.color.neutral000).toDrawable())
         }
@@ -61,6 +80,21 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
             // 현재 기기의 토큰 확인
             val token = task.result
             Log.d("log_fcm", "현재 기기 토큰: $token")
+        }
+    }
+
+    // 알람 권한을 요청
+    private fun checkPermissionNotification(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                // 이미 권한이 허용된 경우
+                Log.d("log_fcm", "이미 알림 권한이 있습니다.")
+            } else {
+                // 권한이 없다면 유저에게 요청
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
     }
 
