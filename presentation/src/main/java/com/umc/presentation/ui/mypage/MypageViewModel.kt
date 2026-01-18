@@ -13,33 +13,33 @@ class MypageViewModel @Inject
 constructor() : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
 
-    fun goGithub(){
-        emitEvent(MypageFragmentEvent.goGithub)
+    fun navigateToGithub(){
+        emitEvent(MypageFragmentEvent.navigateToGithub)
     }
-    fun goLinkedin(){
-        emitEvent(MypageFragmentEvent.goLinkedin)
+    fun navigateToLinkedin(){
+        emitEvent(MypageFragmentEvent.navigateToLinkedin)
 
     }
-    fun goBlog(){
-        emitEvent(MypageFragmentEvent.goBlog)
+    fun navigateToBlog(){
+        emitEvent(MypageFragmentEvent.navigateToBlog)
     }
 
-    fun goEditProfile(){
-        emitEvent(MypageFragmentEvent.goEditProfile)
+    fun navigateToEditProfile(){
+        emitEvent(MypageFragmentEvent.navigateToEditProfile)
     }
 
-    fun goSuggetion(){
-        emitEvent(MypageFragmentEvent.goSuggetion)
+    fun navigateToSuggetion(){
+        emitEvent(MypageFragmentEvent.navigateToSuggetion)
     }
 
-    fun goMypost(){
-        emitEvent(MypageFragmentEvent.goMypost)
+    fun navigateToMypost(){
+        emitEvent(MypageFragmentEvent.navigateToMypost)
     }
-    fun goMyComment(){
-        emitEvent(MypageFragmentEvent.goMyComment)
+    fun navigateToMyComment(){
+        emitEvent(MypageFragmentEvent.navigateToMyComment)
     }
-    fun goScrap(){
-        emitEvent(MypageFragmentEvent.goScrap)
+    fun navigateToScrap(){
+        emitEvent(MypageFragmentEvent.navigateToScrap)
     }
 
 
@@ -74,15 +74,15 @@ data class MypageFragmentUiState(
 
 sealed interface MypageFragmentEvent : UiEvent {
     //이동하기
-    object goGithub : MypageFragmentEvent //깃허브 링크
-    object goBlog : MypageFragmentEvent //블로그 링크
-    object goLinkedin : MypageFragmentEvent //리으드인 링크
+    object navigateToGithub : MypageFragmentEvent //깃허브 링크
+    object navigateToBlog : MypageFragmentEvent //블로그 링크
+    object navigateToLinkedin : MypageFragmentEvent //리으드인 링크
 
-    object goEditProfile : MypageFragmentEvent //프로필 수정
-    object goSuggetion : MypageFragmentEvent //중앙 건의함
-    object goMypost : MypageFragmentEvent //내가 쓴 글
-    object goMyComment : MypageFragmentEvent //내가 쓴 댓글
-    object goScrap : MypageFragmentEvent //스크랩
+    object navigateToEditProfile : MypageFragmentEvent //프로필 수정
+    object navigateToSuggetion : MypageFragmentEvent //중앙 건의함
+    object navigateToMypost : MypageFragmentEvent //내가 쓴 글
+    object navigateToMyComment : MypageFragmentEvent //내가 쓴 댓글
+    object navigateToScrap : MypageFragmentEvent //스크랩
 
 
     //로그아웃

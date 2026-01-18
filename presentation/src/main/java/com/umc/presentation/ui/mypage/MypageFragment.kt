@@ -53,22 +53,33 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
         super.handleEvent(event)
         when(event) {
             /**차후 링크는 실제 값으로 변경**/
-            is MypageFragmentEvent.goGithub -> {
+            is MypageFragmentEvent.navigateToGithub -> {
                 openWebpage(viewModel.uiState.value.tmpgithub)
             }
-            is MypageFragmentEvent.goBlog -> {
+            is MypageFragmentEvent.navigateToBlog -> {
                 openWebpage(viewModel.uiState.value.tmpblog)
             }
-            is MypageFragmentEvent.goLinkedin -> {
+            is MypageFragmentEvent.navigateToLinkedin -> {
                 openWebpage(viewModel.uiState.value.tmplinkedin)
             }
-            is MypageFragmentEvent.goEditProfile -> {
+            is MypageFragmentEvent.navigateToEditProfile -> {
                 val action = MypageFragmentDirections.actionMypageToProfile()
                 findNavController().navigate(action)
             }
-            is MypageFragmentEvent.goSuggetion -> {}
-            is MypageFragmentEvent.goMypost -> {}
-            is MypageFragmentEvent.goMyComment -> {}
+
+            is MypageFragmentEvent.navigateToSuggetion -> {
+                val action = MypageFragmentDirections.actionMypageToSugget()
+                findNavController().navigate(action)
+            }
+            is MypageFragmentEvent.navigateToMypost -> {
+                val action = MypageFragmentDirections.actionMypageToMypost()
+                findNavController().navigate(action)
+            }
+            is MypageFragmentEvent.navigateToMyComment -> {
+                val action = MypageFragmentDirections.actionMypageToMycomment()
+                findNavController().navigate(action)
+
+            }
 
             else -> {}
         }

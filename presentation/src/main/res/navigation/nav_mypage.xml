@@ -18,6 +18,20 @@
             android:id="@+id/action_mypage_to_profile"
             app:destination="@id/ProfileFragment"/>
 
+        <action
+            android:id="@+id/action_mypage_to_sugget"
+            app:destination="@id/SuggestFragment"/>
+
+        <action
+            android:id="@+id/action_mypage_to_mypost"
+            app:destination="@id/MypostFragment"/>
+
+        <action
+            android:id="@+id/action_mypage_to_mycomment"
+            app:destination="@id/MycommentFragment"/>
+
+
+
     </fragment>
 
     <fragment
@@ -44,6 +58,15 @@
         android:label="내가 쓴 댓글"
         tools:layout="@layout/fragment_mycomment"
         >
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/SuggestFragment"
+        android:name="com.umc.presentation.ui.mypage.suggest.SuggestFragment"
+        android:label="중앙 건의함"
+        tools:layout="@layout/fragment_suggest">
+
 
     </fragment>
 

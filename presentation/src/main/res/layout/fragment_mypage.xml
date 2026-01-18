@@ -165,12 +165,14 @@
             <!--링크 3종 세트-->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/mypage_btn_github"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:clickable="true"
                 android:focusable="true"
                 android:layout_marginTop="24dp"
-                android:onClick="@{()->vm.goGithub()}"
+                android:onClick="@{()->vm.navigateToGithub()}"
+                app:layout_constraintHorizontal_weight="1"
+                app:layout_constraintHorizontal_chainStyle="spread"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="1dp"
@@ -178,7 +180,9 @@
                 app:cardBackgroundColor="@color/select_color_neutral000"
                 app:rippleColor="@android:color/transparent"
                 app:layout_constraintTop_toBottomOf="@id/mypage_flexbox_badge"
-                app:layout_constraintStart_toStartOf="parent">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/mypage_btn_linkedin"
+                >
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -198,6 +202,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
+                        android:maxLines="1"
                         android:text="@string/github"
                         android:textColor="@color/neutral800"
                         android:textAppearance="@style/Subheadline" />
@@ -207,19 +212,22 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/mypage_btn_blog"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:clickable="true"
                 android:focusable="true"
                 android:layout_marginTop="24dp"
-                android:onClick="@{()->vm.goBlog()}"
+                android:onClick="@{()->vm.navigateToBlog()}"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="1dp"
                 app:strokeColor="@color/neutral200"
+                app:layout_constraintHorizontal_weight="1"
+                app:layout_constraintHorizontal_chainStyle="spread"
                 app:cardBackgroundColor="@color/select_color_neutral000"
                 app:rippleColor="@android:color/transparent"
                 app:layout_constraintTop_toBottomOf="@id/mypage_flexbox_badge"
+                app:layout_constraintStart_toEndOf="@id/mypage_btn_linkedin"
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <LinearLayout
@@ -241,6 +249,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:text="@string/blog"
+                        android:maxLines="1"
                         android:textColor="@color/neutral800"
                         android:textAppearance="@style/Subheadline" />
 
@@ -249,17 +258,19 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/mypage_btn_linkedin"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:clickable="true"
                 android:focusable="true"
                 android:layout_marginTop="24dp"
                 android:layout_marginHorizontal="8dp"
-                android:onClick="@{()->vm.goLinkedin()}"
+                android:onClick="@{()->vm.navigateToLinkedin()}"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="1dp"
                 app:strokeColor="@color/neutral200"
+                app:layout_constraintHorizontal_weight="1"
+                app:layout_constraintHorizontal_chainStyle="spread"
                 app:cardBackgroundColor="@color/select_color_neutral000"
                 app:rippleColor="@android:color/transparent"
                 app:layout_constraintTop_toBottomOf="@id/mypage_flexbox_badge"
@@ -285,6 +296,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:text="@string/linkedin"
+                        android:maxLines="1"
                         android:textColor="@color/neutral800"
                         android:textAppearance="@style/Subheadline" />
 
@@ -296,7 +308,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:onClick="@{()->vm.goEditProfile()}"
+                android:onClick="@{()->vm.navigateToEditProfile()}"
                 app:cardBackgroundColor="@color/neutral100"
                 app:pressedColor="@color/neutral300"
                 app:borderWidth="0dp"
@@ -323,7 +335,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:background="@color/primary100"
-            android:onClick="@{()->vm.goSuggetion()}"
+            android:onClick="@{()->vm.navigateToSuggetion()}"
             app:cardBackgroundColor="@color/primary100"
             app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
@@ -437,7 +449,7 @@
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
-                android:onClick="@{() -> vm.goMypost()}"
+                android:onClick="@{() -> vm.navigateToMypost()}"
                 android:padding="12dp">
 
                 <ImageView
@@ -469,7 +481,7 @@
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
-                android:onClick="@{() -> vm.goMyComment()}"
+                android:onClick="@{() -> vm.navigateToMyComment()}"
                 android:padding="12dp">
 
                 <ImageView
@@ -501,7 +513,7 @@
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
-                android:onClick="@{() -> vm.goScrap()}"
+                android:onClick="@{() -> vm.navigateToScrap()}"
                 android:padding="12dp">
 
                 <ImageView
