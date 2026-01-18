@@ -28,7 +28,7 @@
                 android:id="@+id/iv_status_icon"
                 android:layout_width="15dp"
                 android:layout_height="15dp"
-                android:src="@{uiModel.isCertified ? @drawable/ic_check_success : @drawable/ic_check_fail}"
+                android:src="@{uiModel.isCertified ? @drawable/ic_check_success : @drawable/ic_check_failed}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
