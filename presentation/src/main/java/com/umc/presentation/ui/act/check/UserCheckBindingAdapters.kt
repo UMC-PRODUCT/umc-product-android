@@ -8,8 +8,8 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.shape.CornerFamily
-import com.umc.domain.model.act.check.CheckAvailableStatus
-import com.umc.domain.model.act.check.CheckHistoryStatus
+import com.umc.domain.model.enums.CheckAvailableStatus
+import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.presentation.R
 import com.umc.presentation.component.UButton
 

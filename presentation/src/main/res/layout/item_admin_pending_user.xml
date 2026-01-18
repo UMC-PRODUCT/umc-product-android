@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="uiModel"
+            type="com.umc.domain.model.act.check.AdminPendingUser" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp">
+
+        <View
+            android:id="@+id/view_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/neutral100"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingVertical="14dp"
+            app:layout_constraintTop_toBottomOf="@+id/view_divider">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_pending_profile"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_person_inset"
+                android:scaleType="centerInside"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/neutral100"
+                app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_pending_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text='@{uiModel.name + "(" + uiModel.nickname + ")"}'
+                android:textAppearance="@style/SubheadlineBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintBottom_toTopOf="@+id/tv_pending_university"
+                app:layout_constraintStart_toEndOf="@+id/iv_pending_profile"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed"
+                tools:text="홍길동(닉네임)" />
+
+            <TextView
+                android:id="@+id/tv_pending_university"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@{uiModel.university}"
+                android:textAppearance="@style/Footnote"
+                android:textColor="@color/neutral400"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="@+id/tv_pending_name"
+                app:layout_constraintTop_toBottomOf="@+id/tv_pending_name"
+                tools:text="중앙대학교" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text='@{@string/admin_pending_user_request_time_format(uiModel.requestTime)}'
+                android:textAppearance="@style/Footnote"
+                android:textColor="@color/neutral400"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_pending_university"
+                app:layout_constraintStart_toEndOf="@+id/tv_pending_university"
+                app:layout_constraintTop_toTopOf="@+id/tv_pending_university"
+                tools:text="14:05 요청" />
+
+            <ImageView
+                android:id="@+id/btn_pending_approve"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="12dp"
+                android:src="@drawable/ic_check_success"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/success500" />
+
+            <ImageView
+                android:id="@+id/btn_pending_reject"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="24dp"
+                android:src="@drawable/ic_check_failed"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/btn_pending_approve"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/danger500" />
+
+            <ImageView
+                android:id="@+id/btn_pending_warning"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="24dp"
+                android:src="@drawable/ic_warning"
+                android:visibility="@{uiModel.hasLateReason ? View.VISIBLE : View.GONE}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/btn_pending_reject"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/warning500"
+                tools:visibility="visible" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

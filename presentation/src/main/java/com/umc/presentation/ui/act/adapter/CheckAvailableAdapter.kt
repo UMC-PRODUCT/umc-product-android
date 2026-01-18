@@ -13,7 +13,7 @@ import com.naver.maps.map.*
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.OverlayImage
 import com.naver.maps.map.util.FusedLocationSource
-import com.umc.domain.model.act.check.CheckAvailableStatus
+import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.presentation.databinding.ItemActCheckAvailableBinding
 import com.umc.presentation.databinding.LayoutCustomMarkerBinding
 import com.umc.presentation.ui.act.check.CheckAvailableUIModel
