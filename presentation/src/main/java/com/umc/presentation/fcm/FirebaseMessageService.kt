@@ -56,7 +56,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
         val channelId = "umc_product_channel"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        //안드로이드 8(오레오) 이상 시 알림 채널 설정
+        //안드로이드 8(오레오) 이상 시 알림 채널 설정 (제어 용도)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId, "기본 알림",
@@ -65,20 +65,6 @@ class FirebaseMessageService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        /**TODO: 만약 차후에 알람에 따라 이동하는 화면이 다르다면?
-         * 일단은 앱이 켜지도록만 해볼까**/
-        val intent = Intent(this, Class.forName("com.umc.presentation.MainActivity")).apply {
-            // 이미 앱이 켜져 있다면 새로 만들지 않고 기존 화면을 재사용함
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-
-        // 얘는 팬딩 인테트로 시스템에게 권한을 위임
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
 
         // 알람 빌더 생성
         val builder = NotificationCompat.Builder(this, channelId)
@@ -86,7 +72,6 @@ class FirebaseMessageService : FirebaseMessagingService() {
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true) // 클릭하면 알림이 자동으로 사라짐
-            .setContentIntent(pendingIntent) // 클릭 시 수행할 동작 연결
             .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         // 알람 띄우기 (ID를 시스템으로 설정해서 쌓이도록)
