@@ -49,6 +49,8 @@
     <string name="profile_linkedin_url">LinkedIn URL</string>
     <string name="profile_blog_url">Blog URL</string>
     <string name="profile_http_start_placeholder">http://-</string>
+    <string name="mypost_title">내가 쓴 글</string>
+    <string name="mycomment_title">댓글 단 글"</string>
 
 
     <!-- Word -->
