@@ -46,6 +46,8 @@ constructor() : BaseViewModel<PlanDetailFragmentUiState, PlanDetailFragmentEvent
     }
 
 
+
+
 }
 
 data class PlanDetailFragmentUiState(
@@ -69,21 +71,22 @@ data class PlanDetailFragmentUiState(
 
 ) : UiState
 
-sealed class PlanDetailFragmentEvent : UiEvent {
+sealed interface PlanDetailFragmentEvent : UiEvent {
 
-    object MoveBackPressedEvent : PlanDetailFragmentEvent()
+    object MoveBackPressedEvent : PlanDetailFragmentEvent
 
     //토글 이벤트
-    object ToggleMenu : PlanDetailFragmentEvent()
+    object ToggleMenu : PlanDetailFragmentEvent
     //신고하기 이벤트
-    object ReportPlan : PlanDetailFragmentEvent()
+    object ReportPlan : PlanDetailFragmentEvent
     //수정하기 이벤트
-    object EditPlan : PlanDetailFragmentEvent()
+    object EditPlan : PlanDetailFragmentEvent
     //삭제하기 이벤트
-    object DeletePlan : PlanDetailFragmentEvent()
+    object DeletePlan : PlanDetailFragmentEvent
 
 
     //출석 체크 이벤트
-    object TouchConfirmAttention : PlanDetailFragmentEvent()
+    object TouchConfirmAttention : PlanDetailFragmentEvent
+
 
 }

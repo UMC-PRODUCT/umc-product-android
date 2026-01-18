@@ -24,6 +24,32 @@
     <string name="csv_upload">CSV 업로드</string>
     <string name="home_plan_add_plan_register">일정 등록하기</string>
 
+    <!-- mypage -->
+    <string name="mypage_title">마이페이지</string>
+    <string name="mypage_modify_profile">프로필 수정</string>
+    <string name="mypage_logout">로그아웃</string>
+    <string name="mypage_suggest">중앙 건의함</string>
+    <string name="mypage_suggest_cotnet">익명으로 자유롭게 의견을 남길 수 있어요.</string>
+    <string name="mypage_myactivity">내 활동</string>
+    <string name="mypage_mypost">내가 쓴 글</string>
+    <string name="mypage_mycomment">댓글 단 글</string>
+    <string name="mypage_myscrap">스크랩</string>
+    <string name="mypage_setting_notice">알림 설정</string>
+    <string name="mypage_social">소셜 연동</string>
+    <string name="mypage_kakao">카카오</string>
+    <string name="mypage_google">Google</string>
+    <string name="mypage_opensource">오픈소스 라이선스</string>
+    <string name="profile_connect_account">연동된 계정</string>
+    <string name="profile_give_login">로그인 제공자</string>
+    <string name="profile_name_nickname">이름/닉네임</string>
+    <string name="profile_school">학교</string>
+    <string name="profile_part">기수/파트</string>
+    <string name="profile_active_summary">활동 이력</string>
+    <string name="profile_github_url">Github URL</string>
+    <string name="profile_linkedin_url">LinkedIn URL</string>
+    <string name="profile_blog_url">Blog URL</string>
+    <string name="profile_http_start_placeholder">http://-</string>
+
 
     <!-- Word -->
     <string name="sign_up">회원가입</string>
@@ -36,6 +62,13 @@
     <string name="cancel">취소</string>
     <string name="school">학교</string>
     <string name="next">다음</string>
+    <string name="github">Github</string>
+    <string name="linkedin">Linked in</string>
+    <string name="blog">Blog</string>
+    <string name="setting">설정</string>
+    <string name="information">정보</string>
+    <string name="logout">로그아웃</string>
+    <string name="complete">완료</string>
 
     <!-- Login -->
     <string name="login_title">UMC 활동을 더 편하게 관리해보세요</string>

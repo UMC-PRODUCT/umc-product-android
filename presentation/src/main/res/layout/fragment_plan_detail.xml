@@ -86,30 +86,31 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:padding="12dp"
                         android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
                         android:onClick="@{() -> vm.reportPlan()}"
-                        >
+                        android:padding="12dp">
+
                         <ImageView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:src="@drawable/ic_error_filled"
-                            app:tint="@color/danger500"/>
+                            app:tint="@color/danger500" />
 
                         <TextView
                             android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:layout_marginStart="8dp"
                             android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
                             android:text="신고하기"
-                            android:textColor="@color/danger500"
-                            android:textAppearance="@style/Subheadline"/>
+                            android:textAppearance="@style/Subheadline"
+                            android:textColor="@color/danger500" />
+
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_next_small"
-                            app:tint="@color/danger500"/>
+                            app:tint="@color/danger500" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -239,7 +240,7 @@
             android:layout_marginTop="24dp"
             android:background="@color/neutral000"
             app:cardBackgroundColor="@color/neutral000"
-            app:cardCornerRadius="16dp"
+            app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
             app:strokeWidth="1dp"
             app:strokeColor="@color/neutral300"
@@ -426,7 +427,7 @@
             android:visibility="@{vm.uiState.isToday == true ? View.VISIBLE : View.GONE}"
             android:onClick="@{()->vm.onClickConfirmAttention()}"
             app:cardBackgroundColor="@color/accent500"
-            app:cornerRadius="16dp"
+            app:cornerRadius="8dp"
             app:pressedColor="@color/accent700"
             app:text="@string/home_plan_detail_check_confirm"
             app:textAppearance="@style/HeadlineBold"

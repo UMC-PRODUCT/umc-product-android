@@ -58,6 +58,10 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
         when (event){
             is PlanDetailFragmentEvent.TouchConfirmAttention -> clickConfirmAttention()
 
+            is PlanDetailFragmentEvent.MoveBackPressedEvent -> {
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
+
             else -> {}
         }
     }

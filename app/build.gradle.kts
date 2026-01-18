@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.android.ksp)
     alias(libs.plugins.hilt.android)
+    alias(libs.plugins.google.services)
+
 }
 
 android {
@@ -94,6 +96,9 @@ dependencies {
     
     //opencsv
     implementation(libs.opencsv)
+
+    //firebase
+    implementation(platform(libs.firebase.bom))
 }
 
 fun getApiKey(propertyKey: String): String {

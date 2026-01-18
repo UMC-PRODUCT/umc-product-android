@@ -1,5 +1,7 @@
 package com.umc.presentation.ui.mypage
 
+import com.umc.domain.model.enums.HomeViewMode
+import com.umc.domain.model.enums.LoginType
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -10,15 +12,80 @@ import javax.inject.Inject
 class MypageViewModel @Inject
 constructor() : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
+
+    fun navigateToGithub(){
+        emitEvent(MypageFragmentEvent.navigateToGithub)
+    }
+    fun navigateToLinkedin(){
+        emitEvent(MypageFragmentEvent.navigateToLinkedin)
+
+    }
+    fun navigateToBlog(){
+        emitEvent(MypageFragmentEvent.navigateToBlog)
+    }
+
+    fun navigateToEditProfile(){
+        emitEvent(MypageFragmentEvent.navigateToEditProfile)
+    }
+
+    fun navigateToSuggetion(){
+        emitEvent(MypageFragmentEvent.navigateToSuggetion)
+    }
+
+    fun navigateToMypost(){
+        emitEvent(MypageFragmentEvent.navigateToMypost)
+    }
+    fun navigateToMyComment(){
+        emitEvent(MypageFragmentEvent.navigateToMyComment)
+    }
+    fun navigateToScrap(){
+        emitEvent(MypageFragmentEvent.navigateToScrap)
+    }
+
+
+    fun logout(){
+        emitEvent(MypageFragmentEvent.logout)
+    }
+
+
+
+
 }
 
 
 
 
 data class MypageFragmentUiState(
-    val dummy: String = "",
+    // 현재 카카오 구글 로그인 2개로 비교하니 카카오를 기준으로 view 세팅
+    val loginType: LoginType = LoginType.KAKAO,
+    
+    // 현재 직책
+    val myCareer : List<String> = listOf("8기 Android 챌린저", "9기 Android 중앙 파트장", "9기 칸 맞추기 기다란 텍스트"),
+
+    // 알람을 송수신할건지
+    val isAlarmOn : Boolean = false,
+
+    // 임시 더ㅣㅁ 데이터
+    val tmpgithub : String = "https://github.com/UMC-PRODUCT/umc-product-android",
+    val tmpblog : String = "https://velog.io/",
+    val tmplinkedin : String = "https://kr.linkedin.com/",
+    
 ) : UiState
 
 sealed interface MypageFragmentEvent : UiEvent {
-    object DummyEvent : MypageFragmentEvent
+    //이동하기
+    object navigateToGithub : MypageFragmentEvent //깃허브 링크
+    object navigateToBlog : MypageFragmentEvent //블로그 링크
+    object navigateToLinkedin : MypageFragmentEvent //리으드인 링크
+
+    object navigateToEditProfile : MypageFragmentEvent //프로필 수정
+    object navigateToSuggetion : MypageFragmentEvent //중앙 건의함
+    object navigateToMypost : MypageFragmentEvent //내가 쓴 글
+    object navigateToMyComment : MypageFragmentEvent //내가 쓴 댓글
+    object navigateToScrap : MypageFragmentEvent //스크랩
+
+
+    //로그아웃
+    object logout : MypageFragmentEvent
+
 }
