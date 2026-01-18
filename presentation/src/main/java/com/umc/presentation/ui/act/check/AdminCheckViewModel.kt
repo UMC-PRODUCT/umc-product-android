@@ -28,7 +28,8 @@ class AdminCheckViewModel @Inject constructor() :
 
         val domainSessions = listOf(
             AdminSessionCheck(1, "4주차 정기세션", "2024-03-23", "14:00", "18:00", AdminSessionStatus.IN_PROGRESS, AdminCheckStats(85, 40, 34, 3), mockPendingUsers),
-            AdminSessionCheck(2, "4주차 정기세션", "2024-03-23", "14:00", "18:00", AdminSessionStatus.COMPLETED, AdminCheckStats(85, 40, 34, 3), emptyList())
+            AdminSessionCheck(2, "4주차 정기세션", "2024-03-23", "14:00", "18:00", AdminSessionStatus.COMPLETED, AdminCheckStats(85, 40, 34, 3), emptyList()),
+            AdminSessionCheck(3, "4주차 정기세션", "2024-03-23", "14:00", "18:00", AdminSessionStatus.IN_PROGRESS, AdminCheckStats(85, 40, 34, 3), mockPendingUsers),
         )
 
         updateState { copy(adminSessions = domainSessions.map { AdminSessionUIModel(it) }) }

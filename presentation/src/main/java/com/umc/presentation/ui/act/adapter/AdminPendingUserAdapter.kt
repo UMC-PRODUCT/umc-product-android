@@ -44,7 +44,7 @@ class AdminPendingUserAdapter(
             }
 
             // 경고 아이콘 클릭 (지각 사유 팝업 호출)
-            binding.ivPendingWarning.setOnClickListener {
+            binding.btnPendingWarning.setOnClickListener {
                 if (uiModel.hasLateReason) {
                     onShowLateReason(uiModel)
                 }
