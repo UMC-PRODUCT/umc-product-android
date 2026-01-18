@@ -80,45 +80,62 @@
                 app:textAppearance="@style/Caption1Bold"
                 tools:text="진행 중" />
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/layout_admin_session_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
+                android:layout_marginTop="12dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tv_admin_session_title">
 
                 <ImageView
+                    android:id="@+id/iv_admin_calendar"
                     android:layout_width="14dp"
                     android:layout_height="14dp"
-                    android:src="@drawable/ic_calendar" />
+                    android:src="@drawable/ic_calendar"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <TextView
+                    android:id="@+id/tv_admin_date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
+                    android:includeFontPadding="false"
                     android:text="@{uiModel.formattedDate}"
-                    android:textAppearance="@style/Caption1"
+                    android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral600"
+                    app:layout_constraintBottom_toBottomOf="@+id/iv_admin_calendar"
+                    app:layout_constraintStart_toEndOf="@+id/iv_admin_calendar"
+                    app:layout_constraintTop_toTopOf="@+id/iv_admin_calendar"
                     tools:text="2024.03.23 (토)" />
 
                 <ImageView
+                    android:id="@+id/iv_admin_clock"
                     android:layout_width="14dp"
                     android:layout_height="14dp"
                     android:layout_marginStart="12dp"
-                    android:src="@drawable/ic_clock" />
+                    android:src="@drawable/ic_clock"
+                    app:layout_constraintBottom_toBottomOf="@+id/tv_admin_date"
+                    app:layout_constraintStart_toEndOf="@+id/tv_admin_date"
+                    app:layout_constraintTop_toTopOf="@+id/tv_admin_date" />
 
                 <TextView
+                    android:id="@+id/tv_admin_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
+                    android:includeFontPadding="false"
                     android:text="@{uiModel.formattedTime}"
-                    android:textAppearance="@style/Caption1"
+                    android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral600"
+                    app:layout_constraintBottom_toBottomOf="@+id/iv_admin_clock"
+                    app:layout_constraintStart_toEndOf="@+id/iv_admin_clock"
+                    app:layout_constraintTop_toTopOf="@+id/iv_admin_clock"
                     tools:text="14:00 - 18:00" />
-            </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <LinearLayout
                 android:id="@+id/layout_admin_stats_group"
