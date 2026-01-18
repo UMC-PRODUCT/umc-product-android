@@ -30,7 +30,8 @@
             android:src="@drawable/ic_back"
             android:onClick="@{()->vm.onClickBackPressed()}"
             app:tint="@color/neutral800"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="@id/profile_tv_title"
+            app:layout_constraintBottom_toBottomOf="@id/profile_tv_title"
             app:layout_constraintStart_toStartOf="parent"
             />
 

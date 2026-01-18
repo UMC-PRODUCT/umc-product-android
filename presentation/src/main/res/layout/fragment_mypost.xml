@@ -28,7 +28,8 @@
             android:layout_height="wrap_content"
             android:src="@drawable/ic_back"
             app:tint="@color/neutral800"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="@id/mypost_tv_title"
+            app:layout_constraintBottom_toBottomOf="@id/mypost_tv_title"
             app:layout_constraintStart_toStartOf="parent"
             />
 
