@@ -15,7 +15,9 @@ class AdminCheckViewModel @Inject constructor() :
     BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
 
     init {
-        loadMockData()
+        // loadMockData()
+
+        updateState { copy(adminSessions = emptyList()) }
     }
 
     private fun loadMockData() {

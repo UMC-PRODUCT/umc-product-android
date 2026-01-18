@@ -108,6 +108,7 @@
     <string name="admin_check_completed_message">모든 출석 승인이 완료되었습니다.</string>
 
     <string name="admin_pending_user_request_time_format">%1$s 요청</string>
+    <string name="attendance_empty_admin_sessions">아직 출석을 진행할 세션이 없어요</string>
   
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

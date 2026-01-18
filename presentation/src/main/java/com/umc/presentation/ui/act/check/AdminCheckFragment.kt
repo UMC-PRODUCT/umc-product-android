@@ -1,7 +1,6 @@
 package com.umc.presentation.ui.act.check
 
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentAdminCheckBinding
 import com.umc.presentation.ui.act.adapter.AdminCheckAdapter
@@ -26,6 +25,7 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
     }
 
     override fun initView() {
+        binding.lifecycleOwner = viewLifecycleOwner
         binding.rvAdminCheckMain.adapter = adminAdapter
     }
 
@@ -34,6 +34,7 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
             launch {
                 viewModel.uiState.collect { state ->
                     adminAdapter.submitList(state.adminSessions)
+                    binding.uiState = state
                 }
             }
         }
