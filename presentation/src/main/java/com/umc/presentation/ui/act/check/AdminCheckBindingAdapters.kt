@@ -9,7 +9,7 @@ import com.umc.presentation.component.UButton
 object AdminCheckBindingAdapters {
 
     /**
-     * 어드민 세션 카드의 상단 뱃지 스타일 (진행 중 / 종료됨)
+     * 세션 상태(진행 중/종료)에 따른 UButton 배경 및 텍스트 색상 설정
      */
     @JvmStatic
     @BindingAdapter("adminStatusStyle")
@@ -17,9 +17,9 @@ object AdminCheckBindingAdapters {
         if (status == null) return
 
         val (bgColorRes, textColorRes) = when (status) {
-            AdminSessionStatus.IN_PROGRESS -> // 진행 중: 연한 파랑
+            AdminSessionStatus.IN_PROGRESS ->
                 R.color.primary100 to R.color.primary600
-            AdminSessionStatus.COMPLETED -> // 종료됨: 연한 회색
+            AdminSessionStatus.COMPLETED ->
                 R.color.neutral200 to R.color.neutral600
         }
 

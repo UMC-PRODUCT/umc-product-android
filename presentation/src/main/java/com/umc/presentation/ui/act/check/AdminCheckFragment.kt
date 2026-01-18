@@ -14,7 +14,6 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
 ) {
     override val viewModel: AdminCheckViewModel by viewModels()
 
-    // 어댑터 생성 시 필요한 콜백 함수들을 전달합니다.
     private val adminAdapter by lazy {
         AdminCheckAdapter(
             onToggleExpansion = { sessionId ->

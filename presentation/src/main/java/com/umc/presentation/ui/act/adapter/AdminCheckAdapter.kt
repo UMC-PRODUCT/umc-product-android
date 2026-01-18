@@ -50,6 +50,7 @@ class AdminCheckAdapter(
         fun bind(uiModel: AdminSessionUIModel) {
             binding.uiModel = uiModel
 
+            // 확장 상태일 때만 하위 리스트 업데이트
             if (uiModel.isExpanded) {
                 pendingUserAdapter.submitList(uiModel.session.pendingUsers)
             }
