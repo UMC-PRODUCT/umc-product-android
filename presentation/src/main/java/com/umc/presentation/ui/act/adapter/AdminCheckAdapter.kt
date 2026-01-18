@@ -15,9 +15,7 @@ class AdminCheckAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemAdminCheckSessionBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
+            LayoutInflater.from(parent.context), parent, false
         )
         return ViewHolder(binding)
     }
@@ -29,16 +27,27 @@ class AdminCheckAdapter(
     inner class ViewHolder(private val binding: ItemAdminCheckSessionBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
+        private val pendingUserAdapter = AdminPendingUserAdapter(
+            onApprove = { /* TODO: 승인 */ },
+            onReject = { /* TODO: 거절 */ },
+            onShowLateReason = { /* TODO: 사유 확인 */ }
+        )
+
+        init {
+            binding.rvAdminPendingUsers.adapter = pendingUserAdapter
+        }
+
         fun bind(uiModel: AdminSessionUIModel) {
-            // 레이아웃에 UI 모델 바인딩
             binding.uiModel = uiModel
 
-            // 위치 변경 버튼 클릭 리스너
+            if (uiModel.isExpanded) {
+                pendingUserAdapter.submitList(uiModel.session.pendingUsers)
+            }
+
             binding.btnAdminChangeLocation.setOnClickListener {
                 onChangeLocation(uiModel.session.id)
             }
 
-            // 승인 대기 명단 확인 버튼(ConstraintLayout) 클릭 시 확장/축소 토글
             binding.btnAdminPendingListTrigger.setOnClickListener {
                 onToggleExpansion(uiModel.session.id)
             }
@@ -48,12 +57,10 @@ class AdminCheckAdapter(
     }
 
     class AdminCheckDiffCallback : DiffUtil.ItemCallback<AdminSessionUIModel>() {
-        override fun areItemsTheSame(oldItem: AdminSessionUIModel, newItem: AdminSessionUIModel): Boolean {
-            return oldItem.session.id == newItem.session.id
-        }
+        override fun areItemsTheSame(oldItem: AdminSessionUIModel, newItem: AdminSessionUIModel) =
+            oldItem.session.id == newItem.session.id
 
-        override fun areContentsTheSame(oldItem: AdminSessionUIModel, newItem: AdminSessionUIModel): Boolean {
-            return oldItem == newItem
-        }
+        override fun areContentsTheSame(oldItem: AdminSessionUIModel, newItem: AdminSessionUIModel) =
+            oldItem == newItem
     }
 }
