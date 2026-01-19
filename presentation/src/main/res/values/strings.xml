@@ -132,6 +132,16 @@
 
     <string name="location_certified">위치 인증됨</string>
     <string name="location_certification_failed">위치 인증 실패</string>
+
+    <string name="admin_check_change_location">위치 변경</string>
+    <string name="admin_check_stats_attendance_rate">출석률</string>
+    <string name="admin_check_stats_attendance_count">출석 인원</string>
+    <string name="admin_check_stats_pending_count">승인 대기</string>
+    <string name="admin_check_pending_list_trigger">승인 대기 명단 확인하기</string>
+    <string name="admin_check_completed_message">모든 출석 승인이 완료되었습니다.</string>
+
+    <string name="admin_pending_user_request_time_format">%1$s 요청</string>
+    <string name="attendance_empty_admin_sessions">아직 출석을 진행할 세션이 없어요</string>
   
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

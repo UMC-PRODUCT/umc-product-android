@@ -5,7 +5,7 @@
 
     <data>
         <import type="android.view.View" />
-        <import type="com.umc.domain.model.act.check.CheckAvailableStatus" />
+        <import type="com.umc.domain.model.enums.CheckAvailableStatus" />
         <variable
             name="uiModel"
             type="com.umc.presentation.ui.act.check.CheckAvailableUIModel" />
