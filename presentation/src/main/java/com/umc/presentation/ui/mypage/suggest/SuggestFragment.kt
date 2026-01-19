@@ -10,10 +10,11 @@ import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentSuggestBinding
 import com.umc.presentation.ui.mypage.profile.ProfileViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlin.getValue
 
-
+@AndroidEntryPoint
 class SuggestFragment : BaseFragment<FragmentSuggestBinding, SuggestFragmentUiState, SuggestFragmentEvent, SuggestViewModel>(
     FragmentSuggestBinding::inflate,
 ){

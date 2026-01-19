@@ -33,6 +33,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.UMCProduct">
+
+        <!--서비스 등록-->
+        <service
+            android:name="com.umc.presentation.fcm.FirebaseMessageService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name="com.umc.presentation.MainActivity"
             android:exported="true">

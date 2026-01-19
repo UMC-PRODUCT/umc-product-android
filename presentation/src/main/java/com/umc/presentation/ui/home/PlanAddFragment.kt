@@ -22,9 +22,11 @@ import com.umc.presentation.databinding.FragmentPlanAddBinding
 import com.umc.presentation.ui.home.adapter.SearchParticipantAdapter
 import com.umc.presentation.ui.home.adapter.ShowCategoryAdapter
 import com.umc.presentation.ui.home.adapter.ShowParticipantAdapter
+import dagger.hilt.android.AndroidEntryPoint
 import java.io.InputStreamReader
 import java.util.Calendar
 
+@AndroidEntryPoint
 class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiState, PlanAddFragmentEvent, PlanAddViewModel>(
     FragmentPlanAddBinding::inflate,
 ) {

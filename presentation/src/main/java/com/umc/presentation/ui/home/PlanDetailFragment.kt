@@ -13,8 +13,11 @@ import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPlanDetailBinding
 import com.umc.presentation.util.UToast
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
+
+@AndroidEntryPoint
 
 class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFragmentUiState, PlanDetailFragmentEvent, PlanDetailViewModel>(
     FragmentPlanDetailBinding::inflate,

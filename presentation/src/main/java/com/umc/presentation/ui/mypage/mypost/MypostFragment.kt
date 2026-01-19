@@ -10,14 +10,16 @@ import com.umc.domain.model.mypage.MyContentItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentMypostBinding
-import com.umc.presentation.ui.mypage.adapter.MyContentAdapter
-import com.umc.presentation.ui.mypage.adapter.MyContentItemDelegate
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlin.getValue
+import com.umc.presentation.ui.mypage.adapter.MyContentAdapter
+import com.umc.presentation.ui.mypage.adapter.MyContentItemDelegate
 
-
+@AndroidEntryPoint
 class MypostFragment : BaseFragment<FragmentMypostBinding, MypostFragmentUiState, MypostFragmentEvent, MypostViewModel>(FragmentMypostBinding::inflate,
 ), MyContentItemDelegate {
+
 
     override val viewModel : MypostViewModel by viewModels()
 
