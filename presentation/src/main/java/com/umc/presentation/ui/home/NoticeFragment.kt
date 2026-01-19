@@ -9,9 +9,11 @@ import androidx.fragment.app.viewModels
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentNoticeBinding
+import dagger.hilt.android.AndroidEntryPoint
 
 
 //공지사항 내용
+@AndroidEntryPoint
 class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeFragmentUiState, NoticeFragmentEvent, NoticeViewModel>(
     FragmentNoticeBinding::inflate,
 ) {
