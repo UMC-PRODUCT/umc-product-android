@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.mypage
 
+import android.util.Log
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.LoginType
 import com.umc.presentation.base.BaseViewModel
@@ -12,6 +13,17 @@ import javax.inject.Inject
 class MypageViewModel @Inject
 constructor() : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
+
+
+    // USWITH 바꾸기
+    fun setAlarmOn(isOn: Boolean) {
+        updateState { copy(isAlarmOn = isOn)
+            //임시로 로그 찍기
+            .also { updatedState ->
+            Log.d("log_mypage", "알람 체크 상태: ${updatedState.isAlarmOn}")
+            }
+        }
+    }
 
     fun navigateToGithub(){
         emitEvent(MypageFragmentEvent.navigateToGithub)
@@ -63,7 +75,7 @@ data class MypageFragmentUiState(
     val myCareer : List<String> = listOf("8기 Android 챌린저", "9기 Android 중앙 파트장", "9기 칸 맞추기 기다란 텍스트"),
 
     // 알람을 송수신할건지
-    val isAlarmOn : Boolean = false,
+    val isAlarmOn : Boolean = true,
 
     // 임시 더ㅣㅁ 데이터
     val tmpgithub : String = "https://github.com/UMC-PRODUCT/umc-product-android",

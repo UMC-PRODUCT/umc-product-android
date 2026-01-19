@@ -67,6 +67,18 @@
         android:label="중앙 건의함"
         tools:layout="@layout/fragment_suggest">
 
+        <action
+            android:id="@+id/action_suggetst_to_suggestWrite"
+            app:destination="@id/SuggestWriteFragment"/>
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/SuggestWriteFragment"
+        android:name="com.umc.presentation.ui.mypage.suggest.SuggestWriteFragment"
+        android:label="중앙 건의함 작성"
+        tools:layout="@layout/fragment_suggest_write">
+
 
     </fragment>
 

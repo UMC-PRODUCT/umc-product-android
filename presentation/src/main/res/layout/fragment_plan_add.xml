@@ -340,6 +340,7 @@
                         android:layout_height="144dp"
                         android:layout_marginTop="16dp"
                         android:background="@color/neutral000"
+                        android:gravity="top"
                         app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_detail"
                         app:layout_constraintStart_toStartOf="@id/planadd_tv_plan_title_detail"
                         app:placeholderText="@string/home_plan_add_plan_detail_placeholder"

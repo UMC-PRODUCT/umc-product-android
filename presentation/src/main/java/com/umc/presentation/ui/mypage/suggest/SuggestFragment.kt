@@ -6,9 +6,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentSuggestBinding
+import com.umc.presentation.ui.mypage.MypageFragmentDirections
+import com.umc.presentation.ui.mypage.adapter.SuggestionAdapter
 import com.umc.presentation.ui.mypage.profile.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -21,10 +24,19 @@ class SuggestFragment : BaseFragment<FragmentSuggestBinding, SuggestFragmentUiSt
 
     override val viewModel : SuggestViewModel by viewModels()
 
+    private lateinit var suggestAdapter: SuggestionAdapter
+
+
     override fun initView() {
         binding.apply {
             vm = viewModel
             lifecycleOwner = viewLifecycleOwner
+        }
+
+        //어댑터 정의
+        suggestAdapter = SuggestionAdapter()
+        binding.suggestRcv.apply {
+            adapter = suggestAdapter
         }
     }
 
@@ -35,18 +47,27 @@ class SuggestFragment : BaseFragment<FragmentSuggestBinding, SuggestFragmentUiSt
         repeatOnStarted(viewLifecycleOwner){
             launch {
                 viewModel.uiState.collect { state ->
-
+                    suggestAdapter.submitList(state.tmpData)
                 }
             }
 
             launch {
                 viewModel.uiEvent.collect { event ->
-
+                    handleEvent(event)
                 }
             }
         }
-
-
-
     }
+
+    override fun handleEvent(event: SuggestFragmentEvent) {
+        super.handleEvent(event)
+        when(event) {
+         is SuggestFragmentEvent.NavigateSuggestWrite -> {
+             val action = SuggestFragmentDirections.actionSuggetstToSuggestWrite()
+             findNavController().navigate(action)
+         }
+            else -> {}
+        }
+    }
+
 }
