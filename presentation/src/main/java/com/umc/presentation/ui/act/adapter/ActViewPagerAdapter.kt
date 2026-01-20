@@ -2,7 +2,7 @@ package com.umc.presentation.ui.act.adapter
 
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.umc.presentation.ui.act.challenge.AdminChallengeFragment
+import com.umc.presentation.ui.act.challenge.AdminChallengerFragment
 import com.umc.presentation.ui.act.challenge.UserChallengerFragment
 import com.umc.presentation.ui.act.check.AdminCheckFragment
 import com.umc.presentation.ui.act.check.UserCheckFragment
@@ -30,7 +30,7 @@ class ActViewPagerAdapter(
             when (position) {
                 TAB_CHECK -> AdminCheckFragment()
                 TAB_STUDY -> AdminStudyFragment()
-                TAB_CHALLENGE -> AdminChallengeFragment()
+                TAB_CHALLENGE -> AdminChallengerFragment()
                 else -> throw IllegalStateException("Invalid position: $position")
             }
         } else {
