@@ -91,7 +91,7 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
         }
     }
 
-    private fun handleEvent(event: UserCheckEvent) {
+    override fun handleEvent(event: UserCheckEvent) {
         when (event) {
             is UserCheckEvent.ShowToast -> { /* 토스트 구현 */ }
             is UserCheckEvent.NavigateToFailureReason -> { /* 이동 구현 */ }

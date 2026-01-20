@@ -28,7 +28,7 @@ object CheckBindingAdapters {
         }
 
         view.setCardBackgroundColor(ContextCompat.getColor(view.context, bgColorRes))
-        view.setTextColor(ContextCompat.getColor(view.context, textColorRes)) // UButton에 해당 메서드가 있다고 가정
+        //view.setTextColor(ContextCompat.getColor(view.context, textColorRes)) // UButton에 해당 메서드가 있다고 가정
     }
 
     @JvmStatic
