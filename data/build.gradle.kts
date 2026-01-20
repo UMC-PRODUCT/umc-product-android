@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -49,4 +50,6 @@ dependencies {
     // OKHTTP
     implementation(libs.okhttp.android)
     implementation(libs.okhttp.log)
+
+    implementation(libs.kotlinx.serialization.json)
 }

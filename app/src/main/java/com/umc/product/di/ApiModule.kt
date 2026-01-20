@@ -1,15 +1,20 @@
 package com.umc.product.di
 
+import com.umc.data.api.AuthApi
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import retrofit2.Retrofit
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object ApiModule {
-    //    @Singleton
-//    @Provides
-//    fun provide머시기머시기(retrofit: Retrofit): API Interface {
-//        return retrofit.create(API Interface::class.java)
-//    }
+
+    @Singleton
+    @Provides
+    fun provideAuthApi(@AuthRetrofit retrofit: Retrofit): AuthApi {
+        return retrofit.create(AuthApi::class.java)
+    }
 }
