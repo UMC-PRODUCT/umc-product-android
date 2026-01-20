@@ -11,12 +11,21 @@ import javax.inject.Inject
 class SuggestWriteViewModel @Inject
 constructor() : BaseViewModel<SuggestWriteFragmentUiState, SuggestWriteFragmentEvent>(
     SuggestWriteFragmentUiState()){
+
+    fun setAnomy(isOn: Boolean) {
+        updateState { copy(isAnomy = isOn)
+        }
+    }
 }
 
 
 
 data class SuggestWriteFragmentUiState(
-    val dummy: String = "",
+    val isAnomy : Boolean = true,
+
+
+
+
 ) : UiState
 
 sealed interface SuggestWriteFragmentEvent : UiEvent {

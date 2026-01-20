@@ -24,6 +24,12 @@ class SuggestWriteFragment : BaseFragment<FragmentSuggestWriteBinding, SuggestWr
             vm = viewModel
             lifecycleOwner = viewLifecycleOwner
         }
+
+        //여기서 바뀔 때 호출
+        binding.sugwriteSwitchAnomy.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setAnomy(isChecked)
+        }
+
     }
 
 

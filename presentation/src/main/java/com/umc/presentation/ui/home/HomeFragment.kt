@@ -69,6 +69,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
                     }
 
                     //달력 이벤트 데코레이터 갱신
+                    //로직상 기존 데코레이터를 지우고 새로 입력
                     binding.homeCalendarView.removeDecorators()
                     binding.homeCalendarView.addDecorators(
                         //TodayDecorator

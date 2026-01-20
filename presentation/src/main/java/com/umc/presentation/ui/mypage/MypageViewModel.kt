@@ -18,10 +18,6 @@ constructor() : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     // USWITH 바꾸기
     fun setAlarmOn(isOn: Boolean) {
         updateState { copy(isAlarmOn = isOn)
-            //임시로 로그 찍기
-            .also { updatedState ->
-            Log.d("log_mypage", "알람 체크 상태: ${updatedState.isAlarmOn}")
-            }
         }
     }
 

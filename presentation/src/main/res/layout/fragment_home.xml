@@ -646,6 +646,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
+                    android:visibility="@{vm.uiState.dailyPlans.size() != 0 ? View.VISIBLE : View.INVISIBLE}"
                     android:paddingHorizontal="8dp"
                     android:background="@color/neutral200"/>
 
@@ -655,6 +656,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:nestedScrollingEnabled="false"
+                    android:visibility="@{vm.uiState.dailyPlans.size() != 0 ? View.VISIBLE : View.INVISIBLE}"
                     android:layout_marginTop="16dp"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     tools:listitem="@layout/item_home_plan_active" />

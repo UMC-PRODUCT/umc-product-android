@@ -15,15 +15,123 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingHorizontal="16dp"
+        android:background="@color/neutral000"
+        >
+
+        <!-- 상단 바 -->
+        <ImageView
+            android:id="@+id/sugwrite_btn_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_back"
+            app:tint="@color/neutral800"
+            app:layout_constraintTop_toTopOf="@id/sugwrite_tv_title"
+            app:layout_constraintBottom_toBottomOf="@id/sugwrite_tv_title"
+            app:layout_constraintStart_toStartOf="parent"
+            />
+
+        <TextView
+            android:id="@+id/sugwrite_tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/Title2Bold"
+            android:textColor="@color/neutral800"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="18dp"
+            android:text="@string/suggest_write_title"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/sugwrite_btn_back"
+            />
+
+        <TextView
+            android:id="@+id/sugwrite_tv_complete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/CalloutBold"
+            android:textColor="@color/primary500"
+            android:clickable="true"
+            android:text="@string/register"
+            app:layout_constraintTop_toTopOf="@id/sugwrite_tv_title"
+            app:layout_constraintBottom_toBottomOf="@id/sugwrite_tv_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+        <!--익명 건의함-->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/sugwrite_cdv_anomy"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:background="@color/neutral100"
+        app:cardBackgroundColor="@color/neutral100"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/sugwrite_tv_title">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
         >
 
         <TextView
+            android:id="@+id/sugwrite_tv_anomy_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAppearance="@style/HeadlineBold"
+            android:textColor="@color/neutral800"
+            android:text="@string/suggest_write_anomy_title"
+            android:layout_marginEnd="28dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/sugwrite_switch_anomy"
+            />
+
+        <TextView
+            android:id="@+id/sugwrite_tv_anomy_content"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAppearance="@style/Footnote"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/neutral600"
+            android:text="@string/suggest_write_anomy_content"
+            android:layout_marginEnd="28dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/sugwrite_tv_anomy_title"
+            app:layout_constraintEnd_toStartOf="@id/sugwrite_switch_anomy"
+            />
+
+        <com.umc.presentation.component.USwitch
+            android:id="@+id/sugwrite_switch_anomy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="AAA"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            android:checked="@{vm.uiState.isAnomy}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            />
 
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/sugwrite_tv_region"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAppearance="@style/HeadlineBold"
+            android:textColor="@color/neutral800"
+            android:text="@string/region"
+            android:layout_marginTop="32dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/sugwrite_cdv_anomy"
+            />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
