@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.android.ksp)
     alias(libs.plugins.hilt.android)
+    alias(libs.plugins.google.services)
+
 }
 
 android {
@@ -16,6 +18,11 @@ android {
             "String",
             "KAKAO_APP_KEY",
             getApiKey("kakao.native.key"),
+        )
+        buildConfigField(
+            "String",
+            "NAVER_CLIENT_ID",
+            "\"${getApiKey("naver.client.id")}\""
         )
         manifestPlaceholders["KAKAO_APP_KEY"] = getApiKey("kakao.app.key")
         applicationId = "com.umc.product"
@@ -83,6 +90,15 @@ dependencies {
 
     // flexboxLayout
     implementation(libs.google.flexbox)
+
+    // NAVER
+    implementation("com.naver.maps:map-sdk:3.23.0")
+    
+    //opencsv
+    implementation(libs.opencsv)
+
+    //firebase
+    implementation(platform(libs.firebase.bom))
 }
 
 fun getApiKey(propertyKey: String): String {

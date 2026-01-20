@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.ktlint) apply false
     alias(libs.plugins.androidx.navigation.safeargs) apply false
     alias(libs.plugins.kotlin.kapt) apply false
+
+    alias(libs.plugins.google.services) apply false
 }
 
 subprojects {

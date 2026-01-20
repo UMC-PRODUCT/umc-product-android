@@ -76,8 +76,19 @@ dependencies {
 
     // RECYCLER VIEW
     implementation(libs.androidx.recyclerview)
-    
+
+    //opencsv
+    implementation(libs.opencsv)
+
     // flexboxLayout
     implementation(libs.google.flexbox)
+
+    // NAVER MAPS & LOCATION
+    implementation("com.naver.maps:map-sdk:3.23.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    //firebase meesage
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 }
 

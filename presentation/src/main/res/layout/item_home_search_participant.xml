@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/neutral100"
+    android:padding="16dp">
+
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/imv_participant_profile"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_person"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/neutral200"
+        app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        />
+
+
+    <TextView
+        android:id="@+id/tv_search_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="이름"
+        android:layout_marginHorizontal="8dp"
+        android:gravity="start"
+        android:textAppearance="@style/SubheadlineBold"
+        android:textColor="@color/neutral800"
+        app:layout_constraintStart_toEndOf="@id/imv_participant_profile"
+        app:layout_constraintEnd_toStartOf="@id/cb_search_select"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <CheckBox
+        android:id="@+id/cb_search_select"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:buttonTint="@color/primary500"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
