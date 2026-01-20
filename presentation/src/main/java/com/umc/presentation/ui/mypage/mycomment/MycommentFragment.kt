@@ -57,12 +57,21 @@ FragmentMycommentBinding::inflate,
 
             launch {
                 viewModel.uiEvent.collect { event ->
-
+                    handleEvent(event)
                 }
             }
         }
 
+    }
 
+    override fun handleEvent(event: MycommentFragmentEvent) {
+        super.handleEvent(event)
+
+        when(event){
+            is MycommentFragmentEvent.ClickBackPressed -> {
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
+        }
 
     }
 

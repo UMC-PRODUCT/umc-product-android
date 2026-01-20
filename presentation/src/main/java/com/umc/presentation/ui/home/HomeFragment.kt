@@ -78,7 +78,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
                         selectedDec.apply {
                             //데코레이터에 셀렉트 넣고
                             setSelectedDay(state.selectedDate) },
-                        //EventDecorator
+                            //EventDecorator
                             EventDecorator(requireContext(), state.eventDates)
                     )
 

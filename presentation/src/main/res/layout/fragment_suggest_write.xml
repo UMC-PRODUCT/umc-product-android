@@ -25,6 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_back"
+            android:onClick="@{()->vm.onClickBackPressed()}"
             app:tint="@color/neutral800"
             app:layout_constraintTop_toTopOf="@id/sugwrite_tv_title"
             app:layout_constraintBottom_toBottomOf="@id/sugwrite_tv_title"
@@ -120,6 +121,8 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
+        <!--지역 탭-->
+
         <TextView
             android:id="@+id/sugwrite_tv_region"
             android:layout_width="0dp"
@@ -132,6 +135,59 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/sugwrite_cdv_anomy"
             />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/sugwrite_rcv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/sugwrite_tv_region"
+            tools:listitem="@layout/item_home_category"
+            />
+
+        <!--editText 탭-->
+
+        <EditText
+            android:id="@+id/sugwrite_textfield_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="48dp"
+            android:background="@null"
+            android:hint="@string/suggest_write_anomy_title_placeholder"
+            android:paddingVertical="16dp"
+            android:singleLine="true"
+            android:textAppearance="@style/Title3Bold"
+            android:textColor="@color/neutral800"
+            android:textColorHint="@color/neutral400"
+            app:layout_constraintTop_toBottomOf="@id/sugwrite_rcv" />
+
+        <View
+            android:id="@+id/sugwrote_view_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/neutral400"
+            app:layout_constraintTop_toBottomOf="@id/sugwrite_textfield_title" />
+
+        <EditText
+            android:id="@+id/planadd_textfield_plan_detail"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@null"
+            android:gravity="top"
+            android:hint="@string/suggest_write_anomy_content_placeholder"
+            android:inputType="textMultiLine"
+            android:paddingVertical="16dp"
+            android:layout_marginBottom="64dp"
+            android:textAppearance="@style/Body"
+            android:textColor="@color/neutral800"
+            android:textColorHint="@color/neutral400"
+            app:layout_constraintTop_toBottomOf="@id/sugwrote_view_divider"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

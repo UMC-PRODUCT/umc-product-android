@@ -66,6 +66,9 @@ class SuggestFragment : BaseFragment<FragmentSuggestBinding, SuggestFragmentUiSt
              val action = SuggestFragmentDirections.actionSuggetstToSuggestWrite()
              findNavController().navigate(action)
          }
+         is SuggestFragmentEvent.ClickBackPressed -> {
+             requireActivity().onBackPressedDispatcher.onBackPressed()
+         }
             else -> {}
         }
     }

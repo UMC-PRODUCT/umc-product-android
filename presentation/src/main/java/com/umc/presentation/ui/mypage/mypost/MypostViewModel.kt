@@ -5,6 +5,7 @@ import com.umc.domain.model.mypage.MyContentItem
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import com.umc.presentation.ui.mypage.profile.ProfileFragmentEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -13,6 +14,13 @@ import javax.inject.Inject
 class MypostViewModel @Inject
 constructor() : BaseViewModel<MypostFragmentUiState, MypostFragmentEvent>(
     MypostFragmentUiState()){
+
+
+    fun onClickBackPressed(){
+        emitEvent(MypostFragmentEvent.ClickBackPressed)
+    }
+
+
 }
 
 
@@ -53,5 +61,5 @@ data class MypostFragmentUiState(
     ) : UiState
 
 sealed interface MypostFragmentEvent : UiEvent {
-    object DummyEvent : MypostFragmentEvent
+    object ClickBackPressed : MypostFragmentEvent
 }

@@ -5,6 +5,7 @@ import com.umc.domain.model.mypage.SuggestionItem
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import com.umc.presentation.ui.mypage.profile.ProfileFragmentEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.String
@@ -17,6 +18,10 @@ constructor() : BaseViewModel<SuggestFragmentUiState, SuggestFragmentEvent>(
 
     fun navigateSuggestWrite() {
         emitEvent(SuggestFragmentEvent.NavigateSuggestWrite)
+    }
+
+    fun onClickBackPressed(){
+        emitEvent(SuggestFragmentEvent.ClickBackPressed)
     }
 
 }
@@ -59,4 +64,6 @@ data class SuggestFragmentUiState(
 
 sealed interface SuggestFragmentEvent : UiEvent {
     object NavigateSuggestWrite : SuggestFragmentEvent
+
+    object ClickBackPressed : SuggestFragmentEvent
 }

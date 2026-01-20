@@ -24,9 +24,9 @@ class ShowCategoryAdapter(
                 // 상태에 따른 스타일 분기 처리
                 if (item.isChecked) {
                     // 선택됨
-                    setUChipBackgroundColor(ContextCompat.getColor(context, R.color.primary500))
-                    setUChipBorder(ContextCompat.getColor(context, R.color.primary500), 1)
-                    setUChipTextColor(ContextCompat.getColor(context, R.color.neutral000))
+                    setUChipBackgroundColor(ContextCompat.getColor(context, R.color.neutral800))
+                    setUChipBorder(ContextCompat.getColor(context, R.color.neutral800), 1)
+                    setUChipTextColor(ContextCompat.getColor(context, R.color.neutral100))
                 } else {
                     // 해제됨
                     setUChipBackgroundColor(ContextCompat.getColor(context, R.color.neutral000))

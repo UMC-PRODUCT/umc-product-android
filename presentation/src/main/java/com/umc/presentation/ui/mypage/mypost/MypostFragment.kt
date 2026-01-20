@@ -56,13 +56,20 @@ class MypostFragment : BaseFragment<FragmentMypostBinding, MypostFragmentUiState
 
             launch {
                 viewModel.uiEvent.collect { event ->
-
+                    handleEvent(event)
                 }
             }
         }
+    }
 
+    override fun handleEvent(event: MypostFragmentEvent) {
+        super.handleEvent(event)
 
-
+        when(event){
+            is MypostFragmentEvent.ClickBackPressed -> {
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
+        }
     }
 
 }
