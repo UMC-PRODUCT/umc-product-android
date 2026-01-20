@@ -22,38 +22,47 @@ class HomeViewModel
 
 
         //테스트용 데이터
-        var tmpSchedules = listOf(
-            SchedulePlanItem( "중앙 해커톤", "10:00", "2026-01-27", "TUE", "27", "D-19", false),
-            SchedulePlanItem( "아이디어톤", "14:00", "2026-01-08", "WED", "08", "", true),
-            SchedulePlanItem( "기획 파트 회의", "19:00", "2026-01-27", "TUE", "27", "D-19", false),
-            SchedulePlanItem( "데모 데이", "13:00", "2026-02-15", "SUN", "15", "D-38", false)
-        )
 
         init{
+            //시작 시 오늘 날짜로
+            val today = CalendarDay.today()
+            val todayString = String.format("%d-%02d-%02d", today.year, today.month, today.day)
+
             updateState {
                 copy(
-                    schedules = listOf(
-                        SchedulePlanItem( "중앙 해커톤", "10:00", "2026-01-27", "TUE", "27", "D-19", false),
-                        SchedulePlanItem( "아이디어톤", "14:00", "2026-01-08", "WED", "08", "", true),
-                        SchedulePlanItem( "기획 파트 회의", "19:00", "2026-01-27", "TUE", "27", "D-19", false),
-                        SchedulePlanItem( "데모 데이", "13:00", "2026-02-15", "SUN", "15", "D-38", false)
-                    ),
-
                     //임시로 tmp 넣기
-                    allPlans = tmpSchedules,
+                    //allPlans = tmpSchedules,
                     // 초기 실행 시 오늘 날짜(27일 가정)로 필터링된 리스트를 보여줌
-                    dailyPlans = tmpSchedules.filter { it.date == "2026-01-27" }
+                    dailyPlans = allPlans.filter { it.date == todayString }
                 )
             }
+
+            //날짜들 가져오기 (eventDecorator)
+            loadEvents()
         }
 
 
         // 날짜 정보를 업데이트 함수
         fun setSelectedDate(date: CalendarDay) {
             // updateState를 통해 UiState의 selectedDate 변경
+            val dateString = String.format("%d-%02d-%02d", date.year, date.month, date.day)
+
             updateState {
-                copy(selectedDate = date)
+                copy(selectedDate = date,
+                    dailyPlans = allPlans.filter { it.date == dateString } //dailyPlans에 필터리
+                    )
+
             }
+        }
+
+        // 초기 데이터 로딩 = 일정이 있는 날짜들을 추가하자.
+        fun loadEvents(){
+            val dates = uiState.value.allPlans.map {
+                val parts = it.date.split("-")
+                CalendarDay.from(parts[0].toInt(), parts[1].toInt(), parts[2].toInt())
+            }.toSet()
+
+            updateState { copy(eventDates = dates) }
         }
 
         // 뷰모드(달력/리스트) 전환 함수
@@ -61,6 +70,11 @@ class HomeViewModel
             updateState {
                 copy(viewMode = mode)
             }
+        }
+
+        // 달력 상단 열기
+        fun onClickCalendarHeader(){
+            emitEvent(HomeFragmentEvent.OpenDatePickerEvent)
         }
 
         // 공시사항 (운영바침) 이동 --> 얘를 보내면 Fragment에서 수신
@@ -113,14 +127,22 @@ data class HomeFragmentUiState(
             WarningStatus.NORMAL -> "누적된 경고가 없습니다."
         },
 
-    // 3. 필터링된 일정 데이터
-    val schedules: List<SchedulePlanItem> = emptyList(),
 
 
-
-    //임시 데이터
-    val dailyPlans: List<SchedulePlanItem> = emptyList(),
-    val allPlans: List<SchedulePlanItem> = emptyList(),
+    //일정 관련
+    val dailyPlans: List<SchedulePlanItem> = emptyList(), //선택한 날들의 일정
+    val allPlans: List<SchedulePlanItem> = listOf(
+        SchedulePlanItem( "중앙 해커톤", "10:00", "2026-01-20", "TUE", "27", "D-19", false),
+        SchedulePlanItem( "아이디어톤", "14:00", "2026-01-08", "WED", "08", "", true),
+        SchedulePlanItem( "기획 파트 회의", "19:00", "2026-01-20", "TUE", "27", "D-19", false),
+        SchedulePlanItem( "데모 데이", "13:00", "2026-01-30", "SUN", "15", "D-38", false),
+        SchedulePlanItem( "데모 데이", "13:00", "2026-01-29", "SUN", "15", "D-38", false),
+        SchedulePlanItem( "데모 데이", "13:00", "2026-01-31", "SUN", "15", "D-38", false),
+        SchedulePlanItem( "데모 데이", "13:00", "2026-01-08", "SUN", "15", "D-38", false),
+        SchedulePlanItem( "데모 데이", "13:00", "2026-02-08", "SUN", "15", "D-38", false),
+        SchedulePlanItem( "데모 데이", "13:00", "2026-02-08", "SUN", "15", "D-38", false),
+    ), //월별 모든 일정
+    
     val tmptag: List<String> = listOf("11기", "12기", "13기")
 
 
@@ -128,10 +150,13 @@ data class HomeFragmentUiState(
 ) : UiState
 
 
-sealed class HomeFragmentEvent : UiEvent {
-    object MoveNoticeEvent : HomeFragmentEvent() //공시사항 이동
-    object MoveNotificationEvent : HomeFragmentEvent() //알림 이동
-    data class MovePlanDetailEvent(val plan: SchedulePlanItem) : HomeFragmentEvent() //일정 상세 이동
-    object MovePlanAddEvent : HomeFragmentEvent() //일정 추가 이동
+sealed interface HomeFragmentEvent : UiEvent {
+    object MoveNoticeEvent : HomeFragmentEvent //공시사항 이동
+    object MoveNotificationEvent : HomeFragmentEvent //알림 이동
+    data class MovePlanDetailEvent(val plan: SchedulePlanItem) : HomeFragmentEvent //일정 상세 이동
+    object MovePlanAddEvent : HomeFragmentEvent //일정 추가 이동
+
+    object OpenDatePickerEvent : HomeFragmentEvent //날짜 선택 다이얼로그 열기
+
 }
 

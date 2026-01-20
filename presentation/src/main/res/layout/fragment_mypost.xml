@@ -15,7 +15,6 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingTop="56dp"
         android:paddingBottom="64dp"
         android:paddingHorizontal="16dp"
         android:background="@color/neutral100"
@@ -40,6 +39,7 @@
             android:textAppearance="@style/Title2Bold"
             android:textColor="@color/neutral800"
             android:layout_marginStart="8dp"
+            android:layout_marginTop="18dp"
             android:text="@string/mypost_title"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@id/mypost_btn_back"

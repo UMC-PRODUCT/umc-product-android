@@ -8,7 +8,7 @@ import com.prolificinteractive.materialcalendarview.DayViewDecorator
 import com.prolificinteractive.materialcalendarview.DayViewFacade
 import com.umc.presentation.R
 
-class SelectedDecorator(context: Context) : DayViewDecorator {
+class SelectedDecorator(private val context: Context) : DayViewDecorator {
     private var selectedDay: CalendarDay? = null
     private val drawable = ContextCompat.getDrawable(context, R.drawable.bg_primary100_primary600_circle)
 
@@ -19,6 +19,7 @@ class SelectedDecorator(context: Context) : DayViewDecorator {
     override fun decorate(view: DayViewFacade) {
         drawable?.let { view.setBackgroundDrawable(it) }
         // 글자색 설정
-        view.addSpan(ForegroundColorSpan(R.color.primary600))
+        val primaryColor = ContextCompat.getColor(context, R.color.primary600)
+        view.addSpan(ForegroundColorSpan(primaryColor))
     }
 }
