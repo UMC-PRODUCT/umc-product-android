@@ -49,6 +49,26 @@
     <string name="profile_linkedin_url">LinkedIn URL</string>
     <string name="profile_blog_url">Blog URL</string>
     <string name="profile_http_start_placeholder">http://-</string>
+    <string name="mypost_title">내가 쓴 글</string>
+    <string name="mycomment_title">댓글 단 글"</string>
+    <string name="suggest_title">내 건의 내역</string>
+    <string name="suggest_ask_title">새로운 의견이 있나요?</string>
+    <string name="suggest_ask_content">익명으로 자유롭게 의견을 남겨주세요.</string>
+    <string name="suggest_btn_content">건의하기</string>
+    <string name="suggest_write_title">중앙 건의함</string>
+    <string name="suggest_admin_answer">운영진 답변</string>
+    <string name="suggest_write_anomy_title">익명으로 건의하기</string>
+    <string name="suggest_write_anomy_content">익명 해제 시 회원님의 학교와 이름(닉네임) 정보가 건의 내용과 함께 운영진에게 전달됩니다.</string>
+    <string name="suggest_write_anomy_title_placeholder">제목을 입력하세요.</string>
+    <string name="suggest_write_anomy_content_placeholder">내용을 입력하세요.</string>
+
+    <!-- 커뮤니티 -->
+    <string name="community_title">커뮤니티</string>
+    <string name="community_top">명예의 전당</string>
+    <string name="community_recruting">모집중</string>
+    <string name="community_search_recent">최근 검색어</string>
+    <string name="community_search_deleteall">전체 삭제</string>
+
 
 
     <!-- Word -->
@@ -69,6 +89,12 @@
     <string name="information">정보</string>
     <string name="logout">로그아웃</string>
     <string name="complete">완료</string>
+    <string name="register">등록</string>
+    <string name="region">지역</string>
+    <string name="all">전체</string>
+    <string name="soft">Soft</string>
+    <string name="hard">Hard</string>
+
 
     <!-- Login -->
     <string name="login_title">UMC 활동을 더 편하게 관리해보세요</string>
@@ -142,7 +168,7 @@
 
     <string name="admin_pending_user_request_time_format">%1$s 요청</string>
     <string name="attendance_empty_admin_sessions">아직 출석을 진행할 세션이 없어요</string>
-  
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

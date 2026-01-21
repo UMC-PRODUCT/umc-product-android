@@ -45,6 +45,7 @@
 
         <activity
             android:name="com.umc.presentation.MainActivity"
+            android:windowSoftInputMode="adjustPan"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -15,7 +15,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/neutral100"
-        android:paddingTop="56dp"
         android:paddingBottom="32dp"
         >
 
@@ -28,7 +27,8 @@
             android:src="@drawable/ic_back"
             app:tint="@color/neutral800"
             android:onClick="@{()->vm.onClickBackPressed()}"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="@id/notificiation_tv_title"
+            app:layout_constraintBottom_toBottomOf="@id/notificiation_tv_title"
             app:layout_constraintStart_toStartOf="parent"
             />
 
@@ -39,9 +39,9 @@
             android:textAppearance="@style/Title2Bold"
             android:textColor="@color/neutral800"
             android:text="@string/home_notification_title"
+            android:layout_marginTop="18dp"
             android:layout_marginStart="16dp"
-            app:layout_constraintTop_toTopOf="@id/notification_btn_back"
-            app:layout_constraintBottom_toBottomOf="@id/notification_btn_back"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@id/notification_btn_back"
             />
 

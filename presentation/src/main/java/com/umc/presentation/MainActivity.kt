@@ -115,6 +115,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
         when (id) {
             R.id.homeFragment,
             R.id.mypageFragment,
+                R.id.communityFragment,
             R.id.activityManagementFragment -> {
                 binding.mainBnv.visibility = View.VISIBLE
             }

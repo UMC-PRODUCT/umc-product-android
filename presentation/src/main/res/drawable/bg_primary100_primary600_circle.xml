@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="oval">
-    <stroke
-        android:width="1.5dp"
-        android:color="@color/primary600"/>
-    <solid
-        android:color="@color/primary100"/>
-    <size
-        android:width="32dp"
-        android:height="32dp"/>
-</shape>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetTop="4dp"
+    android:insetBottom="4dp"
+    android:insetLeft="4dp"
+    android:insetRight="4dp">
+
+    <shape android:shape="oval">
+        <stroke
+            android:width="1.5dp"
+            android:color="@color/primary600"/>
+        <solid
+            android:color="@color/primary100"/>
+    </shape>
+</inset>

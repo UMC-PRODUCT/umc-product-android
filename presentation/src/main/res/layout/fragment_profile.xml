@@ -17,7 +17,6 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingTop="56dp"
         android:paddingHorizontal="16dp"
         android:background="@color/neutral000"
         >
@@ -30,7 +29,8 @@
             android:src="@drawable/ic_back"
             android:onClick="@{()->vm.onClickBackPressed()}"
             app:tint="@color/neutral800"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="@id/profile_tv_title"
+            app:layout_constraintBottom_toBottomOf="@id/profile_tv_title"
             app:layout_constraintStart_toStartOf="parent"
             />
 
@@ -41,6 +41,7 @@
             android:textAppearance="@style/Title2Bold"
             android:textColor="@color/neutral800"
             android:layout_marginStart="8dp"
+            android:layout_marginTop="18dp"
             android:text="@string/mypage_modify_profile"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@id/profile_btn_back"

@@ -200,11 +200,13 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
             is PlanAddFragmentEvent.SelectCategory -> {
                 updateState {
                     val selectedCategories = categories.map{
+                        //만약 터치한 놈이 리스트 중 하나랑 같으면
                         if(it.name == event.category.name){
                             it.copy(isChecked = !it.isChecked)
                         }
+                        //아니면 싹 다 false로 바꾸기
                         else{
-                            it
+                            it.copy(isChecked = false)
                         }
                     }
                     copy(categories = selectedCategories)
@@ -248,14 +250,14 @@ data class PlanAddFragmentUiState(
     val searchResults: List<ParticipantItem> = emptyList(), //검색 결과
     val isSearchOverlayVisible: Boolean = false, //검색 결과창 보여주기
 
-    //카테고리 관련
+    //카테고리 리스트
     val categories: List<CategoryItem> = listOf(
         CategoryItem("팀 활동"),
         CategoryItem("개인 학습"),
         CategoryItem("멘토링"),
         CategoryItem("행사"),
-    ), //카테고리 리스트
-    val selectedCategory: List<CategoryItem> = emptyList(), //선택 결과(recyclerview)
+    ),
+    
 
     
     ) : UiState {

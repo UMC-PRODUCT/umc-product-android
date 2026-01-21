@@ -28,6 +28,12 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             vm = viewModel
             lifecycleOwner = viewLifecycleOwner
         }
+
+        //여기서 바뀔 때 호출
+        binding.mypageSwitchSettingAlarm.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setAlarmOn(isChecked)
+        }
+        
     }
 
 

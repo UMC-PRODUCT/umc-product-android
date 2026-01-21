@@ -4,13 +4,16 @@ import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
+import com.umc.presentation.component.calendar.EventDecorator
 import com.umc.presentation.component.calendar.SelectedDecorator
 import com.umc.presentation.component.calendar.TodayDecorator
 import com.umc.presentation.databinding.FragmentHomeBinding
@@ -28,6 +31,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
     //달력 데코레이터
     private lateinit var todayDec : TodayDecorator
     private lateinit var selectedDec : SelectedDecorator
+    private lateinit var eventDec : EventDecorator
 
     //리사이클러뷰 어댑터
     private val dailyAdapter by lazy { ScheduleAdapter(this) }
@@ -40,6 +44,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
         }
         todayDec = TodayDecorator(requireContext())
         selectedDec = SelectedDecorator(requireContext())
+        eventDec = EventDecorator(requireContext(), viewModel.uiState.value.eventDates)
+
         initCalendar()
 
         binding.homeRcvDailyPlan.adapter = dailyAdapter
@@ -61,6 +67,20 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
                     } else {
                         allAdapter.submitList(state.allPlans)
                     }
+
+                    //달력 이벤트 데코레이터 갱신
+                    //로직상 기존 데코레이터를 지우고 새로 입력
+                    binding.homeCalendarView.removeDecorators()
+                    binding.homeCalendarView.addDecorators(
+                        //TodayDecorator
+                        todayDec,
+                        //SelectedDecoator
+                        selectedDec.apply {
+                            //데코레이터에 셀렉트 넣고
+                            setSelectedDay(state.selectedDate) },
+                            //EventDecorator
+                            EventDecorator(requireContext(), state.eventDates)
+                    )
 
                     //커스텀 텍스트뷰
                     updateGrowthDaysText(state.growDay)
@@ -91,6 +111,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
             is HomeFragmentEvent.MoveNotificationEvent -> moveToNotification()
             is HomeFragmentEvent.MovePlanDetailEvent -> moveToPlanDetail(event.plan)
             is HomeFragmentEvent.MovePlanAddEvent -> moveToPlanAdd()
+            is HomeFragmentEvent.OpenDatePickerEvent -> openDatePicker()
 
             else -> {}
         }
@@ -132,6 +153,34 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
         }
     }
 
+    //DatePicker 열기
+    private fun openDatePicker(){
+        // 현재 선택된 날짜 가져오기
+        val currentDay = viewModel.uiState.value.selectedDate
+
+        // DatePickerDialog 인스턴스 생성
+        val datePickerDialog = android.app.DatePickerDialog(
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                // DatePicker의 month는 0부터 시작하므로 1 더하기
+                val selectedDate = CalendarDay.from(year, month + 1, dayOfMonth)
+
+                // 뷰모델에 선택한 날짜 전달
+                viewModel.setSelectedDate(selectedDate)
+
+                // 달력 UI 업데이트 (강제로 해당 날짜를 선택하고 월 페이지를 이동시킴)
+                binding.homeCalendarView.selectedDate = selectedDate // 선택 하이라이트 이동
+                binding.homeCalendarView.setCurrentDate(selectedDate) // 해당 월로 달력 스크롤
+            },
+            currentDay.year,     // 다이얼로그 처음 켰을 때 보여줄 연도
+            currentDay.month - 1, // 다이얼로그 처음 켰을 때 보여줄 월 (0~11)
+            currentDay.day        // 다이얼로그 처음 켰을 때 보여줄 일
+        )
+
+        datePickerDialog.show()
+    }
+
+
     //MaterialCalendar 초기화
     private fun initCalendar(){
         binding.homeCalendarView.apply {
@@ -141,6 +190,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
                 val month = String.format("%02d", day.month)
                 "$year.$month"
             }
+
+            //제목 터치 시 로직
+            setOnTitleClickListener {
+                viewModel.onClickCalendarHeader()
+            }
+
 
             //주 커스텀
             setWeekDayFormatter { dayOfWeek ->
@@ -169,7 +224,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
             setRightArrow(R.drawable.ic_calendar_arrow_right)
 
             //데코레이터 연결
-            addDecorators(todayDec, selectedDec)
+            /**initState에서 관리**/
 
             //날짜 터치 리스너 달기
             setOnDateChangedListener { widget, date, selected ->
