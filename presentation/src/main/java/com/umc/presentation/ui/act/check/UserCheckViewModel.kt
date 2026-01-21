@@ -1,9 +1,9 @@
 package com.umc.presentation.ui.act.check
 
-import com.umc.domain.model.act.check.CheckHistory
-import com.umc.domain.model.act.check.CheckAvailable
-import com.umc.domain.model.act.check.CheckAvailableStatus
-import com.umc.domain.model.act.check.CheckHistoryStatus
+import com.umc.domain.model.act.check.UserCheckHistory
+import com.umc.domain.model.act.check.UserCheckAvailable
+import com.umc.domain.model.enums.CheckAvailableStatus
+import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -20,10 +20,10 @@ class UserCheckViewModel @Inject constructor() :
 
     private fun loadInitialData() {
         val availableList = listOf(
-            CheckAvailable(1, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE, 37.021877, 127.080960, "경기도 평택시 지제동삭1로 어쩌구저쩌구 주소를 길게 쓰기 위한 발악"),
-            CheckAvailable(2, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE, 37.582568, 127.001488, "서울특별시 종로구 명륜4가 88-2번지 주소를 길게 써보자ㅏㅏㅏㅏㅏㅏㅏ"),
-            CheckAvailable(3, "정기 세션 3주차", "14:00", "18:00", "운영진", CheckAvailableStatus.COMPLETED, 37.5665, 126.9780,"서울특별시 중구 소공동 세종대로18길 2", true),
-            CheckAvailable(4, "UMCON", "14:00", "18:00", "스터디장", CheckAvailableStatus.PENDING, 37.5665, 126.9780, "서울특별시 중구 소공동 세종대로18길 2", false)
+            UserCheckAvailable(1, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE, 37.021877, 127.080960, "경기도 평택시 지제동삭1로 어쩌구저쩌구 주소를 길게 쓰기 위한 발악"),
+            UserCheckAvailable(2, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE, 37.582568, 127.001488, "서울특별시 종로구 명륜4가 88-2번지 주소를 길게 써보자ㅏㅏㅏㅏㅏㅏㅏ"),
+            UserCheckAvailable(3, "정기 세션 3주차", "14:00", "18:00", "운영진", CheckAvailableStatus.COMPLETED, 37.5665, 126.9780,"서울특별시 중구 소공동 세종대로18길 2", true),
+            UserCheckAvailable(4, "UMCON", "14:00", "18:00", "스터디장", CheckAvailableStatus.PENDING, 37.5665, 126.9780, "서울특별시 중구 소공동 세종대로18길 2", false)
         ).map {
             CheckAvailableUIModel(
                 session = it,
@@ -32,9 +32,9 @@ class UserCheckViewModel @Inject constructor() :
         }
 
         val rawHistoryList = listOf(
-            CheckHistory(1, "3주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.SUCCESS),
-            CheckHistory(2, "2주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.LATE),
-            CheckHistory(3, "1주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.ABSENT)
+            UserCheckHistory(1, "3주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.SUCCESS),
+            UserCheckHistory(2, "2주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.LATE),
+            UserCheckHistory(3, "1주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.ABSENT)
         )
 
         val historyUIList = rawHistoryList.mapIndexed { index, history ->

@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+        <import type="com.umc.domain.model.enums.AdminSessionStatus" />
+        <variable
+            name="uiModel"
+            type="com.umc.presentation.ui.act.check.AdminSessionUIModel" />
+    </data>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="8dp"
+        app:strokeWidth="0dp"
+        app:cardBackgroundColor="@color/neutral000"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="24dp">
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/btn_admin_change_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:backgroundColor="@color/neutral000"
+                app:borderColor="@color/neutral300"
+                app:borderWidth="1dp"
+                app:cornerRadius="8dp"
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
+                app:contentPaddingTop="4dp"
+                app:contentPaddingBottom="4dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:text="@string/admin_check_change_location"
+                app:textAppearance="@style/SubheadlineBold"
+                app:textColor="@color/neutral700" />
+
+            <TextView
+                android:id="@+id/tv_admin_session_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{uiModel.session.title}"
+                android:textAppearance="@style/Title3Bold"
+                android:textColor="@color/neutral800"
+                android:maxLines="1"
+                android:ellipsize="end"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintEnd_toStartOf="@+id/btn_admin_session_status"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/btn_admin_change_location"
+                tools:text="4주차 정기세션" />
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/btn_admin_session_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                app:adminStatusStyle="@{uiModel.session.adminStatus}"
+                app:buttonElevation="0"
+                app:contentPaddingBottom="2dp"
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
+                app:contentPaddingTop="2dp"
+                app:cornerRadius="4dp"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_admin_session_title"
+                app:layout_constraintStart_toEndOf="@+id/tv_admin_session_title"
+                app:layout_constraintTop_toTopOf="@+id/tv_admin_session_title"
+                app:text="@{uiModel.session.adminStatus.text}"
+                app:textAppearance="@style/Caption1Bold"
+                tools:text="진행 중" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layout_admin_session_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_admin_session_title">
+
+                <ImageView
+                    android:id="@+id/iv_admin_calendar"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_calendar"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_admin_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:includeFontPadding="false"
+                    android:text="@{uiModel.formattedDate}"
+                    android:textAppearance="@style/Footnote"
+                    android:textColor="@color/neutral600"
+                    app:layout_constraintBottom_toBottomOf="@+id/iv_admin_calendar"
+                    app:layout_constraintStart_toEndOf="@+id/iv_admin_calendar"
+                    app:layout_constraintTop_toTopOf="@+id/iv_admin_calendar"
+                    tools:text="2024.03.23 (토)" />
+
+                <ImageView
+                    android:id="@+id/iv_admin_clock"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="12dp"
+                    android:src="@drawable/ic_clock"
+                    app:layout_constraintBottom_toBottomOf="@+id/tv_admin_date"
+                    app:layout_constraintStart_toEndOf="@+id/tv_admin_date"
+                    app:layout_constraintTop_toTopOf="@+id/tv_admin_date" />
+
+                <TextView
+                    android:id="@+id/tv_admin_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:includeFontPadding="false"
+                    android:text="@{uiModel.formattedTime}"
+                    android:textAppearance="@style/Footnote"
+                    android:textColor="@color/neutral600"
+                    app:layout_constraintBottom_toBottomOf="@+id/iv_admin_clock"
+                    app:layout_constraintStart_toEndOf="@+id/iv_admin_clock"
+                    app:layout_constraintTop_toTopOf="@+id/iv_admin_clock"
+                    tools:text="14:00 - 18:00" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_admin_stats_group"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="horizontal"
+                android:weightSum="3"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/layout_admin_session_info">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_admin_stats_blue"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingVertical="9dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/admin_check_stats_attendance_rate"
+                        android:textAppearance="@style/SubheadlineBold"
+                        android:textColor="@color/primary700"
+                        tools:text="출석률"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text='@{String.format("%d%%", uiModel.session.stats.attendanceRate)}'
+                        android:textAppearance="@style/Title3Bold"
+                        android:textColor="@color/primary500"
+                        tools:text="85%" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_admin_stats_green"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingVertical="9dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/admin_check_stats_attendance_count"
+                        android:textAppearance="@style/SubheadlineBold"
+                        android:textColor="@color/success700"
+                        tools:text="출석 인원"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text='@{String.format("%d/%d", uiModel.session.stats.attendedChallengers, uiModel.session.stats.totalChallengers)}'
+                        android:textAppearance="@style/Title3Bold"
+                        android:textColor="@color/success500"
+                        tools:text="34/40" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_admin_stats_yellow"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingVertical="9dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/admin_check_stats_pending_count"
+                        android:textAppearance="@style/SubheadlineBold"
+                        android:textColor="@color/warning700"
+                        tools:text="승인 대기"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text='@{String.format("%d명", uiModel.session.stats.pendingCount)}'
+                        android:textAppearance="@style/Title3Bold"
+                        android:textColor="@color/warning500"
+                        tools:text="3명" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                app:layout_constraintTop_toBottomOf="@+id/layout_admin_stats_group">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layout_admin_pending_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_admin_pending_button_orange"
+                    android:visibility="@{uiModel.session.adminStatus == AdminSessionStatus.IN_PROGRESS ? View.VISIBLE : View.GONE}">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/btn_admin_pending_list_trigger"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <ImageView
+                            android:id="@+id/iv_admin_btn_icon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_person"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:tint="@color/warning500" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/admin_check_pending_list_trigger"
+                            android:textAppearance="@style/SubheadlineBold"
+                            android:textColor="@color/warning700"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/iv_admin_btn_icon"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:text="승인 대기 명단 확인하기"/>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@{uiModel.isExpanded ? @drawable/ic_dropdown_up : @drawable/ic_dropdown_down}"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:tint="@color/warning500"
+                            tools:src="@drawable/ic_dropdown_down" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_admin_pending_users"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        android:visibility="@{uiModel.isExpanded ? View.VISIBLE : View.GONE}"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                        app:layout_constraintTop_toBottomOf="@+id/btn_admin_pending_list_trigger"
+                        tools:itemCount="2"
+                        tools:listitem="@layout/item_admin_pending_user" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <LinearLayout
+                    android:id="@+id/layout_admin_completed_box"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_admin_completed_gray"
+                    android:gravity="center"
+                    android:paddingVertical="14dp"
+                    android:visibility="@{uiModel.session.adminStatus == AdminSessionStatus.COMPLETED ? View.VISIBLE : View.GONE}">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_check_success"
+                        app:tint="@color/success500" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/admin_check_completed_message"
+                        android:textAppearance="@style/SubheadlineBold"
+                        android:textColor="@color/neutral600"
+                        tools:text="모든 출석 승인이 완료되었습니다."/>
+                </LinearLayout>
+            </FrameLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+</layout>
