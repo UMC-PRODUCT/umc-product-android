@@ -6,3 +6,4 @@ data class ParticipantItem(
     val name : String = "",
     val id: String = UUID.randomUUID().toString()
 )
+

@@ -4,3 +4,4 @@ data class CategoryItem(
     val name : String,
     val isChecked : Boolean = false
 )
+

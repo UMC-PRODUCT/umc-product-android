@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 
+
 @HiltViewModel
 class MypostViewModel @Inject
 constructor() : BaseViewModel<MypostFragmentUiState, MypostFragmentEvent>(

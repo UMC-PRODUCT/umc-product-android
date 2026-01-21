@@ -2,6 +2,7 @@ package com.umc.domain.model.mypage
 
 import com.umc.domain.model.enums.SuggestionStatus
 
+
 data class SuggestionItem(
     val status: SuggestionStatus,
     val date: String,

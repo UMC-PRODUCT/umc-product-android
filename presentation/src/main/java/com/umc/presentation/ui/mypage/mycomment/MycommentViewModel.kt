@@ -59,4 +59,5 @@ data class MycommentFragmentUiState(
 
 sealed interface MycommentFragmentEvent : UiEvent {
     object ClickBackPressed : MycommentFragmentEvent
+
 }
