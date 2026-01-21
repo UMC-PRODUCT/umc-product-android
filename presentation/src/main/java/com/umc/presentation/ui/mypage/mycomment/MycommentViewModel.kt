@@ -1,6 +1,6 @@
 package com.umc.presentation.ui.mypage.mycomment
 
-import com.umc.domain.model.enums.MycontentType
+import com.umc.domain.model.enums.MyContentType
 import com.umc.domain.model.mypage.MyContentItem
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -27,7 +27,7 @@ data class MycommentFragmentUiState(
         MyContentItem(
             category = "만남",
             region = "서울",
-            status = MycontentType.RECRUIT,
+            status = MyContentType.RECRUIT,
             title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
             username = "어헛차",
             writeTime = "방금 전",
@@ -37,7 +37,7 @@ data class MycommentFragmentUiState(
         MyContentItem(
             category = "스터디",
             region = "인천",
-            status = MycontentType.RECRUIT,
+            status = MyContentType.RECRUIT,
             title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
             username = "어헛차2호",
             writeTime = "1시간 전",
@@ -47,7 +47,7 @@ data class MycommentFragmentUiState(
         MyContentItem(
             category = "밥",
             region = "인천",
-            status = MycontentType.END,
+            status = MyContentType.END,
             title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
             username = "사람",
             writeTime = "2016.01.19",

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-        <import type="com.umc.domain.model.enums.MycontentType" />
+        <import type="com.umc.domain.model.enums.MyContentType" />
 
         <variable
             name="item"
@@ -72,11 +72,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:cornerRadius="4dp"
-                app:cardBackgroundColor="@{item.status == MycontentType.RECRUIT ? @color/primary100 : @color/neutral200}"
+                app:cardBackgroundColor="@{item.status == MyContentType.RECRUIT ? @color/primary100 : @color/neutral200}"
                 app:borderWidth="0dp"
                 app:text="@{item.status.label}"
                 app:textAppearance="@style/Caption1Bold"
-                app:textColor="@{item.status == MycontentType.RECRUIT ? @color/primary600 : @color/neutral700}"
+                app:textColor="@{item.status == MyContentType.RECRUIT ? @color/primary600 : @color/neutral700}"
                 app:buttonElevation="0"
                 app:contentPaddingBottom="4dp"
                 app:contentPaddingTop="4dp"
