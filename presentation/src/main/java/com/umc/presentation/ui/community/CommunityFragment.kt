@@ -6,12 +6,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.umc.domain.model.enums.CommunityType
+import com.umc.domain.model.mypage.MyContentItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentCommunityBinding
+import com.umc.presentation.ui.mypage.adapter.MyContentAdapter
+import com.umc.presentation.ui.mypage.adapter.MyContentItemDelegate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -19,9 +23,18 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragmentUiState, CommunityFragmentEvent, CommunityViewModel>(
     FragmentCommunityBinding::inflate
-) {
+), MyContentItemDelegate {
 
     override val viewModel: CommunityViewModel by viewModels()
+
+    private lateinit var myContentAdapter : MyContentAdapter
+
+    override fun onItemClicked(item: MyContentItem) {
+        /**TODO. 이동 로직 작성하기**/
+
+        val action = CommunityFragmentDirections.actionCommunityToPostDetail()
+        findNavController().navigate(action)
+    }
 
     override fun initView() {
         binding.apply {
@@ -32,8 +45,18 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
         //탭 초기화 및 설정
         setTabLayout()
 
+        //게시글 default 필터링
+        viewModel.filterContents()
+
+        //스위치 로직
         binding.communitySwitchRecruit.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setRecruit(isChecked)
+        }
+
+        //어댑터 정의 및 연결
+        myContentAdapter = MyContentAdapter(this)
+        binding.communityRcv.apply {
+            adapter = myContentAdapter
         }
 
 
@@ -45,7 +68,7 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
         repeatOnStarted(viewLifecycleOwner){
             launch {
                 viewModel.uiState.collect { state ->
-
+                    myContentAdapter.submitList(state.nowContents)
                 }
             }
 
@@ -59,8 +82,18 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
 
     override fun handleEvent(event: CommunityFragmentEvent) {
         super.handleEvent(event)
+
+        when(event){
+            is CommunityFragmentEvent.navigateWrite -> {
+                val action = CommunityFragmentDirections.actionCommunityToPostWrite()
+                findNavController().navigate(action)
+            }
+        }
     }
 
+
+
+    //탭 세팅 초기화
     private fun setTabLayout(){
         binding.communityTabLayout.apply {
             removeAllTabs()
@@ -83,10 +116,34 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
                     
                     //만약 탭 추가나 변경 시 CommunityType 변경 후 적용
                     when(position){
-                        0-> viewModel.setNowTab(CommunityType.ALL)
-                        1-> viewModel.setNowTab(CommunityType.SOFT)
-                        2-> viewModel.setNowTab(CommunityType.HARD)
-                        3-> viewModel.setNowTab(CommunityType.TOP)
+                        0, 1, 2 -> {
+                            //명예의 전당 탭 없애고 글쓰기 탭 보이기
+                            binding.communityFragmentContainerWrite.visibility = View.VISIBLE
+                            binding.communityFragmentContainerTop.visibility = View.GONE
+
+                            //타입 빌딩
+                            val type = when(position){
+                                0 -> CommunityType.ALL
+                                1 -> CommunityType.SOFT
+                                2 -> CommunityType.HARD
+                                else -> CommunityType.ALL
+                            }
+                            //게시글 필터링
+                            viewModel.setNowTab(type)
+                        }
+                        3 -> {
+                            //명예의 전당 탭 보이고 글쓰기 탭 없애기
+                            binding.communityFragmentContainerWrite.visibility = View.GONE
+                            binding.communityFragmentContainerTop.visibility = View.VISIBLE
+                            
+                            //일단 탭 변경
+                            viewModel.setNowTab(CommunityType.TOP)
+
+                            /**TODO. 보이기 로직**/
+                            //childFragmentManager.beginTransaction()
+                            //    .replace(R.id.community_fragmentContainer_top, )
+                            //    .commit()
+                        }
                     }
                 }
 

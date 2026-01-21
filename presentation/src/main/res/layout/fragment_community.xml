@@ -64,12 +64,26 @@
             app:layout_constraintEnd_toEndOf="parent" />
 
 
+        <!--명예의 전당 보여주는 곳-->
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/community_fragmentContainer_top"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            android:paddingVertical="24dp"
+            android:paddingHorizontal="16dp"
+            app:layout_constraintTop_toBottomOf="@id/community_tab_layout"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <!--글쓰기 탭을 보여주는 곳-->
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/community_fragmentContainer_write"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:background="@color/neutral100"
             android:paddingVertical="24dp"
             android:paddingHorizontal="16dp"
+            android:visibility="visible"
             app:layout_constraintTop_toBottomOf="@id/community_tab_layout"
             app:layout_constraintBottom_toBottomOf="parent"
             >
@@ -116,6 +130,7 @@
                 android:layout_margin="16dp"
                 android:src="@drawable/ic_plus"
                 android:padding="16dp"
+                android:onClick="@{()->vm.navigateWrite()}"
                 app:tint="@color/neutral000"
                 app:backgroundTint="@color/primary500"
                 app:fabSize="normal"
