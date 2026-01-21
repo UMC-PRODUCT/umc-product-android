@@ -32,7 +32,8 @@ data class MycommentFragmentUiState(
             username = "어헛차",
             writeTime = "방금 전",
             likes = "0",
-            comments = "1"
+            comments = "1",
+            isSoft = false
         ),
         MyContentItem(
             category = "스터디",
@@ -42,7 +43,8 @@ data class MycommentFragmentUiState(
             username = "어헛차2호",
             writeTime = "1시간 전",
             likes = "2",
-            comments = "2"
+            comments = "2",
+            isSoft = true
         ),
         MyContentItem(
             category = "밥",
@@ -52,7 +54,8 @@ data class MycommentFragmentUiState(
             username = "사람",
             writeTime = "2016.01.19",
             likes = "200",
-            comments = "123"
+            comments = "123",
+            isSoft = false
         ),
     ),
 ) : UiState
