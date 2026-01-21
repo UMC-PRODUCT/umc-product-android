@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ui.community.CommunityFragment">
+
+    <data>
+
+        <variable
+            name="vm"
+            type="com.umc.presentation.ui.community.CommunityViewModel" />
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/neutral100"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="64dp"
+        >
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

@@ -1,6 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/nav_community">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_community"
+    app:startDestination="@id/communityFragment"
+    >
+
+
+    <fragment
+        android:id="@+id/communityFragment"
+        android:name="com.umc.presentation.ui.community.CommunityFragment"
+        android:label="커뮤니티"
+        tools:layout="@layout/fragment_community"
+        >
+
+        <action
+            android:id="@+id/action_community_to_postWrite"
+            app:destination="@id/postWriteFragment"/>
+
+        <action
+            android:id="@+id/action_community_to_postSearch"
+            app:destination="@id/postSearchFragment"/>
+
+        <action
+            android:id="@+id/action_community_to_postDetail"
+            app:destination="@id/postDetailFragment"/>
+
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/postWriteFragment"
+        android:name="com.umc.presentation.ui.community.write.PostWriteFragment"
+        android:label="게시글 작성"
+        tools:layout="@layout/fragment_post_write">
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/postSearchFragment"
+        android:name="com.umc.presentation.ui.community.search.PostSearchFragment"
+        android:label="게시글 검색"
+        tools:layout="@layout/fragment_post_search">
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/postDetailFragment"
+        android:name="com.umc.presentation.ui.community.detail.PostDetailFragment"
+        android:label="게시글 상세"
+        tools:layout="@layout/fragment_post_detail">
+
+    </fragment>
 
 </navigation>
