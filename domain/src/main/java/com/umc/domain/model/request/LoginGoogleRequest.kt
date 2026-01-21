@@ -1,8 +1,8 @@
-package com.umc.data.dto.request
+package com.umc.domain.model.request
 
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class LoginGoogleRequest(
     val idToken: String = "",
-) : Request
+)

@@ -1,4 +1,4 @@
-package com.umc.data.dto.request
+package com.umc.domain.model.request
 
 import kotlinx.serialization.Serializable
 
@@ -6,4 +6,4 @@ import kotlinx.serialization.Serializable
 data class EmailVerificationCompleteRequest(
     val emailVerificationId: Int = 0,
     val verificationCode: String = "",
-): Request
+)

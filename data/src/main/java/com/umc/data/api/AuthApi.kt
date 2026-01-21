@@ -1,15 +1,16 @@
 package com.umc.data.api
 
-import com.umc.data.base.ApiResponse
-import com.umc.data.dto.request.EmailVerificationCompleteRequest
-import com.umc.data.dto.request.EmailVerificationRequest
-import com.umc.data.dto.request.LoginGoogleRequest
-import com.umc.data.dto.request.LoginKakaoRequest
-import com.umc.data.dto.request.RefreshTokenRequest
-import com.umc.data.dto.response.EmailVerificationCompleteResponse
-import com.umc.data.dto.response.EmailVerificationResponse
-import com.umc.data.dto.response.JwtLoginResponse
-import com.umc.data.dto.response.RefreshTokenResponse
+import com.umc.data.response.EmailVerificationCompleteResponse
+import com.umc.data.response.EmailVerificationResponse
+import com.umc.data.response.JwtLoginResponse
+import com.umc.data.response.RefreshTokenResponse
+import com.umc.domain.model.base.ApiResponse
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.request.EmailVerificationCompleteRequest
+import com.umc.domain.model.request.EmailVerificationRequest
+import com.umc.domain.model.request.LoginGoogleRequest
+import com.umc.domain.model.request.LoginKakaoRequest
+import com.umc.domain.model.request.RefreshTokenRequest
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -17,27 +18,27 @@ interface AuthApi {
     @POST(Endpoints.Auth.REISSUE)
     suspend fun refreshToken(
         @Body request: RefreshTokenRequest
-    ): ApiResponse<RefreshTokenResponse>
+    ): ApiState<ApiResponse<RefreshTokenResponse>>
 
     @POST(Endpoints.Auth.LOGIN_KAKAO)
     suspend fun loginKakao(
         @Body request: LoginKakaoRequest
-    ): ApiResponse<JwtLoginResponse>
+    ): ApiState<ApiResponse<JwtLoginResponse>>
 
     @POST(Endpoints.Auth.LOGIN_GOOGLE)
     suspend fun loginGoogle(
         @Body request: LoginGoogleRequest
-    ): ApiResponse<JwtLoginResponse>
+    ): ApiState<ApiResponse<JwtLoginResponse>>
 
 
     @POST(Endpoints.Auth.EMAIL_VERIFICATION)
     suspend fun emailVerification(
         @Body request: EmailVerificationRequest
-    ): ApiResponse<EmailVerificationResponse>
+    ): ApiState<ApiResponse<EmailVerificationResponse>>
 
     @POST(Endpoints.Auth.EMAIL_VERIFICATION_COMPLETE)
     suspend fun emailVerificationComplete(
         @Body request: EmailVerificationCompleteRequest
-    ): ApiResponse<EmailVerificationCompleteResponse>
+    ): ApiState<ApiResponse<EmailVerificationCompleteResponse>>
 
 }

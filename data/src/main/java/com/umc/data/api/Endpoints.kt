@@ -3,7 +3,7 @@ package com.umc.data.api
 object Endpoints {
 
     object Auth {
-        const val AUTH = "auth/"
+        const val AUTH = "auth"
         const val REISSUE = "$AUTH/auth/renew"
         const val LOGIN_KAKAO = "$AUTH/login/kakao"
         const val LOGIN_GOOGLE = "$AUTH/login/google"
