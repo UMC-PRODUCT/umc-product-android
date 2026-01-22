@@ -93,6 +93,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:background="@color/neutral000"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="@color/neutral300"
                         app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_name"
                         app:layout_constraintStart_toStartOf="@id/planadd_tv_plan_title_name"
                         app:placeholderText="@string/home_plan_add_plan_name_placeholder"
@@ -124,7 +126,7 @@
                         app:layout_constraintTop_toTopOf="@id/planadd_tv_plan_title_date" />
 
                 <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/plandetail_cdv_cover"
+                    android:id="@+id/planadd_cdv_cover"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -147,7 +149,7 @@
                     <!--하루 종일-->
 
                     <TextView
-                        android:id="@+id/plandetail_tv_allday"
+                        android:id="@+id/planadd_tv_allday"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/neutral600"
@@ -155,12 +157,12 @@
                         android:text="@string/allday"
                         android:layout_marginStart="16dp"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="@id/plandetail_switch_allday"
-                        app:layout_constraintBottom_toBottomOf="@id/plandetail_switch_allday"
+                        app:layout_constraintTop_toTopOf="@id/planadd_switch_allday"
+                        app:layout_constraintBottom_toBottomOf="@id/planadd_switch_allday"
                         />
 
                     <com.umc.presentation.component.USwitch
-                        android:id="@+id/plandetail_switch_allday"
+                        android:id="@+id/planadd_switch_allday"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:checked="@{vm.uiState.isAllDay}"
@@ -170,18 +172,18 @@
                         />
 
                     <View
-                        android:id="@+id/plandetail_view_divide1"
+                        android:id="@+id/planadd_view_divide1"
                         android:layout_width="0dp"
                         android:layout_height="1dp"
                         android:background="@color/neutral300"
                         android:layout_marginTop="16dp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/plandetail_switch_allday"/>
+                        app:layout_constraintTop_toBottomOf="@id/planadd_switch_allday"/>
 
 
                     <TextView
-                        android:id="@+id/plandetail_tv_start"
+                        android:id="@+id/planadd_tv_start"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/neutral600"
@@ -190,14 +192,14 @@
                         android:layout_marginTop="16dp"
                         android:layout_marginStart="16dp"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/plandetail_view_divide1"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_view_divide1"
                         />
 
                     <com.umc.presentation.component.UChip
-                        android:id="@+id/plandetail_cdv_start_date"
+                        android:id="@+id/planadd_cdv_start_date"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
+                        android:layout_marginEnd="16dp"
                         app:text="2025년 2월 2일"
                         app:backgroundColor="@color/neutral000"
                         app:pressedColor="@color/neutral300"
@@ -205,17 +207,18 @@
                         app:borderWidth="1dp"
                         app:textAppearance="@style/SubheadlineBold"
                         app:textColor="@color/neutral500"
-                        app:layout_constraintEnd_toStartOf="@id/plandetail_cdv_start_time"
-                        app:layout_constraintTop_toTopOf="@id/plandetail_tv_start"
-                        app:layout_constraintBottom_toBottomOf="@id/plandetail_tv_start"/>
+                        app:layout_constraintEnd_toStartOf="@id/planadd_cdv_start_time"
+                        app:layout_constraintTop_toTopOf="@id/planadd_tv_start"
+                        app:layout_constraintBottom_toBottomOf="@id/planadd_tv_start"/>
 
                     />
 
                     <com.umc.presentation.component.UChip
-                        android:id="@+id/plandetail_cdv_start_time"
+                        android:id="@+id/planadd_cdv_start_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="16dp"
+                        android:visibility="@{vm.uiState.isAllDay == true ? View.GONE : View.VISIBLE}"
                         app:text="오후 4:00"
                         app:backgroundColor="@color/neutral000"
                         app:pressedColor="@color/neutral300"
@@ -224,25 +227,25 @@
                         app:textAppearance="@style/SubheadlineBold"
                         app:textColor="@color/neutral500"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="@id/plandetail_tv_start"
-                        app:layout_constraintBottom_toBottomOf="@id/plandetail_tv_start"/>
+                        app:layout_constraintTop_toTopOf="@id/planadd_tv_start"
+                        app:layout_constraintBottom_toBottomOf="@id/planadd_tv_start"/>
                         />
 
 
 
                     <View
-                        android:id="@+id/plandetail_view_divide2"
+                        android:id="@+id/planadd_view_divide2"
                         android:layout_width="0dp"
                         android:layout_height="1dp"
                         android:background="@color/neutral300"
                         android:layout_marginTop="16dp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/plandetail_tv_start"/>
+                        app:layout_constraintTop_toBottomOf="@id/planadd_tv_start"/>
 
 
                     <TextView
-                        android:id="@+id/plandetail_tv_end"
+                        android:id="@+id/planadd_tv_end"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/neutral600"
@@ -251,14 +254,14 @@
                         android:layout_marginTop="16dp"
                         android:layout_marginStart="16dp"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/plandetail_view_divide2"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_view_divide2"
                         />
 
                     <com.umc.presentation.component.UChip
-                        android:id="@+id/plandetail_cdv_end_date"
+                        android:id="@+id/planadd_cdv_end_date"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
+                        android:layout_marginEnd="16dp"
                         app:text="2025년 2월 2일"
                         app:backgroundColor="@color/neutral000"
                         app:pressedColor="@color/neutral300"
@@ -266,17 +269,18 @@
                         app:borderWidth="1dp"
                         app:textAppearance="@style/SubheadlineBold"
                         app:textColor="@color/neutral500"
-                        app:layout_constraintEnd_toStartOf="@id/plandetail_cdv_end_time"
-                        app:layout_constraintTop_toTopOf="@id/plandetail_tv_end"
-                        app:layout_constraintBottom_toBottomOf="@id/plandetail_tv_end"/>
+                        app:layout_constraintEnd_toStartOf="@id/planadd_cdv_end_time"
+                        app:layout_constraintTop_toTopOf="@id/planadd_tv_end"
+                        app:layout_constraintBottom_toBottomOf="@id/planadd_tv_end"/>
 
                     />
 
                     <com.umc.presentation.component.UChip
-                        android:id="@+id/plandetail_cdv_end_time"
+                        android:id="@+id/planadd_cdv_end_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="16dp"
+                        android:visibility="@{vm.uiState.isAllDay == true ? View.GONE : View.VISIBLE}"
                         app:text="오후 4:00"
                         app:backgroundColor="@color/neutral000"
                         app:pressedColor="@color/neutral300"
@@ -285,8 +289,8 @@
                         app:textAppearance="@style/SubheadlineBold"
                         app:textColor="@color/neutral500"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="@id/plandetail_tv_end"
-                        app:layout_constraintBottom_toBottomOf="@id/plandetail_tv_end"/>
+                        app:layout_constraintTop_toTopOf="@id/planadd_tv_end"
+                        app:layout_constraintBottom_toBottomOf="@id/planadd_tv_end"/>
 
                     />
 
@@ -305,7 +309,7 @@
                         android:textAppearance="@style/HeadlineBold"
                         android:textColor="@color/neutral800"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/plandetail_cdv_cover" />
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_cover" />
 
 
                     <com.umc.presentation.component.UTextField
@@ -314,6 +318,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:background="@color/neutral000"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="@color/neutral300"
                         app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_location"
                         app:layout_constraintStart_toStartOf="@id/planadd_tv_plan_title_location"
                         app:placeholderText="@string/home_plan_add_plan_location_placeholder"
@@ -341,6 +347,8 @@
                         android:layout_marginTop="16dp"
                         android:background="@color/neutral000"
                         android:gravity="top"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="@color/neutral300"
                         app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_detail"
                         app:layout_constraintStart_toStartOf="@id/planadd_tv_plan_title_detail"
                         app:placeholderText="@string/home_plan_add_plan_detail_placeholder"
@@ -455,6 +463,8 @@
                         app:prevIconSize="24dp"
                         app:prevIconTint="@color/neutral400"
                         app:borderWidth="0dp"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="@color/neutral300"
                         app:placeholderText="@string/home_plan_add_plan_search_placeholder"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
