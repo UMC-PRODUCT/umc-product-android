@@ -84,8 +84,12 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
         super.handleEvent(event)
 
         when(event){
-            is CommunityFragmentEvent.navigateWrite -> {
+            is CommunityFragmentEvent.NavigateWrite -> {
                 val action = CommunityFragmentDirections.actionCommunityToPostWrite()
+                findNavController().navigate(action)
+            }
+            is CommunityFragmentEvent.NavigateSearch -> {
+                val action = CommunityFragmentDirections.actionCommunityToPostSearch()
                 findNavController().navigate(action)
             }
         }

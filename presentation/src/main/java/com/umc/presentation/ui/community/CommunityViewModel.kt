@@ -60,8 +60,14 @@ constructor() : BaseViewModel<CommunityFragmentUiState, CommunityFragmentEvent>(
     
     //이동 로직
     fun navigateWrite(){
-        emitEvent(CommunityFragmentEvent.navigateWrite)
+        emitEvent(CommunityFragmentEvent.NavigateWrite)
     }
+
+    fun navigateSearch(){
+        emitEvent(CommunityFragmentEvent.NavigateSearch)
+    }
+
+
     
     
 
@@ -129,7 +135,9 @@ data class CommunityFragmentUiState(
     ) : UiState
 
 sealed interface CommunityFragmentEvent : UiEvent {
-    object navigateWrite : CommunityFragmentEvent
+    object NavigateWrite : CommunityFragmentEvent
+    object NavigateSearch : CommunityFragmentEvent
+
 
 
 
