@@ -6,14 +6,14 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.act.challenger.UserChallenger
-import com.umc.presentation.databinding.ItemUserChallengerMemberBinding
+import com.umc.presentation.databinding.ItemActUserChallengerBinding
 
 class UserChallengerAdapter(
     private val onItemClick: (Int) -> Unit
 ) : ListAdapter<UserChallenger, UserChallengerAdapter.UserChallengerViewHolder>(UserChallengerDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserChallengerViewHolder {
-        val binding = ItemUserChallengerMemberBinding.inflate(
+        val binding = ItemActUserChallengerBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
             false
@@ -26,7 +26,7 @@ class UserChallengerAdapter(
     }
 
     inner class UserChallengerViewHolder(
-        private val binding: ItemUserChallengerMemberBinding
+        private val binding: ItemActUserChallengerBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: UserChallenger) {
