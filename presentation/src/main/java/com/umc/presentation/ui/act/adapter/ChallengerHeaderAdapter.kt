@@ -3,7 +3,7 @@ package com.umc.presentation.ui.act.adapter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.presentation.databinding.ItemChallengerHeaderBinding
+import com.umc.presentation.databinding.ItemActChallengerHeaderBinding
 
 class ChallengerHeaderAdapter(
     private val title: String
@@ -11,7 +11,7 @@ class ChallengerHeaderAdapter(
 
     private var count: Int = 0
 
-    inner class ViewHolder(private val binding: ItemChallengerHeaderBinding) :
+    inner class ViewHolder(private val binding: ItemActChallengerHeaderBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(title: String, count: Int) {
             binding.tvHeaderTitle.text = title
@@ -20,7 +20,7 @@ class ChallengerHeaderAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = ItemChallengerHeaderBinding.inflate(
+        val binding = ItemActChallengerHeaderBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
         return ViewHolder(binding)

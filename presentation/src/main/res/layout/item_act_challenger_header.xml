@@ -7,9 +7,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="20dp"
-        android:paddingTop="16dp"
+        android:paddingTop="8dp"
         android:paddingBottom="8dp"
-        android:background="@color/white">
+        android:background="@drawable/bg_card_middle">
 
         <View
             android:id="@+id/view_indicator"
