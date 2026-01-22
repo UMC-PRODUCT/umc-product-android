@@ -3,7 +3,8 @@ package com.umc.presentation.component
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import androidx.databinding.BindingAdapter
@@ -50,6 +51,18 @@ class USearchBar @JvmOverloads constructor(
 
                 editText.apply {
                     hint = placeholderText
+
+                    // 키보드 액션 버튼 클릭 시 처리
+                    setOnEditorActionListener { v, actionId, _ ->
+                        if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
+                            clearFocus()
+                            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                            imm.hideSoftInputFromWindow(v.windowToken, 0)
+                            true
+                        } else {
+                            false
+                        }
+                    }
 
                     doOnTextChanged { text, _, _, _ ->
                         imageClear.visibility = if (text.isNullOrEmpty()) GONE else VISIBLE
