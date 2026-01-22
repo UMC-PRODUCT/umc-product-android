@@ -84,6 +84,7 @@
                 android:clickable="false"
                 app:buttonElevation="0"
                 app:cornerRadius="4dp"
+                app:borderWidth="1dp"
                 app:textAppearance="@style/Caption1Bold"
                 app:userChallengerRoleStyle="@{model.role}"
                 app:layout_constraintBottom_toBottomOf="parent"
