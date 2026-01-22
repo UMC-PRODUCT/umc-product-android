@@ -584,7 +584,7 @@
 
                     <View
                         android:layout_width="wrap_content"
-                        android:layout_height="200dp"
+                        android:layout_height="64dp"
                         android:layout_marginTop="64dp"
                         app:layout_constraintTop_toBottomOf="@id/planadd_btn_register_plan"
                         app:layout_constraintStart_toStartOf="parent"/>

@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.home
 
 import android.util.Log
+import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.presentation.base.BaseViewModel
@@ -257,23 +258,23 @@ data class PlanAddFragmentUiState(
 
     //카테고리 리스트
     val categories: List<CategoryItem> = listOf(
-        CategoryItem("네트워킹"),
-        CategoryItem("프로젝트"),
-        CategoryItem("회비"),
-        CategoryItem("회의"),
+        CategoryItem(CategoryType.NETWORKING.label),
+        CategoryItem(CategoryType.PROJECT.label),
+        CategoryItem(CategoryType.FEES.label),
+        CategoryItem(CategoryType.MEETING.label),
 
-        CategoryItem("오리엔테이션"),
-        CategoryItem("발표"),
-        CategoryItem("회고"),
-        CategoryItem("일반"),
+        CategoryItem(CategoryType.ORIENTATION.label),
+        CategoryItem(CategoryType.PRESENTATION.label),
+        CategoryItem(CategoryType.RETROSPECTIVE.label),
+        CategoryItem(CategoryType.GENERAL.label),
 
-        CategoryItem("리더십"),
-        CategoryItem("스터디"),
-        CategoryItem("해커톤"),
-        CategoryItem("워크숍"),
-        
-        CategoryItem("뒤풀이"),
-    ),
+        CategoryItem(CategoryType.LEADERSHIP.label),
+        CategoryItem(CategoryType.STUDY.label),
+        CategoryItem(CategoryType.HACKATHON.label),
+        CategoryItem(CategoryType.WORKSHOP.label),
+
+        CategoryItem(CategoryType.AFTER_PARTY.label)
+    )
     
 
     

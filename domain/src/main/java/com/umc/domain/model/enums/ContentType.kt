@@ -1,8 +1,7 @@
 package com.umc.domain.model.enums
 
-enum class CommunityType(val label: String) {
+enum class ContentType(val label: String) {
     ALL("전체"),
-    SOFT("Soft"),
-    HARD("Hard"),
+    QUESTION("질문"),
     TOP("명예의 전당"),
 }

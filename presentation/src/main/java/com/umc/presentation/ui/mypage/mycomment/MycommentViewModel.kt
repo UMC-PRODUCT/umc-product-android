@@ -1,7 +1,9 @@
 package com.umc.presentation.ui.mypage.mycomment
 
-import com.umc.domain.model.enums.MyContentType
-import com.umc.domain.model.mypage.MyContentItem
+import com.umc.domain.model.enums.CategoryType
+import com.umc.domain.model.enums.ContentType
+import com.umc.domain.model.enums.RecruitType
+import com.umc.domain.model.mypage.ContentItem
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -23,41 +25,52 @@ constructor() : BaseViewModel<MycommentFragmentUiState, MycommentFragmentEvent>(
 
 
 data class MycommentFragmentUiState(
-    val tmpData: List<MyContentItem> = listOf(
-        MyContentItem(
-            category = "만남",
+    val tmpData: List<ContentItem> = listOf(
+        ContentItem(
+            category = CategoryType.MEETING,
             region = "서울",
-            status = MyContentType.RECRUIT,
+            contentType = ContentType.ALL,
+            recruitType = RecruitType.END,
             title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
             username = "어헛차",
             writeTime = "방금 전",
             likes = "0",
             comments = "1",
-            isSoft = false
         ),
-        MyContentItem(
-            category = "스터디",
+        ContentItem(
+            category = CategoryType.STUDY,
             region = "인천",
-            status = MyContentType.RECRUIT,
+            contentType = ContentType.ALL,
+            recruitType = RecruitType.RECRUIT,
             title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
             username = "어헛차2호",
             writeTime = "1시간 전",
             likes = "2",
             comments = "2",
-            isSoft = true
         ),
-        MyContentItem(
-            category = "밥",
+        ContentItem(
+            category = CategoryType.WORKSHOP,
             region = "인천",
-            status = MyContentType.END,
+            contentType = ContentType.QUESTION,
+            recruitType = RecruitType.RECRUIT,
             title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
             username = "사람",
             writeTime = "2016.01.19",
             likes = "200",
             comments = "123",
-            isSoft = false
         ),
-    ),
+        ContentItem(
+            category = CategoryType.HACKATHON,
+            region = "인천",
+            contentType = ContentType.QUESTION,
+            recruitType = RecruitType.END,
+            title = "밥먹고개발하고쉬고개발하고게임하고개발하고자고개발하고나는개발이너무너무너무좋아헤헤헤헤헤헿",
+            username = "사람",
+            writeTime = "2016.01.19",
+            likes = "10",
+            comments = "110",
+        ),
+    )
 ) : UiState
 
 sealed interface MycommentFragmentEvent : UiEvent {

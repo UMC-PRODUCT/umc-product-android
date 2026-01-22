@@ -9,13 +9,13 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import com.umc.domain.model.enums.CommunityType
-import com.umc.domain.model.mypage.MyContentItem
+import com.umc.domain.model.enums.ContentType
+import com.umc.domain.model.mypage.ContentItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentCommunityBinding
-import com.umc.presentation.ui.mypage.adapter.MyContentAdapter
-import com.umc.presentation.ui.mypage.adapter.MyContentItemDelegate
+import com.umc.presentation.ui.mypage.adapter.ContentAdapter
+import com.umc.presentation.ui.mypage.adapter.ContentItemDelegate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -23,13 +23,13 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragmentUiState, CommunityFragmentEvent, CommunityViewModel>(
     FragmentCommunityBinding::inflate
-), MyContentItemDelegate {
+), ContentItemDelegate {
 
     override val viewModel: CommunityViewModel by viewModels()
 
-    private lateinit var myContentAdapter : MyContentAdapter
+    private lateinit var myContentAdapter : ContentAdapter
 
-    override fun onItemClicked(item: MyContentItem) {
+    override fun onItemClicked(item: ContentItem) {
         /**TODO. 이동 로직 작성하기**/
 
         val action = CommunityFragmentDirections.actionCommunityToPostDetail()
@@ -54,7 +54,7 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
         }
 
         //어댑터 정의 및 연결
-        myContentAdapter = MyContentAdapter(this)
+        myContentAdapter = ContentAdapter(this)
         binding.communityRcv.apply {
             adapter = myContentAdapter
         }
@@ -104,8 +104,7 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
 
             val tabTitles = listOf(
                     getString(R.string.all),
-                    getString(R.string.soft),
-                    getString(R.string.hard),
+                    getString(R.string.question),
                     getString(R.string.community_top),
                 )
 
@@ -120,28 +119,27 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
                     
                     //만약 탭 추가나 변경 시 CommunityType 변경 후 적용
                     when(position){
-                        0, 1, 2 -> {
+                        0, 1 -> {
                             //명예의 전당 탭 없애고 글쓰기 탭 보이기
                             binding.communityFragmentContainerWrite.visibility = View.VISIBLE
                             binding.communityFragmentContainerTop.visibility = View.GONE
 
                             //타입 빌딩
                             val type = when(position){
-                                0 -> CommunityType.ALL
-                                1 -> CommunityType.SOFT
-                                2 -> CommunityType.HARD
-                                else -> CommunityType.ALL
+                                0 -> ContentType.ALL
+                                1 -> ContentType.QUESTION
+                                else -> ContentType.ALL
                             }
                             //게시글 필터링
                             viewModel.setNowTab(type)
                         }
-                        3 -> {
+                        2-> {
                             //명예의 전당 탭 보이고 글쓰기 탭 없애기
                             binding.communityFragmentContainerWrite.visibility = View.GONE
                             binding.communityFragmentContainerTop.visibility = View.VISIBLE
                             
                             //일단 탭 변경
-                            viewModel.setNowTab(CommunityType.TOP)
+                            viewModel.setNowTab(ContentType.TOP)
 
                             /**TODO. 보이기 로직**/
                             //childFragmentManager.beginTransaction()

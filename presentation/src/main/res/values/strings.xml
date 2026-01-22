@@ -94,6 +94,7 @@
     <string name="all">전체</string>
     <string name="soft">Soft</string>
     <string name="hard">Hard</string>
+    <string name="question">질문</string>
 
 
     <!-- Login -->
