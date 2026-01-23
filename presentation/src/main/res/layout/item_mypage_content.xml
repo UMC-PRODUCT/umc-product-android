@@ -154,7 +154,7 @@
 
                 <ImageView
                     android:id="@+id/item_imv_likes"
-                    android:layout_width="18dp"
+                    android:layout_width="12dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_thumb_up_filled"
                     app:tint="@color/neutral400" />
@@ -164,7 +164,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="@{item.likes}"
+                    android:text="@{String.valueOf(item.likes)}"
                     android:textColor="@color/neutral600"
                     android:textAppearance="@style/Footnote"
                     tools:text="0" />
@@ -182,7 +182,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="@{item.comments}"
+                    android:text="@{String.valueOf(item.comments)}"
                     android:textColor="@color/neutral600"
                     android:textAppearance="@style/Footnote"
                     tools:text="0" />

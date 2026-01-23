@@ -14,6 +14,8 @@ constructor() : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent
 ) {
 
 
+    //각 데이터를 조합
+
 }
 
 

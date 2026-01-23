@@ -3,6 +3,7 @@ package com.umc.presentation.ui.mypage.mycomment
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.ContentType
 import com.umc.domain.model.enums.RecruitType
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.mypage.ContentItem
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -34,8 +35,10 @@ data class MycommentFragmentUiState(
             title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
             username = "어헛차",
             writeTime = "방금 전",
-            likes = "0",
-            comments = "1",
+            likes = 0,
+            comments = 1,
+            content = "이거는 본문 내용이에요!!!",
+            userPart = UserPart.ANDROID,
         ),
         ContentItem(
             category = CategoryType.STUDY,
@@ -45,8 +48,10 @@ data class MycommentFragmentUiState(
             title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
             username = "어헛차2호",
             writeTime = "1시간 전",
-            likes = "2",
-            comments = "2",
+            likes = 2,
+            comments = 2,
+            content = "이거는 본문 내용이에요!!!",
+            userPart = UserPart.WEB,
         ),
         ContentItem(
             category = CategoryType.WORKSHOP,
@@ -56,8 +61,10 @@ data class MycommentFragmentUiState(
             title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
             username = "사람",
             writeTime = "2016.01.19",
-            likes = "200",
-            comments = "123",
+            likes = 200,
+            comments = 123,
+            content = "이거는 본문 내용이에요!!!",
+            userPart = UserPart.IOS,
         ),
         ContentItem(
             category = CategoryType.HACKATHON,
@@ -67,8 +74,10 @@ data class MycommentFragmentUiState(
             title = "밥먹고개발하고쉬고개발하고게임하고개발하고자고개발하고나는개발이너무너무너무좋아헤헤헤헤헤헿",
             username = "사람",
             writeTime = "2016.01.19",
-            likes = "10",
-            comments = "110",
+            likes = 10,
+            comments = 1,
+            content = "본문내용을늘려야하는데무슨내용을적어야잘적었다는소문이날까?내용을늘리기위해서는아무내용이나넣어야겠다.이쯤되면길어지겠지?",
+            userPart = UserPart.SPRING,
         ),
     )
 ) : UiState

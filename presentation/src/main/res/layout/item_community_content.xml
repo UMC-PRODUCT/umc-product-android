@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="com.umc.domain.model.enums.RecruitType" />
+        <import type="com.umc.domain.model.enums.ContentType" />
+        <import type="com.umc.domain.model.enums.CategoryType" />
+
+        <variable
+            name="item"
+            type="com.umc.domain.model.mypage.ContentItem" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp"
+        android:background="@color/neutral000">
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/item_cdv_category"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cornerRadius="4dp"
+            app:cardBackgroundColor="@color/accent100"
+            app:borderWidth="1dp"
+            app:borderColor="@color/accent200"
+            app:text="@{item.category.label}"
+            app:textAppearance="@style/Caption1Bold"
+            app:textColor="@color/accent600"
+            app:buttonElevation="0"
+            app:contentPaddingBottom="4dp"
+            app:contentPaddingTop="4dp"
+            app:contentPaddingLeft="8dp"
+            app:contentPaddingRight="8dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            />
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/item_cdv_region"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:cornerRadius="4dp"
+            app:cardBackgroundColor="@color/neutral000"
+            app:borderWidth="1dp"
+            app:borderColor="@color/neutral200"
+            app:text="@{item.region}"
+            app:textAppearance="@style/Caption1Bold"
+            app:textColor="@color/neutral700"
+            app:buttonElevation="0"
+            app:contentPaddingBottom="4dp"
+            app:contentPaddingTop="4dp"
+            app:contentPaddingLeft="8dp"
+            app:contentPaddingRight="8dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/item_cdv_category"
+            />
+
+        <TextView
+            android:id="@+id/item_tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAppearance="@style/Title3Bold"
+            android:textColor="@color/neutral800"
+            android:text="@{item.title}"
+            android:layout_marginTop="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/item_cdv_category"
+            tools:text="Title"
+            />
+
+        <!--유저 정보 표시-->
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/item_circleimv_profile"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_person"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/neutral200"
+            app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+            app:layout_constraintTop_toTopOf="@id/item_tv_username"
+            app:layout_constraintBottom_toBottomOf="@id/item_tv_time"
+            app:layout_constraintStart_toStartOf="parent"
+            />
+
+        <TextView
+            android:id="@+id/item_tv_username"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAppearance="@style/SubheadlineBold"
+            android:textColor="@color/neutral800"
+            android:text="@{item.username}"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@id/item_circleimv_profile"
+            app:layout_constraintTop_toBottomOf="@id/item_tv_title"
+            tools:text="홍길동(닉네임)"
+            />
+
+        <TextView
+            android:id="@+id/item_tv_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAppearance="@style/Footnote"
+            android:textColor="@color/neutral600"
+            android:text="@{item.username}"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@id/item_circleimv_profile"
+            app:layout_constraintTop_toBottomOf="@id/item_tv_username"
+            tools:text="홍길동(닉네임)"
+            />
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/item_cdv_user_part"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:cornerRadius="4dp"
+            app:cardBackgroundColor="@color/primary100"
+            app:borderWidth="0dp"
+            app:text="@{item.userPart.label}"
+            app:textAppearance="@style/Caption1Bold"
+            app:textColor="@color/primary600"
+            app:buttonElevation="0"
+            app:contentPaddingBottom="4dp"
+            app:contentPaddingTop="4dp"
+            app:contentPaddingLeft="8dp"
+            app:contentPaddingRight="8dp"
+            app:layout_constraintTop_toTopOf="@id/item_tv_username"
+            app:layout_constraintBottom_toBottomOf="@id/item_tv_username"
+            app:layout_constraintStart_toEndOf="@id/item_tv_username"
+            />
+
+        <View
+            android:id='@+id/item_divide_view'
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/neutral200"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/item_tv_time"
+            />
+
+        <TextView
+            android:id="@+id/item_tv_content"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:minHeight="100dp"
+            android:gravity="start"
+            android:textAppearance="@style/Body"
+            android:textColor="@color/neutral900"
+            android:text="@{item.content}"
+            android:layout_marginTop="16dp"
+            android:textIsSelectable="true"
+            android:lineSpacingExtra="4dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/item_divide_view"
+            tools:text="내용"
+            />
+
+
+        <!--좋아요 버튼-->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/item_btn_like"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@{item.isLiked ? @color/primary500 : @color/neutral400}"
+            app:cardBackgroundColor="@color/neutral000"
+            app:layout_constraintTop_toBottomOf="@id/item_tv_content"
+            app:layout_constraintStart_toStartOf="parent"
+            >
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="13dp">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@{item.isLiked ? @drawable/ic_thumb_up_filled : @drawable/ic_thumb_up}"
+                    app:tint="@{item.isLiked ? @color/primary500 : @color/neutral400}" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:textAppearance="@style/SubheadlineBold"
+
+                    android:text='@{"좋아요 " + String.valueOf(item.likes)}'
+
+                    android:textColor="@{item.isLiked ? @color/primary500 : @color/neutral400}" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!--스크랩 버튼-->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/item_btn_scrap"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@{item.isScrapped ? @color/accent500 : @color/neutral400}"
+            app:cardBackgroundColor="@color/neutral000"
+            app:layout_constraintTop_toTopOf="@id/item_btn_like"
+            app:layout_constraintStart_toEndOf="@id/item_btn_like"
+            >
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="13dp">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@{item.isScrapped ? @drawable/ic_star_filled : @drawable/ic_star}"
+                    app:tint="@{item.isScrapped ? @color/accent500 : @color/neutral400}" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:textAppearance="@style/SubheadlineBold"
+
+                    android:text='@{"스크랩 " + String.valueOf(item.scraps)}'
+
+                    android:textColor="@{item.isScrapped ? @color/accent500 : @color/neutral400}" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>
