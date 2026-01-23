@@ -71,6 +71,10 @@
     <string name="community_detail_title">게시글 상세</string>
     <string name="community_detail_placeholder">댓글을 입력해주세요.</string>
     <string name="community_detail_please_first_comment">첫 댓글을 남겨주세요.</string>
+    <string name="community_write_title">글쓰기</string>
+    <string name="community_write_category">카테고리</string>
+    <string name="community_write_category_select">카테고리 선택</string>
+    <string name="community_write_category_select_long">카테고리를 선택하세요</string>
 
 
 

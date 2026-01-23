@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.community.detail
 
 import com.umc.domain.model.enums.CategoryType
+import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.enums.ContentType
 import com.umc.domain.model.enums.RecruitType
 import com.umc.domain.model.enums.UserPart
@@ -62,6 +63,7 @@ constructor() : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent
         )
         val updatedComments = uiState.value.nowCommentList+ newComment
         rebuildDetailList(uiState.value.nowContent, updatedComments)
+        /**TODO 서버에 댓글 추가 로직**/
     }
 
     // 좋아요 토글
@@ -72,6 +74,7 @@ constructor() : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent
 
         val updatedContent = current.copy(isLiked = newIsLiked, likes = newLikes)
         rebuildDetailList(updatedContent, uiState.value.nowCommentList)
+        /**TODO 서버에 반영**/
     }
 
     // 스크랩 토글
@@ -82,6 +85,7 @@ constructor() : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent
 
         val updatedContent = current.copy(isScrapped = newIsScrapped, scraps = newScraps)
         rebuildDetailList(updatedContent, uiState.value.nowCommentList)
+        /**TODO 서버에 반영**/
     }
 
     //댓글 추가
@@ -143,7 +147,7 @@ data class PostDetailFragmentUiState(
 
     //현재 게시글
     val nowContent: ContentItem = ContentItem(
-        category = CategoryType.STUDY,
+        category = CommunityCategoryType.QUESTION,
         region = "인천",
         title = "질문있습니다.",
         username = "박유수(어헛차)",

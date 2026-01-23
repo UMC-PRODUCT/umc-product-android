@@ -35,7 +35,7 @@ class SuggestWriteFragment : BaseFragment<FragmentSuggestWriteBinding, SuggestWr
             }
 
             // 본문 입력 리스너 (ID가 planadd_...로 되어 있으니 확인 필요!)
-            planaddTextfieldPlanDetail.addTextChangedListener { text ->
+            sugwriteTextfieldContent.addTextChangedListener { text ->
                 viewModel.updateContent(text.toString())
             }
 
