@@ -197,7 +197,7 @@
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@{item.isLiked ? @drawable/ic_thumb_up_filled : @drawable/ic_thumb_up}"
-                    app:tint="@{item.isLiked ? @color/primary500 : @color/neutral400}" />
+                    android:tint="@{item.isLiked ? @color/primary500 : @color/neutral400}" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -239,7 +239,7 @@
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@{item.isScrapped ? @drawable/ic_star_filled : @drawable/ic_star}"
-                    app:tint="@{item.isScrapped ? @color/accent500 : @color/neutral400}" />
+                    android:tint="@{item.isScrapped ? @color/accent500 : @color/neutral400}" />
 
                 <TextView
                     android:layout_width="wrap_content"

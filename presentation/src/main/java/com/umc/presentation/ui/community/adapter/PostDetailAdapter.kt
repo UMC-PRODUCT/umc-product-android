@@ -13,6 +13,13 @@ import com.umc.presentation.databinding.ItemCommunityContentBinding
 import com.umc.presentation.databinding.ItemCommunityNoCommentBinding
 import com.umc.presentation.ui.community.detail.PostDetailItem
 
+/**
+ * 이 어댑터는 게시글의
+ * 본문 / 댓글 개수 / 댓글 list or Empty 뷰를 보여주는 recyclerview 어댑터입니다.
+ * 1st item = 본문 / 2nd item = 댓글 개수 / 그 이후는 댓글 리스트 or empty view입니다.
+ *
+ * **/
+
 interface PostItemDelegate {
     // 좋아요 버튼 클릭
     fun onLikeClicked(item: ContentItem)
