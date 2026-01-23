@@ -22,15 +22,15 @@
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/item_circleimv_profile"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_person"
+            android:layout_marginTop="8dp"
             app:strokeWidth="1dp"
             app:strokeColor="@color/neutral200"
             app:shapeAppearanceOverlay="@style/CircleImageAppearance"
             app:layout_constraintTop_toTopOf="@id/item_tv_username"
-            app:layout_constraintBottom_toBottomOf="@id/item_tv_comment"
             app:layout_constraintStart_toStartOf="parent"
             />
 

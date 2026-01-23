@@ -79,8 +79,8 @@
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/item_circleimv_profile"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_person"
             app:strokeWidth="1dp"
@@ -113,12 +113,12 @@
             android:gravity="start"
             android:textAppearance="@style/Footnote"
             android:textColor="@color/neutral600"
-            android:text="@{item.username}"
+            android:text="@{item.writeTime}"
             android:layout_marginTop="4dp"
             android:layout_marginStart="8dp"
             app:layout_constraintStart_toEndOf="@id/item_circleimv_profile"
             app:layout_constraintTop_toBottomOf="@id/item_tv_username"
-            tools:text="홍길동(닉네임)"
+            tools:text="방그 전"
             />
 
         <com.umc.presentation.component.UButton

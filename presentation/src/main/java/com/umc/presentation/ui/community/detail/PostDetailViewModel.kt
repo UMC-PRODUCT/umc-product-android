@@ -9,6 +9,7 @@ import com.umc.domain.model.mypage.ContentItem
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import com.umc.presentation.ui.home.PlanDetailFragmentEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -83,10 +84,59 @@ constructor() : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent
         rebuildDetailList(updatedContent, uiState.value.nowCommentList)
     }
 
+    //댓글 추가
+    fun onClickCommentAdd(){
+        emitEvent(PostDetailFragmentEvent.OnClickCommentAdd)
+    }
+
+    //메뉴 버튼 열기
+    fun onClickOpenMenu(){
+        updateState { copy(isMenuVisible = !isMenuVisible) }
+    }
+    
+    //게시글 신고
+    fun onClickReportPost(){
+        emitEvent(PostDetailFragmentEvent.ReportPost)
+    }
+    //게시글 수정
+    fun onClickEditPost(){
+        emitEvent(PostDetailFragmentEvent.EditPost)
+    }
+    //게시글 삭제
+    fun onClickDeletePost(){
+        emitEvent(PostDetailFragmentEvent.DeletePost)
+    }
+
+    //댓글  신고
+    fun onClickReportComment(){
+        emitEvent(PostDetailFragmentEvent.ReportComment)
+    }
+
+    //댓글 삭제
+    fun onClickeDeleteComment(item: CommentItem){
+        // 현재 저장된 댓글 리스트에서 선택한 아이템만 제외하고 새로운 리스트 생성
+        val updatedCommentList = uiState.value.nowCommentList.filterNot { it == item }
+
+        // 리스트 재조립 호출 (본문 + 업데이트된 댓글 리스트)
+        rebuildDetailList(uiState.value.nowContent, updatedCommentList)
+    }
+
+    //뒤로가기
+    fun moveBackPressed(){
+        emitEvent(PostDetailFragmentEvent.MoveBackPressed)
+    }
+
+
+
+
+
 }
 
 
 data class PostDetailFragmentUiState(
+    //메뉴 창 열기
+    val isAuthor : Boolean = true,
+    val isMenuVisible : Boolean = false,
 
     //보여줄 view들이 담긴 곳 (recyclerview가 inflate할것들)
     val nowDetailList : List<PostDetailItem> = emptyList(),
@@ -116,6 +166,24 @@ data class PostDetailFragmentUiState(
     ) : UiState
 
 sealed interface PostDetailFragmentEvent : UiEvent {
-    object DummyEvent : PostDetailFragmentEvent
+    
+    //댓글 추가 이벤트
+    object OnClickCommentAdd : PostDetailFragmentEvent
+
+    //신고하기 이벤트
+    object ReportPost : PostDetailFragmentEvent
+    //수정하기 이벤트
+    object EditPost : PostDetailFragmentEvent
+    //삭제하기 이벤트
+    object DeletePost : PostDetailFragmentEvent
+
+    //댓글 신고하기 이벤트
+    object ReportComment : PostDetailFragmentEvent
+
+
+
+    object MoveBackPressed : PostDetailFragmentEvent
+
+
 
 }
