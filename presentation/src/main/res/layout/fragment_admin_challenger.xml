@@ -27,7 +27,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:text="챌린저 리스트"
+                android:text="@string/challenger_list_title"
                 android:textAppearance="@style/Title3Bold"
                 android:textColor="@color/neutral900"
                 app:layout_constraintStart_toStartOf="parent"
@@ -40,7 +40,7 @@
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="16dp"
                 app:cornerRadius="8dp"
-                app:placeholderText="이름으로 멤버 검색"
+                app:placeholderText="@string/challenger_search_placeholder"
                 app:onTextChanged="@{(text) -> viewModel.filterList(text)}"
                 app:layout_constraintTop_toBottomOf="@id/tv_list_title" />
         </androidx.constraintlayout.widget.ConstraintLayout>
