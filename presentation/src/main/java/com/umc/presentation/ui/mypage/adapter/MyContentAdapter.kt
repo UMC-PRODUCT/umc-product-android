@@ -12,8 +12,8 @@ interface MyContentItemDelegate {
     fun onItemClicked(item: MyContentItem)
 }
 
-class MyContentAdapter(private val delegate: MyContentItemDelegate):
-ListAdapter<MyContentItem, MyContentAdapter.MyContentViewHolder>(MyContentDiffCallback){
+class MyContentAdapter(private val delegate: MyContentItemDelegate) :
+    ListAdapter<MyContentItem, MyContentAdapter.MyContentViewHolder>(MyContentDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyContentViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
@@ -49,7 +49,10 @@ ListAdapter<MyContentItem, MyContentAdapter.MyContentViewHolder>(MyContentDiffCa
                 return oldItem.title == newItem.title && oldItem.username == newItem.username
             }
 
-            override fun areContentsTheSame(oldItem: MyContentItem, newItem: MyContentItem): Boolean {
+            override fun areContentsTheSame(
+                oldItem: MyContentItem,
+                newItem: MyContentItem
+            ): Boolean {
                 // 데이터 내용 전체가 같은지 비교
                 return oldItem == newItem
             }

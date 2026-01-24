@@ -98,6 +98,11 @@ class UChip @JvmOverloads constructor(
         binding.tvChipText.text = text ?: ""
     }
 
+    // 텍스트 Style
+    fun setTextStyle(style: Int?) {
+        style?.let { binding.tvChipText.setTextAppearance(it) }
+    }
+
     // X 버튼 클릭 리스너 등록 (데이터 삭제나 기타 로직 수행)
     fun setOnCloseClickListener(listener: (String) -> Unit) {
         this.onCloseClickListener = listener

@@ -1,23 +1,18 @@
 package com.umc.presentation.ui.home
 
-import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentNoticeBinding
+import com.umc.presentation.databinding.FragmentNoticeDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 
 //공지사항 내용
 @AndroidEntryPoint
-class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeFragmentUiState, NoticeFragmentEvent, NoticeViewModel>(
-    FragmentNoticeBinding::inflate,
+class NoticeDetailFragment : BaseFragment<FragmentNoticeDetailBinding, NoticeFragmentUiState, NoticeFragmentEvent, NoticeDetailViewModel>(
+    FragmentNoticeDetailBinding::inflate,
 ) {
-    override val viewModel: NoticeViewModel by viewModels()
+    override val viewModel: NoticeDetailViewModel by viewModels()
 
     override fun initView() {
         binding.apply {

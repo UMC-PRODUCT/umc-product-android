@@ -5,6 +5,7 @@
     tools:parentTag="com.google.android.material.card.MaterialCardView">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_background"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingStart="16dp"

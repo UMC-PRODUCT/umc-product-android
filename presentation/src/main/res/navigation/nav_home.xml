@@ -32,9 +32,9 @@
 
     <fragment
         android:id="@+id/noticeFragment"
-        android:name="com.umc.presentation.ui.home.NoticeFragment"
+        android:name="com.umc.presentation.ui.home.NoticeDetailFragment"
         android:label="공지 화면"
-        tools:layout="@layout/fragment_notice">
+        tools:layout="@layout/fragment_notice_detail">
 
 
     </fragment>

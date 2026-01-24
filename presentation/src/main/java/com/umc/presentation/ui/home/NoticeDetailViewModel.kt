@@ -7,7 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class NoticeViewModel @Inject
+class NoticeDetailViewModel @Inject
 constructor() : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
     NoticeFragmentUiState()){
 
