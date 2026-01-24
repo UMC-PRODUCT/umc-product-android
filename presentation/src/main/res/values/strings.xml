@@ -171,4 +171,6 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="challenger_list_title">챌린저 리스트</string>
+    <string name="challenger_search_placeholder">이름으로 멤버 검색</string>
 </resources>
