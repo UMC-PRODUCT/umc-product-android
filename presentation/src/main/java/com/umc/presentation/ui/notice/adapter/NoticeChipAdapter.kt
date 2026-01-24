@@ -6,13 +6,12 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.notice.NoticeChipState
-import com.umc.presentation.databinding.CustomChipBinding
 import com.umc.presentation.databinding.ItemHomeCategoryBinding
 
 class NoticeChipAdapter(
     private val listener: NoticeChipDelegate
 ) : ListAdapter<NoticeChipState, RecyclerView.ViewHolder> (
-    DailyRecordListDiffCallBack()
+    NoticeChipDiffCallBack()
 ) {
 
     interface NoticeChipDelegate {
@@ -39,7 +38,7 @@ class NoticeChipAdapter(
     }
 }
 
-class DailyRecordListDiffCallBack : DiffUtil.ItemCallback<NoticeChipState>() {
+class NoticeChipDiffCallBack : DiffUtil.ItemCallback<NoticeChipState>() {
     override fun areContentsTheSame(
         oldItem: NoticeChipState,
         newItem: NoticeChipState

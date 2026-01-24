@@ -49,14 +49,96 @@
             app:layout_constraintTop_toTopOf="@id/text_notice_title" />
 
         <androidx.recyclerview.widget.RecyclerView
-            app:layout_constraintTop_toBottomOf="@id/text_notice_title"
+            android:id="@+id/recycler_tag"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="34dp"
             android:orientation="horizontal"
             android:paddingHorizontal="16dp"
-            android:id="@+id/recycler_tag"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            app:layout_constraintTop_toBottomOf="@id/text_notice_title" />
 
+        <View
+            android:id="@+id/view_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="@color/neutral200"
+            app:layout_constraintTop_toBottomOf="@id/recycler_tag" />
+
+        <LinearLayout
+            android:id="@+id/layout_detail_chip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="16dp"
+            app:layout_constraintTop_toBottomOf="@id/view_divider">
+
+            <com.umc.presentation.component.UChip
+                android:id="@+id/uchip_all"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                app:backgroundColor="@color/neutral800"
+                app:borderColor="@color/neutral800"
+                app:borderWidth="1dp"
+                app:text="전체"
+                app:textAppearance="@style/SubheadlineBold"
+                app:textColor="@color/neutral000" />
+
+            <com.umc.presentation.component.UChip
+                android:id="@+id/uchip_notice_admin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                app:backgroundColor="@color/neutral000"
+                app:borderColor="@color/neutral200"
+                app:borderWidth="1dp"
+                app:text="운영진 공지"
+                app:textAppearance="@style/SubheadlineBold"
+                app:textColor="@color/neutral500" />
+
+            <com.umc.presentation.component.UChip
+                android:id="@+id/uchip_part"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                app:backgroundColor="@color/neutral000"
+                app:borderColor="@color/neutral200"
+                app:borderWidth="1dp"
+                app:nextIcon="@drawable/ic_dropdown"
+                app:text="파트"
+                app:textAppearance="@style/SubheadlineBold"
+                app:textColor="@color/neutral500" />
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_notice"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/layout_detail_chip" />
+
+        <com.umc.presentation.component.UButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:contentPaddingLeft="16dp"
+            app:contentPaddingRight="16dp"
+            app:contentPaddingBottom="12dp"
+            app:contentPaddingTop="12dp"
+            app:cardBackgroundColor="@color/primary500"
+            app:cornerRadius="999dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:prevIcon="@drawable/ic_plus_circle"
+            app:text="@string/notice_write"
+            app:textAppearance="@style/HeadlineBold"
+            app:textColor="@color/neutral000" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

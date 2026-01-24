@@ -80,6 +80,17 @@ class UChip @JvmOverloads constructor(
                 val showClose = a.getBoolean(R.styleable.UChip_showCloseIcon, false)
                 imvClose.visibility = if (showClose) View.VISIBLE else View.GONE
 
+                // 후위 버튼
+                val hasNextIcon = a.hasValue(R.styleable.UChip_nextIcon)
+
+                if (hasNextIcon) {
+                    val nextIconRes = a.getResourceId(R.styleable.UChip_nextIcon, R.drawable.ic_dropdown)
+                    imageNext.setImageResource(nextIconRes)
+                    imageNext.visibility = View.VISIBLE
+                } else {
+                    imageNext.visibility = View.GONE
+                }
+
                 imvClose.setOnClickListener {
                     // 아이템이 사라지는 기본 로직 수행 후 콜백 호출
                     this@UChip.visibility = View.GONE

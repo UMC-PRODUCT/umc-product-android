@@ -94,6 +94,9 @@
     <string name="all">전체</string>
     <string name="soft">Soft</string>
     <string name="hard">Hard</string>
+    <string name="central">중앙</string>
+    <string name="part">파트</string>
+    <string name="branch">지부</string>
 
 
     <!-- Login -->
@@ -171,6 +174,7 @@
     
     <!-- Notice -->
     <string name="notice_title">%d기 공지사항</string>
+    <string name="notice_write">공지 작성</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
