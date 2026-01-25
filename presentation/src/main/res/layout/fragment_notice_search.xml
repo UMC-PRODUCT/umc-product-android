@@ -7,7 +7,7 @@
 
         <variable
             name="vm"
-            type="com.umc.presentation.ui.home.NoticeDetailViewModel" />
+            type="com.umc.presentation.ui.notice.search.NoticeSearchViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

@@ -7,7 +7,7 @@
 
         <variable
             name="vm"
-            type="com.umc.presentation.ui.home.NoticeDetailViewModel" />
+            type="com.umc.presentation.ui.notice.search.result.NoticeSearchResultViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -41,7 +41,7 @@
             app:textAppearance="@style/Subheadline" />
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_recent_search"
+            android:id="@+id/recycler_search_result"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"

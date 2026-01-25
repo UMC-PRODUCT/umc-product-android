@@ -9,6 +9,26 @@
         android:id="@+id/noticeFragment"
         android:name="com.umc.presentation.ui.notice.NoticeFragment"
         android:label="공지 화면"
-        tools:layout="@layout/fragment_notice"/>
+        tools:layout="@layout/fragment_notice">
+        <action
+            android:id="@+id/action_noticeFragment_to_noticeSearchFragment"
+            app:destination="@id/noticeSearchFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/noticeSearchFragment"
+        android:name="com.umc.presentation.ui.notice.search.NoticeSearchFragment"
+        android:label="공지검색"
+        tools:layout="@layout/fragment_notice_search">
+        <action
+            android:id="@+id/action_noticeSearchFragment_to_noticeSearchResultFragment"
+            app:destination="@id/noticeSearchResultFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/noticeSearchResultFragment"
+        android:name="com.umc.presentation.ui.notice.search.result.NoticeSearchResultFragment"
+        android:label="공지검색결과"
+        tools:layout="@layout/fragment_notice_search_result"/>
 
 </navigation>
