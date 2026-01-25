@@ -4,9 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+        <import type="android.view.View" />
         <variable
             name="model"
-            type="com.umc.domain.model.act.challenger.UserChallenger" />
+            type="com.umc.domain.model.act.challenger.AdminChallenger" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -25,14 +26,14 @@
                 android:id="@+id/iv_challenger_profile"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_person_inset"
                 android:scaleType="centerInside"
-                app:strokeWidth="1dp"
-                app:strokeColor="@color/neutral100"
-                app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+                android:src="@drawable/ic_person_inset"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+                app:strokeColor="@color/neutral100"
+                app:strokeWidth="1dp" />
 
             <TextView
                 android:id="@+id/tv_challenger_name"
@@ -64,35 +65,64 @@
                 android:id="@+id/iv_challenger_detail_arrow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingVertical="6dp"
                 android:paddingHorizontal="8dp"
+                android:paddingVertical="6dp"
                 android:src="@drawable/ic_arrow_next"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:tint="@color/neutral300" />
 
-            <com.umc.presentation.component.UButton
-                android:id="@+id/ub_challenger_role"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                app:contentPaddingTop="4dp"
-                app:contentPaddingBottom="4dp"
-                app:contentPaddingLeft="8dp"
-                app:contentPaddingRight="8dp"
-                android:clickable="false"
-                app:buttonElevation="0"
-                app:cornerRadius="4dp"
-                app:borderWidth="1dp"
-                app:textAppearance="@style/Caption1Bold"
-                app:userChallengerRoleStyle="@{model.role}"
+                android:orientation="horizontal"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/iv_challenger_detail_arrow"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:uBackgroundColor="@color/orange100"
-                tools:text="회장"
-                tools:textColor="@color/warning700" />
+                app:layout_constraintTop_toTopOf="parent">
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/ub_out_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:clickable="false"
+                    android:visibility="@{model.outCount > 0 ? View.VISIBLE : View.GONE}"
+                    app:borderWidth="1dp"
+                    app:buttonElevation="0"
+                    app:contentPaddingBottom="4dp"
+                    app:contentPaddingLeft="8dp"
+                    app:contentPaddingRight="8dp"
+                    app:contentPaddingTop="4dp"
+                    app:cornerRadius="4dp"
+                    app:uStrokeColor="@{@color/danger300}"
+                    app:textAppearance="@style/Caption1Bold"
+                    app:uBackgroundColor="@{@color/danger100}"
+                    app:uTextColor="@{@color/danger700}"
+                    android:text="@{@string/admin_challenger_out_count(model.outCount)}"
+                    tools:text="아웃 1" />
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/ub_warning_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:visibility="@{model.warningCount > 0 ? View.VISIBLE : View.GONE}"
+                    app:borderWidth="1dp"
+                    app:buttonElevation="0"
+                    app:contentPaddingBottom="4dp"
+                    app:contentPaddingLeft="8dp"
+                    app:contentPaddingRight="8dp"
+                    app:contentPaddingTop="4dp"
+                    app:cornerRadius="4dp"
+                    app:uStrokeColor="@{@color/warning300}"
+                    app:textAppearance="@style/Caption1Bold"
+                    app:uBackgroundColor="@{@color/warning100}"
+                    app:uTextColor="@{@color/warning700}"
+                    android:text="@{@string/admin_challenger_warning_count(model.warningCount)}"
+                    tools:text="경고 1" />
+            </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

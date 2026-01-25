@@ -14,4 +14,10 @@ object UButtonBindingAdapter {
     fun setUTextColor(view: UButton, color: Int) {
         view.setTextColor(color)
     }
+
+    @JvmStatic
+    @BindingAdapter("uStrokeColor")
+    fun setUStrokeColor(view: UButton, color: Int) {
+        view.strokeColor = color
+    }
 }
