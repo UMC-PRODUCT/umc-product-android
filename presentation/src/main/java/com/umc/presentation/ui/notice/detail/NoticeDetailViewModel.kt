@@ -59,7 +59,10 @@ constructor() : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
                         name = "족발 보쌈"
                     )
                 )
-            )
+            ),
+            allReceiverCount = 1000,
+            nowReceiverCount = 801.toString(),
+            receiverText = "/ 1000명 (80%)"
         )
     }
 

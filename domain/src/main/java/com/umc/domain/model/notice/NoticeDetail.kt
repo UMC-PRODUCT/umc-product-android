@@ -15,4 +15,7 @@ data class NoticeDetail(
     val imageList: List<String> = emptyList(),
     val link: String = "",
     val vote: Vote = Vote(),
+    val allReceiverCount: Int = 0,
+    val nowReceiverCount: String = "0",
+    val receiverText: String = "",
 )
