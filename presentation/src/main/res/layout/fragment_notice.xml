@@ -5,6 +5,7 @@
 
     <data>
 
+        <import type="android.view.View"/>
         <variable
             name="vm"
             type="com.umc.presentation.ui.notice.NoticeViewModel" />
@@ -21,7 +22,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="18dp"
-            android:text="@string/notice_title"
+            android:text="@{vm.uiState.nowTitle}"
             android:textAppearance="@style/Title2Bold"
             android:textColor="@color/neutral800"
             app:layout_constraintStart_toStartOf="parent"
@@ -32,16 +33,33 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:onClick="@{()->vm.onClickShowDropDown()}"
             android:src="@drawable/ic_dropdown"
             app:layout_constraintBottom_toBottomOf="@id/text_notice_title"
             app:layout_constraintStart_toEndOf="@id/text_notice_title"
             app:layout_constraintTop_toTopOf="@id/text_notice_title" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_dropdown"
+            android:layout_width="0dp"
+            android:layout_height="208dp"
+            android:layout_marginStart="9dp"
+            android:visibility="@{vm.uiState.showDropDown ? View.VISIBLE : View.GONE}"
+            android:paddingVertical="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="2dp"
+            android:background="@drawable/bg_rect_neutral000_radius12"
+            android:translationZ="8dp"
+            app:layout_constraintEnd_toEndOf="@id/image_btn_menu"
+            app:layout_constraintStart_toStartOf="@id/text_notice_title"
+            app:layout_constraintTop_toBottomOf="@id/text_notice_title" />
 
         <ImageView
             android:id="@+id/image_search"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
+            android:onClick="@{()->vm.onClickSearch()}"
             android:padding="12dp"
             android:src="@drawable/ic_search"
             app:layout_constraintBottom_toBottomOf="@id/text_notice_title"
@@ -126,11 +144,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
+            app:cardBackgroundColor="@color/primary500"
+            app:contentPaddingBottom="12dp"
             app:contentPaddingLeft="16dp"
             app:contentPaddingRight="16dp"
-            app:contentPaddingBottom="12dp"
             app:contentPaddingTop="12dp"
-            app:cardBackgroundColor="@color/primary500"
             app:cornerRadius="999dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

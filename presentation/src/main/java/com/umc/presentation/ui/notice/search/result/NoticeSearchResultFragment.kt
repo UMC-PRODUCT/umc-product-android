@@ -27,7 +27,7 @@ class NoticeSearchResultFragment : BaseFragment<FragmentNoticeSearchResultBindin
         binding.apply {
             vm = viewModel
 
-            recyclerRecentSearch.apply {
+            recyclerSearchResult.apply {
                 adapter = noticeAdapter
                 layoutManager = LinearLayoutManager(context)
                 itemAnimator = null

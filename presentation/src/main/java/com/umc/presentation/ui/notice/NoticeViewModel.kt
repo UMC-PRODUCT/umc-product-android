@@ -16,6 +16,7 @@ constructor() : BaseViewModel<NoticeUiState, NoticeEvent>(
     NoticeUiState(),
 ) {
     init {
+        updateDropDownList(dummyDropDown())
         updateChipList(getDummy())
         updateNoticeList(getDummyNotice())
     }
@@ -37,20 +38,11 @@ constructor() : BaseViewModel<NoticeUiState, NoticeEvent>(
     }
 
     fun onClickChip(item: NoticeChipState) {
-        val isAll = item.text == "전체"
-        val turningAllOn = isAll && !item.isClicked
-
         val newList = uiState.value.chipList.map { chip ->
-            when {
-                turningAllOn -> {
-                    // "전체"를 켜는 순간: 전체만 true, 나머지 false
-                    chip.copy(isClicked = chip.text == "전체")
-                }
-                chip.text == item.text -> {
-                    // 그 외: 클릭한 칩만 토글
-                    chip.copy(isClicked = !chip.isClicked)
-                }
-                else -> chip
+            if (item.text == chip.text) {
+                chip.copy(isClicked = !chip.isClicked)
+            } else {
+                chip
             }
         }
 
@@ -132,9 +124,43 @@ constructor() : BaseViewModel<NoticeUiState, NoticeEvent>(
             ),
         )
     }
+
+    fun onClickSearch() {
+        emitEvent(NoticeEvent.MoveToSearchEvent)
+    }
+
+    fun updateNowTitle(title: String) {
+        onClickShowDropDown()
+        updateState {
+            copy(nowTitle = title)
+        }
+    }
+
+    fun updateDropDownList(list: List<String>) {
+        updateState {
+            copy(dropdownList = list)
+        }
+    }
+
+    private fun dummyDropDown() : List<String>{
+        return listOf(
+            "12기 공지사항", "11기 공지사항", "10기 공지사항", "9기 공지사항", "8기 공지사항",
+            "7기 공지사항", "6기 공지사항", "5기 공지사항", "4기 공지사항", "3기 공지사항", "2기 공지사항",
+            "1기 공지사항"
+        )
+    }
+
+    fun onClickShowDropDown() {
+        updateState {
+            copy(isShowDropDown = !uiState.value.isShowDropDown)
+        }
+    }
 }
 
 data class NoticeUiState(
+    val isShowDropDown: Boolean = false,
+    val nowTitle: String = "12기 공지사항", //TODO 서버에서 기수만 내려주는지, 텍스트 내려주는지 확인 필요 (아마 전자 같기도)
+    val dropdownList: List<String> = emptyList(),
     val chipList: List<NoticeChipState> = emptyList(),
     val noticeList: List<Notice> = emptyList()
 ) : UiState
@@ -142,5 +168,5 @@ data class NoticeUiState(
 sealed interface NoticeEvent : UiEvent {
     object MoveToMainEvent : NoticeEvent
 
-    object MoveToLoginEvent : NoticeEvent
+    object MoveToSearchEvent : NoticeEvent
 }

@@ -1,11 +1,13 @@
 package com.umc.presentation.ui.notice
 
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.domain.model.notice.Notice
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
+import com.umc.presentation.component.adapter.DropDownAdapter
 import com.umc.presentation.databinding.FragmentNoticeBinding
 import com.umc.presentation.ui.home.NoticeFragmentEvent
 import com.umc.presentation.ui.home.NoticeFragmentUiState
@@ -21,6 +23,14 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
     FragmentNoticeBinding::inflate,
 ) {
     override val viewModel: NoticeViewModel by viewModels()
+
+    private val dropDownAdapter : DropDownAdapter by lazy {
+        DropDownAdapter(object : DropDownAdapter.DropDownDelegate {
+            override fun onClickItem(text: String) {
+                viewModel.updateNowTitle(text)
+            }
+        })
+    }
 
     private val noticeChipAdapter : NoticeChipAdapter by lazy {
         NoticeChipAdapter(object : NoticeChipAdapter.NoticeChipDelegate {
@@ -43,6 +53,11 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
             vm = viewModel
 
             textNoticeTitle.text = getString(R.string.notice_title, 12)
+
+            recyclerDropdown.apply {
+                adapter = dropDownAdapter
+                layoutManager = LinearLayoutManager(context)
+            }
 
             recyclerTag.apply {
                 adapter = noticeChipAdapter
@@ -70,6 +85,7 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
 
             launch {
                 viewModel.uiState.collect {
+                    dropDownAdapter.submitList(it.dropdownList)
                     noticeChipAdapter.submitList(it.chipList)
                     noticeAdapter.submitList(it.noticeList)
                 }
@@ -78,6 +94,14 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
     }
 
     override fun handleEvent(event: NoticeEvent) {
-        super.handleEvent(event)
+        when (event) {
+            NoticeEvent.MoveToMainEvent -> {}
+            NoticeEvent.MoveToSearchEvent -> navigateToNoticeSearch()
+        }
+    }
+
+    private fun navigateToNoticeSearch() {
+        val action = NoticeFragmentDirections.actionNoticeFragmentToNoticeSearchFragment()
+        findNavController().navigate(action)
     }
 }
