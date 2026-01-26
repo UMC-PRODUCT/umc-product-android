@@ -1,5 +1,7 @@
 package com.umc.presentation.ui.notice
 
+import android.annotation.SuppressLint
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -72,6 +74,8 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
                 itemAnimator = null
             }
 
+            uchipAll.setOnClickListener { onClickChipAll() }
+            uchipNoticeAdmin.setOnClickListener { onClickChipNoticeAdmin() }
             uchipPart.setOnClickListener { showBottomSheet() }
         }
     }
@@ -111,9 +115,62 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
     private fun showBottomSheet() {
         val bottomSheet = NoticeChipBottomSheet(object : NoticeChipBottomSheet.Delegate {
             override fun onClickItem(item: String) {
+                onClickChipPart()
                 viewModel.updateSubChip(item)
             }
         })
         bottomSheet.show(parentFragmentManager, "")
+    }
+
+    @SuppressLint("ResourceAsColor")
+    private fun onClickChipAll() {
+        binding.apply {
+            uchipAll.setUChipBackgroundColor(ContextCompat.getColor(requireActivity(), R.color.neutral800))
+            uchipAll.setUChipBorder(ContextCompat.getColor(requireActivity(), R.color.neutral800), 1)
+            uchipAll.setUChipTextColor(ContextCompat.getColor(requireActivity(), R.color.neutral100))
+
+            uchipNoticeAdmin.setUChipBackgroundColor(ContextCompat.getColor(requireActivity(), R.color.neutral000))
+            uchipNoticeAdmin.setUChipBorder(ContextCompat.getColor(requireActivity(), R.color.neutral200), 1)
+            uchipNoticeAdmin.setUChipTextColor(ContextCompat.getColor(requireActivity(), R.color.neutral500))
+
+            uchipPart.setUChipBackgroundColor(ContextCompat.getColor(requireActivity(), R.color.neutral000))
+            uchipPart.setUChipBorder(ContextCompat.getColor(requireActivity(), R.color.neutral200), 1)
+            uchipPart.setUChipTextColor(ContextCompat.getColor(requireActivity(), R.color.neutral500))
+        }
+    }
+
+    @SuppressLint("ResourceAsColor")
+    private fun onClickChipNoticeAdmin() {
+        binding.apply {
+            uchipNoticeAdmin.setUChipBackgroundColor(ContextCompat.getColor(requireActivity(), R.color.neutral800))
+            uchipNoticeAdmin.setUChipBorder(ContextCompat.getColor(requireActivity(), R.color.neutral800), 1)
+            uchipNoticeAdmin.setUChipTextColor(ContextCompat.getColor(requireActivity(), R.color.neutral100))
+
+            uchipAll.setUChipBackgroundColor(ContextCompat.getColor(requireActivity(), R.color.neutral000))
+            uchipAll.setUChipBorder(ContextCompat.getColor(requireActivity(), R.color.neutral200), 1)
+            uchipAll.setUChipTextColor(ContextCompat.getColor(requireActivity(), R.color.neutral500))
+
+            uchipPart.setUChipBackgroundColor(ContextCompat.getColor(requireActivity(), R.color.neutral000))
+            uchipPart.setUChipBorder(ContextCompat.getColor(requireActivity(), R.color.neutral200), 1)
+            uchipPart.setUChipTextColor(ContextCompat.getColor(requireActivity(), R.color.neutral500))
+        }
+    }
+
+
+    @SuppressLint("ResourceAsColor")
+    private fun onClickChipPart() {
+        binding.apply {
+            uchipPart.setUChipBackgroundColor(ContextCompat.getColor(requireActivity(), R.color.neutral800))
+            uchipPart.setUChipBorder(ContextCompat.getColor(requireActivity(), R.color.neutral800), 1)
+            uchipPart.setUChipTextColor(ContextCompat.getColor(requireActivity(), R.color.neutral100))
+
+            uchipAll.setUChipBackgroundColor(ContextCompat.getColor(requireActivity(), R.color.neutral000))
+            uchipAll.setUChipBorder(ContextCompat.getColor(requireActivity(), R.color.neutral200), 1)
+            uchipAll.setUChipTextColor(ContextCompat.getColor(requireActivity(), R.color.neutral500))
+
+            uchipNoticeAdmin.setUChipBackgroundColor(ContextCompat.getColor(requireActivity(), R.color.neutral000))
+            uchipNoticeAdmin.setUChipBorder(ContextCompat.getColor(requireActivity(), R.color.neutral200), 1)
+            uchipNoticeAdmin.setUChipTextColor(ContextCompat.getColor(requireActivity(), R.color.neutral500))
+        }
     }
 }

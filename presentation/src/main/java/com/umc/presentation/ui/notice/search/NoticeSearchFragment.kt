@@ -11,6 +11,7 @@ import com.umc.presentation.databinding.FragmentNoticeBinding
 import com.umc.presentation.databinding.FragmentNoticeSearchBinding
 import com.umc.presentation.ui.notice.adapter.NoticeAdapter
 import com.umc.presentation.ui.notice.adapter.NoticeChipAdapter
+import com.umc.presentation.ui.notice.search.adapter.RecentSearchAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -20,9 +21,27 @@ class NoticeSearchFragment : BaseFragment<FragmentNoticeSearchBinding, NoticeSea
 ) {
     override val viewModel: NoticeSearchViewModel by viewModels()
 
+    private val recentSearchAdapter : RecentSearchAdapter by lazy {
+        RecentSearchAdapter(object : RecentSearchAdapter.RecentSearchDelegate {
+            override fun onClickItem(text: String) {
+                moveToSearchResult(text)
+            }
+
+            override fun onClickDelete(text: String) {
+                //TODO 아이템 삭제 로직
+            }
+        })
+    }
+
     override fun initView() {
         binding.apply {
             vm = viewModel
+
+            recyclerRecentSearch.apply {
+                adapter = recentSearchAdapter
+                layoutManager = LinearLayoutManager(context)
+                itemAnimator = null
+            }
         }
     }
 
@@ -38,6 +57,7 @@ class NoticeSearchFragment : BaseFragment<FragmentNoticeSearchBinding, NoticeSea
 
             launch {
                 viewModel.uiState.collect {
+                    recentSearchAdapter.submitList(it.recentSearchList)
                 }
             }
         }
