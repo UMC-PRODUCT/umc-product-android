@@ -357,6 +357,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
+                        app:onTextChanged="@{vm::onChangedLinkText}"
+                        app:text="@{vm.uiState.linkText}"
                         app:layout_constraintTop_toBottomOf="@id/image_delete_link"
                         app:placeholderText="@string/notice_write_link_hint"
                         app:strokeColor="@color/neutral300"
@@ -413,7 +415,8 @@
                         android:id="@+id/recycler_vote"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:paddingVertical="16dp"
+                        android:paddingTop="16dp"
+                        android:overScrollMode="never"
                         app:layout_constraintTop_toBottomOf="@id/image_delete_vote" />
 
                     <com.umc.presentation.component.UButton
@@ -422,6 +425,7 @@
                         android:layout_height="wrap_content"
                         app:borderColor="@color/neutral300"
                         app:borderWidth="1dp"
+                        android:onClick="@{()->vm.onVoteAdd()}"
                         app:cardBackgroundColor="@color/neutral000"
                         app:contentPaddingBottom="13dp"
                         app:contentPaddingTop="13dp"
@@ -436,10 +440,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:padding="4dp"
-                        android:src="@drawable/ic_check_box_empty"
+                        android:padding="8dp"
+                        android:onClick="@{()->vm.onClickVoteSelectMultiple()}"
+                        android:tint="@{vm.uiState.canSelectMultiple ? @color/primary500 : @color/neutral400}"
+                        android:src="@drawable/ic_check_box"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/ubutton_add_vote" />
+                        app:layout_constraintTop_toBottomOf="@id/ubutton_add_vote"
+                        tools:ignore="UseAppTint" />
 
                     <TextView
                         android:id="@+id/text_select_multiple"
@@ -456,11 +463,14 @@
                         android:id="@+id/image_check_anonymity"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:onClick="@{()->vm.onClickVoteAnonymity()}"
                         android:layout_marginTop="16dp"
-                        android:padding="4dp"
-                        android:src="@drawable/ic_check_box_empty"
+                        android:padding="8dp"
+                        android:tint="@{vm.uiState.canAnonymity ? @color/primary500 : @color/neutral400}"
+                        android:src="@drawable/ic_check_box"
                         app:layout_constraintEnd_toStartOf="@id/text_select_multiple"
-                        app:layout_constraintTop_toBottomOf="@id/ubutton_add_vote" />
+                        app:layout_constraintTop_toBottomOf="@id/ubutton_add_vote"
+                        tools:ignore="UseAppTint" />
 
                     <TextView
                         android:id="@+id/text_select_anonymity"

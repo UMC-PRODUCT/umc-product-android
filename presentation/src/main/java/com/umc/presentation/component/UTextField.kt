@@ -187,4 +187,12 @@ class UTextField @JvmOverloads constructor(
     fun setOnImeActionListener(listener: ((Int, String) -> Boolean)?) {
         onImeActionListener = listener
     }
+
+    fun setPlaceHolder(text: String) {
+        binding.editText.hint = text
+    }
+
+    fun setPlaceHolder(text: Int) {
+        binding.editText.hint = context.getText(text)
+    }
 }

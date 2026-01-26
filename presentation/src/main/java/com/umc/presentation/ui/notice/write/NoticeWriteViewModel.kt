@@ -190,6 +190,56 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
             )
         }
     }
+
+    fun onChangedLinkText(text: String){
+        updateState {
+            copy(linkText = text)
+        }
+    }
+
+    fun onVoteTextChanged(position: Int, text: String) {
+        updateState {
+            val cur = uiState.value.voteTextList
+            val new = cur.toMutableList()
+            new[position] = text
+            copy(voteTextList = new)
+        }
+    }
+
+    fun onVoteDelete(position: Int) {
+        updateState {
+            val cur = uiState.value.voteTextList
+            val new = cur.toMutableList()
+            if (new.size > 2) {
+                new.removeAt(position)
+            } else {
+                new[position] = ""
+            }
+
+            copy(voteTextList = new)
+        }
+    }
+
+    fun onVoteAdd() {
+        updateState {
+            val cur = uiState.value.voteTextList
+            val new = cur.toMutableList()
+            new.add("")
+            copy(voteTextList = new)
+        }
+    }
+
+    fun onClickVoteAnonymity(){
+        updateState {
+            copy(canAnonymity = !canAnonymity)
+        }
+    }
+
+    fun onClickVoteSelectMultiple(){
+        updateState {
+            copy(canSelectMultiple = !canSelectMultiple)
+        }
+    }
 }
 
 data class NoticeWriteUiState(
@@ -202,6 +252,10 @@ data class NoticeWriteUiState(
     val partList: List<NoticeChipState> = emptyList(),
     val category: NoticeCategory = NoticeCategory.SCHOOL,
     val dropdownList: List<String> = emptyList(),
+    val linkText: String = "",
+    val voteTextList: List<String> = List(3) { "" },
+    val canAnonymity: Boolean = false,
+    val canSelectMultiple: Boolean = false,
 ) : UiState
 
 sealed interface NoticeWriteEvent : UiEvent {
