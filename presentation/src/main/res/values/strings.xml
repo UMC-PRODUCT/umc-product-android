@@ -200,6 +200,8 @@
     <string name="notice_write_vote_add">항목 추가하기</string>
     <string name="notice_write_select_multiple">복수 선택 허용</string>
     <string name="notice_write_anonymity">익명 투표</string>
+    <string name="notice_detail_about_link_title">관련 링크 바로가기</string>
+    <string name="notice_detail_vote">투표하기</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

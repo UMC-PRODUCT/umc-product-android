@@ -14,7 +14,7 @@
 
         <action
             android:id="@+id/action_home_to_notice"
-            app:destination="@id/noticeFragment"/>
+            app:destination="@id/noticeDetailFragment"/>
 
         <action
             android:id="@+id/action_home_to_notification"
@@ -27,15 +27,6 @@
         <action
             android:id="@+id/action_home_to_planDetail"
             app:destination="@id/planDetailFragment"/>
-
-    </fragment>
-
-    <fragment
-        android:id="@+id/noticeFragment"
-        android:name="com.umc.presentation.ui.home.NoticeDetailFragment"
-        android:label="공지 화면"
-        tools:layout="@layout/fragment_notice_detail">
-
 
     </fragment>
 

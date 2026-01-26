@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_notice"
-    app:startDestination="@id/noticeFragment">
+    app:startDestination="@id/noticeDetailFragment">
 
     <fragment
         android:id="@+id/noticeFragment"
@@ -47,5 +47,11 @@
         android:label="공지작성"
         tools:layout="@layout/fragment_notice_write">
     </fragment>
+
+    <fragment
+        android:id="@+id/noticeDetailFragment"
+        android:name="com.umc.presentation.ui.notice.detail.NoticeDetailFragment"
+        android:label="공지 화면"
+        tools:layout="@layout/fragment_notice_detail"/>
 
 </navigation>
