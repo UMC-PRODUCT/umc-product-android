@@ -11,13 +11,9 @@ import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.adapter.DropDownAdapter
 import com.umc.presentation.databinding.FragmentNoticeBinding
-import com.umc.presentation.ui.home.NoticeFragmentEvent
-import com.umc.presentation.ui.home.NoticeFragmentUiState
-import com.umc.presentation.ui.home.NoticeDetailViewModel
 import com.umc.presentation.ui.notice.adapter.NoticeAdapter
 import com.umc.presentation.ui.notice.adapter.NoticeChipAdapter
 import com.umc.presentation.ui.notice.bottomsheet.NoticeChipBottomSheet
-import com.umc.presentation.util.ULog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -102,13 +98,18 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
 
     override fun handleEvent(event: NoticeEvent) {
         when (event) {
-            NoticeEvent.MoveToMainEvent -> {}
+            NoticeEvent.MoveToWriteEvent -> navigateToNoticeWrite()
             NoticeEvent.MoveToSearchEvent -> navigateToNoticeSearch()
         }
     }
 
     private fun navigateToNoticeSearch() {
         val action = NoticeFragmentDirections.actionNoticeFragmentToNoticeSearchFragment()
+        findNavController().navigate(action)
+    }
+
+    private fun navigateToNoticeWrite() {
+        val action = NoticeFragmentDirections.actionNoticeFragmentToNoticeWriteFragment()
         findNavController().navigate(action)
     }
 

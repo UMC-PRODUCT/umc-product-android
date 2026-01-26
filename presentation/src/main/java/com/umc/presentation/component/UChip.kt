@@ -158,4 +158,11 @@ class UChip @JvmOverloads constructor(
         strokeWidth = width
     }
 
+    fun setNextIcon(icon: Int) {
+        binding.apply {
+            imageNext.setImageResource(icon)
+            imageNext.visibility = View.VISIBLE
+        }
+    }
+
 }

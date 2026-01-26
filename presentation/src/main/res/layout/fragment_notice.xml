@@ -152,6 +152,7 @@
             app:contentPaddingRight="16dp"
             app:contentPaddingTop="12dp"
             app:cornerRadius="999dp"
+            android:onClick="@{() -> vm.onClickWriteNotice()}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

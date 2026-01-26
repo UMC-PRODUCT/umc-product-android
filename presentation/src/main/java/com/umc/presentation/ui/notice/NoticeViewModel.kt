@@ -163,6 +163,10 @@ constructor() : BaseViewModel<NoticeUiState, NoticeEvent>(
             copy(selectedSubChip = filter)
         }
     }
+
+    fun onClickWriteNotice() {
+        emitEvent(NoticeEvent.MoveToWriteEvent)
+    }
 }
 
 data class NoticeUiState(
@@ -176,7 +180,7 @@ data class NoticeUiState(
 ) : UiState
 
 sealed interface NoticeEvent : UiEvent {
-    object MoveToMainEvent : NoticeEvent
+    object MoveToWriteEvent : NoticeEvent
 
     object MoveToSearchEvent : NoticeEvent
 }
