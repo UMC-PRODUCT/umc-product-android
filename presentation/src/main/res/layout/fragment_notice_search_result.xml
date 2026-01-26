@@ -13,7 +13,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/neutral100"
+        android:background="@color/neutral000"
         android:paddingHorizontal="16dp">
 
         <ImageView
@@ -21,6 +21,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="12dp"
+            android:onClick="@{() -> vm.onClickBack()}"
             android:src="@drawable/ic_back"
             app:layout_constraintBottom_toBottomOf="@id/text_field_search"
             app:layout_constraintStart_toStartOf="parent"
@@ -36,6 +37,7 @@
             app:layout_constraintStart_toEndOf="@id/image_back"
             app:layout_constraintTop_toTopOf="parent"
             app:placeholderText="@string/notice_search_placeholder"
+            app:text="@{vm.uiState.searchText}"
             app:strokeColor="@color/neutral300"
             app:strokeWidth="1dp"
             app:textAppearance="@style/Subheadline" />

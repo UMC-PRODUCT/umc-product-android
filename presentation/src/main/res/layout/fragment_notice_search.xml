@@ -13,10 +13,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/neutral100"
+        android:background="@color/neutral000"
         android:paddingHorizontal="16dp">
-
-        <!-- 상단 바 -->
 
         <com.umc.presentation.component.UTextField
             android:id="@+id/text_field_search"
@@ -24,9 +22,11 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
+            app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
             app:layout_constraintEnd_toStartOf="@id/text_cancel"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:onImeAction="@{(actionId, text) -> vm.onImeAction(actionId, text)}"
             app:placeholderText="@string/notice_search_placeholder"
             app:strokeColor="@color/neutral300"
             app:strokeWidth="1dp"
@@ -37,6 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
+            android:onClick="@{() -> vm.onClickBack()}"
             android:paddingHorizontal="8dp"
             android:paddingVertical="13dp"
             android:text="@string/cancel"
@@ -71,10 +72,10 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_recent_search"
-            app:layout_constraintTop_toBottomOf="@id/text_recent_search"
-            android:layout_marginTop="16dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/text_recent_search" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

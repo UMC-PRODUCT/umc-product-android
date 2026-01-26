@@ -39,13 +39,15 @@ constructor() : BaseViewModel<NoticeUiState, NoticeEvent>(
 
     fun onClickChip(item: NoticeChipState) {
         val newList = uiState.value.chipList.map { chip ->
-            if (item.text == chip.text) {
-                chip.copy(isClicked = !chip.isClicked)
-            } else {
-                chip
-            }
+            chip.copy(isClicked = (chip.text == item.text))
         }
 
+        //TODO 하드코딩임 서버 내려오면 수정
+        if (item.text == "중앙운영사무국") {
+            updateState { copy(isShowSubChip = true) }
+        } else {
+            updateState { copy(isShowSubChip = false) }
+        }
         updateChipList(newList)
     }
 
@@ -155,11 +157,19 @@ constructor() : BaseViewModel<NoticeUiState, NoticeEvent>(
             copy(isShowDropDown = !uiState.value.isShowDropDown)
         }
     }
+
+    fun updateSubChip(filter: String) {
+        updateState {
+            copy(selectedSubChip = filter)
+        }
+    }
 }
 
 data class NoticeUiState(
     val isShowDropDown: Boolean = false,
+    val isShowSubChip: Boolean = false,
     val nowTitle: String = "12기 공지사항", //TODO 서버에서 기수만 내려주는지, 텍스트 내려주는지 확인 필요 (아마 전자 같기도)
+    val selectedSubChip: String = "파트",
     val dropdownList: List<String> = emptyList(),
     val chipList: List<NoticeChipState> = emptyList(),
     val noticeList: List<Notice> = emptyList()

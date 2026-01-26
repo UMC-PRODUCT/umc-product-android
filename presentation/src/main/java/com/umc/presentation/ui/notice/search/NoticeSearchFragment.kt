@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.notice.search
 
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.domain.model.notice.Notice
 import com.umc.domain.model.notice.NoticeChipState
@@ -43,6 +44,14 @@ class NoticeSearchFragment : BaseFragment<FragmentNoticeSearchBinding, NoticeSea
     }
 
     override fun handleEvent(event: NoticeSearchEvent) {
-        super.handleEvent(event)
+        when (event) {
+            NoticeSearchEvent.MoveToBack -> findNavController().popBackStack()
+            is NoticeSearchEvent.MoveToSearchResult -> moveToSearchResult(event.search)
+        }
+    }
+
+    private fun moveToSearchResult(search: String) {
+        val action = NoticeSearchFragmentDirections.actionNoticeSearchFragmentToNoticeSearchResultFragment(search)
+        findNavController().navigate(action)
     }
 }

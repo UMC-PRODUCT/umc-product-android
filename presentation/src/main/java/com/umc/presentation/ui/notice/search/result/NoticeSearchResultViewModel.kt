@@ -80,12 +80,23 @@ constructor() : BaseViewModel<NoticeSearchResultUiState, NoticeSearchResultEvent
             ),
         )
     }
+
+    fun updateSearchText(text: String ){
+        updateState {
+            copy(searchText = text)
+        }
+    }
+
+    fun onClickBack() {
+        emitEvent(NoticeSearchResultEvent.MoveToBack)
+    }
 }
 
 data class NoticeSearchResultUiState(
-    val noticeList: List<Notice> = emptyList()
+    val noticeList: List<Notice> = emptyList(),
+    val searchText: String = "",
 ) : UiState
 
 sealed interface NoticeSearchResultEvent : UiEvent {
-
+    data object MoveToBack: NoticeSearchResultEvent
 }

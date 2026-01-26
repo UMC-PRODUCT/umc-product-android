@@ -14,6 +14,7 @@ import com.umc.presentation.ui.home.NoticeFragmentUiState
 import com.umc.presentation.ui.home.NoticeDetailViewModel
 import com.umc.presentation.ui.notice.adapter.NoticeAdapter
 import com.umc.presentation.ui.notice.adapter.NoticeChipAdapter
+import com.umc.presentation.ui.notice.bottomsheet.NoticeChipBottomSheet
 import com.umc.presentation.util.ULog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -70,6 +71,8 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
                 layoutManager = LinearLayoutManager(context)
                 itemAnimator = null
             }
+
+            uchipPart.setOnClickListener { showBottomSheet() }
         }
     }
 
@@ -103,5 +106,14 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
     private fun navigateToNoticeSearch() {
         val action = NoticeFragmentDirections.actionNoticeFragmentToNoticeSearchFragment()
         findNavController().navigate(action)
+    }
+
+    private fun showBottomSheet() {
+        val bottomSheet = NoticeChipBottomSheet(object : NoticeChipBottomSheet.Delegate {
+            override fun onClickItem(item: String) {
+                viewModel.updateSubChip(item)
+            }
+        })
+        bottomSheet.show(parentFragmentManager, "")
     }
 }

@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.notice.search
 
+import android.view.inputmethod.EditorInfo
 import com.umc.domain.model.enums.NoticeCategory
 import com.umc.domain.model.notice.Notice
 import com.umc.domain.model.notice.NoticeChipState
@@ -17,6 +18,10 @@ constructor() : BaseViewModel<NoticeSearchUiState, NoticeSearchEvent>(
 ) {
     init {
         updateNoticeList(getDummyNotice())
+    }
+
+    fun onClickBack() {
+        emitEvent(NoticeSearchEvent.MoveToBack)
     }
 
     private fun updateNoticeList(noticeList: List<Notice>) {
@@ -81,6 +86,14 @@ constructor() : BaseViewModel<NoticeSearchUiState, NoticeSearchEvent>(
             ),
         )
     }
+
+    fun onImeAction(actionId: Int, text: String): Boolean {
+        if (actionId == EditorInfo.IME_ACTION_DONE) {
+            emitEvent(NoticeSearchEvent.MoveToSearchResult(text))
+            return true
+        }
+        return false
+    }
 }
 
 data class NoticeSearchUiState(
@@ -88,5 +101,6 @@ data class NoticeSearchUiState(
 ) : UiState
 
 sealed interface NoticeSearchEvent : UiEvent {
-
+    data class MoveToSearchResult(val search: String): NoticeSearchEvent
+    data object MoveToBack: NoticeSearchEvent
 }

@@ -22,13 +22,19 @@
         tools:layout="@layout/fragment_notice_search">
         <action
             android:id="@+id/action_noticeSearchFragment_to_noticeSearchResultFragment"
-            app:destination="@id/noticeSearchResultFragment" />
+            app:destination="@id/noticeSearchResultFragment"/>
     </fragment>
 
     <fragment
         android:id="@+id/noticeSearchResultFragment"
         android:name="com.umc.presentation.ui.notice.search.result.NoticeSearchResultFragment"
         android:label="공지검색결과"
-        tools:layout="@layout/fragment_notice_search_result"/>
+        tools:layout="@layout/fragment_notice_search_result">
+
+        <argument
+            android:name="search"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
 
 </navigation>

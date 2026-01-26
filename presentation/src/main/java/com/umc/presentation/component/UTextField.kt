@@ -33,6 +33,29 @@ class UTextField @JvmOverloads constructor(
                 if (listener == null) null else { text -> listener.onChanged(text) }
             )
         }
+
+        @JvmStatic
+        @BindingAdapter("imeAction")
+        fun bindImeAction(view: UTextField, action: Int) {
+            view.setImeAction(action)
+        }
+
+        @JvmStatic
+        @BindingAdapter("onImeAction")
+        fun bindOnImeAction(view: UTextField, listener: OnImeAction?) {
+            view.setOnImeActionListener(
+                if (listener == null) null else { actionId, text ->
+                    listener.onAction(
+                        actionId,
+                        text
+                    )
+                }
+            )
+        }
+    }
+
+    fun interface OnImeAction {
+        fun onAction(actionId: Int, text: String): Boolean
     }
 
     fun interface OnUTextChanged {
@@ -46,6 +69,7 @@ class UTextField @JvmOverloads constructor(
     private var focusStrokeColor: Int = ContextCompat.getColor(context, R.color.primary500)
     private var defaultStrokeColor: Int = ContextCompat.getColor(context, R.color.neutral300)
     private var isFocus: Boolean = false
+    private var onImeActionListener: ((Int, String) -> Boolean)? = null
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.UTextField, defStyle, 0)
@@ -99,6 +123,10 @@ class UTextField @JvmOverloads constructor(
                     }
                 }
 
+                binding.editText.setOnEditorActionListener { _, actionId, _ ->
+                    onImeActionListener?.invoke(actionId, getText()) ?: false
+                }
+
                 editText.setOnFocusChangeListener { _, hasFocus ->
                     isFocus = hasFocus
                     updateStrokeColor()
@@ -147,6 +175,16 @@ class UTextField @JvmOverloads constructor(
     }
 
     override fun setStrokeColor(strokeColor: ColorStateList?) {
-        super.setStrokeColor(if(isFocus) ColorStateList.valueOf(focusStrokeColor) else strokeColor)
+        super.setStrokeColor(if (isFocus) ColorStateList.valueOf(focusStrokeColor) else strokeColor)
+    }
+
+    fun setImeAction(action: Int) {
+        binding.editText.imeOptions = action
+        // IME 액션 버튼(완료/검색 등)을 보이게 하려면 보통 singleLine이 필요합니다.
+        binding.editText.isSingleLine = true
+    }
+
+    fun setOnImeActionListener(listener: ((Int, String) -> Boolean)?) {
+        onImeActionListener = listener
     }
 }
