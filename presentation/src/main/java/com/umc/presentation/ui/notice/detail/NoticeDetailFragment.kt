@@ -7,16 +7,18 @@ import com.umc.domain.model.notice.VoteItem
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentNoticeDetailBinding
 import com.umc.presentation.ui.notice.detail.adapter.NoticeDetailVoteAdapter
+import com.umc.presentation.ui.notice.detail.bottomsheet.NoticeConfirmBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class NoticeDetailFragment : BaseFragment<FragmentNoticeDetailBinding, NoticeFragmentUiState, NoticeFragmentEvent, NoticeDetailViewModel>(
-    FragmentNoticeDetailBinding::inflate,
-) {
+class NoticeDetailFragment :
+    BaseFragment<FragmentNoticeDetailBinding, NoticeFragmentUiState, NoticeFragmentEvent, NoticeDetailViewModel>(
+        FragmentNoticeDetailBinding::inflate,
+    ) {
     override val viewModel: NoticeDetailViewModel by viewModels()
 
-    private val noticeDetailVoteAdapter : NoticeDetailVoteAdapter by lazy {
+    private val noticeDetailVoteAdapter: NoticeDetailVoteAdapter by lazy {
         NoticeDetailVoteAdapter(object : NoticeDetailVoteAdapter.NoticeDetailVoteDelegate {
             override fun onClickVote(item: VoteItem) {
                 viewModel.onClickVoteItem(item)
@@ -54,10 +56,16 @@ class NoticeDetailFragment : BaseFragment<FragmentNoticeDetailBinding, NoticeFra
         }
     }
 
-    private fun handleMoveEvent(event: NoticeFragmentEvent){
-        when (event){
+    override fun handleEvent(event: NoticeFragmentEvent) {
+        when (event) {
             NoticeFragmentEvent.MoveBackPressedEvent -> findNavController().popBackStack()
+            NoticeFragmentEvent.ShowBottomSheetEvent -> showBottomSheet()
         }
+    }
+
+    private fun showBottomSheet() {
+        val bottomSheet = NoticeConfirmBottomSheet()
+        bottomSheet.show(parentFragmentManager, "")
     }
 
 

@@ -97,6 +97,8 @@
     <string name="central">중앙</string>
     <string name="part">파트</string>
     <string name="branch">지부</string>
+    <string name="confirm">확인</string>
+    <string name="unConfirm">미확인</string>
 
     <!-- 파트 -->
     <string name="pm">PM</string>
@@ -204,6 +206,8 @@
     <string name="notice_detail_vote">투표하기</string>
     <string name="notice_detail_unconfirmed_people_check">미확인 인원 확인하기</string>
     <string name="notice_detail_confirmed_people_check">수신 확인 현황</string>
+    <string name="notice_detail_now_confirmed_people">공지 열람 현황</string>
+    <string name="notice_detail_send_notification">재알림 보내기</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

@@ -16,6 +16,7 @@ data class NoticeDetail(
     val link: String = "",
     val vote: Vote = Vote(),
     val allReceiverCount: Int = 0,
-    val nowReceiverCount: String = "0",
+    val nowReceiverCount: Int = 0,
     val receiverText: String = "",
+    val userList: List<User> = emptyList()
 )

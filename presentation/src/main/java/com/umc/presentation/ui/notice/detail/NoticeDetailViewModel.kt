@@ -4,6 +4,7 @@ import com.umc.domain.model.enums.NoticeCategory
 import com.umc.domain.model.enums.VoteCondition
 import com.umc.domain.model.enums.VoteState
 import com.umc.domain.model.notice.NoticeDetail
+import com.umc.domain.model.notice.User
 import com.umc.domain.model.notice.Vote
 import com.umc.domain.model.notice.VoteItem
 import com.umc.presentation.base.BaseViewModel
@@ -15,7 +16,8 @@ import javax.inject.Inject
 @HiltViewModel
 class NoticeDetailViewModel @Inject
 constructor() : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
-    NoticeFragmentUiState()){
+    NoticeFragmentUiState()
+) {
 
     init {
         updateState {
@@ -23,11 +25,11 @@ constructor() : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
         }
     }
 
-    fun onClickBackPressed(){
+    fun onClickBackPressed() {
         emitEvent(NoticeFragmentEvent.MoveBackPressedEvent)
     }
 
-    private fun getDummy(): NoticeDetail{
+    private fun getDummy(): NoticeDetail {
         return NoticeDetail(
             mustRead = true,
             category = NoticeCategory.CENTRAL_OFFICE,
@@ -44,7 +46,12 @@ constructor() : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
                 title = "회식 메뉴 투표",
                 state = VoteState.PROGRESS,
                 condition = listOf(VoteCondition.BLINDNESS, VoteCondition.SINGLE_VOTE),
-                conditionText = VoteCondition.buildVoteConditionText(listOf(VoteCondition.BLINDNESS, VoteCondition.SINGLE_VOTE)),
+                conditionText = VoteCondition.buildVoteConditionText(
+                    listOf(
+                        VoteCondition.BLINDNESS,
+                        VoteCondition.SINGLE_VOTE
+                    )
+                ),
                 item = listOf(
                     VoteItem(
                         isChecked = false,
@@ -61,8 +68,111 @@ constructor() : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
                 )
             ),
             allReceiverCount = 1000,
-            nowReceiverCount = 801.toString(),
-            receiverText = "/ 1000명 (80%)"
+            nowReceiverCount = 801,
+            receiverText = "/ 1000명 (80%)",
+            userList = listOf(
+                User(
+                    id = 1,
+                    name = "김서준",
+                    nickName = "서니",
+                    branch = "서울",
+                    school = "경희대학교",
+                    part = "Android",
+                    isSendNotification = true,
+                    isCheck = false
+                ),
+                User(
+                    id = 2,
+                    name = "이하은",
+                    nickName = "하니",
+                    branch = "부산",
+                    school = "부산대학교",
+                    part = "Design",
+                    isSendNotification = false,
+                    isCheck = true
+                ),
+                User(
+                    id = 3,
+                    name = "박민준",
+                    nickName = "민",
+                    branch = "대구",
+                    school = "영남대학교",
+                    part = "Web",
+                    isSendNotification = true,
+                    isCheck = true
+                ),
+                User(
+                    id = 4,
+                    name = "최유진",
+                    nickName = "유지니",
+                    branch = "인천",
+                    school = "인하대학교",
+                    part = "PM",
+                    isSendNotification = false,
+                    isCheck = false
+                ),
+                User(
+                    id = 5,
+                    name = "정도현",
+                    nickName = "도도",
+                    branch = "대전",
+                    school = "충남대학교",
+                    part = "Node.js",
+                    isSendNotification = true,
+                    isCheck = false
+                ),
+                User(
+                    id = 6,
+                    name = "윤지아",
+                    nickName = "지아",
+                    branch = "광주",
+                    school = "전남대학교",
+                    part = "iOS",
+                    isSendNotification = true,
+                    isCheck = true
+                ),
+                User(
+                    id = 7,
+                    name = "한지훈",
+                    nickName = "지훈",
+                    branch = "울산",
+                    school = "울산대학교",
+                    part = "SpringBoot",
+                    isSendNotification = false,
+                    isCheck = false
+                ),
+                User(
+                    id = 8,
+                    name = "오수빈",
+                    nickName = "수비니",
+                    branch = "수원",
+                    school = "아주대학교",
+                    part = "Android",
+                    isSendNotification = true,
+                    isCheck = true
+                ),
+                User(
+                    id = 9,
+                    name = "임현우",
+                    nickName = "현우",
+                    branch = "세종",
+                    school = "고려대학교(세종)",
+                    part = "Web",
+                    isSendNotification = false,
+                    isCheck = false
+                ),
+                User(
+                    id = 10,
+                    name = "강예린",
+                    nickName = "예린",
+                    branch = "제주",
+                    school = "제주대학교",
+                    part = "Design",
+                    isSendNotification = true,
+                    isCheck = false
+                )
+            )
+
         )
     }
 
@@ -80,13 +190,14 @@ constructor() : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
                         item.copy(isChecked = item.name == clicked.name)
                     }
 
-                     val clickedWasChecked = vote.item.any { it.name == clicked.name && it.isChecked }
-                     vote.item.map { item ->
-                         when {
-                             item.name == clicked.name -> item.copy(isChecked = !clickedWasChecked)
-                             else -> item.copy(isChecked = false)
-                         }
-                     }
+                    val clickedWasChecked =
+                        vote.item.any { it.name == clicked.name && it.isChecked }
+                    vote.item.map { item ->
+                        when {
+                            item.name == clicked.name -> item.copy(isChecked = !clickedWasChecked)
+                            else -> item.copy(isChecked = false)
+                        }
+                    }
                 }
 
                 isMultiple -> {
@@ -112,15 +223,19 @@ constructor() : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
         }
     }
 
+    fun onClickShowBottomSheet() {
+        emitEvent(NoticeFragmentEvent.ShowBottomSheetEvent)
+    }
+
 
 }
-
 
 
 data class NoticeFragmentUiState(
     val detail: NoticeDetail = NoticeDetail()
 ) : UiState
 
-sealed class NoticeFragmentEvent : UiEvent {
-    object MoveBackPressedEvent : NoticeFragmentEvent()
+sealed interface NoticeFragmentEvent : UiEvent {
+    object ShowBottomSheetEvent : NoticeFragmentEvent
+    object MoveBackPressedEvent : NoticeFragmentEvent
 }
