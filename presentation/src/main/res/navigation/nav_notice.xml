@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_notice"
-    app:startDestination="@id/noticeDetailFragment">
+    app:startDestination="@id/noticeFragment">
 
     <fragment
         android:id="@+id/noticeFragment"
@@ -17,6 +17,10 @@
         <action
             android:id="@+id/action_noticeFragment_to_noticeWriteFragment"
             app:destination="@id/noticeWriteFragment" />
+
+        <action
+            android:id="@+id/action_noticeFragment_to_noticeDetailFragment"
+            app:destination="@id/noticeDetailFragment" />
     </fragment>
 
     <fragment

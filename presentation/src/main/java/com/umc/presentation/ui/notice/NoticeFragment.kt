@@ -42,7 +42,7 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
     private val noticeAdapter : NoticeAdapter by lazy {
         NoticeAdapter(object : NoticeAdapter.NoticeDelegate {
             override fun onClickNotice(item: Notice) {
-                //TODO 클릭 시 상세 페이지
+                navigateToNoticeDetail()
             }
         })
     }
@@ -110,6 +110,12 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
 
     private fun navigateToNoticeWrite() {
         val action = NoticeFragmentDirections.actionNoticeFragmentToNoticeWriteFragment()
+        findNavController().navigate(action)
+    }
+
+    private fun navigateToNoticeDetail() {
+        //TODO 상세 id값 넘겨야 함
+        val action = NoticeFragmentDirections.actionNoticeFragmentToNoticeDetailFragment()
         findNavController().navigate(action)
     }
 

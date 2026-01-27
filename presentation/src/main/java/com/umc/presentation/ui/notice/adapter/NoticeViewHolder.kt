@@ -17,6 +17,7 @@ class NoticeViewHolder(
 
     fun bind(item: Notice) {
         binding.apply {
+            binding.root.setOnClickListener { listener.onClickNotice(item) }
             if (item.isMustRead) {
                 ubuttonMustRead.visible()
                 spaceBetween.visible()
