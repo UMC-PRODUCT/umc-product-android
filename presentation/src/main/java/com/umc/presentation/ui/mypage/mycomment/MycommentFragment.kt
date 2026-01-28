@@ -6,13 +6,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import com.umc.domain.model.mypage.MyContentItem
+import com.umc.domain.model.mypage.ContentItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentMycommentBinding
 import com.umc.presentation.ui.mypage.MypageViewModel
-import com.umc.presentation.ui.mypage.adapter.MyContentAdapter
-import com.umc.presentation.ui.mypage.adapter.MyContentItemDelegate
+import com.umc.presentation.ui.mypage.adapter.ContentAdapter
+import com.umc.presentation.ui.mypage.adapter.ContentItemDelegate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlin.getValue
@@ -20,13 +20,13 @@ import kotlin.getValue
 @AndroidEntryPoint
 class MycommentFragment : BaseFragment<FragmentMycommentBinding, MycommentFragmentUiState, MycommentFragmentEvent, MycommentViewModel>(
 FragmentMycommentBinding::inflate,
-), MyContentItemDelegate {
+), ContentItemDelegate {
 
     override val viewModel : MycommentViewModel by viewModels()
 
-    private lateinit var myContentAdapter : MyContentAdapter
+    private lateinit var myContentAdapter : ContentAdapter
 
-    override fun onItemClicked(item: MyContentItem) {
+    override fun onItemClicked(item: ContentItem) {
         /**TODO. 이동 로직 작성하기**/
     }
 
@@ -37,7 +37,7 @@ FragmentMycommentBinding::inflate,
         }
 
         //어댑터 정의 및 연결
-        myContentAdapter = MyContentAdapter(this)
+        myContentAdapter = ContentAdapter(this)
         binding.mycommentRcv.apply {
             adapter = myContentAdapter
         }

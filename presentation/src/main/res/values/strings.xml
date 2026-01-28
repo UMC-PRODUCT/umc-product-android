@@ -68,6 +68,9 @@
     <string name="community_recruting">모집중</string>
     <string name="community_search_recent">최근 검색어</string>
     <string name="community_search_deleteall">전체 삭제</string>
+    <string name="community_detail_title">게시글 상세</string>
+    <string name="community_detail_placeholder">댓글을 입력해주세요.</string>
+    <string name="community_detail_please_first_comment">첫 댓글을 남겨주세요.</string>
 
 
 
@@ -94,6 +97,7 @@
     <string name="all">전체</string>
     <string name="soft">Soft</string>
     <string name="hard">Hard</string>
+    <string name="question">질문</string>
 
 
     <!-- Login -->

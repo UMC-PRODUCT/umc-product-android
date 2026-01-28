@@ -51,11 +51,17 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
             vm = viewModel
             //onclick 달기
             //시작 날짜/시간
-            plandetailCdvStartDate.setOnClickListener { showDatePicker(true) }
-            plandetailCdvStartTime.setOnClickListener { showTimePicker(true) }
+            planaddCdvStartDate.setOnClickListener { showDatePicker(true) }
+            planaddCdvStartTime.setOnClickListener { showTimePicker(true) }
             //종료 날짜/시간
-            plandetailCdvEndDate.setOnClickListener { showDatePicker(false) }
-            plandetailCdvEndTime.setOnClickListener { showTimePicker(false) }
+            planaddCdvEndDate.setOnClickListener { showDatePicker(false) }
+            planaddCdvEndTime.setOnClickListener { showTimePicker(false) }
+
+            //하루종일
+            //스위치 로직
+            binding.planaddSwitchAllday.setOnCheckedChangeListener { _, isChecked ->
+                viewModel.setAllday(isChecked)
+            }
 
             //csv 선택
             planaddBtnUploadCsv.setOnClickListener {
@@ -168,10 +174,10 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
         repeatOnStarted(viewLifecycleOwner){
             viewModel.uiState.collect{ state ->
                 binding.apply {
-                    plandetailCdvStartDate.setText(state.startDateText)
-                    plandetailCdvStartTime.setText(state.startTimeText)
-                    plandetailCdvEndDate.setText(state.endDateText)
-                    plandetailCdvEndTime.setText(state.endTimeText)
+                    planaddCdvStartDate.setText(state.startDateText)
+                    planaddCdvStartTime.setText(state.startTimeText)
+                    planaddCdvEndDate.setText(state.endDateText)
+                    planaddCdvEndTime.setText(state.endTimeText)
 
                 }
 

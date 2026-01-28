@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.home
 
 import android.util.Log
+import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.presentation.base.BaseViewModel
@@ -204,9 +205,8 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
                         if(it.name == event.category.name){
                             it.copy(isChecked = !it.isChecked)
                         }
-                        //아니면 싹 다 false로 바꾸기
                         else{
-                            it.copy(isChecked = false)
+                            it.copy(isChecked = it.isChecked)
                         }
                     }
                     copy(categories = selectedCategories)
@@ -218,11 +218,17 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
     }
 
 
+    //하루종일 관련
+    //모집 중 스위치 누를 때마다 상태 변화하고 필터링
+    fun setAllday(isAllday: Boolean) {
+        updateState { copy(isAllDay = isAllday) }
+    }
+
+
 }
 
 
 data class PlanAddFragmentUiState(
-    val dummyData: String = "",
 
     //하루 종일 부분에 체크가 되었나
     val isAllDay: Boolean = false,
@@ -252,11 +258,23 @@ data class PlanAddFragmentUiState(
 
     //카테고리 리스트
     val categories: List<CategoryItem> = listOf(
-        CategoryItem("팀 활동"),
-        CategoryItem("개인 학습"),
-        CategoryItem("멘토링"),
-        CategoryItem("행사"),
-    ),
+        CategoryItem(CategoryType.NETWORKING.label),
+        CategoryItem(CategoryType.PROJECT.label),
+        CategoryItem(CategoryType.FEES.label),
+        CategoryItem(CategoryType.MEETING.label),
+
+        CategoryItem(CategoryType.ORIENTATION.label),
+        CategoryItem(CategoryType.PRESENTATION.label),
+        CategoryItem(CategoryType.RETROSPECTIVE.label),
+        CategoryItem(CategoryType.GENERAL.label),
+
+        CategoryItem(CategoryType.LEADERSHIP.label),
+        CategoryItem(CategoryType.STUDY.label),
+        CategoryItem(CategoryType.HACKATHON.label),
+        CategoryItem(CategoryType.WORKSHOP.label),
+
+        CategoryItem(CategoryType.AFTER_PARTY.label)
+    )
     
 
     
@@ -273,10 +291,9 @@ data class PlanAddFragmentUiState(
             val isTextValid = planTitle.isNotBlank()
 
             //2. 날짜/시간이 초기값이 아님
-            val isDateTimeValid = startDateText != "시작 날짜" &&
-                    startTimeText != "시작 시간" &&
-                    endDateText != "종료 날짜" &&
-                    endTimeText != "종료 시간"
+            val isDateTimeValid = (isAllDay && (startDateText != "시작 날짜" && endDateText != "종료 날짜"))
+                    || (!isAllDay && (startDateText != "시작 날짜" && startTimeText != "시작 시간" &&
+                            endDateText != "종료 날짜" && endTimeText != "종료 시간"))
 
             //3. 참여자가 1명 이상임
             val isParticipantValid = isSelectedParticipant
