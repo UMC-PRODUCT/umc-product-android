@@ -12,6 +12,8 @@ import com.google.android.gms.location.*
 import com.naver.maps.map.util.FusedLocationSource
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
+import com.umc.presentation.component.UCheckDialog
+import com.umc.presentation.component.UCheckDialogModel
 import com.umc.presentation.databinding.FragmentUserCheckBinding
 import com.umc.presentation.ui.act.adapter.CheckAvailableAdapter
 import com.umc.presentation.ui.act.adapter.CheckHistoryAdapter
@@ -41,6 +43,9 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
             locationSource = locationSource,
             onItemClick = { sessionId ->
                 viewModel.toggleSessionExpansion(sessionId)
+            },
+            onReasonClick = { sessionId ->
+                showAttendanceReasonDialog(sessionId)
             }
         )
     }
@@ -148,9 +153,25 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
 
     override fun handleEvent(event: UserCheckEvent) {
         when (event) {
-            is UserCheckEvent.ShowToast -> { /* 토스트 구현 */ }
-            is UserCheckEvent.NavigateToFailureReason -> { /* 이동 구현 */ }
+            is UserCheckEvent.ShowReasonDialog -> showAttendanceReasonDialog(event.sessionId)
+            is UserCheckEvent.ShowToast -> { /* 토스트 출력 */ }
+            else -> {}
         }
+    }
+
+    private fun showAttendanceReasonDialog(sessionId: Int) {
+        val model = UCheckDialogModel(
+            title = "출석 사유 작성",
+            subtitle = "위치 인증이 어려운 경우 사유를 작성하여\n출석을 요청할 수 있습니다.\n(예: GPS 오류, 지각, 개인 사정 등)",
+            positiveText = "제출하기",
+            isWriteMode = true
+        )
+
+        UCheckDialog(model) { reason ->
+            if (reason.isNotBlank()) {
+                viewModel.submitAttendanceReason(sessionId, reason)
+            }
+        }.show(childFragmentManager, "UCheckDialog")
     }
 
     override fun onPause() {

@@ -20,11 +20,11 @@ import com.umc.presentation.ui.act.check.CheckAvailableUIModel
 
 class CheckAvailableAdapter(
     private val locationSource: FusedLocationSource,
-    private val onItemClick: (Int) -> Unit
+    private val onItemClick: (Int) -> Unit,
+    private val onReasonClick: (Int) -> Unit
 ) : ListAdapter<CheckAvailableUIModel, CheckAvailableAdapter.ViewHolder>(
     AvailableSessionDiffCallback()
 ) {
-
     private data class ButtonSize(val width: Int, val height: Int)
     private val buttonSizeCache = mutableMapOf<String, ButtonSize>()
 
@@ -73,6 +73,10 @@ class CheckAvailableAdapter(
                     params.height = measuredHeight
                 }
                 binding.btnStatusBadge.layoutParams = params
+            }
+
+            binding.tvFailReasonAction.setOnClickListener {
+                onReasonClick(uiModel.session.id)
             }
 
             binding.root.setOnClickListener {

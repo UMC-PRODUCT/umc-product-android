@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.presentation.component.UBasicDialog
 import com.umc.presentation.component.UBasicDialogModel
+import com.umc.presentation.component.UCheckDialog
+import com.umc.presentation.component.UCheckDialogModel
 import com.umc.presentation.databinding.ItemAdminPendingUserBinding
 
 class AdminPendingUserAdapter(
@@ -89,16 +91,17 @@ class AdminPendingUserAdapter(
         private fun showLateReasonDialog(user: AdminPendingUser) {
             if (user.lateReason.isNullOrBlank()) return
 
-            val lateReasonModel = UBasicDialogModel.Warning(
-                title = "지각 사유",
-                content = user.lateReason,
+            val checkModel = UCheckDialogModel(
+                title = "출석 사유 확인",
+                subtitle = "${user.name}님이 작성하신 사유입니다.",
                 positiveText = "확인",
-                negativeText = "수정 예정"
+                isWriteMode = false,
+                reason = user.lateReason
             )
 
-            UBasicDialog(
-                model = lateReasonModel,
-                onConfirm = { }
+            UCheckDialog(
+                model = checkModel,
+                onConfirm = { /* 확인 버튼 클릭 시 별도 로직 없음 */ }
             ).show(fragmentManager, "LateReasonDialog")
         }
     }
