@@ -136,9 +136,13 @@
                 app:layout_constraintTop_toBottomOf="@+id/cv_session_icon_container"
                 tools:visibility="visible">
 
-                <FrameLayout
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cv_map_wrapper"
                     android:layout_width="match_parent"
-                    android:layout_height="180dp">
+                    android:layout_height="180dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp">
 
                     <FrameLayout
                         android:id="@+id/map_container"
@@ -167,7 +171,7 @@
                         android:layout_gravity="bottom"
                         android:layout_margin="6dp"
                         app:uiModel="@{uiModel}" />
-                </FrameLayout>
+                </com.google.android.material.card.MaterialCardView>
 
                 <LinearLayout
                     android:id="@+id/layout_status_before"
