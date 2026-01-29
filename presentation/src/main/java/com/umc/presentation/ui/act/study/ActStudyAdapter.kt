@@ -70,16 +70,25 @@ class ActStudyAdapter(
 
         init {
 
-
             binding.root.setOnClickListener {
                 val pos = bindingAdapterPosition
-                if (pos != RecyclerView.NO_POSITION) onToggle(pos)
-            }
-            binding.ivArrow.setOnClickListener {
-                val pos = bindingAdapterPosition
-                if (pos != RecyclerView.NO_POSITION) onToggle(pos)
+                if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
+
+                val item = getItem(pos)
+                if (item.isLocked) return@setOnClickListener // ✅ 잠김이면 무시
+
+                onToggle(pos)
             }
 
+            binding.ivArrow.setOnClickListener {
+                val pos = bindingAdapterPosition
+                if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
+
+                val item = getItem(pos)
+                if (item.isLocked) return@setOnClickListener // ✅ 잠김이면 무시
+
+                onToggle(pos)
+            }
 
             binding.etLink.setOnTextChangedListener { text ->
                 if (currentItemId != -1L) {
@@ -87,7 +96,6 @@ class ActStudyAdapter(
                     updateSubmitButtonUi(text)
                 }
             }
-
 
             binding.btnSubmit.setOnClickListener {
                 if (currentItemId == -1L) return@setOnClickListener
@@ -105,8 +113,6 @@ class ActStudyAdapter(
                 if (currentItemId != -1L) onLongApprove(currentItemId)
                 true
             }
-
-
         }
 
 
@@ -124,6 +130,12 @@ class ActStudyAdapter(
 
 
             updateSubmitButtonUi(currentLink)
+
+            val locked = item.isLocked
+            binding.etLink.isEnabled = !locked
+            binding.btnSubmit.isEnabled = !locked && currentLink.isNotBlank()
+            binding.btnConfirm.isEnabled = !locked
+
 
             binding.executePendingBindings()
         }

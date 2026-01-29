@@ -40,13 +40,13 @@ class UserChallengerViewModel @Inject constructor() :
             UserChallenger(12, "성구글", "픽셀러버", 12, UserPart.ANDROID, UserChallengerRole.MEMBER),
 
             // SpringBoot 파트
-            UserChallenger(13, "배엔드", "스프링", 12, UserPart.SPRING_BOOT, UserChallengerRole.PART_LEADER),
-            UserChallenger(14, "백자바", "제이피에이", 12, UserPart.SPRING_BOOT, UserChallengerRole.MEMBER),
-            UserChallenger(15, "유디비", "마이바티스", 12, UserPart.SPRING_BOOT, UserChallengerRole.MEMBER),
+            UserChallenger(13, "배엔드", "스프링", 12, UserPart.SPRING, UserChallengerRole.PART_LEADER),
+            UserChallenger(14, "백자바", "제이피에이", 12, UserPart.SPRING, UserChallengerRole.MEMBER),
+            UserChallenger(15, "유디비", "마이바티스", 12, UserPart.SPRING, UserChallengerRole.MEMBER),
 
             // Node.js 파트
-            UserChallenger(16, "노드정", "익스프레스", 12, UserPart.NODE_JS, UserChallengerRole.PART_LEADER),
-            UserChallenger(17, "신서버", "네스트", 12, UserPart.NODE_JS, UserChallengerRole.MEMBER)
+            UserChallenger(16, "노드정", "익스프레스", 12, UserPart.NODEJS, UserChallengerRole.PART_LEADER),
+            UserChallenger(17, "신서버", "네스트", 12, UserPart.NODEJS, UserChallengerRole.MEMBER)
         )
         updateState { copy(allChallengers = dummyList, filteredChallengers = dummyList) }
     }

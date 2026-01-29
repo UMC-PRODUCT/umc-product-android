@@ -16,6 +16,7 @@ class UserStudyFragment : BaseFragment<FragmentUserStudyBinding, UserStudyState,
         adapter = ActStudyAdapter(
             onToggle = { index -> viewModel.toggleExpand(index) },
             onLongApprove = { itemId -> viewModel.debugApprove(itemId) },
+
             onSubmitClick = { itemId, link -> viewModel.onSubmitClick(itemId, link) },
         )
 

@@ -6,6 +6,10 @@ import androidx.databinding.BindingAdapter
 import com.umc.presentation.R
 import com.umc.presentation.component.UButton
 import android.view.View
+import androidx.constraintlayout.widget.ConstraintLayout
+import android.widget.ImageView
+import android.widget.TextView
+
 
 
 @BindingAdapter("studyStatusStyle")
@@ -61,4 +65,45 @@ fun View.visibleWhenResultPass(item: ActStudyItemUiModel?) {
 fun View.visibleWhenResultFail(item: ActStudyItemUiModel?) {
     if (item == null) return
     visibility = if (item.status == StudyStatus.FAIL) View.VISIBLE else View.GONE
+}
+
+@BindingAdapter(
+    value = ["timelineStatus", "timelineWeek", "timelineLocked"],
+    requireAll = true
+)
+fun ConstraintLayout.bindTimeline(
+    status: StudyStatus?,
+    week: Int?,
+    locked: Boolean?
+) {
+    if (status == null || week == null || locked == null) return
+
+    val icon = findViewById<ImageView>(R.id.iv_timeline_status)
+    val number = findViewById<TextView>(R.id.tv_timeline_number)
+
+    if (locked) {
+        icon.setImageResource(R.drawable.ic_locked)
+        number.visibility = View.GONE
+        return
+    }
+
+
+    number.visibility = View.VISIBLE
+    number.text = week.toString()
+    icon.setImageResource(R.drawable.bg_primary500_circle)
+
+
+    when (status) {
+        StudyStatus.PASS -> {
+            icon.setImageResource(R.drawable.ic_check_success)
+            number.visibility = View.GONE
+        }
+        StudyStatus.FAIL -> {
+            icon.setImageResource(R.drawable.ic_check_failed)
+            number.visibility = View.GONE
+        }
+        StudyStatus.IN_PROGRESS -> {
+
+        }
+    }
 }

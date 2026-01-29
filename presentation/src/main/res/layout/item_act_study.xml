@@ -24,9 +24,10 @@
             app:layout_constraintTop_toTopOf="@id/cv_item"
             app:layout_constraintBottom_toBottomOf="@id/cv_item"
             app:layout_constraintStart_toStartOf="parent"
+            android:alpha='@{item.isLocked ? 0.35f : 1f}'
             app:timelineStatus="@{item.status}"
-            app:timelineWeek="@{item.week}">
-
+            app:timelineWeek="@{item.week}"
+            app:timelineLocked="@{item.isLocked}">
 
             <ImageView
                 android:id="@+id/iv_timeline_status"
@@ -36,7 +37,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 tools:ignore="ContentDescription" />
-
 
             <TextView
                 android:id="@+id/tv_timeline_number"
@@ -73,7 +73,9 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:padding="16dp"
+                android:alpha='@{item.isLocked ? 0.35f : 1f}'
+                android:enabled='@{!item.isLocked}'>
 
 
                 <LinearLayout
@@ -137,6 +139,7 @@
                     app:contentPaddingBottom="4dp"
                     app:textAppearance="@style/Caption1Bold"
                     app:studyStatusStyle="@{item.status}"
+                    android:visibility='@{item.isLocked ? View.GONE : View.VISIBLE}'
                     app:layout_constraintEnd_toStartOf="@id/iv_arrow"
                     app:layout_constraintTop_toTopOf="@id/top_anchor"
                     app:layout_constraintBottom_toBottomOf="@id/top_anchor"
@@ -148,6 +151,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src='@{item.isExpanded ? @drawable/ic_dropdown_up : @drawable/ic_dropdown_down}'
+                    android:visibility='@{item.isLocked ? View.GONE : View.VISIBLE}'
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="@id/top_anchor"
                     app:layout_constraintBottom_toBottomOf="@id/top_anchor"
@@ -167,7 +171,6 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     tools:text="HTML/CSS 기초" />
 
-
                 <View
                     android:id="@+id/top_anchor"
                     android:layout_width="0dp"
@@ -184,10 +187,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:orientation="vertical"
-                    android:visibility='@{item.isExpanded ? View.VISIBLE : View.GONE}'
                     app:layout_constraintTop_toBottomOf="@id/tv_title"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
+                    android:visibility='@{(item.isExpanded &amp;&amp; !item.isLocked) ? View.VISIBLE : View.GONE}'
                     tools:visibility="visible">
 
 
@@ -244,7 +247,6 @@
                         app:visibleWhenConfirming="@{item}"
                         tools:visibility="visible">
 
-
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -268,7 +270,6 @@
                                 android:textColor="@color/neutral500" />
                         </LinearLayout>
 
-
                         <com.umc.presentation.component.UButton
                             android:id="@+id/btnConfirm"
                             android:layout_width="match_parent"
@@ -283,8 +284,6 @@
                             app:confirmButtonStyle="@{true}"
                             tools:text="학습 완료 인증하기" />
                     </LinearLayout>
-
-
 
 
                     <LinearLayout
@@ -340,6 +339,7 @@
                             android:textColor="@color/success700" />
                     </LinearLayout>
 
+
                     <LinearLayout
                         android:id="@+id/layout_fail"
                         android:layout_width="match_parent"
@@ -366,6 +366,22 @@
                     </LinearLayout>
 
                 </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/layout_lock_overlay"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:orientation="horizontal"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="#40FFFFFF"
+                    android:visibility='@{item.isLocked ? View.VISIBLE : View.GONE}'
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    tools:visibility="gone" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
