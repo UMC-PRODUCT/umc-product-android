@@ -11,7 +11,7 @@ import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.*
 import com.umc.presentation.databinding.CustomDialogLocationBinding
 
-class ULocationChangeDialog(
+class ULocationDialog(
     private val initialLat: Double,
     private val initialLng: Double,
     private val onLocationChanged: (String, Double, Double) -> Unit
