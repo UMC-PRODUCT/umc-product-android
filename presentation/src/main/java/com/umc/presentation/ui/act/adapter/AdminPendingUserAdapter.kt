@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.act.check.AdminPendingUser
+import com.umc.presentation.R
 import com.umc.presentation.component.UBasicDialog
 import com.umc.presentation.component.UBasicDialogModel
 import com.umc.presentation.component.UCheckDialog
@@ -58,11 +59,12 @@ class AdminPendingUserAdapter(
             binding.executePendingBindings()
         }
 
-        private fun showApprovalDialog(user: AdminPendingUser) {// After
+        private fun showApprovalDialog(user: AdminPendingUser) {
+            val context = binding.root.context
             val approveModel = UBasicDialogModel.Success(
-                title = "출석 요청을 승인하시겠습니까?",
-                content = "${user.name} | 요청 시간: ${user.requestTime}",
-                positiveText = "승인하기"
+                title = context.getString(R.string.admin_approve_title),
+                content = context.getString(R.string.admin_pending_content_format, user.name, user.requestTime),
+                positiveText = context.getString(R.string.common_approve)
             )
 
             UBasicDialog(
@@ -74,10 +76,11 @@ class AdminPendingUserAdapter(
         }
 
         private fun showRejectionDialog(user: AdminPendingUser) {
+            val context = binding.root.context
             val rejectModel = UBasicDialogModel.Cancel(
-                title = "출석 요청을 반려하시겠습니까?",
-                content = "${user.name} | 요청 시간: ${user.requestTime}",
-                positiveText = "반려하기"
+                title = context.getString(R.string.admin_reject_title),
+                content = context.getString(R.string.admin_pending_content_format, user.name, user.requestTime),
+                positiveText = context.getString(R.string.common_reject)
             )
 
             UBasicDialog(
@@ -90,11 +93,12 @@ class AdminPendingUserAdapter(
 
         private fun showLateReasonDialog(user: AdminPendingUser) {
             if (user.lateReason.isNullOrBlank()) return
+            val context = binding.root.context
 
             val checkModel = UCheckDialogModel(
-                title = "출석 사유 확인",
-                subtitle = "${user.name}님이 작성하신 사유입니다.",
-                positiveText = "확인",
+                title = context.getString(R.string.admin_reason_check_title),
+                subtitle = context.getString(R.string.admin_reason_check_subtitle, user.name),
+                positiveText = context.getString(R.string.common_confirm),
                 isWriteMode = false,
                 reason = user.lateReason
             )

@@ -128,7 +128,6 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
             }
         }
 
-        // 초기 권한이 이미 있다면 업데이트 시작
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
             == PackageManager.PERMISSION_GRANTED) {
             startLocationUpdates()
@@ -136,7 +135,6 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
     }
 
     private fun setupMainRecyclerView() {
-        // [수정] ConcatAdapter 설정 시 isolateViewTypes를 true로 유지하여 뷰 타입 충돌 방지
         val concatAdapter = ConcatAdapter(
             availableHeaderAdapter, availableAdapter, availableEmptyAdapter,
             historyHeaderAdapter, historyAdapter, historyEmptyAdapter
@@ -168,9 +166,9 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
 
     private fun showAttendanceReasonDialog(sessionId: Int) {
         val model = UCheckDialogModel(
-            title = "출석 사유 작성",
-            subtitle = "위치 인증이 어려운 경우 사유를 작성하여\n출석을 요청할 수 있습니다.\n(예: GPS 오류, 지각, 개인 사정 등)",
-            positiveText = "제출하기",
+            title = getString(R.string.attendance_reason_dialog_title),
+            subtitle = getString(R.string.attendance_reason_guide),
+            positiveText = getString(R.string.common_submit),
             isWriteMode = true
         )
 
