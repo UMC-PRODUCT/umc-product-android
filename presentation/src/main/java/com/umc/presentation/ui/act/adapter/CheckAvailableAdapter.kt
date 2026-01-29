@@ -5,17 +5,16 @@ import android.transition.TransitionManager
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.*
-import com.naver.maps.map.overlay.Marker
-import com.naver.maps.map.overlay.OverlayImage
+import com.naver.maps.map.overlay.CircleOverlay
 import com.naver.maps.map.util.FusedLocationSource
-import com.umc.domain.model.enums.CheckAvailableStatus
+import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemActCheckAvailableBinding
-import com.umc.presentation.databinding.LayoutCustomMarkerBinding
 import com.umc.presentation.ui.act.check.CheckAvailableUIModel
 
 class CheckAvailableAdapter(
@@ -44,20 +43,24 @@ class CheckAvailableAdapter(
     inner class ViewHolder(private val binding: ItemActCheckAvailableBinding) :
         RecyclerView.ViewHolder(binding.root), OnMapReadyCallback {
 
-        private var mapView: MapView? = null
+        private var naverMap: NaverMap? = null
         private var currentModel: CheckAvailableUIModel? = null
+        private var circleOverlay: CircleOverlay? = null
+
+        init {
+            binding.mapView.onCreate(null)
+            binding.mapView.getMapAsync(this)
+        }
 
         fun bind(uiModel: CheckAvailableUIModel) {
             currentModel = uiModel
             binding.uiModel = uiModel
-            cleanupMapView()
 
-            if (uiModel.isExpanded) {
-                initMapView()
-            }
+            naverMap?.let { updateMapContent(it) }
 
             binding.executePendingBindings()
 
+            // 버튼 사이즈 캐싱 로직
             binding.btnStatusBadge.post {
                 val cacheKey = "${uiModel.session.id}_${uiModel.session.status}"
                 val cachedSize = buttonSizeCache[cacheKey]
@@ -80,6 +83,7 @@ class CheckAvailableAdapter(
             }
 
             binding.root.setOnClickListener {
+                // 펼치기/접기 애니메이션 설정
                 val transition = AutoTransition().apply {
                     duration = 300
                     excludeTarget(binding.btnStatusBadge, true)
@@ -89,74 +93,54 @@ class CheckAvailableAdapter(
             }
         }
 
-        private fun initMapView() {
-            mapView = MapView(binding.root.context).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-                onCreate(null)
-                getMapAsync(this@ViewHolder)
-            }
-            binding.mapContainer.addView(mapView)
-        }
-
-        fun cleanupMapView() {
-            mapView?.let {
-                it.onPause()
-                it.onStop()
-                it.onDestroy()
-            }
-            binding.mapContainer.removeAllViews()
-            mapView = null
-        }
-
         override fun onMapReady(map: NaverMap) {
-            val model = currentModel ?: return
-            val sessionPos = LatLng(model.session.latitude, model.session.longitude)
+            this.naverMap = map
 
-            // 마커 이미지 생성 및 설정
-            val markerBinding = LayoutCustomMarkerBinding.inflate(LayoutInflater.from(binding.root.context))
-            val customIcon = OverlayImage.fromView(markerBinding.root)
-
-            Marker().apply {
-                position = sessionPos
-                icon = customIcon
-                anchor = android.graphics.PointF(0.5f, 0.5f)
-                this.map = map
-            }
-
-            binding.layoutLocationStatus.root.post {
-                val bottomUiHeight = binding.layoutLocationStatus.root.height
-                val density = binding.root.context.resources.displayMetrics.density
-                val marginPx = (6 * density).toInt()
-
-                map.setContentPadding(0, 0, 0, bottomUiHeight + marginPx)
-                map.moveCamera(CameraUpdate.scrollTo(sessionPos))
-            }
-            // UI 및 제스처 설정
+            // 초기 UI 및 제스처 설정
             map.uiSettings.apply {
                 isZoomControlEnabled = false
                 isLocationButtonEnabled = false
                 isCompassEnabled = false
                 isScaleBarEnabled = false
-
                 setAllGesturesEnabled(false)
 
                 logoGravity = Gravity.TOP or Gravity.START
                 setLogoMargin(20, 20, 0, 0)
             }
 
-            if (model.session.status == CheckAvailableStatus.BEFORE) {
-                map.locationSource = locationSource
-                map.locationTrackingMode = LocationTrackingMode.None
-            }
+            updateMapContent(map)
         }
-    }
 
-    override fun onViewRecycled(holder: ViewHolder) {
-        holder.cleanupMapView()
-        super.onViewRecycled(holder)
+        private fun updateMapContent(map: NaverMap) {
+            val model = currentModel ?: return
+            val sessionPos = LatLng(model.session.latitude, model.session.longitude)
+            val context = binding.root.context
+
+            circleOverlay?.map = null
+            circleOverlay = CircleOverlay().apply {
+                center = sessionPos
+                radius = GEOFENCE_RADIUS
+                color = ContextCompat.getColor(context, R.color.geofence_fill)
+                outlineColor = ContextCompat.getColor(context, R.color.geofence_stroke)
+                outlineWidth = GEOFENCE_STROKE_WIDTH
+                this.map = map
+            }
+
+            binding.layoutLocationStatus.root.post {
+                val bottomUiHeight = binding.layoutLocationStatus.root.height
+                val density = context.resources.displayMetrics.density
+                val marginPx = (6 * density).toInt()
+
+                map.setContentPadding(0, 0, 0, bottomUiHeight + marginPx)
+
+                val cameraUpdate = CameraUpdate.scrollAndZoomTo(sessionPos, CAMERA_ZOOM_LEVEL)
+                    .animate(CameraAnimation.Easing)
+                map.moveCamera(cameraUpdate)
+            }
+
+            map.locationTrackingMode = LocationTrackingMode.None
+            map.locationOverlay.isVisible = false
+        }
     }
 
     class AvailableSessionDiffCallback : DiffUtil.ItemCallback<CheckAvailableUIModel>() {
@@ -164,5 +148,11 @@ class CheckAvailableAdapter(
             oldItem.session.id == newItem.session.id
         override fun areContentsTheSame(oldItem: CheckAvailableUIModel, newItem: CheckAvailableUIModel) =
             oldItem == newItem
+    }
+
+    companion object {
+        private const val GEOFENCE_RADIUS = 50.0
+        private const val GEOFENCE_STROKE_WIDTH = 3
+        private const val CAMERA_ZOOM_LEVEL = 16.0
     }
 }

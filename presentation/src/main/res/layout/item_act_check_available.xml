@@ -143,8 +143,21 @@
                     <FrameLayout
                         android:id="@+id/map_container"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@color/neutral100" />
+                        android:layout_height="match_parent">
+
+                        <com.naver.maps.map.MapView
+                            android:id="@+id/map_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+                        <ImageView
+                            android:id="@+id/iv_center_marker"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center"
+                            android:translationY="-18dp"
+                            android:src="@drawable/ic_location_marker" />
+                    </FrameLayout>
 
                     <include
                         android:id="@+id/layout_location_status"
