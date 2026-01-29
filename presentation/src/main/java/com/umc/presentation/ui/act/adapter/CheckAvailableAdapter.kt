@@ -48,6 +48,7 @@ class CheckAvailableAdapter(
         private var circleOverlay: CircleOverlay? = null
 
         init {
+            // MapView 초기화 시점 최적화
             binding.mapView.onCreate(null)
             binding.mapView.getMapAsync(this)
         }
@@ -56,26 +57,34 @@ class CheckAvailableAdapter(
             currentModel = uiModel
             binding.uiModel = uiModel
 
-            naverMap?.let { updateMapContent(it) }
-
+            // 데이터 바인딩 즉시 반영
             binding.executePendingBindings()
 
-            // 버튼 사이즈 캐싱 로직
+            // 지도가 준비된 상태라면 콘텐츠 업데이트
+            naverMap?.let { updateMapContent(it) }
+
+            // 버튼 사이즈 캐싱 및 적용
             binding.btnStatusBadge.post {
                 val cacheKey = "${uiModel.session.id}_${uiModel.session.status}"
                 val cachedSize = buttonSizeCache[cacheKey]
                 val params = binding.btnStatusBadge.layoutParams
+
                 if (cachedSize != null) {
-                    params.width = cachedSize.width
-                    params.height = cachedSize.height
+                    if (params.width != cachedSize.width || params.height != cachedSize.height) {
+                        params.width = cachedSize.width
+                        params.height = cachedSize.height
+                        binding.btnStatusBadge.layoutParams = params
+                    }
                 } else {
                     val measuredWidth = binding.btnStatusBadge.width
                     val measuredHeight = binding.btnStatusBadge.height
-                    buttonSizeCache[cacheKey] = ButtonSize(measuredWidth, measuredHeight)
-                    params.width = measuredWidth
-                    params.height = measuredHeight
+                    if (measuredWidth > 0) {
+                        buttonSizeCache[cacheKey] = ButtonSize(measuredWidth, measuredHeight)
+                        params.width = measuredWidth
+                        params.height = measuredHeight
+                        binding.btnStatusBadge.layoutParams = params
+                    }
                 }
-                binding.btnStatusBadge.layoutParams = params
             }
 
             binding.tvFailReasonAction.setOnClickListener {
@@ -116,17 +125,24 @@ class CheckAvailableAdapter(
             val sessionPos = LatLng(model.session.latitude, model.session.longitude)
             val context = binding.root.context
 
-            circleOverlay?.map = null
-            circleOverlay = CircleOverlay().apply {
+            // 오버레이 객체 재사용 로직
+            if (circleOverlay == null) {
+                circleOverlay = CircleOverlay().apply {
+                    radius = GEOFENCE_RADIUS
+                    color = ContextCompat.getColor(context, R.color.geofence_fill)
+                    outlineColor = ContextCompat.getColor(context, R.color.geofence_stroke)
+                    outlineWidth = GEOFENCE_STROKE_WIDTH
+                }
+            }
+
+            circleOverlay?.apply {
                 center = sessionPos
-                radius = GEOFENCE_RADIUS
-                color = ContextCompat.getColor(context, R.color.geofence_fill)
-                outlineColor = ContextCompat.getColor(context, R.color.geofence_stroke)
-                outlineWidth = GEOFENCE_STROKE_WIDTH
                 this.map = map
             }
 
             binding.layoutLocationStatus.root.post {
+                if (naverMap == null) return@post
+
                 val bottomUiHeight = binding.layoutLocationStatus.root.height
                 val density = context.resources.displayMetrics.density
                 val marginPx = (6 * density).toInt()
@@ -134,7 +150,7 @@ class CheckAvailableAdapter(
                 map.setContentPadding(0, 0, 0, bottomUiHeight + marginPx)
 
                 val cameraUpdate = CameraUpdate.scrollAndZoomTo(sessionPos, CAMERA_ZOOM_LEVEL)
-                    .animate(CameraAnimation.Easing)
+                    .animate(CameraAnimation.None)
                 map.moveCamera(cameraUpdate)
             }
 
@@ -146,6 +162,7 @@ class CheckAvailableAdapter(
     class AvailableSessionDiffCallback : DiffUtil.ItemCallback<CheckAvailableUIModel>() {
         override fun areItemsTheSame(oldItem: CheckAvailableUIModel, newItem: CheckAvailableUIModel) =
             oldItem.session.id == newItem.session.id
+
         override fun areContentsTheSame(oldItem: CheckAvailableUIModel, newItem: CheckAvailableUIModel) =
             oldItem == newItem
     }
