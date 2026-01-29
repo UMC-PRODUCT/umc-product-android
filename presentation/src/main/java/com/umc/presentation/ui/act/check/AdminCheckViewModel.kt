@@ -37,6 +37,20 @@ class AdminCheckViewModel @Inject constructor() :
         updateState { copy(adminSessions = domainSessions.map { AdminSessionUIModel(it) }) }
     }
 
+    /**
+     * 출석 승인 버튼 클릭 시 호출
+     */
+    fun approveAttendance(user: AdminPendingUser) {
+        // TODO: 출석 승인 API 호출
+    }
+
+    /**
+     * 출석 반려 버튼 클릭 시 호출
+     */
+    fun rejectAttendance(user: AdminPendingUser) {
+        // TODO: 출석 반려 API 호츌
+    }
+
     fun toggleSessionExpansion(sessionId: Int) {
         updateState {
             val newList = adminSessions.map { uiModel ->

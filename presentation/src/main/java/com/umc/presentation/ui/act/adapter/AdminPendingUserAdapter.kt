@@ -2,16 +2,19 @@ package com.umc.presentation.ui.act.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.act.check.AdminPendingUser
+import com.umc.presentation.component.UBasicDialog
+import com.umc.presentation.component.UBasicDialogModel
 import com.umc.presentation.databinding.ItemAdminPendingUserBinding
 
 class AdminPendingUserAdapter(
-    private val onApprove: (AdminPendingUser) -> Unit,
-    private val onReject: (AdminPendingUser) -> Unit,
-    private val onShowLateReason: (AdminPendingUser) -> Unit
+    private val fragmentManager: FragmentManager,
+    private val onApproveConfirmed: (AdminPendingUser) -> Unit,
+    private val onRejectConfirmed: (AdminPendingUser) -> Unit
 ) : ListAdapter<AdminPendingUser, AdminPendingUserAdapter.ViewHolder>(AdminPendingUserDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -33,24 +36,70 @@ class AdminPendingUserAdapter(
         fun bind(uiModel: AdminPendingUser) {
             binding.uiModel = uiModel
 
-            // 승인 버튼 클릭
+            // 승인 버튼 클릭 - 승인 다이얼로그 표시
             binding.btnPendingApprove.setOnClickListener {
-                onApprove(uiModel)
+                showApprovalDialog(uiModel)
             }
 
-            // 거절 버튼 클릭
+            // 거절 버튼 클릭 - 반려 다이얼로그 표시
             binding.btnPendingReject.setOnClickListener {
-                onReject(uiModel)
+                showRejectionDialog(uiModel)
             }
 
-            // 경고 아이콘 클릭 (지각 사유 팝업 호출)
+            // 경고 아이콘 클릭 - 지각 사유 다이얼로그 표시
             binding.btnPendingWarning.setOnClickListener {
                 if (uiModel.hasLateReason) {
-                    onShowLateReason(uiModel)
+                    showLateReasonDialog(uiModel)
                 }
             }
 
             binding.executePendingBindings()
+        }
+
+        private fun showApprovalDialog(user: AdminPendingUser) {// After
+            val approveModel = UBasicDialogModel.Success(
+                title = "출석 요청을 승인하시겠습니까?",
+                content = "${user.name} | 요청 시간: ${user.requestTime}",
+                positiveText = "승인하기"
+            )
+
+            UBasicDialog(
+                model = approveModel,
+                onConfirm = {
+                    onApproveConfirmed(user)
+                }
+            ).show(fragmentManager, "ApproveDialog")
+        }
+
+        private fun showRejectionDialog(user: AdminPendingUser) {
+            val rejectModel = UBasicDialogModel.Cancel(
+                title = "출석 요청을 반려하시겠습니까?",
+                content = "${user.name} | 요청 시간: ${user.requestTime}",
+                positiveText = "반려하기"
+            )
+
+            UBasicDialog(
+                model = rejectModel,
+                onConfirm = {
+                    onRejectConfirmed(user)
+                }
+            ).show(fragmentManager, "RejectDialog")
+        }
+
+        private fun showLateReasonDialog(user: AdminPendingUser) {
+            if (user.lateReason.isNullOrBlank()) return
+
+            val lateReasonModel = UBasicDialogModel.Warning(
+                title = "지각 사유",
+                content = user.lateReason,
+                positiveText = "확인",
+                negativeText = "수정 예정"
+            )
+
+            UBasicDialog(
+                model = lateReasonModel,
+                onConfirm = { }
+            ).show(fragmentManager, "LateReasonDialog")
         }
     }
 

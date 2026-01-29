@@ -15,11 +15,18 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
 
     private val adminAdapter by lazy {
         AdminCheckAdapter(
+            fragmentManager = childFragmentManager,
             onToggleExpansion = { sessionId ->
                 viewModel.toggleSessionExpansion(sessionId)
             },
             onChangeLocation = { sessionId ->
                 // TODO: 위치 변경 다이얼로그 호출 로직 추가 예정
+            },
+            onApproveConfirmed = { user ->
+                viewModel.approveAttendance(user)
+            },
+            onRejectConfirmed = { user ->
+                viewModel.rejectAttendance(user)
             }
         )
     }
