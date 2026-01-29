@@ -1,10 +1,7 @@
 package com.umc.presentation.ui.community.detail
 
-import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.fragment.app.viewModels
@@ -12,8 +9,8 @@ import com.umc.domain.model.mypage.CommentItem
 import com.umc.domain.model.mypage.ContentItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
-import com.umc.presentation.component.UWarningDialog
-import com.umc.presentation.component.UWarningDialogModel
+import com.umc.presentation.component.UBasicDialog
+import com.umc.presentation.component.UBasicDialogModel
 import com.umc.presentation.databinding.FragmentPostDetailBinding
 import com.umc.presentation.databinding.LayoutMenuCommentBinding
 import com.umc.presentation.ui.community.adapter.PostDetailAdapter
@@ -150,38 +147,31 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
 
             //게시글 신고 누를 경우
             is PostDetailFragmentEvent.ReportPost -> {
-                //1. 게시글에 넣을 data class 정의
-                val reportModel = UWarningDialogModel(
+                val reportModel = UBasicDialogModel.Warning(
                     title = "해당 글을 신고하시겠습니까?",
-                    positiveText = "신고하기",
-                    negativeText = "취소"
+                    positiveText = "신고하기"
                 )
-                //2. dialog inflate
-                UWarningDialog(
+
+                UBasicDialog(
                     model = reportModel,
                     onConfirm = {
                         // TODO: 서버에 신고 API 호출하는 뷰모델 함수 연결
-
-
                     }
                 ).show(childFragmentManager, "ReportDialog")
             }
 
+
             //댓글 신고
             is PostDetailFragmentEvent.ReportComment -> {
-                //1. 게시글에 넣을 data class 정의
-                val reportModel = UWarningDialogModel(
+                val reportModel = UBasicDialogModel.Warning(
                     title = "해당 댓글을 신고하시겠습니까?",
-                    positiveText = "신고하기",
-                    negativeText = "취소"
+                    positiveText = "신고하기"
                 )
-                //2. dialog inflate
-                UWarningDialog(
+
+                UBasicDialog(
                     model = reportModel,
                     onConfirm = {
                         // TODO: 서버에 신고 API 호출하는 뷰모델 함수 연결
-
-
                     }
                 ).show(childFragmentManager, "ReportDialog")
             }
