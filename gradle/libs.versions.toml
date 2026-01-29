@@ -30,6 +30,10 @@ flexbox = "3.0.0"
 opencsv = "5.7.1"
 googleServices = "4.4.4"
 firebaseBom = "34.8.0"
+navigationFragmentKtx = "2.9.6"
+navigationUiKtx = "2.9.6"
+navigationFragmentKtxVersion = "2.9.7"
+navigationUiKtxVersion = "2.9.7"
 
 
 [libraries]
@@ -72,6 +76,10 @@ kakao-user = { group = "com.kakao.sdk", name = "v2-all", version.ref = "kakao" }
 
 # opencsv
 opencsv = { group = "com.opencsv", name = "opencsv", version.ref = "opencsv" }
+androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
+androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtx" }
+navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtxVersion" }
+navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtxVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
