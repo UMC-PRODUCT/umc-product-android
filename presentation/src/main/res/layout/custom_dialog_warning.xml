@@ -14,13 +14,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_neutral000_radius16"
-        android:padding="24dp">
+        android:paddingTop="16dp"
+        android:paddingBottom="24dp"
+        android:paddingHorizontal="24dp">
 
         <ImageView
             android:id="@+id/imv_icon_close"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/ic_delete"
+            android:src="@drawable/ic_close_big"
+            android:padding="12dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
