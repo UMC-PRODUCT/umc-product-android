@@ -55,6 +55,9 @@
         <attr name="pressedColor"/>
 
         <attr name="leftIcon" format="reference"/>
+        <attr name="rightIcon" format="reference"/>
+        <attr name="rightIconTint" format="color|reference"/>
+        <attr name="rightIconSize" format="dimension"/>
     </declare-styleable>
 
 
@@ -77,6 +80,7 @@
         <attr name="borderWidth"/>
         <attr name="pressedColor"/>
         <attr name="showCloseIcon" format="boolean"/>
+
     </declare-styleable>
 
     <!-- 공통 SearchBar -->

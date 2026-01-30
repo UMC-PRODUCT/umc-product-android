@@ -63,6 +63,28 @@ constructor(
                     ivLeft.visibility = View.GONE
                 }
 
+
+                val rightIconRes = a.getResourceId(R.styleable.UButton_rightIcon, 0)
+                if (rightIconRes != 0) {
+                    binding.ivRight.visibility = View.VISIBLE
+                    binding.ivRight.setImageResource(rightIconRes)
+
+                    val tint = if (a.hasValue(R.styleable.UButton_rightIconTint)) {
+                        a.getColor(R.styleable.UButton_rightIconTint, binding.textView.currentTextColor)
+                    } else binding.textView.currentTextColor
+
+                    binding.ivRight.imageTintList = ColorStateList.valueOf(tint)
+
+                    val size = a.getDimensionPixelSize(R.styleable.UButton_rightIconSize, 16.px)
+                    binding.ivRight.layoutParams = binding.ivRight.layoutParams.apply {
+                        width = size
+                        height = size
+                    }
+                } else {
+                    binding.ivRight.visibility = View.GONE
+                }
+
+
                 // 배경색
                 pressedColor = a.getColor(R.styleable.UButton_pressedColor, normalColor)
                 rippleColor = ColorStateList.valueOf(Color.TRANSPARENT)
