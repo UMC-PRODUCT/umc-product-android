@@ -2,13 +2,24 @@ package com.umc.presentation.ui.act.study
 
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentAdminStudyBinding
+import com.umc.presentation.ui.act.study.submit.AdminActStudySubmitFragment
 
-class AdminStudyFragment : BaseFragment<FragmentAdminStudyBinding, Nothing, Nothing, Nothing>(
-    FragmentAdminStudyBinding::inflate
-) {
+class AdminStudyFragment :
+    BaseFragment<FragmentAdminStudyBinding, Nothing, Nothing, Nothing>(
+        FragmentAdminStudyBinding::inflate
+    ) {
+
     override val viewModel: Nothing
         get() = throw IllegalStateException("ViewModel is not used in this Fragment.")
 
-    override fun initView() {}
+    override fun initView() {
+
+        if (childFragmentManager.findFragmentById(binding.fcvAdminStudyContainer.id) == null) {
+            childFragmentManager.beginTransaction()
+                .replace(binding.fcvAdminStudyContainer.id, AdminActStudySubmitFragment())
+                .commit()
+        }
+    }
+
     override fun initStates() {}
 }

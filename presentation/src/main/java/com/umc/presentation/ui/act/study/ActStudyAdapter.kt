@@ -75,7 +75,7 @@ class ActStudyAdapter(
                 if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
 
                 val item = getItem(pos)
-                if (item.isLocked) return@setOnClickListener // ✅ 잠김이면 무시
+                if (item.isLocked) return@setOnClickListener
 
                 onToggle(pos)
             }
@@ -85,7 +85,7 @@ class ActStudyAdapter(
                 if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
 
                 val item = getItem(pos)
-                if (item.isLocked) return@setOnClickListener // ✅ 잠김이면 무시
+                if (item.isLocked) return@setOnClickListener
 
                 onToggle(pos)
             }
