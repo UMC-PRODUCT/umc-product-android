@@ -104,7 +104,7 @@ class UTextField @JvmOverloads constructor(
                 editText.setHorizontallyScrolling(false)
                 editText.inputType = editText.inputType or InputType.TYPE_TEXT_FLAG_MULTI_LINE
 
-                editText.setMinLines(4)
+
 
 
                 editText.isSingleLine = false
