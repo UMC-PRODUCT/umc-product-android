@@ -12,6 +12,10 @@ import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
 import com.umc.presentation.databinding.CustomTextFieldBinding
 import com.umc.presentation.extension.px
+import android.view.Gravity
+import android.text.InputType
+
+
 
 class UTextField @JvmOverloads constructor(
     mContext: Context,
@@ -92,6 +96,22 @@ class UTextField @JvmOverloads constructor(
                         ContextCompat.getColor(context, R.color.neutral400),
                     ),
                 )
+
+
+                editText.gravity = Gravity.START or Gravity.TOP
+
+                editText.isSingleLine = false
+                editText.setHorizontallyScrolling(false)
+                editText.inputType = editText.inputType or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+
+                editText.setMinLines(4)
+
+
+                editText.isSingleLine = false
+                editText.setHorizontallyScrolling(false)
+                editText.inputType =
+                    editText.inputType or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+
 
                 editText.doOnTextChanged { text, _, _, _ ->
                     if (!suppressCallback) {

@@ -36,6 +36,8 @@
 
         <attr name="cornerRadius"/>
 
+        <attr name="inputGravity" format="integer" />
+
         <attr name="focusStrokeColor" format="color"/>
     </declare-styleable>
 
