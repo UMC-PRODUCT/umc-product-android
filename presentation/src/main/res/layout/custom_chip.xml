@@ -34,5 +34,8 @@
             app:layout_constraintTop_toTopOf="@id/tv_chip_text"
              />
 
+
+
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </merge>
