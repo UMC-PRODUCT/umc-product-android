@@ -51,6 +51,8 @@
 
         <attr name="buttonElevation"/>
         <attr name="pressedColor"/>
+
+        <attr name="leftIcon" format="reference"/>
     </declare-styleable>
 
 

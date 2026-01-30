@@ -11,4 +11,13 @@
         android:gravity="center"
         android:textSize="14sp" />
 
+
+    <ImageView
+        android:id="@+id/iv_left"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginEnd="6dp"
+        android:visibility="gone"
+        tools:src="@drawable/ic_check_success" />
+
 </merge>

@@ -11,6 +11,8 @@ import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
 import com.umc.presentation.databinding.CustomButtonBinding
 import com.umc.presentation.extension.px
+import android.view.View
+
 
 class UButton
 @JvmOverloads
@@ -50,6 +52,16 @@ constructor(
                 // Border
                 strokeWidth = a.getDimensionPixelSize(R.styleable.UButton_borderWidth, 0.px)
                 strokeColor = a.getColor(R.styleable.UButton_borderColor, Color.TRANSPARENT)
+
+                val iconRes =
+                    a.getResourceId(R.styleable.UButton_leftIcon, 0)
+
+                if (iconRes != 0) {
+                    ivLeft.visibility = View.VISIBLE
+                    ivLeft.setImageResource(iconRes)
+                } else {
+                    ivLeft.visibility = View.GONE
+                }
 
                 // 배경색
                 pressedColor = a.getColor(R.styleable.UButton_pressedColor, normalColor)
