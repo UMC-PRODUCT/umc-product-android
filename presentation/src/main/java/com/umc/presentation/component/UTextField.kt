@@ -150,6 +150,32 @@ class UTextField @JvmOverloads constructor(
         suppressCallback = false
     }
 
+    fun setReadOnly(readOnly: Boolean) {
+        binding.editText.apply {
+            isFocusable = !readOnly
+            isFocusableInTouchMode = !readOnly
+            isClickable = !readOnly
+            isLongClickable = !readOnly
+            isCursorVisible = !readOnly
+        }
+    }
+
+    fun setReadOnlyStyle(
+        backgroundColor: Int = R.color.neutral100,
+        strokeColorRes: Int = R.color.neutral200,
+        textColor: Int = R.color.neutral600,
+        hintColor: Int = R.color.neutral400,
+    ) {
+        setCardBackgroundColor(ContextCompat.getColor(context, backgroundColor))
+        strokeColor = ContextCompat.getColor(context, strokeColorRes)
+        binding.editText.setTextColor(ContextCompat.getColor(context, textColor))
+        binding.editText.setHintTextColor(ContextCompat.getColor(context, hintColor))
+    }
+
+
+
+
+
     fun setOnTextChangedListener(listener: ((String) -> Unit)?) {
         onTextChangedListener = listener
     }
