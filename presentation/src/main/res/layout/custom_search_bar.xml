@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:id="@+id/layout_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp">
+        <ImageView
+            android:id="@+id/image_prev_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_search"
+            android:layout_marginEnd="12dp"
+            app:tint="@color/neutral400" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/edit_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@null"
+                android:padding="0dp"
+                android:singleLine="true"
+                android:textAppearance="@style/Body"
+                android:textColor="@color/neutral800"
+                android:textColorHint="@color/neutral400" />
+
+            <ImageView
+                android:id="@+id/image_clear"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_delete_filled"
+                android:visibility="gone"
+                app:tint="@color/neutral300" />
+
+    </LinearLayout>
+</merge>

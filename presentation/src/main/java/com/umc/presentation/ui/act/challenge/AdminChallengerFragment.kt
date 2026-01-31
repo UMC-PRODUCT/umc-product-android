@@ -4,36 +4,39 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ConcatAdapter
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
-import com.umc.presentation.databinding.FragmentUserChallengerBinding
+import com.umc.presentation.databinding.FragmentAdminChallengerBinding
 import com.umc.presentation.extension.px
 import com.umc.presentation.ui.act.adapter.ChallengerHeaderAdapter
-import com.umc.presentation.ui.act.adapter.UserChallengerAdapter
+import com.umc.presentation.ui.act.adapter.AdminChallengerAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserChallengerUiState, UserChallengerEvent, UserChallengerViewModel>(
-    FragmentUserChallengerBinding::inflate
+class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, AdminChallengerUiState, AdminChallengerEvent, AdminChallengerViewModel>(
+    FragmentAdminChallengerBinding::inflate
 ) {
-    override val viewModel: UserChallengerViewModel by viewModels()
+    override val viewModel: AdminChallengerViewModel by viewModels()
     private val partOrder = UserPart.entries
     private val headerAdapters = mutableMapOf<UserPart, ChallengerHeaderAdapter>()
-    private val itemAdapters = mutableMapOf<UserPart, UserChallengerAdapter>()
+    private val itemAdapters = mutableMapOf<UserPart, AdminChallengerAdapter>()
 
     override fun initView() {
         setupRecyclerView()
-        setupSearch()
 
-        // 배경 클릭 시 포커스 해제 및 키보드 숨기기 로직
+        // 검색바 텍스트 변경 리스너 연결
+        binding.searchBar.setOnTextChangedListener { text ->
+            viewModel.filterList(text)
+        }
+
+        // 배경 클릭 시 포커스 해제
         binding.root.setOnClickListener {
+            binding.searchBar.clearFocus()
             val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
             imm.hideSoftInputFromWindow(binding.searchBar.windowToken, 0)
-            binding.searchBar.clearFocus()
         }
     }
 
@@ -42,7 +45,7 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
 
         partOrder.forEach { part ->
             val headerAdapter = ChallengerHeaderAdapter(part.label)
-            val itemAdapter = UserChallengerAdapter { id -> viewModel.navigateToDetail(id) }
+            val itemAdapter = AdminChallengerAdapter { id -> /* 상세 이동 로직 */ }
 
             headerAdapters[part] = headerAdapter
             itemAdapters[part] = itemAdapter
@@ -51,6 +54,7 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
             mainConcatAdapter.addAdapter(itemAdapter)
         }
 
+        // 하단 여백용 푸터
         val footerAdapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
                 object : RecyclerView.ViewHolder(
@@ -61,15 +65,11 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
         }
         mainConcatAdapter.addAdapter(footerAdapter)
 
-        binding.rvChallengerList.apply {
+        binding.rvAdminChallengerList.apply {
             adapter = mainConcatAdapter
             clipToPadding = false
             setPadding(0, 0, 0, 64.px)
         }
-    }
-
-    private fun setupSearch() {
-        binding.searchBar.setOnTextChangedListener { text -> viewModel.filterList(text) }
     }
 
     override fun initStates() {
@@ -84,13 +84,6 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
                     }
                 }
             }
-            launch { viewModel.uiEvent.collect { handleEvent(it) } }
-        }
-    }
-
-    override fun handleEvent(event: UserChallengerEvent) {
-        when (event) {
-            is UserChallengerEvent.NavigateToDetail -> { /* 다이얼로그 로직 */ }
         }
     }
 }

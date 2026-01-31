@@ -75,4 +75,22 @@
         <attr name="showCloseIcon" format="boolean"/>
     </declare-styleable>
 
+    <!-- 공통 SearchBar -->
+    <declare-styleable name="USearchBar">
+        <attr name="text" />
+        <attr name="textColor" />
+        <attr name="textAppearance" />
+        <attr name="placeholderText" />
+        <attr name="placeholderTextColor" />
+
+        <attr name="prevIcon" />
+        <attr name="prevIconTint" />
+        <attr name="prevIconSize" />
+        <attr name="prevIconPadding" />
+
+        <attr name="cornerRadius" />
+        <attr name="backgroundColor" />
+        <attr name="focusStrokeColor" />
+    </declare-styleable>
+
 </resources>
