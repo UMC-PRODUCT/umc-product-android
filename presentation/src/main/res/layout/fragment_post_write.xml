@@ -294,6 +294,7 @@
                 app:layout_constraintTop_toBottomOf="@id/write_tv_light_time"
                 app:placeholderText="@string/community_write_light_time_placeholder"
                 app:textAppearance="@style/Body"
+                app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
                 />
 
             <!--최대 인원-->
@@ -327,6 +328,7 @@
                 app:layout_constraintTop_toBottomOf="@id/write_tv_light_people"
                 app:placeholderText="@string/community_write_light_people_placeholder"
                 app:textAppearance="@style/Body"
+                app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
                 />
 
             <!--장소-->
@@ -358,6 +360,7 @@
                 app:layout_constraintTop_toBottomOf="@id/write_tv_light_place"
                 app:placeholderText="@string/community_write_light_place_placeholder"
                 app:textAppearance="@style/Body"
+                app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
                 />
 
             <!--오픈챗-->
@@ -389,6 +392,7 @@
                 app:layout_constraintTop_toBottomOf="@id/write_tv_light_openchat"
                 app:placeholderText="@string/community_write_light_openchat_placeholder"
                 app:textAppearance="@style/Body"
+                app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
                 />
 
 

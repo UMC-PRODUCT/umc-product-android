@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
@@ -50,5 +51,13 @@ class PostSearchFragment : BaseFragment<FragmentPostSearchBinding, PostSearchFra
 
     override fun handleEvent(event: PostSearchFragmentEvent) {
         super.handleEvent(event)
+
+        when(event){
+            is PostSearchFragmentEvent.ShowSearchResult -> {
+                Toast.makeText(requireContext(), "검색 결과", Toast.LENGTH_SHORT).show()
+            }
+            else -> {}
+        }
+
     }
 }

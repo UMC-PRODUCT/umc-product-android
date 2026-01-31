@@ -135,7 +135,7 @@ data class CommunityFragmentUiState(
             likes = 10,
             comments = 1,
             content = "본문내용을늘려야하는데무슨내용을적어야잘적었다는소문이날까?내용을늘리기위해서는아무내용이나넣어야겠다.이쯤되면길어지겠지?",
-            userPart = UserPart.SPRING,
+            userPart = UserPart.SPRING_BOOT,
         ),
     ),
 
