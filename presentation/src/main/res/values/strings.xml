@@ -75,6 +75,15 @@
     <string name="community_write_category">카테고리</string>
     <string name="community_write_category_select">카테고리 선택</string>
     <string name="community_write_category_select_long">카테고리를 선택하세요</string>
+    <string name="community_write_light_title">번개 설정하기</string>
+    <string name="community_write_light_time">날짜/시간</string>
+    <string name="community_write_light_time_placeholder">예: 1/1, 13시</string>
+    <string name="community_write_light_people">최대 인원</string>
+    <string name="community_write_light_people_placeholder">예: 4명</string>
+    <string name="community_write_light_place">장소</string>
+    <string name="community_write_light_place_placeholder">예: 강남역 3번 출구</string>
+    <string name="community_write_light_openchat">오픈 채팅 링크</string>
+    <string name="community_write_light_openchat_placeholder">링크를 입력해주세요</string>
 
 
 

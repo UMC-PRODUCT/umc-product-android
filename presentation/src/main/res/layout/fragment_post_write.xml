@@ -6,6 +6,8 @@
 
     <data>
 
+        <import type="android.view.View"/>
+
         <variable
             name="vm"
             type="com.umc.presentation.ui.community.write.PostWriteViewModel" />
@@ -57,6 +59,23 @@
             app:layout_constraintBottom_toBottomOf="@id/write_tv_title"
             app:layout_constraintEnd_toEndOf="parent"
             />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:isScrollContainer="true"
+        android:layout_marginTop="24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/write_tv_title"
+        app:layout_constraintBottom_toBottomOf="parent"
+        >
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
 
         <!--카테고리-->
         <TextView
@@ -190,6 +209,196 @@
             app:layout_constraintBottom_toBottomOf="parent"/>
 
 
+        <!-- 번개함-->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/write_cdv_light"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="80dp"
+            android:background="@color/accent100"
+            android:visibility="@{vm.uiState.isLight ? View.VISIBLE : View.GONE}"
+            app:cardBackgroundColor="@color/accent100"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/accent300"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/write_textfield_content">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="24dp"
+            >
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/write_guideline_divide1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.5"/>
+
+            <!--TODO 변경-->
+            <ImageView
+                android:id="@+id/write_imv_light"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_star_filled"
+                app:tint="@color/accent500"
+                />
+
+            <TextView
+                android:id="@+id/write_tv_light_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="start"
+                android:textAppearance="@style/HeadlineBold"
+                android:textColor="@color/accent600"
+                android:text="@string/community_write_light_title"
+                android:layout_marginStart="4dp"
+                app:layout_constraintStart_toEndOf="@id/write_imv_light"
+                app:layout_constraintTop_toTopOf="@id/write_imv_light"
+                app:layout_constraintBottom_toBottomOf="@id/write_imv_light"
+                />
+
+            <!--날짜/시간-->
+            <TextView
+                android:id="@+id/write_tv_light_time"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/SubheadlineBold"
+                android:gravity="start"
+                android:textColor="@color/neutral800"
+                android:layout_marginTop="24dp"
+                android:text="@string/community_write_light_time"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/write_guideline_divide1"
+                app:layout_constraintTop_toBottomOf="@id/write_tv_light_title"
+                />
+
+            <com.umc.presentation.component.UTextField
+                android:id="@+id/write_textfield_time"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@color/neutral000"
+                app:strokeColor="@color/neutral300"
+                app:strokeWidth="1dp"
+                app:cardBackgroundColor="@color/neutral000"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/write_guideline_divide1"
+                app:layout_constraintTop_toBottomOf="@id/write_tv_light_time"
+                app:placeholderText="@string/community_write_light_time_placeholder"
+                app:textAppearance="@style/Body"
+                />
+
+            <!--최대 인원-->
+            <TextView
+                android:id="@+id/write_tv_light_people"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/SubheadlineBold"
+                android:gravity="start"
+                android:textColor="@color/neutral800"
+                android:layout_marginTop="24dp"
+                android:text="@string/community_write_light_people"
+                android:layout_marginStart="8dp"
+                app:layout_constraintStart_toEndOf="@id/write_guideline_divide1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/write_tv_light_title"
+                />
+
+            <com.umc.presentation.component.UTextField
+                android:id="@+id/write_textfield_people"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@color/neutral000"
+                app:strokeColor="@color/neutral300"
+                app:strokeWidth="1dp"
+                app:cardBackgroundColor="@color/neutral000"
+                android:layout_marginStart="8dp"
+                app:layout_constraintStart_toEndOf="@id/write_guideline_divide1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/write_tv_light_people"
+                app:placeholderText="@string/community_write_light_people_placeholder"
+                app:textAppearance="@style/Body"
+                />
+
+            <!--장소-->
+            <TextView
+                android:id="@+id/write_tv_light_place"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/SubheadlineBold"
+                android:gravity="start"
+                android:textColor="@color/neutral800"
+                android:layout_marginTop="24dp"
+                android:text="@string/community_write_light_place"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/write_textfield_time"
+                />
+
+            <com.umc.presentation.component.UTextField
+                android:id="@+id/write_textfield_place"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@color/neutral000"
+                app:strokeColor="@color/neutral300"
+                app:strokeWidth="1dp"
+                app:cardBackgroundColor="@color/neutral000"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/write_tv_light_place"
+                app:placeholderText="@string/community_write_light_place_placeholder"
+                app:textAppearance="@style/Body"
+                />
+
+            <!--오픈챗-->
+            <TextView
+                android:id="@+id/write_tv_light_openchat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/SubheadlineBold"
+                android:gravity="start"
+                android:textColor="@color/neutral800"
+                android:layout_marginTop="24dp"
+                android:text="@string/community_write_light_openchat"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/write_textfield_place"
+                />
+
+            <com.umc.presentation.component.UTextField
+                android:id="@+id/write_textfield_openchat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@color/neutral000"
+                app:strokeColor="@color/neutral300"
+                app:strokeWidth="1dp"
+                app:cardBackgroundColor="@color/neutral000"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/write_tv_light_openchat"
+                app:placeholderText="@string/community_write_light_openchat_placeholder"
+                app:textAppearance="@style/Body"
+                />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 

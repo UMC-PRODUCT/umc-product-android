@@ -41,10 +41,34 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
                 viewModel.updateContent(text.toString())
             }
 
+            // 번개 날짜 입력 리스너
+            writeTextfieldTime.setOnTextChangedListener { text ->
+                viewModel.updateLightTime(text)
+            }
+
+            // 번개 장소 입력 리스너
+            writeTextfieldPlace.setOnTextChangedListener { text ->
+                viewModel.updateLightPlace(text)
+            }
+
+            //번개 장소 입력 리스너
+            writeTextfieldPeople.setOnTextChangedListener { text ->
+                viewModel.updateLightPeople(text)
+            }
+
+            //번개 옵챗 입력 리스너
+            writeTextfieldOpenchat.setOnTextChangedListener { text ->
+                viewModel.updateLightOpenChat(text)
+            }
+
+
+
+
             // 등록 버튼 클릭
             writeTvComplete.setOnClickListener {
                 viewModel.onClickRegister()
             }
+
         }
 
         //카테고리 어댑터 -> 클릭 시 변경하기
@@ -94,9 +118,9 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
     }
 
     private fun settingBottomSheetDialog(){
-        // 1. 바텀시트 생성 및 클릭 리스너 연결
+        // BottomSheet 생성 및 클릭 리스너 연결
         val bottomSheet = CategoryBottomSheetDialog { selectedCategory ->
-            // 2. 바텀시트 어댑터에서 클릭된 CategoryType을 뷰모델로 전달
+            // BottomSheet 어댑터에서 클릭된 CategoryType을 뷰모델로 전달
             viewModel.updateContentCategory(selectedCategory)
         }
         // 3. 화면에 표시

@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.community.write
 
+import android.util.Log
 import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.home.CategoryItem
 import com.umc.presentation.base.BaseViewModel
@@ -31,6 +32,7 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
             }
             copy(regionCategories = selectedCategories)
         }
+
     }
 
     //category(글 카테고리) 선택
@@ -44,6 +46,15 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
             // 초기값 "카테고리 선택"이 실제 선택된 라벨(예: "번개")로 바뀝니다.
             copy(selectContentCategory = CategoryItem(category.label, true))
         }
+
+        //추가 카테고리가 번개냐?
+        if(category.label == CommunityCategoryType.LIGHTNING.label){
+            setLightCardView(true)
+        }
+        else{
+            setLightCardView(false)
+        }
+
     }
 
 
@@ -60,8 +71,34 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
 
     //작성한 내용을 저장(서버로 전송)
     fun onClickRegister(){
-
+        //TODO 서버 로직 작성
     }
+    
+    //번개 관련
+    fun setLightCardView(nowLight : Boolean){
+        updateState { copy(isLight = nowLight) }
+    }
+
+    //번개 날짜/시간 업데이트
+    fun updateLightTime(time: String) {
+        updateState { copy(lightTime = time) }
+    }
+
+    //번개 최대 인원 업데이트
+    fun updateLightPeople(people: String) {
+        updateState { copy(lightPeople = people) }
+    }
+
+    //번개 장소 업데이트
+    fun updateLightPlace(place: String) {
+        updateState { copy(lightPlace = place) }
+    }
+
+    //번개 오픈 채팅 링크 업데이트
+    fun updateLightOpenChat(openChat: String) {
+        updateState { copy(lightOpenChat = openChat) }
+    }
+
 
 
 
@@ -85,7 +122,15 @@ data class PostWriteFragmentUiState(
 
     //작성한 내용들
     val title: String = "",
-    val content: String = ""
+    val content: String = "",
+
+
+    //번개 관련 내용들
+    val isLight : Boolean = false,
+    val lightTime : String = "",
+    val lightPeople : String = "",
+    val lightPlace : String = "",
+    val lightOpenChat : String = "",
 
 
     ) : UiState
