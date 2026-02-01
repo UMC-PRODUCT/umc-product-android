@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.mypage.mycomment
 
 import com.umc.domain.model.enums.CategoryType
+import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.enums.ContentType
 import com.umc.domain.model.enums.RecruitType
 import com.umc.domain.model.enums.UserPart
@@ -28,7 +29,7 @@ constructor() : BaseViewModel<MycommentFragmentUiState, MycommentFragmentEvent>(
 data class MycommentFragmentUiState(
     val tmpData: List<ContentItem> = listOf(
         ContentItem(
-            category = CategoryType.MEETING,
+            category = CommunityCategoryType.QUESTION,
             region = "서울",
             contentType = ContentType.ALL,
             recruitType = RecruitType.END,
@@ -41,7 +42,7 @@ data class MycommentFragmentUiState(
             userPart = UserPart.ANDROID,
         ),
         ContentItem(
-            category = CategoryType.STUDY,
+            category = CommunityCategoryType.HOBBY,
             region = "인천",
             contentType = ContentType.ALL,
             recruitType = RecruitType.RECRUIT,
@@ -54,7 +55,7 @@ data class MycommentFragmentUiState(
             userPart = UserPart.WEB,
         ),
         ContentItem(
-            category = CategoryType.WORKSHOP,
+            category = CommunityCategoryType.SUGGESTION,
             region = "인천",
             contentType = ContentType.QUESTION,
             recruitType = RecruitType.RECRUIT,
@@ -67,7 +68,7 @@ data class MycommentFragmentUiState(
             userPart = UserPart.IOS,
         ),
         ContentItem(
-            category = CategoryType.HACKATHON,
+            category = CommunityCategoryType.LIGHTNING,
             region = "인천",
             contentType = ContentType.QUESTION,
             recruitType = RecruitType.END,
