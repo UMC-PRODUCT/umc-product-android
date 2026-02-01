@@ -155,7 +155,7 @@
             android:id="@+id/sugwrite_textfield_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="48dp"
+            android:layout_marginTop="32dp"
             android:background="@null"
             android:hint="@string/suggest_write_anomy_title_placeholder"
             android:paddingVertical="16dp"
@@ -166,14 +166,14 @@
             app:layout_constraintTop_toBottomOf="@id/sugwrite_rcv" />
 
         <View
-            android:id="@+id/sugwrote_view_divider"
+            android:id="@+id/sugwrite_view_divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/neutral400"
             app:layout_constraintTop_toBottomOf="@id/sugwrite_textfield_title" />
 
         <EditText
-            android:id="@+id/planadd_textfield_plan_detail"
+            android:id="@+id/sugwrite_textfield_content"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:background="@null"
@@ -185,7 +185,7 @@
             android:textAppearance="@style/Body"
             android:textColor="@color/neutral800"
             android:textColorHint="@color/neutral400"
-            app:layout_constraintTop_toBottomOf="@id/sugwrote_view_divider"
+            app:layout_constraintTop_toBottomOf="@id/sugwrite_view_divider"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
 

@@ -400,6 +400,7 @@
             app:placeholderText="@string/profile_http_start_placeholder"
             app:textAppearance="@style/Subheadline"
             app:text="@{vm.uiState.githubLink}"
+            app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
             />
 
         <!--링크드인 링크-->
@@ -428,6 +429,7 @@
             app:placeholderText="@string/profile_http_start_placeholder"
             app:textAppearance="@style/Subheadline"
             app:text="@{vm.uiState.linkedinLink}"
+            app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
             />
 
         <!--블로그 링크-->
@@ -456,6 +458,7 @@
             app:placeholderText="@string/profile_http_start_placeholder"
             app:textAppearance="@style/Subheadline"
             app:text="@{vm.uiState.blogLink}"
+            app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
             />
 
 

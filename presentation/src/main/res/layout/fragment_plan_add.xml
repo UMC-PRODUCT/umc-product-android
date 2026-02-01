@@ -100,6 +100,7 @@
                         app:placeholderText="@string/home_plan_add_plan_name_placeholder"
                         app:textAppearance="@style/Subheadline"
                         app:text="@{vm.uiState.planTitle}"
+                        app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
                         />
 
 
@@ -325,6 +326,7 @@
                         app:placeholderText="@string/home_plan_add_plan_location_placeholder"
                         app:textAppearance="@style/Subheadline"
                         app:text="@{vm.uiState.planLocation}"
+                        app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
                         />
 
                     <!--상세 안내-->
@@ -468,7 +470,9 @@
                         app:placeholderText="@string/home_plan_add_plan_search_placeholder"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_selected" />
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_selected"
+                        app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH}"
+                        />
 
 
                     <!--검색 결과창 (이 부분은 겹치는 곳으로 표시)-->

@@ -43,6 +43,10 @@
         android:label="게시글 검색"
         tools:layout="@layout/fragment_post_search">
 
+        <action
+            android:id="@+id/action_postSearch_to_postDetail"
+            app:destination="@id/postDetailFragment"/>
+
     </fragment>
 
     <fragment

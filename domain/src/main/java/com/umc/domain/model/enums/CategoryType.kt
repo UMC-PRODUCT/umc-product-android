@@ -1,5 +1,6 @@
 package com.umc.domain.model.enums
 
+//일정 생성 화면 카테고리
 enum class CategoryType(val label: String) {
     NETWORKING("네트워킹"),
     PROJECT("프로젝트"),

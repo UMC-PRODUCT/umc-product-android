@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.mypage.mypost
 
 import com.umc.domain.model.enums.CategoryType
+import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.enums.ContentType
 import com.umc.domain.model.enums.RecruitType
 import com.umc.domain.model.enums.UserPart
@@ -31,7 +32,7 @@ constructor() : BaseViewModel<MypostFragmentUiState, MypostFragmentEvent>(
 data class MypostFragmentUiState(
     val tmpData: List<ContentItem> = listOf(
         ContentItem(
-            category = CategoryType.MEETING,
+            category = CommunityCategoryType.QUESTION,
             region = "서울",
             contentType = ContentType.ALL,
             recruitType = RecruitType.END,
@@ -44,7 +45,7 @@ data class MypostFragmentUiState(
             userPart = UserPart.ANDROID,
         ),
         ContentItem(
-            category = CategoryType.STUDY,
+            category = CommunityCategoryType.HOBBY,
             region = "인천",
             contentType = ContentType.ALL,
             recruitType = RecruitType.RECRUIT,
@@ -57,7 +58,7 @@ data class MypostFragmentUiState(
             userPart = UserPart.WEB,
         ),
         ContentItem(
-            category = CategoryType.WORKSHOP,
+            category = CommunityCategoryType.SUGGESTION,
             region = "인천",
             contentType = ContentType.QUESTION,
             recruitType = RecruitType.RECRUIT,
@@ -70,7 +71,7 @@ data class MypostFragmentUiState(
             userPart = UserPart.IOS,
         ),
         ContentItem(
-            category = CategoryType.HACKATHON,
+            category = CommunityCategoryType.LIGHTNING,
             region = "인천",
             contentType = ContentType.QUESTION,
             recruitType = RecruitType.END,
@@ -80,7 +81,7 @@ data class MypostFragmentUiState(
             likes = 10,
             comments = 1,
             content = "본문내용을늘려야하는데무슨내용을적어야잘적었다는소문이날까?내용을늘리기위해서는아무내용이나넣어야겠다.이쯤되면길어지겠지?",
-            userPart = UserPart.SPRING,
+            userPart = UserPart.SPRING_BOOT,
         ),
     )
 ): UiState
