@@ -629,7 +629,7 @@
                     android:id="@+id/home_calendar_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="24dp"
                     android:padding="16dp"
                     android:background="@drawable/bg_neutral000_radius16"
                     android:elevation="0dp"
@@ -646,7 +646,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:visibility="@{vm.uiState.dailyPlans.size() != 0 ? View.VISIBLE : View.INVISIBLE}"
+                    android:visibility="@{vm.uiState.dailyPlans.size() != 0 ? View.VISIBLE : View.GONE}"
                     android:paddingHorizontal="8dp"
                     android:background="@color/neutral200"/>
 
@@ -656,7 +656,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:nestedScrollingEnabled="false"
-                    android:visibility="@{vm.uiState.dailyPlans.size() != 0 ? View.VISIBLE : View.INVISIBLE}"
+                    android:visibility="@{vm.uiState.dailyPlans.size() != 0 ? View.VISIBLE : View.GONE}"
                     android:layout_marginTop="16dp"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     tools:listitem="@layout/item_home_plan_active" />

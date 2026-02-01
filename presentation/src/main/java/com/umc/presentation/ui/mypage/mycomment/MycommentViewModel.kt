@@ -1,7 +1,11 @@
 package com.umc.presentation.ui.mypage.mycomment
 
-import com.umc.domain.model.enums.MyContentType
-import com.umc.domain.model.mypage.MyContentItem
+import com.umc.domain.model.enums.CategoryType
+import com.umc.domain.model.enums.CommunityCategoryType
+import com.umc.domain.model.enums.ContentType
+import com.umc.domain.model.enums.RecruitType
+import com.umc.domain.model.enums.UserPart
+import com.umc.domain.model.mypage.ContentItem
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -23,41 +27,60 @@ constructor() : BaseViewModel<MycommentFragmentUiState, MycommentFragmentEvent>(
 
 
 data class MycommentFragmentUiState(
-    val tmpData: List<MyContentItem> = listOf(
-        MyContentItem(
-            category = "만남",
+    val tmpData: List<ContentItem> = listOf(
+        ContentItem(
+            category = CommunityCategoryType.QUESTION,
             region = "서울",
-            status = MyContentType.RECRUIT,
+            contentType = ContentType.ALL,
+            recruitType = RecruitType.END,
             title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
             username = "어헛차",
             writeTime = "방금 전",
-            likes = "0",
-            comments = "1",
-            isSoft = false
+            likes = 0,
+            comments = 1,
+            content = "이거는 본문 내용이에요!!!",
+            userPart = UserPart.ANDROID,
         ),
-        MyContentItem(
-            category = "스터디",
+        ContentItem(
+            category = CommunityCategoryType.HOBBY,
             region = "인천",
-            status = MyContentType.RECRUIT,
+            contentType = ContentType.ALL,
+            recruitType = RecruitType.RECRUIT,
             title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
             username = "어헛차2호",
             writeTime = "1시간 전",
-            likes = "2",
-            comments = "2",
-            isSoft = true
+            likes = 2,
+            comments = 2,
+            content = "이거는 본문 내용이에요!!!",
+            userPart = UserPart.WEB,
         ),
-        MyContentItem(
-            category = "밥",
+        ContentItem(
+            category = CommunityCategoryType.SUGGESTION,
             region = "인천",
-            status = MyContentType.END,
+            contentType = ContentType.QUESTION,
+            recruitType = RecruitType.RECRUIT,
             title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
             username = "사람",
             writeTime = "2016.01.19",
-            likes = "200",
-            comments = "123",
-            isSoft = false
+            likes = 200,
+            comments = 123,
+            content = "이거는 본문 내용이에요!!!",
+            userPart = UserPart.IOS,
         ),
-    ),
+        ContentItem(
+            category = CommunityCategoryType.LIGHTNING,
+            region = "인천",
+            contentType = ContentType.QUESTION,
+            recruitType = RecruitType.END,
+            title = "밥먹고개발하고쉬고개발하고게임하고개발하고자고개발하고나는개발이너무너무너무좋아헤헤헤헤헤헿",
+            username = "사람",
+            writeTime = "2016.01.19",
+            likes = 10,
+            comments = 1,
+            content = "본문내용을늘려야하는데무슨내용을적어야잘적었다는소문이날까?내용을늘리기위해서는아무내용이나넣어야겠다.이쯤되면길어지겠지?",
+            userPart = UserPart.SPRING_BOOT,
+        ),
+    )
 ) : UiState
 
 sealed interface MycommentFragmentEvent : UiEvent {

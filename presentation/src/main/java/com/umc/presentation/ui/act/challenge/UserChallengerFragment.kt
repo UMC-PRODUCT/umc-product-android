@@ -64,7 +64,7 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
         binding.rvChallengerList.apply {
             adapter = mainConcatAdapter
             clipToPadding = false
-            setPadding(1, 1, 1, 64.px)
+            setPadding(0, 0, 0, 64.px)
         }
     }
 

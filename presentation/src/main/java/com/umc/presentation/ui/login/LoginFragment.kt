@@ -22,7 +22,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEven
         if (error != null) {
             ULog.d("실패~!")
         } else if (token != null) {
-            viewModel.kakaoLogin()
+            viewModel.kakaoLogin(token.accessToken)
         }
     }
 
@@ -82,7 +82,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEven
                     UserApiClient.instance.loginWithKakaoAccount(requireActivity(), callback = callback)
                 } else if (token != null) {
                     // 로그인 성공
-                    viewModel.kakaoLogin()
+                    viewModel.kakaoLogin(token.accessToken)
                 }
             }
         } else {

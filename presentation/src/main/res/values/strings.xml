@@ -66,10 +66,26 @@
     <string name="community_title">커뮤니티</string>
     <string name="community_top">명예의 전당</string>
     <string name="community_recruting">모집중</string>
+    <string name="community_detail_title">게시글 상세</string>
+    <string name="community_detail_placeholder">댓글을 입력해주세요.</string>
+    <string name="community_detail_please_first_comment">첫 댓글을 남겨주세요.</string>
+    <string name="community_write_title">글쓰기</string>
+    <string name="community_write_category">카테고리</string>
+    <string name="community_write_category_select">카테고리 선택</string>
+    <string name="community_write_category_select_long">카테고리를 선택하세요</string>
+    <string name="community_write_light_title">번개 설정하기</string>
+    <string name="community_write_light_time">날짜/시간</string>
+    <string name="community_write_light_time_placeholder">예: 1/1, 13시</string>
+    <string name="community_write_light_people">최대 인원</string>
+    <string name="community_write_light_people_placeholder">예: 4명</string>
+    <string name="community_write_light_place">장소</string>
+    <string name="community_write_light_place_placeholder">예: 강남역 3번 출구</string>
+    <string name="community_write_light_openchat">오픈 채팅 링크</string>
+    <string name="community_write_light_openchat_placeholder">링크를 입력해주세요</string>
+
+    <string name="community_search_placehold">제목, 내용 검색</string>
     <string name="community_search_recent">최근 검색어</string>
     <string name="community_search_deleteall">전체 삭제</string>
-
-
 
     <!-- Word -->
     <string name="sign_up">회원가입</string>
@@ -94,6 +110,7 @@
     <string name="all">전체</string>
     <string name="soft">Soft</string>
     <string name="hard">Hard</string>
+    <string name="question">질문</string>
     <string name="central">중앙</string>
     <string name="part">파트</string>
     <string name="branch">지부</string>
@@ -116,7 +133,7 @@
     <!-- SignUp -->
     <string name="sign_up_sub_title">동아리 활동을 위해 정보를 입력해주세요.</string>
     <string name="sign_up_name_placeholder">실명을 입력하세요</string>
-    <string name="sign_up_nickname_placeholder">활동할 닉네임을 입력하세요</string>
+    <string name="sign_up_nickname_placeholder">닉네임을 입력하세요</string>
     <string name="sign_up_email_placeholder">example@univ.ac.kr</string>
     <string name="sign_up_verify_request">인증 요청</string>
     <string name="sign_up_verify_confirm">인증 확인</string>
@@ -182,7 +199,12 @@
 
     <string name="admin_pending_user_request_time_format">%1$s 요청</string>
     <string name="attendance_empty_admin_sessions">아직 출석을 진행할 세션이 없어요</string>
-    
+    <string name="challenger_list_title">챌린저 리스트</string>
+    <string name="challenger_search_placeholder">이름으로 멤버 검색</string>
+    <string name="admin_challenger_out_count">아웃 %d</string>
+    <string name="admin_challenger_warning_count">경고 %d</string>
+    <string name="challenger_name_nickname_format">%1$s(%2$s)</string>
+
     <!-- Notice -->
     <string name="notice_title">%d기 공지사항</string>
     <string name="notice_write">공지 작성</string>
@@ -209,8 +231,25 @@
     <string name="notice_detail_now_confirmed_people">공지 열람 현황</string>
     <string name="notice_detail_send_notification">재알림 보내기</string>
 
+    <!-- Dialog -->
+    <string name="common_cancel">취소</string>
+    <string name="common_confirm">확인</string>
+    <string name="common_approve">승인하기</string>
+    <string name="common_reject">반려하기</string>
+    <string name="common_submit">제출하기</string>
+
+    <string name="admin_approve_title">출석 요청을 승인하시겠습니까?</string>
+    <string name="admin_reject_title">출석 요청을 반려하시겠습니까?</string>
+    <string name="admin_reason_check_title">출석 사유 확인</string>
+    <string name="admin_reason_check_subtitle">%1$s님이 작성하신 사유입니다.</string>
+    <string name="admin_pending_content_format">%1$s | 요청 시간: %2$s</string>
+
+    <string name="attendance_reason_dialog_title">출석 사유 작성</string>
+    <string name="attendance_reason_guide">위치 인증이 어려운 경우 사유를 작성하여\n출석을 요청할 수 있습니다.\n(예: GPS 오류, 지각, 개인 사정 등)</string>
+
+    <string name="location_dialog_change">변경하기</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="challenger_list_title">챌린저 리스트</string>
-    <string name="challenger_search_placeholder">이름으로 멤버 검색</string>
+
 </resources>

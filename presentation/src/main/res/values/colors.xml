@@ -59,4 +59,7 @@
 
     <color name="kakaoColor">#FEE500</color>
 
+    <color name="geofence_fill">#0D51A2FF</color>
+    <color name="geofence_stroke">#4D51A2FF</color>
+
 </resources>

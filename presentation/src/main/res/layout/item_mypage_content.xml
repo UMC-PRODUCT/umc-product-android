@@ -4,11 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-        <import type="com.umc.domain.model.enums.MyContentType" />
+        <import type="com.umc.domain.model.enums.RecruitType" />
+        <import type="com.umc.domain.model.enums.ContentType" />
+        <import type="com.umc.domain.model.enums.CategoryType" />
+        <import type="com.umc.domain.model.enums.CommunityCategoryType" />
 
         <variable
             name="item"
-            type="com.umc.domain.model.mypage.MyContentItem" />
+            type="com.umc.domain.model.mypage.ContentItem" />
     </data>
 
     <com.google.android.material.card.MaterialCardView
@@ -34,7 +37,7 @@
                 app:cardBackgroundColor="@color/accent100"
                 app:borderWidth="1dp"
                 app:borderColor="@color/accent200"
-                app:text="@{item.category}"
+                app:text="@{item.category.label}"
                 app:textAppearance="@style/Caption1Bold"
                 app:textColor="@color/accent600"
                 app:buttonElevation="0"
@@ -68,15 +71,15 @@
                 />
 
             <com.umc.presentation.component.UButton
-                android:id="@+id/item_cdv_status"
+                android:id="@+id/item_cdv_recruit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:cornerRadius="4dp"
-                app:cardBackgroundColor="@{item.status == MyContentType.RECRUIT ? @color/primary100 : @color/neutral200}"
+                app:cardBackgroundColor="@{item.recruitType == RecruitType.RECRUIT ? @color/primary100 : @color/neutral200}"
                 app:borderWidth="0dp"
-                app:text="@{item.status.label}"
+                app:text="@{item.recruitType.label}"
                 app:textAppearance="@style/Caption1Bold"
-                app:textColor="@{item.status == MyContentType.RECRUIT ? @color/primary600 : @color/neutral700}"
+                app:textColor="@{item.recruitType == RecruitType.RECRUIT ? @color/primary600 : @color/neutral700}"
                 app:buttonElevation="0"
                 app:contentPaddingBottom="4dp"
                 app:contentPaddingTop="4dp"
@@ -152,7 +155,7 @@
 
                 <ImageView
                     android:id="@+id/item_imv_likes"
-                    android:layout_width="18dp"
+                    android:layout_width="12dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_thumb_up_filled"
                     app:tint="@color/neutral400" />
@@ -162,7 +165,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="@{item.likes}"
+                    android:text="@{String.valueOf(item.likes)}"
                     android:textColor="@color/neutral600"
                     android:textAppearance="@style/Footnote"
                     tools:text="0" />
@@ -180,7 +183,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="@{item.comments}"
+                    android:text="@{String.valueOf(item.comments)}"
                     android:textColor="@color/neutral600"
                     android:textAppearance="@style/Footnote"
                     tools:text="0" />
