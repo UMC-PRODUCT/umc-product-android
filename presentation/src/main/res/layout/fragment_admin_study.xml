@@ -15,6 +15,7 @@
             android:id="@+id/card_tabs"
             android:layout_width="210dp"
             android:layout_height="44dp"
+            android:minWidth="210dp"
             android:layout_marginHorizontal="16dp"
             android:layout_marginTop="12dp"
             app:cardCornerRadius="999dp"
@@ -26,10 +27,28 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
+
+
+
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:padding="4dp">
+
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/gl_indicator_start"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.0" />
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/gl_indicator_end"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_end="101dp" />
 
                 <View
                     android:id="@+id/view_tab_indicator"
@@ -38,8 +57,8 @@
                     android:background="@drawable/bg_neutral000_radius999"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/btn_tab_group" />
+                    app:layout_constraintStart_toStartOf="@id/gl_indicator_start"
+                    app:layout_constraintEnd_toStartOf="@id/gl_indicator_end" />
 
 
                 <TextView

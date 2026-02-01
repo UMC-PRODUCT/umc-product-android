@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="item"
+            type="com.umc.presentation.ui.act.study.group.AdminStudyGroupItemUiModel" />
+    </data>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cv_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+
+        app:cardCornerRadius="12dp"
+        app:cardBackgroundColor="@color/neutral000"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
+        app:cardUseCompatPadding="false"
+        app:cardPreventCornerOverlap="false">
+
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+
+            <TextView
+                android:id="@+id/tv_group_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{item.title}"
+                android:textAppearance="@style/SubheadlineBold"
+                android:textColor="@color/neutral900"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/ub_part_badge"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                tools:text="React A팀" />
+
+            <!-- 파트 뱃지 (Web) -->
+            <com.umc.presentation.component.UButton
+                android:id="@+id/ub_part_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:layout_marginStart="8dp"
+
+                app:buttonElevation="0"
+                app:cornerRadius="6dp"
+
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
+                app:contentPaddingTop="2dp"
+                app:contentPaddingBottom="2dp"
+
+                app:textAppearance="@style/Caption1Bold"
+                app:text='@{item.partLabel}'
+                app:textColor="@color/primary600"
+
+
+                app:cardBackgroundColor="@color/primary100"
+                app:borderWidth="1dp"
+                app:borderColor="@color/primary200"
+
+                app:layout_constraintStart_toEndOf="@id/tv_group_title"
+                app:layout_constraintTop_toTopOf="@id/tv_group_title"
+                app:layout_constraintBottom_toBottomOf="@id/tv_group_title"
+
+                tools:text="Web" />
+
+
+
+            <ImageView
+                android:id="@+id/iv_setting"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_document"
+                app:tint="@color/neutral500"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="ContentDescription" />
+
+
+            <TextView
+                android:id="@+id/tv_sub_info"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text='@{item.createdAtText + "  |  멤버 " + item.memberCount + "명"}'
+                android:textAppearance="@style/Footnote"
+                android:textColor="@color/neutral500"
+                app:layout_constraintTop_toBottomOf="@id/tv_group_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="생성일: 2024.03.01  |  멤버 3명" />
+
+
+            <TextView
+                android:id="@+id/tv_leader_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="담당 파트장"
+                android:textAppearance="@style/FootnoteBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintTop_toBottomOf="@id/tv_sub_info"
+                app:layout_constraintStart_toStartOf="parent" />
+
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cv_leader_box"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/neutral100"
+                app:strokeColor="@color/neutral100"
+                app:strokeWidth="1dp"
+                app:layout_constraintTop_toBottomOf="@id/tv_leader_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/iv_leader_profile"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:src="@drawable/ic_person_inset"
+                        android:scaleType="centerInside"
+                        android:background="@color/neutral000"
+                        app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="@color/neutral400"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+
+                    <TextView
+                        android:id="@+id/tv_leader_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text='@{item.leaderName}'
+                        android:textAppearance="@style/SubheadlineBold"
+                        android:textColor="@color/neutral900"
+                        app:layout_constraintStart_toEndOf="@id/iv_leader_profile"
+                        app:layout_constraintTop_toTopOf="@id/iv_leader_profile"
+                        tools:text="홍길동" />
+
+                    <TextView
+                        android:id="@+id/tv_leader_univ"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginTop="4dp"
+                        android:text='@{item.leaderUniv}'
+                        android:textAppearance="@style/Footnote"
+                        android:textColor="@color/neutral500"
+                        app:layout_constraintStart_toEndOf="@id/iv_leader_profile"
+                        app:layout_constraintTop_toBottomOf="@id/tv_leader_name"
+                        app:layout_constraintEnd_toStartOf="@id/ub_leader_badge"
+                        tools:text="중앙대" />
+
+
+                    <com.umc.presentation.component.UButton
+                        android:id="@+id/ub_leader_badge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        app:buttonElevation="0"
+                        app:cornerRadius="8dp"
+                        app:contentPaddingLeft="10dp"
+                        app:contentPaddingRight="10dp"
+                        app:contentPaddingTop="4dp"
+                        app:contentPaddingBottom="4dp"
+                        app:textAppearance="@style/Caption1Bold"
+                        app:text="Leader"
+                        app:backgroundColor="@color/neutral000"
+                        app:borderWidth="1dp"
+                        app:borderColor="@color/neutral200"
+                        app:textColor="@color/neutral700"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        tools:text="Leader" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+
+            <TextView
+                android:id="@+id/tv_members_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="스터디원"
+                android:textAppearance="@style/FootnoteBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintTop_toBottomOf="@id/cv_leader_box"
+                app:layout_constraintStart_toStartOf="parent" />
+
+
+            <LinearLayout
+                android:id="@+id/layout_member_chips"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal"
+                android:gravity="start"
+                android:layoutDirection="ltr"
+                app:layout_constraintTop_toBottomOf="@id/tv_members_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+
+                <com.umc.presentation.component.UButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    app:buttonElevation="0"
+                    app:cornerRadius="16dp"
+                    app:contentPaddingLeft="10dp"
+                    app:contentPaddingRight="10dp"
+                    app:textAppearance="@style/Caption1Bold"
+                    app:text="홍길동"
+                    app:backgroundColor="@color/neutral100"
+                    app:borderWidth="1dp"
+                    app:borderColor="@color/neutral100"
+                    app:textColor="@color/neutral800" />
+
+
+                <com.umc.presentation.component.UButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    app:buttonElevation="0"
+                    app:cornerRadius="16dp"
+                    app:contentPaddingLeft="10dp"
+                    app:contentPaddingRight="10dp"
+                    app:textAppearance="@style/Caption1Bold"
+                    app:text="홍길동"
+                    app:backgroundColor="@color/neutral100"
+                    app:borderWidth="1dp"
+                    app:borderColor="@color/neutral100"
+                    app:textColor="@color/neutral800" />
+
+
+                <com.umc.presentation.component.UButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    app:buttonElevation="0"
+                    app:cornerRadius="16dp"
+                    app:contentPaddingLeft="10dp"
+                    app:contentPaddingRight="10dp"
+                    app:textAppearance="@style/Caption1Bold"
+                    app:text="홍길동"
+                    app:backgroundColor="@color/neutral100"
+                    app:borderWidth="1dp"
+                    app:borderColor="@color/neutral100"
+                    app:textColor="@color/neutral800" />
+
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/ub_add_member"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    app:buttonElevation="0"
+                    app:cornerRadius="16dp"
+                    app:contentPaddingLeft="12dp"
+                    app:contentPaddingRight="12dp"
+                    app:textAppearance="@style/Caption1Bold"
+                    app:text="추가하기"
+                    app:backgroundColor="@color/neutral000"
+                    app:borderWidth="1dp"
+                    app:borderColor="@color/neutral200"
+                    app:textColor="@color/neutral700" />
+
+            </LinearLayout>
+
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/ub_add_schedule"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="14dp"
+                app:buttonElevation="0"
+                app:cornerRadius="12dp"
+                app:textAppearance="@style/SubheadlineBold"
+                app:text="스터디 일정 등록하기"
+                app:backgroundColor="@color/neutral000"
+                app:borderWidth="1dp"
+                app:borderColor="@color/neutral200"
+                app:textColor="@color/neutral800"
+                app:leftIcon="@drawable/ic_calendar"
+                app:layout_constraintTop_toBottomOf="@id/layout_member_chips"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="스터디 일정 등록하기" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+</layout>
