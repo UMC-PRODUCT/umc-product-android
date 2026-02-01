@@ -44,7 +44,7 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
     fun updateContentCategory(category: CommunityCategoryType) {
         updateState {
             // 초기값 "카테고리 선택"이 실제 선택된 라벨(예: "번개")로 바뀝니다.
-            copy(selectContentCategory = CategoryItem(category.label, true))
+            copy(selectContentCategory = CategoryItem(category.label, isChecked = true))
         }
 
         //추가 카테고리가 번개냐?
