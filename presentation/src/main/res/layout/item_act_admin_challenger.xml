@@ -96,10 +96,10 @@
                     app:contentPaddingRight="8dp"
                     app:contentPaddingTop="4dp"
                     app:cornerRadius="4dp"
-                    app:uStrokeColor="@{@color/danger300}"
+                    app:strokeColor="@{@color/danger300}"
                     app:textAppearance="@style/Caption1Bold"
-                    app:uBackgroundColor="@{@color/danger100}"
-                    app:uTextColor="@{@color/danger700}"
+                    app:backgroundColor="@{@color/danger100}"
+                    app:textColor="@{@color/danger700}"
                     android:text="@{@string/admin_challenger_out_count(model.outCount)}"
                     tools:text="아웃 1" />
 
@@ -116,10 +116,10 @@
                     app:contentPaddingRight="8dp"
                     app:contentPaddingTop="4dp"
                     app:cornerRadius="4dp"
-                    app:uStrokeColor="@{@color/warning300}"
+                    app:strokeColor="@{@color/warning300}"
                     app:textAppearance="@style/Caption1Bold"
-                    app:uBackgroundColor="@{@color/warning100}"
-                    app:uTextColor="@{@color/warning700}"
+                    app:backgroundColor="@{@color/warning100}"
+                    app:textColor="@{@color/warning700}"
                     android:text="@{@string/admin_challenger_warning_count(model.warningCount)}"
                     tools:text="경고 1" />
             </LinearLayout>

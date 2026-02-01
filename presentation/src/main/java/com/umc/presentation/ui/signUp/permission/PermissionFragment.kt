@@ -8,8 +8,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPermissionBinding
+import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -30,6 +32,8 @@ class PermissionFragment :
     override fun initView() {
         binding.apply {
             vm = viewModel
+
+            UToast.createToast(requireActivity(), R.string.name, state = UToast.State.NONE).show()
         }
     }
 

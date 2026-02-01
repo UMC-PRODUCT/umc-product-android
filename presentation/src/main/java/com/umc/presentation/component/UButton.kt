@@ -5,14 +5,15 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
 import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
 import com.umc.presentation.databinding.CustomButtonBinding
+import com.umc.presentation.extension.gone
 import com.umc.presentation.extension.px
-import android.view.View
-
+import com.umc.presentation.extension.visible
 
 class UButton
 @JvmOverloads
@@ -53,41 +54,20 @@ constructor(
                 strokeWidth = a.getDimensionPixelSize(R.styleable.UButton_borderWidth, 0.px)
                 strokeColor = a.getColor(R.styleable.UButton_borderColor, Color.TRANSPARENT)
 
-                val iconRes =
-                    a.getResourceId(R.styleable.UButton_leftIcon, 0)
-
-                if (iconRes != 0) {
-                    ivLeft.visibility = View.VISIBLE
-                    ivLeft.setImageResource(iconRes)
-                } else {
-                    ivLeft.visibility = View.GONE
-                }
-
-
-                val rightIconRes = a.getResourceId(R.styleable.UButton_rightIcon, 0)
-                if (rightIconRes != 0) {
-                    binding.ivRight.visibility = View.VISIBLE
-                    binding.ivRight.setImageResource(rightIconRes)
-
-                    val tint = if (a.hasValue(R.styleable.UButton_rightIconTint)) {
-                        a.getColor(R.styleable.UButton_rightIconTint, binding.textView.currentTextColor)
-                    } else binding.textView.currentTextColor
-
-                    binding.ivRight.imageTintList = ColorStateList.valueOf(tint)
-
-                    val size = a.getDimensionPixelSize(R.styleable.UButton_rightIconSize, 16.px)
-                    binding.ivRight.layoutParams = binding.ivRight.layoutParams.apply {
-                        width = size
-                        height = size
-                    }
-                } else {
-                    binding.ivRight.visibility = View.GONE
-                }
-
-
                 // 배경색
                 pressedColor = a.getColor(R.styleable.UButton_pressedColor, normalColor)
                 rippleColor = ColorStateList.valueOf(Color.TRANSPARENT)
+
+                // 후위 버튼
+                val hasPrevIcon = a.hasValue(R.styleable.UButton_prevIcon)
+
+                if (hasPrevIcon) {
+                    val prevIconRes = a.getResourceId(R.styleable.UButton_prevIcon, R.drawable.ic_dropdown)
+                    imagePrevIcon.setImageResource(prevIconRes)
+                    imagePrevIcon.visible()
+                } else {
+                    imagePrevIcon.gone()
+                }
             }
         } finally {
             a.recycle()

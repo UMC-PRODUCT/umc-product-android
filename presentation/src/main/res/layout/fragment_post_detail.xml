@@ -27,6 +27,7 @@
             android:layout_height="wrap_content"
             android:src="@drawable/ic_back"
             android:layout_marginStart="16dp"
+            android:onClick="@{()->vm.moveBackPressed()}"
             app:tint="@color/neutral800"
             app:layout_constraintTop_toTopOf="@id/postdetail_tv_big_title"
             app:layout_constraintBottom_toBottomOf="@id/postdetail_tv_big_title"

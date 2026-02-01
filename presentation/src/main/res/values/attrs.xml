@@ -36,8 +36,6 @@
 
         <attr name="cornerRadius"/>
 
-        <attr name="inputGravity" format="integer" />
-
         <attr name="focusStrokeColor" format="color"/>
     </declare-styleable>
 
@@ -47,6 +45,8 @@
         <attr name="textColor"/>
         <attr name="textAppearance"/>
 
+        <attr name="backgroundColor"/>
+
         <attr name="borderColor"/>
         <attr name="borderWidth"/>
         <attr name="cornerRadius"/>
@@ -54,7 +54,9 @@
         <attr name="buttonElevation"/>
         <attr name="pressedColor"/>
 
-        <attr name="leftIcon" format="reference"/>
+        <attr name="prevIcon"/>
+
+
         <attr name="rightIcon" format="reference"/>
         <attr name="rightIconTint" format="color|reference"/>
         <attr name="rightIconSize" format="dimension"/>
@@ -80,7 +82,7 @@
         <attr name="borderWidth"/>
         <attr name="pressedColor"/>
         <attr name="showCloseIcon" format="boolean"/>
-
+        <attr name="nextIcon" format="reference"/>
     </declare-styleable>
 
     <!-- 공통 SearchBar -->
@@ -100,10 +102,5 @@
         <attr name="backgroundColor" />
         <attr name="focusStrokeColor" />
     </declare-styleable>
-
-
-
-
-
 
 </resources>

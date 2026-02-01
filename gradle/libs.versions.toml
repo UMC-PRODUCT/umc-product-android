@@ -30,10 +30,7 @@ flexbox = "3.0.0"
 opencsv = "5.7.1"
 googleServices = "4.4.4"
 firebaseBom = "34.8.0"
-navigationFragmentKtx = "2.9.6"
-navigationUiKtx = "2.9.6"
-navigationFragmentKtxVersion = "2.9.7"
-navigationUiKtxVersion = "2.9.7"
+kotlinx-serialization = "1.9.0"
 
 
 [libraries]
@@ -48,6 +45,7 @@ androidx-activity = { group = "androidx.activity", name = "activity", version.re
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+hilt-core = { group = "com.google.dagger", name = "hilt-core", version.ref = "hilt" }
 retrofit-android = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 okhttp-android = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okHttp"}
@@ -62,6 +60,7 @@ androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", ve
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 
 #material calendar
@@ -76,10 +75,6 @@ kakao-user = { group = "com.kakao.sdk", name = "v2-all", version.ref = "kakao" }
 
 # opencsv
 opencsv = { group = "com.opencsv", name = "opencsv", version.ref = "opencsv" }
-androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
-androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtx" }
-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtxVersion" }
-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtxVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -93,3 +88,4 @@ androidx-navigation-safeargs = { id = "androidx.navigation.safeargs", version.re
 androidx-navigation-safeargs-kotlin = { id = "androidx.navigation.safeargs.kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
