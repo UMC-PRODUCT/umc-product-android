@@ -233,7 +233,7 @@ data class PlanAddFragmentUiState(
     //하루 종일 부분에 체크가 되었나
     val isAllDay: Boolean = false,
 
-    //일정 관련
+    //일정 및 장소 관련
     val planTitle: String = "",    //필수
     val planLocation: String = "",
     val planDetail: String = "",
@@ -272,8 +272,6 @@ data class PlanAddFragmentUiState(
         CategoryItem(CategoryType.STUDY.label),
         CategoryItem(CategoryType.HACKATHON.label),
         CategoryItem(CategoryType.WORKSHOP.label),
-
-        CategoryItem(CategoryType.AFTER_PARTY.label)
     )
     
 
