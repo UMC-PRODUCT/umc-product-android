@@ -6,13 +6,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import com.umc.presentation.databinding.CustomDialogWarningBinding
 
-class UWarningDialog(
-    private val model: UWarningDialogModel,
+class UBasicDialog(
+    private val model: UBasicDialogModel,
     private val onConfirm: () -> Unit
-    
 ): DialogFragment() {
 
     private var _binding: CustomDialogWarningBinding? = null
@@ -34,24 +34,45 @@ class UWarningDialog(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.model = model // 모델 바인딩
+        binding.model = model
+
+        // 아이콘 설정
+        setupIcon()
+
+        // 버튼 색상 설정
+        setupButtons()
 
         binding.imvIconClose.setOnClickListener { dismiss() }
         binding.btnNegative.setOnClickListener { dismiss() }
         binding.btnPositive.setOnClickListener {
-            //확인 버튼을 누를 경우의 로직을 람다로 빼기
             onConfirm()
             dismiss()
         }
     }
 
+    private fun setupIcon() {
+        binding.imvIconWarning.apply {
+            // 아이콘 이미지 설정
+            setImageResource(model.iconRes)
+
+            // 아이콘 배경색 설정
+            setBackgroundResource(model.iconBackgroundRes)
+
+            // 아이콘 틴트 색상 설정
+            setColorFilter(ContextCompat.getColor(requireContext(), model.iconTintRes))
+        }
+    }
+
+    private fun setupButtons() {
+        // Positive 버튼 색상 설정
+        binding.btnPositive.apply {
+            setTextColor(ContextCompat.getColor(requireContext(), model.positiveTextColorRes))
+            strokeColor = ContextCompat.getColor(requireContext(), model.positiveBorderColorRes)
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }
-
-
-
-data class UWarningDialogModel(
-    val title: String,                    // 제목
-    val content: String? = null,          // (선택) 상세 설명
-    val negativeText: String = "취소",     // 왼쪽 버튼 텍스트
-    val positiveText: String,             // 오른쪽 버튼 텍스트
-)

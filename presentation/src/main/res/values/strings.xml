@@ -192,6 +192,24 @@
     <string name="admin_challenger_warning_count">경고 %d</string>
     <string name="challenger_name_nickname_format">%1$s(%2$s)</string>
 
+    <!-- Dialog -->
+    <string name="common_cancel">취소</string>
+    <string name="common_confirm">확인</string>
+    <string name="common_approve">승인하기</string>
+    <string name="common_reject">반려하기</string>
+    <string name="common_submit">제출하기</string>
+
+    <string name="admin_approve_title">출석 요청을 승인하시겠습니까?</string>
+    <string name="admin_reject_title">출석 요청을 반려하시겠습니까?</string>
+    <string name="admin_reason_check_title">출석 사유 확인</string>
+    <string name="admin_reason_check_subtitle">%1$s님이 작성하신 사유입니다.</string>
+    <string name="admin_pending_content_format">%1$s | 요청 시간: %2$s</string>
+
+    <string name="attendance_reason_dialog_title">출석 사유 작성</string>
+    <string name="attendance_reason_guide">위치 인증이 어려운 경우 사유를 작성하여\n출석을 요청할 수 있습니다.\n(예: GPS 오류, 지각, 개인 사정 등)</string>
+
+    <string name="location_dialog_change">변경하기</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 

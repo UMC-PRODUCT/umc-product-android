@@ -7,11 +7,14 @@ import androidx.annotation.RequiresPermission
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ConcatAdapter
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.location.*
 import com.naver.maps.map.util.FusedLocationSource
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
+import com.umc.presentation.component.UCheckDialog
+import com.umc.presentation.component.UCheckDialogModel
 import com.umc.presentation.databinding.FragmentUserCheckBinding
 import com.umc.presentation.ui.act.adapter.CheckAvailableAdapter
 import com.umc.presentation.ui.act.adapter.CheckHistoryAdapter
@@ -41,6 +44,9 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
             locationSource = locationSource,
             onItemClick = { sessionId ->
                 viewModel.toggleSessionExpansion(sessionId)
+            },
+            onReasonClick = { sessionId ->
+                showAttendanceReasonDialog(sessionId)
             }
         )
     }
@@ -73,7 +79,7 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
     // 실시간 위치 업데이트 시작
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     private fun startLocationUpdates() {
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000) // 5초마다
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
             .setMinUpdateIntervalMillis(3000)
             .build()
 
@@ -88,7 +94,7 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (locationSource.onRequestPermissionsResult(requestCode, permissions, grantResults)) {
             if (locationSource.isActivated) {
-                startLocationUpdates() // 권한 허용 시 위치 업데이트 시작
+                startLocationUpdates()
             }
             return
         }
@@ -122,7 +128,6 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
             }
         }
 
-        // 초기 권한이 이미 있다면 업데이트 시작
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
             == PackageManager.PERMISSION_GRANTED) {
             startLocationUpdates()
@@ -134,9 +139,14 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
             availableHeaderAdapter, availableAdapter, availableEmptyAdapter,
             historyHeaderAdapter, historyAdapter, historyEmptyAdapter
         )
+
         binding.rvUserCheckMain.apply {
             adapter = concatAdapter
             layoutManager = LinearLayoutManager(requireContext())
+
+            (itemAnimator as? DefaultItemAnimator)?.apply {
+                supportsChangeAnimations = false
+            }
         }
     }
 
@@ -148,9 +158,25 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
 
     override fun handleEvent(event: UserCheckEvent) {
         when (event) {
-            is UserCheckEvent.ShowToast -> { /* 토스트 구현 */ }
-            is UserCheckEvent.NavigateToFailureReason -> { /* 이동 구현 */ }
+            is UserCheckEvent.ShowReasonDialog -> showAttendanceReasonDialog(event.sessionId)
+            is UserCheckEvent.ShowToast -> { /* 토스트 출력 */ }
+            else -> {}
         }
+    }
+
+    private fun showAttendanceReasonDialog(sessionId: Int) {
+        val model = UCheckDialogModel(
+            title = getString(R.string.attendance_reason_dialog_title),
+            subtitle = getString(R.string.attendance_reason_guide),
+            positiveText = getString(R.string.common_submit),
+            isWriteMode = true
+        )
+
+        UCheckDialog(model) { reason ->
+            if (reason.isNotBlank()) {
+                viewModel.submitAttendanceReason(sessionId, reason)
+            }
+        }.show(childFragmentManager, "UCheckDialog")
     }
 
     override fun onPause() {
@@ -159,6 +185,7 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
     }
 
     override fun onDestroyView() {
+        binding.rvUserCheckMain.itemAnimator = null
         binding.rvUserCheckMain.adapter = null
         super.onDestroyView()
     }

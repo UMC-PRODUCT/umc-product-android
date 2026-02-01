@@ -18,9 +18,14 @@ class UserCheckViewModel @Inject constructor() :
         loadInitialData()
     }
 
+    fun submitAttendanceReason(sessionId: Int, reason: String) {
+        // TODO: API 전송 로직 구현
+        emitEvent(UserCheckEvent.ShowToast("사유가 성공적으로 제출되었습니다."))
+    }
+
     private fun loadInitialData() {
         val availableList = listOf(
-            UserCheckAvailable(1, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE, 37.021877, 127.080960, "경기도 평택시 지제동삭1로 어쩌구저쩌구 주소를 길게 쓰기 위한 발악"),
+            UserCheckAvailable(1, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE, 37.504562, 126.956926, "서울특별시 동작구 흑석로 84"),
             UserCheckAvailable(2, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE, 37.582568, 127.001488, "서울특별시 종로구 명륜4가 88-2번지 주소를 길게 써보자ㅏㅏㅏㅏㅏㅏㅏ"),
             UserCheckAvailable(3, "정기 세션 3주차", "14:00", "18:00", "운영진", CheckAvailableStatus.COMPLETED, 37.5665, 126.9780,"서울특별시 중구 소공동 세종대로18길 2", true),
             UserCheckAvailable(4, "UMCON", "14:00", "18:00", "스터디장", CheckAvailableStatus.PENDING, 37.5665, 126.9780, "서울특별시 중구 소공동 세종대로18길 2", false)
@@ -98,5 +103,6 @@ data class UserCheckUiState(
 ) : UiState
 sealed class UserCheckEvent : UiEvent {
     data class ShowToast(val message: String) : UserCheckEvent()
+    data class ShowReasonDialog(val sessionId: Int) : UserCheckEvent()
     data class NavigateToFailureReason(val sessionId: Int) : UserCheckEvent()
 }
