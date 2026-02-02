@@ -1,20 +1,17 @@
 package com.umc.presentation.ui.act.study.submit
 
 import android.content.Intent
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.ItemTouchHelper
-import com.umc.presentation.base.BaseFragment
-import com.umc.presentation.databinding.FragmentAdminStudySubmitBinding
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
-import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.CustomDialogBestBinding
 import com.umc.presentation.databinding.CustomDialogReviewBinding
-
-
+import com.umc.presentation.databinding.FragmentAdminStudySubmitBinding
 
 class AdminActStudySubmitFragment :
     BaseFragment<
@@ -29,10 +26,11 @@ class AdminActStudySubmitFragment :
     private lateinit var adapter: AdminActStudySubmitAdapter
     private lateinit var swipeController: AdminStudySubmitSwipeController
 
+    private var bestDialog: androidx.appcompat.app.AlertDialog? = null
+    private var reviewDialog: androidx.appcompat.app.AlertDialog? = null
 
-    private var bestDialog: AlertDialog? = null
-    private var reviewDialog: AlertDialog? = null
 
+    private var latestState: AdminActStudySubmitState = AdminActStudySubmitState()
 
     override fun initView() {
         binding.vm = viewModel
@@ -59,9 +57,50 @@ class AdminActStudySubmitFragment :
         )
         ItemTouchHelper(swipeController).attachToRecyclerView(binding.rvSubmit)
 
+
+        binding.clWeekDropdown.setOnClickListener {
+            AdminActStudySubmitWeekSelectBottomSheet(
+                weeks = (1..7).toList(),
+                onSelect = { week ->
+                    viewModel.onAction(AdminActStudySubmitAction.SelectWeek(week))
+                }
+            ).show(parentFragmentManager, "admin_act_study_submit_week")
+        }
+
+
+        binding.clGroupDropdown.setOnClickListener {
+            AdminActStudySubmitGroupSelectBottomSheet(
+                groups = latestState.groupOptions,
+                onSelect = { name ->
+                    viewModel.onAction(AdminActStudySubmitAction.SelectGroupName(name))
+                }
+            ).show(parentFragmentManager, "admin_act_study_submit_group")
+        }
+
         viewModel.loadDummy()
     }
 
+    override fun initStates() {
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            viewModel.uiState.collect { state ->
+                latestState = state
+                binding.state = state
+                adapter.submitList(state.items)
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            viewModel.uiEvent.collect { event ->
+                when (event) {
+                    is AdminActStudySubmitEvent.ShowBestDialog -> showBestDialog(event.item)
+                    is AdminActStudySubmitEvent.ShowReviewDialog -> showReviewDialog(event.item)
+                    is AdminActStudySubmitEvent.ShowToast -> {
+                        // TODO toast 처리
+                    }
+                }
+            }
+        }
+    }
 
     private fun showBestDialog(item: AdminActStudySubmitItemUiModel) {
         bestDialog?.dismiss()
@@ -69,7 +108,6 @@ class AdminActStudySubmitFragment :
         val dialogBinding = CustomDialogBestBinding.inflate(layoutInflater)
         dialogBinding.item = item
         dialogBinding.lifecycleOwner = viewLifecycleOwner
-
 
         bestDialog = MaterialAlertDialogBuilder(requireContext())
             .setView(dialogBinding.root)
@@ -79,7 +117,6 @@ class AdminActStudySubmitFragment :
         bestDialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         bestDialog?.show()
 
-        // 닫기
         dialogBinding.ivClose.setOnClickListener {
             viewModel.onAction(AdminActStudySubmitAction.DismissBestDialog)
             bestDialog?.dismiss()
@@ -90,10 +127,8 @@ class AdminActStudySubmitFragment :
             bestDialog?.dismiss()
         }
 
-
         dialogBinding.btnConfirm.setOnClickListener {
             val reason = dialogBinding.etReason.getText()?.toString().orEmpty()
-
             viewModel.onAction(AdminActStudySubmitAction.ConfirmBest(reason))
             bestDialog?.dismiss()
         }
@@ -106,12 +141,9 @@ class AdminActStudySubmitFragment :
         dialogBinding.item = item
         dialogBinding.lifecycleOwner = viewLifecycleOwner
 
-
         dialogBinding.etUrl.setText(item.submitUrl)
         dialogBinding.etUrl.setReadOnly(true)
         dialogBinding.etUrl.setReadOnlyStyle()
-
-
 
         dialogBinding.btnGo.setOnClickListener {
             val raw = item.submitUrl.orEmpty().trim()
@@ -141,7 +173,6 @@ class AdminActStudySubmitFragment :
         dialogBinding.btnReject.setOnClickListener {
             val url = dialogBinding.etUrl.getText()
             val feedback = dialogBinding.etFeedback.getText()
-
             viewModel.onAction(AdminActStudySubmitAction.SubmitReview(false, url, feedback))
             reviewDialog?.dismiss()
         }
@@ -149,35 +180,8 @@ class AdminActStudySubmitFragment :
         dialogBinding.btnApprove.setOnClickListener {
             val url = dialogBinding.etUrl.getText()
             val feedback = dialogBinding.etFeedback.getText()
-
             viewModel.onAction(AdminActStudySubmitAction.SubmitReview(true, url, feedback))
             reviewDialog?.dismiss()
-        }
-    }
-
-
-
-    override fun initStates() {
-
-
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            viewModel.uiState.collect { state ->
-                binding.state = state
-                adapter.submitList(state.items)
-            }
-        }
-
-
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            viewModel.uiEvent.collect { event ->
-                when (event) {
-                    is AdminActStudySubmitEvent.ShowBestDialog -> showBestDialog(event.item)
-                    is AdminActStudySubmitEvent.ShowReviewDialog -> showReviewDialog(event.item)
-                    is AdminActStudySubmitEvent.ShowToast -> {
-
-                    }
-                }
-            }
         }
     }
 }

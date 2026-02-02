@@ -43,7 +43,7 @@
                 app:layout_constraintHorizontal_chainStyle="packed"
                 tools:text="React A팀" />
 
-            <!-- 파트 뱃지 (Web) -->
+
             <com.umc.presentation.component.UButton
                 android:id="@+id/ub_part_badge"
                 android:layout_width="wrap_content"
@@ -301,7 +301,7 @@
                 app:borderWidth="1dp"
                 app:borderColor="@color/neutral200"
                 app:textColor="@color/neutral800"
-                app:leftIcon="@drawable/ic_calendar"
+                app:prevIcon="@drawable/ic_calendar"
                 app:layout_constraintTop_toBottomOf="@id/layout_member_chips"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

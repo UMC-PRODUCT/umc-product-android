@@ -2,6 +2,7 @@ package com.umc.presentation.ui.act.study.submit
 
 import com.umc.presentation.base.BaseViewModel
 
+
 class AdminActStudySubmitViewModel :
     BaseViewModel<AdminActStudySubmitState, AdminActStudySubmitEvent>(
         AdminActStudySubmitState()
@@ -9,12 +10,20 @@ class AdminActStudySubmitViewModel :
 
     fun onAction(action: AdminActStudySubmitAction) {
         when (action) {
-
-            is AdminActStudySubmitAction.SelectWeek ->
+            is AdminActStudySubmitAction.SelectWeek -> {
                 updateState { copy(selectedWeek = action.week) }
 
-            is AdminActStudySubmitAction.SelectGroup ->
+            }
+
+            is AdminActStudySubmitAction.SelectGroupName -> {
+                updateState { copy(selectedGroupName = action.name) }
+
+            }
+
+            is AdminActStudySubmitAction.SelectGroup -> {
                 updateState { copy(selectedGroupId = action.groupId) }
+
+            }
 
             is AdminActStudySubmitAction.ClickBest -> {
                 updateState { copy(bestDialogTarget = action.item) }
@@ -49,7 +58,6 @@ class AdminActStudySubmitViewModel :
             }
         }
     }
-
 
     fun loadDummy() {
         updateState {
