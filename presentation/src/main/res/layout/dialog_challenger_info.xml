@@ -134,6 +134,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     tools:text="12기"
+                    android:text="@{model.generation}"
                     android:textAppearance="@style/HeadlineBold"
                     app:layout_constraintTop_toBottomOf="@id/tv_gen_label"
                     app:layout_constraintStart_toStartOf="parent"
