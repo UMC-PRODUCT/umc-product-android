@@ -54,6 +54,7 @@
     <string name="mypage_google">Google</string>
     <string name="mypage_opensource">오픈소스 라이선스</string>
     <string name="mypage_umc_out_channel">UMC 외부 채널</string>
+    <string name="mypage_out_link">외부 링크</string>
     <string name="mypage_personal_information">개인정보처리 방침</string>
     <string name="mypage_use_manual">이용 약관</string>
     <string name="mypage_inquire_umc_kakao">UMC 카카오톡 문의</string>
