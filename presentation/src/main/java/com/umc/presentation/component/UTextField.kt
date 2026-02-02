@@ -230,15 +230,7 @@ class UTextField @JvmOverloads constructor(
         binding.editText.isSingleLine = true
     }
 
-    fun setOnImeActionListener(listener: ((Int, String) -> Boolean)?) {
-        onImeActionListener = listener
-    }
 
-    fun setImeAction(action: Int) {
-        binding.editText.imeOptions = action
-        // IME 액션 버튼(완료/검색 등)을 보이게 하려면 보통 singleLine이 필요합니다.
-        binding.editText.isSingleLine = true
-    }
 
     fun setOnImeActionListener(listener: ((Int, String) -> Boolean)?) {
         onImeActionListener = listener

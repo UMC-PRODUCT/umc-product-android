@@ -7,6 +7,7 @@ import android.view.WindowManager
 import android.widget.ListPopupWindow
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
@@ -34,8 +35,17 @@ class AdminStudyGroupFragment :
         adapter = AdminStudyGroupAdapter(
             onClickSetting = { anchorView, item ->
                 showSettingPopup(anchorView, item)
+            },
+            onClickAddSchedule = { item ->
+
+                findNavController().navigate(
+                    R.id.action_activityManagementFragment_to_adminActStudyScheduleAddFragment
+                )
+
+
             }
         )
+
 
         binding.rvGroups.layoutManager = LinearLayoutManager(requireContext())
         binding.rvGroups.adapter = adapter

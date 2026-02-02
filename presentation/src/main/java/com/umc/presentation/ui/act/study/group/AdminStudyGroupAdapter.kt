@@ -32,6 +32,8 @@ class AdminStudyGroupAdapter(
         private val onClickSetting: ((View, AdminStudyGroupItemUiModel) -> Unit)?,
         private val onClickAddSchedule: ((AdminStudyGroupItemUiModel) -> Unit)?,
         private val onClickAddMember: ((AdminStudyGroupItemUiModel) -> Unit)?,
+
+
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: AdminStudyGroupItemUiModel) {
@@ -41,6 +43,11 @@ class AdminStudyGroupAdapter(
             binding.ivSetting.setOnClickListener { v -> onClickSetting?.invoke(v, item) }
             binding.ubAddSchedule.setOnClickListener { onClickAddSchedule?.invoke(item) }
             binding.ubAddMember.setOnClickListener { onClickAddMember?.invoke(item) }
+            binding.ubAddSchedule.setOnClickListener {
+                onClickAddSchedule?.invoke(item)
+            }
+
+
         }
     }
 
