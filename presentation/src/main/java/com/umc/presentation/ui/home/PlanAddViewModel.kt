@@ -302,6 +302,9 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
 
 data class PlanAddFragmentUiState(
 
+    //운영진 여부 판단
+    val isManager: Boolean = true,
+
     //하루 종일 부분에 체크가 되었나
     val isAllDay: Boolean = false,
 

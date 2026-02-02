@@ -3,30 +3,14 @@ package com.umc.presentation.ui.home
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.res.Configuration
-import android.net.Uri
-import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.opencsv.CSVReader
-import com.umc.domain.model.home.ParticipantItem
-import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPlanAddBinding
-import com.umc.presentation.ui.home.adapter.SearchParticipantAdapter
-import com.umc.presentation.ui.home.adapter.ShowCategoryAdapter
-import com.umc.presentation.ui.home.adapter.ShowParticipantAdapter
+import com.umc.presentation.ui.home.dialog.AddAttendanceDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetCategoryPlanDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetParticipantDialog
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.InputStreamReader
 import java.util.Calendar
 
 @AndroidEntryPoint
@@ -121,9 +105,31 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
             planaddBtnBack.setOnClickListener { moveBackPressed() }
             planaddBtnCancelPlan.setOnClickListener { moveBackPressed() }
+
+            //최종 확인 버튼
             planaddBtnRegisterPlan.setOnClickListener {
                 /**TODO 이벤트를 통해 해당 정보를 서버에 넘겨야 한다.**/
-                moveBackPressed()
+
+                //운영진 여부에 따라 분기 처리
+                if(viewModel.uiState.value.isManager){
+                    //다이얼로그 생성
+                    val dialog = AddAttendanceDialog(
+                        onReject = {
+
+                            moveBackPressed()
+                        },
+                        onConfirm = {
+                            /**TODO 출석부 생성 페이지로 이동**/
+                            moveBackPressed()
+                        }
+
+                    )
+                    dialog.show(childFragmentManager, "AddAttendance")
+                    
+                }
+                else{
+                    moveBackPressed()
+                }
             }
 
             //장소 선택 부분 터치시 다이얼로그 로직
