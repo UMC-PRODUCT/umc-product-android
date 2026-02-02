@@ -125,8 +125,11 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
         }
     }
 
+    /*
     override fun onBackPressed() {
         super.onBackPressed()
         navController.popBackStack()
     }
+    */
+     
 }
