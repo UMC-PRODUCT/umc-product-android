@@ -14,7 +14,7 @@ import com.umc.presentation.R
 import com.umc.domain.model.act.challenger.HistoryItem
 import com.umc.presentation.component.UButton
 import com.umc.domain.model.act.challenger.UChallengerManageDialogModel
-import com.umc.presentation.databinding.CustomDialogChallengerManageBinding
+import com.umc.presentation.databinding.DialogChallengerManageBinding
 import com.umc.presentation.ui.act.adapter.ChallengerHistoryAdapter
 
 class ChallengerManageDialog(
@@ -24,7 +24,7 @@ class ChallengerManageDialog(
     private val onDeleteHistory: (HistoryItem) -> Unit = {}
 ) : DialogFragment() {
 
-    private var _binding: CustomDialogChallengerManageBinding? = null
+    private var _binding: DialogChallengerManageBinding? = null
     private val binding get() = _binding!!
 
     private enum class DialogMode { DEFAULT, ABSENCE, WARNING, EDIT }
@@ -35,7 +35,7 @@ class ChallengerManageDialog(
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = CustomDialogChallengerManageBinding.inflate(inflater, container, false)
+        _binding = DialogChallengerManageBinding.inflate(inflater, container, false)
         dialog?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         return binding.root
     }
