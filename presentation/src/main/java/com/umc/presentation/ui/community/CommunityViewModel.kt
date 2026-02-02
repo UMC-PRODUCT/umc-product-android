@@ -21,10 +21,12 @@ constructor() : BaseViewModel<CommunityFragmentUiState, CommunityFragmentEvent>(
 ) {
 
     //모집 중 스위치 누를 때마다 상태 변화하고 필터링
+    /**
     fun setRecruit(isRecruit: Boolean) {
         updateState { copy(isRecruit = isRecruit) }
         filterContents()
     }
+    **/
 
     //탭 바꿀 때마다 탭 변화하고 필터링
     fun setNowTab(whichTab: ContentType) {
@@ -44,15 +46,17 @@ constructor() : BaseViewModel<CommunityFragmentUiState, CommunityFragmentEvent>(
                     ContentType.TOP -> true
                 }
 
+                /**
                 // 모집 중 스위치 기준 필터링
                 val matchesRecruit = if (isRecruit) {
                     item.recruitType == RecruitType.RECRUIT // 모집 중인 것만
                 } else {
                     true // 전체 보기
                 }
+                **/
 
                 //최종적으로 겹치는 것만 고르기
-                matchesTab && matchesRecruit
+                matchesTab
             }
 
             // 최종 계산된 리스트를 nowContents에 할당
@@ -79,7 +83,7 @@ constructor() : BaseViewModel<CommunityFragmentUiState, CommunityFragmentEvent>(
 data class CommunityFragmentUiState(
 
     // 게시글 필터링 용도
-    val isRecruit: Boolean = false, //얘는 switch 여부
+    // val isRecruit: Boolean = false, //얘는 switch 여부
     val whichTab: ContentType = ContentType.ALL, //얘는 tabLayout 선택 여부
 
 

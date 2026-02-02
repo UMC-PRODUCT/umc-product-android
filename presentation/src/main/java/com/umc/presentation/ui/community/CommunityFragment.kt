@@ -49,9 +49,11 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
         viewModel.filterContents()
 
         //스위치 로직
+        /**
         binding.communitySwitchRecruit.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setRecruit(isChecked)
         }
+        **/
 
         //어댑터 정의 및 연결
         myContentAdapter = ContentAdapter(this)
