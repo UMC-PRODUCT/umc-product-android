@@ -64,57 +64,81 @@
                     app:layout_constraintBottom_toBottomOf="@id/iv_filter" />
 
 
-                <com.umc.presentation.component.UButton
-                    android:id="@+id/ub_group"
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/cl_group_dropdown"
                     android:layout_width="wrap_content"
                     android:layout_height="38dp"
+                    android:background="@drawable/bg_neutral000_radius8"
+                    android:paddingHorizontal="10dp"
                     android:clickable="true"
                     android:focusable="true"
-                    app:buttonElevation="0"
-                    app:cornerRadius="6dp"
-                    app:contentPaddingLeft="10dp"
-                    app:contentPaddingRight="10dp"
-                    app:contentPaddingTop="4dp"
-                    app:contentPaddingBottom="4dp"
-                    app:textAppearance="@style/Caption1Bold"
-                    app:text='@{state.selectedGroupId == null ? "전체 그룹" : "선택 그룹"}'
-                    app:backgroundColor="@color/neutral000"
-                    app:borderWidth="1dp"
-                    app:borderColor="@color/neutral200"
-                    app:textColor="@color/neutral700"
-                    app:rightIcon="@drawable/ic_dropdown_down"
-                    app:rightIconTint="@color/neutral500"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    tools:text="전체 그룹" />
+                    app:layout_constraintBottom_toBottomOf="parent">
+
+                    <TextView
+                        android:id="@+id/tv_group"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text='@{state.selectedGroupName != null ? state.selectedGroupName : "전체 그룹"}'
+                        android:textAppearance="@style/Caption1Bold"
+                        android:textColor="@color/neutral700"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"/>
+
+                    <ImageView
+                        android:id="@+id/iv_group_arrow"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginStart="6dp"
+                        android:src="@drawable/ic_dropdown_down"
+                        app:tint="@color/neutral500"
+                        app:layout_constraintStart_toEndOf="@id/tv_group"
+                        app:layout_constraintTop_toTopOf="@id/tv_group"
+                        app:layout_constraintBottom_toBottomOf="@id/tv_group"
+                        app:layout_constraintEnd_toEndOf="parent"/>
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
 
-                <com.umc.presentation.component.UButton
-                    android:id="@+id/ub_week"
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/cl_week_dropdown"
                     android:layout_width="wrap_content"
                     android:layout_height="38dp"
                     android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_neutral000_radius8"
+                    android:paddingHorizontal="10dp"
                     android:clickable="true"
                     android:focusable="true"
-                    app:buttonElevation="0"
-                    app:cornerRadius="6dp"
-                    app:contentPaddingLeft="10dp"
-                    app:contentPaddingRight="10dp"
-                    app:contentPaddingTop="4dp"
-                    app:contentPaddingBottom="4dp"
-                    app:textAppearance="@style/Caption1Bold"
-                    app:text='@{state.selectedWeek + "주차"}'
-                    app:backgroundColor="@color/neutral000"
-                    app:borderWidth="1dp"
-                    app:borderColor="@color/neutral200"
-                    app:textColor="@color/neutral700"
-                    app:rightIcon="@drawable/ic_dropdown_down"
-                    app:rightIconTint="@color/neutral500"
-                    app:layout_constraintEnd_toStartOf="@id/ub_group"
-                    app:layout_constraintTop_toTopOf="@id/ub_group"
-                    app:layout_constraintBottom_toBottomOf="@id/ub_group"
-                    tools:text="1주차" />
+                    app:layout_constraintEnd_toStartOf="@id/cl_group_dropdown"
+                    app:layout_constraintTop_toTopOf="@id/cl_group_dropdown"
+                    app:layout_constraintBottom_toBottomOf="@id/cl_group_dropdown">
+
+                    <TextView
+                        android:id="@+id/tv_week"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text='@{state.selectedWeek + "주차"}'
+                        android:textAppearance="@style/Caption1Bold"
+                        android:textColor="@color/neutral700"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"/>
+
+                    <ImageView
+                        android:id="@+id/iv_week_arrow"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginStart="6dp"
+                        android:src="@drawable/ic_dropdown_down"
+                        app:tint="@color/neutral500"
+                        app:layout_constraintStart_toEndOf="@id/tv_week"
+                        app:layout_constraintTop_toTopOf="@id/tv_week"
+                        app:layout_constraintBottom_toBottomOf="@id/tv_week"
+                        app:layout_constraintEnd_toEndOf="parent"/>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
