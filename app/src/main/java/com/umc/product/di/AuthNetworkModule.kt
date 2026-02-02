@@ -40,7 +40,7 @@ object AuthNetworkModule {
         gsonConverterFactory: GsonConverterFactory,
     ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("BASE_URL")
+            .baseUrl("https://dev.umc-product.kyeoungwoon.kr/")
             .client(okHttpClient)
             .addConverterFactory(gsonConverterFactory)
             .build()

@@ -80,6 +80,17 @@ class UChip @JvmOverloads constructor(
                 val showClose = a.getBoolean(R.styleable.UChip_showCloseIcon, false)
                 imvClose.visibility = if (showClose) View.VISIBLE else View.GONE
 
+                // 후위 버튼
+                val hasNextIcon = a.hasValue(R.styleable.UChip_nextIcon)
+
+                if (hasNextIcon) {
+                    val nextIconRes = a.getResourceId(R.styleable.UChip_nextIcon, R.drawable.ic_dropdown)
+                    imageNext.setImageResource(nextIconRes)
+                    imageNext.visibility = View.VISIBLE
+                } else {
+                    imageNext.visibility = View.GONE
+                }
+
                 imvClose.setOnClickListener {
                     // 아이템이 사라지는 기본 로직 수행 후 콜백 호출
                     this@UChip.visibility = View.GONE
@@ -96,6 +107,11 @@ class UChip @JvmOverloads constructor(
     // 텍스트 Setter
     fun setText(text: String?) {
         binding.tvChipText.text = text ?: ""
+    }
+
+    // 텍스트 Style
+    fun setTextStyle(style: Int?) {
+        style?.let { binding.tvChipText.setTextAppearance(it) }
     }
 
     // X 버튼 클릭 리스너 등록 (데이터 삭제나 기타 로직 수행)
@@ -140,6 +156,13 @@ class UChip @JvmOverloads constructor(
     fun setUChipBorder(color: Int, width: Int = strokeWidth) {
         strokeColor = color
         strokeWidth = width
+    }
+
+    fun setNextIcon(icon: Int) {
+        binding.apply {
+            imageNext.setImageResource(icon)
+            imageNext.visibility = View.VISIBLE
+        }
     }
 
 }

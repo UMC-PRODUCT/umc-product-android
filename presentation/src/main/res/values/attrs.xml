@@ -53,6 +53,8 @@
 
         <attr name="buttonElevation"/>
         <attr name="pressedColor"/>
+
+        <attr name="prevIcon"/>
     </declare-styleable>
 
 
@@ -75,6 +77,7 @@
         <attr name="borderWidth"/>
         <attr name="pressedColor"/>
         <attr name="showCloseIcon" format="boolean"/>
+        <attr name="nextIcon" format="reference"/>
     </declare-styleable>
 
     <!-- 공통 SearchBar -->
