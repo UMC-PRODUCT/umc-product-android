@@ -540,6 +540,80 @@
         </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+
+        <!--지원-->
+        <TextView
+            android:id="@+id/mypage_tv_title_assist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/HeadlineBold"
+            android:textColor="@color/neutral800"
+            android:text="@string/assist"
+            android:layout_marginTop="32dp"
+            app:layout_constraintTop_toBottomOf="@id/mypage_cdv_myactivity"
+            app:layout_constraintStart_toStartOf="parent"
+
+            />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/mypage_cdv_assist"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@color/neutral000"
+            android:onClick="@{()->vm.navigateToAssistUmc()}"
+            app:cardBackgroundColor="@color/neutral000"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/mypage_tv_title_assist">
+
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
+
+                <ImageView
+                    android:id="@+id/mypage_imv_assist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_inquire_umc"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="@string/mypage_inquire_umc_kakao"
+                    android:textAppearance="@style/Body"
+                    android:textColor="@color/neutral800"
+                    app:layout_constraintStart_toEndOf="@id/mypage_imv_assist"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    />
+
+
+                <ImageView
+                    android:id="@+id/mypage_imv_assist_next"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_go_website"
+                    app:tint="@color/neutral400"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+
         <!--설정-->
         <TextView
             android:id="@+id/mypage_tv_title_setting"
@@ -549,7 +623,7 @@
             android:textColor="@color/neutral800"
             android:text="@string/setting"
             android:layout_marginTop="24dp"
-            app:layout_constraintTop_toBottomOf="@id/mypage_cdv_myactivity"
+            app:layout_constraintTop_toBottomOf="@id/mypage_cdv_assist"
             app:layout_constraintStart_toStartOf="parent"
 
             />
@@ -569,45 +643,78 @@
             app:layout_constraintTop_toBottomOf="@id/mypage_tv_title_setting">
 
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:orientation="vertical"
+                >
 
-                <ImageView
-                    android:id="@+id/mypage_imv_setting"
-                    android:layout_width="wrap_content"
+                <!--알림 설정-->
+                <LinearLayout
+                    android:id="@+id/mypage_btn_setting_alarm"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/ic_bottom_nav_notice"
-                    app:tint="@color/neutral800"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    />
+                    android:background="?attr/selectableItemBackground"
+                    android:onClick="@{()->vm.navigateToSettingNotice()}"
+                    android:gravity="center_vertical"
+                    android:padding="12dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_bottom_nav_notice"
+                        app:tint="@color/neutral800" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:text="@string/mypage_setting_notice"
+                        android:textAppearance="@style/Body"
+                        android:textColor="@color/neutral800" />
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_go_website"
+                        app:tint="@color/neutral400" />
+                </LinearLayout>
+
+                <!--위치 설정-->
+                <LinearLayout
+                    android:id="@+id/mypage_btn_setting_location"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="@string/mypage_setting_notice"
-                    android:textAppearance="@style/Body"
-                    android:textColor="@color/neutral800"
-                    app:layout_constraintStart_toEndOf="@id/mypage_imv_setting"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    />
+                    android:onClick="@{()->vm.navigateToSettingLocation()}"
+                    android:background="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:padding="12dp">
 
-                <com.umc.presentation.component.USwitch
-                    android:id="@+id/mypage_switch_setting_alarm"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="@{vm.uiState.isAlarmOn}"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    />
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_location"
+                        app:tint="@color/neutral800" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:text="@string/mypage_setting_location"
+                        android:textAppearance="@style/Body"
+                        android:textColor="@color/neutral800" />
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_go_website"
+                        app:tint="@color/neutral400" />
+                </LinearLayout>
+
+
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
 
@@ -631,6 +738,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:background="@color/neutral000"
+            android:onClick="@{()->vm.navigateToSocialSetting()}"
             app:cardBackgroundColor="@color/neutral000"
             app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
@@ -694,14 +802,14 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!--정보-->
+        <!--법률-->
         <TextView
-            android:id="@+id/mypage_tv_title_information"
+            android:id="@+id/mypage_tv_title_law"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="@style/HeadlineBold"
             android:textColor="@color/neutral800"
-            android:text="@string/information"
+            android:text="@string/law"
             android:layout_marginTop="32dp"
             app:layout_constraintTop_toBottomOf="@id/mypage_cdv_social"
             app:layout_constraintStart_toStartOf="parent"
@@ -709,7 +817,7 @@
             />
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/mypage_cdv_information"
+            android:id="@+id/mypage_cdv_laws"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
@@ -720,68 +828,176 @@
             app:strokeWidth="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/mypage_tv_title_information">
+            app:layout_constraintTop_toBottomOf="@id/mypage_tv_title_law">
 
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:orientation="vertical"
+                >
 
-                <ImageView
-                    android:id="@+id/mypage_imv_information"
-                    android:layout_width="wrap_content"
+                <!--개인정보처리방침-->
+                <LinearLayout
+                    android:id="@+id/mypage_btn_personal_information"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/ic_error"
-                    app:tint="@color/neutral800"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    />
+                    android:background="?attr/selectableItemBackground"
+                    android:onClick="@{()->vm.navigateToPersonalInformation()}"
+                    android:gravity="center_vertical"
+                    android:padding="12dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_hand_question"
+                        app:tint="@color/neutral800" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:text="@string/mypage_personal_information"
+                        android:textAppearance="@style/Body"
+                        android:textColor="@color/neutral800" />
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_arrow_next"
+                        app:tint="@color/neutral400" />
+                </LinearLayout>
+
+                <!--이용 약관-->
+                <LinearLayout
+                    android:id="@+id/mypage_btn_personal_use_manual"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="@string/mypage_opensource"
-                    android:textAppearance="@style/Body"
-                    android:textColor="@color/neutral800"
-                    app:layout_constraintStart_toEndOf="@id/mypage_imv_information"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    />
+                    android:onClick="@{()->vm.navigateToUseManual()}"
+                    android:background="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:padding="12dp">
 
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_arrow_next"
-                    app:tint="@color/neutral400"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    />
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_agreement"
+                        app:tint="@color/neutral800" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:text="@string/mypage_use_manual"
+                        android:textAppearance="@style/Body"
+                        android:textColor="@color/neutral800" />
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_arrow_next"
+                        app:tint="@color/neutral400" />
+                </LinearLayout>
+
+
+            </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+
+
+        <!--하단 탈퇴 버튼들-->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/mypage_guideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintGuide_percent="0.5"
+            android:orientation="vertical"/>
+
+        <!--회원탈퇴 버튼-->
+        <com.umc.presentation.component.UButton
+            android:id="@+id/mypage_btn_delete_user"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:onClick="@{()->vm.deleteUser()}"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="6dp"
+            app:contentPadding="16dp"
+            app:cardBackgroundColor="@color/neutral000"
+            app:cornerRadius="12dp"
+            app:pressedColor="@color/neutral200"
+            app:text="@string/delete_user"
+            app:textAppearance="@style/Body"
+            app:textColor="@color/danger500"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/mypage_guideline"
+            app:layout_constraintTop_toBottomOf="@id/mypage_cdv_laws"
+            />
 
 
         <!--로그아웃 버튼-->
         <com.umc.presentation.component.UButton
             android:id="@+id/mypage_btn_logout"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:onClick="@{()->vm.logout()}"
             android:layout_marginTop="32dp"
+            android:layout_marginStart="6dp"
             app:contentPadding="16dp"
             app:cardBackgroundColor="@color/neutral000"
             app:cornerRadius="12dp"
             app:pressedColor="@color/neutral200"
             app:text="@string/logout"
             app:textAppearance="@style/Body"
-            app:textColor="@color/danger500"
-            app:layout_constraintStart_toStartOf="parent"
+            app:textColor="@color/neutral800"
+            app:layout_constraintStart_toEndOf="@id/mypage_guideline"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/mypage_cdv_information"
+            app:layout_constraintTop_toBottomOf="@id/mypage_cdv_laws"
+            />
+
+
+        <!--UMC 외부 채널-->
+        <TextView
+            android:id="@+id/mypage_tv_title_umc_out_channel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/HeadlineBold"
+            android:textColor="@color/neutral800"
+            android:text="@string/mypage_umc_out_channel"
+            android:layout_marginTop="32dp"
+            app:layout_constraintTop_toBottomOf="@id/mypage_btn_delete_user"
+            app:layout_constraintStart_toStartOf="parent"
+
+            />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/mypage_btn_umc_website"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_out_website_umc"
+            android:layout_marginTop="16dp"
+            android:onClick="@{()->vm.navigateToWebsiteUmc()}"
+            app:strokeWidth="0dp"
+            app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+            app:layout_constraintTop_toBottomOf="@id/mypage_tv_title_umc_out_channel"
+            app:layout_constraintStart_toStartOf="parent"
+            />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/mypage_btn_umc_instagram"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_out_instagram_umc"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="16dp"
+            android:onClick="@{()->vm.navigateToInstagramUmc()}"
+            app:strokeWidth="0dp"
+            app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+            app:layout_constraintTop_toBottomOf="@id/mypage_tv_title_umc_out_channel"
+            app:layout_constraintStart_toEndOf="@id/mypage_btn_umc_website"
             />
 
 

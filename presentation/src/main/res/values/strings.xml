@@ -48,10 +48,16 @@
     <string name="mypage_mycomment">댓글 단 글</string>
     <string name="mypage_myscrap">스크랩</string>
     <string name="mypage_setting_notice">알림 설정</string>
+    <string name="mypage_setting_location">위치 설정</string>
     <string name="mypage_social">소셜 연동</string>
     <string name="mypage_kakao">카카오</string>
     <string name="mypage_google">Google</string>
     <string name="mypage_opensource">오픈소스 라이선스</string>
+    <string name="mypage_umc_out_channel">UMC 외부 채널</string>
+    <string name="mypage_personal_information">개인정보처리 방침</string>
+    <string name="mypage_use_manual">이용 약관</string>
+    <string name="mypage_inquire_umc_kakao">UMC 카카오톡 문의</string>
+
     <string name="profile_connect_account">연동된 계정</string>
     <string name="profile_give_login">로그인 제공자</string>
     <string name="profile_name_nickname">이름/닉네임</string>
@@ -117,6 +123,7 @@
     <string name="setting">설정</string>
     <string name="information">정보</string>
     <string name="logout">로그아웃</string>
+    <string name="delete_user">회원탈퇴</string>
     <string name="complete">완료</string>
     <string name="register">등록</string>
     <string name="region">지역</string>
@@ -125,6 +132,8 @@
     <string name="hard">Hard</string>
     <string name="question">질문</string>
     <string name="select">선택</string>
+    <string name="law">법률</string>
+    <string name="assist">지원</string>
 
 
     <!-- Login -->

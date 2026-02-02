@@ -29,10 +29,6 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             lifecycleOwner = viewLifecycleOwner
         }
 
-        //여기서 바뀔 때 호출
-        binding.mypageSwitchSettingAlarm.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.setAlarmOn(isChecked)
-        }
         
     }
 
@@ -60,33 +56,82 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
         super.handleEvent(event)
         when(event) {
             /**차후 링크는 실제 값으로 변경**/
-            is MypageFragmentEvent.navigateToGithub -> {
+            is MypageFragmentEvent.NavigateToGithub -> {
                 openWebpage(viewModel.uiState.value.tmpgithub)
             }
-            is MypageFragmentEvent.navigateToBlog -> {
+            is MypageFragmentEvent.NavigateToBlog -> {
                 openWebpage(viewModel.uiState.value.tmpblog)
             }
-            is MypageFragmentEvent.navigateToLinkedin -> {
+            is MypageFragmentEvent.NavigateToLinkedin -> {
                 openWebpage(viewModel.uiState.value.tmplinkedin)
             }
-            is MypageFragmentEvent.navigateToEditProfile -> {
+            is MypageFragmentEvent.NavigateToEditProfile -> {
                 val action = MypageFragmentDirections.actionMypageToProfile()
                 findNavController().navigate(action)
             }
 
-            is MypageFragmentEvent.navigateToSuggetion -> {
+            is MypageFragmentEvent.NavigateToSuggetion -> {
                 val action = MypageFragmentDirections.actionMypageToSugget()
                 findNavController().navigate(action)
             }
-            is MypageFragmentEvent.navigateToMypost -> {
+            is MypageFragmentEvent.NavigateToMypost -> {
                 val action = MypageFragmentDirections.actionMypageToMypost()
                 findNavController().navigate(action)
             }
-            is MypageFragmentEvent.navigateToMyComment -> {
+            is MypageFragmentEvent.NavigateToMyComment -> {
                 val action = MypageFragmentDirections.actionMypageToMycomment()
                 findNavController().navigate(action)
 
             }
+            
+            is MypageFragmentEvent.NavigateToScrap -> {
+                /**TODO 스크랩 글 생성**/
+            }
+
+
+            is MypageFragmentEvent.NavigateToAssistUmc -> {
+                /**TODO UMC 문의 이동 로직**/
+            }
+
+
+            is MypageFragmentEvent.NavigateToSettingNotice -> {
+                /**TODO 알림 설정 이동 로직**/
+            }
+
+            is MypageFragmentEvent.NavigateToSettingLocation -> {
+                /**TODO 위치 설정 이동 로직**/
+            }
+
+            is MypageFragmentEvent.NavigateToSocialSetting -> {
+                /**TODO 소셜 연동 이동 로직**/
+            }
+
+            is MypageFragmentEvent.NavigateToPersonalInformation -> {
+                /**TODO 개인정보처리 방침 이동 로직**/
+            }
+
+            is MypageFragmentEvent.NavigateToUseManual -> {
+                /**TODO 이용약관 이동 로직**/
+
+            }
+            
+            is MypageFragmentEvent.Logout -> {
+                /**TODO logout 로직 생성**/
+            }
+
+            is MypageFragmentEvent.DeleteUser -> {
+                /**TODO 회원 탈퇴 로직 생성**/
+            }
+
+            is MypageFragmentEvent.NavigateToWebstieUmc -> {
+                openWebpage(viewModel.uiState.value.websiteUMC)
+            }
+
+            is MypageFragmentEvent.NavigateToInstagramUmc -> {
+                openWebpage(viewModel.uiState.value.instagramUMC)
+            }
+            
+            
 
             else -> {}
         }
