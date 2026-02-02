@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable name="item" type="com.umc.domain.model.home.ParticipantItem" />
+        <variable name="isSelected" type="Boolean" />
+    </data>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="8dp">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/item_imv_profile"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_person"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/neutral200"
+            app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/item_tv_name"
+            app:layout_constraintBottom_toBottomOf="@id/item_tv_school"
+            />
+
+
+        <TextView
+            android:id="@+id/item_tv_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text='박유수'
+            android:textAppearance="@style/SubheadlineBold"
+            android:textColor="@color/neutral800"
+            app:layout_constraintStart_toEndOf="@id/item_imv_profile"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/item_tv_school"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="4dp"
+            android:text='학교'
+            android:textAppearance="@style/Footnote"
+            android:textColor="@color/neutral800"
+            app:layout_constraintStart_toEndOf="@id/item_imv_profile"
+            app:layout_constraintTop_toBottomOf="@id/item_tv_name"
+            />
+
+        <CheckBox
+            android:id="@+id/item_cb_select"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:checked="@{isSelected}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

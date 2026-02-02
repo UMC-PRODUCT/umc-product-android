@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable name="title" type="String" />
+    </data>
+
+    <TextView
+        android:id="@+id/item_tv_user_part"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="8dp"
+        android:text="@{title}"
+        android:textAppearance="@style/Body"
+        android:textColor="@color/neutral800" />
+</layout>

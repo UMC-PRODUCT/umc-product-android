@@ -20,6 +20,9 @@
     <string name="home_plan_add_plan_tag_placeholder">태그를 선택하세요</string>
     <string name="home_plan_add_plan_tag_bottomsheet_title">태그를 추가하세요</string>
     <string name="home_plan_add_plan_tag_bottomsheet_content">중복 선택이 가능합니다</string>
+    <string name="home_plan_add_plan_participant_title">초대할 챌린저를 추가하세요</string>
+    <string name="home_plan_add_plan_participant_no_challenger">아직 초대한 챌린저가 없어요</string>
+    <string name="home_plan_add_plan_participant_placeholder">이름을 입력하세요</string>
     <string name="home_plan_add_plan_detail_placeholder">상세 내용을 입력하세요</string>
     <string name="home_plan_add_plan_search_placeholder">이름, 닉네임 또는 학교 검색</string>
     <string name="home_plan_add_plan_attend">참여자 명단</string>
