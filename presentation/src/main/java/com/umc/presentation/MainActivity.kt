@@ -131,5 +131,4 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
         navController.popBackStack()
     }
     */
-     
 }
