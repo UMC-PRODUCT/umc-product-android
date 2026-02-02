@@ -5,12 +5,15 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
 import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
 import com.umc.presentation.databinding.CustomButtonBinding
+import com.umc.presentation.extension.gone
 import com.umc.presentation.extension.px
+import com.umc.presentation.extension.visible
 
 class UButton
 @JvmOverloads
@@ -54,6 +57,17 @@ constructor(
                 // 배경색
                 pressedColor = a.getColor(R.styleable.UButton_pressedColor, normalColor)
                 rippleColor = ColorStateList.valueOf(Color.TRANSPARENT)
+
+                // 후위 버튼
+                val hasPrevIcon = a.hasValue(R.styleable.UButton_prevIcon)
+
+                if (hasPrevIcon) {
+                    val prevIconRes = a.getResourceId(R.styleable.UButton_prevIcon, R.drawable.ic_dropdown)
+                    imagePrevIcon.setImageResource(prevIconRes)
+                    imagePrevIcon.visible()
+                } else {
+                    imagePrevIcon.gone()
+                }
             }
         } finally {
             a.recycle()

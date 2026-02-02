@@ -4,11 +4,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:parentTag="com.google.android.material.card.MaterialCardView">
 
-    <TextView
-        android:id="@+id/text_view"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:textSize="14sp" />
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical">
 
+        <ImageView
+            android:id="@+id/image_prev_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/text_view"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textSize="14sp" />
+    </LinearLayout>
 </merge>
