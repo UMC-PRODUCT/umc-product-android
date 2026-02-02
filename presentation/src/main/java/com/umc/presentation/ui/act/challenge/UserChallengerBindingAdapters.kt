@@ -3,6 +3,7 @@ package com.umc.presentation.ui.act.challenge
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
+import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.presentation.R
 import com.umc.presentation.component.UButton
@@ -32,5 +33,27 @@ object UserChallengerBindingAdapters {
         view.setUBackgroundColor(ContextCompat.getColor(view.context, bgColorRes))
         view.setTextColor(ContextCompat.getColor(view.context, textColorRes))
         view.strokeColor = ContextCompat.getColor(view.context, borderColorRes)
+    }
+
+    @JvmStatic
+    @BindingAdapter("attendanceStatus")
+    fun setAttendanceStatus(view: UButton, status: CheckHistoryStatus?) {
+        if (status == null) return
+
+        // Enum에 정의된 text 설정
+        view.setText(status.text)
+
+        // 상태별 색상 매핑
+        val (textColorRes, bgColorRes) = when (status) {
+            CheckHistoryStatus.SUCCESS -> R.color.success500 to R.color.success100
+            CheckHistoryStatus.LATE -> R.color.warning500 to R.color.warning100
+            CheckHistoryStatus.ABSENT -> R.color.danger500 to R.color.danger100
+        }
+
+        val textColor = ContextCompat.getColor(view.context, textColorRes)
+        val bgColor = ContextCompat.getColor(view.context, bgColorRes)
+
+        view.setTextColor(textColor)
+        view.setUBackgroundColor(bgColor)
     }
 }

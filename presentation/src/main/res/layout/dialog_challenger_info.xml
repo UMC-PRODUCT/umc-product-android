@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="model"
+            type="com.umc.domain.model.act.challenger.ChallengerInfoDialogModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_neutral000_radius16"
+        android:padding="24dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_profile_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imv_profile"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:src="@drawable/ic_person_inset"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/neutral200"
+                app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@{model.name}"
+                android:textAppearance="@style/Title3Bold"
+                android:textColor="@color/neutral800"
+                android:includeFontPadding="false"
+                app:layout_constraintTop_toBottomOf="@id/imv_profile"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:text="김디자" />
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/btn_university"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:clickable="false"
+                app:text="@{model.university}"
+                app:textColor="@color/neutral700"
+                app:textAppearance="@style/Caption1Bold"
+                app:cardBackgroundColor="@color/neutral000"
+                app:borderColor="@color/neutral200"
+                app:borderWidth="1dp"
+                app:cornerRadius="4dp"
+                app:contentPaddingTop="4dp"
+                app:contentPaddingBottom="4dp"
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
+                app:layout_constraintTop_toTopOf="@id/tv_name"
+                app:layout_constraintBottom_toBottomOf="@id/tv_name"
+                app:layout_constraintStart_toEndOf="@id/tv_name" />
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/btn_part"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:clickable="false"
+                app:text="@{model.part}"
+                app:textColor="@color/primary500"
+                app:textAppearance="@style/Caption1Bold"
+                app:cardBackgroundColor="@color/primary100"
+                app:borderColor="@color/primary200"
+                app:borderWidth="1dp"
+                app:cornerRadius="4dp"
+                app:contentPaddingTop="4dp"
+                app:contentPaddingBottom="4dp"
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
+                app:layout_constraintTop_toTopOf="@id/tv_name"
+                app:layout_constraintBottom_toBottomOf="@id/tv_name"
+                app:layout_constraintStart_toEndOf="@id/btn_university" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ImageView
+            android:id="@+id/imv_icon_close"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_close_big"
+            android:padding="12dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/layout_stats"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="24dp"
+            android:weightSum="2"
+            app:layout_constraintTop_toBottomOf="@id/layout_profile_container"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:paddingVertical="16dp"
+                android:background="@drawable/bg_rectangle_neutral000_stroke_neutral300_radius8">
+
+                <TextView
+                    android:id="@+id/tv_gen_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="활동 기수"
+                    android:textAppearance="@style/Callout"
+                    android:textColor="@color/neutral600"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="12기"
+                    android:textAppearance="@style/HeadlineBold"
+                    app:layout_constraintTop_toBottomOf="@id/tv_gen_label"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:paddingVertical="16dp"
+                android:background="@drawable/bg_rectangle_neutral000_stroke_neutral300_radius8">
+
+                <TextView
+                    android:id="@+id/tv_warning_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="누적 경고"
+                    android:textAppearance="@style/Callout"
+                    android:textColor="@color/neutral600"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text='@{String.valueOf(model.warningCount)}'
+                    android:textAppearance="@style/HeadlineBold"
+                    android:textColor="@color/danger500"
+                    app:layout_constraintTop_toBottomOf="@id/tv_warning_label"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    tools:text="1.5" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            app:layout_constraintTop_toBottomOf="@id/layout_stats"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ImageView
+                android:id="@+id/iv_history"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_history"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_history_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="출석/활동 기록"
+                android:textAppearance="@style/Title3Bold"
+                app:layout_constraintTop_toTopOf="@id/iv_history"
+                app:layout_constraintBottom_toBottomOf="@id/iv_history"
+                app:layout_constraintStart_toEndOf="@id/iv_history" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_history"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_rectangle_neutral000_stroke_neutral300_radius8"
+                android:padding="16dp"
+                app:layout_constraintTop_toBottomOf="@id/tv_history_label"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
