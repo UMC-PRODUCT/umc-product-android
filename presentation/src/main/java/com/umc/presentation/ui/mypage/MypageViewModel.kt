@@ -1,19 +1,38 @@
 package com.umc.presentation.ui.mypage
 
 import android.util.Log
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.LoginType
+import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MypageViewModel @Inject
-constructor() : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
+class MypageViewModel @Inject constructor(
+    private val appDataStoreRepository: AppDataStoreRepository
+) : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
 
+
+    //초기 상태
+    init {
+        viewModelScope.launch {
+            appDataStoreRepository.getUserOutLink().collect { map ->
+                updateState {
+                    copy(
+                        githubUrl = map["github"] ?: "",
+                        linkedinUrl = map["linkedin"] ?: "",
+                        blogUrl = map["blog"] ?: ""
+                    )
+                }
+            }
+        }
+    }
 
     fun navigateToGithub(){
         emitEvent(MypageFragmentEvent.NavigateToGithub)
@@ -103,10 +122,10 @@ data class MypageFragmentUiState(
     val myCareer : List<String> = listOf("8기 Android 챌린저", "9기 Android 중앙 파트장", "9기 칸 맞추기 기다란 텍스트"),
 
 
-    // 임시 더ㅣㅁ 데이터
-    val tmpgithub : String = "https://github.com/UMC-PRODUCT/umc-product-android",
-    val tmpblog : String = "https://velog.io/",
-    val tmplinkedin : String = "https://kr.linkedin.com/",
+    // 링크 데이터
+    val githubUrl : String = "",
+    val blogUrl : String = "",
+    val linkedinUrl : String = "",
 
     // UMC 외부 링크
     val websiteUMC : String = "https://umc.makeus.in",

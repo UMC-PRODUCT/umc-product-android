@@ -12,6 +12,8 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
+import com.umc.presentation.component.UMypageDialog
+import com.umc.presentation.component.UMypageDialogModel
 import com.umc.presentation.databinding.FragmentMypageBinding
 import com.umc.presentation.ui.home.HomeFragmentDirections
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,6 +24,29 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
     FragmentMypageBinding::inflate,
 ) {
     override val viewModel : MypageViewModel by viewModels()
+
+    private enum class OutLinkType(val label: String) {
+        GITHUB("Github"),
+        LINKEDIN("LinkedIn"),
+        BLOG("Blog")
+    }
+    
+    val logoutDialogModel = UMypageDialogModel(
+        title = "로그아웃",
+        content = "정말 로그아웃을 하시겠습니까?",
+        isTwoButton = true,
+        positiveText = "로그아웃",
+        negativeText = "취소"
+    )
+
+    val deleteUserDialogModel = UMypageDialogModel(
+        title = "계정 삭제",
+        content = "계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 정말 삭제하시겠습니까?",
+        isTwoButton = true,
+        positiveText = "삭제",
+        negativeText = "취소"
+    )
+    
 
     override fun initView() {
         binding.apply {
@@ -57,13 +82,44 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
         when(event) {
             /**차후 링크는 실제 값으로 변경**/
             is MypageFragmentEvent.NavigateToGithub -> {
-                openWebpage(viewModel.uiState.value.tmpgithub)
+                val url = viewModel.uiState.value.githubUrl
+                val model = setDialogContent(OutLinkType.GITHUB)
+
+                if(url == ""){
+                    val dialog = UMypageDialog(model){/**NO LOGIC**/}
+                    dialog.show(parentFragmentManager, "MyPageDialog")
+                }
+                else{
+                    openWebpage(url)
+                }
+
             }
             is MypageFragmentEvent.NavigateToBlog -> {
-                openWebpage(viewModel.uiState.value.tmpblog)
+                val url = viewModel.uiState.value.blogUrl
+                val model = setDialogContent(OutLinkType.BLOG)
+
+                if(url == ""){
+                    val dialog = UMypageDialog(model){/**NO LOGIC**/}
+                    dialog.show(parentFragmentManager, "MyPageDialog")
+                }
+                else{
+                    openWebpage(url)
+                }
+
+
             }
             is MypageFragmentEvent.NavigateToLinkedin -> {
-                openWebpage(viewModel.uiState.value.tmplinkedin)
+                val url = viewModel.uiState.value.linkedinUrl
+                val model = setDialogContent(OutLinkType.LINKEDIN)
+
+                if(url == ""){
+                    val dialog = UMypageDialog(model){/**NO LOGIC**/}
+                    dialog.show(parentFragmentManager, "MyPageDialog")
+                }
+                else{
+                    openWebpage(url)
+                }
+
             }
             is MypageFragmentEvent.NavigateToEditProfile -> {
                 val action = MypageFragmentDirections.actionMypageToProfile()
@@ -116,12 +172,25 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             }
             
             is MypageFragmentEvent.Logout -> {
-                /**TODO logout 로직 생성**/
+                //1. 다이얼로그로 체크
+                val dialog = UMypageDialog(logoutDialogModel) {
+                    /**TODO 로그아웃 로직 생성**/
+                }
+
+                dialog.show(parentFragmentManager, "MyPageDialog")
+
             }
 
             is MypageFragmentEvent.DeleteUser -> {
-                /**TODO 회원 탈퇴 로직 생성**/
+                //1. 다이얼로그로 체크
+                val dialog = UMypageDialog(deleteUserDialogModel) {
+                    /**TODO 회원 탈퇴 로직 생성**/
+                }
+
+                dialog.show(parentFragmentManager, "MyPageDialog")
+                
             }
+            
 
             is MypageFragmentEvent.NavigateToWebstieUmc -> {
                 openWebpage(viewModel.uiState.value.websiteUMC)
@@ -137,6 +206,22 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
         }
     }
 
+    //outLink 3종 다이얼로그 포멧 만들기
+    /**Type : 1 = Github, 2 = LinkedIn, 3 = Blog**/
+    private fun setDialogContent(type : OutLinkType) : UMypageDialogModel {
+        var name = ""
+        if(type == OutLinkType.GITHUB){name = "Github를"}
+        else if(type == OutLinkType.LINKEDIN){name = "LinkedIn을"}
+        else if(type == OutLinkType.BLOG){name = "Blog를"}
+        
+        return UMypageDialogModel(
+            title = "${name} 열 수 없어요.",
+            content = "아직 등록된 링크가 없습니다. 프로필에서 링크를 추가해 주세요.",
+            isTwoButton = false,
+            confirmText = "확인"
+        )
+    
+    }
 
     //웹페이지 이동
     private fun openWebpage(url: String) {

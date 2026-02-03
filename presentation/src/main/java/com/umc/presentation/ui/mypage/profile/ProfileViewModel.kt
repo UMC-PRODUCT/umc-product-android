@@ -1,19 +1,40 @@
 package com.umc.presentation.ui.mypage.profile
 
 import android.net.Uri
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.mypage.UserActiveItem
+import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
-class ProfileViewModel @Inject
-constructor() : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
+class ProfileViewModel @Inject constructor(
+    private val appDataStoreRepository: AppDataStoreRepository
+) : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     ProfileFragmentUiState()){
+
+    //초기화 작업
+    init {
+        viewModelScope.launch {
+            //DataStore에서 가져와서 넣기
+            appDataStoreRepository.getUserOutLink().collect { map ->
+                updateState {
+                    copy(
+                        githubLink = map["github"] ?: "",
+                        linkedinLink = map["linkedin"] ?: "",
+                        blogLink = map["blog"] ?: ""
+                    )
+                }
+            }
+        }
+    }
+
 
     //프로필 이미지 수정했을 때 이벤트
     fun onClickProfileImage(){
@@ -29,6 +50,14 @@ constructor() : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     //완료 누르고 뒤로 가기
     fun onClickComplete(){
         emitEvent(ProfileFragmentEvent.ClickComplete)
+    }
+
+    // 완료 버튼을 눌렀을 때 호출될 저장 로직
+    fun saveOutLinkData(github: String, linkedin: String, blog: String) {
+        viewModelScope.launch {
+            // DataStore에 저장
+            appDataStoreRepository.saveUserOutLink(github, linkedin, blog)
+        }
     }
 
     //그냥 뒤로 가기
