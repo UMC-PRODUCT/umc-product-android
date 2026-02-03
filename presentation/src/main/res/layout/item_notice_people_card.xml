@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_notice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_rect_neutral100_radius12"
+        android:padding="16dp">
+
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_profile"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_person"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+            app:strokeColor="@color/neutral200"
+            app:strokeWidth="1dp" />
+
+        <TextView
+            android:id="@+id/text_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:textAppearance="@style/CalloutBold"
+            android:textColor="@color/neutral800"
+            app:layout_constraintStart_toEndOf="@id/image_profile"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="홍길동(닉네임)" />
+
+        <TextView
+            android:id="@+id/text_branch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:textAppearance="@style/Footnote"
+            android:textColor="@color/neutral600"
+            app:layout_constraintStart_toEndOf="@id/image_profile"
+            app:layout_constraintTop_toBottomOf="@id/text_name"
+            tools:text="지부이름" />
+
+        <TextView
+            android:id="@+id/text_school"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="4dp"
+            android:textAppearance="@style/Footnote"
+            android:textColor="@color/neutral600"
+            app:layout_constraintStart_toEndOf="@id/text_branch"
+            app:layout_constraintTop_toBottomOf="@id/text_name"
+            tools:text="학교이름" />
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/ubutton_part"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:buttonElevation="0"
+            app:cardBackgroundColor="@color/neutral000"
+            app:contentPaddingBottom="2dp"
+            app:contentPaddingLeft="8dp"
+            app:contentPaddingRight="8dp"
+            app:contentPaddingTop="2dp"
+            app:cornerRadius="4dp"
+            app:layout_constraintBottom_toBottomOf="@id/text_name"
+            app:layout_constraintStart_toEndOf="@id/text_name"
+            app:layout_constraintTop_toTopOf="@id/text_name"
+            app:text="중앙"
+            app:textAppearance="@style/Caption1Bold"
+            app:textColor="@color/neutral700" />
+
+        <View
+            android:id="@+id/view_new"
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:layout_marginEnd="9dp"
+            android:background="@drawable/bg_circle_accent500"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/image_check"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:visibility="gone"
+            android:src="@drawable/ic_check_success"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

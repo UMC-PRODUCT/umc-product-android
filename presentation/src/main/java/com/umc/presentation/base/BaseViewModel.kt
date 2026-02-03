@@ -2,7 +2,7 @@ package com.umc.presentation.base
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.umc.domain.model.ApiState
+import com.umc.domain.model.base.ApiState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -39,14 +39,11 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
         errorCallback: ((String) -> Unit)? = null,
     ) {
         when (response) {
-            is ApiState.Error -> {
-                errorCallback?.invoke(response.errorCode)
+            is ApiState.Fail -> {
+                errorCallback?.invoke(response.failState.code)
             }
             is ApiState.Success -> {
-                successCallback.invoke(response.result)
-            }
-            is ApiState.Loading -> {
-                // TODO 로딩 화면 같은거
+                successCallback.invoke(response.data)
             }
         }
     }

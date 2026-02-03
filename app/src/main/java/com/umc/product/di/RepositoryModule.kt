@@ -2,6 +2,8 @@ package com.umc.product.di
 
 import com.umc.data.repository.AppDataStoreRepositoryImpl
 import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.data.repository.AuthRepositoryImpl
+import com.umc.domain.repository.AuthRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -23,4 +25,7 @@ abstract class RepositoryModule {
     ): AppDataStoreRepository
 
 
+    @Singleton
+    @Binds
+    abstract fun providesAuthRepository(repositoryImpl: AuthRepositoryImpl): AuthRepository
 }

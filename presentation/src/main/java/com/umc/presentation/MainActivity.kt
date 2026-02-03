@@ -16,6 +16,7 @@ import com.umc.presentation.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import androidx.core.graphics.drawable.toDrawable
+import androidx.navigation.findNavController
 import com.google.firebase.messaging.FirebaseMessaging
 
 @AndroidEntryPoint
@@ -116,10 +117,18 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
             R.id.homeFragment,
             R.id.mypageFragment,
                 R.id.communityFragment,
+                R.id.noticeFragment,
             R.id.activityManagementFragment -> {
                 binding.mainBnv.visibility = View.VISIBLE
             }
             else -> binding.mainBnv.visibility = View.GONE
         }
     }
+
+    /*
+    override fun onBackPressed() {
+        super.onBackPressed()
+        navController.popBackStack()
+    }
+    */
 }

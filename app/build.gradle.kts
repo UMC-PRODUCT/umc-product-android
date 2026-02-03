@@ -74,6 +74,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     // HILT
+    implementation(libs.hilt.core)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
