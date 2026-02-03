@@ -2,19 +2,18 @@ package com.umc.presentation.ui.act.study
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.presentation.databinding.ItemActStudyBinding
-import androidx.core.content.ContextCompat
 import com.umc.presentation.R
-
+import com.umc.presentation.databinding.ItemActStudyBinding
 
 class ActStudyAdapter(
     private val onToggle: (Int) -> Unit,
     private val onLongApprove: (Long) -> Unit,
     private val onSubmitClick: (Long, String) -> Unit,
-) : ListAdapter<ActStudyItemUiModel, ActStudyAdapter.VH>(DIFF) {
+) : ListAdapter<ActStudyItemUiModel, ActStudyAdapter.ActStudyViewHolder>(DIFF) {
 
     companion object {
         private val DIFF = object : DiffUtil.ItemCallback<ActStudyItemUiModel>() {
@@ -25,7 +24,6 @@ class ActStudyAdapter(
                 old == new
         }
     }
-
 
     private val draftLinks = mutableMapOf<Long, String>()
 
@@ -39,43 +37,48 @@ class ActStudyAdapter(
         draftLinks[itemId] = link
     }
 
-    inner class VH(private val binding: ItemActStudyBinding) :
+
+    class ActStudyViewHolder(private val binding: ItemActStudyBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         private var currentItemId: Long = -1L
 
+
         private fun updateSubmitButtonUi(link: String) {
             val enabled = link.isNotBlank()
+            val ctx = binding.root.context
 
-            binding.btnSubmit.isEnabled = enabled
+            binding.apply {
+                btnSubmit.isEnabled = enabled
+                btnSubmit.setText("링크 제출하기")
 
-            if (enabled) {
-                binding.btnSubmit.setText("링크 제출하기")
-                binding.btnSubmit.setTextColor(
-                    ContextCompat.getColor(binding.root.context, R.color.neutral000)
-                )
-                binding.btnSubmit.setUBackgroundColor(
-                    ContextCompat.getColor(binding.root.context, R.color.primary500)
-                )
-            } else {
-                binding.btnSubmit.setText("링크 제출하기")
-                binding.btnSubmit.setTextColor(
-                    ContextCompat.getColor(binding.root.context, R.color.neutral500)
-                )
-                binding.btnSubmit.setUBackgroundColor(
-                    ContextCompat.getColor(binding.root.context, R.color.neutral200)
-                )
+                if (enabled) {
+                    btnSubmit.setTextColor(ContextCompat.getColor(ctx, R.color.neutral000))
+                    btnSubmit.setUBackgroundColor(ContextCompat.getColor(ctx, R.color.primary500))
+                } else {
+                    btnSubmit.setTextColor(ContextCompat.getColor(ctx, R.color.neutral500))
+                    btnSubmit.setUBackgroundColor(ContextCompat.getColor(ctx, R.color.neutral200))
+                }
             }
         }
 
-        init {
+        fun bind(
+            item: ActStudyItemUiModel,
+            getItemAt: (Int) -> ActStudyItemUiModel,
+            draftLinks: MutableMap<Long, String>,
+            onToggle: (Int) -> Unit,
+            onLongApprove: (Long) -> Unit,
+            onSubmitClick: (Long, String) -> Unit,
+        ) {
+            currentItemId = item.id
+            binding.item = item
 
             binding.root.setOnClickListener {
                 val pos = bindingAdapterPosition
                 if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
 
-                val item = getItem(pos)
-                if (item.isLocked) return@setOnClickListener
+                val curItem = getItemAt(pos)
+                if (curItem.isLocked) return@setOnClickListener
 
                 onToggle(pos)
             }
@@ -84,8 +87,8 @@ class ActStudyAdapter(
                 val pos = bindingAdapterPosition
                 if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
 
-                val item = getItem(pos)
-                if (item.isLocked) return@setOnClickListener
+                val curItem = getItemAt(pos)
+                if (curItem.isLocked) return@setOnClickListener
 
                 onToggle(pos)
             }
@@ -113,21 +116,11 @@ class ActStudyAdapter(
                 if (currentItemId != -1L) onLongApprove(currentItemId)
                 true
             }
-        }
-
-
-        fun bind(item: ActStudyItemUiModel) {
-            currentItemId = item.id
-            binding.item = item
-
 
             val currentLink = draftLinks[item.id] ?: item.link
-
-
             if (currentLink != binding.etLink.getText()) {
                 binding.etLink.setText(currentLink)
             }
-
 
             updateSubmitButtonUi(currentLink)
 
@@ -136,16 +129,23 @@ class ActStudyAdapter(
             binding.btnSubmit.isEnabled = !locked && currentLink.isNotBlank()
             binding.btnConfirm.isEnabled = !locked
 
-
             binding.executePendingBindings()
         }
-
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActStudyViewHolder {
         val binding = ItemActStudyBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return VH(binding)
+        return ActStudyViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: VH, position: Int) = holder.bind(getItem(position))
+    override fun onBindViewHolder(holder: ActStudyViewHolder, position: Int) {
+        holder.bind(
+            item = getItem(position),
+            getItemAt = { pos -> getItem(pos) },
+            draftLinks = draftLinks,
+            onToggle = onToggle,
+            onLongApprove = onLongApprove,
+            onSubmitClick = onSubmitClick,
+        )
+    }
 }
