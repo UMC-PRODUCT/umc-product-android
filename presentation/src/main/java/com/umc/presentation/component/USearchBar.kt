@@ -112,4 +112,14 @@ class USearchBar @JvmOverloads constructor(
     }
 
     fun setOnTextChangedListener(listener: ((String) -> Unit)?) { onTextChangedListener = listener }
+
+    fun setOnFocusChangedListener(listener: (Boolean) -> Unit) {
+        binding.editText.setOnFocusChangeListener { _, hasFocus ->
+            isFocus = hasFocus
+            binding.editText.hint = if (hasFocus) "" else placeholderText
+            updateStyle()
+            listener(hasFocus)
+        }
+    }
+
 }
