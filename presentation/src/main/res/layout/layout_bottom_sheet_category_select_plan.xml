@@ -2,6 +2,8 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+
+    <data />
     <!--일정 생성 화면에서 카테고리 선택 시 나오는 bottomsheetdialog-->
 
     <androidx.constraintlayout.widget.ConstraintLayout
