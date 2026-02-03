@@ -22,7 +22,7 @@
 
         <action
             android:id="@+id/action_home_to_planAdd"
-            app:destination="@id/planCreateFragment"/>
+            app:destination="@id/planAddFragment"/>
 
         <action
             android:id="@+id/action_home_to_planDetail"
@@ -48,7 +48,7 @@
     </fragment>
 
     <fragment
-        android:id="@+id/planCreateFragment"
+        android:id="@+id/planAddFragment"
         android:name="com.umc.presentation.ui.home.PlanAddFragment"
         android:label="일정 생성 화면"
         tools:layout="@layout/fragment_plan_add">

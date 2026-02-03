@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable name="item" type="com.umc.domain.model.home.CategoryItem" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="8dp">
+
+        <ImageView
+            android:id="@+id/item_imv_category"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:imageResource="@{item.isChecked ? item.selectedIcon : item.unselectedIcon}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/item_tv_category_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:text="@{item.name}"
+            android:textAppearance="@style/HeadlineBold"
+            android:textColor="@color/neutral800"
+            app:layout_constraintBottom_toBottomOf="@id/item_imv_category"
+            app:layout_constraintEnd_toStartOf="@id/cb_category"
+            app:layout_constraintStart_toEndOf="@id/item_imv_category"
+            app:layout_constraintTop_toTopOf="@id/item_imv_category" />
+
+        <CheckBox
+            android:id="@+id/cb_category"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:buttonTint="@color/primary500"
+            android:checked="@{item.isChecked}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

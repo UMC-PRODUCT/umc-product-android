@@ -4,6 +4,7 @@ import android.util.Log
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.model.home.ParticipantItem
+import com.umc.presentation.R
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -200,6 +201,7 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
         when(event){
             is PlanAddFragmentEvent.SelectCategory -> {
                 updateState {
+                    //카테고리 uistate 업데이트
                     val selectedCategories = categories.map{
                         //만약 터치한 놈이 리스트 중 하나랑 같으면
                         if(it.name == event.category.name){
@@ -209,7 +211,25 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
                             it.copy(isChecked = it.isChecked)
                         }
                     }
-                    copy(categories = selectedCategories)
+
+                    //선택된 카테코리 필터링
+                    val selectedOnes = selectedCategories.filter { it.isChecked }
+                    //더미 텍스트 및 선택 여부 반영
+                    val isSelected = when {
+                        selectedOnes.isEmpty() -> false
+                        else -> true
+                    }
+                    val summaryText = when {
+                        selectedOnes.isEmpty() -> ""
+                        selectedOnes.size <= 3 -> selectedOnes.joinToString(", ") { it.name }
+                        else -> "${selectedOnes.take(3).joinToString(", ") { it.name }} 외 ${selectedOnes.size - 3}개"
+                    }
+
+                    copy(categories = selectedCategories,
+                        isSeletedCategory = isSelected,
+                        selectedCategoriesString = summaryText
+                    )
+
                 }
             }
 
@@ -233,7 +253,7 @@ data class PlanAddFragmentUiState(
     //하루 종일 부분에 체크가 되었나
     val isAllDay: Boolean = false,
 
-    //일정 관련
+    //일정 및 장소 관련
     val planTitle: String = "",    //필수
     val planLocation: String = "",
     val planDetail: String = "",
@@ -258,23 +278,23 @@ data class PlanAddFragmentUiState(
 
     //카테고리 리스트
     val categories: List<CategoryItem> = listOf(
-        CategoryItem(CategoryType.NETWORKING.label),
-        CategoryItem(CategoryType.PROJECT.label),
-        CategoryItem(CategoryType.FEES.label),
-        CategoryItem(CategoryType.MEETING.label),
+        CategoryItem(CategoryType.NETWORKING.label, R.drawable.ic_networking_off, R.drawable.ic_networking_on),
+        CategoryItem(CategoryType.PROJECT.label, R.drawable.ic_project_off, R.drawable.ic_project_on),
+        CategoryItem(CategoryType.FEES.label, R.drawable.ic_fees_off, R.drawable.ic_fees_on),
+        CategoryItem(CategoryType.MEETING.label, R.drawable.ic_meeting_off, R.drawable.ic_meeting_on),
 
-        CategoryItem(CategoryType.ORIENTATION.label),
-        CategoryItem(CategoryType.PRESENTATION.label),
-        CategoryItem(CategoryType.RETROSPECTIVE.label),
-        CategoryItem(CategoryType.GENERAL.label),
+        CategoryItem(CategoryType.ORIENTATION.label, R.drawable.ic_orientation_off, R.drawable.ic_orientation_on),
+        CategoryItem(CategoryType.PRESENTATION.label, R.drawable.ic_presentation_off, R.drawable.ic_presentation_on),
+        CategoryItem(CategoryType.RETROSPECTIVE.label, R.drawable.ic_retrospective_off, R.drawable.ic_retrospective_on),
+        CategoryItem(CategoryType.GENERAL.label, R.drawable.ic_general_off, R.drawable.ic_general_on),
 
-        CategoryItem(CategoryType.LEADERSHIP.label),
-        CategoryItem(CategoryType.STUDY.label),
-        CategoryItem(CategoryType.HACKATHON.label),
-        CategoryItem(CategoryType.WORKSHOP.label),
-
-        CategoryItem(CategoryType.AFTER_PARTY.label)
-    )
+        CategoryItem(CategoryType.LEADERSHIP.label, R.drawable.ic_leadership_off, R.drawable.ic_leadership_on),
+        CategoryItem(CategoryType.STUDY.label, R.drawable.ic_study_off, R.drawable.ic_study_on),
+        CategoryItem(CategoryType.HACKATHON.label, R.drawable.ic_hackathon_off, R.drawable.ic_hackathon_on),
+        CategoryItem(CategoryType.WORKSHOP.label, R.drawable.ic_workshop_off, R.drawable.ic_workshop_on),
+    ),
+    val isSeletedCategory: Boolean = false,
+    val selectedCategoriesString: String = ""
     
 
     
