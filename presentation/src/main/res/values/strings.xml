@@ -257,8 +257,13 @@
     <!-- study -->
     <string name="admin_study_submit_desc">%1$s님의 %2$s 스터디입니다.</string>
     <string name="admin_best_title">베스트 워크북 설정</string>
-
     <string name="admin_best_desc">우수한 스터디를 명예의 전당에 등록하고\n%1$s님의 경고 점수를 차감할 수 있습니다.</string>
-
+    <string name="study_member_add_placeholder">스터디원을 추가하세요</string>
+    <string name="study_member_search_title">스터디원을 검색하세요</string>
+    <string name="study_member_search_hint">이름을 입력하세요</string>
+    <string name="study_leader_add_placeholder">담당 파트장을 추가하세요</string>
+    <string name="study_leader_search_title">담당 파트장을 검색하세요</string>
+    <string name="select">선택</string>
+    <string name="delete">삭제</string>
 
 </resources>

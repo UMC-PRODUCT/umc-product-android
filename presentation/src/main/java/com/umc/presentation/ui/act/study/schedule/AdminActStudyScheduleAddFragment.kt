@@ -5,18 +5,18 @@ import android.app.TimePickerDialog
 import android.content.res.Configuration
 import androidx.fragment.app.viewModels
 import com.umc.presentation.base.BaseFragment
-import com.umc.presentation.databinding.FragmentAdminActStudyScheduleAddBinding
+import com.umc.presentation.databinding.FragmentAdminStudyScheduleAddBinding
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
 
 @AndroidEntryPoint
 class AdminActStudyScheduleAddFragment :
     BaseFragment<
-            FragmentAdminActStudyScheduleAddBinding,
+            FragmentAdminStudyScheduleAddBinding,
             AdminActStudyScheduleAddState,
             AdminActStudyScheduleAddEvent,
             AdminActStudyScheduleAddViewModel
-            >(FragmentAdminActStudyScheduleAddBinding::inflate) {
+            >(FragmentAdminStudyScheduleAddBinding::inflate) {
 
     override val viewModel: AdminActStudyScheduleAddViewModel by viewModels()
 

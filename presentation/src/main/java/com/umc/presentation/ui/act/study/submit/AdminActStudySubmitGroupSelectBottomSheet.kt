@@ -5,14 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.umc.presentation.databinding.BottomSheetActAdminGroupSelectBinding
+import com.umc.presentation.databinding.BottomSheetActGroupSelectBinding
 
 class AdminActStudySubmitGroupSelectBottomSheet(
     private val groups: List<String>,
     private val onSelect: (String) -> Unit,
 ) : BottomSheetDialogFragment() {
 
-    private var _binding: BottomSheetActAdminGroupSelectBinding? = null
+    private var _binding: BottomSheetActGroupSelectBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -20,7 +20,7 @@ class AdminActStudySubmitGroupSelectBottomSheet(
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        _binding = BottomSheetActAdminGroupSelectBinding.inflate(inflater, container, false)
+        _binding = BottomSheetActGroupSelectBinding.inflate(inflater, container, false)
         return binding.root
     }
 

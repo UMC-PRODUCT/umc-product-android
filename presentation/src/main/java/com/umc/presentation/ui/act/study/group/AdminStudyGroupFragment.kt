@@ -37,14 +37,14 @@ class AdminStudyGroupFragment :
                 showSettingPopup(anchorView, item)
             },
             onClickAddSchedule = { item ->
-
-                findNavController().navigate(
-                    R.id.action_activityManagementFragment_to_adminActStudyScheduleAddFragment
-                )
-
-
+                findNavController().navigate(R.id.action_to_schedule_add)
             }
         )
+
+
+        binding.btnCreateGroup.setOnClickListener {
+            findNavController().navigate(R.id.adminStudyGroupAddFragment)
+        }
 
 
         binding.rvGroups.layoutManager = LinearLayoutManager(requireContext())

@@ -5,14 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.umc.presentation.databinding.BottomSheetActAdminSheetWeekSelectBinding
+import com.umc.presentation.databinding.BottomSheetActWeekSelectBinding
 
 class AdminActStudySubmitWeekSelectBottomSheet(
     private val weeks: List<Int>,
     private val onSelect: (Int) -> Unit,
 ) : BottomSheetDialogFragment() {
 
-    private var _binding: BottomSheetActAdminSheetWeekSelectBinding? = null
+    private var _binding: BottomSheetActWeekSelectBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -20,7 +20,7 @@ class AdminActStudySubmitWeekSelectBottomSheet(
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        _binding = BottomSheetActAdminSheetWeekSelectBinding.inflate(inflater, container, false)
+        _binding = BottomSheetActWeekSelectBinding.inflate(inflater, container, false)
         return binding.root
     }
 
