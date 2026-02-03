@@ -22,6 +22,8 @@ import com.umc.presentation.databinding.FragmentPlanAddBinding
 import com.umc.presentation.ui.home.adapter.SearchParticipantAdapter
 import com.umc.presentation.ui.home.adapter.ShowCategoryAdapter
 import com.umc.presentation.ui.home.adapter.ShowParticipantAdapter
+import com.umc.presentation.ui.home.dialog.BottomSheetCategoryPlanDialog
+import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.InputStreamReader
 import java.util.Calendar
@@ -34,7 +36,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
     //recyclerviewAdapter 정의구간
     private lateinit var participantAdapter: ShowParticipantAdapter
-    private lateinit var categoryAdapter: ShowCategoryAdapter
+    //private lateinit var categoryAdapter: ShowCategoryAdapter
     private lateinit var searchAdapter: SearchParticipantAdapter
 
 
@@ -99,11 +101,8 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanTitle(text))
                 }
             }
-            planaddTextfieldPlanLocation.apply{
-                setOnTextChangedListener { text ->
-                    viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanLocation(text))
-                }
-            }
+
+
             planaddTextfieldPlanDetail.apply{
                 setOnTextChangedListener { text ->
                     viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanDetail(text))
@@ -115,6 +114,23 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
             planaddBtnRegisterPlan.setOnClickListener {
                 /**TODO 이벤트를 통해 해당 정보를 서버에 넘겨야 한다.**/
                 moveBackPressed()
+            }
+
+            //장소 선택 부분 터치시 다이얼로그 로직
+            binding.planaddCdvPlanLocation.setOnClickListener {
+                // 앞서 만든 BottomSheetDialog 생성
+                val locationDialog = BottomSheetLocationDialog { selectedItem ->
+                    // 선택된 장소(LocationItem)의 제목을 뷰모델 이벤트로 전달
+                    viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanLocation(selectedItem.title))
+                }
+                // 다이얼로그 표시
+                locationDialog.show(childFragmentManager, "LocationSelect")
+            }
+
+            //카테고리 선택 처피 시 다이얼로그 로직
+            binding.planaddCdvSearchCategory.setOnClickListener {
+                val categoryDialog = BottomSheetCategoryPlanDialog(viewModel)
+                categoryDialog.show(childFragmentManager, "CategorySelect")
             }
 
 
@@ -136,12 +152,18 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                 }
         }
 
+        /**수정**/
+        /*
         //3. 카테고리 목록 recyclerview에 콜백
         categoryAdapter = ShowCategoryAdapter{ categoryItem ->
             val event = PlanAddFragmentEvent.SelectCategory(categoryItem)
             viewModel.handleEvent(event)
 
         }
+
+         */
+        /**수정**/
+        /*
         //4. 카테고리 목록 recyclerview에 연결
         binding.planaddRcvSearchCategory.apply{
             adapter = categoryAdapter
@@ -151,6 +173,8 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     flexDirection = com.google.android.flexbox.FlexDirection.ROW
                 }
         }
+        */
+
         //5. 검색 관련 recyclerview 정의
         searchAdapter = SearchParticipantAdapter{ participantItem ->
             //토글 하면 이벤트 쏘기
@@ -183,7 +207,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
                 // 상태 바뀔 때마다 submitList로 수정
                 participantAdapter.submitList(state.selectedParticipants)
-                categoryAdapter.submitList(state.categories)
+                //categoryAdapter.submitList(state.categories)
                 searchAdapter.submitList(state.searchResults)
                 searchAdapter.updateSelectedList(state.selectedParticipants)
             }

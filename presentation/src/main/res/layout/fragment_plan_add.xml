@@ -313,21 +313,54 @@
                         app:layout_constraintTop_toBottomOf="@id/planadd_cdv_cover" />
 
 
-                    <com.umc.presentation.component.UTextField
-                        android:id="@+id/planadd_textfield_plan_location"
-                        android:layout_width="match_parent"
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/planadd_cdv_plan_location"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:background="@color/neutral000"
-                        app:strokeWidth="1dp"
+                        app:cardBackgroundColor="@color/neutral000"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="0dp"
                         app:strokeColor="@color/neutral300"
+                        app:strokeWidth="1dp"
                         app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_location"
                         app:layout_constraintStart_toStartOf="@id/planadd_tv_plan_title_location"
-                        app:placeholderText="@string/home_plan_add_plan_location_placeholder"
-                        app:textAppearance="@style/Subheadline"
-                        app:text="@{vm.uiState.planLocation}"
-                        app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
-                        />
+                        app:layout_constraintEnd_toEndOf="parent">
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="16dp"
+                            >
+
+                            <TextView
+                                android:id="@+id/planadd_tv_plan_location_placeholder"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/Body"
+                                android:layout_marginEnd="8dp"
+                                android:text='@{vm.uiState.planLocation.empty ? @string/home_plan_add_plan_location_placeholder : vm.uiState.planLocation}'
+                                android:textColor='@{vm.uiState.planLocation.empty ? @color/neutral400 : @color/neutral800}'
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toStartOf="@id/planadd_imv_plan_location_go"
+                                />
+
+                            <ImageView
+                                android:id="@+id/planadd_imv_plan_location_go"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_arrow_next"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"/>
+
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+                    </com.google.android.material.card.MaterialCardView>
 
                     <!--상세 안내-->
 
@@ -340,7 +373,7 @@
                         android:textAppearance="@style/HeadlineBold"
                         android:textColor="@color/neutral800"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_textfield_plan_location" />
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_plan_location" />
 
                     <com.umc.presentation.component.UTextField
                         android:id="@+id/planadd_textfield_plan_detail"
@@ -511,15 +544,55 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/planadd_layout_search_overlay" />
 
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/planadd_rcv_search_category"
-                        android:layout_width="match_parent"
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/planadd_cdv_search_category"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
+                        app:cardBackgroundColor="@color/neutral000"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/neutral300"
+                        app:strokeWidth="1dp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_category"
-                        />
+                        app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_category">
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="16dp"
+                            >
+
+                            <TextView
+                                android:id="@+id/planadd_tv_plan_category_placeholder"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/Body"
+                                android:layout_marginEnd="8dp"
+                                android:text='@{vm.uiState.isSeletedCategory == false ? @string/home_plan_add_plan_tag_placeholder : vm.uiState.selectedCategoriesString}'
+                                android:textColor='@{vm.uiState.isSeletedCategory == false ? @color/neutral400 : @color/neutral800}'
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toStartOf="@id/planadd_imv_plan_category_go"
+                                />
+
+                            <ImageView
+                                android:id="@+id/planadd_imv_plan_category_go"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_arrow_next"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"/>
+
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+                    </com.google.android.material.card.MaterialCardView>
 
 
                     <androidx.constraintlayout.widget.Guideline
@@ -545,7 +618,7 @@
                         app:borderColor="@color/neutral300"
                         app:layout_constraintEnd_toStartOf="@id/planadd_guideline_bottom"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_rcv_search_category"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_category"
                         />
 
                     <com.umc.presentation.component.UButton
@@ -563,7 +636,7 @@
                         app:textColor="@color/neutral000"
                         app:layout_constraintStart_toEndOf="@id/planadd_guideline_bottom"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_rcv_search_category"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_category"
                         />
 
                     <com.umc.presentation.component.UButton
@@ -581,7 +654,7 @@
                         app:textColor="@color/neutral000"
                         app:layout_constraintStart_toEndOf="@id/planadd_guideline_bottom"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_rcv_search_category"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_category"
                         />
 
 

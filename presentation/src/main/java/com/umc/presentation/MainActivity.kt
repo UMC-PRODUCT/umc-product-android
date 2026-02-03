@@ -117,6 +117,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
             R.id.homeFragment,
             R.id.mypageFragment,
                 R.id.communityFragment,
+                R.id.noticeFragment,
             R.id.activityManagementFragment -> {
                 binding.mainBnv.visibility = View.VISIBLE
             }
@@ -124,8 +125,10 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
         }
     }
 
+    /*
     override fun onBackPressed() {
         super.onBackPressed()
         navController.popBackStack()
     }
+    */
 }

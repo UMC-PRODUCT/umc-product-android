@@ -112,4 +112,18 @@ class USearchBar @JvmOverloads constructor(
     }
 
     fun setOnTextChangedListener(listener: ((String) -> Unit)?) { onTextChangedListener = listener }
+
+
+    fun getText(): String = binding.editText.text?.toString().orEmpty()
+
+    fun setText(value: String?) {
+        val newValue = value.orEmpty()
+        if (getText() == newValue) return
+
+        binding.editText.setText(newValue)
+        // 커서를 항상 텍스트 끝으로 이동
+        binding.editText.setSelection(newValue.length)
+    }
+
+
 }
