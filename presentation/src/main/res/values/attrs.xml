@@ -56,10 +56,6 @@
 
         <attr name="prevIcon"/>
 
-
-        <attr name="rightIcon" format="reference"/>
-        <attr name="rightIconTint" format="color|reference"/>
-        <attr name="rightIconSize" format="dimension"/>
     </declare-styleable>
 
 
