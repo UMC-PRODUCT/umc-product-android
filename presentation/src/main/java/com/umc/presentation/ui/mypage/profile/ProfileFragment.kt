@@ -79,12 +79,8 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding, ProfileFragmentUiSt
                 val nowBlog = binding.profileTextfieldBlog.getText()
                 val nowProfileImage = viewModel.uiState.value.profileImageUri
 
-                //뷰모델에게 DataStore에 저장 요청
-                viewModel.saveOutLinkData(nowGithub, nowLinkedin, nowBlog)
-
-
-                //뒤로 가기
-                requireActivity().onBackPressedDispatcher.onBackPressed()
+                //뷰모델에게 DataStore에 저장 요청하고 지우기
+                viewModel.saveAndExit(nowGithub, nowLinkedin, nowBlog)
 
             }
 

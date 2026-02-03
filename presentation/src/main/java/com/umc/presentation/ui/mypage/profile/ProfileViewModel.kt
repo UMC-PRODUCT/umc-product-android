@@ -33,6 +33,7 @@ class ProfileViewModel @Inject constructor(
                 }
             }
         }
+
     }
 
 
@@ -53,12 +54,15 @@ class ProfileViewModel @Inject constructor(
     }
 
     // 완료 버튼을 눌렀을 때 호출될 저장 로직
-    fun saveOutLinkData(github: String, linkedin: String, blog: String) {
+    fun saveAndExit(github: String, linkedin: String, blog: String) {
         viewModelScope.launch {
-            // DataStore에 저장
+            // DataStore에 저장하고 끝내기
             appDataStoreRepository.saveUserOutLink(github, linkedin, blog)
+
+            emitEvent(ProfileFragmentEvent.ClickBackPressed)
         }
     }
+
 
     //그냥 뒤로 가기
     fun onClickBackPressed(){
