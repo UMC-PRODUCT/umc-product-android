@@ -269,7 +269,7 @@
     <string name="study_member_search_hint">이름을 입력하세요</string>
     <string name="study_leader_add_placeholder">담당 파트장을 추가하세요</string>
     <string name="study_leader_search_title">담당 파트장을 검색하세요</string>
-    <string name="select">선택</string>
+
     <string name="delete">삭제</string>
 
 </resources>
