@@ -9,7 +9,7 @@ import com.umc.domain.model.act.challenger.AdminChallenger
 import com.umc.presentation.databinding.ItemActAdminChallengerBinding
 
 class AdminChallengerAdapter(
-    private val onItemClick: (Int) -> Unit
+    private val onItemClick: (AdminChallenger) -> Unit
 ) : ListAdapter<AdminChallenger, AdminChallengerAdapter.ViewHolder>(AdminChallengerDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -27,7 +27,7 @@ class AdminChallengerAdapter(
         RecyclerView.ViewHolder(binding.root) {
         fun bind(item: AdminChallenger) {
             binding.model = item
-            binding.root.setOnClickListener { onItemClick(item.id) }
+            binding.root.setOnClickListener { onItemClick(item) }
             binding.executePendingBindings()
         }
     }

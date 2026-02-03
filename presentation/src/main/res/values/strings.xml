@@ -255,7 +255,24 @@
 
     <string name="location_dialog_change">변경하기</string>
 
+    <!-- Chalenger Dialog -->
+    <string name="challenger_info_generation_label">활동 기수</string>
+    <string name="challenger_info_warning_label">누적 경고</string>
+    <string name="challenger_info_history_label">출석/활동 기록</string>
+
+    <string name="challenger_manage_history_title">히스토리</string>
+    <string name="challenger_manage_delete_guide">삭제 버튼을 눌러 기록을 삭제할 수 있습니다.</string>
+    <string name="challenger_manage_out_reason_title">아웃 사유 입력</string>
+    <string name="challenger_manage_warning_reason_title">경고 사유 입력</string>
+    <string name="challenger_manage_out_confirm">아웃 확정하기</string>
+    <string name="challenger_manage_warning_confirm">경고 확정하기</string>
+
+    <string name="challenger_manage_action_warning">경고 부여</string>
+    <string name="challenger_manage_action_out">아웃 부여</string>
+    <string name="challenger_manage_action_edit_history">기록 수정</string>
+
+    <string name="challenger_manage_reason_placeholder">사유를 입력하세요</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-
 </resources>

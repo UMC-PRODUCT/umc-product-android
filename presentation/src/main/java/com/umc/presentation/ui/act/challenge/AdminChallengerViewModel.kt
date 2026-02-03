@@ -16,13 +16,10 @@ class AdminChallengerViewModel @Inject constructor() :
 
     private fun loadInitialData() {
         val dummyList = listOf(
-            AdminChallenger(1, "홍길동", "닉네임", 12, UserPart.PM, outCount = 1, warningCount = 1),
-            AdminChallenger(2, "홍길동", "닉네임", 12, UserPart.DESIGN, outCount = 1, warningCount = 1),
-            AdminChallenger(3, "홍길동", "닉네임", 12, UserPart.DESIGN, outCount = 1, warningCount = 1),
-            AdminChallenger(4, "홍길동", "닉네임", 12, UserPart.WEB),
-            AdminChallenger(5, "홍길동", "닉네임", 12, UserPart.WEB),
-            AdminChallenger(6, "홍길동", "닉네임", 12, UserPart.WEB),
-            AdminChallenger(7, "홍길동", "닉네임", 12, UserPart.IOS)
+            AdminChallenger(1, "김디자", "닉네임1", 12, UserPart.DESIGN, outCount = 1, warningCount = 0),
+            AdminChallenger(2, "홍길동", "닉네임2", 12, UserPart.PM, outCount = 0, warningCount = 1),
+            AdminChallenger(3, "이웹마", "닉네임3", 12, UserPart.WEB, outCount = 2, warningCount = 1),
+            AdminChallenger(4, "박안드", "닉네임4", 12, UserPart.ANDROID, outCount = 0, warningCount = 0)
         )
         updateState { copy(allChallengers = dummyList, filteredChallengers = dummyList) }
     }
