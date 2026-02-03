@@ -54,13 +54,17 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="스터디 관리를 위한 스터디 그룹을 생성하고\n멤버를 관리하세요."
+                    android:text="스터디 관리를 위한 스터디 그룹을 생성하고 멤버를 관리하세요."
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral500"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    android:breakStrategy="balanced"
+                    android:hyphenationFrequency="none"
                     app:layout_constraintStart_toStartOf="@id/tv_header_title"
                     app:layout_constraintTop_toBottomOf="@id/tv_header_title"
-                    app:layout_constraintEnd_toStartOf="@id/btn_create_group"
-                    tools:text="스터디 관리를 위한 스터디 그룹을 생성하고\n멤버를 관리하세요." />
+                    app:layout_constraintEnd_toStartOf="@id/btn_create_group"/>
+
 
 
                 <com.umc.presentation.component.UButton
