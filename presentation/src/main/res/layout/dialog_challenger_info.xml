@@ -133,12 +133,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    tools:text="12기"
-                    android:text="@{model.generation}"
+                    android:text="@{@string/challenger_info_format_generation(model.generation)}"
                     android:textAppearance="@style/HeadlineBold"
                     app:layout_constraintTop_toBottomOf="@id/tv_gen_label"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
+                    app:layout_constraintEnd_toEndOf="parent"
+                    tools:text="12기" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
