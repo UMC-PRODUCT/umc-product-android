@@ -121,7 +121,7 @@ data class MypageFragmentUiState(
     
     // 현재 직책
     val myCareer : List<String> = listOf("8기 Android 챌린저", "9기 Android 중앙 파트장", "9기 칸 맞추기 기다란 텍스트"),
-
+    val myRecentCarrer : String = "9기 Android 중앙 파트장",
 
     // 링크 데이터
     val githubUrl : String = "",

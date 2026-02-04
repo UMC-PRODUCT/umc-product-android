@@ -74,7 +74,7 @@
                 app:strokeColor="@color/neutral200"
                 app:shapeAppearanceOverlay="@style/CircleImageAppearance"
                 app:layout_constraintTop_toTopOf="@id/mypage_tv_nickname"
-                app:layout_constraintBottom_toBottomOf="@id/mypage_flexbox_badge"
+                app:layout_constraintBottom_toBottomOf="@id/mypage_cdv_badge"
                 app:layout_constraintStart_toStartOf="parent"
                 />
 
@@ -146,22 +146,25 @@
                 app:layout_constraintTop_toBottomOf="@id/mypage_tv_nickname"
                 />
 
-            <com.google.android.flexbox.FlexboxLayout
-                android:id="@+id/mypage_flexbox_badge"
-                android:layout_width="0dp"
+            <com.umc.presentation.component.UButton
+                android:id="@+id/mypage_cdv_badge"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:flexDirection="row"
-                app:flexWrap="wrap"
-                app:justifyContent="flex_start"
-                app:alignItems="stretch"
-                app:alignContent="flex_start"
-                app:tagItems="@{vm.uiState.myCareer}"
-                app:tagLayoutId="@{@layout/item_mypage_tag}"
+                app:cardBackgroundColor="@color/neutral000"
+                app:borderWidth="1dp"
+                app:borderColor="@color/neutral200"
+                app:text="@{vm.uiState.myRecentCarrer}"
+                app:textAppearance="@style/Caption1Bold"
+                app:textColor="@color/neutral700"
+                app:contentPaddingBottom="4dp"
+                app:contentPaddingTop="4dp"
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
                 app:layout_constraintStart_toStartOf="@id/mypage_tv_nickname"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/mypage_tv_school"
                 />
+
 
 
             <ImageView
