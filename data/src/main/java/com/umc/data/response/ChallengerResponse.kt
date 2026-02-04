@@ -2,6 +2,7 @@ package com.umc.data.response
 
 import com.google.gson.annotations.SerializedName
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
+import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 
 data class ChallengerResponse(
     @SerializedName("challengerId") val challengerId: Long? = null,
@@ -26,6 +27,17 @@ data class ChallengerResponse(
                 university = schoolName ?: defaultModel.university,
                 part = part ?: defaultModel.part,
                 generation = gisu ?: defaultModel.generation,
+                profileImageUrl = profileImageLink ?: defaultModel.profileImageUrl
+            )
+        }
+
+        fun ChallengerResponse.toManageModel(): ChallengerManageDialogModel {
+            val defaultModel = ChallengerManageDialogModel()
+
+            return ChallengerManageDialogModel(
+                name = name ?: defaultModel.name,
+                university = schoolName ?: defaultModel.university,
+                part = part ?: defaultModel.part,
                 profileImageUrl = profileImageLink ?: defaultModel.profileImageUrl
             )
         }
