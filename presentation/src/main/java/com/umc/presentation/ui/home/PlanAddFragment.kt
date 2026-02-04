@@ -135,7 +135,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
             //장소 선택 부분 터치시 다이얼로그 로직
             binding.planaddCdvPlanLocation.setOnClickListener {
                 // 앞서 만든 BottomSheetDialog 생성
-                val locationDialog = BottomSheetLocationDialog { selectedItem ->
+                val locationDialog = BottomSheetLocationDialog(viewModel) { selectedItem ->
                     // 선택된 장소(LocationItem)의 제목을 뷰모델 이벤트로 전달
                     viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanLocation(selectedItem.title))
                 }

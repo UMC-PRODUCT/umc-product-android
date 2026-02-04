@@ -1,15 +1,19 @@
 package com.umc.presentation.ui.home
 
 import android.util.Log
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.model.home.ParticipantItem
+import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchPlaceUseCase
+import com.umc.domain.usecase.appDataStore.recent.UpdateRecentSearchPlaceUseCase
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -18,7 +22,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlanAddViewModel @Inject
-constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
+constructor(
+    private val getRecentSearchPlaceUseCase: GetRecentSearchPlaceUseCase, //최근 장소 기록 불러오기;
+    private val updateRecentSearchPlaceUseCase: UpdateRecentSearchPlaceUseCase, //최근 장소 기록 업데이트하기
+
+) : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
     PlanAddFragmentUiState()){
 
     private val dateSdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
@@ -33,6 +41,10 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
         ParticipantItem("최삼이", UserPart.NODE_JS, "연세대학교"),
         ParticipantItem("박사성", UserPart.ANDROID, "숭실대학교")
     )
+
+    init {
+        loadRecentPlaces()
+    }
 
 
     //handleEvent
@@ -296,6 +308,22 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
         updateState { copy(isAllDay = isAllday) }
     }
 
+    //장소 검색 기록 dataStore usecase
+    private fun loadRecentPlaces() {
+        viewModelScope.launch {
+            getRecentSearchPlaceUseCase().collect { places ->
+                updateState { copy(recentSearchList = places) }
+            }
+        }
+    }
+
+    //장소 선택 시 기록 추가
+    fun saveRecentPlace(place: String) {
+        viewModelScope.launch {
+            updateRecentSearchPlaceUseCase(place)
+        }
+    }
+
 
 }
 
@@ -312,6 +340,8 @@ data class PlanAddFragmentUiState(
     val planTitle: String = "",    //필수
     val planLocation: String = "",
     val planDetail: String = "",
+    val recentSearchList: List<String> = emptyList(), //최근 장소 검색 기록 (DATASTORE)
+
 
     //시간 관련
     val startDate: Calendar = Calendar.getInstance(),
