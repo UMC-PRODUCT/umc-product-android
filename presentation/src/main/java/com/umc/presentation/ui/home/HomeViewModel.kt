@@ -7,6 +7,8 @@ import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.enums.WarningStatus
 import com.umc.domain.model.home.SchedulePlanItem
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.appDataStore.UpdateUserInfoUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -15,9 +17,10 @@ import javax.inject.Inject
 
 //뷰모델에서는 xml에서 이벤트 의도 전달 -> fragment한테 이거 로직 처리하삼
 @HiltViewModel
-class HomeViewModel
-    @Inject
-    constructor() : BaseViewModel<HomeFragmentUiState, HomeFragmentEvent>(
+class HomeViewModel @Inject constructor(
+    private val getUserInfoUseCase: GetUserInfoUseCase,    // 조회용 UseCase
+    private val updateUserInfoUseCase: UpdateUserInfoUseCase // 저장용 UseCase
+) : BaseViewModel<HomeFragmentUiState, HomeFragmentEvent>(
             HomeFragmentUiState()){
 
 
@@ -39,6 +42,9 @@ class HomeViewModel
 
             //날짜들 가져오기 (eventDecorator)
             loadEvents()
+
+
+
         }
 
 

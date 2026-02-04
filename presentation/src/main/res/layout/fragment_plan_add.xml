@@ -93,6 +93,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:background="@color/neutral000"
+                        app:cardBackgroundColor="@color/neutral000"
                         app:strokeWidth="1dp"
                         app:strokeColor="@color/neutral300"
                         app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_name"
@@ -381,7 +382,8 @@
                         android:layout_height="144dp"
                         android:layout_marginTop="16dp"
                         android:background="@color/neutral000"
-                        android:gravity="top"
+                        app:cardBackgroundColor="@color/neutral000"
+                        android:gravity="top|start"
                         app:strokeWidth="1dp"
                         app:strokeColor="@color/neutral300"
                         app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_detail"
@@ -416,119 +418,53 @@
 
 
                     <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/planadd_btn_upload_csv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:cardBackgroundColor="@color/select_color_accent500"
-                        app:cardCornerRadius="8dp"
-                        app:cardElevation="0dp"
-                        app:rippleColor="@android:color/transparent"
-                        app:strokeWidth="0dp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="@id/planadd_tv_plan_title_attend"
-                        app:layout_constraintBottom_toBottomOf="@id/planadd_tv_plan_title_attend"
-                        >
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:orientation="horizontal"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="6dp">
-
-                            <ImageView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:src="@drawable/ic_upload"
-                                app:tint="@color/neutral000" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:text="@string/csv_upload"
-                                android:textColor="@color/neutral000"
-                                android:textAppearance="@style/SubheadlineBold" />
-
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/planadd_cdv_selected"
-                        android:layout_width="match_parent"
+                        android:id="@+id/planadd_cdv_search_participant"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:visibility="@{vm.uiState.isSelectedParticipant == true ? View.VISIBLE : View.GONE}"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="0dp"
-                        app:strokeWidth="1dp"
-                        app:strokeColor="@color/neutral300"
                         app:cardBackgroundColor="@color/neutral000"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/neutral300"
+                        app:strokeWidth="1dp"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintStart_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_btn_upload_csv"
-                        >
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_attend">
 
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/planadd_rcv_selected"
+                        <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:padding="16dp"
-                            android:nestedScrollingEnabled="false"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintStart_toEndOf="parent"
-                            app:layout_constraintTop_toBottomOf="@id/planadd_btn_upload_csv" />
+                            >
+
+                            <TextView
+                                android:id="@+id/planadd_tv_plan_participant_placeholder"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/Body"
+                                android:layout_marginEnd="8dp"
+                                android:text='@{vm.uiState.isSelectedParticipant == false ? @string/home_plan_add_plan_participant_placeholder : vm.uiState.selectedParticipantsString}'
+                                android:textColor='@{vm.uiState.isSelectedParticipant == false ? @color/neutral400 : @color/neutral800}'
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toStartOf="@id/planadd_imv_plan_category_go"
+                                />
+
+                            <ImageView
+                                android:id="@+id/planadd_imv_plan_participant_go"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_arrow_next"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"/>
+
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
 
                     </com.google.android.material.card.MaterialCardView>
-
-
-
-                    <com.umc.presentation.component.UTextField
-                        android:id="@+id/planadd_textifield_search"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        app:textAppearance="@style/Callout"
-                        app:backgroundColor="@color/neutral100"
-                        app:prevIcon="@drawable/ic_search"
-                        app:prevIconSize="24dp"
-                        app:prevIconTint="@color/neutral400"
-                        app:borderWidth="0dp"
-                        app:strokeWidth="1dp"
-                        app:strokeColor="@color/neutral300"
-                        app:placeholderText="@string/home_plan_add_plan_search_placeholder"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_selected"
-                        app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH}"
-                        />
-
-
-                    <!--검색 결과창 (이 부분은 겹치는 곳으로 표시)-->
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/planadd_layout_search_overlay"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:background="@drawable/bg_neutral100_radius16"
-                        android:visibility="@{vm.uiState.isSearchOverlayVisible ? View.VISIBLE : View.GONE}"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_textifield_search"
-                        >
-
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/planadd_rcv_search_results"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-
-                            />
-                    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
                     <!--카테고리-->
@@ -542,7 +478,7 @@
                         android:textAppearance="@style/HeadlineBold"
                         android:textColor="@color/neutral800"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_layout_search_overlay" />
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_participant" />
 
 
                     <com.google.android.material.card.MaterialCardView

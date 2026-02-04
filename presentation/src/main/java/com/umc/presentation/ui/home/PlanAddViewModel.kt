@@ -1,14 +1,19 @@
 package com.umc.presentation.ui.home
 
 import android.util.Log
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.CategoryType
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.model.home.ParticipantItem
+import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchPlaceUseCase
+import com.umc.domain.usecase.appDataStore.recent.UpdateRecentSearchPlaceUseCase
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -17,11 +22,29 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlanAddViewModel @Inject
-constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
+constructor(
+    private val getRecentSearchPlaceUseCase: GetRecentSearchPlaceUseCase, //최근 장소 기록 불러오기;
+    private val updateRecentSearchPlaceUseCase: UpdateRecentSearchPlaceUseCase, //최근 장소 기록 업데이트하기
+
+) : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
     PlanAddFragmentUiState()){
 
     private val dateSdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
     private val timeSdf = SimpleDateFormat("a h:mm", Locale.KOREAN)
+
+    // 임시 더미 데이터 (실제로는 서버나 DB에서 가져와야 함)
+    private val allChallengers = listOf(
+        ParticipantItem("박유수", UserPart.ANDROID, "숭실대학교"),
+        ParticipantItem("어헛차", UserPart.ANDROID, "숭실대학교"),
+        ParticipantItem("김하나", UserPart.DESIGN, "서울대학교"),
+        ParticipantItem("이두리", UserPart.IOS, "고려대학교"),
+        ParticipantItem("최삼이", UserPart.NODE_JS, "연세대학교"),
+        ParticipantItem("박사성", UserPart.ANDROID, "숭실대학교")
+    )
+
+    init {
+        loadRecentPlaces()
+    }
 
 
     //handleEvent
@@ -131,9 +154,21 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
             is PlanAddFragmentEvent.UpdateParticipants -> {
                 updateState {
 
+                    val newList = event.participants.toList()
+
+                    // 결과 텍스트 만들기
+                    val summaryText = when {
+                        newList.isEmpty() -> ""
+                        newList.size == 1 -> newList[0].name
+                        else -> "${newList[0].name} 외 ${newList.size - 1}명"
+                    }
+
                     // 이 경우, 덮어쓰기 (기존 꺼 유지 하니 꼬인다)
                     //val addList = (selectedParticipants + event.participants).distinct().toList()
-                    copy(selectedParticipants = event.participants.toList())
+                    copy(
+                        selectedParticipants = newList,
+                        selectedParticipantsString = summaryText
+                        )
                 }
                 Log.d("log_home", "추가 결과: ${uiState.value.selectedParticipants}")
             }
@@ -143,23 +178,39 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
                 updateState {
                     // event에서 전달해준 string name을 뺀 data list를 새로 성성
                     val newList = selectedParticipants.filter { it.name != event.user.name }
-                    copy(selectedParticipants = newList.toList())
+
+                    // 결과 텍스트 만들기
+                    val summaryText = when {
+                        newList.isEmpty() -> ""
+                        newList.size == 1 -> newList[0].name
+                        else -> "${newList[0].name} 외 ${newList.size - 1}명"
+                    }
+
+                    copy(
+                        selectedParticipants = newList.toList(),
+                        selectedParticipantsString = summaryText
+                    )
                 }
                 Log.d("log_home", "삭제 결과: ${uiState.value.selectedParticipants}")
             }
 
             //인원을 검색할 경우
             is PlanAddFragmentEvent.SearchParticipants -> {
-                //더미데이터
+                
+                //텍스트가 비어있으면 = 전부 보여주기
+                //아니면 필터링
                 val searchQuery = event.user.name
-                val results = listOf("어헛차", "박유수", "어헛차", "김하나")
-                    .filter { it.contains(searchQuery) }
-                    .map { ParticipantItem(it) }
+                val results = if (searchQuery.isBlank()) {
+                    allChallengers
+                } else {
+                    allChallengers.filter { it.name.contains(searchQuery, ignoreCase = true) }
+                }
 
                 updateState {
                     copy(
                         searchResults = results,
-                        isSearchOverlayVisible = true
+                        searchQuery = searchQuery,
+                        isSearching = true
                     )
                 }
 
@@ -177,7 +228,19 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
                     else {
                         selectedParticipants + event.user // 없으면 추가
                     }
-                    copy(selectedParticipants = newList.toList())
+
+                    //결과 스트링 작성
+                    val summaryText = when {
+                        newList.isEmpty() -> ""
+                        newList.size == 1 -> newList[0].name
+                        else -> "${newList[0].name} 외 ${newList.size - 1}명"
+                    }
+
+
+                    copy(
+                        selectedParticipants = newList.toList(),
+                        selectedParticipantsString = summaryText
+                        )
                 }
                 Log.d("log_home", "토글 결과: ${uiState.value.selectedParticipants}")
             }
@@ -187,7 +250,8 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
                 updateState {
                     copy(
                         searchResults = emptyList(),
-                        isSearchOverlayVisible = false
+                        searchQuery = "",
+                        isSearching = false
                     )
                 }
             }
@@ -244,11 +308,30 @@ constructor() : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
         updateState { copy(isAllDay = isAllday) }
     }
 
+    //장소 검색 기록 dataStore usecase
+    private fun loadRecentPlaces() {
+        viewModelScope.launch {
+            getRecentSearchPlaceUseCase().collect { places ->
+                updateState { copy(recentSearchList = places) }
+            }
+        }
+    }
+
+    //장소 선택 시 기록 추가
+    fun saveRecentPlace(place: String) {
+        viewModelScope.launch {
+            updateRecentSearchPlaceUseCase(place)
+        }
+    }
+
 
 }
 
 
 data class PlanAddFragmentUiState(
+
+    //운영진 여부 판단
+    val isManager: Boolean = true,
 
     //하루 종일 부분에 체크가 되었나
     val isAllDay: Boolean = false,
@@ -257,6 +340,8 @@ data class PlanAddFragmentUiState(
     val planTitle: String = "",    //필수
     val planLocation: String = "",
     val planDetail: String = "",
+    val recentSearchList: List<String> = emptyList(), //최근 장소 검색 기록 (DATASTORE)
+
 
     //시간 관련
     val startDate: Calendar = Calendar.getInstance(),
@@ -274,7 +359,9 @@ data class PlanAddFragmentUiState(
     /**TODO 일단은 이름만 받는다고 가정**/
     val selectedParticipants: List<ParticipantItem> = emptyList(), //선택된 참여자 결과(recyclerview에 쓰임)
     val searchResults: List<ParticipantItem> = emptyList(), //검색 결과
-    val isSearchOverlayVisible: Boolean = false, //검색 결과창 보여주기
+    val searchQuery: String = "", //검색하는 내용
+    val isSearching: Boolean = false,
+    val selectedParticipantsString : String = "", //cdv에 보여줄 string
 
     //카테고리 리스트
     val categories: List<CategoryItem> = listOf(

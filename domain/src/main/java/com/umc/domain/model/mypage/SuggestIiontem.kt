@@ -2,7 +2,7 @@ package com.umc.domain.model.mypage
 
 import com.umc.domain.model.enums.SuggestionStatus
 
-
+/**사용 안함**/
 data class SuggestionItem(
     val status: SuggestionStatus,
     val date: String,

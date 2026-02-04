@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="item"
+            type="com.umc.domain.model.act.challenger.SimpleHistoryItem" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/btn_status_tag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:attendanceStatus="@{item.status}"
+            app:cornerRadius="4dp"
+            app:contentPaddingTop="2dp"
+            app:contentPaddingBottom="2dp"
+            app:contentPaddingLeft="6dp"
+            app:contentPaddingRight="6dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_record_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="@{item.title}"
+            android:textAppearance="@style/Subheadline"
+            android:textColor="@color/neutral800"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btn_status_tag"
+            tools:text="3주차 정기 세션" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

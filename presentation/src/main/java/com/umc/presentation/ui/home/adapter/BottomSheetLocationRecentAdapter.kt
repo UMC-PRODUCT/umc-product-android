@@ -9,18 +9,18 @@ import com.umc.domain.model.home.LocationItem
 import com.umc.presentation.databinding.ItemBottomSheetLocationRecentBinding
 
 interface RecentLocationDelegate {
-    fun onRecentClicked(item: LocationItem) // 최근 기록 클릭 시 검색창에 입력 및 검색 실행
+    fun onRecentClicked(item: String) // 최근 기록 클릭 시 검색창에 입력 및 검색 실행
 }
 
 class BottomSheetLocationRecentAdapter(
     private val delegate: RecentLocationDelegate
-) : ListAdapter<LocationItem, BottomSheetLocationRecentAdapter.ViewHolder>(LocationDiffCallback) {
+) : ListAdapter<String, BottomSheetLocationRecentAdapter.ViewHolder>(LocationDiffCallback) {
 
     inner class ViewHolder(private val binding: ItemBottomSheetLocationRecentBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item : LocationItem) {
-            binding.itemTvLocation.text = item.address
+        fun bind(item : String) {
+            binding.itemTvLocation.text = item
 
             // 아이템 전체 클릭 시 검색 로직 실행
             binding.root.setOnClickListener {
@@ -39,11 +39,15 @@ class BottomSheetLocationRecentAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(getItem(position))
 
     companion object {
-        private val LocationDiffCallback = object : DiffUtil.ItemCallback<LocationItem>() {
-            override fun areItemsTheSame(oldItem: LocationItem, newItem: LocationItem) =
-                oldItem.title == newItem.title && oldItem.address == newItem.address
-            override fun areContentsTheSame(oldItem: LocationItem, newItem: LocationItem) =
-                oldItem == newItem
+
+        private val LocationDiffCallback = object : DiffUtil.ItemCallback<String>() {
+            override fun areItemsTheSame(oldItem: String, newItem: String): Boolean {
+                return oldItem == newItem
+            }
+
+            override fun areContentsTheSame(oldItem: String, newItem: String): Boolean {
+                return oldItem == newItem
+            }
         }
     }
 }

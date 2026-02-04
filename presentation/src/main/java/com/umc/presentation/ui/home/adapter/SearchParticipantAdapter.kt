@@ -8,6 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.presentation.databinding.ItemHomeSearchParticipantBinding
 
+
+// * TODO: 해당 어댑터는 일정 추가 탭의 BottomSheetdDialog 사용으로 인해 사용이 중지되었습니다.
 class SearchParticipantAdapter(
     private val onToggleClick: (ParticipantItem) -> Unit
 ) : ListAdapter<ParticipantItem, SearchParticipantAdapter.ViewHolder>(DiffCallback) {
