@@ -2,6 +2,7 @@ package com.umc.data.repository
 
 import com.umc.data.dataSource.local.AppDataStore
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.mypage.UserOutLink
 import com.umc.domain.repository.AppDataStoreRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -13,10 +14,10 @@ class AppDataStoreRepositoryImpl @Inject constructor(
 ) : AppDataStoreRepository {
 
     //외부 링크 가져오고 받아오기 연결
-    override fun getUserOutLink(): Flow<Map<String, String>> = appDataStore.userOutLinkFlow
+    override fun getUserOutLink(): Flow<UserOutLink> = appDataStore.userOutLinkFlow
 
-    override suspend fun saveUserOutLink(github: String, linkedin: String, blog: String) {
-        appDataStore.saveOutLink(github, linkedin, blog)
+    override suspend fun saveUserOutLink(outLink: UserOutLink) {
+        appDataStore.saveOutLink(outLink)
     }
 
     //일정 추가 -> 최근 장소 검색 기록 연결

@@ -4,7 +4,10 @@ import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.mypage.UserActiveItem
+import com.umc.domain.model.mypage.UserOutLink
 import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
+import com.umc.domain.usecase.appDataStore.UpdateUserOutLinkUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -15,7 +18,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val appDataStoreRepository: AppDataStoreRepository
+    private val getUserOutLinkUseCase: GetUserOutLinkUseCase,
+    private val updateUserOutLinkUseCase: UpdateUserOutLinkUseCase,
 ) : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     ProfileFragmentUiState()){
 
@@ -23,12 +27,12 @@ class ProfileViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             //DataStore에서 가져와서 넣기
-            appDataStoreRepository.getUserOutLink().collect { map ->
+            getUserOutLinkUseCase().collect { outLink ->
                 updateState {
                     copy(
-                        githubLink = map["github"] ?: "",
-                        linkedinLink = map["linkedin"] ?: "",
-                        blogLink = map["blog"] ?: ""
+                        githubLink = outLink.github,
+                        linkedinLink = outLink.linkedin,
+                        blogLink = outLink.blog
                     )
                 }
             }
@@ -57,7 +61,8 @@ class ProfileViewModel @Inject constructor(
     fun saveAndExit(github: String, linkedin: String, blog: String) {
         viewModelScope.launch {
             // DataStore에 저장하고 끝내기
-            appDataStoreRepository.saveUserOutLink(github, linkedin, blog)
+            val nowOutLink = UserOutLink(github, linkedin, blog)
+            updateUserOutLinkUseCase(nowOutLink)
 
             emitEvent(ProfileFragmentEvent.ClickBackPressed)
         }

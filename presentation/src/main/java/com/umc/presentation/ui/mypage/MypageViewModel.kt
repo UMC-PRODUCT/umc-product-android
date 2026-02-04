@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -14,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MypageViewModel @Inject constructor(
-    private val appDataStoreRepository: AppDataStoreRepository
+    private val getUserOutLinkUseCase: GetUserOutLinkUseCase,
 ) : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
 
@@ -22,12 +23,12 @@ class MypageViewModel @Inject constructor(
     //초기 상태
     init {
         viewModelScope.launch {
-            appDataStoreRepository.getUserOutLink().collect { map ->
+           getUserOutLinkUseCase().collect { outLink ->
                 updateState {
                     copy(
-                        githubUrl = map["github"] ?: "",
-                        linkedinUrl = map["linkedin"] ?: "",
-                        blogUrl = map["blog"] ?: ""
+                        githubUrl = outLink.github,
+                        linkedinUrl = outLink.linkedin,
+                        blogUrl = outLink.blog
                     )
                 }
             }

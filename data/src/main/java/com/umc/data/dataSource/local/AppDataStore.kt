@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.mypage.UserOutLink
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,42 +20,22 @@ class AppDataStore @Inject constructor(
 ) {
     private val gson = Gson()
 
-    // 여기서 Datastore에 들어갈 key들 정의
-    companion object {
-        //외부 링크 KEY
-        val KEY_GITHUB = stringPreferencesKey("github_url")
-        val KEY_LINKEDIN = stringPreferencesKey("linkedin_url")
-        val KEY_BLOG = stringPreferencesKey("blog_url")
-
-        //유저 정보 KEY
-        val KEY_ID = intPreferencesKey("id")
-        val KEY_NAME = stringPreferencesKey("name")
-        val KEY_NICKNAME = stringPreferencesKey("nickname")
-        val KEY_EMAIL = stringPreferencesKey("email")
-        val KEY_SCHOOL_ID = intPreferencesKey("school_id")
-        val KEY_SCHOOL_NAME = stringPreferencesKey("school_name")
-        val KEY_PROFILE_IMAGE = stringPreferencesKey("profile_image")
-        val KEY_STATUS = stringPreferencesKey("status")
-
-        //일정 추가에서 장소 기록 KEY
-        val KEY_RECENT_SEARCHES_PLACE = stringPreferencesKey("recent_searches_place")
-    }
 
     // 아웃링크 Flow
-    val userOutLinkFlow: Flow<Map<String, String>> = context.dataStore.data.map { prefs ->
-        mapOf(
-            "github" to (prefs[KEY_GITHUB] ?: ""),
-            "linkedin" to (prefs[KEY_LINKEDIN] ?: ""),
-            "blog" to (prefs[KEY_BLOG] ?: ""),
+    val userOutLinkFlow: Flow<UserOutLink> = context.dataStore.data.map { prefs ->
+        UserOutLink(
+            github = prefs[KEY_GITHUB] ?: "",
+            linkedin = prefs[KEY_LINKEDIN] ?: "",
+            blog = prefs[KEY_BLOG] ?: ""
         )
     }
 
     // 아웃 링크 저장
-    suspend fun saveOutLink(github: String, linkedin: String, blog: String) {
+    suspend fun saveOutLink(outLink: UserOutLink) {
         context.dataStore.edit { prefs ->
-            prefs[KEY_GITHUB] = github
-            prefs[KEY_LINKEDIN] = linkedin
-            prefs[KEY_BLOG] = blog
+            prefs[KEY_GITHUB] = outLink.github
+            prefs[KEY_LINKEDIN] = outLink.linkedin
+            prefs[KEY_BLOG] = outLink.blog
         }
     }
 
@@ -103,5 +84,26 @@ class AppDataStore @Inject constructor(
         }
     }
 
+
+    // 여기서 Datastore에 들어갈 key들 정의
+    companion object {
+        //외부 링크 KEY
+        val KEY_GITHUB = stringPreferencesKey("github_url")
+        val KEY_LINKEDIN = stringPreferencesKey("linkedin_url")
+        val KEY_BLOG = stringPreferencesKey("blog_url")
+
+        //유저 정보 KEY
+        val KEY_ID = intPreferencesKey("id")
+        val KEY_NAME = stringPreferencesKey("name")
+        val KEY_NICKNAME = stringPreferencesKey("nickname")
+        val KEY_EMAIL = stringPreferencesKey("email")
+        val KEY_SCHOOL_ID = intPreferencesKey("school_id")
+        val KEY_SCHOOL_NAME = stringPreferencesKey("school_name")
+        val KEY_PROFILE_IMAGE = stringPreferencesKey("profile_image")
+        val KEY_STATUS = stringPreferencesKey("status")
+
+        //일정 추가에서 장소 기록 KEY
+        val KEY_RECENT_SEARCHES_PLACE = stringPreferencesKey("recent_searches_place")
+    }
 
 }
