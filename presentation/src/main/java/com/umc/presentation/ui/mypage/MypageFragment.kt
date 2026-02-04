@@ -83,42 +83,22 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             /**차후 링크는 실제 값으로 변경**/
             is MypageFragmentEvent.NavigateToGithub -> {
                 val url = viewModel.uiState.value.githubUrl
-                val model = setDialogContent(OutLinkType.GITHUB)
 
-                if(url == ""){
-                    val dialog = UMypageDialog(model){/**NO LOGIC**/}
-                    dialog.show(parentFragmentManager, "MyPageDialog")
-                }
-                else{
-                    openWebpage(url)
-                }
+                handleOutLink(url, OutLinkType.GITHUB)
+
 
             }
             is MypageFragmentEvent.NavigateToBlog -> {
                 val url = viewModel.uiState.value.blogUrl
-                val model = setDialogContent(OutLinkType.BLOG)
 
-                if(url == ""){
-                    val dialog = UMypageDialog(model){/**NO LOGIC**/}
-                    dialog.show(parentFragmentManager, "MyPageDialog")
-                }
-                else{
-                    openWebpage(url)
-                }
+                handleOutLink(url, OutLinkType.BLOG)
 
 
             }
             is MypageFragmentEvent.NavigateToLinkedin -> {
                 val url = viewModel.uiState.value.linkedinUrl
-                val model = setDialogContent(OutLinkType.LINKEDIN)
 
-                if(url == ""){
-                    val dialog = UMypageDialog(model){/**NO LOGIC**/}
-                    dialog.show(parentFragmentManager, "MyPageDialog")
-                }
-                else{
-                    openWebpage(url)
-                }
+                handleOutLink(url, OutLinkType.LINKEDIN)
 
             }
             is MypageFragmentEvent.NavigateToEditProfile -> {
@@ -207,7 +187,6 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
     }
 
     //outLink 3종 다이얼로그 포멧 만들기
-    /**Type : 1 = Github, 2 = LinkedIn, 3 = Blog**/
     private fun setDialogContent(type : OutLinkType) : UMypageDialogModel {
         var name = ""
         if(type == OutLinkType.GITHUB){name = "Github를"}
@@ -221,6 +200,19 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             confirmText = "확인"
         )
     
+    }
+
+    // url 여부와 타입에 따라 다이얼로그를 열 지 아니면, 실행할지 로직
+    private fun handleOutLink(url: String, type: OutLinkType) {
+        val model = setDialogContent(type)
+
+        if(url == ""){
+            val dialog = UMypageDialog(model){/**NO LOGIC**/}
+            dialog.show(parentFragmentManager, "MyPageDialog")
+        }
+        else{
+            openWebpage(url)
+        }
     }
 
     //웹페이지 이동

@@ -11,7 +11,7 @@ java {
 
 dependencies {
     // 안드로이드 의존성이 없는 'core' 버전만 가져옵니다.
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation(libs.kotlinx.coroutines.core)
 }
 
 kotlin {

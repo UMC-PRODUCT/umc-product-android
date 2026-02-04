@@ -31,7 +31,9 @@ opencsv = "5.7.1"
 googleServices = "4.4.4"
 firebaseBom = "34.8.0"
 kotlinx-serialization = "1.9.0"
-
+kotlinxCoroutines = "1.7.3"
+datastore = "1.0.0"
+gson = "2.10.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -75,6 +77,13 @@ kakao-user = { group = "com.kakao.sdk", name = "v2-all", version.ref = "kakao" }
 
 # opencsv
 opencsv = { group = "com.opencsv", name = "opencsv", version.ref = "opencsv" }
+
+# pure coroutines
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+
+#dataStore & Gson
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+google-code-gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
