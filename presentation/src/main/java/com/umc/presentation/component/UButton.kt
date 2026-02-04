@@ -68,6 +68,17 @@ constructor(
                 } else {
                     imagePrevIcon.gone()
                 }
+
+                // 상단 아이콘
+                val hasPrevTopIcon = a.hasValue(R.styleable.UButton_topIcon)
+
+                if (hasPrevTopIcon) {
+                    val prevTopIconRes = a.getResourceId(R.styleable.UButton_topIcon, R.drawable.ic_dropdown)
+                    imagePrevTopIcon.setImageResource(prevTopIconRes)
+                    imagePrevTopIcon.visible()
+                } else {
+                    imagePrevTopIcon.gone()
+                }
             }
         } finally {
             a.recycle()
