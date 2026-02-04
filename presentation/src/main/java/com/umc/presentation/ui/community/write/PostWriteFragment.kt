@@ -72,10 +72,13 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
         }
 
         //카테고리 어댑터 -> 클릭 시 변경하기
+        /*
         categoryAdapter = ShowCategoryAdapter{ categoryItem ->
             viewModel.setCategory(categoryItem)
         }
         binding.writeRcv.adapter = categoryAdapter
+
+         */
 
 
     }
@@ -86,7 +89,8 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
         repeatOnStarted(viewLifecycleOwner){
             launch {
                 viewModel.uiState.collect { state ->
-                    categoryAdapter.submitList(state.regionCategories)
+                    /**카테고리 관련은 OUT**/
+                //categoryAdapter.submitList(state.regionCategories)
                 }
             }
 
