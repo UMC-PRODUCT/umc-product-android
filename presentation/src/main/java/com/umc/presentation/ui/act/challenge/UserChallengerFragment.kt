@@ -2,6 +2,7 @@ package com.umc.presentation.ui.act.challenge
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -97,6 +98,9 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
         when (event) {
             is UserChallengerEvent.NavigateToDetail -> {
                 ChallengerInfoDialog(event.model).show(childFragmentManager, "ChallengerInfoDialog")
+            }
+            is UserChallengerEvent.ShowErrorToast -> {
+                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
             }
         }
     }

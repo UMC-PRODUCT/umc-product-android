@@ -66,16 +66,13 @@ class UserChallengerViewModel @Inject constructor(
 
     fun navigateToDetail(id: Int) {
         viewModelScope.launch {
-            try {
-                when (val result = getChallengerDetailUseCase(id.toLong())) {
-                    is ApiState.Success -> {
-                        emitEvent(UserChallengerEvent.NavigateToDetail(result.data))
-                    }
-                    is ApiState.Fail -> {
-                    }
+            when (val result = getChallengerDetailUseCase(id.toLong())) {
+                is ApiState.Success -> {
+                    emitEvent(UserChallengerEvent.NavigateToDetail(result.data))
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
+                is ApiState.Fail -> {
+                    emitEvent(UserChallengerEvent.ShowErrorToast(result.failState.message))
+                }
             }
         }
     }
@@ -86,6 +83,7 @@ data class UserChallengerUiState(
     val filteredChallengers: List<UserChallenger> = emptyList()
 ) : UiState
 
-sealed class UserChallengerEvent : UiEvent {
-    data class NavigateToDetail(val model: ChallengerInfoDialogModel) : UserChallengerEvent()
+sealed interface UserChallengerEvent : UiEvent {
+    data class NavigateToDetail(val model: ChallengerInfoDialogModel) : UserChallengerEvent
+    data class ShowErrorToast(val message: String) : UserChallengerEvent
 }
