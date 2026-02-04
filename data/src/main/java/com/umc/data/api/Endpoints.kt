@@ -10,5 +10,10 @@ object Endpoints {
         const val EMAIL_VERIFICATION = "$AUTH/email-verification"
         const val EMAIL_VERIFICATION_COMPLETE = "$EMAIL_VERIFICATION/complete"
     }
+
+    object Challenger {
+        const val CHALLENGER = "api/v1/challenger"
+        const val DETAIL = "$CHALLENGER/{challengerId}"
+    }
     // TODO 경로명 입력
 }
