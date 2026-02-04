@@ -259,6 +259,7 @@
     <string name="challenger_info_generation_label">활동 기수</string>
     <string name="challenger_info_warning_label">누적 경고</string>
     <string name="challenger_info_history_label">출석/활동 기록</string>
+    <string name="challenger_info_format_generation">%d기</string>
 
     <string name="challenger_manage_history_title">히스토리</string>
     <string name="challenger_manage_delete_guide">삭제 버튼을 눌러 기록을 삭제할 수 있습니다.</string>

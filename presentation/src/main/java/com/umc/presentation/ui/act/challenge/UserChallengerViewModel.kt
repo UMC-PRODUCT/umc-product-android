@@ -1,17 +1,23 @@
 package com.umc.presentation.ui.act.challenge
 
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.UserChallenger
+import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
+import com.umc.domain.usecase.GetChallengerDetailUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class UserChallengerViewModel @Inject constructor() :
-    BaseViewModel<UserChallengerUiState, UserChallengerEvent>(UserChallengerUiState()) {
+class UserChallengerViewModel @Inject constructor(
+    private val getChallengerDetailUseCase: GetChallengerDetailUseCase
+) : BaseViewModel<UserChallengerUiState, UserChallengerEvent>(UserChallengerUiState()) {
 
     init { loadInitialData() }
 
@@ -59,7 +65,19 @@ class UserChallengerViewModel @Inject constructor() :
     }
 
     fun navigateToDetail(id: Int) {
-        emitEvent(UserChallengerEvent.NavigateToDetail(id))
+        viewModelScope.launch {
+            try {
+                when (val result = getChallengerDetailUseCase(id.toLong())) {
+                    is ApiState.Success -> {
+                        emitEvent(UserChallengerEvent.NavigateToDetail(result.data))
+                    }
+                    is ApiState.Fail -> {
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }
 
@@ -69,5 +87,5 @@ data class UserChallengerUiState(
 ) : UiState
 
 sealed class UserChallengerEvent : UiEvent {
-    data class NavigateToDetail(val id: Int) : UserChallengerEvent()
+    data class NavigateToDetail(val model: ChallengerInfoDialogModel) : UserChallengerEvent()
 }
