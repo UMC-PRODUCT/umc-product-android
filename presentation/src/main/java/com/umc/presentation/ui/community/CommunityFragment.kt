@@ -107,6 +107,7 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
             val tabTitles = listOf(
                     getString(R.string.all),
                     getString(R.string.question),
+                    "번개모임",
                     getString(R.string.community_top),
                 )
 
@@ -121,7 +122,7 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
                     
                     //만약 탭 추가나 변경 시 CommunityType 변경 후 적용
                     when(position){
-                        0, 1 -> {
+                        0, 1, 2 -> {
                             //명예의 전당 탭 없애고 글쓰기 탭 보이기
                             binding.communityFragmentContainerWrite.visibility = View.VISIBLE
                             binding.communityFragmentContainerTop.visibility = View.GONE
@@ -130,12 +131,13 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
                             val type = when(position){
                                 0 -> ContentType.ALL
                                 1 -> ContentType.QUESTION
+                                2 -> ContentType.LIGHTNING
                                 else -> ContentType.ALL
                             }
                             //게시글 필터링
                             viewModel.setNowTab(type)
                         }
-                        2-> {
+                        3-> {
                             //명예의 전당 탭 보이고 글쓰기 탭 없애기
                             binding.communityFragmentContainerWrite.visibility = View.GONE
                             binding.communityFragmentContainerTop.visibility = View.VISIBLE

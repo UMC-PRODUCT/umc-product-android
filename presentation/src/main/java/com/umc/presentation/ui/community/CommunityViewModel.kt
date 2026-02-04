@@ -42,6 +42,7 @@ constructor() : BaseViewModel<CommunityFragmentUiState, CommunityFragmentEvent>(
                 val matchesTab = when (whichTab) {
                     ContentType.ALL -> true
                     ContentType.QUESTION -> item.contentType == ContentType.QUESTION //질문 관련
+                    ContentType.LIGHTNING -> item.category == CommunityCategoryType.LIGHTNING //번개 모임
                     /**TODO. 이 탭은 별도의 필터 방식이 필요 - 일단은 true로**/
                     ContentType.TOP -> true
                 }
@@ -94,12 +95,12 @@ data class CommunityFragmentUiState(
             region = "서울",
             contentType = ContentType.ALL,
             recruitType = RecruitType.END,
-            title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
+            title = "BottomSheet에 대해 질문이 있습니다.",
             username = "어헛차",
             writeTime = "방금 전",
             likes = 0,
             comments = 1,
-            content = "이거는 본문 내용이에요!!!",
+            content = "하단 bottom이 넘치는 문제가 있는데, wrap_content로 어떻게 막나요?",
             userPart = UserPart.ANDROID,
         ),
         ContentItem(
@@ -107,12 +108,12 @@ data class CommunityFragmentUiState(
             region = "인천",
             contentType = ContentType.ALL,
             recruitType = RecruitType.RECRUIT,
-            title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
+            title = "동작구에 분위기 있는 카페 있나요?",
             username = "어헛차2호",
             writeTime = "1시간 전",
             likes = 2,
             comments = 2,
-            content = "이거는 본문 내용이에요!!!",
+            content = "궁금합니다.",
             userPart = UserPart.WEB,
         ),
         ContentItem(
@@ -120,12 +121,12 @@ data class CommunityFragmentUiState(
             region = "인천",
             contentType = ContentType.QUESTION,
             recruitType = RecruitType.RECRUIT,
-            title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
+            title = "이번 IOS 스터디 일정 바꾸는 게 어떤가요?",
             username = "사람",
             writeTime = "2016.01.19",
             likes = 200,
             comments = 123,
-            content = "이거는 본문 내용이에요!!!",
+            content = "제가 여행 일정이 있어서 바꾸는 게 좋을 거 같아요.",
             userPart = UserPart.IOS,
         ),
         ContentItem(
@@ -133,12 +134,12 @@ data class CommunityFragmentUiState(
             region = "인천",
             contentType = ContentType.QUESTION,
             recruitType = RecruitType.END,
-            title = "밥먹고개발하고쉬고개발하고게임하고개발하고자고개발하고나는개발이너무너무너무좋아헤헤헤헤헤헿",
+            title = "인천 보드게임 동아리 2차 번개 모집",
             username = "사람",
             writeTime = "2016.01.19",
             likes = 10,
             comments = 1,
-            content = "본문내용을늘려야하는데무슨내용을적어야잘적었다는소문이날까?내용을늘리기위해서는아무내용이나넣어야겠다.이쯤되면길어지겠지?",
+            content = "2026.01.30 예정. 너만 오면 ㄱㄱ",
             userPart = UserPart.SPRING_BOOT,
         ),
     ),
