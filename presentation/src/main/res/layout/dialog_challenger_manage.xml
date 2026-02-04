@@ -7,7 +7,7 @@
         <import type="android.view.View" />
         <variable
             name="model"
-            type="com.umc.domain.model.act.challenger.UChallengerManageDialogModel" />
+            type="com.umc.domain.model.act.challenger.ChallengerManageDialogModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -349,9 +349,39 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_rectangle_neutral000_stroke_neutral300_radius8"
                 android:padding="16dp"
+                android:visibility="@{model.history.empty ? View.GONE : View.VISIBLE}"
                 app:layout_constraintTop_toBottomOf="@id/tv_history_label"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
+
+            <LinearLayout
+                android:id="@+id/layout_empty_history"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_rectangle_neutral000_stroke_neutral300_radius8"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingVertical="30dp"
+                android:visibility="@{model.history.empty ? View.VISIBLE : View.GONE}"
+                app:layout_constraintTop_toBottomOf="@id/tv_history_label"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_history"
+                    app:tint="@color/neutral500" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="아직 활동 기록이 없습니다"
+                    android:textAppearance="@style/Caption1Bold"
+                    android:textColor="@color/neutral500" />
+            </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
