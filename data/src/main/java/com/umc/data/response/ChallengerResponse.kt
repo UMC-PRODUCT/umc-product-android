@@ -18,13 +18,17 @@ data class ChallengerResponse(
     @SerializedName("status") val status: String? = null
 ) {
     companion object {
-        fun ChallengerResponse.toModel() = ChallengerInfoDialogModel(
-            name = name ?: "",
-            university = schoolName ?: "",
-            part = part ?: "",
-            generation = gisu ?: 0,
-            profileImageUrl = profileImageLink ?: ""
-        )
+        fun ChallengerResponse.toModel(): ChallengerInfoDialogModel {
+            val defaultModel = ChallengerInfoDialogModel()
+
+            return ChallengerInfoDialogModel(
+                name = name ?: defaultModel.name,
+                university = schoolName ?: defaultModel.university,
+                part = part ?: defaultModel.part,
+                generation = gisu ?: defaultModel.generation,
+                profileImageUrl = profileImageLink ?: defaultModel.profileImageUrl
+            )
+        }
     }
 }
 
