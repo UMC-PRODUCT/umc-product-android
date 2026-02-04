@@ -24,8 +24,8 @@ class UserChallengerViewModel @Inject constructor(
     private fun loadInitialData() {
         val dummyList = listOf(
             // PM 파트
-            UserChallenger(1, "김유엠", "유엠씨대장", 12, UserPart.PM, UserChallengerRole.LEADER),
-            UserChallenger(2, "이길동", "피엠조아", 12, UserPart.PM, UserChallengerRole.MEMBER),
+            UserChallenger(101, "김유엠", "유엠씨대장", 12, UserPart.PM, UserChallengerRole.LEADER),
+            UserChallenger(102, "이길동", "피엠조아", 12, UserPart.PM, UserChallengerRole.MEMBER),
 
             // Design 파트
             UserChallenger(3, "박디자인", "피그마마스터", 12, UserPart.DESIGN, UserChallengerRole.PART_LEADER),
