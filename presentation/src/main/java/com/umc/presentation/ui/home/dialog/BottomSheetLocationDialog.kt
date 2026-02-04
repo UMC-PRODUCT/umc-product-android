@@ -49,8 +49,8 @@ class BottomSheetLocationDialog (
         // TODO: DataStore 등에서 가져온 최근 기록 주입
         recentAdapter.submitList(
             listOf(
-                LocationItem("서울역", "서울특별시 어딘가 상세주소 1"),
-                LocationItem("중앙대학교", "서울특별시 어딘가 상세주소 2"),
+                "서울역",
+                "중앙대학교"
             )
         )
 
@@ -79,8 +79,8 @@ class BottomSheetLocationDialog (
     }
 
     // 1. 최근 기록 클릭 시: 검색창 텍스트를 바꾸고 검색 모드로 전환
-    override fun onRecentClicked(item: LocationItem) {
-        binding.searchbarLocation.setText(item.title)
+    override fun onRecentClicked(item: String) {
+        binding.searchbarLocation.setText(item)
         // 텍스트가 채워지면서 setupSearchLogic의 Listener가 자동으로 결과창을 띄웁니다.
     }
 
