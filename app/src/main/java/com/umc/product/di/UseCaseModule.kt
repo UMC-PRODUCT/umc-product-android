@@ -1,12 +1,18 @@
 package com.umc.product.di
 
+import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.repository.AuthRepository
+import com.umc.domain.repository.member.MemberRepository
 import com.umc.domain.usecase.PostLoginUseCase
+import com.umc.domain.usecase.member.GetMemberProfileUseCase
+import com.umc.domain.usecase.member.GetMyProfileUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+
+/**UseCase 모듈 관리를 위해!**/
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -16,4 +22,25 @@ object UseCaseModule {
     fun providesPostLoginUseCase(repository: AuthRepository): PostLoginUseCase {
         return PostLoginUseCase(repository)
     }
+
+
+
+    /**member usecase**/
+    @Singleton
+    @Provides
+    fun providesGetMyProfileUseCase(
+        memberRepository: MemberRepository,
+        appDataStoreRepository: AppDataStoreRepository //
+    ): GetMyProfileUseCase {
+        return GetMyProfileUseCase(memberRepository, appDataStoreRepository)
+    }
+
+    @Singleton
+    @Provides
+    fun providesGetMemberProfileUseCase(
+        memberRepository: MemberRepository
+    ): GetMemberProfileUseCase {
+        return GetMemberProfileUseCase(memberRepository)
+    }
+
 }

@@ -11,4 +11,11 @@ object Endpoints {
         const val EMAIL_VERIFICATION_COMPLETE = "$EMAIL_VERIFICATION/complete"
     }
     // TODO 경로명 입력
+
+
+    object Member{
+        const val MEMBER = "api/v1/member"
+        const val MYPROFILE = "$MEMBER/me"
+        const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
+    }
 }
