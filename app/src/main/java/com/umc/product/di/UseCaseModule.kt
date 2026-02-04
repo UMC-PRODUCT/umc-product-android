@@ -4,6 +4,7 @@ import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.repository.AuthRepository
 import com.umc.domain.repository.member.MemberRepository
 import com.umc.domain.usecase.PostLoginUseCase
+import com.umc.domain.usecase.appDataStore.UpdateUserInfoUseCase
 import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import dagger.Module
@@ -30,9 +31,9 @@ object UseCaseModule {
     @Provides
     fun providesGetMyProfileUseCase(
         memberRepository: MemberRepository,
-        appDataStoreRepository: AppDataStoreRepository //
+        updateUserInfoUseCase: UpdateUserInfoUseCase, //
     ): GetMyProfileUseCase {
-        return GetMyProfileUseCase(memberRepository, appDataStoreRepository)
+        return GetMyProfileUseCase(memberRepository, updateUserInfoUseCase)
     }
 
     @Singleton
