@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable
+            name="vm"
+            type="com.umc.presentation.ui.notice.write.NoticeWriteViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_bottom_sheet"
+        android:paddingBottom="24dp">
+
+        <include
+            android:id="@+id/layout_top"
+            layout="@layout/include_bottom_sheet_top_bar" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_vote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            app:layout_constraintTop_toBottomOf="@id/layout_top">
+
+            <ImageView
+                android:id="@+id/image_vote_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:src="@drawable/ic_vote"
+                android:tint="@color/primary500"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="UseAppTint" />
+
+            <EditText
+                android:id="@+id/edit_text_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:afterTextChanged="@{(text) -> vm.updateVoteTitle(text.toString())}"
+                android:background="@null"
+                android:maxLines="1"
+                android:text="@string/notice_write_vote_title"
+                android:textAppearance="@style/HeadlineBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintBottom_toBottomOf="@id/image_vote_title"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/image_vote_title"
+                app:layout_constraintTop_toTopOf="@id/image_vote_title" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_vote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:overScrollMode="never"
+                app:layout_constraintTop_toBottomOf="@id/edit_text_title" />
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/ubutton_add_vote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="@{()->vm.onVoteAdd()}"
+                app:borderColor="@color/neutral300"
+                app:borderWidth="1dp"
+                app:cardBackgroundColor="@color/neutral000"
+                app:contentPaddingBottom="13dp"
+                app:contentPaddingTop="13dp"
+                app:cornerRadius="8dp"
+                app:layout_constraintTop_toBottomOf="@id/recycler_vote"
+                app:prevIcon="@drawable/ic_plus_circle"
+                app:prevIconTint="@color/primary500"
+                app:text="@string/notice_write_vote_add"
+                app:textAppearance="@style/CalloutBold"
+                app:textColor="@color/neutral800" />
+
+            <ImageView
+                android:id="@+id/image_check_select_mult"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:onClick="@{()->vm.onClickVoteSelectMultiple()}"
+                android:src="@{vm.uiState.canSelectMultiple ? @drawable/ic_check_box : @drawable/ic_check_box_empty}"
+                android:tint="@{vm.uiState.canSelectMultiple ? @color/primary500 : @color/neutral400}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ubutton_add_vote"
+                tools:ignore="UseAppTint" />
+
+            <TextView
+                android:id="@+id/text_select_multiple"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="@string/notice_write_select_multiple"
+                android:textAppearance="@style/Footnote"
+                android:textColor="@color/neutral600"
+                app:layout_constraintBottom_toBottomOf="@id/image_check_select_mult"
+                app:layout_constraintEnd_toStartOf="@id/image_check_select_mult"
+                app:layout_constraintTop_toTopOf="@id/image_check_select_mult" />
+
+            <ImageView
+                android:id="@+id/image_check_anonymity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:layout_marginEnd="16dp"
+                android:onClick="@{()->vm.onClickVoteAnonymity()}"
+                android:src="@{vm.uiState.canAnonymity ? @drawable/ic_check_box : @drawable/ic_check_box_empty}"
+                android:tint="@{vm.uiState.canAnonymity ? @color/primary500 : @color/neutral400}"
+                app:layout_constraintEnd_toStartOf="@id/text_select_multiple"
+                app:layout_constraintTop_toBottomOf="@id/ubutton_add_vote"
+                tools:ignore="UseAppTint" />
+
+            <TextView
+                android:id="@+id/text_select_anonymity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="@string/notice_write_anonymity"
+                android:textAppearance="@style/Footnote"
+                android:textColor="@color/neutral600"
+                app:layout_constraintBottom_toBottomOf="@id/image_check_anonymity"
+                app:layout_constraintEnd_toStartOf="@id/image_check_anonymity"
+                app:layout_constraintTop_toTopOf="@id/image_check_anonymity" />
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/ubutton_complete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                app:cardBackgroundColor="@color/neutral300"
+                app:contentPaddingBottom="13dp"
+                app:contentPaddingLeft="16dp"
+                app:contentPaddingRight="16dp"
+                app:contentPaddingTop="13dp"
+                app:cornerRadius="8dp"
+                app:layout_constraintTop_toBottomOf="@id/image_check_select_mult"
+                app:pressedColor="@color/primary700"
+                app:text="@string/notice_write_vote_create"
+                app:textAppearance="@style/HeadlineBold"
+                app:textColor="@color/neutral000" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</layout>

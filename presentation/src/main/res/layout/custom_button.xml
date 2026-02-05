@@ -24,6 +24,11 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
+            <Space
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
+
             <ImageView
                 android:id="@+id/image_prev_icon"
                 android:layout_width="wrap_content"
@@ -32,11 +37,15 @@
 
             <TextView
                 android:id="@+id/text_view"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:gravity="center"
                 android:textSize="14sp" />
+
+            <Space
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
         </LinearLayout>
 
     </LinearLayout>

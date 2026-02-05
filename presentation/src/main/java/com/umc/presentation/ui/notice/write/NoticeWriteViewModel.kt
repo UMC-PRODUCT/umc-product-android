@@ -167,10 +167,8 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
         }
     }
 
-    fun onClickShowVote(flag: Boolean) {
-        updateState {
-            copy(isShowVote = flag)
-        }
+    fun onClickShowVote() {
+        emitEvent(NoticeWriteEvent.ShowBottomSheetEvent)
     }
 
     fun onClickCamera() {
@@ -197,12 +195,16 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
         }
     }
 
-    fun onVoteTextChanged(position: Int, text: String) {
+    fun updateVoteList(list: List<String>) {
+        val anonymity = if (uiState.value.canAnonymity) "익명, " else "실명, "
+        val multiple = if (uiState.value.canSelectMultiple) "복수 허용, " else "단일 투표, "
+        val count = "${list.size}개의 항목"
         updateState {
-            val cur = uiState.value.voteTextList
-            val new = cur.toMutableList()
-            new[position] = text
-            copy(voteTextList = new)
+            copy(
+                isShowVote = true,
+                voteTextList = list,
+                voteCondition = anonymity + multiple + count
+            )
         }
     }
 
@@ -240,6 +242,10 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
             copy(canSelectMultiple = !canSelectMultiple)
         }
     }
+
+    fun updateVoteTitle(title: String) {
+        updateState { copy(voteTitle = title) }
+    }
 }
 
 data class NoticeWriteUiState(
@@ -253,12 +259,15 @@ data class NoticeWriteUiState(
     val category: NoticeCategory = NoticeCategory.SCHOOL,
     val dropdownList: List<String> = emptyList(),
     val linkText: String = "",
-    val voteTextList: List<String> = List(3) { "" },
+    val voteTitle: String = "",
+    val voteCondition: String = "",
+    val voteTextList: List<String> = List(2) { "" },
     val canAnonymity: Boolean = false,
     val canSelectMultiple: Boolean = false,
 ) : UiState
 
 sealed interface NoticeWriteEvent : UiEvent {
     object SelectImageEvent : NoticeWriteEvent
+    object ShowBottomSheetEvent: NoticeWriteEvent
 
 }

@@ -35,8 +35,8 @@
                 android:id="@+id/image_camera"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="12dp"
                 android:onClick="@{()->vm.onClickCamera()}"
+                android:padding="12dp"
                 android:src="@drawable/ic_camera"
                 android:tint="@color/neutral600"
                 tools:ignore="UseAppTint" />
@@ -45,8 +45,8 @@
                 android:id="@+id/image_link"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="12dp"
                 android:onClick="@{()->vm.onClickShowLink(true)}"
+                android:padding="12dp"
                 android:src="@drawable/ic_blog_link"
                 android:tint="@color/neutral600"
                 tools:ignore="UseAppTint" />
@@ -55,8 +55,8 @@
                 android:id="@+id/image_vote"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:onClick="@{()->vm.onClickShowVote()}"
                 android:padding="12dp"
-                android:onClick="@{()->vm.onClickShowVote(true)}"
                 android:src="@drawable/ic_vote"
                 android:tint="@color/neutral600"
                 tools:ignore="UseAppTint" />
@@ -305,19 +305,19 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="24dp"
-                    android:visibility="@{vm.uiState.selectImageList.empty ? View.GONE : View.VISIBLE}"
                     android:paddingTop="16dp"
+                    android:visibility="@{vm.uiState.selectImageList.empty ? View.GONE : View.VISIBLE}"
                     app:layout_constraintTop_toBottomOf="@id/edit_text_content" />
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/layout_link"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:visibility="@{vm.uiState.showLink ? View.VISIBLE : View.GONE}"
                     android:layout_marginHorizontal="24dp"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_rect_neutral100_radius12"
                     android:padding="16dp"
+                    android:visibility="@{vm.uiState.showLink ? View.VISIBLE : View.GONE}"
                     app:layout_constraintTop_toBottomOf="@id/recycler_image">
 
                     <ImageView
@@ -346,8 +346,8 @@
                         android:id="@+id/image_delete_link"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:padding="12dp"
                         android:onClick="@{()->vm.onClickShowLink(false)}"
+                        android:padding="12dp"
                         android:src="@drawable/ic_close_big"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
@@ -357,12 +357,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        app:onTextChanged="@{vm::onChangedLinkText}"
-                        app:text="@{vm.uiState.linkText}"
                         app:layout_constraintTop_toBottomOf="@id/image_delete_link"
+                        app:onTextChanged="@{vm::onChangedLinkText}"
                         app:placeholderText="@string/notice_write_link_hint"
                         app:strokeColor="@color/neutral300"
                         app:strokeWidth="1dp"
+                        app:text="@{vm.uiState.linkText}"
                         app:textAppearance="@style/Body" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
@@ -372,116 +372,64 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="24dp"
-                    android:visibility="@{vm.uiState.showVote ? View.VISIBLE : View.GONE}"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_rect_neutral100_radius12"
-                    android:padding="16dp"
+                    android:padding="12dp"
+                    android:visibility="@{vm.uiState.showVote ? View.VISIBLE : View.GONE}"
                     app:layout_constraintTop_toBottomOf="@id/layout_link">
 
                     <ImageView
                         android:id="@+id/image_vote_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
                         android:src="@drawable/ic_vote"
                         android:tint="@color/primary500"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/ubutton_edit"
+                        app:layout_constraintBottom_toBottomOf="@id/ubutton_edit"
                         tools:ignore="UseAppTint" />
 
-                    <EditText
+                    <TextView
+                        android:id="@+id/text_vote_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:background="@null"
-                        android:text="@string/notice_write_vote_title"
+                        android:text="@{vm.uiState.voteTitle}"
                         android:textAppearance="@style/HeadlineBold"
                         android:textColor="@color/neutral800"
                         app:layout_constraintBottom_toBottomOf="@id/image_vote_title"
                         app:layout_constraintStart_toEndOf="@id/image_vote_title"
                         app:layout_constraintTop_toTopOf="@id/image_vote_title" />
 
-                    <ImageView
-                        android:id="@+id/image_delete_vote"
+                    <TextView
+                        android:id="@+id/text_vote_condition"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:padding="12dp"
-                        android:onClick="@{()->vm.onClickShowVote(false)}"
-                        android:src="@drawable/ic_close_big"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recycler_vote"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingTop="16dp"
-                        android:overScrollMode="never"
-                        app:layout_constraintTop_toBottomOf="@id/image_delete_vote" />
+                        android:layout_marginStart="8dp"
+                        android:text="@{vm.uiState.voteCondition}"
+                        android:textAppearance="@style/Subheadline"
+                        android:textColor="@color/neutral600"
+                        app:layout_constraintBottom_toBottomOf="@id/text_vote_title"
+                        app:layout_constraintStart_toEndOf="@id/text_vote_title"
+                        app:layout_constraintTop_toTopOf="@id/text_vote_title" />
 
                     <com.umc.presentation.component.UButton
-                        android:id="@+id/ubutton_add_vote"
-                        android:layout_width="match_parent"
+                        android:id="@+id/ubutton_edit"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         app:borderColor="@color/neutral300"
                         app:borderWidth="1dp"
-                        android:onClick="@{()->vm.onVoteAdd()}"
                         app:cardBackgroundColor="@color/neutral000"
-                        app:contentPaddingBottom="13dp"
-                        app:contentPaddingTop="13dp"
+                        app:contentPaddingBottom="6dp"
+                        app:contentPaddingLeft="8dp"
+                        app:contentPaddingRight="8dp"
+                        app:contentPaddingTop="6dp"
                         app:cornerRadius="8dp"
-                        app:layout_constraintTop_toBottomOf="@id/recycler_vote"
-                        app:text="@string/notice_write_vote_add"
-                        app:textAppearance="@style/CalloutBold"
-                        app:textColor="@color/neutral800" />
-
-                    <ImageView
-                        android:id="@+id/image_check_select_mult"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:padding="8dp"
-                        android:onClick="@{()->vm.onClickVoteSelectMultiple()}"
-                        android:tint="@{vm.uiState.canSelectMultiple ? @color/primary500 : @color/neutral400}"
-                        android:src="@drawable/ic_check_box"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/ubutton_add_vote"
-                        tools:ignore="UseAppTint" />
-
-                    <TextView
-                        android:id="@+id/text_select_multiple"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/notice_write_select_multiple"
-                        android:textAppearance="@style/Footnote"
-                        android:textColor="@color/neutral600"
-                        app:layout_constraintBottom_toBottomOf="@id/image_check_select_mult"
-                        app:layout_constraintEnd_toStartOf="@id/image_check_select_mult"
-                        app:layout_constraintTop_toTopOf="@id/image_check_select_mult" />
-
-                    <ImageView
-                        android:id="@+id/image_check_anonymity"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="@{()->vm.onClickVoteAnonymity()}"
-                        android:layout_marginTop="16dp"
-                        android:padding="8dp"
-                        android:tint="@{vm.uiState.canAnonymity ? @color/primary500 : @color/neutral400}"
-                        android:src="@drawable/ic_check_box"
-                        app:layout_constraintEnd_toStartOf="@id/text_select_multiple"
-                        app:layout_constraintTop_toBottomOf="@id/ubutton_add_vote"
-                        tools:ignore="UseAppTint" />
-
-                    <TextView
-                        android:id="@+id/text_select_anonymity"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/notice_write_anonymity"
-                        android:textAppearance="@style/Footnote"
-                        android:textColor="@color/neutral600"
-                        app:layout_constraintBottom_toBottomOf="@id/image_check_anonymity"
-                        app:layout_constraintEnd_toStartOf="@id/image_check_anonymity"
-                        app:layout_constraintTop_toTopOf="@id/image_check_anonymity" />
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:text="@string/edit"
+                        app:textAppearance="@style/SubheadlineBold"
+                        app:textColor="@color/neutral800" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
