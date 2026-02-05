@@ -2,12 +2,18 @@ package com.umc.presentation.ui.act.challenge
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ConcatAdapter
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
+import com.umc.presentation.component.UBasicDialog
+import com.umc.presentation.component.UBasicDialogModel
+import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.presentation.databinding.FragmentAdminChallengerBinding
 import com.umc.presentation.extension.px
 import com.umc.presentation.ui.act.adapter.ChallengerHeaderAdapter
@@ -45,7 +51,10 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
 
         partOrder.forEach { part ->
             val headerAdapter = ChallengerHeaderAdapter(part.label)
-            val itemAdapter = AdminChallengerAdapter { id -> /* 상세 이동 로직 */ }
+
+            val itemAdapter = AdminChallengerAdapter { challenger ->
+                viewModel.onChallengerClicked(challenger.id)
+            }
 
             headerAdapters[part] = headerAdapter
             itemAdapters[part] = itemAdapter
@@ -67,6 +76,7 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
 
         binding.rvAdminChallengerList.apply {
             adapter = mainConcatAdapter
+            layoutManager = LinearLayoutManager(requireContext())
             clipToPadding = false
             setPadding(0, 0, 0, 64.px)
         }
@@ -84,6 +94,38 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
                     }
                 }
             }
+            launch { viewModel.uiEvent.collect { handleEvent(it) } }
         }
+    }
+
+    override fun handleEvent(event: AdminChallengerEvent) {
+        when (event) {
+            is AdminChallengerEvent.ShowManageDialog -> {
+                showManageDialog(event.model)
+            }
+            is AdminChallengerEvent.ShowErrorToast -> {
+                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showManageDialog(model: ChallengerManageDialogModel) {
+        val dialog = ChallengerManageDialog(
+            model = model,
+            onAbsenceSubmit = { reason -> /* TODO */ },
+            onWarningSubmit = { reason -> /* TODO */ },
+            onDeleteHistory = { item ->
+                val warningDialog = UBasicDialog(
+                    model = UBasicDialogModel.Warning(
+                        title = "해당 기록을 삭제하시겠습니까?",
+                        content = "삭제된 기록은 복구가 어렵습니다.",
+                        positiveText = "삭제하기"
+                    ),
+                    onConfirm = { /* TODO */ }
+                )
+                warningDialog.show(childFragmentManager, "DeleteWarningDialog")
+            }
+        )
+        dialog.show(childFragmentManager, "UChallengerManageDialog")
     }
 }

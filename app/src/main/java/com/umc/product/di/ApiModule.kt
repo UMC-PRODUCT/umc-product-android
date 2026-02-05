@@ -2,6 +2,7 @@ package com.umc.product.di
 
 import com.umc.data.api.AuthApi
 import com.umc.data.api.MemberApi
+import com.umc.data.api.ChallengerApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,4 +29,9 @@ object ApiModule {
         return retrofit.create(MemberApi::class.java)
     }
 
+    @Singleton
+    @Provides
+    fun provideChallengerApi(@AuthRetrofit retrofit: Retrofit): ChallengerApi {
+        return retrofit.create(ChallengerApi::class.java)
+    }
 }

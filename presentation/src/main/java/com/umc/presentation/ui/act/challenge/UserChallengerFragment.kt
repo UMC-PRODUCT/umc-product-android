@@ -2,10 +2,13 @@ package com.umc.presentation.ui.act.challenge
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ConcatAdapter
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
+import com.umc.domain.model.act.challenger.ChallengerInfoHistory
+import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
@@ -88,9 +91,17 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
         }
     }
 
+    /**
+     * ViewModel에서 발생한 이벤트를 처리
+     */
     override fun handleEvent(event: UserChallengerEvent) {
         when (event) {
-            is UserChallengerEvent.NavigateToDetail -> { /* 다이얼로그 로직 */ }
+            is UserChallengerEvent.NavigateToDetail -> {
+                ChallengerInfoDialog(event.model).show(childFragmentManager, "ChallengerInfoDialog")
+            }
+            is UserChallengerEvent.ShowErrorToast -> {
+                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }

@@ -1,11 +1,13 @@
 package com.umc.product.di
 
 import com.umc.data.dataSource.AuthRemoteDataSource
+import com.umc.data.dataSource.ChallengerRemoteDataSource
 import com.umc.data.dataSource.remote.AuthRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.kakao.KakaoRemoteDataSource
 import com.umc.data.dataSource.remote.kakao.KakaoRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSource
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.ChallengerRemoteDataSourceImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -38,4 +40,7 @@ abstract class DataSourceModule {
         dataSourceImpl: KakaoRemoteDataSourceImpl
     ): KakaoRemoteDataSource
 
+    @Singleton
+    @Binds
+    abstract fun bindsChallengerRemoteDataSource(dataSourceImpl: ChallengerRemoteDataSourceImpl): ChallengerRemoteDataSource
 }
