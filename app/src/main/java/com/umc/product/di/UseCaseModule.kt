@@ -31,9 +31,8 @@ object UseCaseModule {
     @Provides
     fun providesGetMyProfileUseCase(
         memberRepository: MemberRepository,
-        updateUserInfoUseCase: UpdateUserInfoUseCase, //
     ): GetMyProfileUseCase {
-        return GetMyProfileUseCase(memberRepository, updateUserInfoUseCase)
+        return GetMyProfileUseCase(memberRepository)
     }
 
     @Singleton

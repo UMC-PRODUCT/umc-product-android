@@ -119,18 +119,17 @@ class HomeViewModel @Inject constructor(
         // 서버에서 내 정보 가져오기
         private fun getUserInfo(){
             viewModelScope.launch {
-                val result = getMyProfileUseCase()
-                when(result){
-                    is ApiState.Success -> {
-                        Log.d("log_home", "getUserInfo: ${result.data}")
-                    }
-                    is ApiState.Fail -> {
+                resultResponse(
+                    response = getMyProfileUseCase(),
+                    successCallback = { userInfo ->
+                        Log.d("log_home", "getUserInfo: ${userInfo}")
+                    },
+                    errorCallback = {
                         /**TODO. 에러 토스트 메시지 등을 전송**/
                     }
-                }
+                )
             }
         }
-    
 
     }
 
