@@ -41,7 +41,7 @@ constructor() : BaseViewModel<CommunityFragmentUiState, CommunityFragmentEvent>(
                 // 탭 기준 필터링 (ContentType 필드 활용)
                 val matchesTab = when (whichTab) {
                     ContentType.ALL -> true
-                    ContentType.QUESTION -> item.contentType == ContentType.QUESTION //질문 관련
+                    ContentType.QUESTION -> item.category == CommunityCategoryType.QUESTION //질문 관련
                     ContentType.LIGHTNING -> item.category == CommunityCategoryType.LIGHTNING //번개 모임
                     /**TODO. 이 탭은 별도의 필터 방식이 필요 - 일단은 true로**/
                     ContentType.TOP -> true
@@ -104,7 +104,7 @@ data class CommunityFragmentUiState(
             userPart = UserPart.ANDROID,
         ),
         ContentItem(
-            category = CommunityCategoryType.HOBBY,
+            category = CommunityCategoryType.HABIT,
             region = "인천",
             contentType = ContentType.ALL,
             recruitType = RecruitType.RECRUIT,
@@ -117,7 +117,7 @@ data class CommunityFragmentUiState(
             userPart = UserPart.WEB,
         ),
         ContentItem(
-            category = CommunityCategoryType.SUGGESTION,
+            category = CommunityCategoryType.ASK,
             region = "인천",
             contentType = ContentType.QUESTION,
             recruitType = RecruitType.RECRUIT,

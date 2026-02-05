@@ -16,4 +16,15 @@ object Endpoints {
         const val DETAIL = "$CHALLENGER/{challengerId}"
     }
     // TODO 경로명 입력
+
+
+    object Member{
+        const val MEMBER = "api/v1/member"
+        const val MYPROFILE = "$MEMBER/me"
+        const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
+    }
+
+    object Kakao{
+        const val SEARCH_LOCATION = "v2/local/search/keyword.json"
+    }
 }

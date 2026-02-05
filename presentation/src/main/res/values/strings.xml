@@ -15,7 +15,7 @@
     <string name="home_plan_add_title">일정 등록</string>
     <string name="home_plan_add_plan_name">일정 제목</string>
     <string name="home_plan_add_plan_name_placeholder">일정 제목을 입력하세요</string>
-    <string name="home_plan_add_plan_location_placeholder">장소를 선택하세요</string>
+    <string name="home_plan_add_plan_location_placeholder">위치를 입력하세요</string>
     <string name="home_plan_add_plan_challenger_placeholder">챌린저를 선택하세요</string>
     <string name="home_plan_add_plan_tag_placeholder">태그를 선택하세요</string>
     <string name="home_plan_add_plan_tag_bottomsheet_title">태그를 추가하세요</string>

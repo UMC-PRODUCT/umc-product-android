@@ -2,46 +2,39 @@ package com.umc.presentation.ui.home
 
 import android.R
 import android.text.Spanned
+import android.util.Log
+import androidx.lifecycle.viewModelScope
 import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.enums.WarningStatus
 import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.UpdateUserInfoUseCase
+import com.umc.domain.usecase.member.GetMemberProfileUseCase
+import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 //뷰모델에서는 xml에서 이벤트 의도 전달 -> fragment한테 이거 로직 처리하삼
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val getUserInfoUseCase: GetUserInfoUseCase,    // 조회용 UseCase
-    private val updateUserInfoUseCase: UpdateUserInfoUseCase // 저장용 UseCase
+    private val getMyProfileUseCase: GetMyProfileUseCase,
 ) : BaseViewModel<HomeFragmentUiState, HomeFragmentEvent>(
             HomeFragmentUiState()){
 
 
-        //테스트용 데이터
-
         init{
-            //시작 시 오늘 날짜로
-            val today = CalendarDay.today()
-            val todayString = String.format("%d-%02d-%02d", today.year, today.month, today.day)
+            //달력 초기화
+            initCalendar()
 
-            updateState {
-                copy(
-                    //임시로 tmp 넣기
-                    //allPlans = tmpSchedules,
-                    // 초기 실행 시 오늘 날짜(27일 가정)로 필터링된 리스트를 보여줌
-                    dailyPlans = allPlans.filter { it.date == todayString }
-                )
-            }
-
-            //날짜들 가져오기 (eventDecorator)
-            loadEvents()
+            //유저 정보 가져오기
+            getUserInfo()
 
 
 
@@ -69,6 +62,24 @@ class HomeViewModel @Inject constructor(
             }.toSet()
 
             updateState { copy(eventDates = dates) }
+        }
+
+        // 초기 달력 초기화
+        fun initCalendar(){
+            //시작 시 오늘 날짜로
+            val today = CalendarDay.today()
+            val todayString = String.format("%d-%02d-%02d", today.year, today.month, today.day)
+
+            updateState {
+                copy(
+                    //임시로 tmp 넣기
+                    //allPlans = tmpSchedules,
+                    // 초기 실행 시 오늘 날짜(27일 가정)로 필터링된 리스트를 보여줌
+                    dailyPlans = allPlans.filter { it.date == todayString }
+                )
+            }
+            //날짜들 가져오기 (eventDecorator)
+            loadEvents()
         }
 
         // 뷰모드(달력/리스트) 전환 함수
@@ -102,7 +113,23 @@ class HomeViewModel @Inject constructor(
         fun onClickPlanDetail(plan : SchedulePlanItem){
             emitEvent(HomeFragmentEvent.MovePlanDetailEvent(plan))
         }
-    
+
+
+
+        // 서버에서 내 정보 가져오기
+        private fun getUserInfo(){
+            viewModelScope.launch {
+                resultResponse(
+                    response = getMyProfileUseCase(),
+                    successCallback = { userInfo ->
+                        Log.d("log_home", "getUserInfo: ${userInfo}")
+                    },
+                    errorCallback = {
+                        /**TODO. 에러 토스트 메시지 등을 전송**/
+                    }
+                )
+            }
+        }
 
     }
 
