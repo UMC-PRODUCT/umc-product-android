@@ -31,12 +31,7 @@ class NoticeVoteBottomSheet: BaseBottomSheetFragment<BottomSheetNoticeVoteBindin
         NoticeVoteAdapter(object : NoticeVoteAdapter.NoticeVoteDelegate {
             override fun onTextChanged(position: Int, text: String) {
                 currentVoteList[position] = text
-                val validItems = currentVoteList.filter { it.isNotBlank() }
-                val isEnabled = validItems.size >= 2
-                val enableColor = ContextCompat.getColor(requireActivity(), R.color.primary500)
-                val disableColor = ContextCompat.getColor(requireActivity(), R.color.neutral300)
-                binding.ubuttonComplete.isEnabled = isEnabled
-                binding.ubuttonComplete.setUBackgroundColor(if (isEnabled) enableColor else disableColor)
+                checkEnable()
             }
 
             override fun onClickDelete(position: Int) {
@@ -49,6 +44,10 @@ class NoticeVoteBottomSheet: BaseBottomSheetFragment<BottomSheetNoticeVoteBindin
     override fun initView() {
         binding.apply {
             vm = viewModel
+
+            updateCurrentList(viewModel.uiState.value.voteTextList)
+            checkEnable()
+
             recyclerVote.apply {
                 adapter = noticeVoteAdapter
                 layoutManager = LinearLayoutManager(context)
@@ -63,7 +62,6 @@ class NoticeVoteBottomSheet: BaseBottomSheetFragment<BottomSheetNoticeVoteBindin
                 viewModel.updateVoteList(resultList)
                 dismiss()
             }
-
         }
     }
 
@@ -74,7 +72,6 @@ class NoticeVoteBottomSheet: BaseBottomSheetFragment<BottomSheetNoticeVoteBindin
             launch {
                 viewModel.uiState.collect {
                     if (it.voteTextList.size == 5) binding.ubuttonAddVote.gone()
-                    updateCurrentList(it.voteTextList)
                     noticeVoteAdapter.submitList(it.voteTextList)
                 }
             }
@@ -85,6 +82,15 @@ class NoticeVoteBottomSheet: BaseBottomSheetFragment<BottomSheetNoticeVoteBindin
         list.forEachIndexed { index, vote ->
             currentVoteList[index] = vote
         }
+    }
+
+    private fun checkEnable() {
+        val validItems = currentVoteList.filter { it.isNotBlank() }
+        val isEnabled = validItems.size >= 2
+        val enableColor = ContextCompat.getColor(requireActivity(), R.color.primary500)
+        val disableColor = ContextCompat.getColor(requireActivity(), R.color.neutral300)
+        binding.ubuttonComplete.isEnabled = isEnabled
+        binding.ubuttonComplete.setUBackgroundColor(if (isEnabled) enableColor else disableColor)
     }
 
     override fun onDismiss(dialog: DialogInterface) {

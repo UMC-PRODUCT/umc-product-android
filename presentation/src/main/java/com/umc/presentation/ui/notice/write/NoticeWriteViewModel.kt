@@ -260,7 +260,7 @@ data class NoticeWriteUiState(
     val category: NoticeCategory = NoticeCategory.SCHOOL,
     val dropdownList: List<String> = emptyList(),
     val linkText: String = "",
-    val voteTitle: String = "",
+    val voteTitle: String = "투표 만들기",
     val voteCondition: String = "",
     val voteTextList: List<String> = List(2) { "" },
     val canAnonymity: Boolean = false,
