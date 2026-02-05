@@ -1,9 +1,10 @@
 package com.umc.domain.model.act.challenger
 
-data class UChallengerManageDialogModel(
-    val name: String,
-    val university: String,
-    val part: String,
+data class ChallengerManageDialogModel(
+    val name: String = "알수없음",
+    val university: String = "알수없음",
+    val part: String = "알수없음",
+    val profileImageUrl: String = "",
     val hasNewAbsence: Boolean = false,
     val absenceCount: Int = 0,
     val warningCount: Int = 0,
