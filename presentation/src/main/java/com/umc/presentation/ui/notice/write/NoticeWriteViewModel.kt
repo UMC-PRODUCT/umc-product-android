@@ -196,6 +196,7 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
     }
 
     fun updateVoteList(list: List<String>) {
+        //TODO 보기 좀 불편해서 api 연결하면서 수정하겠습니다.
         val anonymity = if (uiState.value.canAnonymity) "익명, " else "실명, "
         val multiple = if (uiState.value.canSelectMultiple) "복수 허용, " else "단일 투표, "
         val count = "${list.size}개의 항목"

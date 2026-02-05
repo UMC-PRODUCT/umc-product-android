@@ -14,14 +14,9 @@ import com.umc.domain.model.notice.NoticeChipState
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.adapter.DropDownAdapter
 import com.umc.presentation.databinding.FragmentNoticeWriteBinding
-import com.umc.presentation.extension.VerticalSpaceItemDecoration
-import com.umc.presentation.extension.dp
-import com.umc.presentation.ui.notice.detail.bottomsheet.NoticeConfirmBottomSheet
 import com.umc.presentation.ui.notice.write.adapter.NoticeClassChipAdapter
 import com.umc.presentation.ui.notice.write.adapter.NoticeImageAdapter
-import com.umc.presentation.ui.notice.write.adapter.NoticeVoteAdapter
 import com.umc.presentation.ui.notice.write.bottomsheet.NoticeVoteBottomSheet
-import com.umc.presentation.util.ULog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
