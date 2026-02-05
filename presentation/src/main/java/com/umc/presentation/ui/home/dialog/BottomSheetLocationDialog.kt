@@ -70,7 +70,8 @@ class BottomSheetLocationDialog (
                 binding.layoutResult.visibility = View.VISIBLE
 
                 // Mock 데이터: 실제로는 여기서 API 호출 후 submitList 수행
-                updateSearchResult(text)
+                viewModel.searchLocation(text)
+                //updateSearchResult(text)
             }
         }
     }
@@ -89,19 +90,14 @@ class BottomSheetLocationDialog (
         dismiss()
     }
 
-    private fun updateSearchResult(query: String) {
-        val mockData = listOf(
-            LocationItem("서울역", "서울특별시 어딘가 상세주소 1"),
-            LocationItem("중앙대학교", "서울특별시 어딘가 상세주소 2"),
-        )
-        resultAdapter.submitList(mockData)
-    }
-
     //최근 검색 기록 observe
     private fun observeData() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
+                //최근 검색 기록 observe
                 recentAdapter.submitList(state.recentSearchList)
+                //카카오맵 검색 기록 observe
+                resultAdapter.submitList(state.searchResultList)
             }
         }
     }

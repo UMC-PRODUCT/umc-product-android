@@ -18,4 +18,8 @@ object Endpoints {
         const val MYPROFILE = "$MEMBER/me"
         const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
     }
+
+    object Kakao{
+        const val SEARCH_LOCATION = "v2/local/search/keyword.json"
+    }
 }

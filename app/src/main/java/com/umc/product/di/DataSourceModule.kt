@@ -2,6 +2,8 @@ package com.umc.product.di
 
 import com.umc.data.dataSource.AuthRemoteDataSource
 import com.umc.data.dataSource.remote.AuthRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.kakao.KakaoRemoteDataSource
+import com.umc.data.dataSource.remote.kakao.KakaoRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSource
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSourceImpl
 import dagger.Binds
@@ -28,5 +30,12 @@ abstract class DataSourceModule {
     abstract fun bindsMemberRemoteDataSource(
         dataSourceImpl: MemberRemoteDataSourceImpl
     ): MemberRemoteDataSource
+
+
+    @Singleton
+    @Binds
+    abstract fun bindsKakaoRemoteDataSource(
+        dataSourceImpl: KakaoRemoteDataSourceImpl
+    ): KakaoRemoteDataSource
 
 }

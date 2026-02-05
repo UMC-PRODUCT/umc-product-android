@@ -3,8 +3,10 @@ package com.umc.product.di
 import com.umc.data.repository.AppDataStoreRepositoryImpl
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.data.repository.AuthRepositoryImpl
+import com.umc.data.repository.kakao.KakaoSearchRepositoryImpl
 import com.umc.data.repository.member.MemberRepositoryImpl
 import com.umc.domain.repository.AuthRepository
+import com.umc.domain.repository.kakao.KakaoSearchRepository
 import com.umc.domain.repository.member.MemberRepository
 import dagger.Binds
 import dagger.Module
@@ -36,6 +38,12 @@ abstract class RepositoryModule {
     abstract fun bindsMemberRepository(
         repositoryImpl: MemberRepositoryImpl
     ): MemberRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindKakaoSearchRepository(
+        kakaoSearchRepositoryImpl: KakaoSearchRepositoryImpl
+    ): KakaoSearchRepository
 
 
     @Singleton
