@@ -69,9 +69,9 @@ class BottomSheetLocationDialog (
                 binding.layoutRecent.visibility = View.GONE
                 binding.layoutResult.visibility = View.VISIBLE
 
-                // Mock 데이터: 실제로는 여기서 API 호출 후 submitList 수행
+                // 카카오 API를 이용한 장소 검색
                 viewModel.searchLocation(text)
-                //updateSearchResult(text)
+                
             }
         }
     }
@@ -80,7 +80,6 @@ class BottomSheetLocationDialog (
     override fun onRecentClicked(item: String) {
         viewModel.saveRecentPlace(item) //datastore 업데이트
         binding.searchbarLocation.setText(item)
-        // 텍스트가 채워지면서 setupSearchLogic의 Listener가 자동으로 결과창을 띄웁니다.
     }
 
     // 2. 검색 결과의 '선택' 버튼 클릭 시: 최종 데이터 전달 및 닫기

@@ -114,7 +114,7 @@ data class PostSearchFragmentUiState(
             userPart = UserPart.ANDROID,
         ),
         ContentItem(
-            category = CommunityCategoryType.HOBBY,
+            category = CommunityCategoryType.HABIT,
             region = "인천",
             contentType = ContentType.ALL,
             recruitType = RecruitType.RECRUIT,
@@ -127,7 +127,7 @@ data class PostSearchFragmentUiState(
             userPart = UserPart.WEB,
         ),
         ContentItem(
-            category = CommunityCategoryType.SUGGESTION,
+            category = CommunityCategoryType.ASK,
             region = "인천",
             contentType = ContentType.QUESTION,
             recruitType = RecruitType.RECRUIT,

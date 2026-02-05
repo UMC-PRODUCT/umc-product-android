@@ -388,7 +388,7 @@ data class PlanAddFragmentUiState(
     val categories: List<CategoryItem> = listOf(
         CategoryItem(CategoryType.NETWORKING.label, R.drawable.ic_networking_off, R.drawable.ic_networking_on),
         CategoryItem(CategoryType.PROJECT.label, R.drawable.ic_project_off, R.drawable.ic_project_on),
-        CategoryItem(CategoryType.FEES.label, R.drawable.ic_fees_off, R.drawable.ic_fees_on),
+        CategoryItem(CategoryType.DUES.label, R.drawable.ic_fees_off, R.drawable.ic_fees_on),
         CategoryItem(CategoryType.MEETING.label, R.drawable.ic_meeting_off, R.drawable.ic_meeting_on),
 
         CategoryItem(CategoryType.ORIENTATION.label, R.drawable.ic_orientation_off, R.drawable.ic_orientation_on),
