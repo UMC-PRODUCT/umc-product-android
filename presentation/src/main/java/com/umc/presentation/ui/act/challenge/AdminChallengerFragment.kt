@@ -104,10 +104,13 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
     override fun handleEvent(event: AdminChallengerEvent) {
         when (event) {
             is AdminChallengerEvent.ShowManageDialog -> {
-                childFragmentManager.findFragmentByTag("UChallengerManageDialog")?.let {
-                    (it as DialogFragment).dismiss()
+                val existingDialog = childFragmentManager.findFragmentByTag("UChallengerManageDialog") as? ChallengerManageDialog
+
+                if (existingDialog != null && existingDialog.isAdded) {
+                    existingDialog.updateData(event.model)
+                } else {
+                    showManageDialog(event.model, event.model.challengerId.toInt())
                 }
-                showManageDialog(event.model, event.model.challengerId.toInt())
             }
             is AdminChallengerEvent.ShowErrorToast -> {
                 Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
