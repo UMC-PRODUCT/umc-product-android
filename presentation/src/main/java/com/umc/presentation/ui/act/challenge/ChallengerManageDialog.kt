@@ -11,9 +11,9 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.presentation.R
-import com.umc.domain.model.act.challenger.HistoryItem
 import com.umc.presentation.component.UButton
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
+import com.umc.domain.model.act.challenger.ChallengerPoint
 import com.umc.presentation.databinding.DialogChallengerManageBinding
 import com.umc.presentation.ui.act.adapter.ChallengerHistoryAdapter
 
@@ -21,7 +21,7 @@ class ChallengerManageDialog(
     private val model: ChallengerManageDialogModel,
     private val onAbsenceSubmit: (String) -> Unit = {},
     private val onWarningSubmit: (String) -> Unit = {},
-    private val onDeleteHistory: (HistoryItem) -> Unit = {}
+    private val onDeleteHistory: (ChallengerPoint) -> Unit = {}
 ) : DialogFragment() {
 
     private var _binding: DialogChallengerManageBinding? = null

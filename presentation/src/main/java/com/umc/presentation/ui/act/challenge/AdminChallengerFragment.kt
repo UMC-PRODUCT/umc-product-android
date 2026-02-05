@@ -3,6 +3,7 @@ package com.umc.presentation.ui.act.challenge
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -14,6 +15,8 @@ import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.UBasicDialog
 import com.umc.presentation.component.UBasicDialogModel
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
+import com.umc.domain.model.act.challenger.ChallengerPoint
+import com.umc.domain.model.enums.PointType
 import com.umc.presentation.databinding.FragmentAdminChallengerBinding
 import com.umc.presentation.extension.px
 import com.umc.presentation.ui.act.adapter.ChallengerHeaderAdapter
@@ -101,7 +104,10 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
     override fun handleEvent(event: AdminChallengerEvent) {
         when (event) {
             is AdminChallengerEvent.ShowManageDialog -> {
-                showManageDialog(event.model)
+                childFragmentManager.findFragmentByTag("UChallengerManageDialog")?.let {
+                    (it as DialogFragment).dismiss()
+                }
+                showManageDialog(event.model, event.model.challengerId.toInt())
             }
             is AdminChallengerEvent.ShowErrorToast -> {
                 Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
@@ -109,12 +115,18 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
         }
     }
 
-    private fun showManageDialog(model: ChallengerManageDialogModel) {
+    private fun showManageDialog(model: ChallengerManageDialogModel, challengerId: Int) {
         val dialog = ChallengerManageDialog(
             model = model,
-            onAbsenceSubmit = { reason -> /* TODO */ },
-            onWarningSubmit = { reason -> /* TODO */ },
-            onDeleteHistory = { item ->
+            onAbsenceSubmit = { reason ->
+                // 아웃 부여 시 POINT_TYPE을 OUT으로 전송
+                viewModel.grantPoint(challengerId, PointType.OUT, reason)
+            },
+            onWarningSubmit = { reason ->
+                // 경고 부여 시 POINT_TYPE을 WARNING으로 전송
+                viewModel.grantPoint(challengerId, PointType.WARNING, reason)
+            },
+            onDeleteHistory = { point ->
                 val warningDialog = UBasicDialog(
                     model = UBasicDialogModel.Warning(
                         title = "해당 기록을 삭제하시겠습니까?",
