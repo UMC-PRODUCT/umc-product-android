@@ -1,59 +1,30 @@
 package com.umc.data.dataSource.remote
 
-import com.google.gson.Gson
 import com.umc.data.api.ChallengerApi
 import com.umc.data.dataSource.ChallengerRemoteDataSource
 import com.umc.data.response.challenger.ChallengerResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
+import com.umc.domain.model.base.mapSuccessData
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
 import javax.inject.Inject
 
 class ChallengerRemoteDataSourceImpl @Inject constructor(
     private val challengerApi: ChallengerApi
 ) : ChallengerRemoteDataSource {
-    override suspend fun getChallengerDetail(id: Long): ApiState<ChallengerResponse> {
+
+    override suspend fun getChallengerDetail(id: Long): ApiState<ChallengerResponse> = fetch {
+        challengerApi.getChallengerDetail(id)
+    }.mapSuccessData()
+
+    override suspend fun grantChallengerPoint(id: Long, request: ChallengerPointRequest): ApiState<ChallengerResponse> = fetch {
+        challengerApi.grantChallengerPoint(id, request)
+    }.mapSuccessData()
+
+    private suspend fun <T> fetch(call: suspend () -> ApiResponse<T>): ApiState<ApiResponse<T>> {
         return try {
-            val response = challengerApi.getChallengerDetail(id)
-
-            if (response.success) {
-                ApiState.Success(response.result ?: throw Exception("Data is null"))
-            } else {
-                ApiState.Fail(FailState(false, response.code, response.message))
-            }
-        } catch (e: retrofit2.HttpException) {
-            val errorBody = e.response()?.errorBody()?.string()
-            val errorResponse = Gson().fromJson(errorBody, ApiResponse::class.java)
-
-            ApiState.Fail(FailState(
-                isSuccess = false,
-                code = errorResponse?.code ?: "HTTP_${e.code()}",
-                message = errorResponse?.message ?: "서버 에러가 발생했습니다."
-            ))
-        } catch (e: Exception) {
-            ApiState.Fail(FailState(false, "UNKNOWN", e.message ?: "알 수 없는 오류"))
-        }
-    }
-
-    override suspend fun grantChallengerPoint(id: Long, request: ChallengerPointRequest): ApiState<ChallengerResponse> {
-        return try {
-            val response = challengerApi.grantChallengerPoint(id, request) //
-
-            if (response.success) {
-                ApiState.Success(response.result ?: throw Exception("Data is null"))
-            } else {
-                ApiState.Fail(FailState(false, response.code, response.message))
-            }
-        } catch (e: retrofit2.HttpException) {
-            val errorBody = e.response()?.errorBody()?.string()
-            val errorResponse = Gson().fromJson(errorBody, ApiResponse::class.java)
-
-            ApiState.Fail(FailState(
-                isSuccess = false,
-                code = errorResponse?.code ?: "HTTP_${e.code()}",
-                message = errorResponse?.message ?: "서버 에러가 발생했습니다."
-            ))
+            ApiState.Success(call())
         } catch (e: Exception) {
             ApiState.Fail(FailState(false, "UNKNOWN", e.message ?: "알 수 없는 오류"))
         }
