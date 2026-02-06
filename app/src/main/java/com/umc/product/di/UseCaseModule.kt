@@ -4,8 +4,12 @@ import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.repository.AuthRepository
 import com.umc.domain.repository.member.MemberRepository
 import com.umc.domain.repository.ChallengerRepository
+import com.umc.domain.repository.schedule.ScheduleRepository
 import com.umc.domain.usecase.GetChallengerDetailUseCase
 import com.umc.domain.usecase.PostLoginUseCase
+import com.umc.domain.usecase.Schedule.GetScheduleDetailUseCase
+import com.umc.domain.usecase.Schedule.GetScheduleListUseCase
+import com.umc.domain.usecase.Schedule.GetScheduleMonthUseCase
 import com.umc.domain.usecase.appDataStore.UpdateUserInfoUseCase
 import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
@@ -27,7 +31,6 @@ object UseCaseModule {
     }
 
 
-
     /**member usecase**/
     @Singleton
     @Provides
@@ -45,6 +48,28 @@ object UseCaseModule {
         return GetMemberProfileUseCase(memberRepository)
     }
 
+
+    /**schedule usecase**/
+    @Singleton
+    @Provides
+    fun providesGetScheduleListUseCase(repository: ScheduleRepository): GetScheduleListUseCase {
+        return GetScheduleListUseCase(repository)
+    }
+
+    @Singleton
+    @Provides
+    fun providesGetScheduleMonthUseCase(repository: ScheduleRepository): GetScheduleMonthUseCase {
+        return GetScheduleMonthUseCase(repository)
+    }
+
+    @Singleton
+    @Provides
+    fun providesGetScheduleDetailUseCase(repository: ScheduleRepository): GetScheduleDetailUseCase {
+        return GetScheduleDetailUseCase(repository)
+    }
+
+
+    /**challenger usecase**/
     @Singleton
     @Provides
     fun providesGetChallengerDetailUseCase(repository: ChallengerRepository): GetChallengerDetailUseCase {

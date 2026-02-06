@@ -138,7 +138,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
     }
 
     private fun moveToPlanDetail(plan : SchedulePlanItem){
-        val action = HomeFragmentDirections.actionHomeToPlanDetail()
+        val action = HomeFragmentDirections.actionHomeToPlanDetail(
+            //scheduleId = plan.id
+        )
         findNavController().navigate(action)
     }
 
@@ -153,7 +155,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
         }
     }
 
-    //DatePicker 열기
+    //DatePicker 달력 열기
     private fun openDatePicker(){
         // 현재 선택된 날짜 가져오기
         val currentDay = viewModel.uiState.value.selectedDate
@@ -229,15 +231,30 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
             //날짜 터치 리스너 달기
             setOnDateChangedListener { widget, date, selected ->
                 if(selected){
+                    //데코레이터에 전달
                     selectedDec.setSelectedDay(date)
                     invalidateDecorators()
 
                     /**viewModel에 전달**/
                     viewModel.setSelectedDate(date)
                 }
-
             }
+
+            //월이 바뀔 때 일정 다시 가져오기 리스너
+            setOnMonthChangedListener { widget, date ->
+                viewModel.getScheduleMonth(date.year, date.month)
+            }
+
         }
+    }
+
+    //API 재호출
+    override fun onResume() {
+
+        val current = viewModel.uiState.value.selectedDate
+        viewModel.getScheduleMonth(current.year, current.month)
+
+        super.onResume()
     }
 
 

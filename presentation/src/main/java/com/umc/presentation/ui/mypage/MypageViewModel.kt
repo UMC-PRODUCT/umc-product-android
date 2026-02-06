@@ -144,7 +144,7 @@ data class MypageFragmentUiState(
     val linkedinUrl : String = "",
 
     // UMC 외부 링크
-    val websiteUMC : String = "https://umc.makeus.in",
+    val websiteUMC : String = "https://umc.it.kr",
     val instagramUMC : String = "https://www.instagram.com/uni_makeus_challenge/",
     
 ) : UiState

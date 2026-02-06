@@ -2,6 +2,7 @@ package com.umc.domain.model.home
 
 //홈의 recyclerview를 표현할 때 필요한 data class
 data class SchedulePlanItem(
+    val id: Int,          // 1
     val title: String,    // "아이디어톤"
     val time: String,     // "10:00"
     val date: String,     // "2026.03.27"
