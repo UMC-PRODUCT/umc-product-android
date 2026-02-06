@@ -7,8 +7,8 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.PointType
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
-import com.umc.domain.usecase.GetAdminChallengerDetailUseCase
-import com.umc.domain.usecase.GrantChallengerPointUseCase
+import com.umc.domain.usecase.challenger.GetAdminChallengerDetailUseCase
+import com.umc.domain.usecase.challenger.GrantChallengerPointUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState

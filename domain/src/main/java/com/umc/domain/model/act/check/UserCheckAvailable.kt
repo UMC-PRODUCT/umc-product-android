@@ -1,5 +1,6 @@
 package com.umc.domain.model.act.check
 
+import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CheckAvailableStatus
 
 /**
@@ -8,9 +9,9 @@ import com.umc.domain.model.enums.CheckAvailableStatus
 data class UserCheckAvailable(
     val id: Int,
     val title: String,
+    val tags: List<CategoryType>?,
     val startTime: String,
     val endTime: String,
-    val admin: String,
     val status: CheckAvailableStatus,
     val latitude: Double,
     val longitude: Double,

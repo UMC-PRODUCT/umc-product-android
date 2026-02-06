@@ -11,18 +11,26 @@ object Endpoints {
         const val EMAIL_VERIFICATION_COMPLETE = "$EMAIL_VERIFICATION/complete"
     }
 
+    object Attendance {
+        const val ATTENDANCE = "api/v1/attendances"
+        const val AVAILABLE = "$ATTENDANCE/available"
+    }
+
     object Challenger {
         const val CHALLENGER = "api/v1/challenger"
         const val DETAIL = "$CHALLENGER/{challengerId}"
         const val POINT = "$CHALLENGER/{challengerId}/points"
     }
-    // TODO 경로명 입력
-
 
     object Member{
         const val MEMBER = "api/v1/member"
         const val MYPROFILE = "$MEMBER/me"
         const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
+    }
+
+    object Schedule{
+        const val SCHEDULE = "api/v1/schedules"
+        const val DETAIL = "$SCHEDULE/{scheduleId}"
     }
 
     object Kakao{

@@ -1,4 +1,4 @@
-package com.umc.domain.usecase
+package com.umc.domain.usecase.challenger
 
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.domain.model.base.ApiState

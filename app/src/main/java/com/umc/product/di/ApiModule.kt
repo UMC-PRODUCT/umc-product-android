@@ -1,8 +1,10 @@
 package com.umc.product.di
 
+import com.umc.data.api.AttendanceApi
 import com.umc.data.api.AuthApi
 import com.umc.data.api.MemberApi
 import com.umc.data.api.ChallengerApi
+import com.umc.data.api.ScheduleApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,5 +35,17 @@ object ApiModule {
     @Provides
     fun provideChallengerApi(@AuthRetrofit retrofit: Retrofit): ChallengerApi {
         return retrofit.create(ChallengerApi::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideAttendanceApi(@AuthRetrofit retrofit: Retrofit): AttendanceApi {
+        return retrofit.create(AttendanceApi::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideScheduleApi(@AuthRetrofit retrofit: Retrofit): ScheduleApi {
+        return retrofit.create(ScheduleApi::class.java)
     }
 }
