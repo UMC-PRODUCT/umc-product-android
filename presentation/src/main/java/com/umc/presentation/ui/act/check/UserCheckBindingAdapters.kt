@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.shape.CornerFamily
+import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.presentation.R
@@ -34,6 +35,36 @@ object UserCheckBindingAdapters {
 
         view.setCardBackgroundColor(ContextCompat.getColor(view.context, bgColorRes))
         view.setTextColor(ContextCompat.getColor(view.context, textColorRes))
+    }
+
+    /**
+     * 태그 리스트의 첫 번째 항목에 따라 세션 아이콘 설정
+     */
+    @JvmStatic
+    @BindingAdapter("sessionIconByTag")
+    fun setSessionIconByTag(view: ImageView, tags: List<CategoryType>?) {
+        if (tags.isNullOrEmpty()) {
+            view.setImageResource(R.drawable.ic_people_color)
+            return
+        }
+
+        // 첫 번째 태그에 따라 아이콘 분기 처리
+        val iconRes = when (tags.first()) {
+            CategoryType.NETWORKING -> R.drawable.ic_networking_on
+            CategoryType.PROJECT -> R.drawable.ic_project_on
+            CategoryType.DUES -> R.drawable.ic_fees_on
+            CategoryType.MEETING -> R.drawable.ic_meeting_on
+            CategoryType.ORIENTATION -> R.drawable.ic_orientation_on
+            CategoryType.PRESENTATION -> R.drawable.ic_presentation_on
+            CategoryType.RETROSPECTIVE -> R.drawable.ic_retrospective_on
+            CategoryType.GENERAL -> R.drawable.ic_general_on
+            CategoryType.LEADERSHIP -> R.drawable.ic_leadership_on
+            CategoryType.STUDY -> R.drawable.ic_study_on
+            CategoryType.HACKATHON -> R.drawable.ic_workshop_on
+            CategoryType.WORKSHOP -> R.drawable.ic_workshop_on
+            else -> R.drawable.ic_people_color
+        }
+        view.setImageResource(iconRes)
     }
 
     /**

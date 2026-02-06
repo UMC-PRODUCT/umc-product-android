@@ -21,6 +21,7 @@ data class AttendanceAvailableResponse(
             return UserCheckAvailable(
                 id = scheduleId,
                 title = scheduleName,
+                tags = tags,
                 startTime = startTime,
                 endTime = endTime,
                 status = status,
