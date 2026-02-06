@@ -10,7 +10,6 @@ data class UserCheckAvailable(
     val title: String,
     val startTime: String,
     val endTime: String,
-    val admin: String,
     val status: CheckAvailableStatus,
     val latitude: Double,
     val longitude: Double,
