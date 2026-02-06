@@ -137,6 +137,7 @@
     <string name="branch">지부</string>
     <string name="confirm">확인</string>
     <string name="unConfirm">미확인</string>
+    <string name="edit">수정</string>
 
     <!-- 파트 -->
     <string name="pm">PM</string>
@@ -241,6 +242,7 @@
     <string name="notice_write_part_title">전송할 파트 선택</string>
     <string name="notice_write_part_hint">선택하지 않으면 전체 파트원에게 전송됩니다</string>
     <string name="notice_write_sent_notification">알림 발송</string>
+    <string name="notice_write_vote_create">생성하기</string>
     <string name="notice_write_complete">작성 완료</string>
     <string name="notice_write_link_title">링크 첨부</string>
     <string name="notice_write_link_hint">링크를 첨부해주세요.</string>

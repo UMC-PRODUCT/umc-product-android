@@ -22,15 +22,19 @@ fun <T> ApiState<ApiResponse<T>>.mapSuccessData() : ApiState<T> {
     }
 }
 
+fun <T> ApiResponse<T>.mapSuccessData() : ApiState<T> {
+    return if (this.success) ApiState.Success(this.result ?: (Unit as T)) else ApiState.Fail(FailState.default)
+}
+
 data class FailState(
-    val isSuccess: Boolean,
+    val success: Boolean,
     val code: String,
     val message: String
 ) {
     companion object {
         private const val EMPTY = ""
         val default = FailState(
-            isSuccess = DEFAULT_ERROR,
+            success = DEFAULT_ERROR,
             code = EMPTY,
             message = EMPTY
         )
