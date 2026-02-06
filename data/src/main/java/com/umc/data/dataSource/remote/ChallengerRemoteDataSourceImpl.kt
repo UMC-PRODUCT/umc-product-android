@@ -26,7 +26,7 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
             val errorResponse = Gson().fromJson(errorBody, ApiResponse::class.java)
 
             ApiState.Fail(FailState(
-                isSuccess = false,
+                success = false,
                 code = errorResponse?.code ?: "HTTP_${e.code()}",
                 message = errorResponse?.message ?: "서버 에러가 발생했습니다."
             ))
