@@ -10,7 +10,7 @@ class AttendanceRemoteDataSourceImpl @Inject constructor(
     private val attendanceApi: AttendanceApi
 ) : AttendanceRemoteDataSource {
 
-    override suspend fun getAttendanceAvailable(): ApiState<AttendanceAvailableResponse> {
+    override suspend fun getAttendanceAvailable(): ApiState<List<AttendanceAvailableResponse>> {
         return apiCall { attendanceApi.getAttendanceAvailable() }
     }
 }

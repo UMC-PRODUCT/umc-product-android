@@ -6,5 +6,5 @@ import retrofit2.http.GET
 
 interface AttendanceApi {
     @GET(Endpoints.Attendance.AVAILABLE)
-    suspend fun getAttendanceAvailable(): ApiResponse<AttendanceAvailableResponse>
+    suspend fun getAttendanceAvailable(): ApiResponse<List<AttendanceAvailableResponse>>
 }

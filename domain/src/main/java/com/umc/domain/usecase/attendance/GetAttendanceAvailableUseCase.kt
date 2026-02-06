@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetAttendanceAvailableUseCase @Inject constructor(
     private val attendanceRepository: AttendanceRepository
 ) {
-    suspend operator fun invoke(): ApiState<UserCheckAvailable> {
+    suspend operator fun invoke(): ApiState<List<UserCheckAvailable>> {
         return attendanceRepository.getAttendanceAvailable()
     }
 }

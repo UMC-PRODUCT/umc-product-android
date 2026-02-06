@@ -12,7 +12,9 @@ class AttendanceRepositoryImpl @Inject constructor(
     private val attendanceRemoteDataSource: AttendanceRemoteDataSource
 ) : AttendanceRepository {
 
-    override suspend fun getAttendanceAvailable(): ApiState<UserCheckAvailable> {
-        return attendanceRemoteDataSource.getAttendanceAvailable().map { it.toModel() }
+    override suspend fun getAttendanceAvailable(): ApiState<List<UserCheckAvailable>> {
+        return attendanceRemoteDataSource.getAttendanceAvailable().map { responseList ->
+            responseList.map { it.toModel() }
+        }
     }
 }
