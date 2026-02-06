@@ -13,7 +13,6 @@
             android:id="@+id/text_field_vote"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
             android:layout_weight="1"
             app:layout_constraintTop_toTopOf="parent"
             app:placeholderText="@string/notice_write_link_hint"
@@ -25,8 +24,9 @@
             android:id="@+id/image_delete"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:src="@drawable/ic_delete_filled" />
+            android:layout_marginStart="16dp"
+            android:padding="2dp"
+            android:src="@drawable/ic_trash_can" />
     </LinearLayout>
 
 </layout>
