@@ -5,6 +5,7 @@ import android.text.Spanned
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
@@ -123,6 +124,14 @@ class HomeViewModel @Inject constructor(
                     response = getMyProfileUseCase(),
                     successCallback = { userInfo ->
                         Log.d("log_home", "getUserInfo: ${userInfo}")
+
+                        updateState {
+                            copy(
+                                userName = userInfo.name,
+                                userType = UserType.valueOf(userInfo.status),
+                            )
+                        }
+
                     },
                     errorCallback = {
                         /**TODO. 에러 토스트 메시지 등을 전송**/

@@ -1,11 +1,14 @@
 package com.umc.presentation.ui.mypage.profile
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.mypage.UserActiveItem
 import com.umc.domain.model.mypage.UserOutLink
 import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
 import com.umc.domain.usecase.appDataStore.UpdateUserOutLinkUseCase
 import com.umc.presentation.base.BaseViewModel
@@ -18,8 +21,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val getUserOutLinkUseCase: GetUserOutLinkUseCase,
-    private val updateUserOutLinkUseCase: UpdateUserOutLinkUseCase,
+    private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //dataStore에서 불러오기
+    private val updateUserOutLinkUseCase: UpdateUserOutLinkUseCase, //dataStore에 저장
+    private val getUserInfoUseCase: GetUserInfoUseCase, //dataStore에서 유저 정보 불러오기
 ) : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     ProfileFragmentUiState()){
 
@@ -33,6 +37,15 @@ class ProfileViewModel @Inject constructor(
                         githubLink = outLink.github,
                         linkedinLink = outLink.linkedin,
                         blogLink = outLink.blog
+                    )
+                }
+            }
+        }
+        viewModelScope.launch {
+            getUserInfoUseCase().collect { userInfo ->
+                updateState {
+                    copy(
+                        userInfo = userInfo,
                     )
                 }
             }
@@ -82,9 +95,9 @@ class ProfileViewModel @Inject constructor(
 data class ProfileFragmentUiState(
     //유저 정보 (고정)
     val loginType: LoginType = LoginType.KAKAO,
-    val nickname: String = "어헛차/박유수",
-    val mySchool: String = "숭실대학교",
     val myPart: String = "9기/Android",
+    val userInfo : UserInfo = UserInfo(),
+
 
     //유저 정보 (가변)
     val githubLink: String = "",
@@ -108,7 +121,7 @@ data class ProfileFragmentUiState(
             position = "파트장"),
     ),
 
-) : UiState
+    ) : UiState
 
 sealed interface ProfileFragmentEvent : UiEvent {
     
