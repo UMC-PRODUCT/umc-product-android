@@ -7,6 +7,6 @@ class GetScheduleDetailUseCase @Inject constructor(
     private val scheduleRepository: ScheduleRepository
 ) {
     suspend operator fun invoke(scheduleId: Int) =
-        scheduleRepository.getScheduleDetail(scheduleId)
+        scheduleRepository.getScheduleDetailHome(scheduleId)
 
 }

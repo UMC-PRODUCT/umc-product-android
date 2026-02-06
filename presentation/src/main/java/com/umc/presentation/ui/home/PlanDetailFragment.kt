@@ -3,12 +3,14 @@ package com.umc.presentation.ui.home
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPlanDetailBinding
@@ -24,6 +26,9 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
 ) {
     override val viewModel: PlanDetailViewModel by viewModels()
 
+    //인자로 받은 ID
+    private val args: PlanDetailFragmentArgs by navArgs()
+
     override fun initView() {
         binding.apply {
             vm = viewModel
@@ -33,6 +38,14 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
                 openNaverMap(address)
             }
 
+        }
+
+        val scheduleId = args.scheduleId
+
+        if (scheduleId != -1) {
+            // 이 id를 사용하여 상세 조회 API를 호출하는 ViewModel 함수를 실행하세요.
+            // viewModel.getScheduleDetail(scheduleId)
+            Log.d("log_home", "전달받은 ID: $scheduleId")
         }
 
     }

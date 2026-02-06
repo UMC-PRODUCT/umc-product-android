@@ -14,12 +14,12 @@ interface ScheduleApi {
     @GET(Endpoints.Schedule.SCHEDULE)
     suspend fun getScheduleList(): ApiResponse<List<ScheduleListResponse>>
 
-    @GET(Endpoints.Schedule.SCHEDULE_DETAIL)
+    @GET(Endpoints.Schedule.DETAIL)
     suspend fun getScheduleDetail(
         @Path("scheduleId") scheduleId: Int
     ): ApiResponse<ScheduleDetailResponse>
 
-    @GET(Endpoints.Schedule.SCHEDULE_MONTH)
+    @GET(Endpoints.Schedule.MONTH)
     suspend fun getMonthSchedule(
         @Query("year") year: Int,
         @Query("month") month: Int

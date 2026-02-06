@@ -1,7 +1,7 @@
 package com.umc.data.repository.schedule
 
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
-import com.umc.data.response.schedule.ScheduleDetailResponse.Companion.toDomain
+import com.umc.data.response.schedule.ScheduleDetailResponse.Companion.toHomeDomain
 import com.umc.data.response.schedule.ScheduleListResponse.Companion.toDomain
 import com.umc.data.response.schedule.ScheduleMonthResponse.Companion.toDomain
 import com.umc.domain.model.base.ApiState
@@ -22,9 +22,20 @@ class ScheduleRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getScheduleDetail(scheduleId: Int): ApiState<ScheduleDetailModel> {
-        return scheduleRemoteDataSource.getScheduleDetail(scheduleId).map { it.toDomain() }
+    override suspend fun getScheduleDetailHome(scheduleId: Int): ApiState<ScheduleDetailModel> {
+        return scheduleRemoteDataSource.getScheduleDetail(scheduleId).map { it.toHomeDomain() }
     }
+
+    /*
+    override suspend fun getScheduleDetail(scheduleId: Int): ApiState<UserCheckAvailable> {
+        return scheduleRemoteDataSource.getScheduleDetail(scheduleId).map { response ->
+            response.toModel()
+        }
+    }
+
+     */
+
+
 
     override suspend fun getMonthSchedule(
         year: Int,

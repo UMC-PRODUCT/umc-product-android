@@ -139,7 +139,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
 
     private fun moveToPlanDetail(plan : SchedulePlanItem){
         val action = HomeFragmentDirections.actionHomeToPlanDetail(
-            //scheduleId = plan.id
+            scheduleId = plan.id
         )
         findNavController().navigate(action)
     }
