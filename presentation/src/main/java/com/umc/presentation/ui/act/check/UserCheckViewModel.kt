@@ -25,10 +25,10 @@ class UserCheckViewModel @Inject constructor() :
 
     private fun loadInitialData() {
         val availableList = listOf(
-            UserCheckAvailable(1, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE, 37.504562, 126.956926, "서울특별시 동작구 흑석로 84"),
-            UserCheckAvailable(2, "스터디", "14:00", "18:00", "스터디장", CheckAvailableStatus.BEFORE, 37.582568, 127.001488, "서울특별시 종로구 명륜4가 88-2번지 주소를 길게 써보자ㅏㅏㅏㅏㅏㅏㅏ"),
-            UserCheckAvailable(3, "정기 세션 3주차", "14:00", "18:00", "운영진", CheckAvailableStatus.COMPLETED, 37.5665, 126.9780,"서울특별시 중구 소공동 세종대로18길 2", true),
-            UserCheckAvailable(4, "UMCON", "14:00", "18:00", "스터디장", CheckAvailableStatus.PENDING, 37.5665, 126.9780, "서울특별시 중구 소공동 세종대로18길 2", false)
+            UserCheckAvailable(1, "스터디", "14:00", "18:00", CheckAvailableStatus.BEFORE, 37.504562, 126.956926, "서울특별시 동작구 흑석로 84"),
+            UserCheckAvailable(2, "스터디", "14:00", "18:00", CheckAvailableStatus.BEFORE, 37.582568, 127.001488, "서울특별시 종로구 명륜4가 88-2번지 주소를 길게 써보자ㅏㅏㅏㅏㅏㅏㅏ"),
+            UserCheckAvailable(3, "정기 세션 3주차", "14:00", "18:00", CheckAvailableStatus.COMPLETED, 37.5665, 126.9780,"서울특별시 중구 소공동 세종대로18길 2", true),
+            UserCheckAvailable(4, "UMCON", "14:00", "18:00", CheckAvailableStatus.PENDING, 37.5665, 126.9780, "서울특별시 중구 소공동 세종대로18길 2", false)
         ).map {
             CheckAvailableUIModel(
                 session = it,
@@ -87,7 +87,7 @@ class UserCheckViewModel @Inject constructor() :
                 if (uiModel.session.id == sessionId) {
                     uiModel.copy(isExpanded = !uiModel.isExpanded)
                 } else {
-                    uiModel
+                    uiModel.copy(isExpanded = false)
                 }
             }
             copy(availableSessions = newList)
