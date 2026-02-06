@@ -1,21 +1,26 @@
 package com.umc.presentation.ui.act.check
 
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.act.check.UserCheckHistory
 import com.umc.domain.model.act.check.UserCheckAvailable
+import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
+import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class UserCheckViewModel @Inject constructor() :
-    BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
+class UserCheckViewModel @Inject constructor(
+    private val getAttendanceAvailableUseCase: GetAttendanceAvailableUseCase //
+) : BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
 
     init {
-        loadInitialData()
+        fetchAvailableAttendance()
     }
 
     fun submitAttendanceReason(sessionId: Int, reason: String) {
@@ -23,39 +28,28 @@ class UserCheckViewModel @Inject constructor() :
         emitEvent(UserCheckEvent.ShowToast("사유가 성공적으로 제출되었습니다."))
     }
 
-    private fun loadInitialData() {
-        val availableList = listOf(
-            UserCheckAvailable(1, "스터디", "14:00", "18:00", CheckAvailableStatus.BEFORE, 37.504562, 126.956926, "서울특별시 동작구 흑석로 84"),
-            UserCheckAvailable(2, "스터디", "14:00", "18:00", CheckAvailableStatus.BEFORE, 37.582568, 127.001488, "서울특별시 종로구 명륜4가 88-2번지 주소를 길게 써보자ㅏㅏㅏㅏㅏㅏㅏ"),
-            UserCheckAvailable(3, "정기 세션 3주차", "14:00", "18:00", CheckAvailableStatus.COMPLETED, 37.5665, 126.9780,"서울특별시 중구 소공동 세종대로18길 2", true),
-            UserCheckAvailable(4, "UMCON", "14:00", "18:00", CheckAvailableStatus.PENDING, 37.5665, 126.9780, "서울특별시 중구 소공동 세종대로18길 2", false)
-        ).map {
-            CheckAvailableUIModel(
-                session = it,
-                address = it.address
-            )
-        }
+    private fun fetchAvailableAttendance() {
+        viewModelScope.launch {
+            when (val result = getAttendanceAvailableUseCase()) {
+                is ApiState.Success -> {
+                    val uiModels = result.data.map { session ->
+                        CheckAvailableUIModel(
+                            session = session,
+                            address = session.address
+                        )
+                    }
 
-        val rawHistoryList = listOf(
-            UserCheckHistory(1, "3주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.SUCCESS),
-            UserCheckHistory(2, "2주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.LATE),
-            UserCheckHistory(3, "1주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.ABSENT)
-        )
-
-        val historyUIList = rawHistoryList.mapIndexed { index, history ->
-            CheckHistoryUIModel(
-                history = history,
-                isFirst = index == 0,
-                isLast = index == rawHistoryList.size - 1
-            )
-        }
-
-        updateState {
-            copy(
-                availableSessions = availableList,
-                attendanceHistories = historyUIList,
-                availableCount = availableList.size
-            )
+                    updateState {
+                        copy(
+                            availableSessions = uiModels,
+                            availableCount = uiModels.size
+                        )
+                    }
+                }
+                is ApiState.Fail -> {
+                    emitEvent(UserCheckEvent.ShowToast(result.failState.message))
+                }
+            }
         }
     }
 
