@@ -27,4 +27,12 @@ object Endpoints {
     object Kakao{
         const val SEARCH_LOCATION = "v2/local/search/keyword.json"
     }
+
+    object Schedule{
+        const val SCHEDULE = "api/v1/schedules"
+
+        const val SCHEDULE_DETAIL = "$SCHEDULE/{scheduleId}"
+
+        const val SCHEDULE_MONTH = "$SCHEDULE/my-list"
+    }
 }
