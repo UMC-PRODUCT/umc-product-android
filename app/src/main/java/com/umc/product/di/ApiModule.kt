@@ -1,5 +1,6 @@
 package com.umc.product.di
 
+import com.umc.data.api.AttendanceApi
 import com.umc.data.api.AuthApi
 import com.umc.data.api.MemberApi
 import com.umc.data.api.ChallengerApi

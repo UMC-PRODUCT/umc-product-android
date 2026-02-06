@@ -9,12 +9,15 @@ import com.umc.domain.model.base.map
 import com.umc.domain.model.home.schedule.ScheduleDetailModel
 import com.umc.domain.model.home.schedule.ScheduleListModel
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
+import com.umc.data.response.schedule.ScheduleDetailResponse.Companion.toModel
+import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.repository.schedule.ScheduleRepository
 import javax.inject.Inject
 
 class ScheduleRepositoryImpl @Inject constructor(
     private val scheduleRemoteDataSource: ScheduleRemoteDataSource
 ) : ScheduleRepository {
+
 
     override suspend fun getScheduleList(): ApiState<List<ScheduleListModel>> {
         return scheduleRemoteDataSource.getScheduleList().map { responseList ->
@@ -26,16 +29,12 @@ class ScheduleRepositoryImpl @Inject constructor(
         return scheduleRemoteDataSource.getScheduleDetail(scheduleId).map { it.toHomeDomain() }
     }
 
-    /*
+  
     override suspend fun getScheduleDetail(scheduleId: Int): ApiState<UserCheckAvailable> {
         return scheduleRemoteDataSource.getScheduleDetail(scheduleId).map { response ->
             response.toModel()
         }
     }
-
-     */
-
-
 
     override suspend fun getMonthSchedule(
         year: Int,

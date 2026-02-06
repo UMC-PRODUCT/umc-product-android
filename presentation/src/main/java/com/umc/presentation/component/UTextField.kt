@@ -197,4 +197,8 @@ class UTextField @JvmOverloads constructor(
     fun setPlaceHolder(text: Int) {
         binding.editText.hint = context.getText(text)
     }
+
+    fun clearText() {
+        setText("")
+    }
 }

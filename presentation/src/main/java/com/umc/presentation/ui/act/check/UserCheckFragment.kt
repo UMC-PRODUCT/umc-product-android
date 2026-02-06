@@ -3,6 +3,7 @@ package com.umc.presentation.ui.act.check
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Looper
+import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
@@ -57,19 +58,18 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
 
     override fun initView() {
         locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-        setupLocationCallback()
 
+        setupLocationCallback()
         checkLocationPermissions()
         setupMainRecyclerView()
     }
 
-    // 위치 업데이트 콜백 설정
     private fun setupLocationCallback() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
-                for (location in locationResult.locations) {
+                // 실시간 위치 정보를 뷰모델에 전달하여 거리 계산 수행
+                locationResult.lastLocation?.let { location ->
                     viewModel.updateLocation(location.latitude, location.longitude)
                 }
             }
@@ -104,25 +104,29 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun initStates() {
         repeatOnStarted(viewLifecycleOwner) {
+            // 1. UI State 구독: 리스트 및 카운트 업데이트
             launch {
                 viewModel.uiState.collect { state ->
+                    // 가용한 세션 업데이트
                     availableAdapter.submitList(state.availableSessions)
                     availableHeaderAdapter.updateCount(state.availableCount)
 
-                    if (state.availableSessions.isEmpty()) {
-                        availableEmptyAdapter.submitList(listOf(EmptyStateUIModel(R.drawable.ic_people, getString(R.string.attendance_empty_available))))
-                    } else {
-                        availableEmptyAdapter.submitList(emptyList())
-                    }
+                    // 빈 화면 처리 (EmptyStateAdapter)
+                    val availableEmptyList = if (state.availableSessions.isEmpty()) {
+                        listOf(EmptyStateUIModel(R.drawable.ic_people, getString(R.string.attendance_empty_available)))
+                    } else emptyList()
+                    availableEmptyAdapter.submitList(availableEmptyList)
 
+                    // 출석 히스토리 업데이트
                     historyAdapter.submitList(state.attendanceHistories)
-                    if (state.attendanceHistories.isEmpty()) {
-                        historyEmptyAdapter.submitList(listOf(EmptyStateUIModel(R.drawable.ic_document, getString(R.string.attendance_empty_history))))
-                    } else {
-                        historyEmptyAdapter.submitList(emptyList())
-                    }
+                    val historyEmptyList = if (state.attendanceHistories.isEmpty()) {
+                        listOf(EmptyStateUIModel(R.drawable.ic_document, getString(R.string.attendance_empty_history)))
+                    } else emptyList()
+                    historyEmptyAdapter.submitList(historyEmptyList)
                 }
             }
+
+            // 2. UI Event 구독: 일회성 액션(토스트, 다이얼로그) 처리
             launch {
                 viewModel.uiEvent.collect { event -> handleEvent(event) }
             }
@@ -159,8 +163,12 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
     override fun handleEvent(event: UserCheckEvent) {
         when (event) {
             is UserCheckEvent.ShowReasonDialog -> showAttendanceReasonDialog(event.sessionId)
-            is UserCheckEvent.ShowToast -> { /* 토스트 출력 */ }
-            else -> {}
+            is UserCheckEvent.ShowToast -> {
+                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+            }
+            is UserCheckEvent.NavigateToFailureReason -> {
+
+            }
         }
     }
 
