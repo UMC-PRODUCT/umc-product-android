@@ -49,6 +49,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 />
 
+            <!--
             <com.umc.presentation.component.UButton
                 android:id="@+id/item_cdv_region"
                 android:layout_width="wrap_content"
@@ -69,7 +70,9 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toEndOf="@id/item_cdv_category"
                 />
+                -->
 
+            <!--
             <com.umc.presentation.component.UButton
                 android:id="@+id/item_cdv_recruit"
                 android:layout_width="wrap_content"
@@ -88,6 +91,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 />
+                -->
 
             <TextView
                 android:id="@+id/item_tv_title"

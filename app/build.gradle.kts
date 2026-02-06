@@ -20,6 +20,12 @@ android {
             getApiKey("kakao.native.key"),
         )
         buildConfigField(
+                "String",
+                "KAKAO_REST_KEY",
+                "\"${getApiKey("kakao.rest.key")}\""
+        )
+
+        buildConfigField(
             "String",
             "NAVER_CLIENT_ID",
             "\"${getApiKey("naver.client.id")}\""

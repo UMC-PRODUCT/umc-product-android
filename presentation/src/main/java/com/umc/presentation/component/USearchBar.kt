@@ -35,6 +35,7 @@ class USearchBar @JvmOverloads constructor(
 
     private val binding = CustomSearchBarBinding.inflate(LayoutInflater.from(context), this)
     private var onTextChangedListener: ((String) -> Unit)? = null
+    private var onFocusChangedListener: ((Boolean) -> Unit)? = null
     private var isFocus: Boolean = false
     private var placeholderText: String? = null
 
@@ -74,6 +75,7 @@ class USearchBar @JvmOverloads constructor(
                         isFocus = hasFocus
                         hint = if (hasFocus) "" else placeholderText
                         updateStyle()
+                        onFocusChangedListener?.invoke(hasFocus)
                     }
                 }
             }
@@ -113,6 +115,9 @@ class USearchBar @JvmOverloads constructor(
 
     fun setOnTextChangedListener(listener: ((String) -> Unit)?) { onTextChangedListener = listener }
 
+    fun setOnFocusChangedListener(listener: (Boolean) -> Unit) {
+        this.onFocusChangedListener = listener
+    }
 
     fun getText(): String = binding.editText.text?.toString().orEmpty()
 

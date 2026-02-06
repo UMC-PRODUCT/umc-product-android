@@ -18,6 +18,7 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
 
 
     //category(지역) 변경
+    /*
     fun setCategory(nowCategory: CategoryItem) {
         updateState {
             val selectedCategories = regionCategories.map{
@@ -34,6 +35,8 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
         }
 
     }
+
+     */
 
     //category(글 카테고리) 선택
     fun onClickContentCategorySelect(){
@@ -111,12 +114,15 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
 data class PostWriteFragmentUiState(
 
     //카테고리 리스트
+    /*
     val regionCategories: List<CategoryItem> = listOf(
         CategoryItem("서울"),
         CategoryItem("경기/인천"),
         CategoryItem("대전/충청"),
         CategoryItem("부산/경남"),
     ),
+
+     */
 
     val selectContentCategory : CategoryItem = CategoryItem("카테고리 선택"),
 

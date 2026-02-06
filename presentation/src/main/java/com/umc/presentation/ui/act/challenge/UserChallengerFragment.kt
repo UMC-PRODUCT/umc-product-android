@@ -2,12 +2,12 @@ package com.umc.presentation.ui.act.challenge
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ConcatAdapter
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
-import com.umc.domain.model.act.challenger.SimpleHistoryItem
+import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.R
@@ -91,27 +91,16 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
         }
     }
 
+    /**
+     * ViewModel에서 발생한 이벤트를 처리
+     */
     override fun handleEvent(event: UserChallengerEvent) {
         when (event) {
             is UserChallengerEvent.NavigateToDetail -> {
-                val challenger = viewModel.uiState.value.allChallengers.find { it.id == event.id }
-
-                challenger?.let { data ->
-                    val infoModel = ChallengerInfoDialogModel(
-                        name = data.name,
-                        university = "중앙대학교",
-                        part = data.part.label,
-                        generation = "12기",
-                        warningCount = 1.0,
-                        history = listOf(
-                            SimpleHistoryItem("3주차 정기 세션", CheckHistoryStatus.SUCCESS),
-                            SimpleHistoryItem("2주차 정기 세션", CheckHistoryStatus.LATE),
-                            SimpleHistoryItem("1주차 정기 세션", CheckHistoryStatus.ABSENT)
-                        )
-                    )
-
-                    ChallengerInfoDialog(infoModel).show(childFragmentManager, "ChallengerInfoDialog")
-                }
+                ChallengerInfoDialog(event.model).show(childFragmentManager, "ChallengerInfoDialog")
+            }
+            is UserChallengerEvent.ShowErrorToast -> {
+                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
             }
         }
     }

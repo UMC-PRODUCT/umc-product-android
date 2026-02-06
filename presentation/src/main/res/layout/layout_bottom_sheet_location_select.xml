@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             app:cornerRadius="8dp"
-            app:placeholderText="@string/challenger_search_placeholder"
+            app:placeholderText="@string/home_plan_add_plan_location_placeholder"
             app:layout_constraintTop_toBottomOf="@id/tv_title" />
 
 
@@ -49,7 +49,6 @@
             android:layout_height="wrap_content"
             android:visibility="visible"
             android:layout_marginTop="40dp"
-            android:paddingBottom="64dp"
             android:background="@color/neutral000"
             app:layout_constraintTop_toBottomOf="@id/searchbar_location"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -71,8 +70,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:nestedScrollingEnabled="true"
+                android:overScrollMode="never"
+                app:layout_constrainedHeight="true"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 app:layout_constraintTop_toBottomOf="@id/tv_recent_title"
+                app:layout_constraintBottom_toBottomOf="parent"
                 />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -84,7 +87,9 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             android:layout_marginTop="24dp"
-            android:paddingBottom="64dp"
+            android:nestedScrollingEnabled="true"
+            android:overScrollMode="never"
+            app:layout_constrainedHeight="true"
             app:layout_constraintTop_toBottomOf="@id/searchbar_location"
             app:layout_constraintBottom_toBottomOf="parent"
             >
@@ -93,8 +98,12 @@
                 android:id="@+id/rcv_result"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="true"
+                android:overScrollMode="never"
+                app:layout_constrainedHeight="true"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
                 />
 
 

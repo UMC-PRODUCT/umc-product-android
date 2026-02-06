@@ -3,29 +3,14 @@ package com.umc.presentation.ui.home
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.res.Configuration
-import android.net.Uri
-import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.opencsv.CSVReader
-import com.umc.domain.model.home.ParticipantItem
-import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPlanAddBinding
-import com.umc.presentation.ui.home.adapter.SearchParticipantAdapter
-import com.umc.presentation.ui.home.adapter.ShowCategoryAdapter
-import com.umc.presentation.ui.home.adapter.ShowParticipantAdapter
+import com.umc.presentation.ui.home.dialog.AddAttendanceDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetCategoryPlanDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
+import com.umc.presentation.ui.home.dialog.BottomSheetParticipantDialog
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.InputStreamReader
 import java.util.Calendar
 
 @AndroidEntryPoint
@@ -35,11 +20,13 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
     override val viewModel: PlanAddViewModel by viewModels()
 
     //recyclerviewAdapter 정의구간
-    private lateinit var participantAdapter: ShowParticipantAdapter
+    //private lateinit var participantAdapter: ShowParticipantAdapter
     //private lateinit var categoryAdapter: ShowCategoryAdapter
-    private lateinit var searchAdapter: SearchParticipantAdapter
+    //private lateinit var searchAdapter: SearchParticipantAdapter
 
 
+
+    /*
     //csv 파일 처리를 위한 런처
     private val csvPickerLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
         uri: Uri? -> uri?.let {
@@ -47,6 +34,8 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
             parseCsvFile(it)
         }
     }
+
+     */
 
     override fun initView() {
         binding.apply {
@@ -66,6 +55,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
             }
 
             //csv 선택
+            /*
             planaddBtnUploadCsv.setOnClickListener {
                 // 파일 타입을 설정
                 val mimeTypes = arrayOf(
@@ -77,7 +67,10 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                 csvPickerLauncher.launch(mimeTypes)
             }
 
+             */
+
             //각 textField에 이벤트 정의
+            /*
             planaddTextifieldSearch.apply {
                 setOnTextChangedListener { text ->
                     //바뀔때마다 비교
@@ -95,6 +88,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     }
                 }
             }
+            */
 
             planaddTextfieldPlanTitleName.apply {
                 setOnTextChangedListener { text ->
@@ -111,15 +105,37 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
             planaddBtnBack.setOnClickListener { moveBackPressed() }
             planaddBtnCancelPlan.setOnClickListener { moveBackPressed() }
+
+            //최종 확인 버튼
             planaddBtnRegisterPlan.setOnClickListener {
                 /**TODO 이벤트를 통해 해당 정보를 서버에 넘겨야 한다.**/
-                moveBackPressed()
+
+                //운영진 여부에 따라 분기 처리
+                if(viewModel.uiState.value.isManager){
+                    //다이얼로그 생성
+                    val dialog = AddAttendanceDialog(
+                        onReject = {
+
+                            moveBackPressed()
+                        },
+                        onConfirm = {
+                            /**TODO 출석부 생성 페이지로 이동**/
+                            moveBackPressed()
+                        }
+
+                    )
+                    dialog.show(childFragmentManager, "AddAttendance")
+                    
+                }
+                else{
+                    moveBackPressed()
+                }
             }
 
             //장소 선택 부분 터치시 다이얼로그 로직
             binding.planaddCdvPlanLocation.setOnClickListener {
                 // 앞서 만든 BottomSheetDialog 생성
-                val locationDialog = BottomSheetLocationDialog { selectedItem ->
+                val locationDialog = BottomSheetLocationDialog(viewModel) { selectedItem ->
                     // 선택된 장소(LocationItem)의 제목을 뷰모델 이벤트로 전달
                     viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanLocation(selectedItem.title))
                 }
@@ -133,10 +149,21 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                 categoryDialog.show(childFragmentManager, "CategorySelect")
             }
 
+            //인원 관련 터치 시 다이얼로그 로직
+            binding.planaddCdvSearchParticipant.setOnClickListener {
+                // 뷰모델을 생성자로 전달하여 상태를 공유합니다.
+                val participantDialog = BottomSheetParticipantDialog(viewModel)
+
+                // childFragmentManager를 사용하여 프래그먼트 계층 구조를 유지합니다.
+                participantDialog.show(childFragmentManager, "ParticipantSelect")
+            }
+
 
         }
 
         /**recylceriview adapter**/
+
+        /*
         //1. 참여자 목록 recyclerview에 콜백 (X 터치 시 Event 송신)
         participantAdapter = ShowParticipantAdapter{ participantItem ->
             val event = PlanAddFragmentEvent.RemoveParticipants(participantItem)
@@ -151,6 +178,8 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     flexDirection = com.google.android.flexbox.FlexDirection.ROW
                 }
         }
+        */
+
 
         /**수정**/
         /*
@@ -175,7 +204,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
         }
         */
 
-        //5. 검색 관련 recyclerview 정의
+        /*       //5. 검색 관련 recyclerview 정의
         searchAdapter = SearchParticipantAdapter{ participantItem ->
             //토글 하면 이벤트 쏘기
             val event = PlanAddFragmentEvent.ToggleParticipants(participantItem)
@@ -187,7 +216,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
             adapter = searchAdapter
             layoutManager = LinearLayoutManager(requireContext())
         }
-
+*/
 
 
     }
@@ -206,14 +235,16 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                 }
 
                 // 상태 바뀔 때마다 submitList로 수정
-                participantAdapter.submitList(state.selectedParticipants)
+                //participantAdapter.submitList(state.selectedParticipants)
                 //categoryAdapter.submitList(state.categories)
-                searchAdapter.submitList(state.searchResults)
-                searchAdapter.updateSelectedList(state.selectedParticipants)
+                //searchAdapter.submitList(state.searchResults)
+                //searchAdapter.updateSelectedList(state.selectedParticipants)
             }
         }
     }
 
+
+    /*
     //CSV 파일 파싱
     private fun parseCsvFile(uri: Uri){
         //이름 정보를 임시로 담을 곳
@@ -279,6 +310,8 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
             Toast.makeText(requireContext(), "CSV 파일을 읽는 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
         }
     }
+
+     */
 
     //날짜 다이얼로그 호출 (날짜)
     private fun showDatePicker(isStart: Boolean) {

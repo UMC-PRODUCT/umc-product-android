@@ -88,7 +88,7 @@
             android:text="@string/community_write_category"
             android:layout_marginTop="32dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/write_tv_title"
+            app:layout_constraintTop_toTopOf="parent"
             />
 
         <com.google.android.material.card.MaterialCardView
@@ -142,7 +142,7 @@
 
 
         <!--지역 탭-->
-
+        <!--
         <TextView
             android:id="@+id/write_tv_region"
             android:layout_width="0dp"
@@ -168,6 +168,7 @@
             app:layout_constraintTop_toBottomOf="@id/write_tv_region"
             tools:listitem="@layout/item_home_category"
             />
+            -->
 
         <!--editText 탭-->
 
@@ -183,7 +184,7 @@
             android:textAppearance="@style/Title3Bold"
             android:textColor="@color/neutral800"
             android:textColorHint="@color/neutral400"
-            app:layout_constraintTop_toBottomOf="@id/write_rcv" />
+            app:layout_constraintTop_toBottomOf="@id/write_cdv_category" />
 
         <View
             android:id="@+id/write_view_divider"
