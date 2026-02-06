@@ -10,6 +10,8 @@ import com.umc.data.dataSource.remote.kakao.KakaoRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSource
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
+import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSourceImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -49,4 +51,8 @@ abstract class DataSourceModule {
     @Singleton
     @Binds
     abstract fun bindsAttendanceRemoteDataSource(dataSourceImpl: AttendanceRemoteDataSourceImpl): AttendanceRemoteDataSource
+
+    @Singleton
+    @Binds
+    abstract fun bindsScheduleRemoteDataSource(dataSourceImpl: ScheduleRemoteDataSourceImpl): ScheduleRemoteDataSource
 }

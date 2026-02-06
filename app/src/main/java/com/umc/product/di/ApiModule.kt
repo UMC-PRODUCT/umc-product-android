@@ -4,6 +4,7 @@ import com.umc.data.api.AttendanceApi
 import com.umc.data.api.AuthApi
 import com.umc.data.api.MemberApi
 import com.umc.data.api.ChallengerApi
+import com.umc.data.api.ScheduleApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,5 +41,11 @@ object ApiModule {
     @Provides
     fun provideAttendanceApi(@AuthRetrofit retrofit: Retrofit): AttendanceApi {
         return retrofit.create(AttendanceApi::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideScheduleApi(@AuthRetrofit retrofit: Retrofit): ScheduleApi {
+        return retrofit.create(ScheduleApi::class.java)
     }
 }
