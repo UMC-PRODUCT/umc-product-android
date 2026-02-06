@@ -55,6 +55,8 @@
         <attr name="pressedColor"/>
 
         <attr name="prevIcon"/>
+        <attr name="prevIconTint"/>
+        <attr name="topIcon" format="reference"/>
     </declare-styleable>
 
 
