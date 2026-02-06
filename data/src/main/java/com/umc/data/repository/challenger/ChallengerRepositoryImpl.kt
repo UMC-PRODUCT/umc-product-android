@@ -1,6 +1,6 @@
-package com.umc.data.repository
+package com.umc.data.repository.challenger
 
-import com.umc.data.dataSource.ChallengerRemoteDataSource
+import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSource
 import com.umc.data.response.challenger.ChallengerResponse.Companion.toManageModel
 import com.umc.data.response.challenger.ChallengerResponse.Companion.toModel
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel

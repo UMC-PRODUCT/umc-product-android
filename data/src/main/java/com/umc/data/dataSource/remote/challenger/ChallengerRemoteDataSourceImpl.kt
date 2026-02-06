@@ -1,7 +1,6 @@
-package com.umc.data.dataSource.remote
+package com.umc.data.dataSource.remote.challenger
 
 import com.umc.data.api.ChallengerApi
-import com.umc.data.dataSource.ChallengerRemoteDataSource
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.response.challenger.ChallengerResponse
 import com.umc.domain.model.base.ApiState

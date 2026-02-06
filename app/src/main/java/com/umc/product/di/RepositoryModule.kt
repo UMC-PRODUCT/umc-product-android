@@ -8,7 +8,7 @@ import com.umc.data.repository.member.MemberRepositoryImpl
 import com.umc.domain.repository.AuthRepository
 import com.umc.domain.repository.kakao.KakaoSearchRepository
 import com.umc.domain.repository.member.MemberRepository
-import com.umc.data.repository.ChallengerRepositoryImpl
+import com.umc.data.repository.challenger.ChallengerRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
 import dagger.Binds
 import dagger.Module

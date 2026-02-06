@@ -1,4 +1,4 @@
-package com.umc.data.dataSource
+package com.umc.data.dataSource.remote.challenger
 
 import com.umc.data.response.challenger.ChallengerResponse
 import com.umc.domain.model.base.ApiState
