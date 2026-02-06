@@ -11,17 +11,17 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.presentation.R
-import com.umc.domain.model.act.challenger.HistoryItem
+import com.umc.domain.model.act.challenger.ChallengerPoint
 import com.umc.presentation.component.UButton
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.presentation.databinding.DialogChallengerManageBinding
 import com.umc.presentation.ui.act.adapter.ChallengerHistoryAdapter
 
 class ChallengerManageDialog(
-    private val model: ChallengerManageDialogModel,
+    private var model: ChallengerManageDialogModel,
     private val onAbsenceSubmit: (String) -> Unit = {},
     private val onWarningSubmit: (String) -> Unit = {},
-    private val onDeleteHistory: (HistoryItem) -> Unit = {}
+    private val onDeleteHistory: (ChallengerPoint) -> Unit = {}
 ) : DialogFragment() {
 
     private var _binding: DialogChallengerManageBinding? = null
@@ -32,6 +32,30 @@ class ChallengerManageDialog(
 
     private val historyAdapter by lazy {
         ChallengerHistoryAdapter(onDeleteClick = { item -> onDeleteHistory(item) })
+    }
+
+
+    fun updateData(newModel: ChallengerManageDialogModel) {
+        this.model = newModel
+        binding.model = newModel
+        historyAdapter.submitList(newModel.history)
+
+        binding.etAbsenceReason.apply {
+            clearText()
+            clearFocus()
+        }
+        binding.etWarningReason.apply {
+            clearText()
+            clearFocus()
+        }
+
+        updateConfirmButton(binding.btnAbsenceConfirm, false)
+        updateConfirmButton(binding.btnWarningConfirm, false)
+
+        val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        imm.hideSoftInputFromWindow(binding.root.windowToken, 0)
+
+        binding.executePendingBindings()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -62,7 +86,6 @@ class ChallengerManageDialog(
     private fun initEvent() {
         binding.imvIconClose.setOnClickListener { dismiss() }
 
-        // 이미 선택된 모드를 다시 누르면 DEFAULT로 복구
         binding.btnWarningView.setOnClickListener { toggleMode(DialogMode.WARNING) }
         binding.btnAbsenceView.setOnClickListener { toggleMode(DialogMode.ABSENCE) }
         binding.btnRecordEdit.setOnClickListener { toggleMode(DialogMode.EDIT) }
@@ -70,14 +93,12 @@ class ChallengerManageDialog(
         binding.btnAbsenceConfirm.setOnClickListener {
             if (it.isEnabled) {
                 onAbsenceSubmit(binding.etAbsenceReason.getText())
-                updateUIForMode(DialogMode.DEFAULT)
             }
         }
 
         binding.btnWarningConfirm.setOnClickListener {
             if (it.isEnabled) {
                 onWarningSubmit(binding.etWarningReason.getText())
-                updateUIForMode(DialogMode.DEFAULT)
             }
         }
     }
@@ -93,13 +114,10 @@ class ChallengerManageDialog(
 
     private fun updateConfirmButton(button: UButton, isNotEmpty: Boolean) {
         button.isEnabled = isNotEmpty
-        if (isNotEmpty) {
-            button.setUBackgroundColor(ContextCompat.getColor(requireContext(), R.color.neutral000))
-            button.setTextColor(ContextCompat.getColor(requireContext(), R.color.neutral800))
-        } else {
-            button.setUBackgroundColor(ContextCompat.getColor(requireContext(), R.color.neutral100))
-            button.setTextColor(ContextCompat.getColor(requireContext(), R.color.neutral400))
-        }
+        val bgColor = if (isNotEmpty) R.color.neutral000 else R.color.neutral100
+        val textColor = if (isNotEmpty) R.color.neutral800 else R.color.neutral400
+        button.setUBackgroundColor(ContextCompat.getColor(requireContext(), bgColor))
+        button.setTextColor(ContextCompat.getColor(requireContext(), textColor))
     }
 
     private fun toggleMode(targetMode: DialogMode) {
@@ -109,16 +127,13 @@ class ChallengerManageDialog(
 
     private fun updateUIForMode(mode: DialogMode) {
         resetButtonStyles()
-
         binding.layoutAbsenceInput.visibility = View.GONE
         binding.layoutWarningInput.visibility = View.GONE
         binding.tvNewBadge.visibility = View.GONE
 
-        // 수정 모드일 때만 X 버튼 표시
         historyAdapter.setEditMode(mode == DialogMode.EDIT)
 
         when (mode) {
-            DialogMode.DEFAULT -> { /* 초기 상태: 버튼 스타일 초기화 및 히스토리만 표시 */ }
             DialogMode.ABSENCE -> {
                 binding.layoutAbsenceInput.visibility = View.VISIBLE
                 highlightButton(binding.btnAbsenceView, R.color.danger100, R.color.danger500)
@@ -131,6 +146,7 @@ class ChallengerManageDialog(
                 binding.tvNewBadge.visibility = View.VISIBLE
                 highlightButton(binding.btnRecordEdit, R.color.primary100, R.color.primary500)
             }
+            else -> {}
         }
     }
 
@@ -139,14 +155,16 @@ class ChallengerManageDialog(
         button.setUBackgroundColor(ContextCompat.getColor(requireContext(), bgColorRes))
         button.strokeColor = color
         button.setTextColor(color)
+        button.setTopIconTint(color)
     }
 
     private fun resetButtonStyles() {
-        val context = requireContext()
+        val defaultColor = ContextCompat.getColor(requireContext(), R.color.neutral400)
         listOf(binding.btnWarningView, binding.btnAbsenceView, binding.btnRecordEdit).forEach { btn ->
-            btn.setUBackgroundColor(ContextCompat.getColor(context, R.color.neutral000))
-            btn.strokeColor = ContextCompat.getColor(context, R.color.neutral300)
-            btn.setTextColor(ContextCompat.getColor(context, R.color.neutral400))
+            btn.setUBackgroundColor(ContextCompat.getColor(requireContext(), R.color.neutral000))
+            btn.strokeColor = ContextCompat.getColor(requireContext(), R.color.neutral300)
+            btn.setTextColor(defaultColor)
+            btn.setTopIconTint(defaultColor)
         }
     }
 

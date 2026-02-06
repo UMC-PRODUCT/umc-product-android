@@ -139,4 +139,8 @@ constructor(
         }
     }
 
+    fun setTopIconTint(color: Int) {
+        binding.imagePrevTopIcon.imageTintList = ColorStateList.valueOf(color)
+    }
+
 }

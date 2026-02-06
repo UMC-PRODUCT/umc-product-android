@@ -1,18 +1,17 @@
 package com.umc.presentation.ui.act.adapter
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.act.challenger.HistoryItem
+import com.umc.domain.model.act.challenger.ChallengerPoint
 import com.umc.presentation.databinding.ItemChallengerHistoryBinding
 import com.umc.presentation.extension.px
 
 class ChallengerHistoryAdapter(
-    private val onDeleteClick: (HistoryItem) -> Unit
-) : ListAdapter<HistoryItem, ChallengerHistoryAdapter.ViewHolder>(DiffCallback()) {
+    private val onDeleteClick: (ChallengerPoint) -> Unit
+) : ListAdapter<ChallengerPoint, ChallengerHistoryAdapter.ViewHolder>(DiffCallback()) {
 
     private var isEditMode: Boolean = false
 
@@ -33,27 +32,28 @@ class ChallengerHistoryAdapter(
         layoutParams.topMargin = if (position == 0) 0 else 12.px
         holder.itemView.layoutParams = layoutParams
 
-        holder.bind(getItem(position))
+        holder.bind(getItem(position), isEditMode)
     }
 
     inner class ViewHolder(private val binding: ItemChallengerHistoryBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: HistoryItem) {
-            binding.tvDate.text = item.date
-            binding.tvType.text = item.type
 
-            val statusText = "${item.historyType.label} +${if (item.count % 1.0 == 0.0) item.count.toInt() else item.count}"
-            binding.tvStatus.text = statusText
+        fun bind(item: ChallengerPoint, isEditMode: Boolean) {
+            binding.item = item
+            binding.isEditMode = isEditMode
 
-            binding.btnRemove.visibility = if (isEditMode) View.VISIBLE else View.GONE
+            // 삭제 버튼 리스너 연결
             binding.btnRemove.setOnClickListener { onDeleteClick(item) }
+
+            binding.executePendingBindings()
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<HistoryItem>() {
-        override fun areItemsTheSame(oldItem: HistoryItem, newItem: HistoryItem): Boolean =
-            oldItem.date == newItem.date && oldItem.type == newItem.type
-        override fun areContentsTheSame(oldItem: HistoryItem, newItem: HistoryItem): Boolean =
+    class DiffCallback : DiffUtil.ItemCallback<ChallengerPoint>() {
+        override fun areItemsTheSame(oldItem: ChallengerPoint, newItem: ChallengerPoint): Boolean =
+            oldItem.id == newItem.id
+
+        override fun areContentsTheSame(oldItem: ChallengerPoint, newItem: ChallengerPoint): Boolean =
             oldItem == newItem
     }
 }

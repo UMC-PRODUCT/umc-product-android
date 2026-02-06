@@ -14,6 +14,7 @@ object Endpoints {
     object Challenger {
         const val CHALLENGER = "api/v1/challenger"
         const val DETAIL = "$CHALLENGER/{challengerId}"
+        const val POINT = "$CHALLENGER/{challengerId}/points"
     }
     // TODO 경로명 입력
 
