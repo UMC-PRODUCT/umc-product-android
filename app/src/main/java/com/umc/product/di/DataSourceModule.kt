@@ -3,6 +3,8 @@ package com.umc.product.di
 import com.umc.data.dataSource.AuthRemoteDataSource
 import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSource
 import com.umc.data.dataSource.remote.AuthRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSource
+import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.kakao.KakaoRemoteDataSource
 import com.umc.data.dataSource.remote.kakao.KakaoRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSource
@@ -43,4 +45,8 @@ abstract class DataSourceModule {
     @Singleton
     @Binds
     abstract fun bindsChallengerRemoteDataSource(dataSourceImpl: ChallengerRemoteDataSourceImpl): ChallengerRemoteDataSource
+
+    @Singleton
+    @Binds
+    abstract fun bindsAttendanceRemoteDataSource(dataSourceImpl: AttendanceRemoteDataSourceImpl): AttendanceRemoteDataSource
 }

@@ -3,6 +3,7 @@ package com.umc.product.di
 import com.umc.data.repository.AppDataStoreRepositoryImpl
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.data.repository.AuthRepositoryImpl
+import com.umc.data.repository.attendance.AttendanceRepositoryImpl
 import com.umc.data.repository.kakao.KakaoSearchRepositoryImpl
 import com.umc.data.repository.member.MemberRepositoryImpl
 import com.umc.domain.repository.AuthRepository
@@ -10,6 +11,7 @@ import com.umc.domain.repository.kakao.KakaoSearchRepository
 import com.umc.domain.repository.member.MemberRepository
 import com.umc.data.repository.challenger.ChallengerRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
+import com.umc.domain.repository.attendance.AttendanceRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -55,4 +57,9 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindsChallengerRepository(repositoryImpl: ChallengerRepositoryImpl): ChallengerRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindsAttendanceRepository(repositoryImpl: AttendanceRepositoryImpl): AttendanceRepository
+
 }
