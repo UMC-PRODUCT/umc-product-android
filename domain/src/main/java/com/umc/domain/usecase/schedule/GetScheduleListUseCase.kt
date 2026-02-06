@@ -1,4 +1,4 @@
-package com.umc.domain.usecase.Schedule
+package com.umc.domain.usecase.schedule
 
 import com.umc.domain.repository.schedule.ScheduleRepository
 import javax.inject.Inject

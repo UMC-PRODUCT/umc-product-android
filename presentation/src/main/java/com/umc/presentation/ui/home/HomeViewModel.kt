@@ -1,22 +1,16 @@
 package com.umc.presentation.ui.home
 
-import android.R
-import android.text.Spanned
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.prolificinteractive.materialcalendarview.CalendarDay
-import com.umc.domain.model.UserInfo
-import com.umc.domain.model.base.ApiState
+
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.enums.WarningStatus
 import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
-import com.umc.domain.usecase.Schedule.GetScheduleListUseCase
-import com.umc.domain.usecase.Schedule.GetScheduleMonthUseCase
-import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
-import com.umc.domain.usecase.appDataStore.UpdateUserInfoUseCase
-import com.umc.domain.usecase.member.GetMemberProfileUseCase
+
+import com.umc.domain.usecase.schedule.GetScheduleMonthUseCase
+
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
