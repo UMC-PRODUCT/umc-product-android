@@ -12,7 +12,7 @@ object Endpoints {
     }
 
     object Attendance {
-        const val ATTENDANCE = "api/v1/attendance"
+        const val ATTENDANCE = "api/v1/attendances"
         const val AVAILABLE = "$ATTENDANCE/available"
     }
 
