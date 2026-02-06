@@ -155,13 +155,16 @@ class ChallengerManageDialog(
         button.setUBackgroundColor(ContextCompat.getColor(requireContext(), bgColorRes))
         button.strokeColor = color
         button.setTextColor(color)
+        button.setTopIconTint(color)
     }
 
     private fun resetButtonStyles() {
+        val defaultColor = ContextCompat.getColor(requireContext(), R.color.neutral400)
         listOf(binding.btnWarningView, binding.btnAbsenceView, binding.btnRecordEdit).forEach { btn ->
             btn.setUBackgroundColor(ContextCompat.getColor(requireContext(), R.color.neutral000))
             btn.strokeColor = ContextCompat.getColor(requireContext(), R.color.neutral300)
-            btn.setTextColor(ContextCompat.getColor(requireContext(), R.color.neutral400))
+            btn.setTextColor(defaultColor)
+            btn.setTopIconTint(defaultColor)
         }
     }
 
