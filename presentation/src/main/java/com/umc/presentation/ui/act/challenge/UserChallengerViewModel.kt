@@ -6,7 +6,7 @@ import com.umc.domain.model.act.challenger.UserChallenger
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
-import com.umc.domain.usecase.GetChallengerDetailUseCase
+import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
