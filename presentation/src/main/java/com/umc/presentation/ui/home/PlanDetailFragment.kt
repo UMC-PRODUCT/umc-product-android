@@ -35,18 +35,20 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
 
             plandetailTvLocationMap.setOnClickListener {
                 val address = plandetailTvLocationPlace.text.toString()
+
                 openNaverMap(address)
             }
 
         }
 
+        //일정 화면에서 일정 ID 가져오기
         val scheduleId = args.scheduleId
-
+        //일정 화면에서 plusDay 가져오기 (02.06-02.08 일정에 대해 plusDay == 1 이면 02.07에 대한 출력)
+        val plusDay = args.plusDay
         if (scheduleId != -1) {
-            // 이 id를 사용하여 상세 조회 API를 호출하는 ViewModel 함수를 실행하세요.
-            // viewModel.getScheduleDetail(scheduleId)
-            Log.d("log_home", "전달받은 ID: $scheduleId")
+            viewModel.getScheduleDetail(scheduleId, plusDay)
         }
+
 
     }
 
@@ -111,14 +113,14 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
 
 
     //네이버 지도 or 웹 열기
-    private fun openNaverMap(address: String) {
+    private fun openNaverMap(placeName: String) {
         try {
-            
-            // 입력한 주소를 URL 형태로 인코딩하기
-            val encodedAddress = URLEncoder.encode(address, "UTF-8")
+
+            val latitude = viewModel.uiState.value.latitude
+            val longitude = viewModel.uiState.value.longitude
 
             // 네이버 지도 앱에 접근을 시도해보기
-            val appUri = Uri.parse("nmap://search?query=$encodedAddress&appname=${requireContext().packageName}")
+            val appUri = Uri.parse("nmap://map?lat=$latitude&lng=$longitude&zoom=15&title=${URLEncoder.encode(placeName, "UTF-8")}&appname=${requireContext().packageName}")
             val appIntent = Intent(Intent.ACTION_VIEW, appUri)
 
             // 앱이 설치되어 있는지 확인 (Manifest의 <queries> 설정)
@@ -127,7 +129,7 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
                 startActivity(appIntent)
             } else {
                 // 앱이 없으면 웹 브라우저용 URL 실행
-                val webUrl = "https://m.map.naver.com/search2/search.naver?query=$encodedAddress"
+                val webUrl = "https://m.map.naver.com/map.naver?pinId=&pinType=site&lat=$latitude&lng=$longitude&dlevel=11&enc=utf8"
                 val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(webUrl))
                 startActivity(webIntent)
             }

@@ -165,7 +165,8 @@ class HomeViewModel @Inject constructor(
                             serverDDay+i > 31 -> "참여 예정" // 31일보다 크면 참여 예정으로
                             else -> "D-${serverDDay+i}"      // 양수면 D-n
                         },
-                        isPast = isPast
+                        isPast = isPast,
+                        plusDay = i
                     )
                 )
             }
@@ -241,7 +242,7 @@ data class HomeFragmentUiState(
     val dailyPlans: List<SchedulePlanItem> = emptyList(), //선택한 날들의 일정
     val allPlans: List<SchedulePlanItem> = listOf(
     ), //월별 모든 일정
-    
+    val plusDays : Int = 0,
     val tmptag: List<String> = listOf("11기", "12기", "13기")
 
 

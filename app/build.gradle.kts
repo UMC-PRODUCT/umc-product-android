@@ -53,6 +53,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    compileOptions {
+        // 하위 버전 호환성 기능 활성화 (필수)
+        isCoreLibraryDesugaringEnabled = true
+
+        // 기존에 사용하던 11 버전 유지 (두 개 일치시킬 것)
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
     kotlinOptions {
         jvmTarget = "11"
     }
@@ -106,6 +114,8 @@ dependencies {
 
     //firebase
     implementation(platform(libs.firebase.bom))
+
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
 
 fun getApiKey(propertyKey: String): String {

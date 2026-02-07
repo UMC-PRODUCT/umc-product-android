@@ -49,6 +49,11 @@
             app:argType="integer"
             android:defaultValue="-1" />
 
+        <argument
+            android:name="plusDay"
+            app:argType="integer"
+            android:defaultValue="0"/>
+
     </fragment>
 
     <fragment
