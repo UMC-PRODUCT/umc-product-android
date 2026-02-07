@@ -27,6 +27,7 @@ data class ScheduleDetailResponse(
                 id = scheduleId,
                 title = name,
                 tags = tags,
+                sheetId = 0,
                 startTime = startsAt,
                 endTime = endsAt,
                 status = CheckAvailableStatus.BEFORE,

@@ -20,6 +20,7 @@ data class AttendanceAvailableResponse(
         fun AttendanceAvailableResponse.toModel(): UserCheckAvailable {
             return UserCheckAvailable(
                 id = scheduleId,
+                sheetId = sheetId,
                 title = scheduleName,
                 tags = tags,
                 startTime = startTime,
