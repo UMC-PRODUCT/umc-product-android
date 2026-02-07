@@ -25,6 +25,7 @@ data class ScheduleDetailResponse(
     companion object {
         fun ScheduleDetailResponse.toModel(): UserCheckAvailable {
             return UserCheckAvailable(
+                /**TODO: 후에 Long 마이그레이션 시 해당 부분 교체 요망**/
                 id = scheduleId.toInt(),
                 title = name,
                 tags = tags,

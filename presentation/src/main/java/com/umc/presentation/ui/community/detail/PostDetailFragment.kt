@@ -28,7 +28,6 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
 
     private val args: PostDetailFragmentArgs by navArgs()
 
-
     private lateinit var postDetailAdapter : PostDetailAdapter
 
     //RecyclerView에서 정의한 위임 내용
@@ -99,6 +98,12 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
         postDetailAdapter = PostDetailAdapter(this)
         binding.postdetailRcv.apply {
             adapter = postDetailAdapter
+        }
+
+        //일정 화면에서 게시글 id 가져오기
+        val postId = args.postId
+        if (postId != -1L) {
+            viewModel.initPostDetailData(postId)
         }
 
 

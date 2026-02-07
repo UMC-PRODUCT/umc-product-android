@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.community.detail
 
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.enums.ContentType
@@ -7,17 +8,29 @@ import com.umc.domain.model.enums.RecruitType
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.community.CommentItem
 import com.umc.domain.model.community.ContentItem
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.community.GetCommunityPostCommentUseCase
+import com.umc.domain.usecase.community.GetCommunityPostDetailUseCase
+import com.umc.domain.usecase.community.WriteCommunityPostCommentUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import com.umc.presentation.ui.home.PlanDetailFragmentEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
 class PostDetailViewModel @Inject
-constructor() : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent>(
+constructor(
+    private val getCommunityPostDetailUseCase: GetCommunityPostDetailUseCase, //게시글 상세 불러오기
+    private val getCommunityPostCommentUseCase: GetCommunityPostCommentUseCase, //게시글 댓글들 불러오기
+    private val writeCommunityPostCommentUseCase: WriteCommunityPostCommentUseCase, //댓글 작성하기
+    private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 불러오기
+
+    ) : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent>(
     PostDetailFragmentUiState()
 ) {
 
@@ -54,22 +67,102 @@ constructor() : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent
         }
     }
 
-    // 테스트용: 댓글 작성 기능
+    //게시글 정보 + 댓글 정보 + 유저 정보 가져오기
+    fun initPostDetailData(postId: Long){
+        viewModelScope.launch {
+            //0. 유저 정보 가져오기 (별도 분리)
+            launch {
+                getUserInfoUseCase().collect { userInfo ->
+                    updateState { copy(myId = userInfo.id) }
+                }
+            }
 
+            //1. 서로 다른 usecase를 비동기로 실행
+            val detailDeferred = async { getCommunityPostDetailUseCase(postId) }
+            val commentsDeferred = async { getCommunityPostCommentUseCase(postId) }
 
-    fun addComment(text: String) {
-        val newComment = CommentItem(
-            postId = -1L,
-            challengerId = -1L,
-            challengerName = "새 유저",
-            content = text,
-            createdAt = "방금 전",
-            commentId = -1L,
-        )
-        val updatedComments = uiState.value.nowCommentList+ newComment
-        rebuildDetailList(uiState.value.nowContent, updatedComments)
-        /**TODO 서버에 댓글 추가 로직**/
+            //2. 대기
+            val detailResult = detailDeferred.await()
+            val commentsResult = commentsDeferred.await()
+
+            //3. 결과를 담은 item 생성 = 둘 다 정상으로 받아올 때 수행
+            var fetchedContent: ContentItem? = null
+            var fetchedComments: List<CommentItem>? = null
+
+            //3. 결과를 따로 처리
+            resultResponse(
+                response = detailResult,
+                successCallback = {
+                    fetchedContent = it
+                },
+                errorCallback = {
+                }
+            )
+            resultResponse(
+                response = commentsResult,
+                successCallback = {
+                    fetchedComments = it
+                },
+                errorCallback = {
+
+                }
+            )
+
+            //4. 둘다 정상이면 한 번에 재조립
+            if (fetchedContent != null && fetchedComments != null) {
+                rebuildDetailList(fetchedContent, fetchedComments)
+            }
+
+        }
     }
+
+    //댓글 추가하는 함수
+    fun addComment(text: String) {
+        if(text.length < 1){return}
+
+        viewModelScope.launch {
+            val postId = uiState.value.nowContent.postId
+            val myId = uiState.value.myId
+
+            resultResponse(
+                response = writeCommunityPostCommentUseCase(postId, myId, text),
+                successCallback = {
+                    //작성 성공 시 refresh
+                    refreshComments(postId)
+                },
+                errorCallback = {}
+            )
+        }
+
+    }
+
+    //댓글만 갱신할 때 함수
+    private fun refreshComments(postId: Long) {
+        viewModelScope.launch {
+            resultResponse(
+                response = getCommunityPostCommentUseCase(postId),
+                successCallback = { updatedComments ->
+                    // 최신 댓글 목록으로 UI 재조립
+                    rebuildDetailList(uiState.value.nowContent, updatedComments)
+                }
+            )
+        }
+    }
+
+    //게시글만 갱신할 때 함수
+    private fun refreshContent(postId: Long){
+        viewModelScope.launch {
+            resultResponse(
+                response = getCommunityPostDetailUseCase(postId),
+                successCallback = { updatedContent ->
+                    // 최신 포스트 목록으로 재조립
+                    rebuildDetailList(updatedContent, uiState.value.nowCommentList)
+                }
+            )
+        }
+    }
+
+
 
     // 좋아요 토글
     fun toggleLike() {
@@ -92,6 +185,8 @@ constructor() : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent
         rebuildDetailList(updatedContent, uiState.value.nowCommentList)
         /**TODO 서버에 반영**/
     }
+
+
 
     //댓글 추가
     fun onClickCommentAdd(){
@@ -147,31 +242,34 @@ data class PostDetailFragmentUiState(
     val isAuthor : Boolean = true,
     val isMenuVisible : Boolean = false,
 
-    //보여줄 view들이 담긴 곳 (recyclerview가 inflate할것들)
+    //보여줄 view들이 담긴 곳 (recyclerview가 inflate할것들 - 게시글하고 댓글들 조립한 곳들)
     val nowDetailList : List<PostDetailItem> = emptyList(),
+
+    //내 ID
+    val myId : Long = -1L,
 
     //현재 게시글
     val nowContent: ContentItem = ContentItem(
         // 1. 리스트 및 API 핵심 데이터
-        postId = 100L,
-        title = "UMC 안드로이드 파트장 박유수입니다!",
+        postId = -1L,
+        title = "",
         category = CommunityCategoryType.FREE,
 
         // 2. API 미제공 (기본값/X)
-        username = "어헛차",           // X: 익명 여부에 따라 매퍼에서 채울 예정
-        writeTime = "방금 전",         // X: 서버 시간 파싱 전까지 임시값
-        likes = 15,                   // X: 현재 API엔 없지만 UI 확인용
-        comments = 5,                 // X: 현재 API엔 없지만 UI 확인용
+        username = "",           // X: 익명 여부에 따라 매퍼에서 채울 예정
+        writeTime = "",         // X: 서버 시간 파싱 전까지 임시값
+        likes = 0,                   // X: 현재 API엔 없지만 UI 확인용
+        comments = 0,                 // X: 현재 API엔 없지만 UI 확인용
 
         // 3. 본문 및 세부 데이터
-        content = "이번 데모데이 프로젝트에서 안드로이드 개발자 가이드를 만들고 있습니다. 다들 화이팅!",
+        content = "",
         lightningInfo = null,         // 일반 게시글이므로 null
 
         // 4. 기타 연동 예정 필드 (X)
         userPart = UserPart.ANDROID,  // X: 작성자 파트 정보
         isLiked = false,              // 다른 API 연동 전까지 기본값
-        isScrapped = true,             // UI 테스트를 위해 true 설정
-        scraps = 10
+        isScrapped = false,             // UI 테스트를 위해 true 설정
+        scraps = 0
     ),
 
     //현재 댓글 리스트

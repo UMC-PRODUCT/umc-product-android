@@ -1,6 +1,7 @@
 package com.umc.data.response.community
 
 import com.google.gson.annotations.SerializedName
+import com.umc.domain.model.UDomainFormat.parseDateTime
 import com.umc.domain.model.community.CommentItem
 
 data class PostCommentResponse(
@@ -12,15 +13,18 @@ data class PostCommentResponse(
     @SerializedName("createdAt") val createdAt: String
 ) {
     companion object {
-        fun PostCommentResponse.toCommunityDomain(): CommentItem = CommentItem(
-            commentId = this.commentId,
-            postId = this.postId,
-            challengerId = this.challengerId,
-            challengerName = this.challengerName,
-            content = this.content,
-            createdAt = this.createdAt
-        )
+        fun PostCommentResponse.toCommunityDomain(): CommentItem {
+            val (createDay, createTime) = this.createdAt.parseDateTime()
 
+            return CommentItem(
+                commentId = this.commentId,
+                postId = this.postId,
+                challengerId = this.challengerId,
+                challengerName = this.challengerName,
+                content = this.content,
+                createdAt = "${createDay} ${createTime}"
+            )
+        }
 
     }
 }
