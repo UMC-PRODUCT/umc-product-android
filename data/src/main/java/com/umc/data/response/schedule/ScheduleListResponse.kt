@@ -52,7 +52,7 @@ data class ScheduleListResponse (
                 date = date,
                 startTime = startTime,
                 endTime = endTime,
-                status = status,
+                status = AdminSessionStatus.fromServerValue(status),
                 attendanceRate = attendanceRate.replace("%", "").toDoubleOrNull()?.toInt() ?: 0,
                 totalChallengers = totalCount.toIntOrNull() ?: 0,
                 attendedChallengers = presentCount.toIntOrNull() ?: 0,

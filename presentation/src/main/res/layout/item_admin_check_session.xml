@@ -64,7 +64,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                app:adminStatusStyle='@{uiModel.session.status.equals("COMPLETED") ? AdminSessionStatus.COMPLETED : AdminSessionStatus.IN_PROGRESS}'
+                app:adminStatusStyle="@{uiModel.session.status}"
                 app:buttonElevation="0"
                 app:contentPaddingBottom="2dp"
                 app:contentPaddingLeft="8dp"
@@ -74,7 +74,7 @@
                 app:layout_constraintBottom_toBottomOf="@+id/tv_admin_session_title"
                 app:layout_constraintStart_toEndOf="@+id/tv_admin_session_title"
                 app:layout_constraintTop_toTopOf="@+id/tv_admin_session_title"
-                app:text='@{uiModel.session.status.equals("COMPLETED") ? "종료" : "진행 중"}'
+                app:text="@{uiModel.session.status.text}"
                 app:textAppearance="@style/Caption1Bold"
                 tools:text="진행 중" />
 
@@ -230,7 +230,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_admin_pending_button_orange"
-                    android:visibility='@{uiModel.session.pendingCount > 0 ? View.VISIBLE : View.GONE}'>
+                    android:visibility='@{uiModel.session.status == AdminSessionStatus.IN_PROGRESS ? View.VISIBLE : View.GONE}'>
 
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:id="@+id/btn_admin_pending_list_trigger"
@@ -289,7 +289,7 @@
                     android:background="@drawable/bg_admin_completed_gray"
                     android:gravity="center"
                     android:paddingVertical="14dp"
-                    android:visibility="@{(uiModel.session.status == AdminSessionStatus.COMPLETED || uiModel.session.pendingCount == 0) ? View.VISIBLE : View.GONE}">
+                    android:visibility="@{(uiModel.session.status == AdminSessionStatus.COMPLETED &amp;&amp; uiModel.session.pendingCount == 0) ? View.VISIBLE : View.GONE}">
 
                     <ImageView
                         android:layout_width="20dp"
