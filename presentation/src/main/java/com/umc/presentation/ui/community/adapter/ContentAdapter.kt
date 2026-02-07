@@ -45,8 +45,7 @@ ListAdapter<ContentItem, ContentAdapter.ContentViewHolder>(ContentDiffCallback){
     companion object {
         private val ContentDiffCallback = object : DiffUtil.ItemCallback<ContentItem>() {
             override fun areItemsTheSame(oldItem: ContentItem, newItem: ContentItem): Boolean {
-                // 고유 식별자(제목 등)가 같으면 같은 아이템으로 간주
-                return oldItem.title == newItem.title && oldItem.username == newItem.username
+                return oldItem.postId == newItem.postId
             }
 
             override fun areContentsTheSame(oldItem: ContentItem, newItem: ContentItem): Boolean {

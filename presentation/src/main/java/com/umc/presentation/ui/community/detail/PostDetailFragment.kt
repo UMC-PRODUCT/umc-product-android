@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.umc.domain.model.community.CommentItem
 import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.R
@@ -24,6 +25,9 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
 ), PostItemDelegate {
 
     override val viewModel: PostDetailViewModel by viewModels()
+
+    private val args: PostDetailFragmentArgs by navArgs()
+
 
     private lateinit var postDetailAdapter : PostDetailAdapter
 
