@@ -48,6 +48,9 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
             },
             onReasonClick = { sessionId ->
                 showAttendanceReasonDialog(sessionId)
+            },
+            onAttendanceRequestClick = { sheetId ->
+                viewModel.requestAttendance(sheetId)
             }
         )
     }
@@ -104,7 +107,7 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun initStates() {
         repeatOnStarted(viewLifecycleOwner) {
-            // 1. UI State 구독: 리스트 및 카운트 업데이트
+            // 리스트 및 카운트 업데이트
             launch {
                 viewModel.uiState.collect { state ->
                     // 가용한 세션 업데이트
@@ -126,7 +129,7 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
                 }
             }
 
-            // 2. UI Event 구독: 일회성 액션(토스트, 다이얼로그) 처리
+            // 일회성 액션(토스트, 다이얼로그) 처리
             launch {
                 viewModel.uiEvent.collect { event -> handleEvent(event) }
             }

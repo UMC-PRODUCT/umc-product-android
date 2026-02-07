@@ -7,6 +7,7 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
+import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -18,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class UserCheckViewModel @Inject constructor(
     private val getAttendanceAvailableUseCase: GetAttendanceAvailableUseCase,
-    private val getScheduleDetailUseCase: GetScheduleDetailUseCase
+    private val getScheduleDetailUseCase: GetScheduleDetailUseCase,
+    private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase
 ) : BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
 
     private var lastUserLat: Double = 0.0
@@ -63,10 +65,27 @@ class UserCheckViewModel @Inject constructor(
                         copy(availableSessions = updatedList)
                     }
                 }
-                is ApiState.Fail -> { /* 실패 처리 */ }
+                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
             }
         }
     }
+
+    /**
+     * 실시간 위치 기반 출석 요청
+     */
+    fun requestAttendance(sheetId: Int) {
+        viewModelScope.launch {
+            when (val result = postAttendanceCheckUseCase(sheetId)) {
+                is ApiState.Success -> {
+                    fetchAttendanceData()
+                }
+                is ApiState.Fail -> {
+                    emitEvent(UserCheckEvent.ShowToast(result.failState.message))
+                }
+            }
+        }
+    }
+
     fun submitAttendanceReason(sessionId: Int, reason: String) {
         // TODO: 출석 사유 제출 API 연동
         emitEvent(UserCheckEvent.ShowToast("사유가 성공적으로 제출되었습니다."))
