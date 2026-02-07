@@ -5,8 +5,8 @@ import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.enums.ContentType
 import com.umc.domain.model.enums.RecruitType
 import com.umc.domain.model.enums.UserPart
-import com.umc.domain.model.mypage.CommentItem
-import com.umc.domain.model.mypage.ContentItem
+import com.umc.domain.model.community.CommentItem
+import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState

@@ -10,9 +10,11 @@ import com.umc.domain.repository.AuthRepository
 import com.umc.domain.repository.kakao.KakaoSearchRepository
 import com.umc.domain.repository.member.MemberRepository
 import com.umc.data.repository.challenger.ChallengerRepositoryImpl
+import com.umc.data.repository.community.CommunityRepositoryImpl
 import com.umc.data.repository.schedule.ScheduleRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
 import com.umc.domain.repository.attendance.AttendanceRepository
+import com.umc.domain.repository.community.CommunityRepository
 import com.umc.domain.repository.schedule.ScheduleRepository
 import dagger.Binds
 import dagger.Module
@@ -67,5 +69,9 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindsScheduleRepository(repositoryImpl: ScheduleRepositoryImpl): ScheduleRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindsCommunityRepository(repositoryImpl: CommunityRepositoryImpl): CommunityRepository
 
 }

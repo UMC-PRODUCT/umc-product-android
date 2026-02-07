@@ -1,32 +1,44 @@
 package com.umc.presentation.ui.community
 
+import android.util.Log
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.enums.ContentType
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.RecruitType
 import com.umc.domain.model.enums.UserPart
-import com.umc.domain.model.mypage.ContentItem
+import com.umc.domain.model.community.ContentItem
+import com.umc.domain.usecase.community.GetCommunityPostUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
 class CommunityViewModel @Inject
-constructor() : BaseViewModel<CommunityFragmentUiState, CommunityFragmentEvent>(
+constructor(
+    private val getCommunityPostUseCase: GetCommunityPostUseCase,
+) : BaseViewModel<CommunityFragmentUiState, CommunityFragmentEvent>(
     CommunityFragmentUiState()
 ) {
 
-    //모집 중 스위치 누를 때마다 상태 변화하고 필터링
-    /**
-    fun setRecruit(isRecruit: Boolean) {
-        updateState { copy(isRecruit = isRecruit) }
-        filterContents()
+    init {
+        viewModelScope.launch {
+            resultResponse(
+                response = getCommunityPostUseCase(false, "ALL", 0, 20),
+                successCallback = {
+                    Log.d("log_community", "${it}")
+                },
+                errorCallback = {
+                    /**TODO. 에러 토스트 메시지 등을 전송**/
+                }
+            )
+        }
     }
-    **/
 
     //탭 바꿀 때마다 탭 변화하고 필터링
     fun setNowTab(whichTab: ContentType) {

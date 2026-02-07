@@ -5,8 +5,8 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.fragment.app.viewModels
-import com.umc.domain.model.mypage.CommentItem
-import com.umc.domain.model.mypage.ContentItem
+import com.umc.domain.model.community.CommentItem
+import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.UBasicDialog

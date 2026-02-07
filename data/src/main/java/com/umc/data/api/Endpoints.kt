@@ -37,4 +37,9 @@ object Endpoints {
         const val DETAIL = "$SCHEDULE/{scheduleId}"
         const val MONTH = "$SCHEDULE/my-list"
     }
+
+    object Community{
+        const val COMMUNITY = "api/v1/posts"
+        const val POST_SEARCH = "$COMMUNITY/search"
+    }
 }

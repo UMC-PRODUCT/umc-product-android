@@ -1,7 +1,7 @@
 package com.umc.presentation.ui.community.detail
 
-import com.umc.domain.model.mypage.CommentItem
-import com.umc.domain.model.mypage.ContentItem
+import com.umc.domain.model.community.CommentItem
+import com.umc.domain.model.community.ContentItem
 
 sealed class PostDetailItem {
     // 1. 게시글 본문

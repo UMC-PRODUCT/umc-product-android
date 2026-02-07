@@ -5,8 +5,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.mypage.CommentItem
-import com.umc.domain.model.mypage.ContentItem
+import com.umc.domain.model.community.CommentItem
+import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.databinding.ItemCommunityCommentBinding
 import com.umc.presentation.databinding.ItemCommunityCommentsCountBinding
 import com.umc.presentation.databinding.ItemCommunityContentBinding

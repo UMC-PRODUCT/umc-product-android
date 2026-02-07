@@ -10,7 +10,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.umc.domain.model.enums.SearchMode
 import com.umc.domain.model.home.ParticipantItem
-import com.umc.domain.model.mypage.ContentItem
+import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPostSearchBinding

@@ -1,4 +1,4 @@
-package com.umc.domain.model.mypage
+package com.umc.domain.model.community
 
 data class CommentItem (
     val username : String,
