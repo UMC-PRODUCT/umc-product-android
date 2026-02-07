@@ -17,4 +17,8 @@ class AttendanceRepositoryImpl @Inject constructor(
             responseList.map { it.toModel() }
         }
     }
+
+    override suspend fun postAttendanceCheck(sheetId: Int): ApiState<String> {
+        return attendanceRemoteDataSource.postAttendanceCheck(sheetId)
+    }
 }

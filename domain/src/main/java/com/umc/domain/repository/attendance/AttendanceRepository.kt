@@ -5,4 +5,5 @@ import com.umc.domain.model.base.ApiState
 
 interface AttendanceRepository {
     suspend fun getAttendanceAvailable(): ApiState<List<UserCheckAvailable>>
+    suspend fun postAttendanceCheck(sheetId: Int): ApiState<String>
 }
