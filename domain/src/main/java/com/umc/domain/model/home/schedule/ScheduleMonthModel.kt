@@ -8,5 +8,5 @@ data class ScheduleMonthModel (
     val endDay: String,     // "2026.02.08"
     val endTime: String,    // "05:24"
     val status: String,
-    val dDay: String
+    val dDay: Int
 )

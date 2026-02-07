@@ -1,8 +1,8 @@
-package com.umc.domain.model.home.schedule
+package com.umc.domain.model.home
 
 import com.umc.domain.model.enums.CategoryType
 
-data class ScheduleDetailModel (
+data class PlanDetailItem (
     val scheduleId: Int,
     val name: String,
     val description: String,

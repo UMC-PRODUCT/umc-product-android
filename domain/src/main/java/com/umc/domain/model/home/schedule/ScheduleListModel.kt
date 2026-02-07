@@ -9,5 +9,8 @@ data class ScheduleListModel (
     val startTime: String,
     val endTime: String,
     val locationName: String,
-    val attendanceRate: String
+    val totalCount: Int,
+    val presentCount: Int,
+    val pendingCount: Int,
+    val attendanceRate: Double,
 )
