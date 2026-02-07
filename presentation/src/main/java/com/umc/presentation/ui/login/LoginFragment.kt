@@ -53,7 +53,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEven
     private fun handleLoginEvent(event: LoginEvent) {
         when (event) {
             LoginEvent.KakaoLoginEvent -> signInKakao()
-            LoginEvent.MoveToSignUpEvent -> moveToSignUp()
+            is LoginEvent.MoveToSignUpEvent -> moveToSignUp(event.oAuthToken)
             LoginEvent.MoveToMainEvent -> moveToHome()
         }
     }
@@ -63,8 +63,8 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEven
         findNavController().navigate(action)
     }
 
-    private fun moveToSignUp() {
-        val action = LoginFragmentDirections.actionLoginToSignUp()
+    private fun moveToSignUp(token: String) {
+        val action = LoginFragmentDirections.actionLoginToSignUp(token)
         findNavController().navigate(action)
     }
 

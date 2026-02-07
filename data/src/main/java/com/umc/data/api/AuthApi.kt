@@ -18,27 +18,27 @@ interface AuthApi {
     @POST(Endpoints.Auth.REISSUE)
     suspend fun refreshToken(
         @Body request: RefreshTokenRequest
-    ): ApiState<ApiResponse<RefreshTokenResponse>>
+    ): ApiResponse<RefreshTokenResponse>
 
     @POST(Endpoints.Auth.LOGIN_KAKAO)
     suspend fun loginKakao(
         @Body request: LoginKakaoRequest
-    ): ApiState<ApiResponse<JwtLoginResponse>>
+    ): ApiResponse<JwtLoginResponse>
 
     @POST(Endpoints.Auth.LOGIN_GOOGLE)
     suspend fun loginGoogle(
         @Body request: LoginGoogleRequest
-    ): ApiState<ApiResponse<JwtLoginResponse>>
+    ): ApiResponse<JwtLoginResponse>
 
 
     @POST(Endpoints.Auth.EMAIL_VERIFICATION)
     suspend fun emailVerification(
         @Body request: EmailVerificationRequest
-    ): ApiState<ApiResponse<EmailVerificationResponse>>
+    ): ApiResponse<EmailVerificationResponse>
 
     @POST(Endpoints.Auth.EMAIL_VERIFICATION_COMPLETE)
     suspend fun emailVerificationComplete(
         @Body request: EmailVerificationCompleteRequest
-    ): ApiState<ApiResponse<EmailVerificationCompleteResponse>>
+    ): ApiResponse<EmailVerificationCompleteResponse>
 
 }

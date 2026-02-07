@@ -23,19 +23,13 @@ constructor(
     }
 
     fun kakaoLogin(token: String) = viewModelScope.launch {
-        // TODO 서버 연결 해야함
         resultResponse(
             response = postLoginUseCase(token),
             successCallback = {
-                //TODO 성공 콜백
-                ULog.d("성공")
+                if (it.oAuthVerificationToken.isNotEmpty()) emitEvent(LoginEvent.MoveToSignUpEvent(it.oAuthVerificationToken))
+                else emitEvent(LoginEvent.MoveToMainEvent)
             },
-            errorCallback = {
-                //TODO 에러 콜백
-                ULog.d("실패")
-            }
         )
-        emitEvent(LoginEvent.MoveToSignUpEvent)
     }
 }
 
@@ -48,5 +42,5 @@ sealed interface LoginEvent : UiEvent {
 
     object MoveToMainEvent : LoginEvent
 
-    object MoveToSignUpEvent : LoginEvent
+    data class MoveToSignUpEvent(val oAuthToken: String) : LoginEvent
 }

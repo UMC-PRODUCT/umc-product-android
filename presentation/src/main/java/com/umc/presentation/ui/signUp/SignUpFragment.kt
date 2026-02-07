@@ -13,6 +13,7 @@ class SignUpFragment :
         FragmentSignUpBinding::inflate,
     ) {
     override val viewModel: SignUpViewModel by viewModels()
+    //private val args: NoticeSearchResultFragmentArgs by navArgs()
 
     override fun initView() {
         binding.apply {
