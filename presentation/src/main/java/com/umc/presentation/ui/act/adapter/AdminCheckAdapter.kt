@@ -58,9 +58,12 @@ class AdminCheckAdapter(
 
         fun bind(uiModel: AdminSessionUIModel) {
             binding.uiModel = uiModel
+            this.sessionId = uiModel.session.id
 
             if (uiModel.isExpanded) {
                 pendingUserAdapter.submitList(uiModel.session.pendingUsers)
+            } else {
+                pendingUserAdapter.submitList(emptyList())
             }
 
             binding.btnAdminChangeLocation.setOnClickListener {

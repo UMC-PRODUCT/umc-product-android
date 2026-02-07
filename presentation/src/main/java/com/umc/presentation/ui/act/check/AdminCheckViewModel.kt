@@ -45,14 +45,32 @@ class AdminCheckViewModel @Inject constructor(
     /**
      * 출석 승인 버튼 클릭 시 호출
      */
-    fun approveAttendance(attendanceId: Int, sessionId: Int) {
+    fun approveAttendance(attendanceId: Int) {
         viewModelScope.launch {
+            android.util.Log.d("AdminCheck", "승인 시작: attendanceId=$attendanceId")
+
             when (val result = postAttendanceApprovalUseCase(attendanceId)) {
                 is ApiState.Success -> {
-                    fetchAdminSessions() // 전체 재호출
+                    android.util.Log.d("AdminCheck", "승인 성공")
+
+                    // 전체 목록 재호출
+                    fetchAdminSessions()
+
+                    // 펼쳐진 세션들 모두 새로고침
+                    val expandedSessionIds = uiState.value.adminSessions
+                        .filter { it.isExpanded }
+                        .map { it.session.id }
+
+                    expandedSessionIds.forEach { sessionId ->
+                        fetchPendingUsers(sessionId)
+                    }
+
                     emitEvent(AdminCheckEvent.ShowToast("출석이 승인되었습니다."))
                 }
-                is ApiState.Fail -> emitEvent(AdminCheckEvent.ShowToast(result.failState.message))
+                is ApiState.Fail -> {
+                    android.util.Log.e("AdminCheck", "승인 실패: ${result.failState.message}")
+                    emitEvent(AdminCheckEvent.ShowToast(result.failState.message ?: "승인에 실패했습니다."))
+                }
             }
         }
     }
@@ -60,14 +78,32 @@ class AdminCheckViewModel @Inject constructor(
     /**
      * 출석 반려 버튼 클릭 시 호출
      */
-    fun rejectAttendance(attendanceId: Int, sessionId: Int) {
+    fun rejectAttendance(attendanceId: Int) {
         viewModelScope.launch {
+            android.util.Log.d("AdminCheck", "반려 시작: attendanceId=$attendanceId")
+
             when (val result = postAttendanceRejectionUseCase(attendanceId)) {
                 is ApiState.Success -> {
+                    android.util.Log.d("AdminCheck", "반려 성공")
+
+                    // 전체 목록 재호출
                     fetchAdminSessions()
+
+                    // 펼쳐진 세션들 모두 새로고침
+                    val expandedSessionIds = uiState.value.adminSessions
+                        .filter { it.isExpanded }
+                        .map { it.session.id }
+
+                    expandedSessionIds.forEach { sessionId ->
+                        fetchPendingUsers(sessionId)
+                    }
+
                     emitEvent(AdminCheckEvent.ShowToast("출석이 반려되었습니다."))
                 }
-                is ApiState.Fail -> emitEvent(AdminCheckEvent.ShowToast(result.failState.message))
+                is ApiState.Fail -> {
+                    android.util.Log.e("AdminCheck", "반려 실패: ${result.failState.message}")
+                    emitEvent(AdminCheckEvent.ShowToast(result.failState.message ?: "반려에 실패했습니다."))
+                }
             }
         }
     }
