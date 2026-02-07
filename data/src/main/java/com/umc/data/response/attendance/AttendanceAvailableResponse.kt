@@ -17,7 +17,7 @@ data class AttendanceAvailableResponse(
     @SerializedName("statusDisplay") val statusDisplay: String?
 ) {
     companion object {
-        fun AttendanceAvailableResponse.toModel(): UserCheckAvailable {
+        fun AttendanceAvailableResponse.toUserCheckAvailable(): UserCheckAvailable {
             return UserCheckAvailable(
                 id = scheduleId,
                 sheetId = sheetId,

@@ -15,6 +15,7 @@ object Endpoints {
         const val ATTENDANCE = "api/v1/attendances"
         const val AVAILABLE = "$ATTENDANCE/available"
         const val CHECK = "$ATTENDANCE/check"
+        const val PENDING = "$ATTENDANCE/pending/{scheduleId}"
     }
 
     object Challenger {
