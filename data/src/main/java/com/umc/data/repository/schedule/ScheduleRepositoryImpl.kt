@@ -9,7 +9,9 @@ import com.umc.domain.model.base.map
 import com.umc.domain.model.home.schedule.ScheduleDetailModel
 import com.umc.domain.model.home.schedule.ScheduleListModel
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
+import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.data.response.schedule.ScheduleDetailResponse.Companion.toModel
+import com.umc.data.response.schedule.ScheduleListResponse.Companion.toAdminDomain
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.repository.schedule.ScheduleRepository
 import javax.inject.Inject
@@ -42,6 +44,12 @@ class ScheduleRepositoryImpl @Inject constructor(
     ): ApiState<List<ScheduleMonthModel>> {
         return scheduleRemoteDataSource.getMonthSchedule(year, month).map { responseList ->
             responseList.map { it.toDomain() }
+        }
+    }
+
+    override suspend fun getAdminScheduleList(): ApiState<List<AdminSessionCheck>> {
+        return scheduleRemoteDataSource.getScheduleList().map { responseList ->
+            responseList.map { it.toAdminDomain() }
         }
     }
 
