@@ -1,4 +1,4 @@
-package com.umc.presentation.ui.mypage.adapter
+package com.umc.presentation.ui.community.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

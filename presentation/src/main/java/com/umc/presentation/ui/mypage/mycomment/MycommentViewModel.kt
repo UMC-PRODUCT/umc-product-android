@@ -27,7 +27,9 @@ constructor() : BaseViewModel<MycommentFragmentUiState, MycommentFragmentEvent>(
 
 
 data class MycommentFragmentUiState(
-    val tmpData: List<ContentItem> = listOf(
+    val tmpData: List<ContentItem> = emptyList(),
+        /*
+        listOf(
         ContentItem(
             category = CommunityCategoryType.QUESTION,
             region = "서울",
@@ -41,8 +43,9 @@ data class MycommentFragmentUiState(
             content = "하단 bottom이 넘치는 문제가 있는데, wrap_content로 어떻게 막나요?",
             userPart = UserPart.ANDROID,
         ),
-
     ),
+
+         */
 ) : UiState
 
 sealed interface MycommentFragmentEvent : UiEvent {

@@ -99,7 +99,9 @@ data class PostSearchFragmentUiState(
     //최근 검색 내용
     val recentSearches: List<String> = listOf("중앙", "중앙 해커톤"),
     //검색 결과
-    val searchResults: List<ContentItem> = listOf(
+    val searchResults: List<ContentItem> = emptyList(),
+        /*
+        listOf(
         ContentItem(
             category = CommunityCategoryType.QUESTION,
             region = "서울",
@@ -154,6 +156,8 @@ data class PostSearchFragmentUiState(
         ),
     ),
 
+
+         */
 
     ) : UiState
 

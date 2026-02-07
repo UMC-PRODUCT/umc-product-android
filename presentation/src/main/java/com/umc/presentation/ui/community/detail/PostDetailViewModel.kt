@@ -147,20 +147,26 @@ data class PostDetailFragmentUiState(
 
     //현재 게시글
     val nowContent: ContentItem = ContentItem(
-        category = CommunityCategoryType.QUESTION,
-        region = "인천",
-        title = "질문있습니다.",
-        username = "박유수(어헛차)",
-        writeTime = "1시간 전",
-        likes = 5,
-        comments = 0,
-        scraps = 5,
-        content = "내용입니다...",
-        userPart = UserPart.ANDROID,
-        isLiked = false,
-        isScrapped = false,
-        contentType = ContentType.QUESTION,
-        recruitType = RecruitType.RECRUIT,
+        // 1. 리스트 및 API 핵심 데이터
+        postId = 100L,
+        title = "UMC 안드로이드 파트장 박유수입니다!",
+        category = CommunityCategoryType.FREE,
+
+        // 2. API 미제공 (기본값/X)
+        username = "어헛차",           // X: 익명 여부에 따라 매퍼에서 채울 예정
+        writeTime = "방금 전",         // X: 서버 시간 파싱 전까지 임시값
+        likes = 15,                   // X: 현재 API엔 없지만 UI 확인용
+        comments = 5,                 // X: 현재 API엔 없지만 UI 확인용
+
+        // 3. 본문 및 세부 데이터
+        content = "이번 데모데이 프로젝트에서 안드로이드 개발자 가이드를 만들고 있습니다. 다들 화이팅!",
+        lightningInfo = null,         // 일반 게시글이므로 null
+
+        // 4. 기타 연동 예정 필드 (X)
+        userPart = UserPart.ANDROID,  // X: 작성자 파트 정보
+        isLiked = false,              // 다른 API 연동 전까지 기본값
+        isScrapped = true,             // UI 테스트를 위해 true 설정
+        scraps = 10
     ),
 
     //현재 댓글 리스트

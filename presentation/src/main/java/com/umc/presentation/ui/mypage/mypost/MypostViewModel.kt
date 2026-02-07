@@ -30,7 +30,9 @@ constructor() : BaseViewModel<MypostFragmentUiState, MypostFragmentEvent>(
 
 
 data class MypostFragmentUiState(
-    val tmpData: List<ContentItem> = listOf(
+    val tmpData: List<ContentItem> = emptyList(),
+        /*
+        listOf(
         ContentItem(
             category = CommunityCategoryType.QUESTION,
             region = "서울",
@@ -46,6 +48,8 @@ data class MypostFragmentUiState(
         ),
 
     ),
+
+         */
 ): UiState
 
 sealed interface MypostFragmentEvent : UiEvent {

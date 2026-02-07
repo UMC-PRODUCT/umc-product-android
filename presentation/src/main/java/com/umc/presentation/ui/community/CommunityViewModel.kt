@@ -59,14 +59,6 @@ constructor(
                     ContentType.TOP -> true
                 }
 
-                /**
-                // 모집 중 스위치 기준 필터링
-                val matchesRecruit = if (isRecruit) {
-                    item.recruitType == RecruitType.RECRUIT // 모집 중인 것만
-                } else {
-                    true // 전체 보기
-                }
-                **/
 
                 //최종적으로 겹치는 것만 고르기
                 matchesTab
@@ -101,7 +93,9 @@ data class CommunityFragmentUiState(
 
 
     // 임시 게시글
-    val allContents: List<ContentItem> = listOf(
+    val allContents: List<ContentItem> = emptyList(),
+        /*
+        listOf(
         ContentItem(
             category = CommunityCategoryType.QUESTION,
             region = "서울",
@@ -155,6 +149,8 @@ data class CommunityFragmentUiState(
             userPart = UserPart.SPRING_BOOT,
         ),
     ),
+
+         */
 
     val nowContents: List<ContentItem> = listOf(),
 

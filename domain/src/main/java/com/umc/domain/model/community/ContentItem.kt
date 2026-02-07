@@ -7,21 +7,35 @@ import com.umc.domain.model.enums.UserPart
 
 /**Mypage Tap에서도 사용!**/
 data class ContentItem (
-    val category : CommunityCategoryType, //카테고리 타입
-    val region : String = "",/**해당 파트 역시 제거하기로 결정 -- 추후 API 연결 시 삭제 예정**/
-    val contentType : ContentType, //전체, 질문, 번개, 명예의 전당
-    val recruitType : RecruitType,/**일단 해당 파트는 제거하기로 결정 -- 추후 API 연결 시 삭제 예정**/
-    val title : String,
-    val username : String,
-    val writeTime: String,
-    val likes : Int,
-    val comments : Int,
+    val postId: Long = -1L,
+    val title : String,                     //제목
+    val category : CommunityCategoryType,   //카테고리 타입
+    val username : String = "",             //작성자 (API는 X)
+    val writeTime: String = "",             //작성 시간 (API는 X)
+    val likes : Int = 0,                    //좋아요 수 (API는 X)
+    val comments : Int = 0,                 //댓글 수 (API는 X)
 
     //아래는 본문 내용
-    val content : String,
-    val userPart : UserPart,
-    val isLiked: Boolean = false,   // 좋아요 클릭 여부
-    val isScrapped: Boolean = false, // 스크랩 클릭 여부
-    val scraps : Int = 0,
-    //이미지는?
+    val content : String,                   //내용
+    val lightningInfo: LightningInfo? = null, // 번개 내용
+    val userPart : UserPart,                //작성자 유저파트 (API는 X)
+    val isLiked: Boolean = false,           // 좋아요 클릭 여부 (다른 API로)
+    val isScrapped: Boolean = false,        // 스크랩 클릭 여부 (다른 API로)
+    val scraps : Int = 0,                   // 스크랩 수
 )
+
+/**
+ *
+ * data class PostItemModel (
+ *     val postId: Long,                         // 게시글 고유 ID (추가 권장)
+ *     val category: CommunityCategoryType,      // 카테고리 (Enum)
+ *     val title: String,                        // 제목
+ *     val content: String,                      // 본문
+ *     val username: String = "어헛차",           // 작성자 (익명 처리 포함)
+ *     val writeTime: String = "방금 전",         // 작성 시간 (파싱된 문자열)
+ *     val likes: Int = 0,                       // 좋아요 수
+ *     val comments: Int = 0,                    // 댓글 수
+ *     val lightningInfo: LightningInfo? = null, // 번개 모임 추가 정보
+ *     )
+ *
+ * **/
