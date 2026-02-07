@@ -1,4 +1,5 @@
 package com.umc.domain.repository.schedule
+import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.home.schedule.ScheduleDetailModel
 import com.umc.domain.model.home.schedule.ScheduleListModel
@@ -15,5 +16,5 @@ interface ScheduleRepository {
   
     suspend fun getScheduleDetail(scheduleId: Int): ApiState<UserCheckAvailable>
 
-   
+    suspend fun getAdminScheduleList(): ApiState<List<AdminSessionCheck>>
 }
