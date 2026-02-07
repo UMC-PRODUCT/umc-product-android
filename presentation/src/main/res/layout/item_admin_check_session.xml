@@ -270,16 +270,29 @@
                             app:tint="@color/warning500" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
+                    <TextView
+                        android:id="@+id/tv_admin_pending_empty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:paddingVertical="24dp"
+                        android:text="승인 대기 중인 인원이 없습니다."
+                        android:textAppearance="@style/Subheadline"
+                        android:textColor="@color/neutral600"
+                        android:visibility="@{(uiModel.isExpanded &amp;&amp; uiModel.session.pendingUsers.isEmpty()) ? View.VISIBLE : View.GONE}"
+                        app:layout_constraintTop_toBottomOf="@+id/btn_admin_pending_list_trigger" />
+
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rv_admin_pending_users"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:nestedScrollingEnabled="false"
-                        android:visibility="@{uiModel.isExpanded ? View.VISIBLE : View.GONE}"
+                        android:visibility="@{(uiModel.isExpanded &amp;&amp; !uiModel.session.pendingUsers.isEmpty()) ? View.VISIBLE : View.GONE}"
                         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                         app:layout_constraintTop_toBottomOf="@+id/btn_admin_pending_list_trigger"
                         tools:itemCount="2"
                         tools:listitem="@layout/item_admin_pending_user" />
+
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <LinearLayout
