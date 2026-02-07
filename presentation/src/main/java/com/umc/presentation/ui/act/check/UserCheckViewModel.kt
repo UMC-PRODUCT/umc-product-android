@@ -21,6 +21,9 @@ class UserCheckViewModel @Inject constructor(
     private val getScheduleDetailUseCase: GetScheduleDetailUseCase
 ) : BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
 
+    private var lastUserLat: Double = 0.0
+    private var lastUserLng: Double = 0.0
+
     init { fetchAttendanceData() }
 
     private fun fetchAttendanceData() {
@@ -47,7 +50,6 @@ class UserCheckViewModel @Inject constructor(
                     updateState {
                         val updatedList = availableSessions.map { uiModel ->
                             if (uiModel.session.id == sessionId) {
-                                // ⭐️ UIModel의 address와 session 내부 위경도를 모두 업데이트
                                 uiModel.copy(
                                     address = detail.address,
                                     session = uiModel.session.copy(
@@ -92,10 +94,13 @@ class UserCheckViewModel @Inject constructor(
      * 기존 위치 업데이트 및 거리 계산 로직 유지
      */
     fun updateLocation(userLat: Double, userLng: Double) {
+        lastUserLat = userLat
+        lastUserLng = userLng
+
         updateState {
             val updatedList = availableSessions.map { uiModel ->
-                // 상세 정보를 받아와 위도/경도가 0.0이 아닐 때만 거리 계산 수행
-                if (uiModel.session.status == CheckAvailableStatus.BEFORE && uiModel.session.latitude != 0.0) {
+                // 좌표가 0.0이 아니고 유효한 경우에만 계산
+                if (uiModel.session.latitude != 0.0 && uiModel.session.longitude != 0.0) {
                     val results = FloatArray(1)
                     android.location.Location.distanceBetween(
                         userLat, userLng,
