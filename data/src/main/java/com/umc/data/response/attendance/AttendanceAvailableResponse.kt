@@ -13,7 +13,7 @@ data class AttendanceAvailableResponse(
     @SerializedName("endTime") val endTime: String,
     @SerializedName("sheetId") val sheetId: Int,
     @SerializedName("recordId") val recordId: Int,
-    @SerializedName("status") val status: CheckAvailableStatus,
+    @SerializedName("status") val status: String,
     @SerializedName("statusDisplay") val statusDisplay: String?
 ) {
     companion object {
@@ -24,7 +24,7 @@ data class AttendanceAvailableResponse(
                 tags = tags,
                 startTime = startTime,
                 endTime = endTime,
-                status = status,
+                status = CheckAvailableStatus.fromServerValue(status),
                 latitude = 0.0,
                 longitude = 0.0,
                 address = "",
