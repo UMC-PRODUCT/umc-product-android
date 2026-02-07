@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
 import com.umc.domain.usecase.schedule.GetAdminSessionListUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AdminCheckViewModel @Inject constructor(
-    private val getAdminSessionListUseCase: GetAdminSessionListUseCase
+    private val getAdminSessionListUseCase: GetAdminSessionListUseCase,
+    private val getPendingUsersUseCase: GetPendingUsersUseCase
 ) : BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
 
     init {
@@ -72,6 +74,34 @@ class AdminCheckViewModel @Inject constructor(
     }
 
     fun toggleSessionExpansion(sessionId: Int) {
+        val currentSession = uiState.value.adminSessions.find { it.session.id == sessionId }
+
+        if (currentSession?.isExpanded == false && currentSession.session.pendingUsers.isEmpty()) {
+            fetchPendingUsers(sessionId)
+        }
+
+        updateExpansionState(sessionId)
+    }
+
+    private fun fetchPendingUsers(sessionId: Int) {
+        viewModelScope.launch {
+            when (val result = getPendingUsersUseCase(sessionId)) {
+                is ApiState.Success -> {
+                    updateState {
+                        val updatedList = adminSessions.map { uiModel ->
+                            if (uiModel.session.id == sessionId) {
+                                uiModel.copy(session = uiModel.session.copy(pendingUsers = result.data))
+                            } else uiModel
+                        }
+                        copy(adminSessions = updatedList)
+                    }
+                }
+                is ApiState.Fail -> emitEvent(AdminCheckEvent.ShowToast(result.failState.message))
+            }
+        }
+    }
+
+    private fun updateExpansionState(sessionId: Int) {
         updateState {
             val newList = adminSessions.map { uiModel ->
                 if (uiModel.session.id == sessionId) {
