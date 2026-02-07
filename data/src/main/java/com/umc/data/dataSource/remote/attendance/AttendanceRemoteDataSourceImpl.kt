@@ -24,4 +24,12 @@ class AttendanceRemoteDataSourceImpl @Inject constructor(
         return apiCall { attendanceApi.getPendingUsers(scheduleId) }
     }
 
+    override suspend fun approveAttendance(recordId: Int): ApiState<Unit> {
+        return apiCall { attendanceApi.approveAttendance(recordId) }
+    }
+
+    override suspend fun rejectAttendance(recordId: Int): ApiState<Unit> {
+        return apiCall { attendanceApi.rejectAttendance(recordId) }
+    }
+
 }

@@ -22,4 +22,14 @@ interface AttendanceApi {
     suspend fun getPendingUsers(
         @Path("scheduleId") scheduleId: Int
     ): ApiResponse<List<AdminPendingUserResponse>>
+
+    @POST(Endpoints.Attendance.APPROVE)
+    suspend fun approveAttendance(
+        @Path("recordId") recordId: Int
+    ): ApiResponse<Unit>
+
+    @POST(Endpoints.Attendance.REJECT)
+    suspend fun rejectAttendance(
+        @Path("recordId") recordId: Int
+    ): ApiResponse<Unit>
 }

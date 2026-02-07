@@ -8,4 +8,6 @@ interface AttendanceRemoteDataSource {
     suspend fun getAttendanceAvailable(): ApiState<List<AttendanceAvailableResponse>>
     suspend fun postAttendanceCheck(sheetId: Int): ApiState<String>
     suspend fun getPendingUsers(scheduleId: Int): ApiState<List<AdminPendingUserResponse>>
+    suspend fun approveAttendance(recordId: Int): ApiState<Unit>
+    suspend fun rejectAttendance(recordId: Int): ApiState<Unit>
 }

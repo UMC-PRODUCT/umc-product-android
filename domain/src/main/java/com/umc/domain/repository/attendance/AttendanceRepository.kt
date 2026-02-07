@@ -8,4 +8,6 @@ interface AttendanceRepository {
     suspend fun getAttendanceAvailable(): ApiState<List<UserCheckAvailable>>
     suspend fun postAttendanceCheck(sheetId: Int): ApiState<String>
     suspend fun getPendingUsers(scheduleId: Int): ApiState<List<AdminPendingUser>>
+    suspend fun approveAttendance(recordId: Int): ApiState<Unit>
+    suspend fun rejectAttendance(recordId: Int): ApiState<Unit>
 }

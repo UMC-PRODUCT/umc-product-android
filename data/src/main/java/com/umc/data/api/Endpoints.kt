@@ -16,6 +16,8 @@ object Endpoints {
         const val AVAILABLE = "$ATTENDANCE/available"
         const val CHECK = "$ATTENDANCE/check"
         const val PENDING = "$ATTENDANCE/pending/{scheduleId}"
+        const val APPROVE = "$ATTENDANCE/{recordId}/approve"
+        const val REJECT = "$ATTENDANCE/{recordId}/reject"
     }
 
     object Challenger {

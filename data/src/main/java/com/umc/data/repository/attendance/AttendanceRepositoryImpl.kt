@@ -29,4 +29,10 @@ class AttendanceRepositoryImpl @Inject constructor(
             responseList.map { it.toAdminPendingUser() }
         }
     }
+
+    override suspend fun approveAttendance(recordId: Int): ApiState<Unit> =
+        attendanceRemoteDataSource.approveAttendance(recordId)
+
+    override suspend fun rejectAttendance(recordId: Int): ApiState<Unit> =
+        attendanceRemoteDataSource.rejectAttendance(recordId)
 }
