@@ -1,40 +1,40 @@
 package com.umc.presentation.ui.act.check
 
-import com.umc.domain.model.act.check.AdminCheckStats
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
-import com.umc.domain.model.enums.AdminSessionStatus
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.usecase.schedule.GetAdminSessionListUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AdminCheckViewModel @Inject constructor() :
-    BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
+class AdminCheckViewModel @Inject constructor(
+    private val getAdminSessionListUseCase: GetAdminSessionListUseCase
+) : BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
 
     init {
-        loadMockData()
-
-        // updateState { copy(adminSessions = emptyList()) }
+        fetchAdminSessions()
     }
 
-    private fun loadMockData() {
-        val mockPendingUsers = listOf(
-            AdminPendingUser(1, "홍길동", "닉네임", "중앙대학교", null, "14:05", false),
-            AdminPendingUser(2, "홍길동", "닉네임", "중앙대학교", null, "14:05", false),
-            AdminPendingUser(3, "홍길동", "닉네임", "중앙대학교", null, "14:05", true, "개인 사정으로 인한 지각"),
-            AdminPendingUser(4, "홍길동", "닉네임", "중앙대학교", null, "14:05", true, "교통 체증")
-        )
-
-        val domainSessions = listOf(
-            AdminSessionCheck(1, "4주차 정기세션", "2024-03-23", "14:00", "18:00", AdminSessionStatus.IN_PROGRESS, AdminCheckStats(85, 40, 34, 3), mockPendingUsers),
-            AdminSessionCheck(2, "4주차 정기세션", "2024-03-23", "14:00", "18:00", AdminSessionStatus.COMPLETED, AdminCheckStats(85, 40, 34, 3), emptyList()),
-            AdminSessionCheck(3, "4주차 정기세션", "2024-03-23", "14:00", "18:00", AdminSessionStatus.IN_PROGRESS, AdminCheckStats(85, 40, 34, 3), mockPendingUsers)
-        )
-
-        updateState { copy(adminSessions = domainSessions.map { AdminSessionUIModel(it) }) }
+    fun fetchAdminSessions() {
+        viewModelScope.launch {
+            when (val result = getAdminSessionListUseCase()) {
+                is ApiState.Success -> {
+                    val uiModels = result.data.map { domainModel ->
+                        AdminSessionUIModel(session = domainModel)
+                    }
+                    updateState { copy(adminSessions = uiModels) }
+                }
+                is ApiState.Fail -> {
+                    emitEvent(AdminCheckEvent.ShowToast(result.failState.message))
+                }
+            }
+        }
     }
 
     /**
