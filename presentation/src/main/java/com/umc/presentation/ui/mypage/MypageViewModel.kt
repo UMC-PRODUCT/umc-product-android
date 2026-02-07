@@ -39,6 +39,11 @@ class MypageViewModel @Inject constructor(
         viewModelScope.launch {
             getUserInfoUseCase().collect { userInfo ->
                 Log.d("log_home", "DataStore로부터 읽어옴: $userInfo")
+                updateState {
+                    copy(
+                        userInfo = userInfo,
+                    )
+                }
 
             }
         }
@@ -126,6 +131,7 @@ class MypageViewModel @Inject constructor(
 
 data class MypageFragmentUiState(
     // 현재 카카오 구글 로그인 2개로 비교하니 카카오를 기준으로 view 세팅
+    val userInfo: UserInfo = UserInfo(),
     val loginType: LoginType = LoginType.KAKAO,
     
     // 현재 직책
@@ -138,7 +144,7 @@ data class MypageFragmentUiState(
     val linkedinUrl : String = "",
 
     // UMC 외부 링크
-    val websiteUMC : String = "https://umc.makeus.in",
+    val websiteUMC : String = "https://umc.it.kr",
     val instagramUMC : String = "https://www.instagram.com/uni_makeus_challenge/",
     
 ) : UiState

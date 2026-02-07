@@ -44,6 +44,10 @@
         android:label="일정 상세 화면"
         tools:layout="@layout/fragment_plan_detail">
 
+        <argument
+            android:name="scheduleId"
+            app:argType="integer"
+            android:defaultValue="-1" />
 
     </fragment>
 

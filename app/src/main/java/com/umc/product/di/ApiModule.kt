@@ -39,13 +39,13 @@ object ApiModule {
 
     @Singleton
     @Provides
-    fun provideAttendanceApi(@AuthRetrofit retrofit: Retrofit): AttendanceApi {
-        return retrofit.create(AttendanceApi::class.java)
+    fun provideScheduleApi(@AuthRetrofit retrofit: Retrofit): ScheduleApi {
+        return retrofit.create(ScheduleApi::class.java)
     }
 
     @Singleton
     @Provides
-    fun provideScheduleApi(@AuthRetrofit retrofit: Retrofit): ScheduleApi {
-        return retrofit.create(ScheduleApi::class.java)
+    fun provideAttendanceApi(@AuthRetrofit retrofit: Retrofit): AttendanceApi {
+        return retrofit.create(AttendanceApi::class.java)
     }
 }

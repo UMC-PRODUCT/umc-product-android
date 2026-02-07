@@ -28,12 +28,13 @@ object Endpoints {
         const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
     }
 
+    object Kakao{
+        const val SEARCH_LOCATION = "v2/local/search/keyword.json"
+    }
+
     object Schedule{
         const val SCHEDULE = "api/v1/schedules"
         const val DETAIL = "$SCHEDULE/{scheduleId}"
-    }
-
-    object Kakao{
-        const val SEARCH_LOCATION = "v2/local/search/keyword.json"
+        const val MONTH = "$SCHEDULE/my-list"
     }
 }
