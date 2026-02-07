@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.signUp
 
 import com.umc.domain.model.enums.EmailVerifyType
+import com.umc.domain.model.signUp.School
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -84,6 +85,7 @@ data class SignUpState(
     val code: String = "",
     val verifyType: EmailVerifyType = EmailVerifyType.NONE,
     val school: String = "",
+    val schoolList: List<School> = emptyList()
 ) : UiState {
     val enableNextButton: Boolean
         get() = name.isNotEmpty() && nickname.isNotEmpty() && email.isNotEmpty()
