@@ -202,6 +202,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="24dp"
             android:layout_marginTop="16dp"
+            android:onClick="@{()->vm.onClickSchool()}"
             android:background="@drawable/bg_rectangle_neutral000_stroke_neutral300_radius8"
             android:paddingHorizontal="16dp"
             android:paddingVertical="14dp">

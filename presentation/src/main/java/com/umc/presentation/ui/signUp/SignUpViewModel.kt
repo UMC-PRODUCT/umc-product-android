@@ -62,6 +62,10 @@ constructor() : BaseViewModel<SignUpState, SignUpEvent>(
         }
     }
 
+    fun onClickSchool() {
+        emitEvent(SignUpEvent.ShowSchoolBottomSheet)
+    }
+
     fun isValidEmail(): Boolean {
         val regex = Regex(
             pattern = Const.URegex.EMAIL_REGEX,
@@ -88,7 +92,7 @@ data class SignUpState(
 
 sealed interface SignUpEvent : UiEvent {
     object MoveToMainEvent : SignUpEvent
-
     object MoveToLoginEvent : SignUpEvent
     object MoveToBack : SignUpEvent
+    object ShowSchoolBottomSheet : SignUpEvent
 }
