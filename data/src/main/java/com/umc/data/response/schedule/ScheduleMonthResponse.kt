@@ -6,7 +6,7 @@ import com.umc.domain.model.home.schedule.ScheduleMonthModel
 
 //월별 일정 조회
 data class ScheduleMonthResponse(
-    @SerializedName("scheduleId") val scheduleId: Int,
+    @SerializedName("scheduleId") val scheduleId: Long,
     @SerializedName("name") val name: String,
     @SerializedName("startsAt") val startsAt: String,
     @SerializedName("endsAt") val endsAt: String,

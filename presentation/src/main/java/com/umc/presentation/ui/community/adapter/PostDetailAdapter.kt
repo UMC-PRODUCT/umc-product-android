@@ -119,15 +119,15 @@ object PostDetailDiffCallback : DiffUtil.ItemCallback<PostDetailItem>() {
         return when {
             // 1. 게시글 본문: 제목이 같으면 같은 아이템으로 간주
             oldItem is PostDetailItem.Header && newItem is PostDetailItem.Header ->
-                oldItem.post.title == newItem.post.title
+                oldItem.post.postId == newItem.post.postId
 
             // 2. 댓글 헤더: 둘 다 CommentHeader 타입이면 '같은 영역'으로 간주
             oldItem is PostDetailItem.CommentHeader && newItem is PostDetailItem.CommentHeader -> true
 
             // 3. 댓글 아이템: 작성자와 시간이 같으면 같은 아이템으로 간주
             oldItem is PostDetailItem.Comment && newItem is PostDetailItem.Comment ->
-                oldItem.comment.username == newItem.comment.username &&
-                        oldItem.comment.writeTime == newItem.comment.writeTime
+                oldItem.comment.commentId == newItem.comment.commentId
+
 
             // 4. 빈 댓글 안내: 타입이 같으면 같은 아이템
             else -> oldItem is PostDetailItem.EmptyComment && newItem is PostDetailItem.EmptyComment

@@ -33,7 +33,7 @@ data class CommunityGetPostResponse (
         /**
          * 개별 게시글 DTO를 도메인 모델(PostItem)로 변환
          */
-        private fun PostSummaryResponse.toContentItemDomain(): ContentItem = ContentItem(
+        fun PostSummaryResponse.toContentItemDomain(): ContentItem = ContentItem(
             postId = this.postId,
             title = this.title,
             category = try {
@@ -57,7 +57,7 @@ data class CommunityGetPostResponse (
         /**
          * 번개 정보 DTO를 도메인 모델(LightningInfo)로 변환
          */
-        private fun LightningInfoResponse.toLightningDomain(): LightningInfo = LightningInfo(
+        fun LightningInfoResponse.toLightningDomain(): LightningInfo = LightningInfo(
             meetAt = this.meetAt,
             location = this.location,
             maxParticipants = this.maxParticipants

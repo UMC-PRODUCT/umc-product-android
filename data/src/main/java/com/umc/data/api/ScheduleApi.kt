@@ -16,7 +16,7 @@ interface ScheduleApi {
 
     @GET(Endpoints.Schedule.DETAIL)
     suspend fun getScheduleDetail(
-        @Path("scheduleId") scheduleId: Int
+        @Path("scheduleId") scheduleId: Long
     ): ApiResponse<ScheduleDetailResponse>
 
     @GET(Endpoints.Schedule.MONTH)

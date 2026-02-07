@@ -59,11 +59,11 @@ class AppDataStore @Inject constructor(
     // 유저 정보 Flow
     val userInfoFlow: Flow<UserInfo> = context.dataStore.data.map { prefs ->
         UserInfo(
-            id = prefs[KEY_ID] ?: 0,
+            id = prefs[KEY_ID] ?: 0L,
             name = prefs[KEY_NAME] ?: "",
             nickname = prefs[KEY_NICKNAME] ?: "",
             email = prefs[KEY_EMAIL] ?: "",
-            schoolId = prefs[KEY_SCHOOL_ID] ?: 0,
+            schoolId = prefs[KEY_SCHOOL_ID] ?: 0L,
             schoolName = prefs[KEY_SCHOOL_NAME] ?: "",
             profileImageLink = prefs[KEY_PROFILE_IMAGE] ?: "",
             status = prefs[KEY_STATUS] ?: "ACTIVE"
@@ -93,11 +93,11 @@ class AppDataStore @Inject constructor(
         val KEY_BLOG = stringPreferencesKey("blog_url")
 
         //유저 정보 KEY
-        val KEY_ID = intPreferencesKey("id")
+        val KEY_ID = longPreferencesKey("id")
         val KEY_NAME = stringPreferencesKey("name")
         val KEY_NICKNAME = stringPreferencesKey("nickname")
         val KEY_EMAIL = stringPreferencesKey("email")
-        val KEY_SCHOOL_ID = intPreferencesKey("school_id")
+        val KEY_SCHOOL_ID = longPreferencesKey("school_id")
         val KEY_SCHOOL_NAME = stringPreferencesKey("school_name")
         val KEY_PROFILE_IMAGE = stringPreferencesKey("profile_image")
         val KEY_STATUS = stringPreferencesKey("status")

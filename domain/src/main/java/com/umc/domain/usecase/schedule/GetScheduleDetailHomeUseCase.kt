@@ -7,5 +7,5 @@ import javax.inject.Inject
 class GetScheduleDetailHomeUseCase @Inject constructor(
     private val scheduleRepository: ScheduleRepository
 ) {
-    suspend operator fun invoke(scheduleId: Int) = scheduleRepository.getScheduleDetailHome(scheduleId)
+    suspend operator fun invoke(scheduleId: Long) = scheduleRepository.getScheduleDetailHome(scheduleId)
 }

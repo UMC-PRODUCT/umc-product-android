@@ -8,7 +8,7 @@ import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.home.PlanDetailItem
 
 data class ScheduleDetailResponse(
-    @SerializedName("scheduleId") val scheduleId: Int,
+    @SerializedName("scheduleId") val scheduleId: Long,
     @SerializedName("name") val name: String,
     @SerializedName("description") val description: String?,
     @SerializedName("tags") val tags: List<CategoryType>?,
@@ -25,7 +25,7 @@ data class ScheduleDetailResponse(
     companion object {
         fun ScheduleDetailResponse.toModel(): UserCheckAvailable {
             return UserCheckAvailable(
-                id = scheduleId,
+                id = scheduleId.toInt(),
                 title = name,
                 tags = tags,
                 startTime = startsAt,

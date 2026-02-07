@@ -9,7 +9,7 @@ interface ScheduleRepository {
 
     suspend fun getScheduleList(): ApiState<List<ScheduleListModel>>
 
-    suspend fun getScheduleDetailHome(scheduleId: Int): ApiState<PlanDetailItem>
+    suspend fun getScheduleDetailHome(scheduleId: Long): ApiState<PlanDetailItem>
 
     suspend fun getMonthSchedule(year: Int, month: Int): ApiState<List<ScheduleMonthModel>>
   

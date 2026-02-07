@@ -55,11 +55,16 @@ constructor() : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent
     }
 
     // 테스트용: 댓글 작성 기능
+
+
     fun addComment(text: String) {
         val newComment = CommentItem(
-            username = "새 유저",
-            writeTime = "방금 전",
-            comment = text
+            postId = -1L,
+            challengerId = -1L,
+            challengerName = "새 유저",
+            content = text,
+            createdAt = "방금 전",
+            commentId = -1L,
         )
         val updatedComments = uiState.value.nowCommentList+ newComment
         rebuildDetailList(uiState.value.nowContent, updatedComments)

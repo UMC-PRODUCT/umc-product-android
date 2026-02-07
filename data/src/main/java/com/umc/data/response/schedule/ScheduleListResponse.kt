@@ -6,7 +6,7 @@ import com.umc.domain.model.home.schedule.ScheduleListModel
 
 //일정 목록 조회
 data class ScheduleListResponse (
-    @SerializedName("scheduleId") val scheduleId: Int,
+    @SerializedName("scheduleId") val scheduleId: Long,
     @SerializedName("name") val name: String,
     @SerializedName("status") val status: String,
     @SerializedName("date") val date: String,

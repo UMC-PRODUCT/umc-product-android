@@ -25,7 +25,7 @@ constructor(
 
 
         //서버에서 게시글 상세 정보 가져오기
-        fun getScheduleDetail(scheduleId : Int, plusDay: Int){
+        fun getScheduleDetail(scheduleId : Long, plusDay: Int){
             viewModelScope.launch {
                 resultResponse(
                     response = getScheduleDetailHomeUseCase(scheduleId),

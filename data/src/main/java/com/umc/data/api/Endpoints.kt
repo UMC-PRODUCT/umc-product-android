@@ -43,5 +43,6 @@ object Endpoints {
         const val POST_SEARCH = "$COMMUNITY/search"
         const val POST_DETAIL = "$COMMUNITY/{postId}"
         const val POST_COMMENT = "$COMMUNITY/{postId}/comments"
+
     }
 }

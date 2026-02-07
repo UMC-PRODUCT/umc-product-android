@@ -3,7 +3,7 @@ package com.umc.domain.model.home
 import com.umc.domain.model.enums.CategoryType
 
 data class PlanDetailItem (
-    val scheduleId: Int = 0,
+    val scheduleId: Long = 0L,
     val name: String = "",
     val description: String = "",
     val tags: List<CategoryType> = emptyList(),

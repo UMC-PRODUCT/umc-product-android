@@ -25,13 +25,13 @@ class ScheduleRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getScheduleDetailHome(scheduleId: Int): ApiState<PlanDetailItem> {
+    override suspend fun getScheduleDetailHome(scheduleId: Long): ApiState<PlanDetailItem> {
         return scheduleRemoteDataSource.getScheduleDetail(scheduleId).map { it.toPlanDetailDomain() }
     }
 
   
     override suspend fun getScheduleDetail(scheduleId: Int): ApiState<UserCheckAvailable> {
-        return scheduleRemoteDataSource.getScheduleDetail(scheduleId).map { response ->
+        return scheduleRemoteDataSource.getScheduleDetail(scheduleId.toLong()).map { response ->
             response.toModel()
         }
     }

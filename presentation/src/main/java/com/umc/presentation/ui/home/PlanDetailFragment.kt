@@ -45,7 +45,7 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
         val scheduleId = args.scheduleId
         //일정 화면에서 plusDay 가져오기 (02.06-02.08 일정에 대해 plusDay == 1 이면 02.07에 대한 출력)
         val plusDay = args.plusDay
-        if (scheduleId != -1) {
+        if (scheduleId != -1L) {
             viewModel.getScheduleDetail(scheduleId, plusDay)
         }
 

@@ -1,7 +1,7 @@
 package com.umc.domain.model.home.schedule
 
 data class ScheduleMonthModel (
-    val scheduleId: Int,
+    val scheduleId: Long,
     val name: String,
     val startDay: String,   // "2026.02.07"
     val startTime: String,  // "05:24"
