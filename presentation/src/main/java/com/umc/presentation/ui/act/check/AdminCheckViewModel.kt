@@ -5,6 +5,8 @@ import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
+import com.umc.domain.usecase.attendance.PostAttendanceApprovalUseCase
+import com.umc.domain.usecase.attendance.PostAttendanceRejectionUseCase
 import com.umc.domain.usecase.schedule.GetAdminSessionListUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -16,9 +18,10 @@ import javax.inject.Inject
 @HiltViewModel
 class AdminCheckViewModel @Inject constructor(
     private val getAdminSessionListUseCase: GetAdminSessionListUseCase,
-    private val getPendingUsersUseCase: GetPendingUsersUseCase
+    private val getPendingUsersUseCase: GetPendingUsersUseCase,
+    private val postAttendanceApprovalUseCase: PostAttendanceApprovalUseCase,
+    private val postAttendanceRejectionUseCase: PostAttendanceRejectionUseCase
 ) : BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
-
     init {
         fetchAdminSessions()
     }
@@ -27,14 +30,14 @@ class AdminCheckViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = getAdminSessionListUseCase()) {
                 is ApiState.Success -> {
+                    val currentSessions = uiState.value.adminSessions
                     val uiModels = result.data.map { domainModel ->
-                        AdminSessionUIModel(session = domainModel)
+                        val wasExpanded = currentSessions.find { it.session.id == domainModel.id }?.isExpanded ?: false
+                        AdminSessionUIModel(session = domainModel, isExpanded = wasExpanded)
                     }
                     updateState { copy(adminSessions = uiModels) }
                 }
-                is ApiState.Fail -> {
-                    emitEvent(AdminCheckEvent.ShowToast(result.failState.message))
-                }
+                is ApiState.Fail -> emitEvent(AdminCheckEvent.ShowToast(result.failState.message))
             }
         }
     }
@@ -42,15 +45,31 @@ class AdminCheckViewModel @Inject constructor(
     /**
      * 출석 승인 버튼 클릭 시 호출
      */
-    fun approveAttendance(user: AdminPendingUser) {
-        // TODO: 출석 승인 API 호출
+    fun approveAttendance(attendanceId: Int, sessionId: Int) {
+        viewModelScope.launch {
+            when (val result = postAttendanceApprovalUseCase(attendanceId)) {
+                is ApiState.Success -> {
+                    fetchAdminSessions() // 전체 재호출
+                    emitEvent(AdminCheckEvent.ShowToast("출석이 승인되었습니다."))
+                }
+                is ApiState.Fail -> emitEvent(AdminCheckEvent.ShowToast(result.failState.message))
+            }
+        }
     }
 
     /**
      * 출석 반려 버튼 클릭 시 호출
      */
-    fun rejectAttendance(user: AdminPendingUser) {
-        // TODO: 출석 반려 API 호출
+    fun rejectAttendance(attendanceId: Int, sessionId: Int) {
+        viewModelScope.launch {
+            when (val result = postAttendanceRejectionUseCase(attendanceId)) {
+                is ApiState.Success -> {
+                    fetchAdminSessions()
+                    emitEvent(AdminCheckEvent.ShowToast("출석이 반려되었습니다."))
+                }
+                is ApiState.Fail -> emitEvent(AdminCheckEvent.ShowToast(result.failState.message))
+            }
+        }
     }
 
     /**

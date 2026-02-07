@@ -6,6 +6,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.presentation.databinding.ItemAdminCheckSessionBinding
 import com.umc.presentation.ui.act.check.AdminSessionUIModel
 
@@ -13,8 +14,8 @@ class AdminCheckAdapter(
     private val fragmentManager: FragmentManager,
     private val onToggleExpansion: (Int) -> Unit,
     private val onChangeLocation: (Int) -> Unit,
-    private val onApproveConfirmed: (com.umc.domain.model.act.check.AdminPendingUser) -> Unit,
-    private val onRejectConfirmed: (com.umc.domain.model.act.check.AdminPendingUser) -> Unit
+    private val onApproveConfirmed: (AdminPendingUser, Int) -> Unit,
+    private val onRejectConfirmed: (AdminPendingUser, Int) -> Unit
 ) : ListAdapter<AdminSessionUIModel, AdminCheckAdapter.ViewHolder>(AdminCheckDiffCallback()) {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
@@ -39,10 +40,16 @@ class AdminCheckAdapter(
     inner class ViewHolder(private val binding: ItemAdminCheckSessionBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
+        private var sessionId: Int = -1
+
         private val pendingUserAdapter = AdminPendingUserAdapter(
             fragmentManager = fragmentManager,
-            onApproveConfirmed = onApproveConfirmed,
-            onRejectConfirmed = onRejectConfirmed
+            onApproveConfirmed = { user ->
+                onApproveConfirmed(user, sessionId)
+            },
+            onRejectConfirmed = { user ->
+                onRejectConfirmed(user, sessionId)
+            }
         )
 
         init {
