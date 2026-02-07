@@ -87,8 +87,10 @@ class CheckAvailableAdapter(
                 }
             }
 
-            binding.tvFailReasonAction.setOnClickListener {
-                onReasonClick(uiModel.session.id)
+            binding.layoutFailReasonContainer.setOnClickListener {
+                if (!uiModel.isWithinRange) {
+                    onReasonClick(uiModel.session.id)
+                }
             }
 
             binding.root.setOnClickListener {
