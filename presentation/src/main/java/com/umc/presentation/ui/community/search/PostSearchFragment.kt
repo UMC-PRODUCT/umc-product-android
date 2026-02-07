@@ -117,7 +117,6 @@ class PostSearchFragment : BaseFragment<FragmentPostSearchBinding, PostSearchFra
             is PostSearchFragmentEvent.ShowSearchResult -> {
             /**TODO 서버에서 검색 결과를 받아와서 uistate에 넣어주기**/
                 binding.searchTextfield.setText(event.query)
-                Toast.makeText(requireContext(), "${event.query} 검색 결과", Toast.LENGTH_SHORT).show()
             }
 
             is PostSearchFragmentEvent.MoveBackPressedEvent -> {
