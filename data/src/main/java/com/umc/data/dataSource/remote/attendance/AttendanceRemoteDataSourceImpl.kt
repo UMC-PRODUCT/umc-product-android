@@ -4,6 +4,7 @@ import com.umc.data.api.AttendanceApi
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.response.attendance.AttendanceAvailableResponse
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import javax.inject.Inject
 
 class AttendanceRemoteDataSourceImpl @Inject constructor(
@@ -12,5 +13,9 @@ class AttendanceRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun getAttendanceAvailable(): ApiState<List<AttendanceAvailableResponse>> {
         return apiCall { attendanceApi.getAttendanceAvailable() }
+    }
+
+    override suspend fun postAttendanceCheck(sheetId: Int): ApiState<String> {
+        return apiCall { attendanceApi.postAttendanceCheck(AttendanceCheckRequest(sheetId)) }
     }
 }
