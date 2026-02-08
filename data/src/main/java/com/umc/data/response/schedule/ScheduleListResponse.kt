@@ -1,6 +1,8 @@
 package com.umc.data.response.schedule
 
 import com.google.gson.annotations.SerializedName
+import com.umc.domain.model.act.check.AdminSessionCheck
+import com.umc.domain.model.enums.AdminSessionStatus
 import com.umc.domain.model.home.schedule.ScheduleListModel
 
 
@@ -43,6 +45,22 @@ data class ScheduleListResponse (
                 presentCount = presentCount,
                 pendingCount = pendingCount,
                 attendanceRate = attendanceRate
+            )
+        }
+
+        fun ScheduleListResponse.toAdminDomain(): AdminSessionCheck {
+            return AdminSessionCheck(
+                id = scheduleId.toIntOrNull() ?: 0,
+                title = name,
+                date = date,
+                startTime = startTime,
+                endTime = endTime,
+                status = AdminSessionStatus.fromServerValue(status),
+                attendanceRate = attendanceRate.replace("%", "").toDoubleOrNull()?.toInt() ?: 0,
+                totalChallengers = totalCount.toIntOrNull() ?: 0,
+                attendedChallengers = presentCount.toIntOrNull() ?: 0,
+                pendingCount = pendingCount.toIntOrNull() ?: 0,
+                pendingUsers = emptyList()
             )
         }
     }

@@ -7,6 +7,7 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
+import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -18,8 +19,12 @@ import javax.inject.Inject
 @HiltViewModel
 class UserCheckViewModel @Inject constructor(
     private val getAttendanceAvailableUseCase: GetAttendanceAvailableUseCase,
-    private val getScheduleDetailUseCase: GetScheduleDetailUseCase
+    private val getScheduleDetailUseCase: GetScheduleDetailUseCase,
+    private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase
 ) : BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
+
+    private var lastUserLat: Double = 0.0
+    private var lastUserLng: Double = 0.0
 
     init { fetchAttendanceData() }
 
@@ -47,7 +52,6 @@ class UserCheckViewModel @Inject constructor(
                     updateState {
                         val updatedList = availableSessions.map { uiModel ->
                             if (uiModel.session.id == sessionId) {
-                                // ⭐️ UIModel의 address와 session 내부 위경도를 모두 업데이트
                                 uiModel.copy(
                                     address = detail.address,
                                     session = uiModel.session.copy(
@@ -61,10 +65,27 @@ class UserCheckViewModel @Inject constructor(
                         copy(availableSessions = updatedList)
                     }
                 }
-                is ApiState.Fail -> { /* 실패 처리 */ }
+                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
             }
         }
     }
+
+    /**
+     * 실시간 위치 기반 출석 요청
+     */
+    fun requestAttendance(sheetId: Int) {
+        viewModelScope.launch {
+            when (val result = postAttendanceCheckUseCase(sheetId)) {
+                is ApiState.Success -> {
+                    fetchAttendanceData()
+                }
+                is ApiState.Fail -> {
+                    emitEvent(UserCheckEvent.ShowToast(result.failState.message))
+                }
+            }
+        }
+    }
+
     fun submitAttendanceReason(sessionId: Int, reason: String) {
         // TODO: 출석 사유 제출 API 연동
         emitEvent(UserCheckEvent.ShowToast("사유가 성공적으로 제출되었습니다."))
@@ -92,10 +113,13 @@ class UserCheckViewModel @Inject constructor(
      * 기존 위치 업데이트 및 거리 계산 로직 유지
      */
     fun updateLocation(userLat: Double, userLng: Double) {
+        lastUserLat = userLat
+        lastUserLng = userLng
+
         updateState {
             val updatedList = availableSessions.map { uiModel ->
-                // 상세 정보를 받아와 위도/경도가 0.0이 아닐 때만 거리 계산 수행
-                if (uiModel.session.status == CheckAvailableStatus.BEFORE && uiModel.session.latitude != 0.0) {
+                // 좌표가 0.0이 아니고 유효한 경우에만 계산
+                if (uiModel.session.latitude != 0.0 && uiModel.session.longitude != 0.0) {
                     val results = FloatArray(1)
                     android.location.Location.distanceBetween(
                         userLat, userLng,

@@ -23,11 +23,11 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
             onChangeLocation = { sessionId ->
                 viewModel.onLocationChangeClicked(sessionId)
             },
-            onApproveConfirmed = { user ->
-                viewModel.approveAttendance(user)
+            onApproveConfirmed = { user, _ ->
+                viewModel.approveAttendance(user.id)
             },
-            onRejectConfirmed = { user ->
-                viewModel.rejectAttendance(user)
+            onRejectConfirmed = { user, _ ->
+                viewModel.rejectAttendance(user.id)
             }
         )
     }
