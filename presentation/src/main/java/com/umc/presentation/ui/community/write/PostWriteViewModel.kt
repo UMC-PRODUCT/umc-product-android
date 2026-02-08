@@ -15,28 +15,7 @@ class PostWriteViewModel @Inject
 constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
     PostWriteFragmentUiState()
 ) {
-
-
-    //category(지역) 변경
-    /*
-    fun setCategory(nowCategory: CategoryItem) {
-        updateState {
-            val selectedCategories = regionCategories.map{
-                //만약 터치한 놈이 리스트 중 하나랑 같으면
-                if(it.name == nowCategory.name){
-                    it.copy(isChecked = !it.isChecked)
-                }
-                //아니면 싹 다 false로 바꾸기
-                else{
-                    it.copy(isChecked = false)
-                }
-            }
-            copy(regionCategories = selectedCategories)
-        }
-
-    }
-
-     */
+    
 
     //category(글 카테고리) 선택
     fun onClickContentCategorySelect(){
@@ -102,8 +81,10 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
         updateState { copy(lightOpenChat = openChat) }
     }
 
-
-
+    //게시글 등록 시 로직
+    fun createPost(){
+        
+    }
 
     //뒤로 가기
     fun onClickBackPressed(){
@@ -113,17 +94,7 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
 
 data class PostWriteFragmentUiState(
 
-    //카테고리 리스트
-    /*
-    val regionCategories: List<CategoryItem> = listOf(
-        CategoryItem("서울"),
-        CategoryItem("경기/인천"),
-        CategoryItem("대전/충청"),
-        CategoryItem("부산/경남"),
-    ),
-
-     */
-
+    
     val selectContentCategory : CategoryItem = CategoryItem("카테고리 선택"),
 
     //작성한 내용들
