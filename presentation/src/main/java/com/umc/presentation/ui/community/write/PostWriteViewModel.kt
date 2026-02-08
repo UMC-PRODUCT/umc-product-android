@@ -1,18 +1,29 @@
 package com.umc.presentation.ui.community.write
 
 import android.util.Log
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.home.CategoryItem
+import com.umc.domain.usecase.community.CreateCommunityLightningPostUseCase
+import com.umc.domain.usecase.community.CreateCommunityPostUseCase
+import com.umc.domain.usecase.community.GetCommunityPostDetailUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import com.umc.presentation.ui.mypage.suggest.SuggestWriteFragmentEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class PostWriteViewModel @Inject
-constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
+constructor(
+    private val createCommunityPostUseCase: CreateCommunityPostUseCase, //게시글 생성
+    private val createCommunityLightningPostUseCase: CreateCommunityLightningPostUseCase, //번개 게시글 생성
+    private val updateCommunityPostUseCase: CreateCommunityPostUseCase, //게시글 수정
+    private val getCommunityPostDetailUseCase: GetCommunityPostDetailUseCase, //게시글 상세 불러오기 (게시글 수정)
+
+) : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
     PostWriteFragmentUiState()
 ) {
     
@@ -26,7 +37,7 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
     fun updateContentCategory(category: CommunityCategoryType) {
         updateState {
             // 초기값 "카테고리 선택"이 실제 선택된 라벨(예: "번개")로 바뀝니다.
-            copy(selectContentCategory = CategoryItem(category.label, isChecked = true))
+            copy(selectCommunityCategory = category)
         }
 
         //추가 카테고리가 번개냐?
@@ -37,6 +48,42 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
             setLightCardView(false)
         }
 
+    }
+
+    //게시글 수정일 시 게시글 데이터를 받와야 작성 채우기
+    fun settingUpdatePost(postId : Long){
+        viewModelScope.launch {
+            resultResponse(
+                response = getCommunityPostDetailUseCase(postId),
+                successCallback = {
+                    //번개 글인지 확인
+                    val isLightPost = if(it.lightningInfo != null) true else false
+                    setLightCardView(isLightPost)
+                    val time = it.lightningInfo?.meetAt ?: ""
+                    val people = it.lightningInfo?.maxParticipants.toString() ?: ""
+                    val place = it.lightningInfo?.location ?: ""
+                    val openChat = it.lightningInfo?.openChatUrl ?: ""
+
+                    updateState {
+                        copy(
+                            updatePostId = postId,
+                            title = it.title,
+                            content = it.content,
+                            selectCommunityCategory = it.category,
+                            isLight = isLightPost,
+                            lightTime = time,
+                            lightPeople = people,
+                            lightPlace = place,
+                            lightOpenChat = openChat
+                        )
+                    }
+
+                    emitEvent(PostWriteFragmentEvent.SetTextfields)
+
+                },
+                errorCallback = {}
+            )
+        }
     }
 
 
@@ -51,9 +98,21 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
         updateState { copy(content = content) }
     }
 
-    //작성한 내용을 저장(서버로 전송)
-    fun onClickRegister(){
-        //TODO 서버 로직 작성
+
+    //게시글 등록 시 로직
+    fun createPost(){
+        //분기 로직 (1. 게시글 수정인가 / 2. 일반 글인가 / 3. 번개 글인가)
+        val postId = uiState.value.updatePostId
+
+        // 게시글 수정
+        if(postId != -1L){
+
+
+            return
+        }
+
+
+
     }
     
     //번개 관련
@@ -81,11 +140,6 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
         updateState { copy(lightOpenChat = openChat) }
     }
 
-    //게시글 등록 시 로직
-    fun createPost(){
-        
-    }
-
     //뒤로 가기
     fun onClickBackPressed(){
         emitEvent(PostWriteFragmentEvent.ClickBackPressed)
@@ -94,8 +148,10 @@ constructor() : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
 
 data class PostWriteFragmentUiState(
 
-    
-    val selectContentCategory : CategoryItem = CategoryItem("카테고리 선택"),
+    //게시글 수정을 위한 게시글 ID
+    val updatePostId : Long = -1L,
+
+    val selectCommunityCategory : CommunityCategoryType = CommunityCategoryType.FREE,
 
     //작성한 내용들
     val title: String = "",
@@ -118,6 +174,12 @@ sealed interface PostWriteFragmentEvent : UiEvent {
     object ClickCategorySelect : PostWriteFragmentEvent
 
 
+    //뒤로 갈 때
     object ClickBackPressed : PostWriteFragmentEvent
+
+    //채울 떄
+    object SetTextfields : PostWriteFragmentEvent
+
+
 
 }

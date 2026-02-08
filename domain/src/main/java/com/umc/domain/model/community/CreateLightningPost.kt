@@ -6,6 +6,5 @@ data class CreateLightningPost (
     val meetAt : String,
     val location : String,
     val maxParticipants : Int,
-    val region: String = "",
-    val anonymous: Boolean = false,
+    val openChatUrl: String,
 )

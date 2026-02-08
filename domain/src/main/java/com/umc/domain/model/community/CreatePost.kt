@@ -4,6 +4,4 @@ data class CreatePost (
     val title: String,
     val content: String,
     val category: String,
-    val region: String = "",
-    val anonymous: Boolean = false,
 )

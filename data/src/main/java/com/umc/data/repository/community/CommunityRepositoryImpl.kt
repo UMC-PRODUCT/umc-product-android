@@ -8,12 +8,14 @@ import com.umc.data.response.community.CommunityGetPostResponse.Companion.toPost
 import com.umc.data.response.community.CommunitySearchPostResponse.Companion.toPostPageModelDomain
 import com.umc.data.response.community.PostCommentResponse.Companion.toCommentItemDomain
 import com.umc.data.response.community.PostDetailResponse.Companion.toContentItemDomain
+import com.umc.data.response.community.PostLikeResponse.Companion.toPostLikeDomain
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.community.CommentItem
 import com.umc.domain.model.community.ContentItem
 import com.umc.domain.model.community.CreateLightningPost
 import com.umc.domain.model.community.CreatePost
+import com.umc.domain.model.community.PostLike
 import com.umc.domain.model.community.PostPageModel
 import com.umc.domain.repository.community.CommunityRepository
 import javax.inject.Inject
@@ -24,12 +26,11 @@ class CommunityRepositoryImpl @Inject constructor(
 
     //게시글 작성
     override suspend fun getPosts(
-        ing: Boolean,
-        sort: String,
+        category: String?,
         page: Int,
         size: Int
     ): ApiState<PostPageModel> {
-        return communityRemoteDataSource.getPosts(ing, sort, page, size).map {
+        return communityRemoteDataSource.getPosts(category, page, size).map {
             it.toPostPageModelDomain() }
     }
 
@@ -70,20 +71,42 @@ class CommunityRepositoryImpl @Inject constructor(
 
     //일반게시글 작성
     override suspend fun createPost(request: CreatePost): ApiState<ContentItem> {
-        val request = CreatePostRequest(request.title, request.content, request.category, request.region, request.anonymous)
+        val request = CreatePostRequest(request.title, request.content, request.category)
         return communityRemoteDataSource.createPost(request).map {
             it.toContentItemDomain() }
     }
 
     //번개게시글 작성
     override suspend fun createLightningPost(request: CreateLightningPost): ApiState<ContentItem> {
-        val request = CreatePostLightningRequest(request.title, request.content, request.region, request.anonymous,
-            request.meetAt, request.location, request.maxParticipants)
+        val request = CreatePostLightningRequest(request.title, request.content,
+            request.meetAt, request.location, request.maxParticipants, request.openChatUrl)
         return communityRemoteDataSource.createLightningPost(request).map {
             it.toContentItemDomain() }
     }
 
+    //게시글 삭제하기
+    override suspend fun deletePost(postId: Long): ApiState<Unit> {
+        return communityRemoteDataSource.deletePost(postId)
+    }
 
+    //게시글 좋아요 토글하기
+    override suspend fun togglePostLike(postId: Long, challengerId: Long): ApiState<PostLike> {
+        return communityRemoteDataSource.togglePostLike(postId, challengerId).map {
+            it.toPostLikeDomain() }
+    }
+
+    //게시글 댓글 삭제하기
+    override suspend fun deleteComment(postId: Long, commentId: Long, challengerId: Long
+    ): ApiState<Unit> {
+        return communityRemoteDataSource.deleteComment(postId, commentId, challengerId)
+    }
+
+    //게시글 수정하기
+    override suspend fun updatePost(postId: Long, request: CreatePost): ApiState<ContentItem> {
+        val request = CreatePostRequest(request.title, request.content, request.category)
+        return communityRemoteDataSource.updatePost(postId, request).map {
+            it.toContentItemDomain() }
+    }
 
 
 }

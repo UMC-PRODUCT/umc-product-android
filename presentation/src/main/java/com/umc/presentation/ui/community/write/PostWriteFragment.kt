@@ -10,14 +10,17 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPostWriteBinding
 import com.umc.presentation.ui.community.adapter.BottomSheetCategoryAdapter
+import com.umc.presentation.ui.community.detail.PostDetailFragmentArgs
 import com.umc.presentation.ui.home.adapter.ShowCategoryAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import kotlin.getValue
 
 @AndroidEntryPoint
 class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragmentUiState, PostWriteFragmentEvent, PostWriteViewModel>(
@@ -28,9 +31,18 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
     //위치 정하는 지역 카테고리 어댑터
     private lateinit var categoryAdapter: ShowCategoryAdapter
 
+    private val args: PostWriteFragmentArgs by navArgs()
 
+    private var postId : Long = -1L
 
     override fun initView() {
+
+        //postId를 비교하는 로직 (만약 유효하면 이는 게시글 작성이 아닌 수정으로 판단)
+        postId = args.postId
+        if(postId != -1L){
+            viewModel.settingUpdatePost(postId)
+        }
+
         binding.apply {
             vm = viewModel
             lifecycleOwner = viewLifecycleOwner
@@ -102,23 +114,8 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
             }
 
 
-
-
-            // 등록 버튼 클릭
-            writeTvComplete.setOnClickListener {
-                viewModel.onClickRegister()
-            }
-
         }
 
-        //카테고리 어댑터 -> 클릭 시 변경하기
-        /*
-        categoryAdapter = ShowCategoryAdapter{ categoryItem ->
-            viewModel.setCategory(categoryItem)
-        }
-        binding.writeRcv.adapter = categoryAdapter
-
-         */
 
 
     }
@@ -130,7 +127,6 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
             launch {
                 viewModel.uiState.collect { state ->
                     /**카테고리 관련은 OUT**/
-                //categoryAdapter.submitList(state.regionCategories)
                 }
             }
 
@@ -155,6 +151,16 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
             is PostWriteFragmentEvent.ClickCategorySelect -> {
                 // 카테고리 선택 다이얼로그 띄우기
                 settingBottomSheetDialog()
+            }
+
+            //textfield 채우기일때
+            is PostWriteFragmentEvent.SetTextfields -> {
+                binding.writeTextfieldTitle.setText(viewModel.uiState.value.title)
+                binding.writeTextfieldContent.setText(viewModel.uiState.value.content)
+                binding.writeTextfieldTime.setText(viewModel.uiState.value.lightTime)
+                binding.writeTextfieldPlace.setText(viewModel.uiState.value.lightPlace)
+                binding.writeTextfieldPeople.setText(viewModel.uiState.value.lightPeople)
+                binding.writeTextfieldOpenchat.setText(viewModel.uiState.value.lightOpenChat)
             }
             
             else -> {}

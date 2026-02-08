@@ -31,7 +31,7 @@ data class PostSearchSummaryResponse (
                 },
                 // 일부는 직접 (추후 서버 요청)
                 username = "사용자",
-                writeTime = "${writeDay}-${writeTime}", // TODO: 서버 응답에 생성일자가 추가되면 파싱 로직 적용
+                writeTime = "${writeDay} ${writeTime}", // TODO: 서버 응답에 생성일자가 추가되면 파싱 로직 적용
                 likes = likeCount,           // API 미제공 (X)
                 comments = 0,        // API 미제공 (X)
                 content = this.contentPreview,

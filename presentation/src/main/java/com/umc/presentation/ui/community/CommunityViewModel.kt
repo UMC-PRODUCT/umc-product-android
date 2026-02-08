@@ -49,11 +49,17 @@ constructor(
         }
 
         viewModelScope.launch {
-            val isIng = state.whichTab == ContentType.LIGHTNING // 번개 탭은 ing=true
+            val category = when (state.whichTab) {
+                ContentType.ALL -> null
+                ContentType.QUESTION -> CommunityCategoryType.QUESTION.name
+                ContentType.LIGHTNING -> CommunityCategoryType.LIGHTNING.name
+                else -> null
+            }
+
             val pageToFetch = if (isRefresh) 0 else state.currentPage
 
             resultResponse(
-                response = getCommunityPostUseCase(isIng, "ALL", pageToFetch, 20),
+                response = getCommunityPostUseCase(category, pageToFetch, 20),
                 successCallback = { pageModel ->
                     // 1. 질문 탭이면 클라이언트에서 한 번 더 필터링
                     val rawPosts = pageModel.posts

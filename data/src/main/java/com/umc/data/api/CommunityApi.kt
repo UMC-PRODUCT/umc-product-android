@@ -7,9 +7,12 @@ import com.umc.data.response.community.CommunityGetPostResponse
 import com.umc.data.response.community.CommunitySearchPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
+import com.umc.data.response.community.PostLikeResponse
 import com.umc.domain.model.base.ApiResponse
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -19,8 +22,7 @@ interface CommunityApi {
     //게시글 목록 조회
     @GET(Endpoints.Community.COMMUNITY)
     suspend fun getPosts(
-        @Query("ing") ing: Boolean = false, // 모집 중인 번개 게시글글만 조회
-        @Query("sort") sort: String = "ALL", // 정렬 기준 (SOFT:좋아요, HARD:좋아요역순, ALL:최신순)
+        @Query("category") category: String?,
         @Query("page") page: Int, // 현재 페이지
         @Query("size") size: Int = 20 // 페이지당 개수
     ): ApiResponse<CommunityGetPostResponse>
@@ -66,6 +68,33 @@ interface CommunityApi {
         @Body request: CreatePostLightningRequest
     ): ApiResponse<PostDetailResponse>
 
+    //게시글 삭제
+    @DELETE(Endpoints.Community.POST_DETAIL)
+    suspend fun deletePost(
+        @Path("postId") postId: Long
+    ): ApiResponse<Unit>
+
+    //게시글 좋아요 토글
+    @POST(Endpoints.Community.POST_LIKE)
+    suspend fun togglePostLike(
+        @Path("postId") postId: Long,
+        @Query("challengerId") challengerId: Long
+    ): ApiResponse<PostLikeResponse>
+
+    //게시글 댓글 삭제
+    @DELETE(Endpoints.Community.POST_COMMENT_DETAIL)
+    suspend fun deleteComment(
+        @Path("postId") postId: Long,
+        @Path("commentId") commentId: Long,
+        @Query("challengerId") challengerId: Long
+    ) : ApiResponse<Unit>
+
+    //게시글 수정
+    @PATCH(Endpoints.Community.POST_DETAIL)
+    suspend fun updatePost(
+        @Path("postId") postId: Long,
+        @Body request: CreatePostRequest
+    ): ApiResponse<PostDetailResponse>
 
 
 

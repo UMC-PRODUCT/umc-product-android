@@ -9,6 +9,7 @@ import com.umc.data.response.community.CommunityGetPostResponse
 import com.umc.data.response.community.CommunitySearchPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
+import com.umc.data.response.community.PostLikeResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
 import javax.inject.Inject
@@ -19,12 +20,11 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
 
     //게시글 목록 가져오기
     override suspend fun getPosts(
-        ing: Boolean,
-        sort: String,
+        category: String?,
         page: Int,
         size: Int
     ): ApiState<CommunityGetPostResponse> {
-        return apiCall { communityApi.getPosts(ing, sort, page, size) }
+        return apiCall { communityApi.getPosts(category, page, size) }
     }
 
     //게시글 상세 내용 가져오기
@@ -65,6 +65,28 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
         return apiCall { communityApi.createLightningPost(request) }
     }
 
+    //게시글 삭제하기
+    override suspend fun deletePost(postId: Long): ApiState<Unit> {
+        return apiCall { communityApi.deletePost(postId) }
+    }
+
+    //게시글 좋아요 토글
+    override suspend fun togglePostLike(postId: Long, challengerId: Long
+    ): ApiState<PostLikeResponse> {
+        return apiCall { communityApi.togglePostLike(postId, challengerId) }
+    }
+
+    //게시글 댓글 삭제하기
+    override suspend fun deleteComment(postId: Long, commentId: Long, challengerId: Long
+    ): ApiState<Unit> {
+        return apiCall { communityApi.deleteComment(postId, commentId, challengerId) }
+    }
+
+    //게시글 수정하기
+    override suspend fun updatePost(postId: Long, request: CreatePostRequest
+    ): ApiState<PostDetailResponse> {
+        return apiCall { communityApi.updatePost(postId, request) }
+    }
 
 
 }

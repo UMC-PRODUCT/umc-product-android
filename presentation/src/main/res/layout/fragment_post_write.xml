@@ -120,7 +120,7 @@
                     android:gravity="start"
                     android:textAppearance="@style/CalloutBold"
                     android:textColor="@color/neutral500"
-                    android:text="@{vm.uiState.selectContentCategory.name}"
+                    android:text="@{vm.uiState.selectCommunityCategory.label}"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
