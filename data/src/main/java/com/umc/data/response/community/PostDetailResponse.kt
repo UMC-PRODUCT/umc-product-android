@@ -1,7 +1,7 @@
 package com.umc.data.response.community
 
 import com.google.gson.annotations.SerializedName
-import com.umc.data.response.community.CommunityGetPostResponse.Companion.toLightningDomain
+import com.umc.data.response.community.LightningInfoResponse.Companion.toLightningInfoDomain
 import com.umc.domain.model.community.ContentItem
 import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.enums.UserPart
@@ -16,14 +16,14 @@ data class PostDetailResponse(
     @SerializedName("lightningInfo") val lightningInfo: LightningInfoResponse?
 ) {
     companion object{
-        fun PostDetailResponse.toCommunityDomain(): ContentItem = ContentItem(
+        fun PostDetailResponse.toContentItemDomain(): ContentItem = ContentItem(
             postId = this.postId,
             title = this.title,
             category = try { CommunityCategoryType.valueOf(this.category) }
             catch (e: Exception) { CommunityCategoryType.FREE },
             content = this.content,
             username = "사용자",
-            lightningInfo = this.lightningInfo?.toLightningDomain(),
+            lightningInfo = this.lightningInfo?.toLightningInfoDomain(),
             // 상세 조회 시 추가로 필요한 필드들 기본값 채우기
             writeTime = "방금 전",
             userPart = UserPart.ANDROID

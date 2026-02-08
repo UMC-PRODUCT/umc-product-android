@@ -4,6 +4,8 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.enums.SearchMode
 import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.base.BaseFragment
@@ -38,7 +40,9 @@ class PostSearchFragment : BaseFragment<FragmentPostSearchBinding, PostSearchFra
     
     // 검색 결과 item 터치 시 이동 로직
     override fun onItemClicked(item: ContentItem) {
-        val action = PostSearchFragmentDirections.actionPostSearchToPostDetail()
+        val action = PostSearchFragmentDirections.actionPostSearchToPostDetail(
+            postId = item.postId
+        )
         findNavController().navigate(action)
     }
 
@@ -72,6 +76,24 @@ class PostSearchFragment : BaseFragment<FragmentPostSearchBinding, PostSearchFra
         searchContentAdapter = ContentAdapter(this)
         binding.searchRcvResult.apply{
             adapter = searchContentAdapter
+
+            //무한 스크롤
+            // 무한 스크롤 리스너: 바닥 도달 시 다음 페이지 호출
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+
+                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                    val lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition()
+                    val totalItemCount = layoutManager.itemCount
+
+                    // 로딩 중이 아닐 때 바닥에서 2번째 아이템 근처면 다음 데이터 로드
+                    if (!viewModel.uiState.value.isPageLoading && lastVisibleItem >= totalItemCount - 2) {
+                        viewModel.searchPosts(viewModel.uiState.value.query, isRefresh = false)
+                    }
+                }
+            })
+
         }
 
         recentSearchAdapter = RecentSearchAdapter(this)

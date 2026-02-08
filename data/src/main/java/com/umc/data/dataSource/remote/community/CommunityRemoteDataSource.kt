@@ -4,6 +4,7 @@ import com.umc.data.request.community.CreateCommentRequest
 import com.umc.data.request.community.CreatePostLightningRequest
 import com.umc.data.request.community.CreatePostRequest
 import com.umc.data.response.community.CommunityGetPostResponse
+import com.umc.data.response.community.CommunitySearchPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
 import com.umc.domain.model.base.ApiResponse
@@ -25,7 +26,7 @@ interface CommunityRemoteDataSource {
     suspend fun createComment(postId: Long, challengerId: Long, request: CreateCommentRequest): ApiState<PostCommentResponse>
 
     //게시글 검색
-    suspend fun searchPosts(keyword: String, page: Int, size: Int = 20): ApiState<CommunityGetPostResponse>
+    suspend fun searchPosts(keyword: String, page: Int, size: Int = 20): ApiState<CommunitySearchPostResponse>
 
     //게시글 작성
     suspend fun createPost(request: CreatePostRequest): ApiState<PostDetailResponse>

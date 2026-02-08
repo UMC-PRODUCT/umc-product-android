@@ -13,7 +13,7 @@ data class PostCommentResponse(
     @SerializedName("createdAt") val createdAt: String
 ) {
     companion object {
-        fun PostCommentResponse.toCommunityDomain(): CommentItem {
+        fun PostCommentResponse.toCommentItemDomain(): CommentItem {
             val (createDay, createTime) = this.createdAt.parseDateTime()
 
             return CommentItem(

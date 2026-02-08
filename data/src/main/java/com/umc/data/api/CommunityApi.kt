@@ -4,6 +4,7 @@ import com.umc.data.request.community.CreateCommentRequest
 import com.umc.data.request.community.CreatePostLightningRequest
 import com.umc.data.request.community.CreatePostRequest
 import com.umc.data.response.community.CommunityGetPostResponse
+import com.umc.data.response.community.CommunitySearchPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
 import com.umc.domain.model.base.ApiResponse
@@ -46,12 +47,12 @@ interface CommunityApi {
 
 
     //게시글 검색
-    @POST(Endpoints.Community.POST_SEARCH)
+    @GET(Endpoints.Community.POST_SEARCH)
     suspend fun searchPosts(
         @Query("keyword") keyword: String,
         @Query("page") page: Int,
         @Query("size") size: Int = 20
-    ) : ApiResponse<CommunityGetPostResponse>
+    ) : ApiResponse<CommunitySearchPostResponse>
 
     //일반 게시글 작성
     @POST(Endpoints.Community.COMMUNITY)

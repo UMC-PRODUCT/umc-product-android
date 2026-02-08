@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.home
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.prolificinteractive.materialcalendarview.CalendarDay
 
@@ -82,7 +83,7 @@ class HomeViewModel @Inject constructor(
             resultResponse(
                 response = getMyProfileUseCase(),
                 successCallback = { userInfo ->
-
+                    Log.d("log_home", "$userInfo")
                     updateState {
                         copy(
                             userName = userInfo.name,

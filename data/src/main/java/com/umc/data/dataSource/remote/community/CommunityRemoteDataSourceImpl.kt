@@ -6,6 +6,7 @@ import com.umc.data.request.community.CreateCommentRequest
 import com.umc.data.request.community.CreatePostLightningRequest
 import com.umc.data.request.community.CreatePostRequest
 import com.umc.data.response.community.CommunityGetPostResponse
+import com.umc.data.response.community.CommunitySearchPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
 import com.umc.domain.model.base.ApiResponse
@@ -50,7 +51,7 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
         keyword: String,
         page: Int,
         size: Int
-    ): ApiState<CommunityGetPostResponse> {
+    ): ApiState<CommunitySearchPostResponse> {
         return apiCall { communityApi.searchPosts(keyword, page, size) }
      }
 
