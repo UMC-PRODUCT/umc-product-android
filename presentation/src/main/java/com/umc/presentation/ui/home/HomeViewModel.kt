@@ -19,6 +19,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.util.Locale
+
 //뷰모델에서는 xml에서 이벤트 의도 전달 -> fragment한테 이거 로직 처리하삼
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -128,21 +133,21 @@ class HomeViewModel @Inject constructor(
     //ScheduleMonthModel -> SchdulePlanItem(보여주기 형식)으로 바꾸는 함수
     //또한, 연속된 내용의 일정(02.06-0.08)에 대해, 동일한 일정 item을 생성 (id는 same)
     private fun convertToPlanItems(domainModels: List<ScheduleMonthModel>): List<SchedulePlanItem> {
-        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd")
+        val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
         val result = mutableListOf<SchedulePlanItem>()
 
         domainModels.forEach { schedule ->
-            val startDate = java.time.LocalDate.parse(schedule.startDay, formatter)
-            val endDate = java.time.LocalDate.parse(schedule.endDay, formatter)
+            val startDate = LocalDate.parse(schedule.startDay, formatter)
+            val endDate = LocalDate.parse(schedule.endDay, formatter)
             //총 며칠 있는지 계산 (2026.02.07 - 2026.02.09)일 경우 7 8 9에 대해 일정 생성 필요
-            val daysBetween = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate)
+            val daysBetween = ChronoUnit.DAYS.between(startDate, endDate).toInt()
 
             //서버에서 준 dDay 값을 숫자로 변환
-            val serverDDay = schedule.dDay.toIntOrNull() ?: 0
+            val serverDDay = schedule.dDay
             
 
             for (i in 0..daysBetween) {
-                val targetDate = startDate.plusDays(i)
+                val targetDate = startDate.plusDays(i.toLong())
                 val isPast = serverDDay + i < 0 //날짜 추가에 따른 D-Day 변경
 
                 result.add(
@@ -151,16 +156,17 @@ class HomeViewModel @Inject constructor(
                         title = schedule.name,
                         time = schedule.startTime,
                         date = targetDate.format(formatter),
-                        dayOfWeek = targetDate.format(java.time.format.DateTimeFormatter.ofPattern("EEE", java.util.Locale.ENGLISH)).uppercase(),
+                        dayOfWeek = targetDate.format(DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH)).uppercase(),
                         day = targetDate.dayOfMonth.toString().padStart(2, '0'),
                         // UI 표시용 dDay 설정
                         dDay = when {
                             isPast -> null                  // 과거면 null
-                            serverDDay+i == 0L -> "D-Day"   // 0이면 D-Day
-                            serverDDay+i > 31L -> "참여 예정" // 31일보다 크면 참여 예정으로
+                            serverDDay+i == 0 -> "D-Day"   // 0이면 D-Day
+                            serverDDay+i > 31 -> "참여 예정" // 31일보다 크면 참여 예정으로
                             else -> "D-${serverDDay+i}"      // 양수면 D-n
                         },
-                        isPast = isPast
+                        isPast = isPast,
+                        plusDay = i
                     )
                 )
             }
@@ -236,7 +242,7 @@ data class HomeFragmentUiState(
     val dailyPlans: List<SchedulePlanItem> = emptyList(), //선택한 날들의 일정
     val allPlans: List<SchedulePlanItem> = listOf(
     ), //월별 모든 일정
-    
+    val plusDays : Int = 0,
     val tmptag: List<String> = listOf("11기", "12기", "13기")
 
 

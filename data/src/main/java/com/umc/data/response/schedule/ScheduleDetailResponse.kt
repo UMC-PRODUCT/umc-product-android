@@ -1,13 +1,14 @@
 package com.umc.data.response.schedule
 
 import com.google.gson.annotations.SerializedName
+import com.umc.domain.model.UDomainFormat.parseDateTime
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CheckAvailableStatus
-import com.umc.domain.model.home.schedule.ScheduleDetailModel
+import com.umc.domain.model.home.PlanDetailItem
 
 data class ScheduleDetailResponse(
-    @SerializedName("scheduleId") val scheduleId: Int,
+    @SerializedName("scheduleId") val scheduleId: Long,
     @SerializedName("name") val name: String,
     @SerializedName("description") val description: String?,
     @SerializedName("tags") val tags: List<CategoryType>?,
@@ -24,7 +25,8 @@ data class ScheduleDetailResponse(
     companion object {
         fun ScheduleDetailResponse.toModel(): UserCheckAvailable {
             return UserCheckAvailable(
-                id = scheduleId,
+                /**TODO: 후에 Long 마이그레이션 시 해당 부분 교체 요망**/
+                id = scheduleId.toInt(),
                 title = name,
                 tags = tags,
                 startTime = startsAt,
@@ -37,19 +39,12 @@ data class ScheduleDetailResponse(
             )
         }
 
-        fun ScheduleDetailResponse.toHomeDomain(): ScheduleDetailModel {
-            // "T"를 기준으로 날짜와 시간을 분리
-            fun String.parseDateTime(): Pair<String, String> {
-                val dateTimeParts = this.split("T")
-                val date = dateTimeParts.getOrNull(0)?.replace("-", ".") ?: ""
-                val time = dateTimeParts.getOrNull(1)?.substring(0, 5) ?: ""
-                return Pair(date, time)
-            }
-
+        fun ScheduleDetailResponse.toPlanDetailDomain(): PlanDetailItem {
+            // "T"를 기준으로 날짜와 시간을 분리 (UDomainUtil에 정의)
             val (startDay, startTime) = startsAt.parseDateTime()
             val (endDay, endTime) = endsAt.parseDateTime()
 
-            return ScheduleDetailModel(
+            return PlanDetailItem(
                 scheduleId = scheduleId,
                 name = name,
                 description = description ?: "",

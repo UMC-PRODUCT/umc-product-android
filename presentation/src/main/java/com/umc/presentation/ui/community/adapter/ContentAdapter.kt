@@ -1,11 +1,11 @@
-package com.umc.presentation.ui.mypage.adapter
+package com.umc.presentation.ui.community.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.mypage.ContentItem
+import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.databinding.ItemMypageContentBinding
 
 interface ContentItemDelegate {
@@ -45,8 +45,7 @@ ListAdapter<ContentItem, ContentAdapter.ContentViewHolder>(ContentDiffCallback){
     companion object {
         private val ContentDiffCallback = object : DiffUtil.ItemCallback<ContentItem>() {
             override fun areItemsTheSame(oldItem: ContentItem, newItem: ContentItem): Boolean {
-                // 고유 식별자(제목 등)가 같으면 같은 아이템으로 간주
-                return oldItem.title == newItem.title && oldItem.username == newItem.username
+                return oldItem.postId == newItem.postId
             }
 
             override fun areContentsTheSame(oldItem: ContentItem, newItem: ContentItem): Boolean {

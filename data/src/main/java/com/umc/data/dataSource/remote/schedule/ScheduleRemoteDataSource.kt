@@ -8,7 +8,7 @@ import com.umc.domain.model.base.ApiState
 interface ScheduleRemoteDataSource {
     suspend fun getScheduleList(): ApiState<List<ScheduleListResponse>>
 
-    suspend fun getScheduleDetail(scheduleId: Int): ApiState<ScheduleDetailResponse>
+    suspend fun getScheduleDetail(scheduleId: Long): ApiState<ScheduleDetailResponse>
 
     suspend fun getMonthSchedule(year: Int, month: Int): ApiState<List<ScheduleMonthResponse>>
 

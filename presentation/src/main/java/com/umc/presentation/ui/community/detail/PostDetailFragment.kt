@@ -5,8 +5,9 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.fragment.app.viewModels
-import com.umc.domain.model.mypage.CommentItem
-import com.umc.domain.model.mypage.ContentItem
+import androidx.navigation.fragment.navArgs
+import com.umc.domain.model.community.CommentItem
+import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.UBasicDialog
@@ -24,6 +25,8 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
 ), PostItemDelegate {
 
     override val viewModel: PostDetailViewModel by viewModels()
+
+    private val args: PostDetailFragmentArgs by navArgs()
 
     private lateinit var postDetailAdapter : PostDetailAdapter
 
@@ -54,7 +57,7 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
         }
 
         // 내 댓글인지 여부에 따른 가시성 조절 (임시 로직)
-        val isMyComment = item.username == "새 유저"
+        val isMyComment = item.challengerName == "새 유저"
         menuBinding.layoutMenuReport.visibility = if (isMyComment) View.GONE else View.VISIBLE
         menuBinding.layoutMenuDelete.visibility = if (isMyComment) View.VISIBLE else View.GONE
 
@@ -95,6 +98,12 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
         postDetailAdapter = PostDetailAdapter(this)
         binding.postdetailRcv.apply {
             adapter = postDetailAdapter
+        }
+
+        //일정 화면에서 게시글 id 가져오기
+        val postId = args.postId
+        if (postId != -1L) {
+            viewModel.initPostDetailData(postId)
         }
 
 

@@ -21,7 +21,7 @@ class AppDataStore @Inject constructor(
     private val gson = Gson()
 
 
-    // 아웃링크 Flow
+    // 아웃링크 Flow (마이페이지 깃허브/블로그/링크드인)
     val userOutLinkFlow: Flow<UserOutLink> = context.dataStore.data.map { prefs ->
         UserOutLink(
             github = prefs[KEY_GITHUB] ?: "",
@@ -39,31 +39,14 @@ class AppDataStore @Inject constructor(
         }
     }
 
-    // 일정 생성 : 최근 장소 검색어 Flow
-    val recentSearchesPlaceFlow: Flow<List<String>> = context.dataStore.data.map { prefs ->
-        val json = prefs[KEY_RECENT_SEARCHES_PLACE] ?: "[]"
-        gson.fromJson(json, Array<String>::class.java).toList()
-    }
-
-    // 일정 생성 : 최근 장소 검색어 추가 = 최대 10개 저장
-    suspend fun addSearchPlaceHistory(query: String) {
-        context.dataStore.edit { prefs ->
-            val currentJson = prefs[KEY_RECENT_SEARCHES_PLACE] ?: "[]"
-            val currentList = gson.fromJson(currentJson, Array<String>::class.java).toMutableList()
-            currentList.remove(query)
-            currentList.add(0, query)
-            prefs[KEY_RECENT_SEARCHES_PLACE] = gson.toJson(currentList.take(10))
-        }
-    }
-
     // 유저 정보 Flow
     val userInfoFlow: Flow<UserInfo> = context.dataStore.data.map { prefs ->
         UserInfo(
-            id = prefs[KEY_ID] ?: 0,
+            id = prefs[KEY_ID] ?: 0L,
             name = prefs[KEY_NAME] ?: "",
             nickname = prefs[KEY_NICKNAME] ?: "",
             email = prefs[KEY_EMAIL] ?: "",
-            schoolId = prefs[KEY_SCHOOL_ID] ?: 0,
+            schoolId = prefs[KEY_SCHOOL_ID] ?: 0L,
             schoolName = prefs[KEY_SCHOOL_NAME] ?: "",
             profileImageLink = prefs[KEY_PROFILE_IMAGE] ?: "",
             status = prefs[KEY_STATUS] ?: "ACTIVE"
@@ -84,6 +67,60 @@ class AppDataStore @Inject constructor(
         }
     }
 
+    // 일정 생성 : 최근 장소 검색어 Flow
+    val recentSearchesPlaceFlow: Flow<List<String>> = context.dataStore.data.map { prefs ->
+        val json = prefs[KEY_RECENT_SEARCHES_PLACE] ?: "[]"
+        gson.fromJson(json, Array<String>::class.java).toList()
+    }
+
+    // 일정 생성 : 최근 장소 검색어 추가 = 최대 10개 저장
+    suspend fun addSearchPlaceHistory(query: String) {
+        context.dataStore.edit { prefs ->
+            val currentJson = prefs[KEY_RECENT_SEARCHES_PLACE] ?: "[]"
+            val currentList = gson.fromJson(currentJson, Array<String>::class.java).toMutableList()
+            currentList.remove(query)
+            currentList.add(0, query)
+            prefs[KEY_RECENT_SEARCHES_PLACE] = gson.toJson(currentList.take(10))
+        }
+    }
+
+    // 커뮤니티 : 게시글 검색 기록 flow
+    val recentSearchesPostFlow: Flow<List<String>> = context.dataStore.data.map { prefs ->
+        val json = prefs[KEY_RECENT_SEARCHES_POST] ?: "[]"
+        gson.fromJson(json, Array<String>::class.java).toList()
+    }
+
+    // 커뮤니티 : 게시글 검색어 추가 (최대 20개, 중복 제거 후 맨 앞으로)
+    suspend fun addSearchPostHistory(query: String) {
+        if (query.isBlank()) return
+        context.dataStore.edit { prefs ->
+            val currentJson = prefs[KEY_RECENT_SEARCHES_POST] ?: "[]"
+            val currentList = gson.fromJson(currentJson, Array<String>::class.java).toMutableList()
+            currentList.remove(query)
+            currentList.add(0, query)
+            prefs[KEY_RECENT_SEARCHES_POST] = gson.toJson(currentList.take(20))
+        }
+    }
+
+    // 커뮤니티 : 개별 검색어 삭제 (X 버튼 로직)
+    suspend fun removeSearchPostHistory(query: String) {
+        context.dataStore.edit { prefs ->
+            val currentJson = prefs[KEY_RECENT_SEARCHES_POST] ?: "[]"
+            val currentList = gson.fromJson(currentJson, Array<String>::class.java).toMutableList()
+            currentList.remove(query)
+            prefs[KEY_RECENT_SEARCHES_POST] = gson.toJson(currentList)
+        }
+    }
+
+    // 커뮤니티 : 전체 검색어 삭제 로직
+    suspend fun clearSearchPostHistory() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_RECENT_SEARCHES_POST)
+        }
+    }
+
+
+
 
     // 여기서 Datastore에 들어갈 key들 정의
     companion object {
@@ -93,17 +130,20 @@ class AppDataStore @Inject constructor(
         val KEY_BLOG = stringPreferencesKey("blog_url")
 
         //유저 정보 KEY
-        val KEY_ID = intPreferencesKey("id")
+        val KEY_ID = longPreferencesKey("id")
         val KEY_NAME = stringPreferencesKey("name")
         val KEY_NICKNAME = stringPreferencesKey("nickname")
         val KEY_EMAIL = stringPreferencesKey("email")
-        val KEY_SCHOOL_ID = intPreferencesKey("school_id")
+        val KEY_SCHOOL_ID = longPreferencesKey("school_id")
         val KEY_SCHOOL_NAME = stringPreferencesKey("school_name")
         val KEY_PROFILE_IMAGE = stringPreferencesKey("profile_image")
         val KEY_STATUS = stringPreferencesKey("status")
 
         //일정 추가에서 장소 기록 KEY
         val KEY_RECENT_SEARCHES_PLACE = stringPreferencesKey("recent_searches_place")
+
+        //게시글 검색에서 게시글 검색 기록 KEY
+        val KEY_RECENT_SEARCHES_POST = stringPreferencesKey("recent_searches_post")
     }
 
 }

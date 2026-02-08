@@ -9,7 +9,7 @@
 
         <variable
             name="item"
-            type="com.umc.domain.model.mypage.CommentItem" />
+            type="com.umc.domain.model.community.CommentItem" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

@@ -55,6 +55,11 @@
         android:label="게시글 상세"
         tools:layout="@layout/fragment_post_detail">
 
+        <argument
+            android:name="postId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+
     </fragment>
 
 </navigation>

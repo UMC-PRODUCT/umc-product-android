@@ -14,11 +14,11 @@ data class MemberResponse(
 ) {
     companion object {
         fun MemberResponse.toDomain(): UserInfo = UserInfo(
-            id = id.toIntOrNull() ?: 0,
+            id = id.toLongOrNull() ?: 0L,
             name = name,
             nickname = nickname,
             email = email,
-            schoolId = schoolId.toIntOrNull() ?: 0,
+            schoolId = schoolId.toLongOrNull() ?: 0L,
             schoolName = schoolName,
             profileImageLink = profileImageLink ?: "",
             status = status
