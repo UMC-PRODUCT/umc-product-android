@@ -1,8 +1,6 @@
 package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
-import com.umc.domain.model.act.check.AdminPendingUser
-import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceApprovalUseCase
@@ -22,6 +20,7 @@ class AdminCheckViewModel @Inject constructor(
     private val postAttendanceApprovalUseCase: PostAttendanceApprovalUseCase,
     private val postAttendanceRejectionUseCase: PostAttendanceRejectionUseCase
 ) : BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
+
     init {
         fetchAdminSessions()
     }
@@ -47,28 +46,11 @@ class AdminCheckViewModel @Inject constructor(
      */
     fun approveAttendance(attendanceId: Int) {
         viewModelScope.launch {
-            android.util.Log.d("AdminCheck", "승인 시작: attendanceId=$attendanceId")
-
             when (val result = postAttendanceApprovalUseCase(attendanceId)) {
                 is ApiState.Success -> {
-                    android.util.Log.d("AdminCheck", "승인 성공")
-
-                    // 전체 목록 재호출
-                    fetchAdminSessions()
-
-                    // 펼쳐진 세션들 모두 새로고침
-                    val expandedSessionIds = uiState.value.adminSessions
-                        .filter { it.isExpanded }
-                        .map { it.session.id }
-
-                    expandedSessionIds.forEach { sessionId ->
-                        fetchPendingUsers(sessionId)
-                    }
-
-                    emitEvent(AdminCheckEvent.ShowToast("출석이 승인되었습니다."))
+                    updateSessionAfterApproval(attendanceId)
                 }
                 is ApiState.Fail -> {
-                    android.util.Log.e("AdminCheck", "승인 실패: ${result.failState.message}")
                     emitEvent(AdminCheckEvent.ShowToast(result.failState.message ?: "승인에 실패했습니다."))
                 }
             }
@@ -86,17 +68,8 @@ class AdminCheckViewModel @Inject constructor(
                 is ApiState.Success -> {
                     android.util.Log.d("AdminCheck", "반려 성공")
 
-                    // 전체 목록 재호출
-                    fetchAdminSessions()
-
-                    // 펼쳐진 세션들 모두 새로고침
-                    val expandedSessionIds = uiState.value.adminSessions
-                        .filter { it.isExpanded }
-                        .map { it.session.id }
-
-                    expandedSessionIds.forEach { sessionId ->
-                        fetchPendingUsers(sessionId)
-                    }
+                    // 로컬 UI 업데이트 (유저 제거만, 출석 통계는 변경 없음)
+                    updateSessionAfterRejection(attendanceId)
 
                     emitEvent(AdminCheckEvent.ShowToast("출석이 반려되었습니다."))
                 }
@@ -109,8 +82,85 @@ class AdminCheckViewModel @Inject constructor(
     }
 
     /**
-     * 위치 변경 버튼 클릭 시 호출
+     * 승인 후 세션 업데이트
+     * - pending 목록에서 유저 제거
+     * - attendedChallengers +1
+     * - attendanceRate 재계산
+     * - pendingCount -1
      */
+    private fun updateSessionAfterApproval(attendanceId: Int) {
+        updateState {
+            val updatedSessions = adminSessions.map { uiModel ->
+                val session = uiModel.session
+
+                // 해당 유저가 이 세션에 있는지 확인
+                val targetUser = session.pendingUsers.find { it.id == attendanceId }
+
+                if (targetUser != null) {
+                    // pending 목록에서 제거
+                    val updatedPendingUsers = session.pendingUsers.filter { it.id != attendanceId }
+
+                    // 출석 완료 인원 +1
+                    val newAttendedChallengers = session.attendedChallengers + 1
+
+                    // 출석률 재계산 (출석 완료 인원 / 전체 인원 * 100)
+                    val newAttendanceRate = if (session.totalChallengers > 0) {
+                        (newAttendedChallengers * 100) / session.totalChallengers
+                    } else {
+                        0
+                    }
+
+                    val updatedSession = session.copy(
+                        pendingUsers = updatedPendingUsers,
+                        pendingCount = updatedPendingUsers.size,
+                        attendedChallengers = newAttendedChallengers,
+                        attendanceRate = newAttendanceRate
+                    )
+
+                    uiModel.copy(session = updatedSession)
+                } else {
+                    // 다른 세션은 그대로 유지
+                    uiModel
+                }
+            }
+            copy(adminSessions = updatedSessions)
+        }
+    }
+
+    /**
+     * 반려 후 세션 업데이트
+     * - pending 목록에서 유저 제거
+     * - pendingCount -1
+     * - attendedChallengers, attendanceRate는 변경 없음 (반려이므로)
+     */
+    private fun updateSessionAfterRejection(attendanceId: Int) {
+        updateState {
+            val updatedSessions = adminSessions.map { uiModel ->
+                val session = uiModel.session
+
+                // 해당 유저가 이 세션에 있는지 확인
+                val targetUser = session.pendingUsers.find { it.id == attendanceId }
+
+                if (targetUser != null) {
+                    // pending 목록에서 제거
+                    val updatedPendingUsers = session.pendingUsers.filter { it.id != attendanceId }
+
+                    val updatedSession = session.copy(
+                        pendingUsers = updatedPendingUsers,
+                        pendingCount = updatedPendingUsers.size
+                        // 반려이므로 attendedChallengers, attendanceRate는 변경 없음
+                    )
+
+                    uiModel.copy(session = updatedSession)
+                } else {
+                    // 다른 세션은 그대로 유지
+                    uiModel
+                }
+            }
+            copy(adminSessions = updatedSessions)
+        }
+    }
+
     fun onLocationChangeClicked(sessionId: Int) {
         emitEvent(AdminCheckEvent.ShowLocationDialog(
             sessionId = sessionId,
@@ -120,9 +170,6 @@ class AdminCheckViewModel @Inject constructor(
         ))
     }
 
-    /**
-     * 다이얼로그에서 변경 완료 시 호출
-     */
     fun updateSessionLocation(sessionId: Int, lat: Double, lng: Double, address: String) {
         // TODO: 서버 위치 업데이트 API 호출
         emitEvent(AdminCheckEvent.ShowToast("출석 위치가 성공적으로 변경되었습니다."))
