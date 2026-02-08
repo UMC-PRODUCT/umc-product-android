@@ -1,6 +1,8 @@
 package com.umc.data.api
 
 import com.umc.data.request.community.CreateCommentRequest
+import com.umc.data.request.community.CreatePostLightningRequest
+import com.umc.data.request.community.CreatePostRequest
 import com.umc.data.response.community.CommunityGetPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
@@ -41,5 +43,30 @@ interface CommunityApi {
         @Query("challengerId") challengerId: Long,
         @Body request: CreateCommentRequest
     ): ApiResponse<PostCommentResponse>
+
+
+    //게시글 검색
+    @POST(Endpoints.Community.POST_SEARCH)
+    suspend fun searchPosts(
+        @Query("keyword") keyword: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int = 20
+    ) : ApiResponse<CommunityGetPostResponse>
+
+    //일반 게시글 작성
+    @POST(Endpoints.Community.COMMUNITY)
+    suspend fun createPost(
+        @Body request: CreatePostRequest
+    ): ApiResponse<PostDetailResponse>
+
+    //번개 게시글 작성
+    @POST(Endpoints.Community.LIGHTNING)
+    suspend fun createLightningPost(
+        @Body request: CreatePostLightningRequest
+    ): ApiResponse<PostDetailResponse>
+
+
+
+
 
 }

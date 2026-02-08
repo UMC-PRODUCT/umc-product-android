@@ -3,6 +3,8 @@ package com.umc.data.dataSource.remote.community
 import com.umc.data.api.CommunityApi
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.request.community.CreateCommentRequest
+import com.umc.data.request.community.CreatePostLightningRequest
+import com.umc.data.request.community.CreatePostRequest
 import com.umc.data.response.community.CommunityGetPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
@@ -41,6 +43,27 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
         request: CreateCommentRequest
     ): ApiState<PostCommentResponse> {
         return apiCall { communityApi.createComment(postId, challengerId, request) }
-
     }
+
+    //게시글 검색하기
+    override suspend fun searchPosts(
+        keyword: String,
+        page: Int,
+        size: Int
+    ): ApiState<CommunityGetPostResponse> {
+        return apiCall { communityApi.searchPosts(keyword, page, size) }
+     }
+
+    //일반 게시글 작성하기
+    override suspend fun createPost(request: CreatePostRequest): ApiState<PostDetailResponse> {
+        return apiCall {communityApi.createPost(request)}
+    }
+
+    //번개 게시글 작성하기
+    override suspend fun createLightningPost(request: CreatePostLightningRequest): ApiState<PostDetailResponse> {
+        return apiCall { communityApi.createLightningPost(request) }
+    }
+
+
+
 }

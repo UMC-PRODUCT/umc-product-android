@@ -2,6 +2,8 @@ package com.umc.data.repository.community
 
 import com.umc.data.dataSource.remote.community.CommunityRemoteDataSource
 import com.umc.data.request.community.CreateCommentRequest
+import com.umc.data.request.community.CreatePostLightningRequest
+import com.umc.data.request.community.CreatePostRequest
 import com.umc.data.response.community.CommunityGetPostResponse.Companion.toCommunityDomain
 import com.umc.data.response.community.PostCommentResponse.Companion.toCommunityDomain
 import com.umc.data.response.community.PostDetailResponse.Companion.toCommunityDomain
@@ -9,6 +11,8 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.community.CommentItem
 import com.umc.domain.model.community.ContentItem
+import com.umc.domain.model.community.CreateLightningPost
+import com.umc.domain.model.community.CreatePost
 import com.umc.domain.model.community.PostPageModel
 import com.umc.domain.repository.community.CommunityRepository
 import javax.inject.Inject
@@ -52,5 +56,33 @@ class CommunityRepositoryImpl @Inject constructor(
             it.toCommunityDomain() }
 
     }
+
+    //게시글 검색
+    override suspend fun searchPosts(
+        keyword: String,
+        page: Int,
+        size: Int
+    ): ApiState<PostPageModel> {
+        return communityRemoteDataSource.searchPosts(keyword, page, size).map {
+            it.toCommunityDomain() }
+    }
+
+    //일반게시글 작성
+    override suspend fun createPost(request: CreatePost): ApiState<ContentItem> {
+        val request = CreatePostRequest(request.title, request.content, request.category, request.region, request.anonymous)
+        return communityRemoteDataSource.createPost(request).map {
+            it.toCommunityDomain() }
+    }
+
+    //번개게시글 작성
+    override suspend fun createLightningPost(request: CreateLightningPost): ApiState<ContentItem> {
+        val request = CreatePostLightningRequest(request.title, request.content, request.region, request.anonymous,
+            request.meetAt, request.location, request.maxParticipants)
+        return communityRemoteDataSource.createLightningPost(request).map {
+            it.toCommunityDomain() }
+    }
+
+
+
 
 }

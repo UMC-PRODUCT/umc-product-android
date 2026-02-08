@@ -44,5 +44,8 @@ object Endpoints {
         const val POST_DETAIL = "$COMMUNITY/{postId}"
         const val POST_COMMENT = "$COMMUNITY/{postId}/comments"
 
+        const val LIGHTNING = "$COMMUNITY/lightning"
+
+
     }
 }
