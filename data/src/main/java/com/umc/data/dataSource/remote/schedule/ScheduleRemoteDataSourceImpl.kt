@@ -16,7 +16,7 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
         return apiCall {scheduleApi.getScheduleList()}
     }
 
-    override suspend fun getScheduleDetail(scheduleId: Int): ApiState<ScheduleDetailResponse> {
+    override suspend fun getScheduleDetail(scheduleId: Long): ApiState<ScheduleDetailResponse> {
         return apiCall {scheduleApi.getScheduleDetail(scheduleId)}
     }
 

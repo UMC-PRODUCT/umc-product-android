@@ -46,8 +46,13 @@
 
         <argument
             android:name="scheduleId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+
+        <argument
+            android:name="plusDay"
             app:argType="integer"
-            android:defaultValue="-1" />
+            android:defaultValue="0"/>
 
     </fragment>
 

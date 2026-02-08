@@ -1,7 +1,7 @@
 package com.umc.domain.model.home.schedule
 
 data class ScheduleListModel (
-    val scheduleId: Int,
+    val scheduleId: Long,
     val name: String,
     val status: String,
     val date: String,        // "2026.02.05"
@@ -9,5 +9,8 @@ data class ScheduleListModel (
     val startTime: String,
     val endTime: String,
     val locationName: String,
-    val attendanceRate: String
+    val totalCount: Int,
+    val presentCount: Int,
+    val pendingCount: Int,
+    val attendanceRate: Double,
 )

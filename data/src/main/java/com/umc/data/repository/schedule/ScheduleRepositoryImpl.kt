@@ -1,18 +1,18 @@
 package com.umc.data.repository.schedule
 
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
-import com.umc.data.response.schedule.ScheduleDetailResponse.Companion.toHomeDomain
 import com.umc.data.response.schedule.ScheduleListResponse.Companion.toDomain
 import com.umc.data.response.schedule.ScheduleMonthResponse.Companion.toDomain
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
-import com.umc.domain.model.home.schedule.ScheduleDetailModel
 import com.umc.domain.model.home.schedule.ScheduleListModel
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.data.response.schedule.ScheduleDetailResponse.Companion.toModel
 import com.umc.data.response.schedule.ScheduleListResponse.Companion.toAdminDomain
+import com.umc.data.response.schedule.ScheduleDetailResponse.Companion.toPlanDetailDomain
 import com.umc.domain.model.act.check.UserCheckAvailable
+import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.repository.schedule.ScheduleRepository
 import javax.inject.Inject
 
@@ -27,13 +27,13 @@ class ScheduleRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getScheduleDetailHome(scheduleId: Int): ApiState<ScheduleDetailModel> {
-        return scheduleRemoteDataSource.getScheduleDetail(scheduleId).map { it.toHomeDomain() }
+    override suspend fun getScheduleDetailHome(scheduleId: Long): ApiState<PlanDetailItem> {
+        return scheduleRemoteDataSource.getScheduleDetail(scheduleId).map { it.toPlanDetailDomain() }
     }
 
   
     override suspend fun getScheduleDetail(scheduleId: Int): ApiState<UserCheckAvailable> {
-        return scheduleRemoteDataSource.getScheduleDetail(scheduleId).map { response ->
+        return scheduleRemoteDataSource.getScheduleDetail(scheduleId.toLong()).map { response ->
             response.toModel()
         }
     }
