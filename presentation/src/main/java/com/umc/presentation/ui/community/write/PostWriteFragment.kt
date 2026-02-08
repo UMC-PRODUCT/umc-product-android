@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -17,6 +18,7 @@ import com.umc.presentation.databinding.FragmentPostWriteBinding
 import com.umc.presentation.ui.community.adapter.BottomSheetCategoryAdapter
 import com.umc.presentation.ui.community.detail.PostDetailFragmentArgs
 import com.umc.presentation.ui.home.adapter.ShowCategoryAdapter
+import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -162,7 +164,12 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
                 binding.writeTextfieldPeople.setText(viewModel.uiState.value.lightPeople)
                 binding.writeTextfieldOpenchat.setText(viewModel.uiState.value.lightOpenChat)
             }
-            
+
+            //Error toast make
+            is PostWriteFragmentEvent.MakeErrorTaost -> {
+                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+            }
+
             else -> {}
         }
     }
