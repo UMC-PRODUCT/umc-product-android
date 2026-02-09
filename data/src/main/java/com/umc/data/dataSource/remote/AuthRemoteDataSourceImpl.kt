@@ -36,6 +36,6 @@ class AuthRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun emailVerifyComplete(request: EmailVerificationCompleteRequest): ApiState<EmailVerificationCompleteResponse> {
-        return apiCall { authApi.emailVerificationComplete(request) }
+        return apiCall { authApi.emailVerificationComplete(request = request) }
     }
 }

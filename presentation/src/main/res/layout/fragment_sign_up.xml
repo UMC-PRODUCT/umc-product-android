@@ -357,7 +357,7 @@
             android:layout_marginHorizontal="24dp"
             android:layout_marginBottom="24dp"
             android:enabled="@{!vm.uiState.name.empty}"
-            android:onClick="@{()->vm.onClickConfirm()}"
+            android:onClick="@{()->vm.register()}"
             app:backgroundColor="@{vm.uiState.enableNextButton == true ? @color/primary500 : @color/neutral300}"
             app:cornerRadius="8dp"
             app:pressedColor="@color/primary700"

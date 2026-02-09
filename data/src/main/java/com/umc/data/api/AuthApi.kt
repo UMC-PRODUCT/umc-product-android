@@ -12,6 +12,7 @@ import com.umc.domain.model.request.LoginGoogleRequest
 import com.umc.domain.model.request.LoginKakaoRequest
 import com.umc.domain.model.request.RefreshTokenRequest
 import retrofit2.http.Body
+import retrofit2.http.Header
 import retrofit2.http.POST
 
 interface AuthApi {

@@ -5,9 +5,12 @@ import com.umc.domain.repository.member.MemberRepository
 import com.umc.domain.repository.ChallengerRepository
 import com.umc.domain.repository.OrganizationRepository
 import com.umc.domain.usecase.PostLoginUseCase
+import com.umc.domain.usecase.auth.PostEmailVerificationCompleteUseCase
+import com.umc.domain.usecase.auth.PostEmailVerificationUseCase
 import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
 import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
+import com.umc.domain.usecase.member.RegisterUseCase
 import com.umc.domain.usecase.school.GetAllSchoolUseCase
 import dagger.Module
 import dagger.Provides
@@ -20,12 +23,25 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object UseCaseModule {
+
+    /**auth usecase**/
     @Singleton
     @Provides
     fun providesPostLoginUseCase(repository: AuthRepository): PostLoginUseCase {
         return PostLoginUseCase(repository)
     }
 
+    @Singleton
+    @Provides
+    fun providesPostEmailVerificationUseCase(repository: AuthRepository): PostEmailVerificationUseCase {
+        return PostEmailVerificationUseCase(repository)
+    }
+
+    @Singleton
+    @Provides
+    fun providesPostEmailVerificationCompleteUseCase(repository: AuthRepository): PostEmailVerificationCompleteUseCase {
+        return PostEmailVerificationCompleteUseCase(repository)
+    }
 
     /**member usecase**/
     @Singleton
@@ -43,6 +59,13 @@ object UseCaseModule {
     ): GetMemberProfileUseCase {
         return GetMemberProfileUseCase(memberRepository)
     }
+
+    @Singleton
+    @Provides
+    fun providesRegisterUseCase(repository: MemberRepository): RegisterUseCase {
+        return RegisterUseCase(repository)
+    }
+
 
 
     /**schedule usecase**/

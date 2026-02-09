@@ -8,7 +8,7 @@ object Endpoints {
         const val LOGIN_KAKAO = "$AUTH/login/kakao"
         const val LOGIN_GOOGLE = "$AUTH/login/google"
         const val EMAIL_VERIFICATION = "$AUTH/email-verification"
-        const val EMAIL_VERIFICATION_COMPLETE = "$EMAIL_VERIFICATION/complete"
+        const val EMAIL_VERIFICATION_COMPLETE = "$EMAIL_VERIFICATION/code"
     }
 
     object Attendance {
@@ -26,6 +26,7 @@ object Endpoints {
         const val MEMBER = "api/v1/member"
         const val MYPROFILE = "$MEMBER/me"
         const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
+        const val MEMBER_REGISTER = "$MEMBER/register"
     }
 
     object Kakao {

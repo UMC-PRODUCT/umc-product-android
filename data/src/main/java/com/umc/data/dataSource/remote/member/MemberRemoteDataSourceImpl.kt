@@ -7,6 +7,7 @@ import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
 import com.umc.domain.model.base.mapSuccessData
+import com.umc.domain.model.request.member.RegisterRequest
 import javax.inject.Inject
 
 class MemberRemoteDataSourceImpl @Inject constructor(
@@ -16,23 +17,11 @@ class MemberRemoteDataSourceImpl @Inject constructor(
         return apiCall { memberApi.getMyProfile() }
     }
 
-
-//    override suspend fun getMyProfile(): ApiState<MemberResponse> {
-//        return apiCall { memberApi.getMyProfile() }
-//    }
-
-
     override suspend fun getMemberProfile(id: Long): ApiState<MemberResponse> {
         return apiCall { memberApi.getMemberProfile(id) }
     }
 
-    // 네트워크 통신의 수행 여부 체크-> 성공/실패 로직은 mappSuccessData에서 처리한다.
-        /*
-    private suspend fun <T> fetch(call: suspend () -> ApiResponse<T>): ApiState<ApiResponse<T>> {
-        return try {
-            ApiState.Success(call())
-        } catch (e: Exception) {
-            ApiState.Fail(FailState(false, "UNKNOWN", e.message ?: "알 수 없는 오류"))
-        }
-    }*/
+    override suspend fun register(request: RegisterRequest): ApiState<Unit> {
+        return apiCall { memberApi.register(request) }
+    }
 }

@@ -26,6 +26,7 @@ class SignUpFragment :
     override fun initView() {
         binding.apply {
             vm = viewModel
+            viewModel.setOAuthVerificationToken(args.token)
         }
     }
 
