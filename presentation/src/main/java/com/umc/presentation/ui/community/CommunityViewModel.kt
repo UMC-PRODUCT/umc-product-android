@@ -78,7 +78,10 @@ constructor(
                     ) }
                 },
                 errorCallback = {
-                    updateState { copy(isPageLoading = false) }
+                    updateState { copy(
+                        isPageLoading = false,
+                        nowContents = emptyList()
+                    ) }
                 }
             )
         }
