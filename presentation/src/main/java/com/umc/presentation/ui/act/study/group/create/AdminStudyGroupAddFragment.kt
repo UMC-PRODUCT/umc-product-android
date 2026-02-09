@@ -8,9 +8,9 @@ import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentAdminStudyGroupAddBinding
 import com.umc.presentation.ui.act.adapter.DropDownAdapter
 import com.umc.presentation.ui.act.study.common.model.MemberUiModel
-import com.umc.presentation.ui.act.study.common.picker.MemberPickerFormatter
 import com.umc.presentation.ui.act.study.common.picker.PickLeaderBottomSheet
 import com.umc.presentation.ui.act.study.common.picker.PickMembersBottomSheet
+import com.umc.presentation.util.toSummaryText
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -134,10 +134,12 @@ class AdminStudyGroupAddFragment :
             )
         } else {
             binding.tvMembersPlaceholder.text =
-                MemberPickerFormatter.formatSummary(selectedMembers)
+                selectedMembers.toSummaryText(emptyText = "")
             binding.tvMembersPlaceholder.setTextColor(
                 resources.getColor(R.color.neutral800, null)
             )
         }
     }
+
+
 }
