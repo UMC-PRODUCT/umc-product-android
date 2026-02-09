@@ -24,11 +24,11 @@ object CheckBindingAdapters {
             CheckAvailableStatus.PENDING ->
                 R.color.warning100 to R.color.warning700
             CheckAvailableStatus.COMPLETED ->
-                R.color.success100 to R.color.success700 // 연한 녹색 배경 / 진한 녹색 글자
+                R.color.success100 to R.color.success700
         }
 
         view.setCardBackgroundColor(ContextCompat.getColor(view.context, bgColorRes))
-        //view.setTextColor(ContextCompat.getColor(view.context, textColorRes)) // UButton에 해당 메서드가 있다고 가정
+        view.setTextColor(ContextCompat.getColor(view.context, textColorRes))
     }
 
     @JvmStatic
