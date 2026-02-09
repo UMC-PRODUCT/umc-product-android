@@ -58,8 +58,8 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
             elevation = 20f
         }
 
-        // 내 댓글인지 여부에 따른 가시성 조절 (임시 로직)
-        val isMyComment = item.challengerName == "새 유저"
+        // TODO : chllengerId 체크 필요!
+        val isMyComment = item.challengerId == viewModel.uiState.value.myId
         menuBinding.layoutMenuReport.visibility = if (isMyComment) View.GONE else View.VISIBLE
         menuBinding.layoutMenuDelete.visibility = if (isMyComment) View.VISIBLE else View.GONE
 
