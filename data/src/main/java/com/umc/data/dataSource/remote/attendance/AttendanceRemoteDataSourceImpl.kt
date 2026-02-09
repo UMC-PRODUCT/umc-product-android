@@ -16,8 +16,8 @@ class AttendanceRemoteDataSourceImpl @Inject constructor(
         return apiCall { attendanceApi.getAttendanceAvailable() }
     }
 
-    override suspend fun postAttendanceCheck(sheetId: Int): ApiState<String> {
-        return apiCall { attendanceApi.postAttendanceCheck(AttendanceCheckRequest(sheetId)) }
+    override suspend fun postAttendanceCheck(request: AttendanceCheckRequest): ApiState<String> {
+        return apiCall { attendanceApi.postAttendanceCheck(request) }
     }
 
     override suspend fun getPendingUsers(scheduleId: Int): ApiState<List<AdminPendingUserResponse>> {

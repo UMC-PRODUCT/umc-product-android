@@ -6,6 +6,7 @@ import com.umc.domain.model.act.check.UserCheckHistory
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
+import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailUseCase
@@ -23,8 +24,8 @@ class UserCheckViewModel @Inject constructor(
     private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase
 ) : BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
 
-    private var lastUserLat: Double = 0.0
-    private var lastUserLng: Double = 0.0
+    private var lastUserLat: Double? = null
+    private var lastUserLng: Double? = null
 
     init { fetchAttendanceData() }
 
@@ -74,14 +75,23 @@ class UserCheckViewModel @Inject constructor(
      * 실시간 위치 기반 출석 요청
      */
     fun requestAttendance(sheetId: Int) {
+        // 현재 UI 상태에서 해당 세션의 인증 여부를 확인
+        val sessionUIModel = uiState.value.availableSessions.find { it.session.id == sheetId }
+        val isVerified = sessionUIModel?.isWithinRange ?: false
+
+        // Request 객체 생성
+        val request = AttendanceCheckRequest(
+            attendanceSheetId = sheetId,
+            latitude = lastUserLat,
+            longitude = lastUserLng,
+            locationVerified = isVerified
+        )
+
         viewModelScope.launch {
-            when (val result = postAttendanceCheckUseCase(sheetId)) {
-                is ApiState.Success -> {
-                    fetchAttendanceData()
-                }
-                is ApiState.Fail -> {
-                    emitEvent(UserCheckEvent.ShowToast(result.failState.message))
-                }
+            // UseCase에 객체 전달
+            when (val result = postAttendanceCheckUseCase(request)) {
+                is ApiState.Success -> fetchAttendanceData()
+                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
             }
         }
     }
