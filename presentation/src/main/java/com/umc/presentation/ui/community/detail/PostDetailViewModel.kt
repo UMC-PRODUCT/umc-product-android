@@ -9,6 +9,7 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.community.CommentItem
 import com.umc.domain.model.community.ContentItem
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.community.DeleteCommunityPostUseCase
 import com.umc.domain.usecase.community.GetCommunityPostCommentUseCase
 import com.umc.domain.usecase.community.GetCommunityPostDetailUseCase
 import com.umc.domain.usecase.community.WriteCommunityPostCommentUseCase
@@ -29,6 +30,7 @@ constructor(
     private val getCommunityPostCommentUseCase: GetCommunityPostCommentUseCase, //게시글 댓글들 불러오기
     private val writeCommunityPostCommentUseCase: WriteCommunityPostCommentUseCase, //댓글 작성하기
     private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 불러오기
+    private val deleteCommunityPostUseCase: DeleteCommunityPostUseCase, //게시글 삭제하기
 
     ) : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent>(
     PostDetailFragmentUiState()
@@ -188,6 +190,19 @@ constructor(
 
 
 
+    //게시글 삭제 로직
+    fun deletePost(){
+        viewModelScope.launch {
+            resultResponse(
+                response = deleteCommunityPostUseCase(uiState.value.nowContent.postId),
+                successCallback = {
+                    emitEvent(PostDetailFragmentEvent.MoveBackPressed)
+                },
+                errorCallback = {}
+            )
+        }
+    }
+
     //댓글 추가
     fun onClickCommentAdd(){
         emitEvent(PostDetailFragmentEvent.OnClickCommentAdd)
@@ -292,7 +307,6 @@ sealed interface PostDetailFragmentEvent : UiEvent {
 
     //댓글 신고하기 이벤트
     object ReportComment : PostDetailFragmentEvent
-
 
 
     object MoveBackPressed : PostDetailFragmentEvent

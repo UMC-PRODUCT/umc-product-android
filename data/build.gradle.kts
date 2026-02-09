@@ -54,9 +54,8 @@ dependencies {
     implementation(libs.okhttp.android)
     implementation(libs.okhttp.log)
 
-    //DataStore
+    // DataStore
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.google.code.gson)
-    
     implementation(libs.kotlinx.serialization.json)
 }
