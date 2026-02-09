@@ -3,11 +3,10 @@ package com.umc.presentation.ui.act.study.group
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import com.umc.presentation.R
-
-enum class StudyGroupSettingAction { EDIT, DELETE }
+import com.umc.domain.model.enums.EditDeleteAction
 
 data class StudyGroupSettingMenuItem(
-    val action: StudyGroupSettingAction,
+    val action: EditDeleteAction,
     val title: String,
     @DrawableRes val iconRes: Int,
     @ColorRes val titleColorRes: Int = R.color.neutral800,
