@@ -40,6 +40,9 @@ object Endpoints {
         const val SCHEDULE = "api/v1/schedules"
         const val DETAIL = "$SCHEDULE/{scheduleId}"
         const val MONTH = "$SCHEDULE/my-list"
+
+        const val SCHEDULE_WITH_ATTENDANCE = "$SCHEDULE/{scheduleId}/with-attendance"
+
     }
 
     object Community{
