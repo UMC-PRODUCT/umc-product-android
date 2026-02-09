@@ -6,6 +6,9 @@ import android.content.res.Configuration
 import androidx.fragment.app.viewModels
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentAdminStudyScheduleAddBinding
+import com.umc.presentation.ui.act.study.schedule.model.AdminActStudyScheduleAddEvent
+import com.umc.presentation.ui.act.study.schedule.model.AdminActStudyScheduleAddState
+import com.umc.presentation.ui.act.study.schedule.model.AdminActStudyScheduleAddViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
 

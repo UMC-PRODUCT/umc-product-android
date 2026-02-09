@@ -6,7 +6,7 @@
     <data>
         <variable
             name="item"
-            type="com.umc.presentation.ui.act.study.group.AdminStudyGroupItemUiModel" />
+            type="com.umc.presentation.ui.act.study.group.model.AdminStudyGroupItemUiModel" />
     </data>
 
     <com.google.android.material.card.MaterialCardView

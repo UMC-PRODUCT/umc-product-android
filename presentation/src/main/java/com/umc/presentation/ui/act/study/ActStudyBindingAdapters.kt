@@ -5,6 +5,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
+import com.umc.domain.model.enums.StudyStatus
 import com.umc.presentation.R
 import com.umc.presentation.component.UButton
 

@@ -8,11 +8,11 @@
 
         <variable
             name="vm"
-            type="com.umc.presentation.ui.act.study.group.create.AdminStudyGroupAddViewModel" />
+            type="com.umc.presentation.ui.act.study.group.create.model.AdminStudyGroupAddViewModel" />
 
         <variable
             name="state"
-            type="com.umc.presentation.ui.act.study.group.create.AdminStudyGroupAddState" />
+            type="com.umc.presentation.ui.act.study.group.create.model.AdminStudyGroupAddState" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

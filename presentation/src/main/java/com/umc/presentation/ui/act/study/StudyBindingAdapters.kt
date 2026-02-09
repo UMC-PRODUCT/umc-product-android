@@ -9,7 +9,8 @@ import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import android.widget.ImageView
 import android.widget.TextView
-
+import com.umc.domain.model.enums.StudyStatus
+import com.umc.domain.model.enums.SubmitState
 
 
 @BindingAdapter("studyStatusStyle")

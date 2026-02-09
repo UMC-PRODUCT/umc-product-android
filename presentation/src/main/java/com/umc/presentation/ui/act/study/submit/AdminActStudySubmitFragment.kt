@@ -12,6 +12,15 @@ import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.CustomDialogBestBinding
 import com.umc.presentation.databinding.CustomDialogReviewBinding
 import com.umc.presentation.databinding.FragmentAdminStudySubmitBinding
+import com.umc.presentation.ui.act.study.submit.adapter.AdminActStudySubmitAdapter
+import com.umc.presentation.ui.act.study.submit.adapter.AdminStudySubmitSwipeController
+import com.umc.presentation.ui.act.study.submit.bottomsheet.AdminActStudySubmitGroupSelectBottomSheet
+import com.umc.presentation.ui.act.study.submit.bottomsheet.AdminActStudySubmitWeekSelectBottomSheet
+import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitAction
+import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitEvent
+import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitItemUiModel
+import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitState
+import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitViewModel
 
 class AdminActStudySubmitFragment :
     BaseFragment<

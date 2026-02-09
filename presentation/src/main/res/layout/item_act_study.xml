@@ -5,7 +5,7 @@
 
     <data>
         <import type="android.view.View" />
-        <import type="com.umc.presentation.ui.act.study.SubmitState" />
+        <import type="com.umc.domain.model.enums.SubmitState" />
         <variable
             name="item"
             type="com.umc.presentation.ui.act.study.ActStudyItemUiModel" />

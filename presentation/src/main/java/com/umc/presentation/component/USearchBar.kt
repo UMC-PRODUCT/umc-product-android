@@ -115,9 +115,7 @@ class USearchBar @JvmOverloads constructor(
 
     fun setOnTextChangedListener(listener: ((String) -> Unit)?) { onTextChangedListener = listener }
 
-    fun setOnFocusChangedListener(listener: (Boolean) -> Unit) {
-        this.onFocusChangedListener = listener
-    }
+
 
     fun getText(): String = binding.editText.text?.toString().orEmpty()
 

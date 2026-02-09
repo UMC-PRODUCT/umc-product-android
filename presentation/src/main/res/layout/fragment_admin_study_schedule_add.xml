@@ -9,11 +9,11 @@
 
         <variable
             name="vm"
-            type="com.umc.presentation.ui.act.study.schedule.AdminActStudyScheduleAddViewModel" />
+            type="com.umc.presentation.ui.act.study.schedule.model.AdminActStudyScheduleAddViewModel" />
 
         <variable
             name="state"
-            type="com.umc.presentation.ui.act.study.schedule.AdminActStudyScheduleAddState" />
+            type="com.umc.presentation.ui.act.study.schedule.model.AdminActStudyScheduleAddState" />
     </data>
 
 

@@ -6,10 +6,10 @@
     <data>
         <variable
             name="vm"
-            type="com.umc.presentation.ui.act.study.submit.AdminActStudySubmitViewModel" />
+            type="com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitViewModel" />
         <variable
             name="state"
-            type="com.umc.presentation.ui.act.study.submit.AdminActStudySubmitState" />
+            type="com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitState" />
     </data>
 
 

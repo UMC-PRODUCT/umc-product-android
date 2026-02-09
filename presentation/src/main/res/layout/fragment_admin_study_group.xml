@@ -6,7 +6,7 @@
     <data>
         <variable
             name="vm"
-            type="com.umc.presentation.ui.act.study.group.AdminStudyGroupViewModel" />
+            type="com.umc.presentation.ui.act.study.group.model.AdminStudyGroupViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

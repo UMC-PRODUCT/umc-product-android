@@ -15,6 +15,12 @@ import com.umc.presentation.databinding.DialogAdminStudyGroupDeleteBinding
 import com.umc.presentation.databinding.DialogAdminStudyGroupEditBinding
 import com.umc.presentation.databinding.FragmentAdminStudyGroupBinding
 import com.umc.presentation.ui.act.adapter.DropDownAdapter
+import com.umc.presentation.ui.act.study.group.adapter.AdminStudyGroupAdapter
+import com.umc.presentation.ui.act.study.group.adapter.StudyGroupSettingMenuAdapter
+import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupEvent
+import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupItemUiModel
+import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupState
+import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

@@ -5,7 +5,7 @@
     <data>
         <variable
             name="item"
-            type="com.umc.presentation.ui.act.study.submit.AdminActStudySubmitItemUiModel" />
+            type="com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitItemUiModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

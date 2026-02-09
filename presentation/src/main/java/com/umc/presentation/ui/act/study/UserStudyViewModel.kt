@@ -1,5 +1,7 @@
 package com.umc.presentation.ui.act.study
 
+import com.umc.domain.model.enums.StudyStatus
+import com.umc.domain.model.enums.SubmitState
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState

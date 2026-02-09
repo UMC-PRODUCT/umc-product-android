@@ -8,9 +8,12 @@ import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentAdminStudyGroupAddBinding
 import com.umc.presentation.ui.act.adapter.DropDownAdapter
 import com.umc.presentation.ui.act.study.common.model.MemberUiModel
-import com.umc.presentation.ui.act.study.common.picker.PickLeaderBottomSheet
-import com.umc.presentation.ui.act.study.common.picker.PickMembersBottomSheet
-import com.umc.presentation.util.toSummaryText
+import com.umc.presentation.ui.act.study.common.picker.bottomsheet.PickLeaderBottomSheet
+import com.umc.presentation.ui.act.study.common.picker.bottomsheet.PickMembersBottomSheet
+import com.umc.presentation.ui.act.study.group.create.model.AdminStudyGroupAddEvent
+import com.umc.presentation.ui.act.study.group.create.model.AdminStudyGroupAddState
+import com.umc.presentation.ui.act.study.group.create.model.AdminStudyGroupAddViewModel
+import com.umc.presentation.ui.act.util.toSummaryText
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
