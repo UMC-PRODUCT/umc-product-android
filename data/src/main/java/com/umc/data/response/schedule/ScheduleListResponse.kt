@@ -50,16 +50,16 @@ data class ScheduleListResponse (
 
         fun ScheduleListResponse.toAdminDomain(): AdminSessionCheck {
             return AdminSessionCheck(
-                id = scheduleId.toIntOrNull() ?: 0,
+                id = scheduleId,
                 title = name,
                 date = date,
                 startTime = startTime,
                 endTime = endTime,
                 status = AdminSessionStatus.fromServerValue(status),
-                attendanceRate = attendanceRate.replace("%", "").toDoubleOrNull()?.toInt() ?: 0,
-                totalChallengers = totalCount.toIntOrNull() ?: 0,
-                attendedChallengers = presentCount.toIntOrNull() ?: 0,
-                pendingCount = pendingCount.toIntOrNull() ?: 0,
+                attendanceRate = attendanceRate.toInt(),
+                totalChallengers = totalCount,
+                attendedChallengers = presentCount,
+                pendingCount = pendingCount,
                 pendingUsers = emptyList()
             )
         }

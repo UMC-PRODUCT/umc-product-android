@@ -19,9 +19,9 @@ import com.umc.presentation.ui.act.check.CheckAvailableUIModel
 
 class CheckAvailableAdapter(
     private val locationSource: FusedLocationSource,
-    private val onItemClick: (Int) -> Unit,
-    private val onReasonClick: (Int) -> Unit,
-    private val onAttendanceRequestClick: (Int) -> Unit
+    private val onItemClick: (Long) -> Unit,
+    private val onReasonClick: (Long) -> Unit,
+    private val onAttendanceRequestClick: (Long) -> Unit
 ) : ListAdapter<CheckAvailableUIModel, CheckAvailableAdapter.ViewHolder>(
     AvailableSessionDiffCallback()
 ) {

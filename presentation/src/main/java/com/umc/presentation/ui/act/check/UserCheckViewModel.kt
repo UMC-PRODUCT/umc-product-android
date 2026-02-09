@@ -45,7 +45,7 @@ class UserCheckViewModel @Inject constructor(
         loadHistoryDummyData()
     }
 
-    private fun fetchSessionDetail(sessionId: Int) {
+    private fun fetchSessionDetail(sessionId: Long) {
         viewModelScope.launch {
             when (val result = getScheduleDetailUseCase(sessionId)) {
                 is ApiState.Success -> {
@@ -74,7 +74,7 @@ class UserCheckViewModel @Inject constructor(
     /**
      * 실시간 위치 기반 출석 요청
      */
-    fun requestAttendance(sheetId: Int) {
+    fun requestAttendance(sheetId: Long) {
         // 현재 UI 상태에서 해당 세션의 인증 여부를 확인
         val sessionUIModel = uiState.value.availableSessions.find { it.session.id == sheetId }
         val isVerified = sessionUIModel?.isWithinRange ?: false
@@ -96,7 +96,7 @@ class UserCheckViewModel @Inject constructor(
         }
     }
 
-    fun submitAttendanceReason(sessionId: Int, reason: String) {
+    fun submitAttendanceReason(sessionId: Long, reason: String) {
         // TODO: 출석 사유 제출 API 연동
         emitEvent(UserCheckEvent.ShowToast("사유가 성공적으로 제출되었습니다."))
     }
@@ -148,7 +148,7 @@ class UserCheckViewModel @Inject constructor(
     /**
      * 특정 아이템을 클릭했을 때 확장 상태를 토글 (기존 로직 유지)
      */
-    fun toggleSessionExpansion(sessionId: Int) {
+    fun toggleSessionExpansion(sessionId: Long) {
         updateState {
             val newList = availableSessions.map { uiModel ->
                 if (uiModel.session.id == sessionId) {
@@ -171,6 +171,6 @@ data class UserCheckUiState(
 
 sealed class UserCheckEvent : UiEvent {
     data class ShowToast(val message: String) : UserCheckEvent()
-    data class ShowReasonDialog(val sessionId: Int) : UserCheckEvent()
-    data class NavigateToFailureReason(val sessionId: Int) : UserCheckEvent()
+    data class ShowReasonDialog(val sessionId: Long) : UserCheckEvent()
+    data class NavigateToFailureReason(val sessionId: Long) : UserCheckEvent()
 }

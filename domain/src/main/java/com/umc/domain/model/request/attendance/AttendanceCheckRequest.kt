@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AttendanceCheckRequest(
-    val attendanceSheetId: Int,
+    val attendanceSheetId: Long,
     val latitude: Double? = null,
     val longitude: Double? = null,
     val locationVerified: Boolean = false

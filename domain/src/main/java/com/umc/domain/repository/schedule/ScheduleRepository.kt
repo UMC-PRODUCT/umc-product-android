@@ -14,7 +14,7 @@ interface ScheduleRepository {
 
     suspend fun getMonthSchedule(year: Int, month: Int): ApiState<List<ScheduleMonthModel>>
   
-    suspend fun getScheduleDetail(scheduleId: Int): ApiState<UserCheckAvailable>
+    suspend fun getScheduleDetail(scheduleId: Long): ApiState<UserCheckAvailable>
 
     suspend fun getAdminScheduleList(): ApiState<List<AdminSessionCheck>>
 }

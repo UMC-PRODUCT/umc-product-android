@@ -20,15 +20,15 @@ class AttendanceRemoteDataSourceImpl @Inject constructor(
         return apiCall { attendanceApi.postAttendanceCheck(request) }
     }
 
-    override suspend fun getPendingUsers(scheduleId: Int): ApiState<List<AdminPendingUserResponse>> {
+    override suspend fun getPendingUsers(scheduleId: Long): ApiState<List<AdminPendingUserResponse>> {
         return apiCall { attendanceApi.getPendingUsers(scheduleId) }
     }
 
-    override suspend fun approveAttendance(recordId: Int): ApiState<Unit> {
+    override suspend fun approveAttendance(recordId: Long): ApiState<Unit> {
         return apiCall { attendanceApi.approveAttendance(recordId) }
     }
 
-    override suspend fun rejectAttendance(recordId: Int): ApiState<Unit> {
+    override suspend fun rejectAttendance(recordId: Long): ApiState<Unit> {
         return apiCall { attendanceApi.rejectAttendance(recordId) }
     }
 
