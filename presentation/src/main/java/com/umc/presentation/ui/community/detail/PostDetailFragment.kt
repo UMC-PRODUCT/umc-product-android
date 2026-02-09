@@ -176,7 +176,7 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
                 val reportModel = UBasicDialogModel.Warning(
                     title = "해당 글을 삭제하시겠습니까",
                     content = "삭제된 글은 복구할 수 없습니다.",
-                    positiveText = "신고하기"
+                    positiveText = "삭제하기"
                 )
 
                 UBasicDialog(
