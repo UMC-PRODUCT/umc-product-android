@@ -8,6 +8,7 @@ import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.request.attendance.AttendanceCheckRequest
+import com.umc.domain.model.request.attendance.AttendanceReasonRequest
 import com.umc.domain.repository.attendance.AttendanceRepository
 import javax.inject.Inject
 
@@ -36,4 +37,8 @@ class AttendanceRepositoryImpl @Inject constructor(
 
     override suspend fun rejectAttendance(recordId: Long): ApiState<Unit> =
         attendanceRemoteDataSource.rejectAttendance(recordId)
+
+    override suspend fun postAttendanceReason(request: AttendanceReasonRequest): ApiState<String> {
+        return attendanceRemoteDataSource.postAttendanceReason(request)
+    }
 }

@@ -9,6 +9,7 @@ import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
+import com.umc.domain.usecase.attendance.PostAttendanceReasonUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -21,7 +22,8 @@ import javax.inject.Inject
 class UserCheckViewModel @Inject constructor(
     private val getAttendanceAvailableUseCase: GetAttendanceAvailableUseCase,
     private val getScheduleDetailUseCase: GetScheduleDetailUseCase,
-    private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase
+    private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase,
+    private val postAttendanceReasonUseCase: PostAttendanceReasonUseCase
 ) : BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
 
     private var lastUserLat: Double? = null
@@ -96,9 +98,18 @@ class UserCheckViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 출석 사유 제출 API 연동
+     */
     fun submitAttendanceReason(sessionId: Long, reason: String) {
-        // TODO: 출석 사유 제출 API 연동
-        emitEvent(UserCheckEvent.ShowToast("사유가 성공적으로 제출되었습니다."))
+        viewModelScope.launch {
+            when (val result = postAttendanceReasonUseCase(sessionId, reason)) {
+                is ApiState.Success -> {
+                    fetchAttendanceData()
+                }
+                is ApiState.Fail -> {}
+            }
+        }
     }
 
     private fun loadHistoryDummyData() {

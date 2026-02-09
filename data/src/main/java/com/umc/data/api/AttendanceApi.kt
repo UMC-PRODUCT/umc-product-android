@@ -4,6 +4,7 @@ import com.umc.data.response.attendance.AdminPendingUserResponse
 import com.umc.data.response.attendance.AttendanceAvailableResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.attendance.AttendanceCheckRequest
+import com.umc.domain.model.request.attendance.AttendanceReasonRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -32,4 +33,9 @@ interface AttendanceApi {
     suspend fun rejectAttendance(
         @Path("recordId") recordId: Long
     ): ApiResponse<Unit>
+
+    @POST(Endpoints.Attendance.REASON)
+    suspend fun postAttendanceReason(
+        @Body request: AttendanceReasonRequest
+    ): ApiResponse<String>
 }
