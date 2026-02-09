@@ -12,6 +12,7 @@ import com.umc.presentation.ui.home.dialog.BottomSheetCategoryPlanDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetParticipantDialog
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 @AndroidEntryPoint
@@ -73,12 +74,11 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     //다이얼로그 생성
                     val dialog = AddAttendanceDialog(
                         onReject = {
-
-                            moveBackPressed()
+                            viewModel.submitPlan()
                         },
                         onConfirm = {
+                            viewModel.submitPlan()
                             /**TODO 출석부 생성 페이지로 이동**/
-                            moveBackPressed()
                         }
 
                     )
@@ -86,7 +86,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     
                 }
                 else{
-                    moveBackPressed()
+                    viewModel.submitPlan()
                 }
             }
 
@@ -95,7 +95,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                 // 앞서 만든 BottomSheetDialog 생성
                 val locationDialog = BottomSheetLocationDialog(viewModel) { selectedItem ->
                     // 선택된 장소(LocationItem)의 제목을 뷰모델 이벤트로 전달
-                    viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanLocation(selectedItem.title))
+                    viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanLocation(selectedItem))
                 }
                 // 다이얼로그 표시
                 locationDialog.show(childFragmentManager, "LocationSelect")
@@ -126,16 +126,33 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
     override fun initStates() {
         super.initStates()
         repeatOnStarted(viewLifecycleOwner){
-            viewModel.uiState.collect{ state ->
-                binding.apply {
-                    planaddCdvStartDate.setText(state.startDateText)
-                    planaddCdvStartTime.setText(state.startTimeText)
-                    planaddCdvEndDate.setText(state.endDateText)
-                    planaddCdvEndTime.setText(state.endTimeText)
+            launch {
+                viewModel.uiState.collect { state ->
+                    binding.apply {
+                        planaddCdvStartDate.setText(state.startDateText)
+                        planaddCdvStartTime.setText(state.startTimeText)
+                        planaddCdvEndDate.setText(state.endDateText)
+                        planaddCdvEndTime.setText(state.endTimeText)
+
+                    }
 
                 }
-
             }
+            launch {
+                viewModel.uiEvent.collect { event ->
+                    handleEvent(event)
+                }
+            }
+        }
+    }
+
+    override fun handleEvent(event: PlanAddFragmentEvent) {
+        super.handleEvent(event)
+        when(event){
+            is PlanAddFragmentEvent.MoveBackPressedEvent -> {
+                moveBackPressed()
+            }
+            else -> {}
         }
     }
 

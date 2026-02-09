@@ -35,7 +35,7 @@ interface ScheduleApi {
     ): ApiResponse<List<ScheduleMonthResponse>>
 
     //일정 출석부 통합 삭제하기
-    @DELETE(Endpoints.Schedule.SCHEDULE_WITH_ATTENDANCE)
+    @DELETE(Endpoints.Schedule.DELETE)
     suspend fun deleteScheduleWithAttendance(
         @Path("scheduleId") scheduleId: Long
     ): ApiResponse<Unit>

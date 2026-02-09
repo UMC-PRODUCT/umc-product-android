@@ -41,7 +41,9 @@ object Endpoints {
         const val DETAIL = "$SCHEDULE/{scheduleId}"
         const val MONTH = "$SCHEDULE/my-list"
 
-        const val SCHEDULE_WITH_ATTENDANCE = "$SCHEDULE/{scheduleId}/with-attendance"
+        const val SCHEDULE_WITH_ATTENDANCE = "$SCHEDULE/with-attendance"
+
+        const val DELETE = "$SCHEDULE/{scheduleId}/with-attendance"
 
     }
 

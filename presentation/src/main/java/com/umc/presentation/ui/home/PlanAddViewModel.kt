@@ -8,11 +8,15 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.model.home.LocationItem
 import com.umc.domain.model.home.ParticipantItem
+import com.umc.domain.model.home.schedule.CreateSchedule
+import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchPlaceUseCase
 import com.umc.domain.usecase.appDataStore.recent.UpdateRecentSearchPlaceUseCase
 import com.umc.domain.usecase.kakao.GetSearchLocationUseCase
+import com.umc.domain.usecase.schedule.CreateScheduleUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailHomeUseCase
+import com.umc.domain.usecase.schedule.UpdateScheduleUseCase
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -33,7 +37,9 @@ constructor(
     private val updateRecentSearchPlaceUseCase: UpdateRecentSearchPlaceUseCase, //최근 장소 기록 업데이트하기
     private val getSearchLocationUseCase: GetSearchLocationUseCase, //카카오 SDK로 장소 검색하기
     private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 가져오기
-    private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase, //일정 상세 정보 가져오기
+    private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase, //일정 상세 정보 가져오기,
+    private val createScheduleUseCase: CreateScheduleUseCase, //일정 생성하기
+    private val updateScheduleUseCase: UpdateScheduleUseCase, //일정 수정하기
 ) : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
     PlanAddFragmentUiState()){
 
@@ -107,6 +113,8 @@ constructor(
                             updateScheduleId = scheduleId,
                             planTitle = detail.name,
                             planLocation = detail.locationName,
+                            latitude = detail.latitude,
+                            longitude = detail.longitude,
                             planDetail = detail.description,
                             isAllDay = detail.isAllDay,
                             startDate = startCal, startTime = startCal,
@@ -148,6 +156,22 @@ constructor(
         return cal
     }
 
+    /**
+     * Calendar 객체 두 개(날짜, 시간)를 합쳐 ISO 8601 문자열로 변환
+     * 예: 2026-02-08T09:57:19.628Z
+     */
+    private fun getIsoDateTime(dateCal: Calendar, timeCal: Calendar): String {
+        return String.format(
+            Locale.getDefault(),
+            "%d-%02d-%02dT%02d:%02d:00.000Z",
+            dateCal.get(Calendar.YEAR),
+            dateCal.get(Calendar.MONTH) + 1,
+            dateCal.get(Calendar.DAY_OF_MONTH),
+            timeCal.get(Calendar.HOUR_OF_DAY),
+            timeCal.get(Calendar.MINUTE)
+        )
+    }
+
 
     // 24시간 형식 ("14:00") -> 12시간 AM/PM 형식 ("오후 02:00")으로 바꾸는 포맷 함수
     private fun formatToAmPm(time: String): String {
@@ -159,6 +183,77 @@ constructor(
         }
     }
 
+
+    /**일정을 생성 or 수정하는 함수**/
+    fun submitPlan(){
+        val state = uiState.value
+        val isEditMode = state.updateScheduleId != -1L
+
+        //날짜 데이터 ISO 8601 포맷으로 변환
+        val startsAt = getIsoDateTime(state.startDate, state.startTime)
+        val endsAt = getIsoDateTime(state.endDate, state.endTime)
+
+        //선택한 카테고리 enums -> String list로
+        val selectedTags = state.categories
+            .filter { it.isChecked }
+            .mapNotNull { item ->
+                CategoryType.entries.find { it.label == item.name }?.name
+            }
+
+        //TODO 참여자 ID 임시 하드코딩 (차후 수정 가능하도록 리스트로 관리)
+        val tempParticipantIds = listOf(101L, 102L)
+
+        viewModelScope.launch {
+            if (isEditMode) {
+                // [기존 일정 수정]
+                val request = UpdateSchedule(
+                    name = state.planTitle,
+                    startsAt = startsAt,
+                    endsAt = endsAt,
+                    isAllDay = state.isAllDay,
+                    locationName = state.planLocation,
+                    latitude = state.latitude,
+                    longitude = state.longitude,
+                    description = state.planDetail,
+                    tags = selectedTags
+                )
+
+                resultResponse(
+                    response = updateScheduleUseCase(state.updateScheduleId, request),
+                    successCallback = {
+                        emitEvent(PlanAddFragmentEvent.MoveBackPressedEvent)
+                                      },
+                    errorCallback = { /* 에러 처리 */ }
+                )
+            } else {
+                // [새 일정 생성]
+                val request = CreateSchedule(
+                    name = state.planTitle,
+                    startsAt = startsAt,
+                    endsAt = endsAt,
+                    isAllDay = state.isAllDay,
+                    locationName = state.planLocation,
+                    latitude = state.latitude,
+                    longitude = state.longitude,
+                    description = state.planDetail,
+                    tags = selectedTags,
+                    /**TODO 차후 확실히**/
+                    participantMemberIds = tempParticipantIds,
+                    gisuId = 1L,
+                    requiresApproval = state.isManager
+                )
+
+                resultResponse(
+                    response = createScheduleUseCase(request),
+                    successCallback = {
+                        emitEvent(PlanAddFragmentEvent.MoveBackPressedEvent)
+                                      },
+                    errorCallback = { /* 에러 처리 */ }
+                )
+            }
+        }
+
+    }
 
 
     /**이벤트 핸들러 정의**/
@@ -189,7 +284,10 @@ constructor(
             }
             is PlanAddFragmentEvent.UpdatePlanLocation -> {
                 updateState {
-                    copy(planLocation = event.location)
+                    copy(planLocation = event.location.title,
+                        latitude = event.location.latitude,
+                        longitude = event.location.longitude
+                    )
                 }
             }
             is PlanAddFragmentEvent.UpdatePlanDetail -> {
@@ -417,14 +515,9 @@ constructor(
         }
     }
 
-
-    //하루종일 관련
-    //모집 중 스위치 누를 때마다 상태 변화하고 필터링
-    fun setAllday(isAllday: Boolean) {
-        updateState { copy(isAllDay = isAllday) }
-    }
     
 
+    /**장소 검색 관련 함수들 - DataStore에 저장하거나 Kakao Rest API로 호출하는 부분**/
     //장소 선택 시 기록 추가
     fun saveRecentPlace(place: String) {
         viewModelScope.launch {
@@ -451,6 +544,12 @@ constructor(
         }
     }
 
+    //하루종일 관련
+    //모집 중 스위치 누를 때마다 상태 변화하고 필터링
+    fun setAllday(isAllday: Boolean) {
+        updateState { copy(isAllDay = isAllday) }
+    }
+
     
 
 }
@@ -473,6 +572,8 @@ data class PlanAddFragmentUiState(
     //일정 및 장소 관련
     val planTitle: String = "",    //필수
     val planLocation: String = "",
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
     val planDetail: String = "",
     val recentSearchList: List<String> = emptyList(), //최근 장소 검색 기록 (DATASTORE)
     val searchResultList: List<LocationItem> = emptyList(), //장소 검색 결과를 보여줄 곳
@@ -546,7 +647,7 @@ data class PlanAddFragmentUiState(
 sealed interface PlanAddFragmentEvent : UiEvent {
     //일정 제목이랑 장소, 상세안내를 입력받는 이벤트
     data class UpdatePlanTitle(val title: String) : PlanAddFragmentEvent
-    data class UpdatePlanLocation(val location: String) : PlanAddFragmentEvent
+    data class UpdatePlanLocation(val location: LocationItem) : PlanAddFragmentEvent
     data class UpdatePlanDetail(val detail: String) : PlanAddFragmentEvent
 
 

@@ -13,8 +13,8 @@ class AuthenticationInterceptor
     constructor() : Interceptor {
         override fun intercept(chain: Interceptor.Chain): Response {
             // val accessToken = runBlocking { repository.getAccessToken().first() }
-            val testToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMDIiLCJpYXQiOjE3NzA2MzIzMTgsImV4cCI6MTc3MDY" +
-                    "zNTkxOH0.qrP6kqwzc4NKGvOmA8gFZhip1-AebMiBgvn7ARMX9Lb24XI_Sdm5A684oIZl_gIJ3ZxmnNDILcVrQaiS32LtGg"
+            val testToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMDIiLCJpYXQiOjE3NzA2MzkwNzgsImV4" +
+                    "cCI6MTc3MDY0MjY3OH0.I5Q5Y-sKNwPge3F2SNyY_vznw0uS_hT1a0y-W5diZd3QsyiU5xBbxK99rUN3bszQ8OBl99BK7567c8UcAdmJ0Q"
 
             val request =
                 chain.request().newBuilder()
