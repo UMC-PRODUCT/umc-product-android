@@ -6,6 +6,7 @@ import com.umc.domain.model.base.ApiResponse
 import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.HeaderMap
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -31,6 +32,13 @@ interface StorageApi {
     //3. 업로드가 완료되었으면 확정받기
     @POST(Endpoints.Storage.CONFIRM_UPLOAD)
     suspend fun confirmUpload(
+        @Path("fileId") fileId: String
+    ) : ApiResponse<Unit>
+
+
+    // 파일 삭제
+    @DELETE(Endpoints.Storage.FILE_DELETE)
+    suspend fun deleteFile(
         @Path("fileId") fileId: String
     ) : ApiResponse<Unit>
 }

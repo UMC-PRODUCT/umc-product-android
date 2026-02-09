@@ -68,5 +68,7 @@ object Endpoints {
 
         const val CONFIRM_UPLOAD = "$STORAGE/{fileId}/confirm"
 
+        const val FILE_DELETE = "$STORAGE/{fileId}"
+
     }
 }

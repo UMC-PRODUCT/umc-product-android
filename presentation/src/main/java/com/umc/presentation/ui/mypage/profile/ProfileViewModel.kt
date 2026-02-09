@@ -62,6 +62,15 @@ class ProfileViewModel @Inject constructor(
         emitEvent(ProfileFragmentEvent.ClickProfileImage)
     }
 
+
+    fun settingImage(uri: Uri){
+        updateState {
+            copy(
+                userProfileImageUri = uri
+            )
+        }
+    }
+
     //viewModel에서 갤러리->이미지 가져온 후 처리 이벤트
     fun updateProfileImage(uri: Uri){
         //uri을 이용해 파일 전송하기
@@ -72,6 +81,7 @@ class ProfileViewModel @Inject constructor(
                     Log.d("log_mypage", "성공! updateProfileImage: $it")
                 },
                 errorCallback = {
+                    emitEvent(ProfileFragmentEvent.MakeToast(it))
                     Log.d("log_mypage", "실패! $it")
                 }
             )
@@ -81,7 +91,10 @@ class ProfileViewModel @Inject constructor(
 
     //완료 누르고 뒤로 가기
     fun onClickComplete(){
-        emitEvent(ProfileFragmentEvent.ClickComplete)
+        val nowUri = uiState.value.userProfileImageUri
+        updateProfileImage(nowUri)
+
+        //emitEvent(ProfileFragmentEvent.ClickComplete)
     }
 
     // 완료 버튼을 눌렀을 때 호출될 저장 로직
@@ -114,7 +127,8 @@ data class ProfileFragmentUiState(
 
 
     //유저 정보 (가변)
-    val userProfileImageUrl : Uri = Uri.EMPTY,
+    val userProfileImageUri : Uri = Uri.EMPTY, //이미지 수정 시 먼저 보여주는 Uri (보내기 용도)
+
     val githubLink: String = "",
     val linkedinLink: String = "",
     val blogLink: String = "",
@@ -143,8 +157,9 @@ sealed interface ProfileFragmentEvent : UiEvent {
     //갤러리 터치 이벤트
     object ClickProfileImage : ProfileFragmentEvent
 
-    //이미지 업데이트 이벤트
-    data class UpdateProfileImage(val uri: Uri) : ProfileFragmentEvent
+    //토스트 만들기
+    data class MakeToast(val message: String) : ProfileFragmentEvent
+
 
     //완료 버튼을 눌렀을 때
     object ClickComplete : ProfileFragmentEvent

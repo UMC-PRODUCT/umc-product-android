@@ -22,7 +22,8 @@ class AuthenticationInterceptor
             }
 
             // val accessToken = runBlocking { repository.getAccessToken().first() }
-            val testToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMDIiLCJpYXQiOjE3NzA2NTY3NDIsImV4cCI6MTc3MDY2MDM0Mn0.Wf0OtgUG16Ued5VGblZXI4WmbgYkviLCuQ3Ou5Q0GoxMeAzDTVdb8-xtZ2UFfemSGU3coex-wPEefTorZrcESg"
+            val testToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMDIiLCJpYXQiOjE3NzA2NjMwNDQsImV4cCI6MTc3MDY2NjY0NH0.UdqmkhjQ" +
+                    "BXqp2IOpw4CTzqM26Qs91gda-tVtIlq6f-G-gCUTy_an-GlCo7ThleGkU2xaK23J1Gz3in5qE3RcFA"
 
             val request =
                 chain.request().newBuilder()

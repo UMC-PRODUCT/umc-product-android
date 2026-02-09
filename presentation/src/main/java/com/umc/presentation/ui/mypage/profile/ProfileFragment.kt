@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
@@ -16,6 +17,7 @@ import com.umc.presentation.ui.mypage.MypageViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlin.getValue
+import coil.load
 
 @AndroidEntryPoint
 class ProfileFragment : BaseFragment<FragmentProfileBinding, ProfileFragmentUiState, ProfileFragmentEvent, ProfileViewModel>(
@@ -28,7 +30,7 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding, ProfileFragmentUiSt
         // 갤러리에서 사진을 선택하고 돌아왔을 때 실행
         if (uri != null) {
             // 뷰모델에 선택된 URI 전달
-            viewModel.updateProfileImage(uri)
+            viewModel.settingImage(uri)
         }
     }
     
@@ -46,7 +48,14 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding, ProfileFragmentUiSt
         repeatOnStarted(viewLifecycleOwner){
             launch {
                 viewModel.uiState.collect { state ->
+                    //사전에 서버에서 받은 이미지 or 미리보기 이미지가 있는지 체크
+                    val imageSource: Any? = state.userProfileImageUri ?: state.userInfo.profileImageLink
 
+                    binding.profileCircleimvProfile.load(imageSource) {
+                        crossfade(true)
+                        placeholder(R.drawable.ic_profile_default) // 로딩 중 이미지
+                        error(R.drawable.ic_profile_default)       // 에러 시 이미지
+                    }
                 }
             }
 
@@ -80,6 +89,11 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding, ProfileFragmentUiSt
                 //뷰모델에게 DataStore에 저장 요청하고 지우기
                 viewModel.saveAndExit(nowGithub, nowLinkedin, nowBlog)
 
+            }
+
+            //토스트 만들기
+            is ProfileFragmentEvent.MakeToast -> {
+                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
             }
 
             //그냥 뒤로 가기
