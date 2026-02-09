@@ -35,6 +35,12 @@
         android:label="게시글 작성"
         tools:layout="@layout/fragment_post_write">
 
+        <!--게시글 수정을 위한 용도-->
+        <argument
+            android:name="postId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+
     </fragment>
 
     <fragment
@@ -54,6 +60,10 @@
         android:name="com.umc.presentation.ui.community.detail.PostDetailFragment"
         android:label="게시글 상세"
         tools:layout="@layout/fragment_post_detail">
+
+        <action
+            android:id="@+id/action_postDetail_to_postWrite"
+            app:destination="@id/postWriteFragment"/>
 
         <argument
             android:name="postId"
