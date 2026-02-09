@@ -44,6 +44,19 @@
         android:label="일정 상세 화면"
         tools:layout="@layout/fragment_plan_detail">
 
+        <action
+            android:id="@+id/action_planDetail_to_planAdd"
+            app:destination="@id/planAddFragment"/>
+
+        <argument
+            android:name="scheduleId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+
+        <argument
+            android:name="plusDay"
+            app:argType="integer"
+            android:defaultValue="0"/>
 
     </fragment>
 
@@ -52,6 +65,12 @@
         android:name="com.umc.presentation.ui.home.PlanAddFragment"
         android:label="일정 생성 화면"
         tools:layout="@layout/fragment_plan_add">
+
+        <!--일정 수정에 대한 인자-->
+        <argument
+            android:name="scheduleId"
+            app:argType="long"
+            android:defaultValue="-1L" />
 
     </fragment>
 

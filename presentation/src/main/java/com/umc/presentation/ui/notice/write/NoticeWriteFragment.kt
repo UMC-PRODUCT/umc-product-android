@@ -14,11 +14,9 @@ import com.umc.domain.model.notice.NoticeChipState
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.adapter.DropDownAdapter
 import com.umc.presentation.databinding.FragmentNoticeWriteBinding
-import com.umc.presentation.extension.VerticalSpaceItemDecoration
-import com.umc.presentation.extension.dp
 import com.umc.presentation.ui.notice.write.adapter.NoticeClassChipAdapter
 import com.umc.presentation.ui.notice.write.adapter.NoticeImageAdapter
-import com.umc.presentation.ui.notice.write.adapter.NoticeVoteAdapter
+import com.umc.presentation.ui.notice.write.bottomsheet.NoticeVoteBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -64,18 +62,6 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
         })
     }
 
-    private val noticeVoteAdapter : NoticeVoteAdapter by lazy {
-        NoticeVoteAdapter(object : NoticeVoteAdapter.NoticeVoteDelegate {
-            override fun onTextChanged(position: Int, text: String) {
-                viewModel.onVoteTextChanged(position, text)
-            }
-
-            override fun onClickDelete(position: Int) {
-                viewModel.onVoteDelete(position)
-            }
-        })
-    }
-
     private val pickMultipleImagesLauncher =
         registerForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(MAX_PICK_COUNT)) { uris: List<Uri> ->
             if (uris.isEmpty()) return@registerForActivityResult
@@ -116,12 +102,6 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
                 layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
                 itemAnimator = null
             }
-
-            recyclerVote.apply {
-                adapter = noticeVoteAdapter
-                layoutManager = LinearLayoutManager(context)
-                itemAnimator = null
-            }
         }
     }
 
@@ -141,7 +121,6 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
                     noticeClassChipAdapter.submitList(it.classList)
                     noticePartChipAdapter.submitList(it.partList)
                     noticeImageAdapter.submitList(it.selectImageList)
-                    noticeVoteAdapter.submitList(it.voteTextList)
                 }
             }
         }
@@ -150,6 +129,7 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
     override fun handleEvent(event: NoticeWriteEvent) {
         when(event) {
             NoticeWriteEvent.SelectImageEvent -> openPhotoPicker()
+            NoticeWriteEvent.ShowBottomSheetEvent -> showBottomSheet()
         }
     }
 
@@ -157,5 +137,10 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
         pickMultipleImagesLauncher.launch(
             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         )
+    }
+
+    private fun showBottomSheet() {
+        val bottomSheet = NoticeVoteBottomSheet()
+        bottomSheet.show(childFragmentManager, "")
     }
 }

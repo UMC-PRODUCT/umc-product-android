@@ -37,6 +37,10 @@
         <attr name="cornerRadius"/>
 
         <attr name="focusStrokeColor" format="color"/>
+
+        <attr name="android:inputType" />
+        <attr name="android:focusable" />
+
     </declare-styleable>
 
     <!-- 공통 Button -->
@@ -55,7 +59,8 @@
         <attr name="pressedColor"/>
 
         <attr name="prevIcon"/>
-
+        <attr name="prevIconTint"/>
+        <attr name="topIcon" format="reference"/>
     </declare-styleable>
 
 

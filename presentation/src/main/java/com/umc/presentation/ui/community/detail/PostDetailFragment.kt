@@ -5,14 +5,17 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.fragment.app.viewModels
-import com.umc.domain.model.mypage.CommentItem
-import com.umc.domain.model.mypage.ContentItem
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
+import com.umc.domain.model.community.CommentItem
+import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.UBasicDialog
 import com.umc.presentation.component.UBasicDialogModel
 import com.umc.presentation.databinding.FragmentPostDetailBinding
 import com.umc.presentation.databinding.LayoutMenuCommentBinding
+import com.umc.presentation.ui.community.CommunityFragmentDirections
 import com.umc.presentation.ui.community.adapter.PostDetailAdapter
 import com.umc.presentation.ui.community.adapter.PostItemDelegate
 import dagger.hilt.android.AndroidEntryPoint
@@ -25,6 +28,8 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
 
     override val viewModel: PostDetailViewModel by viewModels()
 
+    private val args: PostDetailFragmentArgs by navArgs()
+    private var postId : Long = -1L
     private lateinit var postDetailAdapter : PostDetailAdapter
 
     //RecyclerView에서 정의한 위임 내용
@@ -54,7 +59,7 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
         }
 
         // 내 댓글인지 여부에 따른 가시성 조절 (임시 로직)
-        val isMyComment = item.username == "새 유저"
+        val isMyComment = item.challengerName == "새 유저"
         menuBinding.layoutMenuReport.visibility = if (isMyComment) View.GONE else View.VISIBLE
         menuBinding.layoutMenuDelete.visibility = if (isMyComment) View.VISIBLE else View.GONE
 
@@ -95,6 +100,12 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
         postDetailAdapter = PostDetailAdapter(this)
         binding.postdetailRcv.apply {
             adapter = postDetailAdapter
+        }
+
+        //일정 화면에서 게시글 id 가져오기
+        postId = args.postId
+        if (postId != -1L) {
+            viewModel.initPostDetailData(postId)
         }
 
 
@@ -160,6 +171,30 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
                 ).show(childFragmentManager, "ReportDialog")
             }
 
+            //게시글 삭제를 누른 경우
+            is PostDetailFragmentEvent.DeletePost -> {
+                val reportModel = UBasicDialogModel.Warning(
+                    title = "해당 글을 삭제하시겠습니까",
+                    content = "삭제된 글은 복구할 수 없습니다.",
+                    positiveText = "신고하기"
+                )
+
+                UBasicDialog(
+                    model = reportModel,
+                    onConfirm = {
+                        viewModel.deletePost()
+                    }
+                ).show(childFragmentManager, "ReportDialog")
+            }
+
+            //게시글 수정을 누른 경우
+            is PostDetailFragmentEvent.EditPost -> {
+                //게시글 작성 페이지로 이동하되, id를 주기
+                val action = PostDetailFragmentDirections.actionPostDetailToPostWrite(
+                    postId = postId
+                )
+                findNavController().navigate(action)
+            }
 
             //댓글 신고
             is PostDetailFragmentEvent.ReportComment -> {

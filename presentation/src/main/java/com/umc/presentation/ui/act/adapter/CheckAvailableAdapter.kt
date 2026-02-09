@@ -20,7 +20,8 @@ import com.umc.presentation.ui.act.check.CheckAvailableUIModel
 class CheckAvailableAdapter(
     private val locationSource: FusedLocationSource,
     private val onItemClick: (Int) -> Unit,
-    private val onReasonClick: (Int) -> Unit
+    private val onReasonClick: (Int) -> Unit,
+    private val onAttendanceRequestClick: (Int) -> Unit
 ) : ListAdapter<CheckAvailableUIModel, CheckAvailableAdapter.ViewHolder>(
     AvailableSessionDiffCallback()
 ) {
@@ -63,6 +64,11 @@ class CheckAvailableAdapter(
             // 지도가 준비된 상태라면 콘텐츠 업데이트
             naverMap?.let { updateMapContent(it) }
 
+            // 출석 요청 버튼 클릭
+            binding.btnAttendanceRequest.setOnClickListener {
+                onAttendanceRequestClick(uiModel.session.sheetId)
+            }
+
             // 버튼 사이즈 캐싱 및 적용
             binding.btnStatusBadge.post {
                 val cacheKey = "${uiModel.session.id}_${uiModel.session.status}"
@@ -87,8 +93,10 @@ class CheckAvailableAdapter(
                 }
             }
 
-            binding.tvFailReasonAction.setOnClickListener {
-                onReasonClick(uiModel.session.id)
+            binding.layoutFailReasonContainer.setOnClickListener {
+                if (!uiModel.isWithinRange) {
+                    onReasonClick(uiModel.session.id)
+                }
             }
 
             binding.root.setOnClickListener {

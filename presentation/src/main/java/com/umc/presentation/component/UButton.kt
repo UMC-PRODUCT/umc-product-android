@@ -65,8 +65,33 @@ constructor(
                     val prevIconRes = a.getResourceId(R.styleable.UButton_prevIcon, R.drawable.ic_dropdown)
                     imagePrevIcon.setImageResource(prevIconRes)
                     imagePrevIcon.visible()
+
+                    if (a.hasValue(R.styleable.UTextField_prevIconTint)) {
+                        imagePrevIcon.imageTintList =
+                            a.getColorStateList(R.styleable.UTextField_prevIconTint)
+                    } else {
+                        imagePrevIcon.imageTintList = null
+                    }
                 } else {
                     imagePrevIcon.gone()
+                }
+
+                // 상단 아이콘
+                val hasPrevTopIcon = a.hasValue(R.styleable.UButton_topIcon)
+
+                if (hasPrevTopIcon) {
+                    val prevTopIconRes = a.getResourceId(R.styleable.UButton_topIcon, R.drawable.ic_dropdown)
+                    imagePrevTopIcon.setImageResource(prevTopIconRes)
+                    imagePrevTopIcon.visible()
+
+                    if (a.hasValue(R.styleable.UTextField_prevIconTint)) {
+                        imagePrevTopIcon.imageTintList =
+                            a.getColorStateList(R.styleable.UTextField_prevIconTint)
+                    } else {
+                        imagePrevTopIcon.imageTintList = null
+                    }
+                } else {
+                    imagePrevTopIcon.gone()
                 }
             }
         } finally {
@@ -112,6 +137,10 @@ constructor(
             )
             setCardBackgroundColor(bg)
         }
+    }
+
+    fun setTopIconTint(color: Int) {
+        binding.imagePrevTopIcon.imageTintList = ColorStateList.valueOf(color)
     }
 
 }

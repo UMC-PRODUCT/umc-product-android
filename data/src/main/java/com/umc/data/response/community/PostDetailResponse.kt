@@ -1,0 +1,41 @@
+package com.umc.data.response.community
+
+import com.google.gson.annotations.SerializedName
+import com.umc.data.response.community.LightningInfoResponse.Companion.toLightningInfoDomain
+import com.umc.domain.model.community.ContentItem
+import com.umc.domain.model.enums.CommunityCategoryType
+import com.umc.domain.model.enums.UserPart
+
+data class PostDetailResponse(
+    @SerializedName("postId") val postId: Long,                // 게시글 고유 ID
+    @SerializedName("title") val title: String,                // 게시글 제목
+    @SerializedName("content") val content: String,            // 게시글 본문
+    @SerializedName("category") val category: String,          // 게시글 카테고리
+    @SerializedName("authorId")val authorId: Long,             // 게시글 작성자 ID
+    @SerializedName("authorName")val authorName: String,       // 게시글 작성자 이름
+    @SerializedName("lightningInfo") val lightningInfo: LightningInfoResponse? // 번개 모임 상세 정보 (일반글은 null)
+) {
+    companion object{
+        fun PostDetailResponse.toContentItemDomain(): ContentItem = ContentItem(
+            postId = this.postId,
+            title = this.title,
+            category = try {
+                CommunityCategoryType.valueOf(this.category)
+            } catch (e: Exception) {
+                CommunityCategoryType.FREE
+            },
+            // 일부는 직접 (추후 서버 요청)
+            username = authorName,
+            userId = authorId,
+            writeTime = "방금 전", // TODO: 서버 응답에 생성일자가 추가되면 파싱 로직 적용
+            likes = 0,           // API 미제공 (X)
+            comments = 0,        // API 미제공 (X)
+            content = this.content,
+            lightningInfo = this.lightningInfo?.toLightningInfoDomain(),
+            userPart = UserPart.ANDROID, // API 미제공 (X)
+            isLiked = false,             // 다른 API로 처리 예정 (X)
+            isScrapped = false,          // 다른 API로 처리 예정 (X)
+            scraps = 0                   // API 미제공 (X)
+        )
+    }
+}

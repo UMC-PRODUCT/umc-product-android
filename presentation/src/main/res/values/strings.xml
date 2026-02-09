@@ -15,7 +15,7 @@
     <string name="home_plan_add_title">일정 등록</string>
     <string name="home_plan_add_plan_name">일정 제목</string>
     <string name="home_plan_add_plan_name_placeholder">일정 제목을 입력하세요</string>
-    <string name="home_plan_add_plan_location_placeholder">장소를 선택하세요</string>
+    <string name="home_plan_add_plan_location_placeholder">위치를 입력하세요</string>
     <string name="home_plan_add_plan_challenger_placeholder">챌린저를 선택하세요</string>
     <string name="home_plan_add_plan_tag_placeholder">태그를 선택하세요</string>
     <string name="home_plan_add_plan_tag_bottomsheet_title">태그를 추가하세요</string>
@@ -95,9 +95,9 @@
     <string name="community_write_category_select_long">카테고리를 선택하세요</string>
     <string name="community_write_light_title">번개 설정하기</string>
     <string name="community_write_light_time">날짜/시간</string>
-    <string name="community_write_light_time_placeholder">예: 1/1, 13시</string>
+    <string name="community_write_light_time_placeholder">예: 2026.01.01 13:00</string>
     <string name="community_write_light_people">최대 인원</string>
-    <string name="community_write_light_people_placeholder">예: 4명</string>
+    <string name="community_write_light_people_placeholder">예: 4</string>
     <string name="community_write_light_place">장소</string>
     <string name="community_write_light_place_placeholder">예: 강남역 3번 출구</string>
     <string name="community_write_light_openchat">오픈 채팅 링크</string>
@@ -137,6 +137,7 @@
     <string name="branch">지부</string>
     <string name="confirm">확인</string>
     <string name="unConfirm">미확인</string>
+    <string name="edit">수정</string>
 
     <!-- 파트 -->
     <string name="pm">PM</string>
@@ -241,6 +242,7 @@
     <string name="notice_write_part_title">전송할 파트 선택</string>
     <string name="notice_write_part_hint">선택하지 않으면 전체 파트원에게 전송됩니다</string>
     <string name="notice_write_sent_notification">알림 발송</string>
+    <string name="notice_write_vote_create">생성하기</string>
     <string name="notice_write_complete">작성 완료</string>
     <string name="notice_write_link_title">링크 첨부</string>
     <string name="notice_write_link_hint">링크를 첨부해주세요.</string>
@@ -277,6 +279,7 @@
     <string name="challenger_info_generation_label">활동 기수</string>
     <string name="challenger_info_warning_label">누적 경고</string>
     <string name="challenger_info_history_label">출석/활동 기록</string>
+    <string name="challenger_info_format_generation">%d기</string>
 
     <string name="challenger_manage_history_title">히스토리</string>
     <string name="challenger_manage_delete_guide">삭제 버튼을 눌러 기록을 삭제할 수 있습니다.</string>

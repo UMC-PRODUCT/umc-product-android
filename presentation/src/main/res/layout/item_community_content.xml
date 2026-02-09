@@ -10,7 +10,7 @@
 
         <variable
             name="item"
-            type="com.umc.domain.model.mypage.ContentItem" />
+            type="com.umc.domain.model.community.ContentItem" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -61,7 +61,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_person"
+            android:src="@drawable/ic_profile_default"
             app:strokeWidth="1dp"
             app:strokeColor="@color/neutral200"
             app:shapeAppearanceOverlay="@style/CircleImageAppearance"

@@ -160,6 +160,27 @@ class UTextField @JvmOverloads constructor(
                     ContextCompat.getColor(context, R.color.primary500)
                 )
                 elevation = 0f
+
+                //인풋 타입
+                val inputType = a.getInt(
+                    R.styleable.UTextField_android_inputType,
+                    android.text.InputType.TYPE_CLASS_TEXT
+                )
+                editText.inputType = inputType
+
+                // 포커스 여부
+                val focusable = a.getBoolean(
+                    R.styleable.UTextField_android_focusable,
+                    true
+                )
+                editText.isFocusable = focusable
+                editText.isFocusableInTouchMode = focusable
+
+                // 피커용일 때(focusable=false)를 위해 클릭 이벤트 배달
+                if (!focusable) {
+                    editText.setOnClickListener { this@UTextField.performClick() }
+                }
+
             }
         } finally {
             a.recycle()
@@ -242,5 +263,9 @@ class UTextField @JvmOverloads constructor(
 
     fun setPlaceHolder(text: Int) {
         binding.editText.hint = context.getText(text)
+    }
+
+    fun clearText() {
+        setText("")
     }
 }

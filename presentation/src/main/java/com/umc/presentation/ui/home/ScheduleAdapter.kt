@@ -45,9 +45,7 @@ class ScheduleAdapter(private val delegate: ScheduleItemDelegate) :
         private val ScheduleDiffCallback = object : DiffUtil.ItemCallback<SchedulePlanItem>() {
             override fun areItemsTheSame(oldItem: SchedulePlanItem, newItem: SchedulePlanItem): Boolean {
                 // 제목과 날짜와 시간이 모두 같으면 같은 아이템으로 간주
-                return oldItem.title == newItem.title &&
-                        oldItem.date == newItem.date &&
-                        oldItem.time == newItem.time
+                return oldItem.id == newItem.id
             }
 
             override fun areContentsTheSame(oldItem: SchedulePlanItem, newItem: SchedulePlanItem): Boolean {

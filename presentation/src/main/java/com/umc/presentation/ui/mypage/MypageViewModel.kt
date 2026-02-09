@@ -2,9 +2,11 @@ package com.umc.presentation.ui.mypage
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -16,6 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MypageViewModel @Inject constructor(
     private val getUserOutLinkUseCase: GetUserOutLinkUseCase,
+    private val getUserInfoUseCase: GetUserInfoUseCase,
 ) : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
 
@@ -31,6 +34,17 @@ class MypageViewModel @Inject constructor(
                         blogUrl = outLink.blog
                     )
                 }
+            }
+        }
+        viewModelScope.launch {
+            getUserInfoUseCase().collect { userInfo ->
+                Log.d("log_home", "DataStore로부터 읽어옴: $userInfo")
+                updateState {
+                    copy(
+                        userInfo = userInfo,
+                    )
+                }
+
             }
         }
     }
@@ -117,6 +131,7 @@ class MypageViewModel @Inject constructor(
 
 data class MypageFragmentUiState(
     // 현재 카카오 구글 로그인 2개로 비교하니 카카오를 기준으로 view 세팅
+    val userInfo: UserInfo = UserInfo(),
     val loginType: LoginType = LoginType.KAKAO,
     
     // 현재 직책
@@ -129,7 +144,7 @@ data class MypageFragmentUiState(
     val linkedinUrl : String = "",
 
     // UMC 외부 링크
-    val websiteUMC : String = "https://umc.makeus.in",
+    val websiteUMC : String = "https://umc.it.kr",
     val instagramUMC : String = "https://www.instagram.com/uni_makeus_challenge/",
     
 ) : UiState

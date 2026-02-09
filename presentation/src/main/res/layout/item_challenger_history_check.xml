@@ -6,7 +6,7 @@
     <data>
         <variable
             name="item"
-            type="com.umc.domain.model.act.challenger.SimpleHistoryItem" />
+            type="com.umc.domain.model.act.challenger.ChallengerInfoHistory" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

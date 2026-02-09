@@ -55,6 +55,7 @@
             android:textColor="@color/primary500"
             android:clickable="true"
             android:text="@string/register"
+            android:onClick="@{()->vm.createPost()}"
             app:layout_constraintTop_toTopOf="@id/write_tv_title"
             app:layout_constraintBottom_toBottomOf="@id/write_tv_title"
             app:layout_constraintEnd_toEndOf="parent"
@@ -119,7 +120,7 @@
                     android:gravity="start"
                     android:textAppearance="@style/CalloutBold"
                     android:textColor="@color/neutral500"
-                    android:text="@{vm.uiState.selectContentCategory.name}"
+                    android:text="@{vm.uiState.selectCommunityCategory.label}"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -140,35 +141,6 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-
-        <!--지역 탭-->
-        <!--
-        <TextView
-            android:id="@+id/write_tv_region"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:gravity="start"
-            android:textAppearance="@style/HeadlineBold"
-            android:textColor="@color/neutral800"
-            android:text="@string/region"
-            android:layout_marginTop="32dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/write_cdv_category"
-            />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/write_rcv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/write_tv_region"
-            tools:listitem="@layout/item_home_category"
-            />
-            -->
 
         <!--editText 탭-->
 
@@ -294,6 +266,7 @@
                 app:layout_constraintEnd_toStartOf="@id/write_guideline_divide1"
                 app:layout_constraintTop_toBottomOf="@id/write_tv_light_time"
                 app:placeholderText="@string/community_write_light_time_placeholder"
+                android:focusable="false"
                 app:textAppearance="@style/Body"
                 app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
                 />
@@ -324,6 +297,7 @@
                 app:strokeWidth="1dp"
                 app:cardBackgroundColor="@color/neutral000"
                 android:layout_marginStart="8dp"
+                android:inputType="number"
                 app:layout_constraintStart_toEndOf="@id/write_guideline_divide1"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/write_tv_light_people"

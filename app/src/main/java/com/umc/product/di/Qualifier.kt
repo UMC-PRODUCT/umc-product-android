@@ -12,8 +12,16 @@ annotation class AuthOkHttpClient
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
+annotation class KakaoOkHttpClient
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
 annotation class NormalRetrofit
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class AuthRetrofit
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class KakaoRetrofit

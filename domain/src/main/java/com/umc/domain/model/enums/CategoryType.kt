@@ -4,7 +4,7 @@ package com.umc.domain.model.enums
 enum class CategoryType(val label: String) {
     NETWORKING("네트워킹"),
     PROJECT("프로젝트"),
-    FEES("회비"),
+    DUES("회비"),
     MEETING("회의"),
     ORIENTATION("오리엔테이션"),
     PRESENTATION("발표"),

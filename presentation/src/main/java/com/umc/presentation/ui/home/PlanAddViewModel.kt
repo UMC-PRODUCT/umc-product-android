@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.CategoryItem
+import com.umc.domain.model.home.LocationItem
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchPlaceUseCase
 import com.umc.domain.usecase.appDataStore.recent.UpdateRecentSearchPlaceUseCase
+import com.umc.domain.usecase.kakao.GetSearchLocationUseCase
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -25,7 +27,7 @@ class PlanAddViewModel @Inject
 constructor(
     private val getRecentSearchPlaceUseCase: GetRecentSearchPlaceUseCase, //최근 장소 기록 불러오기;
     private val updateRecentSearchPlaceUseCase: UpdateRecentSearchPlaceUseCase, //최근 장소 기록 업데이트하기
-
+    private val getSearchLocationUseCase: GetSearchLocationUseCase,
 ) : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
     PlanAddFragmentUiState()){
 
@@ -324,6 +326,25 @@ constructor(
         }
     }
 
+    //장소 검색 = KAKAO API
+    fun searchLocation(query: String) {
+        if (query.isBlank()) return // 빈 값은 검색하지 않음
+
+        viewModelScope.launch {
+            resultResponse(
+                response = getSearchLocationUseCase(query),
+                successCallback = { locationList ->
+                    updateState {
+                        copy(searchResultList = locationList)
+                    }
+                },
+                errorCallback = { errorCode ->
+                   /**검색 실패 로직**/
+                }
+            )
+        }
+    }
+
 
 }
 
@@ -341,7 +362,7 @@ data class PlanAddFragmentUiState(
     val planLocation: String = "",
     val planDetail: String = "",
     val recentSearchList: List<String> = emptyList(), //최근 장소 검색 기록 (DATASTORE)
-
+    val searchResultList: List<LocationItem> = emptyList(), //장소 검색 결과를 보여줄 곳
 
     //시간 관련
     val startDate: Calendar = Calendar.getInstance(),
@@ -367,7 +388,7 @@ data class PlanAddFragmentUiState(
     val categories: List<CategoryItem> = listOf(
         CategoryItem(CategoryType.NETWORKING.label, R.drawable.ic_networking_off, R.drawable.ic_networking_on),
         CategoryItem(CategoryType.PROJECT.label, R.drawable.ic_project_off, R.drawable.ic_project_on),
-        CategoryItem(CategoryType.FEES.label, R.drawable.ic_fees_off, R.drawable.ic_fees_on),
+        CategoryItem(CategoryType.DUES.label, R.drawable.ic_fees_off, R.drawable.ic_fees_on),
         CategoryItem(CategoryType.MEETING.label, R.drawable.ic_meeting_off, R.drawable.ic_meeting_on),
 
         CategoryItem(CategoryType.ORIENTATION.label, R.drawable.ic_orientation_off, R.drawable.ic_orientation_on),

@@ -1,42 +1,119 @@
 package com.umc.presentation.ui.community.search
 
+import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.enums.ContentType
 import com.umc.domain.model.enums.RecruitType
 import com.umc.domain.model.enums.SearchMode
 import com.umc.domain.model.enums.UserPart
-import com.umc.domain.model.mypage.ContentItem
+import com.umc.domain.model.community.ContentItem
+import com.umc.domain.usecase.appDataStore.recent.AddRecentSearchPostUseCase
+import com.umc.domain.usecase.appDataStore.recent.ClearRecentSearchPostUseCase
+import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchPlaceUseCase
+import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchPostUseCase
+import com.umc.domain.usecase.appDataStore.recent.RemoveRecentSearchPostUseCase
+import com.umc.domain.usecase.community.SearchCommunityPostUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import com.umc.presentation.ui.home.PlanDetailFragmentEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
 class PostSearchViewModel @Inject
-constructor() : BaseViewModel<PostSearchFragmentUiState, PostSearchFragmentEvent>(
+constructor(
+    private val searchCommunityPostUseCase: SearchCommunityPostUseCase, //서버에서 검색 로직
+    private val getRecentSearchPostUseCase: GetRecentSearchPostUseCase, //최근 검색 리스트 가져오기
+    private val addRecentSearchPostUseCase: AddRecentSearchPostUseCase, //최근 검색 리스트 추가
+    private val removeRecentSearchPostUseCase: RemoveRecentSearchPostUseCase, //최근 검색 리스트 삭제
+    private val clearRecentSearchPostUseCase: ClearRecentSearchPostUseCase //최근 검색 리스트 전체 삭제
+
+) : BaseViewModel<PostSearchFragmentUiState, PostSearchFragmentEvent>(
     PostSearchFragmentUiState()
 ) {
 
+    // 초기화 : 기존 검색 리스트 호출
+    init {
+        viewModelScope.launch {
+            getRecentSearchPostUseCase().collect {
+                updateState {
+                    copy(recentSearches = it)
+                }
+            }
+        }
+    }
 
     // 검색 창 엔터 관련 메서드 (검색 결과 시 처리)
     fun onImeAction(actionId: Int, text: String): Boolean {
         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+
+            //기록 추가
+            viewModelScope.launch {
+                addRecentSearchPostUseCase(text)
+            }
+            
             updateState {
                 copy(
                     mode = SearchMode.RESULT,
                 )
             }
-            /**TODO 서버에서 처리한 결과가 들어가기**/
+            // 텍스트필드 바꾸기
             emitEvent(PostSearchFragmentEvent.ShowSearchResult(uiState.value.query))
-
+            // 검색 로직 수행
+            searchPosts(text, isRefresh = true)
+            
             return true
         }
         return false
+    }
+
+    //검색 로직처리 (CommunityFragment의 fetchPosts 차용)
+    fun searchPosts(query: String, isRefresh: Boolean = false) {
+        val state = uiState.value
+
+        if (query.isBlank()) return
+        // 로딩 중이거나, 마지막 페이지면 중단
+        if (state.isPageLoading || (!isRefresh && state.isLastPage)) return
+
+        // 상태 초기화
+        updateState {
+            copy(
+                isPageLoading = true,
+                currentPage = if (isRefresh) 0 else currentPage,
+                isLastPage = if (isRefresh) false else isLastPage,
+                mode = SearchMode.RESULT
+            )
+        }
+        
+        viewModelScope.launch {
+            //현재 페이지
+            val pageToFetch = uiState.value.currentPage
+
+            resultResponse(
+                response = searchCommunityPostUseCase(query, pageToFetch, 20),
+                successCallback = { pageModel ->
+                    Log.d("log_community", "$pageModel")
+                    updateState {
+                        copy(
+                            // 새로고침이면 리스트 교체, 아니면 기존 리스트에 누적
+                            searchResults = if (isRefresh) pageModel.posts else searchResults + pageModel.posts,
+                            currentPage = pageToFetch + 1,
+                            isPageLoading = false,
+                            isLastPage = !pageModel.hasNext // 서버에서 준 마지막 페이지 여부
+                        )
+                    }
+                },
+                errorCallback = {
+                    updateState { copy(isPageLoading = false) }
+                }
+            )
+        }
     }
 
     // 실시간 텍스트 변경 처리
@@ -48,6 +125,11 @@ constructor() : BaseViewModel<PostSearchFragmentUiState, PostSearchFragmentEvent
 
     // 최근 검색어 선택 시 쿼리 변경 및 결과 모드 처리
     fun selectRecentSearch(keyword: String) {
+        // 클릭한 단어를 다시 저장하여 최상단으로 올림
+        viewModelScope.launch {
+            addRecentSearchPostUseCase(keyword)
+        }
+
         updateState {
             copy(
                 query = keyword,
@@ -56,23 +138,22 @@ constructor() : BaseViewModel<PostSearchFragmentUiState, PostSearchFragmentEvent
         }
         // 검색 로직 실행 (엔터 친 것과 동일)
         emitEvent(PostSearchFragmentEvent.ShowSearchResult(uiState.value.query))
+        searchPosts(keyword, isRefresh = true)
     }
 
     // 최근 검색어 리스트에서 X 클릭 시 -> 해당 키워드 제거
     fun deleteRecentSearch(keyword: String) {
-        updateState {
-            val updatedList = recentSearches.filter { it != keyword }
-            copy(recentSearches = updatedList)
+        viewModelScope.launch {
+            removeRecentSearchPostUseCase(keyword)
         }
-        /**TODO 서버 로직**/
     }
 
     // 최근 검색어 키워드 전체 삭제
     fun deleteAllRecentSearch(){
-        updateState {
-            copy(recentSearches = listOf())
+        viewModelScope.launch {
+            clearRecentSearchPostUseCase()
         }
-        /**TODO 서버 로직**/
+
     }
 
     //뷰모드 변경하기
@@ -96,64 +177,17 @@ data class PostSearchFragmentUiState(
     val query : String = "",
     //뷰모드
     val mode : SearchMode = SearchMode.EMPTY,
-    //최근 검색 내용
-    val recentSearches: List<String> = listOf("중앙", "중앙 해커톤"),
-    //검색 결과
-    val searchResults: List<ContentItem> = listOf(
-        ContentItem(
-            category = CommunityCategoryType.QUESTION,
-            region = "서울",
-            contentType = ContentType.ALL,
-            recruitType = RecruitType.END,
-            title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
-            username = "어헛차",
-            writeTime = "방금 전",
-            likes = 0,
-            comments = 1,
-            content = "이거는 본문 내용이에요!!!",
-            userPart = UserPart.ANDROID,
-        ),
-        ContentItem(
-            category = CommunityCategoryType.HOBBY,
-            region = "인천",
-            contentType = ContentType.ALL,
-            recruitType = RecruitType.RECRUIT,
-            title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
-            username = "어헛차2호",
-            writeTime = "1시간 전",
-            likes = 2,
-            comments = 2,
-            content = "이거는 본문 내용이에요!!!",
-            userPart = UserPart.WEB,
-        ),
-        ContentItem(
-            category = CommunityCategoryType.SUGGESTION,
-            region = "인천",
-            contentType = ContentType.QUESTION,
-            recruitType = RecruitType.RECRUIT,
-            title = "이거는 제목이에요!!!!!!!!!!!!!!!!",
-            username = "사람",
-            writeTime = "2016.01.19",
-            likes = 200,
-            comments = 123,
-            content = "이거는 본문 내용이에요!!!",
-            userPart = UserPart.IOS,
-        ),
-        ContentItem(
-            category = CommunityCategoryType.LIGHTNING,
-            region = "인천",
-            contentType = ContentType.QUESTION,
-            recruitType = RecruitType.END,
-            title = "밥먹고개발하고쉬고개발하고게임하고개발하고자고개발하고나는개발이너무너무너무좋아헤헤헤헤헤헿",
-            username = "사람",
-            writeTime = "2016.01.19",
-            likes = 10,
-            comments = 1,
-            content = "본문내용을늘려야하는데무슨내용을적어야잘적었다는소문이날까?내용을늘리기위해서는아무내용이나넣어야겠다.이쯤되면길어지겠지?",
-            userPart = UserPart.SPRING_BOOT,
-        ),
-    ),
+    //최근 검색 내용(appdatastore에서 사용)
+    val recentSearches: List<String> = listOf(),
 
+
+    //검색 결과
+    val searchResults: List<ContentItem> = emptyList(),
+
+    // 무한 스크롤 및 로딩 제어
+    val currentPage: Int = 0,           // 현재 페이지 인덱스 (0부터 시작)
+    val isPageLoading: Boolean = false,  // 중복 호출 방지용 로딩 플래그
+    val isLastPage: Boolean = false      // 서버 응답의 hasNext 기반 마지막 여부
 
     ) : UiState
 
