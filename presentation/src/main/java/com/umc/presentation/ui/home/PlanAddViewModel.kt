@@ -2,14 +2,17 @@ package com.umc.presentation.ui.home
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.model.home.LocationItem
 import com.umc.domain.model.home.ParticipantItem
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchPlaceUseCase
 import com.umc.domain.usecase.appDataStore.recent.UpdateRecentSearchPlaceUseCase
 import com.umc.domain.usecase.kakao.GetSearchLocationUseCase
+import com.umc.domain.usecase.schedule.GetScheduleDetailHomeUseCase
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -18,6 +21,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
@@ -27,12 +31,17 @@ class PlanAddViewModel @Inject
 constructor(
     private val getRecentSearchPlaceUseCase: GetRecentSearchPlaceUseCase, //최근 장소 기록 불러오기;
     private val updateRecentSearchPlaceUseCase: UpdateRecentSearchPlaceUseCase, //최근 장소 기록 업데이트하기
-    private val getSearchLocationUseCase: GetSearchLocationUseCase,
+    private val getSearchLocationUseCase: GetSearchLocationUseCase, //카카오 SDK로 장소 검색하기
+    private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 가져오기
+    private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase, //일정 상세 정보 가져오기
 ) : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
     PlanAddFragmentUiState()){
 
-    private val dateSdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
-    private val timeSdf = SimpleDateFormat("a h:mm", Locale.KOREAN)
+    //Calender를 String으로 변경하는 포맷들이 담김
+    private val dateDisplaySdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
+    private val timeDisplaySdf = SimpleDateFormat("a h:mm", Locale.KOREAN)
+    private val parseDateSdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
+    private val parseTimeSdf = SimpleDateFormat("HH:mm", Locale.KOREAN)
 
     // 임시 더미 데이터 (실제로는 서버나 DB에서 가져와야 함)
     private val allChallengers = listOf(
@@ -45,10 +54,114 @@ constructor(
     )
 
     init {
-        loadRecentPlaces()
+        loadInitialData()
+    }
+
+    /**초기 데이터 가져오는 작업들 정의 및 파싱 함수들 정의**/
+    // 초기 데이터(장소 검색 기록 및 유저 정보 가져오기)
+    private fun loadInitialData() {
+        viewModelScope.launch {
+            //장소 검색 기록 가져오기
+            launch {
+                getRecentSearchPlaceUseCase().collect { places ->
+                    updateState { copy(recentSearchList = places) }
+                }
+            }
+            //유저 정보 가져오기
+            launch {
+                getUserInfoUseCase().collect { userInfo ->
+                    updateState { copy(myInfo = userInfo) }
+                }
+            }
+        }
+    }
+
+    //일정 수정 시 기존 일정 데이터로 UI 채우기
+    fun settingUpdateSchedule(scheduleId: Long) {
+        viewModelScope.launch {
+            resultResponse(
+                response = getScheduleDetailHomeUseCase(scheduleId),
+                successCallback = { detail ->
+                    updateState {
+                        //1. 도메인 String -> 내부 연산용 Calendar 생성
+                        val startCal = stringToCalendar(detail.startDay, detail.startTime)
+                        val endCal = stringToCalendar(detail.endDay, detail.endTime)
+
+                        //2. 도메인 시간 문자열 -> UI 표시용 "오전/오후" 변환
+                        val startTimeTextFormatted = formatToAmPm(detail.startTime)
+                        val endTimeTextFormatted = formatToAmPm(detail.endTime)
+
+                        //3. 카테고리 매칭
+                        val updatedCategories = categories.map { item ->
+                            item.copy(isChecked = detail.tags.any { it.label == item.name })
+                        }
+                        val selectedOnes = updatedCategories.filter { it.isChecked }
+                        val summaryText = when {
+                            selectedOnes.isEmpty() -> ""
+                            selectedOnes.size <= 3 -> selectedOnes.joinToString(", ") { it.name }
+                            else -> "${selectedOnes.take(3).joinToString(", ") { it.name }} 외 ${selectedOnes.size - 3}개"
+                        }
+                        
+                        //4. 갱신 저장
+                        copy(
+                            updateScheduleId = scheduleId,
+                            planTitle = detail.name,
+                            planLocation = detail.locationName,
+                            planDetail = detail.description,
+                            isAllDay = detail.isAllDay,
+                            startDate = startCal, startTime = startCal,
+                            endDate = endCal, endTime = endCal,
+                            categories = updatedCategories,
+                            isSelectedCategory = true,
+                            // UI 표시용 텍스트 저장
+                            startDateText = detail.startDay, // "2026.02.05" 그대로 사용
+                            startTimeText = startTimeTextFormatted,
+                            endDateText = detail.endDay,
+                            endTimeText = endTimeTextFormatted,
+                            selectedCategoriesString = summaryText
+                        )
+                    }
+                },
+                errorCallback = {}
+            )
+        }
+    }
+
+    //string을 이용해 Calendar로 바꾸는 함수
+    private fun stringToCalendar(day: String, time: String): Calendar {
+        val cal = Calendar.getInstance()
+        try {
+            val date = parseDateSdf.parse(day) ?: Date()
+            val timeData = parseTimeSdf.parse(time) ?: Date()
+
+            cal.time = date // 날짜 세팅 (년, 월, 일)
+            val timeCal = Calendar.getInstance().apply { this.time = timeData }
+
+            // 시간 세팅 (시, 분)
+            cal.set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY))
+            cal.set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE))
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+        } catch (e: Exception) {
+            Log.e("log_home", "Parsing Error: ${e.message}")
+        }
+        return cal
     }
 
 
+    // 24시간 형식 ("14:00") -> 12시간 AM/PM 형식 ("오후 02:00")으로 바꾸는 포맷 함수
+    private fun formatToAmPm(time: String): String {
+        return try {
+            val date = parseTimeSdf.parse(time) // "HH:mm" 포맷으로 읽기
+            date?.let { timeDisplaySdf.format(it) } ?: "시간 선택"
+        } catch (e: Exception) {
+            "시간 선택"
+        }
+    }
+
+
+
+    /**이벤트 핸들러 정의**/
     //handleEvent
     fun handleEvent(event: PlanAddFragmentEvent){
         when(event){
@@ -100,7 +213,7 @@ constructor(
                 }
                 updateState {
                     copy(startDate = newCalendar,
-                        startDateText = dateSdf.format(newCalendar.time)
+                        startDateText = dateDisplaySdf.format(newCalendar.time)
                     )
                 }
             }
@@ -113,7 +226,7 @@ constructor(
                 }
                 updateState {
                     copy(startTime = newCalendar,
-                        startTimeText = timeSdf.format(newCalendar.time)
+                        startTimeText = timeDisplaySdf.format(newCalendar.time)
                     )
 
                 }
@@ -126,7 +239,7 @@ constructor(
                 }
                 updateState {
                     copy(endDate = newCalendar,
-                        endDateText = dateSdf.format(newCalendar.time)
+                        endDateText = dateDisplaySdf.format(newCalendar.time)
                     )
 
                 }
@@ -140,7 +253,7 @@ constructor(
                 }
                 updateState {
                     copy(endTime = newCalendar,
-                        endTimeText = timeSdf.format(newCalendar.time)
+                        endTimeText = timeDisplaySdf.format(newCalendar.time)
                     )
                 }
             }
@@ -150,6 +263,7 @@ constructor(
     }
 
     //CSV 및 인원 값 업데이트
+    /**서버 로직에 따라 수정 필요**/
     private fun handleParticipants(event: PlanAddFragmentEvent) {
         when(event){
             //CSV에서 업데이트 한 경우
@@ -175,7 +289,7 @@ constructor(
                 Log.d("log_home", "추가 결과: ${uiState.value.selectedParticipants}")
             }
 
-            //recylcerview에서 삭제할 경우
+            //다이얼로그에서 삭제할 경우
             is PlanAddFragmentEvent.RemoveParticipants -> {
                 updateState {
                     // event에서 전달해준 string name을 뺀 data list를 새로 성성
@@ -292,7 +406,7 @@ constructor(
                     }
 
                     copy(categories = selectedCategories,
-                        isSeletedCategory = isSelected,
+                        isSelectedCategory = isSelected,
                         selectedCategoriesString = summaryText
                     )
 
@@ -309,15 +423,7 @@ constructor(
     fun setAllday(isAllday: Boolean) {
         updateState { copy(isAllDay = isAllday) }
     }
-
-    //장소 검색 기록 dataStore usecase
-    private fun loadRecentPlaces() {
-        viewModelScope.launch {
-            getRecentSearchPlaceUseCase().collect { places ->
-                updateState { copy(recentSearchList = places) }
-            }
-        }
-    }
+    
 
     //장소 선택 시 기록 추가
     fun saveRecentPlace(place: String) {
@@ -345,11 +451,18 @@ constructor(
         }
     }
 
+    
 
 }
 
 
 data class PlanAddFragmentUiState(
+    //챌린저 내 정보
+    val myInfo : UserInfo = UserInfo(),
+
+    ////스케쥴 수정용 id
+    val updateScheduleId : Long = -1L,
+
 
     //운영진 여부 판단
     val isManager: Boolean = true,
@@ -401,7 +514,7 @@ data class PlanAddFragmentUiState(
         CategoryItem(CategoryType.HACKATHON.label, R.drawable.ic_hackathon_off, R.drawable.ic_hackathon_on),
         CategoryItem(CategoryType.WORKSHOP.label, R.drawable.ic_workshop_off, R.drawable.ic_workshop_on),
     ),
-    val isSeletedCategory: Boolean = false,
+    val isSelectedCategory: Boolean = false, //UI에 placeholder or text 보여줄지 판단하는 변수
     val selectedCategoriesString: String = ""
     
 

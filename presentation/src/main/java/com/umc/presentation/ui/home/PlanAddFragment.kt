@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.res.Configuration
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPlanAddBinding
 import com.umc.presentation.ui.home.dialog.AddAttendanceDialog
@@ -19,32 +20,41 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 ) {
     override val viewModel: PlanAddViewModel by viewModels()
 
+    private val args: PlanAddFragmentArgs by navArgs()
+    private var scheduleId : Long = -1L
+
 
     override fun initView() {
+
+        scheduleId = args.scheduleId
+        if(scheduleId != -1L){
+            viewModel.settingUpdateSchedule(scheduleId)
+        }
+
         binding.apply {
             vm = viewModel
             //onclick 달기
-            //시작 날짜/시간
+            
+            //시작 날짜/시간 chip 설정
             planaddCdvStartDate.setOnClickListener { showDatePicker(true) }
             planaddCdvStartTime.setOnClickListener { showTimePicker(true) }
-            //종료 날짜/시간
+            //종료 날짜/시간 chip 설정
             planaddCdvEndDate.setOnClickListener { showDatePicker(false) }
             planaddCdvEndTime.setOnClickListener { showTimePicker(false) }
 
-            //하루종일
-            //스위치 로직
+            //하루종일 스위치 로직
             binding.planaddSwitchAllday.setOnCheckedChangeListener { _, isChecked ->
                 viewModel.setAllday(isChecked)
             }
 
-
+            //일정 제목 title 설정
             planaddTextfieldPlanTitleName.apply {
                 setOnTextChangedListener { text ->
                     viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanTitle(text))
                 }
             }
 
-
+            //일정 상세 내용 설정
             planaddTextfieldPlanDetail.apply{
                 setOnTextChangedListener { text ->
                     viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanDetail(text))
