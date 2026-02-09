@@ -9,6 +9,7 @@ import com.umc.domain.model.UploadFileInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
 import com.umc.domain.model.base.map
+import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.repository.storage.StorageRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -17,16 +18,38 @@ class StorageRepositoryImpl @Inject constructor(
     private val storageRemoteDatasource: StorageRemoteDataSource,
     @ApplicationContext private val context: Context
 ) : StorageRepository {
-    override suspend fun uploadFile(uriString: String, category: String)
+    override suspend fun uploadFile(uriString: String, category: UploadFileCategory)
     : ApiState<UploadFileInfo> {
         val uri = Uri.parse(uriString)
 
         val meta = StorageUriUtil.getMetadata(context, uri)
             ?: return ApiState.Fail(FailState(code = "LOCAL_001", message = "파일 읽기 실패"))
 
+        // 추가!!! 여기서 카테고리별 파일 크기를 비교해서 reject 로직을 수행
+        if (meta.size > category.maxSizeBytes) {
+            val maxSizeMb = category.maxSizeBytes / (1024 * 1024)
+            return ApiState.Fail(
+                FailState(
+                    code = "FILE_SIZE_EXCEEDED",
+                    message = "${category.label}는 최대 ${maxSizeMb}MB까지 업로드 가능합니다."
+                )
+            )
+        }
+
+        // 여기서는 카테고리별 확장자 타입이 맞는지 비교해서 reject 로직을 수행
+        val type = StorageUriUtil.getType(meta.name)
+        if (category.alloweType.isNotEmpty() && !category.alloweType.contains(type)) {
+            return ApiState.Fail(
+                FailState(
+                    code = "INVALID_FILE_TYPE",
+                    message = "${category.label}에 허용되지 않는 파일 형식(.${type})입니다."
+                )
+            )
+        }
+        
         // 1. 파일 preupload (presigned url을 생성)
         val prepareState = storageRemoteDatasource.prepareUpload(
-            PrepareUploadRequest(meta.name, meta.mimeType, meta.size, category)
+            PrepareUploadRequest(meta.name, meta.mimeType, meta.size, category.name)
         )
 
         // 만약 결과값인 prepareState가 성공이면 S3 업로드를 수행한다.

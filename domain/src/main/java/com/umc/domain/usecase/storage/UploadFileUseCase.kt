@@ -19,5 +19,5 @@ class UploadFileUseCase @Inject constructor(
     private val storageRepository: StorageRepository
 ){
     suspend operator fun invoke(uriString : String, category: UploadFileCategory) =
-        storageRepository.uploadFile(uriString, category.name)
+        storageRepository.uploadFile(uriString, category)
 }

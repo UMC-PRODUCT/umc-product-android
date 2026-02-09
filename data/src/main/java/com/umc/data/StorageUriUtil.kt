@@ -42,6 +42,11 @@ object StorageUriUtil {
         }
     }
 
+    //파일 이름에서 타입 뽑아내기 (이결로 비교)
+    fun getType(fileName: String): String {
+        return fileName.substringAfterLast('.', "").lowercase()
+    }
+
     data class UploadFileMetadata(val name: String, val mimeType: String, val size: Long)
 
 }

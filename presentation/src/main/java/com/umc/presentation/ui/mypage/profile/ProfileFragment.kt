@@ -76,6 +76,7 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding, ProfileFragmentUiSt
                 val nowLinkedin = binding.profileTextfieldLinkedin.getText()
                 val nowBlog = binding.profileTextfieldBlog.getText()
 
+
                 //뷰모델에게 DataStore에 저장 요청하고 지우기
                 viewModel.saveAndExit(nowGithub, nowLinkedin, nowBlog)
 
