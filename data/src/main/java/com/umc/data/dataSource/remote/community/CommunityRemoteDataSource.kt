@@ -1,0 +1,48 @@
+package com.umc.data.dataSource.remote.community
+
+import com.umc.data.request.community.CreateCommentRequest
+import com.umc.data.request.community.CreatePostLightningRequest
+import com.umc.data.request.community.CreatePostRequest
+import com.umc.data.response.community.CommunityGetPostResponse
+import com.umc.data.response.community.CommunitySearchPostResponse
+import com.umc.data.response.community.PostCommentResponse
+import com.umc.data.response.community.PostDetailResponse
+import com.umc.data.response.community.PostLikeResponse
+import com.umc.domain.model.base.ApiResponse
+import com.umc.domain.model.base.ApiState
+
+interface CommunityRemoteDataSource {
+
+    //게시글 목록 조회
+    suspend fun getPosts(category: String?, page: Int, size: Int = 20): ApiState<CommunityGetPostResponse>
+
+    //게시글 상세 조회
+    suspend fun getPostDetail(postId: Long): ApiState<PostDetailResponse>
+
+    //게시글 댓글 조회
+    suspend fun getComments(postId: Long): ApiState<List<PostCommentResponse>>
+
+    //게시글 댓글 작성
+    suspend fun createComment(postId: Long, challengerId: Long, request: CreateCommentRequest): ApiState<PostCommentResponse>
+
+    //게시글 검색
+    suspend fun searchPosts(keyword: String, page: Int, size: Int = 20): ApiState<CommunitySearchPostResponse>
+
+    //게시글 작성
+    suspend fun createPost(request: CreatePostRequest): ApiState<PostDetailResponse>
+
+    //번개 게시글 작성
+    suspend fun createLightningPost(request: CreatePostLightningRequest): ApiState<PostDetailResponse>
+
+    //게시글 삭제 API
+    suspend fun deletePost(postId: Long): ApiState<Unit>
+
+    //게시글 좋아요 토글
+    suspend fun togglePostLike(postId: Long, challengerId: Long): ApiState<PostLikeResponse>
+
+    //게시글 댓글 삭제
+    suspend fun deleteComment(postId: Long, commentId: Long, challengerId: Long): ApiState<Unit>
+
+    //게시글 수정하기
+    suspend fun updatePost(postId: Long, request: CreatePostRequest): ApiState<PostDetailResponse>
+}

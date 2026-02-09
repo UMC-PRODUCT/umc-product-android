@@ -10,7 +10,7 @@
 
         <variable
             name="item"
-            type="com.umc.domain.model.mypage.CommentItem" />
+            type="com.umc.domain.model.community.CommentItem" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -25,7 +25,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_person"
+            android:src="@drawable/ic_profile_default"
             android:layout_marginTop="8dp"
             app:strokeWidth="1dp"
             app:strokeColor="@color/neutral200"
@@ -41,7 +41,7 @@
             android:gravity="start"
             android:textAppearance="@style/SubheadlineBold"
             android:textColor="@color/neutral800"
-            android:text="@{item.username}"
+            android:text="@{item.challengerName}"
             android:layout_marginStart="8dp"
             app:layout_constraintStart_toEndOf="@id/item_circleimv_profile"
             app:layout_constraintTop_toTopOf="parent"
@@ -55,7 +55,7 @@
             android:gravity="start"
             android:textAppearance="@style/Footnote"
             android:textColor="@color/neutral600"
-            android:text="@{item.writeTime}"
+            android:text="test"
             android:layout_marginStart="8dp"
             app:layout_constraintStart_toEndOf="@id/item_tv_username"
             app:layout_constraintTop_toTopOf="@id/item_tv_username"
@@ -70,7 +70,7 @@
             android:gravity="start"
             android:textAppearance="@style/Body"
             android:textColor="@color/neutral800"
-            android:text="@{item.comment}"
+            android:text="@{item.content}"
             android:layout_marginTop="4dp"
             app:layout_constraintStart_toStartOf="@id/item_tv_username"
             app:layout_constraintTop_toBottomOf="@id/item_tv_username"

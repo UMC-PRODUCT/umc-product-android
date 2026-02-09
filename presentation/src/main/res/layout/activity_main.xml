@@ -30,10 +30,17 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/main_bnv"
+            app:layout_constraintBottom_toTopOf="@id/main_view"
             />
 
-
+        <View
+            android:id="@+id/main_view"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/neutral200"
+            android:paddingTop="4dp"
+            android:paddingBottom="2dp"
+            app:layout_constraintBottom_toTopOf="@id/main_bnv"/>
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/main_bnv"

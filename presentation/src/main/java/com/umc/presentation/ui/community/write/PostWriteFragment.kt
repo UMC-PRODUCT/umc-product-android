@@ -1,19 +1,28 @@
 package com.umc.presentation.ui.community.write
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPostWriteBinding
 import com.umc.presentation.ui.community.adapter.BottomSheetCategoryAdapter
+import com.umc.presentation.ui.community.detail.PostDetailFragmentArgs
 import com.umc.presentation.ui.home.adapter.ShowCategoryAdapter
+import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.util.Calendar
+import kotlin.getValue
 
 @AndroidEntryPoint
 class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragmentUiState, PostWriteFragmentEvent, PostWriteViewModel>(
@@ -24,9 +33,18 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
     //위치 정하는 지역 카테고리 어댑터
     private lateinit var categoryAdapter: ShowCategoryAdapter
 
+    private val args: PostWriteFragmentArgs by navArgs()
 
+    private var postId : Long = -1L
 
     override fun initView() {
+
+        //postId를 비교하는 로직 (만약 유효하면 이는 게시글 작성이 아닌 수정으로 판단)
+        postId = args.postId
+        if(postId != -1L){
+            viewModel.settingUpdatePost(postId)
+        }
+
         binding.apply {
             vm = viewModel
             lifecycleOwner = viewLifecycleOwner
@@ -42,8 +60,44 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
             }
 
             // 번개 날짜 입력 리스너
-            writeTextfieldTime.setOnTextChangedListener { text ->
-                viewModel.updateLightTime(text)
+            writeTextfieldTime.setOnClickListener {
+                val cal = Calendar.getInstance()
+
+                // 다크모드에 따른 테마 설정
+                val isDarkMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+                val themeResId = if (isDarkMode) {
+                    android.R.style.Theme_Holo_Dialog_NoActionBar
+                } else {
+                    android.R.style.Theme_Holo_Light_Dialog_NoActionBar
+                }
+
+                // 날짜 선택 다이얼로그 (DatePickerDialog)
+                val dateDialog = DatePickerDialog(requireContext(),{ _, y, m, d ->
+
+
+                    val displayDate = String.format("%02d.%02d.%02d", y % 100, m, d) //UI 보여주기용 date
+                    val selectedDate = String.format("%d-%02d-%02d", y, m + 1, d)
+
+                    // 날짜 선택 완료 후 바로 시간 선택 다이얼로그 띄우기
+                    val timeDialog = TimePickerDialog(requireContext(), themeResId, { _, hour, minute ->
+                        val selectedTime = String.format("%02d:%02d", hour, minute)
+
+                        // UI 표시 (사용자용)
+                        binding.writeTextfieldTime.setText("$displayDate $selectedTime")
+
+                        // 서버 전송용 ISO 8601 조립 (예: 2026-02-08T10:02:00.000Z)
+                        val isoDateTime = "${selectedDate}T${selectedTime}:00.000Z"
+
+                        // 뷰모델 업데이트
+                        viewModel.updateLightTime(isoDateTime)
+
+                    }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), false)
+
+                    timeDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+                    timeDialog.show()
+
+                }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
+                dateDialog.show()
             }
 
             // 번개 장소 입력 리스너
@@ -51,7 +105,7 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
                 viewModel.updateLightPlace(text)
             }
 
-            //번개 장소 입력 리스너
+            //번개 인원 수 입력 리스너
             writeTextfieldPeople.setOnTextChangedListener { text ->
                 viewModel.updateLightPeople(text)
             }
@@ -62,20 +116,8 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
             }
 
 
-
-
-            // 등록 버튼 클릭
-            writeTvComplete.setOnClickListener {
-                viewModel.onClickRegister()
-            }
-
         }
 
-        //카테고리 어댑터 -> 클릭 시 변경하기
-        categoryAdapter = ShowCategoryAdapter{ categoryItem ->
-            viewModel.setCategory(categoryItem)
-        }
-        binding.writeRcv.adapter = categoryAdapter
 
 
     }
@@ -86,7 +128,7 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
         repeatOnStarted(viewLifecycleOwner){
             launch {
                 viewModel.uiState.collect { state ->
-                    categoryAdapter.submitList(state.regionCategories)
+                    /**카테고리 관련은 OUT**/
                 }
             }
 
@@ -112,7 +154,22 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
                 // 카테고리 선택 다이얼로그 띄우기
                 settingBottomSheetDialog()
             }
-            
+
+            //textfield 채우기일때
+            is PostWriteFragmentEvent.SetTextfields -> {
+                binding.writeTextfieldTitle.setText(viewModel.uiState.value.title)
+                binding.writeTextfieldContent.setText(viewModel.uiState.value.content)
+                binding.writeTextfieldTime.setText(viewModel.uiState.value.lightTime)
+                binding.writeTextfieldPlace.setText(viewModel.uiState.value.lightPlace)
+                binding.writeTextfieldPeople.setText(viewModel.uiState.value.lightPeople)
+                binding.writeTextfieldOpenchat.setText(viewModel.uiState.value.lightOpenChat)
+            }
+
+            //Error toast make
+            is PostWriteFragmentEvent.MakeErrorTaost -> {
+                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+            }
+
             else -> {}
         }
     }

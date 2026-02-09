@@ -1,19 +1,58 @@
 package com.umc.presentation.ui.mypage.profile
 
 import android.net.Uri
+import android.util.Log
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.mypage.UserActiveItem
+import com.umc.domain.model.mypage.UserOutLink
+import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
+import com.umc.domain.usecase.appDataStore.UpdateUserOutLinkUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
-class ProfileViewModel @Inject
-constructor() : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
+class ProfileViewModel @Inject constructor(
+    private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //dataStore에서 불러오기
+    private val updateUserOutLinkUseCase: UpdateUserOutLinkUseCase, //dataStore에 저장
+    private val getUserInfoUseCase: GetUserInfoUseCase, //dataStore에서 유저 정보 불러오기
+) : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     ProfileFragmentUiState()){
+
+    //초기화 작업
+    init {
+        viewModelScope.launch {
+            //DataStore에서 가져와서 넣기
+            getUserOutLinkUseCase().collect { outLink ->
+                updateState {
+                    copy(
+                        githubLink = outLink.github,
+                        linkedinLink = outLink.linkedin,
+                        blogLink = outLink.blog
+                    )
+                }
+            }
+        }
+        viewModelScope.launch {
+            getUserInfoUseCase().collect { userInfo ->
+                updateState {
+                    copy(
+                        userInfo = userInfo,
+                    )
+                }
+            }
+        }
+
+    }
+
 
     //프로필 이미지 수정했을 때 이벤트
     fun onClickProfileImage(){
@@ -31,6 +70,18 @@ constructor() : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
         emitEvent(ProfileFragmentEvent.ClickComplete)
     }
 
+    // 완료 버튼을 눌렀을 때 호출될 저장 로직
+    fun saveAndExit(github: String, linkedin: String, blog: String) {
+        viewModelScope.launch {
+            // DataStore에 저장하고 끝내기
+            val nowOutLink = UserOutLink(github, linkedin, blog)
+            updateUserOutLinkUseCase(nowOutLink)
+
+            emitEvent(ProfileFragmentEvent.ClickBackPressed)
+        }
+    }
+
+
     //그냥 뒤로 가기
     fun onClickBackPressed(){
         emitEvent(ProfileFragmentEvent.ClickBackPressed)
@@ -44,9 +95,9 @@ constructor() : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
 data class ProfileFragmentUiState(
     //유저 정보 (고정)
     val loginType: LoginType = LoginType.KAKAO,
-    val nickname: String = "어헛차/박유수",
-    val mySchool: String = "숭실대학교",
     val myPart: String = "9기/Android",
+    val userInfo : UserInfo = UserInfo(),
+
 
     //유저 정보 (가변)
     val githubLink: String = "",
@@ -70,7 +121,7 @@ data class ProfileFragmentUiState(
             position = "파트장"),
     ),
 
-) : UiState
+    ) : UiState
 
 sealed interface ProfileFragmentEvent : UiEvent {
     

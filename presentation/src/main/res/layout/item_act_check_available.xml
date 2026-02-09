@@ -32,7 +32,7 @@
                 android:id="@+id/cv_session_icon_container"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                app:cardBackgroundColor="@color/primary100"
+                app:cardBackgroundColor="@android:color/transparent"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp"
@@ -41,10 +41,10 @@
 
                 <ImageView
                     android:id="@+id/iv_session_icon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_people_color" />
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:sessionIconByTag="@{uiModel.session.tags}"
+                    tools:src="@drawable/ic_networking_on" />
             </com.google.android.material.card.MaterialCardView>
 
             <TextView
@@ -202,7 +202,9 @@
                         android:layout_gravity="center"
                         android:paddingTop="16dp"
                         android:paddingHorizontal="16dp"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:clickable="@{!uiModel.withinRange}"
+                        android:enabled="@{!uiModel.withinRange}">
 
                         <TextView
                             android:id="@+id/tv_fail_reason_question"
@@ -210,7 +212,8 @@
                             android:layout_height="wrap_content"
                             android:text="@string/attendance_fail_reason_question"
                             android:textAppearance="@style/Footnote"
-                            android:textColor="@color/neutral500" />
+                            android:textColor="@{uiModel.withinRange ? @color/neutral400 : @color/neutral500}"
+                            tools:textColor="@color/neutral500" />
 
                         <TextView
                             android:id="@+id/tv_fail_reason_action"
@@ -219,7 +222,8 @@
                             android:layout_marginStart="4dp"
                             android:text="@string/attendance_fail_reason_action"
                             android:textAppearance="@style/Footnote"
-                            android:textColor="@color/accent500" />
+                            android:textColor="@{uiModel.withinRange ? @color/neutral400 : @color/accent500}"
+                            tools:textColor="@color/accent500" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -259,10 +263,9 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:text="@{@string/attendance_status_pending_description(uiModel.session.admin)}"
                             android:textAppearance="@style/Footnote"
                             android:textColor="@color/warning700"
-                            tools:text="스터디장님이 출석 정보를 확인하고 있습니다."/>
+                            android:text="출석 정보를 확인하고 있습니다."/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 

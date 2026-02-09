@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation(libs.hilt.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -53,5 +54,9 @@ dependencies {
     implementation(libs.okhttp.android)
     implementation(libs.okhttp.log)
 
+    //DataStore
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.google.code.gson)
+    
     implementation(libs.kotlinx.serialization.json)
 }

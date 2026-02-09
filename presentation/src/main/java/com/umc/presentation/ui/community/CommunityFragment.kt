@@ -1,21 +1,18 @@
 package com.umc.presentation.ui.community
 
-import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
 import com.umc.domain.model.enums.ContentType
-import com.umc.domain.model.mypage.ContentItem
+import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentCommunityBinding
-import com.umc.presentation.ui.mypage.adapter.ContentAdapter
-import com.umc.presentation.ui.mypage.adapter.ContentItemDelegate
+import com.umc.presentation.ui.community.adapter.ContentAdapter
+import com.umc.presentation.ui.community.adapter.ContentItemDelegate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -32,7 +29,9 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
     override fun onItemClicked(item: ContentItem) {
         /**TODO. 이동 로직 작성하기**/
 
-        val action = CommunityFragmentDirections.actionCommunityToPostDetail()
+        val action = CommunityFragmentDirections.actionCommunityToPostDetail(
+            postId = item.postId
+        )
         findNavController().navigate(action)
     }
 
@@ -45,18 +44,28 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
         //탭 초기화 및 설정
         setTabLayout()
 
-        //게시글 default 필터링
-        viewModel.filterContents()
-
-        //스위치 로직
-        binding.communitySwitchRecruit.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.setRecruit(isChecked)
-        }
-
         //어댑터 정의 및 연결
         myContentAdapter = ContentAdapter(this)
         binding.communityRcv.apply {
             adapter = myContentAdapter
+
+            //무한 스크롤
+            // 무한 스크롤 리스너: 바닥 도달 시 다음 페이지 호출
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+
+                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                    val lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition()
+                    val totalItemCount = layoutManager.itemCount
+
+                    // 로딩 중이 아닐 때 바닥에서 2번째 아이템 근처면 다음 데이터 로드
+                    if (!viewModel.uiState.value.isPageLoading && lastVisibleItem >= totalItemCount - 2) {
+                        viewModel.fetchPosts(isRefresh = false)
+                    }
+                }
+            })
+
         }
 
 
@@ -105,6 +114,7 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
             val tabTitles = listOf(
                     getString(R.string.all),
                     getString(R.string.question),
+                    "번개모임",
                     getString(R.string.community_top),
                 )
 
@@ -119,7 +129,7 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
                     
                     //만약 탭 추가나 변경 시 CommunityType 변경 후 적용
                     when(position){
-                        0, 1 -> {
+                        0, 1, 2 -> {
                             //명예의 전당 탭 없애고 글쓰기 탭 보이기
                             binding.communityFragmentContainerWrite.visibility = View.VISIBLE
                             binding.communityFragmentContainerTop.visibility = View.GONE
@@ -128,12 +138,13 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
                             val type = when(position){
                                 0 -> ContentType.ALL
                                 1 -> ContentType.QUESTION
+                                2 -> ContentType.LIGHTNING
                                 else -> ContentType.ALL
                             }
                             //게시글 필터링
                             viewModel.setNowTab(type)
                         }
-                        2-> {
+                        3-> {
                             //명예의 전당 탭 보이고 글쓰기 탭 없애기
                             binding.communityFragmentContainerWrite.visibility = View.GONE
                             binding.communityFragmentContainerTop.visibility = View.VISIBLE
@@ -159,6 +170,12 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
             })
         }
 
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 다른 화면에서 돌아올 때마다 최신 데이터로 새로고침
+        viewModel.fetchPosts(isRefresh = true)
     }
 
 

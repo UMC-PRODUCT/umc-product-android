@@ -23,14 +23,14 @@ fun <T> ApiState<ApiResponse<T>>.mapSuccessData() : ApiState<T> {
 }
 
 data class FailState(
-    val isSuccess: Boolean,
+    val success: Boolean = false,
     val code: String,
     val message: String
 ) {
     companion object {
         private const val EMPTY = ""
         val default = FailState(
-            isSuccess = DEFAULT_ERROR,
+            success = DEFAULT_ERROR,
             code = EMPTY,
             message = EMPTY
         )

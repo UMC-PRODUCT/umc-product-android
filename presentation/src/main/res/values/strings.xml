@@ -15,19 +15,27 @@
     <string name="home_plan_add_title">일정 등록</string>
     <string name="home_plan_add_plan_name">일정 제목</string>
     <string name="home_plan_add_plan_name_placeholder">일정 제목을 입력하세요</string>
-    <string name="home_plan_add_plan_location_placeholder">장소를 선택하세요</string>
+    <string name="home_plan_add_plan_location_placeholder">위치를 입력하세요</string>
     <string name="home_plan_add_plan_challenger_placeholder">챌린저를 선택하세요</string>
     <string name="home_plan_add_plan_tag_placeholder">태그를 선택하세요</string>
     <string name="home_plan_add_plan_tag_bottomsheet_title">태그를 추가하세요</string>
     <string name="home_plan_add_plan_tag_bottomsheet_content">중복 선택이 가능합니다</string>
+    <string name="home_plan_add_plan_participant_title">초대할 챌린저를 추가하세요</string>
+    <string name="home_plan_add_plan_participant_no_challenger">아직 초대한 챌린저가 없어요</string>
+    <string name="home_plan_add_plan_participant_placeholder">챌린저를 선택하세요</string>
     <string name="home_plan_add_plan_detail_placeholder">상세 내용을 입력하세요</string>
     <string name="home_plan_add_plan_search_placeholder">이름, 닉네임 또는 학교 검색</string>
-    <string name="home_plan_add_plan_attend">참여자 명단</string>
+    <string name="home_plan_add_plan_attend">챌린저 명단</string>
     <string name="home_plan_add_plan_detail_information">상세 안내</string>
     <string name="home_plan_add_plan_category">카테고리</string>
     <string name="home_plan_add_location_title">"장소를 선택하세요"</string>
     <string name="csv_upload">CSV 업로드</string>
     <string name="home_plan_add_plan_register">일정 등록하기</string>
+
+    <string name="home_plan_add_dialog_add_attendance_title">출석부 생성</string>
+    <string name="home_plan_add_dialog_add_attendance_content">출석부와 함께 일정을 생성하시겠습니까?</string>
+    <string name="home_plan_add_dialog_add_attendance_yes">네, 출석부도 같이 생성할게요</string>
+    <string name="home_plan_add_dialog_add_attendance_no">아니요, 일정만 생성할게요</string>
 
     <!-- mypage -->
     <string name="mypage_title">마이페이지</string>
@@ -40,10 +48,17 @@
     <string name="mypage_mycomment">댓글 단 글</string>
     <string name="mypage_myscrap">스크랩</string>
     <string name="mypage_setting_notice">알림 설정</string>
+    <string name="mypage_setting_location">위치 설정</string>
     <string name="mypage_social">소셜 연동</string>
     <string name="mypage_kakao">카카오</string>
     <string name="mypage_google">Google</string>
     <string name="mypage_opensource">오픈소스 라이선스</string>
+    <string name="mypage_umc_out_channel">UMC 외부 채널</string>
+    <string name="mypage_out_link">외부 링크</string>
+    <string name="mypage_personal_information">개인정보처리 방침</string>
+    <string name="mypage_use_manual">이용 약관</string>
+    <string name="mypage_inquire_umc_kakao">UMC 카카오톡 문의</string>
+
     <string name="profile_connect_account">연동된 계정</string>
     <string name="profile_give_login">로그인 제공자</string>
     <string name="profile_name_nickname">이름/닉네임</string>
@@ -80,9 +95,9 @@
     <string name="community_write_category_select_long">카테고리를 선택하세요</string>
     <string name="community_write_light_title">번개 설정하기</string>
     <string name="community_write_light_time">날짜/시간</string>
-    <string name="community_write_light_time_placeholder">예: 1/1, 13시</string>
+    <string name="community_write_light_time_placeholder">예: 2026.01.01 13:00</string>
     <string name="community_write_light_people">최대 인원</string>
-    <string name="community_write_light_people_placeholder">예: 4명</string>
+    <string name="community_write_light_people_placeholder">예: 4</string>
     <string name="community_write_light_place">장소</string>
     <string name="community_write_light_place_placeholder">예: 강남역 3번 출구</string>
     <string name="community_write_light_openchat">오픈 채팅 링크</string>
@@ -109,6 +124,7 @@
     <string name="setting">설정</string>
     <string name="information">정보</string>
     <string name="logout">로그아웃</string>
+    <string name="delete_user">회원탈퇴</string>
     <string name="complete">완료</string>
     <string name="register">등록</string>
     <string name="region">지역</string>
@@ -121,6 +137,7 @@
     <string name="branch">지부</string>
     <string name="confirm">확인</string>
     <string name="unConfirm">미확인</string>
+    <string name="edit">수정</string>
 
     <!-- 파트 -->
     <string name="pm">PM</string>
@@ -131,6 +148,8 @@
     <string name="nodejs">Node.js</string>
     <string name="springBoot">SpringBoot</string>
     <string name="select">선택</string>
+    <string name="law">법률</string>
+    <string name="assist">지원</string>
 
 
     <!-- Login -->
@@ -224,6 +243,7 @@
     <string name="notice_write_part_title">전송할 파트 선택</string>
     <string name="notice_write_part_hint">선택하지 않으면 전체 파트원에게 전송됩니다</string>
     <string name="notice_write_sent_notification">알림 발송</string>
+    <string name="notice_write_vote_create">생성하기</string>
     <string name="notice_write_complete">작성 완료</string>
     <string name="notice_write_link_title">링크 첨부</string>
     <string name="notice_write_link_hint">링크를 첨부해주세요.</string>
@@ -255,6 +275,25 @@
     <string name="attendance_reason_guide">위치 인증이 어려운 경우 사유를 작성하여\n출석을 요청할 수 있습니다.\n(예: GPS 오류, 지각, 개인 사정 등)</string>
 
     <string name="location_dialog_change">변경하기</string>
+
+    <!-- Chalenger Dialog -->
+    <string name="challenger_info_generation_label">활동 기수</string>
+    <string name="challenger_info_warning_label">누적 경고</string>
+    <string name="challenger_info_history_label">출석/활동 기록</string>
+    <string name="challenger_info_format_generation">%d기</string>
+
+    <string name="challenger_manage_history_title">히스토리</string>
+    <string name="challenger_manage_delete_guide">삭제 버튼을 눌러 기록을 삭제할 수 있습니다.</string>
+    <string name="challenger_manage_out_reason_title">아웃 사유 입력</string>
+    <string name="challenger_manage_warning_reason_title">경고 사유 입력</string>
+    <string name="challenger_manage_out_confirm">아웃 확정하기</string>
+    <string name="challenger_manage_warning_confirm">경고 확정하기</string>
+
+    <string name="challenger_manage_action_warning">경고 부여</string>
+    <string name="challenger_manage_action_out">아웃 부여</string>
+    <string name="challenger_manage_action_edit_history">기록 수정</string>
+
+    <string name="challenger_manage_reason_placeholder">사유를 입력하세요</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

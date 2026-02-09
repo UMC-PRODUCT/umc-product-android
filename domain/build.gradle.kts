@@ -8,6 +8,12 @@ java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
 }
+
+dependencies {
+    // 안드로이드 의존성이 없는 'core' 버전만 가져옵니다.
+    implementation(libs.kotlinx.coroutines.core)
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
