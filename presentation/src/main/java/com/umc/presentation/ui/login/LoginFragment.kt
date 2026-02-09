@@ -7,13 +7,14 @@ import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
 import com.kakao.sdk.user.UserApiClient
 import com.umc.presentation.base.BaseFragment
+import com.umc.presentation.base.UiState
 import com.umc.presentation.databinding.FragmentLoginBinding
 import com.umc.presentation.util.ULog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEvent, LoginViewModel>(
+class LoginFragment : BaseFragment<FragmentLoginBinding, UiState, LoginEvent, LoginViewModel>(
     FragmentLoginBinding::inflate,
 ) {
     override val viewModel: LoginViewModel by viewModels()
@@ -64,7 +65,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginUiState, LoginEven
     }
 
     private fun moveToSignUp(token: String) {
-        val action = LoginFragmentDirections.actionLoginToSignUp(token)
+        val action = LoginFragmentDirections.actionLoginToSignUp(token = token)
         findNavController().navigate(action)
     }
 

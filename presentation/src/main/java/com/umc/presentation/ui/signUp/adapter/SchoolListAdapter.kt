@@ -5,17 +5,17 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.signUp.School
+import com.umc.domain.model.school.SchoolInfo
 import com.umc.presentation.databinding.ItemSchoolBinding
 
 class SchoolListAdapter(
     private val listener: SchoolListDelegate
-) : ListAdapter<School, RecyclerView.ViewHolder> (
+) : ListAdapter<SchoolInfo, RecyclerView.ViewHolder> (
     SchoolListDiffCallBack()
 ) {
 
     interface SchoolListDelegate {
-        fun onClickNotice(item: School)
+        fun onClickNotice(item: SchoolInfo)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -34,17 +34,17 @@ class SchoolListAdapter(
     }
 }
 
-class SchoolListDiffCallBack : DiffUtil.ItemCallback<School>() {
+class SchoolListDiffCallBack : DiffUtil.ItemCallback<SchoolInfo>() {
     override fun areContentsTheSame(
-        oldItem: School,
-        newItem: School
+        oldItem: SchoolInfo,
+        newItem: SchoolInfo
     ): Boolean {
         return oldItem == newItem
     }
 
     override fun areItemsTheSame(
-        oldItem: School,
-        newItem: School
+        oldItem: SchoolInfo,
+        newItem: SchoolInfo
     ): Boolean {
         return oldItem.schoolId == newItem.schoolId
     }

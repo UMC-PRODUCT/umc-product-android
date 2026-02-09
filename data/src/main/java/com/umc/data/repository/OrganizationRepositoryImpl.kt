@@ -2,9 +2,11 @@ package com.umc.data.repository
 
 import com.umc.data.dataSource.OrganizationDataSource
 import com.umc.data.response.organization.*
+import com.umc.data.response.organization.SchoolNameResponse.Companion.toModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.request.organization.*
+import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.repository.OrganizationRepository
 import javax.inject.Inject
 
@@ -51,10 +53,12 @@ class OrganizationRepositoryImpl @Inject constructor(
         organizationDataSource.getUnassignedSchool(gisuId).map { Unit } //임시
 
     override suspend fun getSchoolLink(schoolId: Int): ApiState<Unit> =
-        organizationDataSource.getSchoolLink(schoolId).map { Unit } //임시
+        organizationDataSource.getSchoolLink(schoolId).map { Unit }
 
-    override suspend fun getAllSchool(): ApiState<Unit> =
-        organizationDataSource.getAllSchool().map { Unit } //임시
+    override suspend fun getAllSchool(): ApiState<List<SchoolInfo>> =
+        organizationDataSource.getAllSchool().map {
+            it.schools.map { item -> item.toModel() }
+        }
 
     override suspend fun getAllGisu(): ApiState<Unit> =
         organizationDataSource.getAllGisu().map { Unit } //임시

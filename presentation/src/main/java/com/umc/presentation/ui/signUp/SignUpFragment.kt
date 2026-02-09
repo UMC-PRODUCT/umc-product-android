@@ -5,7 +5,8 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.umc.domain.model.signUp.School
+import com.umc.domain.model.enums.EmailVerifyType
+import com.umc.domain.model.school.SchoolInfo
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentSignUpBinding
 import com.umc.presentation.ui.signUp.bottomSheet.SchoolSelectBottomSheet
@@ -40,6 +41,7 @@ class SignUpFragment :
 
             launch {
                 viewModel.uiState.collect {
+                    if (it.verifyType == EmailVerifyType.ERROR) binding.textFieldEmail.clearFocus()
                 }
             }
         }
@@ -55,22 +57,17 @@ class SignUpFragment :
     }
 
     private fun showSchoolSelectBottomSheet() {
-        val schoolList = arrayListOf(
-            School(1, "서울고등학교"),
-            School(2, "경기고등학교"),
-            School(3, "핀업고등학교")
-        )
 
-        val bottomSheet = SchoolSelectBottomSheet.newInstance(schoolList)
+        val bottomSheet = SchoolSelectBottomSheet.newInstance(viewModel.uiState.value.schoolList)
 
         setFragmentResultListener(SchoolSelectBottomSheet.SCHOOL_SELECT) { _, bundle ->
             val selectedSchool = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                bundle.getSerializable(SchoolSelectBottomSheet.BUNDLE_KEY_SELECT, School::class.java)
+                bundle.getSerializable(SchoolSelectBottomSheet.BUNDLE_KEY_SELECT, SchoolInfo::class.java)
             } else {
                 @Suppress("DEPRECATION")
-                bundle.getSerializable(SchoolSelectBottomSheet.BUNDLE_KEY_SELECT) as? School
+                bundle.getSerializable(SchoolSelectBottomSheet.BUNDLE_KEY_SELECT) as? SchoolInfo
             }
-            selectedSchool?.schoolName?.let { ULog.d(it) }
+            selectedSchool?.let { viewModel.updateSelectSchool(school = selectedSchool) }
         }
 
         bottomSheet.show(parentFragmentManager, "SchoolSelectBottomSheet")

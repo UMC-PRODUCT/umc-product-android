@@ -9,7 +9,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.umc.domain.model.signUp.School
+import com.umc.domain.model.school.SchoolInfo
 import com.umc.presentation.databinding.BottomSheetSchoolListBinding
 import com.umc.presentation.ui.signUp.adapter.SchoolListAdapter
 
@@ -20,7 +20,7 @@ class SchoolSelectBottomSheet: BottomSheetDialogFragment() {
         const val BUNDLE_KEY_SELECT = "school_select_key"
         private const val ARG_SCHOOL_LIST = "arg_school_list"
 
-        fun newInstance(schoolList: List<School>): SchoolSelectBottomSheet {
+        fun newInstance(schoolList: List<SchoolInfo>): SchoolSelectBottomSheet {
             return SchoolSelectBottomSheet().apply {
                 arguments = bundleOf(
                     ARG_SCHOOL_LIST to schoolList
@@ -29,13 +29,13 @@ class SchoolSelectBottomSheet: BottomSheetDialogFragment() {
         }
     }
 
-    private val schoolList : List<School> by lazy {
-        (arguments?.getSerializable(ARG_SCHOOL_LIST) as? List<School>) ?: emptyList()
+    private val schoolList : List<SchoolInfo> by lazy {
+        (arguments?.getSerializable(ARG_SCHOOL_LIST) as? List<SchoolInfo>) ?: emptyList()
     }
 
     private val schoolListAdapter : SchoolListAdapter by lazy {
         SchoolListAdapter(object : SchoolListAdapter.SchoolListDelegate{
-            override fun onClickNotice(item: School) {
+            override fun onClickNotice(item: SchoolInfo) {
                 setFragmentResult(SCHOOL_SELECT, bundleOf(BUNDLE_KEY_SELECT to item))
                 dismiss()
             }

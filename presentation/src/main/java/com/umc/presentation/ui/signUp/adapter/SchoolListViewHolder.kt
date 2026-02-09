@@ -1,7 +1,7 @@
 package com.umc.presentation.ui.signUp.adapter
 
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.signUp.School
+import com.umc.domain.model.school.SchoolInfo
 import com.umc.presentation.databinding.ItemSchoolBinding
 
 class SchoolListViewHolder(
@@ -9,7 +9,7 @@ class SchoolListViewHolder(
     private val listener: SchoolListAdapter.SchoolListDelegate
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(item: School) {
+    fun bind(item: SchoolInfo) {
         binding.apply {
             root.setOnClickListener { listener.onClickNotice(item) }
             textSchool.text = item.schoolName

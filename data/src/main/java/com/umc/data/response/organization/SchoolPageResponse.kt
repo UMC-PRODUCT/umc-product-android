@@ -1,5 +1,6 @@
 package com.umc.data.response.organization
 
+import com.umc.domain.model.school.SchoolInfo
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -32,4 +33,13 @@ data class SchoolListResponse(
 data class SchoolNameResponse(
     val schoolId: Int,
     val schoolName: String
-)
+) {
+    companion object {
+        fun SchoolNameResponse.toModel(): SchoolInfo {
+            return SchoolInfo(
+                schoolId = schoolId,
+                schoolName = schoolName
+            )
+        }
+    }
+}

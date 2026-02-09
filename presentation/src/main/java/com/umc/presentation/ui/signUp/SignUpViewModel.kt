@@ -1,20 +1,37 @@
 package com.umc.presentation.ui.signUp
 
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.EmailVerifyType
-import com.umc.domain.model.signUp.School
+import com.umc.domain.model.school.SchoolInfo
+import com.umc.domain.usecase.school.GetAllSchoolUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import com.umc.presentation.util.Const
+import com.umc.presentation.util.ULog
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SignUpViewModel
-@Inject
-constructor() : BaseViewModel<SignUpState, SignUpEvent>(
+class SignUpViewModel @Inject constructor(
+    private val getAllSchoolUseCase: GetAllSchoolUseCase
+) : BaseViewModel<SignUpState, SignUpEvent>(
     SignUpState(),
 ) {
+
+    init {
+        getAllSchool()
+    }
+
+    private fun getAllSchool() = viewModelScope.launch {
+        resultResponse(
+            response = getAllSchoolUseCase(),
+            successCallback = {
+                updateState { copy(schoolList = it) }
+            }
+        )
+    }
 
     fun onClickBack() {
         emitEvent(SignUpEvent.MoveToBack)
@@ -23,6 +40,7 @@ constructor() : BaseViewModel<SignUpState, SignUpEvent>(
 
     fun onClickConfirm() {
         // TODO 서버 연결 필요
+        ULog.d(uiState.value.toString())
         updateState {
             copy(
                 verifyType = EmailVerifyType.VERIFY
@@ -76,6 +94,9 @@ constructor() : BaseViewModel<SignUpState, SignUpEvent>(
         return isValid
     }
 
+    fun updateSelectSchool(school: SchoolInfo) {
+        updateState { copy(school = school) }
+    }
 }
 
 data class SignUpState(
@@ -84,12 +105,12 @@ data class SignUpState(
     val email: String = "",
     val code: String = "",
     val verifyType: EmailVerifyType = EmailVerifyType.NONE,
-    val school: String = "",
-    val schoolList: List<School> = emptyList()
+    val school: SchoolInfo = SchoolInfo(),
+    val schoolList: List<SchoolInfo> = emptyList()
 ) : UiState {
     val enableNextButton: Boolean
         get() = name.isNotEmpty() && nickname.isNotEmpty() && email.isNotEmpty()
-                && school.isNotEmpty() && verifyType == EmailVerifyType.VERIFY
+                && school.schoolId != -1 && verifyType == EmailVerifyType.VERIFY
 }
 
 sealed interface SignUpEvent : UiEvent {

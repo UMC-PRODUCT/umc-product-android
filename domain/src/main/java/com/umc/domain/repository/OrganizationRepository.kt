@@ -11,6 +11,7 @@ import com.umc.domain.model.request.organization.EditStudyGroupRequest
 import com.umc.domain.model.request.organization.SchoolIdRequest
 import com.umc.domain.model.request.organization.SchoolRegistrationRequest
 import com.umc.domain.model.request.organization.UnAssignSchoolRequest
+import com.umc.domain.model.school.SchoolInfo
 
 interface OrganizationRepository {
 
@@ -44,7 +45,7 @@ interface OrganizationRepository {
 
     suspend fun getSchoolLink(schoolId: Int): ApiState<Unit> //SchoolLinksResponse
 
-    suspend fun getAllSchool(): ApiState<Unit> //SchoolListResponse
+    suspend fun getAllSchool(): ApiState<List<SchoolInfo>>
 
     suspend fun getAllGisu(): ApiState<Unit> //GisuListResponse
 

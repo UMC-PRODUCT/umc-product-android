@@ -52,6 +52,18 @@ class UTextField @JvmOverloads constructor(
                 }
             )
         }
+
+        @JvmStatic
+        @BindingAdapter("textColor")
+        fun bindTextColor(view: UTextField, color: Int) {
+            view.setTextColor(color)
+        }
+
+        @JvmStatic
+        @BindingAdapter("enabled")
+        fun bindEnabled(view: UTextField, isEnabled: Boolean) {
+            view.isEnabled = isEnabled
+        }
     }
 
     fun interface OnImeAction {
@@ -200,5 +212,14 @@ class UTextField @JvmOverloads constructor(
 
     fun clearText() {
         setText("")
+    }
+
+    fun setTextColor(color: Int) {
+        binding.editText.setTextColor(color)
+    }
+
+    override fun setEnabled(enabled: Boolean) {
+        super.setEnabled(enabled)
+        binding.editText.isEnabled = enabled
     }
 }

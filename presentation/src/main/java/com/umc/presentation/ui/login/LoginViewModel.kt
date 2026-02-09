@@ -15,8 +15,8 @@ class LoginViewModel
 @Inject
 constructor(
     private val postLoginUseCase: PostLoginUseCase
-) : BaseViewModel<LoginUiState, LoginEvent>(
-    LoginUiState(),
+) : BaseViewModel<UiState, LoginEvent>(
+    UiState.Default,
 ) {
     fun onClickKakaoLogin() {
         emitEvent(LoginEvent.KakaoLoginEvent)
@@ -32,10 +32,6 @@ constructor(
         )
     }
 }
-
-data class LoginUiState(
-    val dummy: String = "",
-) : UiState
 
 sealed interface LoginEvent : UiEvent {
     object KakaoLoginEvent : LoginEvent
