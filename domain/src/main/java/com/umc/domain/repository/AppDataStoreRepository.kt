@@ -17,4 +17,9 @@ interface AppDataStoreRepository {
     //유저 정보 getter/setter
     fun getUserInfo(): Flow<UserInfo>
     suspend fun saveUserInfo(userInfo: UserInfo)
+
+    suspend fun getAccessToken(): String
+    suspend fun getRefreshToken(): String
+    suspend fun saveTokens(accessToken: String, refreshToken: String)
+    suspend fun clearTokens()
 }

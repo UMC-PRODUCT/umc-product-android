@@ -32,6 +32,21 @@ class AppDataStoreRepositoryImpl @Inject constructor(
 
     override suspend fun saveUserInfo(userInfo: UserInfo) {
         appDataStore.saveUserInfo(userInfo)
+    }
 
+    override suspend fun getAccessToken(): String {
+        return appDataStore.getAccessToken()
+    }
+
+    override suspend fun getRefreshToken(): String {
+        return appDataStore.getRefreshToken()
+    }
+
+    override suspend fun saveTokens(accessToken: String, refreshToken: String) {
+        appDataStore.saveTokens(accessToken, refreshToken)
+    }
+
+    override suspend fun clearTokens() {
+        appDataStore.clearTokens()
     }
 }
