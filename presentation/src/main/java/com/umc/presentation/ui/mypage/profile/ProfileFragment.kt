@@ -46,9 +46,7 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding, ProfileFragmentUiSt
         repeatOnStarted(viewLifecycleOwner){
             launch {
                 viewModel.uiState.collect { state ->
-                    state.profileImageUri?.let {
-                        binding.profileCircleimvProfile.setImageURI(it)
-                    }
+
                 }
             }
 
@@ -77,7 +75,6 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding, ProfileFragmentUiSt
                 val nowGithub = binding.profileTextfieldGithub.getText()
                 val nowLinkedin = binding.profileTextfieldLinkedin.getText()
                 val nowBlog = binding.profileTextfieldBlog.getText()
-                val nowProfileImage = viewModel.uiState.value.profileImageUri
 
                 //뷰모델에게 DataStore에 저장 요청하고 지우기
                 viewModel.saveAndExit(nowGithub, nowLinkedin, nowBlog)

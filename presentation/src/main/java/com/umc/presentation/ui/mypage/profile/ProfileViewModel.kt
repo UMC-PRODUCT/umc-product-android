@@ -5,12 +5,14 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LoginType
+import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.mypage.UserActiveItem
 import com.umc.domain.model.mypage.UserOutLink
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
 import com.umc.domain.usecase.appDataStore.UpdateUserOutLinkUseCase
+import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -24,7 +26,8 @@ class ProfileViewModel @Inject constructor(
     private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //dataStore에서 불러오기
     private val updateUserOutLinkUseCase: UpdateUserOutLinkUseCase, //dataStore에 저장
     private val getUserInfoUseCase: GetUserInfoUseCase, //dataStore에서 유저 정보 불러오기
-) : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
+    private val uploadFileUseCase: UploadFileUseCase,
+    ) : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     ProfileFragmentUiState()){
 
     //초기화 작업
@@ -61,8 +64,19 @@ class ProfileViewModel @Inject constructor(
 
     //viewModel에서 갤러리->이미지 가져온 후 처리 이벤트
     fun updateProfileImage(uri: Uri){
-        //이미지 업데이트하고 이벤트 쏘기
-        updateState { copy(profileImageUri = uri) }
+        //uri을 이용해 파일 전송하기
+        viewModelScope.launch {
+            resultResponse(
+                response = uploadFileUseCase(uri.toString(), UploadFileCategory.PROFILE_IMAGE),
+                successCallback = {
+                    Log.d("log_mypage", "성공! updateProfileImage: $it")
+                },
+                errorCallback = {
+                    Log.d("log_mypage", "실패! $it")
+                }
+            )
+        }
+
     }
 
     //완료 누르고 뒤로 가기
@@ -100,10 +114,11 @@ data class ProfileFragmentUiState(
 
 
     //유저 정보 (가변)
+    val userProfileImageUrl : Uri = Uri.EMPTY,
     val githubLink: String = "",
     val linkedinLink: String = "",
     val blogLink: String = "",
-    val profileImageUri : Uri? = null,
+
 
     //임시 정보
     val myActiveHistory: List<UserActiveItem> = listOf(

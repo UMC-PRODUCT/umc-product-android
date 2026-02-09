@@ -59,6 +59,14 @@ object Endpoints {
 
         const val POST_COMMENT_DETAIL = "$POST_COMMENT/{commentId}"
 
+    }
+
+    object Storage{
+        const val STORAGE = "api/v1/storage"
+
+        const val PRE_UPLOAD = "$STORAGE/prepare-upload"
+
+        const val CONFIRM_UPLOAD = "$STORAGE/{fileId}/confirm"
 
     }
 }

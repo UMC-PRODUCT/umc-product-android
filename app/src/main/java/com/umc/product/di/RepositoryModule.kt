@@ -12,10 +12,12 @@ import com.umc.domain.repository.member.MemberRepository
 import com.umc.data.repository.challenger.ChallengerRepositoryImpl
 import com.umc.data.repository.community.CommunityRepositoryImpl
 import com.umc.data.repository.schedule.ScheduleRepositoryImpl
+import com.umc.data.repository.storage.StorageRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
 import com.umc.domain.repository.attendance.AttendanceRepository
 import com.umc.domain.repository.community.CommunityRepository
 import com.umc.domain.repository.schedule.ScheduleRepository
+import com.umc.domain.repository.storage.StorageRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -74,4 +76,7 @@ abstract class RepositoryModule {
     @Binds
     abstract fun bindsCommunityRepository(repositoryImpl: CommunityRepositoryImpl): CommunityRepository
 
+    @Singleton
+    @Binds
+    abstract fun bindsStorageRepository(repositoryImpl: StorageRepositoryImpl): StorageRepository
 }
