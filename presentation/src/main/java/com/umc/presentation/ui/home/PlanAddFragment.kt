@@ -19,23 +19,6 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 ) {
     override val viewModel: PlanAddViewModel by viewModels()
 
-    //recyclerviewAdapter 정의구간
-    //private lateinit var participantAdapter: ShowParticipantAdapter
-    //private lateinit var categoryAdapter: ShowCategoryAdapter
-    //private lateinit var searchAdapter: SearchParticipantAdapter
-
-
-
-    /*
-    //csv 파일 처리를 위한 런처
-    private val csvPickerLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
-        uri: Uri? -> uri?.let {
-            //돌아오고 난 뒤, 아래의 처리로직을 수행
-            parseCsvFile(it)
-        }
-    }
-
-     */
 
     override fun initView() {
         binding.apply {

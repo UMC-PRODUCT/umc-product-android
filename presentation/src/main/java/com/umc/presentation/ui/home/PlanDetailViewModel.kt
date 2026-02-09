@@ -3,6 +3,7 @@ package com.umc.presentation.ui.home
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.home.PlanDetailItem
+import com.umc.domain.usecase.schedule.DeleteScheduleUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailHomeUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class PlanDetailViewModel @Inject
 constructor(
-    private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase,
+    private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase, //일정 상세 정보 가져오기
+    private val deleteScheduleUseCase: DeleteScheduleUseCase, //일정 삭제하기
     ) : BaseViewModel<PlanDetailFragmentUiState, PlanDetailFragmentEvent>(
     PlanDetailFragmentUiState()){
 
@@ -130,11 +132,28 @@ constructor(
             emitEvent(PlanDetailFragmentEvent.EditPlan)
         }
 
+        //삭제 로직 확인 다이얼로그 생성 로직 수행
+        fun checkDeletePlan(){
+            updateState { copy(isMenuVisible = false) }
+            emitEvent(PlanDetailFragmentEvent.CheckDeletePlan)
+        }
+
         //삭제 로직 수행
         fun deletePlan(){
-            updateState { copy(isMenuVisible = false) }
-            emitEvent(PlanDetailFragmentEvent.DeletePlan)
+            viewModelScope.launch {
+                val scheduleId = uiState.value.content.scheduleId
+                resultResponse(
+                    response = deleteScheduleUseCase(scheduleId),
+                    successCallback = {
+                        emitEvent(PlanDetailFragmentEvent.MoveBackPressedEvent)
+                    },
+                    errorCallback = {
+
+                    }
+                )
+            }
         }
+
 
         //뒤로 가기
         fun onClickBackPressed(){
@@ -182,8 +201,8 @@ sealed interface PlanDetailFragmentEvent : UiEvent {
     object ReportPlan : PlanDetailFragmentEvent
     //수정하기 이벤트
     object EditPlan : PlanDetailFragmentEvent
-    //삭제하기 이벤트
-    object DeletePlan : PlanDetailFragmentEvent
+    //삭제하기 이벤트 (다이얼로그로 확인)
+    object CheckDeletePlan : PlanDetailFragmentEvent
 
 
     //출석 체크 이벤트
