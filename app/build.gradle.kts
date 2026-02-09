@@ -6,7 +6,6 @@ plugins {
     alias(libs.plugins.kotlin.android.ksp)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.google.services)
-
 }
 
 android {
@@ -20,11 +19,10 @@ android {
             getApiKey("kakao.native.key"),
         )
         buildConfigField(
-                "String",
-                "KAKAO_REST_KEY",
-                "\"${getApiKey("kakao.rest.key")}\""
+            "String",
+            "KAKAO_REST_KEY",
+            "\"${getApiKey("kakao.rest.key")}\""
         )
-
         buildConfigField(
             "String",
             "NAVER_CLIENT_ID",
