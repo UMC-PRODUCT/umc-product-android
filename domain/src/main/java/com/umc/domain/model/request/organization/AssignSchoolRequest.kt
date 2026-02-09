@@ -1,0 +1,8 @@
+package com.umc.domain.model.request.organization
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class AssignSchoolRequest(
+    val chapterId: Int
+)

@@ -22,3 +22,14 @@ data class SchoolItemResponse(
     val createdAt: String,
     val isActive: Boolean
 )
+
+@Serializable
+data class SchoolListResponse(
+    val schools: List<SchoolNameResponse>
+)
+
+@Serializable
+data class SchoolNameResponse(
+    val schoolId: Int,
+    val schoolName: String
+)

@@ -10,6 +10,17 @@ data class StudyGroupListResponse(
 )
 
 @Serializable
+data class MyStudyGroupListResponse(
+    val studyGroups: List<StudyGroupNameResponse>
+)
+
+@Serializable
+data class StudyGroupNameResponse(
+    val groupId: Int = 0,
+    val name: String = "",
+)
+
+@Serializable
 data class StudyGroupResponse(
     val groupId: Int = 0,
     val name: String = "",
