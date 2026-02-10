@@ -114,6 +114,9 @@ dependencies {
     implementation(platform(libs.firebase.bom))
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    //coli (이미지)
+    implementation(libs.coil)
 }
 
 fun getApiKey(propertyKey: String): String {

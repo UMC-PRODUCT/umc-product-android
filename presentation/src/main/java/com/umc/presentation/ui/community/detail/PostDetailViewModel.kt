@@ -9,6 +9,7 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.community.CommentItem
 import com.umc.domain.model.community.ContentItem
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.community.DeleteCommunityCommentUseCase
 import com.umc.domain.usecase.community.DeleteCommunityPostUseCase
 import com.umc.domain.usecase.community.GetCommunityPostCommentUseCase
 import com.umc.domain.usecase.community.GetCommunityPostDetailUseCase
@@ -31,6 +32,7 @@ constructor(
     private val writeCommunityPostCommentUseCase: WriteCommunityPostCommentUseCase, //댓글 작성하기
     private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 불러오기
     private val deleteCommunityPostUseCase: DeleteCommunityPostUseCase, //게시글 삭제하기
+    private val deleteCommunityCommentUseCase: DeleteCommunityCommentUseCase, //댓글 삭제하기
 
     ) : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent>(
     PostDetailFragmentUiState()
@@ -152,6 +154,7 @@ constructor(
     }
 
     //게시글만 갱신할 때 함수
+    /**게시글 수정 및 갱신은 별도의 페이지에서 작성하므로 쓰일 일은 없었다,,,**/
     private fun refreshContent(postId: Long){
         viewModelScope.launch {
             resultResponse(
@@ -226,18 +229,29 @@ constructor(
         emitEvent(PostDetailFragmentEvent.DeletePost)
     }
 
-    //댓글  신고
+    //댓글 신고
     fun onClickReportComment(){
         emitEvent(PostDetailFragmentEvent.ReportComment)
     }
 
     //댓글 삭제
     fun onClickeDeleteComment(item: CommentItem){
-        // 현재 저장된 댓글 리스트에서 선택한 아이템만 제외하고 새로운 리스트 생성
-        val updatedCommentList = uiState.value.nowCommentList.filterNot { it == item }
+        val postId = uiState.value.nowContent.postId
+        val commentId = item.commentId
+        val challengerId = item.challengerId //이미 id 비교 로직을 거쳤기 때문에, 댓글의 challengerId 사용해도 부압
+        viewModelScope.launch {
+            resultResponse(
+                response =deleteCommunityCommentUseCase(postId, commentId, challengerId),
+                successCallback = {
+                    //댓글만 다시 갱신하기
+                    refreshComments(postId)
+                },
+                errorCallback = {
+                    
+                }
+            )
+        }
 
-        // 리스트 재조립 호출 (본문 + 업데이트된 댓글 리스트)
-        rebuildDetailList(uiState.value.nowContent, updatedCommentList)
     }
 
     //뒤로가기
@@ -261,6 +275,7 @@ data class PostDetailFragmentUiState(
     val nowDetailList : List<PostDetailItem> = emptyList(),
 
     //내 ID
+    /**TODO. 얘는 MemberId인지 ChallengerId인지 확인 필요**/
     val myId : Long = -1L,
 
     //현재 게시글
@@ -307,7 +322,6 @@ sealed interface PostDetailFragmentEvent : UiEvent {
 
     //댓글 신고하기 이벤트
     object ReportComment : PostDetailFragmentEvent
-
 
     object MoveBackPressed : PostDetailFragmentEvent
 

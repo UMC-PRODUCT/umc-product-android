@@ -59,12 +59,14 @@ interface CommunityApi {
     //일반 게시글 작성
     @POST(Endpoints.Community.COMMUNITY)
     suspend fun createPost(
+        @Query("challengerId") challengerId: Long,
         @Body request: CreatePostRequest
     ): ApiResponse<PostDetailResponse>
 
     //번개 게시글 작성
     @POST(Endpoints.Community.LIGHTNING)
     suspend fun createLightningPost(
+        @Query("challengerId") challengerId: Long,
         @Body request: CreatePostLightningRequest
     ): ApiResponse<PostDetailResponse>
 
