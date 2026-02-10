@@ -32,8 +32,8 @@ class ScheduleRepositoryImpl @Inject constructor(
     }
 
   
-    override suspend fun getScheduleDetail(scheduleId: Int): ApiState<UserCheckAvailable> {
-        return scheduleRemoteDataSource.getScheduleDetail(scheduleId.toLong()).map { response ->
+    override suspend fun getScheduleDetail(scheduleId: Long): ApiState<UserCheckAvailable> {
+        return scheduleRemoteDataSource.getScheduleDetail(scheduleId).map { response ->
             response.toModel()
         }
     }
