@@ -22,6 +22,8 @@ import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupItemUiModel
 import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupState
 import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import com.umc.domain.model.enums.EditDeleteAction
+
 
 @AndroidEntryPoint
 class AdminStudyGroupFragment :
@@ -61,7 +63,7 @@ class AdminStudyGroupFragment :
     private fun showSettingPopup(anchor: View, item: AdminStudyGroupItemUiModel) {
         val menuItems = listOf(
             StudyGroupSettingMenuItem(
-                action = StudyGroupSettingAction.EDIT,
+                action = EditDeleteAction.EDIT,
                 title = "정보 수정",
                 iconRes = R.drawable.ic_edit,
                 titleColorRes = R.color.neutral800,
@@ -69,7 +71,7 @@ class AdminStudyGroupFragment :
                 arrowTintRes = R.color.neutral400,
             ),
             StudyGroupSettingMenuItem(
-                action = StudyGroupSettingAction.DELETE,
+                action = EditDeleteAction.DELETE,
                 title = "그룹 삭제",
                 iconRes = R.drawable.ic_trash_can,
                 titleColorRes = R.color.danger500,
@@ -83,8 +85,8 @@ class AdminStudyGroupFragment :
         val menuAdapter = StudyGroupSettingMenuAdapter(menuItems) { clicked ->
             popup.dismiss()
             when (clicked.action) {
-                StudyGroupSettingAction.EDIT -> showEditGroupDialog()
-                StudyGroupSettingAction.DELETE -> showDeleteGroupDialog()
+                EditDeleteAction.EDIT -> showEditGroupDialog()
+                EditDeleteAction.DELETE -> showDeleteGroupDialog()
             }
         }
 

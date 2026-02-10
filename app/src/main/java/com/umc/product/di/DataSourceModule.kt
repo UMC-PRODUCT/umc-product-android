@@ -12,6 +12,8 @@ import com.umc.data.dataSource.remote.member.MemberRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.community.CommunityRemoteDataSource
 import com.umc.data.dataSource.remote.community.CommunityRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.curriculum.CurriculumRemoteDataSource
+import com.umc.data.dataSource.remote.curriculum.CurriculumRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSourceImpl
 import dagger.Binds
@@ -45,6 +47,14 @@ abstract class DataSourceModule {
     abstract fun bindsKakaoRemoteDataSource(
         dataSourceImpl: KakaoRemoteDataSourceImpl
     ): KakaoRemoteDataSource
+
+
+    @Singleton
+    @Binds
+    abstract fun bindsCurriculumRemoteDataSource(
+        impl: CurriculumRemoteDataSourceImpl
+    ): CurriculumRemoteDataSource
+
 
     @Singleton
     @Binds

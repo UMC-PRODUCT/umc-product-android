@@ -11,10 +11,12 @@ import com.umc.domain.repository.kakao.KakaoSearchRepository
 import com.umc.domain.repository.member.MemberRepository
 import com.umc.data.repository.challenger.ChallengerRepositoryImpl
 import com.umc.data.repository.community.CommunityRepositoryImpl
+import com.umc.data.repository.curriculum.CurriculumRepositoryImpl
 import com.umc.data.repository.schedule.ScheduleRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
 import com.umc.domain.repository.attendance.AttendanceRepository
 import com.umc.domain.repository.community.CommunityRepository
+import com.umc.domain.repository.curriculum.CurriculumRepository
 import com.umc.domain.repository.schedule.ScheduleRepository
 import dagger.Binds
 import dagger.Module
@@ -52,6 +54,13 @@ abstract class RepositoryModule {
     abstract fun bindKakaoSearchRepository(
         kakaoSearchRepositoryImpl: KakaoSearchRepositoryImpl
     ): KakaoSearchRepository
+
+
+    @Singleton
+    @Binds
+    abstract fun bindsCurriculumRepository(
+        impl: CurriculumRepositoryImpl
+    ): CurriculumRepository
 
 
     @Singleton

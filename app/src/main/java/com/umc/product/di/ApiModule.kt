@@ -6,6 +6,7 @@ import com.umc.data.api.MemberApi
 import com.umc.data.api.ChallengerApi
 import com.umc.data.api.CommunityApi
 import com.umc.data.api.ScheduleApi
+import com.umc.data.api.CurriculumApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -55,4 +56,11 @@ object ApiModule {
     fun provideCommunityApi(@AuthRetrofit retrofit: Retrofit): CommunityApi {
         return retrofit.create(CommunityApi::class.java)
     }
+
+    @Singleton
+    @Provides
+    fun provideCurriculumApi(@AuthRetrofit retrofit: Retrofit): CurriculumApi {
+        return retrofit.create(CurriculumApi::class.java)
+    }
+
 }
