@@ -42,6 +42,11 @@
         android:label="회원가입"
         tools:layout="@layout/fragment_sign_up">
 
+        <argument
+            android:name="token"
+            app:argType="string"
+            android:defaultValue="" />
+
         <action
             android:id="@+id/action_sign_up_to_home"
             app:destination="@id/nav_home"/>

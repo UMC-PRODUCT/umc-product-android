@@ -1,23 +1,27 @@
 package com.umc.product.di
 
 import android.util.Log
+import com.umc.data.dataSource.local.AppDataStore
+import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.presentation.util.ULog
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// TODO 토큰 관련 Repository 필요
 @Singleton
-class AuthenticationInterceptor
-    @Inject
-    constructor() : Interceptor {
+class AuthenticationInterceptor @Inject constructor(
+    private val appDataStoreRepository: AppDataStoreRepository
+) : Interceptor {
         override fun intercept(chain: Interceptor.Chain): Response {
-            // val accessToken = runBlocking { repository.getAccessToken().first() }
-            val testToken = "TEST_TOKEN"
+            val accessToken = runBlocking { appDataStoreRepository.getAccessToken() }
+            val testToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMDEiLCJpYXQiOjE3NzAzOTg2MDAsImV4cCI6MTc3MDQwMjIwMH0.WYCX4j" +
+                    "Gxa3mLiiL6JFgGE8kEVBOKW1awJ0Zir-15Q8yhg3dntYaCmux408_8ybRjbQ-4JUAErIVGguT3Yse93Q"
 
             val request =
                 chain.request().newBuilder()
-                    .addHeader("Authorization", "Bearer ${testToken}").build()
+                    .addHeader("Authorization", "Bearer ${accessToken}").build()
 
             Log.d(
                 "RETROFIT",

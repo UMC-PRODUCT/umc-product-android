@@ -1,7 +1,10 @@
 package com.umc.data.repository
 
+import android.util.Log
 import com.umc.data.dataSource.local.AppDataStore
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.base.FailState
 import com.umc.domain.model.mypage.UserOutLink
 import com.umc.domain.repository.AppDataStoreRepository
 import kotlinx.coroutines.flow.Flow
@@ -48,6 +51,31 @@ class AppDataStoreRepositoryImpl @Inject constructor(
 
     override suspend fun saveUserInfo(userInfo: UserInfo) {
         appDataStore.saveUserInfo(userInfo)
+    }
 
+    override suspend fun getAccessToken(): String {
+        return appDataStore.getAccessToken()
+    }
+
+    override suspend fun getRefreshToken(): String {
+        return appDataStore.getRefreshToken()
+    }
+
+    override suspend fun saveTokens(accessToken: String, refreshToken: String): ApiState<Unit> {
+        return try {
+            appDataStore.saveTokens(accessToken, refreshToken)
+            ApiState.Success(Unit)
+        } catch (e: Exception) {
+            ApiState.Fail(
+                FailState(
+                    message = e.message ?: "Token Save Error",
+                    code = "LOCAL_ERROR"
+                )
+            )
+        }
+    }
+
+    override suspend fun clearTokens() {
+        appDataStore.clearTokens()
     }
 }

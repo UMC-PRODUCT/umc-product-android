@@ -19,7 +19,7 @@ import javax.inject.Inject
 class AuthRepositoryImpl @Inject constructor(
     private val authRemoteDataSource: AuthRemoteDataSource
 ) : AuthRepository {
-    override suspend fun reissueToken(request: RefreshTokenRequest): ApiState<String> {
+    override suspend fun reissueToken(request: RefreshTokenRequest): ApiState<JwtToken> {
         return authRemoteDataSource.reissueToken(request).map {
             it.toModel()
         }
