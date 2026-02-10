@@ -73,7 +73,7 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
     /**
      * 위치 변경 다이얼로그를 띄우는 함수
      */
-    private fun showLocationChangeDialog(sessionId: Int, lat: Double, lng: Double, address: String) {
+    private fun showLocationChangeDialog(sessionId: Long, lat: Double, lng: Double, address: String) {
         ULocationDialog(
             initialLat = lat,
             initialLng = lng,

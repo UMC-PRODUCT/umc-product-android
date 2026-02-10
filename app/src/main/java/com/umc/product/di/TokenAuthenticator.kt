@@ -1,6 +1,13 @@
 package com.umc.product.di
 
 import android.util.Log
+import com.umc.domain.model.JwtToken
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.request.RefreshTokenRequest
+import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.domain.repository.AuthRepository
+import com.umc.presentation.util.ULog
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -11,71 +18,65 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class TokenAuthenticator
-    @Inject
-    constructor(
-        // TODO 토큰 관련 Repository 필요
-    ) : Authenticator {
-        private val mutex = Mutex()
+class TokenAuthenticator @Inject constructor(
+    private val appDataStoreRepository: AppDataStoreRepository,
+    private val authRepository: AuthRepository
+) : Authenticator {
+    private val mutex = Mutex()
 
-        override fun authenticate(
-            route: Route?,
-            response: okhttp3.Response,
-        ): Request? =
-            runBlocking {
-                // val access = async { repository.getAccessToken().first() }
-                // val refresh = async { repository.getRefreshToken().first() }
-                val accessToken = "access.await()"
-                val refreshToken = "refresh.await()"
+    override fun authenticate(
+        route: Route?,
+        response: okhttp3.Response,
+    ): Request? =
+        runBlocking {
+            val accessToken = runBlocking { appDataStoreRepository.getAccessToken() }
+            val refreshToken = runBlocking { appDataStoreRepository.getRefreshToken() }
 
-                mutex.withLock {
-                    if (verifyTokenIsRefreshed(accessToken, refreshToken)) {
-                        Log.d("RETROFIT", "TokenAuthenticator - authenticate() called / 중단된 API 재요청")
-                        response.request
-                            .newBuilder()
-                            .removeHeader("Authorization")
-                            .header(
-                                "Authorization",
-                                "Bearer repository.getAccessToken().first()",
-                            )
-                            .build()
-                    } else {
-                        null
-                    }
+            mutex.withLock {
+                if (verifyTokenIsRefreshed(accessToken, refreshToken)) {
+                    Log.d("RETROFIT", "TokenAuthenticator - authenticate() called / 중단된 API 재요청")
+                    response.request
+                        .newBuilder()
+                        .removeHeader("Authorization")
+                        .header(
+                            "Authorization",
+                            "Bearer ${appDataStoreRepository.getAccessToken()}",
+                        )
+                        .build()
+                } else {
+                    null
                 }
             }
+        }
 
-        private suspend fun verifyTokenIsRefreshed(
-            access: String,
-            refresh: String,
-        ): Boolean {
-            val newAccess = "access" // repository.getAccessToken().first()
+    private suspend fun verifyTokenIsRefreshed(
+        access: String,
+        refresh: String,
+    ): Boolean {
+        val newAccess = appDataStoreRepository.getAccessToken()
 
-            return if (access != newAccess) {
+        if (access != newAccess) {
+            true
+        }
+
+        Log.d(
+            "RETROFIT",
+            "TokenAuthenticator - authenticate() called / 토큰 만료. 토큰 Refresh 요청: $refresh"
+        )
+
+        val request = RefreshTokenRequest(refresh)
+        val state = authRepository.reissueToken(request)
+
+        return when (state) {
+            is ApiState.Success -> {
+                appDataStoreRepository.saveTokens(state.data.accessToken, state.data.refreshToken)
                 true
-            } else {
-                Log.d("RETROFIT", "TokenAuthenticator - authenticate() called / 토큰 만료. 토큰 Refresh 요청: $refresh")
-//            var foreggJwtToken = JwtResponseVo("", "")
-//            JwtRepository.reIssueToken(refresh).collect { state ->
-//                when(state) {
-//                    is ApiState.Loading -> { }
-//                    is ApiState.Success -> {
-//                        JwtToken = state.data
-//                        return@collect
-//                    }
-//                    else -> {
-//                        return@collect
-//                    }
-//                }
-//            }
+            }
 
-//            val saveJwtRequestVo = SaveJwtRequestVo(JwtToken.accessToken, JwtToken.refreshToken)
-//
-//            JwtRepository.saveAccessTokenAndRefreshToken(saveJwtRequestVo).first()
-//            JwtToken.isTokenValid.apply {
-//                if(!this) Log.d("RETROFIT","TokenAuthenticator - verifyTokenIsRefreshed() called / 토큰 갱신 실패.")
-//            }
-                false // TODO 삭제
+            is ApiState.Fail -> {
+                ULog.d("재발급 실패: ${state.failState.message}")
+                false
             }
         }
     }
+}

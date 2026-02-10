@@ -51,7 +51,7 @@ data class ScheduleListResponse (
         /**TODO 서버 DTO에 맞춰 수정 : attendanceRate는 차후 douvle 추천!**/
         fun ScheduleListResponse.toAdminDomain(): AdminSessionCheck {
             return AdminSessionCheck(
-                id = scheduleId.toInt(),
+                id = scheduleId,
                 title = name,
                 date = date,
                 startTime = startTime,

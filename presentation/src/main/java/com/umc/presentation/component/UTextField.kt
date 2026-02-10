@@ -12,6 +12,10 @@ import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
 import com.umc.presentation.databinding.CustomTextFieldBinding
 import com.umc.presentation.extension.px
+import android.view.Gravity
+import android.text.InputType
+
+
 
 class UTextField @JvmOverloads constructor(
     mContext: Context,
@@ -51,6 +55,18 @@ class UTextField @JvmOverloads constructor(
                     )
                 }
             )
+        }
+
+        @JvmStatic
+        @BindingAdapter("textColor")
+        fun bindTextColor(view: UTextField, color: Int) {
+            view.setTextColor(color)
+        }
+
+        @JvmStatic
+        @BindingAdapter("enabled")
+        fun bindEnabled(view: UTextField, isEnabled: Boolean) {
+            view.isEnabled = isEnabled
         }
     }
 
@@ -117,6 +133,18 @@ class UTextField @JvmOverloads constructor(
                     ),
                 )
 
+
+                editText.gravity = Gravity.START or Gravity.TOP
+
+                editText.isSingleLine = false
+                editText.setHorizontallyScrolling(false)
+                editText.inputType = editText.inputType or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+
+
+
+
+
+
                 editText.doOnTextChanged { text, _, _, _ ->
                     if (!suppressCallback) {
                         onTextChangedListener?.invoke(text?.toString().orEmpty())
@@ -179,6 +207,32 @@ class UTextField @JvmOverloads constructor(
         suppressCallback = false
     }
 
+    fun setReadOnly(readOnly: Boolean) {
+        binding.editText.apply {
+            isFocusable = !readOnly
+            isFocusableInTouchMode = !readOnly
+            isClickable = !readOnly
+            isLongClickable = !readOnly
+            isCursorVisible = !readOnly
+        }
+    }
+
+    fun setReadOnlyStyle(
+        backgroundColor: Int = R.color.neutral100,
+        strokeColorRes: Int = R.color.neutral200,
+        textColor: Int = R.color.neutral600,
+        hintColor: Int = R.color.neutral400,
+    ) {
+        setCardBackgroundColor(ContextCompat.getColor(context, backgroundColor))
+        strokeColor = ContextCompat.getColor(context, strokeColorRes)
+        binding.editText.setTextColor(ContextCompat.getColor(context, textColor))
+        binding.editText.setHintTextColor(ContextCompat.getColor(context, hintColor))
+    }
+
+
+
+
+
     fun setOnTextChangedListener(listener: ((String) -> Unit)?) {
         onTextChangedListener = listener
     }
@@ -205,10 +259,10 @@ class UTextField @JvmOverloads constructor(
         binding.editText.isSingleLine = true
     }
 
+
     fun setOnImeActionListener(listener: ((Int, String) -> Boolean)?) {
         onImeActionListener = listener
     }
-
 
 
     fun setPlaceHolder(text: String) {
@@ -221,5 +275,14 @@ class UTextField @JvmOverloads constructor(
 
     fun clearText() {
         setText("")
+    }
+
+    fun setTextColor(color: Int) {
+        binding.editText.setTextColor(color)
+    }
+
+    override fun setEnabled(enabled: Boolean) {
+        super.setEnabled(enabled)
+        binding.editText.isEnabled = enabled
     }
 }

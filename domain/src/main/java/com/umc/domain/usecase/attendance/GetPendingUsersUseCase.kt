@@ -8,6 +8,6 @@ import javax.inject.Inject
 class GetPendingUsersUseCase @Inject constructor(
     private val repository: AttendanceRepository
 ) {
-    suspend operator fun invoke(scheduleId: Int): ApiState<List<AdminPendingUser>> =
+    suspend operator fun invoke(scheduleId: Long): ApiState<List<AdminPendingUser>> =
         repository.getPendingUsers(scheduleId)
 }

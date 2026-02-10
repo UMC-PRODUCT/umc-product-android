@@ -4,8 +4,8 @@ import com.google.gson.annotations.SerializedName
 import com.umc.domain.model.act.check.AdminPendingUser
 
 data class AdminPendingUserResponse(
-    @SerializedName("attendanceId") val attendanceId: String,
-    @SerializedName("memberId") val memberId: String,
+    @SerializedName("attendanceId") val attendanceId: Long,
+    @SerializedName("memberId") val memberId: Long,
     @SerializedName("memberName") val memberName: String,
     @SerializedName("nickname") val nickname: String,
     @SerializedName("schoolName") val schoolName: String,
@@ -16,7 +16,7 @@ data class AdminPendingUserResponse(
     companion object {
         fun AdminPendingUserResponse.toAdminPendingUser(): AdminPendingUser {
             return AdminPendingUser(
-                id = attendanceId.toIntOrNull() ?: 0,
+                id = attendanceId,
                 name = memberName,
                 nickname = nickname,
                 university = schoolName,

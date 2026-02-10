@@ -7,6 +7,8 @@ import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
+import com.umc.domain.model.request.attendance.AttendanceCheckRequest
+import com.umc.domain.model.request.attendance.AttendanceReasonRequest
 import com.umc.domain.repository.attendance.AttendanceRepository
 import javax.inject.Inject
 
@@ -20,19 +22,23 @@ class AttendanceRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun postAttendanceCheck(sheetId: Int): ApiState<String> {
-        return attendanceRemoteDataSource.postAttendanceCheck(sheetId)
+    override suspend fun postAttendanceCheck(request: AttendanceCheckRequest): ApiState<String> {
+        return attendanceRemoteDataSource.postAttendanceCheck(request)
     }
 
-    override suspend fun getPendingUsers(scheduleId: Int): ApiState<List<AdminPendingUser>> {
+    override suspend fun getPendingUsers(scheduleId: Long): ApiState<List<AdminPendingUser>> {
         return attendanceRemoteDataSource.getPendingUsers(scheduleId).map { responseList ->
             responseList.map { it.toAdminPendingUser() }
         }
     }
 
-    override suspend fun approveAttendance(recordId: Int): ApiState<Unit> =
+    override suspend fun approveAttendance(recordId: Long): ApiState<Unit> =
         attendanceRemoteDataSource.approveAttendance(recordId)
 
-    override suspend fun rejectAttendance(recordId: Int): ApiState<Unit> =
+    override suspend fun rejectAttendance(recordId: Long): ApiState<Unit> =
         attendanceRemoteDataSource.rejectAttendance(recordId)
+
+    override suspend fun postAttendanceReason(request: AttendanceReasonRequest): ApiState<String> {
+        return attendanceRemoteDataSource.postAttendanceReason(request)
+    }
 }

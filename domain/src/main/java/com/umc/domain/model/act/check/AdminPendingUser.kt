@@ -1,7 +1,7 @@
 package com.umc.domain.model.act.check
 
 data class AdminPendingUser(
-    val id: Int,
+    val id: Long,
     val name: String,
     val nickname: String,
     val university: String,

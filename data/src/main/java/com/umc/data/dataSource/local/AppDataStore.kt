@@ -9,6 +9,7 @@ import com.umc.domain.model.UserRole
 import com.umc.domain.model.mypage.UserOutLink
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -127,6 +128,29 @@ class AppDataStore @Inject constructor(
 
 
 
+    //------------JWT 관련 로직-----------------//
+    suspend fun saveTokens(accessToken: String, refreshToken: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_ACCESS_TOKEN] = accessToken
+            prefs[KEY_REFRESH_TOKEN] = refreshToken
+        }
+    }
+
+    suspend fun getAccessToken(): String {
+        return context.dataStore.data.first()[KEY_ACCESS_TOKEN] ?: ""
+    }
+
+    suspend fun getRefreshToken(): String {
+        return context.dataStore.data.first()[KEY_REFRESH_TOKEN] ?: ""
+    }
+
+    suspend fun clearTokens() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_ACCESS_TOKEN)
+            prefs.remove(KEY_REFRESH_TOKEN)
+        }
+    }
+
 
     // 여기서 Datastore에 들어갈 key들 정의
     companion object {
@@ -151,6 +175,9 @@ class AppDataStore @Inject constructor(
 
         //게시글 검색에서 게시글 검색 기록 KEY
         val KEY_RECENT_SEARCHES_POST = stringPreferencesKey("recent_searches_post")
+
+        val KEY_ACCESS_TOKEN = stringPreferencesKey("access_token")
+        val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token")
     }
 
 }

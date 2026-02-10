@@ -44,7 +44,7 @@ class AdminCheckViewModel @Inject constructor(
     /**
      * 출석 승인 버튼 클릭 시 호출
      */
-    fun approveAttendance(attendanceId: Int) {
+    fun approveAttendance(attendanceId: Long) {
         viewModelScope.launch {
             when (val result = postAttendanceApprovalUseCase(attendanceId)) {
                 is ApiState.Success -> {
@@ -60,7 +60,7 @@ class AdminCheckViewModel @Inject constructor(
     /**
      * 출석 반려 버튼 클릭 시 호출
      */
-    fun rejectAttendance(attendanceId: Int) {
+    fun rejectAttendance(attendanceId: Long) {
         viewModelScope.launch {
             android.util.Log.d("AdminCheck", "반려 시작: attendanceId=$attendanceId")
 
@@ -88,7 +88,7 @@ class AdminCheckViewModel @Inject constructor(
      * - attendanceRate 재계산
      * - pendingCount -1
      */
-    private fun updateSessionAfterApproval(attendanceId: Int) {
+    private fun updateSessionAfterApproval(attendanceId: Long) {
         updateState {
             val updatedSessions = adminSessions.map { uiModel ->
                 val session = uiModel.session
@@ -133,7 +133,7 @@ class AdminCheckViewModel @Inject constructor(
      * - pendingCount -1
      * - attendedChallengers, attendanceRate는 변경 없음 (반려이므로)
      */
-    private fun updateSessionAfterRejection(attendanceId: Int) {
+    private fun updateSessionAfterRejection(attendanceId: Long) {
         updateState {
             val updatedSessions = adminSessions.map { uiModel ->
                 val session = uiModel.session
@@ -161,7 +161,7 @@ class AdminCheckViewModel @Inject constructor(
         }
     }
 
-    fun onLocationChangeClicked(sessionId: Int) {
+    fun onLocationChangeClicked(sessionId: Long) {
         emitEvent(AdminCheckEvent.ShowLocationDialog(
             sessionId = sessionId,
             lat = 37.582568,
@@ -170,12 +170,12 @@ class AdminCheckViewModel @Inject constructor(
         ))
     }
 
-    fun updateSessionLocation(sessionId: Int, lat: Double, lng: Double, address: String) {
+    fun updateSessionLocation(sessionId: Long, lat: Double, lng: Double, address: String) {
         // TODO: 서버 위치 업데이트 API 호출
         emitEvent(AdminCheckEvent.ShowToast("출석 위치가 성공적으로 변경되었습니다."))
     }
 
-    fun toggleSessionExpansion(sessionId: Int) {
+    fun toggleSessionExpansion(sessionId: Long) {
         val currentSession = uiState.value.adminSessions.find { it.session.id == sessionId }
 
         if (currentSession?.isExpanded == false && currentSession.session.pendingUsers.isEmpty()) {
@@ -185,7 +185,7 @@ class AdminCheckViewModel @Inject constructor(
         updateExpansionState(sessionId)
     }
 
-    private fun fetchPendingUsers(sessionId: Int) {
+    private fun fetchPendingUsers(sessionId: Long) {
         viewModelScope.launch {
             when (val result = getPendingUsersUseCase(sessionId)) {
                 is ApiState.Success -> {
@@ -203,7 +203,7 @@ class AdminCheckViewModel @Inject constructor(
         }
     }
 
-    private fun updateExpansionState(sessionId: Int) {
+    private fun updateExpansionState(sessionId: Long) {
         updateState {
             val newList = adminSessions.map { uiModel ->
                 if (uiModel.session.id == sessionId) {
@@ -224,7 +224,7 @@ data class AdminCheckUiState(
 sealed class AdminCheckEvent : UiEvent {
     data class ShowToast(val message: String) : AdminCheckEvent()
     data class ShowLocationDialog(
-        val sessionId: Int,
+        val sessionId: Long,
         val lat: Double,
         val lng: Double,
         val address: String

@@ -43,17 +43,20 @@
 
             <TextView
                 android:id="@+id/tv_pending_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"  android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
+                android:layout_marginEnd="12dp"
                 android:text='@{uiModel.name + "(" + uiModel.nickname + ")"}'
                 android:textAppearance="@style/SubheadlineBold"
                 android:textColor="@color/neutral800"
+                android:ellipsize="end"
+                android:maxLines="1"
                 app:layout_constraintBottom_toTopOf="@+id/tv_pending_university"
+                app:layout_constraintEnd_toStartOf="@+id/btn_pending_warning"
                 app:layout_constraintStart_toEndOf="@+id/iv_pending_profile"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_chainStyle="packed"
-                tools:text="홍길동(닉네임)" />
+                tools:text="홍길동(매우긴닉네임입니다확인해보세요)" />
 
             <TextView
                 android:id="@+id/tv_pending_university"

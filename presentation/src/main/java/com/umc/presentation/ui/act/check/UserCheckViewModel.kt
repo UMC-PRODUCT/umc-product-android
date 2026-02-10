@@ -6,8 +6,10 @@ import com.umc.domain.model.act.check.UserCheckHistory
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
+import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
+import com.umc.domain.usecase.attendance.PostAttendanceReasonUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -20,11 +22,12 @@ import javax.inject.Inject
 class UserCheckViewModel @Inject constructor(
     private val getAttendanceAvailableUseCase: GetAttendanceAvailableUseCase,
     private val getScheduleDetailUseCase: GetScheduleDetailUseCase,
-    private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase
+    private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase,
+    private val postAttendanceReasonUseCase: PostAttendanceReasonUseCase
 ) : BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
 
-    private var lastUserLat: Double = 0.0
-    private var lastUserLng: Double = 0.0
+    private var lastUserLat: Double? = null
+    private var lastUserLng: Double? = null
 
     init { fetchAttendanceData() }
 
@@ -44,7 +47,7 @@ class UserCheckViewModel @Inject constructor(
         loadHistoryDummyData()
     }
 
-    private fun fetchSessionDetail(sessionId: Int) {
+    private fun fetchSessionDetail(sessionId: Long) {
         viewModelScope.launch {
             when (val result = getScheduleDetailUseCase(sessionId)) {
                 is ApiState.Success -> {
@@ -73,22 +76,40 @@ class UserCheckViewModel @Inject constructor(
     /**
      * 실시간 위치 기반 출석 요청
      */
-    fun requestAttendance(sheetId: Int) {
+    fun requestAttendance(sheetId: Long) {
+        // 현재 UI 상태에서 해당 세션의 인증 여부를 확인
+        val sessionUIModel = uiState.value.availableSessions.find { it.session.id == sheetId }
+        val isVerified = sessionUIModel?.isWithinRange ?: false
+
+        // Request 객체 생성
+        val request = AttendanceCheckRequest(
+            attendanceSheetId = sheetId,
+            latitude = lastUserLat,
+            longitude = lastUserLng,
+            locationVerified = isVerified
+        )
+
         viewModelScope.launch {
-            when (val result = postAttendanceCheckUseCase(sheetId)) {
-                is ApiState.Success -> {
-                    fetchAttendanceData()
-                }
-                is ApiState.Fail -> {
-                    emitEvent(UserCheckEvent.ShowToast(result.failState.message))
-                }
+            // UseCase에 객체 전달
+            when (val result = postAttendanceCheckUseCase(request)) {
+                is ApiState.Success -> fetchAttendanceData()
+                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
             }
         }
     }
 
-    fun submitAttendanceReason(sessionId: Int, reason: String) {
-        // TODO: 출석 사유 제출 API 연동
-        emitEvent(UserCheckEvent.ShowToast("사유가 성공적으로 제출되었습니다."))
+    /**
+     * 출석 사유 제출 API 연동
+     */
+    fun submitAttendanceReason(sessionId: Long, reason: String) {
+        viewModelScope.launch {
+            when (val result = postAttendanceReasonUseCase(sessionId, reason)) {
+                is ApiState.Success -> {
+                    fetchAttendanceData()
+                }
+                is ApiState.Fail -> {}
+            }
+        }
     }
 
     private fun loadHistoryDummyData() {
@@ -138,7 +159,7 @@ class UserCheckViewModel @Inject constructor(
     /**
      * 특정 아이템을 클릭했을 때 확장 상태를 토글 (기존 로직 유지)
      */
-    fun toggleSessionExpansion(sessionId: Int) {
+    fun toggleSessionExpansion(sessionId: Long) {
         updateState {
             val newList = availableSessions.map { uiModel ->
                 if (uiModel.session.id == sessionId) {
@@ -161,6 +182,6 @@ data class UserCheckUiState(
 
 sealed class UserCheckEvent : UiEvent {
     data class ShowToast(val message: String) : UserCheckEvent()
-    data class ShowReasonDialog(val sessionId: Int) : UserCheckEvent()
-    data class NavigateToFailureReason(val sessionId: Int) : UserCheckEvent()
+    data class ShowReasonDialog(val sessionId: Long) : UserCheckEvent()
+    data class NavigateToFailureReason(val sessionId: Long) : UserCheckEvent()
 }

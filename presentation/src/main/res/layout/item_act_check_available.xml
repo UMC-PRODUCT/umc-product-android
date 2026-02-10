@@ -103,7 +103,6 @@
                 app:contentPaddingLeft="8dp"
                 app:contentPaddingRight="8dp"
                 app:layout_constrainedWidth="true"
-                app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toEndOf="@+id/tv_session_title"
                 app:layout_constraintEnd_toStartOf="@+id/iv_dropdown_arrow"
                 app:layout_constraintTop_toTopOf="parent"
@@ -111,7 +110,6 @@
                 app:text="@{uiModel.session.status.text}"
                 app:attendanceStatusStyle="@{uiModel.session.status}"
                 app:textAppearance="@style/Caption1Bold"
-                app:textColor="@color/neutral700"
                 tools:text="출석 전" />
 
             <ImageView

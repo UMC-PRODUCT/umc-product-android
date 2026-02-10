@@ -19,8 +19,8 @@ interface ScheduleRepository {
     //월별 일정 가져오기
     suspend fun getMonthSchedule(year: Int, month: Int): ApiState<List<ScheduleMonthModel>>
 
-    //일정 상세 가져오기 (활동 탭)
-    suspend fun getScheduleDetail(scheduleId: Int): ApiState<UserCheckAvailable>
+  
+    suspend fun getScheduleDetail(scheduleId: Long): ApiState<UserCheckAvailable>
 
     //운영진 일정 리스트 가져오기
     suspend fun getAdminScheduleList(): ApiState<List<AdminSessionCheck>>

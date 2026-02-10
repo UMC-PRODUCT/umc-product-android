@@ -3,7 +3,7 @@ package com.umc.domain.model.act.check
 import com.umc.domain.model.enums.AdminSessionStatus
 
 data class AdminSessionCheck(
-    val id: Int,
+    val id: Long,
     val title: String,
     val date: String,
     val startTime: String,

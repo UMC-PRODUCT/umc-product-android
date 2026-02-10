@@ -175,7 +175,7 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
         }
     }
 
-    private fun showAttendanceReasonDialog(sessionId: Int) {
+    private fun showAttendanceReasonDialog(sessionId: Long) {
         val model = UCheckDialogModel(
             title = getString(R.string.attendance_reason_dialog_title),
             subtitle = getString(R.string.attendance_reason_guide),

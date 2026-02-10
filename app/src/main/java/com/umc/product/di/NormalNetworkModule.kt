@@ -70,7 +70,7 @@ object NormalNetworkModule {
         gsonConverterFactory: GsonConverterFactory,
     ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://dev.umc-product.kyeoungwoon.kr/")
+            .baseUrl("https://dev.api.umc.it.kr/")
             .client(okHttpClient)
             .addConverterFactory(gsonConverterFactory)
             .build()

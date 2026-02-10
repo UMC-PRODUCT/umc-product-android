@@ -12,10 +12,10 @@ import com.umc.presentation.ui.act.check.AdminSessionUIModel
 
 class AdminCheckAdapter(
     private val fragmentManager: FragmentManager,
-    private val onToggleExpansion: (Int) -> Unit,
-    private val onChangeLocation: (Int) -> Unit,
-    private val onApproveConfirmed: (AdminPendingUser, Int) -> Unit,
-    private val onRejectConfirmed: (AdminPendingUser, Int) -> Unit
+    private val onToggleExpansion: (Long) -> Unit,
+    private val onChangeLocation: (Long) -> Unit,
+    private val onApproveConfirmed: (AdminPendingUser, Long) -> Unit,
+    private val onRejectConfirmed: (AdminPendingUser, Long) -> Unit
 ) : ListAdapter<AdminSessionUIModel, AdminCheckAdapter.ViewHolder>(AdminCheckDiffCallback()) {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
@@ -40,7 +40,7 @@ class AdminCheckAdapter(
     inner class ViewHolder(private val binding: ItemAdminCheckSessionBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        private var sessionId: Int = -1
+        private var sessionId: Long = -1
 
         private val pendingUserAdapter = AdminPendingUserAdapter(
             fragmentManager = fragmentManager,

@@ -1,16 +1,19 @@
 package com.umc.product.di
 
 import android.util.Log
+import com.umc.data.dataSource.local.AppDataStore
+import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.presentation.util.ULog
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// TODO 토큰 관련 Repository 필요
 @Singleton
-class AuthenticationInterceptor
-    @Inject
-    constructor() : Interceptor {
+class AuthenticationInterceptor @Inject constructor(
+    private val appDataStoreRepository: AppDataStoreRepository
+) : Interceptor {
         override fun intercept(chain: Interceptor.Chain): Response {
 
             // S3에 직접 전송 시 인증 경로 겹쳐서 문제 발생 (별도로 생성하자니)
@@ -27,7 +30,7 @@ class AuthenticationInterceptor
 
             val request =
                 chain.request().newBuilder()
-                    .addHeader("Authorization", "Bearer ${testToken}").build()
+                    .addHeader("Authorization", "Bearer ${accessToken}").build()
 
             Log.d(
                 "RETROFIT",
