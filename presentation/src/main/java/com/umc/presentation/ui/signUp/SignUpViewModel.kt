@@ -1,11 +1,13 @@
 package com.umc.presentation.ui.signUp
 
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.JwtToken
 import com.umc.domain.model.enums.EmailVerifyType
 import com.umc.domain.model.request.EmailVerificationCompleteRequest
 import com.umc.domain.model.request.EmailVerificationRequest
 import com.umc.domain.model.request.member.RegisterRequest
 import com.umc.domain.model.school.SchoolInfo
+import com.umc.domain.usecase.appDataStore.SaveTokenUseCase
 import com.umc.domain.usecase.auth.PostEmailVerificationCompleteUseCase
 import com.umc.domain.usecase.auth.PostEmailVerificationUseCase
 import com.umc.domain.usecase.member.RegisterUseCase
@@ -24,7 +26,8 @@ class SignUpViewModel @Inject constructor(
     private val getAllSchoolUseCase: GetAllSchoolUseCase,
     private val postEmailVerificationUseCase: PostEmailVerificationUseCase,
     private val postEmailVerificationCompleteUseCase: PostEmailVerificationCompleteUseCase,
-    private val registerUseCase: RegisterUseCase
+    private val registerUseCase: RegisterUseCase,
+    private val saveTokenUseCase: SaveTokenUseCase,
 ) : BaseViewModel<SignUpState, SignUpEvent>(
     SignUpState(),
 ) {
@@ -144,11 +147,20 @@ class SignUpViewModel @Inject constructor(
         resultResponse(
             response = registerUseCase(request),
             successCallback = {
-                emitEvent(SignUpEvent.MoveToMainEvent)
+                updateToken(it)
             },
             errorCallback = {
                 //TODO Toast?
                 ULog.d("에러 로그")
+            }
+        )
+    }
+
+    private fun updateToken(token: JwtToken) = viewModelScope.launch {
+        resultResponse(
+            response = saveTokenUseCase(token),
+            successCallback = {
+                emitEvent(SignUpEvent.MoveToPermissionEvent)
             }
         )
     }
@@ -176,8 +188,7 @@ data class SignUpState(
 }
 
 sealed interface SignUpEvent : UiEvent {
-    object MoveToMainEvent : SignUpEvent
-    object MoveToLoginEvent : SignUpEvent
+    object MoveToPermissionEvent : SignUpEvent
     object MoveToBack : SignUpEvent
     object ShowSchoolBottomSheet : SignUpEvent
 }

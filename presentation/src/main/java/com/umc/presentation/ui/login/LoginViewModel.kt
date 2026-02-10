@@ -1,7 +1,9 @@
 package com.umc.presentation.ui.login
 
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.JwtToken
 import com.umc.domain.usecase.PostLoginUseCase
+import com.umc.domain.usecase.appDataStore.SaveTokenUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -14,7 +16,8 @@ import javax.inject.Inject
 class LoginViewModel
 @Inject
 constructor(
-    private val postLoginUseCase: PostLoginUseCase
+    private val postLoginUseCase: PostLoginUseCase,
+    private val saveTokenUseCase: SaveTokenUseCase
 ) : BaseViewModel<UiState, LoginEvent>(
     UiState.Default,
 ) {
@@ -27,8 +30,19 @@ constructor(
             response = postLoginUseCase(token),
             successCallback = {
                 if (it.oAuthVerificationToken.isNotEmpty()) emitEvent(LoginEvent.MoveToSignUpEvent(it.oAuthVerificationToken))
-                else emitEvent(LoginEvent.MoveToMainEvent)
+                else {
+                    saveToken(it)
+                }
             },
+        )
+    }
+
+    private fun saveToken(request: JwtToken) = viewModelScope.launch {
+        resultResponse(
+            response = saveTokenUseCase(request),
+            successCallback = {
+                emitEvent(LoginEvent.MoveToMainEvent)
+            }
         )
     }
 }

@@ -51,8 +51,7 @@ class SignUpFragment :
     override fun handleEvent(event: SignUpEvent) {
         when (event) {
             SignUpEvent.MoveToBack -> findNavController().popBackStack()
-            SignUpEvent.MoveToLoginEvent -> {}
-            SignUpEvent.MoveToMainEvent -> {}
+            SignUpEvent.MoveToPermissionEvent -> navigatePermission()
             SignUpEvent.ShowSchoolBottomSheet -> showSchoolSelectBottomSheet()
         }
     }
@@ -72,5 +71,10 @@ class SignUpFragment :
         }
 
         bottomSheet.show(parentFragmentManager, "SchoolSelectBottomSheet")
+    }
+
+    private fun navigatePermission() {
+        val action = SignUpFragmentDirections.actionSignUpToPermission()
+        findNavController().navigate(action)
     }
 }

@@ -1,5 +1,6 @@
 package com.umc.data.api
 
+import com.umc.data.response.JwtLoginResponse
 import com.umc.data.response.member.MemberResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.member.RegisterRequest
@@ -21,6 +22,6 @@ interface MemberApi {
     @POST(Endpoints.Member.MEMBER_REGISTER)
     suspend fun register(
         @Body request: RegisterRequest
-    ): ApiResponse<Unit>
+    ): ApiResponse<JwtLoginResponse>
 
 }

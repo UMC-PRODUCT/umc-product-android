@@ -19,11 +19,9 @@ class AuthenticationInterceptor @Inject constructor(
             val testToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMDEiLCJpYXQiOjE3NzAzOTg2MDAsImV4cCI6MTc3MDQwMjIwMH0.WYCX4j" +
                     "Gxa3mLiiL6JFgGE8kEVBOKW1awJ0Zir-15Q8yhg3dntYaCmux408_8ybRjbQ-4JUAErIVGguT3Yse93Q"
 
-            //TODO 확인용 지워야 함
-            ULog.d("실제 헤더 : $accessToken")
             val request =
                 chain.request().newBuilder()
-                    .addHeader("Authorization", "Bearer ${testToken}").build()
+                    .addHeader("Authorization", "Bearer ${accessToken}").build()
 
             Log.d(
                 "RETROFIT",

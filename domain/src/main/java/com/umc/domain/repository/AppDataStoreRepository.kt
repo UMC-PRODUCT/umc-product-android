@@ -1,5 +1,6 @@
 package com.umc.domain.repository
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.mypage.UserOutLink
 import kotlinx.coroutines.flow.Flow
 
@@ -20,6 +21,6 @@ interface AppDataStoreRepository {
 
     suspend fun getAccessToken(): String
     suspend fun getRefreshToken(): String
-    suspend fun saveTokens(accessToken: String, refreshToken: String)
+    suspend fun saveTokens(accessToken: String, refreshToken: String): ApiState<Unit>
     suspend fun clearTokens()
 }

@@ -1,7 +1,9 @@
 package com.umc.data.repository.member
 
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSource
+import com.umc.data.response.JwtLoginResponse.Companion.toModel
 import com.umc.data.response.member.MemberResponse.Companion.toDomain
+import com.umc.domain.model.JwtToken
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
@@ -33,7 +35,7 @@ class MemberRepositoryImpl @Inject constructor(
         return memberRemoteDataSource.getMemberProfile(id).map { it.toDomain() }
     }
 
-    override suspend fun register(request: RegisterRequest): ApiState<Unit> {
-        return memberRemoteDataSource.register(request)
+    override suspend fun register(request: RegisterRequest): ApiState<JwtToken> {
+        return memberRemoteDataSource.register(request).map { it.toModel() }
     }
 }

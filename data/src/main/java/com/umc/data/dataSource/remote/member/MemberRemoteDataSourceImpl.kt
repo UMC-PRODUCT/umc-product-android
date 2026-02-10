@@ -2,6 +2,7 @@ package com.umc.data.dataSource.remote.member
 
 import com.umc.data.api.MemberApi
 import com.umc.data.dataSource.base.apiCall
+import com.umc.data.response.JwtLoginResponse
 import com.umc.data.response.member.MemberResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
@@ -21,7 +22,7 @@ class MemberRemoteDataSourceImpl @Inject constructor(
         return apiCall { memberApi.getMemberProfile(id) }
     }
 
-    override suspend fun register(request: RegisterRequest): ApiState<Unit> {
+    override suspend fun register(request: RegisterRequest): ApiState<JwtLoginResponse> {
         return apiCall { memberApi.register(request) }
     }
 }
