@@ -48,7 +48,7 @@ class UserChallengerViewModel @Inject constructor(
             // SpringBoot 파트
             UserChallenger(13, "배엔드", "스프링", 12, UserPart.SPRING_BOOT, UserChallengerRole.PART_LEADER),
             UserChallenger(14, "백자바", "제이피에이", 12, UserPart.SPRING_BOOT, UserChallengerRole.MEMBER),
-            UserChallenger(15, "유디비", "마이바티스", 12, UserPart.SPRING_BOOT, UserChallengerRole.MEMBER),
+        UserChallenger(15, "유디비", "마이바티스", 12, UserPart.SPRING_BOOT, UserChallengerRole.MEMBER),
 
             // Node.js 파트
             UserChallenger(16, "노드정", "익스프레스", 12, UserPart.NODE_JS, UserChallengerRole.PART_LEADER),

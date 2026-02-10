@@ -6,15 +6,16 @@ import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.presentation.databinding.ItemAdminCheckSessionBinding
 import com.umc.presentation.ui.act.check.AdminSessionUIModel
 
 class AdminCheckAdapter(
     private val fragmentManager: FragmentManager,
-    private val onToggleExpansion: (Int) -> Unit,
-    private val onChangeLocation: (Int) -> Unit,
-    private val onApproveConfirmed: (com.umc.domain.model.act.check.AdminPendingUser) -> Unit,
-    private val onRejectConfirmed: (com.umc.domain.model.act.check.AdminPendingUser) -> Unit
+    private val onToggleExpansion: (Long) -> Unit,
+    private val onChangeLocation: (Long) -> Unit,
+    private val onApproveConfirmed: (AdminPendingUser, Long) -> Unit,
+    private val onRejectConfirmed: (AdminPendingUser, Long) -> Unit
 ) : ListAdapter<AdminSessionUIModel, AdminCheckAdapter.ViewHolder>(AdminCheckDiffCallback()) {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
@@ -39,10 +40,16 @@ class AdminCheckAdapter(
     inner class ViewHolder(private val binding: ItemAdminCheckSessionBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
+        private var sessionId: Long = -1
+
         private val pendingUserAdapter = AdminPendingUserAdapter(
             fragmentManager = fragmentManager,
-            onApproveConfirmed = onApproveConfirmed,
-            onRejectConfirmed = onRejectConfirmed
+            onApproveConfirmed = { user ->
+                onApproveConfirmed(user, sessionId)
+            },
+            onRejectConfirmed = { user ->
+                onRejectConfirmed(user, sessionId)
+            }
         )
 
         init {
@@ -51,9 +58,12 @@ class AdminCheckAdapter(
 
         fun bind(uiModel: AdminSessionUIModel) {
             binding.uiModel = uiModel
+            this.sessionId = uiModel.session.id
 
             if (uiModel.isExpanded) {
                 pendingUserAdapter.submitList(uiModel.session.pendingUsers)
+            } else {
+                pendingUserAdapter.submitList(emptyList())
             }
 
             binding.btnAdminChangeLocation.setOnClickListener {

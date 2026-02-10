@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetScheduleDetailUseCase @Inject constructor(
     private val scheduleRepository: ScheduleRepository
 ) {
-    suspend operator fun invoke(scheduleId: Int): ApiState<UserCheckAvailable> {
+    suspend operator fun invoke(scheduleId: Long): ApiState<UserCheckAvailable> {
         return scheduleRepository.getScheduleDetail(scheduleId)
     }
 }

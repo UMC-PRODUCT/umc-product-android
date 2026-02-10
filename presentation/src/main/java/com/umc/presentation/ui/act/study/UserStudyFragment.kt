@@ -1,14 +1,53 @@
 package com.umc.presentation.ui.act.study
 
+import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentUserStudyBinding
+import kotlinx.coroutines.launch
 
-class UserStudyFragment : BaseFragment<FragmentUserStudyBinding, Nothing, Nothing, Nothing>(
-    FragmentUserStudyBinding::inflate
-) {
-    override val viewModel: Nothing
-        get() = throw IllegalStateException("ViewModel is not used in this Fragment.")
+class UserStudyFragment :
+    BaseFragment<FragmentUserStudyBinding, UserStudyState, UserStudyEvent, UserStudyViewModel>(
+        FragmentUserStudyBinding::inflate,
+    ) {
 
-    override fun initView() {}
-    override fun initStates() {}
+    override val viewModel: UserStudyViewModel by viewModels()
+    private lateinit var adapter: ActStudyAdapter
+
+    override fun initView() {
+        adapter = ActStudyAdapter(
+            onToggle = { index -> viewModel.toggleExpand(index) },
+            onLongApprove = { itemId -> viewModel.debugApprove(itemId) },
+            onSubmitClick = { itemId, link -> viewModel.onSubmitClick(itemId, link) },
+        )
+
+        binding.rvUserStudy.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvUserStudy.adapter = adapter
+
+
+        binding.rvUserStudy.itemAnimator = null
+
+        binding.state = viewModel.uiState.value
+        binding.lifecycleOwner = viewLifecycleOwner
+    }
+
+    override fun initStates() {
+        repeatOnStarted(viewLifecycleOwner) {
+            viewModel.uiState.collect { state ->
+
+
+                launch {
+                    binding.apply {
+                        tvPart.text = "WEB PART CURRICULUM"
+                        tvTitle.text = state.title
+                        tvPercent.text = state.percentText
+                        progress.progress = state.progress
+                        tvSub.text = state.subText
+                    }
+
+                    adapter.submitList(state.items)
+                }
+            }
+        }
+    }
 }

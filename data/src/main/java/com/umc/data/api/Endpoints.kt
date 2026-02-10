@@ -14,6 +14,11 @@ object Endpoints {
     object Attendance {
         const val ATTENDANCE = "api/v1/attendances"
         const val AVAILABLE = "$ATTENDANCE/available"
+        const val CHECK = "$ATTENDANCE/check"
+        const val REASON = "$ATTENDANCE/reason"
+        const val PENDING = "$ATTENDANCE/pending/{scheduleId}"
+        const val APPROVE = "$ATTENDANCE/{recordId}/approve"
+        const val REJECT = "$ATTENDANCE/{recordId}/reject"
     }
 
     object Challenger {
@@ -37,6 +42,21 @@ object Endpoints {
         const val SCHEDULE = "api/v1/schedules"
         const val DETAIL = "$SCHEDULE/{scheduleId}"
         const val MONTH = "$SCHEDULE/my-list"
+    }
+
+    object Community{
+        const val COMMUNITY = "api/v1/posts"
+        const val POST_SEARCH = "$COMMUNITY/search"
+        const val POST_DETAIL = "$COMMUNITY/{postId}"
+        const val POST_COMMENT = "$COMMUNITY/{postId}/comments"
+
+        const val POST_LIKE = "$COMMUNITY/{postId}/like"
+
+        const val LIGHTNING = "$COMMUNITY/lightning"
+
+        const val POST_COMMENT_DETAIL = "$POST_COMMENT/{commentId}"
+
+
     }
 
     object Organization {

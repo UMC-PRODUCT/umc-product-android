@@ -30,6 +30,22 @@ class AppDataStoreRepositoryImpl @Inject constructor(
         appDataStore.addSearchPlaceHistory(query)
     }
 
+    //커뮤니티 -> 최근 게시글 검색 기록 연결
+    override fun getRecentSearchesPost(): Flow<List<String>> {
+        return appDataStore.recentSearchesPostFlow
+    }
+    override suspend fun addRecentSearchPost(query: String) {
+        appDataStore.addSearchPostHistory(query)
+    }
+    override suspend fun removeRecentSearchPost(query: String) {
+        appDataStore.removeSearchPostHistory(query)
+    }
+    override suspend fun clearRecentSearchPost() {
+        appDataStore.clearSearchPostHistory()
+    }
+
+
+
     //유저 정보 가져오고 받아오기 연결
     override fun getUserInfo(): Flow<UserInfo> = appDataStore.userInfoFlow
 

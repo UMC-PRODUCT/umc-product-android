@@ -95,9 +95,9 @@
     <string name="community_write_category_select_long">카테고리를 선택하세요</string>
     <string name="community_write_light_title">번개 설정하기</string>
     <string name="community_write_light_time">날짜/시간</string>
-    <string name="community_write_light_time_placeholder">예: 1/1, 13시</string>
+    <string name="community_write_light_time_placeholder">예: 2026.01.01 13:00</string>
     <string name="community_write_light_people">최대 인원</string>
-    <string name="community_write_light_people_placeholder">예: 4명</string>
+    <string name="community_write_light_people_placeholder">예: 4</string>
     <string name="community_write_light_place">장소</string>
     <string name="community_write_light_place_placeholder">예: 강남역 3번 출구</string>
     <string name="community_write_light_openchat">오픈 채팅 링크</string>
@@ -208,7 +208,7 @@
 
     <string name="attendance_status_pending_title">승인 대기중</string>
     <string name="attendance_status_pending_description">%1$s님이 출석 정보를 확인하고 있습니다.</string>
-    <string name="attendance_status_completed_description">출석 처리가 완료 되었습니다.</string>
+    <string name="attendance_status_completed_description">출석 요청 처리가 완료되었습니다.</string>
 
     <string name="attendance_empty_available">아직 출석 가능한 세션이 없어요</string>
     <string name="attendance_empty_history">아직 진행된 세션이 없어요</string>
@@ -297,4 +297,18 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
+    <!-- study -->
+    <string name="admin_study_submit_desc">%1$s님의 %2$s 스터디입니다.</string>
+    <string name="admin_best_title">베스트 워크북 설정</string>
+    <string name="admin_best_desc">우수한 스터디를 명예의 전당에 등록하고\n%1$s님의 경고 점수를 차감할 수 있습니다.</string>
+    <string name="study_member_add_placeholder">스터디원을 추가하세요</string>
+    <string name="study_member_search_title">스터디원을 검색하세요</string>
+    <string name="study_member_search_hint">이름을 입력하세요</string>
+    <string name="study_leader_add_placeholder">담당 파트장을 추가하세요</string>
+    <string name="study_leader_search_title">담당 파트장을 검색하세요</string>
+
+    <string name="delete">삭제</string>
+
 </resources>

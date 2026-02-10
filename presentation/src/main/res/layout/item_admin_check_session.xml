@@ -46,37 +46,39 @@
 
             <TextView
                 android:id="@+id/tv_admin_session_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="@{uiModel.session.title}"
                 android:textAppearance="@style/Title3Bold"
                 android:textColor="@color/neutral800"
-                android:maxLines="1"
                 android:ellipsize="end"
-                app:layout_constrainedWidth="true"
-                app:layout_constraintEnd_toStartOf="@+id/btn_admin_session_status"
-                app:layout_constraintHorizontal_bias="0"
+                android:maxLines="1"
+                app:layout_constrainedWidth="true" app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintHorizontal_chainStyle="packed"
                 app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/btn_admin_session_status"
                 app:layout_constraintTop_toTopOf="@+id/btn_admin_change_location"
-                tools:text="4주차 정기세션" />
+                app:layout_constraintBottom_toBottomOf="@+id/btn_admin_change_location"
+                tools:text="4주차 정기세션 제목이 아주 길어질 경우의 테스트입니다." />
 
             <com.umc.presentation.component.UButton
                 android:id="@+id/btn_admin_session_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                app:adminStatusStyle="@{uiModel.session.adminStatus}"
+                android:layout_marginEnd="12dp"
+                app:adminStatusStyle="@{uiModel.session.status}"
                 app:buttonElevation="0"
                 app:contentPaddingBottom="2dp"
                 app:contentPaddingLeft="8dp"
                 app:contentPaddingRight="8dp"
                 app:contentPaddingTop="2dp"
                 app:cornerRadius="4dp"
-                app:layout_constraintBottom_toBottomOf="@+id/tv_admin_session_title"
+                app:layout_constrainedWidth="true"
                 app:layout_constraintStart_toEndOf="@+id/tv_admin_session_title"
+                app:layout_constraintEnd_toStartOf="@id/btn_admin_change_location"
                 app:layout_constraintTop_toTopOf="@+id/tv_admin_session_title"
-                app:text="@{uiModel.session.adminStatus.text}"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_admin_session_title"
+                app:text="@{uiModel.session.status.text}"
                 app:textAppearance="@style/Caption1Bold"
                 tools:text="진행 중" />
 
@@ -102,8 +104,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:includeFontPadding="false"
-                    android:text="@{uiModel.formattedDate}"
+                    android:text="@{uiModel.session.date}"
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral600"
                     app:layout_constraintBottom_toBottomOf="@+id/iv_admin_calendar"
@@ -126,15 +127,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:includeFontPadding="false"
-                    android:text="@{uiModel.formattedTime}"
+                    android:text='@{String.format("%s - %s", uiModel.session.startTime, uiModel.session.endTime)}'
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral600"
                     app:layout_constraintBottom_toBottomOf="@+id/iv_admin_clock"
                     app:layout_constraintStart_toEndOf="@+id/iv_admin_clock"
                     app:layout_constraintTop_toTopOf="@+id/iv_admin_clock"
                     tools:text="14:00 - 18:00" />
-
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <LinearLayout
@@ -162,13 +161,12 @@
                         android:layout_height="wrap_content"
                         android:text="@string/admin_check_stats_attendance_rate"
                         android:textAppearance="@style/SubheadlineBold"
-                        android:textColor="@color/primary700"
-                        tools:text="출석률"/>
+                        android:textColor="@color/primary700" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text='@{String.format("%d%%", uiModel.session.stats.attendanceRate)}'
+                        android:text='@{String.format("%d%%", uiModel.session.attendanceRate)}'
                         android:textAppearance="@style/Title3Bold"
                         android:textColor="@color/primary500"
                         tools:text="85%" />
@@ -188,13 +186,12 @@
                         android:layout_height="wrap_content"
                         android:text="@string/admin_check_stats_attendance_count"
                         android:textAppearance="@style/SubheadlineBold"
-                        android:textColor="@color/success700"
-                        tools:text="출석 인원"/>
+                        android:textColor="@color/success700" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text='@{String.format("%d/%d", uiModel.session.stats.attendedChallengers, uiModel.session.stats.totalChallengers)}'
+                        android:text='@{String.format("%d/%d", uiModel.session.attendedChallengers, uiModel.session.totalChallengers)}'
                         android:textAppearance="@style/Title3Bold"
                         android:textColor="@color/success500"
                         tools:text="34/40" />
@@ -214,13 +211,12 @@
                         android:layout_height="wrap_content"
                         android:text="@string/admin_check_stats_pending_count"
                         android:textAppearance="@style/SubheadlineBold"
-                        android:textColor="@color/warning700"
-                        tools:text="승인 대기"/>
+                        android:textColor="@color/warning700" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text='@{String.format("%d명", uiModel.session.stats.pendingCount)}'
+                        android:text='@{String.format("%d명", uiModel.session.pendingCount)}'
                         android:textAppearance="@style/Title3Bold"
                         android:textColor="@color/warning500"
                         tools:text="3명" />
@@ -230,15 +226,15 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
                 app:layout_constraintTop_toBottomOf="@+id/layout_admin_stats_group">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/layout_admin_pending_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
                     android:background="@drawable/bg_admin_pending_button_orange"
-                    android:visibility="@{uiModel.session.adminStatus == AdminSessionStatus.IN_PROGRESS ? View.VISIBLE : View.GONE}">
+                    android:visibility='@{uiModel.session.pendingCount > 0 ? View.VISIBLE : View.GONE}'>
 
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:id="@+id/btn_admin_pending_list_trigger"
@@ -266,8 +262,7 @@
                             android:textColor="@color/warning700"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toEndOf="@+id/iv_admin_btn_icon"
-                            app:layout_constraintTop_toTopOf="parent"
-                            tools:text="승인 대기 명단 확인하기"/>
+                            app:layout_constraintTop_toTopOf="parent" />
 
                         <ImageView
                             android:layout_width="20dp"
@@ -276,8 +271,7 @@
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:tint="@color/warning500"
-                            tools:src="@drawable/ic_dropdown_down" />
+                            app:tint="@color/warning500" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                     <androidx.recyclerview.widget.RecyclerView
@@ -285,7 +279,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:nestedScrollingEnabled="false"
-                        android:visibility="@{uiModel.isExpanded ? View.VISIBLE : View.GONE}"
+                        android:visibility="@{(uiModel.isExpanded &amp;&amp; !uiModel.session.pendingUsers.isEmpty()) ? View.VISIBLE : View.GONE}"
                         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                         app:layout_constraintTop_toBottomOf="@+id/btn_admin_pending_list_trigger"
                         tools:itemCount="2"
@@ -300,7 +294,8 @@
                     android:background="@drawable/bg_admin_completed_gray"
                     android:gravity="center"
                     android:paddingVertical="14dp"
-                    android:visibility="@{uiModel.session.adminStatus == AdminSessionStatus.COMPLETED ? View.VISIBLE : View.GONE}">
+                    android:layout_marginTop="24dp"
+                    android:visibility="@{(uiModel.session.status == AdminSessionStatus.COMPLETED &amp;&amp; uiModel.session.pendingCount == 0) ? View.VISIBLE : View.GONE}">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -314,11 +309,9 @@
                         android:layout_marginStart="8dp"
                         android:text="@string/admin_check_completed_message"
                         android:textAppearance="@style/SubheadlineBold"
-                        android:textColor="@color/neutral600"
-                        tools:text="모든 출석 승인이 완료되었습니다."/>
+                        android:textColor="@color/neutral600" />
                 </LinearLayout>
             </FrameLayout>
-
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 </layout>

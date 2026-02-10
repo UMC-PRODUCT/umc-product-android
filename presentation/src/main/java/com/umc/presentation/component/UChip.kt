@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
@@ -98,6 +99,9 @@ class UChip @JvmOverloads constructor(
                 }
 
 
+
+
+
             }
         } finally {
             a.recycle()
@@ -148,6 +152,11 @@ class UChip @JvmOverloads constructor(
         )
         setCardBackgroundColor(bg)
     }
+
+
+
+
+
 
     /** 외곽선 설정 변경
      * @param color 외곽선 색상

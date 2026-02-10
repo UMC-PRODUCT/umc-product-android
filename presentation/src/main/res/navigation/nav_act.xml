@@ -9,6 +9,46 @@
         android:id="@+id/activityManagementFragment"
         android:name="com.umc.presentation.ui.act.ActFragment"
         android:label="활동 관리 화면"
-        tools:layout="@layout/fragment_act" />
+        tools:layout="@layout/fragment_act">
+
+        <action
+            android:id="@+id/action_to_schedule_add"
+            app:destination="@id/adminActStudyScheduleAddFragment" />
+
+
+    </fragment>
+
+
+
+    <fragment
+        android:id="@+id/adminStudyGroupFragment"
+        android:name="com.umc.presentation.ui.act.study.group.AdminStudyGroupFragment"
+        android:label="스터디 그룹 관리"
+        tools:layout="@layout/fragment_admin_study_group">
+
+        <action
+            android:id="@+id/action_adminStudyGroupFragment_to_adminActStudyScheduleAddFragment"
+            app:destination="@id/adminActStudyScheduleAddFragment" />
+
+        <action
+            android:id="@+id/action_adminStudyGroupFragment_to_adminStudyGroupAddFragment"
+            app:destination="@id/adminStudyGroupAddFragment" />
+
+    </fragment>
+
+
+
+    <fragment
+        android:id="@+id/adminActStudyScheduleAddFragment"
+        android:name="com.umc.presentation.ui.act.study.schedule.AdminActStudyScheduleAddFragment"
+        android:label="스터디 일정 등록"
+        tools:layout="@layout/fragment_admin_study_schedule_add" />
+
+    <fragment
+        android:id="@+id/adminStudyGroupAddFragment"
+        android:name="com.umc.presentation.ui.act.study.group.create.AdminStudyGroupAddFragment"
+        android:label="스터디 그룹 생성"
+        tools:layout="@layout/fragment_admin_study_group_add" />
+
 
 </navigation>

@@ -1,27 +1,19 @@
 package com.umc.presentation.ui.community.search
 
-import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.enums.SearchMode
-import com.umc.domain.model.home.ParticipantItem
-import com.umc.domain.model.mypage.ContentItem
-import com.umc.presentation.R
+import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPostSearchBinding
-import com.umc.presentation.ui.community.CommunityFragmentDirections
 import com.umc.presentation.ui.community.adapter.RecentSearchAdapter
 import com.umc.presentation.ui.community.adapter.RecentSearchDelegate
-import com.umc.presentation.ui.community.detail.PostDetailFragmentEvent
-import com.umc.presentation.ui.community.detail.PostDetailViewModel
-import com.umc.presentation.ui.home.PlanAddFragmentEvent
-import com.umc.presentation.ui.mypage.adapter.ContentAdapter
-import com.umc.presentation.ui.mypage.adapter.ContentItemDelegate
+import com.umc.presentation.ui.community.adapter.ContentAdapter
+import com.umc.presentation.ui.community.adapter.ContentItemDelegate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -48,7 +40,9 @@ class PostSearchFragment : BaseFragment<FragmentPostSearchBinding, PostSearchFra
     
     // 검색 결과 item 터치 시 이동 로직
     override fun onItemClicked(item: ContentItem) {
-        val action = PostSearchFragmentDirections.actionPostSearchToPostDetail()
+        val action = PostSearchFragmentDirections.actionPostSearchToPostDetail(
+            postId = item.postId
+        )
         findNavController().navigate(action)
     }
 
@@ -82,6 +76,24 @@ class PostSearchFragment : BaseFragment<FragmentPostSearchBinding, PostSearchFra
         searchContentAdapter = ContentAdapter(this)
         binding.searchRcvResult.apply{
             adapter = searchContentAdapter
+
+            //무한 스크롤
+            // 무한 스크롤 리스너: 바닥 도달 시 다음 페이지 호출
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+
+                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                    val lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition()
+                    val totalItemCount = layoutManager.itemCount
+
+                    // 로딩 중이 아닐 때 바닥에서 2번째 아이템 근처면 다음 데이터 로드
+                    if (!viewModel.uiState.value.isPageLoading && lastVisibleItem >= totalItemCount - 2) {
+                        viewModel.searchPosts(viewModel.uiState.value.query, isRefresh = false)
+                    }
+                }
+            })
+
         }
 
         recentSearchAdapter = RecentSearchAdapter(this)
@@ -127,7 +139,6 @@ class PostSearchFragment : BaseFragment<FragmentPostSearchBinding, PostSearchFra
             is PostSearchFragmentEvent.ShowSearchResult -> {
             /**TODO 서버에서 검색 결과를 받아와서 uistate에 넣어주기**/
                 binding.searchTextfield.setText(event.query)
-                Toast.makeText(requireContext(), "${event.query} 검색 결과", Toast.LENGTH_SHORT).show()
             }
 
             is PostSearchFragmentEvent.MoveBackPressedEvent -> {
