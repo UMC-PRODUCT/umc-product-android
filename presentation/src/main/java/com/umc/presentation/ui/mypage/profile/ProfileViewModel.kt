@@ -83,6 +83,7 @@ class ProfileViewModel @Inject constructor(
                 errorCallback = {
                     emitEvent(ProfileFragmentEvent.MakeToast(
                         it.message))
+
                     Log.d("log_mypage", "실패! $it")
                 }
             )
