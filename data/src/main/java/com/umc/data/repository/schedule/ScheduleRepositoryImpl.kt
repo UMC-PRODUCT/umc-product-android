@@ -37,7 +37,7 @@ class ScheduleRepositoryImpl @Inject constructor(
     }
 
     //일정 상세 정보 가져오기 (활동 탭)
-    override suspend fun getScheduleDetail(scheduleId: Int): ApiState<UserCheckAvailable> {
+    override suspend fun getScheduleDetail(scheduleId: Long): ApiState<UserCheckAvailable> {
         return scheduleRemoteDataSource.getScheduleDetail(scheduleId.toLong()).map { response ->
             response.toModel()
         }
