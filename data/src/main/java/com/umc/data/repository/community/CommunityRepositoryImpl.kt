@@ -70,17 +70,17 @@ class CommunityRepositoryImpl @Inject constructor(
     }
 
     //일반게시글 작성
-    override suspend fun createPost(request: CreatePost): ApiState<ContentItem> {
+    override suspend fun createPost(challengerId: Long, request: CreatePost): ApiState<ContentItem> {
         val request = CreatePostRequest(request.title, request.content, request.category)
-        return communityRemoteDataSource.createPost(request).map {
+        return communityRemoteDataSource.createPost(challengerId, request).map {
             it.toContentItemDomain() }
     }
 
     //번개게시글 작성
-    override suspend fun createLightningPost(request: CreateLightningPost): ApiState<ContentItem> {
+    override suspend fun createLightningPost(challengerId: Long, request: CreateLightningPost): ApiState<ContentItem> {
         val request = CreatePostLightningRequest(request.title, request.content,
             request.meetAt, request.location, request.maxParticipants, request.openChatUrl)
-        return communityRemoteDataSource.createLightningPost(request).map {
+        return communityRemoteDataSource.createLightningPost(challengerId,request).map {
             it.toContentItemDomain() }
     }
 

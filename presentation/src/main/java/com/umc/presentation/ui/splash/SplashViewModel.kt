@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.splash
 
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -11,26 +12,29 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
-class SplashViewModel
-    @Inject
-    constructor() : BaseViewModel<SplashUiState, SplashEvent>(
-            SplashUiState(),
-        ) {
-        init {
-            initFun()
-        }
+class SplashViewModel @Inject constructor(
+    private val getMyProfileUseCase: GetMyProfileUseCase,
+) : BaseViewModel<UiState, SplashEvent>(UiState.Default) {
 
-        private fun initFun() {
-            viewModelScope.launch {
-                delay(3.seconds)
-                emitEvent(SplashEvent.MoveToLoginEvent)
-            }
-        }
+    init {
+        initFun()
     }
 
-data class SplashUiState(
-    val dummy: String = "",
-) : UiState
+    private fun initFun() {
+        viewModelScope.launch {
+            delay(3.seconds)
+            resultResponse(
+                response = getMyProfileUseCase(),
+                successCallback = {
+                    emitEvent(SplashEvent.MoveToMainEvent)
+                },
+                errorCallback = {
+                    emitEvent(SplashEvent.MoveToLoginEvent)
+                }
+            )
+        }
+    }
+}
 
 sealed interface SplashEvent : UiEvent {
     object MoveToMainEvent : SplashEvent

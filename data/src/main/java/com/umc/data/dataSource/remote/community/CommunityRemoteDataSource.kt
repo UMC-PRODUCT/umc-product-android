@@ -29,10 +29,10 @@ interface CommunityRemoteDataSource {
     suspend fun searchPosts(keyword: String, page: Int, size: Int = 20): ApiState<CommunitySearchPostResponse>
 
     //게시글 작성
-    suspend fun createPost(request: CreatePostRequest): ApiState<PostDetailResponse>
+    suspend fun createPost(challengerId: Long, request: CreatePostRequest): ApiState<PostDetailResponse>
 
     //번개 게시글 작성
-    suspend fun createLightningPost(request: CreatePostLightningRequest): ApiState<PostDetailResponse>
+    suspend fun createLightningPost(challengerId: Long, request: CreatePostLightningRequest): ApiState<PostDetailResponse>
 
     //게시글 삭제 API
     suspend fun deletePost(postId: Long): ApiState<Unit>

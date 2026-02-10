@@ -30,9 +30,6 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
 ) {
     override val viewModel: PostWriteViewModel by viewModels()
 
-    //위치 정하는 지역 카테고리 어댑터
-    private lateinit var categoryAdapter: ShowCategoryAdapter
-
     private val args: PostWriteFragmentArgs by navArgs()
 
     private var postId : Long = -1L

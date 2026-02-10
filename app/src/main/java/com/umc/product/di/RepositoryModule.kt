@@ -3,6 +3,7 @@ package com.umc.product.di
 import com.umc.data.repository.AppDataStoreRepositoryImpl
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.data.repository.AuthRepositoryImpl
+import com.umc.data.repository.OrganizationRepositoryImpl
 import com.umc.data.repository.attendance.AttendanceRepositoryImpl
 import com.umc.data.repository.kakao.KakaoSearchRepositoryImpl
 import com.umc.data.repository.member.MemberRepositoryImpl
@@ -12,10 +13,13 @@ import com.umc.domain.repository.member.MemberRepository
 import com.umc.data.repository.challenger.ChallengerRepositoryImpl
 import com.umc.data.repository.community.CommunityRepositoryImpl
 import com.umc.data.repository.schedule.ScheduleRepositoryImpl
+import com.umc.data.repository.storage.StorageRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
+import com.umc.domain.repository.OrganizationRepository
 import com.umc.domain.repository.attendance.AttendanceRepository
 import com.umc.domain.repository.community.CommunityRepository
 import com.umc.domain.repository.schedule.ScheduleRepository
+import com.umc.domain.repository.storage.StorageRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -29,9 +33,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
-//    @Singleton
-//    @Binds
-//    abstract fun provides머시기머시기(repositoryImpl: RepositoryImpl): Repository
 
     /**아래는 Local DataStore를 사용하기 위한 세팅**/
     @Binds
@@ -73,5 +74,10 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindsCommunityRepository(repositoryImpl: CommunityRepositoryImpl): CommunityRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindsStorageRepository(repositoryImpl: StorageRepositoryImpl): StorageRepository
+    abstract fun providesOrganizationRepository(repositoryImpl: OrganizationRepositoryImpl): OrganizationRepository
 
 }

@@ -7,9 +7,11 @@ data class ParticipantItem(
     val name : String = "",
     val userPart : UserPart = UserPart.ANDROID,
     val school : String = "학교",
-    val id: String = UUID.randomUUID().toString()
+    val id: Long = -1L,
 )
 
+
+//recyclerivew 용도
 sealed class SearchResultItem {
     data class Header(val partName: String) : SearchResultItem()
     data class Participant(val user: ParticipantItem) : SearchResultItem()

@@ -5,7 +5,9 @@ import com.umc.data.api.AuthApi
 import com.umc.data.api.MemberApi
 import com.umc.data.api.ChallengerApi
 import com.umc.data.api.CommunityApi
+import com.umc.data.api.OrganizationApi
 import com.umc.data.api.ScheduleApi
+import com.umc.data.api.StorageApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -52,7 +54,19 @@ object ApiModule {
 
     @Singleton
     @Provides
+    fun provideOrganizationApi(@AuthRetrofit retrofit: Retrofit): OrganizationApi {
+        return retrofit.create(OrganizationApi::class.java)
+    }
+
+    @Singleton
+    @Provides
     fun provideCommunityApi(@AuthRetrofit retrofit: Retrofit): CommunityApi {
         return retrofit.create(CommunityApi::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideStorageApi(@AuthRetrofit retrofit: Retrofit): StorageApi {
+        return retrofit.create(StorageApi::class.java)
     }
 }

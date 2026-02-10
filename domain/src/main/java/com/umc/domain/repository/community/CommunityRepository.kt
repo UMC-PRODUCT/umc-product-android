@@ -26,10 +26,10 @@ interface CommunityRepository {
     suspend fun searchPosts(keyword: String, page: Int, size: Int) : ApiState<PostPageModel>
 
     // 일반 게시글 작성
-    suspend fun createPost(request: CreatePost): ApiState<ContentItem>
+    suspend fun createPost(challengerId: Long, request: CreatePost): ApiState<ContentItem>
 
     // 번개 게시글 작성
-    suspend fun createLightningPost(request: CreateLightningPost): ApiState<ContentItem>
+    suspend fun createLightningPost(challengerId: Long, request: CreateLightningPost): ApiState<ContentItem>
 
     // 게시글 삭제하기
     suspend fun deletePost(postId: Long): ApiState<Unit>

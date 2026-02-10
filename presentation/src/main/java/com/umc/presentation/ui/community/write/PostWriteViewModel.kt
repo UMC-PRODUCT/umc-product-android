@@ -2,10 +2,12 @@ package com.umc.presentation.ui.community.write
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.community.CreateLightningPost
 import com.umc.domain.model.community.CreatePost
 import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.home.CategoryItem
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.community.CreateCommunityLightningPostUseCase
 import com.umc.domain.usecase.community.CreateCommunityPostUseCase
 import com.umc.domain.usecase.community.GetCommunityPostDetailUseCase
@@ -26,11 +28,23 @@ constructor(
     private val createCommunityLightningPostUseCase: CreateCommunityLightningPostUseCase, //번개 게시글 생성
     private val updateCommunityPostUseCase: UpdateCommunityPostUseCase, //게시글 수정
     private val getCommunityPostDetailUseCase: GetCommunityPostDetailUseCase, //게시글 상세 불러오기 (게시글 수정)
+    private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 가져오기
 
 ) : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
     PostWriteFragmentUiState()
 ) {
-    
+
+    init{
+        viewModelScope.launch {
+            getUserInfoUseCase().collect { userInfo ->
+                updateState {
+                    copy(
+                        myInfo = userInfo,
+                    )
+                }
+            }
+        }
+    }
 
     //category(글 카테고리) 선택
     fun onClickContentCategorySelect(){
@@ -109,6 +123,7 @@ constructor(
         val state = uiState.value
         val isUpdateMode = state.updatePostId != -1L
         val isLightning = state.selectCommunityCategory == CommunityCategoryType.LIGHTNING
+        val myId = state.myInfo.id
 
         viewModelScope.launch {
             if (isUpdateMode) {
@@ -117,9 +132,9 @@ constructor(
             } else {
                 // 신규 게시글 작성 로직
                 if (isLightning) {
-                    handleCreateLightningPost(state)
+                    handleCreateLightningPost(myId, state)
                 } else {
-                    handleCreateNormalPost(state)
+                    handleCreateNormalPost(myId, state)
                 }
             }
         }
@@ -127,7 +142,7 @@ constructor(
     }
 
     // 일반 게시글 작성 핸들러
-    private suspend fun handleCreateNormalPost(state: PostWriteFragmentUiState) {
+    private suspend fun handleCreateNormalPost(challengerId: Long, state: PostWriteFragmentUiState) {
         val param = CreatePost(
             title = state.title,
             content = state.content,
@@ -135,7 +150,7 @@ constructor(
         )
 
         resultResponse(
-            response = createCommunityPostUseCase(param),
+            response = createCommunityPostUseCase(challengerId, param),
             successCallback = {
                 emitEvent(PostWriteFragmentEvent.ClickBackPressed)
             },
@@ -146,7 +161,7 @@ constructor(
     }
 
     // 번개 게시글 작성 핸들러
-    private suspend fun handleCreateLightningPost(state: PostWriteFragmentUiState) {
+    private suspend fun handleCreateLightningPost(challengerId: Long, state: PostWriteFragmentUiState) {
         val param = CreateLightningPost(
             title = state.title,
             content = state.content,
@@ -157,7 +172,7 @@ constructor(
         )
 
         resultResponse(
-            response = createCommunityLightningPostUseCase(param),
+            response = createCommunityLightningPostUseCase(challengerId,param),
             successCallback = {
                 emitEvent(PostWriteFragmentEvent.ClickBackPressed)
             },
@@ -246,6 +261,8 @@ constructor(
 }
 
 data class PostWriteFragmentUiState(
+    //챌린저 내 정보
+    val myInfo : UserInfo = UserInfo(),
 
     //게시글 수정을 위한 게시글 ID
     val updatePostId : Long = -1L,
