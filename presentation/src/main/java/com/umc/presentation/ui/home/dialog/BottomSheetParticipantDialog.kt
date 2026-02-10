@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.opencsv.CSVReader
@@ -20,16 +21,19 @@ import com.umc.presentation.ui.home.adapter.AddParticipantDelegate
 import com.umc.presentation.ui.home.adapter.BottomSheetAddParticipantAdapter
 import com.umc.presentation.ui.home.adapter.BottomSheetSearchParticipantAdapter
 import com.umc.presentation.ui.home.adapter.SearchParticipantDelegate
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.InputStreamReader
 
+@AndroidEntryPoint
 class BottomSheetParticipantDialog(
-    private val viewModel: PlanAddViewModel 
+    private val onConfirm: (List<ParticipantItem>, String) -> Unit
 ) : BottomSheetDialogFragment(), AddParticipantDelegate, SearchParticipantDelegate {
 
     private var _binding: LayoutBottomSheetParticipantAddBinding? = null
     private val binding get() = _binding!!
 
+    private val viewModel: BottomSheetParticipantViewModel by viewModels()
     private lateinit var addAdapter: BottomSheetAddParticipantAdapter
     private lateinit var searchAdapter: BottomSheetSearchParticipantAdapter
 
@@ -51,8 +55,6 @@ class BottomSheetParticipantDialog(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.vm = viewModel
-        binding.lifecycleOwner = viewLifecycleOwner
 
         //얻배터 초기화
         initAdapters()
@@ -72,8 +74,11 @@ class BottomSheetParticipantDialog(
             csvPickerLauncher.launch(mimeTypes)
         }
 
-        //사실상 viewModel로 live 관리
-        binding.btnConfirm.setOnClickListener { dismiss() }
+        //확인 시, viewModel에서 선택한 것들을 전송
+        binding.btnConfirm.setOnClickListener { 
+            onConfirm(viewModel.uiState.value.selectedParticipants, viewModel.uiState.value.selectedParticipantsString)
+            dismiss()
+        }
     }
 
     private fun initAdapters() {
@@ -91,7 +96,8 @@ class BottomSheetParticipantDialog(
         binding.searchbarParticipant.apply {
             // 텍스트 입력 시 실시간 검색
             setOnTextChangedListener { query ->
-                viewModel.handleEvent(PlanAddFragmentEvent.SearchParticipants(ParticipantItem(name = query)))
+                viewModel.searchParticipants(query)
+                val isSearching = query.isNotEmpty()
                 binding.btnConfirm.visibility = View.VISIBLE
                 binding.btnUploadCsv.visibility = View.GONE
             }
@@ -101,7 +107,7 @@ class BottomSheetParticipantDialog(
             setOnFocusChangedListener { hasFocus ->
                 // 내용이 없고 포커스가 나가면 검색 모드 종료
                 if (!hasFocus && getText().isEmpty()) {
-                    viewModel.handleEvent(PlanAddFragmentEvent.ClearSearch)
+                    viewModel.clearSearch()
                     binding.btnConfirm.visibility = View.GONE
                     binding.btnUploadCsv.visibility = View.VISIBLE
                 }
@@ -190,9 +196,8 @@ class BottomSheetParticipantDialog(
             for(name in names){
                 newUsers.add(ParticipantItem(name))
             }
-            val event = PlanAddFragmentEvent.UpdateParticipants(newUsers)
-            Log.d("log_home", "이름 리스트: $names")
-            viewModel.handleEvent(event)
+
+            viewModel.updateParticipant(newUsers)
 
             // 임시 토스트
             Toast.makeText(requireContext(), "${names.size}명의 명단을 불러왔습니다.", Toast.LENGTH_SHORT).show()
@@ -203,18 +208,18 @@ class BottomSheetParticipantDialog(
             Toast.makeText(requireContext(), "CSV 파일을 읽는 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
         }
     }
-    
+
 
     // --- Delegate 구현부 ---
 
     override fun onParticipantToggled(item: ParticipantItem) {
         // 검색 결과 리스트에서 항목 클릭 시 (추가 혹은 삭제)
-        viewModel.handleEvent(PlanAddFragmentEvent.ToggleParticipants(item))
+        viewModel.toggleParticipant(item)
     }
 
     override fun onParticipantRemoved(item: ParticipantItem) {
-        // 추가된 인원 리스트에서 '삭제' 버튼 클릭 시
-        viewModel.handleEvent(PlanAddFragmentEvent.RemoveParticipants(item))
+        // 추가된 인원 리스트에서 '삭제' 버튼 클릭 시 (차피 로직은 같아)
+        viewModel.toggleParticipant(item)
     }
 
     override fun onDestroyView() {

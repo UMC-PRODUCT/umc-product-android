@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.umc.domain.model.home.LocationItem
@@ -14,15 +15,20 @@ import com.umc.presentation.ui.home.adapter.BottomSheetLocationRecentAdapter
 import com.umc.presentation.ui.home.adapter.BottomSheetLocationResultAdapter
 import com.umc.presentation.ui.home.adapter.LocationResultDelegate
 import com.umc.presentation.ui.home.adapter.RecentLocationDelegate
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 //onLocationSelected -> 선택 누를 시 부모 프래그먼트로 전송하기 위함.
+@AndroidEntryPoint
 class BottomSheetLocationDialog (
-    private val viewModel: PlanAddViewModel,
+    //선택된 장소의 LocationItem을 전달하기 위한 콜백함수
     private val onItemSelected: (LocationItem) -> Unit
 ) : BottomSheetDialogFragment(), RecentLocationDelegate, LocationResultDelegate {
 
     private lateinit var binding: LayoutBottomSheetLocationSelectBinding
+
+    //다이얼로그 전용 뷰모델 (이젠 뷰모델에 의존X)
+    private val viewModel: BottomSheetLocationViewModel by viewModels()
 
     // 두 종류의 어댑터 선언
     private lateinit var recentAdapter: BottomSheetLocationRecentAdapter

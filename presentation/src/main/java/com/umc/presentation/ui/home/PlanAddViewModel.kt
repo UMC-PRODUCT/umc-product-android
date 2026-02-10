@@ -49,15 +49,7 @@ constructor(
     private val parseDateSdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
     private val parseTimeSdf = SimpleDateFormat("HH:mm", Locale.KOREAN)
 
-    // 임시 더미 데이터 (실제로는 서버나 DB에서 가져와야 함)
-    private val allChallengers = listOf(
-        ParticipantItem("박유수", UserPart.ANDROID, "숭실대학교"),
-        ParticipantItem("어헛차", UserPart.ANDROID, "숭실대학교"),
-        ParticipantItem("김하나", UserPart.DESIGN, "서울대학교"),
-        ParticipantItem("이두리", UserPart.IOS, "고려대학교"),
-        ParticipantItem("최삼이", UserPart.NODE_JS, "연세대학교"),
-        ParticipantItem("박사성", UserPart.ANDROID, "숭실대학교")
-    )
+
 
     init {
         loadInitialData()
@@ -67,12 +59,6 @@ constructor(
     // 초기 데이터(장소 검색 기록 및 유저 정보 가져오기)
     private fun loadInitialData() {
         viewModelScope.launch {
-            //장소 검색 기록 가져오기
-            launch {
-                getRecentSearchPlaceUseCase().collect { places ->
-                    updateState { copy(recentSearchList = places) }
-                }
-            }
             //유저 정보 가져오기
             launch {
                 getUserInfoUseCase().collect { userInfo ->
@@ -256,6 +242,16 @@ constructor(
     }
 
 
+    /**viewModel 값 업데이트**/
+    // 다이얼로그에서 가져온 참여자 정보를 업데이트 하는 함수
+    fun updateParticipants(participants: List<ParticipantItem>, participantsString: String) {
+        updateState { 
+            copy(
+                selectedParticipants = participants,
+                selectedParticipantsString = participantsString
+            ) }
+    }
+    
     /**이벤트 핸들러 정의**/
     //handleEvent
     fun handleEvent(event: PlanAddFragmentEvent){
@@ -266,12 +262,7 @@ constructor(
             is PlanAddFragmentEvent.UpdateEndDate,
             is PlanAddFragmentEvent.UpdateEndTime -> handleDateTime(event)
 
-            // 2. 인원 및 검색 관련 이벤트
-            is PlanAddFragmentEvent.UpdateParticipants,
-            is PlanAddFragmentEvent.RemoveParticipants,
-            is PlanAddFragmentEvent.SearchParticipants,
-            is PlanAddFragmentEvent.ToggleParticipants,
-            is PlanAddFragmentEvent.ClearSearch -> handleParticipants(event)
+
 
             // 3. 카테고리 관련 이벤트
             is PlanAddFragmentEvent.SelectCategory -> handleCategory(event)
@@ -360,119 +351,6 @@ constructor(
         }
     }
 
-    //CSV 및 인원 값 업데이트
-    /**서버 로직에 따라 수정 필요**/
-    private fun handleParticipants(event: PlanAddFragmentEvent) {
-        when(event){
-            //CSV에서 업데이트 한 경우
-            is PlanAddFragmentEvent.UpdateParticipants -> {
-                updateState {
-
-                    val newList = event.participants.toList()
-
-                    // 결과 텍스트 만들기
-                    val summaryText = when {
-                        newList.isEmpty() -> ""
-                        newList.size == 1 -> newList[0].name
-                        else -> "${newList[0].name} 외 ${newList.size - 1}명"
-                    }
-
-                    // 이 경우, 덮어쓰기 (기존 꺼 유지 하니 꼬인다)
-                    //val addList = (selectedParticipants + event.participants).distinct().toList()
-                    copy(
-                        selectedParticipants = newList,
-                        selectedParticipantsString = summaryText
-                        )
-                }
-                Log.d("log_home", "추가 결과: ${uiState.value.selectedParticipants}")
-            }
-
-            //다이얼로그에서 삭제할 경우
-            is PlanAddFragmentEvent.RemoveParticipants -> {
-                updateState {
-                    // event에서 전달해준 string name을 뺀 data list를 새로 성성
-                    val newList = selectedParticipants.filter { it.name != event.user.name }
-
-                    // 결과 텍스트 만들기
-                    val summaryText = when {
-                        newList.isEmpty() -> ""
-                        newList.size == 1 -> newList[0].name
-                        else -> "${newList[0].name} 외 ${newList.size - 1}명"
-                    }
-
-                    copy(
-                        selectedParticipants = newList.toList(),
-                        selectedParticipantsString = summaryText
-                    )
-                }
-                Log.d("log_home", "삭제 결과: ${uiState.value.selectedParticipants}")
-            }
-
-            //인원을 검색할 경우
-            is PlanAddFragmentEvent.SearchParticipants -> {
-                
-                //텍스트가 비어있으면 = 전부 보여주기
-                //아니면 필터링
-                val searchQuery = event.user.name
-                val results = if (searchQuery.isBlank()) {
-                    allChallengers
-                } else {
-                    allChallengers.filter { it.name.contains(searchQuery, ignoreCase = true) }
-                }
-
-                updateState {
-                    copy(
-                        searchResults = results,
-                        searchQuery = searchQuery,
-                        isSearching = true
-                    )
-                }
-
-            }
-
-            //토글을 할 때, 해당 유저가 있는지 판단해서 추가하기 로직
-            is PlanAddFragmentEvent.ToggleParticipants -> {
-                updateState {
-                    //현재 토글한 유저의 정보가 이미 선택창에 있는지 확인
-                    /**여기서는 선택창에 있다면 이미 선택되었다고 판단해서 지우고, 없으면 추가하는 로직**/
-                    val isExist = selectedParticipants.any { it.name == event.user.name }
-                    val newList = if (isExist) {
-                        selectedParticipants.filter { it.name != event.user.name } // 있으면 제거
-                    }
-                    else {
-                        selectedParticipants + event.user // 없으면 추가
-                    }
-
-                    //결과 스트링 작성
-                    val summaryText = when {
-                        newList.isEmpty() -> ""
-                        newList.size == 1 -> newList[0].name
-                        else -> "${newList[0].name} 외 ${newList.size - 1}명"
-                    }
-
-
-                    copy(
-                        selectedParticipants = newList.toList(),
-                        selectedParticipantsString = summaryText
-                        )
-                }
-                Log.d("log_home", "토글 결과: ${uiState.value.selectedParticipants}")
-            }
-
-            //검색 결과 초기화
-            is PlanAddFragmentEvent.ClearSearch -> {
-                updateState {
-                    copy(
-                        searchResults = emptyList(),
-                        searchQuery = "",
-                        isSearching = false
-                    )
-                }
-            }
-
-            else -> {}
-        }
-    }
 
     // 카테고리 관련 handleEvent
     private fun handleCategory(event: PlanAddFragmentEvent) {
@@ -515,34 +393,7 @@ constructor(
         }
     }
 
-    
 
-    /**장소 검색 관련 함수들 - DataStore에 저장하거나 Kakao Rest API로 호출하는 부분**/
-    //장소 선택 시 기록 추가
-    fun saveRecentPlace(place: String) {
-        viewModelScope.launch {
-            updateRecentSearchPlaceUseCase(place)
-        }
-    }
-
-    //장소 검색 = KAKAO API
-    fun searchLocation(query: String) {
-        if (query.isBlank()) return // 빈 값은 검색하지 않음
-
-        viewModelScope.launch {
-            resultResponse(
-                response = getSearchLocationUseCase(query),
-                successCallback = { locationList ->
-                    updateState {
-                        copy(searchResultList = locationList)
-                    }
-                },
-                errorCallback = { errorCode ->
-                   /**검색 실패 로직**/
-                }
-            )
-        }
-    }
 
     //하루종일 관련
     //모집 중 스위치 누를 때마다 상태 변화하고 필터링
@@ -575,8 +426,6 @@ data class PlanAddFragmentUiState(
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val planDetail: String = "",
-    val recentSearchList: List<String> = emptyList(), //최근 장소 검색 기록 (DATASTORE)
-    val searchResultList: List<LocationItem> = emptyList(), //장소 검색 결과를 보여줄 곳
 
     //시간 관련
     val startDate: Calendar = Calendar.getInstance(),
@@ -593,9 +442,6 @@ data class PlanAddFragmentUiState(
     //인원 검색 관련
     /**TODO 일단은 이름만 받는다고 가정**/
     val selectedParticipants: List<ParticipantItem> = emptyList(), //선택된 참여자 결과(recyclerview에 쓰임)
-    val searchResults: List<ParticipantItem> = emptyList(), //검색 결과
-    val searchQuery: String = "", //검색하는 내용
-    val isSearching: Boolean = false,
     val selectedParticipantsString : String = "", //cdv에 보여줄 string
 
     //카테고리 리스트
@@ -657,22 +503,8 @@ sealed interface PlanAddFragmentEvent : UiEvent {
     data class UpdateEndDate(val year: Int, val month: Int, val day: Int) : PlanAddFragmentEvent
     data class UpdateEndTime(val hour: Int, val minute: Int) : PlanAddFragmentEvent
 
-    //CSV 파일 파싱 결과를 가져오느 이벤트
-    data class UpdateParticipants(val participants: List<ParticipantItem>) : PlanAddFragmentEvent
 
-    //참여자를 제거하는 이벤트
-    data class RemoveParticipants(val user: ParticipantItem) : PlanAddFragmentEvent
-
-    //검색 결과를 보여주는 이벤트
-    /**TODO 인자 바뀐다 지금은 목업 데이터**/
-    data class SearchParticipants(val user: ParticipantItem) : PlanAddFragmentEvent
-
-    //검색 결과로 나온 거를 토클(체크박스)할 때 이벤트
-    data class ToggleParticipants(val user: ParticipantItem) : PlanAddFragmentEvent
-
-    //검색한 거 초기화하는 이벤트
-    object ClearSearch : PlanAddFragmentEvent
-
+    //다이얼로그에서 받은 
 
     //카테코리를 선택하는 이벤트
     data class SelectCategory(val category: CategoryItem): PlanAddFragmentEvent
