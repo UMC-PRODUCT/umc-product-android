@@ -88,7 +88,7 @@ class BottomSheetSearchParticipantAdapter(
         private val DiffCallback = object : DiffUtil.ItemCallback<SearchResultItem>() {
             override fun areItemsTheSame(oldItem: SearchResultItem, newItem: SearchResultItem): Boolean {
                 return if (oldItem is SearchResultItem.Participant && newItem is SearchResultItem.Participant) {
-                    oldItem.user.id == newItem.user.id
+                    oldItem.user.name == newItem.user.name
                 } else oldItem == newItem
             }
             override fun areContentsTheSame(oldItem: SearchResultItem, newItem: SearchResultItem) = oldItem == newItem

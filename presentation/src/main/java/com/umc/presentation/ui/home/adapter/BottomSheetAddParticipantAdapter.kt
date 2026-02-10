@@ -46,7 +46,7 @@ class BottomSheetAddParticipantAdapter(
 
     companion object {
         private val DiffCallback = object : DiffUtil.ItemCallback<ParticipantItem>() {
-            override fun areItemsTheSame(oldItem: ParticipantItem, newItem: ParticipantItem) = oldItem.id == newItem.id
+            override fun areItemsTheSame(oldItem: ParticipantItem, newItem: ParticipantItem) = oldItem.name == newItem.name
             override fun areContentsTheSame(oldItem: ParticipantItem, newItem: ParticipantItem) = oldItem == newItem
         }
     }

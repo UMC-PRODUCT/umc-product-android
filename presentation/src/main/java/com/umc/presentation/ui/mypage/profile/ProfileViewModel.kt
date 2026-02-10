@@ -81,7 +81,8 @@ class ProfileViewModel @Inject constructor(
                     Log.d("log_mypage", "성공! updateProfileImage: $it")
                 },
                 errorCallback = {
-                    emitEvent(ProfileFragmentEvent.MakeToast(it))
+                    emitEvent(ProfileFragmentEvent.MakeToast(
+                        it.message))
                     Log.d("log_mypage", "실패! $it")
                 }
             )

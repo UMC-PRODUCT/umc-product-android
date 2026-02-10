@@ -78,6 +78,9 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindsStorageRepository(repositoryImpl: StorageRepositoryImpl): StorageRepository
+
+    @Singleton
+    @Binds
     abstract fun providesOrganizationRepository(repositoryImpl: OrganizationRepositoryImpl): OrganizationRepository
 
 }
