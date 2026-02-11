@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".ui.community.top.TopPostFragment">
+
+    <data>
+
+        <variable
+            name="vm"
+            type="com.umc.presentation.ui.community.top.TopPostViewModel" />
+    </data>
+
+    <!--이미 containerview에 패딩 있으니 상관 X-->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingVertical="24dp"
+        android:paddingHorizontal="16dp"
+        android:background="@color/neutral100"
+        >
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="현재 지원하지 않는 기능입니다."
+            android:textAppearance="@style/Footnote"
+            android:textColor="@color/neutral800"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+</layout>

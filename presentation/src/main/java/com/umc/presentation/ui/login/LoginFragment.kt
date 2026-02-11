@@ -21,7 +21,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, UiState, LoginEvent, Lo
 
     val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
         if (error != null) {
-            ULog.d("실패~!")
+            ULog.d("실패~! : $error")
         } else if (token != null) {
             viewModel.kakaoLogin(token.accessToken)
         }

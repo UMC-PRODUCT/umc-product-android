@@ -45,13 +45,16 @@
             app:layout_constraintTop_toBottomOf="@id/view_handle" />
 
 
-        <!--csv 업로드 버튼-->
+        <!--csv 업로드 버튼 (차후 csv 로직 복구 시 아래 사용)
+        android:visibility="@{vm.uiState.isSearching ? View.GONE : View.VISIBLE}"
+        -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/btn_upload_csv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:clickable="true"
             android:focusable="true"
+            android:visibility="gone"
             app:cardBackgroundColor="@color/select_color_accent500"
             app:cardCornerRadius="8dp"
             app:cardElevation="0dp"
@@ -87,12 +90,14 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!--확인 버튼-->
+        <!--확인 버튼(차후 csv 파싱 복구 시 아래 사용)
+        android:visibility="@{vm.uiState.isSearching ? View.VISIBLE : View.GONE}"
+        -->
         <com.umc.presentation.component.UButton
             android:id="@+id/btn_confirm"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="invisible"
+            android:visibility="visible"
             app:cardBackgroundColor="@color/primary500"
             app:pressedColor="@color/primary700"
             app:borderWidth="0dp"

@@ -56,6 +56,10 @@ class BottomSheetParticipantDialog(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.vm = viewModel
+
+        binding.lifecycleOwner = viewLifecycleOwner
+
         //얻배터 초기화
         initAdapters()
         //찾기 초기화
@@ -97,19 +101,18 @@ class BottomSheetParticipantDialog(
             // 텍스트 입력 시 실시간 검색
             setOnTextChangedListener { query ->
                 viewModel.searchParticipants(query)
-                val isSearching = query.isNotEmpty()
-                binding.btnConfirm.visibility = View.VISIBLE
-                binding.btnUploadCsv.visibility = View.GONE
+
             }
 
 
             // 포커스 변경 리스너 등록
             setOnFocusChangedListener { hasFocus ->
                 // 내용이 없고 포커스가 나가면 검색 모드 종료
-                if (!hasFocus && getText().isEmpty()) {
+                if(hasFocus){
+                    viewModel.setSearchingMode(true)
+                }
+                else if (getText().isEmpty()) {
                     viewModel.clearSearch()
-                    binding.btnConfirm.visibility = View.GONE
-                    binding.btnUploadCsv.visibility = View.VISIBLE
                 }
             }
 

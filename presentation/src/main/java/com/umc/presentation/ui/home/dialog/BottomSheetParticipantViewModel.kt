@@ -35,8 +35,7 @@ class BottomSheetParticipantViewModel @Inject constructor(
         } else {
             allChallengers.filter { it.name.contains(query, ignoreCase = true) }
         }
-        Log.d("log_home", "query: $query, isSearching: ${query.isNotBlank()}")
-        updateState { copy(searchResults = results, searchQuery = query, isSearching = query.isNotBlank()) }
+        updateState { copy(searchResults = results, searchQuery = query, isSearching = true) }
     }
 
     // 인원 토글 로직
@@ -64,17 +63,6 @@ class BottomSheetParticipantViewModel @Inject constructor(
 
 
 
-    // CSV에서 추출한 이름들을 실제 객체로 매칭
-    fun addFromCsvNames(names: List<String>) {
-        val matchedUsers = names.mapNotNull { name ->
-            allChallengers.find { it.name == name }
-        }
-        updateState {
-            val combined = (selectedParticipants + matchedUsers).distinctBy { it.id }
-            copy(selectedParticipants = combined)
-        }
-    }
-
     //검색 기록을 초기화하하고 중지하는 함수
     fun clearSearch() {
         updateState {
@@ -86,6 +74,23 @@ class BottomSheetParticipantViewModel @Inject constructor(
         }
     }
 
+    fun setSearchingMode(isSearching: Boolean) {
+        updateState { copy(isSearching = isSearching) }
+    }
+
+
+
+    /**csv 로직은 현재 depricated**/
+    // CSV에서 추출한 이름들을 실제 객체로 매칭
+    fun addFromCsvNames(names: List<String>) {
+        val matchedUsers = names.mapNotNull { name ->
+            allChallengers.find { it.name == name }
+        }
+        updateState {
+            val combined = (selectedParticipants + matchedUsers).distinctBy { it.id }
+            copy(selectedParticipants = combined)
+        }
+    }
 
 
     //csv에서 가지고온 파일들로 참여자를 세우는 함수
