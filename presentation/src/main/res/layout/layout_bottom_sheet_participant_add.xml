@@ -11,13 +11,14 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_root"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:clickable="true"
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:background="@drawable/bg_bottom_sheet_neutral000_radius28"
         android:paddingHorizontal="16dp"
         android:paddingBottom="24dp"
+
         >
 
         <com.google.android.material.card.MaterialCardView
@@ -61,6 +62,7 @@
             app:cardElevation="0dp"
             app:rippleColor="@android:color/transparent"
             app:strokeWidth="0dp"
+            app:layout_constrainedHeight="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/tv_title"
             app:layout_constraintBottom_toBottomOf="@id/tv_title"
