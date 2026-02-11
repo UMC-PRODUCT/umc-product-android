@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -16,6 +18,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+
+        buildConfigField(
+            "String",
+            "GOOGLE_LOGIN_KEY",
+            "\"${getApiKey("google.login.key")}\""
+        )
     }
 
     buildTypes {
@@ -40,6 +48,7 @@ android {
     buildFeatures {
         dataBinding = true
         viewBinding = true
+        buildConfig = true
     }
 }
 
@@ -97,5 +106,13 @@ dependencies {
     implementation(libs.firebase.messaging)
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+}
+
+fun getApiKey(propertyKey: String): String {
+    return gradleLocalProperties(rootDir, providers).getProperty(propertyKey) ?: ""
 }
 

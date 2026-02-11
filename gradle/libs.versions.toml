@@ -34,6 +34,8 @@ kotlinx-serialization = "1.9.0"
 kotlinxCoroutines = "1.7.3"
 datastore = "1.0.0"
 gson = "2.10.1"
+credentials = "1.2.1"
+googleId = "1.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -84,6 +86,13 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 #dataStore & Gson
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 google-code-gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
+# Credential Manager 핵심 라이브러리
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+# Google Play Services 인증 지원 (구버전 안드로이드 호환용)
+androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
+# Google ID (Sign in with Google 옵션)
+googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleId" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

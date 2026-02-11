@@ -114,6 +114,10 @@ dependencies {
     implementation(platform(libs.firebase.bom))
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 }
 
 fun getApiKey(propertyKey: String): String {
