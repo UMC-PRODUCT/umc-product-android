@@ -84,9 +84,9 @@ constructor(
                     imagePrevTopIcon.setImageResource(prevTopIconRes)
                     imagePrevTopIcon.visible()
 
-                    if (a.hasValue(R.styleable.UTextField_prevIconTint)) {
+                    if (a.hasValue(R.styleable.UButton_prevIconTint)) {
                         imagePrevTopIcon.imageTintList =
-                            a.getColorStateList(R.styleable.UTextField_prevIconTint)
+                            a.getColorStateList(R.styleable.UButton_prevIconTint)
                     } else {
                         imagePrevTopIcon.imageTintList = null
                     }

@@ -2,6 +2,7 @@ package com.umc.presentation.ui.login
 
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.JwtToken
+import com.umc.domain.model.enums.LoginType
 import com.umc.domain.usecase.PostLoginUseCase
 import com.umc.domain.usecase.appDataStore.SaveTokenUseCase
 import com.umc.presentation.base.BaseViewModel
@@ -25,9 +26,9 @@ constructor(
         emitEvent(LoginEvent.KakaoLoginEvent)
     }
 
-    fun kakaoLogin(token: String) = viewModelScope.launch {
+    fun login(token: String, loginType: LoginType) = viewModelScope.launch {
         resultResponse(
-            response = postLoginUseCase(token),
+            response = postLoginUseCase(loginType = loginType, token = token),
             successCallback = {
                 if (it.oAuthVerificationToken.isNotEmpty()) emitEvent(LoginEvent.MoveToSignUpEvent(it.oAuthVerificationToken))
                 else {
@@ -45,10 +46,17 @@ constructor(
             }
         )
     }
+
+    fun onClickGoogle() {
+        emitEvent(LoginEvent.GoogleLoginEvent)
+    }
+
+
 }
 
 sealed interface LoginEvent : UiEvent {
     object KakaoLoginEvent : LoginEvent
+    object GoogleLoginEvent: LoginEvent
 
     object MoveToMainEvent : LoginEvent
 
