@@ -5,6 +5,7 @@ import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.ULocationDialog
 import com.umc.presentation.databinding.FragmentAdminCheckBinding
 import com.umc.presentation.ui.act.adapter.AdminCheckAdapter
+import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -71,15 +72,19 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
     }
 
     /**
-     * 위치 변경 다이얼로그를 띄우는 함수
+     * 위치 변경 바텀 시트를 띄우는 함수
      */
     private fun showLocationChangeDialog(sessionId: Long, lat: Double, lng: Double, address: String) {
-        ULocationDialog(
-            initialLat = lat,
-            initialLng = lng,
-            onLocationChanged = { newAddress, newLat, newLng ->
-                viewModel.updateSessionLocation(sessionId, newLat, newLng, newAddress)
-            }
-        ).show(childFragmentManager, "ULocationChangeDialog")
+        // 기존 ULocationDialog 대신 BottomSheetLocationDialog 사용
+        val locationDialog = BottomSheetLocationDialog { selectedItem ->
+            // 선택된 장소 정보를 ViewModel에 전달
+            viewModel.updateSessionLocation(
+                sessionId = sessionId,
+                lat = selectedItem.latitude,
+                lng = selectedItem.longitude,
+                address = selectedItem.address
+            )
+        }
+        locationDialog.show(childFragmentManager, "LocationSelect")
     }
 }
