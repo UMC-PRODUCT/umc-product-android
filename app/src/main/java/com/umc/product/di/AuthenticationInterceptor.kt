@@ -25,12 +25,11 @@ class AuthenticationInterceptor @Inject constructor(
             }
 
             // val accessToken = runBlocking { repository.getAccessToken().first() }
-            val testToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMDIiLCJpYXQiOjE3NzA2NjMwNDQsImV4cCI6MTc3MDY2NjY0NH0.UdqmkhjQ" +
-                    "BXqp2IOpw4CTzqM26Qs91gda-tVtIlq6f-G-gCUTy_an-GlCo7ThleGkU2xaK23J1Gz3in5qE3RcFA"
+            val testToken = "TEST_TOKEN"
 
             val request =
                 chain.request().newBuilder()
-                    .addHeader("Authorization", "Bearer ${accessToken}").build()
+                    .addHeader("Authorization", "Bearer ${testToken}").build()
 
             Log.d(
                 "RETROFIT",
