@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.res.Configuration
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPlanAddBinding
 import com.umc.presentation.ui.home.dialog.AddAttendanceDialog
@@ -11,6 +12,7 @@ import com.umc.presentation.ui.home.dialog.BottomSheetCategoryPlanDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetParticipantDialog
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 @AndroidEntryPoint
@@ -19,49 +21,41 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 ) {
     override val viewModel: PlanAddViewModel by viewModels()
 
-    //recyclerviewAdapter 정의구간
-    //private lateinit var participantAdapter: ShowParticipantAdapter
-    //private lateinit var categoryAdapter: ShowCategoryAdapter
-    //private lateinit var searchAdapter: SearchParticipantAdapter
+    private val args: PlanAddFragmentArgs by navArgs()
+    private var scheduleId : Long = -1L
 
-
-
-    /*
-    //csv 파일 처리를 위한 런처
-    private val csvPickerLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
-        uri: Uri? -> uri?.let {
-            //돌아오고 난 뒤, 아래의 처리로직을 수행
-            parseCsvFile(it)
-        }
-    }
-
-     */
 
     override fun initView() {
+
+        scheduleId = args.scheduleId
+        if(scheduleId != -1L){
+            viewModel.settingUpdateSchedule(scheduleId)
+        }
+
         binding.apply {
             vm = viewModel
             //onclick 달기
-            //시작 날짜/시간
+            
+            //시작 날짜/시간 chip 설정
             planaddCdvStartDate.setOnClickListener { showDatePicker(true) }
             planaddCdvStartTime.setOnClickListener { showTimePicker(true) }
-            //종료 날짜/시간
+            //종료 날짜/시간 chip 설정
             planaddCdvEndDate.setOnClickListener { showDatePicker(false) }
             planaddCdvEndTime.setOnClickListener { showTimePicker(false) }
 
-            //하루종일
-            //스위치 로직
+            //하루종일 스위치 로직
             binding.planaddSwitchAllday.setOnCheckedChangeListener { _, isChecked ->
                 viewModel.setAllday(isChecked)
             }
 
-
+            //일정 제목 title 설정
             planaddTextfieldPlanTitleName.apply {
                 setOnTextChangedListener { text ->
                     viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanTitle(text))
                 }
             }
 
-
+            //일정 상세 내용 설정
             planaddTextfieldPlanDetail.apply{
                 setOnTextChangedListener { text ->
                     viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanDetail(text))
@@ -80,12 +74,11 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     //다이얼로그 생성
                     val dialog = AddAttendanceDialog(
                         onReject = {
-
-                            moveBackPressed()
+                            viewModel.submitPlan()
                         },
                         onConfirm = {
+                            viewModel.submitPlan()
                             /**TODO 출석부 생성 페이지로 이동**/
-                            moveBackPressed()
                         }
 
                     )
@@ -93,16 +86,16 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     
                 }
                 else{
-                    moveBackPressed()
+                    viewModel.submitPlan()
                 }
             }
 
             //장소 선택 부분 터치시 다이얼로그 로직
             binding.planaddCdvPlanLocation.setOnClickListener {
                 // 앞서 만든 BottomSheetDialog 생성
-                val locationDialog = BottomSheetLocationDialog(viewModel) { selectedItem ->
+                val locationDialog = BottomSheetLocationDialog { selectedItem ->
                     // 선택된 장소(LocationItem)의 제목을 뷰모델 이벤트로 전달
-                    viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanLocation(selectedItem.title))
+                    viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanLocation(selectedItem))
                 }
                 // 다이얼로그 표시
                 locationDialog.show(childFragmentManager, "LocationSelect")
@@ -117,7 +110,9 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
             //인원 관련 터치 시 다이얼로그 로직
             binding.planaddCdvSearchParticipant.setOnClickListener {
                 // 뷰모델을 생성자로 전달하여 상태를 공유합니다.
-                val participantDialog = BottomSheetParticipantDialog(viewModel)
+                val participantDialog = BottomSheetParticipantDialog { selectedParticipant, selectedParticipantString ->
+                    viewModel.updateParticipants(selectedParticipant, selectedParticipantString)
+                }
 
                 // childFragmentManager를 사용하여 프래그먼트 계층 구조를 유지합니다.
                 participantDialog.show(childFragmentManager, "ParticipantSelect")
@@ -133,16 +128,33 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
     override fun initStates() {
         super.initStates()
         repeatOnStarted(viewLifecycleOwner){
-            viewModel.uiState.collect{ state ->
-                binding.apply {
-                    planaddCdvStartDate.setText(state.startDateText)
-                    planaddCdvStartTime.setText(state.startTimeText)
-                    planaddCdvEndDate.setText(state.endDateText)
-                    planaddCdvEndTime.setText(state.endTimeText)
+            launch {
+                viewModel.uiState.collect { state ->
+                    binding.apply {
+                        planaddCdvStartDate.setText(state.startDateText)
+                        planaddCdvStartTime.setText(state.startTimeText)
+                        planaddCdvEndDate.setText(state.endDateText)
+                        planaddCdvEndTime.setText(state.endTimeText)
+
+                    }
 
                 }
-
             }
+            launch {
+                viewModel.uiEvent.collect { event ->
+                    handleEvent(event)
+                }
+            }
+        }
+    }
+
+    override fun handleEvent(event: PlanAddFragmentEvent) {
+        super.handleEvent(event)
+        when(event){
+            is PlanAddFragmentEvent.MoveBackPressedEvent -> {
+                moveBackPressed()
+            }
+            else -> {}
         }
     }
 

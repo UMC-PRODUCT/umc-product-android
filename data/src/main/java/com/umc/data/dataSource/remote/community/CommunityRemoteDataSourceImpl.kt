@@ -56,13 +56,13 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
      }
 
     //일반 게시글 작성하기
-    override suspend fun createPost(request: CreatePostRequest): ApiState<PostDetailResponse> {
-        return apiCall {communityApi.createPost(request)}
+    override suspend fun createPost(challengerId: Long, request: CreatePostRequest): ApiState<PostDetailResponse> {
+        return apiCall {communityApi.createPost(challengerId, request)}
     }
 
     //번개 게시글 작성하기
-    override suspend fun createLightningPost(request: CreatePostLightningRequest): ApiState<PostDetailResponse> {
-        return apiCall { communityApi.createLightningPost(request) }
+    override suspend fun createLightningPost(challengerId: Long, request: CreatePostLightningRequest): ApiState<PostDetailResponse> {
+        return apiCall { communityApi.createLightningPost(challengerId, request) }
     }
 
     //게시글 삭제하기

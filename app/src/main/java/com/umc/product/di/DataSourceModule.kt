@@ -16,6 +16,8 @@ import com.umc.data.dataSource.remote.community.CommunityRemoteDataSource
 import com.umc.data.dataSource.remote.community.CommunityRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.storage.StorageRemoteDataSource
+import com.umc.data.dataSource.remote.storage.StorageRemoteDataSourceImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -66,4 +68,8 @@ abstract class DataSourceModule {
     @Singleton
     @Binds
     abstract fun bindsCommunityRemoteDataSource(dataSourceImpl: CommunityRemoteDataSourceImpl): CommunityRemoteDataSource
+
+    @Singleton
+    @Binds
+    abstract fun bindsStorageRemoteDataSource(dataSourceImpl: StorageRemoteDataSourceImpl): StorageRemoteDataSource
 }

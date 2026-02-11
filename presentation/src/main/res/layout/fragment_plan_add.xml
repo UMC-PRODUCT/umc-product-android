@@ -507,8 +507,8 @@
                                 android:layout_height="wrap_content"
                                 android:textAppearance="@style/Body"
                                 android:layout_marginEnd="8dp"
-                                android:text='@{vm.uiState.isSeletedCategory == false ? @string/home_plan_add_plan_tag_placeholder : vm.uiState.selectedCategoriesString}'
-                                android:textColor='@{vm.uiState.isSeletedCategory == false ? @color/neutral400 : @color/neutral800}'
+                                android:text='@{vm.uiState.isSelectedCategory == false ? @string/home_plan_add_plan_tag_placeholder : vm.uiState.selectedCategoriesString}'
+                                android:textColor='@{vm.uiState.isSelectedCategory == false ? @color/neutral400 : @color/neutral800}'
                                 app:layout_constraintTop_toTopOf="parent"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"

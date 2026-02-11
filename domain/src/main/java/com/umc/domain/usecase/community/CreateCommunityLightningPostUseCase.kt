@@ -10,7 +10,7 @@ import javax.inject.Inject
 class CreateCommunityLightningPostUseCase @Inject constructor(
     private val communityRepository: CommunityRepository
 )   {
-    suspend operator fun invoke(request: CreateLightningPost): ApiState<ContentItem>{
-        return communityRepository.createLightningPost(request)
+    suspend operator fun invoke(challengerId: Long, request: CreateLightningPost): ApiState<ContentItem>{
+        return communityRepository.createLightningPost(challengerId, request)
     }
 }

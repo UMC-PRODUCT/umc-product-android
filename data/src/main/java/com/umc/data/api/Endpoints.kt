@@ -42,6 +42,11 @@ object Endpoints {
         const val SCHEDULE = "api/v1/schedules"
         const val DETAIL = "$SCHEDULE/{scheduleId}"
         const val MONTH = "$SCHEDULE/my-list"
+
+        const val SCHEDULE_WITH_ATTENDANCE = "$SCHEDULE/with-attendance"
+
+        const val DELETE = "$SCHEDULE/{scheduleId}/with-attendance"
+
     }
 
     object Community{
@@ -56,6 +61,16 @@ object Endpoints {
 
         const val POST_COMMENT_DETAIL = "$POST_COMMENT/{commentId}"
 
+    }
+
+    object Storage{
+        const val STORAGE = "api/v1/storage"
+
+        const val PRE_UPLOAD = "$STORAGE/prepare-upload"
+
+        const val CONFIRM_UPLOAD = "$STORAGE/{fileId}/confirm"
+
+        const val FILE_DELETE = "$STORAGE/{fileId}"
 
     }
 

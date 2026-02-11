@@ -10,9 +10,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
+import com.umc.presentation.component.UBasicDialog
+import com.umc.presentation.component.UBasicDialogModel
 import com.umc.presentation.databinding.FragmentPlanDetailBinding
 import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,6 +32,8 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
     //인자로 받은 ID
     private val args: PlanDetailFragmentArgs by navArgs()
 
+    private var scheduleId : Long = -1L
+
     override fun initView() {
         binding.apply {
             vm = viewModel
@@ -42,7 +47,7 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
         }
 
         //일정 화면에서 일정 ID 가져오기
-        val scheduleId = args.scheduleId
+        scheduleId = args.scheduleId
         //일정 화면에서 plusDay 가져오기 (02.06-02.08 일정에 대해 plusDay == 1 이면 02.07에 대한 출력)
         val plusDay = args.plusDay
         if (scheduleId != -1L) {
@@ -74,7 +79,41 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
     //실질적인 로직 수행 이벤트 맞춰서
     override fun handleEvent(event: PlanDetailFragmentEvent){
         when (event){
+
+            //출석 체크 시 로직
             is PlanDetailFragmentEvent.TouchConfirmAttention -> clickConfirmAttention()
+
+
+            //일정 삭제 로직
+            is PlanDetailFragmentEvent.CheckDeletePlan -> {
+                val reportModel = UBasicDialogModel.Warning(
+                    title = "해당 일정을 삭제하시겠습니까",
+                    content = "삭제된 일정은 복구할 수 없습니다.",
+                    positiveText = "삭제하기"
+                )
+
+                UBasicDialog(
+                    model = reportModel,
+                    onConfirm = {
+                        viewModel.deletePlan()
+                    }
+                ).show(childFragmentManager, "ReportDialog")
+            }
+
+            //일정 수정 로직
+            is PlanDetailFragmentEvent.EditPlan -> {
+                val action = PlanDetailFragmentDirections.actionPlanDetailToPlanAdd(
+                    scheduleId = scheduleId
+                )
+                findNavController().navigate(action)
+
+            }
+
+            //일정 신고 로직
+            is PlanDetailFragmentEvent.ReportPlan -> {
+
+            }
+
 
             is PlanDetailFragmentEvent.MoveBackPressedEvent -> {
                 requireActivity().onBackPressedDispatcher.onBackPressed()

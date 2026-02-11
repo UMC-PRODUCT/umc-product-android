@@ -118,6 +118,9 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
+
+    //coli (이미지)
+    implementation(libs.coil)
 }
 
 fun getApiKey(propertyKey: String): String {

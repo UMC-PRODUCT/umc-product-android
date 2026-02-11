@@ -158,7 +158,7 @@
                         android:gravity="center_vertical"
                         android:padding="12dp"
                         android:background="?attr/selectableItemBackground"
-                        android:onClick="@{() -> vm.deletePlan()}"
+                        android:onClick="@{() -> vm.checkDeletePlan()}"
                         >
                         <ImageView
                             android:layout_width="wrap_content"
