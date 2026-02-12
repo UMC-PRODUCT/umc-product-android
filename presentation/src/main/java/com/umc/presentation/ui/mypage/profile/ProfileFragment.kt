@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.mypage.profile
 
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -49,7 +50,13 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding, ProfileFragmentUiSt
             launch {
                 viewModel.uiState.collect { state ->
                     //사전에 서버에서 받은 이미지 or 미리보기 이미지가 있는지 체크
-                    val imageSource: Any? = state.userProfileImageUri ?: state.userInfo.profileImageLink
+                    var imageSource = ""
+                    if(state.userProfileImageUri != Uri.EMPTY){
+                        imageSource = state.userProfileImageUri.toString()
+                    }
+                    else if(state.userInfo.profileImageLink != ""){
+                        imageSource = state.userInfo.profileImageLink
+                    }
 
                     binding.profileCircleimvProfile.load(imageSource) {
                         crossfade(true)
@@ -87,7 +94,7 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding, ProfileFragmentUiSt
 
 
                 //뷰모델에게 DataStore에 저장 요청하고 지우기
-                viewModel.saveAndExit(nowGithub, nowLinkedin, nowBlog)
+                viewModel.saveUserOutLink(nowGithub, nowLinkedin, nowBlog)
 
             }
 

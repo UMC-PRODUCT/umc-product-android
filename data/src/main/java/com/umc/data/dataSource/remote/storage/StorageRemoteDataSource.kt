@@ -18,4 +18,7 @@ interface StorageRemoteDataSource {
     //파일 업로드 확인
     suspend fun confirmUpload(fileId: String): ApiState<Unit>
 
+    //파일 삭제
+    suspend fun deleteFile(fileId: String): ApiState<Unit>
+
 }

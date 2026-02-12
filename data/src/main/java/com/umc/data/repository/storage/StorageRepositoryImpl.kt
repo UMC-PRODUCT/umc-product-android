@@ -83,4 +83,11 @@ class StorageRepositoryImpl @Inject constructor(
             is ApiState.Fail -> prepareState
         }
     }
+
+
+    //파일 삭제 API
+    override suspend fun deleteFile(fileId: String): ApiState<Unit> {
+        return storageRemoteDatasource.deleteFile(fileId)
+    }
+
 }

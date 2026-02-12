@@ -18,6 +18,7 @@ import com.umc.presentation.databinding.FragmentMypageBinding
 import com.umc.presentation.ui.home.HomeFragmentDirections
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import coil.load
 
 @AndroidEntryPoint
 class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState, MypageFragmentEvent, MypageViewModel>(
@@ -64,7 +65,12 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
         repeatOnStarted(viewLifecycleOwner){
             launch {
                 viewModel.uiState.collect { state ->
-
+                    //이미지 변화
+                    binding.mypageCircleimvProfile.load(state.userInfo.profileImageLink) {
+                        crossfade(true)
+                        placeholder(R.drawable.ic_profile_default)
+                        error(R.drawable.ic_profile_default)
+                    }
                 }
             }
 
@@ -233,6 +239,11 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
         catch (e: Exception){
             e.printStackTrace()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.getUserInfo()
     }
 
 
