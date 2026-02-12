@@ -6,7 +6,9 @@ import com.umc.data.response.member.MemberResponse
 import com.umc.data.response.schedule.ScheduleDetailResponse
 import com.umc.data.response.schedule.ScheduleListResponse
 import com.umc.data.response.schedule.ScheduleMonthResponse
+import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.domain.model.base.ApiResponse
+import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -55,7 +57,12 @@ interface ScheduleApi {
         @Body request: UpdateScheduleRequest
     ) : ApiResponse<Unit>
 
-
+    // 일정 위치 변경하기
+    @PATCH(Endpoints.Schedule.LOCATION)
+    suspend fun updateScheduleLocation(
+        @Path("scheduleId") scheduleId: Long,
+        @Body request: UpdateLocationRequest
+    ): ApiResponse<UpdateLocationResponse>
 
 }
 

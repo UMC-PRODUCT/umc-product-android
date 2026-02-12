@@ -47,6 +47,8 @@ object Endpoints {
 
         const val DELETE = "$SCHEDULE/{scheduleId}/with-attendance"
 
+        const val LOCATION = "$SCHEDULE/{scheduleId}/location"
+
     }
 
     object Community{

@@ -17,6 +17,7 @@ import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
+import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import com.umc.domain.repository.schedule.ScheduleRepository
 import javax.inject.Inject
 
@@ -102,6 +103,14 @@ class ScheduleRepositoryImpl @Inject constructor(
         return scheduleRemoteDataSource.deleteScheduleWithAttendance(scheduleId)
     }
 
-    //
+    override suspend fun updateScheduleLocation(
+        scheduleId: Long,
+        locationName: String,
+        latitude: Double,
+        longitude: Double
+    ): ApiState<Unit> {
+        val request = UpdateLocationRequest(locationName, latitude, longitude)
+        return scheduleRemoteDataSource.updateScheduleLocation(scheduleId, request).map {}
+    }
 
 }
