@@ -31,7 +31,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun kakaoGoogle(request: LoginGoogleRequest): ApiState<JwtToken> {
+    override suspend fun googleLogin(request: LoginGoogleRequest): ApiState<JwtToken> {
         return authRemoteDataSource.loginGoogle(request).map {
             it.toModel()
         }
