@@ -22,7 +22,7 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
                 viewModel.toggleSessionExpansion(sessionId)
             },
             onChangeLocation = { sessionId ->
-                viewModel.onLocationChangeClicked(sessionId)
+                showLocationChangeDialog(sessionId)
             },
             onApproveConfirmed = { user, _ ->
                 viewModel.approveAttendance(user.id)
@@ -57,27 +57,15 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
 
     override fun handleEvent(event: AdminCheckEvent) {
         when (event) {
-            is AdminCheckEvent.ShowLocationDialog -> {
-                showLocationChangeDialog(
-                    sessionId = event.sessionId,
-                    lat = event.lat,
-                    lng = event.lng,
-                    address = event.address
-                )
-            }
-            is AdminCheckEvent.ShowToast -> {
-                // TODO
-            }
+            is AdminCheckEvent.ShowToast -> { /* 토스트 출력 로직 */ }
         }
     }
 
     /**
      * 위치 변경 바텀 시트를 띄우는 함수
      */
-    private fun showLocationChangeDialog(sessionId: Long, lat: Double, lng: Double, address: String) {
-        // 기존 ULocationDialog 대신 BottomSheetLocationDialog 사용
+    private fun showLocationChangeDialog(sessionId: Long) {
         val locationDialog = BottomSheetLocationDialog { selectedItem ->
-            // 선택된 장소 정보를 ViewModel에 전달
             viewModel.updateSessionLocation(
                 sessionId = sessionId,
                 lat = selectedItem.latitude,
