@@ -38,10 +38,11 @@ class AdminChallengerViewModel @Inject constructor(
         }
     }
 
+    /**TODO 서버 part DTO에 맞게 UserPart Enum을 수정했습니다.**/
     private fun loadInitialData() {
         val dummyList = listOf(
             AdminChallenger(101, "김디자", "닉네임1", 12, UserPart.DESIGN, outCount = 1, warningCount = 0),
-            AdminChallenger(102, "홍길동", "닉네임2", 12, UserPart.PM, outCount = 0, warningCount = 1),
+            AdminChallenger(102, "홍길동", "닉네임2", 12, UserPart.PLAN, outCount = 0, warningCount = 1),
             AdminChallenger(103, "이웹마", "닉네임3", 12, UserPart.WEB, outCount = 2, warningCount = 1),
             AdminChallenger(104, "박안드", "닉네임4", 12, UserPart.ANDROID, outCount = 0, warningCount = 0)
         )

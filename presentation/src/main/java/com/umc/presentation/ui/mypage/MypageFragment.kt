@@ -113,10 +113,7 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
                 findNavController().navigate(action)
             }
 
-            is MypageFragmentEvent.NavigateToSuggetion -> {
-                val action = MypageFragmentDirections.actionMypageToSugget()
-                findNavController().navigate(action)
-            }
+
             is MypageFragmentEvent.NavigateToMypost -> {
                 val action = MypageFragmentDirections.actionMypageToMypost()
                 findNavController().navigate(action)

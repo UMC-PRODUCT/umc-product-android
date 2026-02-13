@@ -5,8 +5,10 @@ import android.app.TimePickerDialog
 import android.content.res.Configuration
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
+import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPlanAddBinding
+import com.umc.presentation.extension.dp
 import com.umc.presentation.ui.home.dialog.AddAttendanceDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetCategoryPlanDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
@@ -108,16 +110,32 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
             }
 
             //인원 관련 터치 시 다이얼로그 로직
-            binding.planaddCdvSearchParticipant.setOnClickListener {
-                // 뷰모델을 생성자로 전달하여 상태를 공유합니다.
-                val participantDialog = BottomSheetParticipantDialog { selectedParticipant, selectedParticipantString ->
-                    viewModel.updateParticipants(selectedParticipant, selectedParticipantString)
+            binding.planaddCdvSearchParticipant.apply{
+
+                //수정 모드에 따른 UI 및 터치 로직
+                val isEditMode = viewModel.uiState.value.updateScheduleId != -1L
+                isEnabled = isEditMode //수정 모드이면 터치 못하게 막기
+
+                val bgColor = if (isEditMode) {
+                    context.getColor(R.color.neutral100)
+                } else {
+                    context.getColor(R.color.neutral000)
                 }
+                setCardBackgroundColor(bgColor)
 
-                // childFragmentManager를 사용하여 프래그먼트 계층 구조를 유지합니다.
-                participantDialog.show(childFragmentManager, "ParticipantSelect")
+
+
+                setOnClickListener {
+                    // 뷰모델을 생성자로 전달하여 상태를 공유합니다.
+                    val participantDialog = BottomSheetParticipantDialog { selectedParticipant, selectedParticipantString ->
+                        viewModel.updateParticipants(selectedParticipant, selectedParticipantString)
+                    }
+
+                    // childFragmentManager를 사용하여 프래그먼트 계층 구조를 유지합니다.
+                    participantDialog.show(childFragmentManager, "ParticipantSelect")
+                }
             }
-
+            
 
         }
 

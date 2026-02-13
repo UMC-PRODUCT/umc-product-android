@@ -81,10 +81,6 @@ class MypageViewModel @Inject constructor(
         emitEvent(MypageFragmentEvent.NavigateToEditProfile)
     }
 
-    fun navigateToSuggetion(){
-        emitEvent(MypageFragmentEvent.NavigateToSuggetion)
-    }
-
     fun navigateToMypost(){
         emitEvent(MypageFragmentEvent.NavigateToMypost)
     }
@@ -174,7 +170,6 @@ sealed interface MypageFragmentEvent : UiEvent {
     object NavigateToLinkedin : MypageFragmentEvent //리으드인 링크
 
     object NavigateToEditProfile : MypageFragmentEvent //프로필 수정
-    object NavigateToSuggetion : MypageFragmentEvent //중앙 건의함
     object NavigateToMypost : MypageFragmentEvent //내가 쓴 글
     object NavigateToMyComment : MypageFragmentEvent //내가 쓴 댓글
     object NavigateToScrap : MypageFragmentEvent //스크랩

@@ -460,7 +460,7 @@
                         />
 
 
-                <!-- 참여자 명단-->
+                <!-- 챌린저 명단-->
                     <TextView
                         android:id="@+id/planadd_tv_plan_title_attend"
                         android:layout_width="wrap_content"

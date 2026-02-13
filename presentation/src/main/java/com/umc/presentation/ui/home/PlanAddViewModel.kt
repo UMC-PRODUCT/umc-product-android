@@ -188,7 +188,7 @@ constructor(
             }
 
         //TODO 참여자 ID 임시 하드코딩 (차후 수정 가능하도록 리스트로 관리)
-        val tempParticipantIds = listOf(101L, 102L)
+        val participantIds = state.selectedParticipants.map { it.id }
 
         viewModelScope.launch {
             if (isEditMode) {
@@ -224,8 +224,7 @@ constructor(
                     longitude = state.longitude,
                     description = state.planDetail,
                     tags = selectedTags,
-                    /**TODO 차후 확실히**/
-                    participantMemberIds = tempParticipantIds,
+                    participantMemberIds = participantIds,
                     gisuId = 1L,
                     requiresApproval = state.isManager
                 )
@@ -344,7 +343,7 @@ data class PlanAddFragmentUiState(
 
 
     //운영진 여부 판단
-    val isManager: Boolean = true,
+    val isManager: Boolean = false,
 
     //하루 종일 부분에 체크가 되었나
     val isAllDay: Boolean = false,

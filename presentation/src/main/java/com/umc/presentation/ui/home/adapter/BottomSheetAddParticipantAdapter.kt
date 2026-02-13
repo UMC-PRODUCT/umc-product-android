@@ -7,6 +7,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.presentation.databinding.ItemBottomSheetParticipantAddBinding
 import androidx.recyclerview.widget.DiffUtil
+import coil.load
+import coil.transform.CircleCropTransformation
+import com.umc.presentation.R
 
 
 // 인원 추가/삭제 관련 통합 델리게이트
@@ -25,6 +28,13 @@ class BottomSheetAddParticipantAdapter(
             binding.item = item
             binding.itemTvName.text = item.name
             binding.itemTvSchool.text = item.school
+
+            binding.itemImvProfile.load(item.profileImage.ifEmpty { null }) {
+                crossfade(true)
+                placeholder(R.drawable.ic_profile_default) // 로딩 중 이미지
+                error(R.drawable.ic_profile_default)       // 실패/비어있을 때 이미지
+                transformations(CircleCropTransformation()) // 원형 변환
+            }
 
             // 삭제 버튼 클릭 시 이벤트 전달
             binding.itemBtnDelete.setOnClickListener {

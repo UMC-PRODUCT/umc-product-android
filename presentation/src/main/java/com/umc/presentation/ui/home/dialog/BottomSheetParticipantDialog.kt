@@ -88,6 +88,8 @@ class BottomSheetParticipantDialog(
         initSearch()
         //상태 관리
         observeState()
+        //무한 스크롤 관리
+        setupInfiniteScroll()
 
         //csv 파일 파싱
         binding.btnUploadCsv.setOnClickListener {
@@ -169,6 +171,22 @@ class BottomSheetParticipantDialog(
             }
     }
 
+    private fun setupInfiniteScroll() {
+        binding.rcvSearchResult.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                // 아래로 스크롤 중이며, 더 이상 아래로 갈 수 없을 때 (바닥 도달)
+                if (!recyclerView.canScrollVertically(1) && dy > 0) {
+                    // 다음 페이지가 있으면 추가 로딩
+                    viewModel.loadMore()
+                }
+            }
+        })
+    }
+
+    /**CSV 파싱 로직은 depricated**/
+
     //CSV 파일 불러오고 난 뒤 파싱 로직
     private fun parseCsvFile(uri: Uri){
         //이름 정보를 임시로 담을 곳
@@ -217,9 +235,10 @@ class BottomSheetParticipantDialog(
 
             }
             // 추출된 이름 리스트를 뷰모델로 전송
+            /**TODO CSV 파싱 로직은 현재 엑셀 형식에서 id를 필수로 주어야 하는 문제가 deprecated 된 상태임**/
             val newUsers = mutableListOf<ParticipantItem>()
             for(name in names){
-                newUsers.add(ParticipantItem(name))
+                newUsers.add(ParticipantItem(-1L, name))
             }
 
             viewModel.updateParticipant(newUsers)
