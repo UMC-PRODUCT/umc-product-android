@@ -19,6 +19,7 @@ import com.umc.presentation.ui.home.HomeFragmentDirections
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import coil.load
+import android.provider.Settings
 
 @AndroidEntryPoint
 class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState, MypageFragmentEvent, MypageViewModel>(
@@ -137,11 +138,11 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
 
 
             is MypageFragmentEvent.NavigateToSettingNotice -> {
-                /**TODO 알림 설정 이동 로직**/
+                openPermissionPage()
             }
 
             is MypageFragmentEvent.NavigateToSettingLocation -> {
-                /**TODO 위치 설정 이동 로직**/
+                openPermissionPage()
             }
 
             is MypageFragmentEvent.NavigateToSocialSetting -> {
@@ -240,6 +241,23 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             e.printStackTrace()
         }
     }
+
+    //앱 권한 페이지로 이동(설정 페이지)
+    private fun openPermissionPage() {
+        try {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                // 현재 패키지 정보를 URI 데이터로 삽입
+                data = Uri.fromParts("package", requireContext().packageName, null)
+                // 기존 화면 흐름과 분리하여 새로운 태스크로 실행
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+
+        }
+
+    }
+
 
     override fun onResume() {
         super.onResume()

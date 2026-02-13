@@ -130,6 +130,7 @@ class MypageViewModel @Inject constructor(
     }
 
 
+
     fun deleteUser(){
         emitEvent(MypageFragmentEvent.DeleteUser)
     }
@@ -191,6 +192,8 @@ sealed interface MypageFragmentEvent : UiEvent {
     //외부 채널 이동
     object NavigateToWebstieUmc : MypageFragmentEvent // UMC 웹사이트
     object NavigateToInstagramUmc : MypageFragmentEvent // UMC 인스타그램
+
+
 
     //로그아웃
     object Logout : MypageFragmentEvent

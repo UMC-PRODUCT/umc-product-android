@@ -407,6 +407,7 @@ data class PlanAddFragmentUiState(
             //1. 텍스트 3종 세트가 비어있지 않음
             val isTextValid = planTitle.isNotBlank()
 
+            /** 필수 내용 수정
             //2. 날짜/시간이 초기값이 아님
             val isDateTimeValid = (isAllDay && (startDateText != "시작 날짜" && endDateText != "종료 날짜"))
                     || (!isAllDay && (startDateText != "시작 날짜" && startTimeText != "시작 시간" &&
@@ -414,8 +415,10 @@ data class PlanAddFragmentUiState(
 
             //3. 참여자가 1명 이상임
             val isParticipantValid = isSelectedParticipant
+            **/
 
-            return isTextValid && isDateTimeValid && isParticipantValid
+
+            return isTextValid && isSelectedCategory
         }
 }
 
