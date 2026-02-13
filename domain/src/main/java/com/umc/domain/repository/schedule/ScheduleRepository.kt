@@ -34,6 +34,12 @@ interface ScheduleRepository {
     //일정 삭제하기
     suspend fun deleteSchedule(scheduleId: Long) : ApiState<Unit>
 
-
+    // 위치 변경하기
+    suspend fun updateScheduleLocation(
+        scheduleId: Long,
+        locationName: String,
+        latitude: Double,
+        longitude: Double
+    ): ApiState<Unit>
 
 }

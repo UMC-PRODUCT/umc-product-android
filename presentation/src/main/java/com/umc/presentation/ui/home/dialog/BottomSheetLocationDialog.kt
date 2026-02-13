@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.umc.domain.model.home.LocationItem
 import com.umc.presentation.R
@@ -20,11 +22,11 @@ import kotlinx.coroutines.launch
 
 //onLocationSelected -> 선택 누를 시 부모 프래그먼트로 전송하기 위함.
 @AndroidEntryPoint
-class BottomSheetLocationDialog (
-    //선택된 장소의 LocationItem을 전달하기 위한 콜백함수
+class BottomSheetLocationDialog(
+    private val title: String? = null,       // 커스텀 타이틀
+    private val description: String? = null, // 추가 설명
     private val onItemSelected: (LocationItem) -> Unit
 ) : BottomSheetDialogFragment(), RecentLocationDelegate, LocationResultDelegate {
-
     private lateinit var binding: LayoutBottomSheetLocationSelectBinding
 
     //다이얼로그 전용 뷰모델 (이젠 뷰모델에 의존X)
@@ -47,6 +49,7 @@ class BottomSheetLocationDialog (
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        initView()
         initRecyclerView()
         setupSearchLogic()
         observeData()
@@ -82,6 +85,26 @@ class BottomSheetLocationDialog (
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        // 다이얼로그의 내부 뷰(design_bottom_sheet)를 찾아 높이를 설정
+        (dialog as? BottomSheetDialog)?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)?.let { bottomSheet ->
+            val behavior = BottomSheetBehavior.from(bottomSheet)
+
+            // 1. 레이아웃 파라미터의 높이를 화면 전체의 80%로 설정
+            val layoutParams = bottomSheet.layoutParams
+            layoutParams.height = (resources.displayMetrics.heightPixels * 0.8).toInt()
+            bottomSheet.layoutParams = layoutParams
+
+            // 2. 초기 상태를 확장 상태(EXPANDED)로 고정
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+
+            // 3. 드래그해서 절반으로 접히는 현상 방지 (선택 사항)
+            behavior.skipCollapsed = true
+        }
+    }
+
     // 1. 최근 기록 클릭 시: 검색창 텍스트를 바꾸고 검색 모드로 전환
     override fun onRecentClicked(item: String) {
         viewModel.saveRecentPlace(item) //datastore 업데이트
@@ -104,6 +127,17 @@ class BottomSheetLocationDialog (
                 //카카오맵 검색 기록 observe
                 resultAdapter.submitList(state.searchResultList)
             }
+        }
+    }
+
+    private fun initView() {
+        // 타이틀이 전달되었다면 변경 (없으면 XML 기본값 유지)
+        title?.let { binding.tvTitle.text = it }
+
+        // 설명이 전달되었다면 보이기
+        description?.let {
+            binding.tvDescription.text = it
+            binding.tvDescription.visibility = View.VISIBLE
         }
     }
 

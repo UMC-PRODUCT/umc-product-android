@@ -5,6 +5,7 @@ import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.ULocationDialog
 import com.umc.presentation.databinding.FragmentAdminCheckBinding
 import com.umc.presentation.ui.act.adapter.AdminCheckAdapter
+import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -21,7 +22,7 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
                 viewModel.toggleSessionExpansion(sessionId)
             },
             onChangeLocation = { sessionId ->
-                viewModel.onLocationChangeClicked(sessionId)
+                showLocationChangeDialog(sessionId)
             },
             onApproveConfirmed = { user, _ ->
                 viewModel.approveAttendance(user.id)
@@ -56,30 +57,25 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
 
     override fun handleEvent(event: AdminCheckEvent) {
         when (event) {
-            is AdminCheckEvent.ShowLocationDialog -> {
-                showLocationChangeDialog(
-                    sessionId = event.sessionId,
-                    lat = event.lat,
-                    lng = event.lng,
-                    address = event.address
-                )
-            }
-            is AdminCheckEvent.ShowToast -> {
-                // TODO
-            }
+            is AdminCheckEvent.ShowToast -> { /* 토스트 출력 로직 */ }
         }
     }
 
     /**
-     * 위치 변경 다이얼로그를 띄우는 함수
+     * 위치 변경 바텀 시트를 띄우는 함수
      */
-    private fun showLocationChangeDialog(sessionId: Long, lat: Double, lng: Double, address: String) {
-        ULocationDialog(
-            initialLat = lat,
-            initialLng = lng,
-            onLocationChanged = { newAddress, newLat, newLng ->
-                viewModel.updateSessionLocation(sessionId, newLat, newLng, newAddress)
-            }
-        ).show(childFragmentManager, "ULocationChangeDialog")
+    private fun showLocationChangeDialog(sessionId: Long) {
+        val locationDialog = BottomSheetLocationDialog(
+            title = "출석 위치 변경",
+            description = "지도에서 새로운 출석 체크 위치를 지정해주세요. \n이 위치 반경 50m 이내에서만 출석할 수 있습니다."
+        ) { selectedItem ->
+            viewModel.updateSessionLocation(
+                sessionId = sessionId,
+                lat = selectedItem.latitude,
+                lng = selectedItem.longitude,
+                address = selectedItem.address
+            )
+        }
+        locationDialog.show(childFragmentManager, "LocationSelect")
     }
 }

@@ -26,39 +26,22 @@
             android:paddingHorizontal="16dp"
             android:paddingVertical="24dp">
 
-            <com.umc.presentation.component.UButton
-                android:id="@+id/btn_admin_change_location"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:backgroundColor="@color/neutral000"
-                app:borderColor="@color/neutral300"
-                app:borderWidth="1dp"
-                app:cornerRadius="8dp"
-                app:contentPaddingLeft="8dp"
-                app:contentPaddingRight="8dp"
-                app:contentPaddingTop="4dp"
-                app:contentPaddingBottom="4dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:text="@string/admin_check_change_location"
-                app:textAppearance="@style/SubheadlineBold"
-                app:textColor="@color/neutral700" />
-
             <TextView
                 android:id="@+id/tv_admin_session_title"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="@{uiModel.session.title}"
                 android:textAppearance="@style/Title3Bold"
                 android:textColor="@color/neutral800"
                 android:ellipsize="end"
                 android:maxLines="1"
-                app:layout_constrainedWidth="true" app:layout_constraintHorizontal_bias="0"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintHorizontal_chainStyle="packed"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/btn_admin_session_status"
-                app:layout_constraintTop_toTopOf="@+id/btn_admin_change_location"
-                app:layout_constraintBottom_toBottomOf="@+id/btn_admin_change_location"
-                tools:text="4주차 정기세션 제목이 아주 길어질 경우의 테스트입니다." />
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="4주차 정기세션 제목" />
 
             <com.umc.presentation.component.UButton
                 android:id="@+id/btn_admin_session_status"
@@ -81,6 +64,25 @@
                 app:text="@{uiModel.session.status.text}"
                 app:textAppearance="@style/Caption1Bold"
                 tools:text="진행 중" />
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/btn_admin_change_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="@{uiModel.session.status == AdminSessionStatus.COMPLETED ? View.GONE : View.VISIBLE}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:backgroundColor="@color/neutral000"
+                app:borderColor="@color/neutral300"
+                app:borderWidth="1dp"
+                app:cornerRadius="8dp"
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
+                app:contentPaddingTop="4dp"
+                app:contentPaddingBottom="4dp"
+                app:text="@string/admin_check_change_location"
+                app:textAppearance="@style/SubheadlineBold"
+                app:textColor="@color/neutral700" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/layout_admin_session_info"
