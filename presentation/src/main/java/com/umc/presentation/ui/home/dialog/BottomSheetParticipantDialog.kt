@@ -50,18 +50,23 @@ class BottomSheetParticipantDialog(
     override fun onStart() {
         super.onStart()
 
-        // BottomSheet의 레이아웃을 가져옵니다.
-        val dialog = dialog as? BottomSheetDialog
-        val bottomSheet = dialog?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+        // 다이얼로그의 내부 뷰(design_bottom_sheet)를 찾아 높이를 설정
+        (dialog as? BottomSheetDialog)?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)?.let { bottomSheet ->
+            val behavior = BottomSheetBehavior.from(bottomSheet)
 
-        bottomSheet?.let {
-            val behavior = BottomSheetBehavior.from(it)
+            // 1. 레이아웃 파라미터의 높이를 화면 전체의 80%로 설정
+            val layoutParams = bottomSheet.layoutParams
+            layoutParams.height = (resources.displayMetrics.heightPixels * 0.8).toInt()
+            bottomSheet.layoutParams = layoutParams
 
+            // 2. 초기 상태를 확장 상태(EXPANDED)로 고정
             behavior.state = BottomSheetBehavior.STATE_EXPANDED
-            behavior.isFitToContents = true
 
+            // 3. 드래그해서 절반으로 접히는 현상 방지 (선택 사항)
+            behavior.skipCollapsed = true
         }
     }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
