@@ -56,6 +56,8 @@
                 android:text="@{uiModel.session.title}"
                 android:textAppearance="@style/BodyBold"
                 android:textColor="@color/neutral800"
+                android:ellipsize="end"
+                android:maxLines="1"
                 app:layout_constraintBottom_toTopOf="@+id/layout_session_time_group"
                 app:layout_constraintEnd_toStartOf="@+id/btn_status_badge"
                 app:layout_constraintStart_toEndOf="@+id/cv_session_icon_container"
