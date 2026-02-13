@@ -5,11 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.LoginType
+import com.umc.domain.model.enums.TermsType
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
+import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -22,6 +24,7 @@ class MypageViewModel @Inject constructor(
     private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //유저 outlink 3종 세트 얻기
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val claerAllDataUseCase : ClearAllDataUseCase, //모든 정보 삭제하기
+    private val getTermsByTypeUseCase: GetTermsByTypeUseCase, //타입으로 약관 가져오기
 ) : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
 
@@ -68,6 +71,13 @@ class MypageViewModel @Inject constructor(
         }
     }
 
+    //usecase를 통해 appdatastore에 저장된 내용 날리기
+    fun deleteAllData(){
+        viewModelScope.launch {
+            claerAllDataUseCase()
+        }
+    }
+
     fun navigateToGithub(){
         emitEvent(MypageFragmentEvent.NavigateToGithub)
     }
@@ -111,12 +121,34 @@ class MypageViewModel @Inject constructor(
         emitEvent(MypageFragmentEvent.NavigateToSocialSetting)
     }
 
+    //개인정보처리 방침
     fun navigateToPersonalInformation(){
-        emitEvent(MypageFragmentEvent.NavigateToPersonalInformation)
+        viewModelScope.launch {
+            resultResponse(
+                response = getTermsByTypeUseCase(TermsType.PRIVACY),
+                successCallback = { term ->
+                    emitEvent(MypageFragmentEvent.NavigateToPersonalInformation(term.link))
+                },
+                errorCallback = {}
+            )
+        }
+
+
     }
-    
+
+    //이용 약관
     fun navigateToUseManual(){
-        emitEvent(MypageFragmentEvent.NavigateToUseManual)
+        viewModelScope.launch {
+            resultResponse(
+                response = getTermsByTypeUseCase(TermsType.SERVICE),
+                successCallback = { term ->
+                    emitEvent(MypageFragmentEvent.NavigateToUseManual(term.link))
+                },
+                errorCallback = {}
+            )
+        }
+
+
     }
     
     fun navigateToWebsiteUmc(){
@@ -185,8 +217,8 @@ sealed interface MypageFragmentEvent : UiEvent {
 
     object NavigateToSocialSetting : MypageFragmentEvent //소셜 연동
 
-    object NavigateToPersonalInformation : MypageFragmentEvent //개인정보
-    object NavigateToUseManual : MypageFragmentEvent //이용 약관
+    data class NavigateToPersonalInformation(val privacyTerms : String) : MypageFragmentEvent //개인정보
+    data class NavigateToUseManual(val manualTerms : String) : MypageFragmentEvent //이용 약관
     
     //외부 채널 이동
     object NavigateToWebstieUmc : MypageFragmentEvent // UMC 웹사이트

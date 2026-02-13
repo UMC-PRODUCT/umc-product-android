@@ -149,11 +149,11 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             }
 
             is MypageFragmentEvent.NavigateToPersonalInformation -> {
-                /**TODO 개인정보처리 방침 이동 로직**/
+                openWebpage(event.privacyTerms)
             }
 
             is MypageFragmentEvent.NavigateToUseManual -> {
-                /**TODO 이용약관 이동 로직**/
+                openWebpage(event.manualTerms)
 
             }
             
@@ -161,6 +161,9 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
                 //1. 다이얼로그로 체크
                 val dialog = UMypageDialog(logoutDialogModel) {
                     /**TODO 로그아웃 로직 생성**/
+                    viewModel.deleteAllData()
+                    val action = MypageFragmentDirections.actionMypageToLogin()
+                    findNavController().navigate(action)
 
                 }
 

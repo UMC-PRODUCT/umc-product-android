@@ -1,4 +1,7 @@
 package com.umc.domain.model.terms
 
-class TermsData {
-}
+data class TermsData (
+    val id: Long,
+    val link: String,
+    val isMandatory: Boolean,
+    )

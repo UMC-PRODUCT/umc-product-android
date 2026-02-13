@@ -18,6 +18,8 @@ import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.storage.StorageRemoteDataSource
 import com.umc.data.dataSource.remote.storage.StorageRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.terms.TermsRemoteDataSource
+import com.umc.data.dataSource.remote.terms.TermsRemoteDataSourceImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -72,4 +74,8 @@ abstract class DataSourceModule {
     @Singleton
     @Binds
     abstract fun bindsStorageRemoteDataSource(dataSourceImpl: StorageRemoteDataSourceImpl): StorageRemoteDataSource
+
+    @Singleton
+    @Binds
+    abstract fun bindsTermsRemoteDataSource(dataSourceImpl: TermsRemoteDataSourceImpl): TermsRemoteDataSource
 }
