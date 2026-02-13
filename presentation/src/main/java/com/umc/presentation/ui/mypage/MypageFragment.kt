@@ -161,6 +161,7 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
                 //1. 다이얼로그로 체크
                 val dialog = UMypageDialog(logoutDialogModel) {
                     /**TODO 로그아웃 로직 생성**/
+
                 }
 
                 dialog.show(parentFragmentManager, "MyPageDialog")
@@ -171,6 +172,7 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
                 //1. 다이얼로그로 체크
                 val dialog = UMypageDialog(deleteUserDialogModel) {
                     /**TODO 회원 탈퇴 로직 생성**/
+
                 }
 
                 dialog.show(parentFragmentManager, "MyPageDialog")

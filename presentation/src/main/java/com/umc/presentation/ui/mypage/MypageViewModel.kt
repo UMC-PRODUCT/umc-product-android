@@ -6,6 +6,7 @@ import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
@@ -20,6 +21,7 @@ import javax.inject.Inject
 class MypageViewModel @Inject constructor(
     private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //유저 outlink 3종 세트 얻기
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
+    private val claerAllDataUseCase : ClearAllDataUseCase, //모든 정보 삭제하기
 ) : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
 

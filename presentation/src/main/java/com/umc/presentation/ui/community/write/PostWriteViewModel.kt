@@ -15,7 +15,6 @@ import com.umc.domain.usecase.community.UpdateCommunityPostUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
-import com.umc.presentation.ui.mypage.suggest.SuggestWriteFragmentEvent
 import com.umc.presentation.util.UToast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch

@@ -105,4 +105,10 @@ object Endpoints {
         const val CHAPTER_WITH_SCHOOL = "$CHAPTER/with-schools"
 
     }
+
+    object Terms{
+        const val TERMS = "api/v1/terms"
+        const val TERMS_TYPE = "$TERMS/type/{termsType}"
+        const val TERMS_ID = "$TERMS/{termsId}"
+    }
 }

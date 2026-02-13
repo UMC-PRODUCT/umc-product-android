@@ -27,6 +27,12 @@
             android:id="@+id/action_mypage_to_mycomment"
             app:destination="@id/MycommentFragment"/>
 
+        <action
+            android:id="@+id/action_mypage_to_login"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/nav_mypage"
+            app:popUpToInclusive="true" />
+
 
 
     </fragment>
