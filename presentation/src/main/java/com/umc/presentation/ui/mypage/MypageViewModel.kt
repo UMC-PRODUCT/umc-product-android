@@ -93,7 +93,7 @@ class MypageViewModel @Inject constructor(
 
 
     fun navigateToAssistUmc(){
-        emitEvent(MypageFragmentEvent.NavigateToAssistUmc)
+        emitEvent(MypageFragmentEvent.NavigateToAssistUmc(uiState.value.kakaoInquireChannelId))
     }
 
 
@@ -160,6 +160,8 @@ data class MypageFragmentUiState(
     // UMC 외부 링크
     val websiteUMC : String = "https://umc.it.kr",
     val instagramUMC : String = "https://www.instagram.com/uni_makeus_challenge/",
+    val kakaoInquireChannelId : String = "_xjqxcln", //카카오 문의 채널
+    
     
 ) : UiState
 
@@ -174,7 +176,7 @@ sealed interface MypageFragmentEvent : UiEvent {
     object NavigateToMyComment : MypageFragmentEvent //내가 쓴 댓글
     object NavigateToScrap : MypageFragmentEvent //스크랩
     
-    object NavigateToAssistUmc : MypageFragmentEvent // UMC 문의
+    data class NavigateToAssistUmc(val channelId: String) : MypageFragmentEvent // UMC 문의
 
     object NavigateToSettingNotice : MypageFragmentEvent //알림 설정
     object NavigateToSettingLocation : MypageFragmentEvent //위치 설정
