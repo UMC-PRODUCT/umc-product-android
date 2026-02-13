@@ -65,7 +65,10 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
      * 위치 변경 바텀 시트를 띄우는 함수
      */
     private fun showLocationChangeDialog(sessionId: Long) {
-        val locationDialog = BottomSheetLocationDialog { selectedItem ->
+        val locationDialog = BottomSheetLocationDialog(
+            title = "출석 위치 변경",
+            description = "지도에서 새로운 출석 체크 위치를 지정해주세요. \n이 위치 반경 50m 이내에서만 출석할 수 있습니다."
+        ) { selectedItem ->
             viewModel.updateSessionLocation(
                 sessionId = sessionId,
                 lat = selectedItem.latitude,

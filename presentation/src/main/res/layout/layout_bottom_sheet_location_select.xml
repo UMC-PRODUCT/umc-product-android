@@ -32,6 +32,17 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/view_handle" />
 
+        <TextView
+            android:id="@+id/tv_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="@style/Footnote"
+            android:textColor="@color/neutral600"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/tv_title"
+            android:text="@string/act_location_update"/>
+
         <com.umc.presentation.component.USearchBar
             android:id="@+id/searchbar_location"
             android:layout_width="match_parent"
@@ -39,7 +50,7 @@
             android:layout_marginTop="24dp"
             app:cornerRadius="8dp"
             app:placeholderText="@string/home_plan_add_plan_location_placeholder"
-            app:layout_constraintTop_toBottomOf="@id/tv_title" />
+            app:layout_constraintTop_toBottomOf="@id/tv_description" />
 
 
         <!--이전 검색 기록 보이기-->

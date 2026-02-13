@@ -310,5 +310,6 @@
     <string name="study_leader_search_title">담당 파트장을 검색하세요</string>
 
     <string name="delete">삭제</string>
+    <string name="act_location_update">지도에서 새로운 출석 체크 위치를 지정해주세요.\n이 위치 반경 50m 이내에서만 출석할 수 있습니다.</string>
 
 </resources>
