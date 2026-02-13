@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.umc.domain.model.home.LocationItem
 import com.umc.presentation.R
@@ -79,6 +81,26 @@ class BottomSheetLocationDialog (
                 viewModel.searchLocation(text)
                 
             }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        // 다이얼로그의 내부 뷰(design_bottom_sheet)를 찾아 높이를 설정
+        (dialog as? BottomSheetDialog)?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)?.let { bottomSheet ->
+            val behavior = BottomSheetBehavior.from(bottomSheet)
+
+            // 1. 레이아웃 파라미터의 높이를 화면 전체의 70%로 설정
+            val layoutParams = bottomSheet.layoutParams
+            layoutParams.height = (resources.displayMetrics.heightPixels * 0.7).toInt()
+            bottomSheet.layoutParams = layoutParams
+
+            // 2. 초기 상태를 확장 상태(EXPANDED)로 고정
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+
+            // 3. 드래그해서 절반으로 접히는 현상 방지 (선택 사항)
+            behavior.skipCollapsed = true
         }
     }
 
