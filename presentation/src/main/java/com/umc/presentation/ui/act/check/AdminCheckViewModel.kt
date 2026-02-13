@@ -6,6 +6,7 @@ import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceApprovalUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceRejectionUseCase
 import com.umc.domain.usecase.schedule.GetAdminSessionListUseCase
+import com.umc.domain.usecase.schedule.UpdateScheduleLocationUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -18,7 +19,8 @@ class AdminCheckViewModel @Inject constructor(
     private val getAdminSessionListUseCase: GetAdminSessionListUseCase,
     private val getPendingUsersUseCase: GetPendingUsersUseCase,
     private val postAttendanceApprovalUseCase: PostAttendanceApprovalUseCase,
-    private val postAttendanceRejectionUseCase: PostAttendanceRejectionUseCase
+    private val postAttendanceRejectionUseCase: PostAttendanceRejectionUseCase,
+    private val updateScheduleLocationUseCase: UpdateScheduleLocationUseCase
 ) : BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
 
     init {
@@ -161,18 +163,20 @@ class AdminCheckViewModel @Inject constructor(
         }
     }
 
-    fun onLocationChangeClicked(sessionId: Long) {
-        emitEvent(AdminCheckEvent.ShowLocationDialog(
-            sessionId = sessionId,
-            lat = 37.582568,
-            lng = 127.001488,
-            address = "서울특별시 종로구 명륜4가"
-        ))
-    }
-
     fun updateSessionLocation(sessionId: Long, lat: Double, lng: Double, address: String) {
-        // TODO: 서버 위치 업데이트 API 호출
-        emitEvent(AdminCheckEvent.ShowToast("출석 위치가 성공적으로 변경되었습니다."))
+        viewModelScope.launch {
+            val result = updateScheduleLocationUseCase(sessionId, address, lat, lng)
+
+            resultResponse(
+                response = result,
+                successCallback = {
+                    emitEvent(AdminCheckEvent.ShowToast("출석 위치가 성공적으로 변경되었습니다."))
+                },
+                errorCallback = { failState ->
+                    emitEvent(AdminCheckEvent.ShowToast(failState.message))
+                }
+            )
+        }
     }
 
     fun toggleSessionExpansion(sessionId: Long) {
@@ -223,10 +227,4 @@ data class AdminCheckUiState(
 
 sealed class AdminCheckEvent : UiEvent {
     data class ShowToast(val message: String) : AdminCheckEvent()
-    data class ShowLocationDialog(
-        val sessionId: Long,
-        val lat: Double,
-        val lng: Double,
-        val address: String
-    ) : AdminCheckEvent()
 }
