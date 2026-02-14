@@ -8,6 +8,7 @@ import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
+import com.umc.domain.usecase.attendance.GetAttendanceHistoryUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceReasonUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailUseCase
@@ -21,6 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class UserCheckViewModel @Inject constructor(
     private val getAttendanceAvailableUseCase: GetAttendanceAvailableUseCase,
+    private val getAttendanceHistoryUseCase: GetAttendanceHistoryUseCase,
     private val getScheduleDetailUseCase: GetScheduleDetailUseCase,
     private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase,
     private val postAttendanceReasonUseCase: PostAttendanceReasonUseCase
@@ -29,7 +31,10 @@ class UserCheckViewModel @Inject constructor(
     private var lastUserLat: Double? = null
     private var lastUserLng: Double? = null
 
-    init { fetchAttendanceData() }
+    init {
+        fetchAttendanceData()
+        fetchAttendanceHistory()
+    }
 
     private fun fetchAttendanceData() {
         viewModelScope.launch {
@@ -44,7 +49,24 @@ class UserCheckViewModel @Inject constructor(
                 is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
             }
         }
-        loadHistoryDummyData()
+    }
+
+    private fun fetchAttendanceHistory() {
+        viewModelScope.launch {
+            when (val result = getAttendanceHistoryUseCase()) {
+                is ApiState.Success -> {
+                    val historyUIList = result.data.mapIndexed { index, history ->
+                        CheckHistoryUIModel(
+                            history = history,
+                            isFirst = index == 0,
+                            isLast = index == result.data.size - 1
+                        )
+                    }
+                    updateState { copy(attendanceHistories = historyUIList) }
+                }
+                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
+            }
+        }
     }
 
     private fun fetchSessionDetail(sessionId: Long) {
@@ -110,24 +132,6 @@ class UserCheckViewModel @Inject constructor(
                 is ApiState.Fail -> {}
             }
         }
-    }
-
-    private fun loadHistoryDummyData() {
-        val rawHistoryList = listOf(
-            UserCheckHistory(1, "3주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.SUCCESS),
-            UserCheckHistory(2, "2주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.LATE),
-            UserCheckHistory(3, "1주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.ABSENT)
-        )
-
-        val historyUIList = rawHistoryList.mapIndexed { index, history ->
-            CheckHistoryUIModel(
-                history = history,
-                isFirst = index == 0,
-                isLast = index == rawHistoryList.size - 1
-            )
-        }
-
-        updateState { copy(attendanceHistories = historyUIList) }
     }
 
     /**
