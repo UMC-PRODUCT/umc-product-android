@@ -99,11 +99,9 @@ class UserCheckViewModel @Inject constructor(
      * 실시간 위치 기반 출석 요청
      */
     fun requestAttendance(sheetId: Long) {
-        // 현재 UI 상태에서 해당 세션의 인증 여부를 확인
-        val sessionUIModel = uiState.value.availableSessions.find { it.session.id == sheetId }
+        val sessionUIModel = uiState.value.availableSessions.find { it.session.sheetId == sheetId }
         val isVerified = sessionUIModel?.isWithinRange ?: false
 
-        // Request 객체 생성
         val request = AttendanceCheckRequest(
             attendanceSheetId = sheetId,
             latitude = lastUserLat,
@@ -112,7 +110,6 @@ class UserCheckViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            // UseCase에 객체 전달
             when (val result = postAttendanceCheckUseCase(request)) {
                 is ApiState.Success -> fetchAttendanceData()
                 is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
@@ -121,15 +118,13 @@ class UserCheckViewModel @Inject constructor(
     }
 
     /**
-     * 출석 사유 제출 API 연동
+     * 출석 사유 제출
      */
-    fun submitAttendanceReason(sessionId: Long, reason: String) {
+    fun submitAttendanceReason(sheetId: Long, reason: String) {
         viewModelScope.launch {
-            when (val result = postAttendanceReasonUseCase(sessionId, reason)) {
-                is ApiState.Success -> {
-                    fetchAttendanceData()
-                }
-                is ApiState.Fail -> {}
+            when (val result = postAttendanceReasonUseCase(sheetId, reason)) {
+                is ApiState.Success -> fetchAttendanceData()
+                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
             }
         }
     }
