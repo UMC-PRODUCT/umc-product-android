@@ -4,6 +4,7 @@ import com.umc.data.api.AttendanceApi
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.response.attendance.AdminPendingUserResponse
 import com.umc.data.response.attendance.AttendanceAvailableResponse
+import com.umc.data.response.attendance.UserCheckHistoryResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.model.request.attendance.AttendanceReasonRequest
@@ -35,6 +36,10 @@ class AttendanceRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun postAttendanceReason(request: AttendanceReasonRequest): ApiState<String> {
         return apiCall { attendanceApi.postAttendanceReason(request) }
+    }
+
+    override suspend fun getAttendanceHistory(): ApiState<List<UserCheckHistoryResponse>> {
+        return apiCall { attendanceApi.getAttendanceHistory() }
     }
 
 }
