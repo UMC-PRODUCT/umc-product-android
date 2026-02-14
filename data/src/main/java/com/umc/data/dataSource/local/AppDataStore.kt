@@ -151,6 +151,12 @@ class AppDataStore @Inject constructor(
         }
     }
 
+    suspend fun clearAllData() {
+        context.dataStore.edit { prefs ->
+            prefs.clear()
+        }
+    }
+
 
     // 여기서 Datastore에 들어갈 key들 정의
     companion object {

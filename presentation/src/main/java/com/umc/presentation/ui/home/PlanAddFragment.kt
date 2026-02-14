@@ -51,14 +51,14 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
             //일정 제목 title 설정
             planaddTextfieldPlanTitleName.apply {
                 setOnTextChangedListener { text ->
-                    viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanTitle(text))
+                    viewModel.updatePlanTitle(text)
                 }
             }
 
             //일정 상세 내용 설정
             planaddTextfieldPlanDetail.apply{
                 setOnTextChangedListener { text ->
-                    viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanDetail(text))
+                    viewModel.updatePlanDetail(text)
                 }
             }
 
@@ -95,7 +95,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                 // 앞서 만든 BottomSheetDialog 생성
                 val locationDialog = BottomSheetLocationDialog { selectedItem ->
                     // 선택된 장소(LocationItem)의 제목을 뷰모델 이벤트로 전달
-                    viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanLocation(selectedItem))
+                    viewModel.updatePlanLocation(selectedItem)
                 }
                 // 다이얼로그 표시
                 locationDialog.show(childFragmentManager, "LocationSelect")
@@ -167,10 +167,13 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
         DatePickerDialog(requireContext(), { _, year, month, day ->
             // ViewModel 이벤트 호출 리스너 달기
-            val event = if (isStart) PlanAddFragmentEvent.UpdateStartDate(year, month, day)
-            else PlanAddFragmentEvent.UpdateEndDate(year, month, day)
 
-            viewModel.handleEvent(event)
+            if(isStart){
+                viewModel.updateStartDate(year, month, day)
+            }
+            else{
+                viewModel.updateEndDate(year, month, day)
+            }
         },
             cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
     }
@@ -191,9 +194,13 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
         val dialog = TimePickerDialog(requireContext(),
             themeResId,
             { _, hour, minute ->
-            val event = if (isStart) PlanAddFragmentEvent.UpdateStartTime(hour, minute)
-            else PlanAddFragmentEvent.UpdateEndTime(hour, minute)
-            viewModel.handleEvent(event)
+
+                if(isStart){
+                    viewModel.updateStartTime(hour, minute)
+                }
+                else{
+                    viewModel.updateEndTime(hour, minute)
+                }
         },
             cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), false)
 

@@ -29,3 +29,8 @@ data class PostLike(
     val liked : Boolean,
     val likeCount : Int
 )
+
+data class PostScrap(
+    val scrapped : Boolean,
+    val scrapCount : Int
+)

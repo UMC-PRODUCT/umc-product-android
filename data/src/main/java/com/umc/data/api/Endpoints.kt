@@ -59,6 +59,8 @@ object Endpoints {
 
         const val POST_LIKE = "$COMMUNITY/{postId}/like"
 
+        const val POST_SCRAP = "$COMMUNITY/{postId}/scrap"
+
         const val LIGHTNING = "$COMMUNITY/lightning"
 
         const val POST_COMMENT_DETAIL = "$POST_COMMENT/{commentId}"

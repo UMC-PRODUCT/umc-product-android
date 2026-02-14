@@ -12,6 +12,7 @@ import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
 import com.umc.domain.usecase.appDataStore.UpdateUserOutLinkUseCase
+import com.umc.domain.usecase.member.UpdateMyProfileUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -26,7 +27,8 @@ class ProfileViewModel @Inject constructor(
     private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //dataStore에서 불러오기
     private val updateUserOutLinkUseCase: UpdateUserOutLinkUseCase, //dataStore에 저장
     private val getUserInfoUseCase: GetUserInfoUseCase, //dataStore에서 유저 정보 불러오기
-    private val uploadFileUseCase: UploadFileUseCase,
+    private val uploadFileUseCase: UploadFileUseCase, //파일 업로드 하기(이미지 업로드)
+    private val updateMyProfileUseCase: UpdateMyProfileUseCase, //프로필 정보 업데이트
     ) : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     ProfileFragmentUiState()){
 
@@ -51,6 +53,7 @@ class ProfileViewModel @Inject constructor(
                         userInfo = userInfo,
                     )
                 }
+                Log.d("log_mypage", "dataSource 정보 : $userInfo")
             }
         }
 
@@ -70,42 +73,67 @@ class ProfileViewModel @Inject constructor(
             )
         }
     }
+    
 
-    //viewModel에서 갤러리->이미지 가져온 후 처리 이벤트
+    //완료 누르고 뒤로 가기
+    fun onClickComplete(){
+        val nowUri = uiState.value.userProfileImageUri
+        
+        //1. 아래의 saveAndExit를 수행 - 3개의 outLink를 저장 (fragment에서 데이터를 가져
+        emitEvent(ProfileFragmentEvent.ClickComplete)
+        
+        //2. 이미지 파일을 업로드하고, 바꾸기(여기서 이미지를 바꿀 경우 = Uri가 empty가 아닐 경우만 진행)
+        if(nowUri != Uri.EMPTY){
+            updateProfileImage(nowUri)
+        }
+        else{
+            emitEvent(ProfileFragmentEvent.ClickBackPressed)
+        }
+    }
+
+    // 완료 버튼을 눌렀을 때 호출될 저장 로직
+    fun saveUserOutLink(github: String, linkedin: String, blog: String) {
+        viewModelScope.launch {
+            // DataStore에 저장하고 끝내기
+            val nowOutLink = UserOutLink(github, linkedin, blog)
+            updateUserOutLinkUseCase(nowOutLink)
+        }
+    }
+
+    //viewModel에서 갤러리->이미지 가져온 후 처리 
+    //서버에 파일 업로드 후, 해당 파일 ID를 프로필 정보에 적용
     fun updateProfileImage(uri: Uri){
         //uri을 이용해 파일 전송하기
         viewModelScope.launch {
+
             resultResponse(
                 response = uploadFileUseCase(uri.toString(), UploadFileCategory.PROFILE_IMAGE),
                 successCallback = {
                     Log.d("log_mypage", "성공! updateProfileImage: $it")
+                    //성공이 됬으면, 프로필을 수정하기
+                    launch {
+                        resultResponse(
+                            response = updateMyProfileUseCase(it.fileId),
+                            successCallback = {
+                                //이거 제일 마지막에 뒤로가기 실해
+                                emitEvent(ProfileFragmentEvent.ClickBackPressed)
+                            },
+                            errorCallback = {
+                                
+                            }
+                        )
+                    }
+
                 },
                 errorCallback = {
-                    emitEvent(ProfileFragmentEvent.MakeToast(it.message))
+                    emitEvent(ProfileFragmentEvent.MakeToast(
+                        it.message))
+
                     Log.d("log_mypage", "실패! $it")
                 }
             )
         }
 
-    }
-
-    //완료 누르고 뒤로 가기
-    fun onClickComplete(){
-        val nowUri = uiState.value.userProfileImageUri
-        updateProfileImage(nowUri)
-
-        //emitEvent(ProfileFragmentEvent.ClickComplete)
-    }
-
-    // 완료 버튼을 눌렀을 때 호출될 저장 로직
-    fun saveAndExit(github: String, linkedin: String, blog: String) {
-        viewModelScope.launch {
-            // DataStore에 저장하고 끝내기
-            val nowOutLink = UserOutLink(github, linkedin, blog)
-            updateUserOutLinkUseCase(nowOutLink)
-
-            emitEvent(ProfileFragmentEvent.ClickBackPressed)
-        }
     }
 
 

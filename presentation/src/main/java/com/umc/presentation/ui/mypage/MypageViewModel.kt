@@ -8,6 +8,7 @@ import com.umc.domain.model.enums.LoginType
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
+import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -17,8 +18,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MypageViewModel @Inject constructor(
-    private val getUserOutLinkUseCase: GetUserOutLinkUseCase,
-    private val getUserInfoUseCase: GetUserInfoUseCase,
+    private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //유저 outlink 3종 세트 얻기
+    private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
 ) : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
 
@@ -26,26 +27,42 @@ class MypageViewModel @Inject constructor(
     //초기 상태
     init {
         viewModelScope.launch {
-           getUserOutLinkUseCase().collect { outLink ->
-                updateState {
-                    copy(
-                        githubUrl = outLink.github,
-                        linkedinUrl = outLink.linkedin,
-                        blogUrl = outLink.blog
-                    )
+            launch {
+                //유저 3종 링크 가져오기
+                getUserOutLinkUseCase().collect { outLink ->
+                    updateState {
+                        copy(
+                            githubUrl = outLink.github,
+                            linkedinUrl = outLink.linkedin,
+                            blogUrl = outLink.blog
+                        )
+                    }
                 }
+            }
+            launch {
+                //유저 정보 가져오기
+                getUserInfo()
             }
         }
-        viewModelScope.launch {
-            getUserInfoUseCase().collect { userInfo ->
-                Log.d("log_home", "DataStore로부터 읽어옴: $userInfo")
-                updateState {
-                    copy(
-                        userInfo = userInfo,
-                    )
-                }
+    }
 
-            }
+    // 서버에서 내 정보 가져오기
+    fun getUserInfo() {
+        viewModelScope.launch {
+            resultResponse(
+                response = getMyProfileUseCase(),
+                successCallback = { userInfo ->
+                    updateState {
+                        copy(
+                            userInfo = userInfo
+                        )
+                    }
+
+                },
+                errorCallback = {
+                    /**TODO. 에러 토스트 메시지 등을 전송**/
+                }
+            )
         }
     }
 
@@ -113,6 +130,7 @@ class MypageViewModel @Inject constructor(
     }
 
 
+
     fun deleteUser(){
         emitEvent(MypageFragmentEvent.DeleteUser)
     }
@@ -174,6 +192,8 @@ sealed interface MypageFragmentEvent : UiEvent {
     //외부 채널 이동
     object NavigateToWebstieUmc : MypageFragmentEvent // UMC 웹사이트
     object NavigateToInstagramUmc : MypageFragmentEvent // UMC 인스타그램
+
+
 
     //로그아웃
     object Logout : MypageFragmentEvent

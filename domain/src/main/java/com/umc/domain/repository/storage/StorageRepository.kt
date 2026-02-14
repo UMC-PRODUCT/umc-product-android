@@ -11,5 +11,11 @@ interface StorageRepository {
         category: UploadFileCategory
     ): ApiState<UploadFileInfo>
 
+    //파일 삭제 API
+    suspend fun deleteFile(
+        fileId: String,
+    ): ApiState<Unit>
+
+
 
 }

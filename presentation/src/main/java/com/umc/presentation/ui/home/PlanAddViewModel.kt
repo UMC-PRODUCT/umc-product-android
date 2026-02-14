@@ -145,6 +145,7 @@ constructor(
     /**
      * Calendar 객체 두 개(날짜, 시간)를 합쳐 ISO 8601 문자열로 변환
      * 예: 2026-02-08T09:57:19.628Z
+     * TODO 시간 형태 변경
      */
     private fun getIsoDateTime(dateCal: Calendar, timeCal: Calendar): String {
         return String.format(
@@ -252,115 +253,48 @@ constructor(
             ) }
     }
     
-    /**이벤트 핸들러 정의**/
-    //handleEvent
-    fun handleEvent(event: PlanAddFragmentEvent){
-        when(event){
-            // 1. 날짜 및 시간 관련 이벤트
-            is PlanAddFragmentEvent.UpdateStartDate,
-            is PlanAddFragmentEvent.UpdateStartTime,
-            is PlanAddFragmentEvent.UpdateEndDate,
-            is PlanAddFragmentEvent.UpdateEndTime -> handleDateTime(event)
+    // 일정 이름 변경
+    fun updatePlanTitle(title: String) = updateState { copy(planTitle = title) }
 
+    // 일정 상세내용 변경
+    fun updatePlanDetail(detail: String) = updateState { copy(planDetail = detail) }
 
-
-            // 3. 카테고리 관련 이벤트
-            is PlanAddFragmentEvent.SelectCategory -> handleCategory(event)
-
-            // 4. 기타 관련
-            is PlanAddFragmentEvent.UpdatePlanTitle -> {
-                updateState {
-                    copy(planTitle = event.title)
-                }
-            }
-            is PlanAddFragmentEvent.UpdatePlanLocation -> {
-                updateState {
-                    copy(planLocation = event.location.title,
-                        latitude = event.location.latitude,
-                        longitude = event.location.longitude
-                    )
-                }
-            }
-            is PlanAddFragmentEvent.UpdatePlanDetail -> {
-                updateState {
-                    copy(planDetail = event.detail)
-                }
-            }
-
-            else -> {}
-        }
+    // 일정 위치 변경
+    fun updatePlanLocation(location: LocationItem) = updateState {
+        copy(planLocation = location.title, latitude = location.latitude, longitude = location.longitude)
     }
 
-
-    //날짜 조정 (얘는 Fragment에서 날짜 받아온 후 수행하는 이벤트입니다)
-    private fun handleDateTime(event: PlanAddFragmentEvent){
-        when(event){
-            //시작 날짜 바꾸기
-            is PlanAddFragmentEvent.UpdateStartDate -> {
-                val newCalendar = (uiState.value.startDate.clone() as Calendar).apply {
-                    set(event.year, event.month, event.day)
-                }
-                updateState {
-                    copy(startDate = newCalendar,
-                        startDateText = dateDisplaySdf.format(newCalendar.time)
-                    )
-                }
-            }
-
-            //시작 시간 바꾸기
-            is PlanAddFragmentEvent.UpdateStartTime -> {
-                val newCalendar = (uiState.value.startTime.clone() as Calendar).apply {
-                    set(Calendar.HOUR_OF_DAY, event.hour)
-                    set(Calendar.MINUTE, event.minute)
-                }
-                updateState {
-                    copy(startTime = newCalendar,
-                        startTimeText = timeDisplaySdf.format(newCalendar.time)
-                    )
-
-                }
-            }
-
-            //끝나는 날짜 바꾸기
-            is PlanAddFragmentEvent.UpdateEndDate -> {
-                val newCalendar = (uiState.value.endDate.clone() as Calendar).apply {
-                    set(event.year, event.month, event.day)
-                }
-                updateState {
-                    copy(endDate = newCalendar,
-                        endDateText = dateDisplaySdf.format(newCalendar.time)
-                    )
-
-                }
-            }
-
-            //끝나는 시간 바꾸기
-            is PlanAddFragmentEvent.UpdateEndTime -> {
-                val newCalendar = (uiState.value.endTime.clone() as Calendar).apply {
-                    set(Calendar.HOUR_OF_DAY, event.hour)
-                    set(Calendar.MINUTE, event.minute)
-                }
-                updateState {
-                    copy(endTime = newCalendar,
-                        endTimeText = timeDisplaySdf.format(newCalendar.time)
-                    )
-                }
-            }
-
-            else -> {}
-        }
+    // 일정 시작 날짜 변경
+    fun updateStartDate(year: Int, month: Int, day: Int) {
+        val newCal = (uiState.value.startDate.clone() as Calendar).apply { set(year, month, day) }
+        updateState { copy(startDate = newCal, startDateText = dateDisplaySdf.format(newCal.time)) }
     }
 
+    // 일정 시작 시간 변경
+    fun updateStartTime(hour: Int, minute: Int) {
+        val newCal = (uiState.value.startTime.clone() as Calendar).apply { set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute) }
+        updateState { copy(startTime = newCal, startTimeText = timeDisplaySdf.format(newCal.time)) }
+    }
 
-    // 카테고리 관련 handleEvent
-    private fun handleCategory(event: PlanAddFragmentEvent) {
-        when(event){
-            is PlanAddFragmentEvent.SelectCategory -> {
+    // 일정 종료 날짜 변경
+    fun updateEndDate(year: Int, month: Int, day: Int) {
+        val newCal = (uiState.value.endDate.clone() as Calendar).apply { set(year, month, day) }
+        updateState { copy(endDate = newCal, endDateText = dateDisplaySdf.format(newCal.time)) }
+    }
+
+    // 일정 종료 시간 변경
+    fun updateEndTime(hour: Int, minute: Int) {
+        val newCal = (uiState.value.endTime.clone() as Calendar).apply { set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute) }
+        updateState { copy(endTime = newCal, endTimeText = timeDisplaySdf.format(newCal.time)) }
+    }
+
+    // 카테고리를 선택하면 진행하는 함수
+    fun selectCategory(category: CategoryItem) {
                 updateState {
                     //카테고리 uistate 업데이트
                     val selectedCategories = categories.map{
                         //만약 터치한 놈이 리스트 중 하나랑 같으면
-                        if(it.name == event.category.name){
+                        if(it.name == category.name){
                             it.copy(isChecked = !it.isChecked)
                         }
                         else{
@@ -385,13 +319,8 @@ constructor(
                         isSelectedCategory = isSelected,
                         selectedCategoriesString = summaryText
                     )
-
                 }
             }
-
-                else -> {}
-        }
-    }
 
 
 
@@ -478,6 +407,7 @@ data class PlanAddFragmentUiState(
             //1. 텍스트 3종 세트가 비어있지 않음
             val isTextValid = planTitle.isNotBlank()
 
+            /** 필수 내용 수정
             //2. 날짜/시간이 초기값이 아님
             val isDateTimeValid = (isAllDay && (startDateText != "시작 날짜" && endDateText != "종료 날짜"))
                     || (!isAllDay && (startDateText != "시작 날짜" && startTimeText != "시작 시간" &&
@@ -485,29 +415,14 @@ data class PlanAddFragmentUiState(
 
             //3. 참여자가 1명 이상임
             val isParticipantValid = isSelectedParticipant
+            **/
 
-            return isTextValid && isDateTimeValid && isParticipantValid
+
+            return isTextValid && isSelectedCategory
         }
 }
 
 sealed interface PlanAddFragmentEvent : UiEvent {
-    //일정 제목이랑 장소, 상세안내를 입력받는 이벤트
-    data class UpdatePlanTitle(val title: String) : PlanAddFragmentEvent
-    data class UpdatePlanLocation(val location: LocationItem) : PlanAddFragmentEvent
-    data class UpdatePlanDetail(val detail: String) : PlanAddFragmentEvent
-
-
-    //TIME 및 DATE Picker로 값을 가져오는 이벤트
-    data class UpdateStartDate(val year: Int, val month: Int, val day: Int) : PlanAddFragmentEvent
-    data class UpdateStartTime(val hour: Int, val minute: Int) : PlanAddFragmentEvent
-    data class UpdateEndDate(val year: Int, val month: Int, val day: Int) : PlanAddFragmentEvent
-    data class UpdateEndTime(val hour: Int, val minute: Int) : PlanAddFragmentEvent
-
-
-    //다이얼로그에서 받은 
-
-    //카테코리를 선택하는 이벤트
-    data class SelectCategory(val category: CategoryItem): PlanAddFragmentEvent
 
     //뒤로가기
     object MoveBackPressedEvent : PlanAddFragmentEvent

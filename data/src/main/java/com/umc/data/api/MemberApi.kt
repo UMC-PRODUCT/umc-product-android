@@ -36,4 +36,5 @@ interface MemberApi {
         @Body request: RegisterRequest
     ): ApiResponse<JwtLoginResponse>
 
+
 }

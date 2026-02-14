@@ -30,4 +30,7 @@ interface AppDataStoreRepository {
     suspend fun getRefreshToken(): String
     suspend fun saveTokens(accessToken: String, refreshToken: String): ApiState<Unit>
     suspend fun clearTokens()
+
+    //싹 다 초기화
+    suspend fun clearAllData()
 }

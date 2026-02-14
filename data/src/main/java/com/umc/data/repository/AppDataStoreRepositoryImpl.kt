@@ -78,4 +78,8 @@ class AppDataStoreRepositoryImpl @Inject constructor(
     override suspend fun clearTokens() {
         appDataStore.clearTokens()
     }
+
+    override suspend fun clearAllData() {
+        appDataStore.clearAllData()
+    }
 }

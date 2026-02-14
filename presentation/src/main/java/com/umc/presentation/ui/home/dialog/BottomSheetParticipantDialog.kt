@@ -10,6 +10,8 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.opencsv.CSVReader
 import com.umc.domain.model.home.ParticipantItem
@@ -45,6 +47,26 @@ class BottomSheetParticipantDialog(
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        // 다이얼로그의 내부 뷰(design_bottom_sheet)를 찾아 높이를 설정
+        (dialog as? BottomSheetDialog)?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)?.let { bottomSheet ->
+            val behavior = BottomSheetBehavior.from(bottomSheet)
+
+            // 1. 레이아웃 파라미터의 높이를 화면 전체의 80%로 설정
+            val layoutParams = bottomSheet.layoutParams
+            layoutParams.height = (resources.displayMetrics.heightPixels * 0.8).toInt()
+            bottomSheet.layoutParams = layoutParams
+
+            // 2. 초기 상태를 확장 상태(EXPANDED)로 고정
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+
+            // 3. 드래그해서 절반으로 접히는 현상 방지 (선택 사항)
+            behavior.skipCollapsed = true
+        }
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -55,6 +77,10 @@ class BottomSheetParticipantDialog(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        binding.vm = viewModel
+
+        binding.lifecycleOwner = viewLifecycleOwner
 
         //얻배터 초기화
         initAdapters()
@@ -97,19 +123,18 @@ class BottomSheetParticipantDialog(
             // 텍스트 입력 시 실시간 검색
             setOnTextChangedListener { query ->
                 viewModel.searchParticipants(query)
-                val isSearching = query.isNotEmpty()
-                binding.btnConfirm.visibility = View.VISIBLE
-                binding.btnUploadCsv.visibility = View.GONE
+
             }
 
 
             // 포커스 변경 리스너 등록
             setOnFocusChangedListener { hasFocus ->
                 // 내용이 없고 포커스가 나가면 검색 모드 종료
-                if (!hasFocus && getText().isEmpty()) {
+                if(hasFocus){
+                    viewModel.setSearchingMode(true)
+                }
+                else if (getText().isEmpty()) {
                     viewModel.clearSearch()
-                    binding.btnConfirm.visibility = View.GONE
-                    binding.btnUploadCsv.visibility = View.VISIBLE
                 }
             }
 

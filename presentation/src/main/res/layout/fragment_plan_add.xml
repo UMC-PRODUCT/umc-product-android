@@ -105,13 +105,14 @@
                         />
 
 
-                    <!--일시-->
+                    <!--카테고리-->
+
                     <TextView
-                        android:id="@+id/planadd_tv_plan_title_date"
+                        android:id="@+id/planadd_tv_plan_title_category"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="32dp"
-                        android:text="@string/home_plan_detail_calendar"
+                        android:text="@string/home_plan_add_plan_category"
                         android:textAppearance="@style/HeadlineBold"
                         android:textColor="@color/neutral800"
                         app:layout_constraintStart_toStartOf="parent"
@@ -124,8 +125,73 @@
                         android:text="*"
                         android:textAppearance="@style/HeadlineBold"
                         android:textColor="@color/danger500"
-                        app:layout_constraintStart_toEndOf="@id/planadd_tv_plan_title_date"
-                        app:layout_constraintTop_toTopOf="@id/planadd_tv_plan_title_date" />
+                        app:layout_constraintStart_toEndOf="@id/planadd_tv_plan_title_category"
+                        app:layout_constraintTop_toTopOf="@id/planadd_tv_plan_title_category" />
+
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/planadd_cdv_search_category"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        app:cardBackgroundColor="@color/neutral000"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/neutral300"
+                        app:strokeWidth="1dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_category">
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="16dp"
+                            >
+
+                            <TextView
+                                android:id="@+id/planadd_tv_plan_category_placeholder"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/Body"
+                                android:layout_marginEnd="8dp"
+                                android:text='@{vm.uiState.isSelectedCategory == false ? @string/home_plan_add_plan_tag_placeholder : vm.uiState.selectedCategoriesString}'
+                                android:textColor='@{vm.uiState.isSelectedCategory == false ? @color/neutral400 : @color/neutral800}'
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toStartOf="@id/planadd_imv_plan_category_go"
+                                />
+
+                            <ImageView
+                                android:id="@+id/planadd_imv_plan_category_go"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_arrow_next"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"/>
+
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+                    </com.google.android.material.card.MaterialCardView>
+
+
+
+                    <!--일시-->
+                    <TextView
+                        android:id="@+id/planadd_tv_plan_title_date"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="32dp"
+                        android:text="@string/home_plan_detail_calendar"
+                        android:textAppearance="@style/HeadlineBold"
+                        android:textColor="@color/neutral800"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_category" />
+
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/planadd_cdv_cover"
@@ -406,15 +472,6 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/planadd_textfield_plan_detail" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:text="*"
-                        android:textAppearance="@style/HeadlineBold"
-                        android:textColor="@color/danger500"
-                        app:layout_constraintStart_toEndOf="@id/planadd_tv_plan_title_attend"
-                        app:layout_constraintTop_toTopOf="@id/planadd_tv_plan_title_attend" />
 
 
                     <com.google.android.material.card.MaterialCardView
@@ -448,7 +505,7 @@
                                 app:layout_constraintTop_toTopOf="parent"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintEnd_toStartOf="@id/planadd_imv_plan_category_go"
+                                app:layout_constraintEnd_toStartOf="@id/planadd_imv_plan_participant_go"
                                 />
 
                             <ImageView
@@ -467,68 +524,6 @@
                     </com.google.android.material.card.MaterialCardView>
 
 
-                    <!--카테고리-->
-
-                    <TextView
-                        android:id="@+id/planadd_tv_plan_title_category"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="32dp"
-                        android:text="@string/home_plan_add_plan_category"
-                        android:textAppearance="@style/HeadlineBold"
-                        android:textColor="@color/neutral800"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_participant" />
-
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/planadd_cdv_search_category"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        app:cardBackgroundColor="@color/neutral000"
-                        app:cardCornerRadius="8dp"
-                        app:cardElevation="0dp"
-                        app:strokeColor="@color/neutral300"
-                        app:strokeWidth="1dp"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_category">
-
-                        <androidx.constraintlayout.widget.ConstraintLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:padding="16dp"
-                            >
-
-                            <TextView
-                                android:id="@+id/planadd_tv_plan_category_placeholder"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:textAppearance="@style/Body"
-                                android:layout_marginEnd="8dp"
-                                android:text='@{vm.uiState.isSelectedCategory == false ? @string/home_plan_add_plan_tag_placeholder : vm.uiState.selectedCategoriesString}'
-                                android:textColor='@{vm.uiState.isSelectedCategory == false ? @color/neutral400 : @color/neutral800}'
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintEnd_toStartOf="@id/planadd_imv_plan_category_go"
-                                />
-
-                            <ImageView
-                                android:id="@+id/planadd_imv_plan_category_go"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:src="@drawable/ic_arrow_next"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toEndOf="parent"/>
-
-
-                        </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-                    </com.google.android.material.card.MaterialCardView>
 
 
                     <androidx.constraintlayout.widget.Guideline
@@ -554,7 +549,7 @@
                         app:borderColor="@color/neutral300"
                         app:layout_constraintEnd_toStartOf="@id/planadd_guideline_bottom"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_category"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_participant"
                         />
 
                     <com.umc.presentation.component.UButton
@@ -572,7 +567,7 @@
                         app:textColor="@color/neutral000"
                         app:layout_constraintStart_toEndOf="@id/planadd_guideline_bottom"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_category"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_participant"
                         />
 
                     <com.umc.presentation.component.UButton
@@ -590,7 +585,7 @@
                         app:textColor="@color/neutral000"
                         app:layout_constraintStart_toEndOf="@id/planadd_guideline_bottom"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_category"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_participant"
                         />
 
 

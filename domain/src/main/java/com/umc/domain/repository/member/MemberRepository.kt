@@ -9,4 +9,8 @@ interface MemberRepository {
     suspend fun getMyProfile(): ApiState<UserInfo>
     suspend fun getMemberProfile(id: Long): ApiState<UserInfo>
     suspend fun register(request: RegisterRequest): ApiState<JwtToken>
+
+    suspend fun updateMyProfile(profileImageId : String): ApiState<UserInfo>
+
+
 }

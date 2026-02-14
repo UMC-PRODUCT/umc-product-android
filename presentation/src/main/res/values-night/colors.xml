@@ -39,10 +39,10 @@
 
 
     <color name="success100">#174A39</color>
-    <color name="success300">#288163</color>
-    <color name="success500">#31A07B</color>
-    <color name="success700">#96DFC6</color>
-    <color name="success900">#E8F8F2</color>
+    <color name="success300">#0D824B</color>
+    <color name="success500">#12B76A</color>
+    <color name="success700">#99E0BF</color>
+    <color name="success900">#E7F8F0</color>
 
 
     <color name="warning100">#5C3A00</color>
@@ -52,11 +52,11 @@
     <color name="warning900">#FFFAE0</color>
 
 
-    <color name="danger100">#520F0F</color>
-    <color name="danger300">#8E1A1A</color>
-    <color name="danger500">#DB3E3E</color>
-    <color name="danger700">#EA8B8B</color>
-    <color name="danger900">#FAE5E5</color>
+    <color name="danger100">#6C1F19</color>
+    <color name="danger300">#AB3027</color>
+    <color name="danger500">#F14437</color>
+    <color name="danger700">#F9AFA9</color>
+    <color name="danger900">#FEECEB</color>
 
     <color name="kakaoColor">#FEE500</color>
 
