@@ -29,17 +29,18 @@ class AdminCheckViewModel @Inject constructor(
 
     fun fetchAdminSessions() {
         viewModelScope.launch {
-            when (val result = getAdminSessionListUseCase()) {
-                is ApiState.Success -> {
+            resultResponse(
+                response = getAdminSessionListUseCase(),
+                successCallback = { data ->
                     val currentSessions = uiState.value.adminSessions
-                    val uiModels = result.data.map { domainModel ->
+                    val uiModels = data.map { domainModel ->
                         val wasExpanded = currentSessions.find { it.session.id == domainModel.id }?.isExpanded ?: false
                         AdminSessionUIModel(session = domainModel, isExpanded = wasExpanded)
                     }
                     updateState { copy(adminSessions = uiModels) }
-                }
-                is ApiState.Fail -> emitEvent(AdminCheckEvent.ShowToast(result.failState.message))
-            }
+                },
+                errorCallback = { failState -> emitEvent(AdminCheckEvent.ShowToast(failState.message)) }
+            )
         }
     }
 
@@ -48,14 +49,13 @@ class AdminCheckViewModel @Inject constructor(
      */
     fun approveAttendance(attendanceId: Long) {
         viewModelScope.launch {
-            when (val result = postAttendanceApprovalUseCase(attendanceId)) {
-                is ApiState.Success -> {
-                    updateSessionAfterApproval(attendanceId)
+            resultResponse(
+                response = postAttendanceApprovalUseCase(attendanceId),
+                successCallback = { updateSessionAfterApproval(attendanceId) },
+                errorCallback = { failState ->
+                    emitEvent(AdminCheckEvent.ShowToast(failState.message))
                 }
-                is ApiState.Fail -> {
-                    emitEvent(AdminCheckEvent.ShowToast(result.failState.message ?: "승인에 실패했습니다."))
-                }
-            }
+            )
         }
     }
 
@@ -64,22 +64,15 @@ class AdminCheckViewModel @Inject constructor(
      */
     fun rejectAttendance(attendanceId: Long) {
         viewModelScope.launch {
-            android.util.Log.d("AdminCheck", "반려 시작: attendanceId=$attendanceId")
-
-            when (val result = postAttendanceRejectionUseCase(attendanceId)) {
-                is ApiState.Success -> {
-                    android.util.Log.d("AdminCheck", "반려 성공")
-
-                    // 로컬 UI 업데이트 (유저 제거만, 출석 통계는 변경 없음)
+            resultResponse(
+                response = postAttendanceRejectionUseCase(attendanceId),
+                successCallback = {
                     updateSessionAfterRejection(attendanceId)
-
-                    emitEvent(AdminCheckEvent.ShowToast("출석이 반려되었습니다."))
+                },
+                errorCallback = { failState ->
+                    emitEvent(AdminCheckEvent.ShowToast(failState.message))
                 }
-                is ApiState.Fail -> {
-                    android.util.Log.e("AdminCheck", "반려 실패: ${result.failState.message}")
-                    emitEvent(AdminCheckEvent.ShowToast(result.failState.message ?: "반려에 실패했습니다."))
-                }
-            }
+            )
         }
     }
 
@@ -191,22 +184,22 @@ class AdminCheckViewModel @Inject constructor(
 
     private fun fetchPendingUsers(sessionId: Long) {
         viewModelScope.launch {
-            when (val result = getPendingUsersUseCase(sessionId)) {
-                is ApiState.Success -> {
+            resultResponse(
+                response = getPendingUsersUseCase(sessionId),
+                successCallback = { data ->
                     updateState {
                         val updatedList = adminSessions.map { uiModel ->
                             if (uiModel.session.id == sessionId) {
-                                uiModel.copy(session = uiModel.session.copy(pendingUsers = result.data))
+                                uiModel.copy(session = uiModel.session.copy(pendingUsers = data))
                             } else uiModel
                         }
                         copy(adminSessions = updatedList)
                     }
-                }
-                is ApiState.Fail -> emitEvent(AdminCheckEvent.ShowToast(result.failState.message))
-            }
+                },
+                errorCallback = { failState -> emitEvent(AdminCheckEvent.ShowToast(failState.message)) }
+            )
         }
     }
-
     private fun updateExpansionState(sessionId: Long) {
         updateState {
             val newList = adminSessions.map { uiModel ->

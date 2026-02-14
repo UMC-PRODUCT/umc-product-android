@@ -38,42 +38,42 @@ class UserCheckViewModel @Inject constructor(
 
     private fun fetchAttendanceData() {
         viewModelScope.launch {
-            when (val result = getAttendanceAvailableUseCase()) {
-                is ApiState.Success -> {
-                    val list = result.data.map { CheckAvailableUIModel(session = it) }
+            resultResponse(
+                response = getAttendanceAvailableUseCase(),
+                successCallback = { data ->
+                    val list = data.map { CheckAvailableUIModel(session = it) }
                     updateState { copy(availableSessions = list, availableCount = list.size) }
-
-                    // 목록 로드 즉시 각 아이템의 상세(위치 정보) 요청
                     list.forEach { fetchSessionDetail(it.session.id) }
-                }
-                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
-            }
+                },
+                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+            )
         }
     }
 
     private fun fetchAttendanceHistory() {
         viewModelScope.launch {
-            when (val result = getAttendanceHistoryUseCase()) {
-                is ApiState.Success -> {
-                    val historyUIList = result.data.mapIndexed { index, history ->
+            resultResponse(
+                response = getAttendanceHistoryUseCase(),
+                successCallback = { data ->
+                    val historyUIList = data.mapIndexed { index, history ->
                         CheckHistoryUIModel(
                             history = history,
                             isFirst = index == 0,
-                            isLast = index == result.data.size - 1
+                            isLast = index == data.size - 1
                         )
                     }
                     updateState { copy(attendanceHistories = historyUIList) }
-                }
-                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
-            }
+                },
+                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+            )
         }
     }
 
     private fun fetchSessionDetail(sessionId: Long) {
         viewModelScope.launch {
-            when (val result = getScheduleDetailUseCase(sessionId)) {
-                is ApiState.Success -> {
-                    val detail = result.data
+            resultResponse(
+                response = getScheduleDetailUseCase(sessionId),
+                successCallback = { detail ->
                     updateState {
                         val updatedList = availableSessions.map { uiModel ->
                             if (uiModel.session.id == sessionId) {
@@ -89,9 +89,9 @@ class UserCheckViewModel @Inject constructor(
                         }
                         copy(availableSessions = updatedList)
                     }
-                }
-                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
-            }
+                },
+                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+            )
         }
     }
 
@@ -110,10 +110,11 @@ class UserCheckViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            when (val result = postAttendanceCheckUseCase(request)) {
-                is ApiState.Success -> fetchAttendanceData()
-                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
-            }
+            resultResponse(
+                response = postAttendanceCheckUseCase(request),
+                successCallback = { fetchAttendanceData() },
+                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+            )
         }
     }
 
@@ -122,10 +123,11 @@ class UserCheckViewModel @Inject constructor(
      */
     fun submitAttendanceReason(sheetId: Long, reason: String) {
         viewModelScope.launch {
-            when (val result = postAttendanceReasonUseCase(sheetId, reason)) {
-                is ApiState.Success -> fetchAttendanceData()
-                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
-            }
+            resultResponse(
+                response = postAttendanceReasonUseCase(sheetId, reason),
+                successCallback = { fetchAttendanceData() },
+                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+            )
         }
     }
 
