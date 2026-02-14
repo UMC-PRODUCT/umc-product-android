@@ -25,6 +25,10 @@ object Endpoints {
         const val CHALLENGER = "api/v1/challenger"
         const val DETAIL = "$CHALLENGER/{challengerId}"
         const val POINT = "$CHALLENGER/{challengerId}/points"
+
+        //일정 검색 용도
+        const val SEARCH_SCHEDULE = "$CHALLENGER/search/global"
+
     }
 
     object Member {
@@ -100,5 +104,11 @@ object Endpoints {
         const val CHAPTER = "api/v1/chapters"
         const val CHAPTER_WITH_SCHOOL = "$CHAPTER/with-schools"
 
+    }
+
+    object Terms{
+        const val TERMS = "api/v1/terms"
+        const val TERMS_TYPE = "$TERMS/type/{termsType}"
+        const val TERMS_ID = "$TERMS/{termsId}"
     }
 }

@@ -5,8 +5,11 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
+import coil.transform.CircleCropTransformation
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.model.home.SearchResultItem
+import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemBottomSheetParticipantSearchBinding
 import com.umc.presentation.databinding.ItemBottomSheetParticipantSearchHeaderBinding
 
@@ -65,6 +68,13 @@ class BottomSheetSearchParticipantAdapter(
             binding.item = user
             binding.itemTvName.text = user.name
             binding.itemTvSchool.text = user.school
+
+            binding.itemImvProfile.load(user.profileImage.ifEmpty { null }) {
+                crossfade(true)
+                placeholder(R.drawable.ic_profile_default) // 로딩 중 이미지
+                error(R.drawable.ic_profile_default)       // 실패/비어있을 때 이미지
+                transformations(CircleCropTransformation()) // 원형 변환
+            }
             
             // 토글 되어있는 여부는 selectedList에 있는지 여부로 체크
             val isSelected = selectedList.any { it.id == user.id }

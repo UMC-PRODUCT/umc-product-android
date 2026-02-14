@@ -14,12 +14,14 @@ import com.umc.data.repository.challenger.ChallengerRepositoryImpl
 import com.umc.data.repository.community.CommunityRepositoryImpl
 import com.umc.data.repository.schedule.ScheduleRepositoryImpl
 import com.umc.data.repository.storage.StorageRepositoryImpl
+import com.umc.data.repository.terms.TermsRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
 import com.umc.domain.repository.OrganizationRepository
 import com.umc.domain.repository.attendance.AttendanceRepository
 import com.umc.domain.repository.community.CommunityRepository
 import com.umc.domain.repository.schedule.ScheduleRepository
 import com.umc.domain.repository.storage.StorageRepository
+import com.umc.domain.repository.terms.TermsRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -82,5 +84,9 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun providesOrganizationRepository(repositoryImpl: OrganizationRepositoryImpl): OrganizationRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindsTermsRepository(repositoryImpl: TermsRepositoryImpl): TermsRepository
 
 }

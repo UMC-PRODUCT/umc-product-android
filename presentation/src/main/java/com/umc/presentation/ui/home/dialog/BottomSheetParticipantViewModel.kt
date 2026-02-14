@@ -1,41 +1,89 @@
 package com.umc.presentation.ui.home.dialog
 
 import android.util.Log
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.LocationItem
 import com.umc.domain.model.home.ParticipantItem
+import com.umc.domain.usecase.challenger.SearchChallengerScheduleUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
 class BottomSheetParticipantViewModel @Inject constructor(
-
+    private val searchChallengerScheduleUseCase: SearchChallengerScheduleUseCase
 ) : BaseViewModel<BottomSheetParticipantUiState, BottomSheetParticipantEvent>(
     BottomSheetParticipantUiState()
 ) {
 
-    // 임시 더미 데이터 (실제로는 서버나 DB에서 가져와야 함)
-    private val allChallengers = listOf(
-        ParticipantItem("박유수", UserPart.ANDROID, "숭실대학교"),
-        ParticipantItem("어헛차", UserPart.ANDROID, "숭실대학교"),
-        ParticipantItem("김하나", UserPart.DESIGN, "서울대학교"),
-        ParticipantItem("이두리", UserPart.IOS, "고려대학교"),
-        ParticipantItem("최삼이", UserPart.NODE_JS, "연세대학교"),
-        ParticipantItem("박사성", UserPart.ANDROID, "숭실대학교")
-    )
+    init {
+        searchParticipants("")
+    }
 
     // 유저 검색 로직
     fun searchParticipants(query: String) {
-        val results = if (query.isBlank()) {
-            allChallengers
-        } else {
-            allChallengers.filter { it.name.contains(query, ignoreCase = true) }
+        //일단 현재 상태를 반영해서
+        updateState {
+            copy(
+                searchQuery = query,
+                searchResults = emptyList(),
+                nextCursor = null,
+                hasNext = true,
+                isSearching = query.isNotBlank()
+            )
         }
-        updateState { copy(searchResults = results, searchQuery = query, isSearching = true) }
+        fetchParticipants(isNextPage = false)
+    }
+
+
+    // 실질적으로 usecae로 유저 데이터를 가져오는 로직
+    private fun fetchParticipants(isNextPage: Boolean) {
+        val state = uiState.value
+
+        //API 호출중임을 표시
+        updateState { copy(isLoading = true) }
+
+        viewModelScope.launch {
+            // UseCase 호출: 다음 페이지면 보관된 커서 사용, 아니면 null(처음)
+            val cursor = if (isNextPage) state.nextCursor else null
+
+            resultResponse(
+                response = searchChallengerScheduleUseCase(
+                    cursor = cursor,
+                    size = 50,
+                    name = state.searchQuery.ifBlank { null } // 빈 검색어는 null로 그 외는 searchParticipant에서 가져온 쿼리로
+                ),
+                successCallback = { response ->
+
+                    updateState {
+                        copy(
+                            searchResults = response.content,
+                            nextCursor = response.nextCursor,
+                            hasNext = response.hasNext,
+                            isLoading = false
+                        )
+                    }
+                },
+                errorCallback = {
+                    //검색 실패 시, 로딩 해제 및 다음 꺼 X
+                    updateState { copy(isLoading = false, hasNext = false) }
+                }
+            )
+        }
+    }
+
+    // 무한 스크롤 로직 (바닥 도달 시 추가 데이터 로드)
+    fun loadMore() {
+        val state = uiState.value
+        // 로딩 중이거나 다음 페이지가 없으면 중단
+        if (state.isLoading || !state.hasNext) return
+
+        fetchParticipants(isNextPage = true)
     }
 
     // 인원 토글 로직
@@ -83,13 +131,7 @@ class BottomSheetParticipantViewModel @Inject constructor(
     /**csv 로직은 현재 depricated**/
     // CSV에서 추출한 이름들을 실제 객체로 매칭
     fun addFromCsvNames(names: List<String>) {
-        val matchedUsers = names.mapNotNull { name ->
-            allChallengers.find { it.name == name }
-        }
-        updateState {
-            val combined = (selectedParticipants + matchedUsers).distinctBy { it.id }
-            copy(selectedParticipants = combined)
-        }
+
     }
 
 
@@ -127,7 +169,12 @@ data class BottomSheetParticipantUiState(
     //다이얼로그에서 찾는 쿼리
     val searchQuery: String = "",
     //찾는 중인가? bottom UI 제어 용도
-    val isSearching: Boolean = false
+    val isSearching: Boolean = false,
+
+    //페이징 관련 필드
+    val nextCursor: Long? = null, //검색 용도로 이전 페이지의 마지막 챌린저 ID (첫 페이지는 null)
+    val hasNext: Boolean = true,
+    val isLoading: Boolean = false
 
 ) : UiState {
     val isSelectedParticipant: Boolean

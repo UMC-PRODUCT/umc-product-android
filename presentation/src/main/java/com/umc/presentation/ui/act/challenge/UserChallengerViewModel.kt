@@ -21,11 +21,12 @@ class UserChallengerViewModel @Inject constructor(
 
     init { loadInitialData() }
 
+    /**TODO 서버 part DTO에 맞게 UserPart Enum을 수정했습니다.**/
     private fun loadInitialData() {
         val dummyList = listOf(
             // PM 파트
-            UserChallenger(101, "김유엠", "유엠씨대장", 12, UserPart.PM, UserChallengerRole.LEADER),
-            UserChallenger(102, "이길동", "피엠조아", 12, UserPart.PM, UserChallengerRole.MEMBER),
+            UserChallenger(101, "김유엠", "유엠씨대장", 12, UserPart.PLAN, UserChallengerRole.LEADER),
+            UserChallenger(102, "이길동", "피엠조아", 12, UserPart.PLAN, UserChallengerRole.MEMBER),
 
             // Design 파트
             UserChallenger(3, "박디자인", "피그마마스터", 12, UserPart.DESIGN, UserChallengerRole.PART_LEADER),
@@ -46,13 +47,13 @@ class UserChallengerViewModel @Inject constructor(
             UserChallenger(12, "성구글", "픽셀러버", 12, UserPart.ANDROID, UserChallengerRole.MEMBER),
 
             // SpringBoot 파트
-            UserChallenger(13, "배엔드", "스프링", 12, UserPart.SPRING_BOOT, UserChallengerRole.PART_LEADER),
-            UserChallenger(14, "백자바", "제이피에이", 12, UserPart.SPRING_BOOT, UserChallengerRole.MEMBER),
-        UserChallenger(15, "유디비", "마이바티스", 12, UserPart.SPRING_BOOT, UserChallengerRole.MEMBER),
+            UserChallenger(13, "배엔드", "스프링", 12, UserPart.SPRINGBOOT, UserChallengerRole.PART_LEADER),
+            UserChallenger(14, "백자바", "제이피에이", 12, UserPart.SPRINGBOOT, UserChallengerRole.MEMBER),
+        UserChallenger(15, "유디비", "마이바티스", 12, UserPart.SPRINGBOOT, UserChallengerRole.MEMBER),
 
             // Node.js 파트
-            UserChallenger(16, "노드정", "익스프레스", 12, UserPart.NODE_JS, UserChallengerRole.PART_LEADER),
-            UserChallenger(17, "신서버", "네스트", 12, UserPart.NODE_JS, UserChallengerRole.MEMBER)
+            UserChallenger(16, "노드정", "익스프레스", 12, UserPart.NODEJS, UserChallengerRole.PART_LEADER),
+            UserChallenger(17, "신서버", "네스트", 12, UserPart.NODEJS, UserChallengerRole.MEMBER)
         )
         updateState { copy(allChallengers = dummyList, filteredChallengers = dummyList) }
     }

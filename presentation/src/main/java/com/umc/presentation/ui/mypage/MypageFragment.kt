@@ -20,6 +20,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import coil.load
 import android.provider.Settings
+import com.kakao.sdk.talk.TalkApiClient
+import com.kakao.sdk.user.UserApiClient
 
 @AndroidEntryPoint
 class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState, MypageFragmentEvent, MypageViewModel>(
@@ -113,10 +115,7 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
                 findNavController().navigate(action)
             }
 
-            is MypageFragmentEvent.NavigateToSuggetion -> {
-                val action = MypageFragmentDirections.actionMypageToSugget()
-                findNavController().navigate(action)
-            }
+
             is MypageFragmentEvent.NavigateToMypost -> {
                 val action = MypageFragmentDirections.actionMypageToMypost()
                 findNavController().navigate(action)
@@ -133,7 +132,7 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
 
 
             is MypageFragmentEvent.NavigateToAssistUmc -> {
-                /**TODO UMC 문의 이동 로직**/
+                openKakaoChannel(event.channelId)
             }
 
 
@@ -150,11 +149,11 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             }
 
             is MypageFragmentEvent.NavigateToPersonalInformation -> {
-                /**TODO 개인정보처리 방침 이동 로직**/
+                openWebpage(event.privacyTerms)
             }
 
             is MypageFragmentEvent.NavigateToUseManual -> {
-                /**TODO 이용약관 이동 로직**/
+                openWebpage(event.manualTerms)
 
             }
             
@@ -162,6 +161,10 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
                 //1. 다이얼로그로 체크
                 val dialog = UMypageDialog(logoutDialogModel) {
                     /**TODO 로그아웃 로직 생성**/
+                    viewModel.deleteAllData()
+                    val action = MypageFragmentDirections.actionMypageToLogin()
+                    findNavController().navigate(action)
+
                 }
 
                 dialog.show(parentFragmentManager, "MyPageDialog")
@@ -172,6 +175,7 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
                 //1. 다이얼로그로 체크
                 val dialog = UMypageDialog(deleteUserDialogModel) {
                     /**TODO 회원 탈퇴 로직 생성**/
+
                 }
 
                 dialog.show(parentFragmentManager, "MyPageDialog")
@@ -256,6 +260,30 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
 
         }
 
+    }
+
+    //카카오톡 문의 페이지로 이동
+    private fun openKakaoChannel(channelId: String){
+
+        if (UserApiClient.instance.isKakaoTalkLoginAvailable(requireContext())) {
+            // 카카오톡이 설치되어 있다면 앱 내 채널 채팅창으로 이동
+            TalkApiClient.instance.chatChannel(requireContext(), channelId) { error ->
+                if(error != null){
+                    // 만약 에러 호출 시 웹 브라우저 시도
+                    openKakaoChannelIntent(channelId)
+                }
+            }
+        } else {
+            // 카카오톡이 없다면 웹 브라우저로 우회
+            openKakaoChannelIntent(channelId)
+        }
+    }
+
+    // intent로 카카오 채널 열기
+    fun openKakaoChannelIntent(channelId: String){
+        val url = "https://pf.kakao.com/$channelId/chat"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        startActivity(intent)
     }
 
 
