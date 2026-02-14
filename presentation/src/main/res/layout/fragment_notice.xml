@@ -5,7 +5,8 @@
 
     <data>
 
-        <import type="android.view.View"/>
+        <import type="android.view.View" />
+
         <variable
             name="vm"
             type="com.umc.presentation.ui.notice.NoticeViewModel" />
@@ -42,14 +43,15 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_dropdown"
             android:layout_width="0dp"
-            android:layout_height="208dp"
+            android:layout_height="wrap_content"
             android:layout_marginStart="9dp"
-            android:visibility="@{vm.uiState.showDropDown ? View.VISIBLE : View.GONE}"
-            android:paddingVertical="8dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="2dp"
             android:background="@drawable/bg_rect_neutral000_radius12"
+            android:maxHeight="208dp"
+            android:paddingVertical="8dp"
             android:translationZ="8dp"
+            android:visibility="@{vm.uiState.showDropDown ? View.VISIBLE : View.GONE}"
             app:layout_constraintEnd_toEndOf="@id/image_btn_menu"
             app:layout_constraintStart_toStartOf="@id/text_notice_title"
             app:layout_constraintTop_toBottomOf="@id/text_notice_title" />
@@ -80,8 +82,8 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="16dp"
-            android:visibility="@{vm.uiState.showSubChip ? View.VISIBLE : View.GONE}"
             android:background="@color/neutral200"
+            android:visibility="@{vm.uiState.showSubChip ? View.VISIBLE : View.GONE}"
             app:layout_constraintTop_toBottomOf="@id/recycler_tag" />
 
         <LinearLayout
@@ -89,9 +91,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:visibility="@{vm.uiState.showSubChip ? View.VISIBLE : View.GONE}"
             android:paddingHorizontal="16dp"
             android:paddingVertical="16dp"
+            android:visibility="@{vm.uiState.showSubChip ? View.VISIBLE : View.GONE}"
             app:layout_constraintTop_toBottomOf="@id/view_divider">
 
             <com.umc.presentation.component.UChip
@@ -146,13 +148,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
+            android:onClick="@{() -> vm.onClickWriteNotice()}"
             app:cardBackgroundColor="@color/primary500"
             app:contentPaddingBottom="12dp"
             app:contentPaddingLeft="16dp"
             app:contentPaddingRight="16dp"
             app:contentPaddingTop="12dp"
             app:cornerRadius="999dp"
-            android:onClick="@{() -> vm.onClickWriteNotice()}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

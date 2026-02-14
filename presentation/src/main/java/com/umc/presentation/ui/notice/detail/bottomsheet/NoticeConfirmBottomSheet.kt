@@ -44,14 +44,14 @@ class NoticeConfirmBottomSheet: BottomSheetDialogFragment() {
                 itemAnimator = null
             }
 
-            noticePeopleAdapter.submitList(viewModel.uiState.value.detail.userList.filter { !it.isCheck } )
+            //noticePeopleAdapter.submitList(viewModel.uiState.value.detail.userList.filter { !it.isCheck } )
 
-            ubuttonConfirm.setText("확인 ${viewModel.uiState.value.detail.nowReceiverCount}")
+            //ubuttonConfirm.setText("확인 ${viewModel.uiState.value.detail.nowReceiverCount}")
             ubuttonConfirm.setOnClickListener {
                 onClickConfirmButton()
             }
 
-            ubuttonUnconfirm.setText("미확인 ${viewModel.uiState.value.detail.allReceiverCount - viewModel.uiState.value.detail.nowReceiverCount}")
+            //ubuttonUnconfirm.setText("미확인 ${viewModel.uiState.value.detail.allReceiverCount - viewModel.uiState.value.detail.nowReceiverCount}")
             ubuttonUnconfirm.setOnClickListener {
                 onClickUnConfirmButton()
             }
@@ -71,7 +71,7 @@ class NoticeConfirmBottomSheet: BottomSheetDialogFragment() {
             ubuttonSendNotification.visible()
         }
 
-        noticePeopleAdapter.submitList(viewModel.uiState.value.detail.userList.filter { !it.isCheck } )
+        //noticePeopleAdapter.submitList(viewModel.uiState.value.detail.userList.filter { !it.isCheck } )
     }
 
 
@@ -85,7 +85,7 @@ class NoticeConfirmBottomSheet: BottomSheetDialogFragment() {
             ubuttonSendNotification.gone()
         }
 
-        noticePeopleAdapter.submitList(viewModel.uiState.value.detail.userList.filter { it.isCheck } )
+        //noticePeopleAdapter.submitList(viewModel.uiState.value.detail.userList.filter { it.isCheck } )
     }
 
     override fun onDismiss(dialog: DialogInterface) {

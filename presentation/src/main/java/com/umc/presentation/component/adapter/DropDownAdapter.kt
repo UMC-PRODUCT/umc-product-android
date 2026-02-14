@@ -5,11 +5,12 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.umc.domain.model.organization.GisuItem
 import com.umc.presentation.databinding.ItemDropdownBinding
 
 class DropDownAdapter(
     private val listener: DropDownDelegate
-) : ListAdapter<String, RecyclerView.ViewHolder> (
+) : ListAdapter<GisuItem, RecyclerView.ViewHolder> (
     DropDownDiffCallBack()
 ) {
 
@@ -33,18 +34,18 @@ class DropDownAdapter(
     }
 }
 
-class DropDownDiffCallBack : DiffUtil.ItemCallback<String>() {
+class DropDownDiffCallBack : DiffUtil.ItemCallback<GisuItem>() {
     override fun areContentsTheSame(
-        oldItem: String,
-        newItem: String
+        oldItem: GisuItem,
+        newItem: GisuItem
     ): Boolean {
         return oldItem == newItem
     }
 
     override fun areItemsTheSame(
-        oldItem: String,
-        newItem: String
+        oldItem: GisuItem,
+        newItem: GisuItem
     ): Boolean {
-        return oldItem == newItem
+        return oldItem.gisuId == newItem.gisuId
     }
 }

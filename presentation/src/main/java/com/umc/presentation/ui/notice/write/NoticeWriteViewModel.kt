@@ -3,6 +3,7 @@ package com.umc.presentation.ui.notice.write
 import android.net.Uri
 import com.umc.domain.model.enums.NoticeCategory
 import com.umc.domain.model.notice.NoticeChipState
+import com.umc.domain.model.organization.GisuItem
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -134,9 +135,9 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
     }
 
     fun updateDropDownList(list: List<String>) {
-        updateState {
-            copy(dropdownList = list)
-        }
+//        updateState {
+//            copy(dropdownList = list)
+//        }
     }
 
     private fun dummyDropDown(): List<String> {
@@ -258,7 +259,7 @@ data class NoticeWriteUiState(
     val classList: List<NoticeChipState> = emptyList(),
     val partList: List<NoticeChipState> = emptyList(),
     val category: NoticeCategory = NoticeCategory.SCHOOL,
-    val dropdownList: List<String> = emptyList(),
+    val dropdownList: List<GisuItem> = emptyList(),
     val linkText: String = "",
     val voteTitle: String = "투표 만들기",
     val voteCondition: String = "",

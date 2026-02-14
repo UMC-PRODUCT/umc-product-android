@@ -1,6 +1,7 @@
 package com.umc.domain.repository
 
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.organization.GisuList
 import com.umc.domain.model.request.organization.AssignSchoolRequest
 import com.umc.domain.model.request.organization.ChallengerListRequest
 import com.umc.domain.model.request.organization.CreateChapterRequest
@@ -47,7 +48,7 @@ interface OrganizationRepository {
 
     suspend fun getAllSchool(): ApiState<List<SchoolInfo>>
 
-    suspend fun getAllGisu(): ApiState<Unit> //GisuListResponse
+    suspend fun getAllGisu(): ApiState<GisuList>
 
     suspend fun getActiveGisu(): ApiState<Unit> //GisuItemResponse
 

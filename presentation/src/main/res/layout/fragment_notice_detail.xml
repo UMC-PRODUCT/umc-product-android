@@ -74,7 +74,6 @@
             app:layout_constraintTop_toTopOf="@id/image_check"
             app:layout_constraintBottom_toBottomOf="@id/image_check"
             app:layout_constraintEnd_toEndOf="@id/progressBar"
-            android:text="@{vm.uiState.detail.receiverText}"
             android:textColor="@color/neutral800"
             android:textAppearance="@style/Body"
             android:layout_width="wrap_content"
@@ -85,7 +84,6 @@
             app:layout_constraintTop_toTopOf="@id/image_check"
             app:layout_constraintBottom_toBottomOf="@id/image_check"
             app:layout_constraintEnd_toStartOf="@id/text_all_check"
-            android:text="@{String.valueOf(vm.uiState.detail.nowReceiverCount)}"
             android:textColor="@color/success500"
             android:textAppearance="@style/Body"
             android:layout_width="wrap_content"
@@ -219,7 +217,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="@{vm.uiState.detail.author}"
                     android:textAppearance="@style/Subheadline"
                     android:textColor="@color/neutral800"
                     app:layout_constraintBottom_toBottomOf="@id/image_profile"
@@ -232,7 +229,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@{vm.uiState.detail.date}"
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral600"
                     app:layout_constraintStart_toStartOf="@id/text_title"
@@ -280,7 +276,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text='@{"수신대상 " + vm.uiState.detail.receiver}'
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral600"
                     app:layout_constraintStart_toEndOf="@id/text_divider2"
@@ -309,7 +304,6 @@
                     android:background="@drawable/bg_rect_neutral100_radius12"
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="11dp"
-                    android:visibility="@{vm.uiState.detail.link.empty ? View.GONE : View.VISIBLE}"
                     app:layout_constraintTop_toBottomOf="@id/text_content">
 
                     <ImageView
@@ -340,7 +334,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="2dp"
-                        android:text="@{vm.uiState.detail.link}"
                         android:textAppearance="@style/Footnote"
                         android:textColor="@color/neutral600"
                         app:layout_constraintStart_toEndOf="@id/image_link_title"
@@ -415,7 +408,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="@{vm.uiState.detail.vote.conditionText}"
                         android:textAppearance="@style/Footnote"
                         android:textColor="@color/neutral600"
                         app:layout_constraintStart_toStartOf="parent"

@@ -26,6 +26,7 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
     private val dropDownAdapter : DropDownAdapter by lazy {
         DropDownAdapter(object : DropDownAdapter.DropDownDelegate {
             override fun onClickItem(text: String) {
+                viewModel.onClickShowDropDown()
                 viewModel.updateNowTitle(text)
             }
         })
