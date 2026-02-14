@@ -31,4 +31,12 @@
         android:id="@+id/nav_mypage"
         app:graph="@navigation/nav_mypage"/>
 
+    <action
+        android:id="@+id/action_global_to_login"
+        app:destination="@id/nav_sign"
+        app:popUpTo="@id/main_graph"
+        >
+
+    </action>
+
 </navigation>
