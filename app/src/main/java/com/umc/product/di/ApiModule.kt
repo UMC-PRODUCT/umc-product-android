@@ -5,6 +5,7 @@ import com.umc.data.api.AuthApi
 import com.umc.data.api.MemberApi
 import com.umc.data.api.ChallengerApi
 import com.umc.data.api.CommunityApi
+import com.umc.data.api.NoticeApi
 import com.umc.data.api.OrganizationApi
 import com.umc.data.api.ScheduleApi
 import com.umc.data.api.StorageApi
@@ -75,5 +76,11 @@ object ApiModule {
     @Provides
     fun provideTermsApi(@AuthRetrofit retrofit: Retrofit): TermsApi {
         return retrofit.create(TermsApi::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideNoticeApi(@AuthRetrofit retrofit: Retrofit): NoticeApi {
+        return retrofit.create(NoticeApi::class.java)
     }
 }

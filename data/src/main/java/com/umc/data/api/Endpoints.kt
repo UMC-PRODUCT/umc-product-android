@@ -112,4 +112,20 @@ object Endpoints {
         const val TERMS_TYPE = "$TERMS/type/{termsType}"
         const val TERMS_ID = "$TERMS/{termsId}"
     }
+
+    object Notice {
+        const val NOTICE = "api/v1/notices"
+        const val NOTICE_SEARCH = "$NOTICE/search"
+        const val NOTICE_DETAIL = "$NOTICE/{noticeId}"
+
+        // 세부 리소스 경로
+        const val NOTICE_VOTES = "$NOTICE_DETAIL/votes"
+        const val NOTICE_VOTE = "$NOTICE_DETAIL/vote"
+        const val NOTICE_REMINDERS = "$NOTICE_DETAIL/reminders"
+        const val NOTICE_READ = "$NOTICE_DETAIL/read"
+        const val NOTICE_READ_STATUS = "$NOTICE_DETAIL/read-status"
+        const val NOTICE_READ_STATICS = "$NOTICE_DETAIL/read-statics"
+        const val NOTICE_LINKS = "$NOTICE_DETAIL/links"
+        const val NOTICE_IMAGES = "$NOTICE_DETAIL/images"
+    }
 }
