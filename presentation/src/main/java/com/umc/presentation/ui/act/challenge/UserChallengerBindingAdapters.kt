@@ -45,7 +45,7 @@ object UserChallengerBindingAdapters {
 
         // 상태별 색상 매핑
         val (textColorRes, bgColorRes) = when (status) {
-            CheckHistoryStatus.SUCCESS -> R.color.success500 to R.color.success100
+            CheckHistoryStatus.PRESENT -> R.color.success500 to R.color.success100
             CheckHistoryStatus.LATE -> R.color.warning500 to R.color.warning100
             CheckHistoryStatus.ABSENT -> R.color.danger500 to R.color.danger100
         }
