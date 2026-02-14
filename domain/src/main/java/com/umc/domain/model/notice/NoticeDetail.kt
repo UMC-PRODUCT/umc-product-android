@@ -1,22 +1,55 @@
 package com.umc.domain.model.notice
 
-import com.umc.domain.model.enums.NoticeCategory
-
 data class NoticeDetail(
-    val mustRead: Boolean = false,
-    val category: NoticeCategory = NoticeCategory.CENTRAL_OFFICE,
+    val id: Long = -1L,
     val title: String = "",
-    val profileImage: String = "",
-    val author: String = "",
-    val date: String = "",
-    val viewCount: Int = 0,
-    val receiver: String = "",
     val content: String = "",
-    val imageList: List<String> = emptyList(),
-    val link: String = "",
-    val vote: Vote = Vote(),
-    val allReceiverCount: Int = 0,
-    val nowReceiverCount: Int = 0,
-    val receiverText: String = "",
-    val userList: List<User> = emptyList()
+    val authorChallengerId: Long = -1L,
+    val vote: NoticeVote? = null,
+    val images: List<NoticeImage> = emptyList(),
+    val links: List<NoticeLink> = emptyList(),
+    val targetInfo: NoticeTarget = NoticeTarget(),
+    val viewCount: Int = 0,
+    val createdAt: String = ""
+)
+
+data class NoticeVote(
+    val voteId: Long = -1L,
+    val title: String = "",
+    val isAnonymous: Boolean = false,
+    val allowMultipleChoice: Boolean = false,
+    val status: String = "",
+    val startsAt: String = "",
+    val endsAtExclusive: String = "",
+    val startDateKst: String = "",
+    val endDateKst: String = "",
+    val totalParticipants: Int = 0,
+    val options: List<NoticeVoteOption> = emptyList(),
+    val mySelectedOptionIds: List<Long> = emptyList()
+)
+
+data class NoticeVoteOption(
+    val optionId: Long = -1L,
+    val content: String = "",
+    val voteCount: Int = 0,
+    val voteRate: Double = 0.0
+)
+
+data class NoticeImage(
+    val id: Long = -1L,
+    val url: String = "",
+    val displayOrder: Int = 0
+)
+
+data class NoticeLink(
+    val id: Long = -1L,
+    val url: String = "",
+    val displayOrder: Int = 0
+)
+
+data class NoticeTarget(
+    val targetGisuId: Int = 0,
+    val targetChapterId: Int? = null,
+    val targetSchoolId: Int? = null,
+    val targetParts: List<String> = emptyList()
 )

@@ -1,4 +1,4 @@
-package com.umc.data.request.notice
+package com.umc.domain.model.request.notice
 
 import kotlinx.serialization.Serializable
 

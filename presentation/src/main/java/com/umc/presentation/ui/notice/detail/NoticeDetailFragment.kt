@@ -21,7 +21,7 @@ class NoticeDetailFragment :
     private val noticeDetailVoteAdapter: NoticeDetailVoteAdapter by lazy {
         NoticeDetailVoteAdapter(object : NoticeDetailVoteAdapter.NoticeDetailVoteDelegate {
             override fun onClickVote(item: VoteItem) {
-                viewModel.onClickVoteItem(item)
+                //viewModel.onClickVoteItem(item)
             }
         })
     }
@@ -50,7 +50,8 @@ class NoticeDetailFragment :
 
             launch {
                 viewModel.uiState.collect {
-                    noticeDetailVoteAdapter.submitList(it.detail.vote.item)
+                    // TODO 수정
+                    //noticeDetailVoteAdapter.submitList(it.detail.vote.options)
                 }
             }
         }

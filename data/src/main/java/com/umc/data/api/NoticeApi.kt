@@ -1,11 +1,11 @@
 package com.umc.data.api
 
-import com.umc.data.request.notice.NoticeCreateRequest
-import com.umc.data.request.notice.NoticeImageRequest
-import com.umc.data.request.notice.NoticeLinkRequest
-import com.umc.data.request.notice.NoticeReminderRequest
-import com.umc.data.request.notice.NoticeUpdateRequest
-import com.umc.data.request.notice.NoticeVoteRequest
+import com.umc.domain.model.request.notice.NoticeCreateRequest
+import com.umc.domain.model.request.notice.NoticeImageRequest
+import com.umc.domain.model.request.notice.NoticeLinkRequest
+import com.umc.domain.model.request.notice.NoticeReminderRequest
+import com.umc.domain.model.request.notice.NoticeUpdateRequest
+import com.umc.domain.model.request.notice.NoticeVoteRequest
 import com.umc.data.response.notice.NoticeDetailResponse
 import com.umc.data.response.notice.NoticeReadStatisticsResponse
 import com.umc.data.response.notice.NoticeReadStatusResponse

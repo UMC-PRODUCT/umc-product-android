@@ -3,9 +3,14 @@ package com.umc.data.dataSource.remote
 import com.umc.data.api.NoticeApi
 import com.umc.data.dataSource.NoticeRemoteDataSource
 import com.umc.data.dataSource.base.apiCall
-import com.umc.data.request.notice.*
 import com.umc.data.response.notice.*
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.request.notice.NoticeCreateRequest
+import com.umc.domain.model.request.notice.NoticeImageRequest
+import com.umc.domain.model.request.notice.NoticeLinkRequest
+import com.umc.domain.model.request.notice.NoticeReminderRequest
+import com.umc.domain.model.request.notice.NoticeUpdateRequest
+import com.umc.domain.model.request.notice.NoticeVoteRequest
 import javax.inject.Inject
 
 class NoticeRemoteDataSourceImpl @Inject constructor(

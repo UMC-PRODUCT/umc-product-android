@@ -1,18 +1,18 @@
-package com.umc.data.dataSource
+package com.umc.domain.repository
 
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.notice.NoticeDetail
+import com.umc.domain.model.notice.NoticeReadStatistics
+import com.umc.domain.model.notice.NoticeReadStatus
+import com.umc.domain.model.notice.NoticeSearch
 import com.umc.domain.model.request.notice.NoticeCreateRequest
 import com.umc.domain.model.request.notice.NoticeImageRequest
 import com.umc.domain.model.request.notice.NoticeLinkRequest
 import com.umc.domain.model.request.notice.NoticeReminderRequest
 import com.umc.domain.model.request.notice.NoticeUpdateRequest
 import com.umc.domain.model.request.notice.NoticeVoteRequest
-import com.umc.data.response.notice.NoticeDetailResponse
-import com.umc.data.response.notice.NoticeReadStatisticsResponse
-import com.umc.data.response.notice.NoticeReadStatusResponse
-import com.umc.data.response.notice.NoticeSearchResponse
-import com.umc.domain.model.base.ApiState
 
-interface NoticeRemoteDataSource {
+interface NoticeRepository {
     suspend fun deleteNotice(noticeId: Long): ApiState<Unit>
     suspend fun deleteNoticeVote(noticeId: Long): ApiState<Unit>
     suspend fun getNotices(
@@ -22,18 +22,18 @@ interface NoticeRemoteDataSource {
         part: String? = null,
         page: Int = 0,
         size: Int = 10
-    ): ApiState<NoticeSearchResponse>
+    ): ApiState<NoticeSearch>
 
-    suspend fun getNoticeDetail(noticeId: Long): ApiState<NoticeDetailResponse>
+    suspend fun getNoticeDetail(noticeId: Long): ApiState<NoticeDetail>
     suspend fun getNoticeReadStatus(
         noticeId: Long,
         cursorId: Long? = null,
         filterType: String,
         organizationIds: List<Long>? = null,
         status: String
-    ): ApiState<NoticeReadStatusResponse>
+    ): ApiState<NoticeReadStatus>
 
-    suspend fun getNoticeReadStatistics(noticeId: Long): ApiState<NoticeReadStatisticsResponse>
+    suspend fun getNoticeReadStatistics(noticeId: Long): ApiState<NoticeReadStatistics>
     suspend fun searchNotices(
         keyword: String = "",
         gisuId: Long,
@@ -42,7 +42,7 @@ interface NoticeRemoteDataSource {
         part: String? = null,
         page: Int = 0,
         size: Int = 10
-    ): ApiState<NoticeSearchResponse>
+    ): ApiState<NoticeSearch>
 
     suspend fun editNoticeLinks(noticeId: Long, request: NoticeLinkRequest): ApiState<Unit>
     suspend fun addNoticeImages(noticeId: Long, request: NoticeImageRequest): ApiState<Unit>
@@ -51,6 +51,4 @@ interface NoticeRemoteDataSource {
     suspend fun addNoticeVote(noticeId: Long, request: NoticeVoteRequest): ApiState<Unit>
     suspend fun sendNoticeReminder(noticeId: Long, request: NoticeReminderRequest): ApiState<Unit>
     suspend fun markNoticeAsRead(noticeId: Long): ApiState<Unit>
-    suspend fun addNoticeLinks(noticeId: Long, request: NoticeLinkRequest): ApiState<Unit>
-    suspend fun updateNotice(noticeId: Long, request: NoticeImageRequest): ApiState<Unit>
 }

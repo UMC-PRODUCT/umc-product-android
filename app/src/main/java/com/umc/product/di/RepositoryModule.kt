@@ -3,6 +3,7 @@ package com.umc.product.di
 import com.umc.data.repository.AppDataStoreRepositoryImpl
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.data.repository.AuthRepositoryImpl
+import com.umc.data.repository.NoticeRepositoryImpl
 import com.umc.data.repository.OrganizationRepositoryImpl
 import com.umc.data.repository.attendance.AttendanceRepositoryImpl
 import com.umc.data.repository.kakao.KakaoSearchRepositoryImpl
@@ -16,6 +17,7 @@ import com.umc.data.repository.schedule.ScheduleRepositoryImpl
 import com.umc.data.repository.storage.StorageRepositoryImpl
 import com.umc.data.repository.terms.TermsRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
+import com.umc.domain.repository.NoticeRepository
 import com.umc.domain.repository.OrganizationRepository
 import com.umc.domain.repository.attendance.AttendanceRepository
 import com.umc.domain.repository.community.CommunityRepository
@@ -88,5 +90,9 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindsTermsRepository(repositoryImpl: TermsRepositoryImpl): TermsRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindsNoticeRepository(repositoryImpl: NoticeRepositoryImpl): NoticeRepository
 
 }
