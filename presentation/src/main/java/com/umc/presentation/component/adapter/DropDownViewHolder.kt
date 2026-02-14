@@ -13,7 +13,7 @@ class DropDownViewHolder(
         binding.apply {
             val text = "${item.generation}기 공지사항"
             textItem.text = text
-            root.setOnClickListener { listener.onClickItem(text) }
+            root.setOnClickListener { listener.onClickItem(text, item.generation.toLong()) }
         }
     }
 }

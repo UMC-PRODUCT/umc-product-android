@@ -32,7 +32,7 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
 
     private val dropDownAdapter : DropDownAdapter by lazy {
         DropDownAdapter(object : DropDownAdapter.DropDownDelegate {
-            override fun onClickItem(text: String) {
+            override fun onClickItem(text: String, gisu: Long) {
                 viewModel.updateCategory(NoticeCategory.find(text))
             }
         })

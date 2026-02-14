@@ -5,9 +5,11 @@ import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.NoticeCategory
 import com.umc.domain.model.notice.Notice
 import com.umc.domain.model.notice.NoticeChipState
+import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.organization.GisuItem
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
+import com.umc.domain.usecase.notice.GetNoticeListUseCase
 import com.umc.domain.usecase.organization.GetGisuListUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -20,14 +22,15 @@ import javax.inject.Inject
 @HiltViewModel
 class NoticeViewModel @Inject constructor(
     private val getGisuListUseCase: GetGisuListUseCase,
-    private val getUserInfoUseCase: GetUserInfoUseCase
+    private val getUserInfoUseCase: GetUserInfoUseCase,
+    private val getNoticeListUseCase: GetNoticeListUseCase
 ) : BaseViewModel<NoticeUiState, NoticeEvent>(
     NoticeUiState(),
 ) {
     init {
         getDropDownList()
         getMyProfile()
-        updateNoticeList(getDummyNotice())
+        getNoticeList()
     }
 
     private fun updateChipList(chipList: List<NoticeChipState>) {
@@ -38,7 +41,7 @@ class NoticeViewModel @Inject constructor(
         }
     }
 
-    private fun updateNoticeList(noticeList: List<Notice>) {
+    private fun updateNoticeList(noticeList: List<NoticeSummary>) {
         updateState {
             copy(
                 noticeList = noticeList
@@ -61,9 +64,19 @@ class NoticeViewModel @Inject constructor(
 
         userInfo.roles.forEach { role ->
             if (role.organizationType == "CENTRAL") {
-                chipList.add(NoticeChipState(text = "중앙운영사무국", chapterId = null)) // 중앙은 별도 ID 처리 혹은 null
+                chipList.add(
+                    NoticeChipState(
+                        text = "중앙운영사무국",
+                        chapterId = null
+                    )
+                )
             } else {
-                chipList.add(NoticeChipState(text = "${role.organizationType} 지부", chapterId = role.organizationId))
+                chipList.add(
+                    NoticeChipState(
+                        text = "${role.organizationType} 지부",
+                        chapterId = role.organizationId
+                    )
+                )
             }
 
             if (role.responsiblePart.isNotEmpty()) {
@@ -100,68 +113,13 @@ class NoticeViewModel @Inject constructor(
 //        )
     }
 
-    private fun getDummyNotice(): List<Notice> {
-        return listOf(
-            Notice(
-                id = 1,
-                isMustRead = true,
-                category = NoticeCategory.CENTRAL_OFFICE,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-            Notice(
-                id = 2,
-                isMustRead = true,
-                category = NoticeCategory.BRANCH,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-            Notice(
-                id = 3,
-                isMustRead = false,
-                category = NoticeCategory.SCHOOL,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-            Notice(
-                id = 5,
-                isMustRead = false,
-                category = NoticeCategory.CENTRAL_OFFICE,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-            Notice(
-                id = 1,
-                isMustRead = false,
-                category = NoticeCategory.PART,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-        )
-    }
-
     fun onClickSearch() {
         emitEvent(NoticeEvent.MoveToSearchEvent)
     }
 
-    fun updateNowTitle(title: String) {
+    fun updateNowTitle(title: String, gisu: Long) {
         updateState {
-            copy(nowTitle = title)
+            copy(nowTitle = title, selectedGisu = gisu)
         }
     }
 
@@ -192,7 +150,7 @@ class NoticeViewModel @Inject constructor(
             response = getGisuListUseCase(),
             successCallback = {
                 val nowTitle = "${it.gisuList.find { it.isActive }?.generation}기 공지사항"
-                updateNowTitle(nowTitle)
+                updateNowTitle(nowTitle, it.gisuList.find { it.isActive }?.generation?.toLong() ?: 0)
                 updateDropDownList(it.gisuList)
             }
         )
@@ -203,16 +161,38 @@ class NoticeViewModel @Inject constructor(
             updateChipList(createChipsFromUserInfo(userInfo))
         }
     }
+
+    private fun getNoticeList(
+        chapterId: Long? = null,
+        schoolId: Long? = null,
+        part: String? = null
+    ) = viewModelScope.launch {
+
+        resultResponse(
+            response = getNoticeListUseCase(
+                gisuId = uiState.value.selectedGisu,
+                chapterId = chapterId,
+                schoolId = schoolId,
+                part = part,
+                page = 0,
+                size = 20
+            ),
+            successCallback = { noticeSearch ->
+                updateNoticeList(noticeSearch.content)
+            }
+        )
+    }
 }
 
 data class NoticeUiState(
     val isShowDropDown: Boolean = false,
     val isShowSubChip: Boolean = false,
     val nowTitle: String = "",
+    val selectedGisu: Long = 0,
     val selectedSubChip: String = "파트",
     val dropdownList: List<GisuItem> = emptyList(),
     val chipList: List<NoticeChipState> = emptyList(),
-    val noticeList: List<Notice> = emptyList()
+    val noticeList: List<NoticeSummary> = emptyList()
 ) : UiState
 
 sealed interface NoticeEvent : UiEvent {

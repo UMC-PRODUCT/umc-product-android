@@ -7,6 +7,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.domain.model.notice.Notice
 import com.umc.domain.model.notice.NoticeChipState
+import com.umc.domain.model.notice.NoticeSummary
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.adapter.DropDownAdapter
@@ -25,9 +26,9 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
 
     private val dropDownAdapter : DropDownAdapter by lazy {
         DropDownAdapter(object : DropDownAdapter.DropDownDelegate {
-            override fun onClickItem(text: String) {
+            override fun onClickItem(text: String, gisu: Long) {
                 viewModel.onClickShowDropDown()
-                viewModel.updateNowTitle(text)
+                viewModel.updateNowTitle(text, gisu)
             }
         })
     }
@@ -42,7 +43,7 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
 
     private val noticeAdapter : NoticeAdapter by lazy {
         NoticeAdapter(object : NoticeAdapter.NoticeDelegate {
-            override fun onClickNotice(item: Notice) {
+            override fun onClickNotice(item: NoticeSummary) {
                 navigateToNoticeDetail()
             }
         })

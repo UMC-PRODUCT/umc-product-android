@@ -5,6 +5,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.domain.model.notice.Notice
+import com.umc.domain.model.notice.NoticeSummary
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentNoticeSearchResultBinding
 import com.umc.presentation.ui.notice.adapter.NoticeAdapter
@@ -20,7 +21,7 @@ class NoticeSearchResultFragment : BaseFragment<FragmentNoticeSearchResultBindin
     private val args: NoticeSearchResultFragmentArgs by navArgs()
     private val noticeAdapter : NoticeAdapter by lazy {
         NoticeAdapter(object : NoticeAdapter.NoticeDelegate {
-            override fun onClickNotice(item: Notice) {
+            override fun onClickNotice(item: NoticeSummary) {
                 //TODO 클릭 시 상세 페이지
             }
         })
@@ -52,7 +53,7 @@ class NoticeSearchResultFragment : BaseFragment<FragmentNoticeSearchResultBindin
 
             launch {
                 viewModel.uiState.collect {
-                    noticeAdapter.submitList(it.noticeList)
+                    //noticeAdapter.submitList(it.noticeList)
                 }
             }
         }

@@ -5,6 +5,8 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.enums.NoticeCategory
 import com.umc.domain.model.notice.Notice
+import com.umc.domain.model.notice.NoticeSummary
+import com.umc.domain.model.notice.NoticeTarget
 import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemNoticeBinding
 import com.umc.presentation.extension.gone
@@ -15,10 +17,10 @@ class NoticeViewHolder(
     private val listener: NoticeAdapter.NoticeDelegate
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(item: Notice) {
+    fun bind(item: NoticeSummary) {
         binding.apply {
             binding.root.setOnClickListener { listener.onClickNotice(item) }
-            if (item.isMustRead) {
+            if (item.shouldSendNotification) {
                 ubuttonMustRead.visible()
                 spaceBetween.visible()
                 layoutNotice.setBackgroundResource(R.drawable.bg_rect_warning100_stroke_neutral200_radius12)
@@ -27,40 +29,44 @@ class NoticeViewHolder(
                 spaceBetween.gone()
                 layoutNotice.setBackgroundResource(R.drawable.bg_rect_neutral000_stroke_neutral200_radius12)
             }
-            setCategory(item.category)
-            textDate.text = item.date
+            setCategory(item.targetInfo)
+            textDate.text = item.createdAt
             textTitle.text = item.title
             textContent.text = item.content
-            textAuthor.text = item.author
-            textSeeCount.text = "조회 ${item.count}"
+            textAuthor.text = item.authorNickname
+            textSeeCount.text = "조회 ${item.viewCount}"
         }
     }
 
-    private fun setCategory(category: NoticeCategory) {
+    private fun setCategory(target: NoticeTarget) {
+        val context = binding.root.context
+
         binding.ubuttonCategory.apply {
-            when (category) {
-                NoticeCategory.CENTRAL_OFFICE -> {
-                    setUBackgroundColor(ContextCompat.getColor(binding.root.context, R.color.neutral200))
-                    setTextColor(ContextCompat.getColor(binding.root.context, R.color.neutral700))
-                    setText(binding.root.context.getString(R.string.central))
-                }
-                NoticeCategory.BRANCH -> {
-                    setUBackgroundColor(ContextCompat.getColor(context, R.color.neutral200))
-                    setTextColor(ContextCompat.getColor(context, R.color.neutral700))
-                    setText(context.getString(R.string.branch))
-                }
-                NoticeCategory.SCHOOL -> {
-                    setUBackgroundColor(ContextCompat.getColor(context, R.color.primary100))
-                    setTextColor(ContextCompat.getColor(context, R.color.primary600))
-                    setText(context.getString(R.string.school))
-                }
-                NoticeCategory.PART -> {
+            when {
+                target.targetParts.isNotEmpty() -> {
                     setUBackgroundColor(ContextCompat.getColor(context, R.color.success100))
                     setTextColor(ContextCompat.getColor(context, R.color.success700))
                     setText(context.getString(R.string.part))
                 }
+
+                target.targetSchoolId != null -> {
+                    setUBackgroundColor(ContextCompat.getColor(context, R.color.primary100))
+                    setTextColor(ContextCompat.getColor(context, R.color.primary600))
+                    setText(context.getString(R.string.school))
+                }
+
+                target.targetChapterId != null -> {
+                    setUBackgroundColor(ContextCompat.getColor(context, R.color.neutral200))
+                    setTextColor(ContextCompat.getColor(context, R.color.neutral700))
+                    setText(context.getString(R.string.branch))
+                }
+
+                else -> {
+                    setUBackgroundColor(ContextCompat.getColor(context, R.color.neutral200))
+                    setTextColor(ContextCompat.getColor(context, R.color.neutral700))
+                    setText(context.getString(R.string.central))
+                }
             }
         }
     }
-
 }

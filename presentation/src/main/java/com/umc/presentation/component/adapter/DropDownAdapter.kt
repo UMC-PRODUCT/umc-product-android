@@ -15,7 +15,7 @@ class DropDownAdapter(
 ) {
 
     interface DropDownDelegate {
-        fun onClickItem(text: String)
+        fun onClickItem(text: String, gisu: Long)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
