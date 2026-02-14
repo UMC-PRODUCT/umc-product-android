@@ -8,6 +8,7 @@ import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
+import com.umc.domain.usecase.attendance.GetAttendanceHistoryUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceReasonUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailUseCase
@@ -21,6 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class UserCheckViewModel @Inject constructor(
     private val getAttendanceAvailableUseCase: GetAttendanceAvailableUseCase,
+    private val getAttendanceHistoryUseCase: GetAttendanceHistoryUseCase,
     private val getScheduleDetailUseCase: GetScheduleDetailUseCase,
     private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase,
     private val postAttendanceReasonUseCase: PostAttendanceReasonUseCase
@@ -29,29 +31,49 @@ class UserCheckViewModel @Inject constructor(
     private var lastUserLat: Double? = null
     private var lastUserLng: Double? = null
 
-    init { fetchAttendanceData() }
+    init {
+        fetchAttendanceData()
+        fetchAttendanceHistory()
+    }
 
     private fun fetchAttendanceData() {
         viewModelScope.launch {
-            when (val result = getAttendanceAvailableUseCase()) {
-                is ApiState.Success -> {
-                    val list = result.data.map { CheckAvailableUIModel(session = it) }
+            resultResponse(
+                response = getAttendanceAvailableUseCase(),
+                successCallback = { data ->
+                    val list = data.map { CheckAvailableUIModel(session = it) }
                     updateState { copy(availableSessions = list, availableCount = list.size) }
-
-                    // 목록 로드 즉시 각 아이템의 상세(위치 정보) 요청
                     list.forEach { fetchSessionDetail(it.session.id) }
-                }
-                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
-            }
+                },
+                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+            )
         }
-        loadHistoryDummyData()
+    }
+
+    private fun fetchAttendanceHistory() {
+        viewModelScope.launch {
+            resultResponse(
+                response = getAttendanceHistoryUseCase(),
+                successCallback = { data ->
+                    val historyUIList = data.mapIndexed { index, history ->
+                        CheckHistoryUIModel(
+                            history = history,
+                            isFirst = index == 0,
+                            isLast = index == data.size - 1
+                        )
+                    }
+                    updateState { copy(attendanceHistories = historyUIList) }
+                },
+                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+            )
+        }
     }
 
     private fun fetchSessionDetail(sessionId: Long) {
         viewModelScope.launch {
-            when (val result = getScheduleDetailUseCase(sessionId)) {
-                is ApiState.Success -> {
-                    val detail = result.data
+            resultResponse(
+                response = getScheduleDetailUseCase(sessionId),
+                successCallback = { detail ->
                     updateState {
                         val updatedList = availableSessions.map { uiModel ->
                             if (uiModel.session.id == sessionId) {
@@ -67,9 +89,9 @@ class UserCheckViewModel @Inject constructor(
                         }
                         copy(availableSessions = updatedList)
                     }
-                }
-                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
-            }
+                },
+                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+            )
         }
     }
 
@@ -77,11 +99,9 @@ class UserCheckViewModel @Inject constructor(
      * 실시간 위치 기반 출석 요청
      */
     fun requestAttendance(sheetId: Long) {
-        // 현재 UI 상태에서 해당 세션의 인증 여부를 확인
-        val sessionUIModel = uiState.value.availableSessions.find { it.session.id == sheetId }
+        val sessionUIModel = uiState.value.availableSessions.find { it.session.sheetId == sheetId }
         val isVerified = sessionUIModel?.isWithinRange ?: false
 
-        // Request 객체 생성
         val request = AttendanceCheckRequest(
             attendanceSheetId = sheetId,
             latitude = lastUserLat,
@@ -90,44 +110,25 @@ class UserCheckViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            // UseCase에 객체 전달
-            when (val result = postAttendanceCheckUseCase(request)) {
-                is ApiState.Success -> fetchAttendanceData()
-                is ApiState.Fail -> emitEvent(UserCheckEvent.ShowToast(result.failState.message))
-            }
+            resultResponse(
+                response = postAttendanceCheckUseCase(request),
+                successCallback = { fetchAttendanceData() },
+                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+            )
         }
     }
 
     /**
-     * 출석 사유 제출 API 연동
+     * 출석 사유 제출
      */
-    fun submitAttendanceReason(sessionId: Long, reason: String) {
+    fun submitAttendanceReason(sheetId: Long, reason: String) {
         viewModelScope.launch {
-            when (val result = postAttendanceReasonUseCase(sessionId, reason)) {
-                is ApiState.Success -> {
-                    fetchAttendanceData()
-                }
-                is ApiState.Fail -> {}
-            }
-        }
-    }
-
-    private fun loadHistoryDummyData() {
-        val rawHistoryList = listOf(
-            UserCheckHistory(1, "3주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.SUCCESS),
-            UserCheckHistory(2, "2주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.LATE),
-            UserCheckHistory(3, "1주차", "정기 세션", "14:00", "18:00", CheckHistoryStatus.ABSENT)
-        )
-
-        val historyUIList = rawHistoryList.mapIndexed { index, history ->
-            CheckHistoryUIModel(
-                history = history,
-                isFirst = index == 0,
-                isLast = index == rawHistoryList.size - 1
+            resultResponse(
+                response = postAttendanceReasonUseCase(sheetId, reason),
+                successCallback = { fetchAttendanceData() },
+                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
             )
         }
-
-        updateState { copy(attendanceHistories = historyUIList) }
     }
 
     /**

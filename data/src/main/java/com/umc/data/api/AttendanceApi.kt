@@ -2,6 +2,7 @@ package com.umc.data.api
 
 import com.umc.data.response.attendance.AdminPendingUserResponse
 import com.umc.data.response.attendance.AttendanceAvailableResponse
+import com.umc.data.response.attendance.UserCheckHistoryResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.model.request.attendance.AttendanceReasonRequest
@@ -38,4 +39,7 @@ interface AttendanceApi {
     suspend fun postAttendanceReason(
         @Body request: AttendanceReasonRequest
     ): ApiResponse<String>
+
+    @GET(Endpoints.Attendance.HISTORY)
+    suspend fun getAttendanceHistory(): ApiResponse<List<UserCheckHistoryResponse>>
 }

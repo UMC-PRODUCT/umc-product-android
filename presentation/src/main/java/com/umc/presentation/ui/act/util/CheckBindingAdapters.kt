@@ -36,7 +36,7 @@ object CheckBindingAdapters {
     fun setHistoryStatusColor(view: UButton, status: CheckHistoryStatus?) {
         if (status == null) return
         val colorRes = when (status) {
-            CheckHistoryStatus.SUCCESS -> R.color.success500
+            CheckHistoryStatus.PRESENT -> R.color.success500
             CheckHistoryStatus.LATE -> R.color.warning500
             CheckHistoryStatus.ABSENT -> R.color.danger500
         }

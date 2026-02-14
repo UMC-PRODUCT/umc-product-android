@@ -1,5 +1,6 @@
 package com.umc.domain.model.act.check
 
+import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CheckHistoryStatus
 
 /**
@@ -7,9 +8,9 @@ import com.umc.domain.model.enums.CheckHistoryStatus
  */
 data class UserCheckHistory(
     val id: Int,
-    val week: String,
     val title: String,
     val startTime: String,
     val endTime: String,
-    val status: CheckHistoryStatus
+    val status: CheckHistoryStatus,
+    val tags: List<CategoryType>?
 )

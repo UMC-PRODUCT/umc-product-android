@@ -123,7 +123,7 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
                     // 출석 히스토리 업데이트
                     historyAdapter.submitList(state.attendanceHistories)
                     val historyEmptyList = if (state.attendanceHistories.isEmpty()) {
-                        listOf(EmptyStateUIModel(R.drawable.ic_document, getString(R.string.attendance_empty_history)))
+                        listOf(EmptyStateUIModel(R.drawable.ic_checkbook, getString(R.string.attendance_empty_history)))
                     } else emptyList()
                     historyEmptyAdapter.submitList(historyEmptyList)
                 }
