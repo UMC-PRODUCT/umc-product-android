@@ -32,19 +32,17 @@ class UserChallengerViewModel @Inject constructor(
         viewModelScope.launch {
             appDataStoreRepository.getUserInfo()
                 .distinctUntilChanged { old, new ->
-                    old.schoolId == new.schoolId
+                    old.schoolId == new.schoolId &&
+                            old.roles.firstOrNull()?.gisuId == new.roles.firstOrNull()?.gisuId
                 }
                 .collect { userInfo ->
-                    val testGisuId = 8L
-
-                    if (userInfo.schoolId != 0L) {
-                        startFetchingAll(userInfo.schoolId, testGisuId)
-                    }
+                    val currentGisuId = userInfo.roles.firstOrNull()?.gisuId
+                    startFetchingAll(userInfo.schoolId, currentGisuId)
                 }
         }
     }
 
-    private fun startFetchingAll(schoolId: Long, gisuId: Long) {
+    private fun startFetchingAll(schoolId: Long, gisuId: Long?) {
         // 기존 리스트를 비우고 새로 시작합니다.
         updateState { copy(allChallengers = emptyList(), filteredChallengers = emptyList()) }
         val accumulator = mutableListOf<UserChallenger>()
@@ -56,7 +54,7 @@ class UserChallengerViewModel @Inject constructor(
      */
     private fun fetchAllPages(
         schoolId: Long,
-        gisuId: Long,
+        gisuId: Long?,
         cursor: Long?,
         accumulator: MutableList<UserChallenger>
     ) {
