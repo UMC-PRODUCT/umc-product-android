@@ -47,5 +47,15 @@ interface CommunityRepository {
 
     // 게시글 수정하기
     suspend fun updatePost(postId: Long, request: CreatePost): ApiState<ContentItem>
+
+    //내 게시글 가져오기
+    suspend fun getMyPosts(page: Int, size: Int): ApiState<PostPageModel>
+
+    //내 댓글단 글 갖오기
+    suspend fun getMyCommentedPosts(page: Int, size: Int): ApiState<PostPageModel>
+
+    //내가 스크랩 한 글 갖고오기
+    suspend fun getMyScrappedPosts(page: Int, size: Int): ApiState<PostPageModel>
+
 }
 

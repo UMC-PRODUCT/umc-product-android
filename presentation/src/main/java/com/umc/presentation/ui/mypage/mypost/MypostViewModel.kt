@@ -34,7 +34,7 @@ constructor() : BaseViewModel<MypostFragmentUiState, MypostFragmentEvent>(
 
         }
         else if(showType == "MYSCRAP"){
-           
+
 
         }
         else{

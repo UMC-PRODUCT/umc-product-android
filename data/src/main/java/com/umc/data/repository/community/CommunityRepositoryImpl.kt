@@ -116,5 +116,22 @@ class CommunityRepositoryImpl @Inject constructor(
             it.toContentItemDomain() }
     }
 
+    //내가 작성한 글 가져오기
+    override suspend fun getMyPosts(page: Int, size: Int): ApiState<PostPageModel> {
+        return communityRemoteDataSource.getMyPosts(page, size).map {
+            it.toPostPageModelDomain() }
+    }
+
+    //내가 댓글단글 가져오기
+    override suspend fun getMyCommentedPosts(page: Int, size: Int): ApiState<PostPageModel> {
+        return communityRemoteDataSource.getMyCommentedPosts(page, size).map {
+            it.toPostPageModelDomain() }
+    }
+
+    //내가 스크랩한 글 가져오기
+    override suspend fun getMyScrappedPosts(page: Int, size: Int): ApiState<PostPageModel> {
+        return communityRemoteDataSource.getMyScrappedPosts(page, size).map {
+            it.toPostPageModelDomain() }
+    }
 
 }

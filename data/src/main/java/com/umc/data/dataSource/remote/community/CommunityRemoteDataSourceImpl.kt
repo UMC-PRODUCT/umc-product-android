@@ -95,5 +95,22 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
         return apiCall { communityApi.updatePost(postId, request) }
     }
 
+    //내 게시글 가저여괴
+    override suspend fun getMyPosts(page: Int, size: Int): ApiState<CommunityGetPostResponse> {
+        return apiCall {communityApi.getMyPosts(page, size)}
+    }
+
+    //내가 댓글단 글 가져오기
+    override suspend fun getMyCommentedPosts(page: Int, size: Int
+    ): ApiState<CommunityGetPostResponse> {
+        return apiCall { communityApi.getMyCommentedPosts(page, size) }
+    }
+
+    //내가 스크랩한 글 가져오기
+    override suspend fun getMyScrappedPosts(page: Int, size: Int
+    ): ApiState<CommunityGetPostResponse> {
+        return apiCall { communityApi.getMyScrappedPosts(page, size) }
+
+    }
 
 }
