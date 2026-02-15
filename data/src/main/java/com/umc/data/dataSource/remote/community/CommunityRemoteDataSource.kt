@@ -39,10 +39,10 @@ interface CommunityRemoteDataSource {
     suspend fun deletePost(postId: Long): ApiState<Unit>
 
     //게시글 좋아요 토글
-    suspend fun togglePostLike(postId: Long, challengerId: Long): ApiState<PostLikeResponse>
+    suspend fun togglePostLike(postId: Long): ApiState<PostLikeResponse>
 
     //게시글 스크랩 토글
-    suspend fun togglePostScrap(postId: Long, challengerId: Long): ApiState<PostScrapResponse>
+    suspend fun togglePostScrap(postId: Long): ApiState<PostScrapResponse>
 
     //게시글 댓글 삭제
     suspend fun deleteComment(postId: Long, commentId: Long, challengerId: Long): ApiState<Unit>

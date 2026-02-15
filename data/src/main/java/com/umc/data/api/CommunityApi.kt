@@ -81,14 +81,14 @@ interface CommunityApi {
     @POST(Endpoints.Community.POST_LIKE)
     suspend fun togglePostLike(
         @Path("postId") postId: Long,
-        @Query("challengerId") challengerId: Long
+        //@Query("challengerId") challengerId: Long
     ): ApiResponse<PostLikeResponse>
 
     //게시글 스크랩 토글
     @POST(Endpoints.Community.POST_SCRAP)
     suspend fun togglePostScrap(
         @Path("postId") postId: Long,
-        @Query("challengerId") challengerId: Long
+        //@Query("challengerId") challengerId: Long
     ): ApiResponse<PostScrapResponse>
 
 

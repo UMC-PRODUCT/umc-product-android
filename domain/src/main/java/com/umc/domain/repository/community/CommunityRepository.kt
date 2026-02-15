@@ -36,10 +36,10 @@ interface CommunityRepository {
     suspend fun deletePost(postId: Long): ApiState<Unit>
 
     // 게시글 좋아요 토글하기
-    suspend fun togglePostLike(postId: Long, challengerId: Long): ApiState<PostLike>
+    suspend fun togglePostLike(postId: Long): ApiState<PostLike>
 
     // 게시글 스크랩 토글하기
-    suspend fun togglePostScrap(postId: Long, challengerId: Long): ApiState<PostScrap>
+    suspend fun togglePostScrap(postId: Long): ApiState<PostScrap>
 
 
     // 게시글 댓글 삭제하기

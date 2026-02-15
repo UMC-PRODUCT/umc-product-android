@@ -92,14 +92,14 @@ class CommunityRepositoryImpl @Inject constructor(
     }
 
     //게시글 좋아요 토글하기
-    override suspend fun togglePostLike(postId: Long, challengerId: Long): ApiState<PostLike> {
-        return communityRemoteDataSource.togglePostLike(postId, challengerId).map {
+    override suspend fun togglePostLike(postId: Long): ApiState<PostLike> {
+        return communityRemoteDataSource.togglePostLike(postId).map {
             it.toPostLikeDomain() }
     }
 
     //게시글 스크랩 토글하기
-    override suspend fun togglePostScrap(postId: Long, challengerId: Long): ApiState<PostScrap> {
-        return communityRemoteDataSource.togglePostScrap(postId, challengerId).map {
+    override suspend fun togglePostScrap(postId: Long): ApiState<PostScrap> {
+        return communityRemoteDataSource.togglePostScrap(postId).map {
             it.toPostScrapDomain() }
     }
 

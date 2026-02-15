@@ -13,6 +13,8 @@ import com.umc.domain.usecase.community.DeleteCommunityCommentUseCase
 import com.umc.domain.usecase.community.DeleteCommunityPostUseCase
 import com.umc.domain.usecase.community.GetCommunityPostCommentUseCase
 import com.umc.domain.usecase.community.GetCommunityPostDetailUseCase
+import com.umc.domain.usecase.community.UpdateLikePostUseCase
+import com.umc.domain.usecase.community.UpdateScrapPostUseCase
 import com.umc.domain.usecase.community.WriteCommunityPostCommentUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -33,6 +35,8 @@ constructor(
     private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 불러오기
     private val deleteCommunityPostUseCase: DeleteCommunityPostUseCase, //게시글 삭제하기
     private val deleteCommunityCommentUseCase: DeleteCommunityCommentUseCase, //댓글 삭제하기
+    private val updateLikePostUseCase: UpdateLikePostUseCase, //좋아요 토글
+    private val updateScrapPostUseCase: UpdateScrapPostUseCase, //스크랩 토글
 
     ) : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent>(
     PostDetailFragmentUiState()
@@ -185,6 +189,13 @@ constructor(
         val updatedContent = current.copy(isLiked = newIsLiked, likes = newLikes)
         rebuildDetailList(updatedContent, uiState.value.nowCommentList)
         /**TODO 서버에 반영**/
+        viewModelScope.launch {
+            resultResponse(
+                response = updateLikePostUseCase(uiState.value.nowContent.postId),
+                successCallback = {},
+                errorCallback = {}
+            )
+        }
     }
 
     // 스크랩 토글
