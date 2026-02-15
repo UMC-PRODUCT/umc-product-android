@@ -1,5 +1,6 @@
 package com.umc.data.api
 
+import com.umc.data.response.challenger.ChallengerCursorResponse
 import com.umc.data.response.challenger.ChallengerResponse
 import com.umc.data.response.challenger.ChallengerSearchScheduleResponse
 import com.umc.domain.model.base.ApiResponse
@@ -31,5 +32,15 @@ interface ChallengerApi {
         @Query("nickname") nickname: String?
     ): ApiResponse<ChallengerSearchScheduleResponse>
 
-
+    @GET(Endpoints.Challenger.SEARCH_CURSOR)
+    suspend fun getChallengers(
+        @Query("cursor") cursor: Long?,
+        @Query("size") size: Int,
+        @Query("part") part: String?,
+        @Query("name") name: String?,
+        @Query("nickname") nickname: String?,
+        @Query("schoolId") schoolId: Long?,
+        @Query("chapterId") chapterId: Long?,
+        @Query("gisuId") gisuId: Long?
+    ): ApiResponse<ChallengerCursorResponse>
 }

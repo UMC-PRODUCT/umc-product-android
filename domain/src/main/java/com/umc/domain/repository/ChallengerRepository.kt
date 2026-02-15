@@ -1,6 +1,7 @@
 package com.umc.domain.repository
 
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
+import com.umc.domain.model.act.challenger.ChallengerList
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.home.ParticipantSearchPage
@@ -18,4 +19,12 @@ interface ChallengerRepository {
 
     // 일정 생성용 유저 검색하기
     suspend fun searchChallengerSchedule(cursor: Long?, size: Int, name: String?, nickname: String?): ApiState<ParticipantSearchPage>
+
+    suspend fun getChallengerList(
+        cursor: Long?,
+        size: Int,
+        schoolId: Long?,
+        gisuId: Long?
+    ): ApiState<ChallengerList>
+
 }

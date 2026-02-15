@@ -5,6 +5,7 @@ import com.umc.data.response.challenger.ChallengerResponse.Companion.toManageMod
 import com.umc.data.response.challenger.ChallengerResponse.Companion.toModel
 import com.umc.data.response.challenger.ChallengerSearchScheduleResponse.Companion.toParticipantSearchPage
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
+import com.umc.domain.model.act.challenger.ChallengerList
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
@@ -49,4 +50,14 @@ class ChallengerRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getChallengerList(
+        cursor: Long?,
+        size: Int,
+        schoolId: Long?,
+        gisuId: Long?
+    ): ApiState<ChallengerList> {
+        return challengerRemoteDataSource.getChallengerList(cursor, size, schoolId, gisuId).map {
+            it.toModel()
+        }
+    }
 }
