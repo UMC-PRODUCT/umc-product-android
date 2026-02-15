@@ -92,13 +92,13 @@ class UserChallengerViewModel @Inject constructor(
 
         if (query.isBlank()) {
             // 검색어가 비어있으면 전체 리스트를 보여줌
-            updateState { copy(filteredChallengers = allChallengers) }
+            updateState { copy(filteredChallengers = allChallengers, searchQuery = "") }
         } else {
             val filtered = allChallengers.filter {
                 it.name.contains(query, ignoreCase = true) ||
                         it.nickname.contains(query, ignoreCase = true)
             }
-            updateState { copy(filteredChallengers = filtered) }
+            updateState { copy(filteredChallengers = filtered, searchQuery = query) }
         }
     }
 
@@ -119,7 +119,8 @@ class UserChallengerViewModel @Inject constructor(
 
 data class UserChallengerUiState(
     val allChallengers: List<UserChallenger> = emptyList(),
-    val filteredChallengers: List<UserChallenger> = emptyList()
+    val filteredChallengers: List<UserChallenger> = emptyList(),
+    val searchQuery: String = ""
 ) : UiState
 
 sealed interface UserChallengerEvent : UiEvent {
