@@ -126,6 +126,40 @@ class AppDataStore @Inject constructor(
         }
     }
 
+    // 공지사항 : 검색 기록 flow
+    val recentSearchesNoticeFlow: Flow<List<String>> = context.dataStore.data.map { prefs ->
+        val json = prefs[KEY_RECENT_SEARCHES_NOTICE] ?: "[]"
+        gson.fromJson(json, Array<String>::class.java).toList()
+    }
+
+    // 공지사항 : 검색어 추가 (최대 20개, 중복 제거 후 맨 앞으로)
+    suspend fun addSearchNoticeHistory(query: String) {
+        if (query.isBlank()) return
+        context.dataStore.edit { prefs ->
+            val currentJson = prefs[KEY_RECENT_SEARCHES_NOTICE] ?: "[]"
+            val currentList = gson.fromJson(currentJson, Array<String>::class.java).toMutableList()
+            currentList.remove(query)
+            currentList.add(0, query)
+            prefs[KEY_RECENT_SEARCHES_NOTICE] = gson.toJson(currentList.take(20))
+        }
+    }
+
+    // 공지사항 : 개별 검색어 삭제 (X 버튼 로직)
+    suspend fun removeSearchNoticeHistory(query: String) {
+        context.dataStore.edit { prefs ->
+            val currentJson = prefs[KEY_RECENT_SEARCHES_NOTICE] ?: "[]"
+            val currentList = gson.fromJson(currentJson, Array<String>::class.java).toMutableList()
+            currentList.remove(query)
+            prefs[KEY_RECENT_SEARCHES_NOTICE] = gson.toJson(currentList)
+        }
+    }
+
+    // 공지사항 : 전체 검색어 삭제 로직
+    suspend fun clearSearchNoticeHistory() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_RECENT_SEARCHES_NOTICE)
+        }
+    }
 
 
     //------------JWT 관련 로직-----------------//
@@ -181,6 +215,9 @@ class AppDataStore @Inject constructor(
 
         //게시글 검색에서 게시글 검색 기록 KEY
         val KEY_RECENT_SEARCHES_POST = stringPreferencesKey("recent_searches_post")
+
+        //공지사항 검색에서 검색 기록 KEY
+        val KEY_RECENT_SEARCHES_NOTICE = stringPreferencesKey("recent_searches_notice")
 
         val KEY_ACCESS_TOKEN = stringPreferencesKey("access_token")
         val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token")

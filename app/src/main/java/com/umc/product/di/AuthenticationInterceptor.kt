@@ -25,7 +25,7 @@ class AuthenticationInterceptor @Inject constructor(
             }
 
             val accessToken = runBlocking { appDataStoreRepository.getAccessToken() }
-            val testToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMDEiLCJpYXQiOjE3NzEwODkyMzQsImV4cCI6MTc3MTA5MjgzNH0.yhN5R48mOlZMQntQKyCT91tP2zjdKjADJhqsX0peZ86WxhnvWRRntAkQOHNu9Y9SEtxrLFHejbrxCQRLR7EReA"
+            val testToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzcxMTY2NTYyLCJleHAiOjE3NzExNzAxNjJ9.ZCTIyZG8T-h-CzkDYRA3SvCNO612X-7BW3uhKYC2Xgbnbvj8TRm0CBWJJNLgfh2NE51RmVuh55hqn08kWThm5A"
 
             val request =
                 chain.request().newBuilder()

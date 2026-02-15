@@ -1,52 +1,97 @@
 package com.umc.presentation.ui.notice.search
 
 import android.view.inputmethod.EditorInfo
-import com.umc.domain.model.enums.NoticeCategory
-import com.umc.domain.model.notice.Notice
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.enums.SearchMode
+import com.umc.domain.usecase.appDataStore.recent.AddRecentSearchNoticeUseCase
+import com.umc.domain.usecase.appDataStore.recent.ClearRecentSearchNoticeUseCase
+import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchNoticeUseCase
+import com.umc.domain.usecase.appDataStore.recent.RemoveRecentSearchNoticeUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class NoticeSearchViewModel
-@Inject
-constructor() : BaseViewModel<NoticeSearchUiState, NoticeSearchEvent>(
+class NoticeSearchViewModel @Inject constructor(
+    private val getRecentSearchNoticeUseCase: GetRecentSearchNoticeUseCase,
+    private val addRecentSearchNoticeUseCase: AddRecentSearchNoticeUseCase,
+    private val removeRecentSearchNoticeUseCase: RemoveRecentSearchNoticeUseCase,
+    private val clearRecentSearchNoticeUseCase: ClearRecentSearchNoticeUseCase,
+) : BaseViewModel<NoticeSearchUiState, NoticeSearchEvent>(
     NoticeSearchUiState(),
 ) {
     init {
-        updateSearchList(getDummy())
+        viewModelScope.launch {
+            getRecentSearchNoticeUseCase().collect {
+                updateState {
+                    copy(recentSearchList = it)
+                }
+            }
+        }
     }
 
     fun onClickBack() {
         emitEvent(NoticeSearchEvent.MoveToBack)
     }
 
-    private fun updateSearchList(list: List<String>) {
+    fun onQueryChanged(query: String) {
         updateState {
-            copy(
-                recentSearchList = list
-            )
+            copy(query = query)
         }
     }
 
-    private fun getDummy(): List<String> {
-        return listOf(
-            "더미1", "더미2", "더미3", "더미4"
-        )
-    }
-
     fun onImeAction(actionId: Int, text: String): Boolean {
-        if (actionId == EditorInfo.IME_ACTION_DONE) {
+        if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+            viewModelScope.launch {
+                addRecentSearchNoticeUseCase(text)
+            }
+            updateState {
+                copy(mode = SearchMode.RESULT)
+            }
             emitEvent(NoticeSearchEvent.MoveToSearchResult(text))
             return true
         }
         return false
     }
+
+    fun selectRecentSearch(keyword: String) {
+        viewModelScope.launch {
+            addRecentSearchNoticeUseCase(keyword)
+        }
+        updateState {
+            copy(
+                query = keyword,
+                mode = SearchMode.RESULT
+            )
+        }
+        emitEvent(NoticeSearchEvent.MoveToSearchResult(keyword))
+    }
+
+    fun deleteRecentSearch(keyword: String) {
+        viewModelScope.launch {
+            removeRecentSearchNoticeUseCase(keyword)
+        }
+    }
+
+    fun deleteAllRecentSearch() {
+        viewModelScope.launch {
+            clearRecentSearchNoticeUseCase()
+        }
+    }
+
+    fun onChangeViewMode(mode: SearchMode) {
+        updateState {
+            copy(mode = mode)
+        }
+    }
 }
 
 data class NoticeSearchUiState(
+    val query: String = "",
+    val mode: SearchMode = SearchMode.EMPTY,
     val recentSearchList: List<String> = emptyList()
 ) : UiState
 
