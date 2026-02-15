@@ -2,7 +2,7 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".ui.mypage.mypost.MypostFragment">
+    tools:context="com.umc.presentation.ui.mypage.mypost.MypostFragment">
 
     <data>
         <import type="android.view.View"/>

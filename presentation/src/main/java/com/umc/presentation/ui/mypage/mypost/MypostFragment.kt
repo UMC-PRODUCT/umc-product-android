@@ -3,12 +3,13 @@ package com.umc.presentation.ui.mypage.mypost
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentMypostBinding
 import com.umc.presentation.ui.community.adapter.ContentAdapter
 import com.umc.presentation.ui.community.adapter.ContentItemDelegate
-import com.umc.presentation.ui.home.PlanAddFragmentArgs
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlin.getValue
@@ -32,42 +33,49 @@ class MypostFragment : BaseFragment<FragmentMypostBinding, MypostFragmentUiState
     private var showType : String = ""
 
     
+    //각 아이템 클릭 시 로직
     override fun onItemClicked(item: ContentItem) {
         /**TODO. 이동 로직 작성하기**/
     }
 
     override fun initView() {
-
-        showType = args.showType
-
+        
 
         binding.apply {
             vm = viewModel
             lifecycleOwner = viewLifecycleOwner
         }
 
-        if(showType == "MYPOST"){
-            binding.mypostTvTitle.text = "내가 쓴 글"
-            viewModel.settingPost(showType)
+        //텍스트 정의
+        showType = args.showType
+        binding.mypostTvTitle.text = when (showType) {
+            "MYPOST" -> "내가 쓴 글"
+            "MYCOMMENT" -> "댓글 단 글"
+            "MYSCRAP" -> "스크랩"
+            else -> showType
         }
-        else if(showType == "MYCOMMENT"){
-            binding.mypostTvTitle.text = "댓글 단 글"
-            viewModel.settingPost(showType)
-        }
-        else if(showType == "MYSCRAP"){
-            binding.mypostTvTitle.text = "스크랩"
-            viewModel.settingPost(showType)
-        }
-        else{
-            viewModel.settingPost("")
-        }
-
-
+        viewModel.initShowType(showType)
 
         //어댑터 정의 및 연결
         myContentAdapter = ContentAdapter(this)
         binding.mypostRcv.apply {
             adapter = myContentAdapter
+
+            //무한 스크롤 로직
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+
+                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                    val lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition()
+                    val totalItemCount = layoutManager.itemCount
+
+                    // 로딩 중이 아닐 때 바닥에서 2번째 아이템 근처면 다음 데이터 로드
+                    if (!viewModel.uiState.value.isPageLoading && lastVisibleItem >= totalItemCount - 2) {
+                        viewModel.settingPost(isRefresh = false)
+                    }
+                }
+            })
         }
 
     }
