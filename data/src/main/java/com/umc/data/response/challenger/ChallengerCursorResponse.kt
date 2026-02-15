@@ -84,7 +84,8 @@ data class ChallengerCursorItemResponse(
             generation = generation,
             part = UserPart.valueOf(part),
             outCount = 0, // 초기값 설정
-            warningCount = 0 // 초기값 설정
+            warningCount = 0, // 초기값 설정
+            profileImage = profileImageLink
         )
     }
 
