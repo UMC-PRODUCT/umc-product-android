@@ -89,8 +89,8 @@ class NoticeRepositoryImpl @Inject constructor(
     ): ApiState<Unit> =
         noticeRemoteDataSource.updateNoticeImages(noticeId, request)
 
-    override suspend fun createNotice(request: NoticeCreateRequest): ApiState<Unit> =
-        noticeRemoteDataSource.createNotice(request)
+    override suspend fun createNotice(request: NoticeCreateRequest): ApiState<Long> =
+        noticeRemoteDataSource.createNotice(request).map { it.noticeId }
 
     override suspend fun addNoticeVote(noticeId: Long, request: NoticeVoteRequest): ApiState<Unit> =
         noticeRemoteDataSource.addNoticeVote(noticeId, request)

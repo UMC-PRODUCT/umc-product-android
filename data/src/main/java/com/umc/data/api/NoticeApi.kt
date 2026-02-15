@@ -6,6 +6,7 @@ import com.umc.domain.model.request.notice.NoticeLinkRequest
 import com.umc.domain.model.request.notice.NoticeReminderRequest
 import com.umc.domain.model.request.notice.NoticeUpdateRequest
 import com.umc.domain.model.request.notice.NoticeVoteRequest
+import com.umc.data.response.notice.NoticeCreateResponse
 import com.umc.data.response.notice.NoticeDetailResponse
 import com.umc.data.response.notice.NoticeReadStatisticsResponse
 import com.umc.data.response.notice.NoticeReadStatusResponse
@@ -118,7 +119,7 @@ interface NoticeApi {
     @POST(Endpoints.Notice.NOTICE)
     suspend fun createNotice(
         @Body request: NoticeCreateRequest
-    ): ApiResponse<Unit>
+    ): ApiResponse<NoticeCreateResponse>
 
     // 공지사항 투표 추가
     @POST(Endpoints.Notice.NOTICE_VOTES)

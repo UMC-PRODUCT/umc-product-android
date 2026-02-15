@@ -47,7 +47,7 @@ interface NoticeRepository {
     suspend fun editNoticeLinks(noticeId: Long, request: NoticeLinkRequest): ApiState<Unit>
     suspend fun addNoticeImages(noticeId: Long, request: NoticeImageRequest): ApiState<Unit>
     suspend fun updateNoticeImages(noticeId: Long, request: NoticeUpdateRequest): ApiState<Unit>
-    suspend fun createNotice(request: NoticeCreateRequest): ApiState<Unit>
+    suspend fun createNotice(request: NoticeCreateRequest): ApiState<Long>
     suspend fun addNoticeVote(noticeId: Long, request: NoticeVoteRequest): ApiState<Unit>
     suspend fun sendNoticeReminder(noticeId: Long, request: NoticeReminderRequest): ApiState<Unit>
     suspend fun markNoticeAsRead(noticeId: Long): ApiState<Unit>

@@ -5,8 +5,10 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.umc.domain.model.notice.DropDownItem
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.notice.NoticeSummary
+import com.umc.domain.model.organization.GisuItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.adapter.DropDownAdapter
@@ -24,11 +26,11 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
 ) {
     override val viewModel: NoticeViewModel by viewModels()
 
-    private val dropDownAdapter : DropDownAdapter by lazy {
-        DropDownAdapter(object : DropDownAdapter.DropDownDelegate {
-            override fun onClickItem(text: String, gisu: Long) {
+    private val dropDownAdapter: DropDownAdapter<GisuDropDownItem> by lazy {
+        DropDownAdapter(object : DropDownAdapter.DropDownDelegate<GisuDropDownItem> {
+            override fun onClickItem(item: GisuDropDownItem) {
                 viewModel.onClickShowDropDown()
-                viewModel.updateNowTitle(text, gisu)
+                viewModel.updateNowTitle(item.gisuItem.displayText, item.gisuItem.gisuId.toLong())
             }
         })
     }
@@ -94,7 +96,7 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
 
             launch {
                 viewModel.uiState.collect {
-                    dropDownAdapter.submitList(it.dropdownList)
+                    dropDownAdapter.submitList(it.dropdownList.map { gisu -> GisuDropDownItem(gisu) })
                     noticeChipAdapter.submitList(it.chipList)
                     noticeAdapter.submitList(it.noticeList)
                 }
@@ -186,4 +188,8 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
             uchipNoticeAdmin.setUChipTextColor(ContextCompat.getColor(requireActivity(), R.color.neutral500))
         }
     }
+}
+
+private class GisuDropDownItem(val gisuItem: GisuItem) : DropDownItem {
+    override val displayText: String get() = gisuItem.displayText
 }

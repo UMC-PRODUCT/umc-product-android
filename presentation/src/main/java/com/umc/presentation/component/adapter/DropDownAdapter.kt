@@ -5,26 +5,24 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.organization.GisuItem
+import com.umc.domain.model.notice.DropDownItem
 import com.umc.presentation.databinding.ItemDropdownBinding
 
-class DropDownAdapter(
-    private val listener: DropDownDelegate
-) : ListAdapter<GisuItem, RecyclerView.ViewHolder> (
-    DropDownDiffCallBack()
+class DropDownAdapter<T : DropDownItem>(
+    private val listener: DropDownDelegate<T>
+) : ListAdapter<T, DropDownViewHolder<T>>(
+    DropDownDiffCallBack<T>()
 ) {
 
-    interface DropDownDelegate {
-        fun onClickItem(text: String, gisu: Long)
+    interface DropDownDelegate<T> {
+        fun onClickItem(item: T)
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when(holder) {
-            is DropDownViewHolder -> holder.bind(currentList[position])
-        }
+    override fun onBindViewHolder(holder: DropDownViewHolder<T>, position: Int) {
+        holder.bind(currentList[position])
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DropDownViewHolder<T> {
         val binding = ItemDropdownBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
@@ -34,18 +32,12 @@ class DropDownAdapter(
     }
 }
 
-class DropDownDiffCallBack : DiffUtil.ItemCallback<GisuItem>() {
-    override fun areContentsTheSame(
-        oldItem: GisuItem,
-        newItem: GisuItem
-    ): Boolean {
-        return oldItem == newItem
+class DropDownDiffCallBack<T : DropDownItem> : DiffUtil.ItemCallback<T>() {
+    override fun areContentsTheSame(oldItem: T, newItem: T): Boolean {
+        return oldItem.displayText == newItem.displayText
     }
 
-    override fun areItemsTheSame(
-        oldItem: GisuItem,
-        newItem: GisuItem
-    ): Boolean {
-        return oldItem.gisuId == newItem.gisuId
+    override fun areItemsTheSame(oldItem: T, newItem: T): Boolean {
+        return oldItem.displayText == newItem.displayText
     }
 }

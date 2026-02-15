@@ -3,7 +3,11 @@ package com.umc.data.dataSource.remote
 import com.umc.data.api.NoticeApi
 import com.umc.data.dataSource.NoticeRemoteDataSource
 import com.umc.data.dataSource.base.apiCall
-import com.umc.data.response.notice.*
+import com.umc.data.response.notice.NoticeCreateResponse
+import com.umc.data.response.notice.NoticeDetailResponse
+import com.umc.data.response.notice.NoticeReadStatisticsResponse
+import com.umc.data.response.notice.NoticeReadStatusResponse
+import com.umc.data.response.notice.NoticeSearchResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.notice.NoticeCreateRequest
 import com.umc.domain.model.request.notice.NoticeImageRequest
@@ -68,7 +72,7 @@ class NoticeRemoteDataSourceImpl @Inject constructor(
     override suspend fun updateNoticeImages(noticeId: Long, request: NoticeUpdateRequest): ApiState<Unit> =
         apiCall { noticeApi.updateNoticeImages(noticeId, request) }
 
-    override suspend fun createNotice(request: NoticeCreateRequest): ApiState<Unit> =
+    override suspend fun createNotice(request: NoticeCreateRequest): ApiState<NoticeCreateResponse> =
         apiCall { noticeApi.createNotice(request) }
 
     override suspend fun addNoticeVote(noticeId: Long, request: NoticeVoteRequest): ApiState<Unit> =
