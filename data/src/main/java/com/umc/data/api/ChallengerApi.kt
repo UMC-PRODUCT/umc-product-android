@@ -6,6 +6,7 @@ import com.umc.data.response.challenger.ChallengerSearchScheduleResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -43,4 +44,9 @@ interface ChallengerApi {
         @Query("chapterId") chapterId: Long?,
         @Query("gisuId") gisuId: Long?
     ): ApiResponse<ChallengerCursorResponse>
+
+    @DELETE(Endpoints.Challenger.DELETE_POINT)
+    suspend fun deleteChallengerPoint(
+        @Path("challengerPointId") challengerPointId: Long
+    ): ApiResponse<Unit>
 }

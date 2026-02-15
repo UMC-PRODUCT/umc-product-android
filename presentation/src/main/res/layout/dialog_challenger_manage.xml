@@ -352,7 +352,6 @@
                 android:id="@+id/rv_history"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:minHeight="100dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_rectangle_neutral000_stroke_neutral300_radius8"
                 android:paddingHorizontal="16dp"

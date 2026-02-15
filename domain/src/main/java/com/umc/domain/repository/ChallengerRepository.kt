@@ -34,4 +34,6 @@ interface ChallengerRepository {
         schoolId: Long?,
         gisuId: Long?
     ): ApiState<AdminChallengerList>
+
+    suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit>
 }

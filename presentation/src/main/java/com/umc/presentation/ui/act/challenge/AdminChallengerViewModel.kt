@@ -8,6 +8,7 @@ import com.umc.domain.model.enums.PointType
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
 import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.domain.usecase.challenger.DeleteChallengerPointUseCase
 import com.umc.domain.usecase.challenger.GetAdminChallengerDetailUseCase
 import com.umc.domain.usecase.challenger.GetAdminChallengerListUseCase
 import com.umc.domain.usecase.challenger.GrantChallengerPointUseCase
@@ -24,7 +25,8 @@ class AdminChallengerViewModel @Inject constructor(
     private val appDataStoreRepository: AppDataStoreRepository,
     private val getAdminChallengerListUseCase: GetAdminChallengerListUseCase,
     private val getAdminChallengerDetailUseCase: GetAdminChallengerDetailUseCase,
-    private val grantChallengerPointUseCase: GrantChallengerPointUseCase
+    private val grantChallengerPointUseCase: GrantChallengerPointUseCase,
+    private val deleteChallengerPointUseCase: DeleteChallengerPointUseCase
 ) : BaseViewModel<AdminChallengerUiState, AdminChallengerEvent>(AdminChallengerUiState()) {
 
     init {
@@ -89,6 +91,10 @@ class AdminChallengerViewModel @Inject constructor(
             )
         }
     }
+
+    /**
+     * 상벌점 기록 부여
+     */
     fun grantPoint(challengerId: Int, type: PointType, description: String) {
         viewModelScope.launch {
             val request = ChallengerPointRequest(type, description)
@@ -100,6 +106,24 @@ class AdminChallengerViewModel @Inject constructor(
                     emitEvent(AdminChallengerEvent.ShowErrorToast(result.failState.message))
                 }
             }
+        }
+    }
+
+    /**
+     * 상벌점 기록 삭제
+     */
+    fun deletePoint(challengerId: Int, challengerPointId: Long) {
+        viewModelScope.launch {
+            resultResponse(
+                response = deleteChallengerPointUseCase(challengerPointId),
+                successCallback = {
+                    // 삭제 성공 시, 해당 챌린저의 상세 정보를 다시 불러와 다이얼로그를 갱신
+                    onChallengerClicked(challengerId)
+                },
+                errorCallback = { failState ->
+                    emitEvent(AdminChallengerEvent.ShowErrorToast(failState.message))
+                }
+            )
         }
     }
 

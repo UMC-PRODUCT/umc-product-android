@@ -45,4 +45,8 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit> {
+        return apiCall { challengerApi.deleteChallengerPoint(challengerPointId) }
+    }
+
 }

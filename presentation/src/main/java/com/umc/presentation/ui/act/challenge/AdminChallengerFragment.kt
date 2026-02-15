@@ -142,7 +142,9 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
                         content = "삭제된 기록은 복구가 어렵습니다.",
                         positiveText = "삭제하기"
                     ),
-                    onConfirm = { /* TODO */ }
+                    onConfirm = {
+                        viewModel.deletePoint(challengerId, point.id)
+                    }
                 )
                 warningDialog.show(childFragmentManager, "DeleteWarningDialog")
             }

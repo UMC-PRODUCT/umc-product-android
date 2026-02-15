@@ -73,4 +73,8 @@ class ChallengerRepositoryImpl @Inject constructor(
                 response.toAdminList()
             }
     }
+
+    override suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit> {
+        return challengerRemoteDataSource.deleteChallengerPoint(challengerPointId)
+    }
 }
