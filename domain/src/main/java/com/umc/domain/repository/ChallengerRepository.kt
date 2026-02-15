@@ -1,5 +1,6 @@
 package com.umc.domain.repository
 
+import com.umc.domain.model.act.challenger.AdminChallengerList
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerList
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
@@ -27,4 +28,10 @@ interface ChallengerRepository {
         gisuId: Long?
     ): ApiState<ChallengerList>
 
+    suspend fun getAdminChallengerList(
+        cursor: Long?,
+        size: Int,
+        schoolId: Long?,
+        gisuId: Long?
+    ): ApiState<AdminChallengerList>
 }

@@ -4,6 +4,7 @@ import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSource
 import com.umc.data.response.challenger.ChallengerResponse.Companion.toManageModel
 import com.umc.data.response.challenger.ChallengerResponse.Companion.toModel
 import com.umc.data.response.challenger.ChallengerSearchScheduleResponse.Companion.toParticipantSearchPage
+import com.umc.domain.model.act.challenger.AdminChallengerList
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerList
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
@@ -59,5 +60,17 @@ class ChallengerRepositoryImpl @Inject constructor(
         return challengerRemoteDataSource.getChallengerList(cursor, size, schoolId, gisuId).map {
             it.toModel()
         }
+    }
+
+    override suspend fun getAdminChallengerList(
+        cursor: Long?,
+        size: Int,
+        schoolId: Long?,
+        gisuId: Long?
+    ): ApiState<AdminChallengerList> {
+        return challengerRemoteDataSource.getChallengerList(cursor, size, schoolId, gisuId)
+            .map { response ->
+                response.toAdminList()
+            }
     }
 }

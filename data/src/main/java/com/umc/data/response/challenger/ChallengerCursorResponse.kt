@@ -2,6 +2,8 @@ package com.umc.data.response.challenger
 
 import com.google.gson.annotations.SerializedName
 import com.umc.data.response.base.CursorResponse
+import com.umc.domain.model.act.challenger.AdminChallenger
+import com.umc.domain.model.act.challenger.AdminChallengerList
 import com.umc.domain.model.act.challenger.ChallengerList
 import com.umc.domain.model.act.challenger.UserChallenger
 import com.umc.domain.model.act.challenger.UserPartCount
@@ -21,6 +23,14 @@ data class ChallengerCursorResponse(
         return ChallengerList(
             challengers = cursor.content.map { it.toModel() },
             partCounts = partCounts.map { it.toModel() },
+            nextCursor = cursor.nextCursor,
+            hasNext = cursor.hasNext
+        )
+    }
+
+    fun toAdminList(): AdminChallengerList {
+        return AdminChallengerList(
+            challengers = cursor.content.map { it.toAdminModel() },
             nextCursor = cursor.nextCursor,
             hasNext = cursor.hasNext
         )
@@ -63,6 +73,18 @@ data class ChallengerCursorItemResponse(
             part = UserPart.valueOf(part),
             role = extractDisplayRole(roleTypes),
             profileImage = profileImageLink
+        )
+    }
+
+    fun toAdminModel(): AdminChallenger {
+        return AdminChallenger(
+            id = challengerId.toInt(),
+            name = name,
+            nickname = nickname,
+            generation = generation,
+            part = UserPart.valueOf(part),
+            outCount = 0, // 초기값 설정
+            warningCount = 0 // 초기값 설정
         )
     }
 

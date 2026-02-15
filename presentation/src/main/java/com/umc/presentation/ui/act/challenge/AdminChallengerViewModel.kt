@@ -7,23 +7,88 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.PointType
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
+import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.challenger.GetAdminChallengerDetailUseCase
+import com.umc.domain.usecase.challenger.GetAdminChallengerListUseCase
 import com.umc.domain.usecase.challenger.GrantChallengerPointUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class AdminChallengerViewModel @Inject constructor(
+    private val appDataStoreRepository: AppDataStoreRepository,
+    private val getAdminChallengerListUseCase: GetAdminChallengerListUseCase,
     private val getAdminChallengerDetailUseCase: GetAdminChallengerDetailUseCase,
     private val grantChallengerPointUseCase: GrantChallengerPointUseCase
 ) : BaseViewModel<AdminChallengerUiState, AdminChallengerEvent>(AdminChallengerUiState()) {
 
-    init { loadInitialData() }
+    init {
+        observeUserInfo()
+    }
 
+    /**
+     * DataStore의 유저 정보를 관찰
+     */
+    private fun observeUserInfo() {
+        viewModelScope.launch {
+            appDataStoreRepository.getUserInfo()
+                .distinctUntilChanged { old, new ->
+                    old.schoolId == new.schoolId &&
+                            old.roles.firstOrNull()?.gisuId == new.roles.firstOrNull()?.gisuId
+                }
+                .collect { userInfo ->
+                    val currentGisuId = userInfo.roles.firstOrNull()?.gisuId
+                    startFetchingAll(userInfo.schoolId, currentGisuId)
+                }
+        }
+    }
+
+    /**
+     * 리스트 초기화 후 첫 페이지부터 불러오기
+     */
+    private fun startFetchingAll(schoolId: Long, gisuId: Long?) {
+        updateState { copy(allChallengers = emptyList(), filteredChallengers = emptyList()) }
+        val accumulator = mutableListOf<AdminChallenger>()
+        fetchAllPages(schoolId, gisuId, null, accumulator)
+    }
+
+    /**
+     * 모든 페이지를 순차적으로 요청
+     */
+    private fun fetchAllPages(
+        schoolId: Long,
+        gisuId: Long?,
+        cursor: Long?,
+        accumulator: MutableList<AdminChallenger>
+    ) {
+        viewModelScope.launch {
+            resultResponse(
+                response = getAdminChallengerListUseCase(cursor, 50, schoolId, gisuId),
+                successCallback = { data ->
+                    accumulator.addAll(data.challengers)
+
+                    if (data.hasNext) {
+                        fetchAllPages(schoolId, gisuId, data.nextCursor, accumulator)
+                    } else {
+                        updateState {
+                            copy(
+                                allChallengers = accumulator,
+                                filteredChallengers = accumulator
+                            )
+                        }
+                    }
+                },
+                errorCallback = { failState ->
+                    emitEvent(AdminChallengerEvent.ShowErrorToast(failState.message))
+                }
+            )
+        }
+    }
     fun grantPoint(challengerId: Int, type: PointType, description: String) {
         viewModelScope.launch {
             val request = ChallengerPointRequest(type, description)
@@ -36,17 +101,6 @@ class AdminChallengerViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    /**TODO 서버 part DTO에 맞게 UserPart Enum을 수정했습니다.**/
-    private fun loadInitialData() {
-        val dummyList = listOf(
-            AdminChallenger(101, "김디자", "닉네임1", 12, UserPart.DESIGN, outCount = 1, warningCount = 0),
-            AdminChallenger(102, "홍길동", "닉네임2", 12, UserPart.PLAN, outCount = 0, warningCount = 1),
-            AdminChallenger(103, "이웹마", "닉네임3", 12, UserPart.WEB, outCount = 2, warningCount = 1),
-            AdminChallenger(104, "박안드", "닉네임4", 12, UserPart.ANDROID, outCount = 0, warningCount = 0)
-        )
-        updateState { copy(allChallengers = dummyList, filteredChallengers = dummyList) }
     }
 
     fun filterList(query: String) {

@@ -11,3 +11,9 @@ data class AdminChallenger(
     val outCount: Int = 0,
     val warningCount: Int = 0
 )
+
+data class AdminChallengerList(
+    val challengers: List<AdminChallenger>,
+    val nextCursor: Long?,
+    val hasNext: Boolean
+)
