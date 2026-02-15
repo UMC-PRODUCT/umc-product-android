@@ -5,12 +5,12 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.act.challenger.UserChallenger
 import com.umc.presentation.databinding.ItemActUserChallengerBinding
+import com.umc.presentation.ui.act.challenge.UserChallengerUIModel
 
 class UserChallengerAdapter(
-    private val onItemClick: (Int) -> Unit
-) : ListAdapter<UserChallenger, UserChallengerAdapter.UserChallengerViewHolder>(UserChallengerDiffCallback()) {
+    private val onItemClick: (Long) -> Unit
+) : ListAdapter<UserChallengerUIModel, UserChallengerAdapter.UserChallengerViewHolder>(UserChallengerDiffCallback()) { // UIModel로 변경
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserChallengerViewHolder {
         val binding = ItemActUserChallengerBinding.inflate(
@@ -29,23 +29,25 @@ class UserChallengerAdapter(
         private val binding: ItemActUserChallengerBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: UserChallenger) {
-            binding.model = item
+        fun bind(item: UserChallengerUIModel) {
+            // XML 레이아웃에 맞게 바인딩 변수 설정 (model과 uiModel 모두 전달)
+            binding.model = item.challenger
+            binding.uiModel = item // 구분선 처리를 위한 UI 모델 전달
 
             binding.root.setOnClickListener {
-                onItemClick(item.id)
+                onItemClick(item.challenger.id) // Long 타입 ID 전달
             }
 
             binding.executePendingBindings()
         }
     }
 
-    class UserChallengerDiffCallback : DiffUtil.ItemCallback<UserChallenger>() {
-        override fun areItemsTheSame(oldItem: UserChallenger, newItem: UserChallenger): Boolean {
-            return oldItem.id == newItem.id
+    class UserChallengerDiffCallback : DiffUtil.ItemCallback<UserChallengerUIModel>() {
+        override fun areItemsTheSame(oldItem: UserChallengerUIModel, newItem: UserChallengerUIModel): Boolean {
+            return oldItem.challenger.id == newItem.challenger.id
         }
 
-        override fun areContentsTheSame(oldItem: UserChallenger, newItem: UserChallenger): Boolean {
+        override fun areContentsTheSame(oldItem: UserChallengerUIModel, newItem: UserChallengerUIModel): Boolean {
             return oldItem == newItem
         }
     }

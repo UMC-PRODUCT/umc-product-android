@@ -1,5 +1,6 @@
 package com.umc.data.dataSource.remote.challenger
 
+import com.umc.data.response.challenger.ChallengerCursorResponse
 import com.umc.data.response.challenger.ChallengerResponse
 import com.umc.data.response.challenger.ChallengerSearchScheduleResponse
 import com.umc.domain.model.base.ApiState
@@ -13,4 +14,15 @@ interface ChallengerRemoteDataSource {
     suspend fun searchChallengerSchedule(cursor: Long?, size: Int, name: String?, nickname: String?):
             ApiState<ChallengerSearchScheduleResponse>
 
+    suspend fun getChallengerList(
+        cursor: Long?,
+        size: Int,
+        schoolId: Long?,
+        gisuId: Long?,
+        part: String? = null,
+        name: String? = null,
+        nickname: String? = null
+    ): ApiState<ChallengerCursorResponse>
+
+    suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit>
 }

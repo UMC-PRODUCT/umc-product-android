@@ -6,9 +6,6 @@ import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
-import com.umc.domain.model.act.challenger.ChallengerInfoHistory
-import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
@@ -29,10 +26,11 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
     private val itemAdapters = mutableMapOf<UserPart, UserChallengerAdapter>()
 
     override fun initView() {
-        setupRecyclerView()
-        setupSearch()
+        binding.viewModel = viewModel
+        binding.lifecycleOwner = viewLifecycleOwner
 
-        // 배경 클릭 시 포커스 해제 및 키보드 숨기기 로직
+        setupRecyclerView()
+
         binding.root.setOnClickListener {
             val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
             imm.hideSoftInputFromWindow(binding.searchBar.windowToken, 0)
@@ -45,7 +43,9 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
 
         partOrder.forEach { part ->
             val headerAdapter = ChallengerHeaderAdapter(part.label)
-            val itemAdapter = UserChallengerAdapter { id -> viewModel.navigateToDetail(id) }
+            val itemAdapter = UserChallengerAdapter { id ->
+                viewModel.navigateToDetail(id)
+            }
 
             headerAdapters[part] = headerAdapter
             itemAdapters[part] = itemAdapter
@@ -71,19 +71,25 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
         }
     }
 
-    private fun setupSearch() {
-        binding.searchBar.setOnTextChangedListener { text -> viewModel.filterList(text) }
-    }
-
     override fun initStates() {
         repeatOnStarted(viewLifecycleOwner) {
             launch {
                 viewModel.uiState.collect { state ->
                     val grouped = state.filteredChallengers.groupBy { it.part }
+
                     partOrder.forEach { part ->
                         val list = grouped[part] ?: emptyList()
+
                         headerAdapters[part]?.updateCount(list.size)
-                        itemAdapters[part]?.submitList(list)
+
+                        val uiList = list.mapIndexed { index, challenger ->
+                            UserChallengerUIModel(
+                                challenger = challenger,
+                                isLastInPart = index == list.size - 1
+                            )
+                        }
+
+                        itemAdapters[part]?.submitList(uiList)
                     }
                 }
             }
