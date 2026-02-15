@@ -213,7 +213,7 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
             }
 
             is PostDetailFragmentEvent.ShowErrorToast -> {
-                Toast.makeText(requireContext(), "게시글을 불러오는데 실패했습니다.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), event.errorMessage, Toast.LENGTH_SHORT).show()
             }
 
             //뒤로가기

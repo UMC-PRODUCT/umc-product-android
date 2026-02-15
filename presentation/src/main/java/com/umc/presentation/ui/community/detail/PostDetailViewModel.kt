@@ -106,8 +106,6 @@ constructor(
                     fetchedContent = it
                 },
                 errorCallback = {
-                    emitEvent(PostDetailFragmentEvent.ShowErrorToast)
-                    emitEvent(PostDetailFragmentEvent.MoveBackPressed)
 
                 }
             )
@@ -117,16 +115,29 @@ constructor(
                     fetchedComments = it
                 },
                 errorCallback = {
-                    emitEvent(PostDetailFragmentEvent.ShowErrorToast)
-                    emitEvent(PostDetailFragmentEvent.MoveBackPressed)
+
 
                 }
             )
 
-            //4. 둘다 정상이면 한 번에 재조립
-            if (fetchedContent != null && fetchedComments != null) {
+            //4. 댓글만 받아왔거나 다 실패한 경우 나가기
+            if(fetchedContent == null && fetchedComments == null){
+                emitEvent(PostDetailFragmentEvent.ShowErrorToast("게시글을 불러오는데 실패했습니다."))
+                emitEvent(PostDetailFragmentEvent.MoveBackPressed)
+            }
+
+            //5. 둘다 정상이면 한 번에 재조립
+            else if (fetchedContent != null && fetchedComments != null) {
                 rebuildDetailList(fetchedContent, fetchedComments)
             }
+
+            //6. 게시글만 받아왔을 경우 (일단 빌드)
+            else if(fetchedContent != null){
+                rebuildDetailList(fetchedContent, uiState.value.nowCommentList)
+                emitEvent(PostDetailFragmentEvent.ShowErrorToast("댓글을 불러오는데 실패했습니다."))
+            }
+
+
 
         }
     }
@@ -182,31 +193,51 @@ constructor(
 
     // 좋아요 토글
     fun toggleLike() {
-        val current = uiState.value.nowContent
-        val newIsLiked = !current.isLiked
-        val newLikes = if (newIsLiked) current.likes + 1 else current.likes - 1
 
-        val updatedContent = current.copy(isLiked = newIsLiked, likes = newLikes)
-        rebuildDetailList(updatedContent, uiState.value.nowCommentList)
-        /**TODO 서버에 반영**/
+        /**서버에 반영**/
         viewModelScope.launch {
             resultResponse(
                 response = updateLikePostUseCase(uiState.value.nowContent.postId),
-                successCallback = {},
-                errorCallback = {}
+                successCallback = {
+
+                    //성공하면 UI 업데이트
+                    val current = uiState.value.nowContent
+                    val newIsLiked = !current.isLiked
+                    val newLikes = it.likeCount
+
+                    val updatedContent = current.copy(isLiked = newIsLiked, likes = newLikes)
+                    rebuildDetailList(updatedContent, uiState.value.nowCommentList)
+                },
+                errorCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("좋아요 설정을 실패했습니다."))
+
+                }
             )
         }
     }
 
     // 스크랩 토글
     fun toggleScrap(){
-        val current = uiState.value.nowContent
-        val newIsScrapped = !current.isScrapped
-        val newScraps = if (newIsScrapped) current.scraps + 1 else current.scraps - 1
 
-        val updatedContent = current.copy(isScrapped = newIsScrapped, scraps = newScraps)
-        rebuildDetailList(updatedContent, uiState.value.nowCommentList)
-        /**TODO 서버에 반영**/
+        /**서버에 반영**/
+        viewModelScope.launch {
+            resultResponse(
+                response = updateScrapPostUseCase(uiState.value.nowContent.postId),
+                successCallback = {
+                    //성공하면 UI 업데이트
+                    val current = uiState.value.nowContent
+                    val newIsScrapped = !current.isScrapped
+                    val newScraps = it.scrapCount
+
+                    val updatedContent = current.copy(isScrapped = newIsScrapped, scraps = newScraps)
+                    rebuildDetailList(updatedContent, uiState.value.nowCommentList)
+                },
+                errorCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("스크랩을 실패했습니다."))
+
+                }
+            )
+        }
     }
 
 
@@ -342,7 +373,7 @@ sealed interface PostDetailFragmentEvent : UiEvent {
     object ReportComment : PostDetailFragmentEvent
 
     //오류 토스트 이벤트
-    object ShowErrorToast : PostDetailFragmentEvent
+    data class ShowErrorToast(val errorMessage: String) : PostDetailFragmentEvent
 
     object MoveBackPressed : PostDetailFragmentEvent
 

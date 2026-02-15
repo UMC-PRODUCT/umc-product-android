@@ -70,6 +70,12 @@ object Endpoints {
 
         const val POST_COMMENT_DETAIL = "$POST_COMMENT/{commentId}"
 
+        const val MY_POST = "$COMMUNITY/my"
+        const val MY_COMMENT = "$COMMUNITY/commented"
+        const val MY_SCRAP = "$COMMUNITY/scrapped"
+
+
+
     }
 
     object Storage{

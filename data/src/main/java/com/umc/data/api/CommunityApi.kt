@@ -109,6 +109,25 @@ interface CommunityApi {
     ): ApiResponse<PostDetailResponse>
 
 
+    //내가 쓴 글 조회
+    @GET(Endpoints.Community.MY_POST)
+    suspend fun getMyPosts(
+        @Query("page") page: Int, // 현재 페이지
+        @Query("size") size: Int = 20 // 페이지당 개수
+    ): ApiResponse<CommunityGetPostResponse>
 
+    //내가 댓글 단 글 조회
+    @GET(Endpoints.Community.MY_COMMENT)
+    suspend fun getMyCommentedPosts(
+        @Query("page") page: Int, // 현재 페이지
+        @Query("size") size: Int = 20 // 페이지당 개수
+    ): ApiResponse<CommunityGetPostResponse>
+
+    //내가 스크랩 한 글 조회
+    @GET(Endpoints.Community.MY_SCRAP)
+    suspend fun getMyScrappedPosts(
+        @Query("page") page: Int, // 현재 페이지
+        @Query("size") size: Int = 20 // 페이지당 개수
+    ): ApiResponse<CommunityGetPostResponse>
 
 }

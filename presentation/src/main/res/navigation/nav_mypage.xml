@@ -23,9 +23,6 @@
             android:id="@+id/action_mypage_to_mypost"
             app:destination="@id/MypostFragment"/>
 
-        <action
-            android:id="@+id/action_mypage_to_mycomment"
-            app:destination="@id/MycommentFragment"/>
 
 
 
@@ -43,20 +40,17 @@
     <fragment
         android:id="@+id/MypostFragment"
         android:name="com.umc.presentation.ui.mypage.mypost.MypostFragment"
-        android:label="내가 쓴 글"
+        android:label="나와 관련된 글"
         tools:layout="@layout/fragment_mypost"
         >
 
-    </fragment>
-
-    <fragment
-        android:id="@+id/MycommentFragment"
-        android:name="com.umc.presentation.ui.mypage.mycomment.MycommentFragment"
-        android:label="내가 쓴 댓글"
-        tools:layout="@layout/fragment_mycomment"
-        >
+        <argument
+            android:name="showType"
+            app:argType="string"
+            android:defaultValue="" />
 
     </fragment>
+
 
 
 
