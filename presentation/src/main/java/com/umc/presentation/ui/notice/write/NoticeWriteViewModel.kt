@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.NoticeCategory
 import com.umc.domain.model.enums.NoticeChipClassType
 import com.umc.domain.model.enums.UploadFileCategory
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.school.SchoolInfo
@@ -24,6 +25,11 @@ import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,7 +48,7 @@ class NoticeWriteViewModel @Inject constructor(
     init {
         updateDropDownList(dropDown())
         updateClassChipList(getNoticeChip(NoticeCategory.SCHOOL))
-        updatePartChipList(getDummy2())
+        updatePartChipList(getPartChipList())
         loadChapters()
         loadSchools()
         loadGisuList()
@@ -123,41 +129,14 @@ class NoticeWriteViewModel @Inject constructor(
         }
     }
 
-    private fun getDummy2(): List<NoticeChipState> {
-        return listOf(
+    private fun getPartChipList(): List<NoticeChipState> {
+        return UserPart.entries.map { part ->
             NoticeChipState(
-                text = "Web",
+                text = part.label,
                 isClicked = false,
-            ),
-            NoticeChipState(
-                text = "Server",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "Ios",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "Android",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "Design",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "PM",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "SpringBoot",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "Node.js",
-                isClicked = false,
+                part = part.name
             )
-        )
+        }
     }
 
     fun onClickClassChip(chip: NoticeChipState) {
@@ -364,6 +343,14 @@ class NoticeWriteViewModel @Inject constructor(
         updateState { copy(voteTitle = title) }
     }
 
+    fun updateVoteStartDate(date: String) {
+        updateState { copy(voteStartDate = date) }
+    }
+
+    fun updateVoteEndDate(date: String) {
+        updateState { copy(voteEndDate = date) }
+    }
+
     fun updateTitle(title: String) {
         updateState { copy(title = title) }
     }
@@ -468,15 +455,15 @@ class NoticeWriteViewModel @Inject constructor(
         }
 
         if (state.isShowVote && state.voteTextList.isNotEmpty()) {
-            val validOptions = state.voteTextList.filter { it.isNotBlank() }
-            if (validOptions.isNotEmpty()) {
-                val voteRequest = NoticeVoteRequest(
-                    title = state.voteTitle,
-                    isAnonymous = state.canAnonymity,
-                    allowMultipleChoice = state.canSelectMultiple,
-                    startsAt = "", // TODO: Add vote start time if needed
-                    endsAtExclusive = "", // TODO: Add vote end time if needed
-                    options = validOptions
+                            val validOptions = state.voteTextList.filter { it.isNotBlank() }
+                if (validOptions.isNotEmpty()) {
+                    val voteRequest = NoticeVoteRequest(
+                        title = state.voteTitle,
+                        isAnonymous = state.canAnonymity,
+                        allowMultipleChoice = state.canSelectMultiple,
+                        startsAt = formatDateForServer(state.voteStartDate),
+                        endsAtExclusive = formatDateForServer(state.voteEndDate),
+                        options = validOptions
                 )
                 resultResponse(
                     response = addNoticeVoteUseCase(noticeId, voteRequest),
@@ -510,6 +497,8 @@ data class NoticeWriteUiState(
     val voteTitle: String = "투표 만들기",
     val voteCondition: String = "",
     val voteTextList: List<String> = List(2) { "" },
+    val voteStartDate: String = formatDateForDisplay(Calendar.getInstance()),
+    val voteEndDate: String = formatDateForDisplay(Calendar.getInstance()),
     val canAnonymity: Boolean = false,
     val canSelectMultiple: Boolean = false,
     val title: String = "",
@@ -531,4 +520,30 @@ sealed interface NoticeWriteEvent : UiEvent {
     object ShowSchoolBottomSheetEvent : NoticeWriteEvent
     object SubmitSuccess : NoticeWriteEvent
     data class ShowError(val message: String) : NoticeWriteEvent
+}
+
+// 날짜를 "YYYY년 MM월 DD일" 형식으로 변환
+fun formatDateForDisplay(calendar: Calendar): String {
+    val year = calendar.get(Calendar.YEAR)
+    val month = calendar.get(Calendar.MONTH) + 1
+    val day = calendar.get(Calendar.DAY_OF_MONTH)
+    return "${year}년 ${month}월 ${day}일"
+}
+
+// 날짜를 ISO 8601 형식(2026-02-15T18:35:12.445Z)으로 변환
+fun formatDateForServer(dateString: String): String {
+    // "2025년 2월 16일" -> ISO 8601
+    val regex = """(\d{4})년 (\d{1,2})월 (\d{1,2})일""".toRegex()
+    val matchResult = regex.find(dateString)
+    
+    return if (matchResult != null) {
+        val (year, month, day) = matchResult.destructured
+        // ISO 8601 형식: YYYY-MM-DDTHH:mm:ss.sssZ
+        String.format(Locale.US, "%04d-%02d-%02dT00:00:00.000Z", year.toInt(), month.toInt(), day.toInt())
+    } else {
+        // 파싱 실패 시 현재 시간 반환
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        sdf.timeZone = TimeZone.getTimeZone("UTC")
+        sdf.format(Date())
+    }
 }

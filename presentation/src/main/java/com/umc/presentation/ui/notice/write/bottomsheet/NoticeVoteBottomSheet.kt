@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.notice.write.bottomsheet
 
+import android.app.DatePickerDialog
 import android.content.DialogInterface
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
@@ -12,8 +13,8 @@ import com.umc.presentation.ui.notice.write.NoticeWriteEvent
 import com.umc.presentation.ui.notice.write.NoticeWriteUiState
 import com.umc.presentation.ui.notice.write.NoticeWriteViewModel
 import com.umc.presentation.ui.notice.write.adapter.NoticeVoteAdapter
-import com.umc.presentation.util.ULog
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import kotlin.getValue
 import kotlin.text.isNotEmpty
 
@@ -54,6 +55,9 @@ class NoticeVoteBottomSheet: BaseBottomSheetFragment<BottomSheetNoticeVoteBindin
                 itemAnimator = null
             }
 
+            ucStartDate.setOnClickListener { showDatePicker(true) }
+            ucEndDate.setOnClickListener { showDatePicker(false) }
+
             ubuttonComplete.setOnClickListener {
                 val resultList = currentVoteList.filter { it.isNotEmpty() }.toMutableList()
                 while (resultList.size < 2) {
@@ -63,6 +67,24 @@ class NoticeVoteBottomSheet: BaseBottomSheetFragment<BottomSheetNoticeVoteBindin
                 dismiss()
             }
         }
+    }
+
+    private fun showDatePicker(isStart: Boolean) {
+        val calendar = Calendar.getInstance()
+        DatePickerDialog(
+            requireContext(),
+            { _, year, month, day ->
+                val dateString = "${year}년 ${month + 1}월 ${day}일"
+                if (isStart) {
+                    viewModel.updateVoteStartDate(dateString)
+                } else {
+                    viewModel.updateVoteEndDate(dateString)
+                }
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
     override fun initStates() {
