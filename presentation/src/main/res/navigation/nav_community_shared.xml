@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/postDetailFragment"
+    android:id="@+id/nav_community_shared">
+
+
+    <fragment
+        android:id="@+id/postDetailFragment"
+        android:name="com.umc.presentation.ui.community.detail.PostDetailFragment"
+        android:label="게시글 상세"
+        tools:layout="@layout/fragment_post_detail">
+
+        <argument
+            android:name="postId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+        <action
+            android:id="@+id/action_postDetail_to_postWrite"
+            app:destination="@id/postWriteFragment"/>
+</fragment>
+
+    <fragment
+        android:id="@+id/postWriteFragment"
+        android:name="com.umc.presentation.ui.community.write.PostWriteFragment"
+        android:label="게시글 작성"
+        tools:layout="@layout/fragment_post_write">
+
+            <argument
+                android:name="postId"
+                app:argType="long"
+                android:defaultValue="-1L" />
+
+    </fragment>
+</navigation>

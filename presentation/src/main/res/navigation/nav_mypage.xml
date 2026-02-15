@@ -6,6 +6,7 @@
     app:startDestination="@id/mypageFragment"
     >
 
+    <include app:graph="@navigation/nav_community_shared" />
 
     <fragment
         android:id="@+id/mypageFragment"
@@ -49,7 +50,18 @@
             app:argType="string"
             android:defaultValue="EMPTY" />
 
+        <action
+            android:id="@+id/action_mypost_to_postDetail"
+            app:destination="@id/nav_community_shared">
+
+            <argument
+                android:name="postId"
+                app:argType="long" />
+
+        </action>
+
     </fragment>
+
 
 
 

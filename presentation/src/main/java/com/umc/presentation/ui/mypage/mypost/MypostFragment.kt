@@ -2,12 +2,14 @@ package com.umc.presentation.ui.mypage.mypost
 
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentMypostBinding
+import com.umc.presentation.ui.community.CommunityFragmentDirections
 import com.umc.presentation.ui.community.adapter.ContentAdapter
 import com.umc.presentation.ui.community.adapter.ContentItemDelegate
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,6 +38,10 @@ class MypostFragment : BaseFragment<FragmentMypostBinding, MypostFragmentUiState
     //각 아이템 클릭 시 로직
     override fun onItemClicked(item: ContentItem) {
         /**TODO. 이동 로직 작성하기**/
+        val action = MypostFragmentDirections.actionMypostToPostDetail(
+            postId = item.postId
+        )
+        findNavController().navigate(action)
     }
 
     override fun initView() {
