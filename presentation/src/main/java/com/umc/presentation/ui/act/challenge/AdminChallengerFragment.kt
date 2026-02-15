@@ -21,6 +21,7 @@ import com.umc.presentation.databinding.FragmentAdminChallengerBinding
 import com.umc.presentation.extension.px
 import com.umc.presentation.ui.act.adapter.ChallengerHeaderAdapter
 import com.umc.presentation.ui.act.adapter.AdminChallengerAdapter
+import com.umc.presentation.util.UFormat
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -104,12 +105,17 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
     override fun handleEvent(event: AdminChallengerEvent) {
         when (event) {
             is AdminChallengerEvent.ShowManageDialog -> {
+                val formattedHistory = event.model.history.map { point ->
+                    point.copy(date = UFormat.parseDateTime(point.date).first)
+                }
+                val formattedModel = event.model.copy(history = formattedHistory)
+
                 val existingDialog = childFragmentManager.findFragmentByTag("UChallengerManageDialog") as? ChallengerManageDialog
 
                 if (existingDialog != null && existingDialog.isAdded) {
-                    existingDialog.updateData(event.model)
+                    existingDialog.updateData(formattedModel)
                 } else {
-                    showManageDialog(event.model, event.model.challengerId.toInt())
+                    showManageDialog(formattedModel, formattedModel.challengerId.toInt())
                 }
             }
             is AdminChallengerEvent.ShowErrorToast -> {

@@ -34,11 +34,12 @@ class ChallengerManageDialog(
         ChallengerHistoryAdapter(onDeleteClick = { item -> onDeleteHistory(item) })
     }
 
-
     fun updateData(newModel: ChallengerManageDialogModel) {
         this.model = newModel
         binding.model = newModel
-        historyAdapter.submitList(newModel.history)
+        historyAdapter.submitList(newModel.history) {
+            adjustRecyclerViewHeight()
+        }
 
         binding.etAbsenceReason.apply {
             clearText()
@@ -49,6 +50,9 @@ class ChallengerManageDialog(
             clearFocus()
         }
 
+        // 입력창 초기화 로직
+        binding.etAbsenceReason.clearText()
+        binding.etWarningReason.clearText()
         updateConfirmButton(binding.btnAbsenceConfirm, false)
         updateConfirmButton(binding.btnWarningConfirm, false)
 
@@ -80,26 +84,45 @@ class ChallengerManageDialog(
             layoutManager = LinearLayoutManager(requireContext())
             adapter = historyAdapter
         }
-        historyAdapter.submitList(model.history)
+        historyAdapter.submitList(model.history) {
+            adjustRecyclerViewHeight()
+        }
+    }
+
+    /**
+     * 아이템이 2개보다 많을 경우, 동적으로 2개 높이만큼만 RecyclerView 높이를 제한합니다.
+     */
+    private fun adjustRecyclerViewHeight() {
+        binding.rvHistory.post {
+            val itemCount = historyAdapter.itemCount
+            if (itemCount > 2) {
+                val firstChild = binding.rvHistory.getChildAt(0)
+                if (firstChild != null) {
+                    val itemHeight = firstChild.height
+                    val params = binding.rvHistory.layoutParams
+                    // (아이템 1개 높이 * 2) + 내부 상하 패딩값
+                    params.height = (itemHeight * 2) + binding.rvHistory.paddingTop + binding.rvHistory.paddingBottom
+                    binding.rvHistory.layoutParams = params
+                }
+            } else {
+                val params = binding.rvHistory.layoutParams
+                params.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                binding.rvHistory.layoutParams = params
+            }
+        }
     }
 
     private fun initEvent() {
         binding.imvIconClose.setOnClickListener { dismiss() }
-
         binding.btnWarningView.setOnClickListener { toggleMode(DialogMode.WARNING) }
         binding.btnAbsenceView.setOnClickListener { toggleMode(DialogMode.ABSENCE) }
         binding.btnRecordEdit.setOnClickListener { toggleMode(DialogMode.EDIT) }
 
         binding.btnAbsenceConfirm.setOnClickListener {
-            if (it.isEnabled) {
-                onAbsenceSubmit(binding.etAbsenceReason.getText())
-            }
+            if (it.isEnabled) onAbsenceSubmit(binding.etAbsenceReason.getText())
         }
-
         binding.btnWarningConfirm.setOnClickListener {
-            if (it.isEnabled) {
-                onWarningSubmit(binding.etWarningReason.getText())
-            }
+            if (it.isEnabled) onWarningSubmit(binding.etWarningReason.getText())
         }
     }
 
