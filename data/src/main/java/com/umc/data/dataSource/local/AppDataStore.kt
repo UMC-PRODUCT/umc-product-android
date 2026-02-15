@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
+import com.umc.domain.model.ChallengerRecord
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.UserRole
 import com.umc.domain.model.mypage.UserOutLink
@@ -46,6 +47,9 @@ class AppDataStore @Inject constructor(
         val rolesJson = prefs[KEY_ROLES] ?: "[]"
         val rolesList = gson.fromJson(rolesJson, Array<UserRole>::class.java).toList()
 
+        val recordsJson = prefs[KEY_RECORDS] ?: "[]"
+        val recordsList = gson.fromJson(recordsJson, Array<ChallengerRecord>::class.java).toList()
+
         UserInfo(
             id = prefs[KEY_ID] ?: 0L,
             name = prefs[KEY_NAME] ?: "",
@@ -55,7 +59,8 @@ class AppDataStore @Inject constructor(
             schoolName = prefs[KEY_SCHOOL_NAME] ?: "",
             profileImageLink = prefs[KEY_PROFILE_IMAGE] ?: "",
             status = prefs[KEY_STATUS] ?: "ACTIVE",
-            roles = rolesList
+            roles = rolesList,
+            challengerRecords = recordsList
         )
     }
 
@@ -71,6 +76,7 @@ class AppDataStore @Inject constructor(
             prefs[KEY_PROFILE_IMAGE] = userInfo.profileImageLink
             prefs[KEY_STATUS] = userInfo.status
             prefs[KEY_ROLES] = gson.toJson(userInfo.roles)
+            prefs[KEY_RECORDS] = gson.toJson(userInfo.challengerRecords)
         }
     }
 
@@ -175,6 +181,7 @@ class AppDataStore @Inject constructor(
         val KEY_PROFILE_IMAGE = stringPreferencesKey("profile_image")
         val KEY_STATUS = stringPreferencesKey("status")
         val KEY_ROLES = stringPreferencesKey("roles")
+        val KEY_RECORDS = stringPreferencesKey("challenger_records")
 
         //일정 추가에서 장소 기록 KEY
         val KEY_RECENT_SEARCHES_PLACE = stringPreferencesKey("recent_searches_place")

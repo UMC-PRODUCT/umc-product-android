@@ -15,7 +15,7 @@ data class ChallengerManageDialogModel(
 )
 
 data class ChallengerPoint(
-    val id: Int,
+    val id: Long,
     val date: String = "",
     val title: String,
     val pointType: PointType,

@@ -25,7 +25,7 @@ interface MemberApi {
         @Body request: UpdateMyProfileRequest
     ) : ApiResponse<MemberResponse>
 
-    /**Deprecated**/
+
     @GET(Endpoints.Member.MEMBER_PROFILE)
     suspend fun getMemberProfile(
         @Path("memberId") memberId: Long
