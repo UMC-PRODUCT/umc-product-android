@@ -74,11 +74,6 @@ class UserStudyViewModel @Inject constructor(
 
 
     fun onConfirmClick(itemId: Long) {
-        if (itemId <= 0L) {
-            emitEvent(UserStudyEvent.ShowToast("제출할 워크북 ID가 없습니다. 서버 응답 누락(개발 서버)"))
-            return
-        }
-
         val item = uiState.value.items.firstOrNull { it.id == itemId } ?: return
         if (item.isLocked) return
         if (item.submitState != SubmitState.CONFIRMING) return
@@ -89,12 +84,20 @@ class UserStudyViewModel @Inject constructor(
             return
         }
 
-        updateItem(itemId) { it.copy(submitState = SubmitState.REQUESTED) }
+
+        updateItem(itemId) { it.copy(submitState = SubmitState.REQUESTED, isExpanded = true) }
+
+
+        if (itemId <= 0L) {
+            emitEvent(UserStudyEvent.ShowToast("제출 요청 완료! (임시 처리: 서버 워크북 ID 없음)"))
+            return
+        }
 
         viewModelScope.launch {
             submitWorkbook(itemId, link)
         }
     }
+
 
 
 
@@ -143,7 +146,7 @@ class UserStudyViewModel @Inject constructor(
                                 "week=${wb.weekNo} id=${wb.challengerWorkbookId} state=${wb.status}"
                             )
                             ActStudyItemUiModel(
-                                id = wb.challengerWorkbookId,
+                                id = wb.challengerWorkbookId ?: -wb.weekNo.toLong(),
                                 platform = wb.missionType.toPlatformText(),
                                 title = wb.title,
                                 status = wb.status.toStudyStatus(),

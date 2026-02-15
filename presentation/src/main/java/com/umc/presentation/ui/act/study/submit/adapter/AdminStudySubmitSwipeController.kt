@@ -208,7 +208,7 @@ class AdminStudySubmitSwipeController(
             canvas = c,
             rect = best,
             bgColor = bestBg,
-            iconRes = R.drawable.ic_act_hourglass,
+            iconRes = R.drawable.ic_best,
             iconTint = bestIconTint,
             text = "베스트",
             textColor = bestText

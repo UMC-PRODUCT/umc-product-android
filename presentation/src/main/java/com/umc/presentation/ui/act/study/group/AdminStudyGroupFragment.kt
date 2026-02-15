@@ -23,7 +23,7 @@ import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupItemUiModel
 import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupState
 import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import com.umc.domain.model.enums.EditDeleteAction
+
 
 
 @AndroidEntryPoint

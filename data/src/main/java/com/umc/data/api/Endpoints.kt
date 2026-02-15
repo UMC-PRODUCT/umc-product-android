@@ -112,4 +112,10 @@ object Endpoints {
         const val TERMS_TYPE = "$TERMS/type/{termsType}"
         const val TERMS_ID = "$TERMS/{termsId}"
     }
+
+    object Curriculum {
+        const val CURRICULUM = "api/v1/curriculums"
+        const val CHALLENGER_ME_PROGRESS = "$CURRICULUM/challengers/me/progress"
+        const val SUBMIT = "api/v1/challenger-workbooks/{challengerWorkbookId}/submissions"
+    }
 }
