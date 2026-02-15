@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.PopupWindow
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -209,6 +210,10 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
                         // TODO: 서버에 신고 API 호출하는 뷰모델 함수 연결
                     }
                 ).show(childFragmentManager, "ReportDialog")
+            }
+
+            is PostDetailFragmentEvent.ShowErrorToast -> {
+                Toast.makeText(requireContext(), "게시글을 불러오는데 실패했습니다.", Toast.LENGTH_SHORT).show()
             }
 
             //뒤로가기

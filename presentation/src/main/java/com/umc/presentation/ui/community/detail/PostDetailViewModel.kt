@@ -82,8 +82,10 @@ constructor(
             }
 
             //1. 서로 다른 usecase를 비동기로 실행
-            val detailDeferred = async { getCommunityPostDetailUseCase(postId) }
-            val commentsDeferred = async { getCommunityPostCommentUseCase(postId) }
+            val detailDeferred = async {
+                getCommunityPostDetailUseCase(postId) }
+            val commentsDeferred = async {
+                getCommunityPostCommentUseCase(postId) }
 
             //2. 대기
             val detailResult = detailDeferred.await()
@@ -100,6 +102,9 @@ constructor(
                     fetchedContent = it
                 },
                 errorCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast)
+                    emitEvent(PostDetailFragmentEvent.MoveBackPressed)
+
                 }
             )
             resultResponse(
@@ -108,6 +113,8 @@ constructor(
                     fetchedComments = it
                 },
                 errorCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast)
+                    emitEvent(PostDetailFragmentEvent.MoveBackPressed)
 
                 }
             )
@@ -322,6 +329,9 @@ sealed interface PostDetailFragmentEvent : UiEvent {
 
     //댓글 신고하기 이벤트
     object ReportComment : PostDetailFragmentEvent
+
+    //오류 토스트 이벤트
+    object ShowErrorToast : PostDetailFragmentEvent
 
     object MoveBackPressed : PostDetailFragmentEvent
 
