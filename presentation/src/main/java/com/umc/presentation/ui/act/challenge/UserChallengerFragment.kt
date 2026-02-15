@@ -6,9 +6,6 @@ import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
-import com.umc.domain.model.act.challenger.ChallengerInfoHistory
-import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
@@ -32,7 +29,6 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
         setupRecyclerView()
         setupSearch()
 
-        // 배경 클릭 시 포커스 해제 및 키보드 숨기기 로직
         binding.root.setOnClickListener {
             val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
             imm.hideSoftInputFromWindow(binding.searchBar.windowToken, 0)
@@ -45,7 +41,10 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
 
         partOrder.forEach { part ->
             val headerAdapter = ChallengerHeaderAdapter(part.label)
-            val itemAdapter = UserChallengerAdapter { id -> viewModel.navigateToDetail(id) }
+            // 어댑터 생성 시 클릭 리스너의 id 인자가 이제 Long이므로 navigateToDetail과 일치합니다.
+            val itemAdapter = UserChallengerAdapter { id ->
+                viewModel.navigateToDetail(id)
+            }
 
             headerAdapters[part] = headerAdapter
             itemAdapters[part] = itemAdapter
@@ -80,10 +79,21 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
             launch {
                 viewModel.uiState.collect { state ->
                     val grouped = state.filteredChallengers.groupBy { it.part }
+
                     partOrder.forEach { part ->
                         val list = grouped[part] ?: emptyList()
+
                         headerAdapters[part]?.updateCount(list.size)
-                        itemAdapters[part]?.submitList(list)
+
+                        // UI 모델 리스트 생성 - 어댑터 타입과 일치하여 에러가 해결됩니다.
+                        val uiList = list.mapIndexed { index, challenger ->
+                            UserChallengerUIModel(
+                                challenger = challenger,
+                                isLastInPart = index == list.size - 1
+                            )
+                        }
+
+                        itemAdapters[part]?.submitList(uiList)
                     }
                 }
             }

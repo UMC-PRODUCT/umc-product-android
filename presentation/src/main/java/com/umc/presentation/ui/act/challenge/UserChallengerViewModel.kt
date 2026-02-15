@@ -3,59 +3,87 @@ package com.umc.presentation.ui.act.challenge
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.UserChallenger
-import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.enums.UserChallengerRole
-import com.umc.domain.model.enums.UserPart
+import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
+import com.umc.domain.usecase.challenger.GetChallengerListUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class UserChallengerViewModel @Inject constructor(
+    private val appDataStoreRepository: AppDataStoreRepository,
+    private val getChallengerListUseCase: GetChallengerListUseCase,
     private val getChallengerDetailUseCase: GetChallengerDetailUseCase
 ) : BaseViewModel<UserChallengerUiState, UserChallengerEvent>(UserChallengerUiState()) {
 
-    init { loadInitialData() }
+    init {
+        observeUserInfo()
+    }
 
-    /**TODO 서버 part DTO에 맞게 UserPart Enum을 수정했습니다.**/
-    private fun loadInitialData() {
-        val dummyList = listOf(
-            // PM 파트
-            UserChallenger(101, "김유엠", "유엠씨대장", 12, UserPart.PLAN, UserChallengerRole.LEADER),
-            UserChallenger(102, "이길동", "피엠조아", 12, UserPart.PLAN, UserChallengerRole.MEMBER),
+    /**
+     * DataStore의 유저 정보를 관찰하여 학교/기수 ID가 있을 때 리스트를 가져옵니다.
+     */
+    private fun observeUserInfo() {
+        viewModelScope.launch {
+            appDataStoreRepository.getUserInfo()
+                .distinctUntilChanged { old, new ->
+                    old.schoolId == new.schoolId
+                }
+                .collect { userInfo ->
+                    val testGisuId = 8L
 
-            // Design 파트
-            UserChallenger(3, "박디자인", "피그마마스터", 12, UserPart.DESIGN, UserChallengerRole.PART_LEADER),
-            UserChallenger(4, "최화가", "캔바장인", 12, UserPart.DESIGN, UserChallengerRole.MEMBER),
+                    if (userInfo.schoolId != 0L) {
+                        startFetchingAll(userInfo.schoolId, testGisuId)
+                    }
+                }
+        }
+    }
 
-            // Web 파트
-            UserChallenger(5, "정웹", "리액트왕", 12, UserPart.WEB, UserChallengerRole.PART_LEADER),
-            UserChallenger(6, "한자바", "뷰스크립트", 12, UserPart.WEB, UserChallengerRole.MEMBER),
-            UserChallenger(7, "고쿼리", "넥스트제이에스", 12, UserPart.WEB, UserChallengerRole.MEMBER),
+    private fun startFetchingAll(schoolId: Long, gisuId: Long) {
+        // 기존 리스트를 비우고 새로 시작합니다.
+        updateState { copy(allChallengers = emptyList(), filteredChallengers = emptyList()) }
+        val accumulator = mutableListOf<UserChallenger>()
+        fetchAllPages(schoolId, gisuId, null, accumulator)
+    }
 
-            // iOS 파트
-            UserChallenger(8, "임애플", "스위프트", 12, UserPart.IOS, UserChallengerRole.SUB_LEADER),
-            UserChallenger(9, "강아이", "엑스코드", 12, UserPart.IOS, UserChallengerRole.MEMBER),
+    /**
+     * hasNext가 false일 때까지 모든 페이지를 순차적으로 요청합니다.
+     */
+    private fun fetchAllPages(
+        schoolId: Long,
+        gisuId: Long,
+        cursor: Long?,
+        accumulator: MutableList<UserChallenger>
+    ) {
+        viewModelScope.launch {
+            resultResponse(
+                response = getChallengerListUseCase(cursor, 50, schoolId, gisuId),
+                successCallback = { data ->
+                    accumulator.addAll(data.challengers)
 
-            // Android 파트
-            UserChallenger(10, "조안드", "코틀린", 12, UserPart.ANDROID, UserChallengerRole.PART_LEADER),
-            UserChallenger(11, "권젯팩", "컴포즈", 12, UserPart.ANDROID, UserChallengerRole.MEMBER),
-            UserChallenger(12, "성구글", "픽셀러버", 12, UserPart.ANDROID, UserChallengerRole.MEMBER),
-
-            // SpringBoot 파트
-            UserChallenger(13, "배엔드", "스프링", 12, UserPart.SPRINGBOOT, UserChallengerRole.PART_LEADER),
-            UserChallenger(14, "백자바", "제이피에이", 12, UserPart.SPRINGBOOT, UserChallengerRole.MEMBER),
-        UserChallenger(15, "유디비", "마이바티스", 12, UserPart.SPRINGBOOT, UserChallengerRole.MEMBER),
-
-            // Node.js 파트
-            UserChallenger(16, "노드정", "익스프레스", 12, UserPart.NODEJS, UserChallengerRole.PART_LEADER),
-            UserChallenger(17, "신서버", "네스트", 12, UserPart.NODEJS, UserChallengerRole.MEMBER)
-        )
-        updateState { copy(allChallengers = dummyList, filteredChallengers = dummyList) }
+                    if (data.hasNext) {
+                        // 다음 페이지가 있으면 다시 호출합니다.
+                        fetchAllPages(schoolId, gisuId, data.nextCursor, accumulator)
+                    } else {
+                        // 모든 데이터 확보 후 UI를 한 번에 갱신합니다.
+                        updateState {
+                            copy(
+                                allChallengers = accumulator,
+                                filteredChallengers = accumulator
+                            )
+                        }
+                    }
+                },
+                errorCallback = { failState ->
+                    emitEvent(UserChallengerEvent.ShowErrorToast(failState.message))
+                }
+            )
+        }
     }
 
     fun filterList(query: String) {
@@ -65,16 +93,17 @@ class UserChallengerViewModel @Inject constructor(
         updateState { copy(filteredChallengers = filtered) }
     }
 
-    fun navigateToDetail(id: Int) {
+    fun navigateToDetail(id: Long) {
         viewModelScope.launch {
-            when (val result = getChallengerDetailUseCase(id.toLong())) {
-                is ApiState.Success -> {
-                    emitEvent(UserChallengerEvent.NavigateToDetail(result.data))
+            resultResponse(
+                response = getChallengerDetailUseCase(id),
+                successCallback = { detail ->
+                    emitEvent(UserChallengerEvent.NavigateToDetail(detail))
+                },
+                errorCallback = { failState ->
+                    emitEvent(UserChallengerEvent.ShowErrorToast(failState.message))
                 }
-                is ApiState.Fail -> {
-                    emitEvent(UserChallengerEvent.ShowErrorToast(result.failState.message))
-                }
-            }
+            )
         }
     }
 }
