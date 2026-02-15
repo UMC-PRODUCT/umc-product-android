@@ -6,6 +6,7 @@ import com.umc.data.response.organization.GisuListResponse.Companion.toModel
 import com.umc.data.response.organization.SchoolNameResponse.Companion.toModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
+import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.organization.GisuList
 import com.umc.domain.model.request.organization.*
 import com.umc.domain.model.school.SchoolInfo
@@ -40,8 +41,10 @@ class OrganizationRepositoryImpl @Inject constructor(
         organizationDataSource.getSchoolByKeyword(keyword, chapterId, page, size, sort)
             .map { Unit } //임시
 
-    override suspend fun getAllChapter(): ApiState<Unit> =
-        organizationDataSource.getAllChapter().map { Unit } //임시
+    override suspend fun getAllChapter(): ApiState<List<Chapter>> =
+        organizationDataSource.getAllChapter().map { response ->
+            response.chapters.map { Chapter(it.id, it.name) }
+        }
 
     override suspend fun getStudyGroupDetail(groupId: Int): ApiState<Unit> =
         organizationDataSource.getStudyGroupDetail(groupId).map { Unit } //임시

@@ -5,8 +5,11 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.notice.DropDownItem
 import com.umc.presentation.databinding.ItemDropdownBinding
+
+interface DropDownItem {
+    val displayText: String
+}
 
 class DropDownAdapter<T : DropDownItem>(
     private val listener: DropDownDelegate<T>

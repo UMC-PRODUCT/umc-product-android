@@ -3,8 +3,11 @@ package com.umc.presentation.ui.notice.write
 import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.NoticeCategory
+import com.umc.domain.model.enums.NoticeChipClassType
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.notice.NoticeChipState
+import com.umc.domain.model.organization.Chapter
+import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.model.request.notice.NoticeCreateRequest
 import com.umc.domain.model.request.notice.NoticeTargetRequest
 import com.umc.domain.model.request.notice.NoticeVoteRequest
@@ -12,6 +15,9 @@ import com.umc.domain.usecase.notice.AddNoticeImagesUseCase
 import com.umc.domain.usecase.notice.AddNoticeLinksUseCase
 import com.umc.domain.usecase.notice.AddNoticeVoteUseCase
 import com.umc.domain.usecase.notice.CreateNoticeUseCase
+import com.umc.domain.usecase.organization.GetChapterListUseCase
+import com.umc.domain.usecase.organization.GetGisuListUseCase
+import com.umc.domain.usecase.school.GetAllSchoolUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -21,24 +27,56 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class NoticeWriteViewModel
-@Inject
-constructor(
+class NoticeWriteViewModel @Inject constructor(
     private val createNoticeUseCase: CreateNoticeUseCase,
     private val addNoticeVoteUseCase: AddNoticeVoteUseCase,
     private val addNoticeImagesUseCase: AddNoticeImagesUseCase,
     private val addNoticeLinksUseCase: AddNoticeLinksUseCase,
-    private val uploadFileUseCase: UploadFileUseCase
+    private val uploadFileUseCase: UploadFileUseCase,
+    private val getChapterListUseCase: GetChapterListUseCase,
+    private val getAllSchoolUseCase: GetAllSchoolUseCase,
+    private val getGisuListUseCase: GetGisuListUseCase
 ) : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
     NoticeWriteUiState(),
 ) {
     init {
         updateDropDownList(dropDown())
-        updateClassChipList(getDummy())
+        updateClassChipList(getNoticeChip(NoticeCategory.SCHOOL))
         updatePartChipList(getDummy2())
+        loadChapters()
+        loadSchools()
+        loadGisuList()
     }
 
-    private fun updateClassChipList(chipList: List<NoticeChipState>) {
+    private fun loadChapters() = viewModelScope.launch {
+        resultResponse(
+            response = getChapterListUseCase(),
+            successCallback = { chapters ->
+                updateState { copy(chapterList = chapters) }
+            }
+        )
+    }
+
+    private fun loadSchools() = viewModelScope.launch {
+        resultResponse(
+            response = getAllSchoolUseCase(),
+            successCallback = { schools ->
+                updateState { copy(schoolList = schools) }
+            }
+        )
+    }
+
+    private fun loadGisuList() = viewModelScope.launch {
+        resultResponse(
+            response = getGisuListUseCase(),
+            successCallback = { gisuList ->
+                val activeGisu = gisuList.gisuList.find { it.isActive }
+                updateState { copy(activeGisuId = activeGisu?.gisuId) }
+            }
+        )
+    }
+
+    fun updateClassChipList(chipList: List<NoticeChipState>) {
         updateState {
             copy(
                 classList = chipList
@@ -54,31 +92,35 @@ constructor(
         }
     }
 
-    private fun getDummy(): List<NoticeChipState> {
-        return listOf(
-            NoticeChipState(
-                text = "전체",
-                isClicked = true,
-            ),
-            NoticeChipState(
-                text = "운영진공지",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "파트",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "지부",
-                isClicked = false,
-                hanBottomSheet = true
-            ),
-            NoticeChipState(
-                text = "학교",
-                isClicked = false,
-                hanBottomSheet = true
+    private fun getNoticeChip(category: NoticeCategory): List<NoticeChipState> {
+        val types = when (category) {
+            NoticeCategory.SCHOOL -> listOf(
+                NoticeChipClassType.ALL,
+                NoticeChipClassType.OPERATOR,
+                NoticeChipClassType.PART
             )
-        )
+            NoticeCategory.CENTRAL_OFFICE -> listOf(
+                NoticeChipClassType.ALL,
+                NoticeChipClassType.OPERATOR,
+                NoticeChipClassType.PART,
+                NoticeChipClassType.BRANCH
+            )
+            NoticeCategory.BRANCH -> listOf(
+                NoticeChipClassType.ALL,
+                NoticeChipClassType.OPERATOR,
+                NoticeChipClassType.PART,
+                NoticeChipClassType.SCHOOL
+            )
+            NoticeCategory.PART -> emptyList()
+        }
+        
+        return types.map { type ->
+            NoticeChipState(
+                text = type.label,
+                isClicked = type == NoticeChipClassType.ALL,
+                hanBottomSheet = type.hasBottomSheet
+            )
+        }
     }
 
     private fun getDummy2(): List<NoticeChipState> {
@@ -119,6 +161,17 @@ constructor(
     }
 
     fun onClickClassChip(chip: NoticeChipState) {
+        val selectedType = NoticeChipClassType.fromLabel(chip.text)
+
+        if (selectedType.hasBottomSheet) {
+            when (selectedType) {
+                NoticeChipClassType.BRANCH -> emitEvent(NoticeWriteEvent.ShowChapterBottomSheetEvent)
+                NoticeChipClassType.SCHOOL -> emitEvent(NoticeWriteEvent.ShowSchoolBottomSheetEvent)
+                else -> {}
+            }
+            return
+        }
+
         val newList = uiState.value.classList.map {
             if (it.text == chip.text) {
                 it.copy(isClicked = !it.isClicked)
@@ -127,14 +180,59 @@ constructor(
             }
         }
 
-        //TODO 임시임 게시판 분류 확인되면 수정할 예정
-        if (newList.any { it.text == "파트" && it.isClicked }) {
+        if (newList.any { it.text == NoticeChipClassType.PART.label && it.isClicked }) {
             updateState { copy(isShowPartChip = true) }
         } else {
             updateState { copy(isShowPartChip = false) }
         }
 
         updateClassChipList(newList)
+    }
+
+    fun onChapterSelected(chapter: Chapter) {
+        val currentList = uiState.value.classList.toMutableList()
+
+        val alreadySelected = currentList.any { it.chapterId == chapter.id.toLong() }
+        if (alreadySelected) return
+
+        val selectedChapterChip = NoticeChipState(
+            text = chapter.name,
+            isClicked = true,
+            chapterId = chapter.id.toLong(),
+            hanBottomSheet = false
+        )
+
+        val branchChipIndex = currentList.indexOfFirst { it.text == NoticeChipClassType.BRANCH.label }
+        if (branchChipIndex != -1) {
+            currentList.add(branchChipIndex, selectedChapterChip)
+        } else {
+            currentList.add(selectedChapterChip)
+        }
+
+        updateClassChipList(currentList)
+    }
+
+    fun onSchoolSelected(school: SchoolInfo) {
+        val currentList = uiState.value.classList.toMutableList()
+
+        val alreadySelected = currentList.any { it.schoolId == school.schoolId.toLong() }
+        if (alreadySelected) return
+
+        val selectedSchoolChip = NoticeChipState(
+            text = school.schoolName,
+            isClicked = true,
+            schoolId = school.schoolId.toLong(),
+            hanBottomSheet = false
+        )
+
+        val schoolChipIndex = currentList.indexOfFirst { it.text == NoticeChipClassType.SCHOOL.label }
+        if (schoolChipIndex != -1) {
+            currentList.add(schoolChipIndex, selectedSchoolChip)
+        } else {
+            currentList.add(selectedSchoolChip)
+        }
+
+        updateClassChipList(currentList)
     }
 
     fun onClickPartChip(chip: NoticeChipState) {
@@ -172,8 +270,11 @@ constructor(
 
     fun updateCategory(category: NoticeCategory) {
         onClickShowDropDown()
+        updateClassChipList(getNoticeChip(category))
         updateState {
-            copy(category = category)
+            copy(
+                category = category,
+            )
         }
     }
 
@@ -205,7 +306,7 @@ constructor(
         }
     }
 
-    fun onChangedLinkText(text: String){
+    fun onChangedLinkText(text: String) {
         updateState {
             copy(linkText = text)
         }
@@ -247,13 +348,13 @@ constructor(
         }
     }
 
-    fun onClickVoteAnonymity(){
+    fun onClickVoteAnonymity() {
         updateState {
             copy(canAnonymity = !canAnonymity)
         }
     }
 
-    fun onClickVoteSelectMultiple(){
+    fun onClickVoteSelectMultiple() {
         updateState {
             copy(canSelectMultiple = !canSelectMultiple)
         }
@@ -263,7 +364,6 @@ constructor(
         updateState { copy(voteTitle = title) }
     }
 
-    // Title and Content
     fun updateTitle(title: String) {
         updateState { copy(title = title) }
     }
@@ -276,11 +376,9 @@ constructor(
         updateState { copy(shouldNotify = shouldNotify) }
     }
 
-    // Submit Notice
     fun onClickSubmit() = viewModelScope.launch {
         val state = uiState.value
 
-        // Validate inputs
         if (state.title.isBlank()) {
             emitEvent(NoticeWriteEvent.ShowError("제목을 입력해주세요"))
             return@launch
@@ -290,13 +388,19 @@ constructor(
             return@launch
         }
 
+        val activeGisuId = state.activeGisuId
+        if (activeGisuId == null) {
+            emitEvent(NoticeWriteEvent.ShowError("기수 정보를 불러오는 중입니다"))
+            return@launch
+        }
+
         updateState { copy(isLoading = true) }
 
         val imageIds = uploadImages(state.selectImageList)
 
         val targetParts = state.partList.filter { it.isClicked }.map { it.text }
         val targetRequest = NoticeTargetRequest(
-            targetGisuId = 1, // TODO: Get from selected gisu
+            targetGisuId = activeGisuId,
             targetChapterId = null,
             targetSchoolId = null,
             targetParts = targetParts
@@ -313,7 +417,6 @@ constructor(
         resultResponse(
             response = createNoticeUseCase(createRequest),
             successCallback = { noticeId ->
-                // Notice created successfully, now add optional components
                 handleNoticeCreated(noticeId, imageIds, state)
             },
             errorCallback = {
@@ -412,12 +515,20 @@ data class NoticeWriteUiState(
     val title: String = "",
     val content: String = "",
     val shouldNotify: Boolean = true,
-    val isLoading: Boolean = false
-) : UiState
+    val isLoading: Boolean = false,
+    val chapterList: List<Chapter> = emptyList(),
+    val schoolList: List<SchoolInfo> = emptyList(),
+    val activeGisuId: Int? = null,
+) : UiState {
+    val isShowClassSection: Boolean
+        get() = category != NoticeCategory.PART
+}
 
 sealed interface NoticeWriteEvent : UiEvent {
     object SelectImageEvent : NoticeWriteEvent
-    object ShowBottomSheetEvent: NoticeWriteEvent
+    object ShowBottomSheetEvent : NoticeWriteEvent
+    object ShowChapterBottomSheetEvent : NoticeWriteEvent
+    object ShowSchoolBottomSheetEvent : NoticeWriteEvent
     object SubmitSuccess : NoticeWriteEvent
     data class ShowError(val message: String) : NoticeWriteEvent
 }

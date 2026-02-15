@@ -1,7 +1,6 @@
 package com.umc.presentation.component.adapter
 
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.notice.DropDownItem
 import com.umc.presentation.databinding.ItemDropdownBinding
 
 class DropDownViewHolder<T : DropDownItem>(

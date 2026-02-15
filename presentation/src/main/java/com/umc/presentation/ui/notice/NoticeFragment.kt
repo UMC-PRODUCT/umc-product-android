@@ -5,13 +5,13 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.umc.domain.model.notice.DropDownItem
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.organization.GisuItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.adapter.DropDownAdapter
+import com.umc.presentation.component.adapter.DropDownItem
 import com.umc.presentation.databinding.FragmentNoticeBinding
 import com.umc.presentation.extension.addInfiniteScrollListener
 import com.umc.presentation.ui.notice.adapter.NoticeAdapter
