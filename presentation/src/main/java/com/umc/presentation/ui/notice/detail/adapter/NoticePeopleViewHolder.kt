@@ -1,26 +1,24 @@
 package com.umc.presentation.ui.notice.detail.adapter
 
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.notice.User
+import com.umc.domain.model.notice.ChallengerReadInfo
 import com.umc.presentation.databinding.ItemNoticePeopleCardBinding
-import com.umc.presentation.extension.gone
-import com.umc.presentation.extension.visible
 
 class NoticePeopleViewHolder(
     private val binding: ItemNoticePeopleCardBinding,
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(item: User) {
+    fun bind(item: ChallengerReadInfo) {
         binding.apply {
-            textName.text = "${item.name}(${item.nickName})"
-            textBranch.text = item.branch
-            textSchool.text = item.school
+            textName.text = item.name
+            textBranch.text = item.chapterName
+            textSchool.text = item.schoolName
             ubuttonPart.setText(item.part)
-            if (item.isSendNotification && !item.isCheck) viewNew.visible()
-            if (item.isCheck) {
-                viewNew.gone()
-                imageCheck.visible()
-            }
+//            if (item.isSendNotification && !item.isCheck) viewNew.visible()
+//            if (item.isCheck) {
+//                viewNew.gone()
+//                imageCheck.visible()
+//            }
         }
     }
 }
