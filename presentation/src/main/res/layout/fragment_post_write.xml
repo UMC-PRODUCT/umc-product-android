@@ -188,13 +188,13 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="80dp"
-            android:background="@color/accent100"
+            android:background="@color/neutral000"
             android:visibility="@{vm.uiState.isLight ? View.VISIBLE : View.GONE}"
-            app:cardBackgroundColor="@color/accent100"
+            app:cardBackgroundColor="@color/neutral000"
             app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
             app:strokeWidth="1dp"
-            app:strokeColor="@color/accent300"
+            app:strokeColor="@color/warning500"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/write_textfield_content">
@@ -218,8 +218,8 @@
                 android:id="@+id/write_imv_light"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_star_filled"
-                app:tint="@color/accent500"
+                android:src="@drawable/ic_lightning"
+                app:tint="@color/warning500"
                 />
 
             <TextView
@@ -228,7 +228,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="start"
                 android:textAppearance="@style/HeadlineBold"
-                android:textColor="@color/accent600"
+                android:textColor="@color/warning500"
                 android:text="@string/community_write_light_title"
                 android:layout_marginStart="4dp"
                 app:layout_constraintStart_toEndOf="@id/write_imv_light"

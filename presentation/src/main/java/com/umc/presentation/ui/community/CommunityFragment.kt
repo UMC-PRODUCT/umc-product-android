@@ -13,6 +13,7 @@ import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentCommunityBinding
 import com.umc.presentation.ui.community.adapter.ContentAdapter
 import com.umc.presentation.ui.community.adapter.ContentItemDelegate
+import com.umc.presentation.ui.community.top.TopPostFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -152,10 +153,17 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
                             //일단 탭 변경
                             viewModel.setNowTab(ContentType.TOP)
 
-                            /**TODO. 보이기 로직**/
-                            //childFragmentManager.beginTransaction()
-                            //    .replace(R.id.community_fragmentContainer_top, )
-                            //    .commit()
+                            //중복 생성 로직 방지
+                            val currentFragment = childFragmentManager.findFragmentByTag("TopPostFragment")
+
+                            if (currentFragment == null) {
+                                childFragmentManager.beginTransaction()
+                                    .replace(
+                                        R.id.community_fragmentContainer_top,
+                                        TopPostFragment()
+                                    )
+                                    .commit()
+                            }
                         }
                     }
                 }

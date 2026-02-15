@@ -4,13 +4,17 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.res.Configuration
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
+import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPlanAddBinding
+import com.umc.presentation.extension.dp
 import com.umc.presentation.ui.home.dialog.AddAttendanceDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetCategoryPlanDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetParticipantDialog
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 @AndroidEntryPoint
@@ -19,52 +23,44 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 ) {
     override val viewModel: PlanAddViewModel by viewModels()
 
-    //recyclerviewAdapter 정의구간
-    //private lateinit var participantAdapter: ShowParticipantAdapter
-    //private lateinit var categoryAdapter: ShowCategoryAdapter
-    //private lateinit var searchAdapter: SearchParticipantAdapter
+    private val args: PlanAddFragmentArgs by navArgs()
+    private var scheduleId : Long = -1L
 
-
-
-    /*
-    //csv 파일 처리를 위한 런처
-    private val csvPickerLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
-        uri: Uri? -> uri?.let {
-            //돌아오고 난 뒤, 아래의 처리로직을 수행
-            parseCsvFile(it)
-        }
-    }
-
-     */
 
     override fun initView() {
+
+        scheduleId = args.scheduleId
+        if(scheduleId != -1L){
+            viewModel.settingUpdateSchedule(scheduleId)
+        }
+
         binding.apply {
             vm = viewModel
             //onclick 달기
-            //시작 날짜/시간
+            
+            //시작 날짜/시간 chip 설정
             planaddCdvStartDate.setOnClickListener { showDatePicker(true) }
             planaddCdvStartTime.setOnClickListener { showTimePicker(true) }
-            //종료 날짜/시간
+            //종료 날짜/시간 chip 설정
             planaddCdvEndDate.setOnClickListener { showDatePicker(false) }
             planaddCdvEndTime.setOnClickListener { showTimePicker(false) }
 
-            //하루종일
-            //스위치 로직
+            //하루종일 스위치 로직
             binding.planaddSwitchAllday.setOnCheckedChangeListener { _, isChecked ->
                 viewModel.setAllday(isChecked)
             }
 
-
+            //일정 제목 title 설정
             planaddTextfieldPlanTitleName.apply {
                 setOnTextChangedListener { text ->
-                    viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanTitle(text))
+                    viewModel.updatePlanTitle(text)
                 }
             }
 
-
+            //일정 상세 내용 설정
             planaddTextfieldPlanDetail.apply{
                 setOnTextChangedListener { text ->
-                    viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanDetail(text))
+                    viewModel.updatePlanDetail(text)
                 }
             }
 
@@ -80,12 +76,11 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     //다이얼로그 생성
                     val dialog = AddAttendanceDialog(
                         onReject = {
-
-                            moveBackPressed()
+                            viewModel.submitPlan()
                         },
                         onConfirm = {
+                            viewModel.submitPlan()
                             /**TODO 출석부 생성 페이지로 이동**/
-                            moveBackPressed()
                         }
 
                     )
@@ -93,16 +88,16 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     
                 }
                 else{
-                    moveBackPressed()
+                    viewModel.submitPlan()
                 }
             }
 
             //장소 선택 부분 터치시 다이얼로그 로직
             binding.planaddCdvPlanLocation.setOnClickListener {
                 // 앞서 만든 BottomSheetDialog 생성
-                val locationDialog = BottomSheetLocationDialog(viewModel) { selectedItem ->
+                val locationDialog = BottomSheetLocationDialog { selectedItem ->
                     // 선택된 장소(LocationItem)의 제목을 뷰모델 이벤트로 전달
-                    viewModel.handleEvent(PlanAddFragmentEvent.UpdatePlanLocation(selectedItem.title))
+                    viewModel.updatePlanLocation(selectedItem)
                 }
                 // 다이얼로그 표시
                 locationDialog.show(childFragmentManager, "LocationSelect")
@@ -115,14 +110,32 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
             }
 
             //인원 관련 터치 시 다이얼로그 로직
-            binding.planaddCdvSearchParticipant.setOnClickListener {
-                // 뷰모델을 생성자로 전달하여 상태를 공유합니다.
-                val participantDialog = BottomSheetParticipantDialog(viewModel)
+            binding.planaddCdvSearchParticipant.apply{
 
-                // childFragmentManager를 사용하여 프래그먼트 계층 구조를 유지합니다.
-                participantDialog.show(childFragmentManager, "ParticipantSelect")
+                //수정 모드에 따른 UI 및 터치 로직
+                val isEditMode = viewModel.uiState.value.updateScheduleId != -1L
+                isEnabled = !isEditMode //수정 모드이면 터치 못하게 막기
+
+                val bgColor = if (isEditMode) {
+                    context.getColor(R.color.neutral100)
+                } else {
+                    context.getColor(R.color.neutral000)
+                }
+                setCardBackgroundColor(bgColor)
+
+
+
+                setOnClickListener {
+                    // 뷰모델을 생성자로 전달하여 상태를 공유합니다.
+                    val participantDialog = BottomSheetParticipantDialog { selectedParticipant, selectedParticipantString ->
+                        viewModel.updateParticipants(selectedParticipant, selectedParticipantString)
+                    }
+
+                    // childFragmentManager를 사용하여 프래그먼트 계층 구조를 유지합니다.
+                    participantDialog.show(childFragmentManager, "ParticipantSelect")
+                }
             }
-
+            
 
         }
 
@@ -133,16 +146,33 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
     override fun initStates() {
         super.initStates()
         repeatOnStarted(viewLifecycleOwner){
-            viewModel.uiState.collect{ state ->
-                binding.apply {
-                    planaddCdvStartDate.setText(state.startDateText)
-                    planaddCdvStartTime.setText(state.startTimeText)
-                    planaddCdvEndDate.setText(state.endDateText)
-                    planaddCdvEndTime.setText(state.endTimeText)
+            launch {
+                viewModel.uiState.collect { state ->
+                    binding.apply {
+                        planaddCdvStartDate.setText(state.startDateText)
+                        planaddCdvStartTime.setText(state.startTimeText)
+                        planaddCdvEndDate.setText(state.endDateText)
+                        planaddCdvEndTime.setText(state.endTimeText)
+
+                    }
 
                 }
-
             }
+            launch {
+                viewModel.uiEvent.collect { event ->
+                    handleEvent(event)
+                }
+            }
+        }
+    }
+
+    override fun handleEvent(event: PlanAddFragmentEvent) {
+        super.handleEvent(event)
+        when(event){
+            is PlanAddFragmentEvent.MoveBackPressedEvent -> {
+                moveBackPressed()
+            }
+            else -> {}
         }
     }
 
@@ -155,10 +185,13 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
         DatePickerDialog(requireContext(), { _, year, month, day ->
             // ViewModel 이벤트 호출 리스너 달기
-            val event = if (isStart) PlanAddFragmentEvent.UpdateStartDate(year, month, day)
-            else PlanAddFragmentEvent.UpdateEndDate(year, month, day)
 
-            viewModel.handleEvent(event)
+            if(isStart){
+                viewModel.updateStartDate(year, month, day)
+            }
+            else{
+                viewModel.updateEndDate(year, month, day)
+            }
         },
             cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
     }
@@ -179,9 +212,13 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
         val dialog = TimePickerDialog(requireContext(),
             themeResId,
             { _, hour, minute ->
-            val event = if (isStart) PlanAddFragmentEvent.UpdateStartTime(hour, minute)
-            else PlanAddFragmentEvent.UpdateEndTime(hour, minute)
-            viewModel.handleEvent(event)
+
+                if(isStart){
+                    viewModel.updateStartTime(hour, minute)
+                }
+                else{
+                    viewModel.updateEndTime(hour, minute)
+                }
         },
             cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), false)
 

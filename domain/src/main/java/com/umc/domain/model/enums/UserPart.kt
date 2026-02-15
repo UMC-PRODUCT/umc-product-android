@@ -1,15 +1,14 @@
 package com.umc.domain.model.enums
 
 enum class UserPart(val label: String) {
-    PM("PM"),
+    PLAN("Plan"),
     DESIGN("Design"),
     WEB("Web"),
-    IOS("iOS"),
+    IOS("IOS"),
     ANDROID("Android"),
-    SPRING_BOOT("SpringBoot"),
-    NODE_JS("Node.js"),
+    SPRINGBOOT("SpringBoot"),
+    NODEJS("Node.js"),
     UNKNOWN("Unknown");
-
 
 
     companion object {

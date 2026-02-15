@@ -3,6 +3,7 @@ package com.umc.presentation.base
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.base.FailState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -36,11 +37,11 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
     protected fun <D> resultResponse(
         response: ApiState<D>,
         successCallback: (D) -> Unit,
-        errorCallback: ((String) -> Unit)? = null,
+        errorCallback: ((FailState) -> Unit)? = null,
     ) {
         when (response) {
             is ApiState.Fail -> {
-                errorCallback?.invoke(response.failState.code)
+                errorCallback?.invoke(response.failState)
             }
             is ApiState.Success -> {
                 successCallback.invoke(response.data)

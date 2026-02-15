@@ -8,6 +8,7 @@ import com.umc.data.response.community.CommunitySearchPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
 import com.umc.data.response.community.PostLikeResponse
+import com.umc.data.response.community.PostScrapResponse
 import com.umc.domain.model.base.ApiResponse
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -59,12 +60,14 @@ interface CommunityApi {
     //일반 게시글 작성
     @POST(Endpoints.Community.COMMUNITY)
     suspend fun createPost(
+        @Query("challengerId") challengerId: Long,
         @Body request: CreatePostRequest
     ): ApiResponse<PostDetailResponse>
 
     //번개 게시글 작성
     @POST(Endpoints.Community.LIGHTNING)
     suspend fun createLightningPost(
+        @Query("challengerId") challengerId: Long,
         @Body request: CreatePostLightningRequest
     ): ApiResponse<PostDetailResponse>
 
@@ -80,6 +83,15 @@ interface CommunityApi {
         @Path("postId") postId: Long,
         @Query("challengerId") challengerId: Long
     ): ApiResponse<PostLikeResponse>
+
+    //게시글 스크랩 토글
+    @POST(Endpoints.Community.POST_SCRAP)
+    suspend fun togglePostScrap(
+        @Path("postId") postId: Long,
+        @Query("challengerId") challengerId: Long
+    ): ApiResponse<PostScrapResponse>
+
+
 
     //게시글 댓글 삭제
     @DELETE(Endpoints.Community.POST_COMMENT_DETAIL)

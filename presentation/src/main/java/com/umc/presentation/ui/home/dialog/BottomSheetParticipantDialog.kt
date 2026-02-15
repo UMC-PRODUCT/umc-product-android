@@ -8,7 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.opencsv.CSVReader
 import com.umc.domain.model.home.ParticipantItem
@@ -20,16 +23,19 @@ import com.umc.presentation.ui.home.adapter.AddParticipantDelegate
 import com.umc.presentation.ui.home.adapter.BottomSheetAddParticipantAdapter
 import com.umc.presentation.ui.home.adapter.BottomSheetSearchParticipantAdapter
 import com.umc.presentation.ui.home.adapter.SearchParticipantDelegate
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.InputStreamReader
 
+@AndroidEntryPoint
 class BottomSheetParticipantDialog(
-    private val viewModel: PlanAddViewModel 
+    private val onConfirm: (List<ParticipantItem>, String) -> Unit
 ) : BottomSheetDialogFragment(), AddParticipantDelegate, SearchParticipantDelegate {
 
     private var _binding: LayoutBottomSheetParticipantAddBinding? = null
     private val binding get() = _binding!!
 
+    private val viewModel: BottomSheetParticipantViewModel by viewModels()
     private lateinit var addAdapter: BottomSheetAddParticipantAdapter
     private lateinit var searchAdapter: BottomSheetSearchParticipantAdapter
 
@@ -38,6 +44,26 @@ class BottomSheetParticipantDialog(
         uri?.let {
             //돌아오고 난 뒤, 아래의 처리로직을 수행
             parseCsvFile(it)
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        // 다이얼로그의 내부 뷰(design_bottom_sheet)를 찾아 높이를 설정
+        (dialog as? BottomSheetDialog)?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)?.let { bottomSheet ->
+            val behavior = BottomSheetBehavior.from(bottomSheet)
+
+            // 1. 레이아웃 파라미터의 높이를 화면 전체의 80%로 설정
+            val layoutParams = bottomSheet.layoutParams
+            layoutParams.height = (resources.displayMetrics.heightPixels * 0.8).toInt()
+            bottomSheet.layoutParams = layoutParams
+
+            // 2. 초기 상태를 확장 상태(EXPANDED)로 고정
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+
+            // 3. 드래그해서 절반으로 접히는 현상 방지 (선택 사항)
+            behavior.skipCollapsed = true
         }
     }
 
@@ -51,7 +77,9 @@ class BottomSheetParticipantDialog(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         binding.vm = viewModel
+
         binding.lifecycleOwner = viewLifecycleOwner
 
         //얻배터 초기화
@@ -60,6 +88,8 @@ class BottomSheetParticipantDialog(
         initSearch()
         //상태 관리
         observeState()
+        //무한 스크롤 관리
+        setupInfiniteScroll()
 
         //csv 파일 파싱
         binding.btnUploadCsv.setOnClickListener {
@@ -72,8 +102,11 @@ class BottomSheetParticipantDialog(
             csvPickerLauncher.launch(mimeTypes)
         }
 
-        //사실상 viewModel로 live 관리
-        binding.btnConfirm.setOnClickListener { dismiss() }
+        //확인 시, viewModel에서 선택한 것들을 전송
+        binding.btnConfirm.setOnClickListener { 
+            onConfirm(viewModel.uiState.value.selectedParticipants, viewModel.uiState.value.selectedParticipantsString)
+            dismiss()
+        }
     }
 
     private fun initAdapters() {
@@ -91,19 +124,19 @@ class BottomSheetParticipantDialog(
         binding.searchbarParticipant.apply {
             // 텍스트 입력 시 실시간 검색
             setOnTextChangedListener { query ->
-                viewModel.handleEvent(PlanAddFragmentEvent.SearchParticipants(ParticipantItem(name = query)))
-                binding.btnConfirm.visibility = View.VISIBLE
-                binding.btnUploadCsv.visibility = View.GONE
+                viewModel.searchParticipants(query)
+
             }
 
 
             // 포커스 변경 리스너 등록
             setOnFocusChangedListener { hasFocus ->
                 // 내용이 없고 포커스가 나가면 검색 모드 종료
-                if (!hasFocus && getText().isEmpty()) {
-                    viewModel.handleEvent(PlanAddFragmentEvent.ClearSearch)
-                    binding.btnConfirm.visibility = View.GONE
-                    binding.btnUploadCsv.visibility = View.VISIBLE
+                if(hasFocus){
+                    viewModel.setSearchingMode(true)
+                }
+                else if (getText().isEmpty()) {
+                    viewModel.clearSearch()
                 }
             }
 
@@ -137,6 +170,22 @@ class BottomSheetParticipantDialog(
                         members.map { SearchResultItem.Participant(it) }
             }
     }
+
+    private fun setupInfiniteScroll() {
+        binding.rcvSearchResult.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                // 아래로 스크롤 중이며, 더 이상 아래로 갈 수 없을 때 (바닥 도달)
+                if (!recyclerView.canScrollVertically(1) && dy > 0) {
+                    // 다음 페이지가 있으면 추가 로딩
+                    viewModel.loadMore()
+                }
+            }
+        })
+    }
+
+    /**CSV 파싱 로직은 depricated**/
 
     //CSV 파일 불러오고 난 뒤 파싱 로직
     private fun parseCsvFile(uri: Uri){
@@ -186,13 +235,13 @@ class BottomSheetParticipantDialog(
 
             }
             // 추출된 이름 리스트를 뷰모델로 전송
+            /**TODO CSV 파싱 로직은 현재 엑셀 형식에서 id를 필수로 주어야 하는 문제가 deprecated 된 상태임**/
             val newUsers = mutableListOf<ParticipantItem>()
             for(name in names){
-                newUsers.add(ParticipantItem(name))
+                newUsers.add(ParticipantItem(-1L, name))
             }
-            val event = PlanAddFragmentEvent.UpdateParticipants(newUsers)
-            Log.d("log_home", "이름 리스트: $names")
-            viewModel.handleEvent(event)
+
+            viewModel.updateParticipant(newUsers)
 
             // 임시 토스트
             Toast.makeText(requireContext(), "${names.size}명의 명단을 불러왔습니다.", Toast.LENGTH_SHORT).show()
@@ -203,18 +252,18 @@ class BottomSheetParticipantDialog(
             Toast.makeText(requireContext(), "CSV 파일을 읽는 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
         }
     }
-    
+
 
     // --- Delegate 구현부 ---
 
     override fun onParticipantToggled(item: ParticipantItem) {
         // 검색 결과 리스트에서 항목 클릭 시 (추가 혹은 삭제)
-        viewModel.handleEvent(PlanAddFragmentEvent.ToggleParticipants(item))
+        viewModel.toggleParticipant(item)
     }
 
     override fun onParticipantRemoved(item: ParticipantItem) {
-        // 추가된 인원 리스트에서 '삭제' 버튼 클릭 시
-        viewModel.handleEvent(PlanAddFragmentEvent.RemoveParticipants(item))
+        // 추가된 인원 리스트에서 '삭제' 버튼 클릭 시 (차피 로직은 같아)
+        viewModel.toggleParticipant(item)
     }
 
     override fun onDestroyView() {

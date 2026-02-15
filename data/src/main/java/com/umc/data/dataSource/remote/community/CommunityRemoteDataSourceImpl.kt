@@ -10,6 +10,7 @@ import com.umc.data.response.community.CommunitySearchPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
 import com.umc.data.response.community.PostLikeResponse
+import com.umc.data.response.community.PostScrapResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
 import javax.inject.Inject
@@ -56,13 +57,13 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
      }
 
     //일반 게시글 작성하기
-    override suspend fun createPost(request: CreatePostRequest): ApiState<PostDetailResponse> {
-        return apiCall {communityApi.createPost(request)}
+    override suspend fun createPost(challengerId: Long, request: CreatePostRequest): ApiState<PostDetailResponse> {
+        return apiCall {communityApi.createPost(challengerId, request)}
     }
 
     //번개 게시글 작성하기
-    override suspend fun createLightningPost(request: CreatePostLightningRequest): ApiState<PostDetailResponse> {
-        return apiCall { communityApi.createLightningPost(request) }
+    override suspend fun createLightningPost(challengerId: Long, request: CreatePostLightningRequest): ApiState<PostDetailResponse> {
+        return apiCall { communityApi.createLightningPost(challengerId, request) }
     }
 
     //게시글 삭제하기
@@ -74,6 +75,12 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
     override suspend fun togglePostLike(postId: Long, challengerId: Long
     ): ApiState<PostLikeResponse> {
         return apiCall { communityApi.togglePostLike(postId, challengerId) }
+    }
+
+    //게시글 스크랩 토글
+    override suspend fun togglePostScrap(postId: Long, challengerId: Long
+    ): ApiState<PostScrapResponse> {
+        return apiCall { communityApi.togglePostScrap(postId, challengerId) }
     }
 
     //게시글 댓글 삭제하기

@@ -7,8 +7,8 @@ import com.umc.domain.model.enums.CheckAvailableStatus
  * 현재 출석 가능한 세션 정보
  */
 data class UserCheckAvailable(
-    val id: Int,
-    val sheetId: Int,
+    val id: Long,
+    val sheetId: Long,
     val title: String,
     val tags: List<CategoryType>?,
     val startTime: String,

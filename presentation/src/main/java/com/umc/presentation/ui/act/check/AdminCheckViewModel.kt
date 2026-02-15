@@ -6,6 +6,7 @@ import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceApprovalUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceRejectionUseCase
 import com.umc.domain.usecase.schedule.GetAdminSessionListUseCase
+import com.umc.domain.usecase.schedule.UpdateScheduleLocationUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -18,7 +19,8 @@ class AdminCheckViewModel @Inject constructor(
     private val getAdminSessionListUseCase: GetAdminSessionListUseCase,
     private val getPendingUsersUseCase: GetPendingUsersUseCase,
     private val postAttendanceApprovalUseCase: PostAttendanceApprovalUseCase,
-    private val postAttendanceRejectionUseCase: PostAttendanceRejectionUseCase
+    private val postAttendanceRejectionUseCase: PostAttendanceRejectionUseCase,
+    private val updateScheduleLocationUseCase: UpdateScheduleLocationUseCase
 ) : BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
 
     init {
@@ -27,57 +29,50 @@ class AdminCheckViewModel @Inject constructor(
 
     fun fetchAdminSessions() {
         viewModelScope.launch {
-            when (val result = getAdminSessionListUseCase()) {
-                is ApiState.Success -> {
+            resultResponse(
+                response = getAdminSessionListUseCase(),
+                successCallback = { data ->
                     val currentSessions = uiState.value.adminSessions
-                    val uiModels = result.data.map { domainModel ->
+                    val uiModels = data.map { domainModel ->
                         val wasExpanded = currentSessions.find { it.session.id == domainModel.id }?.isExpanded ?: false
                         AdminSessionUIModel(session = domainModel, isExpanded = wasExpanded)
                     }
                     updateState { copy(adminSessions = uiModels) }
-                }
-                is ApiState.Fail -> emitEvent(AdminCheckEvent.ShowToast(result.failState.message))
-            }
+                },
+                errorCallback = { failState -> emitEvent(AdminCheckEvent.ShowToast(failState.message)) }
+            )
         }
     }
 
     /**
      * 출석 승인 버튼 클릭 시 호출
      */
-    fun approveAttendance(attendanceId: Int) {
+    fun approveAttendance(attendanceId: Long) {
         viewModelScope.launch {
-            when (val result = postAttendanceApprovalUseCase(attendanceId)) {
-                is ApiState.Success -> {
-                    updateSessionAfterApproval(attendanceId)
+            resultResponse(
+                response = postAttendanceApprovalUseCase(attendanceId),
+                successCallback = { updateSessionAfterApproval(attendanceId) },
+                errorCallback = { failState ->
+                    emitEvent(AdminCheckEvent.ShowToast(failState.message))
                 }
-                is ApiState.Fail -> {
-                    emitEvent(AdminCheckEvent.ShowToast(result.failState.message ?: "승인에 실패했습니다."))
-                }
-            }
+            )
         }
     }
 
     /**
      * 출석 반려 버튼 클릭 시 호출
      */
-    fun rejectAttendance(attendanceId: Int) {
+    fun rejectAttendance(attendanceId: Long) {
         viewModelScope.launch {
-            android.util.Log.d("AdminCheck", "반려 시작: attendanceId=$attendanceId")
-
-            when (val result = postAttendanceRejectionUseCase(attendanceId)) {
-                is ApiState.Success -> {
-                    android.util.Log.d("AdminCheck", "반려 성공")
-
-                    // 로컬 UI 업데이트 (유저 제거만, 출석 통계는 변경 없음)
+            resultResponse(
+                response = postAttendanceRejectionUseCase(attendanceId),
+                successCallback = {
                     updateSessionAfterRejection(attendanceId)
-
-                    emitEvent(AdminCheckEvent.ShowToast("출석이 반려되었습니다."))
+                },
+                errorCallback = { failState ->
+                    emitEvent(AdminCheckEvent.ShowToast(failState.message))
                 }
-                is ApiState.Fail -> {
-                    android.util.Log.e("AdminCheck", "반려 실패: ${result.failState.message}")
-                    emitEvent(AdminCheckEvent.ShowToast(result.failState.message ?: "반려에 실패했습니다."))
-                }
-            }
+            )
         }
     }
 
@@ -88,7 +83,7 @@ class AdminCheckViewModel @Inject constructor(
      * - attendanceRate 재계산
      * - pendingCount -1
      */
-    private fun updateSessionAfterApproval(attendanceId: Int) {
+    private fun updateSessionAfterApproval(attendanceId: Long) {
         updateState {
             val updatedSessions = adminSessions.map { uiModel ->
                 val session = uiModel.session
@@ -133,7 +128,7 @@ class AdminCheckViewModel @Inject constructor(
      * - pendingCount -1
      * - attendedChallengers, attendanceRate는 변경 없음 (반려이므로)
      */
-    private fun updateSessionAfterRejection(attendanceId: Int) {
+    private fun updateSessionAfterRejection(attendanceId: Long) {
         updateState {
             val updatedSessions = adminSessions.map { uiModel ->
                 val session = uiModel.session
@@ -161,21 +156,23 @@ class AdminCheckViewModel @Inject constructor(
         }
     }
 
-    fun onLocationChangeClicked(sessionId: Int) {
-        emitEvent(AdminCheckEvent.ShowLocationDialog(
-            sessionId = sessionId,
-            lat = 37.582568,
-            lng = 127.001488,
-            address = "서울특별시 종로구 명륜4가"
-        ))
+    fun updateSessionLocation(sessionId: Long, lat: Double, lng: Double, address: String) {
+        viewModelScope.launch {
+            val result = updateScheduleLocationUseCase(sessionId, address, lat, lng)
+
+            resultResponse(
+                response = result,
+                successCallback = {
+                    emitEvent(AdminCheckEvent.ShowToast("출석 위치가 성공적으로 변경되었습니다."))
+                },
+                errorCallback = { failState ->
+                    emitEvent(AdminCheckEvent.ShowToast(failState.message))
+                }
+            )
+        }
     }
 
-    fun updateSessionLocation(sessionId: Int, lat: Double, lng: Double, address: String) {
-        // TODO: 서버 위치 업데이트 API 호출
-        emitEvent(AdminCheckEvent.ShowToast("출석 위치가 성공적으로 변경되었습니다."))
-    }
-
-    fun toggleSessionExpansion(sessionId: Int) {
+    fun toggleSessionExpansion(sessionId: Long) {
         val currentSession = uiState.value.adminSessions.find { it.session.id == sessionId }
 
         if (currentSession?.isExpanded == false && currentSession.session.pendingUsers.isEmpty()) {
@@ -185,25 +182,25 @@ class AdminCheckViewModel @Inject constructor(
         updateExpansionState(sessionId)
     }
 
-    private fun fetchPendingUsers(sessionId: Int) {
+    private fun fetchPendingUsers(sessionId: Long) {
         viewModelScope.launch {
-            when (val result = getPendingUsersUseCase(sessionId)) {
-                is ApiState.Success -> {
+            resultResponse(
+                response = getPendingUsersUseCase(sessionId),
+                successCallback = { data ->
                     updateState {
                         val updatedList = adminSessions.map { uiModel ->
                             if (uiModel.session.id == sessionId) {
-                                uiModel.copy(session = uiModel.session.copy(pendingUsers = result.data))
+                                uiModel.copy(session = uiModel.session.copy(pendingUsers = data))
                             } else uiModel
                         }
                         copy(adminSessions = updatedList)
                     }
-                }
-                is ApiState.Fail -> emitEvent(AdminCheckEvent.ShowToast(result.failState.message))
-            }
+                },
+                errorCallback = { failState -> emitEvent(AdminCheckEvent.ShowToast(failState.message)) }
+            )
         }
     }
-
-    private fun updateExpansionState(sessionId: Int) {
+    private fun updateExpansionState(sessionId: Long) {
         updateState {
             val newList = adminSessions.map { uiModel ->
                 if (uiModel.session.id == sessionId) {
@@ -223,10 +220,4 @@ data class AdminCheckUiState(
 
 sealed class AdminCheckEvent : UiEvent {
     data class ShowToast(val message: String) : AdminCheckEvent()
-    data class ShowLocationDialog(
-        val sessionId: Int,
-        val lat: Double,
-        val lng: Double,
-        val address: String
-    ) : AdminCheckEvent()
 }

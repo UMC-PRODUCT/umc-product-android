@@ -19,7 +19,7 @@ import javax.inject.Inject
 class AuthRepositoryImpl @Inject constructor(
     private val authRemoteDataSource: AuthRemoteDataSource
 ) : AuthRepository {
-    override suspend fun reissueToken(request: RefreshTokenRequest): ApiState<String> {
+    override suspend fun reissueToken(request: RefreshTokenRequest): ApiState<JwtToken> {
         return authRemoteDataSource.reissueToken(request).map {
             it.toModel()
         }
@@ -31,7 +31,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun kakaoGoogle(request: LoginGoogleRequest): ApiState<JwtToken> {
+    override suspend fun googleLogin(request: LoginGoogleRequest): ApiState<JwtToken> {
         return authRemoteDataSource.loginGoogle(request).map {
             it.toModel()
         }

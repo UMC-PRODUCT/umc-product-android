@@ -1,7 +1,10 @@
 package com.umc.presentation.ui.login
 
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.JwtToken
+import com.umc.domain.model.enums.LoginType
 import com.umc.domain.usecase.PostLoginUseCase
+import com.umc.domain.usecase.appDataStore.SaveTokenUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -14,39 +17,48 @@ import javax.inject.Inject
 class LoginViewModel
 @Inject
 constructor(
-    private val postLoginUseCase: PostLoginUseCase
-) : BaseViewModel<LoginUiState, LoginEvent>(
-    LoginUiState(),
+    private val postLoginUseCase: PostLoginUseCase,
+    private val saveTokenUseCase: SaveTokenUseCase
+) : BaseViewModel<UiState, LoginEvent>(
+    UiState.Default,
 ) {
     fun onClickKakaoLogin() {
         emitEvent(LoginEvent.KakaoLoginEvent)
     }
 
-    fun kakaoLogin(token: String) = viewModelScope.launch {
-        // TODO 서버 연결 해야함
+    fun login(token: String, loginType: LoginType) = viewModelScope.launch {
         resultResponse(
-            response = postLoginUseCase(token),
+            response = postLoginUseCase(loginType = loginType, token = token),
             successCallback = {
-                //TODO 성공 콜백
-                ULog.d("성공")
+                if (it.oAuthVerificationToken.isNotEmpty()) emitEvent(LoginEvent.MoveToSignUpEvent(it.oAuthVerificationToken))
+                else {
+                    saveToken(it)
+                }
             },
-            errorCallback = {
-                //TODO 에러 콜백
-                ULog.d("실패")
+        )
+    }
+
+    private fun saveToken(request: JwtToken) = viewModelScope.launch {
+        resultResponse(
+            response = saveTokenUseCase(request),
+            successCallback = {
+                emitEvent(LoginEvent.MoveToMainEvent)
             }
         )
-        emitEvent(LoginEvent.MoveToSignUpEvent)
     }
-}
 
-data class LoginUiState(
-    val dummy: String = "",
-) : UiState
+    fun onClickGoogle() {
+        emitEvent(LoginEvent.GoogleLoginEvent)
+    }
+
+
+}
 
 sealed interface LoginEvent : UiEvent {
     object KakaoLoginEvent : LoginEvent
+    object GoogleLoginEvent: LoginEvent
 
     object MoveToMainEvent : LoginEvent
 
-    object MoveToSignUpEvent : LoginEvent
+    data class MoveToSignUpEvent(val oAuthToken: String) : LoginEvent
 }

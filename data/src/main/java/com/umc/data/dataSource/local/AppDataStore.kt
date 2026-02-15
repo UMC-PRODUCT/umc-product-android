@@ -4,11 +4,13 @@ import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
+import com.umc.domain.model.ChallengerRecord
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.UserRole
 import com.umc.domain.model.mypage.UserOutLink
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -45,6 +47,9 @@ class AppDataStore @Inject constructor(
         val rolesJson = prefs[KEY_ROLES] ?: "[]"
         val rolesList = gson.fromJson(rolesJson, Array<UserRole>::class.java).toList()
 
+        val recordsJson = prefs[KEY_RECORDS] ?: "[]"
+        val recordsList = gson.fromJson(recordsJson, Array<ChallengerRecord>::class.java).toList()
+
         UserInfo(
             id = prefs[KEY_ID] ?: 0L,
             name = prefs[KEY_NAME] ?: "",
@@ -54,7 +59,8 @@ class AppDataStore @Inject constructor(
             schoolName = prefs[KEY_SCHOOL_NAME] ?: "",
             profileImageLink = prefs[KEY_PROFILE_IMAGE] ?: "",
             status = prefs[KEY_STATUS] ?: "ACTIVE",
-            roles = rolesList
+            roles = rolesList,
+            challengerRecords = recordsList
         )
     }
 
@@ -70,6 +76,7 @@ class AppDataStore @Inject constructor(
             prefs[KEY_PROFILE_IMAGE] = userInfo.profileImageLink
             prefs[KEY_STATUS] = userInfo.status
             prefs[KEY_ROLES] = gson.toJson(userInfo.roles)
+            prefs[KEY_RECORDS] = gson.toJson(userInfo.challengerRecords)
         }
     }
 
@@ -127,6 +134,35 @@ class AppDataStore @Inject constructor(
 
 
 
+    //------------JWT 관련 로직-----------------//
+    suspend fun saveTokens(accessToken: String, refreshToken: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_ACCESS_TOKEN] = accessToken
+            prefs[KEY_REFRESH_TOKEN] = refreshToken
+        }
+    }
+
+    suspend fun getAccessToken(): String {
+        return context.dataStore.data.first()[KEY_ACCESS_TOKEN] ?: ""
+    }
+
+    suspend fun getRefreshToken(): String {
+        return context.dataStore.data.first()[KEY_REFRESH_TOKEN] ?: ""
+    }
+
+    suspend fun clearTokens() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_ACCESS_TOKEN)
+            prefs.remove(KEY_REFRESH_TOKEN)
+        }
+    }
+
+    suspend fun clearAllData() {
+        context.dataStore.edit { prefs ->
+            prefs.clear()
+        }
+    }
+
 
     // 여기서 Datastore에 들어갈 key들 정의
     companion object {
@@ -145,12 +181,16 @@ class AppDataStore @Inject constructor(
         val KEY_PROFILE_IMAGE = stringPreferencesKey("profile_image")
         val KEY_STATUS = stringPreferencesKey("status")
         val KEY_ROLES = stringPreferencesKey("roles")
+        val KEY_RECORDS = stringPreferencesKey("challenger_records")
 
         //일정 추가에서 장소 기록 KEY
         val KEY_RECENT_SEARCHES_PLACE = stringPreferencesKey("recent_searches_place")
 
         //게시글 검색에서 게시글 검색 기록 KEY
         val KEY_RECENT_SEARCHES_POST = stringPreferencesKey("recent_searches_post")
+
+        val KEY_ACCESS_TOKEN = stringPreferencesKey("access_token")
+        val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token")
     }
 
 }

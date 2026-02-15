@@ -1,5 +1,6 @@
 package com.umc.domain.repository
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.mypage.UserOutLink
 import kotlinx.coroutines.flow.Flow
 
@@ -24,4 +25,12 @@ interface AppDataStoreRepository {
     //유저 정보 getter/setter
     fun getUserInfo(): Flow<UserInfo>
     suspend fun saveUserInfo(userInfo: UserInfo)
+
+    suspend fun getAccessToken(): String
+    suspend fun getRefreshToken(): String
+    suspend fun saveTokens(accessToken: String, refreshToken: String): ApiState<Unit>
+    suspend fun clearTokens()
+
+    //싹 다 초기화
+    suspend fun clearAllData()
 }

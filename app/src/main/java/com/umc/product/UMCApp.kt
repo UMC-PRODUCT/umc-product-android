@@ -15,5 +15,11 @@ class UMCApp : Application() {
 
         NaverMapSdk.getInstance(this).client =
             NaverMapSdk.NcpKeyClient(BuildConfig.NAVER_CLIENT_ID)
+
+
     }
+
+
+
+
 }

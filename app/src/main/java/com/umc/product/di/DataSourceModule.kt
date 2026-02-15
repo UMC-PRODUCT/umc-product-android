@@ -1,8 +1,10 @@
 package com.umc.product.di
 
 import com.umc.data.dataSource.AuthRemoteDataSource
+import com.umc.data.dataSource.OrganizationDataSource
 import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSource
 import com.umc.data.dataSource.remote.AuthRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.OrganizationRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSource
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.kakao.KakaoRemoteDataSource
@@ -16,6 +18,10 @@ import com.umc.data.dataSource.remote.curriculum.CurriculumRemoteDataSource
 import com.umc.data.dataSource.remote.curriculum.CurriculumRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.storage.StorageRemoteDataSource
+import com.umc.data.dataSource.remote.storage.StorageRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.terms.TermsRemoteDataSource
+import com.umc.data.dataSource.remote.terms.TermsRemoteDataSourceImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -29,11 +35,14 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DataSourceModule {
+
     @Singleton
     @Binds
     abstract fun providesAuthDataSource(dataSourceImpl: AuthRemoteDataSourceImpl): AuthRemoteDataSource
 
-
+    @Singleton
+    @Binds
+    abstract fun providesOrganizationDataSource(dataSourceImpl: OrganizationRemoteDataSourceImpl): OrganizationDataSource
 
     @Singleton
     @Binds
@@ -71,4 +80,12 @@ abstract class DataSourceModule {
     @Singleton
     @Binds
     abstract fun bindsCommunityRemoteDataSource(dataSourceImpl: CommunityRemoteDataSourceImpl): CommunityRemoteDataSource
+
+    @Singleton
+    @Binds
+    abstract fun bindsStorageRemoteDataSource(dataSourceImpl: StorageRemoteDataSourceImpl): StorageRemoteDataSource
+
+    @Singleton
+    @Binds
+    abstract fun bindsTermsRemoteDataSource(dataSourceImpl: TermsRemoteDataSourceImpl): TermsRemoteDataSource
 }

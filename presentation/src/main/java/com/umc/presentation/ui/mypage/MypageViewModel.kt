@@ -5,9 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.LoginType
+import com.umc.domain.model.enums.TermsType
 import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
+import com.umc.domain.usecase.member.GetMyProfileUseCase
+import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -17,8 +21,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MypageViewModel @Inject constructor(
-    private val getUserOutLinkUseCase: GetUserOutLinkUseCase,
-    private val getUserInfoUseCase: GetUserInfoUseCase,
+    private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //유저 outlink 3종 세트 얻기
+    private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
+    private val clearAllDataUseCase : ClearAllDataUseCase, //모든 정보 삭제하기
+    private val getTermsByTypeUseCase: GetTermsByTypeUseCase, //타입으로 약관 가져오기
 ) : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
 
@@ -26,26 +32,49 @@ class MypageViewModel @Inject constructor(
     //초기 상태
     init {
         viewModelScope.launch {
-           getUserOutLinkUseCase().collect { outLink ->
-                updateState {
-                    copy(
-                        githubUrl = outLink.github,
-                        linkedinUrl = outLink.linkedin,
-                        blogUrl = outLink.blog
-                    )
+            launch {
+                //유저 3종 링크 가져오기
+                getUserOutLinkUseCase().collect { outLink ->
+                    updateState {
+                        copy(
+                            githubUrl = outLink.github,
+                            linkedinUrl = outLink.linkedin,
+                            blogUrl = outLink.blog
+                        )
+                    }
                 }
+            }
+            launch {
+                //유저 정보 가져오기
+                getUserInfo()
             }
         }
-        viewModelScope.launch {
-            getUserInfoUseCase().collect { userInfo ->
-                Log.d("log_home", "DataStore로부터 읽어옴: $userInfo")
-                updateState {
-                    copy(
-                        userInfo = userInfo,
-                    )
-                }
+    }
 
-            }
+    // 서버에서 내 정보 가져오기
+    fun getUserInfo() {
+        viewModelScope.launch {
+            resultResponse(
+                response = getMyProfileUseCase(),
+                successCallback = { userInfo ->
+                    updateState {
+                        copy(
+                            userInfo = userInfo
+                        )
+                    }
+
+                },
+                errorCallback = {
+                    /**TODO. 에러 토스트 메시지 등을 전송**/
+                }
+            )
+        }
+    }
+
+    //usecase를 통해 appdatastore에 저장된 내용 날리기
+    fun deleteAllData(){
+        viewModelScope.launch {
+            clearAllDataUseCase()
         }
     }
 
@@ -64,10 +93,6 @@ class MypageViewModel @Inject constructor(
         emitEvent(MypageFragmentEvent.NavigateToEditProfile)
     }
 
-    fun navigateToSuggetion(){
-        emitEvent(MypageFragmentEvent.NavigateToSuggetion)
-    }
-
     fun navigateToMypost(){
         emitEvent(MypageFragmentEvent.NavigateToMypost)
     }
@@ -80,7 +105,7 @@ class MypageViewModel @Inject constructor(
 
 
     fun navigateToAssistUmc(){
-        emitEvent(MypageFragmentEvent.NavigateToAssistUmc)
+        emitEvent(MypageFragmentEvent.NavigateToAssistUmc(uiState.value.kakaoInquireChannelId))
     }
 
 
@@ -96,12 +121,34 @@ class MypageViewModel @Inject constructor(
         emitEvent(MypageFragmentEvent.NavigateToSocialSetting)
     }
 
+    //개인정보처리 방침
     fun navigateToPersonalInformation(){
-        emitEvent(MypageFragmentEvent.NavigateToPersonalInformation)
+        viewModelScope.launch {
+            resultResponse(
+                response = getTermsByTypeUseCase(TermsType.PRIVACY),
+                successCallback = { term ->
+                    emitEvent(MypageFragmentEvent.NavigateToPersonalInformation(term.link))
+                },
+                errorCallback = {}
+            )
+        }
+
+
     }
-    
+
+    //이용 약관
     fun navigateToUseManual(){
-        emitEvent(MypageFragmentEvent.NavigateToUseManual)
+        viewModelScope.launch {
+            resultResponse(
+                response = getTermsByTypeUseCase(TermsType.SERVICE),
+                successCallback = { term ->
+                    emitEvent(MypageFragmentEvent.NavigateToUseManual(term.link))
+                },
+                errorCallback = {}
+            )
+        }
+
+
     }
     
     fun navigateToWebsiteUmc(){
@@ -111,6 +158,7 @@ class MypageViewModel @Inject constructor(
     fun navigateToInstagramUmc(){
         emitEvent(MypageFragmentEvent.NavigateToInstagramUmc)
     }
+
 
 
     fun deleteUser(){
@@ -146,6 +194,8 @@ data class MypageFragmentUiState(
     // UMC 외부 링크
     val websiteUMC : String = "https://umc.it.kr",
     val instagramUMC : String = "https://www.instagram.com/uni_makeus_challenge/",
+    val kakaoInquireChannelId : String = "_xjqxcln", //카카오 문의 채널
+    
     
 ) : UiState
 
@@ -156,24 +206,25 @@ sealed interface MypageFragmentEvent : UiEvent {
     object NavigateToLinkedin : MypageFragmentEvent //리으드인 링크
 
     object NavigateToEditProfile : MypageFragmentEvent //프로필 수정
-    object NavigateToSuggetion : MypageFragmentEvent //중앙 건의함
     object NavigateToMypost : MypageFragmentEvent //내가 쓴 글
     object NavigateToMyComment : MypageFragmentEvent //내가 쓴 댓글
     object NavigateToScrap : MypageFragmentEvent //스크랩
     
-    object NavigateToAssistUmc : MypageFragmentEvent // UMC 문의
+    data class NavigateToAssistUmc(val channelId: String) : MypageFragmentEvent // UMC 문의
 
     object NavigateToSettingNotice : MypageFragmentEvent //알림 설정
     object NavigateToSettingLocation : MypageFragmentEvent //위치 설정
 
     object NavigateToSocialSetting : MypageFragmentEvent //소셜 연동
 
-    object NavigateToPersonalInformation : MypageFragmentEvent //개인정보
-    object NavigateToUseManual : MypageFragmentEvent //이용 약관
+    data class NavigateToPersonalInformation(val privacyTerms : String) : MypageFragmentEvent //개인정보
+    data class NavigateToUseManual(val manualTerms : String) : MypageFragmentEvent //이용 약관
     
     //외부 채널 이동
     object NavigateToWebstieUmc : MypageFragmentEvent // UMC 웹사이트
     object NavigateToInstagramUmc : MypageFragmentEvent // UMC 인스타그램
+
+
 
     //로그아웃
     object Logout : MypageFragmentEvent

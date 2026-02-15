@@ -38,7 +38,7 @@ data class ChallengerResponse(
 
             val pointList = challengerPoints?.map { point ->
                 ChallengerPoint(
-                    id = point.id ?: 0,
+                    id = point.id ?: 0L,
                     date = "",
                     title = point.description ?: "사유 없음",
                     pointType = try {

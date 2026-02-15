@@ -18,6 +18,11 @@ import com.umc.presentation.databinding.FragmentMypageBinding
 import com.umc.presentation.ui.home.HomeFragmentDirections
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import coil.load
+import android.provider.Settings
+import com.kakao.sdk.talk.TalkApiClient
+import com.kakao.sdk.user.UserApiClient
+import com.umc.presentation.MainGraphDirections
 
 @AndroidEntryPoint
 class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState, MypageFragmentEvent, MypageViewModel>(
@@ -64,7 +69,12 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
         repeatOnStarted(viewLifecycleOwner){
             launch {
                 viewModel.uiState.collect { state ->
-
+                    //이미지 변화
+                    binding.mypageCircleimvProfile.load(state.userInfo.profileImageLink) {
+                        crossfade(true)
+                        placeholder(R.drawable.ic_profile_default)
+                        error(R.drawable.ic_profile_default)
+                    }
                 }
             }
 
@@ -106,10 +116,7 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
                 findNavController().navigate(action)
             }
 
-            is MypageFragmentEvent.NavigateToSuggetion -> {
-                val action = MypageFragmentDirections.actionMypageToSugget()
-                findNavController().navigate(action)
-            }
+
             is MypageFragmentEvent.NavigateToMypost -> {
                 val action = MypageFragmentDirections.actionMypageToMypost()
                 findNavController().navigate(action)
@@ -126,16 +133,16 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
 
 
             is MypageFragmentEvent.NavigateToAssistUmc -> {
-                /**TODO UMC 문의 이동 로직**/
+                openKakaoChannel(event.channelId)
             }
 
 
             is MypageFragmentEvent.NavigateToSettingNotice -> {
-                /**TODO 알림 설정 이동 로직**/
+                openPermissionPage()
             }
 
             is MypageFragmentEvent.NavigateToSettingLocation -> {
-                /**TODO 위치 설정 이동 로직**/
+                openPermissionPage()
             }
 
             is MypageFragmentEvent.NavigateToSocialSetting -> {
@@ -143,18 +150,22 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             }
 
             is MypageFragmentEvent.NavigateToPersonalInformation -> {
-                /**TODO 개인정보처리 방침 이동 로직**/
+                openWebpage(event.privacyTerms)
             }
 
             is MypageFragmentEvent.NavigateToUseManual -> {
-                /**TODO 이용약관 이동 로직**/
+                openWebpage(event.manualTerms)
 
             }
             
             is MypageFragmentEvent.Logout -> {
                 //1. 다이얼로그로 체크
                 val dialog = UMypageDialog(logoutDialogModel) {
-                    /**TODO 로그아웃 로직 생성**/
+
+                    viewModel.deleteAllData()
+                    val action = MainGraphDirections.actionGlobalToLogin()
+                    findNavController().navigate(action)
+
                 }
 
                 dialog.show(parentFragmentManager, "MyPageDialog")
@@ -165,6 +176,7 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
                 //1. 다이얼로그로 체크
                 val dialog = UMypageDialog(deleteUserDialogModel) {
                     /**TODO 회원 탈퇴 로직 생성**/
+
                 }
 
                 dialog.show(parentFragmentManager, "MyPageDialog")
@@ -233,6 +245,52 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
         catch (e: Exception){
             e.printStackTrace()
         }
+    }
+
+    //앱 권한 페이지로 이동(설정 페이지)
+    private fun openPermissionPage() {
+        try {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                // 현재 패키지 정보를 URI 데이터로 삽입
+                data = Uri.fromParts("package", requireContext().packageName, null)
+                // 기존 화면 흐름과 분리하여 새로운 태스크로 실행
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+
+        }
+
+    }
+
+    //카카오톡 문의 페이지로 이동
+    private fun openKakaoChannel(channelId: String){
+
+        if (UserApiClient.instance.isKakaoTalkLoginAvailable(requireContext())) {
+            // 카카오톡이 설치되어 있다면 앱 내 채널 채팅창으로 이동
+            TalkApiClient.instance.chatChannel(requireContext(), channelId) { error ->
+                if(error != null){
+                    // 만약 에러 호출 시 웹 브라우저 시도
+                    openKakaoChannelIntent(channelId)
+                }
+            }
+        } else {
+            // 카카오톡이 없다면 웹 브라우저로 우회
+            openKakaoChannelIntent(channelId)
+        }
+    }
+
+    // intent로 카카오 채널 열기
+    fun openKakaoChannelIntent(channelId: String){
+        val url = "https://pf.kakao.com/$channelId/chat"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        startActivity(intent)
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.getUserInfo()
     }
 
 

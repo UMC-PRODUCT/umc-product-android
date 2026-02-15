@@ -51,7 +51,6 @@ class BottomSheetCategoryPlanDialog(
     }
 
     override fun onCategoryToggled(item: CategoryItem) {
-        val event = PlanAddFragmentEvent.SelectCategory(item)
-        viewModel.handleEvent(event)
+        viewModel.selectCategory(item)
     }
 }

@@ -10,7 +10,7 @@ import javax.inject.Inject
 class CreateCommunityPostUseCase @Inject constructor(
     private val communityRepository: CommunityRepository
 ){
-    suspend operator fun invoke(request: CreatePost): ApiState<ContentItem> {
-        return communityRepository.createPost(request)
+    suspend operator fun invoke(challengerId: Long, request: CreatePost): ApiState<ContentItem> {
+        return communityRepository.createPost(challengerId, request)
     }
 }

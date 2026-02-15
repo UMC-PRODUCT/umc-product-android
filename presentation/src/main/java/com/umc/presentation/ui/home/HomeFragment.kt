@@ -254,6 +254,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
 
         val current = viewModel.uiState.value.selectedDate
         viewModel.getScheduleMonth(current.year, current.month)
+        viewModel.getUserInfo()
 
         super.onResume()
     }

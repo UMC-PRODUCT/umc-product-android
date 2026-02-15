@@ -26,7 +26,7 @@ data class ScheduleDetailResponse(
         fun ScheduleDetailResponse.toModel(): UserCheckAvailable {
             return UserCheckAvailable(
                 /**TODO: 후에 Long 마이그레이션 시 해당 부분 교체 요망**/
-                id = scheduleId.toInt(),
+                id = scheduleId,
                 title = name,
                 tags = tags,
                 sheetId = 0,
@@ -41,7 +41,7 @@ data class ScheduleDetailResponse(
         }
 
         fun ScheduleDetailResponse.toPlanDetailDomain(): PlanDetailItem {
-            // "T"를 기준으로 날짜와 시간을 분리 (UDomainUtil에 정의)
+            // "T"를 기준으로 날짜와 시간을 분리
             val (startDay, startTime) = startsAt.parseDateTime()
             val (endDay, endTime) = endsAt.parseDateTime()
 

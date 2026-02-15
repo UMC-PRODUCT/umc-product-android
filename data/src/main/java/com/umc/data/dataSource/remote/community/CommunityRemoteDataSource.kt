@@ -8,6 +8,7 @@ import com.umc.data.response.community.CommunitySearchPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
 import com.umc.data.response.community.PostLikeResponse
+import com.umc.data.response.community.PostScrapResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
 
@@ -29,16 +30,19 @@ interface CommunityRemoteDataSource {
     suspend fun searchPosts(keyword: String, page: Int, size: Int = 20): ApiState<CommunitySearchPostResponse>
 
     //게시글 작성
-    suspend fun createPost(request: CreatePostRequest): ApiState<PostDetailResponse>
+    suspend fun createPost(challengerId: Long, request: CreatePostRequest): ApiState<PostDetailResponse>
 
     //번개 게시글 작성
-    suspend fun createLightningPost(request: CreatePostLightningRequest): ApiState<PostDetailResponse>
+    suspend fun createLightningPost(challengerId: Long, request: CreatePostLightningRequest): ApiState<PostDetailResponse>
 
     //게시글 삭제 API
     suspend fun deletePost(postId: Long): ApiState<Unit>
 
     //게시글 좋아요 토글
     suspend fun togglePostLike(postId: Long, challengerId: Long): ApiState<PostLikeResponse>
+
+    //게시글 스크랩 토글
+    suspend fun togglePostScrap(postId: Long, challengerId: Long): ApiState<PostScrapResponse>
 
     //게시글 댓글 삭제
     suspend fun deleteComment(postId: Long, commentId: Long, challengerId: Long): ApiState<Unit>
