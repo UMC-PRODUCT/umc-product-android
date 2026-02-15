@@ -2,19 +2,22 @@ package com.umc.presentation.ui.notice.search
 
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentNoticeSearchBinding
 import com.umc.presentation.ui.notice.search.adapter.RecentSearchAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlin.getValue
 
 @AndroidEntryPoint
 class NoticeSearchFragment : BaseFragment<FragmentNoticeSearchBinding, NoticeSearchUiState, NoticeSearchEvent, NoticeSearchViewModel>(
     FragmentNoticeSearchBinding::inflate,
 ) {
     override val viewModel: NoticeSearchViewModel by viewModels()
+
+    private val args: NoticeSearchFragmentArgs by navArgs()
 
     private val recentSearchAdapter : RecentSearchAdapter by lazy {
         RecentSearchAdapter(object : RecentSearchAdapter.RecentSearchDelegate {
@@ -66,7 +69,7 @@ class NoticeSearchFragment : BaseFragment<FragmentNoticeSearchBinding, NoticeSea
     }
 
     private fun moveToSearchResult(search: String) {
-        val action = NoticeSearchFragmentDirections.actionNoticeSearchFragmentToNoticeSearchResultFragment(search)
+        val action = NoticeSearchFragmentDirections.actionNoticeSearchFragmentToNoticeSearchResultFragment(search, args.gisuId)
         findNavController().navigate(action)
     }
 }

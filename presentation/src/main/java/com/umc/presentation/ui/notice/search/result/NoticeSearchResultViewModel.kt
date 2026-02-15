@@ -1,102 +1,107 @@
 package com.umc.presentation.ui.notice.search.result
 
-import com.umc.domain.model.enums.NoticeCategory
-import com.umc.domain.model.notice.Notice
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.notice.NoticeSummary
+import com.umc.domain.usecase.notice.SearchNoticeListUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NoticeSearchResultViewModel
 @Inject
-constructor() : BaseViewModel<NoticeSearchResultUiState, NoticeSearchResultEvent>(
+constructor(
+    private val searchNoticeListUseCase: SearchNoticeListUseCase
+) : BaseViewModel<NoticeSearchResultUiState, NoticeSearchResultEvent>(
     NoticeSearchResultUiState(),
 ) {
-    init {
-        updateNoticeList(getDummyNotice())
+
+    fun initSearch(query: String, gisuId: Long) {
+        updateState {
+            copy(searchText = query, selectedGisu = gisuId)
+        }
+        searchNotices(query, isRefresh = true)
     }
 
-    private fun updateNoticeList(noticeList: List<Notice>) {
+    fun searchNotices(query: String, isRefresh: Boolean = false) {
+        val state = uiState.value
+
+        if (query.isBlank()) return
+        // 로딩 중이거나, 마지막 페이지면 중단
+        if (state.isPageLoading || (!isRefresh && state.isLastPage)) return
+
+        // 상태 초기화
         updateState {
             copy(
-                noticeList = noticeList
+                isPageLoading = true,
+                currentPage = if (isRefresh) 0 else currentPage,
+                isLastPage = if (isRefresh) false else isLastPage
+            )
+        }
+
+        viewModelScope.launch {
+            val pageToFetch = uiState.value.currentPage
+            val activeGisu = state.selectedGisu
+
+            resultResponse(
+                response = searchNoticeListUseCase(
+                    keyword = query,
+                    gisuId = activeGisu,
+                    page = pageToFetch,
+                    size = 20
+                ),
+                successCallback = { noticeSearch ->
+                    updateState {
+                        copy(
+                            // 새로고침이면 리스트 교체, 아니면 기존 리스트에 누적
+                            noticeList = if (isRefresh) noticeSearch.content else noticeList + noticeSearch.content,
+                            currentPage = pageToFetch + 1,
+                            isPageLoading = false,
+                            isLastPage = !noticeSearch.hasNext
+                        )
+                    }
+                },
+                errorCallback = {
+                    updateState { copy(isPageLoading = false) }
+                }
             )
         }
     }
 
-    private fun getDummyNotice(): List<Notice> {
-        return listOf(
-            Notice(
-                id = 1,
-                isMustRead = true,
-                category = NoticeCategory.CENTRAL_OFFICE,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-            Notice(
-                id = 2,
-                isMustRead = true,
-                category = NoticeCategory.BRANCH,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-            Notice(
-                id = 3,
-                isMustRead = false,
-                category = NoticeCategory.SCHOOL,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-            Notice(
-                id = 5,
-                isMustRead = false,
-                category = NoticeCategory.CENTRAL_OFFICE,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-            Notice(
-                id = 1,
-                isMustRead = false,
-                category = NoticeCategory.PART,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-        )
-    }
-
-    fun updateSearchText(text: String ){
+    fun updateSearchText(text: String) {
         updateState {
             copy(searchText = text)
+        }
+    }
+
+    fun loadNextPage() {
+        if (!uiState.value.isPageLoading && !uiState.value.isLastPage) {
+            searchNotices(uiState.value.searchText, isRefresh = false)
         }
     }
 
     fun onClickBack() {
         emitEvent(NoticeSearchResultEvent.MoveToBack)
     }
+
+    fun onClickNotice(noticeId: Long) {
+        emitEvent(NoticeSearchResultEvent.MoveToNoticeDetail(noticeId))
+    }
 }
 
 data class NoticeSearchResultUiState(
-    val noticeList: List<Notice> = emptyList(),
+    val noticeList: List<NoticeSummary> = emptyList(),
     val searchText: String = "",
+    val currentPage: Int = 0,
+    val isPageLoading: Boolean = false,
+    val isLastPage: Boolean = false,
+    val selectedGisu: Long = 0
 ) : UiState
 
 sealed interface NoticeSearchResultEvent : UiEvent {
-    data object MoveToBack: NoticeSearchResultEvent
+    data object MoveToBack : NoticeSearchResultEvent
+    data class MoveToNoticeDetail(val noticeId: Long) : NoticeSearchResultEvent
 }

@@ -2,7 +2,6 @@ package com.umc.presentation.ui.notice.search
 
 import android.view.inputmethod.EditorInfo
 import androidx.lifecycle.viewModelScope
-import com.umc.domain.model.enums.SearchMode
 import com.umc.domain.usecase.appDataStore.recent.AddRecentSearchNoticeUseCase
 import com.umc.domain.usecase.appDataStore.recent.ClearRecentSearchNoticeUseCase
 import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchNoticeUseCase
@@ -37,19 +36,10 @@ class NoticeSearchViewModel @Inject constructor(
         emitEvent(NoticeSearchEvent.MoveToBack)
     }
 
-    fun onQueryChanged(query: String) {
-        updateState {
-            copy(query = query)
-        }
-    }
-
     fun onImeAction(actionId: Int, text: String): Boolean {
         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
             viewModelScope.launch {
                 addRecentSearchNoticeUseCase(text)
-            }
-            updateState {
-                copy(mode = SearchMode.RESULT)
             }
             emitEvent(NoticeSearchEvent.MoveToSearchResult(text))
             return true
@@ -64,7 +54,6 @@ class NoticeSearchViewModel @Inject constructor(
         updateState {
             copy(
                 query = keyword,
-                mode = SearchMode.RESULT
             )
         }
         emitEvent(NoticeSearchEvent.MoveToSearchResult(keyword))
@@ -81,18 +70,12 @@ class NoticeSearchViewModel @Inject constructor(
             clearRecentSearchNoticeUseCase()
         }
     }
-
-    fun onChangeViewMode(mode: SearchMode) {
-        updateState {
-            copy(mode = mode)
-        }
-    }
 }
 
 data class NoticeSearchUiState(
     val query: String = "",
-    val mode: SearchMode = SearchMode.EMPTY,
-    val recentSearchList: List<String> = emptyList()
+    val recentSearchList: List<String> = emptyList(),
+    val selectedGisu: Long = 0
 ) : UiState
 
 sealed interface NoticeSearchEvent : UiEvent {

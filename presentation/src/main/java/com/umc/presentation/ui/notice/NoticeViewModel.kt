@@ -2,19 +2,15 @@ package com.umc.presentation.ui.notice
 
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.UserInfo
-import com.umc.domain.model.enums.NoticeCategory
-import com.umc.domain.model.notice.Notice
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.organization.GisuItem
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
-import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.notice.GetNoticeListUseCase
 import com.umc.domain.usecase.organization.GetGisuListUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
-import com.umc.presentation.util.ULog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -37,14 +33,6 @@ class NoticeViewModel @Inject constructor(
         updateState {
             copy(
                 chipList = chipList
-            )
-        }
-    }
-
-    private fun updateNoticeList(noticeList: List<NoticeSummary>) {
-        updateState {
-            copy(
-                noticeList = noticeList
             )
         }
     }
@@ -114,7 +102,7 @@ class NoticeViewModel @Inject constructor(
     }
 
     fun onClickSearch() {
-        emitEvent(NoticeEvent.MoveToSearchEvent)
+        emitEvent(NoticeEvent.MoveToSearchEvent(uiState.value.selectedGisu))
     }
 
     fun updateNowTitle(title: String, gisu: Long) {
@@ -165,22 +153,47 @@ class NoticeViewModel @Inject constructor(
     private fun getNoticeList(
         chapterId: Long? = null,
         schoolId: Long? = null,
-        part: String? = null
+        part: String? = null,
+        isRefresh: Boolean = true
     ) = viewModelScope.launch {
+        val state = uiState.value
+
+        // 로딩 중이거나, 마지막 페이지면 중단 (새로고침이 아닐 때)
+        if (state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
+
+        updateState { copy(isPageLoading = true) }
+
+        val pageToFetch = if (isRefresh) 0 else state.currentPage
 
         resultResponse(
             response = getNoticeListUseCase(
-                gisuId = uiState.value.selectedGisu,
+                gisuId = state.selectedGisu,
                 chapterId = chapterId,
                 schoolId = schoolId,
                 part = part,
-                page = 0,
+                page = pageToFetch,
                 size = 20
             ),
             successCallback = { noticeSearch ->
-                updateNoticeList(noticeSearch.content)
+                updateState {
+                    copy(
+                        noticeList = if (isRefresh) noticeSearch.content else noticeList + noticeSearch.content,
+                        currentPage = pageToFetch + 1,
+                        isPageLoading = false,
+                        isLastPage = !noticeSearch.hasNext
+                    )
+                }
+            },
+            errorCallback = {
+                updateState { copy(isPageLoading = false) }
             }
         )
+    }
+
+    fun loadNextPage() {
+        if (!uiState.value.isPageLoading && !uiState.value.isLastPage) {
+            getNoticeList(isRefresh = false)
+        }
     }
 }
 
@@ -192,11 +205,14 @@ data class NoticeUiState(
     val selectedSubChip: String = "파트",
     val dropdownList: List<GisuItem> = emptyList(),
     val chipList: List<NoticeChipState> = emptyList(),
-    val noticeList: List<NoticeSummary> = emptyList()
+    val noticeList: List<NoticeSummary> = emptyList(),
+    val currentPage: Int = 0,
+    val isPageLoading: Boolean = false,
+    val isLastPage: Boolean = false
 ) : UiState
 
 sealed interface NoticeEvent : UiEvent {
     object MoveToWriteEvent : NoticeEvent
 
-    object MoveToSearchEvent : NoticeEvent
+    data class MoveToSearchEvent(val gisuId: Long) : NoticeEvent
 }

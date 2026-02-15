@@ -5,13 +5,13 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.umc.domain.model.notice.Notice
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.component.adapter.DropDownAdapter
 import com.umc.presentation.databinding.FragmentNoticeBinding
+import com.umc.presentation.extension.addInfiniteScrollListener
 import com.umc.presentation.ui.notice.adapter.NoticeAdapter
 import com.umc.presentation.ui.notice.adapter.NoticeChipAdapter
 import com.umc.presentation.ui.notice.bottomsheet.NoticeChipBottomSheet
@@ -70,6 +70,10 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
                 adapter = noticeAdapter
                 layoutManager = LinearLayoutManager(context)
                 itemAnimator = null
+
+                addInfiniteScrollListener {
+                    viewModel.loadNextPage()
+                }
             }
 
             uchipAll.setOnClickListener { onClickChipAll() }
@@ -101,12 +105,12 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
     override fun handleEvent(event: NoticeEvent) {
         when (event) {
             NoticeEvent.MoveToWriteEvent -> navigateToNoticeWrite()
-            NoticeEvent.MoveToSearchEvent -> navigateToNoticeSearch()
+            is NoticeEvent.MoveToSearchEvent -> navigateToNoticeSearch(event.gisuId)
         }
     }
 
-    private fun navigateToNoticeSearch() {
-        val action = NoticeFragmentDirections.actionNoticeFragmentToNoticeSearchFragment()
+    private fun navigateToNoticeSearch(gisuId: Long) {
+        val action = NoticeFragmentDirections.actionNoticeFragmentToNoticeSearchFragment(gisuId)
         findNavController().navigate(action)
     }
 

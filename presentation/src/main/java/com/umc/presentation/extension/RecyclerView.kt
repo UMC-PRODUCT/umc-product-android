@@ -2,6 +2,7 @@ package com.umc.presentation.extension
 
 import android.graphics.Rect
 import android.view.View
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class VerticalSpaceItemDecoration(
@@ -19,4 +20,23 @@ class VerticalSpaceItemDecoration(
 
         outRect.bottom = spacePx
     }
+}
+
+fun RecyclerView.addInfiniteScrollListener(
+    threshold: Int = 2,
+    onLoadMore: () -> Unit
+) {
+    addOnScrollListener(object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+
+            val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
+            val lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition()
+            val totalItemCount = layoutManager.itemCount
+
+            if (lastVisibleItem >= totalItemCount - threshold) {
+                onLoadMore()
+            }
+        }
+    })
 }
