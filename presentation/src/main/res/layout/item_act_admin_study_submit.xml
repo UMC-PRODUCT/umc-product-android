@@ -100,7 +100,7 @@
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/ic_blog_link"
+                    android:src="@drawable/ic_swipe"
                     app:tint="@color/neutral300"
                     tools:ignore="ContentDescription" />
 
