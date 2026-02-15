@@ -43,14 +43,13 @@ class UserChallengerViewModel @Inject constructor(
     }
 
     private fun startFetchingAll(schoolId: Long, gisuId: Long?) {
-        // 기존 리스트를 비우고 새로 시작합니다.
         updateState { copy(allChallengers = emptyList(), filteredChallengers = emptyList()) }
         val accumulator = mutableListOf<UserChallenger>()
         fetchAllPages(schoolId, gisuId, null, accumulator)
     }
 
     /**
-     * hasNext가 false일 때까지 모든 페이지를 순차적으로 요청합니다.
+     * hasNext가 false일 때까지 모든 페이지를 순차적으로 요청
      */
     private fun fetchAllPages(
         schoolId: Long,
@@ -65,10 +64,10 @@ class UserChallengerViewModel @Inject constructor(
                     accumulator.addAll(data.challengers)
 
                     if (data.hasNext) {
-                        // 다음 페이지가 있으면 다시 호출합니다.
+                        // 다음 페이지가 있으면 다시 호출
                         fetchAllPages(schoolId, gisuId, data.nextCursor, accumulator)
                     } else {
-                        // 모든 데이터 확보 후 UI를 한 번에 갱신합니다.
+                        // 모든 데이터 확보 후 UI를 한 번에 갱신
                         updateState {
                             copy(
                                 allChallengers = accumulator,

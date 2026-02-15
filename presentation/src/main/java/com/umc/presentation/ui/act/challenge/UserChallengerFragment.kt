@@ -43,7 +43,6 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
 
         partOrder.forEach { part ->
             val headerAdapter = ChallengerHeaderAdapter(part.label)
-            // 어댑터 생성 시 클릭 리스너의 id 인자가 이제 Long이므로 navigateToDetail과 일치합니다.
             val itemAdapter = UserChallengerAdapter { id ->
                 viewModel.navigateToDetail(id)
             }
@@ -83,7 +82,6 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
 
                         headerAdapters[part]?.updateCount(list.size)
 
-                        // UI 모델 리스트 생성 - 어댑터 타입과 일치하여 에러가 해결됩니다.
                         val uiList = list.mapIndexed { index, challenger ->
                             UserChallengerUIModel(
                                 challenger = challenger,
