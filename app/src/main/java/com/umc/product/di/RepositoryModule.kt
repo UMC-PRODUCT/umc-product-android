@@ -98,4 +98,5 @@ abstract class RepositoryModule {
     @Binds
     abstract fun bindsTermsRepository(repositoryImpl: TermsRepositoryImpl): TermsRepository
 
+
 }

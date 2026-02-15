@@ -1,29 +1,41 @@
 package com.umc.presentation.ui.act.study.submit.model
 
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.usecase.curriculum.GetWorkbookSubmissionsUseCase
 import com.umc.presentation.base.BaseViewModel
-import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitAction
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-
-class AdminActStudySubmitViewModel :
-    BaseViewModel<AdminActStudySubmitState, AdminActStudySubmitEvent>(
-        AdminActStudySubmitState()
-    ) {
+@HiltViewModel
+class AdminActStudySubmitViewModel @Inject constructor(
+    private val getWorkbookSubmissionsUseCase: GetWorkbookSubmissionsUseCase,
+) : BaseViewModel<AdminActStudySubmitState, AdminActStudySubmitEvent>(
+    AdminActStudySubmitState()
+) {
 
     fun onAction(action: AdminActStudySubmitAction) {
         when (action) {
             is AdminActStudySubmitAction.SelectWeek -> {
                 updateState { copy(selectedWeek = action.week) }
-
+                loadWorkbookSubmissions(reset = true)
             }
 
             is AdminActStudySubmitAction.SelectGroupName -> {
+
                 updateState { copy(selectedGroupName = action.name) }
 
+
+                val mappedId = mapGroupNameToId(action.name)
+                updateState { copy(selectedGroupId = mappedId) }
+
+                loadWorkbookSubmissions(reset = true)
             }
 
             is AdminActStudySubmitAction.SelectGroup -> {
                 updateState { copy(selectedGroupId = action.groupId) }
-
+                loadWorkbookSubmissions(reset = true)
             }
 
             is AdminActStudySubmitAction.ClickBest -> {
@@ -43,13 +55,13 @@ class AdminActStudySubmitViewModel :
                 updateState { copy(reviewDialogTarget = null) }
 
             is AdminActStudySubmitAction.ConfirmBest -> {
-                // TODO API
+                // TODO: 베스트 설정 API 생기면 연결
                 emitEvent(AdminActStudySubmitEvent.ShowToast("베스트로 설정했어요."))
                 updateState { copy(bestDialogTarget = null) }
             }
 
             is AdminActStudySubmitAction.SubmitReview -> {
-                // TODO API
+                // TODO: PASS/FAIL 처리 API 생기면 연결
                 emitEvent(
                     AdminActStudySubmitEvent.ShowToast(
                         if (action.pass) "통과 처리했어요." else "반려 처리했어요."
@@ -60,31 +72,41 @@ class AdminActStudySubmitViewModel :
         }
     }
 
-    fun loadDummy() {
-        updateState {
-            copy(
-                items = listOf(
-                    AdminActStudySubmitItemUiModel(
-                        userId = 1,
-                        name = "홍길동",
-                        nickname = "닉네임",
-                        partLabel = "iOS",
-                        weekText = "1주차",
-                        studyTitle = "SwiftUI 플로팅 코딩",
-                        submitUrl = "https://github.com/...",
-                    ),
-                    AdminActStudySubmitItemUiModel(
-                        userId = 2,
-                        name = "김도연",
-                        nickname = "도리",
-                        partLabel = "Android",
-                        weekText = "1주차",
-                        studyTitle = "RecyclerView 구조 잡기",
-                        submitUrl = "https://github.com/...",
-                        isBest = true
-                    ),
-                )
-            )
+    fun loadWorkbookSubmissions(reset: Boolean) {
+        viewModelScope.launch {
+            val state = uiState.value
+            val cursor = if (reset) null else state.nextCursor
+
+            when (val res = getWorkbookSubmissionsUseCase(
+                weekNo = state.selectedWeek,
+                studyGroupId = state.selectedGroupId,
+                cursor = cursor,
+                size = 20
+            )) {
+                is ApiState.Success -> {
+                    val page = res.data
+                    val newItems = page.content
+                        .filter { it.status == "SUBMITTED" }
+                        .map { it.toUiModel(state.selectedWeek) }
+
+                    updateState {
+                        copy(
+                            items = if (reset) newItems else items + newItems,
+                            nextCursor = page.nextCursor,
+                            hasNext = page.hasNext,
+                        )
+                    }
+                }
+
+                is ApiState.Fail -> {
+                    emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
+                }
+            }
         }
+    }
+
+
+    private fun mapGroupNameToId(name: String): Long? {
+        return null // TODO: 그룹목록 API 붙이면 제거
     }
 }

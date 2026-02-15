@@ -21,7 +21,9 @@ import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitEvent
 import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitItemUiModel
 import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitState
 import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AdminActStudySubmitFragment :
     BaseFragment<
             FragmentAdminStudySubmitBinding,
@@ -86,7 +88,7 @@ class AdminActStudySubmitFragment :
             ).show(parentFragmentManager, "admin_act_study_submit_group")
         }
 
-        viewModel.loadDummy()
+        viewModel.loadWorkbookSubmissions(reset = true)
     }
 
     override fun initStates() {

@@ -117,5 +117,8 @@ object Endpoints {
         const val CURRICULUM = "api/v1/curriculums"
         const val CHALLENGER_ME_PROGRESS = "$CURRICULUM/challengers/me/progress"
         const val SUBMIT = "api/v1/challenger-workbooks/{challengerWorkbookId}/submissions"
+        const val WORKBOOK_SUBMISSIONS = "api/v1/curriculums/workbook-submissions"
+        const val STUDY_GROUPS = "api/v1/curriculums/study-groups"
+        const val AVAILABLE_WEEKS = "api/v1/curriculums/available-weeks"
     }
 }

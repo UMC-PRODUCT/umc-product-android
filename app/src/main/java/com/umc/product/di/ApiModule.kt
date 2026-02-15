@@ -84,4 +84,6 @@ object ApiModule {
     fun provideTermsApi(@AuthRetrofit retrofit: Retrofit): TermsApi {
         return retrofit.create(TermsApi::class.java)
     }
+
+
 }

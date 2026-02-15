@@ -5,6 +5,9 @@ import com.umc.presentation.base.UiState
 data class AdminActStudySubmitState(
     val selectedWeek: Int = 1,
 
+    val nextCursor: Long? = null,
+    val hasNext: Boolean = false,
+
     val selectedGroupName: String = "전체 그룹",
 
     val groupOptions: List<String> = listOf(

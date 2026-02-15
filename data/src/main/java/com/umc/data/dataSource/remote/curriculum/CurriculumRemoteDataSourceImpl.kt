@@ -6,7 +6,11 @@ import com.umc.data.response.curriculum.CurriculumProgressResponse
 import com.umc.domain.model.base.ApiState
 import javax.inject.Inject
 import com.umc.data.mapper.toFailState
+import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
 import com.umc.domain.model.base.FailState
+
+import com.umc.domain.model.base.ApiResponse
+
 
 
 class CurriculumRemoteDataSourceImpl @Inject constructor(
@@ -39,6 +43,33 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
             ApiState.Success(res.result ?: Unit)
         } catch (e: Exception) {
             ApiState.Fail(e.toFailState())
+        }
+    }
+
+    override suspend fun getWorkbookSubmissions(
+        weekNo: Int,
+        studyGroupId: Long?,
+        cursor: Long?,
+        size: Int,
+    ): ApiState<WorkbookSubmissionsResponse> = fetch {
+        curriculumApi.getWorkbookSubmissions(
+            weekNo = weekNo,
+            studyGroupId = studyGroupId,
+            cursor = cursor,
+            size = size,
+        )
+    }
+
+    private suspend fun <T> fetch(call: suspend () -> ApiResponse<T>): ApiState<T> {
+        return try {
+            val response = call()
+            if (response.success) {
+                ApiState.Success(response.result ?: error("Data is null"))
+            } else {
+                ApiState.Fail(FailState(false, response.code, response.message))
+            }
+        } catch (e: Exception) {
+            ApiState.Fail(FailState(false, "UNKNOWN", e.message ?: "알 수 없는 오류"))
         }
     }
 }
