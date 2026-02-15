@@ -114,7 +114,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
                 //수정 모드에 따른 UI 및 터치 로직
                 val isEditMode = viewModel.uiState.value.updateScheduleId != -1L
-                isEnabled = isEditMode //수정 모드이면 터치 못하게 막기
+                isEnabled = !isEditMode //수정 모드이면 터치 못하게 막기
 
                 val bgColor = if (isEditMode) {
                     context.getColor(R.color.neutral100)
