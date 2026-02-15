@@ -84,11 +84,22 @@ class UserChallengerViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 클라이언트 측 로컬 필터링 수행
+     */
     fun filterList(query: String) {
-        val filtered = uiState.value.allChallengers.filter {
-            it.name.contains(query) || it.nickname.contains(query)
+        val allChallengers = uiState.value.allChallengers
+
+        if (query.isBlank()) {
+            // 검색어가 비어있으면 전체 리스트를 보여줌
+            updateState { copy(filteredChallengers = allChallengers) }
+        } else {
+            val filtered = allChallengers.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                        it.nickname.contains(query, ignoreCase = true)
+            }
+            updateState { copy(filteredChallengers = filtered) }
         }
-        updateState { copy(filteredChallengers = filtered) }
     }
 
     fun navigateToDetail(id: Long) {

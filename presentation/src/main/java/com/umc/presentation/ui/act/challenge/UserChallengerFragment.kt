@@ -26,8 +26,10 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
     private val itemAdapters = mutableMapOf<UserPart, UserChallengerAdapter>()
 
     override fun initView() {
+        binding.viewModel = viewModel
+        binding.lifecycleOwner = viewLifecycleOwner
+
         setupRecyclerView()
-        setupSearch()
 
         binding.root.setOnClickListener {
             val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
@@ -68,10 +70,6 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
             clipToPadding = false
             setPadding(0, 0, 0, 64.px)
         }
-    }
-
-    private fun setupSearch() {
-        binding.searchBar.setOnTextChangedListener { text -> viewModel.filterList(text) }
     }
 
     override fun initStates() {
