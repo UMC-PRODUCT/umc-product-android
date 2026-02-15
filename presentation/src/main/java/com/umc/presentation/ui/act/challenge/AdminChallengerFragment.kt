@@ -35,12 +35,10 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
     private val itemAdapters = mutableMapOf<UserPart, AdminChallengerAdapter>()
 
     override fun initView() {
-        setupRecyclerView()
+        binding.viewModel = viewModel
+        binding.lifecycleOwner = viewLifecycleOwner
 
-        // 검색바 텍스트 변경 리스너 연결
-        binding.searchBar.setOnTextChangedListener { text ->
-            viewModel.filterList(text)
-        }
+        setupRecyclerView()
 
         // 배경 클릭 시 포커스 해제
         binding.root.setOnClickListener {

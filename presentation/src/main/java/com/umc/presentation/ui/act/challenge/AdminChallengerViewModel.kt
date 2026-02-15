@@ -128,10 +128,18 @@ class AdminChallengerViewModel @Inject constructor(
     }
 
     fun filterList(query: String) {
-        val filtered = uiState.value.allChallengers.filter {
-            it.name.contains(query) || it.nickname.contains(query)
+        val allChallengers = uiState.value.allChallengers
+
+        if (query.isBlank()) {
+            // 검색어가 비어있으면 전체 리스트를 보여줌
+            updateState { copy(filteredChallengers = allChallengers, searchQuery = "") }
+        } else {
+            val filtered = allChallengers.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                        it.nickname.contains(query, ignoreCase = true)
+            }
+            updateState { copy(filteredChallengers = filtered, searchQuery = query) }
         }
-        updateState { copy(filteredChallengers = filtered) }
     }
 
     // 상세 정보 API 호출 함수
@@ -151,7 +159,8 @@ class AdminChallengerViewModel @Inject constructor(
 
 data class AdminChallengerUiState(
     val allChallengers: List<AdminChallenger> = emptyList(),
-    val filteredChallengers: List<AdminChallenger> = emptyList()
+    val filteredChallengers: List<AdminChallenger> = emptyList(),
+    val searchQuery: String = ""
 ) : UiState
 
 sealed interface AdminChallengerEvent : UiEvent {
