@@ -1,9 +1,11 @@
 package com.umc.presentation.ui.notice.detail
 
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.umc.domain.model.notice.VoteItem
+import com.umc.domain.model.notice.NoticeVoteOption
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentNoticeDetailBinding
 import com.umc.presentation.ui.notice.detail.adapter.NoticeDetailVoteAdapter
@@ -18,10 +20,12 @@ class NoticeDetailFragment :
     ) {
     override val viewModel: NoticeDetailViewModel by viewModels()
 
+    private val args: NoticeDetailFragmentArgs by navArgs()
+
     private val noticeDetailVoteAdapter: NoticeDetailVoteAdapter by lazy {
         NoticeDetailVoteAdapter(object : NoticeDetailVoteAdapter.NoticeDetailVoteDelegate {
-            override fun onClickVote(item: VoteItem) {
-                //viewModel.onClickVoteItem(item)
+            override fun onClickVote(item: NoticeVoteOption) {
+                viewModel.onClickVoteItem(item)
             }
         })
     }
@@ -29,6 +33,8 @@ class NoticeDetailFragment :
     override fun initView() {
         binding.apply {
             vm = viewModel
+
+            viewModel.init(args.noticeId)
 
             recyclerVote.apply {
                 adapter = noticeDetailVoteAdapter
@@ -49,9 +55,10 @@ class NoticeDetailFragment :
             }
 
             launch {
-                viewModel.uiState.collect {
-                    // TODO 수정
-                    //noticeDetailVoteAdapter.submitList(it.detail.vote.options)
+                viewModel.uiState.collect { state ->
+                    state.detail.vote?.options?.let { options ->
+                        noticeDetailVoteAdapter.submitList(options)
+                    }
                 }
             }
         }
@@ -61,6 +68,12 @@ class NoticeDetailFragment :
         when (event) {
             NoticeFragmentEvent.MoveBackPressedEvent -> findNavController().popBackStack()
             NoticeFragmentEvent.ShowBottomSheetEvent -> showBottomSheet()
+            is NoticeFragmentEvent.ShowError -> {
+                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+            }
+            is NoticeFragmentEvent.ShowSuccess -> {
+                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
