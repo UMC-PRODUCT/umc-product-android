@@ -102,11 +102,27 @@ class UserChallengerViewModel @Inject constructor(
     }
 
     fun navigateToDetail(id: Long) {
+        // 1. 현재 리스트 상태 확인 로그
+        val allChallengers = uiState.value.allChallengers
+        android.util.Log.d("UserChallengerVM", "전체 리스트 개수: ${allChallengers.size}")
+
+        // 2. 클릭한 ID로 챌린저 검색
+        val selectedChallenger = allChallengers.find { it.id == id }
+
+        if (selectedChallenger == null) {
+            android.util.Log.e("UserChallengerVM", "ID $id 에 해당하는 유저를 리스트에서 찾을 수 없습니다.")
+        } else {
+            android.util.Log.d("UserChallengerVM", "찾은 유저: ${selectedChallenger.name}, pointSum: ${selectedChallenger.pointSum}")
+        }
+
         viewModelScope.launch {
             resultResponse(
                 response = getChallengerDetailUseCase(id),
                 successCallback = { detail ->
-                    emitEvent(UserChallengerEvent.NavigateToDetail(detail))
+                    val finalModel = detail.copy(
+                        warningCount = selectedChallenger?.pointSum ?: 0.0
+                    )
+                    emitEvent(UserChallengerEvent.NavigateToDetail(finalModel))
                 },
                 errorCallback = { failState ->
                     emitEvent(UserChallengerEvent.ShowErrorToast(failState.message))

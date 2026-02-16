@@ -72,6 +72,7 @@ data class ChallengerCursorItemResponse(
             generation = generation,
             part = UserPart.valueOf(part),
             role = extractDisplayRole(roleTypes),
+            pointSum = pointSum,
             profileImage = profileImageLink
         )
     }
