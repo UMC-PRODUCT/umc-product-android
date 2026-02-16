@@ -1,6 +1,8 @@
 package com.umc.presentation.ui.act.challenge
 
 import android.view.View
+import android.widget.ImageView
+import coil.load
 import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
 import com.umc.domain.model.enums.CheckHistoryStatus
@@ -19,13 +21,13 @@ object UserChallengerBindingAdapters {
         }
 
         view.visibility = View.VISIBLE
-        view.setText(role.label)
+        view.setText(role.displayName)
 
         // 역할별 색상 리소스 정의
         val (bgColorRes, textColorRes, borderColorRes) = when (role) {
-            UserChallengerRole.LEADER -> Triple(R.color.warning100, R.color.warning700, R.color.warning300)
-            UserChallengerRole.SUB_LEADER -> Triple(R.color.accent100, R.color.accent700, R.color.accent300)
-            UserChallengerRole.PART_LEADER -> Triple(R.color.success100, R.color.success700, R.color.success300)
+            UserChallengerRole.SCHOOL_PRESIDENT -> Triple(R.color.warning100, R.color.warning700, R.color.warning300)
+            UserChallengerRole.SCHOOL_VICE_PRESIDENT -> Triple(R.color.accent100, R.color.accent700, R.color.accent300)
+            UserChallengerRole.SCHOOL_PART_LEADER -> Triple(R.color.success100, R.color.success700, R.color.success300)
             else -> Triple(R.color.neutral100, R.color.neutral700, R.color.neutral200)
         }
 
@@ -55,5 +57,14 @@ object UserChallengerBindingAdapters {
 
         view.setTextColor(textColor)
         view.setUBackgroundColor(bgColor)
+    }
+
+    @JvmStatic
+    @BindingAdapter("profileImageUrl")
+    fun setProfileImageUrl(view: ImageView, url: String?) {
+        view.load(url) {
+            placeholder(R.drawable.ic_profile_default)
+            error(R.drawable.ic_profile_default)
+        }
     }
 }

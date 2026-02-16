@@ -9,5 +9,12 @@ data class AdminChallenger(
     val generation: Int,
     val part: UserPart,
     val outCount: Int = 0,
-    val warningCount: Int = 0
+    val warningCount: Int = 0,
+    val profileImage: String? = null
+)
+
+data class AdminChallengerList(
+    val challengers: List<AdminChallenger>,
+    val nextCursor: Long?,
+    val hasNext: Boolean
 )

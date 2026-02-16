@@ -39,7 +39,7 @@ data class ChallengerResponse(
             val pointList = challengerPoints?.map { point ->
                 ChallengerPoint(
                     id = point.id ?: 0L,
-                    date = "",
+                    date = point.createdAt ?: "",
                     title = point.description ?: "사유 없음",
                     pointType = try {
                         PointType.valueOf(point.pointType ?: "WARNING")

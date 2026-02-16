@@ -15,36 +15,45 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingVertical="4dp">
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text='@{item.date ?? "2024.01.01"}'
+            android:textAppearance="@style/Subheadline"
+            android:textColor="@color/neutral500"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="2024.01.01" />
 
         <TextView
             android:id="@+id/tv_type"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:maxLines="1"
+            android:ellipsize="end"
             android:text="@{item.title}"
             android:textAppearance="@style/Subheadline"
             android:textColor="@color/neutral800"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/tv_status"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tv_date"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="스터디 미제출" />
 
-        <com.umc.presentation.component.UButton
+        <TextView
             android:id="@+id/tv_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:clickable="false"
-            app:adminStatusStyle="@{item.pointType.name()}"
-            app:text='@{item.pointType.name().equals("OUT") ? "아웃 +1" : "경고 +1"}'
-            app:textAppearance="@style/Caption1Bold"
-            app:cornerRadius="4dp"
-            app:contentPaddingTop="4dp"
-            app:contentPaddingBottom="4dp"
-            app:contentPaddingLeft="8dp"
-            app:contentPaddingRight="8dp"
+            android:text='@{item.pointType.name().equals("OUT") ? "아웃 +1" : "경고 +1"}'
+            android:textAppearance="@style/Subheadline"
+            android:textColor='@{item.pointType.name().equals("OUT") ? @color/neutral800 : @color/neutral800}'
             app:layout_constraintBottom_toBottomOf="@id/tv_type"
             app:layout_constraintEnd_toStartOf="@id/btn_remove"
             app:layout_constraintTop_toTopOf="@id/tv_type"
