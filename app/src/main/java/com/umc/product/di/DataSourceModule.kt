@@ -22,6 +22,8 @@ import com.umc.data.dataSource.remote.storage.StorageRemoteDataSource
 import com.umc.data.dataSource.remote.storage.StorageRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.terms.TermsRemoteDataSource
 import com.umc.data.dataSource.remote.terms.TermsRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.workbook.WorkbookRemoteDataSource
+import com.umc.data.dataSource.remote.workbook.WorkbookRemoteDataSourceImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -89,6 +91,12 @@ abstract class DataSourceModule {
     @Binds
     abstract fun bindsTermsRemoteDataSource(dataSourceImpl: TermsRemoteDataSourceImpl): TermsRemoteDataSource
 
+
+    @Singleton
+    @Binds
+    abstract fun bindWorkbookRemoteDataSource(
+        impl: WorkbookRemoteDataSourceImpl
+    ): WorkbookRemoteDataSource
 
 
 }

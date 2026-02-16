@@ -1,7 +1,7 @@
 package com.umc.domain.usecase.curriculum
 
 import com.umc.domain.repository.curriculum.CurriculumRepository
-import jakarta.inject.Inject
+import javax.inject.Inject
 
 class GetStudyGroupsUseCase @Inject constructor(
     private val repository: CurriculumRepository

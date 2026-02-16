@@ -16,6 +16,7 @@ import com.umc.data.repository.curriculum.CurriculumRepositoryImpl
 import com.umc.data.repository.schedule.ScheduleRepositoryImpl
 import com.umc.data.repository.storage.StorageRepositoryImpl
 import com.umc.data.repository.terms.TermsRepositoryImpl
+import com.umc.data.repository.workbook.WorkbookRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
 import com.umc.domain.repository.OrganizationRepository
 import com.umc.domain.repository.attendance.AttendanceRepository
@@ -24,6 +25,7 @@ import com.umc.domain.repository.curriculum.CurriculumRepository
 import com.umc.domain.repository.schedule.ScheduleRepository
 import com.umc.domain.repository.storage.StorageRepository
 import com.umc.domain.repository.terms.TermsRepository
+import com.umc.domain.repository.workbook.WorkbookRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -97,6 +99,10 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindsTermsRepository(repositoryImpl: TermsRepositoryImpl): TermsRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindWorkbookRepository(impl: WorkbookRepositoryImpl): WorkbookRepository
 
 
 }

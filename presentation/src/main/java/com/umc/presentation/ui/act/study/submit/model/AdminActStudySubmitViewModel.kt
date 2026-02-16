@@ -5,6 +5,8 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.usecase.curriculum.GetAvailableWeeksUseCase
 import com.umc.domain.usecase.curriculum.GetStudyGroupsUseCase
 import com.umc.domain.usecase.curriculum.GetWorkbookSubmissionsUseCase
+import com.umc.domain.usecase.workbook.ReviewWorkbookUseCase
+import com.umc.domain.usecase.workbook.SelectBestWorkbookUseCase
 import com.umc.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -17,6 +19,8 @@ class AdminActStudySubmitViewModel @Inject constructor(
     private val getWorkbookSubmissionsUseCase: GetWorkbookSubmissionsUseCase,
     private val getStudyGroupsUseCase: GetStudyGroupsUseCase,
     private val getAvailableWeeksUseCase: GetAvailableWeeksUseCase,
+    private val selectBestWorkbookUseCase: SelectBestWorkbookUseCase,
+    private val reviewWorkbookUseCase: ReviewWorkbookUseCase,
 ) : BaseViewModel<AdminActStudySubmitState, AdminActStudySubmitEvent>(
     AdminActStudySubmitState()
 ) {
@@ -60,20 +64,49 @@ class AdminActStudySubmitViewModel @Inject constructor(
                 updateState { copy(reviewDialogTarget = null) }
 
             is AdminActStudySubmitAction.ConfirmBest -> {
-                // TODO: 베스트 설정 API
-                emitEvent(AdminActStudySubmitEvent.ShowToast("베스트로 설정했어요."))
-                updateState { copy(bestDialogTarget = null) }
+                val target = uiState.value.bestDialogTarget ?: return
+
+                viewModelScope.launch {
+                    when (val res = selectBestWorkbookUseCase(
+                        challengerWorkbookId = target.challengerWorkbookId,
+                        reason = action.reason
+                    )) {
+                        is ApiState.Success -> {
+                            emitEvent(AdminActStudySubmitEvent.ShowToast("베스트로 설정했어요."))
+                            updateState { copy(bestDialogTarget = null) }
+                            loadWorkbookSubmissions(reset = true)
+                        }
+                        is ApiState.Fail -> {
+                            emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
+                        }
+                    }
+                }
             }
 
+
             is AdminActStudySubmitAction.SubmitReview -> {
-                // TODO: PASS/FAIL 처리 API
-                emitEvent(
-                    AdminActStudySubmitEvent.ShowToast(
-                        if (action.pass) "통과 처리했어요." else "반려 처리했어요."
-                    )
-                )
-                updateState { copy(reviewDialogTarget = null) }
+                val target = uiState.value.reviewDialogTarget ?: return
+
+                val status = if (action.pass) "PASS" else "FAIL"
+
+                viewModelScope.launch {
+                    when (val res = reviewWorkbookUseCase(
+                        challengerWorkbookId = target.challengerWorkbookId,
+                        status = status,
+                        feedback = action.feedback // 있으면, 없으면 null
+                    )) {
+                        is ApiState.Success -> {
+                            emitEvent(AdminActStudySubmitEvent.ShowToast(if (action.pass) "통과 처리했어요." else "반려 처리했어요."))
+                            updateState { copy(reviewDialogTarget = null) }
+                            loadWorkbookSubmissions(reset = true)
+                        }
+                        is ApiState.Fail -> {
+                            emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
+                        }
+                    }
+                }
             }
+
         }
     }
 

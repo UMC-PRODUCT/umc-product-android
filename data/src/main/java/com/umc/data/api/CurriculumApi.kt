@@ -11,6 +11,7 @@ import retrofit2.http.Query
 import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
 import com.umc.data.response.curriculum.AvailableWeeksResponse
 import com.umc.data.response.curriculum.StudyGroupResponse
+import retrofit2.http.PATCH
 
 interface CurriculumApi {
 
@@ -42,4 +43,7 @@ interface CurriculumApi {
 
     @GET(Endpoints.Curriculum.AVAILABLE_WEEKS)
     suspend fun getAvailableWeeks(): ApiResponse<AvailableWeeksResponse>
+
+
+
 }

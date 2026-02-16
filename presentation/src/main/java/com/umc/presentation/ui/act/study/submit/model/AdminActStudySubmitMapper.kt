@@ -4,6 +4,7 @@ import com.umc.domain.model.curriculum.WorkbookSubmissionItem
 
 fun WorkbookSubmissionItem.toUiModel(weekNo: Int?): AdminActStudySubmitItemUiModel =
     AdminActStudySubmitItemUiModel(
+        challengerWorkbookId = challengerWorkbookId,
         userId = challengerId,
         name = challengerName,
         nickname = "",
@@ -11,5 +12,5 @@ fun WorkbookSubmissionItem.toUiModel(weekNo: Int?): AdminActStudySubmitItemUiMod
         weekText = weekNo?.let { "${it}주차" } ?: "",
         studyTitle = workbookTitle,
         submitUrl = "",
-        isBest = false
+
     )

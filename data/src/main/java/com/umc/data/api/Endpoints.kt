@@ -122,4 +122,10 @@ object Endpoints {
         const val AVAILABLE_WEEKS = "api/v1/curriculums/available-weeks"
 
     }
+
+    object Workbook {
+        const val BEST = "api/v1/workbooks/challenger/{challengerWorkbookId}/best"
+        const val REVIEW = "api/v1/workbooks/challenger/{challengerWorkbookId}/review"
+    }
+
 }
