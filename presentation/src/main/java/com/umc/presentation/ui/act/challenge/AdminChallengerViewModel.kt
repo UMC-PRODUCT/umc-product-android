@@ -98,14 +98,15 @@ class AdminChallengerViewModel @Inject constructor(
     fun grantPoint(challengerId: Int, type: PointType, description: String) {
         viewModelScope.launch {
             val request = ChallengerPointRequest(type, description)
-            when (val result = grantChallengerPointUseCase(challengerId.toLong(), request)) {
-                is ApiState.Success -> {
-                    emitEvent(AdminChallengerEvent.ShowManageDialog(result.data))
+            resultResponse(
+                response = grantChallengerPointUseCase(challengerId.toLong(), request),
+                successCallback = { data ->
+                    emitEvent(AdminChallengerEvent.ShowManageDialog(data))
+                },
+                errorCallback = { failState ->
+                    emitEvent(AdminChallengerEvent.ShowErrorToast(failState.message))
                 }
-                is ApiState.Fail -> {
-                    emitEvent(AdminChallengerEvent.ShowErrorToast(result.failState.message))
-                }
-            }
+            )
         }
     }
 
@@ -145,14 +146,15 @@ class AdminChallengerViewModel @Inject constructor(
     // 상세 정보 API 호출 함수
     fun onChallengerClicked(id: Int) {
         viewModelScope.launch {
-            when (val result = getAdminChallengerDetailUseCase(id.toLong())) {
-                is ApiState.Success -> {
-                    emitEvent(AdminChallengerEvent.ShowManageDialog(result.data))
+            resultResponse(
+                response = getAdminChallengerDetailUseCase(id.toLong()),
+                successCallback = { data ->
+                    emitEvent(AdminChallengerEvent.ShowManageDialog(data))
+                },
+                errorCallback = { failState ->
+                    emitEvent(AdminChallengerEvent.ShowErrorToast(failState.message))
                 }
-                is ApiState.Fail -> {
-                    emitEvent(AdminChallengerEvent.ShowErrorToast(result.failState.message))
-                }
-            }
+            )
         }
     }
 }
