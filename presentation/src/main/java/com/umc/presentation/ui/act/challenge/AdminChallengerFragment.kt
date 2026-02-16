@@ -21,6 +21,7 @@ import com.umc.presentation.databinding.FragmentAdminChallengerBinding
 import com.umc.presentation.extension.px
 import com.umc.presentation.ui.act.adapter.ChallengerHeaderAdapter
 import com.umc.presentation.ui.act.adapter.AdminChallengerAdapter
+import com.umc.presentation.util.UFormat
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -34,12 +35,10 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
     private val itemAdapters = mutableMapOf<UserPart, AdminChallengerAdapter>()
 
     override fun initView() {
-        setupRecyclerView()
+        binding.viewModel = viewModel
+        binding.lifecycleOwner = viewLifecycleOwner
 
-        // 검색바 텍스트 변경 리스너 연결
-        binding.searchBar.setOnTextChangedListener { text ->
-            viewModel.filterList(text)
-        }
+        setupRecyclerView()
 
         // 배경 클릭 시 포커스 해제
         binding.root.setOnClickListener {
@@ -104,12 +103,17 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
     override fun handleEvent(event: AdminChallengerEvent) {
         when (event) {
             is AdminChallengerEvent.ShowManageDialog -> {
+                val formattedHistory = event.model.history.map { point ->
+                    point.copy(date = UFormat.parseDateTime(point.date).first)
+                }
+                val formattedModel = event.model.copy(history = formattedHistory)
+
                 val existingDialog = childFragmentManager.findFragmentByTag("UChallengerManageDialog") as? ChallengerManageDialog
 
                 if (existingDialog != null && existingDialog.isAdded) {
-                    existingDialog.updateData(event.model)
+                    existingDialog.updateData(formattedModel)
                 } else {
-                    showManageDialog(event.model, event.model.challengerId.toInt())
+                    showManageDialog(formattedModel, formattedModel.challengerId.toInt())
                 }
             }
             is AdminChallengerEvent.ShowErrorToast -> {
@@ -136,7 +140,9 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
                         content = "삭제된 기록은 복구가 어렵습니다.",
                         positiveText = "삭제하기"
                     ),
-                    onConfirm = { /* TODO */ }
+                    onConfirm = {
+                        viewModel.deletePoint(challengerId, point.id)
+                    }
                 )
                 warningDialog.show(childFragmentManager, "DeleteWarningDialog")
             }

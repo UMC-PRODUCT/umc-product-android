@@ -26,10 +26,11 @@ object Endpoints {
         const val CHALLENGER = "api/v1/challenger"
         const val DETAIL = "$CHALLENGER/{challengerId}"
         const val POINT = "$CHALLENGER/{challengerId}/points"
+        const val DELETE_POINT = "$CHALLENGER/points/{challengerPointId}"
 
         //일정 검색 용도
         const val SEARCH_SCHEDULE = "$CHALLENGER/search/global"
-
+        const val SEARCH_CURSOR = "$CHALLENGER/search/cursor"
     }
 
     object Member {
