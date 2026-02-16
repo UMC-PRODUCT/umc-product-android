@@ -187,7 +187,7 @@ constructor(
                 CategoryType.entries.find { it.label == item.name }?.name
             }
 
-        //TODO 참여자 ID 임시 하드코딩 (차후 수정 가능하도록 리스트로 관리)
+
         val participantIds = state.selectedParticipants.map { it.id }
 
         viewModelScope.launch {

@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.DefaultItemAnimator
 import com.umc.domain.model.community.CommentItem
 import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.R
@@ -101,6 +102,10 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
         postDetailAdapter = PostDetailAdapter(this)
         binding.postdetailRcv.apply {
             adapter = postDetailAdapter
+
+            //애니메이션 끄기
+            (itemAnimator as? DefaultItemAnimator)?.supportsChangeAnimations = false
+
         }
 
         //일정 화면에서 게시글 id 가져오기
