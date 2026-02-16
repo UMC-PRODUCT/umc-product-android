@@ -9,6 +9,8 @@ import com.umc.domain.model.act.challenger.UserChallenger
 import com.umc.domain.model.act.challenger.UserPartCount
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
+import com.umc.domain.model.home.ParticipantItem
+import com.umc.domain.model.home.ParticipantSearchPage
 
 /**
  * 챌린저 목록 조회를 위한 커서 기반 응답 DTO
@@ -35,6 +37,16 @@ data class ChallengerCursorResponse(
             hasNext = cursor.hasNext
         )
     }
+
+    fun toParticipantSearchPage(): ParticipantSearchPage {
+        return ParticipantSearchPage(
+            // cursor 내부의 content 리스트를 순회하며 ParticipantItem으로 변환합니다.
+            content = this.cursor.content.map { it.toParticipantItem() },
+            nextCursor = this.cursor.nextCursor,
+            hasNext = this.cursor.hasNext
+        )
+    }
+
 }
 
 /**
@@ -47,8 +59,8 @@ data class ChallengerCursorItemResponse(
     val memberId: Long,
     @SerializedName("gisuId")
     val gisuId: Long,
-    @SerializedName("generation")
-    val generation: Int,
+    @SerializedName("gisu")
+    val gisu: Int,
     @SerializedName("part")
     val part: String,
     @SerializedName("name")
@@ -69,7 +81,7 @@ data class ChallengerCursorItemResponse(
             id = challengerId,
             name = name,
             nickname = nickname,
-            generation = generation,
+            generation = gisu,
             part = UserPart.valueOf(part),
             role = extractDisplayRole(roleTypes),
             profileImage = profileImageLink
@@ -81,11 +93,25 @@ data class ChallengerCursorItemResponse(
             id = challengerId.toInt(),
             name = name,
             nickname = nickname,
-            generation = generation,
+            generation = gisu,
             part = UserPart.valueOf(part),
             outCount = 0, // 초기값 설정
             warningCount = 0, // 초기값 설정
             profileImage = profileImageLink
+        )
+    }
+    
+    //일정 생성용 변경
+    fun toParticipantItem(): ParticipantItem{
+        return ParticipantItem(
+            id = memberId,
+            name = name,
+            nickname = nickname,
+            school = schoolName,
+            gisu = gisu.toLong(),
+            userPart = UserPart.valueOf(part),
+            profileImage = profileImageLink ?: ""
+            
         )
     }
 

@@ -7,6 +7,8 @@ import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.model.home.ParticipantSearchPage
 
 
+/**해당 response는 challengerCUrsorResponse와 통합되었습니다.**/
+
 //챌린저 검색(일정 생성 용도로 할 때의 결과)
 data class ChallengerSearchScheduleResponse (
     @SerializedName("cursor") val cursor: ChallengerCursorData
