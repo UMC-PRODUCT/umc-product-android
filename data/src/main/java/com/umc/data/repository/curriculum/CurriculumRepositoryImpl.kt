@@ -1,15 +1,15 @@
 package com.umc.data.repository.curriculum
 
 import com.umc.data.dataSource.remote.curriculum.CurriculumRemoteDataSource
+import com.umc.data.mapper.curriculum.toDomain
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.CursorPage
 import com.umc.domain.model.base.map
+import com.umc.domain.model.curriculum.StudyGroup
 import com.umc.domain.model.curriculum.WorkbookSubmissionItem
 import com.umc.domain.model.study.StudyProgress
 import com.umc.domain.repository.curriculum.CurriculumRepository
 import javax.inject.Inject
-import com.umc.data.mapper.curriculum.toDomain
-
 
 class CurriculumRepositoryImpl @Inject constructor(
     private val remote: CurriculumRemoteDataSource
@@ -25,29 +25,27 @@ class CurriculumRepositoryImpl @Inject constructor(
         }
     }
 
-
     override suspend fun submitChallengerWorkbook(
         challengerWorkbookId: Long,
         submission: String
     ) = remote.submitChallengerWorkbook(challengerWorkbookId, submission)
 
-
     override suspend fun getWorkbookSubmissions(
-        weekNo: Int,
+        weekNo: Int?,
         studyGroupId: Long?,
         cursor: Long?,
-        size: Int,
+        size: Int
     ): ApiState<CursorPage<WorkbookSubmissionItem>> {
         return remote.getWorkbookSubmissions(weekNo, studyGroupId, cursor, size)
-            .map { it.toDomain() }
+            .map { response -> response.toDomain() }
     }
 
     override suspend fun getStudyGroups(
         schoolId: Long,
         part: String
-    ) = remoteDataSource.getStudyGroups(schoolId, part)
+    ): ApiState<List<StudyGroup>> =
+        remote.getStudyGroups(schoolId, part)
 
-    override suspend fun getAvailableWeeks()
-            = remoteDataSource.getAvailableWeeks()
-
+    override suspend fun getAvailableWeeks(): ApiState<List<Int>> =
+        remote.getAvailableWeeks()
 }

@@ -46,6 +46,8 @@ class AdminActStudySubmitFragment :
     override fun initView() {
         binding.vm = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
+        binding.state = AdminActStudySubmitState()
+
 
         adapter = AdminActStudySubmitAdapter(
             onClickBest = { item -> viewModel.onAction(AdminActStudySubmitAction.ClickBest(item)) },
@@ -71,7 +73,7 @@ class AdminActStudySubmitFragment :
 
         binding.clWeekDropdown.setOnClickListener {
             AdminActStudySubmitWeekSelectBottomSheet(
-                weeks = (1..7).toList(),
+                weeks = latestState.availableWeeks,
                 onSelect = { week ->
                     viewModel.onAction(AdminActStudySubmitAction.SelectWeek(week))
                 }
@@ -79,9 +81,10 @@ class AdminActStudySubmitFragment :
         }
 
 
+
         binding.clGroupDropdown.setOnClickListener {
             AdminActStudySubmitGroupSelectBottomSheet(
-                groups = latestState.groupOptions,
+                groups = viewModel.getGroupNames(latestState),
                 onSelect = { name ->
                     viewModel.onAction(AdminActStudySubmitAction.SelectGroupName(name))
                 }

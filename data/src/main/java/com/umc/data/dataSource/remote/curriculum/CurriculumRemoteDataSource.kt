@@ -20,7 +20,7 @@ interface CurriculumRemoteDataSource {
     ): ApiState<Unit>
 
     suspend fun getWorkbookSubmissions(
-        weekNo: Int,
+        weekNo: Int?,
         studyGroupId: Long?,
         cursor: Long?,
         size: Int,
@@ -29,22 +29,7 @@ interface CurriculumRemoteDataSource {
     suspend fun getStudyGroups(
         schoolId: Long,
         part: String
-    ): ApiState<List<StudyGroup>> {
-        return try {
-            val response = curriculumApi.getStudyGroups(schoolId, part)
-            ApiState.Success(response.result.map { it.toDomain() })
-        } catch (e: Exception) {
-            ApiState.Fail(e.toFailState())
-        }
-    }
+    ): ApiState<List<StudyGroup>>
 
-    suspend fun getAvailableWeeks(): ApiState<List<Int>> {
-        return try {
-            val response = curriculumApi.getAvailableWeeks()
-            ApiState.Success(response.result.weeks)
-        } catch (e: Exception) {
-            ApiState.Fail(e.toFailState())
-        }
-    }
-
+    suspend fun getAvailableWeeks(): ApiState<List<Int>>
 }

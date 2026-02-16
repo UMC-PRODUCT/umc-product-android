@@ -2,18 +2,29 @@ package com.umc.presentation.ui.act.study.submit.model
 
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.usecase.curriculum.GetAvailableWeeksUseCase
+import com.umc.domain.usecase.curriculum.GetStudyGroupsUseCase
 import com.umc.domain.usecase.curriculum.GetWorkbookSubmissionsUseCase
 import com.umc.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
+
 @HiltViewModel
 class AdminActStudySubmitViewModel @Inject constructor(
     private val getWorkbookSubmissionsUseCase: GetWorkbookSubmissionsUseCase,
+    private val getStudyGroupsUseCase: GetStudyGroupsUseCase,
+    private val getAvailableWeeksUseCase: GetAvailableWeeksUseCase,
 ) : BaseViewModel<AdminActStudySubmitState, AdminActStudySubmitEvent>(
     AdminActStudySubmitState()
 ) {
+
+    init {
+        loadFilterData()
+        loadWorkbookSubmissions(reset = true)
+    }
 
     fun onAction(action: AdminActStudySubmitAction) {
         when (action) {
@@ -23,13 +34,7 @@ class AdminActStudySubmitViewModel @Inject constructor(
             }
 
             is AdminActStudySubmitAction.SelectGroupName -> {
-
-                updateState { copy(selectedGroupName = action.name) }
-
-
-                val mappedId = mapGroupNameToId(action.name)
-                updateState { copy(selectedGroupId = mappedId) }
-
+                updateState { copy(selectedGroupId = mapGroupNameToId(action.name)) }
                 loadWorkbookSubmissions(reset = true)
             }
 
@@ -55,13 +60,13 @@ class AdminActStudySubmitViewModel @Inject constructor(
                 updateState { copy(reviewDialogTarget = null) }
 
             is AdminActStudySubmitAction.ConfirmBest -> {
-                // TODO: 베스트 설정 API 생기면 연결
+                // TODO: 베스트 설정 API
                 emitEvent(AdminActStudySubmitEvent.ShowToast("베스트로 설정했어요."))
                 updateState { copy(bestDialogTarget = null) }
             }
 
             is AdminActStudySubmitAction.SubmitReview -> {
-                // TODO: PASS/FAIL 처리 API 생기면 연결
+                // TODO: PASS/FAIL 처리 API
                 emitEvent(
                     AdminActStudySubmitEvent.ShowToast(
                         if (action.pass) "통과 처리했어요." else "반려 처리했어요."
@@ -72,17 +77,52 @@ class AdminActStudySubmitViewModel @Inject constructor(
         }
     }
 
+    fun getGroupNames(state: AdminActStudySubmitState): List<String> {
+        return listOf("전체 그룹") + state.studyGroups.map { group ->
+            group.name
+        }
+    }
+
+
+    fun getSelectedGroupName(state: AdminActStudySubmitState?): String {
+        val safeState = state ?: return "전체 그룹"
+        val id = safeState.selectedGroupId ?: return "전체 그룹"
+        return safeState.studyGroups.firstOrNull { it.id == id }?.name ?: "전체 그룹"
+    }
+
+
+
+
+    private fun loadFilterData() {
+        viewModelScope.launch {
+            val schoolId = 18L
+            val part = "ANDROID"
+
+            when (val res = getStudyGroupsUseCase(schoolId, part)) {
+                is ApiState.Success -> updateState { copy(studyGroups = res.data) }
+                is ApiState.Fail -> emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
+            }
+
+            when (val res = getAvailableWeeksUseCase()) {
+                is ApiState.Success -> updateState { copy(availableWeeks = res.data) }
+                is ApiState.Fail -> Unit
+            }
+        }
+    }
+
     fun loadWorkbookSubmissions(reset: Boolean) {
         viewModelScope.launch {
             val state = uiState.value
             val cursor = if (reset) null else state.nextCursor
 
-            when (val res = getWorkbookSubmissionsUseCase(
-                weekNo = state.selectedWeek,
-                studyGroupId = state.selectedGroupId,
-                cursor = cursor,
-                size = 20
-            )) {
+            when (
+                val res = getWorkbookSubmissionsUseCase(
+                    weekNo = state.selectedWeek,
+                    studyGroupId = state.selectedGroupId,
+                    cursor = cursor,
+                    size = 20
+                )
+            ) {
                 is ApiState.Success -> {
                     val page = res.data
                     val newItems = page.content
@@ -105,8 +145,14 @@ class AdminActStudySubmitViewModel @Inject constructor(
         }
     }
 
-
     private fun mapGroupNameToId(name: String): Long? {
-        return null // TODO: 그룹목록 API 붙이면 제거
+        if (name == "전체 그룹") return null
+
+        val group = uiState.value.studyGroups.firstOrNull { group ->
+            group.name == name
+        }
+
+        return group?.id
     }
+
 }

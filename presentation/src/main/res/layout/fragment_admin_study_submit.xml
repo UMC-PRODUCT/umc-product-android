@@ -81,7 +81,7 @@
                         android:id="@+id/tv_group"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text='@{state.selectedGroupName != null ? state.selectedGroupName : "전체 그룹"}'
+                        android:text='@{vm.getSelectedGroupName(state)}'
                         android:textAppearance="@style/Caption1Bold"
                         android:textColor="@color/neutral700"
                         app:layout_constraintStart_toStartOf="parent"

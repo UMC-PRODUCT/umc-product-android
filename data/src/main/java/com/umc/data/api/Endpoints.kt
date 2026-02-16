@@ -120,5 +120,6 @@ object Endpoints {
         const val WORKBOOK_SUBMISSIONS = "api/v1/curriculums/workbook-submissions"
         const val STUDY_GROUPS = "api/v1/curriculums/study-groups"
         const val AVAILABLE_WEEKS = "api/v1/curriculums/available-weeks"
+
     }
 }

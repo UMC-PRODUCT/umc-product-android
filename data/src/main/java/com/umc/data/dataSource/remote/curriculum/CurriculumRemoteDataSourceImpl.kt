@@ -10,7 +10,7 @@ import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
 import com.umc.domain.model.base.FailState
 
 import com.umc.domain.model.base.ApiResponse
-
+import com.umc.domain.model.curriculum.StudyGroup
 
 
 class CurriculumRemoteDataSourceImpl @Inject constructor(
@@ -47,7 +47,7 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun getWorkbookSubmissions(
-        weekNo: Int,
+        weekNo: Int?,
         studyGroupId: Long?,
         cursor: Long?,
         size: Int,
@@ -58,6 +58,27 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
             cursor = cursor,
             size = size,
         )
+    }
+
+    override suspend fun getStudyGroups(
+        schoolId: Long,
+        part: String
+    ): ApiState<List<StudyGroup>> {
+        return try {
+            val response = curriculumApi.getStudyGroups(schoolId, part)
+            ApiState.Success(response.result?.map { it.toDomain() } ?: emptyList())
+        } catch (e: Exception) {
+            ApiState.Fail(e.toFailState())
+        }
+    }
+
+    override suspend fun getAvailableWeeks(): ApiState<List<Int>> {
+        return try {
+            val response = curriculumApi.getAvailableWeeks()
+            ApiState.Success(response.result?.weeks ?: emptyList())
+        } catch (e: Exception) {
+            ApiState.Fail(e.toFailState())
+        }
     }
 
     private suspend fun <T> fetch(call: suspend () -> ApiResponse<T>): ApiState<T> {
