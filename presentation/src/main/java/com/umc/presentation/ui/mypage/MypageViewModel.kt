@@ -6,6 +6,9 @@ import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.TermsType
+import com.umc.domain.model.enums.UserChallengerRole
+import com.umc.domain.model.enums.UserPart
+import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
@@ -62,6 +65,7 @@ class MypageViewModel @Inject constructor(
                             userInfo = userInfo
                         )
                     }
+                    settingUserInfoToUI(userInfo)
 
                 },
                 errorCallback = {
@@ -70,6 +74,45 @@ class MypageViewModel @Inject constructor(
             )
         }
     }
+
+
+    //UserInfo를 받아았을 때 이를 파싱해서 UI 요소로 분할하는 함수
+    fun settingUserInfoToUI(userInfo: UserInfo){
+        // 기수별 정보가 담긴 것.
+        val gisuSummaryList = userInfo.getGisuSummaryList()
+
+        // 최신기수를 가져오기
+        val latestGisu = gisuSummaryList.maxByOrNull { it.gisu }
+
+        latestGisu?.let { summary ->
+            //권위 or 챌린저에서 1개 선택
+            val representativeItem = summary.fromRoles.firstOrNull() ?: summary.fromRecords.firstOrNull()
+
+            val positionString = representativeItem?.let { item ->
+                //파트명 변환 (UserPart Enum 활용, 없으면 빈 문자열)
+                val partLabel = runCatching { UserPart.valueOf(item.responsiblePart ?: "").label }
+                    .getOrNull()?.let { "$it " } ?: ""
+
+                //직함명 변환 (displayName이 null이면 원본 role 사용)
+                val roleEnum = UserChallengerRole.from(item.role)
+                val roleLabel = roleEnum.displayName ?: item.role
+
+                //최종 포맷: "N기 Part Role"
+                "${summary.gisu}기 $partLabel$roleLabel"
+            } ?: "${summary.gisu}기 챌린저" // 예외 상황 대비 기본값
+
+            updateState {
+                copy(
+                    myRecentCarrer = positionString
+                )
+            }
+
+        }
+            
+
+
+    }
+
 
     //usecase를 통해 appdatastore에 저장된 내용 날리기
     fun deleteAllData(){
@@ -183,7 +226,6 @@ data class MypageFragmentUiState(
     val loginType: LoginType = LoginType.KAKAO,
     
     // 현재 직책
-    val myCareer : List<String> = listOf("8기 Android 챌린저", "9기 Android 중앙 파트장", "9기 칸 맞추기 기다란 텍스트"),
     val myRecentCarrer : String = "9기 Android 중앙 파트장",
 
     // 링크 데이터

@@ -9,6 +9,7 @@ data class PostCommentResponse(
     @SerializedName("postId") val postId: Long,
     @SerializedName("challengerId") val challengerId: Long,
     @SerializedName("challengerName") val challengerName: String?,
+    @SerializedName("challengerProfileImage") val challengerProfileImage: String?,
     @SerializedName("content") val content: String,
     @SerializedName("createdAt") val createdAt: String?
 ) {
@@ -26,6 +27,7 @@ data class PostCommentResponse(
                 postId = this.postId,
                 challengerId = this.challengerId,
                 challengerName = this.challengerName,
+                challengerProfileImage = this.challengerProfileImage ?: "",
                 content = this.content,
                 createdAt = formatTime
             )
