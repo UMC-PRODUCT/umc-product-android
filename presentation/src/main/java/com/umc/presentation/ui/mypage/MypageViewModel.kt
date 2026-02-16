@@ -1,18 +1,15 @@
 package com.umc.presentation.ui.mypage
 
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.UserInfo
-import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.TermsType
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
-import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
-import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
+import com.umc.domain.usecase.member.DeleteUserUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import com.umc.presentation.base.BaseViewModel
@@ -27,6 +24,7 @@ class MypageViewModel @Inject constructor(
     private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //유저 outlink 3종 세트 얻기
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val clearAllDataUseCase : ClearAllDataUseCase, //모든 정보 삭제하기
+    private val deleteUserUseCase: DeleteUserUseCase, //회원 탈퇴
     private val getTermsByTypeUseCase: GetTermsByTypeUseCase, //타입으로 약관 가져오기
 ) : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
@@ -205,7 +203,21 @@ class MypageViewModel @Inject constructor(
 
 
     fun deleteUser(){
-        emitEvent(MypageFragmentEvent.DeleteUser)
+        viewModelScope.launch {
+            resultResponse(
+                response = deleteUserUseCase(),
+                successCallback = {
+                    viewModelScope.launch {
+                        // 회원 탈퇴 성공 시 dataStore의 모든 데이터 삭제
+                        clearAllDataUseCase()
+                        emitEvent(MypageFragmentEvent.DeleteUser)
+                    }
+                },
+                errorCallback = {
+                    /**TODO. 에러 토스트 메시지 등을 전송**/ 
+                }
+            )
+        }
     }
 
     fun logout(){

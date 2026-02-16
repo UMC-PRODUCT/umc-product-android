@@ -12,5 +12,6 @@ interface MemberRemoteDataSource {
     suspend fun register(request: RegisterRequest): ApiState<JwtLoginResponse>
 
     suspend fun updateMyProfile(request: UpdateMyProfileRequest): ApiState<MemberResponse>
+    suspend fun deleteUser(): ApiState<Unit>
 }
 
