@@ -1,6 +1,8 @@
 package com.umc.presentation.ui.community.detail
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.enums.ContentType
@@ -81,7 +83,10 @@ constructor(
             //0. 유저 정보 가져오기 (별도 분리)
             launch {
                 getUserInfoUseCase().collect { userInfo ->
-                    updateState { copy(myId = userInfo.id) }
+                    updateState { copy(
+                        myInfo = userInfo,
+                        myId = userInfo.id
+                    ) }
                 }
             }
 
@@ -99,7 +104,7 @@ constructor(
             var fetchedContent: ContentItem? = null
             var fetchedComments: List<CommentItem>? = null
 
-            //3. 결과를 따로 처리
+            //3. 결과를 따로 처리 (본문)
             resultResponse(
                 response = detailResult,
                 successCallback = {
@@ -120,6 +125,9 @@ constructor(
                 }
             )
 
+            Log.d("log_community", "게시글 정보: ${fetchedContent}")
+            Log.d("log_community", "유저 정보: ${uiState.value.myInfo}")
+
             //4. 댓글만 받아왔거나 다 실패한 경우 나가기
             if(fetchedContent == null && fetchedComments == null){
                 emitEvent(PostDetailFragmentEvent.ShowErrorToast("게시글을 불러오는데 실패했습니다."))
@@ -128,11 +136,13 @@ constructor(
 
             //5. 둘다 정상이면 한 번에 재조립
             else if (fetchedContent != null && fetchedComments != null) {
+                checkIsAuthor(fetchedContent.userId)
                 rebuildDetailList(fetchedContent, fetchedComments)
             }
 
             //6. 게시글만 받아왔을 경우 (일단 빌드)
             else if(fetchedContent != null){
+                checkIsAuthor(fetchedContent.userId)
                 rebuildDetailList(fetchedContent, uiState.value.nowCommentList)
                 emitEvent(PostDetailFragmentEvent.ShowErrorToast("댓글을 불러오는데 실패했습니다."))
             }
@@ -189,6 +199,20 @@ constructor(
         }
     }
 
+    //게시글이 현재 유저 것인지 비교
+    fun checkIsAuthor(authorId : Long){
+        val isAuthor = authorId == uiState.value.myId
+
+        updateState {
+            if(isAuthor){
+                copy(isAuthor = true)
+            }
+            else{
+                copy(isAuthor = false)
+            }
+        }
+
+    }
 
 
     // 좋아요 토글
@@ -325,6 +349,7 @@ data class PostDetailFragmentUiState(
 
     //내 ID
     /**TODO. 얘는 MemberId인지 ChallengerId인지 확인 필요**/
+    val myInfo : UserInfo? = null,
     val myId : Long = -1L,
 
     //현재 게시글

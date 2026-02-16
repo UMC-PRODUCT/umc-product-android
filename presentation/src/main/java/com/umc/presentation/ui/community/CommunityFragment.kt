@@ -95,7 +95,10 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
 
         when(event){
             is CommunityFragmentEvent.NavigateWrite -> {
-                val action = CommunityFragmentDirections.actionCommunityToPostWrite()
+                //전역 action을 이동
+                val action = CommunityFragmentDirections.actionCommunityToPostWrite(
+                    postId = -1L
+                )
                 findNavController().navigate(action)
             }
             is CommunityFragmentEvent.NavigateSearch -> {

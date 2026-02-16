@@ -18,7 +18,7 @@ data class PostDetailResponse(
     @SerializedName("userPart") val userPart: String,           // 게시글 작성자 유저파트
     @SerializedName("lightningInfo") val lightningInfo: LightningInfoResponse?, // 번개 모임 상세 정보 (일반글은 null)
     @SerializedName("commentCount") val commentCount: Int,      // 댓글 수
-    @SerializedName("writeTime") val writeTime: String,        // 게시글 생성 시간
+    @SerializedName("writeTime") val writeTime: String?,        // 게시글 생성 시간
     @SerializedName("likeCount") val likeCount: Int,            // 좋아요 수
     @SerializedName("isLiked") val isLiked: Boolean,            // 좋아요 여부
     @SerializedName("scrapCount") val scrapCount: Int,          // 스크랩 수
@@ -27,7 +27,12 @@ data class PostDetailResponse(
 ) {
     companion object {
         fun PostDetailResponse.toContentItemDomain(): ContentItem {
-            val (writeDay, writeTime) = this.writeTime.parseDateTime()
+            val formatTime = if (this.writeTime.isNullOrBlank()) {
+                ""
+            } else {
+                val (writeDay, writeClock) = this.writeTime.parseDateTime()
+                "${writeDay} ${writeClock}"
+            }
 
             return ContentItem(
 
@@ -40,7 +45,7 @@ data class PostDetailResponse(
                 },
                 username = this.authorName,
                 userId = this.authorId,
-                writeTime = "${writeDay} ${writeTime}",
+                writeTime = formatTime,
                 likes = this.likeCount,
                 comments = this.commentCount,
                 content = this.content,

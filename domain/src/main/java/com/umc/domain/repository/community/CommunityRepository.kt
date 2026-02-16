@@ -32,6 +32,7 @@ interface CommunityRepository {
     // 번개 게시글 작성
     suspend fun createLightningPost(challengerId: Long, request: CreateLightningPost): ApiState<ContentItem>
 
+
     // 게시글 삭제하기
     suspend fun deletePost(postId: Long): ApiState<Unit>
 
@@ -47,6 +48,10 @@ interface CommunityRepository {
 
     // 게시글 수정하기
     suspend fun updatePost(postId: Long, request: CreatePost): ApiState<ContentItem>
+
+    // 번개글 수정하기
+    suspend fun updateLightningPost(postId: Long, request: CreateLightningPost): ApiState<ContentItem>
+
 
     //내 게시글 가져오기
     suspend fun getMyPosts(page: Int, size: Int): ApiState<PostPageModel>

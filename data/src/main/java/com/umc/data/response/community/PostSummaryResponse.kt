@@ -16,7 +16,7 @@ data class PostSummaryResponse(
     @SerializedName("authorId")val authorId: Long,             // 게시글 작성자 ID
     @SerializedName("authorName")val authorName: String,       // 게시글 작성자 이름
     @SerializedName("authorProfileImage")val authorProfileImage: String?,       // 게시글 작성자 프로필 이미지
-    @SerializedName("createdAt") val createdAt: String,        // 게시글 생성 시간
+    @SerializedName("createdAt") val createdAt: String?,        // 게시글 생성 시간
     @SerializedName("commentCount") val commentCount: Int,      // 댓글 수
     @SerializedName("likeCount") val likeCount: Int,            // 좋아요 수
     @SerializedName("isLiked") val isLiked: Boolean,            // 좋아요 여부
@@ -25,7 +25,12 @@ data class PostSummaryResponse(
     companion object {
         fun PostSummaryResponse.toContentItemDomain(): ContentItem {
 
-            val (writeDay, writeTime) = this.createdAt.parseDateTime()
+            val formatTime = if (this.createdAt.isNullOrBlank()) {
+                ""
+            } else {
+                val (writeDay, writeClock) = this.createdAt.parseDateTime()
+                "${writeDay} ${writeClock}"
+            }
 
             return ContentItem(
                 postId = this.postId,
@@ -38,7 +43,7 @@ data class PostSummaryResponse(
                 userId = this.authorId,
                 username = this.authorName,
                 userProfileImage = this.authorProfileImage ?: "",
-                writeTime = "${writeDay} ${writeTime}",
+                writeTime = formatTime,
                 likes = this.likeCount,
                 comments = this.commentCount,
                 content = this.content,

@@ -116,6 +116,15 @@ class CommunityRepositoryImpl @Inject constructor(
             it.toContentItemDomain() }
     }
 
+    //번개글 수정하기
+    override suspend fun updateLightningPost(postId: Long, request: CreateLightningPost
+    ): ApiState<ContentItem> {
+        val request = CreatePostLightningRequest(request.title, request.content,
+            request.meetAt, request.location, request.maxParticipants, request.openChatUrl)
+        return communityRemoteDataSource.updateLightningPost(postId, request).map {
+            it.toContentItemDomain() }
+    }
+
     //내가 작성한 글 가져오기
     override suspend fun getMyPosts(page: Int, size: Int): ApiState<PostPageModel> {
         return communityRemoteDataSource.getMyPosts(page, size).map {

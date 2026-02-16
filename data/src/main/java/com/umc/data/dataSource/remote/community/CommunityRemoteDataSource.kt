@@ -50,6 +50,9 @@ interface CommunityRemoteDataSource {
     //게시글 수정하기
     suspend fun updatePost(postId: Long, request: CreatePostRequest): ApiState<PostDetailResponse>
 
+    //번개글 수정
+    suspend fun updateLightningPost(postId: Long, request: CreatePostLightningRequest): ApiState<PostDetailResponse>
+
     //내 게시글 가져오기
     suspend fun getMyPosts(page: Int, size: Int = 20): ApiState<CommunityGetPostResponse>
 

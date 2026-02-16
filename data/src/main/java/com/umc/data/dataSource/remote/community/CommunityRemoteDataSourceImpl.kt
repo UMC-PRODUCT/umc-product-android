@@ -95,6 +95,12 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
         return apiCall { communityApi.updatePost(postId, request) }
     }
 
+    //번개글 수정하기
+    override suspend fun updateLightningPost(postId: Long, request: CreatePostLightningRequest
+    ): ApiState<PostDetailResponse> {
+        return apiCall { communityApi.updateLightningPost(postId, request) }
+    }
+
     //내 게시글 가저여괴
     override suspend fun getMyPosts(page: Int, size: Int): ApiState<CommunityGetPostResponse> {
         return apiCall {communityApi.getMyPosts(page, size)}

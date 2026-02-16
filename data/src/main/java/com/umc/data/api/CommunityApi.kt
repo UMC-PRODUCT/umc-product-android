@@ -108,6 +108,13 @@ interface CommunityApi {
         @Body request: CreatePostRequest
     ): ApiResponse<PostDetailResponse>
 
+    //번개글 수정
+    @PATCH(Endpoints.Community.MODIFY_LIGHTNING)
+    suspend fun updateLightningPost(
+        @Path("postId") postId: Long,
+        @Body request: CreatePostLightningRequest
+    ): ApiResponse<PostDetailResponse>
+
 
     //내가 쓴 글 조회
     @GET(Endpoints.Community.MY_POST)
