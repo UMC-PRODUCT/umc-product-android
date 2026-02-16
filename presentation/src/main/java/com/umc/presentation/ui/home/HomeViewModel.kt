@@ -140,13 +140,40 @@ class HomeViewModel @Inject constructor(
             .sortedBy { it.gisu } // 기수 번호 낮은 순으로 정렬
             .map { "${it.gisu}기" } // String 포맷팅
 
-        // 2. 기수
+        // 2. 최신기수를 가져오기
+        val latestGisu = gisuSummaryList.maxByOrNull { it.gisu }
 
+        //3. 기본 정보 우선 업데이트
         updateState {
             copy(
                 userName = userInfo.name,
                 gisuTag = gisuTags
             )
+        }
+
+        //4. 최신기수의 날짜 가져오기
+        latestGisu?.let { summary ->
+            viewModelScope.launch {
+                resultResponse(
+                    response = getGisuInfoUseCase(summary.gisuId),
+                    successCallback = { gisuInfo ->
+                        //5. 성공 시 날짜 계산
+                        val (passedDay, userStatus) = getPassedDaysStatus(gisuInfo.startAt, gisuInfo.endAt)
+
+                        updateState {
+                            copy(
+                                userType = userStatus,
+                                growDay = passedDay.toInt(),
+                            )
+                        }
+
+                    },
+                    errorCallback = {
+
+                    }
+                )
+            }
+
         }
 
     }
@@ -198,7 +225,7 @@ class HomeViewModel @Inject constructor(
     }
 
     //최신 기수 날짜 정보를 통해, OB인지 ACTIVE인지 판단하고, 몇일 지났는지 표현
-    fun getPassedDaysStatus(startDateStr: String, endDateStr: String): Long {
+    fun getPassedDaysStatus(startDateStr: String, endDateStr: String): Pair<Long, UserType> {
         val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
         val startDate = LocalDate.parse(startDateStr, formatter)
         val endDate = LocalDate.parse(endDateStr, formatter)
@@ -207,11 +234,13 @@ class HomeViewModel @Inject constructor(
         //오늘이 종료일보다 뒤면 (OB)
         return if (today.isAfter(endDate)) {
             //종료일로부터 오늘까지 며칠 지났는지 계산
-            ChronoUnit.DAYS.between(endDate, today)
+            val days = ChronoUnit.DAYS.between(endDate, today)
+            Pair(days, UserType.OB)
         } else {
             //오늘이 종료일 이전이거나 종료일 당일인 경우
             //시작일로부터 오늘까지 며칠 지났는지 계산
-            ChronoUnit.DAYS.between(startDate, today)
+            val days = ChronoUnit.DAYS.between(startDate, today)
+            Pair(days, UserType.ACTIVE)
         }
     }
 
@@ -260,9 +289,9 @@ data class HomeFragmentUiState(
     val viewMode: HomeViewMode = HomeViewMode.CALENDAR,
 
     // 유저 정보 영역
-    val userName: String = "홍길동",
-    val growDay: Int = 731,
-    val gisuTag: List<String> = listOf("11기", "12기", "13기"),
+    val userName: String = "",
+    val growDay: Int = 0,
+    val gisuTag: List<String> = emptyList(),
 
     val userType: UserType = UserType.ACTIVE,
 
