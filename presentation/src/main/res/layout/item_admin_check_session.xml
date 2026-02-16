@@ -75,6 +75,7 @@
                 app:backgroundColor="@color/neutral000"
                 app:borderColor="@color/neutral300"
                 app:borderWidth="1dp"
+                app:prevIcon="@drawable/ic_location_update"
                 app:cornerRadius="8dp"
                 app:contentPaddingLeft="8dp"
                 app:contentPaddingRight="8dp"

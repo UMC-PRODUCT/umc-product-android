@@ -102,11 +102,16 @@ class UserChallengerViewModel @Inject constructor(
     }
 
     fun navigateToDetail(id: Long) {
+        val allChallengers = uiState.value.allChallengers
+        val selectedChallenger = allChallengers.find { it.id == id }
         viewModelScope.launch {
             resultResponse(
                 response = getChallengerDetailUseCase(id),
                 successCallback = { detail ->
-                    emitEvent(UserChallengerEvent.NavigateToDetail(detail))
+                    val finalModel = detail.copy(
+                        warningCount = selectedChallenger?.pointSum ?: 0.0
+                    )
+                    emitEvent(UserChallengerEvent.NavigateToDetail(finalModel))
                 },
                 errorCallback = { failState ->
                     emitEvent(UserChallengerEvent.ShowErrorToast(failState.message))

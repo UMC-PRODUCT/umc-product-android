@@ -10,6 +10,7 @@ data class UserChallenger(
     val generation: Int,
     val part: UserPart,
     val role: UserChallengerRole = UserChallengerRole.MEMBER,
+    val pointSum: Double,
     val profileImage: String? = null
 )
 
