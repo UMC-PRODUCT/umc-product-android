@@ -133,7 +133,7 @@
                             app:justifyContent="flex_start"
                             app:alignItems="stretch"
                             app:alignContent="flex_start"
-                            app:tagItems="@{vm.uiState.tmptag}"
+                            app:tagItems="@{vm.uiState.gisuTag}"
                             app:tagLayoutId="@{@layout/item_home_tag}"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"

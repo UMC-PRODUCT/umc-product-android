@@ -2,6 +2,7 @@ package com.umc.data.api
 
 import com.umc.data.response.organization.ChapterBySchoolListResponse
 import com.umc.data.response.organization.ChapterResponse
+import com.umc.data.response.organization.GisuInfoResponse
 import com.umc.data.response.organization.GisuItemResponse
 import com.umc.data.response.organization.GisuListResponse
 import com.umc.data.response.organization.MyStudyGroupListResponse
@@ -169,4 +170,12 @@ interface OrganizationApi {
         @Path(PATH_GROUP_ID) groupId: Int,
         @Body request: ChallengerListRequest
     ): ApiResponse<Unit>
+
+
+    @GET(Endpoints.Organization.GISU_ID)
+    suspend fun getGisuInfo(
+        @Path("gisuId") gisuId: Long,
+    ): ApiResponse<GisuInfoResponse>
+
+
 }
