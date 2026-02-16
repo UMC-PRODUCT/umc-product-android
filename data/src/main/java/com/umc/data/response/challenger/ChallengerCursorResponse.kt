@@ -72,7 +72,7 @@ data class ChallengerCursorItemResponse(
             generation = generation,
             part = UserPart.valueOf(part),
             role = extractDisplayRole(roleTypes),
-            pointSum = pointSum,
+            pointSum = if (pointSum < 0) 0.0 else pointSum,
             profileImage = profileImageLink
         )
     }
