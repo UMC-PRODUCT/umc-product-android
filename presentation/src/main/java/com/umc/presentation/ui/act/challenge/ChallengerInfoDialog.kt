@@ -61,14 +61,27 @@ class ChallengerInfoDialog(
                 }
             })
         }
+
         historyAdapter.submitList(model.history)
-    }
 
-    fun updateHistory(newHistory: List<ChallengerInfoHistory>) {
-        val currentModel = binding.model
-        binding.model = currentModel?.copy(history = newHistory)
+        // 아이템이 3개 이상일 때 높이 고정 로직
+        if (model.history.size > 3) {
+            binding.rvHistory.post {
+                val viewHolder = binding.rvHistory.findViewHolderForAdapterPosition(0)
+                val itemHeight = viewHolder?.itemView?.height ?: 0
 
-        historyAdapter.submitList(newHistory)
+                if (itemHeight > 0) {
+                    val spacing = 12.px
+                    val verticalPadding = 32.px
+
+                    val totalHeight = (itemHeight * 3) + (spacing * 2) + verticalPadding
+
+                    binding.rvHistory.layoutParams = binding.rvHistory.layoutParams.apply {
+                        height = totalHeight
+                    }
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {
