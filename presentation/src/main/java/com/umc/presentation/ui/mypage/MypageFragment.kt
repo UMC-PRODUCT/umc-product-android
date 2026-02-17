@@ -118,17 +118,24 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
 
 
             is MypageFragmentEvent.NavigateToMypost -> {
-                val action = MypageFragmentDirections.actionMypageToMypost()
+                val action = MypageFragmentDirections.actionMypageToMypost(
+                    showType = "MYPOST"
+                )
                 findNavController().navigate(action)
             }
             is MypageFragmentEvent.NavigateToMyComment -> {
-                val action = MypageFragmentDirections.actionMypageToMycomment()
+                val action = MypageFragmentDirections.actionMypageToMypost(
+                    showType = "MYCOMMENT"
+                )
                 findNavController().navigate(action)
 
             }
             
             is MypageFragmentEvent.NavigateToScrap -> {
-                /**TODO 스크랩 글 생성**/
+                val action = MypageFragmentDirections.actionMypageToMypost(
+                    showType = "MYSCRAP"
+                )
+                findNavController().navigate(action)
             }
 
 

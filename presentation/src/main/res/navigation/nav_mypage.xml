@@ -6,6 +6,7 @@
     app:startDestination="@id/mypageFragment"
     >
 
+    <include app:graph="@navigation/nav_community_shared" />
 
     <fragment
         android:id="@+id/mypageFragment"
@@ -23,9 +24,6 @@
             android:id="@+id/action_mypage_to_mypost"
             app:destination="@id/MypostFragment"/>
 
-        <action
-            android:id="@+id/action_mypage_to_mycomment"
-            app:destination="@id/MycommentFragment"/>
 
 
 
@@ -43,20 +41,28 @@
     <fragment
         android:id="@+id/MypostFragment"
         android:name="com.umc.presentation.ui.mypage.mypost.MypostFragment"
-        android:label="내가 쓴 글"
+        android:label="나와 관련된 글"
         tools:layout="@layout/fragment_mypost"
         >
 
+        <argument
+            android:name="showType"
+            app:argType="string"
+            android:defaultValue="EMPTY" />
+
+        <action
+            android:id="@+id/action_mypost_to_postDetail"
+            app:destination="@id/nav_community_shared">
+
+            <argument
+                android:name="postId"
+                app:argType="long" />
+
+        </action>
+
     </fragment>
 
-    <fragment
-        android:id="@+id/MycommentFragment"
-        android:name="com.umc.presentation.ui.mypage.mycomment.MycommentFragment"
-        android:label="내가 쓴 댓글"
-        tools:layout="@layout/fragment_mycomment"
-        >
 
-    </fragment>
 
 
 

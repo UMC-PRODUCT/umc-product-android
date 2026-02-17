@@ -92,14 +92,14 @@ class CommunityRepositoryImpl @Inject constructor(
     }
 
     //게시글 좋아요 토글하기
-    override suspend fun togglePostLike(postId: Long, challengerId: Long): ApiState<PostLike> {
-        return communityRemoteDataSource.togglePostLike(postId, challengerId).map {
+    override suspend fun togglePostLike(postId: Long): ApiState<PostLike> {
+        return communityRemoteDataSource.togglePostLike(postId).map {
             it.toPostLikeDomain() }
     }
 
     //게시글 스크랩 토글하기
-    override suspend fun togglePostScrap(postId: Long, challengerId: Long): ApiState<PostScrap> {
-        return communityRemoteDataSource.togglePostScrap(postId, challengerId).map {
+    override suspend fun togglePostScrap(postId: Long): ApiState<PostScrap> {
+        return communityRemoteDataSource.togglePostScrap(postId).map {
             it.toPostScrapDomain() }
     }
 
@@ -116,5 +116,31 @@ class CommunityRepositoryImpl @Inject constructor(
             it.toContentItemDomain() }
     }
 
+    //번개글 수정하기
+    override suspend fun updateLightningPost(postId: Long, request: CreateLightningPost
+    ): ApiState<ContentItem> {
+        val request = CreatePostLightningRequest(request.title, request.content,
+            request.meetAt, request.location, request.maxParticipants, request.openChatUrl)
+        return communityRemoteDataSource.updateLightningPost(postId, request).map {
+            it.toContentItemDomain() }
+    }
+
+    //내가 작성한 글 가져오기
+    override suspend fun getMyPosts(page: Int, size: Int): ApiState<PostPageModel> {
+        return communityRemoteDataSource.getMyPosts(page, size).map {
+            it.toPostPageModelDomain() }
+    }
+
+    //내가 댓글단글 가져오기
+    override suspend fun getMyCommentedPosts(page: Int, size: Int): ApiState<PostPageModel> {
+        return communityRemoteDataSource.getMyCommentedPosts(page, size).map {
+            it.toPostPageModelDomain() }
+    }
+
+    //내가 스크랩한 글 가져오기
+    override suspend fun getMyScrappedPosts(page: Int, size: Int): ApiState<PostPageModel> {
+        return communityRemoteDataSource.getMyScrappedPosts(page, size).map {
+            it.toPostPageModelDomain() }
+    }
 
 }

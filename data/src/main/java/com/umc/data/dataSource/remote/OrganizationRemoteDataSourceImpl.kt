@@ -119,4 +119,8 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
     override suspend fun changeGroupMember(groupId: Int, request: ChallengerListRequest): ApiState<Unit> {
         return apiCall { organizationApi.changeGroupMember(groupId, request) }
     }
+
+    override suspend fun getGisuInfo(gisuId: Long): ApiState<GisuInfoResponse> {
+        return apiCall { organizationApi.getGisuInfo(gisuId) }
+    }
 }

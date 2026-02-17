@@ -151,6 +151,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
         val fullText = "$highlight 성장하고 있어요"
         val color = ContextCompat.getColor(requireContext(), R.color.primary600) // 다크모드 대응
 
+        //몇일째 성장하고 있어요 텍스트
         binding.homeTvUserstatus.text = SpannableStringBuilder(fullText).apply {
             setSpan(ForegroundColorSpan(color), 0, highlight.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }

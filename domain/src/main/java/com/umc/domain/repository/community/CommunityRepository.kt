@@ -32,14 +32,15 @@ interface CommunityRepository {
     // 번개 게시글 작성
     suspend fun createLightningPost(challengerId: Long, request: CreateLightningPost): ApiState<ContentItem>
 
+
     // 게시글 삭제하기
     suspend fun deletePost(postId: Long): ApiState<Unit>
 
     // 게시글 좋아요 토글하기
-    suspend fun togglePostLike(postId: Long, challengerId: Long): ApiState<PostLike>
+    suspend fun togglePostLike(postId: Long): ApiState<PostLike>
 
     // 게시글 스크랩 토글하기
-    suspend fun togglePostScrap(postId: Long, challengerId: Long): ApiState<PostScrap>
+    suspend fun togglePostScrap(postId: Long): ApiState<PostScrap>
 
 
     // 게시글 댓글 삭제하기
@@ -47,5 +48,19 @@ interface CommunityRepository {
 
     // 게시글 수정하기
     suspend fun updatePost(postId: Long, request: CreatePost): ApiState<ContentItem>
+
+    // 번개글 수정하기
+    suspend fun updateLightningPost(postId: Long, request: CreateLightningPost): ApiState<ContentItem>
+
+
+    //내 게시글 가져오기
+    suspend fun getMyPosts(page: Int, size: Int): ApiState<PostPageModel>
+
+    //내 댓글단 글 갖오기
+    suspend fun getMyCommentedPosts(page: Int, size: Int): ApiState<PostPageModel>
+
+    //내가 스크랩 한 글 갖고오기
+    suspend fun getMyScrappedPosts(page: Int, size: Int): ApiState<PostPageModel>
+
 }
 

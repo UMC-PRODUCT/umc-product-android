@@ -6,6 +6,8 @@
     app:startDestination="@id/communityFragment"
     >
 
+    <include app:graph="@navigation/nav_community_shared" />
+
 
     <fragment
         android:id="@+id/communityFragment"
@@ -24,24 +26,17 @@
 
         <action
             android:id="@+id/action_community_to_postDetail"
-            app:destination="@id/postDetailFragment"/>
+            app:destination="@id/nav_community_shared">
+
+            <argument
+                android:name="postId"
+                app:argType="long" />
+
+        </action>
 
 
     </fragment>
 
-    <fragment
-        android:id="@+id/postWriteFragment"
-        android:name="com.umc.presentation.ui.community.write.PostWriteFragment"
-        android:label="게시글 작성"
-        tools:layout="@layout/fragment_post_write">
-
-        <!--게시글 수정을 위한 용도-->
-        <argument
-            android:name="postId"
-            app:argType="long"
-            android:defaultValue="-1L" />
-
-    </fragment>
 
     <fragment
         android:id="@+id/postSearchFragment"
@@ -51,19 +46,21 @@
 
         <action
             android:id="@+id/action_postSearch_to_postDetail"
-            app:destination="@id/postDetailFragment"/>
+            app:destination="@id/nav_community_shared">
+
+            <argument
+                android:name="postId"
+                app:argType="long" />
+
+        </action>
 
     </fragment>
 
     <fragment
-        android:id="@+id/postDetailFragment"
-        android:name="com.umc.presentation.ui.community.detail.PostDetailFragment"
-        android:label="게시글 상세"
-        tools:layout="@layout/fragment_post_detail">
-
-        <action
-            android:id="@+id/action_postDetail_to_postWrite"
-            app:destination="@id/postWriteFragment"/>
+        android:id="@+id/postWriteFragment"
+        android:name="com.umc.presentation.ui.community.write.PostWriteFragment"
+        android:label="게시글 작성"
+        tools:layout="@layout/fragment_post_write">
 
         <argument
             android:name="postId"
@@ -71,5 +68,6 @@
             android:defaultValue="-1L" />
 
     </fragment>
+
 
 </navigation>

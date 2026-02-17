@@ -3,7 +3,6 @@ package com.umc.data.repository.challenger
 import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSource
 import com.umc.data.response.challenger.ChallengerResponse.Companion.toManageModel
 import com.umc.data.response.challenger.ChallengerResponse.Companion.toModel
-import com.umc.data.response.challenger.ChallengerSearchScheduleResponse.Companion.toParticipantSearchPage
 import com.umc.domain.model.act.challenger.AdminChallengerList
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerList
@@ -40,16 +39,23 @@ class ChallengerRepositoryImpl @Inject constructor(
     }
 
     //일정 생성용 유저 검색
+
     override suspend fun searchChallengerSchedule(
         cursor: Long?,
         size: Int,
         name: String?,
         nickname: String?
     ): ApiState<ParticipantSearchPage> {
-        return challengerRemoteDataSource.searchChallengerSchedule(cursor, size, name, nickname).map {
+        return challengerRemoteDataSource.getChallengerList(
+            cursor = cursor,
+            size = size,
+            name = name,
+            nickname = nickname
+        ).map {
             it.toParticipantSearchPage()
         }
     }
+
 
     override suspend fun getChallengerList(
         cursor: Long?,

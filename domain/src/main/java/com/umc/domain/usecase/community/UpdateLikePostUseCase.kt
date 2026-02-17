@@ -7,6 +7,6 @@ import javax.inject.Inject
 class UpdateLikePostUseCase @Inject constructor(
     private val communityRepository: CommunityRepository
 )  {
-    suspend operator fun invoke(postId: Long, challengerId: Long) =
-        communityRepository.togglePostLike(postId, challengerId)
+    suspend operator fun invoke(postId: Long) =
+        communityRepository.togglePostLike(postId)
 }

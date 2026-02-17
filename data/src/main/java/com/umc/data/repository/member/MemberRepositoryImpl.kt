@@ -10,6 +10,7 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.request.member.RegisterRequest
 import com.umc.domain.repository.member.MemberRepository
+import com.umc.domain.usecase.appDataStore.ClearTokensUseCase
 import com.umc.domain.usecase.appDataStore.UpdateUserInfoUseCase
 import javax.inject.Inject
 
@@ -18,6 +19,7 @@ import javax.inject.Inject
 class MemberRepositoryImpl @Inject constructor(
     private val memberRemoteDataSource: MemberRemoteDataSource,
     private val updateUserInfoUseCase: UpdateUserInfoUseCase,
+    private val clearTokensUseCase: ClearTokensUseCase,
 ) : MemberRepository {
 
     //내 정보 가져오기 + dataStore에 저장하기
@@ -44,6 +46,14 @@ class MemberRepositoryImpl @Inject constructor(
         val request = UpdateMyProfileRequest(profileImageId)
         return memberRemoteDataSource.updateMyProfile(request).map { it.toDomain() }
 
+    }
+
+    override suspend fun deleteUser(): ApiState<Unit> {
+        val response = memberRemoteDataSource.deleteUser()
+        if (response is ApiState.Success) {
+            clearTokensUseCase()
+        }
+        return response
     }
 
 }

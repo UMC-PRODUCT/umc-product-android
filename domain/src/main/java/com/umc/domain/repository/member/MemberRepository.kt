@@ -11,6 +11,7 @@ interface MemberRepository {
     suspend fun register(request: RegisterRequest): ApiState<JwtToken>
 
     suspend fun updateMyProfile(profileImageId : String): ApiState<UserInfo>
+    suspend fun deleteUser(): ApiState<Unit>
 
 
 }

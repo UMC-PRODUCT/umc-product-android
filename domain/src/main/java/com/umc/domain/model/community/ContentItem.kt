@@ -10,11 +10,12 @@ data class ContentItem (
     val postId: Long = -1L,
     val title : String,                     //제목
     val category : CommunityCategoryType,   //카테고리 타입
-    val username : String = "",             //작성자 (API는 X)
-    val userId : Long = -1L,                //작성자 ID (API는 X)
-    val writeTime: String = "",             //작성 시간 (API는 X)
-    val likes : Int = 0,                    //좋아요 수 (API는 X)
-    val comments : Int = 0,                 //댓글 수 (API는 X)
+    val userId : Long = -1L,                //작성자 ID
+    val username : String = "",             //작성자 
+    val userProfileImage: String = "",      //작싱자 아이콘
+    val writeTime: String = "",             //작성 시간
+    val likes : Int = 0,                    //좋아요 수
+    val comments : Int = 0,                 //댓글 수
 
     //아래는 본문 내용
     val content : String,                   //내용

@@ -1,12 +1,15 @@
 package com.umc.presentation.ui.community.adapter
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.umc.domain.model.community.CommentItem
 import com.umc.domain.model.community.ContentItem
+import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemCommunityCommentBinding
 import com.umc.presentation.databinding.ItemCommunityCommentsCountBinding
 import com.umc.presentation.databinding.ItemCommunityContentBinding
@@ -84,6 +87,13 @@ class PostDetailAdapter(
             //여기서 좋아요 / 싫어요 클릭 시 delegate로 ㄱㄱ
             fun bind(item: ContentItem) {
                 binding.item = item
+                /**TODO 작성자 userimage 주세요**/
+                Log.d("log_mypage", "작성자: ${item.userProfileImage}")
+                binding.itemCircleimvProfile.load(item.userProfileImage) {
+                    crossfade(true)
+                    placeholder(R.drawable.ic_profile_default)
+                    error(R.drawable.ic_profile_default)
+                }
                 binding.itemBtnLike.setOnClickListener { delegate.onLikeClicked(item) }
                 binding.itemBtnScrap.setOnClickListener { delegate.onScrapClicked(item) }
                 binding.executePendingBindings()
@@ -103,6 +113,11 @@ class PostDetailAdapter(
                             private val delegate: PostItemDelegate) : RecyclerView.ViewHolder(binding.root){
         fun bind(item: CommentItem) {
             binding.item = item
+            binding.itemCircleimvProfile.load(item.challengerProfileImage) {
+                crossfade(true)
+                placeholder(R.drawable.ic_profile_default)
+                error(R.drawable.ic_profile_default)
+            }
             binding.itemBtnMenu.setOnClickListener { delegate.onCommentMenuClicked(item) }
             binding.executePendingBindings()
         }

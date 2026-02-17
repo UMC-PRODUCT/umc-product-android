@@ -9,20 +9,27 @@ data class PostCommentResponse(
     @SerializedName("postId") val postId: Long,
     @SerializedName("challengerId") val challengerId: Long,
     @SerializedName("challengerName") val challengerName: String?,
+    @SerializedName("challengerProfileImage") val challengerProfileImage: String?,
     @SerializedName("content") val content: String,
-    @SerializedName("createdAt") val createdAt: String
+    @SerializedName("createdAt") val createdAt: String?
 ) {
     companion object {
         fun PostCommentResponse.toCommentItemDomain(): CommentItem {
-            val (createDay, createTime) = this.createdAt.parseDateTime()
+            val formatTime = if (this.createdAt.isNullOrBlank()) {
+                ""
+            } else {
+                val (writeDay, writeClock) = this.createdAt.parseDateTime()
+                "${writeDay} ${writeClock}"
+            }
 
             return CommentItem(
                 commentId = this.commentId,
                 postId = this.postId,
                 challengerId = this.challengerId,
                 challengerName = this.challengerName,
+                challengerProfileImage = this.challengerProfileImage ?: "",
                 content = this.content,
-                createdAt = "${createDay} ${createTime}"
+                createdAt = formatTime
             )
         }
 
