@@ -73,7 +73,7 @@ object Endpoints {
         const val MY_COMMENT = "$COMMUNITY/commented"
         const val MY_SCRAP = "$COMMUNITY/scrapped"
 
-        const val MODIFY_LIGHTNING = "$COMMUNITY/{postId}lightning"
+        const val MODIFY_LIGHTNING = "$COMMUNITY/{postId}/lightning"
 
 
 
