@@ -105,12 +105,6 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
             is UserChallengerEvent.NavigateToDetail -> {
                 ChallengerInfoDialog(event.model).show(childFragmentManager, "ChallengerInfoDialog")
             }
-
-            is UserChallengerEvent.UpdateHistory -> {
-                val dialog = childFragmentManager.findFragmentByTag("ChallengerInfoDialog") as? ChallengerInfoDialog
-                dialog?.updateHistory(event.history)
-            }
-
             is UserChallengerEvent.ShowErrorToast -> {
                 Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
             }
