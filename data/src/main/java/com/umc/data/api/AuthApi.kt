@@ -46,11 +46,5 @@ interface AuthApi {
     ): ApiResponse<EmailVerificationCompleteResponse>
 
 
-    @GET(Endpoints.Auth.AUTHORIZATION_CHECK)
-    suspend fun checkAuthAccess(
-        @Query("resourceType") resourceType: String,
-        @Query("resourceId") resourceId: Long
-    ): ApiResponse<AuthorAccessResponse>
-
 
 }

@@ -40,8 +40,4 @@ class AuthRemoteDataSourceImpl @Inject constructor(
         return apiCall { authApi.emailVerificationComplete(request = request) }
     }
 
-    override suspend fun checkAuthAccess(resourceType: String, resourceId: Long
-    ): ApiState<AuthorAccessResponse> {
-        return apiCall { authApi.checkAuthAccess(resourceType, resourceId) }
-    }
 }

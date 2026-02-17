@@ -18,5 +18,4 @@ interface AuthRemoteDataSource {
     suspend fun loginGoogle(request: LoginGoogleRequest): ApiState<JwtLoginResponse>
     suspend fun emailVerify(request: EmailVerificationRequest): ApiState<EmailVerificationResponse>
     suspend fun emailVerifyComplete(request: EmailVerificationCompleteRequest): ApiState<EmailVerificationCompleteResponse>
-    suspend fun checkAuthAccess(resourceType: String, resourceId: Long): ApiState<AuthorAccessResponse>
 }

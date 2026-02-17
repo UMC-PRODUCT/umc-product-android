@@ -51,11 +51,5 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun checkAuthAccess(resourceType: String, resourceId: Long
-    ): ApiState<AuthorAccess> {
-        return authRemoteDataSource.checkAuthAccess(resourceType, resourceId).map {
-            it.toModel()
-        }
 
-    }
 }

@@ -5,6 +5,7 @@ import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.data.repository.AuthRepositoryImpl
 import com.umc.data.repository.OrganizationRepositoryImpl
 import com.umc.data.repository.attendance.AttendanceRepositoryImpl
+import com.umc.data.repository.authorize.AuthorizeRepositoryImpl
 import com.umc.data.repository.kakao.KakaoSearchRepositoryImpl
 import com.umc.data.repository.member.MemberRepositoryImpl
 import com.umc.domain.repository.AuthRepository
@@ -18,6 +19,7 @@ import com.umc.data.repository.terms.TermsRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
 import com.umc.domain.repository.OrganizationRepository
 import com.umc.domain.repository.attendance.AttendanceRepository
+import com.umc.domain.repository.authorize.AuthorizeRepository
 import com.umc.domain.repository.community.CommunityRepository
 import com.umc.domain.repository.schedule.ScheduleRepository
 import com.umc.domain.repository.storage.StorageRepository
@@ -88,5 +90,9 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindsTermsRepository(repositoryImpl: TermsRepositoryImpl): TermsRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindsAuthorizeRepository(repositoryImpl: AuthorizeRepositoryImpl): AuthorizeRepository
 
 }

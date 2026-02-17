@@ -3,7 +3,7 @@ package com.umc.domain.usecase
 import com.umc.domain.model.AuthorAccess
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.ResourceType
-import com.umc.domain.repository.AuthRepository
+import com.umc.domain.repository.authorize.AuthorizeRepository
 import javax.inject.Inject
 
 
@@ -14,11 +14,11 @@ import javax.inject.Inject
 
 //리소스 권한 조회 usecase
 class GetAuthAccessUseCase @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authorizeRepository: AuthorizeRepository
 ) {
     suspend operator fun invoke(resourceType: ResourceType, resourceId: Long): ApiState<AuthorAccess> {
         val resourceTypeString = resourceType.name
-        return authRepository.checkAuthAccess(resourceTypeString, resourceId)
+        return authorizeRepository.checkAuthAccess(resourceTypeString, resourceId)
     }
 
 }

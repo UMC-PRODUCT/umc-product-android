@@ -15,5 +15,5 @@ interface AuthRepository {
     suspend fun googleLogin(request: LoginGoogleRequest): ApiState<JwtToken>
     suspend fun emailVerify(request: EmailVerificationRequest): ApiState<String>
     suspend fun emailVerifyComplete(request: EmailVerificationCompleteRequest): ApiState<String>
-    suspend fun checkAuthAccess(resourceType: String, resourceId: Long): ApiState<AuthorAccess>
+
 }
