@@ -13,6 +13,7 @@ import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.presentation.databinding.DialogChallengerInfoBinding
 import com.umc.presentation.ui.act.adapter.ChallengerInfoHistoryAdapter
 import androidx.core.graphics.drawable.toDrawable
+import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.presentation.extension.px
 
 class ChallengerInfoDialog(
@@ -21,6 +22,8 @@ class ChallengerInfoDialog(
 
     private var _binding: DialogChallengerInfoBinding? = null
     private val binding get() = _binding!!
+
+    private val historyAdapter = ChallengerInfoHistoryAdapter()
 
     override fun onResume() {
         super.onResume()
@@ -59,6 +62,13 @@ class ChallengerInfoDialog(
             })
         }
         historyAdapter.submitList(model.history)
+    }
+
+    fun updateHistory(newHistory: List<ChallengerInfoHistory>) {
+        val currentModel = binding.model
+        binding.model = currentModel?.copy(history = newHistory)
+
+        historyAdapter.submitList(newHistory)
     }
 
     override fun onDestroyView() {
