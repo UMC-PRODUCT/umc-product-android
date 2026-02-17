@@ -125,8 +125,13 @@ class UserCheckViewModel @Inject constructor(
         viewModelScope.launch {
             resultResponse(
                 response = postAttendanceReasonUseCase(sheetId, reason),
-                successCallback = { fetchAttendanceData() },
-                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+                successCallback = {
+                    fetchAttendanceData()
+                    fetchAttendanceHistory()
+                },
+                errorCallback = { failState ->
+                    emitEvent(UserCheckEvent.ShowToast(failState.message))
+                }
             )
         }
     }
