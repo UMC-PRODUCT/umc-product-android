@@ -10,6 +10,7 @@ import com.umc.domain.model.enums.RecruitType
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.community.CommentItem
 import com.umc.domain.model.community.ContentItem
+import com.umc.domain.usecase.GetChallengerIdUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.community.DeleteCommunityCommentUseCase
 import com.umc.domain.usecase.community.DeleteCommunityPostUseCase
@@ -39,6 +40,7 @@ constructor(
     private val deleteCommunityCommentUseCase: DeleteCommunityCommentUseCase, //댓글 삭제하기
     private val updateLikePostUseCase: UpdateLikePostUseCase, //좋아요 토글
     private val updateScrapPostUseCase: UpdateScrapPostUseCase, //스크랩 토글
+    private val getChallengerIdUseCase: GetChallengerIdUseCase, //챌린저 ID 정보 불러오기
 
     ) : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent>(
     PostDetailFragmentUiState()
@@ -83,12 +85,17 @@ constructor(
             //0. 유저 정보 가져오기 (별도 분리)
             launch {
                 getUserInfoUseCase().collect { userInfo ->
-                    updateState { copy(
-                        myInfo = userInfo,
-                        myId = userInfo.id
-                    ) }
+                    updateState { copy(myInfo = userInfo) }
                 }
             }
+
+            //0. 유저 챌린저 ID 가져오기
+            launch {
+                val myChallengerId = getChallengerIdUseCase()
+                updateState { copy(myChallengerId = myChallengerId) }
+            }
+
+
 
             //1. 서로 다른 usecase를 비동기로 실행
             val detailDeferred = async {
@@ -158,7 +165,7 @@ constructor(
 
         viewModelScope.launch {
             val postId = uiState.value.nowContent.postId
-            val myId = uiState.value.myId
+            val myId = uiState.value.myChallengerId
 
             resultResponse(
                 response = writeCommunityPostCommentUseCase(postId, myId, text),
@@ -201,7 +208,7 @@ constructor(
 
     //게시글이 현재 유저 것인지 비교
     fun checkIsAuthor(authorId : Long){
-        val isAuthor = authorId == uiState.value.myId
+        val isAuthor = authorId == uiState.value.myChallengerId
 
         updateState {
             if(isAuthor){
@@ -350,7 +357,7 @@ data class PostDetailFragmentUiState(
     //내 ID
     /**TODO. 얘는 MemberId인지 ChallengerId인지 확인 필요**/
     val myInfo : UserInfo? = null,
-    val myId : Long = -1L,
+    val myChallengerId : Long = -1L,
 
     //현재 게시글
     val nowContent: ContentItem = ContentItem(

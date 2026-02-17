@@ -61,7 +61,7 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
         }
 
         // TODO : chllengerId 체크 필요!
-        val isMyComment = item.challengerId == viewModel.uiState.value.myId
+        val isMyComment = item.challengerId == viewModel.uiState.value.myChallengerId
         menuBinding.layoutMenuReport.visibility = if (isMyComment) View.GONE else View.VISIBLE
         menuBinding.layoutMenuDelete.visibility = if (isMyComment) View.VISIBLE else View.GONE
 
