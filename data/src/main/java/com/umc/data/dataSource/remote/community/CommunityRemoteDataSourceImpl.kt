@@ -119,4 +119,14 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
 
     }
 
+    //게시글 신고
+    override suspend fun reportPost(postId: Long): ApiState<Unit> {
+        return apiCall { communityApi.reportPost(postId) }
+    }
+
+    //댓글 신고
+    override suspend fun reportComment(commentId: Long): ApiState<Unit> {
+        return apiCall { communityApi.reportComment(commentId) }
+    }
+
 }
