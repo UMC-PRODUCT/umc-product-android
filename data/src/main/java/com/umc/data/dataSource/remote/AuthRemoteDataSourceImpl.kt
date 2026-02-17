@@ -7,6 +7,7 @@ import com.umc.data.response.EmailVerificationCompleteResponse
 import com.umc.data.response.EmailVerificationResponse
 import com.umc.data.response.JwtLoginResponse
 import com.umc.data.response.RefreshTokenResponse
+import com.umc.data.response.authorization.AuthorAccessResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.EmailVerificationCompleteRequest
 import com.umc.domain.model.request.EmailVerificationRequest
@@ -37,5 +38,10 @@ class AuthRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun emailVerifyComplete(request: EmailVerificationCompleteRequest): ApiState<EmailVerificationCompleteResponse> {
         return apiCall { authApi.emailVerificationComplete(request = request) }
+    }
+
+    override suspend fun checkAuthAccess(resourceType: String, resourceId: Long
+    ): ApiState<AuthorAccessResponse> {
+        return apiCall { authApi.checkAuthAccess(resourceType, resourceId) }
     }
 }

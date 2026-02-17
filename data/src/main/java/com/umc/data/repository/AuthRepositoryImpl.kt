@@ -5,6 +5,8 @@ import com.umc.data.response.EmailVerificationCompleteResponse.Companion.toModel
 import com.umc.data.response.EmailVerificationResponse.Companion.toModel
 import com.umc.data.response.JwtLoginResponse.Companion.toModel
 import com.umc.data.response.RefreshTokenResponse.Companion.toModel
+import com.umc.data.response.authorization.AuthorAccessResponse.Companion.toModel
+import com.umc.domain.model.AuthorAccess
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.JwtToken
 import com.umc.domain.model.base.map
@@ -47,5 +49,13 @@ class AuthRepositoryImpl @Inject constructor(
         return authRemoteDataSource.emailVerifyComplete(request).map {
             it.toModel()
         }
+    }
+
+    override suspend fun checkAuthAccess(resourceType: String, resourceId: Long
+    ): ApiState<AuthorAccess> {
+        return authRemoteDataSource.checkAuthAccess(resourceType, resourceId).map {
+            it.toModel()
+        }
+
     }
 }

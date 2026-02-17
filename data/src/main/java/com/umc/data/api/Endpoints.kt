@@ -3,12 +3,18 @@ package com.umc.data.api
 object Endpoints {
 
     object Auth {
+        //Authentication
         const val AUTH = "api/v1/auth"
         const val REISSUE = "$AUTH/auth/renew"
         const val LOGIN_KAKAO = "$AUTH/login/kakao"
         const val LOGIN_GOOGLE = "$AUTH/login/google"
         const val EMAIL_VERIFICATION = "$AUTH/email-verification"
         const val EMAIL_VERIFICATION_COMPLETE = "$EMAIL_VERIFICATION/code"
+
+        //Authorization
+        const val AUTHORIZATION = "api/v1/authorization"
+        const val AUTHORIZATION_CHECK = "$AUTHORIZATION/resource-permission"
+
     }
 
     object Attendance {
@@ -119,4 +125,5 @@ object Endpoints {
         const val TERMS_TYPE = "$TERMS/type/{termsType}"
         const val TERMS_ID = "$TERMS/{termsId}"
     }
+
 }
