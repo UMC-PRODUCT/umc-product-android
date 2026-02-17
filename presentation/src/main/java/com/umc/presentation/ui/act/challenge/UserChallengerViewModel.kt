@@ -2,8 +2,10 @@ package com.umc.presentation.ui.act.challenge
 
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
+import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.domain.model.act.challenger.UserChallenger
 import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.domain.usecase.attendance.GetChallengerAttendanceHistoryUseCase
 import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
 import com.umc.domain.usecase.challenger.GetChallengerListUseCase
 import com.umc.presentation.base.BaseViewModel
@@ -18,7 +20,8 @@ import javax.inject.Inject
 class UserChallengerViewModel @Inject constructor(
     private val appDataStoreRepository: AppDataStoreRepository,
     private val getChallengerListUseCase: GetChallengerListUseCase,
-    private val getChallengerDetailUseCase: GetChallengerDetailUseCase
+    private val getChallengerDetailUseCase: GetChallengerDetailUseCase,
+    private val getChallengerAttendanceHistoryUseCase: GetChallengerAttendanceHistoryUseCase
 ) : BaseViewModel<UserChallengerUiState, UserChallengerEvent>(UserChallengerUiState()) {
 
     init {
@@ -26,7 +29,7 @@ class UserChallengerViewModel @Inject constructor(
     }
 
     /**
-     * DataStore의 유저 정보를 관찰하여 학교/기수 ID가 있을 때 리스트를 가져옵니다.
+     * DataStore의 유저 정보를 관찰
      */
     private fun observeUserInfo() {
         viewModelScope.launch {
@@ -109,13 +112,27 @@ class UserChallengerViewModel @Inject constructor(
                 response = getChallengerDetailUseCase(id),
                 successCallback = { detail ->
                     val finalModel = detail.copy(
-                        warningCount = selectedChallenger?.pointSum ?: 0.0
+                        warningCount = selectedChallenger?.pointSum ?: 0.0,
+                        history = emptyList()
                     )
                     emitEvent(UserChallengerEvent.NavigateToDetail(finalModel))
+                    fetchChallengerHistory(id)
                 },
                 errorCallback = { failState ->
                     emitEvent(UserChallengerEvent.ShowErrorToast(failState.message))
                 }
+            )
+        }
+    }
+
+    private fun fetchChallengerHistory(id: Long) {
+        viewModelScope.launch {
+            resultResponse(
+                response = getChallengerAttendanceHistoryUseCase(id),
+                successCallback = { historyList ->
+                    emitEvent(UserChallengerEvent.UpdateHistory(historyList))
+                },
+                errorCallback = {  }
             )
         }
     }
@@ -129,5 +146,6 @@ data class UserChallengerUiState(
 
 sealed interface UserChallengerEvent : UiEvent {
     data class NavigateToDetail(val model: ChallengerInfoDialogModel) : UserChallengerEvent
+    data class UpdateHistory(val history: List<ChallengerInfoHistory>) : UserChallengerEvent
     data class ShowErrorToast(val message: String) : UserChallengerEvent
 }
