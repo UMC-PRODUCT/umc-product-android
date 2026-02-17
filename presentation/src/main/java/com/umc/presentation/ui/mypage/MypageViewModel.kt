@@ -200,8 +200,19 @@ class MypageViewModel @Inject constructor(
         emitEvent(MypageFragmentEvent.NavigateToInstagramUmc)
     }
 
+    fun navigateToOnBoardPage(){
+        emitEvent(MypageFragmentEvent.MoveToOnBoardPage)
+    }
 
 
+
+    //유저 삭제 다이얼로그 호출
+    fun showDeleteUserDialog(){
+        //1. 삭제 이벤트를 전송
+        emitEvent(MypageFragmentEvent.DeleteUser)
+    }
+
+    //2. 유저 삭제 로직(여기서 실징 수행)
     fun deleteUser(){
         viewModelScope.launch {
             resultResponse(
@@ -210,7 +221,7 @@ class MypageViewModel @Inject constructor(
                     viewModelScope.launch {
                         // 회원 탈퇴 성공 시 dataStore의 모든 데이터 삭제
                         clearAllDataUseCase()
-                        emitEvent(MypageFragmentEvent.DeleteUser)
+                        emitEvent(MypageFragmentEvent.MoveToOnBoardPage)
                     }
                 },
                 errorCallback = {
@@ -219,6 +230,8 @@ class MypageViewModel @Inject constructor(
             )
         }
     }
+
+
 
     fun logout(){
         emitEvent(MypageFragmentEvent.Logout)
@@ -285,5 +298,9 @@ sealed interface MypageFragmentEvent : UiEvent {
 
     //회원 탈퇴
     object DeleteUser : MypageFragmentEvent
+
+    //처음으로 이동
+    object MoveToOnBoardPage : MypageFragmentEvent
+
 
 }
