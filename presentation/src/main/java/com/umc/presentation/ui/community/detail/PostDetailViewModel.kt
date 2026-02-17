@@ -16,6 +16,8 @@ import com.umc.domain.usecase.community.DeleteCommunityCommentUseCase
 import com.umc.domain.usecase.community.DeleteCommunityPostUseCase
 import com.umc.domain.usecase.community.GetCommunityPostCommentUseCase
 import com.umc.domain.usecase.community.GetCommunityPostDetailUseCase
+import com.umc.domain.usecase.community.ReportCommentUseCase
+import com.umc.domain.usecase.community.ReportPostUseCase
 import com.umc.domain.usecase.community.UpdateLikePostUseCase
 import com.umc.domain.usecase.community.UpdateScrapPostUseCase
 import com.umc.domain.usecase.community.WriteCommunityPostCommentUseCase
@@ -41,6 +43,8 @@ constructor(
     private val updateLikePostUseCase: UpdateLikePostUseCase, //좋아요 토글
     private val updateScrapPostUseCase: UpdateScrapPostUseCase, //스크랩 토글
     private val getChallengerIdUseCase: GetChallengerIdUseCase, //챌린저 ID 정보 불러오기
+    private val reportPostUseCase: ReportPostUseCase, //게시글 신고하기
+    private val reportCommentUseCase: ReportCommentUseCase, //댓글 신고하기
 
     ) : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent>(
     PostDetailFragmentUiState()
@@ -272,6 +276,38 @@ constructor(
     }
 
 
+    //게시글 신고
+    fun reportPost(){
+        val postId = uiState.value.nowContent.postId
+        viewModelScope.launch {
+            resultResponse(
+                response = reportPostUseCase(postId),
+                successCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("게시글 신고가 완료되었습니다"))
+                },
+                errorCallback = { error ->
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast(error.message))
+                }
+            )
+        }
+
+    }
+
+    //댓글 신고
+    fun reportComment(commentId: Long){
+        viewModelScope.launch {
+            resultResponse(
+                response = reportCommentUseCase(commentId),
+                successCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("댓글 신고가 완료되었습니다"))
+                },
+                errorCallback = { error ->
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast(error.message))
+                }
+            )
+        }
+    }
+
 
     //게시글 삭제 로직
     fun deletePost(){
@@ -281,7 +317,9 @@ constructor(
                 successCallback = {
                     emitEvent(PostDetailFragmentEvent.MoveBackPressed)
                 },
-                errorCallback = {}
+                errorCallback = {
+                    
+                }
             )
         }
     }
@@ -296,7 +334,7 @@ constructor(
         updateState { copy(isMenuVisible = !isMenuVisible) }
     }
     
-    //게시글 신고
+    //게시글 신고 다이얼로그 열기
     fun onClickReportPost(){
         emitEvent(PostDetailFragmentEvent.ReportPost)
     }
@@ -309,10 +347,7 @@ constructor(
         emitEvent(PostDetailFragmentEvent.DeletePost)
     }
 
-    //댓글 신고
-    fun onClickReportComment(){
-        emitEvent(PostDetailFragmentEvent.ReportComment)
-    }
+
 
     //댓글 삭제
     fun onClickeDeleteComment(item: CommentItem){
@@ -402,7 +437,7 @@ sealed interface PostDetailFragmentEvent : UiEvent {
     object DeletePost : PostDetailFragmentEvent
 
     //댓글 신고하기 이벤트
-    object ReportComment : PostDetailFragmentEvent
+    data class ReportComment(val commentId: Long) : PostDetailFragmentEvent
 
     //오류 토스트 이벤트
     data class ShowErrorToast(val errorMessage: String) : PostDetailFragmentEvent

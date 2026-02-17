@@ -70,7 +70,7 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
         menuBinding.layoutMenuReport.setOnClickListener {
             popup.dismiss()
             // 아까 만든 신고 다이얼로그 띄우기
-            handleEvent(PostDetailFragmentEvent.ReportComment)
+            handleEvent(PostDetailFragmentEvent.ReportComment(item.commentId))
         }
 
         // 삭제
@@ -172,7 +172,8 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
                 UBasicDialog(
                     model = reportModel,
                     onConfirm = {
-                        // TODO: 서버에 신고 API 호출하는 뷰모델 함수 연결
+                        //서버에 신고
+                        viewModel.reportPost()
                     }
                 ).show(childFragmentManager, "ReportDialog")
             }
@@ -212,7 +213,8 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
                 UBasicDialog(
                     model = reportModel,
                     onConfirm = {
-                        // TODO: 서버에 신고 API 호출하는 뷰모델 함수 연결
+                        // 서버에 신고
+                        viewModel.reportComment(event.commentId)
                     }
                 ).show(childFragmentManager, "ReportDialog")
             }
