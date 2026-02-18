@@ -316,4 +316,7 @@
     <string name="act_location_update">지도에서 새로운 출석 체크 위치를 지정해주세요.\n이 위치 반경 50m 이내에서만 출석할 수 있습니다.</string>
     <string name="empty_search_result">검색 결과가 없습니다</string>
 
+    <!-- Loading Dialog -->
+    <string name="loading_default_message">로딩 중입니다.</string>
+
 </resources>

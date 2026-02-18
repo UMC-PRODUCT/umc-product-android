@@ -6,6 +6,7 @@ import com.umc.domain.model.request.notice.NoticeLinkRequest
 import com.umc.domain.model.request.notice.NoticeReminderRequest
 import com.umc.domain.model.request.notice.NoticeUpdateRequest
 import com.umc.domain.model.request.notice.NoticeVoteRequest
+import com.umc.domain.model.request.survey.VoteResponseRequest
 import com.umc.data.response.notice.NoticeCreateResponse
 import com.umc.data.response.notice.NoticeDetailResponse
 import com.umc.data.response.notice.NoticeReadStatisticsResponse
@@ -54,4 +55,5 @@ interface NoticeRemoteDataSource {
     suspend fun markNoticeAsRead(noticeId: Long): ApiState<Unit>
     suspend fun addNoticeLinks(noticeId: Long, request: NoticeLinkRequest): ApiState<Unit>
     suspend fun updateNotice(noticeId: Long, request: NoticeImageRequest): ApiState<Unit>
+    suspend fun submitVoteResponse(voteId: Long, request: VoteResponseRequest): ApiState<Unit>
 }
