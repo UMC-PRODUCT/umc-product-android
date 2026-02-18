@@ -167,4 +167,9 @@ object Endpoints {
         const val NOTICE_LINKS = "$NOTICE_DETAIL/links"
         const val NOTICE_IMAGES = "$NOTICE_DETAIL/images"
     }
+
+    object Survey {
+        const val SURVEY = "api/v1/surveys"
+        const val VOTE_RESPONSES = "$SURVEY/votes/{voteId}/responses"
+    }
 }

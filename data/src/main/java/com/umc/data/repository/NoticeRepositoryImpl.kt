@@ -14,6 +14,7 @@ import com.umc.domain.model.request.notice.NoticeLinkRequest
 import com.umc.domain.model.request.notice.NoticeReminderRequest
 import com.umc.domain.model.request.notice.NoticeUpdateRequest
 import com.umc.domain.model.request.notice.NoticeVoteRequest
+import com.umc.domain.model.request.survey.VoteResponseRequest
 import com.umc.domain.repository.NoticeRepository
 import javax.inject.Inject
 
@@ -103,4 +104,7 @@ class NoticeRepositoryImpl @Inject constructor(
 
     override suspend fun markNoticeAsRead(noticeId: Long): ApiState<Unit> =
         noticeRemoteDataSource.markNoticeAsRead(noticeId)
+
+    override suspend fun submitVoteResponse(voteId: Long, request: VoteResponseRequest): ApiState<Unit> =
+        noticeRemoteDataSource.submitVoteResponse(voteId, request)
 }
