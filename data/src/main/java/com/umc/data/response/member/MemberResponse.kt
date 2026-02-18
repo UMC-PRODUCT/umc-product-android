@@ -3,8 +3,10 @@ package com.umc.data.response.member
 import com.google.gson.annotations.SerializedName
 import com.umc.data.response.member.MemberChallengerRecordResponse.Companion.toDomain
 import com.umc.data.response.member.MemberPointResponse.Companion.toDomain
+import com.umc.data.response.member.MemberProfileResponse.Companion.toDomain
 import com.umc.data.response.member.MemberRoleResponse.Companion.toDomain
 import com.umc.domain.model.ChallengerRecord
+import com.umc.domain.model.ProfileInfo
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.UserRole
 import com.umc.domain.model.act.challenger.ChallengerPoint
@@ -20,7 +22,8 @@ data class MemberResponse(
     @SerializedName("profileImageLink") val profileImageLink: String?,
     @SerializedName("status") val status: String,
     @SerializedName("roles") val roles: List<MemberRoleResponse>?,
-    @SerializedName("challengerRecords") val challengerRecords: List<MemberChallengerRecordResponse>?
+    @SerializedName("challengerRecords") val challengerRecords: List<MemberChallengerRecordResponse>?,
+    @SerializedName("profile") val profile: MemberProfileResponse
 )
 {
     companion object {
@@ -34,7 +37,8 @@ data class MemberResponse(
             profileImageLink = profileImageLink ?: "",
             status = status,
             roles = roles?.map { it.toDomain() }.orEmpty(),
-            challengerRecords = challengerRecords?.map { it.toDomain() }.orEmpty()
+            challengerRecords = challengerRecords?.map { it.toDomain() }.orEmpty(),
+            profile = profile.toDomain()
         )
     }
 }
@@ -121,6 +125,26 @@ data class MemberPointResponse(
                 getOrDefault(PointType.WARNING),
             value = point,
             date = createdAt
+        )
+    }
+}
+
+data class MemberProfileResponse(
+    @SerializedName("id") val id : Long?,
+    @SerializedName("linkedIn") val linkedIn : String?,
+    @SerializedName("instagram") val instagram : String?,
+    @SerializedName("github") val github : String?,
+    @SerializedName("blog") val blog : String?,
+    @SerializedName("personal") val personal : String?,
+) {
+    companion object{
+        fun MemberProfileResponse.toDomain(): ProfileInfo = ProfileInfo(
+            id = id ?: -1L,
+            linkedIn = linkedIn ?: "",
+            instagram = instagram ?: "",
+            github = github ?: "",
+            blog = blog ?: "",
+            personal = personal ?: ""
         )
     }
 }

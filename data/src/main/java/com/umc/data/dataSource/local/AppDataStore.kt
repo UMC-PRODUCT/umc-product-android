@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
 import com.umc.domain.model.ChallengerRecord
+import com.umc.domain.model.ProfileInfo
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.UserRole
 import com.umc.domain.model.mypage.UserOutLink
@@ -50,6 +51,14 @@ class AppDataStore @Inject constructor(
         val recordsJson = prefs[KEY_RECORDS] ?: "[]"
         val recordsList = gson.fromJson(recordsJson, Array<ChallengerRecord>::class.java).toList()
 
+        val profileJson = prefs[KEY_PROFILE] ?: ""
+        val profileData = if (profileJson.isNotEmpty()) {
+            gson.fromJson(profileJson, ProfileInfo::class.java)
+        } else {
+            // 기본값 처리
+            ProfileInfo(0, "", "", "", "", "")
+        }
+
         UserInfo(
             id = prefs[KEY_ID] ?: 0L,
             name = prefs[KEY_NAME] ?: "",
@@ -60,7 +69,8 @@ class AppDataStore @Inject constructor(
             profileImageLink = prefs[KEY_PROFILE_IMAGE] ?: "",
             status = prefs[KEY_STATUS] ?: "ACTIVE",
             roles = rolesList,
-            challengerRecords = recordsList
+            challengerRecords = recordsList,
+            profile = profileData
         )
     }
 
@@ -77,6 +87,7 @@ class AppDataStore @Inject constructor(
             prefs[KEY_STATUS] = userInfo.status
             prefs[KEY_ROLES] = gson.toJson(userInfo.roles)
             prefs[KEY_RECORDS] = gson.toJson(userInfo.challengerRecords)
+            prefs[KEY_PROFILE] = gson.toJson(userInfo.profile)
         }
     }
 
@@ -182,6 +193,7 @@ class AppDataStore @Inject constructor(
         val KEY_STATUS = stringPreferencesKey("status")
         val KEY_ROLES = stringPreferencesKey("roles")
         val KEY_RECORDS = stringPreferencesKey("challenger_records")
+        val KEY_PROFILE = stringPreferencesKey("profile_info")
 
         //일정 추가에서 장소 기록 KEY
         val KEY_RECENT_SEARCHES_PLACE = stringPreferencesKey("recent_searches_place")
