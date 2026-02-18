@@ -209,6 +209,7 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_rectangle_neutral000_stroke_neutral300_radius8"
                 android:padding="16dp"
+                android:overScrollMode="never"
                 android:visibility="@{model.history.empty ? View.GONE : View.VISIBLE}"
                 app:layout_constraintTop_toBottomOf="@id/tv_history_label"
                 app:layout_constraintStart_toStartOf="parent"

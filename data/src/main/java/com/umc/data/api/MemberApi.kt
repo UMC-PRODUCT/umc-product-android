@@ -7,6 +7,7 @@ import com.umc.data.response.member.MemberResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.member.RegisterRequest
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -36,5 +37,7 @@ interface MemberApi {
         @Body request: RegisterRequest
     ): ApiResponse<JwtLoginResponse>
 
+    @DELETE(Endpoints.Member.MEMBER)
+    suspend fun deleteUser(): ApiResponse<Unit>
 
 }

@@ -55,11 +55,11 @@ class BottomSheetParticipantViewModel @Inject constructor(
             resultResponse(
                 response = searchChallengerScheduleUseCase(
                     cursor = cursor,
-                    size = 50,
+                    size = 20,
                     name = state.searchQuery.ifBlank { null } // 빈 검색어는 null로 그 외는 searchParticipant에서 가져온 쿼리로
                 ),
                 successCallback = { response ->
-
+                    Log.d("log_home", "유저검색 성공: ${response.content}")
                     updateState {
                         copy(
                             searchResults = response.content,
@@ -71,6 +71,7 @@ class BottomSheetParticipantViewModel @Inject constructor(
                 },
                 errorCallback = {
                     //검색 실패 시, 로딩 해제 및 다음 꺼 X
+                    Log.d("log_home", "유저검색 실패: ${it.message}")
                     updateState { copy(isLoading = false, hasNext = false) }
                 }
             )

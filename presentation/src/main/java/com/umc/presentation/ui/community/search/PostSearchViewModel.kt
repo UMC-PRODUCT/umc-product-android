@@ -116,10 +116,24 @@ constructor(
         }
     }
 
-    // 실시간 텍스트 변경 처리
+    // 실시간 텍스트 변경 처리 + 뷰모드도 같이 설정
     fun onQueryChanged(query: String) {
         updateState {
-            copy(query = query)
+            //만약 이미 결과 있으면 이전 기록은 보이게 하기보이기
+            val newMode = if (query.isBlank()) SearchMode.EMPTY
+            else if (mode == SearchMode.RESULT && searchResults.isNotEmpty()) SearchMode.RESULT
+            else SearchMode.TYPING
+
+            copy(query = query,
+                mode = newMode
+            )
+        }
+    }
+
+    //뷰모드 변경하기
+    fun onChangeViewMode(mode: SearchMode){
+        updateState {
+            copy(mode = mode)
         }
     }
 
@@ -156,12 +170,7 @@ constructor(
 
     }
 
-    //뷰모드 변경하기
-    fun onChangeViewMode(mode: SearchMode){
-        updateState {
-            copy(mode = mode)
-        }
-    }
+    
 
 
     fun onClickBackPressed(){

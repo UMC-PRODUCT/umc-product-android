@@ -2,9 +2,11 @@ package com.umc.data.repository
 
 import com.umc.data.dataSource.OrganizationDataSource
 import com.umc.data.response.organization.*
+import com.umc.data.response.organization.GisuInfoResponse.Companion.toModel
 import com.umc.data.response.organization.SchoolNameResponse.Companion.toModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
+import com.umc.domain.model.home.GisuInfo
 import com.umc.domain.model.request.organization.*
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.repository.OrganizationRepository
@@ -68,6 +70,10 @@ class OrganizationRepositoryImpl @Inject constructor(
 
     override suspend fun getChapterWithSchool(gisuId: Int): ApiState<Unit> =
         organizationDataSource.getChapterWithSchool(gisuId).map { Unit } //임시
+
+    override suspend fun getGisuInfo(gisuId: Long): ApiState<GisuInfo> =
+        organizationDataSource.getGisuInfo(gisuId).map { it.toModel() }
+
 
     // PATCH
     override suspend fun editGroup(groupId: Int, request: EditStudyGroupRequest): ApiState<Unit> =

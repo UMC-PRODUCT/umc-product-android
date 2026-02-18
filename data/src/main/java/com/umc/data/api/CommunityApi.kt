@@ -81,14 +81,14 @@ interface CommunityApi {
     @POST(Endpoints.Community.POST_LIKE)
     suspend fun togglePostLike(
         @Path("postId") postId: Long,
-        @Query("challengerId") challengerId: Long
+        //@Query("challengerId") challengerId: Long
     ): ApiResponse<PostLikeResponse>
 
     //게시글 스크랩 토글
     @POST(Endpoints.Community.POST_SCRAP)
     suspend fun togglePostScrap(
         @Path("postId") postId: Long,
-        @Query("challengerId") challengerId: Long
+        //@Query("challengerId") challengerId: Long
     ): ApiResponse<PostScrapResponse>
 
 
@@ -108,7 +108,33 @@ interface CommunityApi {
         @Body request: CreatePostRequest
     ): ApiResponse<PostDetailResponse>
 
+    //번개글 수정
+    @PATCH(Endpoints.Community.MODIFY_LIGHTNING)
+    suspend fun updateLightningPost(
+        @Path("postId") postId: Long,
+        @Body request: CreatePostLightningRequest
+    ): ApiResponse<PostDetailResponse>
 
 
+    //내가 쓴 글 조회
+    @GET(Endpoints.Community.MY_POST)
+    suspend fun getMyPosts(
+        @Query("page") page: Int, // 현재 페이지
+        @Query("size") size: Int = 20 // 페이지당 개수
+    ): ApiResponse<CommunityGetPostResponse>
+
+    //내가 댓글 단 글 조회
+    @GET(Endpoints.Community.MY_COMMENT)
+    suspend fun getMyCommentedPosts(
+        @Query("page") page: Int, // 현재 페이지
+        @Query("size") size: Int = 20 // 페이지당 개수
+    ): ApiResponse<CommunityGetPostResponse>
+
+    //내가 스크랩 한 글 조회
+    @GET(Endpoints.Community.MY_SCRAP)
+    suspend fun getMyScrappedPosts(
+        @Query("page") page: Int, // 현재 페이지
+        @Query("size") size: Int = 20 // 페이지당 개수
+    ): ApiResponse<CommunityGetPostResponse>
 
 }

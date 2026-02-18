@@ -20,6 +20,7 @@ object Endpoints {
         const val APPROVE = "$ATTENDANCE/{recordId}/approve"
         const val REJECT = "$ATTENDANCE/{recordId}/reject"
         const val HISTORY = "$ATTENDANCE/history"
+        const val CHALLENGER_HISTORY = "$ATTENDANCE/challenger/{challengerId}/history"
     }
 
     object Challenger {
@@ -28,8 +29,6 @@ object Endpoints {
         const val POINT = "$CHALLENGER/{challengerId}/points"
         const val DELETE_POINT = "$CHALLENGER/points/{challengerPointId}"
 
-        //일정 검색 용도
-        const val SEARCH_SCHEDULE = "$CHALLENGER/search/global"
         const val SEARCH_CURSOR = "$CHALLENGER/search/cursor"
     }
 
@@ -70,6 +69,14 @@ object Endpoints {
         const val LIGHTNING = "$COMMUNITY/lightning"
 
         const val POST_COMMENT_DETAIL = "$POST_COMMENT/{commentId}"
+
+        const val MY_POST = "$COMMUNITY/my"
+        const val MY_COMMENT = "$COMMUNITY/commented"
+        const val MY_SCRAP = "$COMMUNITY/scrapped"
+
+        const val MODIFY_LIGHTNING = "$COMMUNITY/{postId}lightning"
+
+
 
     }
 
