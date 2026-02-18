@@ -425,6 +425,10 @@ class NoticeWriteViewModel @Inject constructor(
         updateState { copy(shouldNotify = shouldNotify) }
     }
 
+    fun onClickToggleAllGisu() {
+        updateState { copy(isAllGisuSelected = !isAllGisuSelected) }
+    }
+
     fun onClickSubmit() = viewModelScope.launch {
         val state = uiState.value
 
@@ -449,7 +453,7 @@ class NoticeWriteViewModel @Inject constructor(
         val targetChapterId = state.classList.find { it.isClicked && it.chapterId != null }?.chapterId?.toInt()
         val targetSchoolId = state.classList.find { it.isClicked && it.schoolId != null }?.schoolId?.toInt()
         val targetRequest = NoticeTargetRequest(
-            targetGisuId = activeGisuId,
+            targetGisuId = if (state.isAllGisuSelected) null else activeGisuId,
             targetChapterId = targetChapterId,
             targetSchoolId = targetSchoolId,
             targetParts = targetParts
@@ -570,6 +574,7 @@ data class NoticeWriteUiState(
     val schoolList: List<SchoolInfo> = emptyList(),
     val activeGisuId: Int? = null,
     val userInfo: UserInfo? = null,
+    val isAllGisuSelected: Boolean = false,
 ) : UiState {
     val isShowClassSection: Boolean
         get() = category != NoticeCategory.PART

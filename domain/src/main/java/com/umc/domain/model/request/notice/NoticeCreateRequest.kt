@@ -12,7 +12,7 @@ data class NoticeCreateRequest(
 
 @Serializable
 data class NoticeTargetRequest(
-    val targetGisuId: Int,
+    val targetGisuId: Int?,
     val targetChapterId: Int?,
     val targetSchoolId: Int?,
     val targetParts: List<String>

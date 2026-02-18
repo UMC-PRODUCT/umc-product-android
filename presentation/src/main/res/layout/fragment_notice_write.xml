@@ -66,7 +66,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="12dp"
-                android:src="@drawable/ic_check_box"
+                android:onClick="@{()->vm.updateShouldNotify(!vm.uiState.shouldNotify)}"
+                android:src="@{vm.uiState.shouldNotify ? @drawable/ic_check_box : @drawable/ic_check_box_empty}"
+                android:tint="@{vm.uiState.shouldNotify ? @color/primary500 : @color/neutral400}"
                 tools:ignore="UseAppTint" />
 
             <TextView
@@ -182,6 +184,31 @@
                         app:layout_constraintTop_toTopOf="parent" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <ImageView
+                    android:id="@+id/image_check_all_gisu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:onClick="@{()->vm.onClickToggleAllGisu()}"
+                    android:src="@{vm.uiState.isAllGisuSelected ? @drawable/ic_check_box : @drawable/ic_check_box_empty}"
+                    android:tint="@{vm.uiState.isAllGisuSelected ? @color/primary500 : @color/neutral400}"
+                    app:layout_constraintBottom_toBottomOf="@id/layout_category"
+                    app:layout_constraintEnd_toStartOf="@id/text_all_gisu"
+                    app:layout_constraintTop_toTopOf="@id/layout_category"
+                    tools:ignore="UseAppTint" />
+
+                <TextView
+                    android:id="@+id/text_all_gisu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="24dp"
+                    android:text="전체 기수"
+                    android:textAppearance="@style/Subheadline"
+                    android:textColor="@color/neutral800"
+                    app:layout_constraintBottom_toBottomOf="@id/layout_category"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/layout_category" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recycler_dropdown"

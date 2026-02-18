@@ -2,12 +2,15 @@ package com.umc.presentation.ui.notice.detail
 
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.UDomainFormat.parseDateTime
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.notice.ChallengerReadInfo
 import com.umc.domain.model.notice.NoticeDetail
 import com.umc.domain.model.notice.NoticeReadStatistics
 import com.umc.domain.model.notice.NoticeTarget
 import com.umc.domain.model.notice.NoticeVote
 import com.umc.domain.model.notice.NoticeVoteOption
+import com.umc.domain.usecase.GetChallengerIdUseCase
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
 import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatisticsUseCase
@@ -17,6 +20,7 @@ import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,12 +31,15 @@ class NoticeDetailViewModel @Inject constructor(
     private val getNoticeReadStatisticsUseCase: GetNoticeReadStatisticsUseCase,
     private val sendNoticeReminderUseCase: SendNoticeReminderUseCase,
     private val getChallengerDetailUseCase: GetChallengerDetailUseCase,
+    private val getUserInfoUseCase: GetUserInfoUseCase,
+    private val getChallengerIdUseCase: GetChallengerIdUseCase,
 ) : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
     NoticeFragmentUiState()
 ) {
 
     private var currentNoticeId: Long = 0L
     private var selectedOptionIds: MutableSet<Long> = mutableSetOf()
+    private var currentUserChallengerId: Long = -1L
 
     fun init(noticeId: Long) {
         currentNoticeId = noticeId
@@ -40,6 +47,33 @@ class NoticeDetailViewModel @Inject constructor(
         loadReadStatistics()
         loadReadStatus()
         loadUnReadStatus()
+        loadCurrentUserInfo()
+    }
+
+    private fun loadCurrentUserInfo() = viewModelScope.launch {
+        val userInfo = getUserInfoUseCase().first()
+        currentUserChallengerId = getChallengerIdUseCase()
+        checkIsMember(userInfo)
+        checkIsAuthor()
+    }
+
+    private fun checkIsAuthor() {
+        val isAuthor = currentUserChallengerId == uiState.value.detail.authorChallengerId && currentUserChallengerId != -1L
+        updateState { copy(isAuthor = isAuthor) }
+    }
+
+    private fun checkIsMember(userInfo: UserInfo) {
+        // Check if the user has any role that is MEMBER only (no admin roles)
+        val hasOnlyMemberRole = userInfo.roles.isNotEmpty() && 
+            userInfo.roles.all { it.roleType == "MEMBER" }
+        
+        updateState { 
+            copy(isCurrentUserMember = hasOnlyMemberRole) 
+        }
+    }
+
+    fun onClickMenu() {
+        updateState { copy(isMenuVisible = !isMenuVisible) }
     }
 
     private fun loadNoticeDetail() = viewModelScope.launch {
@@ -71,6 +105,7 @@ class NoticeDetailViewModel @Inject constructor(
                     ) 
                 }
                 
+                checkIsAuthor()
                 loadAuthorNickname(detail.authorChallengerId)
             },
             errorCallback = {
@@ -273,6 +308,14 @@ class NoticeDetailViewModel @Inject constructor(
             }
         )
     }
+
+    fun onClickEditPost() {
+        // TODO: Implement edit post navigation
+    }
+
+    fun onClickDeletePost() {
+        // TODO: Implement delete post logic
+    }
 }
 
 
@@ -292,7 +335,10 @@ data class NoticeFragmentUiState(
     val readNextCursor: Long? = null,
     val readHasNext: Boolean = false,
     val unReadNextCursor: Long? = null,
-    val unReadHasNext: Boolean = false
+    val unReadHasNext: Boolean = false,
+    val isMenuVisible: Boolean = false,
+    val isCurrentUserMember: Boolean = false,
+    val isAuthor: Boolean = false,
 ) : UiState
 
 sealed interface NoticeFragmentEvent : UiEvent {
