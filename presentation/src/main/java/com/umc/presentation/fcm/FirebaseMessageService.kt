@@ -18,7 +18,6 @@ import dagger.hilt.android.AndroidEntryPoint
  * 포그라운드 : 유저가 앱을 쓰는 중이므로, 자체 로직(onMessageReceived)으로 해결
  * **/
 
-@AndroidEntryPoint
 class FirebaseMessageService : FirebaseMessagingService() {
 
     //새로운 토큰이 생성될 때 호출
