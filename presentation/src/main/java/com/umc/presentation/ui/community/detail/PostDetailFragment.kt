@@ -47,48 +47,8 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
 
     //댓글의 메뉴 클릭
     override fun onCommentMenuClicked(item: CommentItem) {
-        val inflater = LayoutInflater.from(requireContext())
-        val menuBinding = LayoutMenuCommentBinding.inflate(inflater)
-
-        // PopupWindow 설정
-        val popup = PopupWindow(
-            menuBinding.root,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            true // 바깥쪽 터치 시 닫힘
-        ).apply {
-            elevation = 20f
-        }
-
-        // TODO : chllengerId 체크 필요!
-        val isMyComment = item.challengerId == viewModel.uiState.value.myId
-        menuBinding.layoutMenuReport.visibility = if (isMyComment) View.GONE else View.VISIBLE
-        menuBinding.layoutMenuDelete.visibility = if (isMyComment) View.VISIBLE else View.GONE
-
-        // 메뉴 클릭 이벤트
-        // 신고
-        menuBinding.layoutMenuReport.setOnClickListener {
-            popup.dismiss()
-            // 아까 만든 신고 다이얼로그 띄우기
-            handleEvent(PostDetailFragmentEvent.ReportComment)
-        }
-
-        // 삭제
-        menuBinding.layoutMenuDelete.setOnClickListener {
-            popup.dismiss()
-            // 삭제 로직
-            viewModel.onClickeDeleteComment(item)
-
-        }
-
-        // 버튼 위치를 기준으로 띄우기 (약간의 오프셋 조정 가능)
-        val anchor = binding.postdetailRcv.findViewHolderForAdapterPosition(
-            postDetailAdapter.currentList.indexOf(PostDetailItem.Comment(item))
-        )?.itemView?.findViewById<View>(R.id.item_btn_menu)
-
-        anchor?.let {
-            popup.showAsDropDown(it, -250, +25) // 버튼 왼쪽 아래로 정렬
-        }
+        //권한 조회하러 가기
+        viewModel.onCommentMenuClicked(item)
     }
 
 
@@ -172,7 +132,8 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
                 UBasicDialog(
                     model = reportModel,
                     onConfirm = {
-                        // TODO: 서버에 신고 API 호출하는 뷰모델 함수 연결
+                        //서버에 신고
+                        viewModel.reportPost()
                     }
                 ).show(childFragmentManager, "ReportDialog")
             }
@@ -212,11 +173,19 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
                 UBasicDialog(
                     model = reportModel,
                     onConfirm = {
-                        // TODO: 서버에 신고 API 호출하는 뷰모델 함수 연결
+                        // 서버에 신고
+                        viewModel.reportComment(event.commentId)
                     }
                 ).show(childFragmentManager, "ReportDialog")
             }
 
+            //댓글 메뉴 보여주기(권한 바탕으로)
+            is PostDetailFragmentEvent.ShowCommentMenu -> {
+                showCommentPopupMenu(event.item, event.canDelete)
+            }
+
+
+            //에러 토스트 출력
             is PostDetailFragmentEvent.ShowErrorToast -> {
                 Toast.makeText(requireContext(), event.errorMessage, Toast.LENGTH_SHORT).show()
             }
@@ -232,6 +201,40 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
     }
 
 
+    //댓글 메뉴 눌렀을 때 처리하기 (실제 권한을 바탕을 로직 분리)
+    private fun showCommentPopupMenu(item: CommentItem, canDelete: Boolean) {
+        val inflater = LayoutInflater.from(requireContext())
+        val menuBinding = LayoutMenuCommentBinding.inflate(inflater)
+
+        val popup = PopupWindow(
+            menuBinding.root,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            true
+        ).apply { elevation = 20f }
+
+        // 서버에서 받은 canDelete 결과에 따라 UI 가시성 조절
+        menuBinding.layoutMenuReport.visibility = if (canDelete) View.GONE else View.VISIBLE
+        menuBinding.layoutMenuDelete.visibility = if (canDelete) View.VISIBLE else View.GONE
+
+        // 메뉴 클릭 이벤트
+        menuBinding.layoutMenuReport.setOnClickListener {
+            popup.dismiss()
+            handleEvent(PostDetailFragmentEvent.ReportComment(item.commentId))
+        }
+
+        menuBinding.layoutMenuDelete.setOnClickListener {
+            popup.dismiss()
+            viewModel.onClickeDeleteComment(item) // 삭제 로직 실행
+        }
+
+        // 앵커 뷰 찾기 및 팝업 노출
+        val anchor = binding.postdetailRcv.findViewHolderForAdapterPosition(
+            postDetailAdapter.currentList.indexOf(PostDetailItem.Comment(item))
+        )?.itemView?.findViewById<View>(R.id.item_btn_menu)
+
+        anchor?.let { popup.showAsDropDown(it, -250, +25) }
+    }
 
 
     private fun handleKebabAnimation(isVisible: Boolean) {

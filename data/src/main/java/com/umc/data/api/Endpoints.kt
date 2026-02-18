@@ -3,12 +3,18 @@ package com.umc.data.api
 object Endpoints {
 
     object Auth {
+        //Authentication
         const val AUTH = "api/v1/auth"
         const val REISSUE = "$AUTH/auth/renew"
         const val LOGIN_KAKAO = "$AUTH/login/kakao"
         const val LOGIN_GOOGLE = "$AUTH/login/google"
         const val EMAIL_VERIFICATION = "$AUTH/email-verification"
         const val EMAIL_VERIFICATION_COMPLETE = "$EMAIL_VERIFICATION/code"
+
+        //Authorization
+        const val AUTHORIZATION = "api/v1/authorization"
+        const val AUTHORIZATION_CHECK = "$AUTHORIZATION/resource-permission"
+
     }
 
     object Attendance {
@@ -74,7 +80,12 @@ object Endpoints {
         const val MY_COMMENT = "$COMMUNITY/commented"
         const val MY_SCRAP = "$COMMUNITY/scrapped"
 
-        const val MODIFY_LIGHTNING = "$COMMUNITY/{postId}lightning"
+        const val MODIFY_LIGHTNING = "$COMMUNITY/{postId}/lightning"
+
+        const val REPORT_POST = "$COMMUNITY/{postId}/reports"
+
+        const val REPORT_COMMENT = "api/v1/comments/{commentId}/reports"
+
 
 
 
@@ -135,5 +146,6 @@ object Endpoints {
         const val BEST = "api/v1/workbooks/challenger/{challengerWorkbookId}/best"
         const val REVIEW = "api/v1/workbooks/challenger/{challengerWorkbookId}/review"
     }
+
 
 }

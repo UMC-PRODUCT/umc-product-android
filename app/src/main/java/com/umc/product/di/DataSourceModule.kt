@@ -7,6 +7,8 @@ import com.umc.data.dataSource.remote.AuthRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.OrganizationRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSource
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.authorize.AuthorizeRemoteDataSource
+import com.umc.data.dataSource.remote.authorize.AuthorizeRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.kakao.KakaoRemoteDataSource
 import com.umc.data.dataSource.remote.kakao.KakaoRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSource
@@ -99,4 +101,8 @@ abstract class DataSourceModule {
     ): WorkbookRemoteDataSource
 
 
+
+    @Singleton
+    @Binds
+    abstract fun bindsAuthorizeRemoteDataSource(dataSourceImpl: AuthorizeRemoteDataSourceImpl): AuthorizeRemoteDataSource
 }

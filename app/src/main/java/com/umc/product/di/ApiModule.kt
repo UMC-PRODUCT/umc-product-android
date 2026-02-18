@@ -2,6 +2,7 @@ package com.umc.product.di
 
 import com.umc.data.api.AttendanceApi
 import com.umc.data.api.AuthApi
+import com.umc.data.api.AuthorizeApi
 import com.umc.data.api.MemberApi
 import com.umc.data.api.ChallengerApi
 import com.umc.data.api.CommunityApi
@@ -92,6 +93,12 @@ object ApiModule {
     @Provides
     fun provideTermsApi(@AuthRetrofit retrofit: Retrofit): TermsApi {
         return retrofit.create(TermsApi::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideAuthorizeApi(@AuthRetrofit retrofit: Retrofit): AuthorizeApi {
+        return retrofit.create(AuthorizeApi::class.java)
     }
 
 

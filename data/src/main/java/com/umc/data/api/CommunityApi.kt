@@ -137,4 +137,17 @@ interface CommunityApi {
         @Query("size") size: Int = 20 // 페이지당 개수
     ): ApiResponse<CommunityGetPostResponse>
 
+    //게시글 신고
+    @POST(Endpoints.Community.REPORT_POST)
+    suspend fun reportPost(
+        @Path("postId") postId: Long
+    ): ApiResponse<Unit>
+
+    //댓글 신고
+    @POST(Endpoints.Community.REPORT_COMMENT)
+    suspend fun reportComment(
+        @Path("commentId") commentId: Long
+    ): ApiResponse<Unit>
+
+
 }

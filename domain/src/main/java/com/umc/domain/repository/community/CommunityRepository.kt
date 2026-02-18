@@ -62,5 +62,10 @@ interface CommunityRepository {
     //내가 스크랩 한 글 갖고오기
     suspend fun getMyScrappedPosts(page: Int, size: Int): ApiState<PostPageModel>
 
+    //게시글 신고
+    suspend fun reportPost(postId: Long): ApiState<Unit>
+
+    //댓글 신고
+    suspend fun reportComment(commentId: Long): ApiState<Unit>
 }
 

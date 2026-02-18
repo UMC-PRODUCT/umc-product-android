@@ -5,6 +5,7 @@ import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.data.repository.AuthRepositoryImpl
 import com.umc.data.repository.OrganizationRepositoryImpl
 import com.umc.data.repository.attendance.AttendanceRepositoryImpl
+import com.umc.data.repository.authorize.AuthorizeRepositoryImpl
 import com.umc.data.repository.kakao.KakaoSearchRepositoryImpl
 import com.umc.data.repository.member.MemberRepositoryImpl
 import com.umc.domain.repository.AuthRepository
@@ -20,12 +21,12 @@ import com.umc.data.repository.workbook.WorkbookRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
 import com.umc.domain.repository.OrganizationRepository
 import com.umc.domain.repository.attendance.AttendanceRepository
+import com.umc.domain.repository.authorize.AuthorizeRepository
 import com.umc.domain.repository.community.CommunityRepository
 import com.umc.domain.repository.curriculum.CurriculumRepository
 import com.umc.domain.repository.schedule.ScheduleRepository
 import com.umc.domain.repository.storage.StorageRepository
 import com.umc.domain.repository.terms.TermsRepository
-import com.umc.domain.repository.workbook.WorkbookRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -104,5 +105,9 @@ abstract class RepositoryModule {
     @Binds
     abstract fun bindWorkbookRepository(impl: WorkbookRepositoryImpl): WorkbookRepository
 
+
+    @Singleton
+    @Binds
+    abstract fun bindsAuthorizeRepository(repositoryImpl: AuthorizeRepositoryImpl): AuthorizeRepository
 
 }

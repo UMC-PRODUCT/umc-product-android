@@ -62,4 +62,9 @@ interface CommunityRemoteDataSource {
     //내가 스크랩 한 글 가져오기
     suspend fun getMyScrappedPosts(page: Int, size: Int = 20): ApiState<CommunityGetPostResponse>
 
+    //게시글 신고
+    suspend fun reportPost(postId: Long): ApiState<Unit>
+
+    //댓글 신고
+    suspend fun reportComment(commentId: Long): ApiState<Unit>
 }
