@@ -8,6 +8,7 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.model.home.LocationItem
 import com.umc.domain.model.home.ParticipantItem
+import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
@@ -33,9 +34,6 @@ import javax.inject.Inject
 @HiltViewModel
 class PlanAddViewModel @Inject
 constructor(
-    private val getRecentSearchPlaceUseCase: GetRecentSearchPlaceUseCase, //최근 장소 기록 불러오기;
-    private val updateRecentSearchPlaceUseCase: UpdateRecentSearchPlaceUseCase, //최근 장소 기록 업데이트하기
-    private val getSearchLocationUseCase: GetSearchLocationUseCase, //카카오 SDK로 장소 검색하기
     private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 가져오기
     private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase, //일정 상세 정보 가져오기,
     private val createScheduleUseCase: CreateScheduleUseCase, //일정 생성하기
@@ -62,7 +60,18 @@ constructor(
             //유저 정보 가져오기
             launch {
                 getUserInfoUseCase().collect { userInfo ->
-                    updateState { copy(myInfo = userInfo) }
+
+                    //기수 요약 리스트 작성
+                    val gisuSummaryList = userInfo.getGisuSummaryList()
+                    val latestGisu = gisuSummaryList.maxByOrNull { it.gisu }
+                    //최신 기수ID 얻기
+                    val latestGisuId = latestGisu?.gisuId ?: 1L
+
+                    updateState {
+                        copy(
+                            myInfo = userInfo,
+                            nowGisuId = latestGisuId
+                            ) }
                 }
             }
         }
@@ -93,6 +102,9 @@ constructor(
                             selectedOnes.size <= 3 -> selectedOnes.joinToString(", ") { it.name }
                             else -> "${selectedOnes.take(3).joinToString(", ") { it.name }} 외 ${selectedOnes.size - 3}개"
                         }
+
+                        //4. 참석자 매칭
+
                         
                         //4. 갱신 저장
                         copy(
@@ -112,7 +124,7 @@ constructor(
                             startTimeText = startTimeTextFormatted,
                             endDateText = detail.endDay,
                             endTimeText = endTimeTextFormatted,
-                            selectedCategoriesString = summaryText
+                            selectedCategoriesString = summaryText,
                         )
                     }
                 },
@@ -225,7 +237,7 @@ constructor(
                     description = state.planDetail,
                     tags = selectedTags,
                     participantMemberIds = participantIds,
-                    gisuId = 1L,
+                    gisuId = state.nowGisuId,
                     requiresApproval = state.isManager
                 )
 
@@ -338,12 +350,15 @@ data class PlanAddFragmentUiState(
     //챌린저 내 정보
     val myInfo : UserInfo = UserInfo(),
 
+    //내 최신 기수
+    val nowGisuId: Long = -1L,
+
     ////스케쥴 수정용 id
     val updateScheduleId : Long = -1L,
 
 
     //운영진 여부 판단
-    val isManager: Boolean = false,
+    val isManager: Boolean = true,
 
     //하루 종일 부분에 체크가 되었나
     val isAllDay: Boolean = false,

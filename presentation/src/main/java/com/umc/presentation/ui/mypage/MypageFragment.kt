@@ -168,8 +168,8 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             is MypageFragmentEvent.Logout -> {
                 //1. 다이얼로그로 체크
                 val dialog = UMypageDialog(logoutDialogModel) {
-
                     viewModel.deleteAllData()
+
                     val action = MainGraphDirections.actionGlobalToLogin()
                     findNavController().navigate(action)
 
@@ -182,7 +182,7 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             is MypageFragmentEvent.DeleteUser -> {
                 //1. 다이얼로그로 체크
                 val dialog = UMypageDialog(deleteUserDialogModel) {
-                    /**TODO 회원 탈퇴 로직 생성**/
+                    viewModel.deleteUser()
 
                 }
 
@@ -198,7 +198,11 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             is MypageFragmentEvent.NavigateToInstagramUmc -> {
                 openWebpage(viewModel.uiState.value.instagramUMC)
             }
-            
+
+            is MypageFragmentEvent.MoveToOnBoardPage -> {
+                val action = MainGraphDirections.actionGlobalToLogin()
+                findNavController().navigate(action)
+            }
             
 
             else -> {}

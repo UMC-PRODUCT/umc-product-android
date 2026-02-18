@@ -143,4 +143,14 @@ class CommunityRepositoryImpl @Inject constructor(
             it.toPostPageModelDomain() }
     }
 
+    //게시글 신고
+    override suspend fun reportPost(postId: Long): ApiState<Unit> {
+        return communityRemoteDataSource.reportPost(postId)
+    }
+
+    //댓글 신고
+    override suspend fun reportComment(commentId: Long): ApiState<Unit> {
+        return communityRemoteDataSource.reportComment(commentId)
+    }
+
 }

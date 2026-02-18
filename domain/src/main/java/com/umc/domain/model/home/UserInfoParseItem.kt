@@ -6,12 +6,14 @@ import com.umc.domain.model.UserInfo
 /**
  * 해당 data class는 UserInfo를 바탕으로 역할이랑 기수 등을 파싱해 저장하는
  * 클래스입니다. 주로 UI 작업에 사용하며, 최신 기수나 challengerId를 얻는데 사용합니다.
+ *
+ * @param UserChallengerRole 을 RolePartItem의 role에서 from으로 이용해 찾아본다.
  * **/
 
 // 1. 개별 활동 아이템 (역할, 파트, 그리고 챌린저 ID)
 data class RolePartItem(
-    val role: String,
-    val responsiblePart: String?,
+    val role: String, //역할 (SCHOOL_PART_LEADER)
+    val responsiblePart: String?, //ANDROID ...
     val challengerId: Long
 )
 

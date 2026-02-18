@@ -183,6 +183,8 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
     //해당 탭을 닫고 이동하는 로직
     /**TODO 로직 작성 필요**/
     private fun clickConfirmAttention(){
+        val action = PlanDetailFragmentDirections.actionPlanDetailToNavAct()
+        findNavController().navigate(action)
 
     }
 
