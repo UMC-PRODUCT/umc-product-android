@@ -5,6 +5,7 @@ import com.umc.domain.model.UserInfo
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.organization.GisuItem
+import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.GetNoticeListUseCase
 import com.umc.domain.usecase.organization.GetGisuListUseCase
@@ -39,6 +40,12 @@ class NoticeViewModel @Inject constructor(
     private fun createChipsFromUserInfo(userInfo: UserInfo): List<NoticeChipState> {
         val chipList = mutableListOf<NoticeChipState>()
         chipList.add(NoticeChipState(text = "전체", isClicked = true))
+
+        // 공지 작성 권한 확인 (MEMBER가 아닌 경우에만 권한 있음)
+        val hasWritePermission = userInfo.roles.any { role ->
+            UserChallengerRole.from(role.roleType) != UserChallengerRole.MEMBER
+        }
+        updateState { copy(canWriteNotice = hasWritePermission) }
 
         if (userInfo.schoolId != 0L) {
             chipList.add(
@@ -200,7 +207,8 @@ data class NoticeUiState(
     val noticeList: List<NoticeSummary> = emptyList(),
     val currentPage: Int = 0,
     val isPageLoading: Boolean = false,
-    val isLastPage: Boolean = false
+    val isLastPage: Boolean = false,
+    val canWriteNotice: Boolean = false
 ) : UiState
 
 sealed interface NoticeEvent : UiEvent {

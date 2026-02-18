@@ -259,21 +259,17 @@ class NoticeWriteViewModel @Inject constructor(
         
         roleTypes.forEach { roleType ->
             when (UserChallengerRole.from(roleType)) {
-                // 기수 ✓ · 지부 ✕ · 학교 ✕ · 파트 ✕ → 해당 기수 전체 (중앙 총괄단)
                 UserChallengerRole.CENTRAL_PRESIDENT,
                 UserChallengerRole.CENTRAL_VICE_PRESIDENT -> {
                     availableCategories.add(NoticeCategory.CENTRAL_OFFICE)
                 }
-                // 기수 ✓ · 지부 ✕ · 학교 ✕ · 파트 ✓ → 해당 기수 특정 파트 (중앙 교육국원)
                 UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER -> {
                     availableCategories.add(NoticeCategory.PART)
                 }
-                // 기수 ✓ · 지부 ✕ · 학교 ✓ · 파트 ✕/✓ → 해당 기수 특정 학교/학교+파트 (학교 회장단)
                 UserChallengerRole.SCHOOL_PRESIDENT,
                 UserChallengerRole.SCHOOL_VICE_PRESIDENT -> {
                     availableCategories.add(NoticeCategory.SCHOOL)
                 }
-                // 기수 ✓ · 지부 ✓ · 학교 ✕ · 파트 ✕/✓ → 해당 기수 특정 지부/지부+파트 (지부장)
                 UserChallengerRole.CHAPTER_PRESIDENT -> {
                     availableCategories.add(NoticeCategory.BRANCH)
                 }
@@ -289,7 +285,7 @@ class NoticeWriteViewModel @Inject constructor(
         
         return when {
             // 중앙 총괄단 우선
-            roleTypes.any { 
+            roleTypes.any {
                 UserChallengerRole.from(it) == UserChallengerRole.CENTRAL_PRESIDENT ||
                 UserChallengerRole.from(it) == UserChallengerRole.CENTRAL_VICE_PRESIDENT
             } -> NoticeCategory.CENTRAL_OFFICE
@@ -480,27 +476,14 @@ class NoticeWriteViewModel @Inject constructor(
 
     private suspend fun uploadImages(imageUris: List<Uri>): List<String> {
         val imageIds = mutableListOf<String>()
-        ULog.d("uploadImages 시작: ${imageUris.size}개의 이미지")
         imageUris.forEachIndexed { index, uri ->
-            ULog.d("[$index] 업로드 시도: $uri")
-            try {
-                val response = uploadFileUseCase(uri.toString(), UploadFileCategory.NOTICE_ATTACHMENT)
-                ULog.d("[$index] uploadFileUseCase 반환: $response")
-                when (response) {
-                    is ApiState.Success -> {
-                        ULog.d("[$index] 업로드 성공: ${response.data.fileId}")
-                        imageIds.add(response.data.fileId)
-                    }
-                    is ApiState.Fail -> {
-                        ULog.d("[$index] 업로드 실패: ${response.failState.code} - ${response.failState.message}")
-                    }
+            resultResponse(
+                response = uploadFileUseCase(uri.toString(), UploadFileCategory.NOTICE_ATTACHMENT),
+                successCallback = {
+                    imageIds.add(it.fileId)
                 }
-            } catch (e: Exception) {
-                ULog.d("[$index] 업로드 중 예외 발생: ${e.message}")
-                e.printStackTrace()
-            }
+            )
         }
-        ULog.d("uploadImages 완료: ${imageIds.size}개 성공")
         return imageIds
     }
 
@@ -509,8 +492,6 @@ class NoticeWriteViewModel @Inject constructor(
     ) = viewModelScope.launch {
         var hasError = false
         val state = uiState.value
-
-        ULog.d(state.selectImageList.toString())
 
         if (state.selectImageList.isNotEmpty()) {
             val imageIds = uploadImages(state.selectImageList)
