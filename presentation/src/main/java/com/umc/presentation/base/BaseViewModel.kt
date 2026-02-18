@@ -24,6 +24,10 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
     val uiEvent: SharedFlow<EVENT>
         get() = _uiEvent.asSharedFlow()
 
+    // 로딩 상태 관리
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     protected fun updateState(state: STATE.() -> STATE) {
         _uiState.update { it.state() }
     }
@@ -39,7 +43,9 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
         successCallback: (D) -> Unit,
         errorCallback: ((FailState) -> Unit)? = null,
     ) {
-        
+        // 로딩 종료
+        _isLoading.value = false
+
         when (response) {
             is ApiState.Fail -> {
                 errorCallback?.invoke(response.failState)
@@ -48,5 +54,15 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
                 successCallback.invoke(response.data)
             }
         }
+    }
+
+    // API 호출 전 로딩 시작
+    fun startLoading() {
+        _isLoading.value = true
+    }
+
+    // 로딩 강제 종료 (에러 등에서 사용)
+    fun stopLoading() {
+        _isLoading.value = false
     }
 }

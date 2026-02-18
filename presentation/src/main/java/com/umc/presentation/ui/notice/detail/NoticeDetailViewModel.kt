@@ -84,6 +84,7 @@ class NoticeDetailViewModel @Inject constructor(
         }
 
         updateState { copy(isLoading = true) }
+        startLoading()
 
         resultResponse(
             response = getNoticeDetailUseCase(currentNoticeId),
@@ -147,6 +148,8 @@ class NoticeDetailViewModel @Inject constructor(
             return@launch
         }
 
+        startLoading()
+
         resultResponse(
             response = getChallengerDetailUseCase(authorChallengerId),
             successCallback = { challengerDetail ->
@@ -160,6 +163,7 @@ class NoticeDetailViewModel @Inject constructor(
 
     private fun loadReadStatistics() = viewModelScope.launch {
         if (currentNoticeId == 0L) return@launch
+        startLoading()
 
         resultResponse(
             response = getNoticeReadStatisticsUseCase(currentNoticeId),
@@ -176,7 +180,7 @@ class NoticeDetailViewModel @Inject constructor(
         if (currentNoticeId == 0L) return@launch
 
         updateState { copy(isLoadingReadStatus = true) }
-
+        startLoading()
         resultResponse(
             response = getNoticeReadStatusUseCase(
                 noticeId = currentNoticeId,
@@ -215,7 +219,7 @@ class NoticeDetailViewModel @Inject constructor(
         if (currentNoticeId == 0L) return@launch
 
         updateState { copy(isLoadingReadStatus = true) }
-
+        startLoading()
         resultResponse(
             response = getNoticeReadStatusUseCase(
                 noticeId = currentNoticeId,
@@ -288,6 +292,7 @@ class NoticeDetailViewModel @Inject constructor(
         if (voteId == -1L || optionIds.isEmpty()) return@launch
 
         updateState { copy(isSubmittingVote = true) }
+        startLoading()
 
         resultResponse(
             response = submitVoteResponseUseCase(voteId, optionIds),
@@ -310,7 +315,7 @@ class NoticeDetailViewModel @Inject constructor(
         if (currentNoticeId == 0L) return@launch
 
         updateState { copy(isSendingReminder = true) }
-
+        startLoading()
         resultResponse(
             response = sendNoticeReminderUseCase(currentNoticeId, targetChallengerIds),
             successCallback = {
