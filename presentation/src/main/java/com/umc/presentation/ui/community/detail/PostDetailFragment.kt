@@ -4,9 +4,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.PopupWindow
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.DefaultItemAnimator
 import com.umc.domain.model.community.CommentItem
 import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.R
@@ -59,7 +61,7 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
         }
 
         // TODO : chllengerId 체크 필요!
-        val isMyComment = item.challengerId == viewModel.uiState.value.myId
+        val isMyComment = item.challengerId == viewModel.uiState.value.myChallengerId
         menuBinding.layoutMenuReport.visibility = if (isMyComment) View.GONE else View.VISIBLE
         menuBinding.layoutMenuDelete.visibility = if (isMyComment) View.VISIBLE else View.GONE
 
@@ -68,7 +70,7 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
         menuBinding.layoutMenuReport.setOnClickListener {
             popup.dismiss()
             // 아까 만든 신고 다이얼로그 띄우기
-            handleEvent(PostDetailFragmentEvent.ReportComment)
+            handleEvent(PostDetailFragmentEvent.ReportComment(item.commentId))
         }
 
         // 삭제
@@ -100,6 +102,10 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
         postDetailAdapter = PostDetailAdapter(this)
         binding.postdetailRcv.apply {
             adapter = postDetailAdapter
+
+            //애니메이션 끄기
+            (itemAnimator as? DefaultItemAnimator)?.supportsChangeAnimations = false
+
         }
 
         //일정 화면에서 게시글 id 가져오기
@@ -166,7 +172,8 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
                 UBasicDialog(
                     model = reportModel,
                     onConfirm = {
-                        // TODO: 서버에 신고 API 호출하는 뷰모델 함수 연결
+                        //서버에 신고
+                        viewModel.reportPost()
                     }
                 ).show(childFragmentManager, "ReportDialog")
             }
@@ -206,9 +213,14 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
                 UBasicDialog(
                     model = reportModel,
                     onConfirm = {
-                        // TODO: 서버에 신고 API 호출하는 뷰모델 함수 연결
+                        // 서버에 신고
+                        viewModel.reportComment(event.commentId)
                     }
                 ).show(childFragmentManager, "ReportDialog")
+            }
+
+            is PostDetailFragmentEvent.ShowErrorToast -> {
+                Toast.makeText(requireContext(), event.errorMessage, Toast.LENGTH_SHORT).show()
             }
 
             //뒤로가기

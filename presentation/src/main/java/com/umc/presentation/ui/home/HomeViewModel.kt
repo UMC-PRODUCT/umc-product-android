@@ -3,12 +3,15 @@ package com.umc.presentation.ui.home
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.umc.domain.model.UserInfo
 
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.enums.WarningStatus
 import com.umc.domain.model.home.SchedulePlanItem
+import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
+import com.umc.domain.usecase.GetGisuInfoUseCase
 
 import com.umc.domain.usecase.schedule.GetScheduleMonthUseCase
 
@@ -30,6 +33,7 @@ import java.util.Locale
 class HomeViewModel @Inject constructor(
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val getScheduleMonthUseCase: GetScheduleMonthUseCase, //월별 일정 가져오기
+    private val getGisuInfoUseCase: GetGisuInfoUseCase, //기수 정보 가져오기
 ) : BaseViewModel<HomeFragmentUiState, HomeFragmentEvent>(
             HomeFragmentUiState()) {
 
@@ -84,12 +88,7 @@ class HomeViewModel @Inject constructor(
                 response = getMyProfileUseCase(),
                 successCallback = { userInfo ->
                     Log.d("log_home", "$userInfo")
-                    updateState {
-                        copy(
-                            userName = userInfo.name,
-                            userType = UserType.valueOf(userInfo.status),
-                        )
-                    }
+                    settingUserInfoToUI(userInfo)
 
                 },
                 errorCallback = {
@@ -130,6 +129,56 @@ class HomeViewModel @Inject constructor(
             )
         }
     }
+
+    //UserInfo를 받아았을 때 이를 파싱해서 UI 요소로 분할하는 함수
+    fun settingUserInfoToUI(userInfo: UserInfo){
+        // 기수별 정보가 담긴 것.
+        val gisuSummaryList = userInfo.getGisuSummaryList()
+
+        //1. 기수 태그 정보 (11기, 12기, 13기... 생성)
+        val gisuTags: List<String> = gisuSummaryList
+            .sortedBy { it.gisu } // 기수 번호 낮은 순으로 정렬
+            .map { "${it.gisu}기" } // String 포맷팅
+
+        // 2. 최신기수를 가져오기
+        val latestGisu = gisuSummaryList.maxByOrNull { it.gisu }
+
+        //3. 기본 정보 우선 업데이트
+        updateState {
+            copy(
+                userName = userInfo.name,
+                gisuTag = gisuTags
+            )
+        }
+
+        //4. 최신기수의 날짜 가져오기
+        latestGisu?.let { summary ->
+            viewModelScope.launch {
+                resultResponse(
+                    response = getGisuInfoUseCase(summary.gisuId),
+                    successCallback = { gisuInfo ->
+                        //5. 성공 시 날짜 계산
+                        val (passedDay, userStatus) = getPassedDaysStatus(gisuInfo.startAt, gisuInfo.endAt)
+
+                        updateState {
+                            copy(
+                                userType = userStatus,
+                                growDay = passedDay.toInt(),
+                            )
+                        }
+
+                    },
+                    errorCallback = {
+
+                    }
+                )
+            }
+
+        }
+
+    }
+
+
 
     //ScheduleMonthModel -> SchdulePlanItem(보여주기 형식)으로 바꾸는 함수
     //또한, 연속된 내용의 일정(02.06-0.08)에 대해, 동일한 일정 item을 생성 (id는 same)
@@ -175,6 +224,27 @@ class HomeViewModel @Inject constructor(
         return result
     }
 
+    //최신 기수 날짜 정보를 통해, OB인지 ACTIVE인지 판단하고, 몇일 지났는지 표현
+    fun getPassedDaysStatus(startDateStr: String, endDateStr: String): Pair<Long, UserType> {
+        val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
+        val startDate = LocalDate.parse(startDateStr, formatter)
+        val endDate = LocalDate.parse(endDateStr, formatter)
+        val today = LocalDate.now() // 2026-02-16
+
+        //오늘이 종료일보다 뒤면 (OB)
+        return if (today.isAfter(endDate)) {
+            //종료일로부터 오늘까지 며칠 지났는지 계산
+            val days = ChronoUnit.DAYS.between(endDate, today)
+            Pair(days, UserType.OB)
+        } else {
+            //오늘이 종료일 이전이거나 종료일 당일인 경우
+            //시작일로부터 오늘까지 며칠 지났는지 계산
+            val days = ChronoUnit.DAYS.between(startDate, today)
+            Pair(days, UserType.ACTIVE)
+        }
+    }
+
+
     // 뷰모드(달력/리스트) 전환 함수
     fun onChangeViewMode(mode: HomeViewMode) {
         updateState {
@@ -219,12 +289,13 @@ data class HomeFragmentUiState(
     val viewMode: HomeViewMode = HomeViewMode.CALENDAR,
 
     // 유저 정보 영역
-    val userName: String = "홍길동",
-    val growDay: Int = 731,
+    val userName: String = "",
+    val growDay: Int = 0,
+    val gisuTag: List<String> = emptyList(),
 
     val userType: UserType = UserType.ACTIVE,
 
-    val warningStatus: WarningStatus = WarningStatus.WARNING,
+    val warningStatus: WarningStatus = WarningStatus.NORMAL,
 
     //알람 존재 관련
     val alarmExist: Boolean = false,
@@ -243,8 +314,8 @@ data class HomeFragmentUiState(
     val dailyPlans: List<SchedulePlanItem> = emptyList(), //선택한 날들의 일정
     val allPlans: List<SchedulePlanItem> = listOf(
     ), //월별 모든 일정
-    val plusDays : Int = 0,
-    val tmptag: List<String> = listOf("11기", "12기", "13기")
+    val plusDays : Int = 0, //연속 날짜 처리 용도
+
 
 
 

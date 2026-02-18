@@ -118,17 +118,24 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
 
 
             is MypageFragmentEvent.NavigateToMypost -> {
-                val action = MypageFragmentDirections.actionMypageToMypost()
+                val action = MypageFragmentDirections.actionMypageToMypost(
+                    showType = "MYPOST"
+                )
                 findNavController().navigate(action)
             }
             is MypageFragmentEvent.NavigateToMyComment -> {
-                val action = MypageFragmentDirections.actionMypageToMycomment()
+                val action = MypageFragmentDirections.actionMypageToMypost(
+                    showType = "MYCOMMENT"
+                )
                 findNavController().navigate(action)
 
             }
             
             is MypageFragmentEvent.NavigateToScrap -> {
-                /**TODO 스크랩 글 생성**/
+                val action = MypageFragmentDirections.actionMypageToMypost(
+                    showType = "MYSCRAP"
+                )
+                findNavController().navigate(action)
             }
 
 
@@ -161,8 +168,8 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             is MypageFragmentEvent.Logout -> {
                 //1. 다이얼로그로 체크
                 val dialog = UMypageDialog(logoutDialogModel) {
-
                     viewModel.deleteAllData()
+
                     val action = MainGraphDirections.actionGlobalToLogin()
                     findNavController().navigate(action)
 
@@ -175,7 +182,7 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             is MypageFragmentEvent.DeleteUser -> {
                 //1. 다이얼로그로 체크
                 val dialog = UMypageDialog(deleteUserDialogModel) {
-                    /**TODO 회원 탈퇴 로직 생성**/
+                    viewModel.deleteUser()
 
                 }
 
@@ -191,7 +198,11 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             is MypageFragmentEvent.NavigateToInstagramUmc -> {
                 openWebpage(viewModel.uiState.value.instagramUMC)
             }
-            
+
+            is MypageFragmentEvent.MoveToOnBoardPage -> {
+                val action = MainGraphDirections.actionGlobalToLogin()
+                findNavController().navigate(action)
+            }
             
 
             else -> {}

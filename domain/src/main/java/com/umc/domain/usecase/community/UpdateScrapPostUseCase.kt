@@ -6,6 +6,6 @@ import javax.inject.Inject
 class UpdateScrapPostUseCase @Inject constructor(
     private val communityRepository: CommunityRepository
 )  {
-    suspend operator fun invoke(postId: Long, challengerId: Long) =
-        communityRepository.togglePostScrap(postId, challengerId)
+    suspend operator fun invoke(postId: Long) =
+        communityRepository.togglePostScrap(postId)
 }

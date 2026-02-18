@@ -62,12 +62,12 @@ class PostSearchFragment : BaseFragment<FragmentPostSearchBinding, PostSearchFra
                 if (text.isNotBlank()) {
                     // 글자가 입력될 때마다 실시간으로 검색 내용 변경
                     viewModel.onQueryChanged(text)
-                    viewModel.onChangeViewMode(SearchMode.TYPING)
+                    //viewModel.onChangeViewMode(SearchMode.TYPING)
 
                 } else {
                     /**여기도 바꾸기**/
                     viewModel.onQueryChanged(text)
-                    viewModel.onChangeViewMode(SearchMode.EMPTY)
+                    //viewModel.onChangeViewMode(SearchMode.EMPTY)
                 }
             }
         }

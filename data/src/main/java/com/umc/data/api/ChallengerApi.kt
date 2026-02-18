@@ -2,7 +2,6 @@ package com.umc.data.api
 
 import com.umc.data.response.challenger.ChallengerCursorResponse
 import com.umc.data.response.challenger.ChallengerResponse
-import com.umc.data.response.challenger.ChallengerSearchScheduleResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
 import retrofit2.http.Body
@@ -23,16 +22,8 @@ interface ChallengerApi {
         @Path("challengerId") challengerId: Long,
         @Body request: ChallengerPointRequest
     ): ApiResponse<ChallengerResponse>
-
-    //일정 생성용 유저 검색
-    @GET(Endpoints.Challenger.SEARCH_SCHEDULE)
-    suspend fun searchChallengerSchedule(
-        @Query("cursor") cursor: Long?,
-        @Query("size") size: Int = 20,
-        @Query("name") name: String?,
-        @Query("nickname") nickname: String?
-    ): ApiResponse<ChallengerSearchScheduleResponse>
-
+    
+    //커서를 통한 유저 검색
     @GET(Endpoints.Challenger.SEARCH_CURSOR)
     suspend fun getChallengers(
         @Query("cursor") cursor: Long?,

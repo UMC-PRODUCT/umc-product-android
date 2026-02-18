@@ -2,6 +2,7 @@ package com.umc.data.response.community
 
 import com.google.gson.annotations.SerializedName
 import com.umc.data.response.community.PostDetailResponse.Companion.toContentItemDomain
+import com.umc.data.response.community.PostSummaryResponse.Companion.toContentItemDomain
 import com.umc.domain.model.community.ContentItem
 import com.umc.domain.model.community.LightningInfo
 import com.umc.domain.model.community.PostPageModel
@@ -9,7 +10,7 @@ import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.enums.UserPart
 
 data class CommunityGetPostResponse (
-    @SerializedName("content") val content: List<PostDetailResponse>, // 게시글 데이터 리스트
+    @SerializedName("content") val content: List<PostSummaryResponse>, // 게시글 데이터 리스트
     @SerializedName("page") val page: Int,                              // 현재 페이지 번호
     @SerializedName("size") val size: Int,                              // 한 페이지당 포함된 게시글 개수
     @SerializedName("totalElements") val totalElements: Long,           // 서버에 저장된 전체 게시글 총 개수

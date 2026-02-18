@@ -4,6 +4,7 @@ import com.umc.data.response.EmailVerificationCompleteResponse
 import com.umc.data.response.EmailVerificationResponse
 import com.umc.data.response.JwtLoginResponse
 import com.umc.data.response.RefreshTokenResponse
+import com.umc.data.response.authorization.AuthorAccessResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.EmailVerificationCompleteRequest
 import com.umc.domain.model.request.EmailVerificationRequest

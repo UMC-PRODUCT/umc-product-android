@@ -2,7 +2,10 @@ package com.umc.presentation.ui.home
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.enums.PermissionType
+import com.umc.domain.model.enums.ResourceType
 import com.umc.domain.model.home.PlanDetailItem
+import com.umc.domain.usecase.GetAuthAccessUseCase
 import com.umc.domain.usecase.schedule.DeleteScheduleUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailHomeUseCase
 import com.umc.presentation.base.BaseViewModel
@@ -20,6 +23,7 @@ class PlanDetailViewModel @Inject
 constructor(
     private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase, //일정 상세 정보 가져오기
     private val deleteScheduleUseCase: DeleteScheduleUseCase, //일정 삭제하기
+    private val getAuthAccessUseCase: GetAuthAccessUseCase, //리소스 권한 조회
     ) : BaseViewModel<PlanDetailFragmentUiState, PlanDetailFragmentEvent>(
     PlanDetailFragmentUiState()){
 
@@ -36,6 +40,7 @@ constructor(
                             content = it,
                             plusDay = plusDay)
                         }
+                        settingScheduleAuthAceess(it.scheduleId)
 
                         convertPlanDetailItemToUiState(it, plusDay)
                     },
@@ -43,6 +48,29 @@ constructor(
 
                     }
                 )
+            }
+        }
+
+        //일정 게시글 접근 권한 조회 및 UI 설정 함수
+        fun settingScheduleAuthAceess(scheduleId : Long){
+            viewModelScope.launch {
+                resultResponse(
+                    response = getAuthAccessUseCase(ResourceType.SCHEDULE, scheduleId),
+                    successCallback = { authAccess ->
+                        //삭제나 작성 권한이 있으면 isAuthor로 취급
+                        val isAuthor = authAccess.permissions.any { item ->
+                            (item.type == PermissionType.DELETE || item.type == PermissionType.WRITE)
+                                    && item.hasPermission
+                        }
+
+                        updateState {
+                            copy(isAuthor = isAuthor)
+                        }
+
+                    },
+                    errorCallback = {},
+                )
+
             }
         }
 
@@ -99,6 +127,7 @@ constructor(
 
         }
 
+        //일정 계산하는 포맷 함수
         private fun calculateTargetDate(startDay: String, plusDay: Int): String {
             return try {
                 val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
@@ -183,7 +212,7 @@ data class PlanDetailFragmentUiState(
 
 
     //내가 작성한 것인지 여부
-    val isAuthor: Boolean = true,
+    val isAuthor: Boolean = false,
 
     //케밥 메뉴 아이콘 보이기 여부
     val isMenuVisible : Boolean = false,

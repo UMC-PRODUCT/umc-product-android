@@ -24,17 +24,22 @@ data class UserRole(
     val challengerId: Long,
     val roleType: String,       // SUPER_ADMIN, SCHOOL_PART_LEADER 등
     val organizationType: String, // CENTRAL, SCHOOL 등
-    val organizationId: Long,
-    val responsiblePart: String,  // ANDROID, SPRINGBOOT 등
-    val gisuId: Long
+    val organizationId: Long?,
+    val responsiblePart: String?,  // ANDROID, SPRINGBOOT 등
+    val gisuId: Long,
+    val gisu: Long,
 )
 
 //현재 챌린저의 기록을 담는 도메인 모델
 data class ChallengerRecord(
     val challengerId: Long,
     val memberId: Long,
+    val gisuId: Long,
     val gisu: Long,
+    val chapterId: Long?,
+    val chapterName: String?,
     val part: String,
+    val challengerStatus: String?,
     val challengerPoints: List<ChallengerPoint> = emptyList(),
     val name: String,
     val nickname: String,

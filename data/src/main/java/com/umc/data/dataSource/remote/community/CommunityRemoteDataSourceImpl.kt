@@ -72,15 +72,15 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
     }
 
     //게시글 좋아요 토글
-    override suspend fun togglePostLike(postId: Long, challengerId: Long
+    override suspend fun togglePostLike(postId: Long
     ): ApiState<PostLikeResponse> {
-        return apiCall { communityApi.togglePostLike(postId, challengerId) }
+        return apiCall { communityApi.togglePostLike(postId) }
     }
 
     //게시글 스크랩 토글
-    override suspend fun togglePostScrap(postId: Long, challengerId: Long
+    override suspend fun togglePostScrap(postId: Long
     ): ApiState<PostScrapResponse> {
-        return apiCall { communityApi.togglePostScrap(postId, challengerId) }
+        return apiCall { communityApi.togglePostScrap(postId) }
     }
 
     //게시글 댓글 삭제하기
@@ -95,5 +95,38 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
         return apiCall { communityApi.updatePost(postId, request) }
     }
 
+    //번개글 수정하기
+    override suspend fun updateLightningPost(postId: Long, request: CreatePostLightningRequest
+    ): ApiState<PostDetailResponse> {
+        return apiCall { communityApi.updateLightningPost(postId, request) }
+    }
+
+    //내 게시글 가저여괴
+    override suspend fun getMyPosts(page: Int, size: Int): ApiState<CommunityGetPostResponse> {
+        return apiCall {communityApi.getMyPosts(page, size)}
+    }
+
+    //내가 댓글단 글 가져오기
+    override suspend fun getMyCommentedPosts(page: Int, size: Int
+    ): ApiState<CommunityGetPostResponse> {
+        return apiCall { communityApi.getMyCommentedPosts(page, size) }
+    }
+
+    //내가 스크랩한 글 가져오기
+    override suspend fun getMyScrappedPosts(page: Int, size: Int
+    ): ApiState<CommunityGetPostResponse> {
+        return apiCall { communityApi.getMyScrappedPosts(page, size) }
+
+    }
+
+    //게시글 신고
+    override suspend fun reportPost(postId: Long): ApiState<Unit> {
+        return apiCall { communityApi.reportPost(postId) }
+    }
+
+    //댓글 신고
+    override suspend fun reportComment(commentId: Long): ApiState<Unit> {
+        return apiCall { communityApi.reportComment(commentId) }
+    }
 
 }

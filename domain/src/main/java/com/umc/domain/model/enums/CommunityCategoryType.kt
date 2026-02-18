@@ -6,6 +6,5 @@ enum class CommunityCategoryType(val label: String) {
     HABIT("취미"),
     QUESTION("질문"),
     INFORMATION("정보"),
-    ASK("건의"),
     FREE("자유"),
 }

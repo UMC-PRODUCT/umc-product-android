@@ -14,11 +14,15 @@
 
         <action
             android:id="@+id/action_splash_to_home"
-            app:destination="@id/nav_home"/>
+            app:destination="@id/nav_home"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
 
         <action
             android:id="@+id/action_splash_to_login"
-            app:destination="@id/loginFragment"/>
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -29,7 +33,9 @@
 
         <action
             android:id="@+id/action_login_to_home"
-            app:destination="@id/nav_home"/>
+            app:destination="@id/nav_home"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
 
         <action
             android:id="@+id/action_login_to_sign_up"
@@ -49,11 +55,15 @@
 
         <action
             android:id="@+id/action_sign_up_to_home"
-            app:destination="@id/nav_home"/>
+            app:destination="@id/nav_home"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
 
         <action
             android:id="@+id/action_sign_up_to_permission"
-            app:destination="@id/nav_home"/>
+            app:destination="@id/nav_home"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -64,7 +74,9 @@
 
         <action
             android:id="@+id/action_permission_to_home"
-            app:destination="@id/nav_home"/>
+            app:destination="@id/nav_home"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
 
         <action
             android:id="@+id/action_permission_to_fail"

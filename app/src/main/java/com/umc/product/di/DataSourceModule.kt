@@ -9,6 +9,8 @@ import com.umc.data.dataSource.remote.NoticeRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.OrganizationRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSource
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.authorize.AuthorizeRemoteDataSource
+import com.umc.data.dataSource.remote.authorize.AuthorizeRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.kakao.KakaoRemoteDataSource
 import com.umc.data.dataSource.remote.kakao.KakaoRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSource
@@ -84,4 +86,8 @@ abstract class DataSourceModule {
     @Singleton
     @Binds
     abstract fun bindsNoticeRemoteDataSource(dataSourceImpl: NoticeRemoteDataSourceImpl): NoticeRemoteDataSource
+
+    @Singleton
+    @Binds
+    abstract fun bindsAuthorizeRemoteDataSource(dataSourceImpl: AuthorizeRemoteDataSourceImpl): AuthorizeRemoteDataSource
 }

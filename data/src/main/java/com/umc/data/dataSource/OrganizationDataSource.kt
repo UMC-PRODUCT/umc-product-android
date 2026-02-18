@@ -6,6 +6,7 @@ import com.umc.data.response.JwtLoginResponse
 import com.umc.data.response.RefreshTokenResponse
 import com.umc.data.response.organization.ChapterBySchoolListResponse
 import com.umc.data.response.organization.ChapterResponse
+import com.umc.data.response.organization.GisuInfoResponse
 import com.umc.data.response.organization.GisuItemResponse
 import com.umc.data.response.organization.GisuListResponse
 import com.umc.data.response.organization.MyStudyGroupListResponse
@@ -58,6 +59,8 @@ interface OrganizationDataSource {
     suspend fun getAllGisu(): ApiState<GisuListResponse>
     suspend fun getActiveGisu(): ApiState<GisuItemResponse>
     suspend fun getChapterWithSchool(gisuId: Int): ApiState<ChapterBySchoolListResponse>
+    suspend fun getGisuInfo(gisuId: Long): ApiState<GisuInfoResponse>
+
 
     // PATCH
     suspend fun editGroup(groupId: Int, request: EditStudyGroupRequest): ApiState<Unit>

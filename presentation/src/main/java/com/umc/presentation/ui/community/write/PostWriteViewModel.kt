@@ -11,6 +11,7 @@ import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.community.CreateCommunityLightningPostUseCase
 import com.umc.domain.usecase.community.CreateCommunityPostUseCase
 import com.umc.domain.usecase.community.GetCommunityPostDetailUseCase
+import com.umc.domain.usecase.community.UpdateCommunityLightningPostUseCase
 import com.umc.domain.usecase.community.UpdateCommunityPostUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -26,6 +27,7 @@ constructor(
     private val createCommunityPostUseCase: CreateCommunityPostUseCase, //게시글 생성
     private val createCommunityLightningPostUseCase: CreateCommunityLightningPostUseCase, //번개 게시글 생성
     private val updateCommunityPostUseCase: UpdateCommunityPostUseCase, //게시글 수정
+    private val updateCommunityPostLightningPostUseCase: UpdateCommunityLightningPostUseCase, //번개글 수정
     private val getCommunityPostDetailUseCase: GetCommunityPostDetailUseCase, //게시글 상세 불러오기 (게시글 수정)
     private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 가져오기
 
@@ -116,9 +118,9 @@ constructor(
     }
 
 
-    //게시글 등록 시 로직
+    //게시글 등록 시 로직 (확인을 누를 시, 데이터에 맞춰, 게시글 수정/생성 + 일반글/번개글 작성)
     fun createPost(){
-        //분기 로직 (1. 게시글 수정인가 / 2. 일반 글인가 / 3. 번개 글인가)
+        //분기 로직 (1. 게시글 수정인가 생성인가 / 2. 일반 글인가 / 3. 번개 글인가)
         val state = uiState.value
         val isUpdateMode = state.updatePostId != -1L
         val isLightning = state.selectCommunityCategory == CommunityCategoryType.LIGHTNING
@@ -185,7 +187,7 @@ constructor(
     private suspend fun handleUpdatePost(state: PostWriteFragmentUiState) {
         val isLightning = state.selectCommunityCategory == CommunityCategoryType.LIGHTNING
         if(isLightning){
-            /* TODO: 번개 게시글에 대해서는 수정 있는지 확인
+            // TODO: 번개 게시글에 대해서는 수정 있는지 확인
             val param = CreateLightningPost(
                 title = state.title,
                 content = state.content,
@@ -196,16 +198,16 @@ constructor(
             )
 
             resultResponse(
-                response = updateCommunityPostUseCase(state.updatePostId),
+                response = updateCommunityPostLightningPostUseCase(state.updatePostId, param),
                 successCallback = {
-
+                    emitEvent(PostWriteFragmentEvent.ClickBackPressed)
                 },
                 errorCallback = {
-
+                    emitEvent(PostWriteFragmentEvent.MakeErrorTaost("번개글 수정에 실패했습니다."))
                 }
             )
             
-             */
+
 
         }
         else{

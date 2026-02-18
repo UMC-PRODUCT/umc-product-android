@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UploadFileCategory
+import com.umc.domain.model.enums.UserChallengerRole
+import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.mypage.UserActiveItem
 import com.umc.domain.model.mypage.UserOutLink
 import com.umc.domain.repository.AppDataStoreRepository
@@ -53,9 +55,73 @@ class ProfileViewModel @Inject constructor(
                         userInfo = userInfo,
                     )
                 }
-                Log.d("log_mypage", "dataSource 정보 : $userInfo")
+                settingUserInfoToUI(userInfo)
             }
         }
+
+    }
+
+    //유저 정보를 통해 활동 이력 및 기수파트 작성
+    fun settingUserInfoToUI(userInfo: UserInfo){
+        val gisuSummaryList = userInfo.getGisuSummaryList()
+
+        //최종 리스트
+        val activeHistory = mutableListOf<UserActiveItem>()
+
+        //gisuSummaryList를 돌면서 만들기
+        gisuSummaryList.forEach { summary->
+            //1. 기수 별 분류 (여기에 roles/ challengers)
+            val generationText = "${summary.gisu}기"
+
+            //2. 운영진 기록이 있으면 싹다 만들기
+            summary.fromRoles.forEach { roleItem ->
+                    //담당 파트가 있으면 (웹 파트장)
+                    val item = if (roleItem.responsiblePart != null) {
+                        UserActiveItem(
+                            generation = generationText,
+                            partName = "${roleItem.responsiblePart} Part",
+                            position = roleItem.role
+                        )
+                    }
+                    //담당 파트가 없으면 (총괄)
+                    else {
+                        val roleLabel =
+                            //label 없으면 enum 이름 그대로 쓰자.
+                            UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
+                        UserActiveItem(
+                            generation = generationText,
+                            partName = roleLabel,
+                            position = roleLabel
+                        )
+                    }
+                    activeHistory.add(item)
+                }
+
+            //3. 챌린저 기록이 있으면 싹 다 만들기
+            summary.fromRecords.forEach { recordItem ->
+                val item = UserActiveItem(
+                    generation = generationText,
+                    partName = "${recordItem.responsiblePart} Part",
+                    position = "챌린저"
+                )
+                activeHistory.add(item)
+            }
+        }
+
+        //최신 파트(기수/파트) - 이거는 role 우선
+        val latestHistory = activeHistory.firstOrNull()
+        val latestPartAndGisu = latestHistory?.let {
+            "${it.generation}/${it.partName.replace(" Part", "")}"
+        } ?: "정보 없음"
+
+        //이 정보를 저장
+        updateState {
+            copy(
+                myActiveHistory = activeHistory,
+                myPart = latestPartAndGisu
+            )
+        }
+
 
     }
 
@@ -150,7 +216,7 @@ class ProfileViewModel @Inject constructor(
 data class ProfileFragmentUiState(
     //유저 정보 (고정)
     val loginType: LoginType = LoginType.KAKAO,
-    val myPart: String = "9기/Android",
+    val myPart: String = "",
     val userInfo : UserInfo = UserInfo(),
 
 
@@ -163,20 +229,7 @@ data class ProfileFragmentUiState(
 
 
     //임시 정보
-    val myActiveHistory: List<UserActiveItem> = listOf(
-        UserActiveItem(
-            generation = "8기",
-            partName = "Android Part",
-            position = "챌린저"),
-        UserActiveItem(
-            generation = "9기",
-            partName = "Android Part",
-            position = "파트장"),
-        UserActiveItem(
-            generation = "9기",
-            partName = "Android Part",
-            position = "파트장"),
-    ),
+    val myActiveHistory: List<UserActiveItem> = emptyList(),
 
     ) : UiState
 

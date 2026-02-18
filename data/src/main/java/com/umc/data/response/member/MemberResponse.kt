@@ -47,7 +47,8 @@ data class MemberRoleResponse(
     @SerializedName("organizationType") val organizationType: String,
     @SerializedName("organizationId") val organizationId: Long?,
     @SerializedName("responsiblePart") val responsiblePart: String,
-    @SerializedName("gisuId") val gisuId: Long
+    @SerializedName("gisuId") val gisuId: Long,
+    @SerializedName("gisu") val gisu: Long
 ) {
     companion object{
         fun MemberRoleResponse.toDomain(): UserRole = UserRole(
@@ -57,7 +58,8 @@ data class MemberRoleResponse(
             organizationType = organizationType,
             organizationId = organizationId ?: 0L,
             responsiblePart = responsiblePart,
-            gisuId = gisuId
+            gisuId = gisuId,
+            gisu = gisu
         )
 
     }
@@ -66,9 +68,13 @@ data class MemberRoleResponse(
 data class MemberChallengerRecordResponse(
     @SerializedName("challengerId") val challengerId: Long,
     @SerializedName("memberId") val memberId: Long,
+    @SerializedName("gisuId") val gisuId: Long,
     @SerializedName("gisu") val gisu: Long,
+    @SerializedName("chapterId") val chapterId: Long?,
+    @SerializedName("chapterName") val chapterName: String?,
     @SerializedName("part") val part: String,
     @SerializedName("challengerPoints") val challengerPoints: List<MemberPointResponse>?,
+    @SerializedName("challengerStatus") val challengerStatus: String?,
     @SerializedName("name") val name: String,
     @SerializedName("nickname") val nickname: String,
     @SerializedName("email") val email: String?,
@@ -81,8 +87,12 @@ data class MemberChallengerRecordResponse(
         fun MemberChallengerRecordResponse.toDomain(): ChallengerRecord = ChallengerRecord(
             challengerId = challengerId,
             memberId = memberId,
+            gisuId = gisuId,
             gisu = gisu,
+            chapterId = chapterId,
+            chapterName = chapterName,
             part = part,
+            challengerStatus = challengerStatus,
             challengerPoints = challengerPoints?.map { it.toDomain() }.orEmpty(),
             name = name,
             nickname = nickname,
