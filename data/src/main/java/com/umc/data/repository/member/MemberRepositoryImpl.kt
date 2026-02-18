@@ -12,7 +12,6 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.request.member.RegisterRequest
 import com.umc.domain.model.request.member.UpdateLinkRequest
-import com.umc.domain.model.request.member.UpdateMyLinkRequest
 import com.umc.domain.repository.member.MemberRepository
 import com.umc.domain.usecase.appDataStore.ClearTokensUseCase
 import com.umc.domain.usecase.appDataStore.UpdateUserInfoUseCase

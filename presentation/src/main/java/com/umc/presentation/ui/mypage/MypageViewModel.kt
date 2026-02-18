@@ -21,7 +21,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MypageViewModel @Inject constructor(
-    private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //유저 outlink 3종 세트 얻기
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val clearAllDataUseCase : ClearAllDataUseCase, //모든 정보 삭제하기
     private val deleteUserUseCase: DeleteUserUseCase, //회원 탈퇴
@@ -33,22 +32,9 @@ class MypageViewModel @Inject constructor(
     //초기 상태
     init {
         viewModelScope.launch {
-            launch {
-                //유저 3종 링크 가져오기
-                getUserOutLinkUseCase().collect { outLink ->
-                    updateState {
-                        copy(
-                            githubUrl = outLink.github,
-                            linkedinUrl = outLink.linkedin,
-                            blogUrl = outLink.blog
-                        )
-                    }
-                }
-            }
-            launch {
-                //유저 정보 가져오기
-                getUserInfo()
-            }
+            //유저 정보 가져오기
+            getUserInfo()
+
         }
     }
 
@@ -60,7 +46,10 @@ class MypageViewModel @Inject constructor(
                 successCallback = { userInfo ->
                     updateState {
                         copy(
-                            userInfo = userInfo
+                            userInfo = userInfo,
+                            githubUrl = userInfo.profile.github,
+                            linkedinUrl = userInfo.profile.linkedIn,
+                            blogUrl = userInfo.profile.blog
                         )
                     }
                     settingUserInfoToUI(userInfo)
