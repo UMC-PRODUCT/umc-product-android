@@ -7,23 +7,25 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.presentation.databinding.ItemDropdownBinding
 
-class DropDownAdapter(
-    private val listener: DropDownDelegate
-) : ListAdapter<String, RecyclerView.ViewHolder> (
-    DropDownDiffCallBack()
+interface DropDownItem {
+    val displayText: String
+}
+
+class DropDownAdapter<T : DropDownItem>(
+    private val listener: DropDownDelegate<T>
+) : ListAdapter<T, DropDownViewHolder<T>>(
+    DropDownDiffCallBack<T>()
 ) {
 
-    interface DropDownDelegate {
-        fun onClickItem(text: String)
+    interface DropDownDelegate<T> {
+        fun onClickItem(item: T)
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when(holder) {
-            is DropDownViewHolder -> holder.bind(currentList[position])
-        }
+    override fun onBindViewHolder(holder: DropDownViewHolder<T>, position: Int) {
+        holder.bind(currentList[position])
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DropDownViewHolder<T> {
         val binding = ItemDropdownBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
@@ -33,18 +35,12 @@ class DropDownAdapter(
     }
 }
 
-class DropDownDiffCallBack : DiffUtil.ItemCallback<String>() {
-    override fun areContentsTheSame(
-        oldItem: String,
-        newItem: String
-    ): Boolean {
-        return oldItem == newItem
+class DropDownDiffCallBack<T : DropDownItem> : DiffUtil.ItemCallback<T>() {
+    override fun areContentsTheSame(oldItem: T, newItem: T): Boolean {
+        return oldItem.displayText == newItem.displayText
     }
 
-    override fun areItemsTheSame(
-        oldItem: String,
-        newItem: String
-    ): Boolean {
-        return oldItem == newItem
+    override fun areItemsTheSame(oldItem: T, newItem: T): Boolean {
+        return oldItem.displayText == newItem.displayText
     }
 }

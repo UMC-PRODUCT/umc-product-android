@@ -11,6 +11,7 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.home.ParticipantSearchPage
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
+import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
 import com.umc.domain.repository.ChallengerRepository
 import javax.inject.Inject
 
@@ -82,5 +83,9 @@ class ChallengerRepositoryImpl @Inject constructor(
 
     override suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit> {
         return challengerRemoteDataSource.deleteChallengerPoint(challengerPointId)
+    }
+
+    override suspend fun addChallengerRecordMember(request: ChallengerRecordMemberRequest): ApiState<Unit> {
+        return challengerRemoteDataSource.addChallengerRecordMember(request)
     }
 }

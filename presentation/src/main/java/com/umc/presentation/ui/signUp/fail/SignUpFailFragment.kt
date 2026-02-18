@@ -44,6 +44,10 @@ class SignUpFailFragment : BaseFragment<FragmentSignUpFailBinding, UiState, Sign
             SignUpFailEvent.MoveToHomePage -> {
                 //TODO 공식 홈페이지 url 이동
             }
+            SignUpFailEvent.MoveToCode -> {
+                val action = SignUpFailFragmentDirections.actionSignUpFailToCode()
+                findNavController().navigate(action)
+            }
         }
     }
 }

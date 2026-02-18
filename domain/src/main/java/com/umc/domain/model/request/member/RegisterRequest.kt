@@ -11,9 +11,7 @@ data class RegisterRequest(
     val schoolId: Int,
     val profileImageId: String?,
     val termsAgreements: List<TermsAgreement> = listOf(
-        TermsAgreement(termsId = 14, isAgreed = true),
-        TermsAgreement(termsId = 13, isAgreed = true),
-        TermsAgreement(termsId = 15, isAgreed = true)
+        TermsAgreement(19),TermsAgreement(18)
     )
 
 )

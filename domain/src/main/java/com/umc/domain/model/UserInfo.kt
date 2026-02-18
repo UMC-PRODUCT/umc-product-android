@@ -24,6 +24,8 @@ data class UserRole(
     val id: Long,
     val challengerId: Long,
     val roleType: String,       // SUPER_ADMIN, SCHOOL_PART_LEADER 등
+    val chapterId: Long?,
+    val chapterName: String?,
     val organizationType: String, // CENTRAL, SCHOOL 등
     val organizationId: Long?,
     val responsiblePart: String?,  // ANDROID, SPRINGBOOT 등

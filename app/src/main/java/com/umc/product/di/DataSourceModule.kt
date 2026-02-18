@@ -1,9 +1,11 @@
 package com.umc.product.di
 
 import com.umc.data.dataSource.AuthRemoteDataSource
+import com.umc.data.dataSource.NoticeRemoteDataSource
 import com.umc.data.dataSource.OrganizationDataSource
 import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSource
 import com.umc.data.dataSource.remote.AuthRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.NoticeRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.OrganizationRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSource
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSourceImpl
@@ -101,6 +103,10 @@ abstract class DataSourceModule {
     ): WorkbookRemoteDataSource
 
 
+
+    @Singleton
+    @Binds
+    abstract fun bindsNoticeRemoteDataSource(dataSourceImpl: NoticeRemoteDataSourceImpl): NoticeRemoteDataSource
 
     @Singleton
     @Binds

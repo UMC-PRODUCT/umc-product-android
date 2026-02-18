@@ -55,7 +55,6 @@
                 app:contentPaddingBottom="8dp"
                 app:contentPaddingTop="8dp"
                 app:cornerRadius="999dp"
-                app:text="@string/unConfirm"
                 app:textAppearance="@style/CalloutBold"
                 app:textColor="@color/neutral800" />
 
@@ -69,7 +68,6 @@
                 app:contentPaddingBottom="8dp"
                 app:contentPaddingTop="8dp"
                 app:cornerRadius="999dp"
-                app:text="@string/unConfirm"
                 app:textAppearance="@style/CalloutBold"
                 app:textColor="@color/neutral400" />
 

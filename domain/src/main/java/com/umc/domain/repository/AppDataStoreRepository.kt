@@ -21,6 +21,12 @@ interface AppDataStoreRepository {
     suspend fun removeRecentSearchPost(query: String)
     suspend fun clearRecentSearchPost()
 
+    //공지사항 -> 최근 검색 기록 저장 / 삭제 / 전체 삭제
+    fun getRecentSearchesNotice(): Flow<List<String>>
+    suspend fun addRecentSearchNotice(query: String)
+    suspend fun removeRecentSearchNotice(query: String)
+    suspend fun clearRecentSearchNotice()
+
 
     //유저 정보 getter/setter
     fun getUserInfo(): Flow<UserInfo>

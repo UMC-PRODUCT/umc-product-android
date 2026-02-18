@@ -2,10 +2,13 @@ package com.umc.data.repository
 
 import com.umc.data.dataSource.OrganizationDataSource
 import com.umc.data.response.organization.*
+import com.umc.data.response.organization.GisuListResponse.Companion.toModel
 import com.umc.data.response.organization.GisuInfoResponse.Companion.toModel
 import com.umc.data.response.organization.SchoolNameResponse.Companion.toModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
+import com.umc.domain.model.organization.Chapter
+import com.umc.domain.model.organization.GisuList
 import com.umc.domain.model.home.GisuInfo
 import com.umc.domain.model.request.organization.*
 import com.umc.domain.model.school.SchoolInfo
@@ -37,10 +40,13 @@ class OrganizationRepositoryImpl @Inject constructor(
         size: Int,
         sort: String
     ): ApiState<Unit> =
-        organizationDataSource.getSchoolByKeyword(keyword, chapterId, page, size, sort).map { Unit } //임시
+        organizationDataSource.getSchoolByKeyword(keyword, chapterId, page, size, sort)
+            .map { Unit } //임시
 
-    override suspend fun getAllChapter(): ApiState<Unit> =
-        organizationDataSource.getAllChapter().map { Unit } //임시
+    override suspend fun getAllChapter(): ApiState<List<Chapter>> =
+        organizationDataSource.getAllChapter().map { response ->
+            response.chapters.map { Chapter(it.id, it.name) }
+        }
 
     override suspend fun getStudyGroupDetail(groupId: Int): ApiState<Unit> =
         organizationDataSource.getStudyGroupDetail(groupId).map { Unit } //임시
@@ -62,8 +68,8 @@ class OrganizationRepositoryImpl @Inject constructor(
             it.schools.map { item -> item.toModel() }
         }
 
-    override suspend fun getAllGisu(): ApiState<Unit> =
-        organizationDataSource.getAllGisu().map { Unit } //임시
+    override suspend fun getAllGisu(): ApiState<GisuList> =
+        organizationDataSource.getAllGisu().map { it.toModel() }
 
     override suspend fun getActiveGisu(): ApiState<Unit> =
         organizationDataSource.getActiveGisu().map { Unit } //임시
