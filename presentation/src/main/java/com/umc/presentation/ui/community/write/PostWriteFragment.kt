@@ -72,7 +72,7 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
                 val dateDialog = DatePickerDialog(requireContext(),{ _, y, m, d ->
 
 
-                    val displayDate = String.format("%02d.%02d.%02d", y % 100, m, d) //UI 보여주기용 date
+                    val displayDate = String.format("%02d.%02d.%02d", y % 100, m + 1, d) //UI 보여주기용 date
                     val selectedDate = String.format("%d-%02d-%02d", y, m + 1, d)
 
                     // 날짜 선택 완료 후 바로 시간 선택 다이얼로그 띄우기
