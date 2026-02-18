@@ -36,14 +36,16 @@ data class ChallengerResponse(
         fun ChallengerResponse.toManageModel(): ChallengerManageDialogModel {
             val defaultModel = ChallengerManageDialogModel()
 
-            val pointList = challengerPoints?.map { point ->
+            val pointList = challengerPoints?.filter { point ->
+                point.pointType == "WARNING" || point.pointType == "OUT"
+            }?.map { point ->
                 ChallengerPoint(
-                    id = point.id ?: 0,
-                    date = "",
+                    id = point.id ?: 0L,
+                    date = point.createdAt ?: "",
                     title = point.description ?: "사유 없음",
                     pointType = try {
                         PointType.valueOf(point.pointType ?: "WARNING")
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         PointType.WARNING
                     },
                     value = point.point ?: 0.0

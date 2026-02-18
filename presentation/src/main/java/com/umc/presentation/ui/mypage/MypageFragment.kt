@@ -22,6 +22,7 @@ import coil.load
 import android.provider.Settings
 import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
+import com.umc.presentation.MainGraphDirections
 
 @AndroidEntryPoint
 class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState, MypageFragmentEvent, MypageViewModel>(
@@ -160,9 +161,9 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             is MypageFragmentEvent.Logout -> {
                 //1. 다이얼로그로 체크
                 val dialog = UMypageDialog(logoutDialogModel) {
-                    /**TODO 로그아웃 로직 생성**/
+
                     viewModel.deleteAllData()
-                    val action = MypageFragmentDirections.actionMypageToLogin()
+                    val action = MainGraphDirections.actionGlobalToLogin()
                     findNavController().navigate(action)
 
                 }

@@ -4,9 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+        <import type="android.view.View" />
         <variable
             name="model"
             type="com.umc.domain.model.act.challenger.UserChallenger" />
+
+        <variable
+            name="uiModel"
+            type="com.umc.presentation.ui.act.challenge.UserChallengerUIModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -25,8 +30,9 @@
                 android:id="@+id/iv_challenger_profile"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_person_inset"
-                android:scaleType="centerInside"
+                android:src="@drawable/ic_profile_default"
+                app:profileImageUrl="@{model.profileImage}"
+                android:scaleType="centerCrop"
                 app:strokeWidth="1dp"
                 app:strokeColor="@color/neutral100"
                 app:shapeAppearanceOverlay="@style/CircleImageAppearance"

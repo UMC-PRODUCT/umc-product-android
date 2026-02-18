@@ -23,7 +23,7 @@ import javax.inject.Inject
 class MypageViewModel @Inject constructor(
     private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //유저 outlink 3종 세트 얻기
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
-    private val claerAllDataUseCase : ClearAllDataUseCase, //모든 정보 삭제하기
+    private val clearAllDataUseCase : ClearAllDataUseCase, //모든 정보 삭제하기
     private val getTermsByTypeUseCase: GetTermsByTypeUseCase, //타입으로 약관 가져오기
 ) : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
@@ -74,7 +74,7 @@ class MypageViewModel @Inject constructor(
     //usecase를 통해 appdatastore에 저장된 내용 날리기
     fun deleteAllData(){
         viewModelScope.launch {
-            claerAllDataUseCase()
+            clearAllDataUseCase()
         }
     }
 

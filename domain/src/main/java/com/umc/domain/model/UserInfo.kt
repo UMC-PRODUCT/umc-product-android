@@ -1,5 +1,7 @@
 package com.umc.domain.model
 
+import com.umc.domain.model.act.challenger.ChallengerPoint
+
 
 //유저 정보 가져오는 API의 내용을 AppDataStore에 저장하기 위한 Data Class입니다.
 
@@ -12,7 +14,8 @@ data class UserInfo(
     val schoolName: String = "",
     val profileImageLink: String = "",
     val status: String = "ACTIVE",
-    val roles: List<UserRole> = emptyList()
+    val roles: List<UserRole> = emptyList(),
+    val challengerRecords: List<ChallengerRecord> = emptyList()
 )
 
 //사용자의 권한 및 파트 정보를 담는 도메인 모델
@@ -25,3 +28,32 @@ data class UserRole(
     val responsiblePart: String,  // ANDROID, SPRINGBOOT 등
     val gisuId: Long
 )
+
+//현재 챌린저의 기록을 담는 도메인 모델
+data class ChallengerRecord(
+    val challengerId: Long,
+    val memberId: Long,
+    val gisu: Long,
+    val part: String,
+    val challengerPoints: List<ChallengerPoint> = emptyList(),
+    val name: String,
+    val nickname: String,
+    val email: String,
+    val schoolId: Long,
+    val schoolName: String,
+    val profileImageLink: String,
+    val status: String
+)
+
+/** ChallengerManagerDialogModel.kt꺼 사용
+ * 
+ * data class ChallengerPoint(
+ *     val id: Long,
+ *     val date: String = "",
+ *     val title: String,
+ *     val pointType: PointType,
+ *     val value: Double
+ * )
+ *
+ * **/
+
