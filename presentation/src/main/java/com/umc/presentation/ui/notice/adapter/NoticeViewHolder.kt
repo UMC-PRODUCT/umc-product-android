@@ -1,16 +1,14 @@
 package com.umc.presentation.ui.notice.adapter
 
-import android.annotation.SuppressLint
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.enums.NoticeCategory
-import com.umc.domain.model.notice.Notice
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.notice.NoticeTarget
 import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemNoticeBinding
 import com.umc.presentation.extension.gone
 import com.umc.presentation.extension.visible
+import com.umc.presentation.util.UFormat.parseDateTime
 
 class NoticeViewHolder(
     private val binding: ItemNoticeBinding,
@@ -30,7 +28,7 @@ class NoticeViewHolder(
                 layoutNotice.setBackgroundResource(R.drawable.bg_rect_neutral000_stroke_neutral200_radius12)
             }
             setCategory(item.targetInfo)
-            textDate.text = item.createdAt
+            textDate.text = parseDateTime(item.createdAt).first
             textTitle.text = item.title
             textContent.text = item.content
             textAuthor.text = item.authorNickname

@@ -26,7 +26,6 @@ class NoticeViewModel @Inject constructor(
     init {
         getDropDownList()
         getMyProfile()
-        getNoticeList()
     }
 
     private fun updateChipList(chipList: List<NoticeChipState>) {
@@ -51,14 +50,7 @@ class NoticeViewModel @Inject constructor(
         }
 
         userInfo.roles.forEach { role ->
-            if (role.organizationType == "CENTRAL") {
-                chipList.add(
-                    NoticeChipState(
-                        text = "중앙운영사무국",
-                        chapterId = null
-                    )
-                )
-            } else {
+            if (role.organizationType != "CENTRAL") {
                 chipList.add(
                     NoticeChipState(
                         text = "${role.organizationType} 지부",
@@ -109,6 +101,7 @@ class NoticeViewModel @Inject constructor(
         updateState {
             copy(nowTitle = title, selectedGisu = gisu)
         }
+        getNoticeList()
     }
 
     fun updateDropDownList(list: List<GisuItem>) {
@@ -138,7 +131,7 @@ class NoticeViewModel @Inject constructor(
             response = getGisuListUseCase(),
             successCallback = {
                 val nowTitle = "${it.gisuList.find { it.isActive }?.generation}기 공지사항"
-                updateNowTitle(nowTitle, it.gisuList.find { it.isActive }?.generation?.toLong() ?: 0)
+                updateNowTitle(nowTitle, it.gisuList.find { it.isActive }?.gisuId?.toLong() ?: 0)
                 updateDropDownList(it.gisuList)
             }
         )
@@ -150,7 +143,7 @@ class NoticeViewModel @Inject constructor(
         }
     }
 
-    private fun getNoticeList(
+    fun getNoticeList(
         chapterId: Long? = null,
         schoolId: Long? = null,
         part: String? = null,

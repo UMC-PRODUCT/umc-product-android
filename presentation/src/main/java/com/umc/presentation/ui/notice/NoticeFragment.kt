@@ -82,6 +82,8 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
             uchipNoticeAdmin.setOnClickListener { onClickChipNoticeAdmin() }
             uchipPart.setOnClickListener { showBottomSheet() }
         }
+
+        //viewModel.getNoticeList()
     }
 
     override fun initStates() {
