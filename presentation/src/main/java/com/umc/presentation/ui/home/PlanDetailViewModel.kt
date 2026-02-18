@@ -59,7 +59,7 @@ constructor(
                     successCallback = { authAccess ->
                         //삭제나 작성 권한이 있으면 isAuthor로 취급
                         val isAuthor = authAccess.permissions.any { item ->
-                            (item.type == PermissionType.DELETE || item.type == PermissionType.WRITE)
+                            (item.type == PermissionType.DELETE || item.type == PermissionType.EDIT)
                                     && item.hasPermission
                         }
 

@@ -4,6 +4,7 @@ package com.umc.domain.model.enums
 enum class PermissionType {
     READ,
     WRITE,
+    EDIT,
     DELETE,
     APPROVE,
     CHECK,
