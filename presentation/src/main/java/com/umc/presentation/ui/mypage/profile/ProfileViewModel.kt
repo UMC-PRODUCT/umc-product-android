@@ -10,13 +10,9 @@ import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.mypage.UserActiveItem
-import com.umc.domain.model.mypage.UserOutLink
 import com.umc.domain.model.request.member.LinkItem
 import com.umc.domain.model.request.member.UpdateLinkRequest
-import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
-import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
-import com.umc.domain.usecase.appDataStore.UpdateUserOutLinkUseCase
 import com.umc.domain.usecase.member.UpdateMyLinkUseCase
 import com.umc.domain.usecase.member.UpdateMyProfileUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
@@ -30,7 +26,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //dataStore에서 불러오기
     private val getUserInfoUseCase: GetUserInfoUseCase, //dataStore에서 유저 정보 불러오기
     private val uploadFileUseCase: UploadFileUseCase, //파일 업로드 하기(이미지 업로드)
     private val updateMyProfileUseCase: UpdateMyProfileUseCase, //프로필 정보 업데이트

@@ -8,7 +8,6 @@ import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
-import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
 import com.umc.domain.usecase.member.DeleteUserUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
