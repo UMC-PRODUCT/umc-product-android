@@ -13,6 +13,7 @@ class ActStudyAdapter(
     private val onToggle: (Int) -> Unit,
     private val onLongApprove: (Long) -> Unit,
     private val onSubmitClick: (Long, String) -> Unit,
+    private val onConfirmClick: (Long) -> Unit,
 ) : ListAdapter<ActStudyItemUiModel, ActStudyAdapter.ActStudyViewHolder>(DIFF) {
 
     companion object {
@@ -33,9 +34,7 @@ class ActStudyAdapter(
 
     override fun getItemId(position: Int): Long = getItem(position).id
 
-    fun updateDraftLink(itemId: Long, link: String) {
-        draftLinks[itemId] = link
-    }
+
 
 
     class ActStudyViewHolder(private val binding: ItemActStudyBinding) :
@@ -60,6 +59,9 @@ class ActStudyAdapter(
                     btnSubmit.setUBackgroundColor(ContextCompat.getColor(ctx, R.color.neutral200))
                 }
             }
+
+
+
         }
 
         fun bind(
@@ -67,8 +69,8 @@ class ActStudyAdapter(
             getItemAt: (Int) -> ActStudyItemUiModel,
             draftLinks: MutableMap<Long, String>,
             onToggle: (Int) -> Unit,
-            onLongApprove: (Long) -> Unit,
             onSubmitClick: (Long, String) -> Unit,
+            onConfirmClick: (Long) -> Unit,
         ) {
             currentItemId = item.id
             binding.item = item
@@ -108,14 +110,11 @@ class ActStudyAdapter(
 
             binding.btnConfirm.setOnClickListener {
                 if (currentItemId == -1L) return@setOnClickListener
-                val link = draftLinks[currentItemId] ?: binding.etLink.getText()
-                onSubmitClick(currentItemId, link)
+                onConfirmClick(currentItemId)
             }
 
-            binding.btnStatus.setOnLongClickListener {
-                if (currentItemId != -1L) onLongApprove(currentItemId)
-                true
-            }
+
+
 
             val currentLink = draftLinks[item.id] ?: item.link
             if (currentLink != binding.etLink.getText()) {
@@ -126,8 +125,7 @@ class ActStudyAdapter(
 
             val locked = item.isLocked
             binding.etLink.isEnabled = !locked
-            binding.btnSubmit.isEnabled = !locked && currentLink.isNotBlank()
-            binding.btnConfirm.isEnabled = !locked
+
 
             binding.executePendingBindings()
         }
@@ -144,8 +142,12 @@ class ActStudyAdapter(
             getItemAt = { pos -> getItem(pos) },
             draftLinks = draftLinks,
             onToggle = onToggle,
-            onLongApprove = onLongApprove,
             onSubmitClick = onSubmitClick,
+            onConfirmClick = onConfirmClick,
         )
     }
 }
+
+
+
+

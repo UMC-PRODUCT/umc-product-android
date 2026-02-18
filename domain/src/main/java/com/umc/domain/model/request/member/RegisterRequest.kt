@@ -13,6 +13,7 @@ data class RegisterRequest(
     val termsAgreements: List<TermsAgreement> = listOf(
         TermsAgreement(19),TermsAgreement(18)
     )
+
 )
 
 @Serializable

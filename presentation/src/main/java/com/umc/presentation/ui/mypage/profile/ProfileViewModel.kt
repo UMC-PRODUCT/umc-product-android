@@ -4,16 +4,16 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.enums.LinkType
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.mypage.UserActiveItem
-import com.umc.domain.model.mypage.UserOutLink
-import com.umc.domain.repository.AppDataStoreRepository
+import com.umc.domain.model.request.member.LinkItem
+import com.umc.domain.model.request.member.UpdateLinkRequest
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
-import com.umc.domain.usecase.appDataStore.GetUserOutLinkUseCase
-import com.umc.domain.usecase.appDataStore.UpdateUserOutLinkUseCase
+import com.umc.domain.usecase.member.UpdateMyLinkUseCase
 import com.umc.domain.usecase.member.UpdateMyProfileUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.presentation.base.BaseViewModel
@@ -26,35 +26,26 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val getUserOutLinkUseCase: GetUserOutLinkUseCase, //dataStore에서 불러오기
-    private val updateUserOutLinkUseCase: UpdateUserOutLinkUseCase, //dataStore에 저장
     private val getUserInfoUseCase: GetUserInfoUseCase, //dataStore에서 유저 정보 불러오기
     private val uploadFileUseCase: UploadFileUseCase, //파일 업로드 하기(이미지 업로드)
     private val updateMyProfileUseCase: UpdateMyProfileUseCase, //프로필 정보 업데이트
+    private val updateMyLinkUseCase: UpdateMyLinkUseCase, //링크 정보 업데이트
     ) : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     ProfileFragmentUiState()){
 
     //초기화 작업
     init {
         viewModelScope.launch {
-            //DataStore에서 가져와서 넣기
-            getUserOutLinkUseCase().collect { outLink ->
-                updateState {
-                    copy(
-                        githubLink = outLink.github,
-                        linkedinLink = outLink.linkedin,
-                        blogLink = outLink.blog
-                    )
-                }
-            }
-        }
-        viewModelScope.launch {
             getUserInfoUseCase().collect { userInfo ->
                 updateState {
                     copy(
                         userInfo = userInfo,
+                        githubLink = userInfo.profile.github,
+                        linkedinLink = userInfo.profile.linkedIn,
+                        blogLink = userInfo.profile.blog
                     )
                 }
+                Log.d("log_mypage", "userInfo: $userInfo")
                 settingUserInfoToUI(userInfo)
             }
         }
@@ -94,6 +85,7 @@ class ProfileViewModel @Inject constructor(
                             position = roleLabel
                         )
                     }
+
                     activeHistory.add(item)
                 }
 
@@ -159,10 +151,23 @@ class ProfileViewModel @Inject constructor(
 
     // 완료 버튼을 눌렀을 때 호출될 저장 로직
     fun saveUserOutLink(github: String, linkedin: String, blog: String) {
+        val request = UpdateLinkRequest(
+            links = listOf(
+                LinkItem(LinkType.GITHUB.label, github),
+                LinkItem(LinkType.LINKEDIN.label, linkedin),
+                LinkItem(LinkType.BLOG.label, blog),
+                LinkItem(LinkType.PERSONAL.label, ""),
+                LinkItem(LinkType.INSTAGRAM.label, "")
+            )
+        )
+
         viewModelScope.launch {
             // DataStore에 저장하고 끝내기
-            val nowOutLink = UserOutLink(github, linkedin, blog)
-            updateUserOutLinkUseCase(nowOutLink)
+            resultResponse(
+                response = updateMyLinkUseCase(request),
+                successCallback = {},
+                errorCallback = {}
+            )
         }
     }
 

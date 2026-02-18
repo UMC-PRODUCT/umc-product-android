@@ -15,7 +15,8 @@ data class UserInfo(
     val profileImageLink: String = "",
     val status: String = "ACTIVE",
     val roles: List<UserRole> = emptyList(),
-    val challengerRecords: List<ChallengerRecord> = emptyList()
+    val challengerRecords: List<ChallengerRecord> = emptyList(),
+    val profile: ProfileInfo = ProfileInfo(0, "", "", "", "", "")
 )
 
 //사용자의 권한 및 파트 정보를 담는 도메인 모델
@@ -50,6 +51,16 @@ data class ChallengerRecord(
     val schoolName: String,
     val profileImageLink: String,
     val status: String
+)
+
+//프로필 정보 담는 도메인 모델
+data class ProfileInfo(
+    val id : Long,
+    val linkedIn : String,
+    val instagram : String,
+    val github : String,
+    val blog : String,
+    val personal : String,
 )
 
 /** ChallengerManagerDialogModel.kt꺼 사용

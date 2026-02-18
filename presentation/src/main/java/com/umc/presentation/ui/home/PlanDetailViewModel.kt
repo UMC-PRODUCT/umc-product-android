@@ -15,6 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 
@@ -40,7 +41,7 @@ constructor(
                             content = it,
                             plusDay = plusDay)
                         }
-                        settingScheduleAuthAceess(it.scheduleId)
+                        settingScheduleAuthAccess(it.scheduleId)
 
                         convertPlanDetailItemToUiState(it, plusDay)
                     },
@@ -52,14 +53,14 @@ constructor(
         }
 
         //일정 게시글 접근 권한 조회 및 UI 설정 함수
-        fun settingScheduleAuthAceess(scheduleId : Long){
+        fun settingScheduleAuthAccess(scheduleId : Long){
             viewModelScope.launch {
                 resultResponse(
                     response = getAuthAccessUseCase(ResourceType.SCHEDULE, scheduleId),
                     successCallback = { authAccess ->
                         //삭제나 작성 권한이 있으면 isAuthor로 취급
                         val isAuthor = authAccess.permissions.any { item ->
-                            (item.type == PermissionType.DELETE || item.type == PermissionType.WRITE)
+                            (item.type == PermissionType.DELETE || item.type == PermissionType.EDIT)
                                     && item.hasPermission
                         }
 
@@ -76,7 +77,13 @@ constructor(
 
         //PlanDetailItem에서 UI에 맞게 데이터를 조절하는 함수
         fun convertPlanDetailItemToUiState(item: PlanDetailItem, plusDay: Int) {
-            val finalDDayValue = item.dDay + plusDay //시작 시간과 진행 상황 합치기
+            val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
+            val startDate = LocalDate.parse(item.startDay, formatter)
+            val today = LocalDate.now()
+            val dDay = ChronoUnit.DAYS.between(today, startDate).toInt()
+
+
+            val finalDDayValue = dDay + plusDay //시작 시간과 진행 상황 합치기
 
             val dDayString: String //D-몇일 포맷
             val isTodayCheck: Boolean //금일 인가? -> 버튼 생성

@@ -14,15 +14,18 @@ import com.umc.domain.repository.kakao.KakaoSearchRepository
 import com.umc.domain.repository.member.MemberRepository
 import com.umc.data.repository.challenger.ChallengerRepositoryImpl
 import com.umc.data.repository.community.CommunityRepositoryImpl
+import com.umc.data.repository.curriculum.CurriculumRepositoryImpl
 import com.umc.data.repository.schedule.ScheduleRepositoryImpl
 import com.umc.data.repository.storage.StorageRepositoryImpl
 import com.umc.data.repository.terms.TermsRepositoryImpl
+import com.umc.data.repository.workbook.WorkbookRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
 import com.umc.domain.repository.NoticeRepository
 import com.umc.domain.repository.OrganizationRepository
 import com.umc.domain.repository.attendance.AttendanceRepository
 import com.umc.domain.repository.authorize.AuthorizeRepository
 import com.umc.domain.repository.community.CommunityRepository
+import com.umc.domain.repository.curriculum.CurriculumRepository
 import com.umc.domain.repository.schedule.ScheduleRepository
 import com.umc.domain.repository.storage.StorageRepository
 import com.umc.domain.repository.terms.TermsRepository
@@ -31,6 +34,8 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.umc.domain.repository.workbook.WorkbookRepository
+
 
 /**얘는 data <-> domain을 연결하는 역할
  * data 영역에서 api 호출 결과를 domain에 정의된 data class에 맞게 이쁘게 만들어서 보내주기
@@ -59,6 +64,13 @@ abstract class RepositoryModule {
     abstract fun bindKakaoSearchRepository(
         kakaoSearchRepositoryImpl: KakaoSearchRepositoryImpl
     ): KakaoSearchRepository
+
+
+    @Singleton
+    @Binds
+    abstract fun bindsCurriculumRepository(
+        impl: CurriculumRepositoryImpl
+    ): CurriculumRepository
 
 
     @Singleton
@@ -92,6 +104,11 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindsTermsRepository(repositoryImpl: TermsRepositoryImpl): TermsRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindWorkbookRepository(impl: WorkbookRepositoryImpl): WorkbookRepository
+
 
     @Singleton
     @Binds

@@ -171,6 +171,22 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     tools:text="HTML/CSS 기초" />
 
+                <TextView
+                    android:id="@+id/tv_description"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@{item.description}"
+                    android:textAppearance="@style/Footnote"
+                    android:textColor="@color/neutral500"
+                    android:visibility='@{(item.isExpanded &amp;&amp; !item.isLocked) ? View.VISIBLE : View.GONE}'
+                    app:layout_constraintTop_toBottomOf="@id/tv_title"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    tools:text="컴포넌트 생명주기와 Hooks의 이해" />
+
+
+
                 <View
                     android:id="@+id/top_anchor"
                     android:layout_width="0dp"
@@ -187,7 +203,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:orientation="vertical"
-                    app:layout_constraintTop_toBottomOf="@id/tv_title"
+                    app:layout_constraintTop_toBottomOf="@id/tv_description"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     android:visibility='@{(item.isExpanded &amp;&amp; !item.isLocked) ? View.VISIBLE : View.GONE}'
@@ -281,7 +297,8 @@
                             app:contentPaddingBottom="13dp"
                             app:text="학습 완료 인증하기"
                             app:textAppearance="@style/CalloutBold"
-                            app:confirmButtonStyle="@{true}"
+                            app:enabledWhenConfirmReady="@{item}"
+                            app:confirmButtonStyle="@{item.submitState == SubmitState.CONFIRMING}"
                             tools:text="학습 완료 인증하기" />
                     </LinearLayout>
 

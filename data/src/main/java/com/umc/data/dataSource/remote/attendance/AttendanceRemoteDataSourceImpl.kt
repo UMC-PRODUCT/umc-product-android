@@ -4,6 +4,7 @@ import com.umc.data.api.AttendanceApi
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.response.attendance.AdminPendingUserResponse
 import com.umc.data.response.attendance.AttendanceAvailableResponse
+import com.umc.data.response.attendance.ChallengerAttendanceHistoryResponse
 import com.umc.data.response.attendance.UserCheckHistoryResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.attendance.AttendanceCheckRequest
@@ -40,6 +41,10 @@ class AttendanceRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun getAttendanceHistory(): ApiState<List<UserCheckHistoryResponse>> {
         return apiCall { attendanceApi.getAttendanceHistory() }
+    }
+
+    override suspend fun getChallengerAttendanceHistory(challengerId: Long): ApiState<List<ChallengerAttendanceHistoryResponse>> {
+        return apiCall { attendanceApi.getChallengerAttendanceHistory(challengerId) }
     }
 
 }

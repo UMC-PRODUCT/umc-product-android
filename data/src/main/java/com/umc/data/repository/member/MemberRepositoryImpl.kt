@@ -1,6 +1,8 @@
 package com.umc.data.repository.member
 
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSource
+import com.umc.data.request.member.LinkItemRequest
+import com.umc.data.request.member.UpdateMyLinkRequest
 import com.umc.data.request.member.UpdateMyProfileRequest
 import com.umc.data.response.JwtLoginResponse.Companion.toModel
 import com.umc.data.response.member.MemberResponse.Companion.toDomain
@@ -9,6 +11,7 @@ import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.request.member.RegisterRequest
+import com.umc.domain.model.request.member.UpdateLinkRequest
 import com.umc.domain.repository.member.MemberRepository
 import com.umc.domain.usecase.appDataStore.ClearTokensUseCase
 import com.umc.domain.usecase.appDataStore.UpdateUserInfoUseCase
@@ -46,6 +49,12 @@ class MemberRepositoryImpl @Inject constructor(
         val request = UpdateMyProfileRequest(profileImageId)
         return memberRemoteDataSource.updateMyProfile(request).map { it.toDomain() }
 
+    }
+
+    override suspend fun updateMyLink(request: UpdateLinkRequest): ApiState<UserInfo> {
+        val lists = request.links.map { LinkItemRequest(it.type, it.link) }
+        val request = UpdateMyLinkRequest(lists)
+        return memberRemoteDataSource.updateMyLink(request).map { it.toDomain() }
     }
 
     override suspend fun deleteUser(): ApiState<Unit> {

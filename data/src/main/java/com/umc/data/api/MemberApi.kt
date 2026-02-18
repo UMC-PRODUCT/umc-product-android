@@ -1,6 +1,7 @@
 package com.umc.data.api
 
 
+import com.umc.data.request.member.UpdateMyLinkRequest
 import com.umc.data.request.member.UpdateMyProfileRequest
 import com.umc.data.response.JwtLoginResponse
 import com.umc.data.response.member.MemberResponse
@@ -24,6 +25,12 @@ interface MemberApi {
     @PATCH(Endpoints.Member.MEMBER)
     suspend fun updateMyProfile(
         @Body request: UpdateMyProfileRequest
+    ) : ApiResponse<MemberResponse>
+
+    //회원 링크 수정
+    @PATCH(Endpoints.Member.MEMBER_PROFILE_LINK)
+    suspend fun updateMyLink(
+        @Body request: UpdateMyLinkRequest
     ) : ApiResponse<MemberResponse>
 
 

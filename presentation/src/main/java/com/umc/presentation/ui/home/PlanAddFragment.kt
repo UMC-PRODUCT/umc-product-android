@@ -76,11 +76,11 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     //다이얼로그 생성
                     val dialog = AddAttendanceDialog(
                         onReject = {
-                            viewModel.submitPlan()
+                            viewModel.submitPlan(false)
                         },
                         onConfirm = {
-                            viewModel.submitPlan()
-                            /**TODO 출석부 생성 페이지로 이동**/
+                            viewModel.submitPlan(true)
+
                         }
 
                     )
@@ -88,7 +88,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     
                 }
                 else{
-                    viewModel.submitPlan()
+                    viewModel.submitPlan(false)
                 }
             }
 

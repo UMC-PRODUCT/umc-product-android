@@ -3,6 +3,8 @@ package com.umc.data.repository.attendance
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSource
 import com.umc.data.response.attendance.AdminPendingUserResponse.Companion.toAdminPendingUser
 import com.umc.data.response.attendance.AttendanceAvailableResponse.Companion.toUserCheckAvailable
+import com.umc.data.response.attendance.ChallengerAttendanceHistoryResponse.Companion.toChallengerInfoHistory
+import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.data.response.attendance.UserCheckHistoryResponse.Companion.toUserCheckHistory
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.UserCheckAvailable
@@ -47,6 +49,12 @@ class AttendanceRepositoryImpl @Inject constructor(
     override suspend fun getAttendanceHistory(): ApiState<List<UserCheckHistory>> {
         return attendanceRemoteDataSource.getAttendanceHistory().map { responseList ->
             responseList.map { it.toUserCheckHistory() }
+        }
+    }
+
+    override suspend fun getChallengerAttendanceHistory(challengerId: Long): ApiState<List<ChallengerInfoHistory>> {
+        return attendanceRemoteDataSource.getChallengerAttendanceHistory(challengerId).map { responseList ->
+            responseList.map { it.toChallengerInfoHistory() }
         }
     }
 }

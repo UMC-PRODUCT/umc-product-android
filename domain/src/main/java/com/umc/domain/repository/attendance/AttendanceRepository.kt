@@ -1,5 +1,6 @@
 package com.umc.domain.repository.attendance
 
+import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.act.check.UserCheckHistory
@@ -15,4 +16,5 @@ interface AttendanceRepository {
     suspend fun rejectAttendance(recordId: Long): ApiState<Unit>
     suspend fun postAttendanceReason(request: AttendanceReasonRequest): ApiState<String>
     suspend fun getAttendanceHistory(): ApiState<List<UserCheckHistory>>
+    suspend fun getChallengerAttendanceHistory(challengerId: Long): ApiState<List<ChallengerInfoHistory>>
 }

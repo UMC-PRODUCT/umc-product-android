@@ -37,52 +37,19 @@ class ChallengerManageDialog(
         ChallengerHistoryAdapter(onDeleteClick = { item -> onDeleteHistory(item) })
     }
 
-    /**
-     * ItemDecoration for adding extra spacing to first and last items
-     */
-    private inner class EdgeSpacingDecoration(private val extraSpacing: Int) : RecyclerView.ItemDecoration() {
-        override fun getItemOffsets(
-            outRect: android.graphics.Rect,
-            view: View,
-            parent: RecyclerView,
-            state: RecyclerView.State
-        ) {
-            val position = parent.getChildAdapterPosition(view)
-            if (position == RecyclerView.NO_POSITION) return
-
-            val itemCount = state.itemCount
-
-            when (position) {
-                0 -> outRect.top = extraSpacing  // 첫 번째 아이템 상단 여백
-                itemCount - 1 -> outRect.bottom = extraSpacing  // 마지막 아이템 하단 여백
-            }
-        }
-    }
-
     fun updateData(newModel: ChallengerManageDialogModel) {
         this.model = newModel
         binding.model = newModel
+
+        // 데이터 제출 후 콜백에서 높이 재계산
         historyAdapter.submitList(newModel.history) {
             adjustRecyclerViewHeight()
         }
 
-        binding.etAbsenceReason.apply {
-            clearText()
-            clearFocus()
-        }
-        binding.etWarningReason.apply {
-            clearText()
-            clearFocus()
-        }
-
-        // 입력창 초기화 로직
-        binding.etAbsenceReason.clearText()
-        binding.etWarningReason.clearText()
+        binding.etAbsenceReason.apply { clearText(); clearFocus() }
+        binding.etWarningReason.apply { clearText(); clearFocus() }
         updateConfirmButton(binding.btnAbsenceConfirm, false)
         updateConfirmButton(binding.btnWarningConfirm, false)
-
-        val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-        imm.hideSoftInputFromWindow(binding.root.windowToken, 0)
 
         binding.executePendingBindings()
     }
@@ -108,47 +75,33 @@ class ChallengerManageDialog(
         binding.rvHistory.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = historyAdapter
-            // 중복 방지 후 데코레이션 추가
-            while (itemDecorationCount > 0) { removeItemDecorationAt(0) }
-            addItemDecoration(HistoryItemDecoration())
         }
-        historyAdapter.submitList(model.history) { adjustRecyclerViewHeight() }
-    }
 
-    class HistoryItemDecoration : RecyclerView.ItemDecoration() {
-        private val edgePadding = 16.px // 끝 여백 16dp
-
-        override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
-            val position = parent.getChildAdapterPosition(view)
-            val itemCount = state.itemCount
-
-            // 첫 번째 아이템 위에만 16dp
-            if (position == 0) {
-                outRect.top = edgePadding
-            }
-
-            // 마지막 아이템 아래에만 16dp 추가
-            if (position == itemCount - 1) {
-                outRect.bottom = edgePadding
-            }
+        historyAdapter.submitList(model.history) {
+            adjustRecyclerViewHeight()
         }
     }
 
     /**
-     * 아이템이 2개보다 많을 경우, 동적으로 2개 높이만큼만 RecyclerView 높이를 제한
+     * 높이 계산 로직 분리
      */
     private fun adjustRecyclerViewHeight() {
         binding.rvHistory.post {
-            if (historyAdapter.itemCount > 2) {
-                val firstChild = binding.rvHistory.getChildAt(0)
-                if (firstChild != null) {
-                    val itemHeight = firstChild.height
-                    val params = binding.rvHistory.layoutParams
+            if (historyAdapter.itemCount > MAX_VISIBLE_ITEMS) {
+                val viewHolder = binding.rvHistory.findViewHolderForAdapterPosition(0)
+                val itemHeight = viewHolder?.itemView?.height ?: 0
 
-                    params.height = (itemHeight * 2) + 16.px + 12.px + 16.px
-                    binding.rvHistory.layoutParams = params
+                if (itemHeight > 0) {
+                    val spacing = 12.px
+                    val verticalPadding = binding.rvHistory.paddingTop + binding.rvHistory.paddingBottom
+                    val totalHeight = (itemHeight * MAX_VISIBLE_ITEMS) + (spacing * (MAX_VISIBLE_ITEMS - 1)) + verticalPadding
+
+                    binding.rvHistory.layoutParams = binding.rvHistory.layoutParams.apply {
+                        height = totalHeight
+                    }
                 }
             } else {
+                // 아이템이 적어지면 다시 유동적으로 조절
                 binding.rvHistory.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
             }
             binding.rvHistory.requestLayout()
@@ -191,6 +144,9 @@ class ChallengerManageDialog(
         updateUIForMode(currentMode)
     }
 
+    /**
+     * 3. 모드 변경 시(기록 수정 등) 아이템 크기가 변할 수 있으므로 재계산 호출
+     */
     private fun updateUIForMode(mode: DialogMode) {
         resetButtonStyles()
         binding.layoutAbsenceInput.visibility = View.GONE
@@ -214,6 +170,7 @@ class ChallengerManageDialog(
             }
             else -> {}
         }
+        adjustRecyclerViewHeight()
     }
 
     private fun highlightButton(button: UButton, bgColorRes: Int, colorRes: Int) {
@@ -244,5 +201,9 @@ class ChallengerManageDialog(
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        private const val MAX_VISIBLE_ITEMS = 2
     }
 }

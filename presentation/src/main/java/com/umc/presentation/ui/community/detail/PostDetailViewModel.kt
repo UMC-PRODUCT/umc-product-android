@@ -10,6 +10,9 @@ import com.umc.domain.model.enums.RecruitType
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.community.CommentItem
 import com.umc.domain.model.community.ContentItem
+import com.umc.domain.model.enums.PermissionType
+import com.umc.domain.model.enums.ResourceType
+import com.umc.domain.usecase.GetAuthAccessUseCase
 import com.umc.domain.usecase.GetChallengerIdUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.community.DeleteCommunityCommentUseCase
@@ -42,8 +45,9 @@ constructor(
     private val deleteCommunityCommentUseCase: DeleteCommunityCommentUseCase, //댓글 삭제하기
     private val updateLikePostUseCase: UpdateLikePostUseCase, //좋아요 토글
     private val updateScrapPostUseCase: UpdateScrapPostUseCase, //스크랩 토글
-    private val getChallengerIdUseCase: GetChallengerIdUseCase, //챌린저 ID 정보 불러오기
     private val reportPostUseCase: ReportPostUseCase, //게시글 신고하기
+    private val getChallengerIdUseCase: GetChallengerIdUseCase, //내 ID 가져오기
+    private val getAuthAccessUseCase: GetAuthAccessUseCase, //리소스 권한 조회
     private val reportCommentUseCase: ReportCommentUseCase, //댓글 신고하기
 
     ) : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent>(
@@ -93,13 +97,13 @@ constructor(
                 }
             }
 
-            //0. 유저 챌린저 ID 가져오기
+            //0. 유저 challengerId 가져오기
             launch {
-                val myChallengerId = getChallengerIdUseCase()
-                updateState { copy(myChallengerId = myChallengerId) }
+                val challengerId = getChallengerIdUseCase()
+                updateState {
+                    copy(myChallengerId = challengerId)
+                }
             }
-
-
 
             //1. 서로 다른 usecase를 비동기로 실행
             val detailDeferred = async {
@@ -136,9 +140,6 @@ constructor(
                 }
             )
 
-            Log.d("log_community", "게시글 정보: ${fetchedContent}")
-            Log.d("log_community", "유저 정보: ${uiState.value.myInfo}")
-
             //4. 댓글만 받아왔거나 다 실패한 경우 나가기
             if(fetchedContent == null && fetchedComments == null){
                 emitEvent(PostDetailFragmentEvent.ShowErrorToast("게시글을 불러오는데 실패했습니다."))
@@ -147,13 +148,13 @@ constructor(
 
             //5. 둘다 정상이면 한 번에 재조립
             else if (fetchedContent != null && fetchedComments != null) {
-                checkIsAuthor(fetchedContent.userId)
+                checkIsAuthor(fetchedContent.postId)
                 rebuildDetailList(fetchedContent, fetchedComments)
             }
 
             //6. 게시글만 받아왔을 경우 (일단 빌드)
             else if(fetchedContent != null){
-                checkIsAuthor(fetchedContent.userId)
+                checkIsAuthor(fetchedContent.postId)
                 rebuildDetailList(fetchedContent, uiState.value.nowCommentList)
                 emitEvent(PostDetailFragmentEvent.ShowErrorToast("댓글을 불러오는데 실패했습니다."))
             }
@@ -211,18 +212,33 @@ constructor(
     }
 
     //게시글이 현재 유저 것인지 비교
-    fun checkIsAuthor(authorId : Long){
-        val isAuthor = authorId == uiState.value.myChallengerId
+    fun checkIsAuthor(postId : Long){
+        viewModelScope.launch { 
+            resultResponse(
+                response = getAuthAccessUseCase(ResourceType.COMMUNITY_POST, postId),
+                successCallback = { authAccess ->
+                    //삭제 or 수정권한 있는지 체크
+                    val isAuthor = authAccess.permissions.any { item ->
+                        (item.type == PermissionType.DELETE || item.type == PermissionType.EDIT)
+                                && item.hasPermission
+                    }
+                    Log.d("log_community", "권한 결과: $isAuthor")
 
-        updateState {
-            if(isAuthor){
-                copy(isAuthor = true)
-            }
-            else{
-                copy(isAuthor = false)
-            }
+                    updateState {
+                        if(isAuthor){
+                            copy(isAuthor = true)
+                        }
+                        else{
+                            copy(isAuthor = false)
+                        }
+                    }
+            
+                },
+                errorCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("게시글 권한을 불러오는데 실패했습니다."))
+                }
+            )
         }
-
     }
 
 
@@ -319,6 +335,29 @@ constructor(
                 },
                 errorCallback = {
                     
+                }
+            )
+        }
+    }
+
+    //댓글 메뉴 바 눌렀을 때, 자신 댓글인지 판단
+    fun onCommentMenuClicked(item: CommentItem) {
+        viewModelScope.launch {
+            resultResponse(
+                // 댓글 권한 조회를 위해 POST_COMMENT 타입 사용 (없다면 Enum에 추가 필요)
+                response = getAuthAccessUseCase(ResourceType.COMMUNITY_COMMENT, item.commentId),
+                successCallback = { authAccess ->
+                    // DELETE 또는 EDIT 권한이 있는지 체크 (팀장님 로직 적용)
+                    val isAuthor = authAccess.permissions.any { p ->
+                        (p.type == PermissionType.DELETE || p.type == PermissionType.EDIT)
+                                && p.hasPermission
+                    }
+
+                    // 권한 결과와 함께 이벤트를 던져 Fragment가 팝업을 띄우게 함
+                    emitEvent(PostDetailFragmentEvent.ShowCommentMenu(item, isAuthor))
+                },
+                errorCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("권한 정보를 불러오지 못했습니다."))
                 }
             )
         }
@@ -438,6 +477,9 @@ sealed interface PostDetailFragmentEvent : UiEvent {
 
     //댓글 신고하기 이벤트
     data class ReportComment(val commentId: Long) : PostDetailFragmentEvent
+
+    //댓글 메뉴 누를시 권한 확인 이벤트
+    data class ShowCommentMenu(val item: CommentItem, val canDelete: Boolean) : PostDetailFragmentEvent
 
     //오류 토스트 이벤트
     data class ShowErrorToast(val errorMessage: String) : PostDetailFragmentEvent

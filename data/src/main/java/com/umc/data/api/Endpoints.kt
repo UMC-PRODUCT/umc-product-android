@@ -26,6 +26,7 @@ object Endpoints {
         const val APPROVE = "$ATTENDANCE/{recordId}/approve"
         const val REJECT = "$ATTENDANCE/{recordId}/reject"
         const val HISTORY = "$ATTENDANCE/history"
+        const val CHALLENGER_HISTORY = "$ATTENDANCE/challenger/{challengerId}/history"
     }
 
     object Challenger {
@@ -45,6 +46,7 @@ object Endpoints {
         const val MYPROFILE = "$MEMBER/me"
         const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
         const val MEMBER_REGISTER = "$MEMBER/register"
+        const val MEMBER_PROFILE_LINK = "$MEMBER/profile/links"
     }
 
     object Kakao {
@@ -133,6 +135,22 @@ object Endpoints {
         const val TERMS_TYPE = "$TERMS/type/{termsType}"
         const val TERMS_ID = "$TERMS/{termsId}"
     }
+
+    object Curriculum {
+        const val CURRICULUM = "api/v1/curriculums"
+        const val CHALLENGER_ME_PROGRESS = "$CURRICULUM/challengers/me/progress"
+        const val SUBMIT = "api/v1/challenger-workbooks/{challengerWorkbookId}/submissions"
+        const val WORKBOOK_SUBMISSIONS = "api/v1/curriculums/workbook-submissions"
+        const val STUDY_GROUPS = "api/v1/curriculums/study-groups"
+        const val AVAILABLE_WEEKS = "api/v1/curriculums/available-weeks"
+
+    }
+
+    object Workbook {
+        const val BEST = "api/v1/workbooks/challenger/{challengerWorkbookId}/best"
+        const val REVIEW = "api/v1/workbooks/challenger/{challengerWorkbookId}/review"
+    }
+
 
     object Notice {
         const val NOTICE = "api/v1/notices"

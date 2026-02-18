@@ -28,6 +28,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 
 
@@ -66,12 +67,16 @@ constructor(
                     val latestGisu = gisuSummaryList.maxByOrNull { it.gisu }
                     //최신 기수ID 얻기
                     val latestGisuId = latestGisu?.gisuId ?: 1L
+                    //운영진 인지 판단
+                    val isManger = latestGisu?.fromRoles?.isNotEmpty() ?: false
 
                     updateState {
                         copy(
                             myInfo = userInfo,
-                            nowGisuId = latestGisuId
-                            ) }
+                            nowGisuId = latestGisuId,
+                            isManager = isManger
+                            )
+                    }
                 }
             }
         }
@@ -102,6 +107,9 @@ constructor(
                             selectedOnes.size <= 3 -> selectedOnes.joinToString(", ") { it.name }
                             else -> "${selectedOnes.take(3).joinToString(", ") { it.name }} 외 ${selectedOnes.size - 3}개"
                         }
+
+                        //4. 참석자 매칭
+
                         
                         //4. 갱신 저장
                         copy(
@@ -121,7 +129,7 @@ constructor(
                             startTimeText = startTimeTextFormatted,
                             endDateText = detail.endDay,
                             endTimeText = endTimeTextFormatted,
-                            selectedCategoriesString = summaryText
+                            selectedCategoriesString = summaryText,
                         )
                     }
                 },
@@ -154,18 +162,25 @@ constructor(
     /**
      * Calendar 객체 두 개(날짜, 시간)를 합쳐 ISO 8601 문자열로 변환
      * 예: 2026-02-08T09:57:19.628Z
-     * TODO 시간 형태 변경
+     * TODO 시간 형태 변경 -9시간
      */
     private fun getIsoDateTime(dateCal: Calendar, timeCal: Calendar): String {
-        return String.format(
-            Locale.getDefault(),
-            "%d-%02d-%02dT%02d:%02d:00.000Z",
-            dateCal.get(Calendar.YEAR),
-            dateCal.get(Calendar.MONTH) + 1,
-            dateCal.get(Calendar.DAY_OF_MONTH),
-            timeCal.get(Calendar.HOUR_OF_DAY),
-            timeCal.get(Calendar.MINUTE)
-        )
+        //그냥 하나의 타임 포맷으로 바꾸자
+        val combineCal = Calendar.getInstance().apply {
+            set(Calendar.YEAR, dateCal.get(Calendar.YEAR))
+            set(Calendar.MONTH, dateCal.get(Calendar.MONTH))
+            set(Calendar.DAY_OF_MONTH, dateCal.get(Calendar.DAY_OF_MONTH))
+            set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY))
+            set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE))
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+
+        return sdf.format(combineCal.time)
     }
 
 
@@ -180,14 +195,19 @@ constructor(
     }
 
 
-    /**일정을 생성 or 수정하는 함수**/
-    fun submitPlan(){
+    /**일정을 생성 or 수정하는 함수
+     * isAttendance = 출석부도 같이 생성하는지 여부
+     * **/
+    fun submitPlan(isAttendance: Boolean){
         val state = uiState.value
         val isEditMode = state.updateScheduleId != -1L
 
         //날짜 데이터 ISO 8601 포맷으로 변환
         val startsAt = getIsoDateTime(state.startDate, state.startTime)
         val endsAt = getIsoDateTime(state.endDate, state.endTime)
+
+        Log.d("log_home", "startsAt: $startsAt, endsAt: $endsAt")
+
 
         //선택한 카테고리 enums -> String list로
         val selectedTags = state.categories
@@ -198,6 +218,7 @@ constructor(
 
 
         val participantIds = state.selectedParticipants.map { it.id }
+
 
         viewModelScope.launch {
             if (isEditMode) {
@@ -235,7 +256,7 @@ constructor(
                     tags = selectedTags,
                     participantMemberIds = participantIds,
                     gisuId = state.nowGisuId,
-                    requiresApproval = state.isManager
+                    requiresApproval = isAttendance
                 )
 
                 resultResponse(
@@ -247,6 +268,7 @@ constructor(
                 )
             }
         }
+
 
     }
 
@@ -356,6 +378,7 @@ data class PlanAddFragmentUiState(
 
     //운영진 여부 판단
     val isManager: Boolean = true,
+
 
     //하루 종일 부분에 체크가 되었나
     val isAllDay: Boolean = false,
