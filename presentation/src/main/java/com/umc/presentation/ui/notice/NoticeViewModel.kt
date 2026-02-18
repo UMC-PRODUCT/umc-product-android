@@ -50,24 +50,24 @@ class NoticeViewModel @Inject constructor(
         }
 
         userInfo.roles.forEach { role ->
-            if (role.organizationType != "CENTRAL") {
+            val chapterName = role.chapterName
+            if (!chapterName.isNullOrEmpty() && chipList.none { it.text == "$chapterName 지부" }) {
                 chipList.add(
                     NoticeChipState(
-                        text = "${role.organizationType} 지부",
-                        chapterId = role.organizationId
+                        text = "$chapterName 지부",
+                        chapterId = role.chapterId
                     )
                 )
             }
 
-            if (role.responsiblePart.isNotEmpty()) {
-                if (chipList.none { it.text == role.responsiblePart }) {
-                    chipList.add(
-                        NoticeChipState(
-                            text = role.responsiblePart,
-                            part = role.responsiblePart
-                        )
+            val responsiblePart = role.responsiblePart
+            if (!responsiblePart.isNullOrEmpty() && chipList.none { it.text == responsiblePart }) {
+                chipList.add(
+                    NoticeChipState(
+                        text = responsiblePart,
+                        part = responsiblePart
                     )
-                }
+                )
             }
         }
 
@@ -85,12 +85,11 @@ class NoticeViewModel @Inject constructor(
         } else {
             updateState { copy(isShowSubChip = false) }
         }
-//        fetchNoticeList(
-//            gisuId = currentGisuId,
-//            chapterId = clickedItem.chapterId,
-//            schoolId = clickedItem.schoolId,
-//            part = clickedItem.part
-//        )
+        getNoticeList(
+            chapterId = clickedItem.chapterId,
+            schoolId = clickedItem.schoolId,
+            part = clickedItem.part
+        )
     }
 
     fun onClickSearch() {

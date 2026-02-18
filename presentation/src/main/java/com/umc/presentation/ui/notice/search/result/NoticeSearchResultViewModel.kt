@@ -1,11 +1,13 @@
 package com.umc.presentation.ui.notice.search.result
 
+import android.view.inputmethod.EditorInfo
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.usecase.notice.SearchNoticeListUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import com.umc.presentation.ui.notice.search.NoticeSearchEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -71,10 +73,14 @@ constructor(
         }
     }
 
-    fun updateSearchText(text: String) {
-        updateState {
-            copy(searchText = text)
+    fun onImeAction(actionId: Int, text: String): Boolean {
+        if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+            viewModelScope.launch {
+                searchNotices(text, true)
+            }
+            return true
         }
+        return false
     }
 
     fun loadNextPage() {
