@@ -37,15 +37,15 @@ class StorageRepositoryImpl @Inject constructor(
         }
 
         // 여기서는 카테고리별 확장자 타입이 맞는지 비교해서 reject 로직을 수행
-        val type = StorageUriUtil.getType(meta.name)
-        if (category.alloweType.isNotEmpty() && !category.alloweType.contains(type)) {
-            return ApiState.Fail(
-                FailState(
-                    code = "INVALID_FILE_TYPE",
-                    message = "${category.label}에 허용되지 않는 파일 형식(.${type})입니다."
-                )
-            )
-        }
+//        val type = StorageUriUtil.getType(meta.name)
+//        if (category.alloweType.isNotEmpty() && !category.alloweType.contains(type)) {
+//            return ApiState.Fail(
+//                FailState(
+//                    code = "INVALID_FILE_TYPE",
+//                    message = "${category.label}에 허용되지 않는 파일 형식(.${type})입니다."
+//                )
+//            )
+//        }
         
         // 1. 파일 preupload (presigned url을 생성)
         val prepareState = storageRemoteDatasource.prepareUpload(
