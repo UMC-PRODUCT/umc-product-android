@@ -55,7 +55,7 @@
             android:gravity="start"
             android:textAppearance="@style/Footnote"
             android:textColor="@color/neutral600"
-            android:text="test"
+            android:text="@{item.createdAt}"
             android:layout_marginStart="8dp"
             app:layout_constraintStart_toEndOf="@id/item_tv_username"
             app:layout_constraintTop_toTopOf="@id/item_tv_username"

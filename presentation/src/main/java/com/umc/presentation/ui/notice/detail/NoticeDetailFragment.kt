@@ -59,6 +59,7 @@ class NoticeDetailFragment :
                     state.detail.vote?.options?.let { options ->
                         noticeDetailVoteAdapter.submitList(options)
                     }
+                    noticeDetailVoteAdapter.setSelectedOptionIds(state.selectedVoteOptionIds.toSet())
                 }
             }
         }

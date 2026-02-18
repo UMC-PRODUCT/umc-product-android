@@ -19,6 +19,7 @@ import com.umc.domain.usecase.notice.SendNoticeReminderUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import com.umc.presentation.util.ULog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -252,7 +253,6 @@ class NoticeDetailViewModel @Inject constructor(
 
     fun onClickVoteItem(clickedOption: NoticeVoteOption) {
         val vote = uiState.value.detail.vote ?: return
-
         val isMultiple = vote.allowMultipleChoice
 
         if (isMultiple) {
