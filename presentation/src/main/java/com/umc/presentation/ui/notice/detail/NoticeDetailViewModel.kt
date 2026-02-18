@@ -38,6 +38,8 @@ class NoticeDetailViewModel @Inject constructor(
         currentNoticeId = noticeId
         loadNoticeDetail()
         loadReadStatistics()
+        loadReadStatus()
+        loadUnReadStatus()
     }
 
     private fun loadNoticeDetail() = viewModelScope.launch {
@@ -69,7 +71,6 @@ class NoticeDetailViewModel @Inject constructor(
                     ) 
                 }
                 
-                // Load author nickname from challenger detail
                 loadAuthorNickname(detail.authorChallengerId)
             },
             errorCallback = {
@@ -132,7 +133,7 @@ class NoticeDetailViewModel @Inject constructor(
         )
     }
 
-    fun loadReadStatus(status: String = "READ") = viewModelScope.launch {
+    fun loadReadStatus(status: String = "READ", cursorId: Long? = null) = viewModelScope.launch {
         if (currentNoticeId == 0L) return@launch
 
         updateState { copy(isLoadingReadStatus = true) }
@@ -141,12 +142,19 @@ class NoticeDetailViewModel @Inject constructor(
             response = getNoticeReadStatusUseCase(
                 noticeId = currentNoticeId,
                 status = status,
-                filterType = "ALL"
+                filterType = "ALL",
+                cursorId = cursorId
             ),
             successCallback = { readStatus ->
                 updateState {
                     copy(
-                        readStatusList = readStatus.content,
+                        readStatusList = if (cursorId == null) {
+                            readStatus.content
+                        } else {
+                            readStatusList + readStatus.content
+                        },
+                        readNextCursor = readStatus.nextCursor,
+                        readHasNext = readStatus.hasNext,
                         isLoadingReadStatus = false
                     )
                 }
@@ -158,9 +166,49 @@ class NoticeDetailViewModel @Inject constructor(
         )
     }
 
-    fun refresh() {
-        loadNoticeDetail()
-        loadReadStatistics()
+    fun loadMoreReadStatus() {
+        val state = uiState.value
+        if (state.isLoadingReadStatus || !state.readHasNext) return
+        loadReadStatus("READ", state.readNextCursor)
+    }
+
+    fun loadUnReadStatus(status: String = "UNREAD", cursorId: Long? = null) = viewModelScope.launch {
+        if (currentNoticeId == 0L) return@launch
+
+        updateState { copy(isLoadingReadStatus = true) }
+
+        resultResponse(
+            response = getNoticeReadStatusUseCase(
+                noticeId = currentNoticeId,
+                status = status,
+                filterType = "ALL",
+                cursorId = cursorId
+            ),
+            successCallback = { unReadStatus ->
+                updateState {
+                    copy(
+                        unReadStatusList = if (cursorId == null) {
+                            unReadStatus.content
+                        } else {
+                            unReadStatusList + unReadStatus.content
+                        },
+                        unReadNextCursor = unReadStatus.nextCursor,
+                        unReadHasNext = unReadStatus.hasNext,
+                        isLoadingReadStatus = false
+                    )
+                }
+            },
+            errorCallback = {
+                updateState { copy(isLoadingReadStatus = false) }
+                emitEvent(NoticeFragmentEvent.ShowError("확인 현황을 불러오는데 실패했습니다"))
+            }
+        )
+    }
+
+    fun loadMoreUnReadStatus() {
+        val state = uiState.value
+        if (state.isLoadingReadStatus || !state.unReadHasNext) return
+        loadUnReadStatus("UNREAD", state.unReadNextCursor)
     }
 
     fun onClickBackPressed() {
@@ -205,7 +253,6 @@ class NoticeDetailViewModel @Inject constructor(
     }
 
     fun onClickShowBottomSheet() {
-        loadReadStatus("READ")
         emitEvent(NoticeFragmentEvent.ShowBottomSheetEvent)
     }
 
@@ -226,12 +273,6 @@ class NoticeDetailViewModel @Inject constructor(
             }
         )
     }
-
-    fun isOptionSelected(optionId: Long): Boolean {
-        return selectedOptionIds.contains(optionId)
-    }
-
-
 }
 
 
@@ -239,6 +280,7 @@ data class NoticeFragmentUiState(
     val detail: NoticeDetail = NoticeDetail(),
     val readStatistics: NoticeReadStatistics? = null,
     val readStatusList: List<ChallengerReadInfo> = emptyList(),
+    val unReadStatusList: List<ChallengerReadInfo> = emptyList(),
     val selectedVoteOptionIds: List<Long> = emptyList(),
     val isLoading: Boolean = false,
     val isLoadingReadStatus: Boolean = false,
@@ -246,7 +288,11 @@ data class NoticeFragmentUiState(
     val formattedVoteCondition: String = "",
     val formattedTargetInfo: String = "",
     val formattedCreatedAt: String = "",
-    val authorNickname: String = ""
+    val authorNickname: String = "",
+    val readNextCursor: Long? = null,
+    val readHasNext: Boolean = false,
+    val unReadNextCursor: Long? = null,
+    val unReadHasNext: Boolean = false
 ) : UiState
 
 sealed interface NoticeFragmentEvent : UiEvent {

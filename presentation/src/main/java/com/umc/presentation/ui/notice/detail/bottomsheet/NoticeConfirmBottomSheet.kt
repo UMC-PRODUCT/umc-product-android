@@ -12,9 +12,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.umc.presentation.R
 import com.umc.presentation.databinding.BottomSheetNoticeConfirmedPeopleBinding
+import com.umc.presentation.extension.addInfiniteScrollListener
 import com.umc.presentation.extension.gone
 import com.umc.presentation.extension.visible
 import com.umc.presentation.ui.notice.detail.NoticeDetailViewModel
@@ -50,6 +52,15 @@ class NoticeConfirmBottomSheet : BottomSheetDialogFragment() {
                 adapter = noticePeopleAdapter
                 layoutManager = LinearLayoutManager(context)
                 itemAnimator = null
+                addInfiniteScrollListener(
+                    onLoadMore = {
+                        if (isShowingRead) {
+                            viewModel.loadMoreReadStatus()
+                        } else {
+                            viewModel.loadMoreUnReadStatus()
+                        }
+                    }
+                )
             }
 
             ubuttonConfirm.setOnClickListener {
@@ -67,6 +78,9 @@ class NoticeConfirmBottomSheet : BottomSheetDialogFragment() {
 
         observeUiState()
         observeUiEvent()
+
+        // 초기 리스트 설정
+        updateList()
     }
 
     private fun observeUiState() {
@@ -74,14 +88,13 @@ class NoticeConfirmBottomSheet : BottomSheetDialogFragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     binding.apply {
-                        // 통계 정보 업데이트
                         state.readStatistics?.let { stats ->
                             ubuttonConfirm.setText("확인 ${stats.readCount}")
                             ubuttonUnconfirm.setText("미확인 ${stats.unreadCount}")
                         }
 
-                        // 리스트 업데이트
-                        noticePeopleAdapter.submitList(state.readStatusList)
+                        // 현재 선택된 탭에 따라 리스트 업데이트
+                        updateList()
 
                         // 로딩 표시
                         if (state.isLoadingReadStatus) {
@@ -98,6 +111,16 @@ class NoticeConfirmBottomSheet : BottomSheetDialogFragment() {
                 }
             }
         }
+    }
+
+    private fun updateList() {
+        val state = viewModel.uiState.value
+        val listToShow = if (isShowingRead) {
+            state.readStatusList
+        } else {
+            state.unReadStatusList
+        }
+        noticePeopleAdapter.submitList(listToShow)
     }
 
     private fun observeUiEvent() {
@@ -128,7 +151,12 @@ class NoticeConfirmBottomSheet : BottomSheetDialogFragment() {
             ubuttonSendNotification.visible()
         }
 
-        viewModel.loadReadStatus("UNREAD")
+        // 미확인 목록이 비어있으면 로드, 아니면 바로 표시
+        if (viewModel.uiState.value.unReadStatusList.isEmpty()) {
+            viewModel.loadUnReadStatus()
+        } else {
+            updateList()
+        }
     }
 
     private fun onClickConfirmButton() {
@@ -141,12 +169,17 @@ class NoticeConfirmBottomSheet : BottomSheetDialogFragment() {
             ubuttonSendNotification.gone()
         }
 
-        viewModel.loadReadStatus("READ")
+        // 확인 목록이 비어있으면 로드, 아니면 바로 표시
+        if (viewModel.uiState.value.readStatusList.isEmpty()) {
+            viewModel.loadReadStatus()
+        } else {
+            updateList()
+        }
     }
 
     private fun onClickSendReminder() {
         // 미확인자에게 알림 발송
-        val unreadChallengerIds = viewModel.uiState.value.readStatusList
+        val unreadChallengerIds = viewModel.uiState.value.unReadStatusList
             .map { it.challengerId }
         
         if (unreadChallengerIds.isNotEmpty()) {

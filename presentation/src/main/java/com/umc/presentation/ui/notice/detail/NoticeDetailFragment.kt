@@ -1,7 +1,7 @@
 package com.umc.presentation.ui.notice.detail
 
 import android.widget.Toast
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,7 +18,7 @@ class NoticeDetailFragment :
     BaseFragment<FragmentNoticeDetailBinding, NoticeFragmentUiState, NoticeFragmentEvent, NoticeDetailViewModel>(
         FragmentNoticeDetailBinding::inflate,
     ) {
-    override val viewModel: NoticeDetailViewModel by viewModels()
+    override val viewModel: NoticeDetailViewModel by activityViewModels()
 
     private val args: NoticeDetailFragmentArgs by navArgs()
 
