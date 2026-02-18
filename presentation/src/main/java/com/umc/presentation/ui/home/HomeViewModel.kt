@@ -192,8 +192,9 @@ class HomeViewModel @Inject constructor(
             //총 며칠 있는지 계산 (2026.02.07 - 2026.02.09)일 경우 7 8 9에 대해 일정 생성 필요
             val daysBetween = ChronoUnit.DAYS.between(startDate, endDate).toInt()
 
-            //서버에서 준 dDay 값을 숫자로 변환
-            val serverDDay = schedule.dDay
+            //일정 시작 날짜(StartDate 기준으로 dday 생성)
+            val today = LocalDate.now()
+            val serverDDay = ChronoUnit.DAYS.between(today, startDate).toInt()
             
 
             for (i in 0..daysBetween) {

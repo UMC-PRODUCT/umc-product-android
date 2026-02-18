@@ -5,6 +5,7 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.util.Log
+import androidx.activity.addCallback
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -13,6 +14,8 @@ import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
+import com.umc.presentation.component.UMypageDialog
+import com.umc.presentation.component.UMypageDialogModel
 import com.umc.presentation.component.calendar.EventDecorator
 import com.umc.presentation.component.calendar.SelectedDecorator
 import com.umc.presentation.component.calendar.TodayDecorator
@@ -36,6 +39,15 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
     //리사이클러뷰 어댑터
     private val dailyAdapter by lazy { ScheduleAdapter(this) }
     private val allAdapter by lazy { ScheduleAdapter(this) }
+    
+    //앱 종료 다이얼로그
+    val finishAppDialogModel = UMypageDialogModel(
+        title = "애플리케이션 종료",
+        content = "애플리케이션을 종료하시겠습니까?",
+        isTwoButton = true,
+        positiveText = "종료",
+        negativeText = "취소"
+    )
 
     override fun initView() {
         binding.apply {
@@ -50,6 +62,15 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
 
         binding.homeRcvDailyPlan.adapter = dailyAdapter
         binding.homeRcvAllPlanList.adapter = allAdapter
+
+        //뒤로가기 백스택 막기
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner){
+            val dialog = UMypageDialog(finishAppDialogModel) {
+                requireActivity().finish()
+            }
+            dialog.show(parentFragmentManager, "HomeDialog")
+        }
+
     }
 
     override fun initStates() {

@@ -43,6 +43,7 @@ object Endpoints {
         const val MYPROFILE = "$MEMBER/me"
         const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
         const val MEMBER_REGISTER = "$MEMBER/register"
+        const val MEMBER_PROFILE_LINK = "$MEMBER/profile/links"
     }
 
     object Kakao {
