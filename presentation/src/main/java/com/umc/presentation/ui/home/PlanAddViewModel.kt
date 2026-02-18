@@ -28,6 +28,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 
 
@@ -161,18 +162,25 @@ constructor(
     /**
      * Calendar 객체 두 개(날짜, 시간)를 합쳐 ISO 8601 문자열로 변환
      * 예: 2026-02-08T09:57:19.628Z
-     * TODO 시간 형태 변경
+     * TODO 시간 형태 변경 -9시간
      */
     private fun getIsoDateTime(dateCal: Calendar, timeCal: Calendar): String {
-        return String.format(
-            Locale.getDefault(),
-            "%d-%02d-%02dT%02d:%02d:00.000Z",
-            dateCal.get(Calendar.YEAR),
-            dateCal.get(Calendar.MONTH) + 1,
-            dateCal.get(Calendar.DAY_OF_MONTH),
-            timeCal.get(Calendar.HOUR_OF_DAY),
-            timeCal.get(Calendar.MINUTE)
-        )
+        //그냥 하나의 타임 포맷으로 바꾸자
+        val combineCal = Calendar.getInstance().apply {
+            set(Calendar.YEAR, dateCal.get(Calendar.YEAR))
+            set(Calendar.MONTH, dateCal.get(Calendar.MONTH))
+            set(Calendar.DAY_OF_MONTH, dateCal.get(Calendar.DAY_OF_MONTH))
+            set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY))
+            set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE))
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+
+        return sdf.format(combineCal.time)
     }
 
 
@@ -198,6 +206,9 @@ constructor(
         val startsAt = getIsoDateTime(state.startDate, state.startTime)
         val endsAt = getIsoDateTime(state.endDate, state.endTime)
 
+        Log.d("log_home", "startsAt: $startsAt, endsAt: $endsAt")
+
+
         //선택한 카테고리 enums -> String list로
         val selectedTags = state.categories
             .filter { it.isChecked }
@@ -207,6 +218,7 @@ constructor(
 
 
         val participantIds = state.selectedParticipants.map { it.id }
+
 
         viewModelScope.launch {
             if (isEditMode) {
@@ -256,6 +268,7 @@ constructor(
                 )
             }
         }
+
 
     }
 
