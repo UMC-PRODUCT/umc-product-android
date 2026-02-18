@@ -49,6 +49,8 @@ class AdminStudyGroupAddFragment :
 
         binding.tvSelectedPart.text = selectedPart
 
+        binding.btnBack.setOnClickListener { moveBackPressed() }
+
         setupPartDropdown()
         setupLeaderPicker()
         setupMembersPicker()
@@ -57,6 +59,10 @@ class AdminStudyGroupAddFragment :
         renderSelectedMembers()
     }
 
+
+    private fun moveBackPressed() {
+        requireActivity().onBackPressedDispatcher.onBackPressed()
+    }
 
     private fun setupPartDropdown() {
         partDropDownAdapter = DropDownAdapter(object : DropDownAdapter.DropDownDelegate {
