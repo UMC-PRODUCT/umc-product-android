@@ -66,12 +66,16 @@ constructor(
                     val latestGisu = gisuSummaryList.maxByOrNull { it.gisu }
                     //최신 기수ID 얻기
                     val latestGisuId = latestGisu?.gisuId ?: 1L
+                    //운영진 인지 판단
+                    val isManger = latestGisu?.fromRoles?.isNotEmpty() ?: false
 
                     updateState {
                         copy(
                             myInfo = userInfo,
-                            nowGisuId = latestGisuId
-                            ) }
+                            nowGisuId = latestGisuId,
+                            isManager = isManger
+                            )
+                    }
                 }
             }
         }
@@ -183,8 +187,10 @@ constructor(
     }
 
 
-    /**일정을 생성 or 수정하는 함수**/
-    fun submitPlan(){
+    /**일정을 생성 or 수정하는 함수
+     * isAttendance = 출석부도 같이 생성하는지 여부
+     * **/
+    fun submitPlan(isAttendance: Boolean){
         val state = uiState.value
         val isEditMode = state.updateScheduleId != -1L
 
@@ -238,7 +244,7 @@ constructor(
                     tags = selectedTags,
                     participantMemberIds = participantIds,
                     gisuId = state.nowGisuId,
-                    requiresApproval = state.isManager
+                    requiresApproval = isAttendance
                 )
 
                 resultResponse(
@@ -359,6 +365,7 @@ data class PlanAddFragmentUiState(
 
     //운영진 여부 판단
     val isManager: Boolean = true,
+
 
     //하루 종일 부분에 체크가 되었나
     val isAllDay: Boolean = false,
