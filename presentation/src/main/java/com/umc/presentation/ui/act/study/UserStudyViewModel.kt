@@ -207,13 +207,18 @@ class UserStudyViewModel @Inject constructor(
         }
     }
 
+
+
+    // db에 여러가지 stats가 섞여있어서 임의로 다 풀었습니다
     private fun applyLockRule(list: List<ActStudyItemUiModel>): List<ActStudyItemUiModel> {
-        val sorted = list.sortedBy { it.week.toString().toIntOrNull() ?: 0 }
-        var prevEvaluated = true
+        val sorted = list.sortedBy { it.week }
+        var prevUnlocksNext = true
 
         return sorted.mapIndexed { index, item ->
-            val locked = if (index == 0) false else !prevEvaluated
-            prevEvaluated = (item.status == StudyStatus.PASS || item.status == StudyStatus.FAIL)
+            val locked = if (index == 0) false else !prevUnlocksNext
+
+
+            prevUnlocksNext = true
 
             item.copy(
                 isLocked = locked,
@@ -221,6 +226,27 @@ class UserStudyViewModel @Inject constructor(
             )
         }
     }
+
+
+
+
+
+    // 서버테스트로 잠시 주석처리중...원래 들어가야할 코드
+
+//    private fun applyLockRule(list: List<ActStudyItemUiModel>): List<ActStudyItemUiModel> {
+//        val sorted = list.sortedBy { it.week.toString().toIntOrNull() ?: 0 }
+//        var prevEvaluated = true
+//
+//        return sorted.mapIndexed { index, item ->
+//            val locked = if (index == 0) false else !prevEvaluated
+//            prevEvaluated = (item.status == StudyStatus.PASS || item.status == StudyStatus.FAIL)
+//
+//            item.copy(
+//                isLocked = locked,
+//                isExpanded = if (locked) false else item.isExpanded
+//            )
+//        }
+//    }
 
 
     private fun WorkbookStatus.toStudyStatus(): StudyStatus = when (this) {

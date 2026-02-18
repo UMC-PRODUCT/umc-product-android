@@ -147,3 +147,7 @@ class ActStudyAdapter(
         )
     }
 }
+
+
+
+
