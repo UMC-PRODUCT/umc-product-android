@@ -1,6 +1,5 @@
 package com.umc.presentation.ui.notice.adapter
 
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.notice.NoticeTarget
@@ -18,16 +17,11 @@ class NoticeViewHolder(
     fun bind(item: NoticeSummary) {
         binding.apply {
             binding.root.setOnClickListener { listener.onClickNotice(item) }
-            if (item.shouldSendNotification) {
-                ubuttonMustRead.visible()
-                spaceBetween.visible()
-                layoutNotice.setBackgroundResource(R.drawable.bg_rect_warning100_stroke_neutral200_radius12)
-            } else {
-                ubuttonMustRead.gone()
-                spaceBetween.gone()
-                layoutNotice.setBackgroundResource(R.drawable.bg_rect_neutral000_stroke_neutral200_radius12)
-            }
-            setCategory(item.targetInfo)
+            layoutNotice.setBackgroundResource(
+                // TODO 필독 생기면 추가 if (item.shouldSendNotification) R.drawable.bg_rect_warning100_stroke_neutral200_radius12
+                R.drawable.bg_rect_neutral000_stroke_neutral200_radius12
+            )
+            setCategories(item.targetInfo)
             textDate.text = parseDateTime(item.createdAt).first
             textTitle.text = item.title
             textContent.text = item.content
@@ -36,35 +30,36 @@ class NoticeViewHolder(
         }
     }
 
-    private fun setCategory(target: NoticeTarget) {
-        val context = binding.root.context
+    private fun setCategories(target: NoticeTarget) {
+        if (target.targetGisuId != 0) {
+            binding.ubuttonCentral.visible()
+        } else {
+            binding.ubuttonCentral.gone()
+        }
 
-        binding.ubuttonCategory.apply {
-            when {
-                target.targetParts.isNotEmpty() -> {
-                    setUBackgroundColor(ContextCompat.getColor(context, R.color.success100))
-                    setTextColor(ContextCompat.getColor(context, R.color.success700))
-                    setText(context.getString(R.string.part))
-                }
+        if (target.targetChapterId != null) {
+            binding.ubuttonChapter.visible()
+            binding.spaceCentralChapter.visible()
+        } else {
+            binding.ubuttonChapter.gone()
+            binding.spaceCentralChapter.gone()
+        }
 
-                target.targetSchoolId != null -> {
-                    setUBackgroundColor(ContextCompat.getColor(context, R.color.primary100))
-                    setTextColor(ContextCompat.getColor(context, R.color.primary600))
-                    setText(context.getString(R.string.school))
-                }
+        if (target.targetSchoolId != null) {
+            binding.ubuttonSchool.visible()
+            binding.spaceChapterSchool.visible()
+        } else {
+            binding.ubuttonSchool.gone()
+            binding.spaceChapterSchool.gone()
+        }
 
-                target.targetChapterId != null -> {
-                    setUBackgroundColor(ContextCompat.getColor(context, R.color.neutral200))
-                    setTextColor(ContextCompat.getColor(context, R.color.neutral700))
-                    setText(context.getString(R.string.branch))
-                }
-
-                else -> {
-                    setUBackgroundColor(ContextCompat.getColor(context, R.color.neutral200))
-                    setTextColor(ContextCompat.getColor(context, R.color.neutral700))
-                    setText(context.getString(R.string.central))
-                }
-            }
+        if (target.targetParts.isNotEmpty()) {
+            binding.ubuttonPart.visible()
+            binding.spaceSchoolPart.visible()
+            binding.ubuttonPart.setText(target.targetParts.first())
+        } else {
+            binding.ubuttonPart.gone()
+            binding.spaceSchoolPart.gone()
         }
     }
 }

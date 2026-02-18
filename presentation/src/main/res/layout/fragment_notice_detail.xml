@@ -42,7 +42,7 @@
             android:layout_marginBottom="16dp"
             android:indeterminate="false"
             android:max="100"
-            android:progress="80"
+            android:progress="@{vm.uiState.readStatistics != null ? (int)(vm.uiState.readStatistics.readRate * 100) : 0}"
             app:indicatorColor="@color/success500"
             app:layout_constraintBottom_toTopOf="@id/text_check_unconfirmed"
             app:trackColor="@color/neutral200"
@@ -74,6 +74,7 @@
             app:layout_constraintTop_toTopOf="@id/image_check"
             app:layout_constraintBottom_toBottomOf="@id/image_check"
             app:layout_constraintEnd_toEndOf="@id/progressBar"
+            android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.totalCount) : "0"}'
             android:textColor="@color/neutral800"
             android:textAppearance="@style/Body"
             android:layout_width="wrap_content"
@@ -84,6 +85,7 @@
             app:layout_constraintTop_toTopOf="@id/image_check"
             app:layout_constraintBottom_toBottomOf="@id/image_check"
             app:layout_constraintEnd_toStartOf="@id/text_all_check"
+            android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.readCount) + "/" : "0/"}'
             android:textColor="@color/success500"
             android:textAppearance="@style/Body"
             android:layout_width="wrap_content"
@@ -143,37 +145,40 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
+<!--                <com.umc.presentation.component.UButton-->
+<!--                    android:id="@+id/ubutton_must_read"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_marginStart="24dp"-->
+<!--                    android:layout_marginTop="24dp"-->
+<!--                    android:visibility="@{vm.uiState.detail.mustRead ? View.VISIBLE : View.GONE}"-->
+<!--                    app:buttonElevation="0"-->
+<!--                    app:cardBackgroundColor="@color/warning500"-->
+<!--                    app:contentPaddingBottom="2dp"-->
+<!--                    app:contentPaddingLeft="8dp"-->
+<!--                    app:contentPaddingRight="8dp"-->
+<!--                    app:contentPaddingTop="2dp"-->
+<!--                    app:cornerRadius="4dp"-->
+<!--                    app:layout_constraintStart_toStartOf="parent"-->
+<!--                    app:layout_constraintTop_toBottomOf="@id/image_back"-->
+<!--                    app:text="필독"-->
+<!--                    app:textAppearance="@style/Caption1Bold"-->
+<!--                    app:textColor="@color/neutral000" />-->
+
+<!--                <Space-->
+<!--                    android:id="@+id/space_between"-->
+<!--                    android:layout_width="4dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    app:layout_constraintStart_toEndOf="@id/ubutton_must_read"-->
+<!--                    app:layout_constraintTop_toTopOf="@id/ubutton_must_read" />-->
+
                 <com.umc.presentation.component.UButton
-                    android:id="@+id/ubutton_must_read"
+                    android:id="@+id/ubutton_central"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
                     android:layout_marginStart="24dp"
-                    android:layout_marginTop="24dp"
-                    app:buttonElevation="0"
-                    app:cardBackgroundColor="@color/warning500"
-                    app:contentPaddingBottom="2dp"
-                    app:contentPaddingLeft="8dp"
-                    app:contentPaddingRight="8dp"
-                    app:contentPaddingTop="2dp"
-                    app:cornerRadius="4dp"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/image_back"
-                    app:text="필독"
-                    app:textAppearance="@style/Caption1Bold"
-                    app:textColor="@color/neutral000" />
-
-                <Space
-                    android:id="@+id/space_between"
-                    android:layout_width="4dp"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintStart_toEndOf="@id/ubutton_must_read"
-                    app:layout_constraintTop_toTopOf="@id/ubutton_must_read" />
-
-                <com.umc.presentation.component.UButton
-                    android:id="@+id/ubutton_category"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:visibility="@{vm.uiState.detail.targetInfo != null ? View.VISIBLE : View.GONE}"
                     app:buttonElevation="0"
                     app:cardBackgroundColor="@color/neutral200"
                     app:contentPaddingBottom="2dp"
@@ -181,22 +186,100 @@
                     app:contentPaddingRight="8dp"
                     app:contentPaddingTop="2dp"
                     app:cornerRadius="4dp"
-                    app:layout_constraintStart_toEndOf="@id/space_between"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/image_back"
                     app:text="중앙"
                     app:textAppearance="@style/Caption1Bold"
                     app:textColor="@color/neutral700" />
+
+                <Space
+                    android:id="@+id/space_central_chapter"
+                    android:layout_width="4dp"
+                    android:layout_height="wrap_content"
+                    android:visibility="@{vm.uiState.detail.targetInfo.targetChapterId != null ? View.VISIBLE : View.GONE}"
+                    app:layout_constraintStart_toEndOf="@id/ubutton_central"
+                    app:layout_constraintTop_toTopOf="@id/ubutton_central" />
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/ubutton_chapter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="@{(vm.uiState.detail.targetInfo.targetChapterId != null) ? View.VISIBLE : View.GONE}"
+                    app:buttonElevation="0"
+                    app:cardBackgroundColor="@color/neutral200"
+                    app:contentPaddingBottom="2dp"
+                    app:contentPaddingLeft="8dp"
+                    app:contentPaddingRight="8dp"
+                    app:contentPaddingTop="2dp"
+                    app:cornerRadius="4dp"
+                    app:layout_constraintStart_toEndOf="@id/space_central_chapter"
+                    app:layout_constraintTop_toTopOf="@id/ubutton_central"
+                    app:text="지부"
+                    app:textAppearance="@style/Caption1Bold"
+                    app:textColor="@color/neutral700" />
+
+                <Space
+                    android:id="@+id/space_chapter_school"
+                    android:layout_width="4dp"
+                    android:layout_height="wrap_content"
+                    android:visibility="@{(vm.uiState.detail.targetInfo.targetSchoolId != null) ? View.VISIBLE : View.GONE}"
+                    app:layout_constraintStart_toEndOf="@id/ubutton_chapter"
+                    app:layout_constraintTop_toTopOf="@id/ubutton_chapter" />
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/ubutton_school"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="@{(vm.uiState.detail.targetInfo.targetSchoolId != null) ? View.VISIBLE : View.GONE}"
+                    app:buttonElevation="0"
+                    app:cardBackgroundColor="@color/primary100"
+                    app:contentPaddingBottom="2dp"
+                    app:contentPaddingLeft="8dp"
+                    app:contentPaddingRight="8dp"
+                    app:contentPaddingTop="2dp"
+                    app:cornerRadius="4dp"
+                    app:layout_constraintStart_toEndOf="@id/space_chapter_school"
+                    app:layout_constraintTop_toTopOf="@id/ubutton_central"
+                    app:text="학교"
+                    app:textAppearance="@style/Caption1Bold"
+                    app:textColor="@color/primary600" />
+
+                <Space
+                    android:id="@+id/space_school_part"
+                    android:layout_width="4dp"
+                    android:layout_height="wrap_content"
+                    android:visibility="@{(!vm.uiState.detail.targetInfo.targetParts.empty) ? View.VISIBLE : View.GONE}"
+                    app:layout_constraintStart_toEndOf="@id/ubutton_school"
+                    app:layout_constraintTop_toTopOf="@id/ubutton_school" />
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/ubutton_part"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="@{(!vm.uiState.detail.targetInfo.targetParts.empty) ? View.VISIBLE : View.GONE}"
+                    app:buttonElevation="0"
+                    app:cardBackgroundColor="@color/success100"
+                    app:contentPaddingBottom="2dp"
+                    app:contentPaddingLeft="8dp"
+                    app:contentPaddingRight="8dp"
+                    app:contentPaddingTop="2dp"
+                    app:cornerRadius="4dp"
+                    app:layout_constraintStart_toEndOf="@id/space_school_part"
+                    app:layout_constraintTop_toTopOf="@id/ubutton_central"
+                    app:text="@{vm.uiState.detail.targetInfo.targetParts[0]}"
+                    app:textAppearance="@style/Caption1Bold"
+                    app:textColor="@color/success700" />
 
                 <TextView
                     android:id="@+id/text_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="24dp"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="64dp"
                     android:text="@{vm.uiState.detail.title}"
                     android:textAppearance="@style/Title2Bold"
                     android:textColor="@color/neutral800"
-                    app:layout_constraintTop_toBottomOf="@id/ubutton_category"
+                    app:layout_constraintTop_toBottomOf="@id/image_back"
                     tools:text="[필독] 12기 활동 " />
 
                 <com.google.android.material.imageview.ShapeableImageView
@@ -217,6 +300,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:text="@{vm.uiState.authorNickname}"
                     android:textAppearance="@style/Subheadline"
                     android:textColor="@color/neutral800"
                     app:layout_constraintBottom_toBottomOf="@id/image_profile"
@@ -229,6 +313,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:text="@{vm.uiState.formattedCreatedAt}"
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral600"
                     app:layout_constraintStart_toStartOf="@id/text_title"
@@ -276,6 +361,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:text="@{vm.uiState.formattedTargetInfo}"
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral600"
                     app:layout_constraintStart_toEndOf="@id/text_divider2"
@@ -304,6 +390,7 @@
                     android:background="@drawable/bg_rect_neutral100_radius12"
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="11dp"
+                    android:visibility="@{vm.uiState.detail.links == null || vm.uiState.detail.links.empty ? View.GONE : View.VISIBLE}"
                     app:layout_constraintTop_toBottomOf="@id/text_content">
 
                     <ImageView
@@ -330,14 +417,19 @@
 
                     <TextView
                         android:id="@+id/text_link"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="2dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="@{vm.uiState.detail.links.size() == 0 ? &quot;&quot; : vm.uiState.detail.links.get(0).url}"
                         android:textAppearance="@style/Footnote"
                         android:textColor="@color/neutral600"
+                        android:ellipsize="end"
+                        android:maxLines="1"
                         app:layout_constraintStart_toEndOf="@id/image_link_title"
                         app:layout_constraintTop_toBottomOf="@id/text_link_title"
+                        app:layout_constraintEnd_toStartOf="@id/image_arrow"
                         tools:text="https://example.com/guideline" />
 
                     <ImageView
@@ -360,7 +452,7 @@
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_rect_neutral100_radius12"
                     android:padding="16dp"
-                    android:visibility="@{vm.uiState.detail.vote.title.empty ? View.GONE : View.VISIBLE}"
+                    android:visibility="@{vm.uiState.detail.vote == null || vm.uiState.detail.vote.title.empty ? View.GONE : View.VISIBLE}"
                     app:layout_constraintTop_toBottomOf="@id/layout_link">
 
                     <ImageView
@@ -399,7 +491,7 @@
                         app:cornerRadius="4dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:text="진행중"
+                        app:text="@{vm.uiState.detail.vote.status}"
                         app:textAppearance="@style/Caption1Bold"
                         app:textColor="@color/neutral000" />
 
@@ -408,6 +500,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:text="@{vm.uiState.formattedVoteCondition}"
                         android:textAppearance="@style/Footnote"
                         android:textColor="@color/neutral600"
                         app:layout_constraintStart_toStartOf="parent"

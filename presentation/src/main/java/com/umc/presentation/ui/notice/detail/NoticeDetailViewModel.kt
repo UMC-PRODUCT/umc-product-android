@@ -1,10 +1,14 @@
 package com.umc.presentation.ui.notice.detail
 
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UDomainFormat.parseDateTime
 import com.umc.domain.model.notice.ChallengerReadInfo
 import com.umc.domain.model.notice.NoticeDetail
 import com.umc.domain.model.notice.NoticeReadStatistics
+import com.umc.domain.model.notice.NoticeTarget
+import com.umc.domain.model.notice.NoticeVote
 import com.umc.domain.model.notice.NoticeVoteOption
+import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
 import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatisticsUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatusUseCase
@@ -17,12 +21,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class NoticeDetailViewModel @Inject
-constructor(
+class NoticeDetailViewModel @Inject constructor(
     private val getNoticeDetailUseCase: GetNoticeDetailUseCase,
     private val getNoticeReadStatusUseCase: GetNoticeReadStatusUseCase,
     private val getNoticeReadStatisticsUseCase: GetNoticeReadStatisticsUseCase,
-    private val sendNoticeReminderUseCase: SendNoticeReminderUseCase
+    private val sendNoticeReminderUseCase: SendNoticeReminderUseCase,
+    private val getChallengerDetailUseCase: GetChallengerDetailUseCase,
 ) : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
     NoticeFragmentUiState()
 ) {
@@ -50,11 +54,66 @@ constructor(
                 detail.vote?.mySelectedOptionIds?.let { ids ->
                     selectedOptionIds = ids.toMutableSet()
                 }
-                updateState { copy(detail = detail, isLoading = false) }
+                
+                val formattedCreatedAt = getFormattedCreatedAt(detail.createdAt)
+                val formattedTargetInfo = getFormattedTargetInfo(detail.targetInfo)
+                val formattedVoteCondition = getFormattedVoteCondition(detail.vote)
+
+                updateState { 
+                    copy(
+                        detail = detail, 
+                        isLoading = false,
+                        formattedCreatedAt = formattedCreatedAt,
+                        formattedTargetInfo = formattedTargetInfo,
+                        formattedVoteCondition = formattedVoteCondition
+                    ) 
+                }
+                
+                // Load author nickname from challenger detail
+                loadAuthorNickname(detail.authorChallengerId)
             },
             errorCallback = {
                 updateState { copy(isLoading = false) }
                 emitEvent(NoticeFragmentEvent.ShowError("공지사항을 불러오는데 실패했습니다"))
+            }
+        )
+    }
+
+    private fun getFormattedCreatedAt(date: String): String {
+        return if (date.isNotBlank()) {
+            date.parseDateTime().first
+        } else ""
+    }
+
+    private fun getFormattedTargetInfo(targetInfo: NoticeTarget): String {
+        val chapterStr = if (targetInfo.targetChapterId != null) "/${targetInfo.targetChapterId}장" else "/전체"
+        val partsStr = if (targetInfo.targetParts.isNotEmpty()) "/${targetInfo.targetParts[0]}" else ""
+        return "수신대상: ${targetInfo.targetGisuId + 1}기${chapterStr}${partsStr}"
+    }
+
+    private fun getFormattedVoteCondition(vote: NoticeVote?): String {
+        return vote?.let {
+            val choiceType = if (it.allowMultipleChoice) "복수선택" else "단일선택"
+            val anonymity = if (it.isAnonymous) "익명" else "신원공개"
+            val startDate = it.startDateKst.parseDateTime().first
+            val endDate = it.endDateKst.parseDateTime().first
+            "${startDate} ~ ${endDate} • ${choiceType} • ${anonymity}"
+        } ?: ""
+    }
+
+    private fun loadAuthorNickname(authorChallengerId: Long) = viewModelScope.launch {
+        if (authorChallengerId <= 0) {
+            updateState { copy(authorNickname = "알수없음") }
+            return@launch
+        }
+
+        resultResponse(
+            response = getChallengerDetailUseCase(authorChallengerId),
+            successCallback = { challengerDetail ->
+                updateState { copy(authorNickname = challengerDetail.name) }
+            },
+            errorCallback = {
+                updateState { copy(authorNickname = "알수없음") }
             }
         )
     }
@@ -172,6 +231,7 @@ constructor(
         return selectedOptionIds.contains(optionId)
     }
 
+
 }
 
 
@@ -182,7 +242,11 @@ data class NoticeFragmentUiState(
     val selectedVoteOptionIds: List<Long> = emptyList(),
     val isLoading: Boolean = false,
     val isLoadingReadStatus: Boolean = false,
-    val isSendingReminder: Boolean = false
+    val isSendingReminder: Boolean = false,
+    val formattedVoteCondition: String = "",
+    val formattedTargetInfo: String = "",
+    val formattedCreatedAt: String = "",
+    val authorNickname: String = ""
 ) : UiState
 
 sealed interface NoticeFragmentEvent : UiEvent {

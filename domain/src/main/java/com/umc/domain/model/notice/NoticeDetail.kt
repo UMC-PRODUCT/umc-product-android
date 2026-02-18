@@ -5,6 +5,7 @@ data class NoticeDetail(
     val title: String = "",
     val content: String = "",
     val authorChallengerId: Long = -1L,
+    val mustRead: Boolean = false, // TODO 현재 필독 여부 추가
     val vote: NoticeVote? = null,
     val images: List<NoticeImage> = emptyList(),
     val links: List<NoticeLink> = emptyList(),
