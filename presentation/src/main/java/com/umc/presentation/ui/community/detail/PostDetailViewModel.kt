@@ -340,6 +340,29 @@ constructor(
         }
     }
 
+    //댓글 메뉴 바 눌렀을 때, 자신 댓글인지 판단
+    fun onCommentMenuClicked(item: CommentItem) {
+        viewModelScope.launch {
+            resultResponse(
+                // 댓글 권한 조회를 위해 POST_COMMENT 타입 사용 (없다면 Enum에 추가 필요)
+                response = getAuthAccessUseCase(ResourceType.COMMUNITY_COMMENT, item.commentId),
+                successCallback = { authAccess ->
+                    // DELETE 또는 EDIT 권한이 있는지 체크 (팀장님 로직 적용)
+                    val isAuthor = authAccess.permissions.any { p ->
+                        (p.type == PermissionType.DELETE || p.type == PermissionType.EDIT)
+                                && p.hasPermission
+                    }
+
+                    // 권한 결과와 함께 이벤트를 던져 Fragment가 팝업을 띄우게 함
+                    emitEvent(PostDetailFragmentEvent.ShowCommentMenu(item, isAuthor))
+                },
+                errorCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("권한 정보를 불러오지 못했습니다."))
+                }
+            )
+        }
+    }
+
     //댓글 추가
     fun onClickCommentAdd(){
         emitEvent(PostDetailFragmentEvent.OnClickCommentAdd)
@@ -454,6 +477,9 @@ sealed interface PostDetailFragmentEvent : UiEvent {
 
     //댓글 신고하기 이벤트
     data class ReportComment(val commentId: Long) : PostDetailFragmentEvent
+
+    //댓글 메뉴 누를시 권한 확인 이벤트
+    data class ShowCommentMenu(val item: CommentItem, val canDelete: Boolean) : PostDetailFragmentEvent
 
     //오류 토스트 이벤트
     data class ShowErrorToast(val errorMessage: String) : PostDetailFragmentEvent
