@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.act.study.submit.model
 
 data class AdminActStudySubmitItemUiModel(
+    val challengerWorkbookId: Long,
     val userId: Long,
     val name: String,
     val nickname: String,
@@ -8,7 +9,8 @@ data class AdminActStudySubmitItemUiModel(
     val weekText: String,
     val studyTitle: String,
     val submitUrl: String,
-    val isBest: Boolean = false,
+    val schoolName: String,
+    val profileImageUrl: String?
 )
 
 

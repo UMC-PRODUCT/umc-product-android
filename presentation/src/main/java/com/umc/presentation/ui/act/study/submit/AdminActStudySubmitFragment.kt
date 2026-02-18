@@ -21,7 +21,9 @@ import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitEvent
 import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitItemUiModel
 import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitState
 import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AdminActStudySubmitFragment :
     BaseFragment<
             FragmentAdminStudySubmitBinding,
@@ -44,6 +46,8 @@ class AdminActStudySubmitFragment :
     override fun initView() {
         binding.vm = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
+        binding.state = AdminActStudySubmitState()
+
 
         adapter = AdminActStudySubmitAdapter(
             onClickBest = { item -> viewModel.onAction(AdminActStudySubmitAction.ClickBest(item)) },
@@ -69,7 +73,7 @@ class AdminActStudySubmitFragment :
 
         binding.clWeekDropdown.setOnClickListener {
             AdminActStudySubmitWeekSelectBottomSheet(
-                weeks = (1..7).toList(),
+                weeks = latestState.availableWeeks,
                 onSelect = { week ->
                     viewModel.onAction(AdminActStudySubmitAction.SelectWeek(week))
                 }
@@ -77,16 +81,17 @@ class AdminActStudySubmitFragment :
         }
 
 
+
         binding.clGroupDropdown.setOnClickListener {
             AdminActStudySubmitGroupSelectBottomSheet(
-                groups = latestState.groupOptions,
+                groups = viewModel.getGroupNames(latestState),
                 onSelect = { name ->
                     viewModel.onAction(AdminActStudySubmitAction.SelectGroupName(name))
                 }
             ).show(parentFragmentManager, "admin_act_study_submit_group")
         }
 
-        viewModel.loadDummy()
+        viewModel.loadWorkbookSubmissions(reset = true)
     }
 
     override fun initStates() {
@@ -126,10 +131,7 @@ class AdminActStudySubmitFragment :
         bestDialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         bestDialog?.show()
 
-        dialogBinding.ivClose.setOnClickListener {
-            viewModel.onAction(AdminActStudySubmitAction.DismissBestDialog)
-            bestDialog?.dismiss()
-        }
+
 
         dialogBinding.btnCancel.setOnClickListener {
             viewModel.onAction(AdminActStudySubmitAction.DismissBestDialog)
@@ -137,8 +139,12 @@ class AdminActStudySubmitFragment :
         }
 
         dialogBinding.btnConfirm.setOnClickListener {
-            val reason = dialogBinding.etReason.getText()?.toString().orEmpty()
-            viewModel.onAction(AdminActStudySubmitAction.ConfirmBest(reason))
+            val reason = dialogBinding.etReason.getText()?.toString()?.trim().orEmpty()
+            viewModel.onAction(
+                AdminActStudySubmitAction.ConfirmBest(
+                    reason = reason.ifBlank { null }
+                )
+            )
             bestDialog?.dismiss()
         }
     }

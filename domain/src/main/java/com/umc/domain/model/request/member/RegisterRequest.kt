@@ -11,8 +11,11 @@ data class RegisterRequest(
     val schoolId: Int,
     val profileImageId: String?,
     val termsAgreements: List<TermsAgreement> = listOf(
-        TermsAgreement(4),TermsAgreement(2),TermsAgreement(1)
+        TermsAgreement(termsId = 14, isAgreed = true),
+        TermsAgreement(termsId = 13, isAgreed = true),
+        TermsAgreement(termsId = 15, isAgreed = true)
     )
+
 )
 
 @Serializable

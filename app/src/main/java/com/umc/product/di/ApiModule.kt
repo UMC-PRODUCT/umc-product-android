@@ -8,8 +8,10 @@ import com.umc.data.api.ChallengerApi
 import com.umc.data.api.CommunityApi
 import com.umc.data.api.OrganizationApi
 import com.umc.data.api.ScheduleApi
+import com.umc.data.api.CurriculumApi
 import com.umc.data.api.StorageApi
 import com.umc.data.api.TermsApi
+import com.umc.data.api.WorkbookApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -68,6 +70,21 @@ object ApiModule {
 
     @Singleton
     @Provides
+    fun provideCurriculumApi(@AuthRetrofit retrofit: Retrofit): CurriculumApi {
+        return retrofit.create(CurriculumApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWorkbookApi(
+        @AuthRetrofit retrofit: Retrofit
+    ): WorkbookApi =
+        retrofit.create(WorkbookApi::class.java)
+
+
+
+    @Singleton
+    @Provides
     fun provideStorageApi(@AuthRetrofit retrofit: Retrofit): StorageApi {
         return retrofit.create(StorageApi::class.java)
     }
@@ -83,4 +100,6 @@ object ApiModule {
     fun provideAuthorizeApi(@AuthRetrofit retrofit: Retrofit): AuthorizeApi {
         return retrofit.create(AuthorizeApi::class.java)
     }
+
+
 }

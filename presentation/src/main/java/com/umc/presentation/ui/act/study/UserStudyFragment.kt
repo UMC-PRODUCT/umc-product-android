@@ -5,7 +5,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentUserStudyBinding
 import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class UserStudyFragment :
     BaseFragment<FragmentUserStudyBinding, UserStudyState, UserStudyEvent, UserStudyViewModel>(
         FragmentUserStudyBinding::inflate,
@@ -19,6 +21,7 @@ class UserStudyFragment :
             onToggle = { index -> viewModel.toggleExpand(index) },
             onLongApprove = { itemId -> viewModel.debugApprove(itemId) },
             onSubmitClick = { itemId, link -> viewModel.onSubmitClick(itemId, link) },
+            onConfirmClick = { id -> viewModel.onConfirmClick(id) },
         )
 
         binding.rvUserStudy.layoutManager = LinearLayoutManager(requireContext())
@@ -38,7 +41,7 @@ class UserStudyFragment :
 
                 launch {
                     binding.apply {
-                        tvPart.text = "WEB PART CURRICULUM"
+                        tvPart.text = "${state.part.label.uppercase()} PART CURRICULUM"
                         tvTitle.text = state.title
                         tvPercent.text = state.percentText
                         progress.progress = state.progress

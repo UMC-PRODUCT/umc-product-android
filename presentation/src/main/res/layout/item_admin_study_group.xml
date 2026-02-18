@@ -79,7 +79,7 @@
                 android:id="@+id/iv_setting"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_document"
+                android:src="@drawable/ic_setting"
                 app:tint="@color/neutral500"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"

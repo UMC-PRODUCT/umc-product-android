@@ -24,6 +24,8 @@ import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupState
 import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
+
+
 @AndroidEntryPoint
 class AdminStudyGroupFragment :
     BaseFragment<
