@@ -35,6 +35,9 @@ object Endpoints {
         const val DELETE_POINT = "$CHALLENGER/points/{challengerPointId}"
 
         const val SEARCH_CURSOR = "$CHALLENGER/search/cursor"
+
+        const val CHALLENGER_RECORD = "api/v1/challenger-record"
+        const val CHALLENGER_RECORD_MEMBER = "api/v1/challenger-record/member"
     }
 
     object Member {

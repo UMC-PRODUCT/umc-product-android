@@ -1,18 +1,19 @@
-package com.umc.presentation.ui.signUp.fail
+package com.umc.presentation.ui.signUp.fail.code
 
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.base.UiState
 import com.umc.presentation.databinding.FragmentSignUpFailBinding
+import com.umc.presentation.databinding.FragmentSignUpFailCodeBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class SignUpFailFragment : BaseFragment<FragmentSignUpFailBinding, UiState, SignUpFailEvent, SignUpFailViewModel>(
-    FragmentSignUpFailBinding::inflate,
+class SignUpFailCodeFragment : BaseFragment<FragmentSignUpFailCodeBinding, SignUpFailCodeState, SignUpFailCodeEvent, SignUpFailCodeViewModel>(
+    FragmentSignUpFailCodeBinding::inflate,
 ) {
-    override val viewModel: SignUpFailViewModel by viewModels()
+    override val viewModel: SignUpFailCodeViewModel by viewModels()
 
     override fun initView() {
         binding.apply {
@@ -38,15 +39,14 @@ class SignUpFailFragment : BaseFragment<FragmentSignUpFailBinding, UiState, Sign
         }
     }
 
-    override fun handleEvent(event: SignUpFailEvent) {
+    override fun handleEvent(event: SignUpFailCodeEvent) {
         when (event) {
-            SignUpFailEvent.MoveToBack -> findNavController().popBackStack()
-            SignUpFailEvent.MoveToHomePage -> {
+            SignUpFailCodeEvent.MoveToBack -> findNavController().popBackStack()
+            SignUpFailCodeEvent.MoveToHomePage -> {
                 //TODO 공식 홈페이지 url 이동
             }
-            SignUpFailEvent.MoveToCode -> {
-                val action = SignUpFailFragmentDirections.actionSignUpFailToCode()
-                findNavController().navigate(action)
+            SignUpFailCodeEvent.MoveToHome -> {
+
             }
         }
     }

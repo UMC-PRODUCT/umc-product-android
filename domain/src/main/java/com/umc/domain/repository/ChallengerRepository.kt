@@ -7,6 +7,7 @@ import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.home.ParticipantSearchPage
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
+import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
 
 interface ChallengerRepository {
     // 유저용 상세 정보
@@ -36,4 +37,7 @@ interface ChallengerRepository {
     ): ApiState<AdminChallengerList>
 
     suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit>
+
+    // 챌린저 기록 멤버 추가 (코드로 참여)
+    suspend fun addChallengerRecordMember(request: ChallengerRecordMemberRequest): ApiState<Unit>
 }

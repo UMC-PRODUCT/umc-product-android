@@ -4,6 +4,7 @@ import com.umc.data.response.challenger.ChallengerCursorResponse
 import com.umc.data.response.challenger.ChallengerResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
+import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -39,5 +40,10 @@ interface ChallengerApi {
     @DELETE(Endpoints.Challenger.DELETE_POINT)
     suspend fun deleteChallengerPoint(
         @Path("challengerPointId") challengerPointId: Long
+    ): ApiResponse<Unit>
+
+    @POST(Endpoints.Challenger.CHALLENGER_RECORD_MEMBER)
+    suspend fun addChallengerRecordMember(
+        @Body request: ChallengerRecordMemberRequest
     ): ApiResponse<Unit>
 }
