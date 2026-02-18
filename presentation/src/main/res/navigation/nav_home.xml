@@ -6,6 +6,8 @@
     app:startDestination="@id/homeFragment"
     >
 
+    <include app:graph="@navigation/nav_act" />
+
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.umc.presentation.ui.home.HomeFragment"
@@ -48,6 +50,17 @@
             android:id="@+id/action_planDetail_to_planAdd"
             app:destination="@id/planAddFragment"/>
 
+        <action
+            android:id="@+id/action_planDetail_to_nav_act"
+            app:destination="@id/nav_act"
+            app:popUpTo="@id/nav_home"
+            app:popUpToInclusive="true"
+            app:launchSingleTop="true"
+            >
+
+
+        </action>
+
         <argument
             android:name="scheduleId"
             app:argType="long"
@@ -71,6 +84,7 @@
             android:name="scheduleId"
             app:argType="long"
             android:defaultValue="-1L" />
+
 
     </fragment>
 
