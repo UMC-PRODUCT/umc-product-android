@@ -9,5 +9,8 @@ enum class ResourceType {
     WORKBOOK_SUBMISSION, //
     ATTENDANCE_SHEET,    //
     ATTENDANCE_RECORD,   //
+    COMMUNITY_POST, //
+    COMMUNITY_COMMENT, //
+
     UNKNOWN
 }

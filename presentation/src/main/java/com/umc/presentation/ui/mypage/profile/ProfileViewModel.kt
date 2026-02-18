@@ -76,6 +76,7 @@ class ProfileViewModel @Inject constructor(
             //2. 운영진 기록이 있으면 싹다 만들기
             summary.fromRoles.forEach { roleItem ->
                     //담당 파트가 있으면 (웹 파트장)
+                Log.d("log_mypage", "운영 IN: ${roleItem}")
                     val item = if (roleItem.responsiblePart != null) {
                         UserActiveItem(
                             generation = generationText,
@@ -94,16 +95,19 @@ class ProfileViewModel @Inject constructor(
                             position = roleLabel
                         )
                     }
+                    Log.d("log_mypage", "결과: ${item}")
                     activeHistory.add(item)
                 }
 
             //3. 챌린저 기록이 있으면 싹 다 만들기
             summary.fromRecords.forEach { recordItem ->
+                Log.d("log_mypage", "챌린저: ${recordItem}")
                 val item = UserActiveItem(
                     generation = generationText,
                     partName = "${recordItem.responsiblePart} Part",
                     position = "챌린저"
                 )
+                Log.d("log_mypage", "결과: ${item}")
                 activeHistory.add(item)
             }
         }
