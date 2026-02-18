@@ -20,11 +20,12 @@ interface CurriculumRemoteDataSource {
     ): ApiState<Unit>
 
     suspend fun getWorkbookSubmissions(
-        weekNo: Int?,
+        weekNo: Int,
         studyGroupId: Long?,
         cursor: Long?,
         size: Int,
     ): ApiState<WorkbookSubmissionsResponse>
+
 
     suspend fun getStudyGroups(
         schoolId: Long,

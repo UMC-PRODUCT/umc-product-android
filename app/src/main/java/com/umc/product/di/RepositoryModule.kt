@@ -32,6 +32,8 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.umc.domain.repository.workbook.WorkbookRepository
+
 
 /**얘는 data <-> domain을 연결하는 역할
  * data 영역에서 api 호출 결과를 domain에 정의된 data class에 맞게 이쁘게 만들어서 보내주기

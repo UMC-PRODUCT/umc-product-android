@@ -131,10 +131,7 @@ class AdminActStudySubmitFragment :
         bestDialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         bestDialog?.show()
 
-        dialogBinding.ivClose.setOnClickListener {
-            viewModel.onAction(AdminActStudySubmitAction.DismissBestDialog)
-            bestDialog?.dismiss()
-        }
+
 
         dialogBinding.btnCancel.setOnClickListener {
             viewModel.onAction(AdminActStudySubmitAction.DismissBestDialog)
@@ -142,8 +139,12 @@ class AdminActStudySubmitFragment :
         }
 
         dialogBinding.btnConfirm.setOnClickListener {
-            val reason = dialogBinding.etReason.getText()?.toString().orEmpty()
-            viewModel.onAction(AdminActStudySubmitAction.ConfirmBest(reason))
+            val reason = dialogBinding.etReason.getText()?.toString()?.trim().orEmpty()
+            viewModel.onAction(
+                AdminActStudySubmitAction.ConfirmBest(
+                    reason = reason.ifBlank { null }
+                )
+            )
             bestDialog?.dismiss()
         }
     }

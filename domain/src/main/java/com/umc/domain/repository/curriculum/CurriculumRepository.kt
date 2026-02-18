@@ -14,11 +14,12 @@ interface CurriculumRepository {
 
 
     suspend fun getWorkbookSubmissions(
-        weekNo: Int?,
-        studyGroupId: Long?,
-        cursor: Long?,
-        size: Int
+        weekNo: Int,
+        studyGroupId: Long? = null,
+        cursor: Long? = null,
+        size: Int = 20
     ): ApiState<CursorPage<WorkbookSubmissionItem>>
+
 
     suspend fun getStudyGroups(
         schoolId: Long,

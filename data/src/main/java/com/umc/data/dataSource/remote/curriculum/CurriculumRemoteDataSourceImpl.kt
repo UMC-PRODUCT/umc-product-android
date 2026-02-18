@@ -47,18 +47,21 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun getWorkbookSubmissions(
-        weekNo: Int?,
+        weekNo: Int,
         studyGroupId: Long?,
         cursor: Long?,
-        size: Int,
-    ): ApiState<WorkbookSubmissionsResponse> = fetch {
-        curriculumApi.getWorkbookSubmissions(
-            weekNo = weekNo,
-            studyGroupId = studyGroupId,
-            cursor = cursor,
-            size = size,
-        )
+        size: Int
+    ): ApiState<WorkbookSubmissionsResponse> {
+        return fetch {
+            curriculumApi.getWorkbookSubmissions(
+                weekNo = weekNo,
+                studyGroupId = studyGroupId,
+                cursor = cursor,
+                size = size
+            )
+        }
     }
+
 
     override suspend fun getStudyGroups(
         schoolId: Long,

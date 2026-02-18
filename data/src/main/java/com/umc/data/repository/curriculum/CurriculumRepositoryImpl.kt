@@ -31,7 +31,7 @@ class CurriculumRepositoryImpl @Inject constructor(
     ) = remote.submitChallengerWorkbook(challengerWorkbookId, submission)
 
     override suspend fun getWorkbookSubmissions(
-        weekNo: Int?,
+        weekNo: Int,
         studyGroupId: Long?,
         cursor: Long?,
         size: Int
@@ -39,6 +39,8 @@ class CurriculumRepositoryImpl @Inject constructor(
         return remote.getWorkbookSubmissions(weekNo, studyGroupId, cursor, size)
             .map { response -> response.toDomain() }
     }
+
+
 
     override suspend fun getStudyGroups(
         schoolId: Long,

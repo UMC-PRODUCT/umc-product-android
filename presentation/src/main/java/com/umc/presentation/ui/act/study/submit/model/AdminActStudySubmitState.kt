@@ -12,7 +12,7 @@ data class AdminActStudySubmitState(
     val availableWeeks: List<Int> = emptyList(),
 
     val selectedGroupId: Long? = null,
-    val selectedWeek: Int? = null,
+    val selectedWeek: Int = 10,
 
     val items: List<AdminActStudySubmitItemUiModel> = emptyList(),
 

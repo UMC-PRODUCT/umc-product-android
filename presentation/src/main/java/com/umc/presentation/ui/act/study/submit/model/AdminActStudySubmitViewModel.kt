@@ -27,7 +27,6 @@ class AdminActStudySubmitViewModel @Inject constructor(
 
     init {
         loadFilterData()
-        loadWorkbookSubmissions(reset = true)
     }
 
     fun onAction(action: AdminActStudySubmitAction) {
@@ -137,11 +136,27 @@ class AdminActStudySubmitViewModel @Inject constructor(
             }
 
             when (val res = getAvailableWeeksUseCase()) {
-                is ApiState.Success -> updateState { copy(availableWeeks = res.data) }
-                is ApiState.Fail -> Unit
+                is ApiState.Success -> {
+                    val weeks = res.data
+                    val defaultWeek = weeks.firstOrNull() ?: 10 // 10주차거 테스트하느라 일단 박아놨습니다..
+
+                    updateState {
+                        copy(
+                            availableWeeks = weeks,
+                            selectedWeek = defaultWeek
+                        )
+                    }
+                    loadWorkbookSubmissions(reset = true)
+                }
+
+                is ApiState.Fail -> {
+                    updateState { copy(selectedWeek = 10) }
+                    loadWorkbookSubmissions(reset = true)
+                }
             }
         }
     }
+
 
     fun loadWorkbookSubmissions(reset: Boolean) {
         viewModelScope.launch {
@@ -159,9 +174,8 @@ class AdminActStudySubmitViewModel @Inject constructor(
                 is ApiState.Success -> {
                     val page = res.data
                     val newItems = page.content
-                        .filter { it.status == "SUBMITTED" }
+                        .filter { it.status == "SUBMITTED" || it.status == "PASS" }
                         .map { it.toUiModel(state.selectedWeek) }
-
                     updateState {
                         copy(
                             items = if (reset) newItems else items + newItems,

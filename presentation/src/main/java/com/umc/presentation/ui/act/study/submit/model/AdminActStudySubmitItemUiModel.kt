@@ -9,7 +9,8 @@ data class AdminActStudySubmitItemUiModel(
     val weekText: String,
     val studyTitle: String,
     val submitUrl: String,
-
+    val schoolName: String,
+    val profileImageUrl: String?
 )
 
 

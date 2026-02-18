@@ -29,11 +29,12 @@ interface CurriculumApi {
 
     @GET(Endpoints.Curriculum.WORKBOOK_SUBMISSIONS)
     suspend fun getWorkbookSubmissions(
-        @Query("weekNo") weekNo: Int?,
-        @Query("studyGroupId") studyGroupId: Long?,
-        @Query("cursor") cursor: Long?,
-        @Query("size") size: Int
+        @Query("weekNo") weekNo: Int,
+        @Query("studyGroupId") studyGroupId: Long? = null,
+        @Query("cursor") cursor: Long? = null,
+        @Query("size") size: Int = 20
     ): ApiResponse<WorkbookSubmissionsResponse>
+
 
     @GET(Endpoints.Curriculum.STUDY_GROUPS)
     suspend fun getStudyGroups(

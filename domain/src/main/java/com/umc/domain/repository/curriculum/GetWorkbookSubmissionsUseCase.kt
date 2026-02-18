@@ -7,7 +7,7 @@ class GetWorkbookSubmissionsUseCase @Inject constructor(
     private val repo: CurriculumRepository,
 ) {
     suspend operator fun invoke(
-        weekNo: Int?,
+        weekNo: Int,
         studyGroupId: Long?,
         cursor: Long?,
         size: Int = 20,
