@@ -157,7 +157,6 @@ class NoticeViewModel @Inject constructor(
     ) = viewModelScope.launch {
         val state = uiState.value
 
-        // 로딩 중이거나, 마지막 페이지면 중단 (새로고침이 아닐 때)
         if (state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
 
         updateState { copy(isPageLoading = true) }
