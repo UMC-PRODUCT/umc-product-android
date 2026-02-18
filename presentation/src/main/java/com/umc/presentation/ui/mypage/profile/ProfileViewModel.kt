@@ -55,6 +55,7 @@ class ProfileViewModel @Inject constructor(
                         userInfo = userInfo,
                     )
                 }
+                Log.d("log_mypage", "userInfo: $userInfo")
                 settingUserInfoToUI(userInfo)
             }
         }

@@ -1,5 +1,6 @@
 package com.umc.data.dataSource.remote.member
 
+import com.umc.data.request.member.UpdateMyLinkRequest
 import com.umc.data.request.member.UpdateMyProfileRequest
 import com.umc.data.response.JwtLoginResponse
 import com.umc.data.response.member.MemberResponse
@@ -12,6 +13,7 @@ interface MemberRemoteDataSource {
     suspend fun register(request: RegisterRequest): ApiState<JwtLoginResponse>
 
     suspend fun updateMyProfile(request: UpdateMyProfileRequest): ApiState<MemberResponse>
+    suspend fun updateMyLink(request: UpdateMyLinkRequest): ApiState<MemberResponse>
     suspend fun deleteUser(): ApiState<Unit>
 }
 
