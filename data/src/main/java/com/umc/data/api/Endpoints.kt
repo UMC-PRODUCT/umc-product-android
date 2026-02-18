@@ -20,6 +20,7 @@ object Endpoints {
         const val APPROVE = "$ATTENDANCE/{recordId}/approve"
         const val REJECT = "$ATTENDANCE/{recordId}/reject"
         const val HISTORY = "$ATTENDANCE/history"
+        const val CHALLENGER_HISTORY = "$ATTENDANCE/challenger/{challengerId}/history"
     }
 
     object Challenger {

@@ -95,7 +95,7 @@ class CheckAvailableAdapter(
 
             binding.layoutFailReasonContainer.setOnClickListener {
                 if (!uiModel.isWithinRange) {
-                    onReasonClick(uiModel.session.id)
+                    onReasonClick(uiModel.session.sheetId)
                 }
             }
 

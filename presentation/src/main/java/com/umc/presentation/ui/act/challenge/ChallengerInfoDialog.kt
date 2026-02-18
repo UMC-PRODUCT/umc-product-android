@@ -13,6 +13,7 @@ import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.presentation.databinding.DialogChallengerInfoBinding
 import com.umc.presentation.ui.act.adapter.ChallengerInfoHistoryAdapter
 import androidx.core.graphics.drawable.toDrawable
+import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.presentation.extension.px
 
 class ChallengerInfoDialog(
@@ -21,6 +22,8 @@ class ChallengerInfoDialog(
 
     private var _binding: DialogChallengerInfoBinding? = null
     private val binding get() = _binding!!
+
+    private val historyAdapter = ChallengerInfoHistoryAdapter()
 
     override fun onResume() {
         super.onResume()
@@ -58,7 +61,27 @@ class ChallengerInfoDialog(
                 }
             })
         }
+
         historyAdapter.submitList(model.history)
+
+        // 아이템이 3개 이상일 때 높이 고정 로직
+        if (model.history.size > 3) {
+            binding.rvHistory.post {
+                val viewHolder = binding.rvHistory.findViewHolderForAdapterPosition(0)
+                val itemHeight = viewHolder?.itemView?.height ?: 0
+
+                if (itemHeight > 0) {
+                    val spacing = 12.px
+                    val verticalPadding = 32.px
+
+                    val totalHeight = (itemHeight * 3) + (spacing * 2) + verticalPadding
+
+                    binding.rvHistory.layoutParams = binding.rvHistory.layoutParams.apply {
+                        height = totalHeight
+                    }
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {
