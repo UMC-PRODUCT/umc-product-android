@@ -40,7 +40,7 @@ constructor(
                             content = it,
                             plusDay = plusDay)
                         }
-                        settingScheduleAuthAceess(it.scheduleId)
+                        settingScheduleAuthAccess(it.scheduleId)
 
                         convertPlanDetailItemToUiState(it, plusDay)
                     },
@@ -52,7 +52,7 @@ constructor(
         }
 
         //일정 게시글 접근 권한 조회 및 UI 설정 함수
-        fun settingScheduleAuthAceess(scheduleId : Long){
+        fun settingScheduleAuthAccess(scheduleId : Long){
             viewModelScope.launch {
                 resultResponse(
                     response = getAuthAccessUseCase(ResourceType.SCHEDULE, scheduleId),

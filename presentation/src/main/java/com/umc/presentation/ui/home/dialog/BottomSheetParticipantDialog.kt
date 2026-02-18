@@ -35,7 +35,7 @@ class BottomSheetParticipantDialog(
     private var _binding: LayoutBottomSheetParticipantAddBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: BottomSheetParticipantViewModel by viewModels()
+    private val viewModel: BottomSheetParticipantViewModel by viewModels({ requireParentFragment() })
     private lateinit var addAdapter: BottomSheetAddParticipantAdapter
     private lateinit var searchAdapter: BottomSheetSearchParticipantAdapter
 

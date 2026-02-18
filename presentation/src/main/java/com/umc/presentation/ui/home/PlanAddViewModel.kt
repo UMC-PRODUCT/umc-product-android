@@ -102,6 +102,9 @@ constructor(
                             selectedOnes.size <= 3 -> selectedOnes.joinToString(", ") { it.name }
                             else -> "${selectedOnes.take(3).joinToString(", ") { it.name }} 외 ${selectedOnes.size - 3}개"
                         }
+
+                        //4. 참석자 매칭
+
                         
                         //4. 갱신 저장
                         copy(
@@ -121,7 +124,7 @@ constructor(
                             startTimeText = startTimeTextFormatted,
                             endDateText = detail.endDay,
                             endTimeText = endTimeTextFormatted,
-                            selectedCategoriesString = summaryText
+                            selectedCategoriesString = summaryText,
                         )
                     }
                 },
