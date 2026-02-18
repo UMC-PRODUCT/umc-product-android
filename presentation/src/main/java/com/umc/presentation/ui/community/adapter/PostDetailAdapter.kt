@@ -87,7 +87,6 @@ class PostDetailAdapter(
             //여기서 좋아요 / 싫어요 클릭 시 delegate로 ㄱㄱ
             fun bind(item: ContentItem) {
                 binding.item = item
-                /**TODO 작성자 userimage 주세요**/
                 Log.d("log_mypage", "작성자: ${item.userProfileImage}")
                 binding.itemCircleimvProfile.load(item.userProfileImage) {
                     crossfade(true)

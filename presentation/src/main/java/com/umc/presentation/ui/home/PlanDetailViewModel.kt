@@ -15,6 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 
@@ -76,7 +77,13 @@ constructor(
 
         //PlanDetailItem에서 UI에 맞게 데이터를 조절하는 함수
         fun convertPlanDetailItemToUiState(item: PlanDetailItem, plusDay: Int) {
-            val finalDDayValue = item.dDay + plusDay //시작 시간과 진행 상황 합치기
+            val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
+            val startDate = LocalDate.parse(item.startDay, formatter)
+            val today = LocalDate.now()
+            val dDay = ChronoUnit.DAYS.between(today, startDate).toInt()
+
+
+            val finalDDayValue = dDay + plusDay //시작 시간과 진행 상황 합치기
 
             val dDayString: String //D-몇일 포맷
             val isTodayCheck: Boolean //금일 인가? -> 버튼 생성

@@ -53,11 +53,9 @@
         <action
             android:id="@+id/action_planDetail_to_nav_act"
             app:destination="@id/nav_act"
-            app:popUpTo="@id/nav_home"
-            app:popUpToInclusive="true"
-            app:launchSingleTop="true"
-            >
+            app:popUpTo="@id/homeFragment"
 
+            >
 
         </action>
 

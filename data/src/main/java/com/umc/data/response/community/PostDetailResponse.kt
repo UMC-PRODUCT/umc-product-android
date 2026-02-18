@@ -15,7 +15,8 @@ data class PostDetailResponse(
     @SerializedName("category") val category: String,          // 게시글 카테고리
     @SerializedName("authorId")val authorId: Long,             // 게시글 작성자 ID
     @SerializedName("authorName")val authorName: String,       // 게시글 작성자 이름
-    @SerializedName("userPart") val userPart: String,           // 게시글 작성자 유저파트
+    @SerializedName("authorProfileImage") val authorProfileImage: String?, // 게시글 작성자 프로필 이미지
+    @SerializedName("authorPart") val authorPart: String,           // 게시글 작성자 유저파트
     @SerializedName("lightningInfo") val lightningInfo: LightningInfoResponse?, // 번개 모임 상세 정보 (일반글은 null)
     @SerializedName("commentCount") val commentCount: Int,      // 댓글 수
     @SerializedName("writeTime") val writeTime: String?,        // 게시글 생성 시간
@@ -50,8 +51,9 @@ data class PostDetailResponse(
                 comments = this.commentCount,
                 content = this.content,
                 lightningInfo = this.lightningInfo?.toLightningInfoDomain(),
+                userProfileImage = this.authorProfileImage ?: "",
                 userPart = try {
-                    UserPart.valueOf(this.userPart.uppercase())
+                    UserPart.valueOf(this.authorPart.uppercase())
                 } catch (e: Exception) {
                     UserPart.ANDROID
                 },
