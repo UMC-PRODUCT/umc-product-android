@@ -185,8 +185,8 @@ class UserCheckViewModel @Inject constructor(
     private fun dummyPendingUser(hasLateReason: Boolean, lateReason: String?) = AdminPendingUser(
         id = 999L,
         name = "유엠씨",
-        nickname = "프로덕트",
-        university = "안드대학교",
+        nickname = "umc",
+        university = "UMC대학교",
         profileImageUrl = null,
         requestTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
         hasLateReason = hasLateReason,
@@ -226,6 +226,14 @@ class UserCheckViewModel @Inject constructor(
             }
             copy(availableSessions = newList)
         }
+    }
+
+    /**
+     * 더미 데이터 전체 리셋 (개발/테스트 전용)
+     * User/Admin 모든 상태가 초기값으로 돌아감
+     */
+    fun resetDummyData() {
+        dummyRepo.reset()
     }
 }
 

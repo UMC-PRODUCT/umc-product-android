@@ -25,8 +25,141 @@ class DummyAttendanceRepository @Inject constructor() {
     // ──────────────────────────────────────────────
     // User 세션
     // ──────────────────────────────────────────────
-    private val _userSessions = MutableStateFlow(
-        listOf(
+    private val _userSessions = MutableStateFlow(INITIAL_USER_SESSIONS)
+    val userSessions: StateFlow<List<UserCheckAvailable>> = _userSessions.asStateFlow()
+
+    fun updateUserSessionStatus(
+        sheetId: Long,
+        status: CheckAvailableStatus,
+        isLocationCertified: Boolean?
+    ) {
+        _userSessions.value = _userSessions.value.map { session ->
+            if (session.sheetId == sheetId) {
+                session.copy(status = status, isLocationCertified = isLocationCertified)
+            } else session
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    // 출석 히스토리 — 초기 더미 3개 + 승인/반려 시 추가됨
+    // ──────────────────────────────────────────────
+    private val _userHistory = MutableStateFlow(INITIAL_USER_HISTORY)
+    val userHistory: StateFlow<List<UserCheckHistory>> = _userHistory.asStateFlow()
+
+    // ──────────────────────────────────────────────
+    // Admin 세션
+    // ──────────────────────────────────────────────
+    private val _adminSessions = MutableStateFlow(INITIAL_ADMIN_SESSIONS)
+    val adminSessions: StateFlow<List<AdminSessionCheck>> = _adminSessions.asStateFlow()
+
+    // sessionId → sheetId 역방향 매핑 (더미 전용)
+    private val sessionIdToSheetId = mapOf(
+        1L to 101L,
+        2L to 102L,
+        3L to 103L,
+        4L to 104L
+    )
+
+    // 유엠씨 유저 ID (더미 전용)
+    private val DUMMY_USER_ID = 999L
+
+    // ──────────────────────────────────────────────
+    // Admin 세션 함수
+    // ──────────────────────────────────────────────
+
+    fun addPendingUser(sessionId: Long, user: AdminPendingUser) {
+        _adminSessions.value = _adminSessions.value.map { session ->
+            if (session.id == sessionId && session.pendingUsers.none { it.id == user.id }) {
+                val updated = session.pendingUsers + user
+                session.copy(pendingUsers = updated, pendingCount = updated.size)
+            } else session
+        }
+    }
+
+    fun updateAdminSessionAfterApproval(attendanceId: Long) {
+        val targetSession = _adminSessions.value.find { session ->
+            session.pendingUsers.any { it.id == attendanceId }
+        }
+
+        _adminSessions.value = _adminSessions.value.map { session ->
+            val target = session.pendingUsers.find { it.id == attendanceId } ?: return@map session
+            val updated = session.pendingUsers.filter { it.id != attendanceId }
+            val newAttended = session.attendedChallengers + 1
+            val newRate = if (session.totalChallengers > 0) (newAttended * 100) / session.totalChallengers else 0
+            session.copy(
+                pendingUsers = updated,
+                pendingCount = updated.size,
+                attendedChallengers = newAttended,
+                attendanceRate = newRate
+            )
+        }
+
+        // 유엠씨 승인 시: 히스토리 PRESENT 추가 + Available COMPLETED 전환
+        if (attendanceId == DUMMY_USER_ID && targetSession != null) {
+            addHistoryFromSession(targetSession, CheckHistoryStatus.PRESENT)
+            val sheetId = sessionIdToSheetId[targetSession.id] ?: return
+            updateUserSessionStatus(sheetId, CheckAvailableStatus.COMPLETED, isLocationCertified = true)
+        }
+    }
+
+    fun updateAdminSessionAfterRejection(attendanceId: Long) {
+        val targetSession = _adminSessions.value.find { session ->
+            session.pendingUsers.any { it.id == attendanceId }
+        }
+
+        _adminSessions.value = _adminSessions.value.map { session ->
+            val target = session.pendingUsers.find { it.id == attendanceId } ?: return@map session
+            val updated = session.pendingUsers.filter { it.id != attendanceId }
+            session.copy(pendingUsers = updated, pendingCount = updated.size)
+        }
+
+        // 유엠씨 반려 시: 히스토리 ABSENT 추가 + Available COMPLETED 전환
+        if (attendanceId == DUMMY_USER_ID && targetSession != null) {
+            addHistoryFromSession(targetSession, CheckHistoryStatus.ABSENT)
+            val sheetId = sessionIdToSheetId[targetSession.id] ?: return
+            updateUserSessionStatus(sheetId, CheckAvailableStatus.COMPLETED, isLocationCertified = false)
+        }
+    }
+
+    /**
+     * AdminSessionCheck 정보를 기반으로 히스토리 항목 생성 후 추가
+     * 태그는 sessionId → sheetId → userSessions에서 조회하여 아이콘 일치
+     * 이미 동일 세션 히스토리가 있으면 상태만 업데이트
+     */
+    private fun addHistoryFromSession(session: AdminSessionCheck, status: CheckHistoryStatus) {
+        val sheetId = sessionIdToSheetId[session.id]
+        val tags = _userSessions.value.find { it.sheetId == sheetId }?.tags
+
+        val newHistory = UserCheckHistory(
+            id = session.id.toInt(),
+            title = session.title,
+            startTime = session.startTime,
+            endTime = session.endTime,
+            status = status,
+            tags = tags
+        )
+
+        val current = _userHistory.value
+        val existingIndex = current.indexOfFirst { it.id == newHistory.id }
+
+        _userHistory.value = if (existingIndex != -1) {
+            current.toMutableList().also { it[existingIndex] = newHistory }
+        } else {
+            listOf(newHistory) + current
+        }
+    }
+
+    /**
+     * 더미 데이터를 초기 상태로 리셋 (개발/테스트 전용)
+     */
+    fun reset() {
+        _userSessions.value = INITIAL_USER_SESSIONS
+        _userHistory.value = INITIAL_USER_HISTORY
+        _adminSessions.value = INITIAL_ADMIN_SESSIONS
+    }
+
+    companion object {
+        private val INITIAL_USER_SESSIONS = listOf(
             UserCheckAvailable(
                 id = 1L, sheetId = 101L,
                 title = "9기 데모데이",
@@ -68,26 +201,8 @@ class DummyAttendanceRepository @Inject constructor() {
                 isLocationCertified = true
             )
         )
-    )
-    val userSessions: StateFlow<List<UserCheckAvailable>> = _userSessions.asStateFlow()
 
-    fun updateUserSessionStatus(
-        sheetId: Long,
-        status: CheckAvailableStatus,
-        isLocationCertified: Boolean?
-    ) {
-        _userSessions.value = _userSessions.value.map { session ->
-            if (session.sheetId == sheetId) {
-                session.copy(status = status, isLocationCertified = isLocationCertified)
-            } else session
-        }
-    }
-
-    // ──────────────────────────────────────────────
-    // 출석 히스토리 — 초기 더미 3개 + 승인/반려 시 추가됨
-    // ──────────────────────────────────────────────
-    private val _userHistory = MutableStateFlow(
-        listOf(
+        private val INITIAL_USER_HISTORY = listOf(
             UserCheckHistory(
                 id = 101,
                 title = "안드로이드 스터디",
@@ -113,14 +228,8 @@ class DummyAttendanceRepository @Inject constructor() {
                 tags = listOf(CategoryType.LEADERSHIP)
             )
         )
-    )
-    val userHistory: StateFlow<List<UserCheckHistory>> = _userHistory.asStateFlow()
 
-    // ──────────────────────────────────────────────
-    // Admin 세션
-    // ──────────────────────────────────────────────
-    private val _adminSessions = MutableStateFlow(
-        listOf(
+        private val INITIAL_ADMIN_SESSIONS = listOf(
             AdminSessionCheck(
                 id = 1L, title = "9기 데모데이", date = "2025-05-20",
                 startTime = "11:00", endTime = "17:00",
@@ -137,7 +246,8 @@ class DummyAttendanceRepository @Inject constructor() {
                     AdminPendingUser(
                         id = 202L, name = "박유수", nickname = "어헛차",
                         university = "숭실대학교", profileImageUrl = null,
-                        requestTime = "11:22", hasLateReason = true, lateReason = "교통 혼잡으로 인해 지각하였습니다."
+                        requestTime = "11:22", hasLateReason = true,
+                        lateReason = "교통 혼잡으로 인해 지각하였습니다."
                     )
                 )
             ),
@@ -171,105 +281,5 @@ class DummyAttendanceRepository @Inject constructor() {
                 pendingCount = 0, pendingUsers = emptyList()
             )
         )
-    )
-    val adminSessions: StateFlow<List<AdminSessionCheck>> = _adminSessions.asStateFlow()
-
-    fun addPendingUser(sessionId: Long, user: AdminPendingUser) {
-        _adminSessions.value = _adminSessions.value.map { session ->
-            if (session.id == sessionId && session.pendingUsers.none { it.id == user.id }) {
-                val updated = session.pendingUsers + user
-                session.copy(pendingUsers = updated, pendingCount = updated.size)
-            } else session
-        }
-    }
-
-    // sessionId → sheetId 역방향 매핑 (더미 전용)
-    private val sessionIdToSheetId = mapOf(
-        1L to 101L,
-        2L to 102L,
-        3L to 103L,
-        4L to 104L
-    )
-
-    // 유엠씨 유저 ID (더미 전용)
-    private val DUMMY_USER_ID = 999L
-
-    fun updateAdminSessionAfterApproval(attendanceId: Long) {
-        // 해당 유저가 속한 세션 찾기
-        val targetSession = _adminSessions.value.find { session ->
-            session.pendingUsers.any { it.id == attendanceId }
-        }
-
-        // Admin 세션 업데이트
-        _adminSessions.value = _adminSessions.value.map { session ->
-            val target = session.pendingUsers.find { it.id == attendanceId } ?: return@map session
-            val updated = session.pendingUsers.filter { it.id != attendanceId }
-            val newAttended = session.attendedChallengers + 1
-            val newRate = if (session.totalChallengers > 0) (newAttended * 100) / session.totalChallengers else 0
-            session.copy(
-                pendingUsers = updated,
-                pendingCount = updated.size,
-                attendedChallengers = newAttended,
-                attendanceRate = newRate
-            )
-        }
-
-        // 유엠씨 승인 시: 히스토리 PRESENT 추가 + Available COMPLETED 전환
-        if (attendanceId == DUMMY_USER_ID && targetSession != null) {
-            addHistoryFromSession(targetSession, CheckHistoryStatus.PRESENT)
-            val sheetId = sessionIdToSheetId[targetSession.id] ?: return
-            updateUserSessionStatus(sheetId, CheckAvailableStatus.COMPLETED, isLocationCertified = true)
-        }
-    }
-
-    fun updateAdminSessionAfterRejection(attendanceId: Long) {
-        // 해당 유저가 속한 세션 찾기
-        val targetSession = _adminSessions.value.find { session ->
-            session.pendingUsers.any { it.id == attendanceId }
-        }
-
-        // Admin 세션 업데이트
-        _adminSessions.value = _adminSessions.value.map { session ->
-            val target = session.pendingUsers.find { it.id == attendanceId } ?: return@map session
-            val updated = session.pendingUsers.filter { it.id != attendanceId }
-            session.copy(pendingUsers = updated, pendingCount = updated.size)
-        }
-
-        // 유엠씨 반려 시: 히스토리 ABSENT 추가 + Available COMPLETED 전환
-        if (attendanceId == DUMMY_USER_ID && targetSession != null) {
-            addHistoryFromSession(targetSession, CheckHistoryStatus.ABSENT)
-            val sheetId = sessionIdToSheetId[targetSession.id] ?: return
-            updateUserSessionStatus(sheetId, CheckAvailableStatus.COMPLETED, isLocationCertified = false)
-        }
-    }
-
-    /**
-     * AdminSessionCheck 정보를 기반으로 히스토리 항목 생성 후 추가
-     * 태그는 sessionId → sheetId → userSessions에서 조회하여 아이콘 일치
-     * 이미 동일 세션 히스토리가 있으면 상태만 업데이트
-     */
-    private fun addHistoryFromSession(session: AdminSessionCheck, status: CheckHistoryStatus) {
-        // userSessions에서 동일 세션의 태그 조회
-        val sheetId = sessionIdToSheetId[session.id]
-        val tags = _userSessions.value.find { it.sheetId == sheetId }?.tags
-
-        val newHistory = UserCheckHistory(
-            id = session.id.toInt(),
-            title = session.title,
-            startTime = session.startTime,
-            endTime = session.endTime,
-            status = status,
-            tags = tags
-        )
-
-        val current = _userHistory.value
-        val existingIndex = current.indexOfFirst { it.id == newHistory.id }
-
-        _userHistory.value = if (existingIndex != -1) {
-            // 이미 있으면 상태만 업데이트
-            current.toMutableList().also { it[existingIndex] = newHistory }
-        } else {
-            listOf(newHistory) + current
-        }
     }
 }

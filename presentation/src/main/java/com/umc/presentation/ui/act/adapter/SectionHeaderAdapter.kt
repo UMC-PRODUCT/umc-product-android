@@ -8,7 +8,8 @@ import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemSectionHeaderBinding
 
 class SectionHeaderAdapter(
-    private val title: String
+    private val title: String,
+    private val onCountClick: (() -> Unit)? = null   // n개 남음 버튼 클릭 콜백 (더미 전용)
 ) : RecyclerView.Adapter<SectionHeaderAdapter.ViewHolder>() {
 
     private var count: Int? = null
@@ -25,8 +26,10 @@ class SectionHeaderAdapter(
                     currentCount
                 )
                 binding.btnSectionCount.setText(formattedText)
+                binding.btnSectionCount.setOnClickListener { onCountClick?.invoke() }
             } else {
                 binding.btnSectionCount.visibility = View.GONE
+                binding.btnSectionCount.setOnClickListener(null)
             }
         }
     }
