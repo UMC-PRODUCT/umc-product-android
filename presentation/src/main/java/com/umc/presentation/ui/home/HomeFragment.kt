@@ -275,8 +275,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
     override fun onResume() {
 
         val current = viewModel.uiState.value.selectedDate
-        viewModel.getScheduleMonth(current.year, current.month)
-        viewModel.getUserInfo()
+        //viewModel.getScheduleMonth(current.year, current.month)
+        //viewModel.getUserInfo()
 
         super.onResume()
     }

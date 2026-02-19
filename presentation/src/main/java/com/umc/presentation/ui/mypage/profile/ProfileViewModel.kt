@@ -3,6 +3,8 @@ package com.umc.presentation.ui.mypage.profile
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.ChallengerRecord
+import com.umc.domain.model.ProfileInfo
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LinkType
 import com.umc.domain.model.enums.LoginType
@@ -35,6 +37,7 @@ class ProfileViewModel @Inject constructor(
 
     //초기화 작업
     init {
+        /*
         viewModelScope.launch {
             getUserInfoUseCase().collect { userInfo ->
                 updateState {
@@ -49,6 +52,8 @@ class ProfileViewModel @Inject constructor(
                 settingUserInfoToUI(userInfo)
             }
         }
+
+         */
 
     }
 
@@ -221,20 +226,73 @@ class ProfileViewModel @Inject constructor(
 data class ProfileFragmentUiState(
     //유저 정보 (고정)
     val loginType: LoginType = LoginType.KAKAO,
-    val myPart: String = "",
-    val userInfo : UserInfo = UserInfo(),
+    val myPart: String = "9기/Android",
+    val userInfo : UserInfo = UserInfo(
+        id = 12345L,
+        name = "박유수",
+        nickname = "어헛차",
+        email = "uhutcha@ssu.ac.kr", // 숭실대 이메일 예시
+        schoolId = 7130L,
+        schoolName = "숭실대학교",
+        profileImageLink = "", // 요청하신 대로 빈 값 처리
+        status = "ACTIVE",
+        roles = emptyList(),
+        challengerRecords = listOf(
+            ChallengerRecord(
+                101,
+                12345,
+                9,
+                9,
+                1,
+                "9기 안드로이드",
+                "ANDROID",
+                "ACTIVE",
+                emptyList(),
+                "박유수",
+                "어헛차",
+                "uhutcha@ssu.ac.kr",
+                7130,
+                "숭실대학교",
+                "",
+                "ACTIVE"
+            ),
+            ChallengerRecord(201, 12345, 8, 8, 2, "8기 안드로이드", "ANDROID", "COMPLETED", emptyList(), "박유수", "어헛차", "uhutcha@ssu.ac.kr", 7130, "숭실대학교", "", "ACTIVE")
+        ),
+        profile = ProfileInfo(
+            id = 1,
+            linkedIn = "https://linkedin.com/in/park-yu-su",
+            instagram = "@uhutcha_dev",
+            github = "https://github.com/Park-yu-su",
+            blog = "https://blog.naver.com/PostList.naver?blogId=uhutcha_7130",
+            personal = "https://parkyusu.me"
+        )
+    ),
 
 
     //유저 정보 (가변)
     val userProfileImageUri : Uri = Uri.EMPTY, //이미지 수정 시 먼저 보여주는 Uri (보내기 용도)
 
-    val githubLink: String = "",
+    val githubLink: String = "https://github.com/Park-yu-su",
     val linkedinLink: String = "",
-    val blogLink: String = "",
+    val blogLink: String = "https://blog.naver.com/PostList.naver?blogId=uhutcha_7130",
 
 
     //임시 정보
-    val myActiveHistory: List<UserActiveItem> = emptyList(),
+    val myActiveHistory: List<UserActiveItem> = listOf(
+        // [9기] 현재 활동 - 운영진 로직 (회장 & 파트장 동시 노출)
+        UserActiveItem(
+            generation = "9기",
+            partName = "Android Part",
+            position = "중앙 파트장"
+        ),
+
+        // [8기] 지난 활동 - 챌린저 및 스터디장
+        UserActiveItem(
+            generation = "8기",
+            partName = "Android Part",
+            position = "챌린저"
+        ),
+    ),
 
     ) : UiState
 
