@@ -1,7 +1,9 @@
 package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
-import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.act.check.AdminPendingUser
+import com.umc.domain.model.act.check.AdminSessionCheck
+import com.umc.domain.model.enums.AdminSessionStatus
 import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceApprovalUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceRejectionUseCase
@@ -24,7 +26,99 @@ class AdminCheckViewModel @Inject constructor(
 ) : BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
 
     init {
-        fetchAdminSessions()
+        loadDummyData()
+    }
+
+    private fun loadDummyData() {
+        val dummySessions = listOf(
+            AdminSessionCheck(
+                id = 1L,
+                title = "9기 데모데이",
+                date = "2025-05-20",
+                startTime = "11:00",
+                endTime = "17:00",
+                status = AdminSessionStatus.IN_PROGRESS,
+                attendanceRate = 80,
+                totalChallengers = 10,
+                attendedChallengers = 8,
+                pendingCount = 2,
+                pendingUsers = listOf(
+                    AdminPendingUser(
+                        id = 201L,
+                        name = "김민준",
+                        nickname = "minjun",
+                        university = "한국대학교",
+                        profileImageUrl = null,
+                        requestTime = "11:15",
+                        hasLateReason = true,
+                        lateReason = "교통 혼잡으로 인해 지각하였습니다."
+                    ),
+                    AdminPendingUser(
+                        id = 202L,
+                        name = "이서연",
+                        nickname = "seoyeon",
+                        university = "서울대학교",
+                        profileImageUrl = null,
+                        requestTime = "11:22",
+                        hasLateReason = false,
+                        lateReason = null
+                    )
+                )
+            ),
+            AdminSessionCheck(
+                id = 2L,
+                title = "9기 OT",
+                date = "2025-05-21",
+                startTime = "17:00",
+                endTime = "18:00",
+                status = AdminSessionStatus.IN_PROGRESS,
+                attendanceRate = 50,
+                totalChallengers = 10,
+                attendedChallengers = 5,
+                pendingCount = 1,
+                pendingUsers = listOf(
+                    AdminPendingUser(
+                        id = 203L,
+                        name = "박지호",
+                        nickname = "jiho",
+                        university = "연세대학교",
+                        profileImageUrl = null,
+                        requestTime = "17:08",
+                        hasLateReason = true,
+                        lateReason = "수업이 늦게 끝나서 지각하였습니다."
+                    )
+                )
+            ),
+            AdminSessionCheck(
+                id = 3L,
+                title = "PM Day",
+                date = "2025-05-19",
+                startTime = "18:00",
+                endTime = "20:00",
+                status = AdminSessionStatus.IN_PROGRESS,
+                attendanceRate = 70,
+                totalChallengers = 10,
+                attendedChallengers = 7,
+                pendingCount = 0,
+                pendingUsers = emptyList()
+            ),
+            AdminSessionCheck(
+                id = 4L,
+                title = "너디너리 해커톤",
+                date = "2025-05-18",
+                startTime = "13:00",
+                endTime = "15:00",
+                status = AdminSessionStatus.COMPLETED,
+                attendanceRate = 90,
+                totalChallengers = 10,
+                attendedChallengers = 9,
+                pendingCount = 0,
+                pendingUsers = emptyList()
+            )
+        )
+
+        val uiModels = dummySessions.map { AdminSessionUIModel(session = it) }
+        updateState { copy(adminSessions = uiModels) }
     }
 
     fun fetchAdminSessions() {

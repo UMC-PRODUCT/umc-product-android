@@ -3,7 +3,7 @@ package com.umc.presentation.ui.act.check
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.act.check.UserCheckHistory
-import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.model.request.attendance.AttendanceCheckRequest
@@ -32,8 +32,71 @@ class UserCheckViewModel @Inject constructor(
     private var lastUserLng: Double? = null
 
     init {
-        fetchAttendanceData()
-        fetchAttendanceHistory()
+        loadDummyData()
+    }
+
+    private fun loadDummyData() {
+        val dummySessions = listOf(
+            // 출석 전
+            UserCheckAvailable(
+                id = 1L,
+                sheetId = 101L,
+                title = "9기 데모데이",
+                tags = listOf(CategoryType.PRESENTATION),
+                startTime = "11:00",
+                endTime = "17:00",
+                status = CheckAvailableStatus.BEFORE,
+                latitude = 37.495608,
+                longitude = 127.072235,
+                address = "SETEC",
+                isLocationCertified = null
+            ),
+            // 출석 전
+            UserCheckAvailable(
+                id = 2L,
+                sheetId = 102L,
+                title = "9기 OT",
+                tags = listOf(CategoryType.ORIENTATION),
+                startTime = "17:00",
+                endTime = "18:00",
+                status = CheckAvailableStatus.BEFORE,
+                latitude = 37.655878,
+                longitude = 127.063968,
+                address = "서울여자대학교 50주년기념관 310호",
+                isLocationCertified = null
+            ),
+            // 3. 승인 대기
+            UserCheckAvailable(
+                id = 3L,
+                sheetId = 103L,
+                title = "PM Day",
+                tags = listOf(CategoryType.PROJECT),
+                startTime = "14:00",
+                endTime = "17:00",
+                status = CheckAvailableStatus.PENDING,
+                latitude = 37.582566,
+                longitude = 127.010063,
+                address = "한성대학교 상상관 203호",
+                isLocationCertified = true
+            ),
+            // 4. 출석 완료
+            UserCheckAvailable(
+                id = 4L,
+                sheetId = 104L,
+                title = "너디너리 해커톤",
+                tags = listOf(CategoryType.HACKATHON),
+                startTime = "13:00",
+                endTime = "07:00",
+                status = CheckAvailableStatus.COMPLETED,
+                latitude = 37.546760,
+                longitude = 126.949971,
+                address = "서울 창업허브 공덕 10층",
+                isLocationCertified = true
+            )
+        )
+
+        val list = dummySessions.map { CheckAvailableUIModel(session = it) }
+        updateState { copy(availableSessions = list, availableCount = list.size) }
     }
 
     private fun fetchAttendanceData() {
