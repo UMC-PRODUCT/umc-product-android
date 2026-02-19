@@ -1,7 +1,10 @@
 package com.umc.presentation.ui.mypage
 
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.ChallengerRecord
+import com.umc.domain.model.ProfileInfo
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.UserRole
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.TermsType
 import com.umc.domain.model.enums.UserChallengerRole
@@ -32,7 +35,7 @@ class MypageViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             //유저 정보 가져오기
-            getUserInfo()
+            //getUserInfo()
 
         }
     }
@@ -235,15 +238,54 @@ class MypageViewModel @Inject constructor(
 
 data class MypageFragmentUiState(
     // 현재 카카오 구글 로그인 2개로 비교하니 카카오를 기준으로 view 세팅
-    val userInfo: UserInfo = UserInfo(),
+    val userInfo: UserInfo = UserInfo(
+        id = 12345L,
+        name = "박유수",
+        nickname = "어헛차",
+        email = "uhutcha@ssu.ac.kr", // 숭실대 이메일 예시
+        schoolId = 7130L,
+        schoolName = "숭실대학교",
+        profileImageLink = "", // 요청하신 대로 빈 값 처리
+        status = "ACTIVE",
+        roles = emptyList(),
+        challengerRecords = listOf(
+            ChallengerRecord(
+                101,
+                12345,
+                9,
+                9,
+                1,
+                "9기 안드로이드",
+                "ANDROID",
+                "ACTIVE",
+                emptyList(),
+                "박유수",
+                "어헛차",
+                "uhutcha@ssu.ac.kr",
+                7130,
+                "숭실대학교",
+                "",
+                "ACTIVE"
+            ),
+            ChallengerRecord(201, 12345, 8, 8, 2, "8기 안드로이드", "ANDROID", "COMPLETED", emptyList(), "박유수", "어헛차", "uhutcha@ssu.ac.kr", 7130, "숭실대학교", "", "ACTIVE")
+        ),
+        profile = ProfileInfo(
+            id = 1,
+            linkedIn = "https://linkedin.com/in/park-yu-su",
+            instagram = "@uhutcha_dev",
+            github = "https://github.com/Park-yu-su",
+            blog = "https://blog.naver.com/PostList.naver?blogId=uhutcha_7130",
+            personal = "https://parkyusu.me"
+        )
+    ),
     val loginType: LoginType = LoginType.KAKAO,
     
     // 현재 직책
     val myRecentCarrer : String = "9기 Android 중앙 파트장",
 
     // 링크 데이터
-    val githubUrl : String = "",
-    val blogUrl : String = "",
+    val githubUrl : String = "https://github.com/Park-yu-su",
+    val blogUrl : String = "https://blog.naver.com/PostList.naver?blogId=uhutcha_7130",
     val linkedinUrl : String = "",
 
     // UMC 외부 링크

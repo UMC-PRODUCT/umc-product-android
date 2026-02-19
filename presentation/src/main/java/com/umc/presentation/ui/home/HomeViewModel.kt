@@ -45,10 +45,10 @@ class HomeViewModel @Inject constructor(
         updateState { copy(selectedDate = today) }
 
         //2. 유저 정보 가져오기
-        getUserInfo()
+        //getUserInfo()
 
         //3. 금일(월) 데이터 가져오기
-        getScheduleMonth(today.year, today.month)
+        //getScheduleMonth(today.year, today.month)
 
     }
 
@@ -314,6 +314,108 @@ data class HomeFragmentUiState(
     //일정 관련
     val dailyPlans: List<SchedulePlanItem> = emptyList(), //선택한 날들의 일정
     val allPlans: List<SchedulePlanItem> = listOf(
+        // --- 과거 일정 (isPast = true, dDay = null) ---
+        SchedulePlanItem(
+            id = 1,
+            title = "UMC 데모데이 준비",
+            time = "14:00",
+            date = "2026.02.13",
+            dayOfWeek = "FRI",
+            day = "13",
+            dDay = null,
+            isPast = true,
+            plusDay = 0
+        ),
+        SchedulePlanItem(
+            id = 2,
+            title = "최종 성적 확인",
+            time = "10:00",
+            date = "2026.02.14",
+            dayOfWeek = "SAT",
+            day = "14",
+            dDay = null,
+            isPast = true,
+            plusDay = 0
+        ),
+        SchedulePlanItem(
+            id = 3,
+            title = "UMC 중앙진 회의",
+            time = "18:00",
+            date = "2026.02.18",
+            dayOfWeek = "WED",
+            day = "18",
+            dDay = null,
+            isPast = true,
+            plusDay = 0
+        ),
+
+        // --- 오늘 및 미래 일정 (isPast = false, dDay 계산) ---
+        SchedulePlanItem(
+            id = 4,
+            title = "앱 안드로이드 배포",
+            time = "21:00",
+            date = "2026.02.20",
+            dayOfWeek = "FRI",
+            day = "20",
+            dDay = "D-Day",
+            isPast = false,
+            plusDay = 0
+        ),
+        SchedulePlanItem(
+            id = 5,
+            title = "앱 프로덕트 점검",
+            time = "15:00",
+            date = "2026.02.24",
+            dayOfWeek = "TUE",
+            day = "24",
+            dDay = "D-4",
+            isPast = false,
+            plusDay = 0
+        ),
+        SchedulePlanItem(
+            id = 5,
+            title = "앱 프로덕트 점검",
+            time = "15:00",
+            date = "2026.02.25",
+            dayOfWeek = "WED",
+            day = "25",
+            dDay = "D-5",
+            isPast = false,
+            plusDay = 1
+        ),
+        SchedulePlanItem(
+            id = 6,
+            title = "숭실대학교 개강",
+            time = "09:00",
+            date = "2026.03.02",
+            dayOfWeek = "MON",
+            day = "02",
+            dDay = "D-10", // 2026년 2월은 28일까지 있습니다.
+            isPast = false,
+            plusDay = 0
+        ),
+        SchedulePlanItem(
+            id = 7,
+            title = "아이디어톤",
+            time = "10:00",
+            date = "2026.03.27",
+            dayOfWeek = "FRI",
+            day = "27",
+            dDay = "D-35",
+            isPast = false,
+            plusDay = 0
+        ),
+        SchedulePlanItem(
+            id = 8,
+            title = "아이디어톤",
+            time = "13:00",
+            date = "2026.03.28",
+            dayOfWeek = "SAT",
+            day = "28",
+            dDay = "D-36",
+            isPast = false,
+            plusDay = 1 // 연속 일정 예시
+        )
     ), //월별 모든 일정
     val plusDays : Int = 0, //연속 날짜 처리 용도
 
