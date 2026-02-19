@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
 import com.umc.domain.usecase.attendance.GetAttendanceHistoryUseCase
@@ -15,7 +16,6 @@ import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
-import com.umc.domain.model.act.check.AdminPendingUser
 
 @HiltViewModel
 class UserCheckViewModel @Inject constructor(
@@ -30,7 +30,6 @@ class UserCheckViewModel @Inject constructor(
     private var lastUserLat: Double? = null
     private var lastUserLng: Double? = null
 
-    // sheetId → AdminSessionCheck.id 매핑 (더미 전용)
     private val sheetIdToSessionId = mapOf(
         101L to 1L,
         102L to 2L,
@@ -39,11 +38,25 @@ class UserCheckViewModel @Inject constructor(
     )
 
     init {
-        // Repository의 StateFlow를 구독 → ViewModel 재생성 시에도 최신 상태 반영
+        // 출석 가능 세션 구독
         viewModelScope.launch {
             dummyRepo.userSessions.collect { sessions ->
                 val list = sessions.map { CheckAvailableUIModel(session = it) }
                 updateState { copy(availableSessions = list, availableCount = list.size) }
+            }
+        }
+
+        // 출석 히스토리 구독 — 처음 화면 진입 시 더미 3개 바로 표시됨
+        viewModelScope.launch {
+            dummyRepo.userHistory.collect { histories ->
+                val historyUIList = histories.mapIndexed { index, history ->
+                    CheckHistoryUIModel(
+                        history = history,
+                        isFirst = index == 0,
+                        isLast = index == histories.size - 1
+                    )
+                }
+                updateState { copy(attendanceHistories = historyUIList) }
             }
         }
     }
@@ -107,22 +120,16 @@ class UserCheckViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 현 위치 기반 출석 요청
-     * 더미: Repository에 바로 저장 → AdminCheckViewModel이 언제 생성되든 최신 상태를 읽음
-     */
     fun requestAttendance(sheetId: Long) {
         val sessionUIModel = uiState.value.availableSessions.find { it.session.sheetId == sheetId }
         val isVerified = sessionUIModel?.isWithinRange ?: false
 
-        // 1. User 세션 상태 변경 (Repository → StateFlow → UI 자동 반영)
         dummyRepo.updateUserSessionStatus(
             sheetId = sheetId,
             status = CheckAvailableStatus.PENDING,
             isLocationCertified = isVerified
         )
 
-        // 2. Admin 승인 대기 목록에 유엠씨 추가
         val sessionId = sheetIdToSessionId[sheetId] ?: return
         dummyRepo.addPendingUser(
             sessionId = sessionId,
@@ -146,19 +153,13 @@ class UserCheckViewModel @Inject constructor(
         */
     }
 
-    /**
-     * 출석 사유 제출
-     * 더미: Repository에 바로 저장 → AdminCheckViewModel이 언제 생성되든 최신 상태를 읽음
-     */
     fun submitAttendanceReason(sheetId: Long, reason: String) {
-        // 1. User 세션 상태 변경 (Repository → StateFlow → UI 자동 반영)
         dummyRepo.updateUserSessionStatus(
             sheetId = sheetId,
             status = CheckAvailableStatus.PENDING,
             isLocationCertified = false
         )
 
-        // 2. Admin 승인 대기 목록에 유엠씨 추가 (사유 포함)
         val sessionId = sheetIdToSessionId[sheetId] ?: return
         dummyRepo.addPendingUser(
             sessionId = sessionId,
@@ -184,8 +185,8 @@ class UserCheckViewModel @Inject constructor(
     private fun dummyPendingUser(hasLateReason: Boolean, lateReason: String?) = AdminPendingUser(
         id = 999L,
         name = "유엠씨",
-        nickname = "umc",
-        university = "UMC대학교",
+        nickname = "프로덕트",
+        university = "안드대학교",
         profileImageUrl = null,
         requestTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
         hasLateReason = hasLateReason,

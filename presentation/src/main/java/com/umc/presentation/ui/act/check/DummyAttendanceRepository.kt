@@ -3,9 +3,11 @@ package com.umc.presentation.ui.act.check
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.act.check.UserCheckAvailable
+import com.umc.domain.model.act.check.UserCheckHistory
 import com.umc.domain.model.enums.AdminSessionStatus
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CheckAvailableStatus
+import com.umc.domain.model.enums.CheckHistoryStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -82,6 +84,39 @@ class DummyAttendanceRepository @Inject constructor() {
     }
 
     // ──────────────────────────────────────────────
+    // 출석 히스토리 (출석 / 지각 / 결석 각 1개)
+    // ──────────────────────────────────────────────
+    private val _userHistory = MutableStateFlow(
+        listOf(
+            UserCheckHistory(
+                id = 1,
+                title = "안드로이드 스터디",
+                startTime = "18:00",
+                endTime = "20:00",
+                status = CheckHistoryStatus.PRESENT,
+                tags = listOf(CategoryType.STUDY)
+            ),
+            UserCheckHistory(
+                id = 2,
+                title = "네트워킹데이",
+                startTime = "12:00",
+                endTime = "17:00",
+                status = CheckHistoryStatus.LATE,
+                tags = listOf(CategoryType.NETWORKING)
+            ),
+            UserCheckHistory(
+                id = 3,
+                title = "9기 LT",
+                startTime = "13:00",
+                endTime = "07:00",
+                status = CheckHistoryStatus.ABSENT,
+                tags = listOf(CategoryType.LEADERSHIP)
+            )
+        )
+    )
+    val userHistory: StateFlow<List<UserCheckHistory>> = _userHistory.asStateFlow()
+
+    // ──────────────────────────────────────────────
     // Admin 세션
     // ──────────────────────────────────────────────
     private val _adminSessions = MutableStateFlow(
@@ -90,19 +125,19 @@ class DummyAttendanceRepository @Inject constructor() {
                 id = 1L, title = "9기 데모데이", date = "2025-05-20",
                 startTime = "11:00", endTime = "17:00",
                 status = AdminSessionStatus.IN_PROGRESS,
-                attendanceRate = 80, totalChallengers = 10, attendedChallengers = 8,
+                attendanceRate = 70, totalChallengers = 10, attendedChallengers = 7,
                 pendingCount = 2,
                 pendingUsers = listOf(
                     AdminPendingUser(
-                        id = 201L, name = "김민준", nickname = "minjun",
-                        university = "한국대학교", profileImageUrl = null,
-                        requestTime = "11:15", hasLateReason = true,
-                        lateReason = "교통 혼잡으로 인해 지각하였습니다."
+                        id = 201L, name = "양지애", nickname = "나루",
+                        university = "서울여자대학교", profileImageUrl = null,
+                        requestTime = "11:15", hasLateReason = false,
+                        lateReason = null
                     ),
                     AdminPendingUser(
-                        id = 202L, name = "이서연", nickname = "seoyeon",
-                        university = "서울대학교", profileImageUrl = null,
-                        requestTime = "11:22", hasLateReason = false, lateReason = null
+                        id = 202L, name = "박유수", nickname = "어헛차",
+                        university = "숭실대학교", profileImageUrl = null,
+                        requestTime = "11:22", hasLateReason = true, lateReason = "교통 혼잡으로 인해 지각하였습니다."
                     )
                 )
             ),
@@ -114,8 +149,8 @@ class DummyAttendanceRepository @Inject constructor() {
                 pendingCount = 1,
                 pendingUsers = listOf(
                     AdminPendingUser(
-                        id = 203L, name = "박지호", nickname = "jiho",
-                        university = "연세대학교", profileImageUrl = null,
+                        id = 203L, name = "조경석", nickname = "조나단",
+                        university = "명지대학교", profileImageUrl = null,
                         requestTime = "17:08", hasLateReason = true,
                         lateReason = "수업이 늦게 끝나서 지각하였습니다."
                     )
