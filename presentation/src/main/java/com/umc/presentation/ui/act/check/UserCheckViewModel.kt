@@ -1,12 +1,7 @@
 package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
-import com.umc.domain.model.act.check.UserCheckAvailable
-import com.umc.domain.model.act.check.UserCheckHistory
-import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CheckAvailableStatus
-import com.umc.domain.model.enums.CheckHistoryStatus
-import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
 import com.umc.domain.usecase.attendance.GetAttendanceHistoryUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
@@ -17,7 +12,10 @@ import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import com.umc.domain.model.act.check.AdminPendingUser
 
 @HiltViewModel
 class UserCheckViewModel @Inject constructor(
@@ -25,78 +23,29 @@ class UserCheckViewModel @Inject constructor(
     private val getAttendanceHistoryUseCase: GetAttendanceHistoryUseCase,
     private val getScheduleDetailUseCase: GetScheduleDetailUseCase,
     private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase,
-    private val postAttendanceReasonUseCase: PostAttendanceReasonUseCase
+    private val postAttendanceReasonUseCase: PostAttendanceReasonUseCase,
+    private val dummyRepo: DummyAttendanceRepository
 ) : BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
 
     private var lastUserLat: Double? = null
     private var lastUserLng: Double? = null
 
+    // sheetId → AdminSessionCheck.id 매핑 (더미 전용)
+    private val sheetIdToSessionId = mapOf(
+        101L to 1L,
+        102L to 2L,
+        103L to 3L,
+        104L to 4L
+    )
+
     init {
-        loadDummyData()
-    }
-
-    private fun loadDummyData() {
-        val dummySessions = listOf(
-            // 출석 전
-            UserCheckAvailable(
-                id = 1L,
-                sheetId = 101L,
-                title = "9기 데모데이",
-                tags = listOf(CategoryType.PRESENTATION),
-                startTime = "11:00",
-                endTime = "17:00",
-                status = CheckAvailableStatus.BEFORE,
-                latitude = 37.495608,
-                longitude = 127.072235,
-                address = "SETEC",
-                isLocationCertified = null
-            ),
-            // 출석 전
-            UserCheckAvailable(
-                id = 2L,
-                sheetId = 102L,
-                title = "9기 OT",
-                tags = listOf(CategoryType.ORIENTATION),
-                startTime = "17:00",
-                endTime = "18:00",
-                status = CheckAvailableStatus.BEFORE,
-                latitude = 37.655878,
-                longitude = 127.063968,
-                address = "서울여자대학교 50주년기념관 310호",
-                isLocationCertified = null
-            ),
-            // 3. 승인 대기
-            UserCheckAvailable(
-                id = 3L,
-                sheetId = 103L,
-                title = "PM Day",
-                tags = listOf(CategoryType.PROJECT),
-                startTime = "14:00",
-                endTime = "17:00",
-                status = CheckAvailableStatus.PENDING,
-                latitude = 37.582566,
-                longitude = 127.010063,
-                address = "한성대학교 상상관 203호",
-                isLocationCertified = true
-            ),
-            // 4. 출석 완료
-            UserCheckAvailable(
-                id = 4L,
-                sheetId = 104L,
-                title = "너디너리 해커톤",
-                tags = listOf(CategoryType.HACKATHON),
-                startTime = "13:00",
-                endTime = "07:00",
-                status = CheckAvailableStatus.COMPLETED,
-                latitude = 37.546760,
-                longitude = 126.949971,
-                address = "서울 창업허브 공덕 10층",
-                isLocationCertified = true
-            )
-        )
-
-        val list = dummySessions.map { CheckAvailableUIModel(session = it) }
-        updateState { copy(availableSessions = list, availableCount = list.size) }
+        // Repository의 StateFlow를 구독 → ViewModel 재생성 시에도 최신 상태 반영
+        viewModelScope.launch {
+            dummyRepo.userSessions.collect { sessions ->
+                val list = sessions.map { CheckAvailableUIModel(session = it) }
+                updateState { copy(availableSessions = list, availableCount = list.size) }
+            }
+        }
     }
 
     private fun fetchAttendanceData() {
@@ -159,19 +108,34 @@ class UserCheckViewModel @Inject constructor(
     }
 
     /**
-     * 실시간 위치 기반 출석 요청
+     * 현 위치 기반 출석 요청
+     * 더미: Repository에 바로 저장 → AdminCheckViewModel이 언제 생성되든 최신 상태를 읽음
      */
     fun requestAttendance(sheetId: Long) {
         val sessionUIModel = uiState.value.availableSessions.find { it.session.sheetId == sheetId }
         val isVerified = sessionUIModel?.isWithinRange ?: false
 
+        // 1. User 세션 상태 변경 (Repository → StateFlow → UI 자동 반영)
+        dummyRepo.updateUserSessionStatus(
+            sheetId = sheetId,
+            status = CheckAvailableStatus.PENDING,
+            isLocationCertified = isVerified
+        )
+
+        // 2. Admin 승인 대기 목록에 유엠씨 추가
+        val sessionId = sheetIdToSessionId[sheetId] ?: return
+        dummyRepo.addPendingUser(
+            sessionId = sessionId,
+            user = dummyPendingUser(hasLateReason = false, lateReason = null)
+        )
+
+        /* API 연동 시 위 블록 전체를 아래로 교체
         val request = AttendanceCheckRequest(
             attendanceSheetId = sheetId,
             latitude = lastUserLat,
             longitude = lastUserLng,
             locationVerified = isVerified
         )
-
         viewModelScope.launch {
             resultResponse(
                 response = postAttendanceCheckUseCase(request),
@@ -179,12 +143,29 @@ class UserCheckViewModel @Inject constructor(
                 errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
             )
         }
+        */
     }
 
     /**
      * 출석 사유 제출
+     * 더미: Repository에 바로 저장 → AdminCheckViewModel이 언제 생성되든 최신 상태를 읽음
      */
     fun submitAttendanceReason(sheetId: Long, reason: String) {
+        // 1. User 세션 상태 변경 (Repository → StateFlow → UI 자동 반영)
+        dummyRepo.updateUserSessionStatus(
+            sheetId = sheetId,
+            status = CheckAvailableStatus.PENDING,
+            isLocationCertified = false
+        )
+
+        // 2. Admin 승인 대기 목록에 유엠씨 추가 (사유 포함)
+        val sessionId = sheetIdToSessionId[sheetId] ?: return
+        dummyRepo.addPendingUser(
+            sessionId = sessionId,
+            user = dummyPendingUser(hasLateReason = true, lateReason = reason)
+        )
+
+        /* API 연동 시 위 블록 전체를 아래로 교체
         viewModelScope.launch {
             resultResponse(
                 response = postAttendanceReasonUseCase(sheetId, reason),
@@ -197,18 +178,26 @@ class UserCheckViewModel @Inject constructor(
                 }
             )
         }
+        */
     }
 
-    /**
-     * 기존 위치 업데이트 및 거리 계산 로직 유지
-     */
+    private fun dummyPendingUser(hasLateReason: Boolean, lateReason: String?) = AdminPendingUser(
+        id = 999L,
+        name = "유엠씨",
+        nickname = "umc",
+        university = "UMC대학교",
+        profileImageUrl = null,
+        requestTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
+        hasLateReason = hasLateReason,
+        lateReason = lateReason
+    )
+
     fun updateLocation(userLat: Double, userLng: Double) {
         lastUserLat = userLat
         lastUserLng = userLng
 
         updateState {
             val updatedList = availableSessions.map { uiModel ->
-                // 좌표가 0.0이 아니고 유효한 경우에만 계산
                 if (uiModel.session.latitude != 0.0 && uiModel.session.longitude != 0.0) {
                     val results = FloatArray(1)
                     android.location.Location.distanceBetween(
@@ -225,9 +214,6 @@ class UserCheckViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 특정 아이템을 클릭했을 때 확장 상태를 토글 (기존 로직 유지)
-     */
     fun toggleSessionExpansion(sessionId: Long) {
         updateState {
             val newList = availableSessions.map { uiModel ->
