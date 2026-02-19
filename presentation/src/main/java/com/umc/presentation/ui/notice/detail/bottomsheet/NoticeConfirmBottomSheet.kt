@@ -55,9 +55,9 @@ class NoticeConfirmBottomSheet : BottomSheetDialogFragment() {
                 addInfiniteScrollListener(
                     onLoadMore = {
                         if (isShowingRead) {
-                            viewModel.loadMoreReadStatus()
+                            //viewModel.loadMoreReadStatus()
                         } else {
-                            viewModel.loadMoreUnReadStatus()
+                            //viewModel.loadMoreUnReadStatus()
                         }
                     }
                 )
@@ -153,7 +153,7 @@ class NoticeConfirmBottomSheet : BottomSheetDialogFragment() {
 
         // 미확인 목록이 비어있으면 로드, 아니면 바로 표시
         if (viewModel.uiState.value.unReadStatusList.isEmpty()) {
-            viewModel.loadUnReadStatus()
+            //viewModel.loadUnReadStatus()
         } else {
             updateList()
         }
@@ -171,7 +171,7 @@ class NoticeConfirmBottomSheet : BottomSheetDialogFragment() {
 
         // 확인 목록이 비어있으면 로드, 아니면 바로 표시
         if (viewModel.uiState.value.readStatusList.isEmpty()) {
-            viewModel.loadReadStatus()
+            //viewModel.loadReadStatus()
         } else {
             updateList()
         }

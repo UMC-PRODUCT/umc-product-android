@@ -1,35 +1,23 @@
 package com.umc.presentation.ui.notice.search
 
 import android.view.inputmethod.EditorInfo
-import androidx.lifecycle.viewModelScope
-import com.umc.domain.usecase.appDataStore.recent.AddRecentSearchNoticeUseCase
-import com.umc.domain.usecase.appDataStore.recent.ClearRecentSearchNoticeUseCase
-import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchNoticeUseCase
-import com.umc.domain.usecase.appDataStore.recent.RemoveRecentSearchNoticeUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NoticeSearchViewModel @Inject constructor(
-    private val getRecentSearchNoticeUseCase: GetRecentSearchNoticeUseCase,
-    private val addRecentSearchNoticeUseCase: AddRecentSearchNoticeUseCase,
-    private val removeRecentSearchNoticeUseCase: RemoveRecentSearchNoticeUseCase,
-    private val clearRecentSearchNoticeUseCase: ClearRecentSearchNoticeUseCase,
+    // 더미 데이터를 사용하므로 UseCase 주입 없음
 ) : BaseViewModel<NoticeSearchUiState, NoticeSearchEvent>(
     NoticeSearchUiState(),
 ) {
+    // 인메모리 최근 검색어 목록 (앱 재시작 시 초기화)
+    private val recentSearches = mutableListOf("데모데이", "OT", "세션")
+
     init {
-        viewModelScope.launch {
-            getRecentSearchNoticeUseCase().collect {
-                updateState {
-                    copy(recentSearchList = it)
-                }
-            }
-        }
+        updateState { copy(recentSearchList = recentSearches.toList()) }
     }
 
     fun onClickBack() {
@@ -38,9 +26,7 @@ class NoticeSearchViewModel @Inject constructor(
 
     fun onImeAction(actionId: Int, text: String): Boolean {
         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-            viewModelScope.launch {
-                addRecentSearchNoticeUseCase(text)
-            }
+            addRecentSearch(text)
             emitEvent(NoticeSearchEvent.MoveToSearchResult(text))
             return true
         }
@@ -48,27 +34,26 @@ class NoticeSearchViewModel @Inject constructor(
     }
 
     fun selectRecentSearch(keyword: String) {
-        viewModelScope.launch {
-            addRecentSearchNoticeUseCase(keyword)
-        }
-        updateState {
-            copy(
-                query = keyword,
-            )
-        }
+        addRecentSearch(keyword)
+        updateState { copy(query = keyword) }
         emitEvent(NoticeSearchEvent.MoveToSearchResult(keyword))
     }
 
     fun deleteRecentSearch(keyword: String) {
-        viewModelScope.launch {
-            removeRecentSearchNoticeUseCase(keyword)
-        }
+        recentSearches.remove(keyword)
+        updateState { copy(recentSearchList = recentSearches.toList()) }
     }
 
     fun deleteAllRecentSearch() {
-        viewModelScope.launch {
-            clearRecentSearchNoticeUseCase()
-        }
+        recentSearches.clear()
+        updateState { copy(recentSearchList = emptyList()) }
+    }
+
+    private fun addRecentSearch(keyword: String) {
+        if (keyword.isBlank()) return
+        recentSearches.remove(keyword) // 중복 제거 후 맨 앞에 추가
+        recentSearches.add(0, keyword)
+        updateState { copy(recentSearchList = recentSearches.toList()) }
     }
 }
 
