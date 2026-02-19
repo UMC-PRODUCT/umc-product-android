@@ -1,29 +1,49 @@
 package com.umc.presentation.ui.act.study.submit.model
 
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.usecase.curriculum.GetAvailableWeeksUseCase
+import com.umc.domain.usecase.curriculum.GetStudyGroupsUseCase
+import com.umc.domain.usecase.curriculum.GetWorkbookSubmissionsUseCase
+import com.umc.domain.usecase.workbook.ReviewWorkbookUseCase
+import com.umc.domain.usecase.workbook.SelectBestWorkbookUseCase
 import com.umc.presentation.base.BaseViewModel
-import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitAction
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
-class AdminActStudySubmitViewModel :
-    BaseViewModel<AdminActStudySubmitState, AdminActStudySubmitEvent>(
-        AdminActStudySubmitState()
-    ) {
+
+@HiltViewModel
+class AdminActStudySubmitViewModel @Inject constructor(
+    private val getWorkbookSubmissionsUseCase: GetWorkbookSubmissionsUseCase,
+    private val getStudyGroupsUseCase: GetStudyGroupsUseCase,
+    private val getAvailableWeeksUseCase: GetAvailableWeeksUseCase,
+    private val selectBestWorkbookUseCase: SelectBestWorkbookUseCase,
+    private val reviewWorkbookUseCase: ReviewWorkbookUseCase,
+) : BaseViewModel<AdminActStudySubmitState, AdminActStudySubmitEvent>(
+    AdminActStudySubmitState()
+) {
+
+    init {
+        loadFilterData()
+    }
 
     fun onAction(action: AdminActStudySubmitAction) {
         when (action) {
             is AdminActStudySubmitAction.SelectWeek -> {
                 updateState { copy(selectedWeek = action.week) }
-
+                loadWorkbookSubmissions(reset = true)
             }
 
             is AdminActStudySubmitAction.SelectGroupName -> {
-                updateState { copy(selectedGroupName = action.name) }
-
+                updateState { copy(selectedGroupId = mapGroupNameToId(action.name)) }
+                loadWorkbookSubmissions(reset = true)
             }
 
             is AdminActStudySubmitAction.SelectGroup -> {
                 updateState { copy(selectedGroupId = action.groupId) }
-
+                loadWorkbookSubmissions(reset = true)
             }
 
             is AdminActStudySubmitAction.ClickBest -> {
@@ -43,48 +63,143 @@ class AdminActStudySubmitViewModel :
                 updateState { copy(reviewDialogTarget = null) }
 
             is AdminActStudySubmitAction.ConfirmBest -> {
-                // TODO API
-                emitEvent(AdminActStudySubmitEvent.ShowToast("베스트로 설정했어요."))
-                updateState { copy(bestDialogTarget = null) }
+                val target = uiState.value.bestDialogTarget ?: return
+
+                viewModelScope.launch {
+                    when (val res = selectBestWorkbookUseCase(
+                        challengerWorkbookId = target.challengerWorkbookId,
+                        reason = action.reason
+                    )) {
+                        is ApiState.Success -> {
+                            emitEvent(AdminActStudySubmitEvent.ShowToast("베스트로 설정했어요."))
+                            updateState { copy(bestDialogTarget = null) }
+                            loadWorkbookSubmissions(reset = true)
+                        }
+                        is ApiState.Fail -> {
+                            emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
+                        }
+                    }
+                }
             }
+
 
             is AdminActStudySubmitAction.SubmitReview -> {
-                // TODO API
-                emitEvent(
-                    AdminActStudySubmitEvent.ShowToast(
-                        if (action.pass) "통과 처리했어요." else "반려 처리했어요."
-                    )
-                )
-                updateState { copy(reviewDialogTarget = null) }
+                val target = uiState.value.reviewDialogTarget ?: return
+
+                val status = if (action.pass) "PASS" else "FAIL"
+
+                viewModelScope.launch {
+                    when (val res = reviewWorkbookUseCase(
+                        challengerWorkbookId = target.challengerWorkbookId,
+                        status = status,
+                        feedback = action.feedback // 있으면, 없으면 null
+                    )) {
+                        is ApiState.Success -> {
+                            emitEvent(AdminActStudySubmitEvent.ShowToast(if (action.pass) "통과 처리했어요." else "반려 처리했어요."))
+                            updateState { copy(reviewDialogTarget = null) }
+                            loadWorkbookSubmissions(reset = true)
+                        }
+                        is ApiState.Fail -> {
+                            emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+
+    fun getGroupNames(state: AdminActStudySubmitState): List<String> {
+        return listOf("전체 그룹") + state.studyGroups.map { group ->
+            group.name
+        }
+    }
+
+
+    fun getSelectedGroupName(state: AdminActStudySubmitState?): String {
+        val safeState = state ?: return "전체 그룹"
+        val id = safeState.selectedGroupId ?: return "전체 그룹"
+        return safeState.studyGroups.firstOrNull { it.id == id }?.name ?: "전체 그룹"
+    }
+
+
+
+
+    private fun loadFilterData() {
+        viewModelScope.launch {
+            val schoolId = 18L
+            val part = "ANDROID"
+
+            when (val res = getStudyGroupsUseCase(schoolId, part)) {
+                is ApiState.Success -> updateState { copy(studyGroups = res.data) }
+                is ApiState.Fail -> emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
+            }
+
+            when (val res = getAvailableWeeksUseCase()) {
+                is ApiState.Success -> {
+                    val weeks = res.data
+                    val defaultWeek = weeks.firstOrNull() ?: 10 // 10주차거 테스트하느라 일단 박아놨습니다..
+
+                    updateState {
+                        copy(
+                            availableWeeks = weeks,
+                            selectedWeek = defaultWeek
+                        )
+                    }
+                    loadWorkbookSubmissions(reset = true)
+                }
+
+                is ApiState.Fail -> {
+                    updateState { copy(selectedWeek = 10) }
+                    loadWorkbookSubmissions(reset = true)
+                }
             }
         }
     }
 
-    fun loadDummy() {
-        updateState {
-            copy(
-                items = listOf(
-                    AdminActStudySubmitItemUiModel(
-                        userId = 1,
-                        name = "홍길동",
-                        nickname = "닉네임",
-                        partLabel = "iOS",
-                        weekText = "1주차",
-                        studyTitle = "SwiftUI 플로팅 코딩",
-                        submitUrl = "https://github.com/...",
-                    ),
-                    AdminActStudySubmitItemUiModel(
-                        userId = 2,
-                        name = "김도연",
-                        nickname = "도리",
-                        partLabel = "Android",
-                        weekText = "1주차",
-                        studyTitle = "RecyclerView 구조 잡기",
-                        submitUrl = "https://github.com/...",
-                        isBest = true
-                    ),
+
+    fun loadWorkbookSubmissions(reset: Boolean) {
+        viewModelScope.launch {
+            val state = uiState.value
+            val cursor = if (reset) null else state.nextCursor
+
+            when (
+                val res = getWorkbookSubmissionsUseCase(
+                    weekNo = state.selectedWeek,
+                    studyGroupId = state.selectedGroupId,
+                    cursor = cursor,
+                    size = 20
                 )
-            )
+            ) {
+                is ApiState.Success -> {
+                    val page = res.data
+                    val newItems = page.content
+                        .filter { it.status == "SUBMITTED" || it.status == "PASS" }
+                        .map { it.toUiModel(state.selectedWeek) }
+                    updateState {
+                        copy(
+                            items = if (reset) newItems else items + newItems,
+                            nextCursor = page.nextCursor,
+                            hasNext = page.hasNext,
+                        )
+                    }
+                }
+
+                is ApiState.Fail -> {
+                    emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
+                }
+            }
         }
     }
+
+    private fun mapGroupNameToId(name: String): Long? {
+        if (name == "전체 그룹") return null
+
+        val group = uiState.value.studyGroups.firstOrNull { group ->
+            group.name == name
+        }
+
+        return group?.id
+    }
+
 }

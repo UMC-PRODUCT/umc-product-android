@@ -6,16 +6,17 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.notice.Notice
+import com.umc.domain.model.notice.NoticeSummary
 import com.umc.presentation.databinding.ItemNoticeBinding
 
 class NoticeAdapter(
     private val listener: NoticeDelegate
-) : ListAdapter<Notice, RecyclerView.ViewHolder> (
+) : ListAdapter<NoticeSummary, RecyclerView.ViewHolder> (
     NoticeDiffCallBack()
 ) {
 
     interface NoticeDelegate {
-        fun onClickNotice(item: Notice)
+        fun onClickNotice(item: NoticeSummary)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -33,22 +34,19 @@ class NoticeAdapter(
         return NoticeViewHolder(binding, listener)
     }
 
-    fun getItemPosition(item: Notice): Int {
-        return currentList.indexOf(item)
-    }
 }
 
-class NoticeDiffCallBack : DiffUtil.ItemCallback<Notice>() {
+class NoticeDiffCallBack : DiffUtil.ItemCallback<NoticeSummary>() {
     override fun areContentsTheSame(
-        oldItem: Notice,
-        newItem: Notice
+        oldItem: NoticeSummary,
+        newItem: NoticeSummary
     ): Boolean {
         return oldItem == newItem
     }
 
     override fun areItemsTheSame(
-        oldItem: Notice,
-        newItem: Notice
+        oldItem: NoticeSummary,
+        newItem: NoticeSummary
     ): Boolean {
         return oldItem.id == newItem.id
     }

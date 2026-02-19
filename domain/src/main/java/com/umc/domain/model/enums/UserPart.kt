@@ -8,5 +8,17 @@ enum class UserPart(val label: String) {
     ANDROID("Android"),
     SPRINGBOOT("SpringBoot"),
     NODEJS("Node.js"),
+    UNKNOWN("Unknown");
+
+
+    companion object {
+        fun from(value: String?): UserPart {
+            if (value.isNullOrBlank()) return UNKNOWN
+
+            return entries.firstOrNull {
+                it.name.replace("_", "") == value.replace("_", "")
+            } ?: UNKNOWN
+        }
+    }
 
 }

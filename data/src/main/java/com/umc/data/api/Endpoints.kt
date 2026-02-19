@@ -36,6 +36,9 @@ object Endpoints {
         const val DELETE_POINT = "$CHALLENGER/points/{challengerPointId}"
 
         const val SEARCH_CURSOR = "$CHALLENGER/search/cursor"
+
+        const val CHALLENGER_RECORD = "api/v1/challenger-record"
+        const val CHALLENGER_RECORD_MEMBER = "api/v1/challenger-record/member"
     }
 
     object Member {
@@ -133,4 +136,40 @@ object Endpoints {
         const val TERMS_ID = "$TERMS/{termsId}"
     }
 
+    object Curriculum {
+        const val CURRICULUM = "api/v1/curriculums"
+        const val CHALLENGER_ME_PROGRESS = "$CURRICULUM/challengers/me/progress"
+        const val SUBMIT = "api/v1/challenger-workbooks/{challengerWorkbookId}/submissions"
+        const val WORKBOOK_SUBMISSIONS = "api/v1/curriculums/workbook-submissions"
+        const val STUDY_GROUPS = "api/v1/curriculums/study-groups"
+        const val AVAILABLE_WEEKS = "api/v1/curriculums/available-weeks"
+
+    }
+
+    object Workbook {
+        const val BEST = "api/v1/workbooks/challenger/{challengerWorkbookId}/best"
+        const val REVIEW = "api/v1/workbooks/challenger/{challengerWorkbookId}/review"
+    }
+
+
+    object Notice {
+        const val NOTICE = "api/v1/notices"
+        const val NOTICE_SEARCH = "$NOTICE/search"
+        const val NOTICE_DETAIL = "$NOTICE/{noticeId}"
+
+        // 세부 리소스 경로
+        const val NOTICE_VOTES = "$NOTICE_DETAIL/votes"
+        const val NOTICE_VOTE = "$NOTICE_DETAIL/vote"
+        const val NOTICE_REMINDERS = "$NOTICE_DETAIL/reminders"
+        const val NOTICE_READ = "$NOTICE_DETAIL/read"
+        const val NOTICE_READ_STATUS = "$NOTICE_DETAIL/read-status"
+        const val NOTICE_READ_STATICS = "$NOTICE_DETAIL/read-statics"
+        const val NOTICE_LINKS = "$NOTICE_DETAIL/links"
+        const val NOTICE_IMAGES = "$NOTICE_DETAIL/images"
+    }
+
+    object Survey {
+        const val SURVEY = "api/v1/surveys"
+        const val VOTE_RESPONSES = "$SURVEY/votes/{voteId}/responses"
+    }
 }

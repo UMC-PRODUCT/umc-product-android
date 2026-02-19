@@ -1,80 +1,145 @@
 package com.umc.presentation.ui.act.study
 
+
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
 import com.umc.domain.model.enums.StudyStatus
+import com.umc.domain.model.enums.SubmitState
 import com.umc.presentation.R
 import com.umc.presentation.component.UButton
 
-@BindingAdapter("submitButtonStyle")
-fun UButton.bindSubmitButtonStyle(status: StudyStatus?) {
-    if (status == null) return
 
+@BindingAdapter("studyStatusStyle")
+fun UButton.bindStudyStatusStyle(status: StudyStatus?) {
+    if (status == null) return
+    android.util.Log.d("BA", "studyStatusStyle called = $status")
+
+    setText(status.text)
 
     val (bgRes, textRes) = when (status) {
-        StudyStatus.PASS -> R.color.neutral100 to R.color.neutral500
-        StudyStatus.FAIL -> R.color.warning500 to R.color.neutral000
-        StudyStatus.IN_PROGRESS -> R.color.primary500 to R.color.neutral000
+        StudyStatus.PASS -> R.color.success100 to R.color.success700
+        StudyStatus.FAIL -> R.color.danger100 to R.color.danger700
+        StudyStatus.IN_PROGRESS -> R.color.primary100 to R.color.primary600
     }
 
-
-    setUBackgroundColor(ContextCompat.getColor(context, bgRes))
     setTextColor(ContextCompat.getColor(context, textRes))
-
-
-    isEnabled = status != StudyStatus.PASS
-    alpha = if (status == StudyStatus.PASS) 0.6f else 1f
+    setUBackgroundColor(ContextCompat.getColor(context, bgRes))
 }
+
 
 @BindingAdapter("confirmButtonStyle")
 fun UButton.bindConfirmButtonStyle(isConfirming: Boolean) {
     if (!isConfirming) return
 
-    setUBackgroundColor(
-        ContextCompat.getColor(context, R.color.primary500)
-    )
-    setTextColor(
-        ContextCompat.getColor(context, R.color.neutral000)
-    )
-    isEnabled = true
-    alpha = 1f
+    setUBackgroundColor(ContextCompat.getColor(context, R.color.primary500))
+    setTextColor(ContextCompat.getColor(context, R.color.neutral000))
+
 }
 
-@BindingAdapter("timelineStatus", "timelineWeek", requireAll = false)
-fun bindTimelineStatus(
-    view: View,
+
+@BindingAdapter("visibleWhenInput")
+fun View.visibleWhenInput(item: ActStudyItemUiModel?) {
+    visibility =
+        if (item != null && !item.isLocked && item.submitState == SubmitState.READY)
+            View.VISIBLE
+        else
+            View.GONE
+}
+
+@BindingAdapter("visibleWhenConfirming")
+fun View.visibleWhenConfirming(item: ActStudyItemUiModel?) {
+    visibility =
+        if (item != null && !item.isLocked && item.submitState == SubmitState.CONFIRMING)
+            View.VISIBLE
+        else
+            View.GONE
+}
+
+@BindingAdapter("visibleWhenWaiting")
+fun View.visibleWhenWaiting(item: ActStudyItemUiModel?) {
+    visibility =
+        if (item != null && !item.isLocked && item.submitState == SubmitState.REQUESTED)
+            View.VISIBLE
+        else
+            View.GONE
+}
+
+@BindingAdapter("visibleWhenResultPass")
+fun View.visibleWhenResultPass(item: ActStudyItemUiModel?) {
+    visibility =
+        if (item != null && !item.isLocked && item.status == StudyStatus.PASS)
+            View.VISIBLE
+        else
+            View.GONE
+}
+
+@BindingAdapter("visibleWhenResultFail")
+fun View.visibleWhenResultFail(item: ActStudyItemUiModel?) {
+    visibility =
+        if (item != null && !item.isLocked && item.status == StudyStatus.FAIL)
+            View.VISIBLE
+        else
+            View.GONE
+}
+
+@BindingAdapter("enabledWhenConfirmReady")
+fun View.enabledWhenConfirmReady(item: ActStudyItemUiModel?) {
+    val enabled = item != null &&
+            !item.isLocked &&
+            item.submitState == SubmitState.CONFIRMING
+
+    isEnabled = enabled
+    alpha = if (enabled) 1f else 0.4f
+}
+
+
+
+@BindingAdapter(
+    value = ["timelineStatus", "timelineWeek", "timelineLocked"],
+    requireAll = true
+)
+fun ConstraintLayout.bindTimeline(
     status: StudyStatus?,
-    week: Int?
+    week: Int?,
+    locked: Boolean?
 ) {
-    val root = view as? androidx.constraintlayout.widget.ConstraintLayout ?: return
+    if (status == null || week == null || locked == null) return
 
-    val iv = root.findViewById<ImageView>(R.id.iv_timeline_status)
-    val tv = root.findViewById<TextView>(R.id.tv_timeline_number)
+    val icon = findViewById<ImageView>(R.id.iv_timeline_status)
+    val number = findViewById<TextView>(R.id.tv_timeline_number)
 
-    if (status == null) return
+    if (locked) {
+        icon.setImageResource(R.drawable.ic_locked)
+        icon.visibility = View.VISIBLE
+        number.visibility = View.GONE
+        return
+    }
+
+
+    number.visibility = View.VISIBLE
+    number.text = week.toString()
+
+
+    icon.visibility = View.VISIBLE
+    icon.setImageResource(R.drawable.bg_primary500_circle)
 
     when (status) {
         StudyStatus.PASS -> {
-            iv.visibility = View.VISIBLE
-            tv.visibility = View.GONE
-            iv.setImageResource(R.drawable.ic_check_success)
+            icon.setImageResource(R.drawable.ic_check_success)
+            number.visibility = View.GONE
         }
 
         StudyStatus.FAIL -> {
-            iv.visibility = View.VISIBLE
-            tv.visibility = View.GONE
-            iv.setImageResource(R.drawable.ic_check_failed)
+            icon.setImageResource(R.drawable.ic_check_failed)
+            number.visibility = View.GONE
         }
 
         StudyStatus.IN_PROGRESS -> {
-            iv.visibility = View.GONE
-            tv.visibility = View.VISIBLE
-            tv.text = (week ?: 0).toString()
-            tv.background = ContextCompat.getDrawable(root.context, R.drawable.bg_primary500_circle)
+
         }
     }
 }
-

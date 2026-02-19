@@ -89,7 +89,17 @@
         android:name="com.umc.presentation.ui.signUp.fail.SignUpFailFragment"
         android:label="인증 실패"
         tools:layout="@layout/fragment_sign_up_fail">
+
+        <action
+            android:id="@+id/action_sign_up_fail_to_code"
+            app:destination="@id/signUpFailCodeFragment"/>
     </fragment>
 
+    <fragment
+        android:id="@+id/signUpFailCodeFragment"
+        android:name="com.umc.presentation.ui.signUp.fail.code.SignUpFailCodeFragment"
+        android:label="인증 코드"
+        tools:layout="@layout/fragment_sign_up_fail_code">
+    </fragment>
 
 </navigation>

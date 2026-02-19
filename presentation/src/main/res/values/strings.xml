@@ -183,6 +183,9 @@
     <string name="sign_up_fail_title">UMC 챌린저 인증 실패</string>
     <string name="sign_up_fail_content">죄송합니다. 입력하신 정보로 등록된\nUMC 챌린저 정보를 찾을 수 없습니다.</string>
     <string name="sign_up_fail_homepage">UMC 공식 홈페이지 방문</string>
+    <string name="sign_up_fail_prev_user">기존에 활동하셨던 챌린저인가요?</string>
+    <string name="sign_up_fail_prev_user_enter">기존에 활동하셨던\n챌린저인가요?</string>
+    <string name="sign_up_fail_prev_user_hint">인증코드를 입력하여 서비스를 이용하실 수 있어요</string>
     <string name="sign_up_fail_qa_email">문의사항: umc.official.korea@gmail.com</string>
 
 
@@ -312,5 +315,8 @@
     <string name="delete">삭제</string>
     <string name="act_location_update">지도에서 새로운 출석 체크 위치를 지정해주세요.\n이 위치 반경 50m 이내에서만 출석할 수 있습니다.</string>
     <string name="empty_search_result">검색 결과가 없습니다</string>
+
+    <!-- Loading Dialog -->
+    <string name="loading_default_message">로딩 중입니다.</string>
 
 </resources>

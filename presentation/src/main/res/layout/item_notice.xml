@@ -12,33 +12,10 @@
         android:padding="16dp">
 
         <com.umc.presentation.component.UButton
-            android:id="@+id/ubutton_must_read"
+            android:id="@+id/ubutton_central"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:buttonElevation="0"
-            app:cardBackgroundColor="@color/warning500"
-            app:contentPaddingBottom="2dp"
-            app:contentPaddingLeft="8dp"
-            app:contentPaddingRight="8dp"
-            app:contentPaddingTop="2dp"
-            app:cornerRadius="4dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:text="필독"
-            app:textAppearance="@style/Caption1Bold"
-            app:textColor="@color/neutral000" />
-
-        <Space
-            app:layout_constraintStart_toEndOf="@id/ubutton_must_read"
-            app:layout_constraintTop_toTopOf="@id/ubutton_must_read"
-            android:id="@+id/space_between"
-            android:layout_width="4dp"
-            android:layout_height="wrap_content"/>
-
-        <com.umc.presentation.component.UButton
-            android:id="@+id/ubutton_category"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:visibility="visible"
             app:buttonElevation="0"
             app:cardBackgroundColor="@color/neutral200"
             app:contentPaddingBottom="2dp"
@@ -46,11 +23,89 @@
             app:contentPaddingRight="8dp"
             app:contentPaddingTop="2dp"
             app:cornerRadius="4dp"
-            app:layout_constraintStart_toEndOf="@id/space_between"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:text="중앙"
             app:textAppearance="@style/Caption1Bold"
             app:textColor="@color/neutral700" />
+
+        <Space
+            android:id="@+id/space_central_chapter"
+            android:layout_width="4dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@id/ubutton_central"
+            app:layout_constraintTop_toTopOf="@id/ubutton_central" />
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/ubutton_chapter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:buttonElevation="0"
+            app:cardBackgroundColor="@color/neutral200"
+            app:contentPaddingBottom="2dp"
+            app:contentPaddingLeft="8dp"
+            app:contentPaddingRight="8dp"
+            app:contentPaddingTop="2dp"
+            app:cornerRadius="4dp"
+            app:layout_constraintStart_toEndOf="@id/space_central_chapter"
+            app:layout_constraintTop_toTopOf="parent"
+            app:text="지부"
+            app:textAppearance="@style/Caption1Bold"
+            app:textColor="@color/neutral700" />
+
+        <Space
+            android:id="@+id/space_chapter_school"
+            android:layout_width="4dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@id/ubutton_chapter"
+            app:layout_constraintTop_toTopOf="@id/ubutton_chapter" />
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/ubutton_school"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:buttonElevation="0"
+            app:cardBackgroundColor="@color/primary100"
+            app:contentPaddingBottom="2dp"
+            app:contentPaddingLeft="8dp"
+            app:contentPaddingRight="8dp"
+            app:contentPaddingTop="2dp"
+            app:cornerRadius="4dp"
+            app:layout_constraintStart_toEndOf="@id/space_chapter_school"
+            app:layout_constraintTop_toTopOf="parent"
+            app:text="학교"
+            app:textAppearance="@style/Caption1Bold"
+            app:textColor="@color/primary600" />
+
+        <Space
+            android:id="@+id/space_school_part"
+            android:layout_width="4dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@id/ubutton_school"
+            app:layout_constraintTop_toTopOf="@id/ubutton_school" />
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/ubutton_part"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:buttonElevation="0"
+            app:cardBackgroundColor="@color/success100"
+            app:contentPaddingBottom="2dp"
+            app:contentPaddingLeft="8dp"
+            app:contentPaddingRight="8dp"
+            app:contentPaddingTop="2dp"
+            app:cornerRadius="4dp"
+            app:layout_constraintStart_toEndOf="@id/space_school_part"
+            app:layout_constraintTop_toTopOf="parent"
+            app:text="파트"
+            app:textAppearance="@style/Caption1Bold"
+            app:textColor="@color/success700" />
 
         <TextView
             android:id="@+id/text_date"
@@ -77,14 +132,14 @@
             android:id="@+id/text_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="9dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:text="중앙 해커톤 팀 빌딩 관련 공지"
             android:textAppearance="@style/BodyBold"
             android:textColor="@color/neutral800"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ubutton_category" />
+            app:layout_constraintTop_toBottomOf="@id/text_date"
+            app:layout_constraintStart_toStartOf="parent"/>
 
         <TextView
             android:id="@+id/text_content"

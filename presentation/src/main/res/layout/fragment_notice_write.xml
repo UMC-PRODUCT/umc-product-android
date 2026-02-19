@@ -66,7 +66,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="12dp"
-                android:src="@drawable/ic_check_box"
+                android:onClick="@{()->vm.updateShouldNotify(!vm.uiState.shouldNotify)}"
+                android:src="@{vm.uiState.shouldNotify ? @drawable/ic_check_box : @drawable/ic_check_box_empty}"
+                android:tint="@{vm.uiState.shouldNotify ? @color/primary500 : @color/neutral400}"
                 tools:ignore="UseAppTint" />
 
             <TextView
@@ -176,18 +178,45 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:src="@drawable/ic_dropdown"
+                        android:visibility="@{vm.uiState.showCategoryDropDown ? View.VISIBLE : View.GONE}"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
+                <ImageView
+                    android:id="@+id/image_check_all_gisu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:onClick="@{()->vm.onClickToggleAllGisu()}"
+                    android:src="@{vm.uiState.isAllGisuSelected ? @drawable/ic_check_box : @drawable/ic_check_box_empty}"
+                    android:tint="@{vm.uiState.isAllGisuSelected ? @color/primary500 : @color/neutral400}"
+                    app:layout_constraintBottom_toBottomOf="@id/layout_category"
+                    app:layout_constraintEnd_toStartOf="@id/text_all_gisu"
+                    app:layout_constraintTop_toTopOf="@id/layout_category"
+                    tools:ignore="UseAppTint" />
+
+                <TextView
+                    android:id="@+id/text_all_gisu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="24dp"
+                    android:text="전체 기수"
+                    android:textAppearance="@style/Subheadline"
+                    android:textColor="@color/neutral800"
+                    app:layout_constraintBottom_toBottomOf="@id/layout_category"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/layout_category" />
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recycler_dropdown"
                     android:layout_width="0dp"
-                    android:layout_height="100dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_rect_neutral000_radius12"
+                    android:maxHeight="150dp"
                     android:paddingVertical="8dp"
                     android:translationZ="8dp"
                     android:visibility="@{vm.uiState.showDropDown ? View.VISIBLE : View.GONE}"
@@ -205,6 +234,7 @@
                     android:text="@string/notice_write_class_title"
                     android:textAppearance="@style/HeadlineBold"
                     android:textColor="@color/neutral800"
+                    android:visibility="@{vm.uiState.showClassSection ? View.VISIBLE : View.GONE}"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/layout_category" />
 
@@ -216,6 +246,7 @@
                     android:text="@string/notice_write_class_hint"
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral600"
+                    android:visibility="@{vm.uiState.showClassSection ? View.VISIBLE : View.GONE}"
                     app:layout_constraintBottom_toBottomOf="@id/text_class_title"
                     app:layout_constraintStart_toEndOf="@id/text_class_title"
                     app:layout_constraintTop_toTopOf="@id/text_class_title" />
@@ -227,6 +258,7 @@
                     android:layout_marginHorizontal="24dp"
                     android:layout_marginTop="16dp"
                     android:overScrollMode="never"
+                    android:visibility="@{vm.uiState.showClassSection ? View.VISIBLE : View.GONE}"
                     app:layout_constraintTop_toBottomOf="@id/text_class_title" />
 
                 <TextView
@@ -274,6 +306,7 @@
                     android:background="@null"
                     android:hint="@string/suggest_write_anomy_title_placeholder"
                     android:paddingVertical="16dp"
+                    android:text="@{vm.uiState.title}"
                     android:textAppearance="@style/Title3Bold"
                     android:textColor="@color/neutral800"
                     android:textColorHint="@color/neutral400"
@@ -295,6 +328,7 @@
                     android:background="@null"
                     android:hint="@string/suggest_write_anomy_content_placeholder"
                     android:paddingVertical="16dp"
+                    android:text="@{vm.uiState.content}"
                     android:textAppearance="@style/Body"
                     android:textColor="@color/neutral800"
                     android:textColorHint="@color/neutral400"
@@ -384,9 +418,9 @@
                         android:layout_height="wrap_content"
                         android:src="@drawable/ic_vote"
                         android:tint="@color/primary500"
+                        app:layout_constraintBottom_toBottomOf="@id/ubutton_edit"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="@id/ubutton_edit"
-                        app:layout_constraintBottom_toBottomOf="@id/ubutton_edit"
                         tools:ignore="UseAppTint" />
 
                     <TextView

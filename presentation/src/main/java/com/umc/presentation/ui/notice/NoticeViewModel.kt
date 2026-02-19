@@ -1,24 +1,32 @@
 package com.umc.presentation.ui.notice
 
-import com.umc.domain.model.enums.NoticeCategory
-import com.umc.domain.model.notice.Notice
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.notice.NoticeChipState
+import com.umc.domain.model.notice.NoticeSummary
+import com.umc.domain.model.organization.GisuItem
+import com.umc.domain.model.enums.UserChallengerRole
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.notice.GetNoticeListUseCase
+import com.umc.domain.usecase.organization.GetGisuListUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class NoticeViewModel
-@Inject
-constructor() : BaseViewModel<NoticeUiState, NoticeEvent>(
+class NoticeViewModel @Inject constructor(
+    private val getGisuListUseCase: GetGisuListUseCase,
+    private val getUserInfoUseCase: GetUserInfoUseCase,
+    private val getNoticeListUseCase: GetNoticeListUseCase
+) : BaseViewModel<NoticeUiState, NoticeEvent>(
     NoticeUiState(),
 ) {
     init {
-        updateDropDownList(dummyDropDown())
-        updateChipList(getDummy())
-        updateNoticeList(getDummyNotice())
+        getDropDownList()
+        getMyProfile()
     }
 
     private fun updateChipList(chipList: List<NoticeChipState>) {
@@ -29,127 +37,83 @@ constructor() : BaseViewModel<NoticeUiState, NoticeEvent>(
         }
     }
 
-    private fun updateNoticeList(noticeList: List<Notice>) {
-        updateState {
-            copy(
-                noticeList = noticeList
+    private fun createChipsFromUserInfo(userInfo: UserInfo): List<NoticeChipState> {
+        val chipList = mutableListOf<NoticeChipState>()
+        chipList.add(NoticeChipState(text = "전체", isClicked = true))
+
+        // 공지 작성 권한 확인 (MEMBER가 아닌 경우에만 권한 있음)
+        val hasWritePermission = userInfo.roles.any { role ->
+            UserChallengerRole.from(role.roleType) != UserChallengerRole.MEMBER
+        }
+        updateState { copy(canWriteNotice = hasWritePermission) }
+
+        if (userInfo.schoolId != 0L) {
+            chipList.add(
+                NoticeChipState(
+                    text = userInfo.schoolName,
+                    schoolId = userInfo.schoolId
+                )
             )
         }
-    }
 
-    fun onClickChip(item: NoticeChipState) {
-        val newList = uiState.value.chipList.map { chip ->
-            chip.copy(isClicked = (chip.text == item.text))
+        userInfo.roles.forEach { role ->
+            val chapterName = role.chapterName
+            if (!chapterName.isNullOrEmpty() && chipList.none { it.text == "$chapterName 지부" }) {
+                chipList.add(
+                    NoticeChipState(
+                        text = "$chapterName 지부",
+                        chapterId = role.chapterId
+                    )
+                )
+            }
+
+            val responsiblePart = role.responsiblePart
+            if (!responsiblePart.isNullOrEmpty() && chipList.none { it.text == responsiblePart }) {
+                chipList.add(
+                    NoticeChipState(
+                        text = responsiblePart,
+                        part = responsiblePart
+                    )
+                )
+            }
         }
 
-        //TODO 하드코딩임 서버 내려오면 수정
-        if (item.text == "중앙운영사무국") {
+        return chipList
+    }
+
+    fun onClickChip(clickedItem: NoticeChipState) {
+        val newList = uiState.value.chipList.map { chip ->
+            chip.copy(isClicked = (chip.text == clickedItem.text))
+        }
+        updateChipList(newList)
+
+        if (clickedItem.text == "중앙운영사무국") {
             updateState { copy(isShowSubChip = true) }
         } else {
             updateState { copy(isShowSubChip = false) }
         }
-        updateChipList(newList)
-    }
-
-    private fun getDummy(): List<NoticeChipState> {
-        return listOf(
-            NoticeChipState(
-                text = "전체",
-                isClicked = true,
-            ),
-            NoticeChipState(
-                text = "중앙운영사무국",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "Ain지부",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "중앙대학교",
-                isClicked = false,
-            )
-        )
-    }
-
-    private fun getDummyNotice(): List<Notice> {
-        return listOf(
-            Notice(
-                id = 1,
-                isMustRead = true,
-                category = NoticeCategory.CENTRAL_OFFICE,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-            Notice(
-                id = 2,
-                isMustRead = true,
-                category = NoticeCategory.BRANCH,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-            Notice(
-                id = 3,
-                isMustRead = false,
-                category = NoticeCategory.SCHOOL,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-            Notice(
-                id = 5,
-                isMustRead = false,
-                category = NoticeCategory.CENTRAL_OFFICE,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
-            Notice(
-                id = 1,
-                isMustRead = false,
-                category = NoticeCategory.PART,
-                date = "2026.01.24",
-                title = "제목이 들어갈 자리",
-                content = "내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구내용이 들어갈자리 어쩌구 저쩌구",
-                author = "중앙 운영진",
-                count = 1000
-            ),
+        getNoticeList(
+            chapterId = clickedItem.chapterId,
+            schoolId = clickedItem.schoolId,
+            part = clickedItem.part
         )
     }
 
     fun onClickSearch() {
-        emitEvent(NoticeEvent.MoveToSearchEvent)
+        emitEvent(NoticeEvent.MoveToSearchEvent(uiState.value.selectedGisu))
     }
 
-    fun updateNowTitle(title: String) {
-        onClickShowDropDown()
+    fun updateNowTitle(title: String, gisu: Long) {
         updateState {
-            copy(nowTitle = title)
+            copy(nowTitle = title, selectedGisu = gisu)
         }
+        getNoticeList()
     }
 
-    fun updateDropDownList(list: List<String>) {
+    fun updateDropDownList(list: List<GisuItem>) {
         updateState {
             copy(dropdownList = list)
         }
-    }
-
-    private fun dummyDropDown() : List<String>{
-        return listOf(
-            "12기 공지사항", "11기 공지사항", "10기 공지사항", "9기 공지사항", "8기 공지사항",
-            "7기 공지사항", "6기 공지사항", "5기 공지사항", "4기 공지사항", "3기 공지사항", "2기 공지사항",
-            "1기 공지사항"
-        )
     }
 
     fun onClickShowDropDown() {
@@ -167,20 +131,87 @@ constructor() : BaseViewModel<NoticeUiState, NoticeEvent>(
     fun onClickWriteNotice() {
         emitEvent(NoticeEvent.MoveToWriteEvent)
     }
+
+    private fun getDropDownList() = viewModelScope.launch {
+        resultResponse(
+            response = getGisuListUseCase(),
+            successCallback = {
+                val nowTitle = "${it.gisuList.find { it.isActive }?.generation}기 공지사항"
+                updateNowTitle(nowTitle, it.gisuList.find { it.isActive }?.gisuId?.toLong() ?: 0)
+                updateDropDownList(it.gisuList)
+            }
+        )
+    }
+
+    private fun getMyProfile() = viewModelScope.launch {
+        getUserInfoUseCase().collect { userInfo ->
+            updateChipList(createChipsFromUserInfo(userInfo))
+        }
+    }
+
+    fun getNoticeList(
+        chapterId: Long? = null,
+        schoolId: Long? = null,
+        part: String? = null,
+        isRefresh: Boolean = true
+    ) = viewModelScope.launch {
+        val state = uiState.value
+
+        if (state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
+
+        updateState { copy(isPageLoading = true) }
+
+        val pageToFetch = if (isRefresh) 0 else state.currentPage
+
+        resultResponse(
+            response = getNoticeListUseCase(
+                gisuId = state.selectedGisu,
+                chapterId = chapterId,
+                schoolId = schoolId,
+                part = part,
+                page = pageToFetch,
+                size = 20
+            ),
+            successCallback = { noticeSearch ->
+                updateState {
+                    copy(
+                        noticeList = if (isRefresh) noticeSearch.content else noticeList + noticeSearch.content,
+                        currentPage = pageToFetch + 1,
+                        isPageLoading = false,
+                        isLastPage = !noticeSearch.hasNext
+                    )
+                }
+            },
+            errorCallback = {
+                updateState { copy(isPageLoading = false) }
+            }
+        )
+    }
+
+    fun loadNextPage() {
+        if (!uiState.value.isPageLoading && !uiState.value.isLastPage) {
+            getNoticeList(isRefresh = false)
+        }
+    }
 }
 
 data class NoticeUiState(
     val isShowDropDown: Boolean = false,
     val isShowSubChip: Boolean = false,
-    val nowTitle: String = "12기 공지사항", //TODO 서버에서 기수만 내려주는지, 텍스트 내려주는지 확인 필요 (아마 전자 같기도)
+    val nowTitle: String = "",
+    val selectedGisu: Long = 0,
     val selectedSubChip: String = "파트",
-    val dropdownList: List<String> = emptyList(),
+    val dropdownList: List<GisuItem> = emptyList(),
     val chipList: List<NoticeChipState> = emptyList(),
-    val noticeList: List<Notice> = emptyList()
+    val noticeList: List<NoticeSummary> = emptyList(),
+    val currentPage: Int = 0,
+    val isPageLoading: Boolean = false,
+    val isLastPage: Boolean = false,
+    val canWriteNotice: Boolean = false
 ) : UiState
 
 sealed interface NoticeEvent : UiEvent {
     object MoveToWriteEvent : NoticeEvent
 
-    object MoveToSearchEvent : NoticeEvent
+    data class MoveToSearchEvent(val gisuId: Long) : NoticeEvent
 }

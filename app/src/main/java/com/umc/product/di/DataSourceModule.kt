@@ -1,9 +1,11 @@
 package com.umc.product.di
 
 import com.umc.data.dataSource.AuthRemoteDataSource
+import com.umc.data.dataSource.NoticeRemoteDataSource
 import com.umc.data.dataSource.OrganizationDataSource
 import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSource
 import com.umc.data.dataSource.remote.AuthRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.NoticeRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.OrganizationRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSource
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSourceImpl
@@ -16,12 +18,16 @@ import com.umc.data.dataSource.remote.member.MemberRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.community.CommunityRemoteDataSource
 import com.umc.data.dataSource.remote.community.CommunityRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.curriculum.CurriculumRemoteDataSource
+import com.umc.data.dataSource.remote.curriculum.CurriculumRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.storage.StorageRemoteDataSource
 import com.umc.data.dataSource.remote.storage.StorageRemoteDataSourceImpl
 import com.umc.data.dataSource.remote.terms.TermsRemoteDataSource
 import com.umc.data.dataSource.remote.terms.TermsRemoteDataSourceImpl
+import com.umc.data.dataSource.remote.workbook.WorkbookRemoteDataSource
+import com.umc.data.dataSource.remote.workbook.WorkbookRemoteDataSourceImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -57,6 +63,14 @@ abstract class DataSourceModule {
         dataSourceImpl: KakaoRemoteDataSourceImpl
     ): KakaoRemoteDataSource
 
+
+    @Singleton
+    @Binds
+    abstract fun bindsCurriculumRemoteDataSource(
+        impl: CurriculumRemoteDataSourceImpl
+    ): CurriculumRemoteDataSource
+
+
     @Singleton
     @Binds
     abstract fun bindsChallengerRemoteDataSource(dataSourceImpl: ChallengerRemoteDataSourceImpl): ChallengerRemoteDataSource
@@ -80,6 +94,19 @@ abstract class DataSourceModule {
     @Singleton
     @Binds
     abstract fun bindsTermsRemoteDataSource(dataSourceImpl: TermsRemoteDataSourceImpl): TermsRemoteDataSource
+
+
+    @Singleton
+    @Binds
+    abstract fun bindWorkbookRemoteDataSource(
+        impl: WorkbookRemoteDataSourceImpl
+    ): WorkbookRemoteDataSource
+
+
+
+    @Singleton
+    @Binds
+    abstract fun bindsNoticeRemoteDataSource(dataSourceImpl: NoticeRemoteDataSourceImpl): NoticeRemoteDataSource
 
     @Singleton
     @Binds

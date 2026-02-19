@@ -46,6 +46,20 @@ class AppDataStoreRepositoryImpl @Inject constructor(
         appDataStore.clearSearchPostHistory()
     }
 
+    //공지사항 -> 최근 검색 기록 저장 / 삭제 / 전체 삭제 연결
+    override fun getRecentSearchesNotice(): Flow<List<String>> {
+        return appDataStore.recentSearchesNoticeFlow
+    }
+    override suspend fun addRecentSearchNotice(query: String) {
+        appDataStore.addSearchNoticeHistory(query)
+    }
+    override suspend fun removeRecentSearchNotice(query: String) {
+        appDataStore.removeSearchNoticeHistory(query)
+    }
+    override suspend fun clearRecentSearchNotice() {
+        appDataStore.clearSearchNoticeHistory()
+    }
+
 
 
     //유저 정보 가져오고 받아오기 연결

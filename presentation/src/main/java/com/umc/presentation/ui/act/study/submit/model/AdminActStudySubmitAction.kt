@@ -14,6 +14,6 @@ sealed interface AdminActStudySubmitAction {
     object DismissBestDialog : AdminActStudySubmitAction
     object DismissReviewDialog : AdminActStudySubmitAction
 
-    data class ConfirmBest(val reason: String) : AdminActStudySubmitAction
+    data class ConfirmBest(val reason: String? = null) : AdminActStudySubmitAction
     data class SubmitReview(val pass: Boolean, val url: String, val feedback: String) : AdminActStudySubmitAction
 }

@@ -28,9 +28,15 @@
         android:name="com.umc.presentation.ui.notice.search.NoticeSearchFragment"
         android:label="공지검색"
         tools:layout="@layout/fragment_notice_search">
+
+        <argument
+            android:name="gisuId"
+            android:defaultValue="0L"
+            app:argType="long" />
+
         <action
             android:id="@+id/action_noticeSearchFragment_to_noticeSearchResultFragment"
-            app:destination="@id/noticeSearchResultFragment"/>
+            app:destination="@id/noticeSearchResultFragment" />
     </fragment>
 
     <fragment
@@ -41,8 +47,17 @@
 
         <argument
             android:name="search"
-            app:argType="string"
-            android:defaultValue="" />
+            android:defaultValue=""
+            app:argType="string" />
+
+        <argument
+            android:name="gisuId"
+            android:defaultValue="0L"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_noticeSearchResultFragment_to_noticeDetailFragment"
+            app:destination="@id/noticeDetailFragment" />
     </fragment>
 
     <fragment
@@ -56,6 +71,11 @@
         android:id="@+id/noticeDetailFragment"
         android:name="com.umc.presentation.ui.notice.detail.NoticeDetailFragment"
         android:label="공지 화면"
-        tools:layout="@layout/fragment_notice_detail"/>
+        tools:layout="@layout/fragment_notice_detail">
 
+        <argument
+            android:name="noticeId"
+            android:defaultValue="0L"
+            app:argType="long" />
+    </fragment>
 </navigation>

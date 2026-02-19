@@ -37,6 +37,8 @@
             app:layout_constraintStart_toEndOf="@id/image_back"
             app:layout_constraintTop_toTopOf="parent"
             app:placeholderText="@string/notice_search_placeholder"
+            app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH}"
+            app:onImeAction="@{(actionId, text) -> vm.onImeAction(actionId, text)}"
             app:text="@{vm.uiState.searchText}"
             app:strokeColor="@color/neutral300"
             app:strokeWidth="1dp"

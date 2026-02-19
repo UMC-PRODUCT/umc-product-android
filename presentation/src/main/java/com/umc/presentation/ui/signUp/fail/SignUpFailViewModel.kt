@@ -19,9 +19,14 @@ constructor() : BaseViewModel<UiState, SignUpFailEvent>(
     fun onClickHomePage() {
         emitEvent(SignUpFailEvent.MoveToHomePage)
     }
+    
+    fun onClickNext() {
+        emitEvent(SignUpFailEvent.MoveToCode)
+    }
 }
 
 sealed interface SignUpFailEvent : UiEvent {
     object MoveToBack : SignUpFailEvent
     object MoveToHomePage : SignUpFailEvent
+    object MoveToCode : SignUpFailEvent
 }

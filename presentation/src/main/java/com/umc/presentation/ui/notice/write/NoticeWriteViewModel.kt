@@ -1,28 +1,106 @@
 package com.umc.presentation.ui.notice.write
 
 import android.net.Uri
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.NoticeCategory
+import com.umc.domain.model.enums.NoticeChipClassType
+import com.umc.domain.model.enums.UploadFileCategory
+import com.umc.domain.model.enums.UserChallengerRole
+import com.umc.domain.model.enums.UserPart
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.notice.NoticeChipState
+import com.umc.domain.model.organization.Chapter
+import com.umc.domain.model.school.SchoolInfo
+import com.umc.domain.model.request.notice.NoticeCreateRequest
+import com.umc.domain.model.request.notice.NoticeTargetRequest
+import com.umc.domain.model.request.notice.NoticeVoteRequest
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.notice.AddNoticeImagesUseCase
+import com.umc.domain.usecase.notice.AddNoticeLinksUseCase
+import com.umc.domain.usecase.notice.AddNoticeVoteUseCase
+import com.umc.domain.usecase.notice.CreateNoticeUseCase
+import com.umc.domain.usecase.organization.GetChapterListUseCase
+import com.umc.domain.usecase.organization.GetGisuListUseCase
+import com.umc.domain.usecase.school.GetAllSchoolUseCase
+import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import com.umc.presentation.util.ULog
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 
 @HiltViewModel
-class NoticeWriteViewModel
-@Inject
-constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
+class NoticeWriteViewModel @Inject constructor(
+    private val createNoticeUseCase: CreateNoticeUseCase,
+    private val addNoticeVoteUseCase: AddNoticeVoteUseCase,
+    private val addNoticeImagesUseCase: AddNoticeImagesUseCase,
+    private val addNoticeLinksUseCase: AddNoticeLinksUseCase,
+    private val uploadFileUseCase: UploadFileUseCase,
+    private val getChapterListUseCase: GetChapterListUseCase,
+    private val getAllSchoolUseCase: GetAllSchoolUseCase,
+    private val getGisuListUseCase: GetGisuListUseCase,
+    private val getUserInfoUseCase: GetUserInfoUseCase
+) : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
     NoticeWriteUiState(),
 ) {
     init {
-        updateDropDownList(dummyDropDown())
-        updateClassChipList(getDummy())
-        updatePartChipList(getDummy2())
+        loadUserInfoAndInit()
+        loadChapters()
+        loadSchools()
+        updatePartChipList(getPartChipList())
+        loadGisuList()
     }
 
-    private fun updateClassChipList(chipList: List<NoticeChipState>) {
+    private fun loadUserInfoAndInit() = viewModelScope.launch {
+        getUserInfoUseCase().collect { userInfo ->
+            updateState { copy(userInfo = userInfo) }
+            val filteredDropDown = filterDropDownByUserRole(userInfo)
+            updateDropDownList(filteredDropDown)
+            
+            // Set default category based on user's first available role
+            val defaultCategory = getDefaultCategory(userInfo)
+            updateState { copy(category = defaultCategory) }
+            updateClassChipList(getNoticeChip(defaultCategory))
+        }
+    }
+
+    private fun loadChapters() = viewModelScope.launch {
+        resultResponse(
+            response = getChapterListUseCase(),
+            successCallback = { chapters ->
+                updateState { copy(chapterList = chapters) }
+            }
+        )
+    }
+
+    private fun loadSchools() = viewModelScope.launch {
+        resultResponse(
+            response = getAllSchoolUseCase(),
+            successCallback = { schools ->
+                updateState { copy(schoolList = schools) }
+            }
+        )
+    }
+
+    private fun loadGisuList() = viewModelScope.launch {
+        resultResponse(
+            response = getGisuListUseCase(),
+            successCallback = { gisuList ->
+                val activeGisu = gisuList.gisuList.find { it.isActive }
+                updateState { copy(activeGisuId = activeGisu?.gisuId) }
+            }
+        )
+    }
+
+    fun updateClassChipList(chipList: List<NoticeChipState>) {
         updateState {
             copy(
                 classList = chipList
@@ -38,71 +116,61 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
         }
     }
 
-    private fun getDummy(): List<NoticeChipState> {
-        return listOf(
+    private fun getNoticeChip(category: NoticeCategory): List<NoticeChipState> {
+        val types = when (category) {
+            NoticeCategory.CENTRAL_OFFICE -> {
+                listOf(NoticeChipClassType.ALL, NoticeChipClassType.PART)
+            }
+            NoticeCategory.PART -> {
+                listOf(NoticeChipClassType.PART)
+            }
+            NoticeCategory.SCHOOL -> {
+                listOf(
+                    NoticeChipClassType.ALL,
+                    NoticeChipClassType.SCHOOL,
+                    NoticeChipClassType.PART
+                )
+            }
+            NoticeCategory.BRANCH -> {
+                listOf(
+                    NoticeChipClassType.ALL,
+                    NoticeChipClassType.BRANCH,
+                    NoticeChipClassType.PART
+                )
+            }
+        }
+        
+        return types.map { type ->
             NoticeChipState(
-                text = "전체",
-                isClicked = true,
-            ),
-            NoticeChipState(
-                text = "운영진공지",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "파트",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "지부",
-                isClicked = false,
-                hanBottomSheet = true
-            ),
-            NoticeChipState(
-                text = "학교",
-                isClicked = false,
-                hanBottomSheet = true
+                text = type.label,
+                isClicked = type == NoticeChipClassType.ALL,
+                hanBottomSheet = type.hasBottomSheet
             )
-        )
+        }
     }
 
-    private fun getDummy2(): List<NoticeChipState> {
-        return listOf(
+    private fun getPartChipList(): List<NoticeChipState> {
+        return UserPart.entries.map { part ->
             NoticeChipState(
-                text = "Web",
+                text = part.label,
                 isClicked = false,
-            ),
-            NoticeChipState(
-                text = "Server",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "Ios",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "Android",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "Design",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "PM",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "SpringBoot",
-                isClicked = false,
-            ),
-            NoticeChipState(
-                text = "Node.js",
-                isClicked = false,
+                part = part.name
             )
-        )
+        }
     }
 
     fun onClickClassChip(chip: NoticeChipState) {
+        val selectedType = NoticeChipClassType.fromLabel(chip.text)
+
+        if (selectedType.hasBottomSheet) {
+            when (selectedType) {
+                NoticeChipClassType.BRANCH -> emitEvent(NoticeWriteEvent.ShowChapterBottomSheetEvent)
+                NoticeChipClassType.SCHOOL -> emitEvent(NoticeWriteEvent.ShowSchoolBottomSheetEvent)
+                else -> {}
+            }
+            return
+        }
+
         val newList = uiState.value.classList.map {
             if (it.text == chip.text) {
                 it.copy(isClicked = !it.isClicked)
@@ -111,14 +179,59 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
             }
         }
 
-        //TODO 임시임 게시판 분류 확인되면 수정할 예정
-        if (newList.any { it.text == "파트" && it.isClicked }) {
+        if (newList.any { it.text == NoticeChipClassType.PART.label && it.isClicked }) {
             updateState { copy(isShowPartChip = true) }
         } else {
             updateState { copy(isShowPartChip = false) }
         }
 
         updateClassChipList(newList)
+    }
+
+    fun onChapterSelected(chapter: Chapter) {
+        val currentList = uiState.value.classList.toMutableList()
+
+        val alreadySelected = currentList.any { it.chapterId == chapter.id.toLong() }
+        if (alreadySelected) return
+
+        val selectedChapterChip = NoticeChipState(
+            text = chapter.name,
+            isClicked = true,
+            chapterId = chapter.id.toLong(),
+            hanBottomSheet = false
+        )
+
+        val branchChipIndex = currentList.indexOfFirst { it.text == NoticeChipClassType.BRANCH.label }
+        if (branchChipIndex != -1) {
+            currentList.add(branchChipIndex, selectedChapterChip)
+        } else {
+            currentList.add(selectedChapterChip)
+        }
+
+        updateClassChipList(currentList)
+    }
+
+    fun onSchoolSelected(school: SchoolInfo) {
+        val currentList = uiState.value.classList.toMutableList()
+
+        val alreadySelected = currentList.any { it.schoolId == school.schoolId.toLong() }
+        if (alreadySelected) return
+
+        val selectedSchoolChip = NoticeChipState(
+            text = school.schoolName,
+            isClicked = true,
+            schoolId = school.schoolId.toLong(),
+            hanBottomSheet = false
+        )
+
+        val schoolChipIndex = currentList.indexOfFirst { it.text == NoticeChipClassType.SCHOOL.label }
+        if (schoolChipIndex != -1) {
+            currentList.add(schoolChipIndex, selectedSchoolChip)
+        } else {
+            currentList.add(selectedSchoolChip)
+        }
+
+        updateClassChipList(currentList)
     }
 
     fun onClickPartChip(chip: NoticeChipState) {
@@ -139,16 +252,58 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
         }
     }
 
-    private fun dummyDropDown(): List<String> {
-        return listOf(
-            NoticeCategory.SCHOOL.label,
-            NoticeCategory.CENTRAL_OFFICE.label,
-            NoticeCategory.BRANCH.label,
-            NoticeCategory.PART.label
-        )
+    private fun filterDropDownByUserRole(userInfo: UserInfo): List<String> {
+        val roleTypes = userInfo.roles.map { it.roleType }.toSet()
+        
+        val availableCategories = mutableSetOf<NoticeCategory>()
+        
+        roleTypes.forEach { roleType ->
+            when (UserChallengerRole.from(roleType)) {
+                UserChallengerRole.CENTRAL_PRESIDENT,
+                UserChallengerRole.CENTRAL_VICE_PRESIDENT -> {
+                    availableCategories.add(NoticeCategory.CENTRAL_OFFICE)
+                }
+                UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER -> {
+                    availableCategories.add(NoticeCategory.PART)
+                }
+                UserChallengerRole.SCHOOL_PRESIDENT,
+                UserChallengerRole.SCHOOL_VICE_PRESIDENT -> {
+                    availableCategories.add(NoticeCategory.SCHOOL)
+                }
+                UserChallengerRole.CHAPTER_PRESIDENT -> {
+                    availableCategories.add(NoticeCategory.BRANCH)
+                }
+                else -> { /* 다른 역할은 드롭다운에 표시하지 않음 */ }
+            }
+        }
+        
+        return availableCategories.map { it.label }.toList()
+    }
+    
+    private fun getDefaultCategory(userInfo: UserInfo): NoticeCategory {
+        val roleTypes = userInfo.roles.map { it.roleType }
+        
+        return when {
+            // 중앙 총괄단 우선
+            roleTypes.any {
+                UserChallengerRole.from(it) == UserChallengerRole.CENTRAL_PRESIDENT ||
+                UserChallengerRole.from(it) == UserChallengerRole.CENTRAL_VICE_PRESIDENT
+            } -> NoticeCategory.CENTRAL_OFFICE
+            // 교육국원
+            roleTypes.any { UserChallengerRole.from(it) == UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER } -> NoticeCategory.PART
+            // 학교 회장단
+            roleTypes.any { 
+                UserChallengerRole.from(it) == UserChallengerRole.SCHOOL_PRESIDENT ||
+                UserChallengerRole.from(it) == UserChallengerRole.SCHOOL_VICE_PRESIDENT 
+            } -> NoticeCategory.SCHOOL
+            // 지부장
+            roleTypes.any { UserChallengerRole.from(it) == UserChallengerRole.CHAPTER_PRESIDENT } -> NoticeCategory.BRANCH
+            else -> NoticeCategory.CENTRAL_OFFICE
+        }
     }
 
     fun onClickShowDropDown() {
+        if (!uiState.value.isShowCategoryDropDown) return
         updateState {
             copy(isShowDropDown = !uiState.value.isShowDropDown)
         }
@@ -156,8 +311,11 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
 
     fun updateCategory(category: NoticeCategory) {
         onClickShowDropDown()
+        updateClassChipList(getNoticeChip(category))
         updateState {
-            copy(category = category)
+            copy(
+                category = category,
+            )
         }
     }
 
@@ -189,14 +347,13 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
         }
     }
 
-    fun onChangedLinkText(text: String){
+    fun onChangedLinkText(text: String) {
         updateState {
             copy(linkText = text)
         }
     }
 
     fun updateVoteList(list: List<String>) {
-        //TODO 보기 좀 불편해서 api 연결하면서 수정하겠습니다.
         val anonymity = if (uiState.value.canAnonymity) "익명, " else "실명, "
         val multiple = if (uiState.value.canSelectMultiple) "복수 허용, " else "단일 투표, "
         val count = "${list.size}개의 항목"
@@ -232,13 +389,13 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
         }
     }
 
-    fun onClickVoteAnonymity(){
+    fun onClickVoteAnonymity() {
         updateState {
             copy(canAnonymity = !canAnonymity)
         }
     }
 
-    fun onClickVoteSelectMultiple(){
+    fun onClickVoteSelectMultiple() {
         updateState {
             copy(canSelectMultiple = !canSelectMultiple)
         }
@@ -246,6 +403,148 @@ constructor() : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
 
     fun updateVoteTitle(title: String) {
         updateState { copy(voteTitle = title) }
+    }
+
+    fun updateVoteStartDate(date: String) {
+        updateState { copy(voteStartDate = date) }
+    }
+
+    fun updateVoteEndDate(date: String) {
+        updateState { copy(voteEndDate = date) }
+    }
+
+    fun updateTitle(title: String) {
+        updateState { copy(title = title) }
+    }
+
+    fun updateContent(content: String) {
+        updateState { copy(content = content) }
+    }
+
+    fun updateShouldNotify(shouldNotify: Boolean) {
+        updateState { copy(shouldNotify = shouldNotify) }
+    }
+
+    fun onClickToggleAllGisu() {
+        updateState { copy(isAllGisuSelected = !isAllGisuSelected) }
+    }
+
+    fun onClickSubmit() = viewModelScope.launch {
+        val state = uiState.value
+
+        if (state.title.isBlank()) {
+            emitEvent(NoticeWriteEvent.ShowError("제목을 입력해주세요"))
+            return@launch
+        }
+        if (state.content.isBlank()) {
+            emitEvent(NoticeWriteEvent.ShowError("내용을 입력해주세요"))
+            return@launch
+        }
+
+        val activeGisuId = state.activeGisuId
+        if (activeGisuId == null) {
+            emitEvent(NoticeWriteEvent.ShowError("기수 정보를 불러오는 중입니다"))
+            return@launch
+        }
+
+        updateState { copy(isLoading = true) }
+
+        val targetParts = state.partList.filter { it.isClicked }.map { it.text.uppercase() }
+        val targetChapterId = state.classList.find { it.isClicked && it.chapterId != null }?.chapterId?.toInt()
+        val targetSchoolId = state.classList.find { it.isClicked && it.schoolId != null }?.schoolId?.toInt()
+        val targetRequest = NoticeTargetRequest(
+            targetGisuId = if (state.isAllGisuSelected) null else activeGisuId,
+            targetChapterId = targetChapterId,
+            targetSchoolId = targetSchoolId,
+            targetParts = targetParts
+        )
+
+        val createRequest = NoticeCreateRequest(
+            title = state.title,
+            content = state.content,
+            shouldNotify = state.shouldNotify,
+            targetInfo = targetRequest
+        )
+
+        resultResponse(
+            response = createNoticeUseCase(createRequest),
+            successCallback = { noticeId ->
+                handleNoticeCreated(noticeId)
+            },
+            errorCallback = {
+                updateState { copy(isLoading = false) }
+                emitEvent(NoticeWriteEvent.ShowError("공지사항 작성에 실패했습니다"))
+            }
+        )
+    }
+
+    private suspend fun uploadImages(imageUris: List<Uri>): List<String> {
+        val imageIds = mutableListOf<String>()
+        imageUris.forEachIndexed { index, uri ->
+            resultResponse(
+                response = uploadFileUseCase(uri.toString(), UploadFileCategory.NOTICE_ATTACHMENT),
+                successCallback = {
+                    imageIds.add(it.fileId)
+                }
+            )
+        }
+        return imageIds
+    }
+
+    private fun handleNoticeCreated(
+        noticeId: Long
+    ) = viewModelScope.launch {
+        var hasError = false
+        val state = uiState.value
+
+        if (state.selectImageList.isNotEmpty()) {
+            val imageIds = uploadImages(state.selectImageList)
+            if (imageIds.isNotEmpty()) {
+                resultResponse(
+                    response = addNoticeImagesUseCase(noticeId, imageIds),
+                    successCallback = { },
+                    errorCallback = { hasError = true }
+                )
+            }
+        }
+
+        if (state.isShowLink && state.linkText.isNotBlank()) {
+            val links = state.linkText.split(",").map { it.trim() }.filter { it.isNotBlank() }
+            if (links.isNotEmpty()) {
+                resultResponse(
+                    response = addNoticeLinksUseCase(noticeId, links),
+                    successCallback = { },
+                    errorCallback = { hasError = true }
+                )
+            }
+        }
+
+        if (state.isShowVote && state.voteTextList.isNotEmpty()) {
+                            val validOptions = state.voteTextList.filter { it.isNotBlank() }
+                if (validOptions.isNotEmpty()) {
+                    val voteRequest = NoticeVoteRequest(
+                        title = state.voteTitle,
+                        isAnonymous = state.canAnonymity,
+                        allowMultipleChoice = state.canSelectMultiple,
+                        startsAt = formatDateForServer(state.voteStartDate),
+                        endsAtExclusive = formatDateForServer(state.voteEndDate),
+                        options = validOptions
+                )
+                resultResponse(
+                    response = addNoticeVoteUseCase(noticeId, voteRequest),
+                    successCallback = { },
+                    errorCallback = { hasError = true }
+                )
+            }
+        }
+
+        updateState { copy(isLoading = false) }
+
+        if (!hasError) {
+            emitEvent(NoticeWriteEvent.SubmitSuccess)
+        } else {
+            emitEvent(NoticeWriteEvent.ShowError("일부 항목 추가에 실패했습니다"))
+        }
     }
 }
 
@@ -257,18 +556,64 @@ data class NoticeWriteUiState(
     val selectImageList: List<Uri> = emptyList(),
     val classList: List<NoticeChipState> = emptyList(),
     val partList: List<NoticeChipState> = emptyList(),
-    val category: NoticeCategory = NoticeCategory.SCHOOL,
+    val category: NoticeCategory = NoticeCategory.CENTRAL_OFFICE,
     val dropdownList: List<String> = emptyList(),
     val linkText: String = "",
     val voteTitle: String = "투표 만들기",
     val voteCondition: String = "",
     val voteTextList: List<String> = List(2) { "" },
+    val voteStartDate: String = formatDateForDisplay(Calendar.getInstance()),
+    val voteEndDate: String = formatDateForDisplay(Calendar.getInstance()),
     val canAnonymity: Boolean = false,
     val canSelectMultiple: Boolean = false,
-) : UiState
+    val title: String = "",
+    val content: String = "",
+    val shouldNotify: Boolean = true,
+    val isLoading: Boolean = false,
+    val chapterList: List<Chapter> = emptyList(),
+    val schoolList: List<SchoolInfo> = emptyList(),
+    val activeGisuId: Int? = null,
+    val userInfo: UserInfo? = null,
+    val isAllGisuSelected: Boolean = false,
+) : UiState {
+    val isShowClassSection: Boolean
+        get() = category != NoticeCategory.PART
+    
+    val isShowCategoryDropDown: Boolean
+        get() = dropdownList.size > 1
+}
 
 sealed interface NoticeWriteEvent : UiEvent {
     object SelectImageEvent : NoticeWriteEvent
-    object ShowBottomSheetEvent: NoticeWriteEvent
+    object ShowBottomSheetEvent : NoticeWriteEvent
+    object ShowChapterBottomSheetEvent : NoticeWriteEvent
+    object ShowSchoolBottomSheetEvent : NoticeWriteEvent
+    object SubmitSuccess : NoticeWriteEvent
+    data class ShowError(val message: String) : NoticeWriteEvent
+}
 
+// 날짜를 "YYYY년 MM월 DD일" 형식으로 변환
+fun formatDateForDisplay(calendar: Calendar): String {
+    val year = calendar.get(Calendar.YEAR)
+    val month = calendar.get(Calendar.MONTH) + 1
+    val day = calendar.get(Calendar.DAY_OF_MONTH)
+    return "${year}년 ${month}월 ${day}일"
+}
+
+// 날짜를 ISO 8601 형식(2026-02-15T18:35:12.445Z)으로 변환
+fun formatDateForServer(dateString: String): String {
+    // "2025년 2월 16일" -> ISO 8601
+    val regex = """(\d{4})년 (\d{1,2})월 (\d{1,2})일""".toRegex()
+    val matchResult = regex.find(dateString)
+    
+    return if (matchResult != null) {
+        val (year, month, day) = matchResult.destructured
+        // ISO 8601 형식: YYYY-MM-DDTHH:mm:ss.sssZ
+        String.format(Locale.US, "%04d-%02d-%02dT00:00:00.000Z", year.toInt(), month.toInt(), day.toInt())
+    } else {
+        // 파싱 실패 시 현재 시간 반환
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        sdf.timeZone = TimeZone.getTimeZone("UTC")
+        sdf.format(Date())
+    }
 }

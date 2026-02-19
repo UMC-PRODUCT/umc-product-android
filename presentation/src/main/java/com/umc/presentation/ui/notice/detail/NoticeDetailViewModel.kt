@@ -1,241 +1,368 @@
 package com.umc.presentation.ui.notice.detail
 
-import com.umc.domain.model.enums.NoticeCategory
-import com.umc.domain.model.enums.VoteCondition
-import com.umc.domain.model.enums.VoteState
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UDomainFormat.parseDateTime
+import com.umc.domain.model.UserInfo
+import com.umc.domain.model.notice.ChallengerReadInfo
 import com.umc.domain.model.notice.NoticeDetail
-import com.umc.domain.model.notice.User
-import com.umc.domain.model.notice.Vote
-import com.umc.domain.model.notice.VoteItem
+import com.umc.domain.model.notice.NoticeReadStatistics
+import com.umc.domain.model.notice.NoticeTarget
+import com.umc.domain.model.notice.NoticeVote
+import com.umc.domain.model.notice.NoticeVoteOption
+import com.umc.domain.usecase.GetChallengerIdUseCase
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
+import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
+import com.umc.domain.usecase.notice.GetNoticeReadStatisticsUseCase
+import com.umc.domain.usecase.notice.GetNoticeReadStatusUseCase
+import com.umc.domain.usecase.notice.SendNoticeReminderUseCase
+import com.umc.domain.usecase.notice.SubmitVoteResponseUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class NoticeDetailViewModel @Inject
-constructor() : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
+class NoticeDetailViewModel @Inject constructor(
+    private val getNoticeDetailUseCase: GetNoticeDetailUseCase,
+    private val getNoticeReadStatusUseCase: GetNoticeReadStatusUseCase,
+    private val getNoticeReadStatisticsUseCase: GetNoticeReadStatisticsUseCase,
+    private val sendNoticeReminderUseCase: SendNoticeReminderUseCase,
+    private val submitVoteResponseUseCase: SubmitVoteResponseUseCase,
+    private val getChallengerDetailUseCase: GetChallengerDetailUseCase,
+    private val getUserInfoUseCase: GetUserInfoUseCase,
+    private val getChallengerIdUseCase: GetChallengerIdUseCase,
+) : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
     NoticeFragmentUiState()
 ) {
 
-    init {
-        updateState {
-            copy(detail = getDummy())
+    private var currentNoticeId: Long = 0L
+    private var selectedOptionIds: MutableSet<Long> = mutableSetOf()
+    private var currentUserChallengerId: Long = -1L
+
+    fun init(noticeId: Long) {
+        currentNoticeId = noticeId
+        loadNoticeDetail()
+        loadReadStatistics()
+        loadReadStatus()
+        loadUnReadStatus()
+        loadCurrentUserInfo()
+    }
+
+    private fun loadCurrentUserInfo() = viewModelScope.launch {
+        val userInfo = getUserInfoUseCase().first()
+        currentUserChallengerId = getChallengerIdUseCase()
+        checkIsMember(userInfo)
+        checkIsAuthor()
+    }
+
+    private fun checkIsAuthor() {
+        val isAuthor = currentUserChallengerId == uiState.value.detail.authorChallengerId && currentUserChallengerId != -1L
+        updateState { copy(isAuthor = isAuthor) }
+    }
+
+    private fun checkIsMember(userInfo: UserInfo) {
+        val hasOnlyMemberRole = userInfo.roles.isNotEmpty() &&
+            userInfo.roles.all { it.roleType == "MEMBER" }
+        
+        updateState { 
+            copy(isCurrentUserMember = hasOnlyMemberRole) 
         }
+    }
+
+    fun onClickMenu() {
+        updateState { copy(isMenuVisible = !isMenuVisible) }
+    }
+
+    private fun loadNoticeDetail() = viewModelScope.launch {
+        if (currentNoticeId == 0L) {
+            emitEvent(NoticeFragmentEvent.ShowError("유효하지 않은 공지사항 ID입니다"))
+            return@launch
+        }
+
+        updateState { copy(isLoading = true) }
+        startLoading()
+
+        resultResponse(
+            response = getNoticeDetailUseCase(currentNoticeId),
+            successCallback = { detail ->
+                detail.vote?.mySelectedOptionIds?.let { ids ->
+                    selectedOptionIds = ids.toMutableSet()
+                } ?: run {
+                    selectedOptionIds = mutableSetOf()
+                }
+                
+                val formattedCreatedAt = getFormattedCreatedAt(detail.createdAt)
+                val formattedTargetInfo = getFormattedTargetInfo(detail.targetInfo)
+                val formattedVoteCondition = getFormattedVoteCondition(detail.vote)
+
+                updateState { 
+                    copy(
+                        detail = detail, 
+                        selectedVoteOptionIds = selectedOptionIds.toList(),
+                        isLoading = false,
+                        formattedCreatedAt = formattedCreatedAt,
+                        formattedTargetInfo = formattedTargetInfo,
+                        formattedVoteCondition = formattedVoteCondition
+                    ) 
+                }
+                
+                checkIsAuthor()
+                loadAuthorNickname(detail.authorChallengerId)
+            },
+            errorCallback = {
+                updateState { copy(isLoading = false) }
+                emitEvent(NoticeFragmentEvent.ShowError("공지사항을 불러오는데 실패했습니다"))
+            }
+        )
+    }
+
+    private fun getFormattedCreatedAt(date: String): String {
+        return if (date.isNotBlank()) {
+            date.parseDateTime().first
+        } else ""
+    }
+
+    private fun getFormattedTargetInfo(targetInfo: NoticeTarget): String {
+        val chapterStr = if (targetInfo.targetChapterId != null) "/${targetInfo.targetChapterId}장" else "/전체"
+        val partsStr = if (targetInfo.targetParts.isNotEmpty()) "/${targetInfo.targetParts[0]}" else ""
+        return "수신대상: ${targetInfo.targetGisuId + 1}기${chapterStr}${partsStr}"
+    }
+
+    private fun getFormattedVoteCondition(vote: NoticeVote?): String {
+        return vote?.let {
+            val choiceType = if (it.allowMultipleChoice) "복수선택" else "단일선택"
+            val anonymity = if (it.isAnonymous) "익명" else "신원공개"
+            val startDate = it.startDateKst.parseDateTime().first
+            val endDate = it.endDateKst.parseDateTime().first
+            "${startDate} ~ ${endDate} • ${choiceType} • ${anonymity}"
+        } ?: ""
+    }
+
+    private fun loadAuthorNickname(authorChallengerId: Long) = viewModelScope.launch {
+        if (authorChallengerId <= 0) {
+            updateState { copy(authorNickname = "알수없음") }
+            return@launch
+        }
+
+        startLoading()
+
+        resultResponse(
+            response = getChallengerDetailUseCase(authorChallengerId),
+            successCallback = { challengerDetail ->
+                updateState { copy(authorNickname = challengerDetail.name) }
+            },
+            errorCallback = {
+                updateState { copy(authorNickname = "알수없음") }
+            }
+        )
+    }
+
+    private fun loadReadStatistics() = viewModelScope.launch {
+        if (currentNoticeId == 0L) return@launch
+        startLoading()
+
+        resultResponse(
+            response = getNoticeReadStatisticsUseCase(currentNoticeId),
+            successCallback = { statistics ->
+                updateState { copy(readStatistics = statistics) }
+            },
+            errorCallback = {
+                // 통계 로드 실패는 침묵으로 처리
+            }
+        )
+    }
+
+    fun loadReadStatus(status: String = "READ", cursorId: Long? = null) = viewModelScope.launch {
+        if (currentNoticeId == 0L) return@launch
+
+        updateState { copy(isLoadingReadStatus = true) }
+        startLoading()
+        resultResponse(
+            response = getNoticeReadStatusUseCase(
+                noticeId = currentNoticeId,
+                status = status,
+                filterType = "ALL",
+                cursorId = cursorId
+            ),
+            successCallback = { readStatus ->
+                updateState {
+                    copy(
+                        readStatusList = if (cursorId == null) {
+                            readStatus.content
+                        } else {
+                            readStatusList + readStatus.content
+                        },
+                        readNextCursor = readStatus.nextCursor,
+                        readHasNext = readStatus.hasNext,
+                        isLoadingReadStatus = false
+                    )
+                }
+            },
+            errorCallback = {
+                updateState { copy(isLoadingReadStatus = false) }
+                emitEvent(NoticeFragmentEvent.ShowError("확인 현황을 불러오는데 실패했습니다"))
+            }
+        )
+    }
+
+    fun loadMoreReadStatus() {
+        val state = uiState.value
+        if (state.isLoadingReadStatus || !state.readHasNext) return
+        loadReadStatus("READ", state.readNextCursor)
+    }
+
+    fun loadUnReadStatus(status: String = "UNREAD", cursorId: Long? = null) = viewModelScope.launch {
+        if (currentNoticeId == 0L) return@launch
+
+        updateState { copy(isLoadingReadStatus = true) }
+        startLoading()
+        resultResponse(
+            response = getNoticeReadStatusUseCase(
+                noticeId = currentNoticeId,
+                status = status,
+                filterType = "ALL",
+                cursorId = cursorId
+            ),
+            successCallback = { unReadStatus ->
+                updateState {
+                    copy(
+                        unReadStatusList = if (cursorId == null) {
+                            unReadStatus.content
+                        } else {
+                            unReadStatusList + unReadStatus.content
+                        },
+                        unReadNextCursor = unReadStatus.nextCursor,
+                        unReadHasNext = unReadStatus.hasNext,
+                        isLoadingReadStatus = false
+                    )
+                }
+            },
+            errorCallback = {
+                updateState { copy(isLoadingReadStatus = false) }
+                emitEvent(NoticeFragmentEvent.ShowError("확인 현황을 불러오는데 실패했습니다"))
+            }
+        )
+    }
+
+    fun loadMoreUnReadStatus() {
+        val state = uiState.value
+        if (state.isLoadingReadStatus || !state.unReadHasNext) return
+        loadUnReadStatus("UNREAD", state.unReadNextCursor)
     }
 
     fun onClickBackPressed() {
         emitEvent(NoticeFragmentEvent.MoveBackPressedEvent)
     }
 
-    private fun getDummy(): NoticeDetail {
-        return NoticeDetail(
-            mustRead = true,
-            category = NoticeCategory.CENTRAL_OFFICE,
-            title = "[필독] 12기 활동 규정 안내",
-            profileImage = "",
-            author = "운영진",
-            date = "2026.01.01",
-            viewCount = 100,
-            receiver = "12기/전체",
-            content = "대충 내용이 들어갈 자리",
-            imageList = emptyList(),
-            link = "https://example.com/guideline",
-            vote = Vote(
-                title = "회식 메뉴 투표",
-                state = VoteState.PROGRESS,
-                condition = listOf(VoteCondition.BLINDNESS, VoteCondition.SINGLE_VOTE),
-                conditionText = VoteCondition.buildVoteConditionText(
-                    listOf(
-                        VoteCondition.BLINDNESS,
-                        VoteCondition.SINGLE_VOTE
-                    )
-                ),
-                item = listOf(
-                    VoteItem(
-                        isChecked = false,
-                        name = "삼겹살 목살"
-                    ),
-                    VoteItem(
-                        isChecked = false,
-                        name = "치킨 피자"
-                    ),
-                    VoteItem(
-                        isChecked = false,
-                        name = "족발 보쌈"
-                    )
-                )
-            ),
-            allReceiverCount = 1000,
-            nowReceiverCount = 801,
-            receiverText = "/ 1000명 (80%)",
-            userList = listOf(
-                User(
-                    id = 1,
-                    name = "김서준",
-                    nickName = "서니",
-                    branch = "서울",
-                    school = "경희대학교",
-                    part = "Android",
-                    isSendNotification = true,
-                    isCheck = false
-                ),
-                User(
-                    id = 2,
-                    name = "이하은",
-                    nickName = "하니",
-                    branch = "부산",
-                    school = "부산대학교",
-                    part = "Design",
-                    isSendNotification = false,
-                    isCheck = true
-                ),
-                User(
-                    id = 3,
-                    name = "박민준",
-                    nickName = "민",
-                    branch = "대구",
-                    school = "영남대학교",
-                    part = "Web",
-                    isSendNotification = true,
-                    isCheck = true
-                ),
-                User(
-                    id = 4,
-                    name = "최유진",
-                    nickName = "유지니",
-                    branch = "인천",
-                    school = "인하대학교",
-                    part = "PM",
-                    isSendNotification = false,
-                    isCheck = false
-                ),
-                User(
-                    id = 5,
-                    name = "정도현",
-                    nickName = "도도",
-                    branch = "대전",
-                    school = "충남대학교",
-                    part = "Node.js",
-                    isSendNotification = true,
-                    isCheck = false
-                ),
-                User(
-                    id = 6,
-                    name = "윤지아",
-                    nickName = "지아",
-                    branch = "광주",
-                    school = "전남대학교",
-                    part = "iOS",
-                    isSendNotification = true,
-                    isCheck = true
-                ),
-                User(
-                    id = 7,
-                    name = "한지훈",
-                    nickName = "지훈",
-                    branch = "울산",
-                    school = "울산대학교",
-                    part = "SpringBoot",
-                    isSendNotification = false,
-                    isCheck = false
-                ),
-                User(
-                    id = 8,
-                    name = "오수빈",
-                    nickName = "수비니",
-                    branch = "수원",
-                    school = "아주대학교",
-                    part = "Android",
-                    isSendNotification = true,
-                    isCheck = true
-                ),
-                User(
-                    id = 9,
-                    name = "임현우",
-                    nickName = "현우",
-                    branch = "세종",
-                    school = "고려대학교(세종)",
-                    part = "Web",
-                    isSendNotification = false,
-                    isCheck = false
-                ),
-                User(
-                    id = 10,
-                    name = "강예린",
-                    nickName = "예린",
-                    branch = "제주",
-                    school = "제주대학교",
-                    part = "Design",
-                    isSendNotification = true,
-                    isCheck = false
-                )
-            )
+    fun onClickVoteItem(clickedOption: NoticeVoteOption) {
+        val vote = uiState.value.detail.vote ?: return
+        val isMultiple = vote.allowMultipleChoice
 
-        )
+        if (isMultiple) {
+            // 복수 선택 가능: 토글
+            if (selectedOptionIds.contains(clickedOption.optionId)) {
+                selectedOptionIds.remove(clickedOption.optionId)
+            } else {
+                selectedOptionIds.add(clickedOption.optionId)
+            }
+        } else {
+            // 단일 선택: 하나만 선택
+            if (selectedOptionIds.contains(clickedOption.optionId)) {
+                selectedOptionIds.clear()
+            } else {
+                selectedOptionIds.clear()
+                selectedOptionIds.add(clickedOption.optionId)
+            }
+        }
+
+        updateState {
+            copy(selectedVoteOptionIds = selectedOptionIds.toList())
+        }
     }
 
-    fun onClickVoteItem(clicked: VoteItem) {
-        updateState {
-            val detail = uiState.value.detail
-            val vote = detail.vote
+    fun onClickSubmitVote() = viewModelScope.launch {
+        val vote = uiState.value.detail.vote ?: return@launch
+        val voteId = vote.voteId
+        val optionIds = selectedOptionIds.toList()
 
-            val isSingle = VoteCondition.SINGLE_VOTE in vote.condition
-            val isMultiple = VoteCondition.MULTIPLE_VOTE in vote.condition
+        if (voteId == -1L || optionIds.isEmpty()) return@launch
 
-            val newItems = when {
-                isSingle -> {
-                    vote.item.map { item ->
-                        item.copy(isChecked = item.name == clicked.name)
-                    }
+        updateState { copy(isSubmittingVote = true) }
+        startLoading()
 
-                    val clickedWasChecked =
-                        vote.item.any { it.name == clicked.name && it.isChecked }
-                    vote.item.map { item ->
-                        when {
-                            item.name == clicked.name -> item.copy(isChecked = !clickedWasChecked)
-                            else -> item.copy(isChecked = false)
-                        }
-                    }
-                }
-
-                isMultiple -> {
-                    vote.item.map { item ->
-                        if (item.name == clicked.name) item.copy(isChecked = !item.isChecked) else item
-                    }
-                }
-
-                else -> {
-                    vote.item.map { item ->
-                        if (item.name == clicked.name) item.copy(isChecked = !item.isChecked) else item
-                    }
-                }
+        resultResponse(
+            response = submitVoteResponseUseCase(voteId, optionIds),
+            successCallback = {
+                loadNoticeDetail()
+                emitEvent(NoticeFragmentEvent.ShowSuccess("투표가 완료되었습니다"))
+            },
+            errorCallback = {
+                updateState { copy(isSubmittingVote = false) }
+                emitEvent(NoticeFragmentEvent.ShowError("투표 제출에 실패했습니다"))
             }
-
-            copy(
-                detail = detail.copy(
-                    vote = vote.copy(
-                        item = newItems
-                    )
-                )
-            )
-        }
+        )
     }
 
     fun onClickShowBottomSheet() {
         emitEvent(NoticeFragmentEvent.ShowBottomSheetEvent)
     }
 
+    fun onClickSendReminder(targetChallengerIds: List<Long>) = viewModelScope.launch {
+        if (currentNoticeId == 0L) return@launch
 
+        updateState { copy(isSendingReminder = true) }
+        startLoading()
+        resultResponse(
+            response = sendNoticeReminderUseCase(currentNoticeId, targetChallengerIds),
+            successCallback = {
+                updateState { copy(isSendingReminder = false) }
+            },
+            errorCallback = {
+                updateState { copy(isSendingReminder = false) }
+            }
+        )
+    }
+
+    fun onClickEditPost() {
+        // TODO: Implement edit post navigation
+    }
+
+    fun onClickDeletePost() {
+        // TODO: Implement delete post logic
+    }
 }
 
 
 data class NoticeFragmentUiState(
-    val detail: NoticeDetail = NoticeDetail()
+    val detail: NoticeDetail = NoticeDetail(),
+    val readStatistics: NoticeReadStatistics? = null,
+    val readStatusList: List<ChallengerReadInfo> = emptyList(),
+    val unReadStatusList: List<ChallengerReadInfo> = emptyList(),
+    val selectedVoteOptionIds: List<Long> = emptyList(),
+    val isLoading: Boolean = false,
+    val isLoadingReadStatus: Boolean = false,
+    val isSendingReminder: Boolean = false,
+    val isSubmittingVote: Boolean = false,
+    val formattedVoteCondition: String = "",
+    val formattedTargetInfo: String = "",
+    val formattedCreatedAt: String = "",
+    val authorNickname: String = "",
+    val readNextCursor: Long? = null,
+    val readHasNext: Boolean = false,
+    val unReadNextCursor: Long? = null,
+    val unReadHasNext: Boolean = false,
+    val isMenuVisible: Boolean = false,
+    val isCurrentUserMember: Boolean = false,
+    val isAuthor: Boolean = false,
 ) : UiState
 
 sealed interface NoticeFragmentEvent : UiEvent {
     object ShowBottomSheetEvent : NoticeFragmentEvent
     object MoveBackPressedEvent : NoticeFragmentEvent
+    data class ShowError(val message: String) : NoticeFragmentEvent
+    data class ShowSuccess(val message: String) : NoticeFragmentEvent
 }
