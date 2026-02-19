@@ -1,6 +1,8 @@
 package com.umc.presentation.ui.act.study.group.model
 
 import com.umc.presentation.base.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+
 
 class AdminStudyGroupViewModel :
     BaseViewModel<AdminStudyGroupState, AdminStudyGroupEvent>(
@@ -22,11 +24,11 @@ class AdminStudyGroupViewModel :
             groupId = 2L,
             title = "Android A팀",
             partLabel = "Android",
-            leaderName = "김도연",
+            leaderName = "박유수",
             members = listOf("김도연", "박유수", "조나단", "나루"),
             createdAtText = "2024.03.05",
             memberCount = 4,
-            leaderUniv = "서울여자대학교",
+            leaderUniv = "숭실대",
         )
     )
 }

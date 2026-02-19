@@ -7,6 +7,7 @@ data class AdminActStudySubmitState(
     val nextCursor: Long? = null,
     val hasNext: Boolean = false,
 
+    val selectedWeekText: String = "10주차",
 
     val studyGroups: List<StudyGroup> = emptyList(),
     val availableWeeks: List<Int> = emptyList(),

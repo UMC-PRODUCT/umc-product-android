@@ -119,7 +119,7 @@
                         android:id="@+id/tv_week"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text='@{state.selectedWeek + "주차"}'
+                        android:text="@{state.selectedWeekText}"
                         android:textAppearance="@style/Caption1Bold"
                         android:textColor="@color/neutral700"
                         app:layout_constraintStart_toStartOf="parent"
