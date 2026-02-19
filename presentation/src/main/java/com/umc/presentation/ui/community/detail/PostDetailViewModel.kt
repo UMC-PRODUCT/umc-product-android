@@ -235,7 +235,7 @@ constructor(
             
                 },
                 errorCallback = {
-                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("게시글 권한을 불러오는데 실패했습니다."))
+
                 }
             )
         }
@@ -244,6 +244,9 @@ constructor(
 
     // 좋아요 토글
     fun toggleLike() {
+
+        
+
 
         /**서버에 반영**/
         viewModelScope.launch {
@@ -260,7 +263,7 @@ constructor(
                     rebuildDetailList(updatedContent, uiState.value.nowCommentList)
                 },
                 errorCallback = {
-                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("좋아요 설정을 실패했습니다."))
+
 
                 }
             )
