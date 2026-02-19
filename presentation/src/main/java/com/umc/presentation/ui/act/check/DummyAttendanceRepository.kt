@@ -84,12 +84,12 @@ class DummyAttendanceRepository @Inject constructor() {
     }
 
     // ──────────────────────────────────────────────
-    // 출석 히스토리 (출석 / 지각 / 결석 각 1개)
+    // 출석 히스토리 — 초기 더미 3개 + 승인/반려 시 추가됨
     // ──────────────────────────────────────────────
     private val _userHistory = MutableStateFlow(
         listOf(
             UserCheckHistory(
-                id = 1,
+                id = 101,
                 title = "안드로이드 스터디",
                 startTime = "18:00",
                 endTime = "20:00",
@@ -97,7 +97,7 @@ class DummyAttendanceRepository @Inject constructor() {
                 tags = listOf(CategoryType.STUDY)
             ),
             UserCheckHistory(
-                id = 2,
+                id = 102,
                 title = "네트워킹데이",
                 startTime = "12:00",
                 endTime = "17:00",
@@ -105,7 +105,7 @@ class DummyAttendanceRepository @Inject constructor() {
                 tags = listOf(CategoryType.NETWORKING)
             ),
             UserCheckHistory(
-                id = 3,
+                id = 103,
                 title = "9기 LT",
                 startTime = "13:00",
                 endTime = "07:00",
@@ -183,7 +183,24 @@ class DummyAttendanceRepository @Inject constructor() {
         }
     }
 
+    // sessionId → sheetId 역방향 매핑 (더미 전용)
+    private val sessionIdToSheetId = mapOf(
+        1L to 101L,
+        2L to 102L,
+        3L to 103L,
+        4L to 104L
+    )
+
+    // 유엠씨 유저 ID (더미 전용)
+    private val DUMMY_USER_ID = 999L
+
     fun updateAdminSessionAfterApproval(attendanceId: Long) {
+        // 해당 유저가 속한 세션 찾기
+        val targetSession = _adminSessions.value.find { session ->
+            session.pendingUsers.any { it.id == attendanceId }
+        }
+
+        // Admin 세션 업데이트
         _adminSessions.value = _adminSessions.value.map { session ->
             val target = session.pendingUsers.find { it.id == attendanceId } ?: return@map session
             val updated = session.pendingUsers.filter { it.id != attendanceId }
@@ -196,13 +213,63 @@ class DummyAttendanceRepository @Inject constructor() {
                 attendanceRate = newRate
             )
         }
+
+        // 유엠씨 승인 시: 히스토리 PRESENT 추가 + Available COMPLETED 전환
+        if (attendanceId == DUMMY_USER_ID && targetSession != null) {
+            addHistoryFromSession(targetSession, CheckHistoryStatus.PRESENT)
+            val sheetId = sessionIdToSheetId[targetSession.id] ?: return
+            updateUserSessionStatus(sheetId, CheckAvailableStatus.COMPLETED, isLocationCertified = true)
+        }
     }
 
     fun updateAdminSessionAfterRejection(attendanceId: Long) {
+        // 해당 유저가 속한 세션 찾기
+        val targetSession = _adminSessions.value.find { session ->
+            session.pendingUsers.any { it.id == attendanceId }
+        }
+
+        // Admin 세션 업데이트
         _adminSessions.value = _adminSessions.value.map { session ->
             val target = session.pendingUsers.find { it.id == attendanceId } ?: return@map session
             val updated = session.pendingUsers.filter { it.id != attendanceId }
             session.copy(pendingUsers = updated, pendingCount = updated.size)
+        }
+
+        // 유엠씨 반려 시: 히스토리 ABSENT 추가 + Available COMPLETED 전환
+        if (attendanceId == DUMMY_USER_ID && targetSession != null) {
+            addHistoryFromSession(targetSession, CheckHistoryStatus.ABSENT)
+            val sheetId = sessionIdToSheetId[targetSession.id] ?: return
+            updateUserSessionStatus(sheetId, CheckAvailableStatus.COMPLETED, isLocationCertified = false)
+        }
+    }
+
+    /**
+     * AdminSessionCheck 정보를 기반으로 히스토리 항목 생성 후 추가
+     * 태그는 sessionId → sheetId → userSessions에서 조회하여 아이콘 일치
+     * 이미 동일 세션 히스토리가 있으면 상태만 업데이트
+     */
+    private fun addHistoryFromSession(session: AdminSessionCheck, status: CheckHistoryStatus) {
+        // userSessions에서 동일 세션의 태그 조회
+        val sheetId = sessionIdToSheetId[session.id]
+        val tags = _userSessions.value.find { it.sheetId == sheetId }?.tags
+
+        val newHistory = UserCheckHistory(
+            id = session.id.toInt(),
+            title = session.title,
+            startTime = session.startTime,
+            endTime = session.endTime,
+            status = status,
+            tags = tags
+        )
+
+        val current = _userHistory.value
+        val existingIndex = current.indexOfFirst { it.id == newHistory.id }
+
+        _userHistory.value = if (existingIndex != -1) {
+            // 이미 있으면 상태만 업데이트
+            current.toMutableList().also { it[existingIndex] = newHistory }
+        } else {
+            listOf(newHistory) + current
         }
     }
 }
