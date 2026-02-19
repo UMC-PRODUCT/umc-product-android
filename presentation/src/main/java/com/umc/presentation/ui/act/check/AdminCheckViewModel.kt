@@ -24,97 +24,36 @@ class AdminCheckViewModel @Inject constructor(
 ) : BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
 
     init {
-        // Repository의 StateFlow 구독
-        // ViewModel 재생성 시에도, User 화면에서 변경된 최신 상태를 바로 반영
         viewModelScope.launch {
             dummyRepo.adminSessions.collect { sessions ->
-                // 기존 확장 상태(isExpanded) 유지
-                val currentExpanded = uiState.value.adminSessions
-                    .filter { it.isExpanded }
-                    .map { it.session.id }
-                    .toSet()
-
-                val uiModels = sessions.map { session ->
-                    AdminSessionUIModel(
-                        session = session,
-                        isExpanded = session.id in currentExpanded
-                    )
-                }
+                val currentExpanded = uiState.value.adminSessions.filter { it.isExpanded }.map { it.session.id }.toSet()
+                val uiModels = sessions.map { AdminSessionUIModel(it, it.id in currentExpanded) }
                 updateState { copy(adminSessions = uiModels) }
             }
         }
     }
 
-    fun fetchAdminSessions() {
-        viewModelScope.launch {
-            resultResponse(
-                response = getAdminSessionListUseCase(),
-                successCallback = { data ->
-                    val currentSessions = uiState.value.adminSessions
-                    val uiModels = data.map { domainModel ->
-                        val wasExpanded = currentSessions.find { it.session.id == domainModel.id }?.isExpanded ?: false
-                        AdminSessionUIModel(session = domainModel, isExpanded = wasExpanded)
-                    }
-                    updateState { copy(adminSessions = uiModels) }
-                },
-                errorCallback = { failState -> emitEvent(AdminCheckEvent.ShowToast(failState.message)) }
-            )
-        }
+    fun approveAttendance(sessionId: Long, attendanceId: Long) {
+        dummyRepo.updateAdminSessionAfterApproval(sessionId, attendanceId)
     }
 
-    fun approveAttendance(attendanceId: Long) {
-        // Repository 변경 → StateFlow → UI 자동 반영
-        dummyRepo.updateAdminSessionAfterApproval(attendanceId)
-
-        /* API 연동 시 위 한 줄을 아래로 교체
-        viewModelScope.launch {
-            resultResponse(
-                response = postAttendanceApprovalUseCase(attendanceId),
-                successCallback = { updateSessionAfterApproval(attendanceId) },
-                errorCallback = { failState -> emitEvent(AdminCheckEvent.ShowToast(failState.message)) }
-            )
-        }
-        */
-    }
-
-    fun rejectAttendance(attendanceId: Long) {
-        // Repository 변경 → StateFlow → UI 자동 반영
-        dummyRepo.updateAdminSessionAfterRejection(attendanceId)
-
-        /* API 연동 시 위 한 줄을 아래로 교체
-        viewModelScope.launch {
-            resultResponse(
-                response = postAttendanceRejectionUseCase(attendanceId),
-                successCallback = { updateSessionAfterRejection(attendanceId) },
-                errorCallback = { failState -> emitEvent(AdminCheckEvent.ShowToast(failState.message)) }
-            )
-        }
-        */
+    fun rejectAttendance(sessionId: Long, attendanceId: Long) {
+        dummyRepo.updateAdminSessionAfterRejection(sessionId, attendanceId)
     }
 
     fun updateSessionLocation(sessionId: Long, lat: Double, lng: Double, address: String) {
         viewModelScope.launch {
-            val result = updateScheduleLocationUseCase(sessionId, address, lat, lng)
-
             resultResponse(
-                response = result,
-                successCallback = {
-                    emitEvent(AdminCheckEvent.ShowToast("출석 위치가 성공적으로 변경되었습니다."))
-                },
-                errorCallback = { failState ->
-                    emitEvent(AdminCheckEvent.ShowToast(failState.message))
-                }
+                response = updateScheduleLocationUseCase(sessionId, address, lat, lng),
+                successCallback = { emitEvent(AdminCheckEvent.ShowToast("위치가 변경되었습니다.")) },
+                errorCallback = { emitEvent(AdminCheckEvent.ShowToast(it.message)) }
             )
         }
     }
 
     fun toggleSessionExpansion(sessionId: Long) {
-        val currentSession = uiState.value.adminSessions.find { it.session.id == sessionId }
-
-        if (currentSession?.isExpanded == false && currentSession.session.pendingUsers.isEmpty()) {
-            fetchPendingUsers(sessionId)
-        }
-
+        val current = uiState.value.adminSessions.find { it.session.id == sessionId }
+        if (current?.isExpanded == false && current.session.pendingUsers.isEmpty()) fetchPendingUsers(sessionId)
         updateExpansionState(sessionId)
     }
 
@@ -124,15 +63,11 @@ class AdminCheckViewModel @Inject constructor(
                 response = getPendingUsersUseCase(sessionId),
                 successCallback = { data ->
                     updateState {
-                        val updatedList = adminSessions.map { uiModel ->
-                            if (uiModel.session.id == sessionId) {
-                                uiModel.copy(session = uiModel.session.copy(pendingUsers = data))
-                            } else uiModel
-                        }
-                        copy(adminSessions = updatedList)
+                        val updated = adminSessions.map { if (it.session.id == sessionId) it.copy(session = it.session.copy(pendingUsers = data)) else it }
+                        copy(adminSessions = updated)
                     }
                 },
-                errorCallback = { failState -> emitEvent(AdminCheckEvent.ShowToast(failState.message)) }
+                errorCallback = { emitEvent(AdminCheckEvent.ShowToast(it.message)) }
             )
         }
     }

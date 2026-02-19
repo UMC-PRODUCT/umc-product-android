@@ -22,50 +22,24 @@ import javax.inject.Singleton
 @Singleton
 class DummyAttendanceRepository @Inject constructor() {
 
-    // ──────────────────────────────────────────────
-    // User 세션
-    // ──────────────────────────────────────────────
     private val _userSessions = MutableStateFlow(INITIAL_USER_SESSIONS)
     val userSessions: StateFlow<List<UserCheckAvailable>> = _userSessions.asStateFlow()
 
-    fun updateUserSessionStatus(
-        sheetId: Long,
-        status: CheckAvailableStatus,
-        isLocationCertified: Boolean?
-    ) {
-        _userSessions.value = _userSessions.value.map { session ->
-            if (session.sheetId == sheetId) {
-                session.copy(status = status, isLocationCertified = isLocationCertified)
-            } else session
-        }
-    }
-
-    // ──────────────────────────────────────────────
-    // 출석 히스토리 — 초기 더미 3개 + 승인/반려 시 추가됨
-    // ──────────────────────────────────────────────
     private val _userHistory = MutableStateFlow(INITIAL_USER_HISTORY)
     val userHistory: StateFlow<List<UserCheckHistory>> = _userHistory.asStateFlow()
 
-    // ──────────────────────────────────────────────
-    // Admin 세션
-    // ──────────────────────────────────────────────
     private val _adminSessions = MutableStateFlow(INITIAL_ADMIN_SESSIONS)
     val adminSessions: StateFlow<List<AdminSessionCheck>> = _adminSessions.asStateFlow()
 
-    // sessionId → sheetId 역방향 매핑 (더미 전용)
-    private val sessionIdToSheetId = mapOf(
-        1L to 101L,
-        2L to 102L,
-        3L to 103L,
-        4L to 104L
-    )
-
-    // 유엠씨 유저 ID (더미 전용)
+    private val sessionIdToSheetId = mapOf(1L to 101L, 2L to 102L, 3L to 103L, 4L to 104L)
     private val DUMMY_USER_ID = 999L
 
-    // ──────────────────────────────────────────────
-    // Admin 세션 함수
-    // ──────────────────────────────────────────────
+    fun updateUserSessionStatus(sheetId: Long, status: CheckAvailableStatus, isLocationCertified: Boolean?) {
+        _userSessions.value = _userSessions.value.map { session ->
+            if (session.sheetId == sheetId) session.copy(status = status, isLocationCertified = isLocationCertified)
+            else session
+        }
+    }
 
     fun addPendingUser(sessionId: Long, user: AdminPendingUser) {
         _adminSessions.value = _adminSessions.value.map { session ->
@@ -76,47 +50,44 @@ class DummyAttendanceRepository @Inject constructor() {
         }
     }
 
-    fun updateAdminSessionAfterApproval(attendanceId: Long) {
-        val targetSession = _adminSessions.value.find { session ->
-            session.pendingUsers.any { it.id == attendanceId }
-        }
+    fun updateAdminSessionAfterApproval(sessionId: Long, attendanceId: Long) {
+        val targetSession = _adminSessions.value.find { it.id == sessionId }
 
         _adminSessions.value = _adminSessions.value.map { session ->
-            val target = session.pendingUsers.find { it.id == attendanceId } ?: return@map session
-            val updated = session.pendingUsers.filter { it.id != attendanceId }
-            val newAttended = session.attendedChallengers + 1
-            val newRate = if (session.totalChallengers > 0) (newAttended * 100) / session.totalChallengers else 0
-            session.copy(
-                pendingUsers = updated,
-                pendingCount = updated.size,
-                attendedChallengers = newAttended,
-                attendanceRate = newRate
-            )
+            if (session.id == sessionId) { // 요청된 세션 ID와 일치할 때만 유저 삭제
+                val updated = session.pendingUsers.filter { it.id != attendanceId }
+                val newAttended = session.attendedChallengers + 1
+                val newRate = if (session.totalChallengers > 0) (newAttended * 100) / session.totalChallengers else 0
+                session.copy(
+                    pendingUsers = updated,
+                    pendingCount = updated.size,
+                    attendedChallengers = newAttended,
+                    attendanceRate = newRate
+                )
+            } else session
         }
 
-        // 유엠씨 승인 시: 히스토리 PRESENT 추가 + Available COMPLETED 전환
         if (attendanceId == DUMMY_USER_ID && targetSession != null) {
             addHistoryFromSession(targetSession, CheckHistoryStatus.PRESENT)
-            val sheetId = sessionIdToSheetId[targetSession.id] ?: return
+            val sheetId = sessionIdToSheetId[sessionId] ?: return
             updateUserSessionStatus(sheetId, CheckAvailableStatus.COMPLETED, isLocationCertified = true)
         }
     }
 
-    fun updateAdminSessionAfterRejection(attendanceId: Long) {
-        val targetSession = _adminSessions.value.find { session ->
-            session.pendingUsers.any { it.id == attendanceId }
-        }
+    fun updateAdminSessionAfterRejection(sessionId: Long, attendanceId: Long) {
+        val targetSession = _adminSessions.value.find { it.id == sessionId }
 
         _adminSessions.value = _adminSessions.value.map { session ->
-            val target = session.pendingUsers.find { it.id == attendanceId } ?: return@map session
-            val updated = session.pendingUsers.filter { it.id != attendanceId }
-            session.copy(pendingUsers = updated, pendingCount = updated.size)
+            if (session.id == sessionId) { // 요청된 세션 ID와 일치할 때만 유저 삭제
+                val updated = session.pendingUsers.filter { it.id != attendanceId }
+                session.copy(pendingUsers = updated, pendingCount = updated.size)
+            } else session
         }
 
         // 유엠씨 반려 시: 히스토리 ABSENT 추가 + Available COMPLETED 전환
         if (attendanceId == DUMMY_USER_ID && targetSession != null) {
             addHistoryFromSession(targetSession, CheckHistoryStatus.ABSENT)
-            val sheetId = sessionIdToSheetId[targetSession.id] ?: return
+            val sheetId = sessionIdToSheetId[sessionId] ?: return
             updateUserSessionStatus(sheetId, CheckAvailableStatus.COMPLETED, isLocationCertified = false)
         }
     }
@@ -167,7 +138,7 @@ class DummyAttendanceRepository @Inject constructor() {
                 startTime = "11:00", endTime = "17:00",
                 status = CheckAvailableStatus.BEFORE,
                 latitude = 37.495608, longitude = 127.072235,
-                address = "SETEC",
+                address = "SETEC 제2전시실",
                 isLocationCertified = null
             ),
             UserCheckAvailable(
@@ -176,18 +147,18 @@ class DummyAttendanceRepository @Inject constructor() {
                 tags = listOf(CategoryType.ORIENTATION),
                 startTime = "17:00", endTime = "18:00",
                 status = CheckAvailableStatus.BEFORE,
-                latitude = 37.655878, longitude = 127.063968,
-                address = "서울여자대학교 50주년기념관 310호",
+                latitude = 37.545355, longitude = 126.952526,
+                address = "프론트원",
                 isLocationCertified = null
             ),
             UserCheckAvailable(
                 id = 3L, sheetId = 103L,
-                title = "PM Day",
+                title = "UMCON",
                 tags = listOf(CategoryType.PROJECT),
                 startTime = "14:00", endTime = "17:00",
                 status = CheckAvailableStatus.PENDING,
-                latitude = 37.582566, longitude = 127.010063,
-                address = "한성대학교 상상관 203호",
+                latitude = 37.493666, longitude = 126.921454,
+                address = "시립보라매청소년센터",
                 isLocationCertified = true
             ),
             UserCheckAvailable(

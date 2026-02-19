@@ -185,8 +185,8 @@ class UserCheckViewModel @Inject constructor(
     private fun dummyPendingUser(hasLateReason: Boolean, lateReason: String?) = AdminPendingUser(
         id = 999L,
         name = "유엠씨",
-        nickname = "umc",
-        university = "UMC대학교",
+        nickname = "프로덕트",
+        university = "안드대학교",
         profileImageUrl = null,
         requestTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
         hasLateReason = hasLateReason,
