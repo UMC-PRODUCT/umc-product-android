@@ -30,15 +30,17 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
 ) {
     override val viewModel: UserCheckViewModel by viewModels()
 
-    // 네이버 지도 UI
     private lateinit var locationSource: FusedLocationSource
-
-    // 실시간 위치 계산
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
 
-    // 어댑터 설정
-    private val availableHeaderAdapter by lazy { SectionHeaderAdapter(getString(R.string.attendance_header_available)) }
+    // n개 남음 버튼 클릭 시 더미 데이터 전체 리셋
+    private val availableHeaderAdapter by lazy {
+        SectionHeaderAdapter(
+            title = getString(R.string.attendance_header_available),
+            onCountClick = { viewModel.resetDummyData() }
+        )
+    }
 
     private val availableAdapter by lazy {
         CheckAvailableAdapter(
@@ -71,7 +73,6 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
     private fun setupLocationCallback() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
-                // 실시간 위치 정보를 뷰모델에 전달하여 거리 계산 수행
                 locationResult.lastLocation?.let { location ->
                     viewModel.updateLocation(location.latitude, location.longitude)
                 }
@@ -79,7 +80,6 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
         }
     }
 
-    // 실시간 위치 업데이트 시작
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     private fun startLocationUpdates() {
         val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
@@ -107,20 +107,16 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun initStates() {
         repeatOnStarted(viewLifecycleOwner) {
-            // 리스트 및 카운트 업데이트
             launch {
                 viewModel.uiState.collect { state ->
-                    // 가용한 세션 업데이트
                     availableAdapter.submitList(state.availableSessions)
                     availableHeaderAdapter.updateCount(state.availableCount)
 
-                    // 빈 화면 처리 (EmptyStateAdapter)
                     val availableEmptyList = if (state.availableSessions.isEmpty()) {
                         listOf(EmptyStateUIModel(R.drawable.ic_people, getString(R.string.attendance_empty_available)))
                     } else emptyList()
                     availableEmptyAdapter.submitList(availableEmptyList)
 
-                    // 출석 히스토리 업데이트
                     historyAdapter.submitList(state.attendanceHistories)
                     val historyEmptyList = if (state.attendanceHistories.isEmpty()) {
                         listOf(EmptyStateUIModel(R.drawable.ic_checkbook, getString(R.string.attendance_empty_history)))
@@ -129,7 +125,6 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
                 }
             }
 
-            // 일회성 액션(토스트, 다이얼로그) 처리
             launch {
                 viewModel.uiEvent.collect { event -> handleEvent(event) }
             }
@@ -150,7 +145,6 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
         binding.rvUserCheckMain.apply {
             adapter = concatAdapter
             layoutManager = LinearLayoutManager(requireContext())
-
             (itemAnimator as? DefaultItemAnimator)?.apply {
                 supportsChangeAnimations = false
             }
@@ -159,7 +153,9 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
 
     private fun checkLocationPermissions() {
         val permissions = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-        val isAllGranted = permissions.all { ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED }
+        val isAllGranted = permissions.all {
+            ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+        }
         if (!isAllGranted) requestPermissions(permissions, LOCATION_PERMISSION_REQUEST_CODE)
     }
 
@@ -169,9 +165,7 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
             is UserCheckEvent.ShowToast -> {
                 Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
             }
-            is UserCheckEvent.NavigateToFailureReason -> {
-
-            }
+            is UserCheckEvent.NavigateToFailureReason -> {}
         }
     }
 

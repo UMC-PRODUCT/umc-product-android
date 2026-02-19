@@ -1,12 +1,8 @@
 package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
-import com.umc.domain.model.act.check.UserCheckAvailable
-import com.umc.domain.model.act.check.UserCheckHistory
-import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.enums.CheckAvailableStatus
-import com.umc.domain.model.enums.CheckHistoryStatus
-import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
 import com.umc.domain.usecase.attendance.GetAttendanceHistoryUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
@@ -17,6 +13,8 @@ import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -25,15 +23,42 @@ class UserCheckViewModel @Inject constructor(
     private val getAttendanceHistoryUseCase: GetAttendanceHistoryUseCase,
     private val getScheduleDetailUseCase: GetScheduleDetailUseCase,
     private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase,
-    private val postAttendanceReasonUseCase: PostAttendanceReasonUseCase
+    private val postAttendanceReasonUseCase: PostAttendanceReasonUseCase,
+    private val dummyRepo: DummyAttendanceRepository
 ) : BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
 
     private var lastUserLat: Double? = null
     private var lastUserLng: Double? = null
 
+    private val sheetIdToSessionId = mapOf(
+        101L to 1L,
+        102L to 2L,
+        103L to 3L,
+        104L to 4L
+    )
+
     init {
-        fetchAttendanceData()
-        fetchAttendanceHistory()
+        // 출석 가능 세션 구독
+        viewModelScope.launch {
+            dummyRepo.userSessions.collect { sessions ->
+                val list = sessions.map { CheckAvailableUIModel(session = it) }
+                updateState { copy(availableSessions = list, availableCount = list.size) }
+            }
+        }
+
+        // 출석 히스토리 구독 — 처음 화면 진입 시 더미 3개 바로 표시됨
+        viewModelScope.launch {
+            dummyRepo.userHistory.collect { histories ->
+                val historyUIList = histories.mapIndexed { index, history ->
+                    CheckHistoryUIModel(
+                        history = history,
+                        isFirst = index == 0,
+                        isLast = index == histories.size - 1
+                    )
+                }
+                updateState { copy(attendanceHistories = historyUIList) }
+            }
+        }
     }
 
     private fun fetchAttendanceData() {
@@ -95,20 +120,29 @@ class UserCheckViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 실시간 위치 기반 출석 요청
-     */
     fun requestAttendance(sheetId: Long) {
         val sessionUIModel = uiState.value.availableSessions.find { it.session.sheetId == sheetId }
         val isVerified = sessionUIModel?.isWithinRange ?: false
 
+        dummyRepo.updateUserSessionStatus(
+            sheetId = sheetId,
+            status = CheckAvailableStatus.PENDING,
+            isLocationCertified = isVerified
+        )
+
+        val sessionId = sheetIdToSessionId[sheetId] ?: return
+        dummyRepo.addPendingUser(
+            sessionId = sessionId,
+            user = dummyPendingUser(hasLateReason = false, lateReason = null)
+        )
+
+        /* API 연동 시 위 블록 전체를 아래로 교체
         val request = AttendanceCheckRequest(
             attendanceSheetId = sheetId,
             latitude = lastUserLat,
             longitude = lastUserLng,
             locationVerified = isVerified
         )
-
         viewModelScope.launch {
             resultResponse(
                 response = postAttendanceCheckUseCase(request),
@@ -116,12 +150,23 @@ class UserCheckViewModel @Inject constructor(
                 errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
             )
         }
+        */
     }
 
-    /**
-     * 출석 사유 제출
-     */
     fun submitAttendanceReason(sheetId: Long, reason: String) {
+        dummyRepo.updateUserSessionStatus(
+            sheetId = sheetId,
+            status = CheckAvailableStatus.PENDING,
+            isLocationCertified = false
+        )
+
+        val sessionId = sheetIdToSessionId[sheetId] ?: return
+        dummyRepo.addPendingUser(
+            sessionId = sessionId,
+            user = dummyPendingUser(hasLateReason = true, lateReason = reason)
+        )
+
+        /* API 연동 시 위 블록 전체를 아래로 교체
         viewModelScope.launch {
             resultResponse(
                 response = postAttendanceReasonUseCase(sheetId, reason),
@@ -134,18 +179,26 @@ class UserCheckViewModel @Inject constructor(
                 }
             )
         }
+        */
     }
 
-    /**
-     * 기존 위치 업데이트 및 거리 계산 로직 유지
-     */
+    private fun dummyPendingUser(hasLateReason: Boolean, lateReason: String?) = AdminPendingUser(
+        id = 999L,
+        name = "유엠씨",
+        nickname = "프로덕트",
+        university = "안드대학교",
+        profileImageUrl = null,
+        requestTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
+        hasLateReason = hasLateReason,
+        lateReason = lateReason
+    )
+
     fun updateLocation(userLat: Double, userLng: Double) {
         lastUserLat = userLat
         lastUserLng = userLng
 
         updateState {
             val updatedList = availableSessions.map { uiModel ->
-                // 좌표가 0.0이 아니고 유효한 경우에만 계산
                 if (uiModel.session.latitude != 0.0 && uiModel.session.longitude != 0.0) {
                     val results = FloatArray(1)
                     android.location.Location.distanceBetween(
@@ -162,9 +215,6 @@ class UserCheckViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 특정 아이템을 클릭했을 때 확장 상태를 토글 (기존 로직 유지)
-     */
     fun toggleSessionExpansion(sessionId: Long) {
         updateState {
             val newList = availableSessions.map { uiModel ->
@@ -176,6 +226,14 @@ class UserCheckViewModel @Inject constructor(
             }
             copy(availableSessions = newList)
         }
+    }
+
+    /**
+     * 더미 데이터 전체 리셋 (개발/테스트 전용)
+     * User/Admin 모든 상태가 초기값으로 돌아감
+     */
+    fun resetDummyData() {
+        dummyRepo.reset()
     }
 }
 

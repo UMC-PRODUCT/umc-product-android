@@ -53,7 +53,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:gravity="end|center_vertical"
-                android:text="@{uiModel.address}"
+                android:text="@{uiModel.session.address}"
                 android:textAppearance="@style/Caption1"
                 android:textColor="@color/neutral600"
                 android:singleLine="true"

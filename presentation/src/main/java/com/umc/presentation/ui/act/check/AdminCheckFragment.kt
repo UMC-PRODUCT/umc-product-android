@@ -2,7 +2,6 @@ package com.umc.presentation.ui.act.check
 
 import androidx.fragment.app.viewModels
 import com.umc.presentation.base.BaseFragment
-import com.umc.presentation.component.ULocationDialog
 import com.umc.presentation.databinding.FragmentAdminCheckBinding
 import com.umc.presentation.ui.act.adapter.AdminCheckAdapter
 import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
@@ -18,17 +17,13 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
     private val adminAdapter by lazy {
         AdminCheckAdapter(
             fragmentManager = childFragmentManager,
-            onToggleExpansion = { sessionId ->
-                viewModel.toggleSessionExpansion(sessionId)
+            onToggleExpansion = { sessionId -> viewModel.toggleSessionExpansion(sessionId) },
+            onChangeLocation = { sessionId -> showLocationChangeDialog(sessionId) },
+            onApproveConfirmed = { user, sessionId ->
+                viewModel.approveAttendance(sessionId, user.id)
             },
-            onChangeLocation = { sessionId ->
-                showLocationChangeDialog(sessionId)
-            },
-            onApproveConfirmed = { user, _ ->
-                viewModel.approveAttendance(user.id)
-            },
-            onRejectConfirmed = { user, _ ->
-                viewModel.rejectAttendance(user.id)
+            onRejectConfirmed = { user, sessionId ->
+                viewModel.rejectAttendance(sessionId, user.id)
             }
         )
     }
