@@ -8,6 +8,7 @@ import com.umc.domain.model.ChallengerRecord
 import com.umc.domain.model.ProfileInfo
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.UserRole
+import com.umc.domain.model.mypage.UserOutLink
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -25,7 +26,6 @@ class AppDataStore @Inject constructor(
 
 
     // 아웃링크 Flow (마이페이지 깃허브/블로그/링크드인)
-    /*
     val userOutLinkFlow: Flow<UserOutLink> = context.dataStore.data.map { prefs ->
         UserOutLink(
             github = prefs[KEY_GITHUB] ?: "",
@@ -42,8 +42,6 @@ class AppDataStore @Inject constructor(
             prefs[KEY_BLOG] = outLink.blog
         }
     }
-
-     */
 
     // 유저 정보 Flow
     val userInfoFlow: Flow<UserInfo> = context.dataStore.data.map { prefs ->
@@ -214,9 +212,9 @@ class AppDataStore @Inject constructor(
     // 여기서 Datastore에 들어갈 key들 정의
     companion object {
         //외부 링크 KEY
-        //val KEY_GITHUB = stringPreferencesKey("github_url")
-        //val KEY_LINKEDIN = stringPreferencesKey("linkedin_url")
-        //val KEY_BLOG = stringPreferencesKey("blog_url")
+        val KEY_GITHUB = stringPreferencesKey("github_url")
+        val KEY_LINKEDIN = stringPreferencesKey("linkedin_url")
+        val KEY_BLOG = stringPreferencesKey("blog_url")
 
         //유저 정보 KEY
         val KEY_ID = longPreferencesKey("id")

@@ -1,21 +1,18 @@
 package com.umc.presentation.ui.act.study
 
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.fragment.app.viewModels
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentAdminStudyBinding
 import com.umc.presentation.ui.act.study.group.AdminStudyGroupFragment
 import com.umc.presentation.ui.act.study.submit.AdminActStudySubmitFragment
-import dagger.hilt.android.AndroidEntryPoint
 
-
-@AndroidEntryPoint
 class AdminStudyFragment :
-    BaseFragment<FragmentAdminStudyBinding, EmptyState, EmptyEvent, AdminStudyViewModel>(
+    BaseFragment<FragmentAdminStudyBinding, Nothing, Nothing, Nothing>(
         FragmentAdminStudyBinding::inflate
     ) {
 
-    override val viewModel: AdminStudyViewModel by viewModels()
+    override val viewModel: Nothing
+        get() = throw IllegalStateException("ViewModel is not used in this Fragment.")
 
     private var selectedTab: Tab = Tab.SUBMIT
 

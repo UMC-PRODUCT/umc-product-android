@@ -26,15 +26,11 @@ class AdminActStudySubmitWeekSelectBottomSheet(
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
         val adapter = AdminActStudySubmitWeekSelectAdapter { week ->
             onSelect(week)
             dismiss()
         }
-
         binding.rvWeeks.adapter = adapter
-
-
         adapter.submitList(weeks)
     }
 
@@ -43,9 +39,3 @@ class AdminActStudySubmitWeekSelectBottomSheet(
         super.onDestroyView()
     }
 }
-
-
-data class WeekDisplayItem(
-    val week: Int,
-    val label: String
-)
