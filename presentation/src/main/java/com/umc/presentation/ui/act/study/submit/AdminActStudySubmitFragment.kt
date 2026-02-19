@@ -91,8 +91,7 @@ class AdminActStudySubmitFragment :
             ).show(parentFragmentManager, "admin_act_study_submit_group")
         }
 
-        viewModel.loadWorkbookSubmissions()
-
+        viewModel.loadWorkbookSubmissions(reset = true)
     }
 
     override fun initStates() {

@@ -34,7 +34,7 @@ class AdminActStudySubmitWeekSelectAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(week: Int) {
-            binding.tvItem.text = if (week == 0) "전체 주차" else "${week}주차"
+            binding.tvItem.text = "${week}주차"
             binding.root.setOnClickListener { onClick(week) }
         }
     }
