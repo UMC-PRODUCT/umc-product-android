@@ -2,6 +2,7 @@ package com.umc.presentation.ui.home
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.PermissionType
 import com.umc.domain.model.enums.ResourceType
 import com.umc.domain.model.home.PlanDetailItem
@@ -33,23 +34,15 @@ constructor(
 
         //서버에서 게시글 상세 정보 가져오기
         fun getScheduleDetail(scheduleId : Long, plusDay: Int){
-            viewModelScope.launch {
-                resultResponse(
-                    response = getScheduleDetailHomeUseCase(scheduleId),
-                    successCallback = {
-                        updateState { copy(
-                            content = it,
-                            plusDay = plusDay)
-                        }
-                        settingScheduleAuthAccess(it.scheduleId)
-
-                        convertPlanDetailItemToUiState(it, plusDay)
-                    },
-                    errorCallback = {
-
-                    }
+            val now = uiState.value.listDetailItem.find { it.scheduleId == scheduleId }
+            Log.d("log_home", "getScheduleDetail: $now")
+            updateState {
+                copy(
+                    content = now ?: PlanDetailItem(),
+                    plusDay = plusDay
                 )
             }
+            convertPlanDetailItemToUiState(now ?: PlanDetailItem(), plusDay)
         }
 
         //일정 게시글 접근 권한 조회 및 UI 설정 함수
@@ -202,6 +195,147 @@ constructor(
 }
 
 data class PlanDetailFragmentUiState(
+
+    val listDetailItem: List<PlanDetailItem> = listOf(
+        // ID 1: UMC 데모데이 준비
+        PlanDetailItem(
+            scheduleId = 1,
+            name = "UMC 데모데이 준비",
+            description = "UMC 5기 데모데이 부스 운영 및 시연용 디바이스 최종 세팅",
+            tags = listOf(CategoryType.PROJECT, CategoryType.PRESENTATION),
+            startDay = "2026.02.13",
+            startTime = "14:00",
+            endDay = "2026.02.13",
+            endTime = "17:00",
+            locationName = "숭실대학교 정보과학관",
+            latitude = 37.4963,
+            longitude = 126.9574,
+            status = "COMPLETED",
+            dDay = -1
+        ),
+        // ID 2: 최종 성적 확인
+        PlanDetailItem(
+            scheduleId = 2,
+            name = "최종 성적 확인",
+            description = "2025학년도 2학기 전체 성적 확인 및 성적 이의신청 기간 확인",
+            tags = listOf(CategoryType.GENERAL),
+            startDay = "2026.02.14",
+            startTime = "10:00",
+            endDay = "2026.02.14",
+            endTime = "11:00",
+            locationName = "숭실대학교 정보과학관",
+            status = "COMPLETED",
+            dDay = -1
+        ),
+        // ID 3: UMC 중앙진 회의
+        PlanDetailItem(
+            scheduleId = 3,
+            name = "UMC 중앙진 회의",
+            description = "UMC 운영진 정기 회의 및 차기 기수 모집 공고 검토",
+            tags = listOf(CategoryType.PRESENTATION),
+            startDay = "2026.02.18",
+            startTime = "18:00",
+            endDay = "2026.02.18",
+            endTime = "20:00",
+            locationName = "강남 스터디룸",
+            status = "COMPLETED",
+            dDay = -1
+        ),
+        // ID 4: 앱 안드로이드 배포 (기준일 D-Day)
+        PlanDetailItem(
+            scheduleId = 4,
+            name = "앱 안드로이드 배포",
+            description = "SleepingHero 또는 Momenty 앱 구글 플레이 스토어 최종 빌드 및 배포 심사 제출",
+            tags = listOf(CategoryType.PROJECT),
+            startDay = "2026.02.20",
+            startTime = "21:00",
+            endDay = "2026.02.20",
+            endTime = "22:00",
+            locationName = "자택",
+            status = "IN_PROGRESS",
+            dDay = 0,
+            requiresAttendanceApproval = true
+        ),
+        // ID 5: 앱 프로덕트 점검 (24일)
+        PlanDetailItem(
+            scheduleId = 5,
+            name = "앱 프로덕트 점검",
+            description = "배포 이후 발생한 런타임 오류 및 사용자 피드백 1차 정리",
+            tags = listOf(CategoryType.PROJECT),
+            startDay = "2026.02.24",
+            startTime = "15:00",
+            endDay = "2026.02.24",
+            endTime = "18:00",
+            locationName = "스타벅스 숭실대입구점",
+            latitude = 37.4963,
+            longitude = 126.9574,
+            status = "PENDING",
+            dDay = 4
+        ),
+        // ID 5: 앱 프로덕트 점검 (25일 - 연속 일정)
+        PlanDetailItem(
+            scheduleId = 6,
+            name = "앱 프로덕트 점검",
+            description = "피드백 기반 핫픽스 업데이트 진행 및 코드 리뷰",
+            tags = listOf(CategoryType.PROJECT),
+            startDay = "2026.02.25",
+            startTime = "15:00",
+            endDay = "2026.02.25",
+            endTime = "18:00",
+            locationName = "스타벅스 숭실대입구점",
+            status = "PENDING",
+            dDay = 5
+        ),
+        // ID 6: 숭실대학교 개강
+        PlanDetailItem(
+            scheduleId = 7,
+            name = "숭실대학교 개강",
+            description = "2026학년도 1학기 개강. 강의실 위치 확인 및 강의계획서 점검",
+            tags = listOf(CategoryType.NETWORKING),
+            startDay = "2026.03.02",
+            startTime = "09:00",
+            endDay = "2026.03.02",
+            endTime = "18:00",
+            isAllDay = true,
+            locationName = "숭실대학교",
+            latitude = 37.4963,
+            longitude = 126.9574,
+            status = "UPCOMING",
+            dDay = 10
+        ),
+        // ID 7: 아이디어톤 (27일)
+        PlanDetailItem(
+            scheduleId = 8,
+            name = "아이디어톤",
+            description = "본선 진출팀 대상 아이디어톤 무박 2일 진행 (프로토타입 개발)",
+            tags = listOf(CategoryType.PROJECT, CategoryType.RETROSPECTIVE),
+            startDay = "2026.03.27",
+            startTime = "10:00",
+            endDay = "2026.03.27",
+            endTime = "23:59",
+            locationName = "강남 코엑스",
+            latitude = 37.5113,
+            longitude = 127.0596,
+            status = "UPCOMING",
+            dDay = 35,
+            requiresAttendanceApproval = true
+        ),
+        // ID 7: 아이디어톤 (28일 - 연속 일정)
+        PlanDetailItem(
+            scheduleId = 9,
+            name = "아이디어톤",
+            description = "최종 결과 발표 및 네트워킹 세션",
+            tags = listOf(CategoryType.PROJECT, CategoryType.RETROSPECTIVE),
+            startDay = "2026.03.28",
+            startTime = "13:00",
+            endDay = "2026.03.28",
+            endTime = "18:00",
+            locationName = "강남 코엑스",
+            status = "UPCOMING",
+            dDay = 36
+        )
+    ),
+
     //일정 관련
     val content : PlanDetailItem = PlanDetailItem(),
     val plusDay : Int = 0,

@@ -49,6 +49,7 @@ class HomeViewModel @Inject constructor(
 
         //3. 금일(월) 데이터 가져오기
         //getScheduleMonth(today.year, today.month)
+        loadEvents()
 
     }
 
@@ -290,9 +291,9 @@ data class HomeFragmentUiState(
     val viewMode: HomeViewMode = HomeViewMode.CALENDAR,
 
     // 유저 정보 영역
-    val userName: String = "",
-    val growDay: Int = 0,
-    val gisuTag: List<String> = emptyList(),
+    val userName: String = "박유수",
+    val growDay: Int = 185,
+    val gisuTag: List<String> = listOf("8기", "9기"),
 
     val userType: UserType = UserType.ACTIVE,
 
@@ -373,7 +374,7 @@ data class HomeFragmentUiState(
             plusDay = 0
         ),
         SchedulePlanItem(
-            id = 5,
+            id = 6,
             title = "앱 프로덕트 점검",
             time = "15:00",
             date = "2026.02.25",
@@ -384,7 +385,7 @@ data class HomeFragmentUiState(
             plusDay = 1
         ),
         SchedulePlanItem(
-            id = 6,
+            id = 7,
             title = "숭실대학교 개강",
             time = "09:00",
             date = "2026.03.02",
@@ -395,7 +396,7 @@ data class HomeFragmentUiState(
             plusDay = 0
         ),
         SchedulePlanItem(
-            id = 7,
+            id = 8,
             title = "아이디어톤",
             time = "10:00",
             date = "2026.03.27",
@@ -406,7 +407,7 @@ data class HomeFragmentUiState(
             plusDay = 0
         ),
         SchedulePlanItem(
-            id = 8,
+            id = 9,
             title = "아이디어톤",
             time = "13:00",
             date = "2026.03.28",

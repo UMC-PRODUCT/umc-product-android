@@ -240,7 +240,9 @@ constructor(
                     successCallback = {
                         emitEvent(PlanAddFragmentEvent.MoveBackPressedEvent)
                                       },
-                    errorCallback = { /* 에러 처리 */ }
+                    errorCallback = { /* 에러 처리 */
+                        emitEvent(PlanAddFragmentEvent.MoveBackPressedEvent)
+                    }
                 )
             } else {
                 // [새 일정 생성]
@@ -264,7 +266,9 @@ constructor(
                     successCallback = {
                         emitEvent(PlanAddFragmentEvent.MoveBackPressedEvent)
                                       },
-                    errorCallback = { /* 에러 처리 */ }
+                    errorCallback = { /* 에러 처리 */
+                        emitEvent(PlanAddFragmentEvent.MoveBackPressedEvent)
+                    }
                 )
             }
         }
