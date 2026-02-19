@@ -156,7 +156,8 @@ constructor(
                 emitEvent(PostWriteFragmentEvent.ClickBackPressed)
             },
             errorCallback = {
-                emitEvent(PostWriteFragmentEvent.MakeErrorTaost("게시글 작성에 실패했습니다."))
+                //emitEvent(PostWriteFragmentEvent.MakeErrorTaost("게시글 작성에 실패했습니다."))
+                emitEvent(PostWriteFragmentEvent.ClickBackPressed)
             }
         )
     }
@@ -178,7 +179,8 @@ constructor(
                 emitEvent(PostWriteFragmentEvent.ClickBackPressed)
             },
             errorCallback = {
-                emitEvent(PostWriteFragmentEvent.MakeErrorTaost("번개 게시글 작성에 실패했습니다."))
+                //emitEvent(PostWriteFragmentEvent.MakeErrorTaost("번개 게시글 작성에 실패했습니다."))4
+                emitEvent(PostWriteFragmentEvent.ClickBackPressed)
             }
         )
     }
@@ -203,7 +205,8 @@ constructor(
                     emitEvent(PostWriteFragmentEvent.ClickBackPressed)
                 },
                 errorCallback = {
-                    emitEvent(PostWriteFragmentEvent.MakeErrorTaost("번개글 수정에 실패했습니다."))
+                    //emitEvent(PostWriteFragmentEvent.MakeErrorTaost("번개글 수정에 실패했습니다."))
+                    emitEvent(PostWriteFragmentEvent.ClickBackPressed)
                 }
             )
             
@@ -223,7 +226,8 @@ constructor(
                     emitEvent(PostWriteFragmentEvent.ClickBackPressed)
                 },
                 errorCallback = {
-                    emitEvent(PostWriteFragmentEvent.MakeErrorTaost("게시글 수정에 실패했습니다."))
+                    //emitEvent(PostWriteFragmentEvent.MakeErrorTaost("게시글 수정에 실패했습니다."))
+                    emitEvent(PostWriteFragmentEvent.ClickBackPressed)
                 }
             )
         }

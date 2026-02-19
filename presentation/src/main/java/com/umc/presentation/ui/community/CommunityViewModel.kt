@@ -170,7 +170,7 @@ data class CommunityFragmentUiState(
             username = "디자인러브",
             writeTime = "3시간 전",
             likes = 15,
-            comments = 8,
+            comments = 3,
             content = "HHKB 배열 써보신 분 계신가요? 타건감이 예술이네요.",
             lightningInfo = null,
             userPart = UserPart.DESIGN,
@@ -186,7 +186,7 @@ data class CommunityFragmentUiState(
             username = "스쿼트장인",
             writeTime = "5시간 전",
             likes = 22,
-            comments = 12,
+            comments = 2,
             content = "오늘 하체 조지고 왔습니다. 다들 거북목 방지 운동 하세요.",
             lightningInfo = null,
             userPart = UserPart.WEB,
@@ -204,7 +204,7 @@ data class CommunityFragmentUiState(
             username = "박유수",
             writeTime = "2시간 전",
             likes = 5,
-            comments = 10,
+            comments = 1,
             content = "LazyColumn에서 특정 아이템만 업데이트하고 싶은데 자꾸 전체가 다시 그려지네요. remember 유의점 있을까요?",
             lightningInfo = null,
             userPart = UserPart.ANDROID,
@@ -238,7 +238,7 @@ data class CommunityFragmentUiState(
             username = "아트디렉터",
             writeTime = "어제",
             likes = 45,
-            comments = 15,
+            comments = 1,
             content = "협업 효율 200% 올려주는 피그마 꿀팁 정리해봤습니다.",
             lightningInfo = null,
             userPart = UserPart.DESIGN,
@@ -272,7 +272,7 @@ data class CommunityFragmentUiState(
             username = "자유로운영혼",
             writeTime = "3일 전",
             likes = 30,
-            comments = 20,
+            comments = 0,
             content = "이번 학기 정말 고생 많으셨습니다. 종강하면 바로 제주도 갈 거예요.",
             lightningInfo = null,
             userPart = UserPart.IOS,
@@ -297,6 +297,8 @@ data class CommunityFragmentUiState(
             scraps = 1
         )
     ),
+
+
 
     // 게시글 필터링 용도
     val whichTab: ContentType = ContentType.ALL, //얘는 tabLayout 선택 여부

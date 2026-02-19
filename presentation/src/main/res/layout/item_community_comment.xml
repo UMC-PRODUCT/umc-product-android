@@ -74,6 +74,7 @@
             android:layout_marginTop="4dp"
             app:layout_constraintStart_toStartOf="@id/item_tv_username"
             app:layout_constraintTop_toBottomOf="@id/item_tv_username"
+            app:layout_constraintEnd_toEndOf="parent"
             tools:text="홍길동(닉네임)"
             />
 
