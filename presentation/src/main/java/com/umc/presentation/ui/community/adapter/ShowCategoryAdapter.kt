@@ -1,4 +1,4 @@
-package com.umc.presentation.ui.home.adapter
+package com.umc.presentation.ui.community.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -10,12 +10,12 @@ import com.umc.domain.model.home.CategoryItem
 import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemHomeCategoryBinding
 
-
 /**해당 어댑터는 카테고리 (UChip) 형태에 대한 어댑터입니다.
  * 게시글 카테고리의 경우 종류가 많으므로, CategoryType의 enums를 생성하고 label로 처리하러 했으나
  * 중아 건의함의 카테고리의 경우, 지역이기 때문에, String으로 통합
  *
  * TODO: 해당 어댑터는 일정 추가 탭의 BottomSheetdDialog 사용으로 인해 사용이 중지되었습니다.
+ * TODO: 2026 02.23 -> 커뮤니티 화면의 명예의 전당에서 사용됩니다.
  * **/
 class ShowCategoryAdapter(
     private val onCategoryClick: (CategoryItem) -> Unit,
