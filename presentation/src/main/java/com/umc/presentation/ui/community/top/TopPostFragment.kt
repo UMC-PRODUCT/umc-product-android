@@ -6,6 +6,8 @@ import android.net.Uri
 import androidx.core.net.toUri
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.umc.domain.model.enums.TrophySchoolType
+import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentTopPostBinding
 import com.umc.presentation.ui.community.adapter.ShowCategoryAdapter
@@ -67,6 +69,37 @@ class TopPostFragment : BaseFragment<FragmentTopPostBinding, TopPostFragmentUiSt
 
     override fun handleEvent(event: TopPostFragmentEvent) {
         super.handleEvent(event)
+
+        when(event){
+            is TopPostFragmentEvent.OnClickSchoolMenu -> {
+                /**TODO: enum을 이용해 학교 이름을 정의한다. - 차후 학교 변동 시 enum 수정**/
+                val schools = TrophySchoolType.getSchoolLabels()
+                TrophyBottomSheetDialog(
+                    title = "학교를 선택하세요",
+                    content = "가나다순으로 정렬되어 있어요",
+                    itemList = schools,
+                    onSelected = {selectedSchool ->
+                        viewModel.handleSelectSchool(selectedSchool)
+                    }
+                ).show(childFragmentManager, "SchoolBottomSheetDialog")
+
+            }
+            is TopPostFragmentEvent.OnClickPartMenu -> {
+                val parts = UserPart.getFilterLabels()
+                TrophyBottomSheetDialog(
+                    title = "파트를 선택하세요",
+                    content = null,
+                    itemList = parts,
+                    onSelected = {selectedPart ->
+                        viewModel.handleSelectPart(selectedPart)
+                    }
+                ).show(childFragmentManager, "PartBottomSheetDialog")
+
+            }
+            else -> {
+
+            }
+        }
 
     }
 

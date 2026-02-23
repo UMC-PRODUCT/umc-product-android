@@ -6,6 +6,8 @@
 
     <data>
 
+        <import type="android.view.View"/>
+
         <variable
             name="vm"
             type="com.umc.presentation.ui.community.top.TopPostViewModel" />
@@ -34,7 +36,7 @@
             android:layout_height="wrap_content"
             android:background="@color/neutral000"
             android:layout_marginTop="16dp"
-
+            android:onClick="@{()->vm.onClickSchoolMenu()}"
             app:cardBackgroundColor="@color/neutral000"
             app:strokeWidth="1dp"
             app:strokeColor="@color/neutral200"
@@ -83,7 +85,7 @@
             android:background="@color/neutral000"
             android:layout_marginTop="16dp"
             android:layout_marginStart="8dp"
-
+            android:onClick="@{()->vm.onClickPartMenu()}"
             app:cardBackgroundColor="@color/neutral000"
             app:strokeWidth="1dp"
             app:strokeColor="@color/neutral200"
@@ -131,9 +133,23 @@
             android:layout_height="0dp"
             android:orientation="vertical"
             android:layout_marginTop="4dp"
+            android:visibility="@{vm.uiState.isShow ? View.VISIBLE : View.GONE}"
             app:layout_constraintTop_toBottomOf="@id/top_cdv_category_school"
             app:layout_constraintBottom_toBottomOf="parent"
             />
+
+        <TextView
+            android:id="@+id/top_tv_now_result"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/Footnote"
+            android:textColor="@color/neutral800"
+            android:visibility="@{vm.uiState.isShow ? View.GONE : View.VISIBLE}"
+            android:text="@string/community_top_no_result"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/top_cdv_category_school"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

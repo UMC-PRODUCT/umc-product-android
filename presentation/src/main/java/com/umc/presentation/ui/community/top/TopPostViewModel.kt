@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.community.TrophyBody
 import com.umc.domain.model.community.TrophyItem
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.usecase.community.GetCommunityTrophyUseCase
 
@@ -86,6 +87,26 @@ BaseViewModel<TopPostFragmentUiState, TopPostFragmentEvent>(
 
     }
 
+    //선택한 학교 선택 및 호출
+    fun handleSelectSchool(schoolName: String){
+        updateState {
+            copy(selectedSchool = schoolName)
+        }
+        fetchTrophies(uiState.value.selectedWeek, schoolName, uiState.value.selectedPart)
+    }
+
+    //선택한 파트 선택 및 호출
+    fun handleSelectPart(partName: String) {
+        //저장은 서버에 보내주는 양식을 저장(name)
+        val partEnum = UserPart.entries.find { it.label == partName } ?: UserPart.UNKNOWN
+        updateState {
+            copy(selectedPart = partEnum.name)
+        }
+        fetchTrophies(uiState.value.selectedWeek, uiState.value.selectedSchool, partName)
+    }
+
+
+
 
     //주차 리스트 최신화하여 recyclerview에 줄 인자 정하기
     fun initWeekList(){
@@ -107,6 +128,15 @@ BaseViewModel<TopPostFragmentUiState, TopPostFragmentEvent>(
             copy(weekList = weekList,
             selectedWeek = 1)
         }
+    }
+    
+    //학교 메뉴 선택
+    fun onClickSchoolMenu(){
+        emitEvent(TopPostFragmentEvent.OnClickSchoolMenu)
+    }
+    //파트 메뉴 선택
+    fun onClickPartMenu(){
+        emitEvent(TopPostFragmentEvent.OnClickPartMenu)
     }
 }
 
@@ -130,9 +160,17 @@ data class TopPostFragmentUiState(
     val selectedPart: String? = null,
 
 
-    ) : UiState
+    ) : UiState {
+    //참여자 명단(recyclerview를 보여주는지 체크 여부)
+    val isShow: Boolean
+        get() = trophyList.isNotEmpty()
+}
 
 sealed interface TopPostFragmentEvent : UiEvent {
+
+    object OnClickSchoolMenu: TopPostFragmentEvent
+    object OnClickPartMenu: TopPostFragmentEvent
+
 
 
 }

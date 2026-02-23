@@ -7,9 +7,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.presentation.databinding.ItemBottomSheetCategoryBinding
 
-class BottomSheetTropyCategoryAdapter(
+class BottomSheetTrophyCategoryAdapter(
     private val onClick: (String) -> Unit
-) : ListAdapter<String, BottomSheetTropyCategoryAdapter.ViewHolder>(CategoryDiffCallback) {
+) : ListAdapter<String, BottomSheetTrophyCategoryAdapter.ViewHolder>(CategoryDiffCallback) {
 
     inner class ViewHolder(private val binding: ItemBottomSheetCategoryBinding) :
         RecyclerView.ViewHolder(binding.root) {
