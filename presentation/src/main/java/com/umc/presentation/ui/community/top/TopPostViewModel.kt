@@ -100,9 +100,9 @@ BaseViewModel<TopPostFragmentUiState, TopPostFragmentEvent>(
         //저장은 서버에 보내주는 양식을 저장(name)
         val partEnum = UserPart.entries.find { it.label == partName } ?: UserPart.UNKNOWN
         updateState {
-            copy(selectedPart = partEnum.name)
+            copy(selectedPart = partName)
         }
-        fetchTrophies(uiState.value.selectedWeek, uiState.value.selectedSchool, partName)
+        fetchTrophies(uiState.value.selectedWeek, uiState.value.selectedSchool, partEnum.name)
     }
 
 
