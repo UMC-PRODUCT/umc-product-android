@@ -3,12 +3,14 @@ package com.umc.data.dataSource.remote.community
 import com.umc.data.request.community.CreateCommentRequest
 import com.umc.data.request.community.CreatePostLightningRequest
 import com.umc.data.request.community.CreatePostRequest
+import com.umc.data.request.community.CreateTrophyRequest
 import com.umc.data.response.community.CommunityGetPostResponse
 import com.umc.data.response.community.CommunitySearchPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
 import com.umc.data.response.community.PostLikeResponse
 import com.umc.data.response.community.PostScrapResponse
+import com.umc.data.response.community.TrophyResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
 
@@ -67,4 +69,10 @@ interface CommunityRemoteDataSource {
 
     //댓글 신고
     suspend fun reportComment(commentId: Long): ApiState<Unit>
+
+    //명예의 전당 게시글 생성
+    suspend fun createTrophy(request: CreateTrophyRequest): ApiState<TrophyResponse>
+
+    //명예의 전당 게시글
+    suspend fun getTrophies(week: Int?, school: String?, part: String?): ApiState<List<TrophyResponse>>
 }
