@@ -138,6 +138,7 @@
     <string name="confirm">확인</string>
     <string name="unConfirm">미확인</string>
     <string name="edit">수정</string>
+    <string name="see">보기</string>
 
     <!-- 파트 -->
     <string name="pm">PM</string>

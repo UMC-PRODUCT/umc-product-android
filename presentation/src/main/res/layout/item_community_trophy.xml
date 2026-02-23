@@ -29,6 +29,148 @@
         android:padding="16dp"
         >
 
+
+        <!--유저 정보-->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/item_circleimv_profile"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_profile_default"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/neutral200"
+            app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+            app:layout_constraintTop_toTopOf="@id/item_tv_username"
+            app:layout_constraintBottom_toBottomOf="@id/item_tv_title"
+            app:layout_constraintStart_toStartOf="parent"
+            />
+
+        <TextView
+            android:id="@+id/item_tv_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAppearance="@style/HeadlineBold"
+            android:textColor="@color/neutral800"
+            android:text="@{item.challengerName}"
+            android:layout_marginStart="16dp"
+            app:layout_constraintStart_toEndOf="@id/item_circleimv_profile"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="홍길동(닉네임)"
+            />
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/item_cdv_user_part"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:cornerRadius="4dp"
+            app:cardBackgroundColor="@color/neutral000"
+            app:borderWidth="1dp"
+            app:borderColor="@color/neutral200"
+            app:text="@{item.part.label}"
+            app:textAppearance="@style/Caption1Bold"
+            app:textColor="@color/neutral700"
+            app:buttonElevation="0"
+            app:contentPaddingBottom="4dp"
+            app:contentPaddingTop="4dp"
+            app:contentPaddingLeft="8dp"
+            app:contentPaddingRight="8dp"
+            app:layout_constraintTop_toTopOf="@id/item_tv_username"
+            app:layout_constraintBottom_toBottomOf="@id/item_tv_username"
+            app:layout_constraintStart_toEndOf="@id/item_tv_username"
+            />
+
+        <TextView
+            android:id="@+id/item_tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAppearance="@style/Footnote"
+            android:textColor="@color/neutral600"
+            android:text="@{item.title}"
+            android:layout_marginTop="4dp"
+            app:layout_constraintStart_toStartOf="@id/item_tv_username"
+            app:layout_constraintTop_toBottomOf="@id/item_tv_username"
+            tools:text="제목입니다."
+            />
+
+        <!--게시글 이동 버튼-->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/item_btn_go"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/neutral300"
+            app:cardBackgroundColor="@color/neutral000"
+            app:layout_constraintTop_toTopOf="@id/item_tv_username"
+            app:layout_constraintBottom_toBottomOf="@id/item_tv_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp">
+
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_go_website"
+                app:tint="@color/neutral800" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/see"
+                android:textAppearance="@style/SubheadlineBold"
+                android:textColor="@color/neutral800"/>
+
+        </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!--내용-->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/item_card_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            app:cardBackgroundColor="@color/neutral100"
+            app:layout_constraintTop_toBottomOf="@id/item_tv_title"
+            >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="10dp">
+
+            <TextView
+                android:id="@+id/item_tv_cotent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{item.content}"
+                android:textAppearance="@style/Footnote"
+                android:textColor="@color/neutral600"
+                tools:text="정말 잘 만든 워크북이네요"
+                />
+
+        </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     </com.google.android.material.card.MaterialCardView>
