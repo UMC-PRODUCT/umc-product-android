@@ -6,32 +6,151 @@
 
     <data>
 
+        <import type="android.view.View"/>
+
         <variable
             name="vm"
             type="com.umc.presentation.ui.community.top.TopPostViewModel" />
     </data>
 
-    <!--이미 containerview에 패딩 있으니 상관 X-->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingVertical="24dp"
+        android:paddingTop="24dp"
         android:paddingHorizontal="16dp"
         android:background="@color/neutral100"
         >
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/top_rcv_week"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toTopOf="parent"
+            />
 
-        <TextView
+        <!--대학교 파트-->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/top_cdv_category_school"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="현재 지원하지 않는 기능입니다."
+            android:background="@color/neutral000"
+            android:layout_marginTop="16dp"
+            android:onClick="@{()->vm.onClickSchoolMenu()}"
+            app:cardBackgroundColor="@color/neutral000"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/neutral200"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/top_rcv_week">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingVertical="8dp"
+                android:paddingHorizontal="12dp">
+
+                <TextView
+                    android:id="@+id/top_tv_school_select"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:textAppearance="@style/CalloutBold"
+                    android:textColor="@color/neutral500"
+                    android:text='@{vm.uiState.selectedSchool == null ? "대학교" : vm.uiState.selectedSchool}'
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_dropdown"
+                    android:layout_marginStart="4dp"
+                    android:tint="@color/neutral400"
+                    app:layout_constraintStart_toEndOf="@id/top_tv_school_select"
+                    app:layout_constraintTop_toTopOf="@id/top_tv_school_select"
+                    app:layout_constraintBottom_toBottomOf="@id/top_tv_school_select"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!--파트-->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/top_cdv_category_userpart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/neutral000"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="8dp"
+            android:onClick="@{()->vm.onClickPartMenu()}"
+            app:cardBackgroundColor="@color/neutral000"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/neutral200"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:layout_constraintStart_toEndOf="@id/top_cdv_category_school"
+            app:layout_constraintTop_toBottomOf="@id/top_rcv_week">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingVertical="8dp"
+                android:paddingHorizontal="12dp">
+
+                <TextView
+                    android:id="@+id/top_tv_userpart_select"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:textAppearance="@style/CalloutBold"
+                    android:textColor="@color/neutral500"
+                    android:text='@{vm.uiState.selectedPart == null ? "파트" : vm.uiState.selectedPart}'
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_dropdown"
+                    android:layout_marginStart="4dp"
+                    android:tint="@color/neutral400"
+                    app:layout_constraintStart_toEndOf="@id/top_tv_userpart_select"
+                    app:layout_constraintTop_toTopOf="@id/top_tv_userpart_select"
+                    app:layout_constraintBottom_toBottomOf="@id/top_tv_userpart_select"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/top_rcv_cotent"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            android:layout_marginTop="4dp"
+            android:visibility="@{vm.uiState.isShow ? View.VISIBLE : View.GONE}"
+            app:layout_constraintTop_toBottomOf="@id/top_cdv_category_school"
+            app:layout_constraintBottom_toBottomOf="parent"
+            />
+
+        <TextView
+            android:id="@+id/top_tv_now_result"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:textAppearance="@style/Footnote"
             android:textColor="@color/neutral800"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:visibility="@{vm.uiState.isShow ? View.GONE : View.VISIBLE}"
+            android:text="@string/community_top_no_result"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            />
+            app:layout_constraintTop_toBottomOf="@id/top_cdv_category_school"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

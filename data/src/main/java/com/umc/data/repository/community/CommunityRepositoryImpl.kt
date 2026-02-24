@@ -4,12 +4,14 @@ import com.umc.data.dataSource.remote.community.CommunityRemoteDataSource
 import com.umc.data.request.community.CreateCommentRequest
 import com.umc.data.request.community.CreatePostLightningRequest
 import com.umc.data.request.community.CreatePostRequest
+import com.umc.data.request.community.CreateTrophyRequest
 import com.umc.data.response.community.CommunityGetPostResponse.Companion.toPostPageModelDomain
 import com.umc.data.response.community.CommunitySearchPostResponse.Companion.toPostPageModelDomain
 import com.umc.data.response.community.PostCommentResponse.Companion.toCommentItemDomain
 import com.umc.data.response.community.PostDetailResponse.Companion.toContentItemDomain
 import com.umc.data.response.community.PostLikeResponse.Companion.toPostLikeDomain
 import com.umc.data.response.community.PostScrapResponse.Companion.toPostScrapDomain
+import com.umc.data.response.community.TrophyResponse.Companion.toTrophyBody
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.community.CommentItem
@@ -19,6 +21,8 @@ import com.umc.domain.model.community.CreatePost
 import com.umc.domain.model.community.PostLike
 import com.umc.domain.model.community.PostPageModel
 import com.umc.domain.model.community.PostScrap
+import com.umc.domain.model.community.TrophyBody
+import com.umc.domain.model.community.TrophyWrite
 import com.umc.domain.repository.community.CommunityRepository
 import javax.inject.Inject
 
@@ -152,5 +156,30 @@ class CommunityRepositoryImpl @Inject constructor(
     override suspend fun reportComment(commentId: Long): ApiState<Unit> {
         return communityRemoteDataSource.reportComment(commentId)
     }
+
+    //명예의전당 불러오기
+    override suspend fun getTrophies(week: Int?, school: String?, part: String?
+    ): ApiState<List<TrophyBody>> {
+        return communityRemoteDataSource.getTrophies(week, school, part).map {
+            it.map {
+                it.toTrophyBody()
+            }
+        }
+    }
+
+    override suspend fun createTrophy(request: TrophyWrite): ApiState<TrophyBody> {
+        val request = CreateTrophyRequest(
+            challengerId = request.challengerId,
+            title = request.title,
+            content = request.content,
+            url = request.url,
+            week = request.week
+        )
+        return communityRemoteDataSource.createTrophy(request).map {
+            it.toTrophyBody()
+        }
+
+    }
+
 
 }

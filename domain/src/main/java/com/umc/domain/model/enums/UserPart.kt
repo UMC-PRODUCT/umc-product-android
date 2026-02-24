@@ -19,6 +19,13 @@ enum class UserPart(val label: String) {
                 it.name.replace("_", "") == value.replace("_", "")
             } ?: UNKNOWN
         }
+
+        fun getFilterLabels(): List<String> {
+            return entries
+                .filter { it != UNKNOWN }
+                .map { it.label }
+        }
+
     }
 
 }
