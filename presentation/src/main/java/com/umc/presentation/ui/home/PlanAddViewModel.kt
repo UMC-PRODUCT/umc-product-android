@@ -377,7 +377,7 @@ data class PlanAddFragmentUiState(
 
 
     //운영진 여부 판단
-    val isManager: Boolean = true,
+    val isManager: Boolean = false,
 
 
     //하루 종일 부분에 체크가 되었나
