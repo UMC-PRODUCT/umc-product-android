@@ -8,6 +8,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemActStudyBinding
+import androidx.core.view.doOnLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 
 class ActStudyAdapter(
     private val onToggle: (Int) -> Unit,
@@ -55,7 +57,7 @@ class ActStudyAdapter(
                     btnSubmit.setTextColor(ContextCompat.getColor(ctx, R.color.neutral000))
                     btnSubmit.setUBackgroundColor(ContextCompat.getColor(ctx, R.color.primary500))
                 } else {
-                    btnSubmit.setTextColor(ContextCompat.getColor(ctx, R.color.neutral500))
+                    btnSubmit.setTextColor(ContextCompat.getColor(ctx, R.color.neutral000))
                     btnSubmit.setUBackgroundColor(ContextCompat.getColor(ctx, R.color.neutral200))
                 }
             }
@@ -128,6 +130,19 @@ class ActStudyAdapter(
 
 
             binding.executePendingBindings()
+
+
+            binding.root.doOnLayout {
+
+                val tags = binding.cvItem.findViewById<android.view.View>(R.id.layout_tags) ?: return@doOnLayout
+                val offsetInCard = tags.bottom
+
+                val lp = binding.tagsBottomAnchor.layoutParams as ConstraintLayout.LayoutParams
+                if (lp.topMargin != offsetInCard) {
+                    lp.topMargin = offsetInCard
+                    binding.tagsBottomAnchor.layoutParams = lp
+                }
+            }
         }
     }
 

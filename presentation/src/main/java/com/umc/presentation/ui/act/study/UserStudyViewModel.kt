@@ -141,6 +141,10 @@ class UserStudyViewModel @Inject constructor(
                     val uiItems = data.workbooks
                         .sortedBy { it.weekNo }
                         .map { wb ->
+
+                            val isBest = wb.status == WorkbookStatus.BEST
+                            val status = if (isBest) StudyStatus.PASS else wb.status.toStudyStatus()
+
                             Log.d(
                                 "UserStudy",
                                 "week=${wb.weekNo} id=${wb.challengerWorkbookId} state=${wb.status}"
@@ -149,13 +153,14 @@ class UserStudyViewModel @Inject constructor(
                                 id = wb.challengerWorkbookId ?: -wb.weekNo.toLong(),
                                 platform = wb.missionType.toPlatformText(),
                                 title = wb.title,
-                                status = wb.status.toStudyStatus(),
+                                status = if (isBest) StudyStatus.PASS else wb.status.toStudyStatus(),
+                                isBest = isBest,
                                 week = wb.weekNo,
                                 submitState = wb.status.toSubmitState(),
                                 isExpanded = false,
                                 link = "",
                                 description = wb.description,
-                                isLocked = false
+                                isLocked = false,
                             )
                         }
 
@@ -252,6 +257,7 @@ class UserStudyViewModel @Inject constructor(
     private fun WorkbookStatus.toStudyStatus(): StudyStatus = when (this) {
         WorkbookStatus.PASS -> StudyStatus.PASS
         WorkbookStatus.FAIL -> StudyStatus.FAIL
+        WorkbookStatus.BEST -> StudyStatus.PASS
         WorkbookStatus.PENDING,
         WorkbookStatus.IN_PROGRESS,
         WorkbookStatus.SUBMITTED,
@@ -261,7 +267,8 @@ class UserStudyViewModel @Inject constructor(
     private fun WorkbookStatus.toSubmitState(): SubmitState = when (this) {
         WorkbookStatus.SUBMITTED -> SubmitState.REQUESTED
         WorkbookStatus.PASS,
-        WorkbookStatus.FAIL -> SubmitState.IDLE
+        WorkbookStatus.FAIL,
+        WorkbookStatus.BEST -> SubmitState.IDLE
         WorkbookStatus.PENDING,
         WorkbookStatus.IN_PROGRESS,
         WorkbookStatus.UNKNOWN -> SubmitState.READY

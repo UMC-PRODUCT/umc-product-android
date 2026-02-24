@@ -14,4 +14,6 @@ data class ActStudyItemUiModel(
     val submitState: SubmitState = SubmitState.IDLE,
     val isLocked: Boolean = false,
     val description: String,
+    val isBest: Boolean = false,
+
 )
