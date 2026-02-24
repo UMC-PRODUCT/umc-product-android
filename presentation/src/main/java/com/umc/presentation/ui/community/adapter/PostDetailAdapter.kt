@@ -87,6 +87,12 @@ class PostDetailAdapter(
             //여기서 좋아요 / 싫어요 클릭 시 delegate로 ㄱㄱ
             fun bind(item: ContentItem) {
                 binding.item = item
+
+                //번개글 파실 로직
+                val postType = item.category
+
+
+
                 Log.d("log_mypage", "작성자: ${item.userProfileImage}")
                 binding.itemCircleimvProfile.load(item.userProfileImage) {
                     crossfade(true)
