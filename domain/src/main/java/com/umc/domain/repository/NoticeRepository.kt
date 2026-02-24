@@ -11,6 +11,7 @@ import com.umc.domain.model.request.notice.NoticeLinkRequest
 import com.umc.domain.model.request.notice.NoticeReminderRequest
 import com.umc.domain.model.request.notice.NoticeUpdateRequest
 import com.umc.domain.model.request.notice.NoticeVoteRequest
+import com.umc.domain.model.request.survey.VoteResponseRequest
 
 interface NoticeRepository {
     suspend fun deleteNotice(noticeId: Long): ApiState<Unit>
@@ -51,4 +52,5 @@ interface NoticeRepository {
     suspend fun addNoticeVote(noticeId: Long, request: NoticeVoteRequest): ApiState<Unit>
     suspend fun sendNoticeReminder(noticeId: Long, request: NoticeReminderRequest): ApiState<Unit>
     suspend fun markNoticeAsRead(noticeId: Long): ApiState<Unit>
+    suspend fun submitVoteResponse(voteId: Long, request: VoteResponseRequest): ApiState<Unit>
 }

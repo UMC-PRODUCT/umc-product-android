@@ -1,6 +1,5 @@
 package com.umc.presentation.base
 
-import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -16,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
+import com.umc.presentation.component.ULoadingDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -30,9 +30,7 @@ abstract class BaseFragment<B : ViewDataBinding, STATE : UiState, EVENT : UiEven
     protected val binding
         get() = _binding!!
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-    }
+    private var loadingDialog: ULoadingDialog? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,6 +52,35 @@ abstract class BaseFragment<B : ViewDataBinding, STATE : UiState, EVENT : UiEven
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, onBackPressedCallback)
         initView()
         initStates()
+        initLoadingDialog()
+    }
+
+    private fun initLoadingDialog() {
+        repeatOnStarted(viewLifecycleOwner) {
+            viewModel.isLoading.collect { isLoading ->
+                if (isLoading) {
+                    showLoadingDialog()
+                } else {
+                    dismissLoadingDialog()
+                }
+            }
+        }
+    }
+
+    private fun showLoadingDialog() {
+        if (loadingDialog == null || loadingDialog?.isAdded == false) {
+            loadingDialog = ULoadingDialog.newInstance()
+            loadingDialog?.show(parentFragmentManager, ULoadingDialog.TAG)
+        }
+    }
+
+    private fun dismissLoadingDialog() {
+        loadingDialog?.let {
+            if (it.isAdded) {
+                it.dismiss()
+            }
+        }
+        loadingDialog = null
     }
 
     private val onBackPressedCallback =
@@ -92,6 +119,8 @@ abstract class BaseFragment<B : ViewDataBinding, STATE : UiState, EVENT : UiEven
     }
 
     override fun onDestroyView() {
+        loadingDialog?.dismiss()
+        loadingDialog = null
         _binding = null
         super.onDestroyView()
     }

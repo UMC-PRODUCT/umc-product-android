@@ -15,12 +15,15 @@ class NoticeDetailVoteViewHolder(
     fun bind(item: NoticeVoteOption, isSelected: Boolean = false) {
         binding.apply {
             root.setOnClickListener { listener.onClickVote(item) }
-            if (isSelected) {
-                imageCheckBox.imageTintList =
-                    ColorStateList.valueOf(ContextCompat.getColor(imageCheckBox.context, R.color.primary500))
-            } else {
-                imageCheckBox.imageTintList = null
-            }
+            imageCheckBox.setImageResource(
+                if (isSelected) R.drawable.ic_check_box else R.drawable.ic_check_box_empty
+            )
+            imageCheckBox.imageTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(
+                    imageCheckBox.context,
+                    if (isSelected) R.color.primary500 else R.color.neutral400
+                )
+            )
             textName.text = item.content
         }
     }

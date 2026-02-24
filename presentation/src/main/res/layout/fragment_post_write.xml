@@ -178,8 +178,7 @@
             android:textAppearance="@style/Body"
             android:textColor="@color/neutral800"
             android:textColorHint="@color/neutral400"
-            app:layout_constraintTop_toBottomOf="@id/write_view_divider"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintTop_toBottomOf="@id/write_view_divider" />
 
 
         <!-- 번개함-->

@@ -17,8 +17,25 @@ class NoticeDetailVoteAdapter(
         fun onClickVote(item: NoticeVoteOption)
     }
 
+    private var selectedOptionIds: Set<Long> = emptySet()
+
+    fun setSelectedOptionIds(ids: Set<Long>) {
+        val oldSelectedIds = selectedOptionIds
+        selectedOptionIds = ids
+
+        // Only notify changed positions
+        currentList.forEachIndexed { index, item ->
+            val wasSelected = oldSelectedIds.contains(item.optionId)
+            val isSelected = ids.contains(item.optionId)
+            if (wasSelected != isSelected) {
+                notifyItemChanged(index)
+            }
+        }
+    }
+
     override fun onBindViewHolder(holder: NoticeDetailVoteViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val item = getItem(position)
+        holder.bind(item, selectedOptionIds.contains(item.optionId))
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoticeDetailVoteViewHolder {

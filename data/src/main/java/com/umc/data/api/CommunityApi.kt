@@ -3,12 +3,14 @@ package com.umc.data.api
 import com.umc.data.request.community.CreateCommentRequest
 import com.umc.data.request.community.CreatePostLightningRequest
 import com.umc.data.request.community.CreatePostRequest
+import com.umc.data.request.community.CreateTrophyRequest
 import com.umc.data.response.community.CommunityGetPostResponse
 import com.umc.data.response.community.CommunitySearchPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
 import com.umc.data.response.community.PostLikeResponse
 import com.umc.data.response.community.PostScrapResponse
+import com.umc.data.response.community.TrophyResponse
 import com.umc.domain.model.base.ApiResponse
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -149,5 +151,18 @@ interface CommunityApi {
         @Path("commentId") commentId: Long
     ): ApiResponse<Unit>
 
+    //명예의 전당 게시글 생성
+    @POST(Endpoints.Community.TROPHY)
+    suspend fun createTrophy(
+        @Body request: CreateTrophyRequest
+    ): ApiResponse<TrophyResponse>
+
+    //명예의 전당게시글 조회
+    @GET(Endpoints.Community.TROPHY)
+    suspend fun getTrophies(
+        @Query("week") week: Int?,
+        @Query("school") school: String?,
+        @Query("part") part: String?,
+    ): ApiResponse<List<TrophyResponse>>
 
 }

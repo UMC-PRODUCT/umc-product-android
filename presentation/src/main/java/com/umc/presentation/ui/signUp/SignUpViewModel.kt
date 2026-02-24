@@ -90,6 +90,7 @@ class SignUpViewModel @Inject constructor(
     fun onClickVerify() = viewModelScope.launch {
         if (isValidEmail()) {
             val request = EmailVerificationRequest(email = uiState.value.email)
+            startLoading()
             resultResponse(
                 response = postEmailVerificationUseCase(request),
                 successCallback = {

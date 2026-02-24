@@ -8,6 +8,8 @@ import com.umc.domain.model.community.CreatePost
 import com.umc.domain.model.community.PostLike
 import com.umc.domain.model.community.PostPageModel
 import com.umc.domain.model.community.PostScrap
+import com.umc.domain.model.community.TrophyBody
+import com.umc.domain.model.community.TrophyWrite
 
 interface CommunityRepository {
 
@@ -67,5 +69,13 @@ interface CommunityRepository {
 
     //댓글 신고
     suspend fun reportComment(commentId: Long): ApiState<Unit>
+
+    //명예의전당 게시글 생성
+    suspend fun createTrophy(request: TrophyWrite): ApiState<TrophyBody>
+
+    //명예의전당 게시글 불러오기
+    suspend fun getTrophies(week: Int?, school: String?, part: String?): ApiState<List<TrophyBody>>
+
+
 }
 

@@ -16,6 +16,7 @@ import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatisticsUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatusUseCase
 import com.umc.domain.usecase.notice.SendNoticeReminderUseCase
+import com.umc.domain.usecase.notice.SubmitVoteResponseUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -30,6 +31,7 @@ class NoticeDetailViewModel @Inject constructor(
     private val getNoticeReadStatusUseCase: GetNoticeReadStatusUseCase,
     private val getNoticeReadStatisticsUseCase: GetNoticeReadStatisticsUseCase,
     private val sendNoticeReminderUseCase: SendNoticeReminderUseCase,
+    private val submitVoteResponseUseCase: SubmitVoteResponseUseCase,
     private val getChallengerDetailUseCase: GetChallengerDetailUseCase,
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getChallengerIdUseCase: GetChallengerIdUseCase,
@@ -63,8 +65,7 @@ class NoticeDetailViewModel @Inject constructor(
     }
 
     private fun checkIsMember(userInfo: UserInfo) {
-        // Check if the user has any role that is MEMBER only (no admin roles)
-        val hasOnlyMemberRole = userInfo.roles.isNotEmpty() && 
+        val hasOnlyMemberRole = userInfo.roles.isNotEmpty() &&
             userInfo.roles.all { it.roleType == "MEMBER" }
         
         updateState { 
@@ -83,12 +84,15 @@ class NoticeDetailViewModel @Inject constructor(
         }
 
         updateState { copy(isLoading = true) }
+        startLoading()
 
         resultResponse(
             response = getNoticeDetailUseCase(currentNoticeId),
             successCallback = { detail ->
                 detail.vote?.mySelectedOptionIds?.let { ids ->
                     selectedOptionIds = ids.toMutableSet()
+                } ?: run {
+                    selectedOptionIds = mutableSetOf()
                 }
                 
                 val formattedCreatedAt = getFormattedCreatedAt(detail.createdAt)
@@ -98,6 +102,7 @@ class NoticeDetailViewModel @Inject constructor(
                 updateState { 
                     copy(
                         detail = detail, 
+                        selectedVoteOptionIds = selectedOptionIds.toList(),
                         isLoading = false,
                         formattedCreatedAt = formattedCreatedAt,
                         formattedTargetInfo = formattedTargetInfo,
@@ -143,6 +148,8 @@ class NoticeDetailViewModel @Inject constructor(
             return@launch
         }
 
+        startLoading()
+
         resultResponse(
             response = getChallengerDetailUseCase(authorChallengerId),
             successCallback = { challengerDetail ->
@@ -156,6 +163,7 @@ class NoticeDetailViewModel @Inject constructor(
 
     private fun loadReadStatistics() = viewModelScope.launch {
         if (currentNoticeId == 0L) return@launch
+        startLoading()
 
         resultResponse(
             response = getNoticeReadStatisticsUseCase(currentNoticeId),
@@ -172,7 +180,7 @@ class NoticeDetailViewModel @Inject constructor(
         if (currentNoticeId == 0L) return@launch
 
         updateState { copy(isLoadingReadStatus = true) }
-
+        startLoading()
         resultResponse(
             response = getNoticeReadStatusUseCase(
                 noticeId = currentNoticeId,
@@ -211,7 +219,7 @@ class NoticeDetailViewModel @Inject constructor(
         if (currentNoticeId == 0L) return@launch
 
         updateState { copy(isLoadingReadStatus = true) }
-
+        startLoading()
         resultResponse(
             response = getNoticeReadStatusUseCase(
                 noticeId = currentNoticeId,
@@ -252,7 +260,6 @@ class NoticeDetailViewModel @Inject constructor(
 
     fun onClickVoteItem(clickedOption: NoticeVoteOption) {
         val vote = uiState.value.detail.vote ?: return
-
         val isMultiple = vote.allowMultipleChoice
 
         if (isMultiple) {
@@ -273,18 +280,31 @@ class NoticeDetailViewModel @Inject constructor(
         }
 
         updateState {
-            copy(
-                selectedVoteOptionIds = selectedOptionIds.toList()
-            )
+            copy(selectedVoteOptionIds = selectedOptionIds.toList())
         }
-
-        // TODO: 투표 제출 API 호출
-        submitVote()
     }
 
-    private fun submitVote() = viewModelScope.launch {
-        // TODO: 투표 제출 API가 구현되면 추가
-        // 현재는 로컬 상태만 업데이트
+    fun onClickSubmitVote() = viewModelScope.launch {
+        val vote = uiState.value.detail.vote ?: return@launch
+        val voteId = vote.voteId
+        val optionIds = selectedOptionIds.toList()
+
+        if (voteId == -1L || optionIds.isEmpty()) return@launch
+
+        updateState { copy(isSubmittingVote = true) }
+        startLoading()
+
+        resultResponse(
+            response = submitVoteResponseUseCase(voteId, optionIds),
+            successCallback = {
+                loadNoticeDetail()
+                emitEvent(NoticeFragmentEvent.ShowSuccess("투표가 완료되었습니다"))
+            },
+            errorCallback = {
+                updateState { copy(isSubmittingVote = false) }
+                emitEvent(NoticeFragmentEvent.ShowError("투표 제출에 실패했습니다"))
+            }
+        )
     }
 
     fun onClickShowBottomSheet() {
@@ -295,16 +315,14 @@ class NoticeDetailViewModel @Inject constructor(
         if (currentNoticeId == 0L) return@launch
 
         updateState { copy(isSendingReminder = true) }
-
+        startLoading()
         resultResponse(
             response = sendNoticeReminderUseCase(currentNoticeId, targetChallengerIds),
             successCallback = {
                 updateState { copy(isSendingReminder = false) }
-                emitEvent(NoticeFragmentEvent.ShowSuccess("알림이 발송되었습니다"))
             },
             errorCallback = {
                 updateState { copy(isSendingReminder = false) }
-                emitEvent(NoticeFragmentEvent.ShowError("알림 발송에 실패했습니다"))
             }
         )
     }
@@ -328,6 +346,7 @@ data class NoticeFragmentUiState(
     val isLoading: Boolean = false,
     val isLoadingReadStatus: Boolean = false,
     val isSendingReminder: Boolean = false,
+    val isSubmittingVote: Boolean = false,
     val formattedVoteCondition: String = "",
     val formattedTargetInfo: String = "",
     val formattedCreatedAt: String = "",

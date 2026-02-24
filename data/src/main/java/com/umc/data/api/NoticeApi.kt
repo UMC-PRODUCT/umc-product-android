@@ -6,6 +6,7 @@ import com.umc.domain.model.request.notice.NoticeLinkRequest
 import com.umc.domain.model.request.notice.NoticeReminderRequest
 import com.umc.domain.model.request.notice.NoticeUpdateRequest
 import com.umc.domain.model.request.notice.NoticeVoteRequest
+import com.umc.domain.model.request.survey.VoteResponseRequest
 import com.umc.data.response.notice.NoticeCreateResponse
 import com.umc.data.response.notice.NoticeDetailResponse
 import com.umc.data.response.notice.NoticeReadStatisticsResponse
@@ -24,6 +25,7 @@ interface NoticeApi {
 
     companion object {
         const val PATH_NOTICE_ID = "noticeId"
+        const val PATH_VOTE_ID = "voteId"
         const val QUERY_GISU_ID = "gisuId"
         const val QUERY_CHAPTER_ID = "chapterId"
         const val QUERY_SCHOOL_ID = "schoolId"
@@ -153,6 +155,13 @@ interface NoticeApi {
     suspend fun updateNotice(
         @Path(PATH_NOTICE_ID) noticeId: Long,
         @Body request: NoticeImageRequest
+    ): ApiResponse<Unit>
+
+    // 투표 응답 제출
+    @POST(Endpoints.Survey.VOTE_RESPONSES)
+    suspend fun submitVoteResponse(
+        @Path(PATH_VOTE_ID) voteId: Long,
+        @Body request: VoteResponseRequest
     ): ApiResponse<Unit>
 
 }

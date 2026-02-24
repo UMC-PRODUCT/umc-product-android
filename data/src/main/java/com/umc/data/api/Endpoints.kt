@@ -85,12 +85,10 @@ object Endpoints {
         const val MY_SCRAP = "$COMMUNITY/scrapped"
 
         const val MODIFY_LIGHTNING = "$COMMUNITY/{postId}/lightning"
-
         const val REPORT_POST = "$COMMUNITY/{postId}/reports"
-
         const val REPORT_COMMENT = "api/v1/comments/{commentId}/reports"
 
-
+        const val TROPHY = "api/v1/trophies"
 
 
     }
@@ -166,5 +164,10 @@ object Endpoints {
         const val NOTICE_READ_STATICS = "$NOTICE_DETAIL/read-statics"
         const val NOTICE_LINKS = "$NOTICE_DETAIL/links"
         const val NOTICE_IMAGES = "$NOTICE_DETAIL/images"
+    }
+
+    object Survey {
+        const val SURVEY = "api/v1/surveys"
+        const val VOTE_RESPONSES = "$SURVEY/votes/{voteId}/responses"
     }
 }

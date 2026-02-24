@@ -5,12 +5,14 @@ import com.umc.data.dataSource.base.apiCall
 import com.umc.data.request.community.CreateCommentRequest
 import com.umc.data.request.community.CreatePostLightningRequest
 import com.umc.data.request.community.CreatePostRequest
+import com.umc.data.request.community.CreateTrophyRequest
 import com.umc.data.response.community.CommunityGetPostResponse
 import com.umc.data.response.community.CommunitySearchPostResponse
 import com.umc.data.response.community.PostCommentResponse
 import com.umc.data.response.community.PostDetailResponse
 import com.umc.data.response.community.PostLikeResponse
 import com.umc.data.response.community.PostScrapResponse
+import com.umc.data.response.community.TrophyResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
 import javax.inject.Inject
@@ -127,6 +129,20 @@ class CommunityRemoteDataSourceImpl @Inject constructor(
     //댓글 신고
     override suspend fun reportComment(commentId: Long): ApiState<Unit> {
         return apiCall { communityApi.reportComment(commentId) }
+    }
+
+    //명예의 전당 가져오기
+    override suspend fun getTrophies(
+        week: Int?,
+        school: String?,
+        part: String?
+    ): ApiState<List<TrophyResponse>> {
+        return apiCall { communityApi.getTrophies(week, school, part) }
+    }
+
+    //명예의 전당 게시글 작성
+    override suspend fun createTrophy(request: CreateTrophyRequest): ApiState<TrophyResponse> {
+        return apiCall { communityApi.createTrophy(request) }
     }
 
 }
