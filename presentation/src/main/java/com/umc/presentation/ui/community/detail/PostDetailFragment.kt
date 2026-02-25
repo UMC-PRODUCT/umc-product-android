@@ -1,10 +1,13 @@
 package com.umc.presentation.ui.community.detail
 
+import android.content.Intent
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -49,6 +52,11 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
     override fun onCommentMenuClicked(item: CommentItem) {
         //권한 조회하러 가기
         viewModel.onCommentMenuClicked(item)
+    }
+
+    //번개글 옵챗 터치 시
+    override fun onOpenChatClicked(url: String) {
+        openWebpage(url)
     }
 
 
@@ -259,6 +267,25 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
                     .withEndAction { visibility = View.GONE }
                     .start()
             }
+        }
+    }
+
+    private fun openWebpage(url: String) {
+        try {
+            val webpage: Uri = url.toUri()
+            val intent = Intent(Intent.ACTION_VIEW, webpage)
+            startActivity(intent)
+            //브라우저를 실행할 수 있는 앱이 있는지 확인
+            if (intent.resolveActivity(requireContext().packageManager) != null) {
+                startActivity(intent)
+            } else {
+                // 브라우저조차 없는 특수한 상황
+                val webIntent = Intent(Intent.ACTION_VIEW, webpage)
+                startActivity(webIntent)
+            }
+        }
+        catch (e: Exception){
+            e.printStackTrace()
         }
     }
 
