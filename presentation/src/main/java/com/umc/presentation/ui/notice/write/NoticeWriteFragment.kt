@@ -123,10 +123,6 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
                 viewModel.updateContent(text?.toString() ?: "")
             }
 
-            ubuttonComplete.setOnClickListener {
-                viewModel.onClickSubmit()
-            }
-
             imageBack.setOnClickListener {
                 findNavController().popBackStack()
             }
@@ -170,9 +166,6 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
                     noticeClassChipAdapter.submitList(state.classList)
                     noticePartChipAdapter.submitList(state.partList)
                     noticeImageAdapter.submitList(state.selectImageList)
-
-                    // Show loading state
-                    binding.ubuttonComplete.isEnabled = !state.isLoading
                 }
             }
         }

@@ -61,12 +61,17 @@
                 android:tint="@color/neutral600"
                 tools:ignore="UseAppTint" />
 
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
             <ImageView
                 android:id="@+id/image_check"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="12dp"
                 android:onClick="@{()->vm.updateShouldNotify(!vm.uiState.shouldNotify)}"
+                android:padding="12dp"
                 android:src="@{vm.uiState.shouldNotify ? @drawable/ic_check_box : @drawable/ic_check_box_empty}"
                 android:tint="@{vm.uiState.shouldNotify ? @color/primary500 : @color/neutral400}"
                 tools:ignore="UseAppTint" />
@@ -77,25 +82,6 @@
                 android:text="@string/notice_write_sent_notification"
                 android:textAppearance="@style/Subheadline"
                 android:textColor="@color/neutral800" />
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-
-            <com.umc.presentation.component.UButton
-                android:id="@+id/ubutton_complete"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/primary500"
-                app:contentPaddingBottom="13dp"
-                app:contentPaddingLeft="16dp"
-                app:contentPaddingRight="16dp"
-                app:contentPaddingTop="13dp"
-                app:cornerRadius="8dp"
-                app:text="@string/notice_write_complete"
-                app:textAppearance="@style/HeadlineBold"
-                app:textColor="@color/neutral000" />
 
         </LinearLayout>
 
@@ -136,6 +122,20 @@
                     app:layout_constraintBottom_toBottomOf="@id/image_back"
                     app:layout_constraintStart_toEndOf="@id/image_back"
                     app:layout_constraintTop_toTopOf="@id/image_back" />
+
+                <TextView
+                    app:layout_constraintTop_toTopOf="@id/text_title"
+                    app:layout_constraintBottom_toBottomOf="@id/text_title"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginEnd="4dp"
+                    android:paddingHorizontal="18dp"
+                    android:paddingVertical="13dp"
+                    android:onClick="@{()->vm.onClickSubmit()}"
+                    android:textAppearance="@style/Callout"
+                    android:textColor="@color/primary500"
+                    android:text="@string/register"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
 
                 <TextView
                     android:id="@+id/text_category_title"
@@ -185,31 +185,6 @@
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <ImageView
-                    android:id="@+id/image_check_all_gisu"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:onClick="@{()->vm.onClickToggleAllGisu()}"
-                    android:src="@{vm.uiState.isAllGisuSelected ? @drawable/ic_check_box : @drawable/ic_check_box_empty}"
-                    android:tint="@{vm.uiState.isAllGisuSelected ? @color/primary500 : @color/neutral400}"
-                    app:layout_constraintBottom_toBottomOf="@id/layout_category"
-                    app:layout_constraintEnd_toStartOf="@id/text_all_gisu"
-                    app:layout_constraintTop_toTopOf="@id/layout_category"
-                    tools:ignore="UseAppTint" />
-
-                <TextView
-                    android:id="@+id/text_all_gisu"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:text="전체 기수"
-                    android:textAppearance="@style/Subheadline"
-                    android:textColor="@color/neutral800"
-                    app:layout_constraintBottom_toBottomOf="@id/layout_category"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/layout_category" />
-
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recycler_dropdown"
                     android:layout_width="0dp"
@@ -224,6 +199,54 @@
                     app:layout_constraintStart_toStartOf="@id/layout_category"
                     app:layout_constraintTop_toBottomOf="@id/layout_category" />
 
+                <TextView
+                    android:id="@+id/text_target_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="32dp"
+                    android:text="@string/notice_write_target_title"
+                    android:textAppearance="@style/HeadlineBold"
+                    android:textColor="@color/neutral800"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/layout_category" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layout_target"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginHorizontal="24dp"
+                    android:background="@{vm.uiState.isAllGisuSelected ? @drawable/bg_rectangle_primary100_radius8 : @drawable/bg_rectangle_neutral100_radius8}"
+                    android:padding="8dp"
+                    app:layout_constraintTop_toBottomOf="@id/text_target_title">
+
+                    <ImageView
+                        android:id="@+id/image_check_all_gisu"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:onClick="@{()->vm.onClickToggleAllGisu()}"
+                        android:src="@{vm.uiState.isAllGisuSelected ? @drawable/ic_check_box : @drawable/ic_check_box_empty}"
+                        android:tint="@{vm.uiState.isAllGisuSelected ? @color/primary500 : @color/neutral400}"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:ignore="UseAppTint" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="전체 기수를 대상으로 수신하기"
+                        android:textAppearance="@style/Callout"
+                        android:textColor="@{vm.uiState.isAllGisuSelected ? @color/primary500 : @color/neutral600}"
+                        app:layout_constraintBottom_toBottomOf="@id/image_check_all_gisu"
+                        app:layout_constraintStart_toEndOf="@id/image_check_all_gisu"
+                        app:layout_constraintTop_toTopOf="@id/image_check_all_gisu" />
+
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
 
                 <TextView
                     android:id="@+id/text_class_title"
@@ -236,7 +259,7 @@
                     android:textColor="@color/neutral800"
                     android:visibility="@{vm.uiState.showClassSection ? View.VISIBLE : View.GONE}"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/layout_category" />
+                    app:layout_constraintTop_toBottomOf="@id/layout_target" />
 
                 <TextView
                     android:id="@+id/text_class_hint"
