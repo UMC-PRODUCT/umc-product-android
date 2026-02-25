@@ -17,7 +17,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="24dp"
-        android:background="@color/neutral000">
+        android:background="@color/neutral000"
+        android:descendantFocusability="blocksDescendants"
+        >
 
         <com.umc.presentation.component.UButton
             android:id="@+id/item_cdv_category"
@@ -167,7 +169,7 @@
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp"
-                app:cardBackgroundColor="@color/neutral600"
+                app:cardBackgroundColor="@color/neutral100"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 >
