@@ -53,7 +53,7 @@
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text='@{item.part + " · " + item.generationText}'
+            android:text='@{item.partLabel + " · " + item.gisuLabel}'
             android:textAppearance="@style/Caption1"
             android:textColor="@color/neutral600"
             app:layout_constraintStart_toEndOf="@id/iv_profile"

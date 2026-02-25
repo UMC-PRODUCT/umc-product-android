@@ -1,9 +1,11 @@
 package com.umc.presentation.ui.act.study.common.model
 
 data class MemberUiModel(
-    val id: Long,
+    val challengerId: Long,
+    val memberId: Long,
     val name: String,
-    val part: String,
-    val generationText: String,
-    val university: String? = null,
+    val partLabel: String,
+    val gisuLabel: String,
+    val schoolName: String,
+    val profileImageUrl: String? = null,
 )
