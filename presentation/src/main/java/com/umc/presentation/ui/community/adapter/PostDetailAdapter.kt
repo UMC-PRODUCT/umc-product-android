@@ -95,6 +95,7 @@ class PostDetailAdapter(
 
             //여기서 좋아요 / 싫어요 클릭 시 delegate로 ㄱㄱ
             fun bind(item: ContentItem) {
+                //번개 게시글 시 상단 포커스
                 binding.item = item
 
                 //번개글 파실 로직

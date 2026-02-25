@@ -94,9 +94,15 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
                     //어댑터에 새 값 연결
                     val isNewCommentAdded = state.nowDetailList.size > postDetailAdapter.itemCount
                     postDetailAdapter.submitList(state.nowDetailList) {
+                        binding.postdetailRcv.scrollToPosition(0)
+
                         // 리스트가 업데이트된 후, 새 댓글이 추가된 상황이라면 맨 아래로 스크롤
                         if (isNewCommentAdded) {
                             binding.postdetailRcv.smoothScrollToPosition(postDetailAdapter.itemCount - 1)
+                        }
+                        // 그 외에는 강제 스크롤
+                        else{
+
                         }
                     }
                     
