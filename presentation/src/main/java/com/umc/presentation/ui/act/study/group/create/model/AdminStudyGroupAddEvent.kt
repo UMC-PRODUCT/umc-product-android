@@ -4,7 +4,10 @@ import com.umc.presentation.base.UiEvent
 
 sealed interface AdminStudyGroupAddEvent : UiEvent {
     data object ClickBack : AdminStudyGroupAddEvent
-    data object ClickRegister : AdminStudyGroupAddEvent
     data object ClickPickLeader : AdminStudyGroupAddEvent
     data object ClickPickMembers : AdminStudyGroupAddEvent
+    data object ClickRegister : AdminStudyGroupAddEvent
+
+    data object CreateSuccess : AdminStudyGroupAddEvent
+    data class ShowToast(val message: String) : AdminStudyGroupAddEvent
 }

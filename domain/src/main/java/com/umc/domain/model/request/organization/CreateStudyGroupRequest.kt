@@ -6,6 +6,6 @@ import kotlinx.serialization.Serializable
 data class CreateStudyGroupRequest(
     val name: String,
     val part: String,
-    val leaderId: Int,
-    val memberIds: List<Int>
+    val leaderId: Long,
+    val memberIds: List<Long>,
 )

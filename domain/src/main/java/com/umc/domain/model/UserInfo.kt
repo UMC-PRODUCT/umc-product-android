@@ -61,7 +61,11 @@ data class ProfileInfo(
     val github : String,
     val blog : String,
     val personal : String,
-)
+){
+    companion object {
+        fun empty() = ProfileInfo(0, "", "", "", "", "")
+    }
+}
 
 /** ChallengerManagerDialogModel.kt꺼 사용
  * 

@@ -37,11 +37,11 @@ interface OrganizationDataSource {
 
     // DELETE
     suspend fun deleteSchool(request: SchoolIdRequest): ApiState<Unit>
-    suspend fun deleteStudyGroup(groupId: Int): ApiState<Unit>
+    suspend fun deleteStudyGroup(groupId: Long): ApiState<Unit>
     suspend fun deleteGisu(gisuId: Int): ApiState<Unit>
 
     // GET
-    suspend fun getMyStudyGroup(cursor: Int, size: Int): ApiState<StudyGroupListResponse>
+    suspend fun getMyStudyGroup(cursor: Long?, size: Int): ApiState<StudyGroupListResponse>
     suspend fun getSchoolByKeyword(
         keyword: String,
         chapterId: Int,
@@ -50,7 +50,7 @@ interface OrganizationDataSource {
         sort: String
     ): ApiState<SchoolPageResponse>
     suspend fun getAllChapter(): ApiState<ChapterResponse>
-    suspend fun getStudyGroupDetail(groupId: Int): ApiState<StudyGroupDetailResponse>
+    suspend fun getStudyGroupDetail(groupId: Long): ApiState<StudyGroupDetailResponse>
     suspend fun getSchoolDetail(schoolId: Int): ApiState<SchoolDetailResponse>
     suspend fun getMyStudyGroupList(): ApiState<MyStudyGroupListResponse>
     suspend fun getUnassignedSchool(gisuId: Int): ApiState<SchoolListResponse>
@@ -63,7 +63,7 @@ interface OrganizationDataSource {
 
 
     // PATCH
-    suspend fun editGroup(groupId: Int, request: EditStudyGroupRequest): ApiState<Unit>
+    suspend fun editGroup(groupId: Long, request: EditStudyGroupRequest): ApiState<Unit>
     suspend fun editSchool(schoolId: Int, request: EditSchoolRequest): ApiState<Unit>
     suspend fun unassignSchool(schoolId: Int, request: UnAssignSchoolRequest): ApiState<Unit>
     suspend fun assignSchool(schoolId: Int, request: AssignSchoolRequest): ApiState<Unit>

@@ -103,7 +103,11 @@
                     app:placeholderText="예: React 실습 A팀"
                     app:textAppearance="@style/Subheadline"
                     app:layout_constraintTop_toBottomOf="@id/tv_group_name_label"
-                    app:layout_constraintStart_toStartOf="parent" />
+                    app:layout_constraintStart_toStartOf="parent"
+
+                    app:text="@{state.groupName}"
+                    app:onTextChanged="@{(t) -> vm.onGroupNameChanged(t)}"
+                    />
 
 
                 <TextView

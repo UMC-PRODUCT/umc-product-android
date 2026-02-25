@@ -53,7 +53,7 @@ interface OrganizationApi {
 
     @DELETE(Endpoints.Organization.STUDY_GROUD_ID)
     suspend fun deleteStudyGroup(
-        @Path(PATH_GROUP_ID) groupId: Int
+        @Path(PATH_GROUP_ID) groupId: Long
     ): ApiResponse<Unit>
 
     @DELETE(Endpoints.Organization.GISU_ID)
@@ -63,7 +63,7 @@ interface OrganizationApi {
 
     @GET(Endpoints.Organization.STUDY_GROUP)
     suspend fun getMyStudyGroup(
-        @Query(QUERY_CURSOR) cursor: Int,
+        @Query(QUERY_CURSOR) cursor: Long?,
         @Query(QUERY_SIZE) size: Int,
     ): ApiResponse<StudyGroupListResponse>
 
@@ -81,7 +81,7 @@ interface OrganizationApi {
 
     @GET(Endpoints.Organization.STUDY_GROUD_ID)
     suspend fun getStudyGroupDetail(
-        @Path(PATH_GROUP_ID) groupId : Int,
+        @Path(PATH_GROUP_ID) groupId: Long,
     ): ApiResponse<StudyGroupDetailResponse>
 
     @GET(Endpoints.Organization.SCHOOL_ID)
@@ -118,7 +118,7 @@ interface OrganizationApi {
 
     @PATCH(Endpoints.Organization.STUDY_GROUD_ID)
     suspend fun editGroup(
-        @Path(PATH_GROUP_ID) groupId: Int,
+        @Path(PATH_GROUP_ID) groupId: Long,
         @Body request: EditStudyGroupRequest
     ): ApiResponse<Unit>
 

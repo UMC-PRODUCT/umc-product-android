@@ -10,6 +10,8 @@ import com.umc.domain.model.base.map
 import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.organization.GisuList
 import com.umc.domain.model.home.GisuInfo
+import com.umc.domain.model.organization.StudyGroupDetail
+import com.umc.domain.model.organization.StudyGroupPage
 import com.umc.domain.model.request.organization.*
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.repository.OrganizationRepository
@@ -23,15 +25,16 @@ class OrganizationRepositoryImpl @Inject constructor(
     override suspend fun deleteSchool(request: SchoolIdRequest): ApiState<Unit> =
         organizationDataSource.deleteSchool(request)
 
-    override suspend fun deleteStudyGroup(groupId: Int): ApiState<Unit> =
+    override suspend fun deleteStudyGroup(groupId: Long): ApiState<Unit> =
         organizationDataSource.deleteStudyGroup(groupId)
 
     override suspend fun deleteGisu(gisuId: Int): ApiState<Unit> =
         organizationDataSource.deleteGisu(gisuId)
 
     // GET
-    override suspend fun getMyStudyGroup(cursor: Int, size: Int): ApiState<Unit> =
-        organizationDataSource.getMyStudyGroup(cursor, size).map { Unit } // 임시
+    override suspend fun getMyStudyGroup(cursor: Long?, size: Int): ApiState<StudyGroupPage> =
+        organizationDataSource.getMyStudyGroup(cursor, size).map { it.toModel() }
+
 
     override suspend fun getSchoolByKeyword(
         keyword: String,
@@ -48,8 +51,8 @@ class OrganizationRepositoryImpl @Inject constructor(
             response.chapters.map { Chapter(it.id, it.name) }
         }
 
-    override suspend fun getStudyGroupDetail(groupId: Int): ApiState<Unit> =
-        organizationDataSource.getStudyGroupDetail(groupId).map { Unit } //임시
+    override suspend fun getStudyGroupDetail(groupId: Long): ApiState<StudyGroupDetail> =
+        organizationDataSource.getStudyGroupDetail(groupId).map { it.toModel() }
 
     override suspend fun getSchoolDetail(schoolId: Int): ApiState<Unit> =
         organizationDataSource.getSchoolDetail(schoolId).map { Unit } //임시
@@ -82,7 +85,7 @@ class OrganizationRepositoryImpl @Inject constructor(
 
 
     // PATCH
-    override suspend fun editGroup(groupId: Int, request: EditStudyGroupRequest): ApiState<Unit> =
+    override suspend fun editGroup(groupId: Long, request: EditStudyGroupRequest): ApiState<Unit> =
         organizationDataSource.editGroup(groupId, request)
 
     override suspend fun editSchool(schoolId: Int, request: EditSchoolRequest): ApiState<Unit> =

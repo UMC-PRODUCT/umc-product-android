@@ -23,7 +23,7 @@ data class MemberResponse(
     @SerializedName("status") val status: String,
     @SerializedName("roles") val roles: List<MemberRoleResponse>?,
     @SerializedName("challengerRecords") val challengerRecords: List<MemberChallengerRecordResponse>?,
-    @SerializedName("profile") val profile: MemberProfileResponse
+    @SerializedName("profile") val profile: MemberProfileResponse?
 )
 {
     companion object {
@@ -38,7 +38,7 @@ data class MemberResponse(
             status = status,
             roles = roles?.map { it.toDomain() }.orEmpty(),
             challengerRecords = challengerRecords?.map { it.toDomain() }.orEmpty(),
-            profile = profile.toDomain()
+            profile = profile?.toDomain() ?: ProfileInfo.empty()
         )
     }
 }
