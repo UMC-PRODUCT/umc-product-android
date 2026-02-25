@@ -6,8 +6,8 @@ import android.net.Uri
 import androidx.core.net.toUri
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.umc.domain.model.enums.TrophySchoolType
 import com.umc.domain.model.enums.UserPart
+import com.umc.domain.model.school.SchoolInfo
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentTopPostBinding
 import com.umc.presentation.ui.community.adapter.ShowCategoryAdapter
@@ -30,6 +30,9 @@ class TopPostFragment : BaseFragment<FragmentTopPostBinding, TopPostFragmentUiSt
     //명예의전당 본문 어댑터
     private lateinit var trophyAdapter : TrophyDetailAdapter
 
+    //학교 리스트
+    private lateinit var schoolList : List<SchoolInfo>
+
     override fun initView() {
         binding.apply {
             vm = viewModel
@@ -40,7 +43,10 @@ class TopPostFragment : BaseFragment<FragmentTopPostBinding, TopPostFragmentUiSt
         setWeekAdapter()
         //본문 어댑터
         setTrophyAdapter()
-        
+
+        //최조 학교 정보 불러오기
+        viewModel.fetchAllSchool()
+
         //뷰모델에서 불러오기(초기는 null)
         viewModel.fetchTrophies(1, null, null)
         
@@ -55,6 +61,7 @@ class TopPostFragment : BaseFragment<FragmentTopPostBinding, TopPostFragmentUiSt
                 viewModel.uiState.collect { state ->
                     weekAdapter.submitList(state.weekList)
                     trophyAdapter.submitList(state.uiTrophyList)
+                    schoolList = state.schoolList
                 }
             }
 
@@ -72,8 +79,9 @@ class TopPostFragment : BaseFragment<FragmentTopPostBinding, TopPostFragmentUiSt
 
         when(event){
             is TopPostFragmentEvent.OnClickSchoolMenu -> {
-                /**TODO: enum을 이용해 학교 이름을 정의한다. - 차후 학교 변동 시 enum 수정**/
-                val schools = TrophySchoolType.getSchoolLabels()
+
+                val schools = schoolList.map { it.schoolName }.sorted()
+
                 TrophyBottomSheetDialog(
                     title = "학교를 선택하세요",
                     content = "가나다순으로 정렬되어 있어요",
