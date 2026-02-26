@@ -345,10 +345,11 @@ class NoticeDetailViewModel @Inject constructor(
         resultResponse(
             response = deleteNoticeUseCase(currentNoticeId),
             successCallback = {
-                emitEvent(NoticeFragmentEvent.ShowSuccess("공지사항이 삭제되었습니다"))
-                emitEvent(NoticeFragmentEvent.MoveToBackEvent)
+                updateState { copy(isMenuVisible = false) }
+                emitEvent(NoticeFragmentEvent.MoveBackPressedEvent)
             },
             errorCallback = {
+                updateState { copy(isMenuVisible = false) }
                 emitEvent(NoticeFragmentEvent.ShowError("공지사항 삭제에 실패했습니다"))
             }
         )
@@ -382,7 +383,6 @@ data class NoticeFragmentUiState(
 sealed interface NoticeFragmentEvent : UiEvent {
     object ShowBottomSheetEvent : NoticeFragmentEvent
     object MoveBackPressedEvent : NoticeFragmentEvent
-    object MoveToBackEvent : NoticeFragmentEvent
     data class ShowError(val message: String) : NoticeFragmentEvent
     data class ShowSuccess(val message: String) : NoticeFragmentEvent
 }

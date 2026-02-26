@@ -60,6 +60,9 @@ class NoticeDetailFragment :
                         noticeDetailVoteAdapter.submitList(options)
                     }
                     noticeDetailVoteAdapter.setSelectedOptionIds(state.selectedVoteOptionIds.toSet())
+                    // 투표 완료 상태 전달
+                    val isVoted = state.detail.vote?.mySelectedOptionIds?.isNotEmpty() == true
+                    noticeDetailVoteAdapter.setVotedState(isVoted, state.detail.vote)
                 }
             }
         }
