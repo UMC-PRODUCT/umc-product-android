@@ -83,7 +83,7 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
             uchipPart.setOnClickListener { showBottomSheet() }
         }
 
-        viewModel.getNoticeList()
+        viewModel.getDropDownList()
     }
 
     override fun initStates() {

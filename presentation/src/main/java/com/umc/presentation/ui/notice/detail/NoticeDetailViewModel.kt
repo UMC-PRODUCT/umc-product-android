@@ -12,6 +12,7 @@ import com.umc.domain.model.notice.NoticeVoteOption
 import com.umc.domain.usecase.GetChallengerIdUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
+import com.umc.domain.usecase.notice.DeleteNoticeUseCase
 import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatisticsUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatusUseCase
@@ -35,6 +36,7 @@ class NoticeDetailViewModel @Inject constructor(
     private val getChallengerDetailUseCase: GetChallengerDetailUseCase,
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getChallengerIdUseCase: GetChallengerIdUseCase,
+    private val deleteNoticeUseCase: DeleteNoticeUseCase,
 ) : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
     NoticeFragmentUiState()
 ) {
@@ -331,8 +333,25 @@ class NoticeDetailViewModel @Inject constructor(
         // TODO: Implement edit post navigation
     }
 
-    fun onClickDeletePost() {
-        // TODO: Implement delete post logic
+    fun onClickDeletePost() = viewModelScope.launch {
+        if (currentNoticeId == 0L) {
+            emitEvent(NoticeFragmentEvent.ShowError("유효하지 않은 공지사항 ID입니다"))
+            return@launch
+        }
+
+        updateState { copy(isLoading = true) }
+        startLoading()
+
+        resultResponse(
+            response = deleteNoticeUseCase(currentNoticeId),
+            successCallback = {
+                emitEvent(NoticeFragmentEvent.ShowSuccess("공지사항이 삭제되었습니다"))
+                emitEvent(NoticeFragmentEvent.MoveToBackEvent)
+            },
+            errorCallback = {
+                emitEvent(NoticeFragmentEvent.ShowError("공지사항 삭제에 실패했습니다"))
+            }
+        )
     }
 }
 
@@ -363,6 +382,7 @@ data class NoticeFragmentUiState(
 sealed interface NoticeFragmentEvent : UiEvent {
     object ShowBottomSheetEvent : NoticeFragmentEvent
     object MoveBackPressedEvent : NoticeFragmentEvent
+    object MoveToBackEvent : NoticeFragmentEvent
     data class ShowError(val message: String) : NoticeFragmentEvent
     data class ShowSuccess(val message: String) : NoticeFragmentEvent
 }

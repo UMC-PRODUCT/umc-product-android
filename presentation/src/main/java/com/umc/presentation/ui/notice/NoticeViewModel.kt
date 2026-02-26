@@ -132,7 +132,7 @@ class NoticeViewModel @Inject constructor(
         emitEvent(NoticeEvent.MoveToWriteEvent)
     }
 
-    private fun getDropDownList() = viewModelScope.launch {
+    fun getDropDownList() = viewModelScope.launch {
         resultResponse(
             response = getGisuListUseCase(),
             successCallback = {
