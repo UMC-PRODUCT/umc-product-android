@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.domain.model.notice.NoticeVoteOption
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentNoticeDetailBinding
+import com.umc.presentation.ui.notice.detail.adapter.NoticeDetailImageAdapter
 import com.umc.presentation.ui.notice.detail.adapter.NoticeDetailVoteAdapter
 import com.umc.presentation.ui.notice.detail.bottomsheet.NoticeConfirmBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
@@ -30,6 +31,10 @@ class NoticeDetailFragment :
         })
     }
 
+    private val noticeDetailImageAdapter: NoticeDetailImageAdapter by lazy {
+        NoticeDetailImageAdapter()
+    }
+
     override fun initView() {
         binding.apply {
             vm = viewModel
@@ -39,6 +44,12 @@ class NoticeDetailFragment :
             recyclerVote.apply {
                 adapter = noticeDetailVoteAdapter
                 layoutManager = LinearLayoutManager(context)
+                itemAnimator = null
+            }
+
+            recyclerImages.apply {
+                adapter = noticeDetailImageAdapter
+                layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
                 itemAnimator = null
             }
         }
@@ -62,6 +73,7 @@ class NoticeDetailFragment :
                     noticeDetailVoteAdapter.setSelectedOptionIds(state.selectedVoteOptionIds.toSet())
                     val isVoted = state.detail.vote?.mySelectedOptionIds?.isNotEmpty() == true
                     noticeDetailVoteAdapter.setVotedState(isVoted, state.detail.vote)
+                    noticeDetailImageAdapter.submitList(state.detail.images)
                 }
             }
         }
