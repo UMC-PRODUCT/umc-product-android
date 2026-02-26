@@ -88,7 +88,7 @@ class NoticeRemoteDataSourceImpl @Inject constructor(
     override suspend fun addNoticeLinks(noticeId: Long, request: NoticeLinkRequest): ApiState<Unit> =
         apiCall { noticeApi.addNoticeLinks(noticeId, request) }
 
-    override suspend fun updateNotice(noticeId: Long, request: NoticeImageRequest): ApiState<Unit> =
+    override suspend fun updateNotice(noticeId: Long, request: NoticeUpdateRequest): ApiState<Unit> =
         apiCall { noticeApi.updateNotice(noticeId, request) }
 
     override suspend fun submitVoteResponse(voteId: Long, request: VoteResponseRequest): ApiState<Unit> =

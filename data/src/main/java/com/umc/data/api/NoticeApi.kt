@@ -117,6 +117,13 @@ interface NoticeApi {
         @Body request: NoticeUpdateRequest
     ): ApiResponse<Unit>
 
+    // 공지사항 기본 정보 수정
+    @PATCH(Endpoints.Notice.NOTICE_DETAIL)
+    suspend fun updateNotice(
+        @Path(PATH_NOTICE_ID) noticeId: Long,
+        @Body request: NoticeUpdateRequest
+    ): ApiResponse<Unit>
+
     // 공지사항 생성
     @POST(Endpoints.Notice.NOTICE)
     suspend fun createNotice(

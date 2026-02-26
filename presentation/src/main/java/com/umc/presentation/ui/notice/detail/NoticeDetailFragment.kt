@@ -60,7 +60,6 @@ class NoticeDetailFragment :
                         noticeDetailVoteAdapter.submitList(options)
                     }
                     noticeDetailVoteAdapter.setSelectedOptionIds(state.selectedVoteOptionIds.toSet())
-                    // 투표 완료 상태 전달
                     val isVoted = state.detail.vote?.mySelectedOptionIds?.isNotEmpty() == true
                     noticeDetailVoteAdapter.setVotedState(isVoted, state.detail.vote)
                 }
@@ -72,6 +71,9 @@ class NoticeDetailFragment :
         when (event) {
             NoticeFragmentEvent.MoveBackPressedEvent -> findNavController().popBackStack()
             NoticeFragmentEvent.ShowBottomSheetEvent -> showBottomSheet()
+            is NoticeFragmentEvent.MoveToEditPostEvent -> {
+                moveToEditPost(event.noticeId)
+            }
             is NoticeFragmentEvent.ShowError -> {
                 Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
             }
@@ -84,6 +86,15 @@ class NoticeDetailFragment :
     private fun showBottomSheet() {
         val bottomSheet = NoticeConfirmBottomSheet()
         bottomSheet.show(parentFragmentManager, "")
+    }
+
+    private fun moveToEditPost(noticeId: Long) {
+        val action = NoticeDetailFragmentDirections
+            .actionNoticeDetailFragmentToNoticeWriteFragment(
+                noticeId = noticeId,
+                isEditMode = true
+            )
+        findNavController().navigate(action)
     }
 
 

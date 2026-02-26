@@ -265,14 +265,12 @@ class NoticeDetailViewModel @Inject constructor(
         val isMultiple = vote.allowMultipleChoice
 
         if (isMultiple) {
-            // 복수 선택 가능: 토글
             if (selectedOptionIds.contains(clickedOption.optionId)) {
                 selectedOptionIds.remove(clickedOption.optionId)
             } else {
                 selectedOptionIds.add(clickedOption.optionId)
             }
         } else {
-            // 단일 선택: 하나만 선택
             if (selectedOptionIds.contains(clickedOption.optionId)) {
                 selectedOptionIds.clear()
             } else {
@@ -330,7 +328,8 @@ class NoticeDetailViewModel @Inject constructor(
     }
 
     fun onClickEditPost() {
-        // TODO: Implement edit post navigation
+        updateState { copy(isMenuVisible = false) }
+        emitEvent(NoticeFragmentEvent.MoveToEditPostEvent(noticeId = currentNoticeId))
     }
 
     fun onClickDeletePost() = viewModelScope.launch {
@@ -383,6 +382,7 @@ data class NoticeFragmentUiState(
 sealed interface NoticeFragmentEvent : UiEvent {
     object ShowBottomSheetEvent : NoticeFragmentEvent
     object MoveBackPressedEvent : NoticeFragmentEvent
+    data class MoveToEditPostEvent(val noticeId: Long) : NoticeFragmentEvent
     data class ShowError(val message: String) : NoticeFragmentEvent
     data class ShowSuccess(val message: String) : NoticeFragmentEvent
 }
