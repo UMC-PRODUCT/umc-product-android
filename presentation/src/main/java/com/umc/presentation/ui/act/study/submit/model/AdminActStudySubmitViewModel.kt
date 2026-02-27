@@ -155,12 +155,12 @@ class AdminActStudySubmitViewModel @Inject constructor(
             when (val res = getAvailableWeeksUseCase()) {
                 is ApiState.Success -> {
                     val weeks = res.data
-                    val defaultWeek = weeks.firstOrNull() ?: 10
+                    val defaultWeek = weeks.firstOrNull() ?: 1
                     updateState { copy(availableWeeks = weeks, selectedWeek = defaultWeek) }
                     loadWorkbookSubmissions(reset = true)
                 }
                 is ApiState.Fail -> {
-                    updateState { copy(selectedWeek = 10) }
+                    updateState { copy(selectedWeek = 1) }
                     loadWorkbookSubmissions(reset = true)
                 }
             }
@@ -184,8 +184,8 @@ class AdminActStudySubmitViewModel @Inject constructor(
                 is ApiState.Success -> {
                     val page = res.data
                     val newItems = page.content
-                        .filter { it.status == "SUBMITTED" || it.status == "PASS" }
-                        .map { it.toUiModel(state.selectedWeek) }
+                        .filter { it.status in listOf("SUBMITTED", "PASS", "FAIL", "BEST") }
+                        .map { it.toUiModel(state.selectedWeek) } // 꼭 안 있어도 될거같기도
                     updateState {
                         copy(
                             items = if (reset) newItems else items + newItems,

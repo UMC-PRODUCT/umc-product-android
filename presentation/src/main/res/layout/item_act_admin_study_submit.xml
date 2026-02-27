@@ -4,6 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+        <import type="android.view.View" />
+
         <variable
             name="item"
             type="com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitItemUiModel" />
@@ -25,7 +27,6 @@
             android:minHeight="76dp"
             android:padding="16dp">
 
-
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/iv_profile"
                 android:layout_width="36dp"
@@ -40,6 +41,49 @@
                 app:layout_constraintBottom_toBottomOf="parent" />
 
 
+
+            <LinearLayout
+                android:id="@+id/right_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+
+                <ImageView
+                    android:id="@+id/iv_best"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_best"
+                    app:tint="@color/warning500"
+                    android:visibility='@{item.isBest ? View.VISIBLE : View.GONE}'
+                    tools:ignore="ContentDescription"
+                    tools:visibility="visible"/>
+
+
+                <FrameLayout
+                    android:layout_width="56dp"
+                    android:layout_height="56dp">
+
+                    <ImageView
+                        android:id="@+id/iv_slot"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        app:slotIcon='@{item.status}'
+                        tools:src="@drawable/ic_swipe"
+                        tools:ignore="ContentDescription" />
+                </FrameLayout>
+
+            </LinearLayout>
+
+
+
             <LinearLayout
                 android:id="@+id/layout_text_container"
                 android:layout_width="0dp"
@@ -47,14 +91,12 @@
                 android:layout_marginStart="10dp"
                 android:orientation="vertical"
                 app:layout_constraintStart_toEndOf="@id/iv_profile"
-                app:layout_constraintEnd_toStartOf="@id/iv_swipe"
+                app:layout_constraintEnd_toStartOf="@id/right_container"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintVertical_bias="0.5">
 
-
-
-            <LinearLayout
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -91,7 +133,6 @@
                         tools:text="iOS" />
                 </LinearLayout>
 
-                <!-- 2️⃣ 학교 + | + 제목 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -128,22 +169,8 @@
                         android:maxLines="1"
                         android:ellipsize="end"
                         tools:text="SwiftUI 클론 코딩" />
-
                 </LinearLayout>
             </LinearLayout>
-
-
-
-            <ImageView
-                android:id="@+id/iv_swipe"
-                android:layout_width="24dp"
-                android:layout_height="44dp"
-                android:src="@drawable/ic_swipe"
-                app:tint="@color/neutral300"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                tools:ignore="ContentDescription" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>

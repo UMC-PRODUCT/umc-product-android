@@ -57,6 +57,8 @@ class AdminActStudySubmitFragment :
 
         swipeController = AdminStudySubmitSwipeController(
             recyclerView = binding.rvSubmit,
+            isBestEnabled = { pos -> adapter.currentList.getOrNull(pos)?.isBestEnabled == true },
+            isReviewEnabled = { pos -> adapter.currentList.getOrNull(pos)?.isReviewEnabled == true },
             onClickBest = { position ->
                 adapter.currentList.getOrNull(position)?.let { item ->
                     viewModel.onAction(AdminActStudySubmitAction.ClickBest(item))
@@ -109,7 +111,7 @@ class AdminActStudySubmitFragment :
                     is AdminActStudySubmitEvent.ShowBestDialog -> showBestDialog(event.item)
                     is AdminActStudySubmitEvent.ShowReviewDialog -> showReviewDialog(event.item)
                     is AdminActStudySubmitEvent.ShowToast -> {
-                        // TODO toast 처리
+
                     }
                 }
             }

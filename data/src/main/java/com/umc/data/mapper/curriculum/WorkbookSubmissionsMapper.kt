@@ -10,6 +10,7 @@ fun WorkbookSubmissionItemResponse.toDomain(): WorkbookSubmissionItem =
     WorkbookSubmissionItem(
         challengerWorkbookId = challengerWorkbookId,
         challengerId = challengerId,
+        memberName = memberName.orEmpty(),
         challengerName = challengerName,
         profileImageUrl = profileImageUrl.orEmpty(),
         schoolName = schoolName,

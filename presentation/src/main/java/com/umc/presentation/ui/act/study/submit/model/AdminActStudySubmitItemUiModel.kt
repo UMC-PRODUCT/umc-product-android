@@ -10,7 +10,17 @@ data class AdminActStudySubmitItemUiModel(
     val studyTitle: String,
     val submitUrl: String,
     val schoolName: String,
-    val profileImageUrl: String?
-)
+    val profileImageUrl: String?,
+    val status: String,
+) {
+    val isBest: Boolean get() = status == "BEST"
+    val isBestEnabled: Boolean get() = status == "PASS"
 
+    val isReviewEnabled: Boolean get() = status == "SUBMITTED"
 
+    val markStatus: String? get() = when (status) {
+        "PASS", "FAIL" -> status
+        "BEST" -> "PASS"
+        else -> null
+    }
+}
