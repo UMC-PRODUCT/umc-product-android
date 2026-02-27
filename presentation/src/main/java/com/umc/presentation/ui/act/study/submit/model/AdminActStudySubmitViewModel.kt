@@ -11,6 +11,8 @@ import com.umc.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.umc.domain.usecase.member.GetMyProfileUseCase
+import com.umc.domain.util.resolveAdminScope
 
 
 
@@ -21,6 +23,7 @@ class AdminActStudySubmitViewModel @Inject constructor(
     private val getAvailableWeeksUseCase: GetAvailableWeeksUseCase,
     private val selectBestWorkbookUseCase: SelectBestWorkbookUseCase,
     private val reviewWorkbookUseCase: ReviewWorkbookUseCase,
+    private val getMyProfileUseCase: GetMyProfileUseCase,
 ) : BaseViewModel<AdminActStudySubmitState, AdminActStudySubmitEvent>(
     AdminActStudySubmitState()
 ) {
@@ -125,12 +128,26 @@ class AdminActStudySubmitViewModel @Inject constructor(
 
 
 
+
+
     private fun loadFilterData() {
         viewModelScope.launch {
-            val schoolId = 18L
-            val part = "ANDROID"
 
-            when (val res = getStudyGroupsUseCase(schoolId, part)) {
+            val scope = when (val meRes = getMyProfileUseCase()) {
+                is ApiState.Success -> meRes.data.resolveAdminScope()
+                is ApiState.Fail -> {
+                    emitEvent(AdminActStudySubmitEvent.ShowToast(meRes.failState.message))
+                    return@launch
+                }
+            }
+
+            if (scope == null) {
+                emitEvent(AdminActStudySubmitEvent.ShowToast("어드민 권한 정보(파트/학교)를 찾을 수 없어요."))
+                return@launch
+            }
+
+
+            when (val res = getStudyGroupsUseCase(scope.schoolId, scope.part)) {
                 is ApiState.Success -> updateState { copy(studyGroups = res.data) }
                 is ApiState.Fail -> emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
             }
@@ -138,17 +155,10 @@ class AdminActStudySubmitViewModel @Inject constructor(
             when (val res = getAvailableWeeksUseCase()) {
                 is ApiState.Success -> {
                     val weeks = res.data
-                    val defaultWeek = weeks.firstOrNull() ?: 10 // 10주차거 테스트하느라 일단 박아놨습니다..
-
-                    updateState {
-                        copy(
-                            availableWeeks = weeks,
-                            selectedWeek = defaultWeek
-                        )
-                    }
+                    val defaultWeek = weeks.firstOrNull() ?: 10
+                    updateState { copy(availableWeeks = weeks, selectedWeek = defaultWeek) }
                     loadWorkbookSubmissions(reset = true)
                 }
-
                 is ApiState.Fail -> {
                     updateState { copy(selectedWeek = 10) }
                     loadWorkbookSubmissions(reset = true)
