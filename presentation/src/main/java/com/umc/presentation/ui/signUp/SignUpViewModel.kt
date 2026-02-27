@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.signUp
 
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import com.umc.domain.model.JwtToken
 import com.umc.domain.model.enums.EmailVerifyType
 import com.umc.domain.model.enums.TermsType
@@ -14,6 +15,7 @@ import com.umc.domain.usecase.appDataStore.SaveTokenUseCase
 import com.umc.domain.usecase.auth.PostEmailVerificationCompleteUseCase
 import com.umc.domain.usecase.auth.PostEmailVerificationUseCase
 import com.umc.domain.usecase.member.RegisterUseCase
+import com.umc.domain.usecase.notification.RegisterFcmTokenUseCase
 import com.umc.domain.usecase.school.GetAllSchoolUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -22,6 +24,7 @@ import com.umc.presentation.util.Const
 import com.umc.presentation.util.ULog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -32,6 +35,7 @@ class SignUpViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase,
     private val saveTokenUseCase: SaveTokenUseCase,
     private val getTermsByTypeUseCase: GetTermsByTypeUseCase,
+    private val registerFcmTokenUseCase: RegisterFcmTokenUseCase,
 ) : BaseViewModel<SignUpState, SignUpEvent>(
     SignUpState(),
 ) {
@@ -201,9 +205,27 @@ class SignUpViewModel @Inject constructor(
         resultResponse(
             response = saveTokenUseCase(token),
             successCallback = {
-                emitEvent(SignUpEvent.MoveToPermissionEvent)
+                registerFcmToken()
             }
         )
+    }
+
+    private fun registerFcmToken() = viewModelScope.launch {
+        try {
+            val fcmToken = FirebaseMessaging.getInstance().token.await()
+            resultResponse(
+                response = registerFcmTokenUseCase(fcmToken),
+                successCallback = {
+                    emitEvent(SignUpEvent.MoveToPermissionEvent)
+                },
+                errorCallback = {
+                    emitEvent(SignUpEvent.MoveToPermissionEvent)
+                }
+            )
+        } catch (e: Exception) {
+            ULog.d("FCM 토큰 획득 실패: ${e.message}")
+            emitEvent(SignUpEvent.MoveToPermissionEvent)
+        }
     }
 
     fun setOAuthVerificationToken(token: String) {
