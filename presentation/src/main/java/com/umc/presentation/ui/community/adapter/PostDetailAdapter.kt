@@ -2,6 +2,7 @@ package com.umc.presentation.ui.community.adapter
 
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -9,12 +10,17 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.umc.domain.model.community.CommentItem
 import com.umc.domain.model.community.ContentItem
+import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemCommunityCommentBinding
 import com.umc.presentation.databinding.ItemCommunityCommentsCountBinding
 import com.umc.presentation.databinding.ItemCommunityContentBinding
 import com.umc.presentation.databinding.ItemCommunityNoCommentBinding
 import com.umc.presentation.ui.community.detail.PostDetailItem
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * 이 어댑터는 게시글의
@@ -32,6 +38,9 @@ interface PostItemDelegate {
 
     // 댓글 메뉴 버튼 클릭
     fun onCommentMenuClicked(item: CommentItem)
+
+    // 번개 오픈채팅 이동
+    fun onOpenChatClicked(url: String)
 }
 
 
@@ -86,7 +95,35 @@ class PostDetailAdapter(
 
             //여기서 좋아요 / 싫어요 클릭 시 delegate로 ㄱㄱ
             fun bind(item: ContentItem) {
+                //번개 게시글 시 상단 포커스
                 binding.item = item
+
+                //번개글 파실 로직
+                val postType = item.category
+
+                //번개글일 경우 내용 넣기
+                if(postType == CommunityCategoryType.LIGHTNING && item.lightningInfo != null){
+                    binding.itemLayoutLightning.visibility = View.VISIBLE
+                    //delegate로 이동 처리
+                    binding.itemBtnGoOpenchat.setOnClickListener { delegate.onOpenChatClicked(item.lightningInfo?.openChatUrl ?: "") }
+
+                    //포맷
+                    val date = formatLightningTime(item.lightningInfo?.meetAt)
+                    val location = item.lightningInfo?.location
+                    val participant = "${item.lightningInfo?.maxParticipants}명"
+                    
+                    binding.itemTvStartTimeContent.text = date
+                    binding.itemTvStartLocationContent.text = location
+                    binding.itemTvStartParticipantContent.text = participant
+
+
+                }
+                else{
+                    binding.itemLayoutLightning.visibility = View.GONE
+                }
+
+
+
                 Log.d("log_mypage", "작성자: ${item.userProfileImage}")
                 binding.itemCircleimvProfile.load(item.userProfileImage) {
                     crossfade(true)
@@ -125,6 +162,35 @@ class PostDetailAdapter(
 
     // 노코멘트 = 댓글이 없을 때
     class EmptyViewHolder(val binding: ItemCommunityNoCommentBinding) : RecyclerView.ViewHolder(binding.root)
+
+}
+
+//lightning 전용 타임 UTC 수정 및 포맷 맞추기
+private fun formatLightningTime(date: String?): String{
+    if(date.isNullOrBlank()) return ""
+
+    return try{
+        val normalizedInput = if (!date.endsWith("Z")) {
+            "${date}Z"
+        } else {
+            date
+        }
+
+        val utcTime = ZonedDateTime.parse(normalizedInput)
+
+        //디폴트(기기설정)
+        val localTime = utcTime.withZoneSameInstant(ZoneId.systemDefault())
+
+        val formatter = DateTimeFormatter
+            .ofPattern("yyyy.MM.dd (E) HH:mm")
+            .withLocale(Locale.getDefault())
+
+        localTime.format(formatter)
+    } catch (e: Exception) {
+        //파싱 실패 시 예외 처리 (최소한의 날짜라도 표시)
+        date.take(10).replace("-", ".")
+    }
+
 
 }
 

@@ -6,7 +6,9 @@ import com.umc.domain.model.community.TrophyBody
 import com.umc.domain.model.community.TrophyItem
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.CategoryItem
+import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.usecase.community.GetCommunityTrophyUseCase
+import com.umc.domain.usecase.school.GetAllSchoolUseCase
 
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -18,7 +20,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TopPostViewModel @Inject constructor(
-    private val getTrophyUseCase: GetCommunityTrophyUseCase
+    private val getTrophyUseCase: GetCommunityTrophyUseCase, //명예의 전당 내용 가져오기
+    private val getAllSchoolUseCase: GetAllSchoolUseCase //전체 학교 정보 가져오기
 ) :
 BaseViewModel<TopPostFragmentUiState, TopPostFragmentEvent>(
     TopPostFragmentUiState()
@@ -45,6 +48,21 @@ BaseViewModel<TopPostFragmentUiState, TopPostFragmentEvent>(
                 }
             )
 
+        }
+    }
+
+    //전체 학교 정보 가져오기
+    fun fetchAllSchool(){
+        viewModelScope.launch {
+            resultResponse(
+                response = getAllSchoolUseCase(),
+                successCallback = {
+                    updateState {
+                        copy(schoolList = it)
+                    }
+                },
+                errorCallback = {}
+            )
         }
     }
 
@@ -147,9 +165,11 @@ data class TopPostFragmentUiState(
     //서버에서 받아온 리스트
     val trophyList : List<TrophyBody> = listOf(),
 
+    //학교 리스트
+    val schoolList : List<SchoolInfo> = listOf(),
+
     //recylcerview에 보여줄 리스트
     val uiTrophyList : List<TrophyItem> = listOf(),
-
 
     //이번 달 몇주까지 있는지 리스트
     val weekList : List<CategoryItem> = emptyList(),
