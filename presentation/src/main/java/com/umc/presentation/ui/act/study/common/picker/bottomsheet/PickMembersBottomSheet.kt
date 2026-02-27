@@ -32,7 +32,6 @@ class PickMembersBottomSheet(
 
     private val vm: UserChallengerViewModel by activityViewModels()
 
-    // ✅ 여기선 challengerId로 선택 상태 관리 (memberId 불확실하니)
     private val selectedChallengerIds = linkedSetOf<Long>()
 
     private lateinit var listAdapter: MemberPickerAdapter
@@ -92,23 +91,29 @@ class PickMembersBottomSheet(
             itemAnimator = null
         }
 
-        // VM 구독
+
         viewLifecycleOwner.lifecycleScope.launch {
             vm.uiState.collectLatest { state ->
                 latestFiltered = state.filteredChallengers.map { it.toMemberUiModel(schoolName) }
 
-                if (mode == Mode.PICKING) listAdapter.submitList(latestFiltered)
-                if (mode == Mode.CONFIRMED) renderSelectedList()
-                if (mode == Mode.EMPTY && selectedChallengerIds.isNotEmpty()) enterConfirmedMode()
+                when (mode) {
+                    Mode.PICKING -> listAdapter.submitList(latestFiltered)
+                    Mode.CONFIRMED -> renderSelectedList()
+                    Mode.EMPTY -> updateEmptyView()
+                }
             }
         }
 
-        // 검색바 -> PICKING 진입
+
         binding.searchBar.setOnTextChangedListener { q ->
             vm.filterList(q)
             if (mode != Mode.PICKING) enterPickingMode()
         }
 
+
+        binding.searchBar.setOnFocusChangedListener { hasFocus ->
+            if (hasFocus && mode != Mode.PICKING) enterPickingMode()
+        }
 
         binding.searchBar.setOnClickListener {
             if (mode != Mode.PICKING) enterPickingMode()
@@ -118,9 +123,9 @@ class PickMembersBottomSheet(
             val picked = allPicked()
             onConfirmed(picked)
             enterConfirmedMode()
-
             binding.root.requestFocus()
         }
+
 
         if (selectedChallengerIds.isEmpty()) enterEmptyMode() else enterConfirmedMode()
     }
@@ -136,6 +141,7 @@ class PickMembersBottomSheet(
         binding.rvList.visibility = View.GONE
         binding.rvSelectedMembers.visibility = View.GONE
         updateConfirmEnabled()
+        updateEmptyView()
     }
 
     private fun enterPickingMode() {
@@ -143,6 +149,9 @@ class PickMembersBottomSheet(
         binding.btnConfirm.visibility = View.VISIBLE
         binding.rvList.visibility = View.VISIBLE
         binding.rvSelectedMembers.visibility = View.GONE
+
+        // empty는 즉시 숨김
+        binding.emptySpace.visibility = View.GONE
 
         listAdapter.submitList(latestFiltered)
         updateConfirmEnabled()
@@ -154,6 +163,7 @@ class PickMembersBottomSheet(
         binding.rvList.visibility = View.GONE
         binding.rvSelectedMembers.visibility = View.VISIBLE
         renderSelectedList()
+        binding.emptySpace.visibility = View.GONE
     }
 
     private fun renderSelectedList() {
@@ -166,6 +176,10 @@ class PickMembersBottomSheet(
         binding.btnConfirm.isEnabled = selectedChallengerIds.isNotEmpty()
     }
 
+    private fun updateEmptyView() {
+        binding.emptySpace.visibility = if (mode == Mode.EMPTY) View.VISIBLE else View.GONE
+    }
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return (super.onCreateDialog(savedInstanceState) as BottomSheetDialog).apply {
             setOnShowListener { dialog ->
@@ -174,10 +188,24 @@ class PickMembersBottomSheet(
                     d.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
                         ?: return@setOnShowListener
 
+                val screenHeight = resources.displayMetrics.heightPixels
+                val targetHeight = (screenHeight * 0.75f).toInt()
+                val topOffset = screenHeight - targetHeight
+
+
+                bottomSheet.layoutParams = bottomSheet.layoutParams.apply {
+                    height = ViewGroup.LayoutParams.MATCH_PARENT
+                }
+                bottomSheet.requestLayout()
+
                 val behavior = BottomSheetBehavior.from(bottomSheet)
-                behavior.state = BottomSheetBehavior.STATE_EXPANDED
+
+
+                behavior.isFitToContents = false
+                behavior.expandedOffset = topOffset
+                behavior.peekHeight = targetHeight
                 behavior.skipCollapsed = true
-                behavior.peekHeight = (resources.displayMetrics.heightPixels * 0.75f).toInt()
+                behavior.state = BottomSheetBehavior.STATE_EXPANDED
             }
         }
     }

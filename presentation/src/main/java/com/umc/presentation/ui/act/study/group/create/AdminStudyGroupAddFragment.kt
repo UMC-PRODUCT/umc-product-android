@@ -32,7 +32,7 @@ class AdminStudyGroupAddFragment :
 
     override val viewModel: AdminStudyGroupAddViewModel by viewModels()
 
-    // ✅ 챌린저 목록(전체 페이지 로드 + 로컬 필터) 이미 구현된 공용 VM 재사용
+
     private val challengerVm: UserChallengerViewModel by activityViewModels()
 
     private val parts = listOf("Web", "Android", "iOS", "Server", "Design", "Plan")
@@ -62,18 +62,14 @@ class AdminStudyGroupAddFragment :
         collectState()
         collectEvent()
 
-        // ✅ 여기 추가: 챌린저 VM에서 멤버 리스트 캐싱
         collectChallengersAsMembers()
     }
 
     private fun collectChallengersAsMembers() {
         viewLifecycleOwner.lifecycleScope.launch {
             challengerVm.uiState.collect { chState ->
-                // ✅ schoolName은 네 state/데이터스토어 구조에 맞게 가져오기
-                // 1) state에 schoolName이 있으면 그걸 쓰고
-                // 2) 없으면 일단 빈 값으로 (UI만 조금 비어보임)
+
                 val schoolName = viewModel.uiState.value.run {
-                    // TODO: 네 AdminStudyGroupAddState에 schoolName 필드 있으면 그걸로 교체
                     ""
                 }
 

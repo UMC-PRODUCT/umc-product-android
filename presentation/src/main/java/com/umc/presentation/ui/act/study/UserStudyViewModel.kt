@@ -111,19 +111,23 @@ class UserStudyViewModel @Inject constructor(
                     isExpanded = false
                 )
             }
-            emitEvent(UserStudyEvent.ShowToast("제출 완료! (더미 성공)"))
+            emitEvent(UserStudyEvent.ShowToast("제출 완료! "))
             return
         }
+
+        startLoading()
 
         Log.d("UserStudy", "submit id=$itemId, link=$link")
         Log.d("UserStudy", "submit API call itemId=$itemId link=$link")
 
         when (val res = submitChallengerWorkbookUseCase(itemId, link)) {
             is ApiState.Success -> {
+                stopLoading()
                 load()
                 emitEvent(UserStudyEvent.ShowToast("제출 완료!"))
             }
             is ApiState.Fail -> {
+                stopLoading()
                 updateItem(itemId) { it.copy(submitState = SubmitState.CONFIRMING) }
                 emitEvent(UserStudyEvent.ShowToast(res.failState.message))
             }
@@ -132,6 +136,7 @@ class UserStudyViewModel @Inject constructor(
 
 
     private fun load() {
+        startLoading()
         viewModelScope.launch {
             when (val result = getMyStudyProgressUseCase()) {
                 is ApiState.Success -> {
@@ -160,7 +165,7 @@ class UserStudyViewModel @Inject constructor(
                                 isExpanded = false,
                                 link = "",
                                 description = wb.description,
-                                isLocked = false,
+                                isLocked = !wb.isReleased,
                             )
                         }
 
@@ -171,9 +176,12 @@ class UserStudyViewModel @Inject constructor(
                             items = applyLockRule(uiItems)
                         )
                     }
+
+                    stopLoading()
                 }
 
                 is ApiState.Fail -> {
+                    stopLoading()
                     emitEvent(UserStudyEvent.ShowToast(result.failState.message))
                 }
             }
@@ -214,16 +222,13 @@ class UserStudyViewModel @Inject constructor(
 
 
 
-    // db에 여러가지 stats가 섞여있어서 임의로 다 풀었습니다
     private fun applyLockRule(list: List<ActStudyItemUiModel>): List<ActStudyItemUiModel> {
-        val sorted = list.sortedBy { it.week }
-        var prevUnlocksNext = true
+        val sorted = list.sortedBy { it.week.toString().toIntOrNull() ?: 0 }
+        var prevEvaluated = true
 
         return sorted.mapIndexed { index, item ->
-            val locked = if (index == 0) false else !prevUnlocksNext
-
-
-            prevUnlocksNext = true
+            val locked = if (index == 0) false else !prevEvaluated
+            prevEvaluated = (item.status == StudyStatus.PASS || item.status == StudyStatus.FAIL)
 
             item.copy(
                 isLocked = locked,
@@ -231,27 +236,6 @@ class UserStudyViewModel @Inject constructor(
             )
         }
     }
-
-
-
-
-
-    // 서버테스트로 잠시 주석처리중...원래 들어가야할 코드
-
-//    private fun applyLockRule(list: List<ActStudyItemUiModel>): List<ActStudyItemUiModel> {
-//        val sorted = list.sortedBy { it.week.toString().toIntOrNull() ?: 0 }
-//        var prevEvaluated = true
-//
-//        return sorted.mapIndexed { index, item ->
-//            val locked = if (index == 0) false else !prevEvaluated
-//            prevEvaluated = (item.status == StudyStatus.PASS || item.status == StudyStatus.FAIL)
-//
-//            item.copy(
-//                isLocked = locked,
-//                isExpanded = if (locked) false else item.isExpanded
-//            )
-//        }
-//    }
 
 
     private fun WorkbookStatus.toStudyStatus(): StudyStatus = when (this) {
