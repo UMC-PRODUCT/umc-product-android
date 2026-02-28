@@ -5,6 +5,7 @@ import com.umc.data.mapper.toFailState
 import com.umc.data.request.workbook.BestWorkbookRequest
 import com.umc.data.request.workbook.ReviewWorkbookRequest
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.curriculum.ChallengerWorkbookSubmission
 import javax.inject.Inject
 
 class WorkbookRemoteDataSourceImpl @Inject constructor(
@@ -39,4 +40,20 @@ class WorkbookRemoteDataSourceImpl @Inject constructor(
         } catch (e: Exception) {
             ApiState.Fail(e.toFailState())
         }
+
+    override suspend fun getChallengerWorkbookSubmission(
+        challengerWorkbookId: Long
+    ): ApiState<ChallengerWorkbookSubmission> {
+        return try {
+            val res = api.getChallengerWorkbookSubmission(challengerWorkbookId)
+
+            val body = res.result ?: throw IllegalStateException(
+                "getChallengerWorkbookSubmission: result is null (code=${res.code}, message=${res.message})"
+            )
+
+            ApiState.Success(body.toModel())
+        } catch (e: Exception) {
+            ApiState.Fail(e.toFailState())
+        }
+    }
 }

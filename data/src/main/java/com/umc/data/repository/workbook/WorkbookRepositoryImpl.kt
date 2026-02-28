@@ -3,6 +3,7 @@ package com.umc.data.repository.workbook
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.repository.workbook.WorkbookRepository
 import com.umc.data.dataSource.remote.workbook.WorkbookRemoteDataSource
+import com.umc.domain.model.curriculum.ChallengerWorkbookSubmission
 import javax.inject.Inject
 
 class WorkbookRepositoryImpl @Inject constructor(
@@ -21,4 +22,9 @@ class WorkbookRepositoryImpl @Inject constructor(
         feedback: String?
     ): ApiState<Unit> =
         remoteDataSource.reviewWorkbook(challengerWorkbookId, status, feedback)
+
+    override suspend fun getChallengerWorkbookSubmission(
+        challengerWorkbookId: Long
+    ): ApiState<ChallengerWorkbookSubmission> =
+        remoteDataSource.getChallengerWorkbookSubmission(challengerWorkbookId)
 }

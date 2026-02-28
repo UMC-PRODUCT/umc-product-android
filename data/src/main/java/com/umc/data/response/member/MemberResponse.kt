@@ -23,7 +23,7 @@ data class MemberResponse(
     @SerializedName("status") val status: String,
     @SerializedName("roles") val roles: List<MemberRoleResponse>?,
     @SerializedName("challengerRecords") val challengerRecords: List<MemberChallengerRecordResponse>?,
-    @SerializedName("profile") val profile: MemberProfileResponse
+    @SerializedName("profile") val profile: MemberProfileResponse?
 )
 {
     companion object {
@@ -38,7 +38,7 @@ data class MemberResponse(
             status = status,
             roles = roles?.map { it.toDomain() }.orEmpty(),
             challengerRecords = challengerRecords?.map { it.toDomain() }.orEmpty(),
-            profile = profile.toDomain()
+            profile = profile?.toDomain() ?: ProfileInfo.empty()
         )
     }
 }
@@ -82,6 +82,9 @@ data class MemberChallengerRecordResponse(
     @SerializedName("chapterName") val chapterName: String?,
     @SerializedName("part") val part: String,
     @SerializedName("challengerPoints") val challengerPoints: List<MemberPointResponse>?,
+    @SerializedName("points") val points: List<MemberPointResponse>?,
+    @SerializedName("totalPoint") val totalPoint: Double?,
+    @SerializedName("roles") val roles: List<MemberRoleResponse>?,
     @SerializedName("challengerStatus") val challengerStatus: String?,
     @SerializedName("name") val name: String,
     @SerializedName("nickname") val nickname: String,
@@ -102,6 +105,9 @@ data class MemberChallengerRecordResponse(
             part = part,
             challengerStatus = challengerStatus,
             challengerPoints = challengerPoints?.map { it.toDomain() }.orEmpty(),
+            points = points?.map { it.toDomain() }.orEmpty(),
+            totalPoint = totalPoint,
+            roles = roles?.map { it.toDomain() }.orEmpty(),
             name = name,
             nickname = nickname,
             email = email ?: "",

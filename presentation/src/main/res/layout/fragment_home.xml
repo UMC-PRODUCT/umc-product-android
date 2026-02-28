@@ -356,7 +356,7 @@
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- 최근 받은 알림 카드 -->
+                <!-- 최근 받은 알림 카드 (숨겨)-->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/home_cdv_recent_alarm"
                     android:layout_width="0dp"
@@ -364,6 +364,7 @@
                     android:layout_marginTop="16dp"
                     android:background="@color/accent100"
                     android:onClick="@{()->vm.onClickNotice()}"
+                    android:visibility="gone"
                     app:cardBackgroundColor="@color/accent100"
                     app:cardElevation="0dp"
                     app:strokeWidth="1dp"

@@ -76,13 +76,11 @@ object ApiModule {
         return retrofit.create(CurriculumApi::class.java)
     }
 
-    @Provides
     @Singleton
-    fun provideWorkbookApi(
-        @AuthRetrofit retrofit: Retrofit
-    ): WorkbookApi =
-        retrofit.create(WorkbookApi::class.java)
-
+    @Provides
+    fun provideWorkbookApi(@AuthRetrofit retrofit: Retrofit): WorkbookApi {
+        return retrofit.create(WorkbookApi::class.java)
+    }
 
 
     @Singleton

@@ -38,35 +38,30 @@ class MemberPickerAdapter(
         fun bind(item: MemberUiModel) {
             binding.item = item
             binding.isMulti = isMulti
-            binding.isChecked = isChecked(item)
 
-            if (isMulti) {
-                applyCheckTint(isChecked(item))
-            } else {
+            val checked = isChecked(item)
+            binding.isChecked = checked
 
-                binding.ivCheck.imageTintList = null
-            }
-
+            if (isMulti) applyCheckTint(checked) else binding.ivCheck.imageTintList = null
 
             binding.btnSelect.setOnClickListener {
                 if (!isMulti) onSinglePick(item)
             }
 
-
             binding.root.setOnClickListener {
                 if (isMulti) {
                     onToggle(item)
-                    applyCheckTint(isChecked(item))
+
+                    submitList(currentList.toList())
                 } else {
                     onSinglePick(item)
                 }
             }
 
-
             binding.ivCheck.setOnClickListener {
                 if (isMulti) {
                     onToggle(item)
-                    applyCheckTint(isChecked(item))
+                    submitList(currentList.toList())
                 }
             }
 
@@ -83,8 +78,11 @@ class MemberPickerAdapter(
 
     companion object {
         val diff = object : DiffUtil.ItemCallback<MemberUiModel>() {
-            override fun areItemsTheSame(old: MemberUiModel, new: MemberUiModel) = old.id == new.id
-            override fun areContentsTheSame(old: MemberUiModel, new: MemberUiModel) = old == new
+            override fun areItemsTheSame(old: MemberUiModel, new: MemberUiModel) =
+                old.challengerId == new.challengerId
+
+            override fun areContentsTheSame(old: MemberUiModel, new: MemberUiModel) =
+                old == new
         }
     }
 }

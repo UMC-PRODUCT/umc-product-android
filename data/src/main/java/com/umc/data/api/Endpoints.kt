@@ -147,6 +147,8 @@ object Endpoints {
     object Workbook {
         const val BEST = "api/v1/workbooks/challenger/{challengerWorkbookId}/best"
         const val REVIEW = "api/v1/workbooks/challenger/{challengerWorkbookId}/review"
+
+        const val CHALLENGER_SUBMISSION = "api/v1/workbooks/challenger/{challengerWorkbookId}/submissions"
     }
 
 

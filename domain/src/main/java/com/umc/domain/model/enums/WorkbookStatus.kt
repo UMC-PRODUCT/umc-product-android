@@ -6,6 +6,8 @@ enum class WorkbookStatus {
     SUBMITTED,      // 제출 완료
     PASS,           // 통과
     FAIL,           // 실패
+
+    BEST,
     UNKNOWN;
 
     companion object {

@@ -8,10 +8,9 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/root"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:background="@drawable/bg_bottom_sheet"
         android:paddingBottom="20dp">
-
 
         <include
             android:id="@+id/top_bar"
@@ -21,8 +20,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
-
-
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layout_header"
@@ -62,11 +59,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-
 
         <com.umc.presentation.component.USearchBar
             android:id="@+id/search_bar"
@@ -80,37 +73,50 @@
             app:layout_constraintEnd_toEndOf="parent" />
 
 
+        <Space
+            android:id="@+id/empty_space"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginHorizontal="20dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/search_bar"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_list"
             android:layout_width="0dp"
-            android:layout_height="320dp"
+            android:layout_height="0dp"
             android:layout_marginTop="12dp"
             android:layout_marginHorizontal="20dp"
             android:overScrollMode="never"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/search_bar"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:listitem="@layout/item_act_member_picker"
+            tools:visibility="visible" />
 
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_selected_members"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginTop="12dp"
             android:layout_marginHorizontal="20dp"
             android:overScrollMode="never"
-            android:nestedScrollingEnabled="false"
+            android:nestedScrollingEnabled="true"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/search_bar"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             tools:listitem="@layout/item_act_selected_member"
             tools:visibility="visible" />
-
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

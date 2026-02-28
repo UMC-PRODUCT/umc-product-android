@@ -90,6 +90,7 @@ class HomeViewModel @Inject constructor(
                     Log.d("log_home", "$userInfo")
                     settingUserInfoToUI(userInfo)
 
+
                 },
                 errorCallback = {
                     /**TODO. 에러 토스트 메시지 등을 전송**/
@@ -174,6 +175,39 @@ class HomeViewModel @Inject constructor(
                 )
             }
 
+        }
+
+        //5. 점수 계산을 통해, 현재 상태 변경하기
+        calculateUserPoint(userInfo)
+
+    }
+
+    //UserInfo의 chllengerspoint를 바탕으로 현재 상태(패널티)를 계산하는 함수
+    private fun calculateUserPoint(userInfo: UserInfo){
+        //가장 최신 기수 챌린저 정보 가져오기
+        val recentChallenge = userInfo.challengerRecords.maxByOrNull { it.gisu }
+        
+        //일단은 totalPoint로 계산 TODO: 차후 로직 변경 가능
+        val recentTotalPoint = recentChallenge?.totalPoint ?: 0.0
+
+        val warningStatus = when {
+            recentTotalPoint <= 0.0 -> WarningStatus.NORMAL    // 0이하 (0)
+            recentTotalPoint < 2.0 -> WarningStatus.WARNING    // 2 이하인 경우 (1~1.9)
+            else -> WarningStatus.DANGER                       // 2 이상인 경우 (2~)
+        }
+
+        val warningStatusText = when(warningStatus){
+            WarningStatus.DANGER -> "경고가 2회 누적되었습니다."
+            WarningStatus.WARNING -> "경고가 1회 누적되었습니다."
+            WarningStatus.NORMAL -> "누적된 경고가 없습니다."
+
+        }
+
+        updateState {
+            copy(
+                warningStatus = warningStatus,
+                warningStatusText = warningStatusText
+            )
         }
 
     }
