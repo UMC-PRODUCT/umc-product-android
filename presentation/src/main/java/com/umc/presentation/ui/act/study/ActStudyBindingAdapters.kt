@@ -141,5 +141,24 @@ fun ConstraintLayout.bindTimeline(
         StudyStatus.IN_PROGRESS -> {
 
         }
+
+
+    }
+}
+
+@BindingAdapter("platformTagStyle")
+fun UButton.bindPlatformTagStyle(enabled: Boolean) {
+    setUBackgroundColor(ContextCompat.getColor(context, R.color.neutral200))
+    setTextColor(ContextCompat.getColor(context, R.color.neutral700))
+}
+
+@BindingAdapter("bestBadgeStyle")
+fun UButton.bindBestBadgeStyle(isBest: Boolean) {
+    if (isBest) {
+        setUBackgroundColor(ContextCompat.getColor(context, R.color.warning100))
+        setTextColor(ContextCompat.getColor(context, R.color.warning500))
+    } else {
+        setUBackgroundColor(ContextCompat.getColor(context, R.color.neutral000))
+        setTextColor(ContextCompat.getColor(context, R.color.neutral700))
     }
 }

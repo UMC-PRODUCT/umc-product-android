@@ -16,7 +16,7 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
         return apiCall { organizationApi.deleteSchool(request) }
     }
 
-    override suspend fun deleteStudyGroup(groupId: Int): ApiState<Unit> {
+    override suspend fun deleteStudyGroup(groupId: Long): ApiState<Unit> {
         return apiCall { organizationApi.deleteStudyGroup(groupId) }
     }
 
@@ -24,9 +24,9 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
         return apiCall { organizationApi.deleteGisu(gisuId) }
     }
 
-    override suspend fun getMyStudyGroup(cursor: Int, size: Int): ApiState<StudyGroupListResponse> {
-        return apiCall { organizationApi.getMyStudyGroup(cursor, size) }
-    }
+    override suspend fun getMyStudyGroup(cursor: Long?, size: Int): ApiState<StudyGroupListResponse> =
+        apiCall { organizationApi.getMyStudyGroup(cursor, size) }
+
 
     override suspend fun getSchoolByKeyword(
         keyword: String,
@@ -44,9 +44,8 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
         return apiCall { organizationApi.getAllChapter() }
     }
 
-    override suspend fun getStudyGroupDetail(groupId: Int): ApiState<StudyGroupDetailResponse> {
-        return apiCall { organizationApi.getStudyGroupDetail(groupId) }
-    }
+    override suspend fun getStudyGroupDetail(groupId: Long): ApiState<StudyGroupDetailResponse> =
+        apiCall { organizationApi.getStudyGroupDetail(groupId) }
 
     override suspend fun getSchoolDetail(schoolId: Int): ApiState<SchoolDetailResponse> {
         return apiCall { organizationApi.getSchoolDetail(schoolId) }
@@ -80,7 +79,7 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
         return apiCall { organizationApi.getActiveGisu(gisuId) }
     }
 
-    override suspend fun editGroup(groupId: Int, request: EditStudyGroupRequest): ApiState<Unit> {
+    override suspend fun editGroup(groupId: Long, request: EditStudyGroupRequest): ApiState<Unit> {
         return apiCall { organizationApi.editGroup(groupId, request) }
     }
 

@@ -16,41 +16,41 @@ import com.umc.presentation.R
 import java.util.WeakHashMap
 import kotlin.math.max
 import kotlin.math.min
+import com.google.android.material.card.MaterialCardView
+import androidx.core.view.ViewCompat
 
 class AdminStudySubmitSwipeController(
     private val recyclerView: RecyclerView,
+    private val isBestEnabled: (position: Int) -> Boolean,
+    private val isReviewEnabled: (position: Int) -> Boolean,
     private val onClickBest: (position: Int) -> Unit,
     private val onClickReview: (position: Int) -> Unit,
 ) : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
 
 
 
+    private val originalCardElevation = WeakHashMap<View, Float>()
+    private val originalStrokeWidth = WeakHashMap<View, Int>()
+    private val originalStrokeColor = WeakHashMap<View, Int>()
+    private val originalZ = WeakHashMap<View, Float>()
+
     private var swipedPosition: Int = RecyclerView.NO_POSITION
     private var bestRect: RectF? = null
     private var reviewRect: RectF? = null
 
-
-
-
     private val originalElevation = WeakHashMap<View, Float>()
     private val originalTranslationZ = WeakHashMap<View, Float>()
-
 
     private val panelRadius = dp(16f)
     private val buttonRadius = dp(12f)
 
-    private val buttonWidth = dp(78f)
+    private val buttonSize = dp(56f)
     private val buttonGap = dp(8f)
-
-
-    private val buttonInsetV = dp(10f)
     private val buttonInsetEnd = dp(12f)
-
-    private val panelInsetEnd = dp(0f)
+    private val panelInsetEnd = 0f
     private val iconSize = dp(18f)
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
         textSize = sp(12f)
@@ -60,6 +60,8 @@ class AdminStudySubmitSwipeController(
     init {
         attachTouchInterceptor()
     }
+
+
 
     private fun attachTouchInterceptor() {
         recyclerView.addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
@@ -74,12 +76,12 @@ class AdminStudySubmitSwipeController(
                     val y = e.y
                     when {
                         best.contains(x, y) -> {
-                            onClickBest(swipedPosition)
+                            if (isBestEnabled(swipedPosition)) onClickBest(swipedPosition)
                             resetSwipe()
                             return true
                         }
                         review.contains(x, y) -> {
-                            onClickReview(swipedPosition)
+                            if (isReviewEnabled(swipedPosition)) onClickReview(swipedPosition)
                             resetSwipe()
                             return true
                         }
@@ -136,47 +138,58 @@ class AdminStudySubmitSwipeController(
             return
         }
 
-
         if (swipedPosition != RecyclerView.NO_POSITION && swipedPosition != pos && isCurrentlyActive) {
             resetSwipe()
         }
 
-        val revealBuffer = dp(12f) // 4~10dp 사이로 취향 조절
-        val maxReveal = (buttonWidth * 2) + buttonGap + buttonInsetEnd + panelInsetEnd + revealBuffer
+        val revealBuffer = dp(12f)
+        val maxReveal = (buttonSize * 2) + buttonGap + buttonInsetEnd + panelInsetEnd + revealBuffer
         val clampedDx = max(-maxReveal, min(0f, dX))
 
-
-
         if (clampedDx < 0f || swipedPosition == pos) {
-            if (!originalElevation.containsKey(itemView)) {
-                originalElevation[itemView] = itemView.elevation
-                originalTranslationZ[itemView] = itemView.translationZ
-            }
-            itemView.elevation = 0f
-            itemView.translationZ = 0f
-        }
 
+
+            val card = itemView as? MaterialCardView
+
+            if (!originalZ.containsKey(itemView)) {
+                originalZ[itemView] = ViewCompat.getTranslationZ(itemView)
+            }
+
+
+            ViewCompat.setTranslationZ(itemView, dp(6f))
+
+
+            if (card != null) {
+                if (!originalCardElevation.containsKey(card)) {
+                    originalCardElevation[card] = card.cardElevation
+                    originalStrokeWidth[card] = card.strokeWidth
+                    originalStrokeColor[card] = card.strokeColor
+                }
+
+                card.cardElevation = dp(2f)
+                card.strokeWidth = dp(1f).toInt()
+                card.strokeColor = ContextCompat.getColor(recyclerView.context, R.color.neutral200)
+            }
+        }
 
         val panelTop = itemView.top.toFloat()
         val panelBottom = itemView.bottom.toFloat()
         val panelRight = itemView.right.toFloat() - panelInsetEnd
 
-
-        val btnTop = panelTop + buttonInsetV
-        val btnBottom = panelBottom - buttonInsetV
+        val itemHeight = panelBottom - panelTop
+        val btnTop = panelTop + (itemHeight - buttonSize) / 2f
+        val btnBottom = btnTop + buttonSize
         val btnRight = panelRight - buttonInsetEnd
 
-        val reviewLeft = btnRight - buttonWidth
+        val reviewLeft = btnRight - buttonSize
         val review = RectF(reviewLeft, btnTop, btnRight, btnBottom)
 
         val bestRight = reviewLeft - buttonGap
-        val bestLeft = bestRight - buttonWidth
+        val bestLeft = bestRight - buttonSize
         val best = RectF(bestLeft, btnTop, bestRight, btnBottom)
-
 
         val panelLeft = panelRight - maxReveal
         val panelRect = RectF(panelLeft, panelTop, panelRight, panelBottom)
-
 
         val reveal = -clampedDx + dp(2f)
         val visibleRight = itemView.right.toFloat() + dp(2f)
@@ -187,124 +200,107 @@ class AdminStudySubmitSwipeController(
         c.save()
         c.clipRect(clipLeft, panelTop, visibleRight, panelBottom)
 
-
         paint.color = neutralBg
+        paint.alpha = 255
         c.drawRoundRect(panelRect, panelRadius, panelRadius, paint)
-
-
         c.drawRect(panelRect.left, panelRect.top, panelRect.left + panelRadius, panelRect.bottom, paint)
 
-        // 버튼 컬러
-        val bestBg = ContextCompat.getColor(recyclerView.context, R.color.warning100)
-        val bestText = ContextCompat.getColor(recyclerView.context, R.color.warning700)
-        val bestIconTint = ContextCompat.getColor(recyclerView.context, R.color.warning700)
+        val bestEnabled = isBestEnabled(pos)
+        val reviewEnabled = isReviewEnabled(pos)
 
-        val reviewBg = ContextCompat.getColor(recyclerView.context, R.color.success100)
-        val reviewText = ContextCompat.getColor(recyclerView.context, R.color.success700)
-        val reviewIconTint = ContextCompat.getColor(recyclerView.context, R.color.success700)
 
+        val bestBg = ContextCompat.getColor(recyclerView.context, if (bestEnabled) R.color.warning100 else R.color.neutral100)
+        val bestText = ContextCompat.getColor(recyclerView.context, if (bestEnabled) R.color.warning700 else R.color.neutral400)
+        val bestIcon = ContextCompat.getColor(recyclerView.context, if (bestEnabled) R.color.warning500 else R.color.neutral400)
+
+        val reviewBg = ContextCompat.getColor(recyclerView.context, if (reviewEnabled) R.color.primary100 else R.color.neutral100)
+        val reviewText = ContextCompat.getColor(recyclerView.context, if (reviewEnabled) R.color.primary500 else R.color.neutral400)
+        val reviewIcon = ContextCompat.getColor(recyclerView.context, if (reviewEnabled) R.color.primary500 else R.color.neutral400)
 
         drawActionButton(
             canvas = c,
             rect = best,
-            bgColor = bestBg,
+            bgColorInt = bestBg,
             iconRes = R.drawable.ic_best,
-            iconTint = bestIconTint,
+            iconTintInt = bestIcon,
             text = "베스트",
-            textColor = bestText
+            textColorInt = bestText,
+            enabled = bestEnabled
         )
 
         drawActionButton(
             canvas = c,
             rect = review,
-            bgColor = reviewBg,
+            bgColorInt = reviewBg,
             iconRes = R.drawable.ic_check_success,
-            iconTint = reviewIconTint,
+            iconTintInt = reviewIcon,
             text = "검토",
-            textColor = reviewText
+            textColorInt = reviewText,
+            enabled = reviewEnabled
         )
 
 
         if (clampedDx < 0f) {
             paint.color = neutralBg
+            paint.alpha = 255
             val movedRight = itemView.right.toFloat() + clampedDx
             val coverLeft = movedRight - panelRadius - dp(14f)
             val coverRight = movedRight + dp(14f)
             c.drawRect(coverLeft, panelTop, coverRight, panelBottom, paint)
         }
 
-
         c.restore()
 
         bestRect = best
         reviewRect = review
 
-
         super.onChildDraw(c, rv, viewHolder, clampedDx, dY, actionState, isCurrentlyActive)
-
-
-        if (clampedDx < 0f) {
-            paint.color = neutralBg
-
-            val movedRight = itemView.right.toFloat() + clampedDx
-
-
-            c.save()
-            c.clipRect(
-                itemView.left.toFloat(),
-                panelTop,
-                movedRight,
-                panelBottom
-            )
-
-
-            c.drawRect(
-                movedRight - panelRadius - dp(2f),
-                panelTop,
-                movedRight + dp(2f),
-                panelBottom,
-                paint
-            )
-
-            c.restore()
-        }
     }
 
     override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
         super.clearView(recyclerView, viewHolder)
 
         val v = viewHolder.itemView
-        originalElevation[v]?.let { v.elevation = it }
-        originalTranslationZ[v]?.let { v.translationZ = it }
+        val card = v as? MaterialCardView
 
-        originalElevation.remove(v)
-        originalTranslationZ.remove(v)
+        // 기존 elevation/translationZ 원복
+        originalZ[v]?.let { ViewCompat.setTranslationZ(v, it) }
+        originalZ.remove(v)
+
+        card?.let {
+            originalCardElevation[it]?.let { e -> it.cardElevation = e }
+            originalStrokeWidth[it]?.let { w -> it.strokeWidth = w }
+            originalStrokeColor[it]?.let { c -> it.strokeColor = c }
+
+            originalCardElevation.remove(it)
+            originalStrokeWidth.remove(it)
+            originalStrokeColor.remove(it)
+        }
     }
 
     private fun drawActionButton(
         canvas: Canvas,
         rect: RectF,
-        bgColor: Int,
+        bgColorInt: Int,
         iconRes: Int,
-        iconTint: Int,
+        iconTintInt: Int,
         text: String,
-        textColor: Int,
+        textColorInt: Int,
+        enabled: Boolean
     ) {
+        val alpha = if (enabled) 255 else 110
 
-        paint.color = bgColor
+        paint.color = bgColorInt
+        paint.alpha = alpha
         canvas.drawRoundRect(rect, buttonRadius, buttonRadius, paint)
 
-
         val drawable = AppCompatResources.getDrawable(recyclerView.context, iconRes)?.mutate()
-        drawable?.setTint(iconTint)
-        val iconBmp = drawable?.toBitmap(
-            iconSize.toInt(),
-            iconSize.toInt(),
-            Bitmap.Config.ARGB_8888
-        )
+        drawable?.setTint(iconTintInt)
+        drawable?.alpha = alpha
+        val iconBmp = drawable?.toBitmap(iconSize.toInt(), iconSize.toInt(), Bitmap.Config.ARGB_8888)
 
-
-        textPaint.color = textColor
+        textPaint.color = textColorInt
+        textPaint.alpha = alpha
 
         val gap = dp(4f)
         val totalHeight = (if (iconBmp != null) iconSize else 0f) + gap + textPaint.textSize
@@ -320,9 +316,6 @@ class AdminStudySubmitSwipeController(
         canvas.drawText(text, rect.centerX(), textY, textPaint)
     }
 
-    private fun dp(v: Float): Float =
-        v * recyclerView.resources.displayMetrics.density
-
-    private fun sp(v: Float): Float =
-        v * recyclerView.resources.displayMetrics.scaledDensity
+    private fun dp(v: Float): Float = v * recyclerView.resources.displayMetrics.density
+    private fun sp(v: Float): Float = v * recyclerView.resources.displayMetrics.scaledDensity
 }

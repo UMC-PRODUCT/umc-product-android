@@ -57,6 +57,8 @@ class AdminActStudySubmitFragment :
 
         swipeController = AdminStudySubmitSwipeController(
             recyclerView = binding.rvSubmit,
+            isBestEnabled = { pos -> adapter.currentList.getOrNull(pos)?.isBestEnabled == true },
+            isReviewEnabled = { pos -> adapter.currentList.getOrNull(pos)?.isReviewEnabled == true },
             onClickBest = { position ->
                 adapter.currentList.getOrNull(position)?.let { item ->
                     viewModel.onAction(AdminActStudySubmitAction.ClickBest(item))
@@ -109,7 +111,7 @@ class AdminActStudySubmitFragment :
                     is AdminActStudySubmitEvent.ShowBestDialog -> showBestDialog(event.item)
                     is AdminActStudySubmitEvent.ShowReviewDialog -> showReviewDialog(event.item)
                     is AdminActStudySubmitEvent.ShowToast -> {
-                        // TODO toast 처리
+
                     }
                 }
             }
@@ -156,7 +158,8 @@ class AdminActStudySubmitFragment :
         dialogBinding.item = item
         dialogBinding.lifecycleOwner = viewLifecycleOwner
 
-        dialogBinding.etUrl.setText(item.submitUrl)
+
+        dialogBinding.etUrl.setText(item.submitUrl.orEmpty())
         dialogBinding.etUrl.setReadOnly(true)
         dialogBinding.etUrl.setReadOnlyStyle()
 
@@ -186,15 +189,17 @@ class AdminActStudySubmitFragment :
         }
 
         dialogBinding.btnReject.setOnClickListener {
-            val url = dialogBinding.etUrl.getText()
-            val feedback = dialogBinding.etFeedback.getText()
+            val url = dialogBinding.etUrl.getText()?.toString().orEmpty()
+            val feedback = dialogBinding.etFeedback.getText()?.toString().orEmpty()
+
             viewModel.onAction(AdminActStudySubmitAction.SubmitReview(false, url, feedback))
             reviewDialog?.dismiss()
         }
 
         dialogBinding.btnApprove.setOnClickListener {
-            val url = dialogBinding.etUrl.getText()
-            val feedback = dialogBinding.etFeedback.getText()
+            val url = dialogBinding.etUrl.getText()?.toString().orEmpty()
+            val feedback = dialogBinding.etFeedback.getText()?.toString().orEmpty()
+
             viewModel.onAction(AdminActStudySubmitAction.SubmitReview(true, url, feedback))
             reviewDialog?.dismiss()
         }

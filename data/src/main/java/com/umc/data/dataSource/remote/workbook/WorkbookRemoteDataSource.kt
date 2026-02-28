@@ -1,6 +1,7 @@
 package com.umc.data.dataSource.remote.workbook
 
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.curriculum.ChallengerWorkbookSubmission
 
 interface WorkbookRemoteDataSource {
 
@@ -14,4 +15,6 @@ interface WorkbookRemoteDataSource {
         status: String,
         feedback: String?
     ): ApiState<Unit>
+
+    suspend fun getChallengerWorkbookSubmission(challengerWorkbookId: Long): ApiState<ChallengerWorkbookSubmission>
 }

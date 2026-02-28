@@ -54,7 +54,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="스터디 관리를 위한 스터디 그룹을 생성하고 멤버를 관리하세요."
+                    android:text="스터디 그룹을 생성하고 멤버를 관리하세요"
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral500"
                     android:maxLines="2"
@@ -79,7 +79,8 @@
                     app:text="그룹 생성"
                     app:cardBackgroundColor="@color/primary500"
                     app:textColor="@color/neutral000"
-                    app:prevIcon="@drawable/ic_plus"
+                    app:prevIcon="@drawable/ic_add_filled"
+                    app:prevIconTint="@color/neutral000"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
