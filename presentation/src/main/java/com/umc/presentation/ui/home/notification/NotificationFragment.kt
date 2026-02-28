@@ -1,9 +1,9 @@
-package com.umc.presentation.ui.home
+package com.umc.presentation.ui.home.notification
 
 import androidx.fragment.app.viewModels
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentNotificationBinding
-import com.umc.presentation.ui.home.adapter.NotificationAdapter
+import com.umc.presentation.ui.home.notification.adapter.NotificationAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 

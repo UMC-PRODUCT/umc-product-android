@@ -7,6 +7,8 @@ import com.google.gson.Gson
 import com.umc.domain.model.ChallengerRecord
 import com.umc.domain.model.ProfileInfo
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.home.NotificationItem
+
 import com.umc.domain.model.UserRole
 import com.umc.domain.model.mypage.UserOutLink
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -208,6 +210,31 @@ class AppDataStore @Inject constructor(
         }
     }
 
+    // 알림 목록 Flow
+    val notificationsFlow: Flow<List<NotificationItem>> = context.dataStore.data.map { prefs ->
+        val json = prefs[KEY_NOTIFICATIONS] ?: "[]"
+        gson.fromJson(json, Array<NotificationItem>::class.java).toList()
+    }
+
+    // 알림 추가 (최대 50개 저장, 중복 제거)
+    suspend fun addNotification(notification: NotificationItem) {
+        context.dataStore.edit { prefs ->
+            val currentJson = prefs[KEY_NOTIFICATIONS] ?: "[]"
+            val currentList = gson.fromJson(currentJson, Array<NotificationItem>::class.java).toMutableList()
+            // 중복 체크: 동일한 title과 content가 있으면 제거 후 새로 추가
+            currentList.removeAll { it.title == notification.title && it.content == notification.content }
+            currentList.add(0, notification)
+            prefs[KEY_NOTIFICATIONS] = gson.toJson(currentList.take(50))
+        }
+    }
+
+    // 알림 전체 삭제
+    suspend fun clearNotifications() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_NOTIFICATIONS)
+        }
+    }
+
 
     // 여기서 Datastore에 들어갈 key들 정의
     companion object {
@@ -240,6 +267,9 @@ class AppDataStore @Inject constructor(
 
         val KEY_ACCESS_TOKEN = stringPreferencesKey("access_token")
         val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token")
+
+        // 알림 저장 KEY
+        val KEY_NOTIFICATIONS = stringPreferencesKey("notifications")
     }
 
 }
