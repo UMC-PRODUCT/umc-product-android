@@ -75,7 +75,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:layout_gravity="center"
-                        app:slotIcon='@{item.status}'
+                        app:slotIcon='@{item.uiStatus}'
                         tools:src="@drawable/ic_swipe"
                         tools:ignore="ContentDescription" />
                 </FrameLayout>

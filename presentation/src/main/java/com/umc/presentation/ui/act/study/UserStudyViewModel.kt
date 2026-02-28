@@ -158,8 +158,8 @@ class UserStudyViewModel @Inject constructor(
                                 id = wb.challengerWorkbookId ?: -wb.weekNo.toLong(),
                                 platform = wb.missionType.toPlatformText(),
                                 title = wb.title,
-                                status = if (isBest) StudyStatus.PASS else wb.status.toStudyStatus(),
-                                isBest = isBest,
+                                status = status,
+                                isBest = false, // 다음주 수정 부분
                                 week = wb.weekNo,
                                 submitState = wb.status.toSubmitState(),
                                 isExpanded = false,

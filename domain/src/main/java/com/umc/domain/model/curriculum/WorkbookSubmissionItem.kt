@@ -22,4 +22,5 @@ data class StudyGroup(
 data class ChallengerWorkbookSubmission(
     val challengerWorkbookId: Long?,
     val submission: String?
+
 )

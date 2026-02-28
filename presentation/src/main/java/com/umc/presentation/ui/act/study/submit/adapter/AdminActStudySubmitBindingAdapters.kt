@@ -45,10 +45,19 @@ fun MaterialCardView.bindMarkStatusStyle(status: String?) {
 @BindingAdapter("slotIcon")
 fun ImageView.bindSlotIcon(status: String?) {
 
-    val (resId, tintColor) = when (status) {
+//    val (resId, tintColor) = when (status) {
+//        "SUBMITTED" -> R.drawable.ic_swipe to R.color.neutral300
+//        "PASS" -> R.drawable.ic_check_success to null
+//        "BEST" -> R.drawable.ic_check_success to null
+//        "FAIL" -> R.drawable.ic_check_failed to null
+//        else -> null to null
+//    }
+
+    val uiStatus = if (status == "BEST") "PASS" else status
+
+    val (resId, tintColor) = when (uiStatus) {
         "SUBMITTED" -> R.drawable.ic_swipe to R.color.neutral300
         "PASS" -> R.drawable.ic_check_success to null
-        "BEST" -> R.drawable.ic_check_success to null
         "FAIL" -> R.drawable.ic_check_failed to null
         else -> null to null
     }

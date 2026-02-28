@@ -140,7 +140,7 @@
                     app:text="Best"
                     app:textAppearance="@style/Caption1Bold"
                     app:bestBadgeStyle="@{item.isBest}"
-                    android:visibility='@{item.isBest ? View.VISIBLE : View.GONE}'
+                    android:visibility="gone"
                     app:layout_constraintEnd_toStartOf="@id/btn_status"
                     app:layout_constraintTop_toTopOf="@id/top_anchor"
                     app:layout_constraintBottom_toBottomOf="@id/top_anchor" />

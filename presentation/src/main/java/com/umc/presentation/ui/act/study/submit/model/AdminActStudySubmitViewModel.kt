@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.umc.domain.usecase.member.GetMyProfileUseCase
+import com.umc.domain.usecase.workbook.GetChallengerWorkbookSubmissionUseCase
 import com.umc.domain.util.resolveAdminScope
 
 
@@ -24,6 +25,7 @@ class AdminActStudySubmitViewModel @Inject constructor(
     private val selectBestWorkbookUseCase: SelectBestWorkbookUseCase,
     private val reviewWorkbookUseCase: ReviewWorkbookUseCase,
     private val getMyProfileUseCase: GetMyProfileUseCase,
+    private val getChallengerWorkbookSubmissionUseCase: GetChallengerWorkbookSubmissionUseCase,
 ) : BaseViewModel<AdminActStudySubmitState, AdminActStudySubmitEvent>(
     AdminActStudySubmitState()
 ) {
@@ -55,8 +57,7 @@ class AdminActStudySubmitViewModel @Inject constructor(
             }
 
             is AdminActStudySubmitAction.ClickReview -> {
-                updateState { copy(reviewDialogTarget = action.item) }
-                emitEvent(AdminActStudySubmitEvent.ShowReviewDialog(action.item))
+                fetchSubmissionUrlAndOpenReview(action.item)
             }
 
             AdminActStudySubmitAction.DismissBestDialog ->
@@ -109,6 +110,26 @@ class AdminActStudySubmitViewModel @Inject constructor(
                 }
             }
 
+        }
+    }
+
+    private fun fetchSubmissionUrlAndOpenReview(item: AdminActStudySubmitItemUiModel) {
+        viewModelScope.launch {
+            when (val res = getChallengerWorkbookSubmissionUseCase(item.challengerWorkbookId)) {
+                is ApiState.Success -> {
+                    val url = res.data.submission.orEmpty()
+                    val newItem = item.copy(submitUrl = url)
+
+                    updateState { copy(reviewDialogTarget = newItem) }
+                    emitEvent(AdminActStudySubmitEvent.ShowReviewDialog(newItem))
+                }
+
+                is ApiState.Fail -> {
+                    emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
+                    updateState { copy(reviewDialogTarget = item) }
+                    emitEvent(AdminActStudySubmitEvent.ShowReviewDialog(item))
+                }
+            }
         }
     }
 
@@ -185,7 +206,7 @@ class AdminActStudySubmitViewModel @Inject constructor(
                     val page = res.data
                     val newItems = page.content
                         .filter { it.status in listOf("SUBMITTED", "PASS", "FAIL", "BEST") }
-                        .map { it.toUiModel(state.selectedWeek) } // 꼭 안 있어도 될거같기도
+                        .map { it.toUiModel(state.selectedWeek) }
                     updateState {
                         copy(
                             items = if (reset) newItems else items + newItems,
