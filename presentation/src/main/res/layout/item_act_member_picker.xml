@@ -48,7 +48,7 @@
             android:layout_marginStart="10dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="@{item.name}"
+            android:text='@{item.name + " /" + item.nickname + " ( " + item.gisuLabel + ")"}'
             android:textAppearance="@style/CalloutBold"
             android:textColor="@color/neutral900"
             app:layout_constraintStart_toEndOf="@id/iv_profile"
@@ -66,14 +66,13 @@
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text='@{item.partLabel + " · " + item.gisuLabel}'
+            android:text='@{item.schoolName}'
             android:textAppearance="@style/Caption1"
             android:textColor="@color/neutral600"
             app:layout_constraintStart_toEndOf="@id/iv_profile"
             app:layout_constraintEnd_toStartOf="@id/right_area"
             app:layout_constraintTop_toBottomOf="@id/tv_name"
             app:layout_constraintBottom_toBottomOf="parent" />
-
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/right_area"
@@ -105,7 +104,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:padding="8dp"
-                android:src="@drawable/ic_check_box"
+                android:src='@{isChecked ? @drawable/ic_check_box : @drawable/ic_check_box_empty}'
                 android:visibility='@{isMulti ? View.VISIBLE : View.GONE}'
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

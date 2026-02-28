@@ -11,8 +11,8 @@ fun UserChallenger.toMemberUiModel(
 
     return MemberUiModel(
         challengerId = id,
-        memberId = id,
         name = name,
+        nickname = nickname.orEmpty(),
         partLabel = partLabel,
         gisuLabel = gisuLabel,
         schoolName = schoolName,

@@ -36,7 +36,7 @@
             android:layout_marginStart="8dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="@{item.name}"
+            android:text='@{item.name + " / " + item.nickname + " (" + item.gisuLabel + ")"}'
             android:textAppearance="@style/CalloutBold"
             android:textColor="@color/neutral900"
             app:layout_constraintStart_toEndOf="@id/iv_profile"
@@ -53,7 +53,7 @@
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text='@{item.partLabel + " · " + item.gisuLabel}'
+            android:text='@{item.schoolName}'
             android:textAppearance="@style/Caption1"
             android:textColor="@color/neutral600"
             app:layout_constraintStart_toEndOf="@id/iv_profile"
