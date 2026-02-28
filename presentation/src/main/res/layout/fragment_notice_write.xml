@@ -476,6 +476,7 @@
                         android:layout_height="wrap_content"
                         app:borderColor="@color/neutral300"
                         app:borderWidth="1dp"
+                        android:onClick="@{()->vm.onClickShowVote()}"
                         app:cardBackgroundColor="@color/neutral000"
                         app:contentPaddingBottom="6dp"
                         app:contentPaddingLeft="8dp"

@@ -2,7 +2,6 @@ package com.umc.presentation.ui.notice.write
 
 import android.net.Uri
 import androidx.lifecycle.viewModelScope
-import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.NoticeCategory
 import com.umc.domain.model.enums.NoticeChipClassType
 import com.umc.domain.model.enums.UploadFileCategory
@@ -56,20 +55,14 @@ class NoticeWriteViewModel @Inject constructor(
 ) : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
     NoticeWriteUiState(),
 ) {
-    private var editNoticeId: Long = 0L
-    private var isEditMode: Boolean = false
-
     fun initEditMode(noticeId: Long) = viewModelScope.launch {
         if (noticeId == 0L) {
             emitEvent(NoticeWriteEvent.ShowError("유효하지 않은 공지사항 ID입니다"))
             return@launch
         }
-        
-        isEditMode = true
-        editNoticeId = noticeId
-        
-        updateState { copy(isLoading = true) }
-        
+
+        updateState { copy(isLoading = true, isEditMode = true, editNoticeId = noticeId) }
+
         // 상세 조회 API로 기존 데이터 가져오기
         resultResponse(
             response = getNoticeDetailUseCase(noticeId),
@@ -473,6 +466,41 @@ class NoticeWriteViewModel @Inject constructor(
         updateState { copy(voteEndDate = date) }
     }
 
+    /**
+     * Reset vote settings (local only, no server call)
+     */
+    fun deleteVote(onSuccess: () -> Unit = {}) {
+        updateState {
+            copy(
+                isShowVote = false,
+                voteTitle = "투표 만들기",
+                voteTextList = List(2) { "" },
+                canAnonymity = false,
+                canSelectMultiple = false,
+                voteStartDate = formatDateForDisplay(Calendar.getInstance()),
+                voteEndDate = formatDateForDisplay(Calendar.getInstance()),
+            )
+        }
+        onSuccess()
+    }
+
+    /**
+     * Update vote settings from current form values (local only, no server call)
+     */
+    fun updateVote(list: List<String>, onSuccess: () -> Unit = {}) {
+        val anonymity = if (uiState.value.canAnonymity) "익명, " else "실명, "
+        val multiple = if (uiState.value.canSelectMultiple) "복수 허용, " else "단일 투표, "
+        val count = "${list.size}개의 항목"
+        updateState {
+            copy(
+                isShowVote = true,
+                voteTextList = list,
+                voteCondition = anonymity + multiple + count
+            )
+        }
+        onSuccess()
+    }
+
     fun updateTitle(title: String) {
         updateState { copy(title = title) }
     }
@@ -509,7 +537,7 @@ class NoticeWriteViewModel @Inject constructor(
 
         updateState { copy(isLoading = true) }
 
-        if (isEditMode) {
+        if (state.isEditMode) {
             // 수정 모드
             handleNoticeUpdate()
         } else {
@@ -553,7 +581,7 @@ class NoticeWriteViewModel @Inject constructor(
             content = state.content
         )
         resultResponse(
-            response = updateNoticeUseCase(editNoticeId, updateRequest),
+            response = updateNoticeUseCase(state.editNoticeId, updateRequest),
             successCallback = { },
             errorCallback = { hasError = true }
         )
@@ -574,7 +602,7 @@ class NoticeWriteViewModel @Inject constructor(
         
         if (allImageIds.isNotEmpty()) {
             resultResponse(
-                response = addNoticeImagesUseCase(editNoticeId, allImageIds),
+                response = addNoticeImagesUseCase(state.editNoticeId, allImageIds),
                 successCallback = { },
                 errorCallback = { hasError = true }
             )
@@ -584,7 +612,7 @@ class NoticeWriteViewModel @Inject constructor(
             val links = state.linkText.split(",").map { it.trim() }.filter { it.isNotBlank() }
             if (links.isNotEmpty()) {
                 resultResponse(
-                    response = addNoticeLinksUseCase(editNoticeId, links),
+                    response = addNoticeLinksUseCase(state.editNoticeId, links),
                     successCallback = { },
                     errorCallback = { hasError = true }
                 )
@@ -698,6 +726,8 @@ data class NoticeWriteUiState(
     val activeGisuId: Int? = null,
     val userInfo: UserInfo? = null,
     val isAllGisuSelected: Boolean = false,
+    val isEditMode: Boolean = false,
+    val editNoticeId: Long = 0L,
 ) : UiState {
     val isShowClassSection: Boolean
         get() = category != NoticeCategory.PART

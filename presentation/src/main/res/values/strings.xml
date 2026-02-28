@@ -251,6 +251,8 @@
     <string name="notice_write_part_hint">선택하지 않으면 전체 파트원에게 전송됩니다</string>
     <string name="notice_write_sent_notification">알림 발송</string>
     <string name="notice_write_vote_create">생성하기</string>
+    <string name="notice_write_vote_delete">삭제하기</string>
+    <string name="notice_write_vote_edit">수정하기</string>
     <string name="notice_write_complete">작성 완료</string>
     <string name="notice_write_link_title">링크 첨부</string>
     <string name="notice_write_link_hint">링크를 첨부해주세요.</string>
