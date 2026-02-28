@@ -10,6 +10,7 @@ import com.umc.data.api.NoticeApi
 import com.umc.data.api.OrganizationApi
 import com.umc.data.api.ScheduleApi
 import com.umc.data.api.CurriculumApi
+import com.umc.data.api.NotificationApi
 import com.umc.data.api.StorageApi
 import com.umc.data.api.TermsApi
 import com.umc.data.api.WorkbookApi
@@ -104,5 +105,11 @@ object ApiModule {
     @Provides
     fun provideNoticeApi(@AuthRetrofit retrofit: Retrofit): NoticeApi {
         return retrofit.create(NoticeApi::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideNotificationApi(@AuthRetrofit retrofit: Retrofit): NotificationApi {
+        return retrofit.create(NotificationApi::class.java)
     }
 }

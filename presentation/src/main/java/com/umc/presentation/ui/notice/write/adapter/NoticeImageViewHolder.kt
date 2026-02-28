@@ -1,25 +1,31 @@
 package com.umc.presentation.ui.notice.write.adapter
 
-import android.net.Uri
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.enums.NoticeCategory
-import com.umc.domain.model.notice.Notice
-import com.umc.presentation.R
-import com.umc.presentation.databinding.ItemNoticeBinding
+import coil.load
 import com.umc.presentation.databinding.ItemNoticeImageBinding
-import com.umc.presentation.extension.gone
-import com.umc.presentation.extension.visible
+import com.umc.presentation.ui.notice.write.model.NoticeImageItem
 
 class NoticeImageViewHolder(
     private val binding: ItemNoticeImageBinding,
     private val listener: NoticeImageAdapter.NoticeImageDelegate
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(uri: Uri) {
+    fun bind(item: NoticeImageItem) {
         binding.apply {
-            imageItem.setImageURI(uri)
-            imageDelete.setOnClickListener { listener.onClickDelete(uri) }
+            when {
+                item.uri != null -> {
+                    imageItem.load(item.uri) {
+                        crossfade(true)
+                    }
+                }
+                item.url.isNotBlank() -> {
+                    imageItem.load(item.url) {
+                        crossfade(true)
+                    }
+                }
+            }
+            
+            imageDelete.setOnClickListener { listener.onClickDelete(item) }
         }
     }
 }

@@ -1,10 +1,10 @@
 package com.umc.data.repository
 
-import android.util.Log
 import com.umc.data.dataSource.local.AppDataStore
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
+import com.umc.domain.model.home.NotificationItem
 import com.umc.domain.model.mypage.UserOutLink
 import com.umc.domain.repository.AppDataStoreRepository
 import kotlinx.coroutines.flow.Flow
@@ -95,5 +95,16 @@ class AppDataStoreRepositoryImpl @Inject constructor(
 
     override suspend fun clearAllData() {
         appDataStore.clearAllData()
+    }
+
+    // 알림 관련 메서드 구현
+    override fun getNotifications(): Flow<List<NotificationItem>> = appDataStore.notificationsFlow
+
+    override suspend fun addNotification(notification: NotificationItem) {
+        appDataStore.addNotification(notification)
+    }
+
+    override suspend fun clearNotifications() {
+        appDataStore.clearNotifications()
     }
 }

@@ -1,4 +1,4 @@
-package com.umc.presentation.ui.home.adapter
+package com.umc.presentation.ui.home.notification.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

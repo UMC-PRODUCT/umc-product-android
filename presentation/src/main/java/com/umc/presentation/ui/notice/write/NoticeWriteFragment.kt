@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexWrap
@@ -24,6 +25,7 @@ import com.umc.presentation.ui.notice.write.adapter.NoticeClassChipAdapter
 import com.umc.presentation.ui.notice.write.adapter.NoticeImageAdapter
 import com.umc.presentation.ui.notice.write.bottomsheet.ChapterSelectBottomSheet
 import com.umc.presentation.ui.notice.write.bottomsheet.NoticeVoteBottomSheet
+import com.umc.presentation.ui.notice.write.model.NoticeImageItem
 import com.umc.presentation.ui.signUp.bottomSheet.SchoolSelectBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -37,6 +39,8 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
     FragmentNoticeWriteBinding::inflate,
 ) {
     override val viewModel: NoticeWriteViewModel by viewModels()
+
+    private val args: NoticeWriteFragmentArgs by navArgs()
 
     private companion object {
         const val MAX_PICK_COUNT = 10
@@ -68,8 +72,8 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
 
     private val noticeImageAdapter : NoticeImageAdapter by lazy {
         NoticeImageAdapter(object : NoticeImageAdapter.NoticeImageDelegate {
-            override fun onClickDelete(uri: Uri) {
-                viewModel.deleteImage(uri)
+            override fun onClickDelete(item: NoticeImageItem) {
+                viewModel.deleteImage(item)
             }
         })
     }
@@ -83,6 +87,11 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
     override fun initView() {
         binding.apply {
             vm = viewModel
+
+            // 수정 모드이면 noticeId만 전달하고 상세 조회는 ViewModel에서 처리
+            if (args.isEditMode) {
+                viewModel.initEditMode(noticeId = args.noticeId)
+            }
 
             recyclerDropdown.apply {
                 adapter = dropDownAdapter
@@ -121,10 +130,6 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
 
             editTextContent.doAfterTextChanged { text ->
                 viewModel.updateContent(text?.toString() ?: "")
-            }
-
-            ubuttonComplete.setOnClickListener {
-                viewModel.onClickSubmit()
             }
 
             imageBack.setOnClickListener {
@@ -170,9 +175,6 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
                     noticeClassChipAdapter.submitList(state.classList)
                     noticePartChipAdapter.submitList(state.partList)
                     noticeImageAdapter.submitList(state.selectImageList)
-
-                    // Show loading state
-                    binding.ubuttonComplete.isEnabled = !state.isLoading
                 }
             }
         }

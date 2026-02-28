@@ -188,6 +188,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
+                android:visibility="@{vm.uiState.isShowVote ? View.GONE : View.VISIBLE}"
                 app:cardBackgroundColor="@color/neutral300"
                 app:contentPaddingBottom="13dp"
                 app:contentPaddingLeft="16dp"
@@ -199,6 +200,54 @@
                 app:text="@string/notice_write_vote_create"
                 app:textAppearance="@style/HeadlineBold"
                 app:textColor="@color/neutral000" />
+
+            <!-- Vote Action Buttons (shown when vote exists) -->
+            <LinearLayout
+                android:id="@+id/layout_edit_buttons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="horizontal"
+                android:visibility="@{vm.uiState.isShowVote ? View.VISIBLE : View.GONE}"
+                app:layout_constraintTop_toBottomOf="@id/text_end_date">
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/ubutton_delete"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    app:borderColor="@color/danger500"
+                    app:borderWidth="1dp"
+                    app:cardBackgroundColor="@color/neutral000"
+                    app:contentPaddingBottom="13dp"
+                    app:contentPaddingLeft="16dp"
+                    app:contentPaddingRight="16dp"
+                    app:contentPaddingTop="13dp"
+                    app:cornerRadius="8dp"
+                    app:pressedColor="@color/neutral100"
+                    app:text="@string/notice_write_vote_delete"
+                    app:textAppearance="@style/HeadlineBold"
+                    app:textColor="@color/danger500" />
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/ubutton_edit"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="@color/primary500"
+                    app:contentPaddingBottom="13dp"
+                    app:contentPaddingLeft="16dp"
+                    app:contentPaddingRight="16dp"
+                    app:contentPaddingTop="13dp"
+                    app:cornerRadius="8dp"
+                    app:pressedColor="@color/primary700"
+                    app:text="@string/notice_write_vote_edit"
+                    app:textAppearance="@style/HeadlineBold"
+                    app:textColor="@color/neutral000" />
+
+            </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

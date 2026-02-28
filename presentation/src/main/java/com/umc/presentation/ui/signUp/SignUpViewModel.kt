@@ -1,16 +1,21 @@
 package com.umc.presentation.ui.signUp
 
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import com.umc.domain.model.JwtToken
 import com.umc.domain.model.enums.EmailVerifyType
+import com.umc.domain.model.enums.TermsType
+import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import com.umc.domain.model.request.EmailVerificationCompleteRequest
 import com.umc.domain.model.request.EmailVerificationRequest
 import com.umc.domain.model.request.member.RegisterRequest
+import com.umc.domain.model.request.member.TermsAgreement
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.usecase.appDataStore.SaveTokenUseCase
 import com.umc.domain.usecase.auth.PostEmailVerificationCompleteUseCase
 import com.umc.domain.usecase.auth.PostEmailVerificationUseCase
 import com.umc.domain.usecase.member.RegisterUseCase
+import com.umc.domain.usecase.notification.RegisterFcmTokenUseCase
 import com.umc.domain.usecase.school.GetAllSchoolUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -19,6 +24,7 @@ import com.umc.presentation.util.Const
 import com.umc.presentation.util.ULog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -28,6 +34,8 @@ class SignUpViewModel @Inject constructor(
     private val postEmailVerificationCompleteUseCase: PostEmailVerificationCompleteUseCase,
     private val registerUseCase: RegisterUseCase,
     private val saveTokenUseCase: SaveTokenUseCase,
+    private val getTermsByTypeUseCase: GetTermsByTypeUseCase,
+    private val registerFcmTokenUseCase: RegisterFcmTokenUseCase,
 ) : BaseViewModel<SignUpState, SignUpEvent>(
     SignUpState(),
 ) {
@@ -136,34 +144,88 @@ class SignUpViewModel @Inject constructor(
     }
 
     fun register() = viewModelScope.launch {
-        val request = RegisterRequest(
-            oAuthVerificationToken = uiState.value.oAuthVerificationToken,
-            name = uiState.value.name,
-            nickname = uiState.value.nickname,
-            emailVerificationToken = uiState.value.emailVerificationToken,
-            schoolId = uiState.value.school.schoolId,
-            profileImageId = null,
-        )
+        startLoading()
+        fetchPrivacyTermsAndProceed()
+    }
 
+    private fun fetchPrivacyTermsAndProceed() = viewModelScope.launch {
         resultResponse(
-            response = registerUseCase(request),
-            successCallback = {
-                updateToken(it)
+            response = getTermsByTypeUseCase(TermsType.PRIVACY),
+            successCallback = { privacyTerms ->
+                fetchServiceTermsAndRegister(privacyTerms.id.toInt())
             },
             errorCallback = {
-                //TODO Toast?
-                ULog.d("에러 로그")
+                ULog.d("개인정보 약관 조회 실패")
             }
         )
+    }
+
+    private fun fetchServiceTermsAndRegister(privacyTermsId: Int) {
+        viewModelScope.launch {
+            resultResponse(
+                response = getTermsByTypeUseCase(TermsType.SERVICE),
+                successCallback = { serviceTerms ->
+                    executeRegister(privacyTermsId, serviceTerms.id.toInt())
+                },
+                errorCallback = {
+                    ULog.d("서비스 약관 조회 실패")
+                }
+            )
+        }
+    }
+
+    private fun executeRegister(privacyTermsId: Int, serviceTermsId: Int) {
+        viewModelScope.launch {
+            val request = RegisterRequest(
+                oAuthVerificationToken = uiState.value.oAuthVerificationToken,
+                name = uiState.value.name,
+                nickname = uiState.value.nickname,
+                emailVerificationToken = uiState.value.emailVerificationToken,
+                schoolId = uiState.value.school.schoolId,
+                profileImageId = null,
+                termsAgreements = listOf(
+                    TermsAgreement(termsId = privacyTermsId, isAgreed = true),
+                    TermsAgreement(termsId = serviceTermsId, isAgreed = true)
+                )
+            )
+
+            resultResponse(
+                response = registerUseCase(request),
+                successCallback = {
+                    updateToken(it)
+                },
+                errorCallback = {
+                    ULog.d("회원가입 에러 로그")
+                }
+            )
+        }
     }
 
     private fun updateToken(token: JwtToken) = viewModelScope.launch {
         resultResponse(
             response = saveTokenUseCase(token),
             successCallback = {
-                emitEvent(SignUpEvent.MoveToPermissionEvent)
+                registerFcmToken()
             }
         )
+    }
+
+    private fun registerFcmToken() = viewModelScope.launch {
+        try {
+            val fcmToken = FirebaseMessaging.getInstance().token.await()
+            resultResponse(
+                response = registerFcmTokenUseCase(fcmToken),
+                successCallback = {
+                    emitEvent(SignUpEvent.MoveToPermissionEvent)
+                },
+                errorCallback = {
+                    emitEvent(SignUpEvent.MoveToPermissionEvent)
+                }
+            )
+        } catch (e: Exception) {
+            ULog.d("FCM 토큰 획득 실패: ${e.message}")
+            emitEvent(SignUpEvent.MoveToPermissionEvent)
+        }
     }
 
     fun setOAuthVerificationToken(token: String) {
