@@ -65,6 +65,9 @@ android {
     hilt {
         enableAggregatingTask = false
     }
+    lint {
+        disable += "Instantiatable"
+    }
     buildFeatures {
         dataBinding = true
         buildConfig = true
