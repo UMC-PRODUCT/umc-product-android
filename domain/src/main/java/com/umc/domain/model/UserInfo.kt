@@ -44,6 +44,9 @@ data class ChallengerRecord(
     val part: String,
     val challengerStatus: String?,
     val challengerPoints: List<ChallengerPoint> = emptyList(),
+    val points: List<ChallengerPoint> = emptyList(), //추기
+    val totalPoint: Double?, //추가
+    val roles: List<UserRole>? = emptyList(), //추가
     val name: String,
     val nickname: String,
     val email: String,

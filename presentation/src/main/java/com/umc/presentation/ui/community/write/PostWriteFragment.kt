@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -73,7 +74,6 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
 
 
                     val displayDate = String.format("%02d.%02d.%02d", y % 100, m + 1, d) //UI 보여주기용 date
-                    val selectedDate = String.format("%d-%02d-%02d", y, m + 1, d)
 
                     // 날짜 선택 완료 후 바로 시간 선택 다이얼로그 띄우기
                     val timeDialog = TimePickerDialog(requireContext(), themeResId, { _, hour, minute ->
@@ -83,7 +83,13 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
                         binding.writeTextfieldTime.setText("$displayDate $selectedTime")
 
                         // 서버 전송용 ISO 8601 조립 (예: 2026-02-08T10:02:00.000Z)
-                        val isoDateTime = "${selectedDate}T${selectedTime}:00.000Z"
+                        val localDateTime = java.time.LocalDateTime.of(y, m + 1, d, hour, minute)
+                        val isoDateTime = localDateTime
+                            .atZone(java.time.ZoneId.systemDefault()) // 사용자의 현재 시간대(KST 등) 설정
+                            .withZoneSameInstant(java.time.ZoneOffset.UTC) // 시차만큼 시간을 계산하여 UTC로 이동
+                            .format(java.time.format.DateTimeFormatter.ISO_INSTANT) // 2026-03-25T05:48:00Z 형태
+
+                        Log.d("log_community", isoDateTime)
 
                         // 뷰모델 업데이트
                         viewModel.updateLightTime(isoDateTime)
