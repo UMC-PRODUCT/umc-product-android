@@ -9,6 +9,7 @@ import com.umc.presentation.ui.act.study.common.model.MemberUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.umc.domain.model.enums.UserPart
 
 @HiltViewModel
 class AdminStudyGroupAddViewModel @Inject constructor(
@@ -16,6 +17,12 @@ class AdminStudyGroupAddViewModel @Inject constructor(
 ) : BaseViewModel<AdminStudyGroupAddState, AdminStudyGroupAddEvent>(
     initialPageState = AdminStudyGroupAddState()
 ) {
+
+
+    fun onClickBack() = emitEvent(AdminStudyGroupAddEvent.ClickBack)
+    fun onClickPickLeader() = emitEvent(AdminStudyGroupAddEvent.ClickPickLeader)
+    fun onClickPickMembers() = emitEvent(AdminStudyGroupAddEvent.ClickPickMembers)
+
 
     fun onGroupNameChanged(name: String) {
         updateState { copy(groupName = name, errorMessage = null) }
@@ -36,37 +43,30 @@ class AdminStudyGroupAddViewModel @Inject constructor(
 
     fun deleteMember(member: MemberUiModel) {
         updateState {
-            copy(
-                selectedMembers = selectedMembers.filterNot { it.challengerId == member.challengerId }
-            )
+            copy(selectedMembers = selectedMembers.filterNot { it.challengerId == member.challengerId })
         }
     }
-
-    fun onClickBack() = emitEvent(AdminStudyGroupAddEvent.ClickBack)
-    fun onClickPickLeader() = emitEvent(AdminStudyGroupAddEvent.ClickPickLeader)
-    fun onClickPickMembers() = emitEvent(AdminStudyGroupAddEvent.ClickPickMembers)
-
 
     fun submitCreateStudyGroup() {
         val state = uiState.value
 
-        val leaderChallengerId = state.leader?.challengerId
-        if (leaderChallengerId == null) {
-            emitEvent(AdminStudyGroupAddEvent.ShowToast("리더를 선택해 주세요."))
-            return
-        }
-        if (state.groupName.isBlank()) {
-            emitEvent(AdminStudyGroupAddEvent.ShowToast("그룹 이름을 입력해 주세요."))
+        if (!state.canRegister) return
+
+        val leaderChallengerId = state.leader!!.challengerId
+
+        val partEnum = UserPart.from(state.partLabel)
+
+        if (partEnum == UserPart.UNKNOWN) {
+            emitEvent(AdminStudyGroupAddEvent.ShowToast("파트를 선택해 주세요."))
             return
         }
 
         val request = CreateStudyGroupRequest(
             name = state.groupName.trim(),
-            part = state.partLabel.toServerPart(),
+            part = partEnum.name,
             leaderId = leaderChallengerId,
             memberIds = state.selectedMembers.map { it.challengerId }.distinct()
         )
-
 
         updateState { copy(isSubmitting = true, errorMessage = null) }
 
@@ -88,14 +88,3 @@ class AdminStudyGroupAddViewModel @Inject constructor(
     }
 }
 
-private fun String.toServerPart(): String {
-    return when (this.trim().lowercase()) {
-        "web" -> "WEB"
-        "android" -> "ANDROID"
-        "ios" -> "IOS"
-        "server" -> "SERVER"
-        "design" -> "DESIGN"
-        "plan", "pm" -> "PLAN"
-        else -> this.uppercase()
-    }
-}

@@ -40,4 +40,16 @@ interface ChallengerRepository {
 
     // 챌린저 기록 멤버 추가 (코드로 참여)
     suspend fun addChallengerRecordMember(request: ChallengerRecordMemberRequest): ApiState<Unit>
+
+
+    suspend fun searchChallengerCursor(
+        cursor: Long?,
+        size: Int,
+        schoolId: Long?,
+        gisuId: Long?,
+        part: String?,
+        name: String?,
+        nickname: String?
+    ): ApiState<ChallengerList>
+
 }

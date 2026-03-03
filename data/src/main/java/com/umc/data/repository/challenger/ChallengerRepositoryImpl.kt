@@ -88,4 +88,24 @@ class ChallengerRepositoryImpl @Inject constructor(
     override suspend fun addChallengerRecordMember(request: ChallengerRecordMemberRequest): ApiState<Unit> {
         return challengerRemoteDataSource.addChallengerRecordMember(request)
     }
+
+    override suspend fun searchChallengerCursor(
+        cursor: Long?,
+        size: Int,
+        schoolId: Long?,
+        gisuId: Long?,
+        part: String?,
+        name: String?,
+        nickname: String?
+    ): ApiState<ChallengerList> {
+        return challengerRemoteDataSource.getChallengerList(
+            cursor = cursor,
+            size = size,
+            schoolId = schoolId,
+            gisuId = gisuId,
+            part = part,
+            name = name,
+            nickname = nickname
+        ).map { it.toModel() }
+    }
 }

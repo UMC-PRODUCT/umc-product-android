@@ -51,8 +51,8 @@ class MemberPickerAdapter(
             binding.root.setOnClickListener {
                 if (isMulti) {
                     onToggle(item)
-
-                    submitList(currentList.toList())
+                    val pos = bindingAdapterPosition
+                    if (pos != RecyclerView.NO_POSITION) notifyItemChanged(pos)
                 } else {
                     onSinglePick(item)
                 }
@@ -61,7 +61,9 @@ class MemberPickerAdapter(
             binding.ivCheck.setOnClickListener {
                 if (isMulti) {
                     onToggle(item)
-                    submitList(currentList.toList())
+
+                    val pos = bindingAdapterPosition
+                    if (pos != RecyclerView.NO_POSITION) notifyItemChanged(pos)
                 }
             }
 
@@ -77,7 +79,7 @@ class MemberPickerAdapter(
     }
 
     companion object {
-        val diff = object : DiffUtil.ItemCallback<MemberUiModel>() {
+        private val diff = object : DiffUtil.ItemCallback<MemberUiModel>() {
             override fun areItemsTheSame(old: MemberUiModel, new: MemberUiModel) =
                 old.challengerId == new.challengerId
 
