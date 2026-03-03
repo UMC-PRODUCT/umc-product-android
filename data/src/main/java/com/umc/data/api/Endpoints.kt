@@ -64,6 +64,8 @@ object Endpoints {
 
         const val LOCATION = "$SCHEDULE/{scheduleId}/location"
 
+        const val CREATE_STUDY_GROUP_SCHEDULE = "$SCHEDULE/study-group"
+
     }
 
     object Community{
