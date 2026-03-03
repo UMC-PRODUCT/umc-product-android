@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class LoginGoogleRequest(
-    val idToken: String = "",
+    val accessToken: String = "",
 )

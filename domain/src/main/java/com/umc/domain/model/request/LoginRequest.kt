@@ -3,6 +3,6 @@ package com.umc.domain.model.request
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class LoginKakaoRequest(
+data class LoginRequest(
     val accessToken: String = "",
 )

@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.splash
 
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UserInfo
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -25,8 +26,12 @@ class SplashViewModel @Inject constructor(
             delay(3.seconds)
             resultResponse(
                 response = getMyProfileUseCase(),
-                successCallback = {
-                    emitEvent(SplashEvent.MoveToMainEvent)
+                successCallback = { userInfo ->
+                    if (hasChallengerId(userInfo)) {
+                        emitEvent(SplashEvent.MoveToMainEvent)
+                    } else {
+                        emitEvent(SplashEvent.MoveToSignUpFailEvent)
+                    }
                 },
                 errorCallback = {
                     emitEvent(SplashEvent.MoveToLoginEvent)
@@ -34,10 +39,20 @@ class SplashViewModel @Inject constructor(
             )
         }
     }
+
+    private fun hasChallengerId(userInfo: UserInfo): Boolean {
+        // roles에서 challengerId 확인
+        val hasRoleChallengerId = userInfo.roles.any { it.challengerId > 0 }
+        // challengerRecords에서 challengerId 확인
+        val hasRecordChallengerId = userInfo.challengerRecords.any { it.challengerId > 0 }
+        return hasRoleChallengerId || hasRecordChallengerId
+    }
 }
 
 sealed interface SplashEvent : UiEvent {
     object MoveToMainEvent : SplashEvent
 
     object MoveToLoginEvent : SplashEvent
+
+    object MoveToSignUpFailEvent : SplashEvent
 }

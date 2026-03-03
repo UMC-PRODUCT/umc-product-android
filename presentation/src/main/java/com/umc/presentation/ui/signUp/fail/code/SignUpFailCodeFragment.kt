@@ -3,8 +3,6 @@ package com.umc.presentation.ui.signUp.fail.code
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.umc.presentation.base.BaseFragment
-import com.umc.presentation.base.UiState
-import com.umc.presentation.databinding.FragmentSignUpFailBinding
 import com.umc.presentation.databinding.FragmentSignUpFailCodeBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -46,7 +44,8 @@ class SignUpFailCodeFragment : BaseFragment<FragmentSignUpFailCodeBinding, SignU
                 //TODO 공식 홈페이지 url 이동
             }
             SignUpFailCodeEvent.MoveToHome -> {
-
+                val action = SignUpFailCodeFragmentDirections.actionSignUpFailCodeToHome()
+                findNavController().navigate(action)
             }
         }
     }
