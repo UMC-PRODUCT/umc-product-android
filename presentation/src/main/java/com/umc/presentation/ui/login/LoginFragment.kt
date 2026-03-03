@@ -1,5 +1,7 @@
 package com.umc.presentation.ui.login
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -9,9 +11,14 @@ import androidx.credentials.exceptions.NoCredentialException
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.google.android.gms.auth.api.identity.AuthorizationRequest
+import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.common.Scopes
+import com.google.android.gms.common.api.Scope
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
@@ -23,6 +30,7 @@ import com.umc.presentation.databinding.FragmentLoginBinding
 import com.umc.presentation.util.ULog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.security.MessageDigest
 import java.util.UUID
 
@@ -137,6 +145,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, UiState, LoginEvent, Lo
 
             } catch (e: NoCredentialException) {
                 ULog.d("사용 가능한 자격 증명이 없습니다.")
+                showGoogleAccountError()
             } catch (e: GetCredentialException) {
                 ULog.d("인증 실패: ${e.message}")
             }
@@ -151,12 +160,21 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, UiState, LoginEvent, Lo
             credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
 
             try {
-                // 토큰 파싱
-                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                // Access Token도 함께 요청
+                lifecycleScope.launch {
+                    try {
+                        val accessToken = requestAccessToken()
+                        ULog.d("Google Access Token: $accessToken")
 
-                val idToken = googleIdTokenCredential.idToken
-
-                viewModel.login(idToken, LoginType.GOOGLE)
+                        // Access Token과 ID Token을 함께 전달
+                        viewModel.login(
+                            token = accessToken,
+                            loginType = LoginType.GOOGLE
+                        )
+                    } catch (e: Exception) {
+                        ULog.d("Access Token 획득 실패: ${e.message}")
+                    }
+                }
 
             } catch (e: GoogleIdTokenParsingException) {
                 ULog.d("유효하지 않은 Google ID 토큰 $e")
@@ -164,6 +182,29 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, UiState, LoginEvent, Lo
         } else {
             ULog.d("예상치 못한 자격 증명 유형")
         }
+    }
+
+    private suspend fun requestAccessToken(): String {
+        val authorizationRequest = AuthorizationRequest.builder()
+            .setRequestedScopes(
+                listOf(Scope(Scopes.PROFILE), Scope(Scopes.EMAIL))
+            )
+            .build()
+
+        val authorizationResult = Identity.getAuthorizationClient(requireActivity())
+            .authorize(authorizationRequest)
+            .await()
+
+        return authorizationResult.accessToken
+            ?: throw IllegalStateException("Access Token을 받을 수 없습니다")
+    }
+
+    private fun showGoogleAccountError() {
+        ULog.d("Google 로그인 실패: 기기에 Google 계정이 없습니다.")
+        val intent = Intent(Settings.ACTION_ADD_ACCOUNT).apply {
+            putExtra(Settings.EXTRA_ACCOUNT_TYPES, arrayOf("com.google"))
+        }
+        startActivity(intent)
     }
 
     // 간단한 SHA-256 해시 함수 (Nonce용)

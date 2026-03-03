@@ -7,10 +7,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.umc.domain.model.enums.EmailVerifyType
 import com.umc.domain.model.school.SchoolInfo
+import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentSignUpBinding
 import com.umc.presentation.ui.signUp.bottomSheet.SchoolSelectBottomSheet
 import com.umc.presentation.util.ULog
+import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -53,6 +55,27 @@ class SignUpFragment :
             SignUpEvent.MoveToBack -> findNavController().popBackStack()
             SignUpEvent.MoveToPermissionEvent -> navigatePermission()
             SignUpEvent.ShowSchoolBottomSheet -> showSchoolSelectBottomSheet()
+            SignUpEvent.ShowVerifyToast -> {
+                UToast.createToast(
+                    requireContext(),
+                    R.string.sign_up_email_verify_sent,
+                    state = UToast.State.CHECK
+                ).show()
+            }
+            SignUpEvent.ShowVerifyCompleteToast -> {
+                UToast.createToast(
+                    requireContext(),
+                    R.string.sign_up_email_verify_complete,
+                    state = UToast.State.CHECK
+                ).show()
+            }
+            SignUpEvent.ShowVerifyErrorToast -> {
+                UToast.createToast(
+                    requireContext(),
+                    R.string.sign_up_email_verify_error,
+                    state = UToast.State.ERROR
+                ).show()
+            }
         }
     }
 
