@@ -59,7 +59,6 @@ class AdminCheckViewModel @Inject constructor(
         }
     }
 
-    // TODO: 승인/반려 로직 및 유저 리스트 조회는 바텀시트 구현 시 해당 뷰모델로 옮기거나 활용
 }
 
 data class AdminCheckUiState(

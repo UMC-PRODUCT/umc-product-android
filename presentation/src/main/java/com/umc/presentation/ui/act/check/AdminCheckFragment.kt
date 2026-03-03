@@ -72,6 +72,7 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
      * 승인 대기 명단 바텀 시트를 띄우는 함수
      */
     private fun showPendingBottomSheet(sessionId: Long) {
-        // TODO: AdminPendingBottomSheet 클래스 구현
+        val pendingBottomSheet = AdminPendingBottomSheet(sessionId)
+        pendingBottomSheet.show(childFragmentManager, "AdminPendingList")
     }
 }
