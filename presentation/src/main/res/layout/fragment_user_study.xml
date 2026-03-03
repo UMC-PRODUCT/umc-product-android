@@ -188,7 +188,7 @@
                 <ImageView
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/ic_study_off"
+                    android:src="@drawable/ic_book"
                     android:contentDescription="@null" />
 
                 <TextView
