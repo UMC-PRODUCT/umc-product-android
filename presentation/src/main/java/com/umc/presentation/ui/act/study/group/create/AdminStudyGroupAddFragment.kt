@@ -20,6 +20,7 @@ import com.umc.presentation.ui.act.study.group.create.model.AdminStudyGroupAddVi
 import com.umc.presentation.ui.act.util.toSummaryText
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import androidx.navigation.fragment.findNavController
 
 @AndroidEntryPoint
 class AdminStudyGroupAddFragment :
@@ -51,7 +52,7 @@ class AdminStudyGroupAddFragment :
 
         binding.tvSelectedPart.text = selectedPart
 
-        binding.btnBack.setOnClickListener { moveBackPressed() }
+        binding.btnBack.setOnClickListener { moveToStudyGroupTab() }
         binding.btnRegister.setOnClickListener { viewModel.submitCreateStudyGroup() }
 
         setupPartDropdown()
@@ -63,6 +64,16 @@ class AdminStudyGroupAddFragment :
         collectEvent()
 
         collectChallengersAsMembers()
+    }
+
+    private fun moveToStudyGroupTab() {
+        val nav = findNavController()
+
+        val actEntry = nav.getBackStackEntry(R.id.activityManagementFragment)
+
+        actEntry.savedStateHandle["ACT_TARGET_TAB"] = 1
+        actEntry.savedStateHandle["ADMIN_STUDY_TARGET_TAB"] = "GROUP"
+        nav.popBackStack(R.id.activityManagementFragment, false)
     }
 
     private fun collectChallengersAsMembers() {

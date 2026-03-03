@@ -14,6 +14,8 @@ import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
 import com.umc.domain.model.home.LocationItem
+import androidx.navigation.fragment.findNavController
+import com.umc.presentation.R
 
 @AndroidEntryPoint
 class AdminActStudyScheduleAddFragment :
@@ -56,8 +58,8 @@ class AdminActStudyScheduleAddFragment :
         binding.chipEndDate.setOnClickListener { showDatePicker(false) }
         binding.chipEndTime.setOnClickListener { showTimePicker(false) }
 
-        binding.btnBack.setOnClickListener { moveBackPressed() }
-        binding.btnCancel.setOnClickListener { moveBackPressed() }
+        binding.btnBack.setOnClickListener { moveToStudyGroupTab() }
+        binding.btnCancel.setOnClickListener { moveToStudyGroupTab() }
 
         // 여기서 바로 뒤로가지 말기
         binding.btnRegister.setOnClickListener {
@@ -80,13 +82,23 @@ class AdminActStudyScheduleAddFragment :
                     is AdminActStudyScheduleAddEvent.ShowToast -> {
                         android.widget.Toast.makeText(requireContext(), event.message, android.widget.Toast.LENGTH_SHORT).show()
                         if (event.message.contains("등록되었습니다")) {
-                            moveBackPressed()
+                            moveToStudyGroupTab()
                         }
                     }
                     else -> Unit
                 }
             }
         }
+    }
+
+    private fun moveToStudyGroupTab() {
+        val nav = findNavController()
+
+        val actEntry = nav.getBackStackEntry(R.id.activityManagementFragment)
+
+        actEntry.savedStateHandle["ACT_TARGET_TAB"] = 1
+        actEntry.savedStateHandle["ADMIN_STUDY_TARGET_TAB"] = "GROUP"
+        nav.popBackStack(R.id.activityManagementFragment, false)
     }
 
     private fun showDatePicker(isStart: Boolean) {
