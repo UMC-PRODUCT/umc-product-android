@@ -185,6 +185,11 @@
                 android:padding="16dp">
 
 
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_book"
+                    android:contentDescription="@null" />
 
                 <TextView
                     android:layout_width="wrap_content"

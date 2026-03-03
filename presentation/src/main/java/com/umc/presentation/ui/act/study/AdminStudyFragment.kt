@@ -7,6 +7,9 @@ import com.umc.presentation.databinding.FragmentAdminStudyBinding
 import com.umc.presentation.ui.act.study.group.AdminStudyGroupFragment
 import com.umc.presentation.ui.act.study.submit.AdminActStudySubmitFragment
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.navigation.fragment.findNavController
+import com.umc.presentation.R
+
 
 @AndroidEntryPoint
 class AdminStudyFragment :
@@ -21,6 +24,18 @@ class AdminStudyFragment :
     enum class Tab { SUBMIT, GROUP }
 
     override fun initView() {
+
+        val actHandle = findNavController()
+            .getBackStackEntry(R.id.activityManagementFragment)
+            .savedStateHandle
+
+        actHandle.getLiveData<String>("ADMIN_STUDY_TARGET_TAB")
+            .observe(viewLifecycleOwner) { tab ->
+                if (tab == "GROUP") showTab(Tab.GROUP)
+                else showTab(Tab.SUBMIT)
+                actHandle.remove<String>("ADMIN_STUDY_TARGET_TAB")
+            }
+
         // 초기 탭
         if (childFragmentManager.findFragmentById(binding.fcvAdminStudyContainer.id) == null) {
             showTab(Tab.SUBMIT, initial = true)

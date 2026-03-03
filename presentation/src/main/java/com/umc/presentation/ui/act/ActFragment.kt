@@ -8,6 +8,7 @@ import com.umc.presentation.databinding.FragmentActBinding
 import com.umc.presentation.ui.act.adapter.ActViewPagerAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import androidx.navigation.fragment.findNavController
 
 @AndroidEntryPoint
 class ActFragment : BaseFragment<FragmentActBinding, ActViewModel.ActivityManagementUiState, ActViewModel.ActivityManagementEvent, ActViewModel>(
@@ -22,6 +23,12 @@ class ActFragment : BaseFragment<FragmentActBinding, ActViewModel.ActivityManage
 
         binding.switchAdmin.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setAdminMode(isChecked)
+        }
+
+        val handle = findNavController().currentBackStackEntry?.savedStateHandle
+        handle?.getLiveData<Int>("ACT_TARGET_TAB")?.observe(viewLifecycleOwner) { tab ->
+            binding.viewPager.setCurrentItem(tab, false)
+            handle.remove<Int>("ACT_TARGET_TAB")
         }
     }
 

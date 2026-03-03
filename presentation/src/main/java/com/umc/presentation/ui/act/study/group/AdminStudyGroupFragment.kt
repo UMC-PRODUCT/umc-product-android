@@ -6,6 +6,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.ListPopupWindow
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -48,7 +49,10 @@ class AdminStudyGroupFragment :
                 showSettingPopup(anchorView, item)
             },
             onClickAddSchedule = { item ->
-                findNavController().navigate(R.id.action_to_schedule_add)
+                findNavController().navigate(
+                    R.id.action_to_schedule_add,
+                    bundleOf("groupId" to item.groupId)
+                )
             },
             onClickAddMember = { item ->
                 findNavController().navigate(R.id.adminStudyGroupAddFragment)

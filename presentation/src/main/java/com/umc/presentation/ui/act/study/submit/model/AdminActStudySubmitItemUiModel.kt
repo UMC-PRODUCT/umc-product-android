@@ -23,7 +23,7 @@ data class AdminActStudySubmitItemUiModel(
 //
 //    val isReviewEnabled: Boolean get() = status == "SUBMITTED"
 
-    val isBestEnabled: Boolean get() = uiStatus == "PASS"
+    val isBestEnabled: Boolean get() = status == "PASS"
     val isReviewEnabled: Boolean get() = uiStatus == "SUBMITTED"
 
     val markStatus: String? get() = when (status) {

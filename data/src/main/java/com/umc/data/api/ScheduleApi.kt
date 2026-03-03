@@ -1,6 +1,7 @@
 package com.umc.data.api
 
 import com.umc.data.request.schedule.CreateScheduleRequest
+import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
 import com.umc.data.response.member.MemberResponse
 import com.umc.data.response.schedule.ScheduleDetailResponse
@@ -64,5 +65,11 @@ interface ScheduleApi {
         @Body request: UpdateLocationRequest
     ): ApiResponse<UpdateLocationResponse>
 
+
+    // 스터디 그룹 일정 생성
+    @POST(Endpoints.Schedule.CREATE_STUDY_GROUP_SCHEDULE)
+    suspend fun createStudyGroupSchedule(
+        @Body request: CreateStudyGroupScheduleRequest
+    ): ApiResponse<Long>
 }
 
