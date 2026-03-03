@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.domain.model.enums.EditDeleteAction
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.request.organization.EditStudyGroupRequest
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
@@ -150,7 +151,7 @@ class AdminStudyGroupFragment :
         b.tvSelectedPart.text = item.partLabel.ifBlank { "Web" }
 
         var isPartDropdownOpen = false
-        val parts = listOf("Web", "Android", "iOS", "Server", "Design", "Plan")
+        val parts = UserPart.getFilterLabels()
 
         val dropDownAdapter = DropDownAdapter(object : DropDownAdapter.DropDownDelegate {
             override fun onClickItem(text: String) {
@@ -190,28 +191,23 @@ class AdminStudyGroupFragment :
 
         b.btnConfirm.setOnClickListener {
             val newName = b.etGroupName.getText().trim()
-            val uiPart = b.tvSelectedPart.text.toString().trim()
-
             if (newName.isBlank()) return@setOnClickListener
+            val uiPartLabel = b.tvSelectedPart.text.toString().trim()
+            val partEnum = UserPart.from(uiPartLabel)
+
+            if (partEnum == UserPart.UNKNOWN) return@setOnClickListener
 
             val req = EditStudyGroupRequest(
                 name = newName,
-                part = uiPart.toServerPart()
+                part = partEnum.name
             )
+
             viewModel.editGroup(item.groupId, req)
             dialog.dismiss()
         }
     }
 
-    private fun String.toServerPart(): String = when (this.lowercase()) {
-        "web" -> "WEB"
-        "android" -> "ANDROID"
-        "ios", "iOS".lowercase() -> "IOS"
-        "server" -> "SERVER"
-        "design" -> "DESIGN"
-        "plan" -> "PLAN"
-        else -> "WEB"
-    }
+
 
     private fun showDeleteGroupDialog(item: AdminStudyGroupItemUiModel) {
         val dialog = Dialog(requireContext())

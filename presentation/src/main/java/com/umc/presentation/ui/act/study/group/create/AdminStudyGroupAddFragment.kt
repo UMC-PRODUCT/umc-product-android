@@ -66,19 +66,23 @@ class AdminStudyGroupAddFragment :
 
 
 
-    private fun moveToStudyGroupTab() {
+    private fun moveToStudyGroupTab(reload: Boolean = false) {
         val nav = findNavController()
-
         val actEntry = nav.getBackStackEntry(R.id.activityManagementFragment)
 
         actEntry.savedStateHandle["ACT_TARGET_TAB"] = 1
         actEntry.savedStateHandle["ADMIN_STUDY_TARGET_TAB"] = "GROUP"
+
+        if (reload) {
+            actEntry.savedStateHandle["ADMIN_STUDY_GROUP_RELOAD"] = true
+        }
+
         nav.popBackStack(R.id.activityManagementFragment, false)
     }
 
 
     private fun selectedServerPartOrNull(): String? {
-        val part = UserPart.from(selectedPart)
+        val part = UserPart.from(viewModel.uiState.value.partLabel)
         return if (part == UserPart.UNKNOWN) null else part.name
     }
 
@@ -122,7 +126,7 @@ class AdminStudyGroupAddFragment :
                     AdminStudyGroupAddEvent.ClickRegister -> viewModel.submitCreateStudyGroup()
 
                     AdminStudyGroupAddEvent.CreateSuccess -> {
-                        moveBackPressed()
+                        moveToStudyGroupTab(reload = true)
                     }
 
                     is AdminStudyGroupAddEvent.ShowToast -> {
