@@ -250,11 +250,14 @@
     <string name="notice_write_title">공지 작성</string>
     <string name="notice_write_category_title">공지 카테고리</string>
     <string name="notice_write_class_title">게시판 분류</string>
+    <string name="notice_write_target_title">수신 대상</string>
     <string name="notice_write_class_hint">중복 선택 가능</string>
     <string name="notice_write_part_title">전송할 파트 선택</string>
     <string name="notice_write_part_hint">선택하지 않으면 전체 파트원에게 전송됩니다</string>
     <string name="notice_write_sent_notification">알림 발송</string>
     <string name="notice_write_vote_create">생성하기</string>
+    <string name="notice_write_vote_delete">삭제하기</string>
+    <string name="notice_write_vote_edit">수정하기</string>
     <string name="notice_write_complete">작성 완료</string>
     <string name="notice_write_link_title">링크 첨부</string>
     <string name="notice_write_link_hint">링크를 첨부해주세요.</string>

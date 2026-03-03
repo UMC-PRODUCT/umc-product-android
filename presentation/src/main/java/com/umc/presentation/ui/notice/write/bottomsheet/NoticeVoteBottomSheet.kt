@@ -66,6 +66,23 @@ class NoticeVoteBottomSheet: BaseBottomSheetFragment<BottomSheetNoticeVoteBindin
                 viewModel.updateVoteList(resultList)
                 dismiss()
             }
+
+            // Vote action buttons (shown when vote exists)
+            ubuttonDelete.setOnClickListener {
+                viewModel.deleteVote {
+                    dismiss()
+                }
+            }
+
+            ubuttonEdit.setOnClickListener {
+                val resultList = currentVoteList.filter { it.isNotEmpty() }.toMutableList()
+                while (resultList.size < 2) {
+                    resultList.add("")
+                }
+                viewModel.updateVote(resultList) {
+                    dismiss()
+                }
+            }
         }
     }
 

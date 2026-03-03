@@ -31,8 +31,8 @@ data class StudyGroupResponse(
 
 @Serializable
 data class GroupMemberResponse(
-    val challengerId: Int = 0,
-    val memberId: Int = 0,
+    val challengerId: Long = 0,
+    val memberId: Long = 0,
     val name: String = "",
-    val profileImageUrl: String? = ""
+    val profileImageUrl: String? = null
 )

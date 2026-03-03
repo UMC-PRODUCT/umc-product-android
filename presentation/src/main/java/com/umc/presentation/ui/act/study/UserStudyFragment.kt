@@ -6,6 +6,7 @@ import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentUserStudyBinding
 import kotlinx.coroutines.launch
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.core.view.isVisible
 
 @AndroidEntryPoint
 class UserStudyFragment :
@@ -38,18 +39,20 @@ class UserStudyFragment :
         repeatOnStarted(viewLifecycleOwner) {
             viewModel.uiState.collect { state ->
 
+                binding.apply {
+                    tvPart.text = "${state.part.label.uppercase()} PART CURRICULUM"
+                    tvTitle.text = state.title
+                    tvPercent.text = state.percentText
+                    progress.progress = state.progress
+                    tvSub.text = state.subText
 
-                launch {
-                    binding.apply {
-                        tvPart.text = "${state.part.label.uppercase()} PART CURRICULUM"
-                        tvTitle.text = state.title
-                        tvPercent.text = state.percentText
-                        progress.progress = state.progress
-                        tvSub.text = state.subText
-                    }
-
-                    adapter.submitList(state.items)
+                    val isEmpty = state.items.isNullOrEmpty()
+                    binding.cvCurriculum.isVisible = !isEmpty
+                    rvUserStudy.isVisible = !isEmpty
+                    layoutEmpty.isVisible = isEmpty
                 }
+
+                adapter.submitList(state.items)
             }
         }
     }

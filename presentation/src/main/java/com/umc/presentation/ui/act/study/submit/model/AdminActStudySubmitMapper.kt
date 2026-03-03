@@ -6,12 +6,13 @@ fun WorkbookSubmissionItem.toUiModel(weekNo: Int): AdminActStudySubmitItemUiMode
     AdminActStudySubmitItemUiModel(
         challengerWorkbookId = challengerWorkbookId,
         userId = challengerId,
-        name = challengerName.ifBlank { "홍길동" },
-        nickname = "",
+        name = memberName.ifBlank { "홍길동" },
+        nickname = challengerName.ifBlank { "" },
         partLabel = part.name,
         weekText = "${weekNo}주차",
         studyTitle = workbookTitle,
         submitUrl = "",
         schoolName = schoolName.ifBlank { "서울대학교" },
-        profileImageUrl = profileImageUrl
+        profileImageUrl = profileImageUrl,
+        status = status
     )

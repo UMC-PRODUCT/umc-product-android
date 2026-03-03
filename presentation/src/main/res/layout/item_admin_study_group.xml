@@ -145,31 +145,38 @@
                         app:layout_constraintTop_toTopOf="parent" />
 
 
-                    <TextView
-                        android:id="@+id/tv_leader_name"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:text='@{item.leaderName}'
-                        android:textAppearance="@style/SubheadlineBold"
-                        android:textColor="@color/neutral900"
-                        app:layout_constraintStart_toEndOf="@id/iv_leader_profile"
-                        app:layout_constraintTop_toTopOf="@id/iv_leader_profile"
-                        tools:text="홍길동" />
-
-                    <TextView
-                        android:id="@+id/tv_leader_univ"
+                    <LinearLayout
+                        android:id="@+id/layout_leader_name_univ"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
-                        android:layout_marginTop="4dp"
-                        android:text='@{item.leaderUniv}'
-                        android:textAppearance="@style/Footnote"
-                        android:textColor="@color/neutral500"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
                         app:layout_constraintStart_toEndOf="@id/iv_leader_profile"
-                        app:layout_constraintTop_toBottomOf="@id/tv_leader_name"
                         app:layout_constraintEnd_toStartOf="@id/ub_leader_badge"
-                        tools:text="중앙대" />
+                        app:layout_constraintTop_toTopOf="@id/iv_leader_profile"
+                        app:layout_constraintBottom_toBottomOf="@id/iv_leader_profile">
+
+                        <TextView
+                            android:id="@+id/tv_leader_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text='@{item.leaderName}'
+                            android:textAppearance="@style/SubheadlineBold"
+                            android:textColor="@color/neutral900"
+                            tools:text="홍길동" />
+
+                        <TextView
+                            android:id="@+id/tv_leader_univ"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:text='@{item.leaderUniv}'
+                            android:textAppearance="@style/Footnote"
+                            android:textColor="@color/neutral500"
+                            tools:text="중앙대" />
+
+                    </LinearLayout>
 
 
                     <com.umc.presentation.component.UButton
@@ -209,83 +216,28 @@
                 app:layout_constraintStart_toStartOf="parent" />
 
 
-            <LinearLayout
-                android:id="@+id/layout_member_chips"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal"
-                android:gravity="start"
-                android:layoutDirection="ltr"
-                app:layout_constraintTop_toBottomOf="@id/tv_members_title"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
+        <com.google.android.flexbox.FlexboxLayout
+            android:id="@+id/layout_member_chips"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            app:flexWrap="wrap"
+            app:justifyContent="flex_start"
+            app:alignItems="center"
+            app:layout_constraintTop_toBottomOf="@id/tv_members_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btn_add_member" />
 
-
-                <com.umc.presentation.component.UButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="8dp"
-                    app:buttonElevation="0"
-                    app:cornerRadius="16dp"
-                    app:contentPaddingLeft="10dp"
-                    app:contentPaddingRight="10dp"
-                    app:textAppearance="@style/Caption1Bold"
-                    app:text="홍길동"
-                    app:backgroundColor="@color/neutral100"
-                    app:borderWidth="1dp"
-                    app:borderColor="@color/neutral100"
-                    app:textColor="@color/neutral800" />
-
-
-                <com.umc.presentation.component.UButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="8dp"
-                    app:buttonElevation="0"
-                    app:cornerRadius="16dp"
-                    app:contentPaddingLeft="10dp"
-                    app:contentPaddingRight="10dp"
-                    app:textAppearance="@style/Caption1Bold"
-                    app:text="홍길동"
-                    app:backgroundColor="@color/neutral100"
-                    app:borderWidth="1dp"
-                    app:borderColor="@color/neutral100"
-                    app:textColor="@color/neutral800" />
-
-
-                <com.umc.presentation.component.UButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="8dp"
-                    app:buttonElevation="0"
-                    app:cornerRadius="16dp"
-                    app:contentPaddingLeft="10dp"
-                    app:contentPaddingRight="10dp"
-                    app:textAppearance="@style/Caption1Bold"
-                    app:text="홍길동"
-                    app:backgroundColor="@color/neutral100"
-                    app:borderWidth="1dp"
-                    app:borderColor="@color/neutral100"
-                    app:textColor="@color/neutral800" />
-
-
-                <com.umc.presentation.component.UButton
-                    android:id="@+id/ub_add_member"
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    app:buttonElevation="0"
-                    app:cornerRadius="16dp"
-                    app:contentPaddingLeft="12dp"
-                    app:contentPaddingRight="12dp"
-                    app:textAppearance="@style/Caption1Bold"
-                    app:text="추가하기"
-                    app:backgroundColor="@color/neutral000"
-                    app:borderWidth="1dp"
-                    app:borderColor="@color/neutral200"
-                    app:textColor="@color/neutral700" />
-
-            </LinearLayout>
+        <ImageView
+            android:id="@+id/btn_add_member"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_add_filled"
+            app:tint="@color/primary500"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/layout_member_chips"
+            app:layout_constraintBottom_toBottomOf="@id/layout_member_chips" />
 
 
             <com.umc.presentation.component.UButton
@@ -302,6 +254,7 @@
                 app:borderColor="@color/neutral200"
                 app:textColor="@color/neutral800"
                 app:prevIcon="@drawable/ic_calendar"
+                app:prevIconTint="@color/primary500"
                 app:layout_constraintTop_toBottomOf="@id/layout_member_chips"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

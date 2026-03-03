@@ -6,7 +6,10 @@ data class AdminStudyGroupItemUiModel(
     val partLabel: String,
     val leaderName: String,
     val members: List<String>,
-    val createdAtText: String,
+    val createdAtRaw: String,
     val memberCount: Int,
     val leaderUniv: String,
-)
+){
+    val createdAtText: String
+        get() = "생성일: " + createdAtRaw.take(10).replace("-", ".")
+}

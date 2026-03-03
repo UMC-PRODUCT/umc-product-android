@@ -34,7 +34,7 @@
 
     <fragment
         android:id="@+id/notificationFragment"
-        android:name="com.umc.presentation.ui.home.NotificationFragment"
+        android:name="com.umc.presentation.ui.home.notification.NotificationFragment"
         android:label="알림 보관함 화면"
         tools:layout="@layout/fragment_notification">
 

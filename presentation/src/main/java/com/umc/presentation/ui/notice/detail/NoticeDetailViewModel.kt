@@ -12,6 +12,7 @@ import com.umc.domain.model.notice.NoticeVoteOption
 import com.umc.domain.usecase.GetChallengerIdUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
+import com.umc.domain.usecase.notice.DeleteNoticeUseCase
 import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatisticsUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatusUseCase
@@ -35,6 +36,7 @@ class NoticeDetailViewModel @Inject constructor(
     private val getChallengerDetailUseCase: GetChallengerDetailUseCase,
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getChallengerIdUseCase: GetChallengerIdUseCase,
+    private val deleteNoticeUseCase: DeleteNoticeUseCase,
 ) : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
     NoticeFragmentUiState()
 ) {
@@ -263,14 +265,12 @@ class NoticeDetailViewModel @Inject constructor(
         val isMultiple = vote.allowMultipleChoice
 
         if (isMultiple) {
-            // 복수 선택 가능: 토글
             if (selectedOptionIds.contains(clickedOption.optionId)) {
                 selectedOptionIds.remove(clickedOption.optionId)
             } else {
                 selectedOptionIds.add(clickedOption.optionId)
             }
         } else {
-            // 단일 선택: 하나만 선택
             if (selectedOptionIds.contains(clickedOption.optionId)) {
                 selectedOptionIds.clear()
             } else {
@@ -328,11 +328,30 @@ class NoticeDetailViewModel @Inject constructor(
     }
 
     fun onClickEditPost() {
-        // TODO: Implement edit post navigation
+        updateState { copy(isMenuVisible = false) }
+        emitEvent(NoticeFragmentEvent.MoveToEditPostEvent(noticeId = currentNoticeId))
     }
 
-    fun onClickDeletePost() {
-        // TODO: Implement delete post logic
+    fun onClickDeletePost() = viewModelScope.launch {
+        if (currentNoticeId == 0L) {
+            emitEvent(NoticeFragmentEvent.ShowError("유효하지 않은 공지사항 ID입니다"))
+            return@launch
+        }
+
+        updateState { copy(isLoading = true) }
+        startLoading()
+
+        resultResponse(
+            response = deleteNoticeUseCase(currentNoticeId),
+            successCallback = {
+                updateState { copy(isMenuVisible = false) }
+                emitEvent(NoticeFragmentEvent.MoveBackPressedEvent)
+            },
+            errorCallback = {
+                updateState { copy(isMenuVisible = false) }
+                emitEvent(NoticeFragmentEvent.ShowError("공지사항 삭제에 실패했습니다"))
+            }
+        )
     }
 }
 
@@ -363,6 +382,7 @@ data class NoticeFragmentUiState(
 sealed interface NoticeFragmentEvent : UiEvent {
     object ShowBottomSheetEvent : NoticeFragmentEvent
     object MoveBackPressedEvent : NoticeFragmentEvent
+    data class MoveToEditPostEvent(val noticeId: Long) : NoticeFragmentEvent
     data class ShowError(val message: String) : NoticeFragmentEvent
     data class ShowSuccess(val message: String) : NoticeFragmentEvent
 }

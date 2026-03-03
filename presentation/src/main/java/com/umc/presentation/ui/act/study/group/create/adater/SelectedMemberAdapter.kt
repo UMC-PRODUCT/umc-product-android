@@ -44,7 +44,7 @@ class SelectedMemberAdapter(
     companion object {
         private val DIFF = object : DiffUtil.ItemCallback<MemberUiModel>() {
             override fun areItemsTheSame(oldItem: MemberUiModel, newItem: MemberUiModel): Boolean {
-                return oldItem.id == newItem.id
+                return oldItem.challengerId == newItem.challengerId
             }
 
             override fun areContentsTheSame(oldItem: MemberUiModel, newItem: MemberUiModel): Boolean {
