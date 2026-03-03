@@ -97,7 +97,7 @@
                     android:id="@+id/iv_admin_calendar"
                     android:layout_width="14dp"
                     android:layout_height="14dp"
-                    android:src="@drawable/ic_calendar"
+                    android:src="@drawable/ic_calendar_color"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -145,7 +145,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:orientation="horizontal"
-                android:weightSum="3"
+                android:background="@drawable/bg_neutral000_radius8"
+                android:paddingVertical="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/layout_admin_session_info">
@@ -153,76 +154,94 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="4dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_admin_stats_blue"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingVertical="9dp">
+                    android:orientation="vertical">
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_checklist" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:text="@string/admin_check_stats_attendance_rate"
-                        android:textAppearance="@style/SubheadlineBold"
-                        android:textColor="@color/primary700" />
+                        android:textAppearance="@style/Caption1"
+                        android:textColor="@color/neutral600" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text='@{String.format("%d%%", uiModel.session.attendanceRate)}'
-                        android:textAppearance="@style/Title3Bold"
-                        android:textColor="@color/primary500"
-                        tools:text="85%" />
+                        android:layout_marginTop="2dp"
+                        android:text='@{String.format("%d(%%)", uiModel.session.attendanceRate)}'
+                        android:textAppearance="@style/SubheadlineBold"
+                        android:textColor="@color/neutral800"
+                        tools:text="85(%)" />
                 </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical"
+                    android:background="@color/neutral200" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="4dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_admin_stats_green"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingVertical="9dp">
+                    android:orientation="vertical">
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_person_outline" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:text="@string/admin_check_stats_attendance_count"
-                        android:textAppearance="@style/SubheadlineBold"
-                        android:textColor="@color/success700" />
+                        android:textAppearance="@style/Caption1"
+                        android:textColor="@color/neutral600" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text='@{String.format("%d/%d", uiModel.session.attendedChallengers, uiModel.session.totalChallengers)}'
-                        android:textAppearance="@style/Title3Bold"
-                        android:textColor="@color/success500"
-                        tools:text="34/40" />
+                        android:layout_marginTop="2dp"
+                        android:text='@{String.format("%d/%d(명)", uiModel.session.attendedChallengers, uiModel.session.totalChallengers)}'
+                        android:textAppearance="@style/SubheadlineBold"
+                        android:textColor="@color/neutral800"
+                        tools:text="34/40(명)" />
                 </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@color/neutral200" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_admin_stats_yellow"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingVertical="9dp">
-                    <TextView
+                    android:orientation="vertical">
+                    <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/admin_check_stats_pending_count"
-                        android:textAppearance="@style/SubheadlineBold"
-                        android:textColor="@color/warning700" />
+                        android:src="@drawable/ic_hourglass" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text='@{String.format("%d명", uiModel.session.pendingCount)}'
-                        android:textAppearance="@style/Title3Bold"
-                        android:textColor="@color/warning500"
-                        tools:text="3명" />
+                        android:text="@string/admin_check_stats_pending_count"
+                        android:textAppearance="@style/Caption1"
+                        android:textColor="@color/neutral600" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text='@{String.format("%d(명)", uiModel.session.pendingCount)}'
+                        android:textAppearance="@style/SubheadlineBold"
+                        android:textColor="@color/neutral800"
+                        tools:text="3(명)" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -232,72 +251,53 @@
                 app:layout_constraintTop_toBottomOf="@+id/layout_admin_stats_group">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/layout_admin_pending_section"
+                    android:id="@+id/btn_admin_pending_list_trigger"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
-                    android:background="@drawable/bg_admin_pending_button_orange"
+                    android:background="@drawable/bg_primary500_radius12"
+                    android:padding="16dp"
                     android:visibility='@{uiModel.session.pendingCount > 0 ? View.VISIBLE : View.GONE}'>
 
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/btn_admin_pending_list_trigger"
-                        android:layout_width="match_parent"
+                    <ImageView
+                        android:id="@+id/iv_admin_btn_icon"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:padding="16dp"
-                        app:layout_constraintTop_toTopOf="parent">
+                        android:layout_marginStart="4dp"
+                        android:src="@drawable/ic_person_color"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:tint="@color/primary500" />
 
-                        <ImageView
-                            android:id="@+id/iv_admin_btn_icon"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_person"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:tint="@color/warning500" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="@string/admin_check_pending_list_trigger"
-                            android:textAppearance="@style/SubheadlineBold"
-                            android:textColor="@color/warning700"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toEndOf="@+id/iv_admin_btn_icon"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@{uiModel.isExpanded ? @drawable/ic_dropdown_up : @drawable/ic_dropdown_down}"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:tint="@color/warning500" />
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rv_admin_pending_users"
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:nestedScrollingEnabled="false"
-                        android:visibility="@{(uiModel.isExpanded &amp;&amp; !uiModel.session.pendingUsers.isEmpty()) ? View.VISIBLE : View.GONE}"
-                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                        app:layout_constraintTop_toBottomOf="@+id/btn_admin_pending_list_trigger"
-                        tools:itemCount="2"
-                        tools:listitem="@layout/item_admin_pending_user" />
+                        android:layout_marginStart="8dp"
+                        android:text="@string/admin_check_pending_list_trigger"
+                        android:textAppearance="@style/SubheadlineBold"
+                        android:textColor="@color/neutral800"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/iv_admin_btn_icon"
+                        app:layout_constraintTop_toTopOf="parent" />
 
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_next"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <LinearLayout
                     android:id="@+id/layout_admin_completed_box"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_admin_completed_gray"
+                    android:background="@drawable/bg_neutral000_radius8"
                     android:gravity="center"
                     android:paddingVertical="14dp"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="20dp"
                     android:visibility="@{(uiModel.session.status == AdminSessionStatus.COMPLETED &amp;&amp; uiModel.session.pendingCount == 0) ? View.VISIBLE : View.GONE}">
 
                     <ImageView
