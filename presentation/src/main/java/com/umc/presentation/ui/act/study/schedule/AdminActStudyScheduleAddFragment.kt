@@ -4,13 +4,16 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.res.Configuration
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentAdminStudyScheduleAddBinding
 import com.umc.presentation.ui.act.study.schedule.model.AdminActStudyScheduleAddEvent
 import com.umc.presentation.ui.act.study.schedule.model.AdminActStudyScheduleAddState
 import com.umc.presentation.ui.act.study.schedule.model.AdminActStudyScheduleAddViewModel
+import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
+import com.umc.domain.model.home.LocationItem
 
 @AndroidEntryPoint
 class AdminActStudyScheduleAddFragment :
@@ -22,56 +25,79 @@ class AdminActStudyScheduleAddFragment :
             >(FragmentAdminStudyScheduleAddBinding::inflate) {
 
     override val viewModel: AdminActStudyScheduleAddViewModel by viewModels()
+    private val args: AdminActStudyScheduleAddFragmentArgs by navArgs()
 
     override fun initView() {
         binding.vm = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
 
+        viewModel.handleEvent(AdminActStudyScheduleAddEvent.Init(groupId = args.groupId))
 
         binding.etStudyName.setOnTextChangedListener { text ->
             viewModel.handleEvent(AdminActStudyScheduleAddEvent.UpdateStudyName(text))
         }
-        binding.etLocation.setOnTextChangedListener { text ->
-            viewModel.handleEvent(AdminActStudyScheduleAddEvent.UpdateLocation(text))
+
+        binding.cardLocation.setOnClickListener {
+            BottomSheetLocationDialog(
+                onItemSelected = { item: LocationItem ->
+                    viewModel.handleEvent(
+                        AdminActStudyScheduleAddEvent.UpdateLocation(
+                            name = item.title,
+                            lat = item.latitude,
+                            lng = item.longitude
+                        )
+                    )
+                }
+            ).show(parentFragmentManager, "location")
         }
 
-
-        binding.chipStartDate.setOnClickListener { showDatePicker(isStart = true) }
-        binding.chipStartTime.setOnClickListener { showTimePicker(isStart = true) }
-        binding.chipEndDate.setOnClickListener { showDatePicker(isStart = false) }
-        binding.chipEndTime.setOnClickListener { showTimePicker(isStart = false) }
-
+        binding.chipStartDate.setOnClickListener { showDatePicker(true) }
+        binding.chipStartTime.setOnClickListener { showTimePicker(true) }
+        binding.chipEndDate.setOnClickListener { showDatePicker(false) }
+        binding.chipEndTime.setOnClickListener { showTimePicker(false) }
 
         binding.btnBack.setOnClickListener { moveBackPressed() }
         binding.btnCancel.setOnClickListener { moveBackPressed() }
 
-
+        // 여기서 바로 뒤로가지 말기
         binding.btnRegister.setOnClickListener {
             viewModel.handleEvent(AdminActStudyScheduleAddEvent.ClickRegister)
-            moveBackPressed()
         }
     }
 
     override fun initStates() {
         super.initStates()
+
         repeatOnStarted(viewLifecycleOwner) {
             viewModel.uiState.collect { state ->
                 binding.state = state
+            }
+        }
+
+        repeatOnStarted(viewLifecycleOwner) {
+            viewModel.uiEvent.collect { event ->
+                when (event) {
+                    is AdminActStudyScheduleAddEvent.ShowToast -> {
+                        android.widget.Toast.makeText(requireContext(), event.message, android.widget.Toast.LENGTH_SHORT).show()
+                        if (event.message.contains("등록되었습니다")) {
+                            moveBackPressed()
+                        }
+                    }
+                    else -> Unit
+                }
             }
         }
     }
 
     private fun showDatePicker(isStart: Boolean) {
         val cal = if (isStart) viewModel.uiState.value.startDate else viewModel.uiState.value.endDate
-
         DatePickerDialog(
             requireContext(),
             { _, year, month, day ->
-                val event =
+                viewModel.handleEvent(
                     if (isStart) AdminActStudyScheduleAddEvent.UpdateStartDate(year, month, day)
                     else AdminActStudyScheduleAddEvent.UpdateEndDate(year, month, day)
-
-                viewModel.handleEvent(event)
+                )
             },
             cal.get(Calendar.YEAR),
             cal.get(Calendar.MONTH),
@@ -96,11 +122,10 @@ class AdminActStudyScheduleAddFragment :
             requireContext(),
             themeResId,
             { _, hour, minute ->
-                val event =
+                viewModel.handleEvent(
                     if (isStart) AdminActStudyScheduleAddEvent.UpdateStartTime(hour, minute)
                     else AdminActStudyScheduleAddEvent.UpdateEndTime(hour, minute)
-
-                viewModel.handleEvent(event)
+                )
             },
             cal.get(Calendar.HOUR_OF_DAY),
             cal.get(Calendar.MINUTE),
