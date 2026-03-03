@@ -249,7 +249,7 @@ data class MypageFragmentUiState(
     // UMC 외부 링크
     val websiteUMC : String = "https://umc.it.kr",
     val instagramUMC : String = "https://www.instagram.com/uni_makeus_challenge/",
-    val kakaoInquireChannelId : String = "_xjqxcln", //카카오 문의 채널
+    val kakaoInquireChannelId : String = "_MDxhqX", //카카오 문의 채널
     
     
 ) : UiState
