@@ -253,7 +253,7 @@
                 app:borderWidth="1dp"
                 app:borderColor="@color/neutral200"
                 app:textColor="@color/neutral800"
-                app:prevIcon="@drawable/ic_calendar"
+                app:prevIcon="@drawable/ic_calendar_color"
                 app:prevIconTint="@color/primary500"
                 app:layout_constraintTop_toBottomOf="@id/layout_member_chips"
                 app:layout_constraintStart_toStartOf="parent"
