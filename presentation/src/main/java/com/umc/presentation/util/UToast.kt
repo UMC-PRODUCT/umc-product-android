@@ -53,4 +53,38 @@ object UToast {
             view = binding.root
         }
     }
+
+    fun createToast(
+        context: Context,
+        message: String,
+        length: Int = Toast.LENGTH_SHORT,
+        state: State,
+    ): Toast {
+        val inflater = LayoutInflater.from(context)
+        val binding: CustomToastBinding =
+            DataBindingUtil.inflate(inflater, R.layout.custom_toast, null, false)
+
+        binding.apply {
+            when (state) {
+                State.CHECK -> {
+                    imageState.visibility = View.VISIBLE
+                    imageState.setImageResource(R.drawable.ic_toast_check)
+                }
+                State.ERROR -> {
+                    imageState.visibility = View.VISIBLE
+                    imageState.setImageResource(R.drawable.ic_toast_error)
+                }
+                State.NONE -> {
+                    imageState.visibility = View.GONE
+                }
+            }
+            textMessage.text = message
+        }
+
+        return Toast(context).apply {
+            setGravity(Gravity.BOTTOM or Gravity.CENTER, 0, MARGIN_BOTTOM.px)
+            duration = length
+            view = binding.root
+        }
+    }
 }

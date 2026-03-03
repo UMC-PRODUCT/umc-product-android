@@ -72,9 +72,10 @@ class SignUpViewModel @Inject constructor(
                         verifyType = EmailVerifyType.VERIFY
                     )
                 }
+                emitEvent(SignUpEvent.ShowVerifyCompleteToast)
             },
             errorCallback = {
-                //TODO Toast같은거 띄워줘야 할 듯
+                emitEvent(SignUpEvent.ShowVerifyErrorToast)
             }
         )
     }
@@ -108,6 +109,7 @@ class SignUpViewModel @Inject constructor(
                             verifyType = EmailVerifyType.REQUEST
                         )
                     }
+                    emitEvent(SignUpEvent.ShowVerifyToast)
                 },
                 errorCallback = {
                     errorEmailVerify()
@@ -254,4 +256,7 @@ sealed interface SignUpEvent : UiEvent {
     object MoveToPermissionEvent : SignUpEvent
     object MoveToBack : SignUpEvent
     object ShowSchoolBottomSheet : SignUpEvent
+    object ShowVerifyToast : SignUpEvent
+    object ShowVerifyCompleteToast : SignUpEvent
+    object ShowVerifyErrorToast : SignUpEvent
 }

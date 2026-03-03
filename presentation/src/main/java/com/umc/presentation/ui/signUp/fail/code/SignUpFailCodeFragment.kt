@@ -4,6 +4,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentSignUpFailCodeBinding
+import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -40,12 +41,16 @@ class SignUpFailCodeFragment : BaseFragment<FragmentSignUpFailCodeBinding, SignU
     override fun handleEvent(event: SignUpFailCodeEvent) {
         when (event) {
             SignUpFailCodeEvent.MoveToBack -> findNavController().popBackStack()
-            SignUpFailCodeEvent.MoveToHomePage -> {
-                //TODO 공식 홈페이지 url 이동
-            }
             SignUpFailCodeEvent.MoveToHome -> {
                 val action = SignUpFailCodeFragmentDirections.actionSignUpFailCodeToHome()
                 findNavController().navigate(action)
+            }
+            is SignUpFailCodeEvent.ShowErrorToast -> {
+                UToast.createToast(
+                    requireContext(),
+                    event.message,
+                    state = UToast.State.ERROR,
+                ).show()
             }
         }
     }

@@ -264,9 +264,8 @@
                 android:layout_height="match_parent"
                 android:layout_marginEnd="16dp"
                 android:layout_weight="1"
-                app:backgroundColor="@{vm.uiState.verifyType == EmailVerifyType.ERROR ? @color/danger100 : (vm.uiState.verifyType == EmailVerifyType.REQUEST || vm.uiState.verifyType == EmailVerifyType.VERIFY ? @color/neutral100: @color/neutral000)}"
+                app:backgroundColor="@{vm.uiState.verifyType == EmailVerifyType.ERROR ? @color/danger100 : @color/neutral000}"
                 app:cornerRadius="8dp"
-                app:enabled="@{vm.uiState.verifyType != EmailVerifyType.REQUEST}"
                 app:focusStrokeColor="@color/primary500"
                 app:onTextChanged="@{vm::onEmailChanged}"
                 app:placeholderText="@string/sign_up_email_placeholder"
@@ -274,7 +273,7 @@
                 app:strokeWidth="1dp"
                 app:text="@{vm.uiState.email}"
                 app:textAppearance="@style/Subheadline"
-                app:textColor="@{vm.uiState.verifyType == EmailVerifyType.ERROR ? @color/danger500 : (vm.uiState.verifyType == EmailVerifyType.REQUEST || vm.uiState.verifyType == EmailVerifyType.VERIFY ? @color/neutral600: @color/neutral800)}" />
+                app:textColor="@{vm.uiState.verifyType == EmailVerifyType.ERROR ? @color/danger500 : @color/neutral800}" />
 
             <com.umc.presentation.component.UButton
                 android:id="@+id/button_verify"
