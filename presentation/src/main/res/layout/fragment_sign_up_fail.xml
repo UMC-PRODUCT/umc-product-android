@@ -64,6 +64,7 @@
             android:layout_marginHorizontal="24dp"
             android:layout_marginTop="80dp"
             android:onClick="@{()->vm.onClickNext()}"
+            app:cardBackgroundColor="@color/primary500"
             app:backgroundColor="@color/primary500"
             app:cornerRadius="8dp"
             app:borderWidth="1dp"
@@ -93,14 +94,18 @@
             android:layout_weight="1" />
 
         <TextView
+            android:id="@+id/text_inquiry"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp"
             android:gravity="center"
+            android:onClick="@{()->vm.onClickKakaoInquiry()}"
             android:text="@string/sign_up_fail_qa_email"
             android:textAppearance="@style/Footnote"
-            android:textColor="@color/neutral600" />
+            android:textColor="@color/neutral600"
+            android:clickable="true"
+            android:focusable="true" />
 
     </LinearLayout>
 

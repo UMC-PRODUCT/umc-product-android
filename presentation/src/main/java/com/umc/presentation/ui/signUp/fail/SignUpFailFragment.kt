@@ -1,5 +1,10 @@
 package com.umc.presentation.ui.signUp.fail
 
+import android.content.Intent
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.UnderlineSpan
+import androidx.core.net.toUri
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.umc.presentation.base.BaseFragment
@@ -17,6 +22,10 @@ class SignUpFailFragment : BaseFragment<FragmentSignUpFailBinding, UiState, Sign
     override fun initView() {
         binding.apply {
             vm = viewModel
+            // Add underline to the inquiry text
+            val spannableString = SpannableString(textInquiry.text)
+            spannableString.setSpan(UnderlineSpan(), 0, spannableString.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            textInquiry.text = spannableString
         }
     }
 
@@ -42,11 +51,16 @@ class SignUpFailFragment : BaseFragment<FragmentSignUpFailBinding, UiState, Sign
         when (event) {
             SignUpFailEvent.MoveToBack -> findNavController().popBackStack()
             SignUpFailEvent.MoveToHomePage -> {
-                //TODO 공식 홈페이지 url 이동
+                val intent = Intent(Intent.ACTION_VIEW, "https://umc.it.kr".toUri())
+                startActivity(intent)
             }
             SignUpFailEvent.MoveToCode -> {
                 val action = SignUpFailFragmentDirections.actionSignUpFailToCode()
                 findNavController().navigate(action)
+            }
+            SignUpFailEvent.MoveToKakaoInquiry -> {
+                val intent = Intent(Intent.ACTION_VIEW, "https://pf.kakao.com/_MDxhqX/chat".toUri())
+                startActivity(intent)
             }
         }
     }

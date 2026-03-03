@@ -174,4 +174,9 @@ object Endpoints {
         const val SURVEY = "api/v1/surveys"
         const val VOTE_RESPONSES = "$SURVEY/votes/{voteId}/responses"
     }
+
+    object Notification {
+        const val NOTIFICATION = "api/v1/notification"
+        const val FCM_TOKEN = "$NOTIFICATION/fcm/token"
+    }
 }

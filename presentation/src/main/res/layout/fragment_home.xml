@@ -49,12 +49,10 @@
                     app:layout_constraintTop_toTopOf="parent"
                     />
 
-                <!--TODO 알람 기능은 일단 pend-->
                 <ImageView
                     android:id="@+id/home_btn_alarm"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:visibility="gone"
                     android:src="@{vm.uiState.alarmExist ? @drawable/ic_alarm_with_dot : @drawable/ic_alarm}"
                     android:onClick="@{()->vm.onClickNotification()}"
                     app:tint="@color/neutral500"

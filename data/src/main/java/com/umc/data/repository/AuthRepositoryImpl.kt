@@ -5,15 +5,13 @@ import com.umc.data.response.EmailVerificationCompleteResponse.Companion.toModel
 import com.umc.data.response.EmailVerificationResponse.Companion.toModel
 import com.umc.data.response.JwtLoginResponse.Companion.toModel
 import com.umc.data.response.RefreshTokenResponse.Companion.toModel
-import com.umc.data.response.authorization.AuthorAccessResponse.Companion.toModel
-import com.umc.domain.model.AuthorAccess
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.JwtToken
 import com.umc.domain.model.base.map
 import com.umc.domain.model.request.EmailVerificationCompleteRequest
 import com.umc.domain.model.request.EmailVerificationRequest
 import com.umc.domain.model.request.LoginGoogleRequest
-import com.umc.domain.model.request.LoginKakaoRequest
+import com.umc.domain.model.request.LoginRequest
 import com.umc.domain.model.request.RefreshTokenRequest
 import com.umc.domain.repository.AuthRepository
 import javax.inject.Inject
@@ -27,13 +25,13 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun kakaoLogin(request: LoginKakaoRequest): ApiState<JwtToken> {
+    override suspend fun kakaoLogin(request: LoginRequest): ApiState<JwtToken> {
         return authRemoteDataSource.loginKakao(request).map {
             it.toModel()
         }
     }
 
-    override suspend fun googleLogin(request: LoginGoogleRequest): ApiState<JwtToken> {
+    override suspend fun googleLogin(request: LoginRequest): ApiState<JwtToken> {
         return authRemoteDataSource.loginGoogle(request).map {
             it.toModel()
         }

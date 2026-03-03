@@ -6,6 +6,8 @@
 
     <data>
 
+        <import type="android.view.View"/>
+
         <variable
             name="vm"
             type="com.umc.presentation.ui.community.CommunityViewModel" />
@@ -87,30 +89,19 @@
             app:layout_constraintBottom_toBottomOf="parent"
             >
 
-            <!--
-            <com.umc.presentation.component.USwitch
-                android:id="@+id/community_switch_recruit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="@{vm.uiState.isRecruit}"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                />
-
             <TextView
-                android:id="@+id/community_tv_recruit"
+                android:id="@+id/community_tv_no_result"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/Callout"
+                android:text="@string/community_top_no_result"
+                android:textAppearance="@style/Footnote"
                 android:textColor="@color/neutral800"
-                android:layout_marginStart="8dp"
-                android:text="@string/community_recruting"
-                app:layout_constraintTop_toTopOf="@id/community_switch_recruit"
-                app:layout_constraintBottom_toBottomOf="@id/community_switch_recruit"
-                app:layout_constraintStart_toEndOf="@id/community_switch_recruit"
-                />
+                android:visibility="@{vm.uiState.nowContents.empty ? View.VISIBLE : View.GONE}"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
 
--->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/community_rcv"
                 android:layout_width="match_parent"

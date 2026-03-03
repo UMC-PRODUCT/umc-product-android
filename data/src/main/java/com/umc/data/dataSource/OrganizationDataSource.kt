@@ -1,9 +1,5 @@
 package com.umc.data.dataSource
 
-import com.umc.data.response.EmailVerificationCompleteResponse
-import com.umc.data.response.EmailVerificationResponse
-import com.umc.data.response.JwtLoginResponse
-import com.umc.data.response.RefreshTokenResponse
 import com.umc.data.response.organization.ChapterBySchoolListResponse
 import com.umc.data.response.organization.ChapterResponse
 import com.umc.data.response.organization.GisuInfoResponse
@@ -17,11 +13,6 @@ import com.umc.data.response.organization.SchoolPageResponse
 import com.umc.data.response.organization.StudyGroupDetailResponse
 import com.umc.data.response.organization.StudyGroupListResponse
 import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.request.EmailVerificationCompleteRequest
-import com.umc.domain.model.request.EmailVerificationRequest
-import com.umc.domain.model.request.LoginGoogleRequest
-import com.umc.domain.model.request.LoginKakaoRequest
-import com.umc.domain.model.request.RefreshTokenRequest
 import com.umc.domain.model.request.organization.AssignSchoolRequest
 import com.umc.domain.model.request.organization.ChallengerListRequest
 import com.umc.domain.model.request.organization.CreateChapterRequest

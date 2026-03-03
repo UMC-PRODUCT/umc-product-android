@@ -46,7 +46,10 @@ class BottomSheetParticipantViewModel @Inject constructor(
         val state = uiState.value
 
         //API 호출중임을 표시
-        updateState { copy(isLoading = true) }
+        updateState {
+            copy(
+                isLoading = true,
+                ) }
 
         viewModelScope.launch {
             // UseCase 호출: 다음 페이지면 보관된 커서 사용, 아니면 null(처음)
@@ -175,7 +178,8 @@ data class BottomSheetParticipantUiState(
     //페이징 관련 필드
     val nextCursor: Long? = null, //검색 용도로 이전 페이지의 마지막 챌린저 ID (첫 페이지는 null)
     val hasNext: Boolean = true,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+
 
 ) : UiState {
     val isSelectedParticipant: Boolean
