@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.act.study.group.create
 
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -21,6 +22,7 @@ import com.umc.presentation.ui.act.util.toSummaryText
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import androidx.navigation.fragment.findNavController
+import com.umc.domain.model.enums.UserPart
 
 @AndroidEntryPoint
 class AdminStudyGroupAddFragment :
@@ -33,12 +35,7 @@ class AdminStudyGroupAddFragment :
 
     override val viewModel: AdminStudyGroupAddViewModel by viewModels()
 
-
-    private val challengerVm: UserChallengerViewModel by activityViewModels()
-
-    private val parts = listOf("Web", "Android", "iOS", "Server", "Design", "Plan")
-
-    private var cachedMembers: List<MemberUiModel> = emptyList()
+    private val parts = UserPart.getFilterLabels()
 
     private var selectedPart: String = "Web"
     private var selectedLeader: MemberUiModel? = null
@@ -63,8 +60,11 @@ class AdminStudyGroupAddFragment :
         collectState()
         collectEvent()
 
-        collectChallengersAsMembers()
+
     }
+
+
+
 
     private fun moveToStudyGroupTab() {
         val nav = findNavController()
@@ -76,23 +76,29 @@ class AdminStudyGroupAddFragment :
         nav.popBackStack(R.id.activityManagementFragment, false)
     }
 
-    private fun collectChallengersAsMembers() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            challengerVm.uiState.collect { chState ->
 
-                val schoolName = viewModel.uiState.value.run {
-                    ""
-                }
-
-                cachedMembers = chState.allChallengers.map { it.toMemberUiModel(schoolName) }
-            }
-        }
+    private fun selectedServerPartOrNull(): String? {
+        val part = UserPart.from(selectedPart)
+        return if (part == UserPart.UNKNOWN) null else part.name
     }
+
 
     private fun collectState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
                 binding.state = state
+
+
+                binding.btnRegister.isEnabled = state.canRegister
+                binding.btnRegister.isClickable = state.canRegister
+
+                binding.btnRegister.setTextColor(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        if (state.canRegister) R.color.primary500 else R.color.neutral300
+                    )
+                )
+
                 state.leader?.let {
                     selectedLeader = it
                     binding.tvLeaderPlaceholder.text = it.name
@@ -188,35 +194,29 @@ class AdminStudyGroupAddFragment :
     }
 
     private fun showPickLeader() {
-        if (cachedMembers.isEmpty()) {
-            showToast("멤버 목록을 불러오는 중입니다. 잠시 후 다시 시도해주세요.")
-            return
-        }
+        val serverPart = selectedServerPartOrNull()
 
         PickLeaderBottomSheet(
             schoolName = "",
+            part = serverPart,
         ) { leader ->
             selectedLeader = leader
             viewModel.setLeader(leader)
-
             binding.tvLeaderPlaceholder.text = leader.name
             binding.tvLeaderPlaceholder.setTextColor(resources.getColor(R.color.neutral800, null))
         }.show(childFragmentManager, "PickLeader")
     }
 
     private fun showPickMembers() {
-        if (cachedMembers.isEmpty()) {
-            showToast("멤버 목록을 불러오는 중입니다. 잠시 후 다시 시도해주세요.")
-            return
-        }
+        val serverPart = selectedServerPartOrNull()
 
         PickMembersBottomSheet(
             schoolName = "",
+            part = serverPart,
             preSelectedChallengerIds = selectedMembers.map { it.challengerId }.toSet()
         ) { picked ->
             selectedMembers.clear()
             selectedMembers.addAll(picked)
-
             viewModel.setMembers(selectedMembers)
             renderSelectedMembers()
         }.show(childFragmentManager, "PickMembers")

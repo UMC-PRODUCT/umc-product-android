@@ -15,9 +15,18 @@ enum class UserPart(val label: String) {
         fun from(value: String?): UserPart {
             if (value.isNullOrBlank()) return UNKNOWN
 
-            return entries.firstOrNull {
-                it.name.replace("_", "") == value.replace("_", "")
-            } ?: UNKNOWN
+            val v = value.trim()
+
+            entries.firstOrNull {
+                it.name.replace("_", "")
+                    .equals(v.replace("_", ""), ignoreCase = true)
+            }?.let { return it }
+
+            entries.firstOrNull {
+                it.label.equals(v, ignoreCase = true)
+            }?.let { return it }
+
+            return UNKNOWN
         }
 
         fun getFilterLabels(): List<String> {
@@ -25,7 +34,6 @@ enum class UserPart(val label: String) {
                 .filter { it != UNKNOWN }
                 .map { it.label }
         }
-
     }
 
 }
