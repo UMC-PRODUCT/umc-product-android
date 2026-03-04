@@ -1,13 +1,20 @@
 package com.umc.data.response.organization
 
+import com.umc.data.response.serializer.FlexibleIntSerializer
+import com.umc.data.response.serializer.FlexibleLongNullableSerializer
+import com.umc.data.response.serializer.FlexibleLongSerializer
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class StudyGroupListResponse(
     val content: List<StudyGroupResponse> = emptyList(),
-    val nextCursor: Int = 0,
+
+    @Serializable(with = FlexibleLongNullableSerializer::class)
+    val nextCursor: Long? = null,
+
     val hasNext: Boolean = false,
 )
+
 
 @Serializable
 data class MyStudyGroupListResponse(
@@ -22,17 +29,27 @@ data class StudyGroupNameResponse(
 
 @Serializable
 data class StudyGroupResponse(
-    val groupId: Int = 0,
+    @Serializable(with = FlexibleLongSerializer::class)
+    val groupId: Long = 0L,
+
     val name: String = "",
+
+    @Serializable(with = FlexibleIntSerializer::class)
     val memberCount: Int = 0,
-    val leader: GroupMemberResponse = GroupMemberResponse(),
+
+    val leader: GroupMemberResponse? = null,
+
     val members: List<GroupMemberResponse> = emptyList()
 )
 
 @Serializable
 data class GroupMemberResponse(
-    val challengerId: Long = 0,
-    val memberId: Long = 0,
+    @Serializable(with = FlexibleLongSerializer::class)
+    val challengerId: Long = 0L,
+
+    @Serializable(with = FlexibleLongSerializer::class)
+    val memberId: Long = 0L,
+
     val name: String = "",
     val profileImageUrl: String? = null
 )

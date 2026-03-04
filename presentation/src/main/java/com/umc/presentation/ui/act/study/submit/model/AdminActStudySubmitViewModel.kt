@@ -147,26 +147,24 @@ class AdminActStudySubmitViewModel @Inject constructor(
     }
 
 
-
-
-
-
     private fun loadFilterData() {
         viewModelScope.launch {
+            startLoading()
 
             val scope = when (val meRes = getMyProfileUseCase()) {
                 is ApiState.Success -> meRes.data.resolveAdminScope()
                 is ApiState.Fail -> {
                     emitEvent(AdminActStudySubmitEvent.ShowToast(meRes.failState.message))
+                    stopLoading()
                     return@launch
                 }
             }
 
             if (scope == null) {
                 emitEvent(AdminActStudySubmitEvent.ShowToast("어드민 권한 정보(파트/학교)를 찾을 수 없어요."))
+                stopLoading()
                 return@launch
             }
-
 
             when (val res = getStudyGroupsUseCase(scope.schoolId, scope.part)) {
                 is ApiState.Success -> updateState { copy(studyGroups = res.data) }
@@ -190,23 +188,25 @@ class AdminActStudySubmitViewModel @Inject constructor(
 
 
     fun loadWorkbookSubmissions(reset: Boolean) {
+        startLoading()
         viewModelScope.launch {
             val state = uiState.value
             val cursor = if (reset) null else state.nextCursor
 
-            when (
-                val res = getWorkbookSubmissionsUseCase(
-                    weekNo = state.selectedWeek,
-                    studyGroupId = state.selectedGroupId,
-                    cursor = cursor,
-                    size = 20
-                )
-            ) {
-                is ApiState.Success -> {
-                    val page = res.data
+            val res = getWorkbookSubmissionsUseCase(
+                weekNo = state.selectedWeek,
+                studyGroupId = state.selectedGroupId,
+                cursor = cursor,
+                size = 20
+            )
+
+            resultResponse(
+                response = res,
+                successCallback = { page ->
                     val newItems = page.content
                         .filter { it.status in listOf("SUBMITTED", "PASS", "FAIL", "BEST") }
                         .map { it.toUiModel(state.selectedWeek) }
+
                     updateState {
                         copy(
                             items = if (reset) newItems else items + newItems,
@@ -214,12 +214,11 @@ class AdminActStudySubmitViewModel @Inject constructor(
                             hasNext = page.hasNext,
                         )
                     }
+                },
+                errorCallback = { fail ->
+                    emitEvent(AdminActStudySubmitEvent.ShowToast(fail.message ?: "조회 실패"))
                 }
-
-                is ApiState.Fail -> {
-                    emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
-                }
-            }
+            )
         }
     }
 

@@ -30,7 +30,7 @@
             android:id="@+id/iv_profile"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:src="@drawable/ic_person_inset"
+            android:src="@drawable/ic_profile_default"
             android:scaleType="centerInside"
             android:background="@color/neutral000"
             app:shapeAppearanceOverlay="@style/CircleImageAppearance"
@@ -48,7 +48,7 @@
             android:layout_marginStart="10dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text='@{item.name + " /" + item.nickname + " ( " + item.gisuLabel + ")"}'
+            android:text='@{item.name + "/" + item.nickname + "(" + item.gisuLabel + ")"}'
             android:textAppearance="@style/CalloutBold"
             android:textColor="@color/neutral900"
             app:layout_constraintStart_toEndOf="@id/iv_profile"

@@ -3,11 +3,9 @@ package com.umc.presentation.ui.act.study.common.mapper
 import com.umc.domain.model.act.challenger.UserChallenger
 import com.umc.presentation.ui.act.study.common.model.MemberUiModel
 
-fun UserChallenger.toMemberUiModel(
-    schoolName: String
-): MemberUiModel {
+fun UserChallenger.toMemberUiModel(): MemberUiModel {
     val partLabel = part.name
-    val gisuLabel = "${generation}기"
+    val gisuLabel = "$generation"
 
     return MemberUiModel(
         challengerId = id,

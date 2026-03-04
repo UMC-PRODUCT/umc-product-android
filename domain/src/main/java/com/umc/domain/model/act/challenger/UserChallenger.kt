@@ -11,7 +11,8 @@ data class UserChallenger(
     val part: UserPart,
     val role: UserChallengerRole = UserChallengerRole.MEMBER,
     val pointSum: Double,
-    val profileImage: String? = null
+    val profileImage: String? = null,
+    val schoolName: String,
 )
 
 data class ChallengerList(

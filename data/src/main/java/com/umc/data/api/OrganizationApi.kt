@@ -167,7 +167,7 @@ interface OrganizationApi {
 
     @PUT(Endpoints.Organization.STUDY_MEMBER)
     suspend fun changeGroupMember(
-        @Path(PATH_GROUP_ID) groupId: Int,
+        @Path(PATH_GROUP_ID) groupId: Long,
         @Body request: ChallengerListRequest
     ): ApiResponse<Unit>
 

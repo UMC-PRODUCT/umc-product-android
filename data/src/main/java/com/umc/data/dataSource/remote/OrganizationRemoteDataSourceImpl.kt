@@ -115,7 +115,10 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
         return apiCall { organizationApi.changeActiveGisu(gisuId) }
     }
 
-    override suspend fun changeGroupMember(groupId: Int, request: ChallengerListRequest): ApiState<Unit> {
+    override suspend fun changeGroupMember(
+        groupId: Long,
+        request: ChallengerListRequest
+    ): ApiState<Unit> {
         return apiCall { organizationApi.changeGroupMember(groupId, request) }
     }
 

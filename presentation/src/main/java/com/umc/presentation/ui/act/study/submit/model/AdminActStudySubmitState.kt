@@ -18,4 +18,5 @@ data class AdminActStudySubmitState(
 
     val bestDialogTarget: AdminActStudySubmitItemUiModel? = null,
     val reviewDialogTarget: AdminActStudySubmitItemUiModel? = null,
+
 ) : UiState

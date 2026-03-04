@@ -93,7 +93,7 @@ class AdminActStudySubmitFragment :
             ).show(parentFragmentManager, "admin_act_study_submit_group")
         }
 
-        viewModel.loadWorkbookSubmissions(reset = true)
+
     }
 
     override fun initStates() {
@@ -102,17 +102,19 @@ class AdminActStudySubmitFragment :
                 latestState = state
                 binding.state = state
                 adapter.submitList(state.items)
+                val loading = viewModel.isLoading.value
+                binding.tvEmpty.visibility =
+                    if (!loading && state.items.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
             }
         }
+
 
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             viewModel.uiEvent.collect { event ->
                 when (event) {
                     is AdminActStudySubmitEvent.ShowBestDialog -> showBestDialog(event.item)
                     is AdminActStudySubmitEvent.ShowReviewDialog -> showReviewDialog(event.item)
-                    is AdminActStudySubmitEvent.ShowToast -> {
-
-                    }
+                    is AdminActStudySubmitEvent.ShowToast -> { /* showToast(event.message) */ }
                 }
             }
         }

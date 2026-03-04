@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.domain.model.enums.EditDeleteAction
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.request.organization.EditStudyGroupRequest
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
@@ -19,6 +20,7 @@ import com.umc.presentation.databinding.DialogAdminStudyGroupDeleteBinding
 import com.umc.presentation.databinding.DialogAdminStudyGroupEditBinding
 import com.umc.presentation.databinding.FragmentAdminStudyGroupBinding
 import com.umc.presentation.ui.act.adapter.DropDownAdapter
+import com.umc.presentation.ui.act.study.common.picker.bottomsheet.PickMembersBottomSheet
 import com.umc.presentation.ui.act.study.group.adapter.AdminStudyGroupAdapter
 import com.umc.presentation.ui.act.study.group.adapter.StudyGroupSettingMenuAdapter
 import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupEvent
@@ -27,7 +29,6 @@ import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupState
 import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-
 
 @AndroidEntryPoint
 class AdminStudyGroupFragment :
@@ -55,27 +56,53 @@ class AdminStudyGroupFragment :
                 )
             },
             onClickAddMember = { item ->
-                findNavController().navigate(R.id.adminStudyGroupAddFragment)
+                showPickMembersForGroup(item)
             }
         )
-
 
         binding.btnCreateGroup.setOnClickListener {
             findNavController().navigate(R.id.adminStudyGroupAddFragment)
         }
-
 
         binding.rvGroups.layoutManager = LinearLayoutManager(requireContext())
         binding.rvGroups.adapter = adapter
 
         viewModel.loadGroups()
 
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
                 adapter.submitList(state.groups)
             }
         }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.uiEvent.collect { event ->
+                when (event) {
+                    is AdminStudyGroupEvent.ShowToast -> showToast(event.message)
+                }
+            }
+        }
+    }
+
+    private fun showPickMembersForGroup(item: AdminStudyGroupItemUiModel) {
+        val leaderId = item.leaderChallengerId.takeIf { it > 0 }
+
+        PickMembersBottomSheet(
+            schoolName = "",
+            part = null,
+            preSelectedChallengerIds = (item.memberChallengerIds + listOfNotNull(leaderId)).toSet()
+        ) { picked ->
+
+            val pickedIds = picked.map { it.challengerId }.distinct()
+            val memberOnlyIds = pickedIds
+                .filterNot { it == leaderId }
+                .distinct()
+
+            viewModel.replaceGroupMembers(
+                groupId = item.groupId,
+                pickedMemberChallengerIds = memberOnlyIds,
+            )
+        }.show(childFragmentManager, "PickGroupMembers")
     }
 
     private fun showSettingPopup(anchor: View, item: AdminStudyGroupItemUiModel) {
@@ -99,7 +126,6 @@ class AdminStudyGroupFragment :
         )
 
         val popup = ListPopupWindow(requireContext())
-
         val menuAdapter = StudyGroupSettingMenuAdapter(menuItems) { clicked ->
             popup.dismiss()
             when (clicked.action) {
@@ -150,7 +176,7 @@ class AdminStudyGroupFragment :
         b.tvSelectedPart.text = item.partLabel.ifBlank { "Web" }
 
         var isPartDropdownOpen = false
-        val parts = listOf("Web", "Android", "iOS", "Server", "Design", "Plan")
+        val parts = UserPart.getFilterLabels()
 
         val dropDownAdapter = DropDownAdapter(object : DropDownAdapter.DropDownDelegate {
             override fun onClickItem(text: String) {
@@ -186,31 +212,22 @@ class AdminStudyGroupFragment :
         b.ivClose.setOnClickListener { dialog.dismiss() }
         b.btnCancel.setOnClickListener { dialog.dismiss() }
 
-        b.etGroupName.setText(item.title)
-
         b.btnConfirm.setOnClickListener {
             val newName = b.etGroupName.getText().trim()
-            val uiPart = b.tvSelectedPart.text.toString().trim()
-
             if (newName.isBlank()) return@setOnClickListener
+
+            val uiPartLabel = b.tvSelectedPart.text.toString().trim()
+            val partEnum = UserPart.from(uiPartLabel)
+            if (partEnum == UserPart.UNKNOWN) return@setOnClickListener
 
             val req = EditStudyGroupRequest(
                 name = newName,
-                part = uiPart.toServerPart()
+                part = partEnum.name
             )
+
             viewModel.editGroup(item.groupId, req)
             dialog.dismiss()
         }
-    }
-
-    private fun String.toServerPart(): String = when (this.lowercase()) {
-        "web" -> "WEB"
-        "android" -> "ANDROID"
-        "ios", "iOS".lowercase() -> "IOS"
-        "server" -> "SERVER"
-        "design" -> "DESIGN"
-        "plan" -> "PLAN"
-        else -> "WEB"
     }
 
     private fun showDeleteGroupDialog(item: AdminStudyGroupItemUiModel) {
@@ -232,6 +249,10 @@ class AdminStudyGroupFragment :
             viewModel.deleteGroup(item.groupId)
             dialog.dismiss()
         }
+    }
+
+    private fun showToast(message: String) {
+        android.widget.Toast.makeText(requireContext(), message, android.widget.Toast.LENGTH_SHORT).show()
     }
 }
 

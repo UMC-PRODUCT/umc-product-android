@@ -4,4 +4,5 @@ import com.umc.presentation.base.UiState
 
 data class AdminStudyGroupState(
     val groups: List<AdminStudyGroupItemUiModel> = emptyList()
+
 ) : UiState

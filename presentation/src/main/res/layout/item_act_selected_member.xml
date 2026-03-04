@@ -19,7 +19,7 @@
             android:id="@+id/iv_profile"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:src="@drawable/ic_person_inset"
+            android:src="@drawable/ic_profile_default"
             android:scaleType="centerInside"
             android:background="@color/neutral000"
             app:shapeAppearanceOverlay="@style/CircleImageAppearance"

@@ -3,6 +3,8 @@ package com.umc.presentation.ui.act.study.group.model
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.organization.StudyGroupPage
+import com.umc.domain.model.request.organization.ChallengerListRequest
+import com.umc.domain.model.request.organization.EditStudyGroupRequest
 import com.umc.domain.repository.OrganizationRepository
 import com.umc.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,6 +17,30 @@ class AdminStudyGroupViewModel @Inject constructor(
 ) : BaseViewModel<AdminStudyGroupState, AdminStudyGroupEvent>(AdminStudyGroupState()) {
 
     private var loaded = false
+
+    fun replaceGroupMembers(
+        groupId: Long,
+        pickedMemberChallengerIds: List<Long>,
+    ) {
+        viewModelScope.launch {
+            val req = ChallengerListRequest(
+                challengerIds = pickedMemberChallengerIds.distinct()
+            )
+
+            val res = organizationRepository.changeGroupMember(groupId, req)
+
+            resultResponse(
+                response = res,
+                successCallback = {
+                    emitEvent(AdminStudyGroupEvent.ShowToast("스터디원이 수정됐어요."))
+                    loadGroups(force = true)
+                },
+                errorCallback = { fail ->
+                    emitEvent(AdminStudyGroupEvent.ShowToast(fail.message ?: "스터디원 수정 실패"))
+                }
+            )
+        }
+    }
 
     fun loadGroups(force: Boolean = false) {
         if (loaded && !force) return
@@ -29,24 +55,44 @@ class AdminStudyGroupViewModel @Inject constructor(
                 response = res,
                 successCallback = { page ->
                     val initialList = page.content.map { summary ->
+
+                        val leaderName = summary.leader?.name.orEmpty()
+                        val leaderId = summary.leader?.challengerId ?: -1L
+                        val leaderProfile = summary.leader?.profileImageUrl
+
+                        val members = summary.members.map { m ->
+                            AdminStudyGroupMemberUiModel(
+                                challengerId = m.challengerId,
+                                name = m.name,
+                                profileImageUrl = m.profileImageUrl
+                            )
+                        }
+
+
+                        val memberIds = members.map { it.challengerId }.distinct()
+
                         AdminStudyGroupItemUiModel(
                             groupId = summary.groupId,
                             title = summary.name,
                             partLabel = "",
-                            leaderName = summary.leader.name,
-                            members = summary.members.map { it.name },
-                            createdAtRaw = "",
-                            memberCount = summary.members.size,
+                            leaderName = leaderName,
+                            leaderChallengerId = leaderId,
+                            leaderProfileImageUrl = leaderProfile,
+                            members = members,
+                            memberChallengerIds = memberIds,
+                            createdAtRaw = "", // detail에서 채움
+                            memberCount = memberIds.size,
                             leaderUniv = "",
                         )
                     }
+
                     updateState { copy(groups = initialList) }
 
                     initialList.forEach { item ->
                         loadGroupDetailAndMerge(item.groupId)
                     }
                 },
-                errorCallback = {}
+                errorCallback = { }
             )
         }
     }
@@ -59,27 +105,23 @@ class AdminStudyGroupViewModel @Inject constructor(
             resultResponse(
                 response = res,
                 successCallback = {
-
                     updateState { copy(groups = groups.filterNot { it.groupId == groupId }) }
-
                     loadGroups(force = true)
                 },
-                errorCallback = {}
+                errorCallback = { }
             )
         }
     }
 
-    fun editGroup(groupId: Long, request: com.umc.domain.model.request.organization.EditStudyGroupRequest) {
+    fun editGroup(groupId: Long, request: EditStudyGroupRequest) {
         startLoading()
         viewModelScope.launch {
             val res = organizationRepository.editGroup(groupId, request)
 
             resultResponse(
                 response = res,
-                successCallback = {
-                    loadGroups(force = true)
-                },
-                errorCallback = {}
+                successCallback = { loadGroups(force = true) },
+                errorCallback = { }
             )
         }
     }
@@ -89,6 +131,22 @@ class AdminStudyGroupViewModel @Inject constructor(
             when (val res = organizationRepository.getStudyGroupDetail(groupId)) {
                 is ApiState.Success -> {
                     val detail = res.data
+
+                    val leaderName = detail.leader?.name.orEmpty()
+                    val leaderId = detail.leader?.challengerId ?: -1L
+                    val leaderProfile = detail.leader?.profileImageUrl
+
+                    val members = detail.members.map { m ->
+                        AdminStudyGroupMemberUiModel(
+                            challengerId = m.challengerId,
+                            name = m.name,
+                            profileImageUrl = m.profileImageUrl
+                        )
+                    }
+
+
+                    val memberIds = members.map { it.challengerId }.distinct()
+
                     updateState {
                         copy(
                             groups = groups.map { item ->
@@ -97,14 +155,18 @@ class AdminStudyGroupViewModel @Inject constructor(
                                     partLabel = detail.part.toPartUiLabel(),
                                     createdAtRaw = detail.createdAt,
                                     leaderUniv = detail.schools.firstOrNull()?.schoolName.orEmpty(),
-                                    members = detail.members.map { it.name },
-
-                                    memberCount = detail.members.size
+                                    leaderName = leaderName,
+                                    leaderChallengerId = leaderId,
+                                    leaderProfileImageUrl = leaderProfile,
+                                    members = members,
+                                    memberChallengerIds = memberIds,
+                                    memberCount = memberIds.size
                                 )
                             }
                         )
                     }
                 }
+
                 is ApiState.Fail -> Unit
             }
         }
