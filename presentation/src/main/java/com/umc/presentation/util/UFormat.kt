@@ -19,12 +19,11 @@ object UFormat {
     fun formatDate(isoString: String?): String {
         if (isoString.isNullOrBlank()) return ""
         return try {
-            // T 앞부분(날짜)만 분리
-            val datePart = isoString.split("T")[0]
-            val date = LocalDate.parse(datePart)
-            date.format(dateFormatter)
+            val systemDateTime = OffsetDateTime.parse(isoString)
+                .atZoneSameInstant(ZoneId.systemDefault())
+            systemDateTime.format(dateFormatter)
         } catch (e: Exception) {
-            isoString.replace("-", ".")
+            isoString.split("T")[0].replace("-", ".")
         }
     }
 
@@ -36,10 +35,8 @@ object UFormat {
     fun formatDuration(startIso: String?, endIso: String?): String {
         if (startIso.isNullOrBlank() || endIso.isNullOrBlank()) return "- : -"
         return try {
-            // T 뒷부분에서 시간(HH:mm)만 추출
-            val startTime = extractTime(startIso)
-            val endTime = extractTime(endIso)
-
+            val startTime = convertToSystemTime(startIso)
+            val endTime = convertToSystemTime(endIso)
             "$startTime - $endTime"
         } catch (e: Exception) {
             "- : -"
@@ -47,16 +44,13 @@ object UFormat {
     }
 
     /**
-     * ISO 문자열에서 HH:mm 부분만 떼어내는 보조 함수
+     * UTC ISO 문자열을 시스템 시간대의 HH:mm 문자열로 변환
      */
-    private fun extractTime(isoString: String): String {
+    private fun convertToSystemTime(isoString: String): String {
         return try {
-            val timePart = isoString.split("T")[1].substring(0, 5) // HH:mm 까지만
-            val time = LocalTime.parse(timePart)
-
-            // 만약 종료 시간이 00:00이라면 24:00으로 표시하고 싶을 때
-            if (time == LocalTime.MIDNIGHT && isoString.contains("endsAt")) "24:00"
-            else timePart
+            val systemDateTime = OffsetDateTime.parse(isoString)
+                .atZoneSameInstant(ZoneId.systemDefault())
+            systemDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
         } catch (e: Exception) {
             "00:00"
         }
