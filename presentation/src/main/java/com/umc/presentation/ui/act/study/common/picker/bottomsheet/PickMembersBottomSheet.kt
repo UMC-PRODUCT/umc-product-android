@@ -1,11 +1,11 @@
 package com.umc.presentation.ui.act.study.common.picker.bottomsheet
 
 import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.content.DialogInterface
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,10 +15,11 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.umc.presentation.R
 import com.umc.presentation.databinding.BottomSheetMemberPickerBinding
-import com.umc.presentation.ui.act.study.common.mapper.toMemberUiModel
-import com.umc.presentation.ui.act.study.common.model.MemberUiModel
 import com.umc.presentation.ui.act.study.common.picker.ChallengerPickerViewModel
+import com.umc.presentation.ui.act.study.common.model.MemberUiModel
+
 import com.umc.presentation.ui.act.study.common.picker.adapter.MemberPickerAdapter
+import com.umc.presentation.ui.act.study.common.picker.adapter.buildMemberSectionRows
 import com.umc.presentation.ui.act.study.group.create.adater.SelectedMemberAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -47,16 +48,10 @@ class PickMembersBottomSheet(
     private enum class Mode { EMPTY, PICKING, CONFIRMED }
     private var mode: Mode = Mode.EMPTY
 
-    private var latestList: List<MemberUiModel> = emptyList()
-
-
+    private var latestMembers: List<MemberUiModel> = emptyList()
     private var didOpenOnce = false
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = BottomSheetMemberPickerBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -68,8 +63,7 @@ class PickMembersBottomSheet(
         selectedChallengerIds.addAll(preSelectedChallengerIds)
         selectedMap.clear()
 
-
-        val lm = LinearLayoutManager(requireContext())
+        val layoutManager = LinearLayoutManager(requireContext())
         listAdapter = MemberPickerAdapter(
             isMulti = true,
             onSinglePick = {},
@@ -84,91 +78,71 @@ class PickMembersBottomSheet(
                 }
                 updateConfirmEnabled()
 
-
                 if (mode == Mode.CONFIRMED) renderSelectedList()
             },
             isChecked = { member -> selectedChallengerIds.contains(member.challengerId) }
         )
 
         binding.rvList.apply {
-            layoutManager = lm
+            this.layoutManager = layoutManager
             adapter = listAdapter
             itemAnimator = null
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
                     if (dy <= 0) return
-                    val last = lm.findLastVisibleItemPosition()
-                    if (lm.itemCount - last <= 5) viewModel.loadNext()
+                    val last = layoutManager.findLastVisibleItemPosition()
+                    if (layoutManager.itemCount - last <= 5) viewModel.loadNext()
                 }
             })
         }
-
 
         selectedAdapter = SelectedMemberAdapter(
             onDelete = { member ->
                 selectedChallengerIds.remove(member.challengerId)
                 selectedMap.remove(member.challengerId)
 
-
                 renderSelectedList()
                 updateConfirmEnabled()
             }
         )
 
-        binding.rvSelectedMembers.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = selectedAdapter
-            itemAnimator = null
-        }
-
+        binding.rvSelectedMembers.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvSelectedMembers.adapter = selectedAdapter
+        binding.rvSelectedMembers.itemAnimator = null
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
-                latestList = state.items
+                latestMembers = state.items
 
-
-                for (m in latestList) {
+                // 최신 리스트에 선택된 멤버 정보 보강
+                for (m in latestMembers) {
                     if (selectedChallengerIds.contains(m.challengerId)) {
                         selectedMap.putIfAbsent(m.challengerId, m)
                     }
                 }
 
                 when (mode) {
-                    Mode.PICKING -> {
-
-                        listAdapter.submitList(latestList.toList())
-                    }
-                    Mode.CONFIRMED -> {
-
-                        renderSelectedList()
-                    }
+                    Mode.PICKING -> listAdapter.submitList(buildMemberSectionRows(latestMembers))
+                    Mode.CONFIRMED -> renderSelectedList()
                     Mode.EMPTY -> updateEmptyView()
                 }
             }
         }
 
-
         binding.searchBar.setOnFocusChangedListener { hasFocus ->
             if (hasFocus) enterPickingMode()
         }
-        binding.searchBar.setOnClickListener {
-            enterPickingMode()
-        }
+        binding.searchBar.setOnClickListener { enterPickingMode() }
         binding.searchBar.setOnTextChangedListener { q ->
-
             if (mode != Mode.PICKING) enterPickingMode()
             viewModel.onQueryChanged(q)
         }
 
-
         binding.btnConfirm.setOnClickListener {
-
             binding.searchBar.setText("")
-
             binding.root.requestFocus()
             enterConfirmedMode()
         }
-
 
         if (selectedChallengerIds.isEmpty()) enterEmptyMode() else enterConfirmedMode()
     }
@@ -188,12 +162,12 @@ class PickMembersBottomSheet(
 
         if (!didOpenOnce) {
             didOpenOnce = true
-            viewModel.open(part) // part 세팅 + 1페이지 로드
+            viewModel.open(part = null, selectedSchoolId = null, selectedGisuId = null)
         } else {
             viewModel.onQueryChanged("")
         }
 
-        listAdapter.submitList(latestList.toList())
+        listAdapter.submitList(buildMemberSectionRows(latestMembers))
     }
 
     private fun enterConfirmedMode() {
@@ -230,9 +204,7 @@ class PickMembersBottomSheet(
         binding.emptySpace.visibility = if (mode == Mode.EMPTY) View.VISIBLE else View.GONE
     }
 
-    private fun allPicked(): List<MemberUiModel> {
-        return selectedMap.values.toList()
-    }
+    private fun allPicked(): List<MemberUiModel> = selectedMap.values.toList()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return (super.onCreateDialog(savedInstanceState) as BottomSheetDialog).apply {
@@ -260,7 +232,6 @@ class PickMembersBottomSheet(
             }
         }
     }
-
 
     override fun onDismiss(dialog: DialogInterface) {
         if (!sent) {
