@@ -7,6 +7,8 @@ import com.umc.domain.usecase.challenger.SearchChallengerCursorUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import com.umc.presentation.ui.act.study.common.mapper.toMemberUiModel
+import com.umc.presentation.ui.act.study.common.model.MemberUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -98,17 +100,13 @@ class ChallengerPickerViewModel @Inject constructor(
                     nextCursor = data.nextCursor
                     hasNext = data.hasNext
 
-                    val newItems: List<UserChallenger> =
-                        if (append) uiState.value.items + data.challengers
-                        else data.challengers
+                    val mapped = data.challengers.map { it.toMemberUiModel() }
 
-                    updateState {
-                        copy(
-                            items = newItems,
-                            isLoading = false,
-                            isEnd = !hasNext
-                        )
-                    }
+                    val newItems =
+                        if (append) uiState.value.items + mapped
+                        else mapped
+
+                    updateState { copy(items = newItems, isLoading = false, isEnd = !hasNext) }
                 },
                 errorCallback = { fail ->
                     emitEvent(ChallengerPickerEvent.ShowErrorToast(fail.message))
@@ -121,7 +119,7 @@ class ChallengerPickerViewModel @Inject constructor(
 }
 
 data class ChallengerPickerState(
-    val items: List<UserChallenger> = emptyList(),
+    val items: List<MemberUiModel> = emptyList(),
     val query: String = "",
     val part: String? = null,
     val isLoading: Boolean = false,

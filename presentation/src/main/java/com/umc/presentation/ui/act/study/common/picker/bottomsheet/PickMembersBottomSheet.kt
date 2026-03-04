@@ -124,7 +124,7 @@ class PickMembersBottomSheet(
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
-                latestList = state.items.map { it.toMemberUiModel() }
+                latestList = state.items
 
 
                 for (m in latestList) {

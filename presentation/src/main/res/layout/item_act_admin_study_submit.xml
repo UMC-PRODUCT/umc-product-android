@@ -32,7 +32,7 @@
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_person_inset"
+                android:src="@drawable/ic_profile_default"
                 app:shapeAppearanceOverlay="@style/CircleImageAppearance"
                 app:strokeWidth="1dp"
                 app:strokeColor="@color/neutral200"

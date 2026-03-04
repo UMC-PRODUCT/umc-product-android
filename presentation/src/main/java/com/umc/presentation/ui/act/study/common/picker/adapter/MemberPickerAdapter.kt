@@ -10,6 +10,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemActMemberPickerBinding
 import com.umc.presentation.ui.act.study.common.model.MemberUiModel
+import coil.load
+import coil.transform.CircleCropTransformation
+
+
 
 class MemberPickerAdapter(
     private val isMulti: Boolean,
@@ -38,6 +42,15 @@ class MemberPickerAdapter(
         fun bind(item: MemberUiModel) {
             binding.item = item
             binding.isMulti = isMulti
+
+
+
+            binding.ivProfile.load(item.profileImageUrl?.takeIf { it.isNotBlank() }) {
+                crossfade(true)
+                placeholder(R.drawable.ic_profile_default)
+                error(R.drawable.ic_profile_default)
+                transformations(CircleCropTransformation())
+            }
 
             val checked = isChecked(item)
             binding.isChecked = checked

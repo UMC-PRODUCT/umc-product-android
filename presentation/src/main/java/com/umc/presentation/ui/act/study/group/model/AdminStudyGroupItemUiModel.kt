@@ -7,8 +7,8 @@ data class AdminStudyGroupItemUiModel(
 
     val leaderName: String,
     val leaderChallengerId: Long,
-
-    val members: List<String>,
+    val leaderProfileImageUrl: String?,
+    val members: List<AdminStudyGroupMemberUiModel>,
     val memberChallengerIds: List<Long> = emptyList(),
 
     val createdAtRaw: String,
@@ -16,5 +16,7 @@ data class AdminStudyGroupItemUiModel(
     val leaderUniv: String,
 ) {
     val createdAtText: String
-        get() = "생성일: " + createdAtRaw.take(10).replace("-", ".")
+        get() = createdAtRaw.takeIf { it.length >= 10 }
+            ?.let { "생성일: " + it.take(10).replace("-", ".") }
+            ?: "생성일: -"
 }

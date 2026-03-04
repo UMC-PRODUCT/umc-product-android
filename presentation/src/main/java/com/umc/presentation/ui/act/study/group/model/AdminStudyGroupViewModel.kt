@@ -58,8 +58,18 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                         val leaderName = summary.leader?.name.orEmpty()
                         val leaderId = summary.leader?.challengerId ?: -1L
+                        val leaderProfile = summary.leader?.profileImageUrl
 
-                        val memberIds = summary.members.map { it.challengerId }.distinct()
+                        val members = summary.members.map { m ->
+                            AdminStudyGroupMemberUiModel(
+                                challengerId = m.challengerId,
+                                name = m.name,
+                                profileImageUrl = m.profileImageUrl
+                            )
+                        }
+
+
+                        val memberIds = members.map { it.challengerId }.distinct()
 
                         AdminStudyGroupItemUiModel(
                             groupId = summary.groupId,
@@ -67,16 +77,16 @@ class AdminStudyGroupViewModel @Inject constructor(
                             partLabel = "",
                             leaderName = leaderName,
                             leaderChallengerId = leaderId,
-                            members = summary.members.map { it.name },
+                            leaderProfileImageUrl = leaderProfile,
+                            members = members,
                             memberChallengerIds = memberIds,
-                            createdAtRaw = "",
+                            createdAtRaw = "", // detail에서 채움
                             memberCount = memberIds.size,
                             leaderUniv = "",
                         )
                     }
 
                     updateState { copy(groups = initialList) }
-
 
                     initialList.forEach { item ->
                         loadGroupDetailAndMerge(item.groupId)
@@ -124,9 +134,18 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                     val leaderName = detail.leader?.name.orEmpty()
                     val leaderId = detail.leader?.challengerId ?: -1L
+                    val leaderProfile = detail.leader?.profileImageUrl
 
-                    val memberNames = detail.members.map { it.name }
-                    val memberIds = detail.members.map { it.challengerId }.distinct()
+                    val members = detail.members.map { m ->
+                        AdminStudyGroupMemberUiModel(
+                            challengerId = m.challengerId,
+                            name = m.name,
+                            profileImageUrl = m.profileImageUrl
+                        )
+                    }
+
+
+                    val memberIds = members.map { it.challengerId }.distinct()
 
                     updateState {
                         copy(
@@ -138,7 +157,8 @@ class AdminStudyGroupViewModel @Inject constructor(
                                     leaderUniv = detail.schools.firstOrNull()?.schoolName.orEmpty(),
                                     leaderName = leaderName,
                                     leaderChallengerId = leaderId,
-                                    members = memberNames,
+                                    leaderProfileImageUrl = leaderProfile,
+                                    members = members,
                                     memberChallengerIds = memberIds,
                                     memberCount = memberIds.size
                                 )

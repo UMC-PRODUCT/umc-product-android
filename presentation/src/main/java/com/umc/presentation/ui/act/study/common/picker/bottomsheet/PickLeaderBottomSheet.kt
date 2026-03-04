@@ -90,8 +90,7 @@ class PickLeaderBottomSheet(
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
-                latestList = state.items.map { it.toMemberUiModel() }
-
+                latestList = state.items
                 // PICKING 모드면 바로 리스트 갱신
                 if (mode == Mode.PICKING) {
                     adapter.submitList(latestList)
