@@ -81,5 +81,5 @@ interface OrganizationRepository {
     suspend fun changeActiveGisu(gisuId: Int): ApiState<Unit>
 
     // PUT
-    suspend fun changeGroupMember(groupId: Int, request: ChallengerListRequest): ApiState<Unit>
+    suspend fun changeGroupMember(groupId: Long, request: ChallengerListRequest): ApiState<Unit>
 }

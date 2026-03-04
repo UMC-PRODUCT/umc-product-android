@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ChallengerListRequest(
-    val challengerIds: List<Int>
+    val challengerIds: List<Long>
 )

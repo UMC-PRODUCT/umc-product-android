@@ -33,7 +33,9 @@ class OrganizationRepositoryImpl @Inject constructor(
 
     // GET
     override suspend fun getMyStudyGroup(cursor: Long?, size: Int): ApiState<StudyGroupPage> =
-        organizationDataSource.getMyStudyGroup(cursor, size).map { it.toModel() }
+        organizationDataSource.getMyStudyGroup(cursor, size).map { dto ->
+            (dto ?: StudyGroupListResponse()).toModel()
+        }
 
 
     override suspend fun getSchoolByKeyword(
@@ -52,7 +54,19 @@ class OrganizationRepositoryImpl @Inject constructor(
         }
 
     override suspend fun getStudyGroupDetail(groupId: Long): ApiState<StudyGroupDetail> =
-        organizationDataSource.getStudyGroupDetail(groupId).map { it.toModel() }
+        organizationDataSource.getStudyGroupDetail(groupId).map { dto ->
+            dto?.toModel() ?: StudyGroupDetail(
+                groupId = groupId,
+                name = "",
+                part = "",
+                partDisplayName = "",
+                schools = emptyList(),
+                createdAt = "",
+                memberCount = 0,
+                leader = com.umc.domain.model.organization.StudyGroupMember(0L, 0L, "", null),
+                members = emptyList()
+            )
+        }
 
     override suspend fun getSchoolDetail(schoolId: Int): ApiState<Unit> =
         organizationDataSource.getSchoolDetail(schoolId).map { Unit } //임시
@@ -118,7 +132,7 @@ class OrganizationRepositoryImpl @Inject constructor(
 
     // PUT
     override suspend fun changeGroupMember(
-        groupId: Int,
+        groupId: Long,
         request: ChallengerListRequest
     ): ApiState<Unit> =
         organizationDataSource.changeGroupMember(groupId, request)

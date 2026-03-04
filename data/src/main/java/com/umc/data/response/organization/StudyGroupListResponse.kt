@@ -1,27 +1,44 @@
 package com.umc.data.response.organization
 
-import com.umc.domain.model.organization.*
+import com.umc.domain.model.organization.StudyGroupMember
+import com.umc.domain.model.organization.StudyGroupPage
+import com.umc.domain.model.organization.StudyGroupSummary
 
-fun StudyGroupListResponse.toModel(): StudyGroupPage =
-    StudyGroupPage(
+fun StudyGroupListResponse.toModel(): StudyGroupPage {
+    return StudyGroupPage(
         content = content.map { it.toModel() },
-        nextCursor = nextCursor.toLong(),
+        nextCursor = nextCursor ?: 0L,
         hasNext = hasNext
     )
+}
 
-fun StudyGroupResponse.toModel(): StudyGroupSummary =
-    StudyGroupSummary(
-        groupId = groupId.toLong(),
+fun StudyGroupResponse.toModel(): StudyGroupSummary {
+    val memberModels = members.map { it.toModel() }
+
+    val leaderModel = leader?.toModel()
+        ?: memberModels.firstOrNull()
+        ?: StudyGroupMember(
+            challengerId = 0L,
+            memberId = 0L,
+            name = "",
+            profileImageUrl = null
+        )
+
+    return StudyGroupSummary(
+        groupId = groupId,
         name = name,
-        memberCount = memberCount,
-        leader = leader.toModel(),
-        members = members.map { it.toModel() }
+        memberCount = if (memberCount > 0) memberCount else memberModels.size,
+        leader = leaderModel,
+        members = memberModels
     )
+}
 
-fun GroupMemberResponse.toModel(): StudyGroupMember =
-    StudyGroupMember(
-        challengerId = challengerId.toLong(),
-        memberId = memberId.toLong(),
+
+fun GroupMemberResponse.toModel(): StudyGroupMember {
+    return StudyGroupMember(
+        challengerId = challengerId,
+        memberId = memberId,
         name = name,
         profileImageUrl = profileImageUrl
     )
+}
