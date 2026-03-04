@@ -53,7 +53,8 @@ class AdminPendingUserAdapter(
             binding.root.setOnClickListener {
                 if (isSelectionMode) {
                     onToggleSelection(uiModel)
-                    notifyItemChanged(adapterPosition)
+                    binding.isSelected = isSelected(uiModel.id)
+                    binding.executePendingBindings()
                 }
             }
 
