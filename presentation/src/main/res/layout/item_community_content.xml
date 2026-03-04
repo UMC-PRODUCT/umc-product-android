@@ -275,7 +275,7 @@
                         android:id="@+id/item_imv_lightning_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:src="@drawable/ic_calendar"
+                        android:src="@drawable/ic_calendar_color"
                         app:tint="@color/primary500"
                         android:layout_marginStart="16dp"
                         app:layout_constraintStart_toStartOf="parent"

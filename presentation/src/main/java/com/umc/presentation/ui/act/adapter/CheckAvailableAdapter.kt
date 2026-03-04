@@ -25,9 +25,6 @@ class CheckAvailableAdapter(
 ) : ListAdapter<CheckAvailableUIModel, CheckAvailableAdapter.ViewHolder>(
     AvailableSessionDiffCallback()
 ) {
-    private data class ButtonSize(val width: Int, val height: Int)
-    private val buttonSizeCache = mutableMapOf<String, ButtonSize>()
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemActCheckAvailableBinding.inflate(
             LayoutInflater.from(parent.context),
@@ -67,30 +64,6 @@ class CheckAvailableAdapter(
             // 출석 요청 버튼 클릭
             binding.btnAttendanceRequest.setOnClickListener {
                 onAttendanceRequestClick(uiModel.session.sheetId)
-            }
-
-            // 버튼 사이즈 캐싱 및 적용
-            binding.btnStatusBadge.post {
-                val cacheKey = "${uiModel.session.id}_${uiModel.session.status}"
-                val cachedSize = buttonSizeCache[cacheKey]
-                val params = binding.btnStatusBadge.layoutParams
-
-                if (cachedSize != null) {
-                    if (params.width != cachedSize.width || params.height != cachedSize.height) {
-                        params.width = cachedSize.width
-                        params.height = cachedSize.height
-                        binding.btnStatusBadge.layoutParams = params
-                    }
-                } else {
-                    val measuredWidth = binding.btnStatusBadge.width
-                    val measuredHeight = binding.btnStatusBadge.height
-                    if (measuredWidth > 0) {
-                        buttonSizeCache[cacheKey] = ButtonSize(measuredWidth, measuredHeight)
-                        params.width = measuredWidth
-                        params.height = measuredHeight
-                        binding.btnStatusBadge.layoutParams = params
-                    }
-                }
             }
 
             binding.layoutFailReasonContainer.setOnClickListener {

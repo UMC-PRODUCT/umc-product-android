@@ -1,11 +1,6 @@
 package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
-import com.umc.domain.model.act.check.UserCheckAvailable
-import com.umc.domain.model.act.check.UserCheckHistory
-import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.enums.CheckAvailableStatus
-import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
 import com.umc.domain.usecase.attendance.GetAttendanceHistoryUseCase

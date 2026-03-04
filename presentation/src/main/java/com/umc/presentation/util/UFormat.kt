@@ -2,45 +2,59 @@ package com.umc.presentation.util
 
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 object UFormat {
+
+    // 출력할 날짜 포맷: 2026.03.03 (화)
+    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd (E)", Locale.KOREAN)
+
     /**
-     * 시작 시간과 종료 시간을 받아 "HH:mm - HH:mm" 형태의 문자열로 반환합니다.
-     * 입력 예: "10:00:00", "22:00:00" -> 출력 예: "10:00 - 22:00"
+     * ISO 8601 문자열에서 날짜만 추출하여 포맷팅
+     * 입력: "2026-03-03T20:00:00Z" -> 출력: "2026.03.03 (화)"
      */
-    fun formatDuration(startTime: String, endTime: String): String {
+    fun formatDate(isoString: String?): String {
+        if (isoString.isNullOrBlank()) return ""
         return try {
-            // "HH:mm:ss" 형태로 오는 서버 데이터를 위해 파서 정의
-            val inputFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
-            val outputFormatter = DateTimeFormatter.ofPattern("HH:mm")
-
-            val start = LocalTime.parse(startTime, inputFormatter).format(outputFormatter)
-            val end = LocalTime.parse(endTime, inputFormatter).format(outputFormatter)
-
-            "$start - $end"
+            val systemDateTime = OffsetDateTime.parse(isoString)
+                .atZoneSameInstant(ZoneId.systemDefault())
+            systemDateTime.format(dateFormatter)
         } catch (e: Exception) {
-            // 파싱 실패 시 예외 처리 (콜론 개수로 문자열 직접 자르기)
-            val start = if (startTime.count { it == ':' } >= 2) startTime.substringBeforeLast(":") else startTime
-            val end = if (endTime.count { it == ':' } >= 2) endTime.substringBeforeLast(":") else endTime
-            "$start - $end"
+            isoString.split("T")[0].replace("-", ".")
         }
     }
 
     /**
-     * "yyyy-MM-dd" 형식의 날짜를 "yyyy.MM.dd (요일)" 형태로 변환합니다.
+     * 시작/종료 ISO 문자열에서 시간만 추출하여 "HH:mm - HH:mm" 변환
+     * 입력: "2026-03-03T20:00:00Z", "2026-03-04T15:00:00Z"
+     * 출력: "20:00 - 15:00"
      */
-    fun formatDate(date: String): String {
+    fun formatDuration(startIso: String?, endIso: String?): String {
+        if (startIso.isNullOrBlank() || endIso.isNullOrBlank()) return "- : -"
         return try {
-            val localDate = LocalDate.parse(date)
-            val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd (E)", Locale.KOREAN)
-            localDate.format(formatter)
+            val startTime = convertToSystemTime(startIso)
+            val endTime = convertToSystemTime(endIso)
+            "$startTime - $endTime"
         } catch (e: Exception) {
-            date
+            "- : -"
         }
     }
 
+    /**
+     * UTC ISO 문자열을 시스템 시간대의 HH:mm 문자열로 변환
+     */
+    private fun convertToSystemTime(isoString: String): String {
+        return try {
+            val systemDateTime = OffsetDateTime.parse(isoString)
+                .atZoneSameInstant(ZoneId.systemDefault())
+            systemDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+        } catch (e: Exception) {
+            "00:00"
+        }
+    }
 
     /**
      * 서버의 ISO DateTime 문자열(2026-02-07T05:24:54) -> "2026.02.07" , "05:24"

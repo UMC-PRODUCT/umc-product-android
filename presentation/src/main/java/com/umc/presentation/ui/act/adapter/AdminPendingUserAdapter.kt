@@ -17,8 +17,16 @@ import com.umc.presentation.databinding.ItemAdminPendingUserBinding
 class AdminPendingUserAdapter(
     private val fragmentManager: FragmentManager,
     private val onApproveConfirmed: (AdminPendingUser) -> Unit,
-    private val onRejectConfirmed: (AdminPendingUser) -> Unit
+    private val onRejectConfirmed: (AdminPendingUser) -> Unit,
+    private val onToggleSelection: (AdminPendingUser) -> Unit,
+    private val isSelected: (Long) -> Boolean
 ) : ListAdapter<AdminPendingUser, AdminPendingUserAdapter.ViewHolder>(AdminPendingUserDiffCallback()) {
+
+    var isSelectionMode: Boolean = false
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemAdminPendingUserBinding.inflate(
@@ -38,6 +46,23 @@ class AdminPendingUserAdapter(
 
         fun bind(uiModel: AdminPendingUser) {
             binding.uiModel = uiModel
+            binding.isSelectionMode = isSelectionMode
+            binding.isSelected = isSelected(uiModel.id)
+
+            // 선택 모드 시 아이템 클릭 시 토글 로직
+            binding.root.setOnClickListener {
+                if (isSelectionMode) {
+                    onToggleSelection(uiModel)
+                    binding.isSelected = isSelected(uiModel.id)
+                    binding.executePendingBindings()
+                }
+            }
+
+            binding.btnPendingApprove.setOnClickListener { showApprovalDialog(uiModel) }
+            binding.btnPendingReject.setOnClickListener { showRejectionDialog(uiModel) }
+            binding.btnPendingWarning.setOnClickListener { if (uiModel.hasLateReason) showLateReasonDialog(uiModel) }
+
+            binding.executePendingBindings()
 
             // 승인 버튼 클릭 - 승인 다이얼로그 표시
             binding.btnPendingApprove.setOnClickListener {
