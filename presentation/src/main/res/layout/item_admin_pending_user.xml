@@ -29,14 +29,14 @@
             app:layout_constraintTop_toBottomOf="@+id/view_divider">
 
             <ImageView
-                android:id="@+id/iv_pending_check"
+                android:id="@+id/iv_check_box"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:visibility="@{isSelectionMode ? View.VISIBLE : View.GONE}"
-                app:layout_constraintBottom_toBottomOf="parent"
+                android:src="@{isSelected ? @drawable/ic_check_box_primary : @drawable/ic_check_box_empty}"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:src="@drawable/ic_check_box_empty" />
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/iv_pending_profile"
@@ -44,7 +44,7 @@
                 android:layout_height="32dp"
                 android:layout_marginStart="12dp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/iv_pending_check"
+                app:layout_constraintStart_toEndOf="@+id/iv_check_box"
                 app:layout_constraintTop_toTopOf="parent"
                 app:profileImageUrl="@{uiModel.profileImageUrl}"
                 app:shapeAppearanceOverlay="@style/CircleImageAppearance"
