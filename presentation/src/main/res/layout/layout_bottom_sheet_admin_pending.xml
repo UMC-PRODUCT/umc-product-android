@@ -9,8 +9,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/bg_bottom_sheet_neutral000_radius28"
-        android:paddingBottom="24dp">
+        android:background="@drawable/bg_bottom_sheet_neutral000_radius28">
 
         <View
             android:id="@+id/view_handle"
