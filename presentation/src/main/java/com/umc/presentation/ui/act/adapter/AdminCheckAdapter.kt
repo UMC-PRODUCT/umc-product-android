@@ -2,29 +2,16 @@ package com.umc.presentation.ui.act.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.presentation.databinding.ItemAdminCheckSessionBinding
 import com.umc.presentation.ui.act.check.AdminSessionUIModel
 
 class AdminCheckAdapter(
-    private val fragmentManager: FragmentManager,
-    private val onToggleExpansion: (Long) -> Unit,
     private val onChangeLocation: (Long) -> Unit,
-    private val onApproveConfirmed: (AdminPendingUser, Long) -> Unit,
-    private val onRejectConfirmed: (AdminPendingUser, Long) -> Unit
+    private val onShowPendingList: (Long) -> Unit // 바텀시트를 띄우기 위한 콜백 추가
 ) : ListAdapter<AdminSessionUIModel, AdminCheckAdapter.ViewHolder>(AdminCheckDiffCallback()) {
-
-    override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
-        if (payloads.isEmpty()) {
-            super.onBindViewHolder(holder, position, payloads)
-        } else {
-            holder.bind(getItem(position))
-        }
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemAdminCheckSessionBinding.inflate(
@@ -40,38 +27,17 @@ class AdminCheckAdapter(
     inner class ViewHolder(private val binding: ItemAdminCheckSessionBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        private var sessionId: Long = -1
-
-        private val pendingUserAdapter = AdminPendingUserAdapter(
-            fragmentManager = fragmentManager,
-            onApproveConfirmed = { user ->
-                onApproveConfirmed(user, sessionId)
-            },
-            onRejectConfirmed = { user ->
-                onRejectConfirmed(user, sessionId)
-            }
-        )
-
-        init {
-            binding.rvAdminPendingUsers.adapter = pendingUserAdapter
-        }
-
         fun bind(uiModel: AdminSessionUIModel) {
             binding.uiModel = uiModel
-            this.sessionId = uiModel.session.id
 
-            if (uiModel.isExpanded) {
-                pendingUserAdapter.submitList(uiModel.session.pendingUsers)
-            } else {
-                pendingUserAdapter.submitList(emptyList())
-            }
-
+            // 위치 변경 버튼 클릭
             binding.btnAdminChangeLocation.setOnClickListener {
                 onChangeLocation(uiModel.session.id)
             }
 
+            // 승인 대기 명단 확인 버튼 클릭 (바텀시트 호출)
             binding.btnAdminPendingListTrigger.setOnClickListener {
-                onToggleExpansion(uiModel.session.id)
+                onShowPendingList(uiModel.session.id)
             }
 
             binding.executePendingBindings()
@@ -84,17 +50,5 @@ class AdminCheckAdapter(
 
         override fun areContentsTheSame(oldItem: AdminSessionUIModel, newItem: AdminSessionUIModel) =
             oldItem == newItem
-
-        override fun getChangePayload(oldItem: AdminSessionUIModel, newItem: AdminSessionUIModel): Any? {
-            return if (oldItem.isExpanded != newItem.isExpanded) {
-                PAYLOAD_EXPAND
-            } else {
-                super.getChangePayload(oldItem, newItem)
-            }
-        }
-
-        companion object {
-            private const val PAYLOAD_EXPAND = "PAYLOAD_EXPAND"
-        }
     }
 }

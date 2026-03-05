@@ -1,9 +1,5 @@
 package com.umc.data.dataSource
 
-import com.umc.data.response.EmailVerificationCompleteResponse
-import com.umc.data.response.EmailVerificationResponse
-import com.umc.data.response.JwtLoginResponse
-import com.umc.data.response.RefreshTokenResponse
 import com.umc.data.response.organization.ChapterBySchoolListResponse
 import com.umc.data.response.organization.ChapterResponse
 import com.umc.data.response.organization.GisuInfoResponse
@@ -17,11 +13,6 @@ import com.umc.data.response.organization.SchoolPageResponse
 import com.umc.data.response.organization.StudyGroupDetailResponse
 import com.umc.data.response.organization.StudyGroupListResponse
 import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.request.EmailVerificationCompleteRequest
-import com.umc.domain.model.request.EmailVerificationRequest
-import com.umc.domain.model.request.LoginGoogleRequest
-import com.umc.domain.model.request.LoginKakaoRequest
-import com.umc.domain.model.request.RefreshTokenRequest
 import com.umc.domain.model.request.organization.AssignSchoolRequest
 import com.umc.domain.model.request.organization.ChallengerListRequest
 import com.umc.domain.model.request.organization.CreateChapterRequest
@@ -37,11 +28,11 @@ interface OrganizationDataSource {
 
     // DELETE
     suspend fun deleteSchool(request: SchoolIdRequest): ApiState<Unit>
-    suspend fun deleteStudyGroup(groupId: Int): ApiState<Unit>
+    suspend fun deleteStudyGroup(groupId: Long): ApiState<Unit>
     suspend fun deleteGisu(gisuId: Int): ApiState<Unit>
 
     // GET
-    suspend fun getMyStudyGroup(cursor: Int, size: Int): ApiState<StudyGroupListResponse>
+    suspend fun getMyStudyGroup(cursor: Long?, size: Int): ApiState<StudyGroupListResponse>
     suspend fun getSchoolByKeyword(
         keyword: String,
         chapterId: Int,
@@ -50,7 +41,7 @@ interface OrganizationDataSource {
         sort: String
     ): ApiState<SchoolPageResponse>
     suspend fun getAllChapter(): ApiState<ChapterResponse>
-    suspend fun getStudyGroupDetail(groupId: Int): ApiState<StudyGroupDetailResponse>
+    suspend fun getStudyGroupDetail(groupId: Long): ApiState<StudyGroupDetailResponse>
     suspend fun getSchoolDetail(schoolId: Int): ApiState<SchoolDetailResponse>
     suspend fun getMyStudyGroupList(): ApiState<MyStudyGroupListResponse>
     suspend fun getUnassignedSchool(gisuId: Int): ApiState<SchoolListResponse>
@@ -63,7 +54,7 @@ interface OrganizationDataSource {
 
 
     // PATCH
-    suspend fun editGroup(groupId: Int, request: EditStudyGroupRequest): ApiState<Unit>
+    suspend fun editGroup(groupId: Long, request: EditStudyGroupRequest): ApiState<Unit>
     suspend fun editSchool(schoolId: Int, request: EditSchoolRequest): ApiState<Unit>
     suspend fun unassignSchool(schoolId: Int, request: UnAssignSchoolRequest): ApiState<Unit>
     suspend fun assignSchool(schoolId: Int, request: AssignSchoolRequest): ApiState<Unit>
@@ -76,5 +67,5 @@ interface OrganizationDataSource {
     suspend fun changeActiveGisu(gisuId: Int): ApiState<Unit>
 
     // PUT
-    suspend fun changeGroupMember(groupId: Int, request: ChallengerListRequest): ApiState<Unit>
+    suspend fun changeGroupMember(groupId: Long, request: ChallengerListRequest): ApiState<Unit>
 }

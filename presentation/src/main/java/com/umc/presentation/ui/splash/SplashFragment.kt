@@ -42,6 +42,7 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, UiState, SplashEvent,
         when (event) {
             SplashEvent.MoveToLoginEvent -> moveToLogin()
             SplashEvent.MoveToMainEvent -> moveToHome()
+            SplashEvent.MoveToSignUpFailEvent -> moveToSignUpFail()
         }
     }
 
@@ -52,6 +53,11 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, UiState, SplashEvent,
 
     private fun moveToLogin() {
         val action = SplashFragmentDirections.actionSplashToLogin()
+        findNavController().navigate(action)
+    }
+
+    private fun moveToSignUpFail() {
+        val action = SplashFragmentDirections.actionSplashToSignUpFail()
         findNavController().navigate(action)
     }
 }

@@ -1,12 +1,17 @@
 package com.umc.presentation.ui.act.study.group.create
 
 import android.view.View
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentAdminStudyGroupAddBinding
 import com.umc.presentation.ui.act.adapter.DropDownAdapter
+import com.umc.presentation.ui.act.challenge.UserChallengerViewModel
+import com.umc.presentation.ui.act.study.common.mapper.toMemberUiModel
 import com.umc.presentation.ui.act.study.common.model.MemberUiModel
 import com.umc.presentation.ui.act.study.common.picker.bottomsheet.PickLeaderBottomSheet
 import com.umc.presentation.ui.act.study.common.picker.bottomsheet.PickMembersBottomSheet
@@ -15,6 +20,9 @@ import com.umc.presentation.ui.act.study.group.create.model.AdminStudyGroupAddSt
 import com.umc.presentation.ui.act.study.group.create.model.AdminStudyGroupAddViewModel
 import com.umc.presentation.ui.act.util.toSummaryText
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import androidx.navigation.fragment.findNavController
+import com.umc.domain.model.enums.UserPart
 
 @AndroidEntryPoint
 class AdminStudyGroupAddFragment :
@@ -27,19 +35,11 @@ class AdminStudyGroupAddFragment :
 
     override val viewModel: AdminStudyGroupAddViewModel by viewModels()
 
-
-    private val parts = listOf("Web", "Android", "iOS", "Server", "Design", "Plan")
-    private val allMembers: List<MemberUiModel> = listOf(
-        MemberUiModel(1, "홍길동", "Web", "16기", "학교"),
-        MemberUiModel(2, "홍길동1", "Design", "16기", "학교"),
-        MemberUiModel(3, "홍길동2", "PM", "16기", "학교"),
-    )
-
+    private val parts = UserPart.getFilterLabels()
 
     private var selectedPart: String = "Web"
     private var selectedLeader: MemberUiModel? = null
     private val selectedMembers = mutableListOf<MemberUiModel>()
-
 
     private var isPartDropdownOpen = false
     private lateinit var partDropDownAdapter: DropDownAdapter
@@ -49,16 +49,97 @@ class AdminStudyGroupAddFragment :
 
         binding.tvSelectedPart.text = selectedPart
 
-        binding.btnBack.setOnClickListener { moveBackPressed() }
+        binding.btnBack.setOnClickListener { moveToStudyGroupTab() }
+        binding.btnRegister.setOnClickListener { viewModel.submitCreateStudyGroup() }
 
         setupPartDropdown()
         setupLeaderPicker()
         setupMembersPicker()
-
-
         renderSelectedMembers()
+
+        collectState()
+        collectEvent()
+
+
     }
 
+
+
+
+    private fun moveToStudyGroupTab(reload: Boolean = false) {
+        val nav = findNavController()
+        val actEntry = nav.getBackStackEntry(R.id.activityManagementFragment)
+
+        actEntry.savedStateHandle["ACT_TARGET_TAB"] = 1
+        actEntry.savedStateHandle["ADMIN_STUDY_TARGET_TAB"] = "GROUP"
+
+        if (reload) {
+            actEntry.savedStateHandle["ADMIN_STUDY_GROUP_RELOAD"] = true
+        }
+
+        nav.popBackStack(R.id.activityManagementFragment, false)
+    }
+
+
+    private fun selectedServerPartOrNull(): String? {
+        val part = UserPart.from(viewModel.uiState.value.partLabel)
+        return if (part == UserPart.UNKNOWN) null else part.name
+    }
+
+
+    private fun collectState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.uiState.collect { state ->
+                binding.state = state
+
+
+                binding.btnRegister.isEnabled = state.canRegister
+                binding.btnRegister.isClickable = state.canRegister
+
+                binding.btnRegister.setTextColor(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        if (state.canRegister) R.color.primary500 else R.color.neutral300
+                    )
+                )
+
+                state.leader?.let {
+                    selectedLeader = it
+                    binding.tvLeaderPlaceholder.text = it.name
+                    binding.tvLeaderPlaceholder.setTextColor(resources.getColor(R.color.neutral800, null))
+                }
+
+                selectedMembers.clear()
+                selectedMembers.addAll(state.selectedMembers)
+                renderSelectedMembers()
+            }
+        }
+    }
+
+    private fun collectEvent() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.uiEvent.collect { event ->
+                when (event) {
+                    AdminStudyGroupAddEvent.ClickBack -> moveBackPressed()
+                    AdminStudyGroupAddEvent.ClickPickLeader -> showPickLeader()
+                    AdminStudyGroupAddEvent.ClickPickMembers -> showPickMembers()
+                    AdminStudyGroupAddEvent.ClickRegister -> viewModel.submitCreateStudyGroup()
+
+                    AdminStudyGroupAddEvent.CreateSuccess -> {
+                        moveToStudyGroupTab(reload = true)
+                    }
+
+                    is AdminStudyGroupAddEvent.ShowToast -> {
+                        showToast(event.message)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showToast(message: String) {
+        android.widget.Toast.makeText(requireContext(), message, android.widget.Toast.LENGTH_SHORT).show()
+    }
 
     private fun moveBackPressed() {
         requireActivity().onBackPressedDispatcher.onBackPressed()
@@ -69,8 +150,7 @@ class AdminStudyGroupAddFragment :
             override fun onClickItem(text: String) {
                 selectedPart = text
                 binding.tvSelectedPart.text = text
-
-
+                viewModel.onPartChanged(text)
                 togglePartDropdown(open = false)
             }
         })
@@ -107,48 +187,53 @@ class AdminStudyGroupAddFragment :
 
     private fun setupLeaderPicker() {
         binding.cardPickLeader.setOnClickListener {
-            PickLeaderBottomSheet(allMembers) { leader ->
-                selectedLeader = leader
-
-                binding.tvLeaderPlaceholder.text = leader.name
-                binding.tvLeaderPlaceholder.setTextColor(
-                    resources.getColor(R.color.neutral800, null)
-                )
-            }.show(childFragmentManager, "PickLeader")
+            showPickLeader()
         }
     }
 
-
     private fun setupMembersPicker() {
         binding.cardPickMembers.setOnClickListener {
-            PickMembersBottomSheet(
-                allMembers = allMembers,
-                preSelectedIds = selectedMembers.map { it.id }.toSet()
-            ) { picked ->
-
-                selectedMembers.clear()
-                selectedMembers.addAll(picked)
-
-
-                renderSelectedMembers()
-            }.show(childFragmentManager, "PickMembers")
+            showPickMembers()
         }
+    }
+
+    private fun showPickLeader() {
+        val serverPart = selectedServerPartOrNull()
+
+        PickLeaderBottomSheet(
+            schoolName = "",
+            part = serverPart,
+        ) { leader ->
+            selectedLeader = leader
+            viewModel.setLeader(leader)
+            binding.tvLeaderPlaceholder.text = leader.name
+            binding.tvLeaderPlaceholder.setTextColor(resources.getColor(R.color.neutral800, null))
+        }.show(childFragmentManager, "PickLeader")
+    }
+
+    private fun showPickMembers() {
+        val serverPart = selectedServerPartOrNull()
+
+        PickMembersBottomSheet(
+            schoolName = "",
+            part = serverPart,
+            preSelectedChallengerIds = selectedMembers.map { it.challengerId }.toSet()
+        ) { picked ->
+            selectedMembers.clear()
+            selectedMembers.addAll(picked)
+            viewModel.setMembers(selectedMembers)
+            renderSelectedMembers()
+        }.show(childFragmentManager, "PickMembers")
     }
 
     private fun renderSelectedMembers() {
         if (selectedMembers.isEmpty()) {
             binding.tvMembersPlaceholder.text = "스터디원을 선택하세요"
-            binding.tvMembersPlaceholder.setTextColor(
-                resources.getColor(R.color.neutral400, null)
-            )
+            binding.tvMembersPlaceholder.setTextColor(resources.getColor(R.color.neutral400, null))
         } else {
             binding.tvMembersPlaceholder.text =
                 selectedMembers.toSummaryText(emptyText = "")
-            binding.tvMembersPlaceholder.setTextColor(
-                resources.getColor(R.color.neutral800, null)
-            )
+            binding.tvMembersPlaceholder.setTextColor(resources.getColor(R.color.neutral800, null))
         }
     }
-
-
 }

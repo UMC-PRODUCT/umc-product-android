@@ -2,7 +2,6 @@ package com.umc.presentation.ui.act.check
 
 import androidx.fragment.app.viewModels
 import com.umc.presentation.base.BaseFragment
-import com.umc.presentation.component.ULocationDialog
 import com.umc.presentation.databinding.FragmentAdminCheckBinding
 import com.umc.presentation.ui.act.adapter.AdminCheckAdapter
 import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
@@ -17,18 +16,11 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
 
     private val adminAdapter by lazy {
         AdminCheckAdapter(
-            fragmentManager = childFragmentManager,
-            onToggleExpansion = { sessionId ->
-                viewModel.toggleSessionExpansion(sessionId)
-            },
             onChangeLocation = { sessionId ->
                 showLocationChangeDialog(sessionId)
             },
-            onApproveConfirmed = { user, _ ->
-                viewModel.approveAttendance(user.id)
-            },
-            onRejectConfirmed = { user, _ ->
-                viewModel.rejectAttendance(user.id)
+            onShowPendingList = { sessionId ->
+                showPendingBottomSheet(sessionId)
             }
         )
     }
@@ -61,9 +53,6 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
         }
     }
 
-    /**
-     * 위치 변경 바텀 시트를 띄우는 함수
-     */
     private fun showLocationChangeDialog(sessionId: Long) {
         val locationDialog = BottomSheetLocationDialog(
             title = "출석 위치 변경",
@@ -77,5 +66,13 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
             )
         }
         locationDialog.show(childFragmentManager, "LocationSelect")
+    }
+
+    /**
+     * 승인 대기 명단 바텀 시트를 띄우는 함수
+     */
+    private fun showPendingBottomSheet(sessionId: Long) {
+        val pendingBottomSheet = AdminPendingBottomSheet(sessionId)
+        pendingBottomSheet.show(childFragmentManager, "AdminPendingList")
     }
 }

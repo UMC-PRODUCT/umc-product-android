@@ -161,5 +161,18 @@
             app:layout_constraintEnd_toEndOf="parent"
             tools:listitem="@layout/item_act_admin_study_submit" />
 
+        <TextView
+            android:id="@+id/tvEmpty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="제출 내역이 없어요"
+            android:textAppearance="@style/FootnoteBold"
+            android:textColor="@color/neutral500"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="@id/rv_submit"
+            app:layout_constraintBottom_toBottomOf="@id/rv_submit"
+            app:layout_constraintStart_toStartOf="@id/rv_submit"
+            app:layout_constraintEnd_toEndOf="@id/rv_submit" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

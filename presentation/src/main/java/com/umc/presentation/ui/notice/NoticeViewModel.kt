@@ -107,7 +107,7 @@ class NoticeViewModel @Inject constructor(
         updateState {
             copy(nowTitle = title, selectedGisu = gisu)
         }
-        getNoticeList()
+        getNoticeList(gisuId = gisu)
     }
 
     fun updateDropDownList(list: List<GisuItem>) {
@@ -132,7 +132,7 @@ class NoticeViewModel @Inject constructor(
         emitEvent(NoticeEvent.MoveToWriteEvent)
     }
 
-    private fun getDropDownList() = viewModelScope.launch {
+    fun getDropDownList() = viewModelScope.launch {
         resultResponse(
             response = getGisuListUseCase(),
             successCallback = {
@@ -150,6 +150,7 @@ class NoticeViewModel @Inject constructor(
     }
 
     fun getNoticeList(
+        gisuId: Long = uiState.value.selectedGisu,
         chapterId: Long? = null,
         schoolId: Long? = null,
         part: String? = null,
@@ -165,7 +166,7 @@ class NoticeViewModel @Inject constructor(
 
         resultResponse(
             response = getNoticeListUseCase(
-                gisuId = state.selectedGisu,
+                gisuId = gisuId,
                 chapterId = chapterId,
                 schoolId = schoolId,
                 part = part,

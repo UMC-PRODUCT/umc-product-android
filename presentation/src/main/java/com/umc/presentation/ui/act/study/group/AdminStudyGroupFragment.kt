@@ -6,16 +6,21 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.ListPopupWindow
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.umc.domain.model.enums.EditDeleteAction
+import com.umc.domain.model.enums.UserPart
+import com.umc.domain.model.request.organization.EditStudyGroupRequest
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.DialogAdminStudyGroupDeleteBinding
 import com.umc.presentation.databinding.DialogAdminStudyGroupEditBinding
 import com.umc.presentation.databinding.FragmentAdminStudyGroupBinding
 import com.umc.presentation.ui.act.adapter.DropDownAdapter
+import com.umc.presentation.ui.act.study.common.picker.bottomsheet.PickMembersBottomSheet
 import com.umc.presentation.ui.act.study.group.adapter.AdminStudyGroupAdapter
 import com.umc.presentation.ui.act.study.group.adapter.StudyGroupSettingMenuAdapter
 import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupEvent
@@ -23,8 +28,7 @@ import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupItemUiModel
 import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupState
 import com.umc.presentation.ui.act.study.group.model.AdminStudyGroupViewModel
 import dagger.hilt.android.AndroidEntryPoint
-
-
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class AdminStudyGroupFragment :
@@ -46,19 +50,59 @@ class AdminStudyGroupFragment :
                 showSettingPopup(anchorView, item)
             },
             onClickAddSchedule = { item ->
-                findNavController().navigate(R.id.action_to_schedule_add)
+                findNavController().navigate(
+                    R.id.action_to_schedule_add,
+                    bundleOf("groupId" to item.groupId)
+                )
+            },
+            onClickAddMember = { item ->
+                showPickMembersForGroup(item)
             }
         )
-
 
         binding.btnCreateGroup.setOnClickListener {
             findNavController().navigate(R.id.adminStudyGroupAddFragment)
         }
 
-
         binding.rvGroups.layoutManager = LinearLayoutManager(requireContext())
         binding.rvGroups.adapter = adapter
-        adapter.submitList(viewModel.dummyGroups)
+
+        viewModel.loadGroups()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.uiState.collect { state ->
+                adapter.submitList(state.groups)
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.uiEvent.collect { event ->
+                when (event) {
+                    is AdminStudyGroupEvent.ShowToast -> showToast(event.message)
+                }
+            }
+        }
+    }
+
+    private fun showPickMembersForGroup(item: AdminStudyGroupItemUiModel) {
+        val leaderId = item.leaderChallengerId.takeIf { it > 0 }
+
+        PickMembersBottomSheet(
+            schoolName = "",
+            part = null,
+            preSelectedChallengerIds = (item.memberChallengerIds + listOfNotNull(leaderId)).toSet()
+        ) { picked ->
+
+            val pickedIds = picked.map { it.challengerId }.distinct()
+            val memberOnlyIds = pickedIds
+                .filterNot { it == leaderId }
+                .distinct()
+
+            viewModel.replaceGroupMembers(
+                groupId = item.groupId,
+                pickedMemberChallengerIds = memberOnlyIds,
+            )
+        }.show(childFragmentManager, "PickGroupMembers")
     }
 
     private fun showSettingPopup(anchor: View, item: AdminStudyGroupItemUiModel) {
@@ -82,12 +126,11 @@ class AdminStudyGroupFragment :
         )
 
         val popup = ListPopupWindow(requireContext())
-
         val menuAdapter = StudyGroupSettingMenuAdapter(menuItems) { clicked ->
             popup.dismiss()
             when (clicked.action) {
-                EditDeleteAction.EDIT -> showEditGroupDialog()
-                EditDeleteAction.DELETE -> showDeleteGroupDialog()
+                EditDeleteAction.EDIT -> showEditGroupDialog(item)
+                EditDeleteAction.DELETE -> showDeleteGroupDialog(item)
             }
         }
 
@@ -116,31 +159,27 @@ class AdminStudyGroupFragment :
         }
     }
 
-    private fun showEditGroupDialog() {
+    private fun showEditGroupDialog(item: AdminStudyGroupItemUiModel) {
         val dialog = Dialog(requireContext())
         val b = DialogAdminStudyGroupEditBinding.inflate(layoutInflater)
         dialog.setContentView(b.root)
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.setCancelable(true)
-
         dialog.show()
+
         dialog.window?.setLayout(
             (resources.displayMetrics.widthPixels * 0.88).toInt(),
             WindowManager.LayoutParams.WRAP_CONTENT
         )
 
+        b.etGroupName.setText(item.title)
+        b.tvSelectedPart.text = item.partLabel.ifBlank { "Web" }
 
         var isPartDropdownOpen = false
-
-
-        val parts = listOf(
-            "Web", "Android", "iOS", "Server", "Design", "Plan",
-        )
-
+        val parts = UserPart.getFilterLabels()
 
         val dropDownAdapter = DropDownAdapter(object : DropDownAdapter.DropDownDelegate {
             override fun onClickItem(text: String) {
-
                 b.tvSelectedPart.text = text
                 isPartDropdownOpen = false
                 b.cardPartDropdown.visibility = View.GONE
@@ -155,17 +194,13 @@ class AdminStudyGroupFragment :
         }
         dropDownAdapter.submitList(parts)
 
-
         b.clPartDropdown.setOnClickListener {
             isPartDropdownOpen = !isPartDropdownOpen
             b.cardPartDropdown.visibility = if (isPartDropdownOpen) View.VISIBLE else View.GONE
-
-
             b.ivArrow.animate()
                 .rotation(if (isPartDropdownOpen) 180f else 0f)
                 .setDuration(120)
                 .start()
-
 
             if (isPartDropdownOpen) {
                 b.cardPartDropdown.bringToFront()
@@ -174,13 +209,28 @@ class AdminStudyGroupFragment :
             }
         }
 
-
         b.ivClose.setOnClickListener { dialog.dismiss() }
         b.btnCancel.setOnClickListener { dialog.dismiss() }
-        b.btnConfirm.setOnClickListener { dialog.dismiss() }
+
+        b.btnConfirm.setOnClickListener {
+            val newName = b.etGroupName.getText().trim()
+            if (newName.isBlank()) return@setOnClickListener
+
+            val uiPartLabel = b.tvSelectedPart.text.toString().trim()
+            val partEnum = UserPart.from(uiPartLabel)
+            if (partEnum == UserPart.UNKNOWN) return@setOnClickListener
+
+            val req = EditStudyGroupRequest(
+                name = newName,
+                part = partEnum.name
+            )
+
+            viewModel.editGroup(item.groupId, req)
+            dialog.dismiss()
+        }
     }
 
-    private fun showDeleteGroupDialog() {
+    private fun showDeleteGroupDialog(item: AdminStudyGroupItemUiModel) {
         val dialog = Dialog(requireContext())
         val b = DialogAdminStudyGroupDeleteBinding.inflate(layoutInflater)
         dialog.setContentView(b.root)
@@ -195,7 +245,14 @@ class AdminStudyGroupFragment :
 
         b.ivClose.setOnClickListener { dialog.dismiss() }
         b.btnCancel.setOnClickListener { dialog.dismiss() }
-        b.btnDelete.setOnClickListener { dialog.dismiss() }
+        b.btnDelete.setOnClickListener {
+            viewModel.deleteGroup(item.groupId)
+            dialog.dismiss()
+        }
+    }
+
+    private fun showToast(message: String) {
+        android.widget.Toast.makeText(requireContext(), message, android.widget.Toast.LENGTH_SHORT).show()
     }
 }
 

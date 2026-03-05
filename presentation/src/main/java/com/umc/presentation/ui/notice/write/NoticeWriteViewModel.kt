@@ -2,7 +2,6 @@ package com.umc.presentation.ui.notice.write
 
 import android.net.Uri
 import androidx.lifecycle.viewModelScope
-import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.NoticeCategory
 import com.umc.domain.model.enums.NoticeChipClassType
 import com.umc.domain.model.enums.UploadFileCategory
@@ -14,12 +13,15 @@ import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.model.request.notice.NoticeCreateRequest
 import com.umc.domain.model.request.notice.NoticeTargetRequest
+import com.umc.domain.model.request.notice.NoticeUpdateRequest
 import com.umc.domain.model.request.notice.NoticeVoteRequest
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.AddNoticeImagesUseCase
 import com.umc.domain.usecase.notice.AddNoticeLinksUseCase
 import com.umc.domain.usecase.notice.AddNoticeVoteUseCase
 import com.umc.domain.usecase.notice.CreateNoticeUseCase
+import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
+import com.umc.domain.usecase.notice.UpdateNoticeUseCase
 import com.umc.domain.usecase.organization.GetChapterListUseCase
 import com.umc.domain.usecase.organization.GetGisuListUseCase
 import com.umc.domain.usecase.school.GetAllSchoolUseCase
@@ -27,7 +29,7 @@ import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
-import com.umc.presentation.util.ULog
+import com.umc.presentation.ui.notice.write.model.NoticeImageItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -40,6 +42,8 @@ import javax.inject.Inject
 @HiltViewModel
 class NoticeWriteViewModel @Inject constructor(
     private val createNoticeUseCase: CreateNoticeUseCase,
+    private val updateNoticeUseCase: UpdateNoticeUseCase,
+    private val getNoticeDetailUseCase: GetNoticeDetailUseCase,
     private val addNoticeVoteUseCase: AddNoticeVoteUseCase,
     private val addNoticeImagesUseCase: AddNoticeImagesUseCase,
     private val addNoticeLinksUseCase: AddNoticeLinksUseCase,
@@ -51,6 +55,45 @@ class NoticeWriteViewModel @Inject constructor(
 ) : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
     NoticeWriteUiState(),
 ) {
+    fun initEditMode(noticeId: Long) = viewModelScope.launch {
+        if (noticeId == 0L) {
+            emitEvent(NoticeWriteEvent.ShowError("유효하지 않은 공지사항 ID입니다"))
+            return@launch
+        }
+
+        updateState { copy(isLoading = true, isEditMode = true, editNoticeId = noticeId) }
+
+        // 상세 조회 API로 기존 데이터 가져오기
+        resultResponse(
+            response = getNoticeDetailUseCase(noticeId),
+            successCallback = { detail ->
+                // 기존 이미지를 NoticeImageItem으로 변환 (id + url만 있음)
+                val existingImages = detail.images.map { image ->
+                    NoticeImageItem(
+                        id = image.id,
+                        url = image.url
+                    )
+                }
+                val linkText = detail.links.joinToString(", ") { it.url }
+                
+                updateState {
+                    copy(
+                        isLoading = false,
+                        title = detail.title,
+                        content = detail.content,
+                        selectImageList = existingImages,
+                        isShowLink = detail.links.isNotEmpty(),
+                        linkText = linkText
+                    )
+                }
+            },
+            errorCallback = {
+                updateState { copy(isLoading = false) }
+                emitEvent(NoticeWriteEvent.ShowError("공지사항 정보를 불러오는데 실패했습니다"))
+            }
+        )
+    }
+
     init {
         loadUserInfoAndInit()
         loadChapters()
@@ -334,15 +377,25 @@ class NoticeWriteViewModel @Inject constructor(
     }
 
     fun updateSelectImage(list: List<Uri>) {
+        // 새 이미지를 NoticeImageItem으로 변환 (uri만 있음, id는 0)
+        val newImages = list.map { uri ->
+            NoticeImageItem(uri = uri)
+        }
         updateState {
-            copy(selectImageList = uiState.value.selectImageList + list)
+            copy(selectImageList = uiState.value.selectImageList + newImages)
         }
     }
 
-    fun deleteImage(uri: Uri) {
+    fun deleteImage(item: NoticeImageItem) {
         updateState {
             copy(
-                selectImageList = uiState.value.selectImageList.filterNot { it == uri }
+                selectImageList = uiState.value.selectImageList.filterNot {
+                    if (it.id != 0L && item.id != 0L) {
+                        it.id == item.id
+                    } else {
+                        it.uri == item.uri
+                    }
+                }
             )
         }
     }
@@ -413,6 +466,41 @@ class NoticeWriteViewModel @Inject constructor(
         updateState { copy(voteEndDate = date) }
     }
 
+    /**
+     * Reset vote settings (local only, no server call)
+     */
+    fun deleteVote(onSuccess: () -> Unit = {}) {
+        updateState {
+            copy(
+                isShowVote = false,
+                voteTitle = "투표 만들기",
+                voteTextList = List(2) { "" },
+                canAnonymity = false,
+                canSelectMultiple = false,
+                voteStartDate = formatDateForDisplay(Calendar.getInstance()),
+                voteEndDate = formatDateForDisplay(Calendar.getInstance()),
+            )
+        }
+        onSuccess()
+    }
+
+    /**
+     * Update vote settings from current form values (local only, no server call)
+     */
+    fun updateVote(list: List<String>, onSuccess: () -> Unit = {}) {
+        val anonymity = if (uiState.value.canAnonymity) "익명, " else "실명, "
+        val multiple = if (uiState.value.canSelectMultiple) "복수 허용, " else "단일 투표, "
+        val count = "${list.size}개의 항목"
+        updateState {
+            copy(
+                isShowVote = true,
+                voteTextList = list,
+                voteCondition = anonymity + multiple + count
+            )
+        }
+        onSuccess()
+    }
+
     fun updateTitle(title: String) {
         updateState { copy(title = title) }
     }
@@ -449,33 +537,95 @@ class NoticeWriteViewModel @Inject constructor(
 
         updateState { copy(isLoading = true) }
 
-        val targetParts = state.partList.filter { it.isClicked }.map { it.text.uppercase() }
-        val targetChapterId = state.classList.find { it.isClicked && it.chapterId != null }?.chapterId?.toInt()
-        val targetSchoolId = state.classList.find { it.isClicked && it.schoolId != null }?.schoolId?.toInt()
-        val targetRequest = NoticeTargetRequest(
-            targetGisuId = if (state.isAllGisuSelected) null else activeGisuId,
-            targetChapterId = targetChapterId,
-            targetSchoolId = targetSchoolId,
-            targetParts = targetParts
-        )
+        if (state.isEditMode) {
+            // 수정 모드
+            handleNoticeUpdate()
+        } else {
+            // 생성 모드
+            val targetParts = state.partList.filter { it.isClicked }.map { it.text.uppercase() }
+            val targetChapterId = state.classList.find { it.isClicked && it.chapterId != null }?.chapterId?.toInt()
+            val targetSchoolId = state.classList.find { it.isClicked && it.schoolId != null }?.schoolId?.toInt()
+            val targetRequest = NoticeTargetRequest(
+                targetGisuId = if (state.isAllGisuSelected) null else activeGisuId,
+                targetChapterId = targetChapterId,
+                targetSchoolId = targetSchoolId,
+                targetParts = targetParts
+            )
 
-        val createRequest = NoticeCreateRequest(
+            val createRequest = NoticeCreateRequest(
+                title = state.title,
+                content = state.content,
+                shouldNotify = state.shouldNotify,
+                targetInfo = targetRequest
+            )
+
+            resultResponse(
+                response = createNoticeUseCase(createRequest),
+                successCallback = { noticeId ->
+                    handleNoticeCreated(noticeId)
+                },
+                errorCallback = {
+                    updateState { copy(isLoading = false) }
+                    emitEvent(NoticeWriteEvent.ShowError("공지사항 작성에 실패했습니다"))
+                }
+            )
+        }
+    }
+
+    private fun handleNoticeUpdate() = viewModelScope.launch {
+        val state = uiState.value
+        var hasError = false
+
+        val updateRequest = NoticeUpdateRequest(
             title = state.title,
-            content = state.content,
-            shouldNotify = state.shouldNotify,
-            targetInfo = targetRequest
+            content = state.content
         )
-
         resultResponse(
-            response = createNoticeUseCase(createRequest),
-            successCallback = { noticeId ->
-                handleNoticeCreated(noticeId)
-            },
-            errorCallback = {
-                updateState { copy(isLoading = false) }
-                emitEvent(NoticeWriteEvent.ShowError("공지사항 작성에 실패했습니다"))
-            }
+            response = updateNoticeUseCase(state.editNoticeId, updateRequest),
+            successCallback = { },
+            errorCallback = { hasError = true }
         )
+        
+        val existingImageIds = state.selectImageList
+            .filter { it.isExistingImage() }
+            .map { it.id.toString() }
+        
+        val newImages = state.selectImageList.filter { it.isNewImage() }
+        val uploadedImageIds = if (newImages.isNotEmpty()) {
+            val newImageUris = newImages.mapNotNull { it.uri }
+            uploadImages(newImageUris)
+        } else {
+            emptyList()
+        }
+        
+        val allImageIds = existingImageIds + uploadedImageIds
+        
+        if (allImageIds.isNotEmpty()) {
+            resultResponse(
+                response = addNoticeImagesUseCase(state.editNoticeId, allImageIds),
+                successCallback = { },
+                errorCallback = { hasError = true }
+            )
+        }
+
+        if (state.isShowLink && state.linkText.isNotBlank()) {
+            val links = state.linkText.split(",").map { it.trim() }.filter { it.isNotBlank() }
+            if (links.isNotEmpty()) {
+                resultResponse(
+                    response = addNoticeLinksUseCase(state.editNoticeId, links),
+                    successCallback = { },
+                    errorCallback = { hasError = true }
+                )
+            }
+        }
+
+        updateState { copy(isLoading = false) }
+
+        if (!hasError) {
+            emitEvent(NoticeWriteEvent.SubmitSuccess)
+        } else {
+            emitEvent(NoticeWriteEvent.ShowError("일부 항목 수정에 실패했습니다"))
+        }
     }
 
     private suspend fun uploadImages(imageUris: List<Uri>): List<String> {
@@ -498,7 +648,8 @@ class NoticeWriteViewModel @Inject constructor(
         val state = uiState.value
 
         if (state.selectImageList.isNotEmpty()) {
-            val imageIds = uploadImages(state.selectImageList)
+            val newImageUris = state.selectImageList.mapNotNull { it.uri }
+            val imageIds = uploadImages(newImageUris)
             if (imageIds.isNotEmpty()) {
                 resultResponse(
                     response = addNoticeImagesUseCase(noticeId, imageIds),
@@ -553,7 +704,7 @@ data class NoticeWriteUiState(
     val isShowPartChip: Boolean = false,
     val isShowLink: Boolean = false,
     val isShowVote: Boolean = false,
-    val selectImageList: List<Uri> = emptyList(),
+    val selectImageList: List<NoticeImageItem> = emptyList(), // 통합 이미지 리스트 (id, uri, url)
     val classList: List<NoticeChipState> = emptyList(),
     val partList: List<NoticeChipState> = emptyList(),
     val category: NoticeCategory = NoticeCategory.CENTRAL_OFFICE,
@@ -575,6 +726,8 @@ data class NoticeWriteUiState(
     val activeGisuId: Int? = null,
     val userInfo: UserInfo? = null,
     val isAllGisuSelected: Boolean = false,
+    val isEditMode: Boolean = false,
+    val editNoticeId: Long = 0L,
 ) : UiState {
     val isShowClassSection: Boolean
         get() = category != NoticeCategory.PART

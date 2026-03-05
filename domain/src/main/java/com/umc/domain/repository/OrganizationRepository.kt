@@ -15,18 +15,20 @@ import com.umc.domain.model.request.organization.SchoolIdRequest
 import com.umc.domain.model.request.organization.SchoolRegistrationRequest
 import com.umc.domain.model.request.organization.UnAssignSchoolRequest
 import com.umc.domain.model.school.SchoolInfo
+import com.umc.domain.model.organization.StudyGroupDetail
+import com.umc.domain.model.organization.StudyGroupPage
 
 interface OrganizationRepository {
 
     // DELETE
     suspend fun deleteSchool(request: SchoolIdRequest): ApiState<Unit>
-    
-    suspend fun deleteStudyGroup(groupId: Int): ApiState<Unit>
+
+    suspend fun deleteStudyGroup(groupId: Long): ApiState<Unit>
     
     suspend fun deleteGisu(gisuId: Int): ApiState<Unit>
 
     // GET
-    suspend fun getMyStudyGroup(cursor: Int, size: Int): ApiState<Unit> // StudyGroupListResponse
+    suspend fun getMyStudyGroup(cursor: Long?, size: Int): ApiState<StudyGroupPage>
 
     suspend fun getSchoolByKeyword(
         keyword: String,
@@ -38,7 +40,7 @@ interface OrganizationRepository {
 
     suspend fun getAllChapter(): ApiState<List<Chapter>>
 
-    suspend fun getStudyGroupDetail(groupId: Int): ApiState<Unit> //StudyGroupDetailResponse
+    suspend fun getStudyGroupDetail(groupId: Long): ApiState<StudyGroupDetail>
 
     suspend fun getSchoolDetail(schoolId: Int): ApiState<Unit> //SchoolDetailResponse
 
@@ -59,7 +61,7 @@ interface OrganizationRepository {
     suspend fun getGisuInfo(gisuId: Long): ApiState<GisuInfo> //GisuInfoResponse
 
     // PATCH
-    suspend fun editGroup(groupId: Int, request: EditStudyGroupRequest): ApiState<Unit>
+    suspend fun editGroup(groupId: Long, request: EditStudyGroupRequest): ApiState<Unit>
 
     suspend fun editSchool(schoolId: Int, request: EditSchoolRequest): ApiState<Unit>
 
@@ -79,5 +81,5 @@ interface OrganizationRepository {
     suspend fun changeActiveGisu(gisuId: Int): ApiState<Unit>
 
     // PUT
-    suspend fun changeGroupMember(groupId: Int, request: ChallengerListRequest): ApiState<Unit>
+    suspend fun changeGroupMember(groupId: Long, request: ChallengerListRequest): ApiState<Unit>
 }

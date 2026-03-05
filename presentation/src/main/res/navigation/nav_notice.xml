@@ -65,6 +65,16 @@
         android:name="com.umc.presentation.ui.notice.write.NoticeWriteFragment"
         android:label="공지작성"
         tools:layout="@layout/fragment_notice_write">
+
+        <argument
+            android:name="noticeId"
+            android:defaultValue="0L"
+            app:argType="long" />
+
+        <argument
+            android:name="isEditMode"
+            android:defaultValue="false"
+            app:argType="boolean" />
     </fragment>
 
     <fragment
@@ -77,5 +87,9 @@
             android:name="noticeId"
             android:defaultValue="0L"
             app:argType="long" />
+
+        <action
+            android:id="@+id/action_noticeDetailFragment_to_noticeWriteFragment"
+            app:destination="@id/noticeWriteFragment" />
     </fragment>
 </navigation>

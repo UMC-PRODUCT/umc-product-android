@@ -156,6 +156,52 @@
                 tools:itemCount="5" />
 
 
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/layoutEmpty"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/neutral000"
+            app:strokeWidth="0dp"
+            android:stateListAnimator="@null"
+            android:outlineProvider="none"
+            app:rippleColor="@android:color/transparent"
+            app:layout_constraintTop_toBottomOf="@id/cv_curriculum"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="16dp">
+
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_book"
+                    android:contentDescription="@null" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="아직 진행된 스터디/활동이 없어요"
+                    android:textAppearance="@style/FootnoteBold"
+                    android:textColor="@color/neutral500" />
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 </layout>

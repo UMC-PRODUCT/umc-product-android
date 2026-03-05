@@ -3,6 +3,7 @@ package com.umc.data.dataSource.remote.schedule
 import com.umc.data.api.ScheduleApi
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.request.schedule.CreateScheduleRequest
+import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
 import com.umc.data.response.schedule.ScheduleDetailResponse
 import com.umc.data.response.schedule.ScheduleListResponse
@@ -58,6 +59,13 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
         request: UpdateLocationRequest
     ): ApiState<UpdateLocationResponse> {
         return apiCall { scheduleApi.updateScheduleLocation(scheduleId, request) }
+    }
+
+
+    override suspend fun createStudyGroupSchedule(
+        request: CreateStudyGroupScheduleRequest
+    ): ApiState<Long> {
+        return apiCall { scheduleApi.createStudyGroupSchedule(request) }
     }
 
 }

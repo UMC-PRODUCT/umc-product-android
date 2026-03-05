@@ -1,32 +1,184 @@
 package com.umc.presentation.ui.act.study.group.model
 
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.organization.StudyGroupPage
+import com.umc.domain.model.request.organization.ChallengerListRequest
+import com.umc.domain.model.request.organization.EditStudyGroupRequest
+import com.umc.domain.repository.OrganizationRepository
 import com.umc.presentation.base.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AdminStudyGroupViewModel :
-    BaseViewModel<AdminStudyGroupState, AdminStudyGroupEvent>(
-        AdminStudyGroupState()
+@HiltViewModel
+class AdminStudyGroupViewModel @Inject constructor(
+    private val organizationRepository: OrganizationRepository,
+) : BaseViewModel<AdminStudyGroupState, AdminStudyGroupEvent>(AdminStudyGroupState()) {
+
+    private var loaded = false
+
+    fun replaceGroupMembers(
+        groupId: Long,
+        pickedMemberChallengerIds: List<Long>,
     ) {
+        viewModelScope.launch {
+            val req = ChallengerListRequest(
+                challengerIds = pickedMemberChallengerIds.distinct()
+            )
 
-    val dummyGroups = listOf(
-        AdminStudyGroupItemUiModel(
-            groupId = 1L,
-            title = "React A팀",
-            partLabel = "Web",
-            leaderName = "홍길동",
-            members = listOf("홍길동", "홍길순", "홍길자"),
-            createdAtText = "2024.03.01",
-            memberCount = 3,
-            leaderUniv = "중앙대학교",
-        ),
-        AdminStudyGroupItemUiModel(
-            groupId = 2L,
-            title = "Android A팀",
-            partLabel = "Android",
-            leaderName = "김도연",
-            members = listOf("김도연", "박유수", "조나단", "나루"),
-            createdAtText = "2024.03.05",
-            memberCount = 4,
-            leaderUniv = "서울여자대학교",
-        )
-    )
+            val res = organizationRepository.changeGroupMember(groupId, req)
+
+            resultResponse(
+                response = res,
+                successCallback = {
+                    emitEvent(AdminStudyGroupEvent.ShowToast("스터디원이 수정됐어요."))
+                    loadGroups(force = true)
+                },
+                errorCallback = { fail ->
+                    emitEvent(AdminStudyGroupEvent.ShowToast(fail.message ?: "스터디원 수정 실패"))
+                }
+            )
+        }
+    }
+
+    fun loadGroups(force: Boolean = false) {
+        if (loaded && !force) return
+        loaded = true
+
+        startLoading()
+        viewModelScope.launch {
+            val res: ApiState<StudyGroupPage> =
+                organizationRepository.getMyStudyGroup(cursor = null, size = 20)
+
+            resultResponse(
+                response = res,
+                successCallback = { page ->
+                    val initialList = page.content.map { summary ->
+
+                        val leaderName = summary.leader?.name.orEmpty()
+                        val leaderId = summary.leader?.challengerId ?: -1L
+                        val leaderProfile = summary.leader?.profileImageUrl
+
+                        val members = summary.members.map { m ->
+                            AdminStudyGroupMemberUiModel(
+                                challengerId = m.challengerId,
+                                name = m.name,
+                                profileImageUrl = m.profileImageUrl
+                            )
+                        }
+
+
+                        val memberIds = members.map { it.challengerId }.distinct()
+
+                        AdminStudyGroupItemUiModel(
+                            groupId = summary.groupId,
+                            title = summary.name,
+                            partLabel = "",
+                            leaderName = leaderName,
+                            leaderChallengerId = leaderId,
+                            leaderProfileImageUrl = leaderProfile,
+                            members = members,
+                            memberChallengerIds = memberIds,
+                            createdAtRaw = "", // detail에서 채움
+                            memberCount = memberIds.size,
+                            leaderUniv = "",
+                        )
+                    }
+
+                    updateState { copy(groups = initialList) }
+
+                    initialList.forEach { item ->
+                        loadGroupDetailAndMerge(item.groupId)
+                    }
+                },
+                errorCallback = { }
+            )
+        }
+    }
+
+    fun deleteGroup(groupId: Long) {
+        startLoading()
+        viewModelScope.launch {
+            val res = organizationRepository.deleteStudyGroup(groupId)
+
+            resultResponse(
+                response = res,
+                successCallback = {
+                    updateState { copy(groups = groups.filterNot { it.groupId == groupId }) }
+                    loadGroups(force = true)
+                },
+                errorCallback = { }
+            )
+        }
+    }
+
+    fun editGroup(groupId: Long, request: EditStudyGroupRequest) {
+        startLoading()
+        viewModelScope.launch {
+            val res = organizationRepository.editGroup(groupId, request)
+
+            resultResponse(
+                response = res,
+                successCallback = { loadGroups(force = true) },
+                errorCallback = { }
+            )
+        }
+    }
+
+    private fun loadGroupDetailAndMerge(groupId: Long) {
+        viewModelScope.launch {
+            when (val res = organizationRepository.getStudyGroupDetail(groupId)) {
+                is ApiState.Success -> {
+                    val detail = res.data
+
+                    val leaderName = detail.leader?.name.orEmpty()
+                    val leaderId = detail.leader?.challengerId ?: -1L
+                    val leaderProfile = detail.leader?.profileImageUrl
+
+                    val members = detail.members.map { m ->
+                        AdminStudyGroupMemberUiModel(
+                            challengerId = m.challengerId,
+                            name = m.name,
+                            profileImageUrl = m.profileImageUrl
+                        )
+                    }
+
+
+                    val memberIds = members.map { it.challengerId }.distinct()
+
+                    updateState {
+                        copy(
+                            groups = groups.map { item ->
+                                if (item.groupId != groupId) item
+                                else item.copy(
+                                    partLabel = detail.part.toPartUiLabel(),
+                                    createdAtRaw = detail.createdAt,
+                                    leaderUniv = detail.schools.firstOrNull()?.schoolName.orEmpty(),
+                                    leaderName = leaderName,
+                                    leaderChallengerId = leaderId,
+                                    leaderProfileImageUrl = leaderProfile,
+                                    members = members,
+                                    memberChallengerIds = memberIds,
+                                    memberCount = memberIds.size
+                                )
+                            }
+                        )
+                    }
+                }
+
+                is ApiState.Fail -> Unit
+            }
+        }
+    }
+}
+
+private fun String.toPartUiLabel(): String = when (this.uppercase()) {
+    "WEB" -> "Web"
+    "ANDROID" -> "Android"
+    "IOS" -> "iOS"
+    "SERVER" -> "Server"
+    "DESIGN" -> "Design"
+    "PLAN" -> "Plan"
+    else -> this
 }

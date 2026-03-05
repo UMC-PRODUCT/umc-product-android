@@ -222,7 +222,11 @@ class MypageViewModel @Inject constructor(
 
 
     fun logout(){
-        emitEvent(MypageFragmentEvent.Logout)
+        viewModelScope.launch {
+            // 로그아웃 시 dataStore의 모든 데이터 삭제
+            clearAllDataUseCase()
+            emitEvent(MypageFragmentEvent.Logout)
+        }
     }
 
 

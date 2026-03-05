@@ -6,8 +6,13 @@ import java.util.Calendar
 import java.util.Locale
 
 data class AdminActStudyScheduleAddState(
+    val groupId: Long = 0L,
+
     val studyName: String = "",
-    val location: String = "",
+
+    val locationName: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
 
     val startDate: Calendar = Calendar.getInstance(),
     val startTime: Calendar = Calendar.getInstance(),
@@ -23,7 +28,7 @@ data class AdminActStudyScheduleAddState(
     val isRegisterOk: Boolean
         get() {
             val isNameOk = studyName.isNotBlank()
-            val isLocationOk = location.isNotBlank()
+            val isLocationOk = locationName.isNotBlank() && latitude != null && longitude != null
             val isDateTimeOk =
                 startDateText != "시작 날짜" &&
                         startTimeText != "시작 시간" &&

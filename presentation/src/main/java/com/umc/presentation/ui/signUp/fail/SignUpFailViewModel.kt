@@ -23,10 +23,15 @@ constructor() : BaseViewModel<UiState, SignUpFailEvent>(
     fun onClickNext() {
         emitEvent(SignUpFailEvent.MoveToCode)
     }
+
+    fun onClickKakaoInquiry() {
+        emitEvent(SignUpFailEvent.MoveToKakaoInquiry)
+    }
 }
 
 sealed interface SignUpFailEvent : UiEvent {
     object MoveToBack : SignUpFailEvent
     object MoveToHomePage : SignUpFailEvent
     object MoveToCode : SignUpFailEvent
+    object MoveToKakaoInquiry : SignUpFailEvent
 }

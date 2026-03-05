@@ -38,12 +38,12 @@
 
             <TextView
                 android:id="@+id/tv_admin_label"
+                style="@style/Subheadline"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/admin_label"
-                android:textColor="@color/neutral600"
                 android:layout_marginEnd="8dp"
-                style="@style/Subheadline" />
+                android:text="@string/admin_label"
+                android:textColor="@color/neutral600" />
 
             <com.umc.presentation.component.USwitch
                 android:id="@+id/switch_admin"

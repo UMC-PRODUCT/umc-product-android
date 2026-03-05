@@ -85,7 +85,7 @@
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/btn_status"
+                    app:layout_constraintEnd_toStartOf="@id/btn_best"
                     app:layout_constraintTop_toTopOf="parent">
 
                     <com.umc.presentation.component.UButton
@@ -113,7 +113,6 @@
                         android:layout_height="20dp"
                         android:clickable="false"
                         android:focusable="false"
-                        app:backgroundColor="@color/neutral100"
                         app:borderColor="@color/neutral200"
                         app:borderWidth="1dp"
                         app:cornerRadius="6dp"
@@ -122,9 +121,29 @@
                         app:text="@{item.platform}"
                         app:textAppearance="@style/FootnoteBold"
                         app:textColor="@color/neutral700"
-                        tools:text="Github" />
+                        app:platformTagStyle="@{true}" />
                 </LinearLayout>
 
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/btn_best"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    app:buttonElevation="0"
+                    app:cornerRadius="4dp"
+                    app:contentPaddingLeft="8dp"
+                    app:contentPaddingRight="8dp"
+                    app:contentPaddingTop="4dp"
+                    app:contentPaddingBottom="4dp"
+                    app:prevIcon="@drawable/ic_best"
+                    app:text="Best"
+                    app:textAppearance="@style/Caption1Bold"
+                    app:bestBadgeStyle="@{item.isBest}"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toStartOf="@id/btn_status"
+                    app:layout_constraintTop_toTopOf="@id/top_anchor"
+                    app:layout_constraintBottom_toBottomOf="@id/top_anchor" />
 
                 <com.umc.presentation.component.UButton
                     android:id="@+id/btn_status"
@@ -221,7 +240,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="제출한 링크"
+                            android:text="제출할 링크"
                             android:textAppearance="@style/SubheadlineBold"
                             android:textColor="@color/primary500" />
 
@@ -249,6 +268,8 @@
                             app:cornerRadius="12dp"
                             app:contentPaddingTop="13dp"
                             app:contentPaddingBottom="13dp"
+                            app:prevIcon="@drawable/ic_blog_link"
+                            app:prevIconTint="@color/neutral000"
                             app:text="링크 제출하기"
                             app:textAppearance="@style/CalloutBold" />
                     </LinearLayout>
@@ -259,6 +280,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
+                        android:gravity="center"
                         android:layout_marginTop="8dp"
                         app:visibleWhenConfirming="@{item}"
                         tools:visibility="visible">
@@ -267,23 +289,28 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:padding="12dp"
-                            android:background="@drawable/bg_neutral100_radius16">
+                            android:padding="18dp"
+                            android:background="@drawable/bg_neutral100_radius16"
+                            android:gravity="center_horizontal">
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="학습을 완료하셨나요?"
                                 android:textAppearance="@style/SubheadlineBold"
-                                android:textColor="@color/neutral800" />
+                                android:textColor="@color/neutral600"
+                                android:gravity="center"
+                                android:textAlignment="center"/>
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
+                                android:layout_marginTop="10dp"
                                 android:text="버튼을 누르면 학습 인증 요청이 전송됩니다."
                                 android:textAppearance="@style/Footnote"
-                                android:textColor="@color/neutral500" />
+                                android:textColor="@color/neutral500"
+                                android:gravity="center"
+                                android:textAlignment="center"/>
                         </LinearLayout>
 
                         <com.umc.presentation.component.UButton
@@ -297,6 +324,8 @@
                             app:contentPaddingBottom="13dp"
                             app:text="학습 완료 인증하기"
                             app:textAppearance="@style/CalloutBold"
+                            app:prevIcon="@drawable/ic_check_success"
+                            app:prevIconTint="@color/neutral000"
                             app:enabledWhenConfirmReady="@{item}"
                             app:confirmButtonStyle="@{item.submitState == SubmitState.CONFIRMING}"
                             tools:text="학습 완료 인증하기" />
@@ -309,6 +338,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:orientation="horizontal"
+                        android:gravity="center"
                         android:padding="12dp"
                         app:visibleWhenWaiting="@{item}"
                         tools:visibility="gone"
@@ -324,7 +354,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="학습 확인 대기 중입니다."
+                            android:text="학습 완료 확인 대기 중입니다."
                             android:textAppearance="@style/FootnoteBold"
                             android:textColor="@color/warning700" />
                     </LinearLayout>
@@ -336,6 +366,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:orientation="horizontal"
+                        android:gravity="center"
                         android:padding="12dp"
                         app:visibleWhenResultPass="@{item}"
                         tools:visibility="gone"
@@ -363,6 +394,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:orientation="horizontal"
+                        android:gravity="center"
                         android:padding="12dp"
                         app:visibleWhenResultFail="@{item}"
                         tools:visibility="gone"
@@ -407,10 +439,10 @@
         <View
             android:id="@+id/tags_bottom_anchor"
             android:layout_width="0dp"
-            android:layout_height="44dp"
-            app:layout_constraintTop_toTopOf="@id/cv_item"
+            android:layout_height="0dp"
             app:layout_constraintStart_toStartOf="@id/timeline_column"
-            app:layout_constraintEnd_toEndOf="@id/timeline_column" />
+            app:layout_constraintEnd_toEndOf="@id/timeline_column"
+            app:layout_constraintTop_toTopOf="@id/cv_item" />
 
         <View
             android:id="@+id/timeline_line"

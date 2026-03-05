@@ -1,23 +1,21 @@
 package com.umc.presentation.ui.notice.write.adapter
 
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.notice.Notice
-import com.umc.presentation.databinding.ItemNoticeBinding
 import com.umc.presentation.databinding.ItemNoticeImageBinding
+import com.umc.presentation.ui.notice.write.model.NoticeImageItem
 
 class NoticeImageAdapter(
     private val listener: NoticeImageDelegate
-) : ListAdapter<Uri, RecyclerView.ViewHolder> (
+) : ListAdapter<NoticeImageItem, RecyclerView.ViewHolder> (
     NoticeImageDiffCallBack()
 ) {
 
     interface NoticeImageDelegate {
-        fun onClickDelete(uri: Uri)
+        fun onClickDelete(item: NoticeImageItem)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -35,23 +33,27 @@ class NoticeImageAdapter(
         return NoticeImageViewHolder(binding, listener)
     }
 
-    fun getItemPosition(item: Uri): Int {
+    fun getItemPosition(item: NoticeImageItem): Int {
         return currentList.indexOf(item)
     }
 }
 
-class NoticeImageDiffCallBack : DiffUtil.ItemCallback<Uri>() {
+class NoticeImageDiffCallBack : DiffUtil.ItemCallback<NoticeImageItem>() {
     override fun areContentsTheSame(
-        oldItem: Uri,
-        newItem: Uri
+        oldItem: NoticeImageItem,
+        newItem: NoticeImageItem
     ): Boolean {
         return oldItem == newItem
     }
 
     override fun areItemsTheSame(
-        oldItem: Uri,
-        newItem: Uri
+        oldItem: NoticeImageItem,
+        newItem: NoticeImageItem
     ): Boolean {
-        return oldItem.path == newItem.path
+        return if (oldItem.id != 0L && newItem.id != 0L) {
+            oldItem.id == newItem.id
+        } else {
+            oldItem.uri == newItem.uri
+        }
     }
 }

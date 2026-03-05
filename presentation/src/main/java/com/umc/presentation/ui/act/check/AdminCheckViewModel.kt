@@ -1,7 +1,6 @@
 package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
-import com.umc.domain.model.base.ApiState
 import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceApprovalUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceRejectionUseCase
@@ -32,10 +31,8 @@ class AdminCheckViewModel @Inject constructor(
             resultResponse(
                 response = getAdminSessionListUseCase(),
                 successCallback = { data ->
-                    val currentSessions = uiState.value.adminSessions
                     val uiModels = data.map { domainModel ->
-                        val wasExpanded = currentSessions.find { it.session.id == domainModel.id }?.isExpanded ?: false
-                        AdminSessionUIModel(session = domainModel, isExpanded = wasExpanded)
+                        AdminSessionUIModel(session = domainModel)
                     }
                     updateState { copy(adminSessions = uiModels) }
                 },
@@ -45,125 +42,15 @@ class AdminCheckViewModel @Inject constructor(
     }
 
     /**
-     * 출석 승인 버튼 클릭 시 호출
+     * 위치 변경 API 호출
      */
-    fun approveAttendance(attendanceId: Long) {
-        viewModelScope.launch {
-            resultResponse(
-                response = postAttendanceApprovalUseCase(attendanceId),
-                successCallback = { updateSessionAfterApproval(attendanceId) },
-                errorCallback = { failState ->
-                    emitEvent(AdminCheckEvent.ShowToast(failState.message))
-                }
-            )
-        }
-    }
-
-    /**
-     * 출석 반려 버튼 클릭 시 호출
-     */
-    fun rejectAttendance(attendanceId: Long) {
-        viewModelScope.launch {
-            resultResponse(
-                response = postAttendanceRejectionUseCase(attendanceId),
-                successCallback = {
-                    updateSessionAfterRejection(attendanceId)
-                },
-                errorCallback = { failState ->
-                    emitEvent(AdminCheckEvent.ShowToast(failState.message))
-                }
-            )
-        }
-    }
-
-    /**
-     * 승인 후 세션 업데이트
-     * - pending 목록에서 유저 제거
-     * - attendedChallengers +1
-     * - attendanceRate 재계산
-     * - pendingCount -1
-     */
-    private fun updateSessionAfterApproval(attendanceId: Long) {
-        updateState {
-            val updatedSessions = adminSessions.map { uiModel ->
-                val session = uiModel.session
-
-                // 해당 유저가 이 세션에 있는지 확인
-                val targetUser = session.pendingUsers.find { it.id == attendanceId }
-
-                if (targetUser != null) {
-                    // pending 목록에서 제거
-                    val updatedPendingUsers = session.pendingUsers.filter { it.id != attendanceId }
-
-                    // 출석 완료 인원 +1
-                    val newAttendedChallengers = session.attendedChallengers + 1
-
-                    // 출석률 재계산 (출석 완료 인원 / 전체 인원 * 100)
-                    val newAttendanceRate = if (session.totalChallengers > 0) {
-                        (newAttendedChallengers * 100) / session.totalChallengers
-                    } else {
-                        0
-                    }
-
-                    val updatedSession = session.copy(
-                        pendingUsers = updatedPendingUsers,
-                        pendingCount = updatedPendingUsers.size,
-                        attendedChallengers = newAttendedChallengers,
-                        attendanceRate = newAttendanceRate
-                    )
-
-                    uiModel.copy(session = updatedSession)
-                } else {
-                    // 다른 세션은 그대로 유지
-                    uiModel
-                }
-            }
-            copy(adminSessions = updatedSessions)
-        }
-    }
-
-    /**
-     * 반려 후 세션 업데이트
-     * - pending 목록에서 유저 제거
-     * - pendingCount -1
-     * - attendedChallengers, attendanceRate는 변경 없음 (반려이므로)
-     */
-    private fun updateSessionAfterRejection(attendanceId: Long) {
-        updateState {
-            val updatedSessions = adminSessions.map { uiModel ->
-                val session = uiModel.session
-
-                // 해당 유저가 이 세션에 있는지 확인
-                val targetUser = session.pendingUsers.find { it.id == attendanceId }
-
-                if (targetUser != null) {
-                    // pending 목록에서 제거
-                    val updatedPendingUsers = session.pendingUsers.filter { it.id != attendanceId }
-
-                    val updatedSession = session.copy(
-                        pendingUsers = updatedPendingUsers,
-                        pendingCount = updatedPendingUsers.size
-                        // 반려이므로 attendedChallengers, attendanceRate는 변경 없음
-                    )
-
-                    uiModel.copy(session = updatedSession)
-                } else {
-                    // 다른 세션은 그대로 유지
-                    uiModel
-                }
-            }
-            copy(adminSessions = updatedSessions)
-        }
-    }
-
     fun updateSessionLocation(sessionId: Long, lat: Double, lng: Double, address: String) {
         viewModelScope.launch {
-            val result = updateScheduleLocationUseCase(sessionId, address, lat, lng)
-
             resultResponse(
-                response = result,
+                response = updateScheduleLocationUseCase(sessionId, address, lat, lng),
                 successCallback = {
                     emitEvent(AdminCheckEvent.ShowToast("출석 위치가 성공적으로 변경되었습니다."))
+                    fetchAdminSessions() // 변경 후 데이터 갱신
                 },
                 errorCallback = { failState ->
                     emitEvent(AdminCheckEvent.ShowToast(failState.message))
@@ -172,46 +59,6 @@ class AdminCheckViewModel @Inject constructor(
         }
     }
 
-    fun toggleSessionExpansion(sessionId: Long) {
-        val currentSession = uiState.value.adminSessions.find { it.session.id == sessionId }
-
-        if (currentSession?.isExpanded == false && currentSession.session.pendingUsers.isEmpty()) {
-            fetchPendingUsers(sessionId)
-        }
-
-        updateExpansionState(sessionId)
-    }
-
-    private fun fetchPendingUsers(sessionId: Long) {
-        viewModelScope.launch {
-            resultResponse(
-                response = getPendingUsersUseCase(sessionId),
-                successCallback = { data ->
-                    updateState {
-                        val updatedList = adminSessions.map { uiModel ->
-                            if (uiModel.session.id == sessionId) {
-                                uiModel.copy(session = uiModel.session.copy(pendingUsers = data))
-                            } else uiModel
-                        }
-                        copy(adminSessions = updatedList)
-                    }
-                },
-                errorCallback = { failState -> emitEvent(AdminCheckEvent.ShowToast(failState.message)) }
-            )
-        }
-    }
-    private fun updateExpansionState(sessionId: Long) {
-        updateState {
-            val newList = adminSessions.map { uiModel ->
-                if (uiModel.session.id == sessionId) {
-                    uiModel.copy(isExpanded = !uiModel.isExpanded)
-                } else {
-                    uiModel
-                }
-            }
-            copy(adminSessions = newList)
-        }
-    }
 }
 
 data class AdminCheckUiState(

@@ -477,6 +477,15 @@
                     app:layout_constraintTop_toBottomOf="@id/text_view_count"
                     tools:text="안녕하세요. 운영진입니다." />
 
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_images"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="24dp"
+                    android:layout_marginTop="16dp"
+                    android:visibility="@{vm.uiState.detail.images.empty ? View.GONE : View.VISIBLE}"
+                    app:layout_constraintTop_toBottomOf="@id/text_content" />
+
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/layout_link"
                     android:layout_width="match_parent"
@@ -487,7 +496,7 @@
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="11dp"
                     android:visibility="@{vm.uiState.detail.links == null || vm.uiState.detail.links.empty ? View.GONE : View.VISIBLE}"
-                    app:layout_constraintTop_toBottomOf="@id/text_content">
+                    app:layout_constraintTop_toBottomOf="@id/recycler_images">
 
                     <ImageView
                         android:id="@+id/image_link_title"

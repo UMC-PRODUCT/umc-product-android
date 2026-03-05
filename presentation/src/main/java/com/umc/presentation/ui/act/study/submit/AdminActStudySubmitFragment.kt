@@ -57,6 +57,8 @@ class AdminActStudySubmitFragment :
 
         swipeController = AdminStudySubmitSwipeController(
             recyclerView = binding.rvSubmit,
+            isBestEnabled = { pos -> adapter.currentList.getOrNull(pos)?.isBestEnabled == true },
+            isReviewEnabled = { pos -> adapter.currentList.getOrNull(pos)?.isReviewEnabled == true },
             onClickBest = { position ->
                 adapter.currentList.getOrNull(position)?.let { item ->
                     viewModel.onAction(AdminActStudySubmitAction.ClickBest(item))
@@ -91,7 +93,7 @@ class AdminActStudySubmitFragment :
             ).show(parentFragmentManager, "admin_act_study_submit_group")
         }
 
-        viewModel.loadWorkbookSubmissions(reset = true)
+
     }
 
     override fun initStates() {
@@ -100,17 +102,19 @@ class AdminActStudySubmitFragment :
                 latestState = state
                 binding.state = state
                 adapter.submitList(state.items)
+                val loading = viewModel.isLoading.value
+                binding.tvEmpty.visibility =
+                    if (!loading && state.items.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
             }
         }
+
 
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             viewModel.uiEvent.collect { event ->
                 when (event) {
                     is AdminActStudySubmitEvent.ShowBestDialog -> showBestDialog(event.item)
                     is AdminActStudySubmitEvent.ShowReviewDialog -> showReviewDialog(event.item)
-                    is AdminActStudySubmitEvent.ShowToast -> {
-                        // TODO toast 처리
-                    }
+                    is AdminActStudySubmitEvent.ShowToast -> { /* showToast(event.message) */ }
                 }
             }
         }
@@ -156,7 +160,8 @@ class AdminActStudySubmitFragment :
         dialogBinding.item = item
         dialogBinding.lifecycleOwner = viewLifecycleOwner
 
-        dialogBinding.etUrl.setText(item.submitUrl)
+
+        dialogBinding.etUrl.setText(item.submitUrl.orEmpty())
         dialogBinding.etUrl.setReadOnly(true)
         dialogBinding.etUrl.setReadOnlyStyle()
 
@@ -186,15 +191,17 @@ class AdminActStudySubmitFragment :
         }
 
         dialogBinding.btnReject.setOnClickListener {
-            val url = dialogBinding.etUrl.getText()
-            val feedback = dialogBinding.etFeedback.getText()
+            val url = dialogBinding.etUrl.getText()?.toString().orEmpty()
+            val feedback = dialogBinding.etFeedback.getText()?.toString().orEmpty()
+
             viewModel.onAction(AdminActStudySubmitAction.SubmitReview(false, url, feedback))
             reviewDialog?.dismiss()
         }
 
         dialogBinding.btnApprove.setOnClickListener {
-            val url = dialogBinding.etUrl.getText()
-            val feedback = dialogBinding.etFeedback.getText()
+            val url = dialogBinding.etUrl.getText()?.toString().orEmpty()
+            val feedback = dialogBinding.etFeedback.getText()?.toString().orEmpty()
+
             viewModel.onAction(AdminActStudySubmitAction.SubmitReview(true, url, feedback))
             reviewDialog?.dismiss()
         }

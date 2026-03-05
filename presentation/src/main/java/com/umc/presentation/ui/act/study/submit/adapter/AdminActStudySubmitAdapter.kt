@@ -7,6 +7,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.presentation.databinding.ItemActAdminStudySubmitBinding
 import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitItemUiModel
+import coil.load
+import coil.transform.CircleCropTransformation
+import com.umc.presentation.R
 
 class AdminActStudySubmitAdapter(
     private val onClickBest: (AdminActStudySubmitItemUiModel) -> Unit,
@@ -37,6 +40,15 @@ class AdminActStudySubmitAdapter(
             binding.executePendingBindings()
 
 
+            val url = item.profileImageUrl?.takeIf { it.isNotBlank() }
+            binding.ivProfile.load(url) {
+                crossfade(true)
+                placeholder(R.drawable.ic_profile_default)
+                error(R.drawable.ic_profile_default)
+                transformations(CircleCropTransformation())
+            }
+
+            binding.executePendingBindings()
             binding.root.setOnClickListener(null)
 
         }

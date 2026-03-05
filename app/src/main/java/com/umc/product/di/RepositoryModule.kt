@@ -4,6 +4,7 @@ import com.umc.data.repository.AppDataStoreRepositoryImpl
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.data.repository.AuthRepositoryImpl
 import com.umc.data.repository.NoticeRepositoryImpl
+import com.umc.data.repository.NotificationRepositoryImpl
 import com.umc.data.repository.OrganizationRepositoryImpl
 import com.umc.data.repository.attendance.AttendanceRepositoryImpl
 import com.umc.data.repository.authorize.AuthorizeRepositoryImpl
@@ -21,6 +22,7 @@ import com.umc.data.repository.terms.TermsRepositoryImpl
 import com.umc.data.repository.workbook.WorkbookRepositoryImpl
 import com.umc.domain.repository.ChallengerRepository
 import com.umc.domain.repository.NoticeRepository
+import com.umc.domain.repository.NotificationRepository
 import com.umc.domain.repository.OrganizationRepository
 import com.umc.domain.repository.attendance.AttendanceRepository
 import com.umc.domain.repository.authorize.AuthorizeRepository
@@ -118,4 +120,7 @@ abstract class RepositoryModule {
     @Binds
     abstract fun bindsNoticeRepository(repositoryImpl: NoticeRepositoryImpl): NoticeRepository
 
+    @Singleton
+    @Binds
+    abstract fun bindsNotificationRepository(repositoryImpl: NotificationRepositoryImpl): NotificationRepository
 }

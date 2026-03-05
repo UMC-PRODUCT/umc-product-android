@@ -64,6 +64,8 @@ object Endpoints {
 
         const val LOCATION = "$SCHEDULE/{scheduleId}/location"
 
+        const val CREATE_STUDY_GROUP_SCHEDULE = "$SCHEDULE/study-group"
+
     }
 
     object Community{
@@ -147,6 +149,8 @@ object Endpoints {
     object Workbook {
         const val BEST = "api/v1/workbooks/challenger/{challengerWorkbookId}/best"
         const val REVIEW = "api/v1/workbooks/challenger/{challengerWorkbookId}/review"
+
+        const val CHALLENGER_SUBMISSION = "api/v1/workbooks/challenger/{challengerWorkbookId}/submissions"
     }
 
 
@@ -169,5 +173,10 @@ object Endpoints {
     object Survey {
         const val SURVEY = "api/v1/surveys"
         const val VOTE_RESPONSES = "$SURVEY/votes/{voteId}/responses"
+    }
+
+    object Notification {
+        const val NOTIFICATION = "api/v1/notification"
+        const val FCM_TOKEN = "$NOTIFICATION/fcm/token"
     }
 }

@@ -11,6 +11,9 @@ import com.umc.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.umc.domain.usecase.member.GetMyProfileUseCase
+import com.umc.domain.usecase.workbook.GetChallengerWorkbookSubmissionUseCase
+import com.umc.domain.util.resolveAdminScope
 
 
 
@@ -21,6 +24,8 @@ class AdminActStudySubmitViewModel @Inject constructor(
     private val getAvailableWeeksUseCase: GetAvailableWeeksUseCase,
     private val selectBestWorkbookUseCase: SelectBestWorkbookUseCase,
     private val reviewWorkbookUseCase: ReviewWorkbookUseCase,
+    private val getMyProfileUseCase: GetMyProfileUseCase,
+    private val getChallengerWorkbookSubmissionUseCase: GetChallengerWorkbookSubmissionUseCase,
 ) : BaseViewModel<AdminActStudySubmitState, AdminActStudySubmitEvent>(
     AdminActStudySubmitState()
 ) {
@@ -52,8 +57,7 @@ class AdminActStudySubmitViewModel @Inject constructor(
             }
 
             is AdminActStudySubmitAction.ClickReview -> {
-                updateState { copy(reviewDialogTarget = action.item) }
-                emitEvent(AdminActStudySubmitEvent.ShowReviewDialog(action.item))
+                fetchSubmissionUrlAndOpenReview(action.item)
             }
 
             AdminActStudySubmitAction.DismissBestDialog ->
@@ -109,6 +113,26 @@ class AdminActStudySubmitViewModel @Inject constructor(
         }
     }
 
+    private fun fetchSubmissionUrlAndOpenReview(item: AdminActStudySubmitItemUiModel) {
+        viewModelScope.launch {
+            when (val res = getChallengerWorkbookSubmissionUseCase(item.challengerWorkbookId)) {
+                is ApiState.Success -> {
+                    val url = res.data.submission.orEmpty()
+                    val newItem = item.copy(submitUrl = url)
+
+                    updateState { copy(reviewDialogTarget = newItem) }
+                    emitEvent(AdminActStudySubmitEvent.ShowReviewDialog(newItem))
+                }
+
+                is ApiState.Fail -> {
+                    emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
+                    updateState { copy(reviewDialogTarget = item) }
+                    emitEvent(AdminActStudySubmitEvent.ShowReviewDialog(item))
+                }
+            }
+        }
+    }
+
     fun getGroupNames(state: AdminActStudySubmitState): List<String> {
         return listOf("전체 그룹") + state.studyGroups.map { group ->
             group.name
@@ -123,14 +147,26 @@ class AdminActStudySubmitViewModel @Inject constructor(
     }
 
 
-
-
     private fun loadFilterData() {
         viewModelScope.launch {
-            val schoolId = 18L
-            val part = "ANDROID"
+            startLoading()
 
-            when (val res = getStudyGroupsUseCase(schoolId, part)) {
+            val scope = when (val meRes = getMyProfileUseCase()) {
+                is ApiState.Success -> meRes.data.resolveAdminScope()
+                is ApiState.Fail -> {
+                    emitEvent(AdminActStudySubmitEvent.ShowToast(meRes.failState.message))
+                    stopLoading()
+                    return@launch
+                }
+            }
+
+            if (scope == null) {
+                emitEvent(AdminActStudySubmitEvent.ShowToast("어드민 권한 정보(파트/학교)를 찾을 수 없어요."))
+                stopLoading()
+                return@launch
+            }
+
+            when (val res = getStudyGroupsUseCase(scope.schoolId, scope.part)) {
                 is ApiState.Success -> updateState { copy(studyGroups = res.data) }
                 is ApiState.Fail -> emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
             }
@@ -138,19 +174,12 @@ class AdminActStudySubmitViewModel @Inject constructor(
             when (val res = getAvailableWeeksUseCase()) {
                 is ApiState.Success -> {
                     val weeks = res.data
-                    val defaultWeek = weeks.firstOrNull() ?: 10 // 10주차거 테스트하느라 일단 박아놨습니다..
-
-                    updateState {
-                        copy(
-                            availableWeeks = weeks,
-                            selectedWeek = defaultWeek
-                        )
-                    }
+                    val defaultWeek = weeks.firstOrNull() ?: 1
+                    updateState { copy(availableWeeks = weeks, selectedWeek = defaultWeek) }
                     loadWorkbookSubmissions(reset = true)
                 }
-
                 is ApiState.Fail -> {
-                    updateState { copy(selectedWeek = 10) }
+                    updateState { copy(selectedWeek = 1) }
                     loadWorkbookSubmissions(reset = true)
                 }
             }
@@ -159,23 +188,25 @@ class AdminActStudySubmitViewModel @Inject constructor(
 
 
     fun loadWorkbookSubmissions(reset: Boolean) {
+        startLoading()
         viewModelScope.launch {
             val state = uiState.value
             val cursor = if (reset) null else state.nextCursor
 
-            when (
-                val res = getWorkbookSubmissionsUseCase(
-                    weekNo = state.selectedWeek,
-                    studyGroupId = state.selectedGroupId,
-                    cursor = cursor,
-                    size = 20
-                )
-            ) {
-                is ApiState.Success -> {
-                    val page = res.data
+            val res = getWorkbookSubmissionsUseCase(
+                weekNo = state.selectedWeek,
+                studyGroupId = state.selectedGroupId,
+                cursor = cursor,
+                size = 20
+            )
+
+            resultResponse(
+                response = res,
+                successCallback = { page ->
                     val newItems = page.content
-                        .filter { it.status == "SUBMITTED" || it.status == "PASS" }
+                        .filter { it.status in listOf("SUBMITTED", "PASS", "FAIL", "BEST") }
                         .map { it.toUiModel(state.selectedWeek) }
+
                     updateState {
                         copy(
                             items = if (reset) newItems else items + newItems,
@@ -183,12 +214,11 @@ class AdminActStudySubmitViewModel @Inject constructor(
                             hasNext = page.hasNext,
                         )
                     }
+                },
+                errorCallback = { fail ->
+                    emitEvent(AdminActStudySubmitEvent.ShowToast(fail.message ?: "조회 실패"))
                 }
-
-                is ApiState.Fail -> {
-                    emitEvent(AdminActStudySubmitEvent.ShowToast(res.failState.message))
-                }
-            }
+            )
         }
     }
 

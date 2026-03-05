@@ -1,6 +1,7 @@
 package com.umc.domain.repository
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.home.NotificationItem
 import com.umc.domain.model.mypage.UserOutLink
 import kotlinx.coroutines.flow.Flow
 
@@ -39,4 +40,9 @@ interface AppDataStoreRepository {
 
     //싹 다 초기화
     suspend fun clearAllData()
+
+    // 알림 관련 메서드
+    fun getNotifications(): Flow<List<NotificationItem>>
+    suspend fun addNotification(notification: NotificationItem)
+    suspend fun clearNotifications()
 }

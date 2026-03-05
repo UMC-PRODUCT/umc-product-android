@@ -7,6 +7,7 @@ import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
+import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
 
 interface ScheduleRepository {
 
@@ -42,4 +43,6 @@ interface ScheduleRepository {
         longitude: Double
     ): ApiState<Unit>
 
+    // 스터디 그룹 일정 생성
+    suspend fun createStudyGroupSchedule(request: CreateStudyGroupSchedule): ApiState<Long>
 }

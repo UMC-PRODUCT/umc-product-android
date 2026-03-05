@@ -23,6 +23,12 @@
             app:destination="@id/loginFragment"
             app:popUpTo="@id/splashFragment"
             app:popUpToInclusive="true" />
+
+        <action
+            android:id="@+id/action_splash_to_sign_up_fail"
+            app:destination="@id/signUpFailFragment"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -54,14 +60,8 @@
             android:defaultValue="" />
 
         <action
-            android:id="@+id/action_sign_up_to_home"
-            app:destination="@id/nav_home"
-            app:popUpTo="@id/splashFragment"
-            app:popUpToInclusive="true" />
-
-        <action
             android:id="@+id/action_sign_up_to_permission"
-            app:destination="@id/nav_home"
+            app:destination="@id/permissionFragment"
             app:popUpTo="@id/splashFragment"
             app:popUpToInclusive="true" />
     </fragment>
@@ -100,6 +100,12 @@
         android:name="com.umc.presentation.ui.signUp.fail.code.SignUpFailCodeFragment"
         android:label="인증 코드"
         tools:layout="@layout/fragment_sign_up_fail_code">
+
+        <action
+            android:id="@+id/action_sign_up_fail_code_to_home"
+            app:destination="@id/nav_home"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
 </navigation>
