@@ -14,7 +14,8 @@ import com.umc.domain.model.UserInfo
 data class RolePartItem(
     val role: String, //역할 (SCHOOL_PART_LEADER)
     val responsiblePart: String?, //ANDROID ...
-    val challengerId: Long
+    val challengerId: Long,
+    val organizationId: Long,
 )
 
 // 2. 기수별 최종 요약 모델
@@ -44,7 +45,8 @@ fun UserInfo.getGisuSummaryList(): List<GisuSummary> {
                 RolePartItem(
                     role = it.roleType,
                     responsiblePart = it.responsiblePart,
-                    challengerId = it.challengerId
+                    challengerId = it.challengerId,
+                    organizationId = it.organizationId ?: -1,
                 )
             }
 
@@ -55,7 +57,8 @@ fun UserInfo.getGisuSummaryList(): List<GisuSummary> {
                 RolePartItem(
                     role = "CHALLENGER",
                     responsiblePart = it.part,
-                    challengerId = it.challengerId
+                    challengerId = it.challengerId,
+                    organizationId = -1, //챌린저는 조직 ID 제거
                 )
             }
 

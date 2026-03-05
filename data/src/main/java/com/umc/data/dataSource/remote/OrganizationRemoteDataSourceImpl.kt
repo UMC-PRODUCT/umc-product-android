@@ -47,7 +47,7 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
     override suspend fun getStudyGroupDetail(groupId: Long): ApiState<StudyGroupDetailResponse> =
         apiCall { organizationApi.getStudyGroupDetail(groupId) }
 
-    override suspend fun getSchoolDetail(schoolId: Int): ApiState<SchoolDetailResponse> {
+    override suspend fun getSchoolDetail(schoolId: Long): ApiState<SchoolDetailResponse> {
         return apiCall { organizationApi.getSchoolDetail(schoolId) }
     }
 

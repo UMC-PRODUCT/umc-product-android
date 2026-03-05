@@ -15,11 +15,15 @@ import com.umc.domain.model.request.member.UpdateLinkRequest
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.member.UpdateMyLinkUseCase
 import com.umc.domain.usecase.member.UpdateMyProfileUseCase
+import com.umc.domain.usecase.organization.GetSchoolNameUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,6 +34,7 @@ class ProfileViewModel @Inject constructor(
     private val uploadFileUseCase: UploadFileUseCase, //파일 업로드 하기(이미지 업로드)
     private val updateMyProfileUseCase: UpdateMyProfileUseCase, //프로필 정보 업데이트
     private val updateMyLinkUseCase: UpdateMyLinkUseCase, //링크 정보 업데이트
+    private val getSchoolNameUseCase: GetSchoolNameUseCase, //학교 이름 가져오기
     ) : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     ProfileFragmentUiState()){
 
@@ -54,74 +59,70 @@ class ProfileViewModel @Inject constructor(
 
     //유저 정보를 통해 활동 이력 및 기수파트 작성
     fun settingUserInfoToUI(userInfo: UserInfo){
-        val gisuSummaryList = userInfo.getGisuSummaryList()
+        
+        viewModelScope.launch {
+            //기수 정보 리스트 가져오기
+            val gisuSummaryList = userInfo.getGisuSummaryList()
 
-        //최종 리스트
-        val activeHistory = mutableListOf<UserActiveItem>()
+            //api 호출 시 coroutineScope를 사용하여 async를 호출 - 다 끝날때까지 기달
+            val finalActiveHistory = coroutineScope {
+                gisuSummaryList.flatMap { summary ->
+                    val generationText = "${summary.gisu}기"
 
-        Log.d("log_mypage", "날것: $gisuSummaryList")
-
-        //gisuSummaryList를 돌면서 만들기
-        gisuSummaryList.forEach { summary->
-            //1. 기수 별 분류 (여기에 roles/ challengers)
-            val generationText = "${summary.gisu}기"
-
-            //2. 운영진 기록이 있으면 싹다 만들기
-            summary.fromRoles.forEach { roleItem ->
-                    //담당 파트가 있으면 (웹 파트장)
-                    val item = if (roleItem.responsiblePart != null) {
-                        UserActiveItem(
-                            generation = generationText,
-                            partName = "${roleItem.responsiblePart} Part",
-                            position = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
-                        )
+                    //운영진 기록
+                    val roleJobs = summary.fromRoles.map { roleItem ->
+                        async {
+                            //파트가 있는 경우 (ex. 안드로이드 파트장)
+                            if (roleItem.responsiblePart != null) {
+                                UserActiveItem(
+                                    generation = generationText,
+                                    partName = "${roleItem.responsiblePart} Part",
+                                    position = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
+                                )
+                            } 
+                            //그 외 (교내 회장)
+                            else {
+                                //들어갈 값
+                                var itemResult: UserActiveItem? = null
+                                resultResponse(
+                                    response = getSchoolNameUseCase(roleItem.organizationId),
+                                    //학교 불러오기 성공이면, 학교 이름을 가져오기
+                                    successCallback = { schoolInfo ->
+                                        val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
+                                        itemResult = UserActiveItem(generationText, "${schoolInfo.schoolName} $label",label, )
+                                    },
+                                    //못 불러오면 그대로 넣기
+                                    errorCallback = {
+                                        val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
+                                        itemResult = UserActiveItem(generationText, label, label)
+                                    }
+                                )
+                                itemResult!!
+                            }
+                        }
                     }
-                    //담당 파트가 없으면 (총괄)
-                    else {
-                        val roleLabel =
-                            //label 없으면 enum 이름 그대로 쓰자.
-                            UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
-                        UserActiveItem(
-                            generation = generationText,
-                            partName = roleLabel,
-                            position = roleLabel
-                        )
-                    }
 
-                    activeHistory.add(item)
-                }
+                    //챌린저 기록
+                    val recordJobs = summary.fromRecords
+                        .filter { it.responsiblePart != "ADMIN" }
+                        .map { recordItem ->
+                            async {
+                                UserActiveItem(
+                                    generation = generationText,
+                                    partName = "${recordItem.responsiblePart} Part",
+                                    position = "챌린저"
+                                )
+                            }
+                        }
 
-            //3. 챌린저 기록이 있으면 싹 다 만들기
-            summary.fromRecords.forEach { recordItem ->
-                //챌린저 중 admin이 있을 경우에는 제거
-                if(recordItem.responsiblePart != "ADMIN") {
-                    val item = UserActiveItem(
-                        generation = generationText,
-                        partName = "${recordItem.responsiblePart} Part",
-                        position = "챌린저"
-                    )
-                    activeHistory.add(item)
-                    }
+                    roleJobs + recordJobs
+                }.awaitAll() // 모든 async 작업이 완료될 때까지 기다림
             }
-        }
 
-        //최신 파트(기수/파트) - 이거는 role 우선
-        /*
-        val latestHistory = activeHistory.firstOrNull()
-        val latestPartAndGisu = latestHistory?.let {
-            "${it.generation}/${it.partName.replace(" Part", "")}"
-        } ?: "정보 없음"
-
-         */
-
-        Log.d("log_mypage", "변환 결과: $activeHistory")
-
-        //이 정보를 저장
-        updateState {
-            copy(
-                myActiveHistory = activeHistory,
-
-            )
+            //모든 데이터가 수집된 후 UI 업데이트
+            updateState {
+                copy(myActiveHistory = finalActiveHistory)
+            }
         }
 
 
