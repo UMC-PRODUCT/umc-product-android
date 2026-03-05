@@ -93,20 +93,26 @@ class ProfileViewModel @Inject constructor(
 
             //3. 챌린저 기록이 있으면 싹 다 만들기
             summary.fromRecords.forEach { recordItem ->
-                val item = UserActiveItem(
-                    generation = generationText,
-                    partName = "${recordItem.responsiblePart} Part",
-                    position = "챌린저"
-                )
-                activeHistory.add(item)
+                //챌린저 중 admin이 있을 경우에는 제거
+                if(recordItem.responsiblePart != "ADMIN") {
+                    val item = UserActiveItem(
+                        generation = generationText,
+                        partName = "${recordItem.responsiblePart} Part",
+                        position = "챌린저"
+                    )
+                    activeHistory.add(item)
+                    }
             }
         }
 
         //최신 파트(기수/파트) - 이거는 role 우선
+        /*
         val latestHistory = activeHistory.firstOrNull()
         val latestPartAndGisu = latestHistory?.let {
             "${it.generation}/${it.partName.replace(" Part", "")}"
         } ?: "정보 없음"
+
+         */
 
         Log.d("log_mypage", "변환 결과: $activeHistory")
 
@@ -114,7 +120,7 @@ class ProfileViewModel @Inject constructor(
         updateState {
             copy(
                 myActiveHistory = activeHistory,
-                myPart = latestPartAndGisu
+
             )
         }
 
@@ -225,7 +231,6 @@ class ProfileViewModel @Inject constructor(
 data class ProfileFragmentUiState(
     //유저 정보 (고정)
     val loginType: LoginType = LoginType.KAKAO,
-    val myPart: String = "",
     val userInfo : UserInfo = UserInfo(),
 
 
