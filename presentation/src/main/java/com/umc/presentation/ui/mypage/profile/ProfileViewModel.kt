@@ -59,6 +59,8 @@ class ProfileViewModel @Inject constructor(
         //최종 리스트
         val activeHistory = mutableListOf<UserActiveItem>()
 
+        Log.d("log_mypage", "날것: $gisuSummaryList")
+
         //gisuSummaryList를 돌면서 만들기
         gisuSummaryList.forEach { summary->
             //1. 기수 별 분류 (여기에 roles/ challengers)
@@ -71,7 +73,7 @@ class ProfileViewModel @Inject constructor(
                         UserActiveItem(
                             generation = generationText,
                             partName = "${roleItem.responsiblePart} Part",
-                            position = roleItem.role
+                            position = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
                         )
                     }
                     //담당 파트가 없으면 (총괄)
@@ -105,6 +107,8 @@ class ProfileViewModel @Inject constructor(
         val latestPartAndGisu = latestHistory?.let {
             "${it.generation}/${it.partName.replace(" Part", "")}"
         } ?: "정보 없음"
+
+        Log.d("log_mypage", "변환 결과: $activeHistory")
 
         //이 정보를 저장
         updateState {
