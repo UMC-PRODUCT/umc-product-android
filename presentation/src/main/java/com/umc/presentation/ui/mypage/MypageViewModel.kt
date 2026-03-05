@@ -243,7 +243,7 @@ data class MypageFragmentUiState(
     val loginType: LoginType = LoginType.KAKAO,
     
     // 현재 직책
-    val myRecentCarrer : String = "9기 Android 중앙 파트장",
+    val myRecentCarrer : String = "",
 
     // 링크 데이터
     val githubUrl : String = "",

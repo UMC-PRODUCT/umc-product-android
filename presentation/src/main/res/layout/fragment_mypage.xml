@@ -151,6 +151,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:visibility='@{vm.uiState.myRecentCarrer == "" ? View.INVISIBLE : View.VISIBLE}'
                 app:cardBackgroundColor="@color/neutral000"
                 app:borderWidth="1dp"
                 app:borderColor="@color/neutral200"
