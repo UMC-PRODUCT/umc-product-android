@@ -10,6 +10,8 @@ import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,11 +24,23 @@ class BottomSheetParticipantViewModel @Inject constructor(
 ) {
 
     init {
-        searchParticipants("")
+        //searchParticipants("")
     }
+
+    //검색 작업 제어
+    private var searchJob: Job? = null
 
     // 유저 검색 로직
     fun searchParticipants(query: String) {
+        //이전 작업 취소
+        searchJob?.cancel()
+
+        //쿼리가 비어있으면 검색X
+        if (query.isBlank()) {
+            clearSearch()
+            return
+        }
+
         //일단 현재 상태를 반영해서
         updateState {
             copy(
@@ -37,7 +51,10 @@ class BottomSheetParticipantViewModel @Inject constructor(
                 isSearching = query.isNotBlank()
             )
         }
-        fetchParticipants(isNextPage = false)
+        searchJob = viewModelScope.launch {
+            delay(500) //'박ㅇ' 등이 완성되어 '박유수'가 될 때까지 기다림
+            fetchParticipants(isNextPage = false)
+        }
     }
 
 
@@ -117,6 +134,7 @@ class BottomSheetParticipantViewModel @Inject constructor(
 
     //검색 기록을 초기화하하고 중지하는 함수
     fun clearSearch() {
+        searchJob?.cancel()
         updateState {
             copy(
                 searchResults = emptyList(), // 혹은 초기 리스트(allChallengers)
