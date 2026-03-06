@@ -92,7 +92,7 @@ class PermissionFragment :
         if (permissions.isNotEmpty()) {
             requestPermissionsLauncher.launch(permissions.toTypedArray())
         } else {
-            // 이미 모두 허용된 상태
+            viewModel.signUp()
         }
     }
 

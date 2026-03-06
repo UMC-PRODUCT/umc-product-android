@@ -11,7 +11,6 @@ import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentSignUpBinding
 import com.umc.presentation.ui.signUp.bottomSheet.SchoolSelectBottomSheet
-import com.umc.presentation.util.ULog
 import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -75,6 +74,9 @@ class SignUpFragment :
                     R.string.sign_up_email_verify_error,
                     state = UToast.State.ERROR
                 ).show()
+            }
+            SignUpEvent.FocusVerifyCodeField -> {
+                binding.textFieldVerifyCode.requestFocus()
             }
         }
     }

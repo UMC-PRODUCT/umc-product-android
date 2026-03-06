@@ -316,6 +316,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="16dp"
                 android:layout_weight="1"
+                android:inputType="number"
                 app:backgroundColor="@{vm.uiState.verifyType == EmailVerifyType.VERIFY ? @color/neutral100: @color/neutral000}"
                 app:cornerRadius="8dp"
                 app:textColor="@{vm.uiState.verifyType == EmailVerifyType.VERIFY ? @color/neutral600: @color/neutral800}"
