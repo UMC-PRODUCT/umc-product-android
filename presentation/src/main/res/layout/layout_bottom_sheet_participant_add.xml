@@ -133,22 +133,25 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layout_added"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginTop="24dp"
             android:visibility="@{vm.uiState.isSearching ? View.GONE : View.VISIBLE}"
             app:layout_constraintTop_toBottomOf="@id/searchbar_participant"
+            app:layout_constraintBottom_toBottomOf="parent"
             >
 
 
             <LinearLayout
                 android:id="@+id/layout_empty_state"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:layout_marginTop="40dp"
                 android:visibility="@{vm.uiState.isSelectedParticipant ? View.GONE : View.VISIBLE}"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                >
 
                 <ImageView
                     android:layout_width="48dp"
@@ -167,7 +170,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rcv_added"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:layout_marginTop="16dp"
                 android:nestedScrollingEnabled="true"
                 android:overScrollMode="never"
@@ -186,17 +189,21 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layout_search_result"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginTop="24dp"
             android:visibility="@{vm.uiState.isSearching ? View.VISIBLE : View.GONE}"
             app:layout_constraintTop_toBottomOf="@id/searchbar_participant"
+            app:layout_constraintBottom_toBottomOf="parent"
             >
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rcv_search_result"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                android:layout_height="0dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
