@@ -47,6 +47,7 @@
     <string name="mypage_mypost">내가 쓴 글</string>
     <string name="mypage_mycomment">댓글 단 글</string>
     <string name="mypage_myscrap">스크랩</string>
+    <string name="mypage_addactivity">내 활동 추가</string>
     <string name="mypage_setting_notice">알림 설정</string>
     <string name="mypage_setting_location">위치 설정</string>
     <string name="mypage_social">소셜 연동</string>

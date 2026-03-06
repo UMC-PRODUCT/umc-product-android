@@ -132,6 +132,10 @@ class MypageViewModel @Inject constructor(
         emitEvent(MypageFragmentEvent.NavigateToScrap)
     }
 
+    fun navigateToAddActivity(){
+        emitEvent(MypageFragmentEvent.NavigateToAddActivity)
+    }
+
 
     fun navigateToAssistUmc(){
         emitEvent(MypageFragmentEvent.NavigateToAssistUmc(uiState.value.kakaoInquireChannelId))
@@ -268,6 +272,8 @@ sealed interface MypageFragmentEvent : UiEvent {
     object NavigateToMypost : MypageFragmentEvent //내가 쓴 글
     object NavigateToMyComment : MypageFragmentEvent //내가 쓴 댓글
     object NavigateToScrap : MypageFragmentEvent //스크랩
+
+    object NavigateToAddActivity : MypageFragmentEvent //활동 추가
     
     data class NavigateToAssistUmc(val channelId: String) : MypageFragmentEvent // UMC 문의
 
