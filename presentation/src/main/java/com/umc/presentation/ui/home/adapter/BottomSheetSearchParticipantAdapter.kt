@@ -65,8 +65,9 @@ class BottomSheetSearchParticipantAdapter(
     inner class ItemViewHolder(private val binding: ItemBottomSheetParticipantSearchBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(user: ParticipantItem) {
+            val nameType = "${user.name}/${user.nickname}"
             binding.item = user
-            binding.itemTvName.text = user.name
+            binding.itemTvName.text = nameType
             binding.itemTvSchool.text = user.school
 
             binding.itemImvProfile.load(user.profileImage.ifEmpty { null }) {

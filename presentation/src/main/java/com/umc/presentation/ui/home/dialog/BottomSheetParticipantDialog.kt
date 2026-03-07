@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.home.dialog
 
+import android.content.DialogInterface
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -62,8 +63,6 @@ class BottomSheetParticipantDialog(
             // 2. 초기 상태를 확장 상태(EXPANDED)로 고정
             behavior.state = BottomSheetBehavior.STATE_EXPANDED
 
-            // 3. 드래그해서 절반으로 접히는 현상 방지 (선택 사항)
-            behavior.skipCollapsed = true
         }
     }
 
@@ -131,11 +130,7 @@ class BottomSheetParticipantDialog(
 
             // 포커스 변경 리스너 등록
             setOnFocusChangedListener { hasFocus ->
-                // 내용이 없고 포커스가 나가면 검색 모드 종료
-                if(hasFocus){
-                    viewModel.setSearchingMode(true)
-                }
-                else if (getText().isEmpty()) {
+                if (getText().isEmpty()) {
                     viewModel.clearSearch()
                 }
             }
@@ -251,6 +246,13 @@ class BottomSheetParticipantDialog(
             // 임시 토스트
             Toast.makeText(requireContext(), "CSV 파일을 읽는 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+
+        //다이얼로그 닫히면 검색 초기화(선택 화면 보이게 하기)
+        viewModel.clearSearch()
     }
 
 
