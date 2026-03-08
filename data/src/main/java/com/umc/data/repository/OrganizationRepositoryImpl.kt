@@ -54,6 +54,12 @@ class OrganizationRepositoryImpl @Inject constructor(
             response.chapters.map { Chapter(it.id, it.name) }
         }
 
+    override suspend fun getChapterDetail(chapterId: Long): ApiState<Chapter> {
+        return organizationDataSource.getChapterDetail(chapterId).map { response ->
+            Chapter(response.id, response.name)
+        }
+    }
+
     override suspend fun getStudyGroupDetail(groupId: Long): ApiState<StudyGroupDetail> =
         organizationDataSource.getStudyGroupDetail(groupId).map { dto ->
             dto?.toModel() ?: StudyGroupDetail(

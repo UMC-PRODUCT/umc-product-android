@@ -135,6 +135,8 @@ object Endpoints {
         const val CHAPTER = "api/v1/chapters"
         const val CHAPTER_WITH_SCHOOL = "$CHAPTER/with-schools"
 
+        const val CHAPTER_ID = "$CHAPTER/{chapterId}"
+
     }
 
     object Terms{

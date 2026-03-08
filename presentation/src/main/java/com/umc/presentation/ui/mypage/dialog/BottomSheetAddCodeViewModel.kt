@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
 import com.umc.domain.usecase.challenger.AddChallengerRecordMemberUseCase
+import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -16,6 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class BottomSheetAddCodeViewModel @Inject constructor(
     private val addChallengerRecordMemberUseCase: AddChallengerRecordMemberUseCase,
+    private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
 ) : BaseViewModel<BottomSheetAddCodeUiState, BottomSheetAddCodeEvent>(
     BottomSheetAddCodeUiState()
 ) {
@@ -33,7 +35,18 @@ class BottomSheetAddCodeViewModel @Inject constructor(
             resultResponse(
                 response = addChallengerRecordMemberUseCase(request),
                 successCallback = {
-                    emitEvent(BottomSheetAddCodeEvent.Confirm)
+                    //유저 정보 업데이트를 위한 호출
+                    viewModelScope.launch {
+                        resultResponse(
+                            response = getMyProfileUseCase(),
+                            successCallback = {
+                                emitEvent(BottomSheetAddCodeEvent.Confirm)
+                            },
+                            errorCallback = {
+                                emitEvent(BottomSheetAddCodeEvent.Confirm)
+                            }
+                        )
+                    }
                 },
                 errorCallback = { failState ->
                     emitEvent(BottomSheetAddCodeEvent.ShowToast(failState.message))
