@@ -42,7 +42,7 @@ interface OrganizationDataSource {
     ): ApiState<SchoolPageResponse>
     suspend fun getAllChapter(): ApiState<ChapterResponse>
     suspend fun getStudyGroupDetail(groupId: Long): ApiState<StudyGroupDetailResponse>
-    suspend fun getSchoolDetail(schoolId: Int): ApiState<SchoolDetailResponse>
+    suspend fun getSchoolDetail(schoolId: Long): ApiState<SchoolDetailResponse>
     suspend fun getMyStudyGroupList(): ApiState<MyStudyGroupListResponse>
     suspend fun getUnassignedSchool(gisuId: Int): ApiState<SchoolListResponse>
     suspend fun getSchoolLink(schoolId: Int): ApiState<SchoolLinksResponse>

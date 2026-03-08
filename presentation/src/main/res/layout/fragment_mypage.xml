@@ -696,6 +696,39 @@
                     android:src="@drawable/ic_arrow_next"
                     app:tint="@color/neutral400" />
             </LinearLayout>
+
+            <!--내 활동 추가-->
+            <LinearLayout
+                android:id="@+id/mypage_btn_addactivity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:onClick="@{() -> vm.navigateToAddActivity()}"
+                android:padding="12dp">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_add"
+                    app:tint="@color/neutral800" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:text="@string/mypage_addactivity"
+                    android:textAppearance="@style/Body"
+                    android:textColor="@color/neutral800" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arrow_next"
+                    app:tint="@color/neutral400" />
+            </LinearLayout>
+
         </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

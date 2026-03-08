@@ -4,6 +4,7 @@ import com.umc.data.dataSource.OrganizationDataSource
 import com.umc.data.response.organization.*
 import com.umc.data.response.organization.GisuListResponse.Companion.toModel
 import com.umc.data.response.organization.GisuInfoResponse.Companion.toModel
+import com.umc.data.response.organization.SchoolDetailResponse.Companion.toModel
 import com.umc.data.response.organization.SchoolNameResponse.Companion.toModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
@@ -68,8 +69,10 @@ class OrganizationRepositoryImpl @Inject constructor(
             )
         }
 
-    override suspend fun getSchoolDetail(schoolId: Int): ApiState<Unit> =
-        organizationDataSource.getSchoolDetail(schoolId).map { Unit } //임시
+    override suspend fun getSchoolDetail(schoolId: Long): ApiState<SchoolInfo> =
+        organizationDataSource.getSchoolDetail(schoolId).map { dto ->
+            dto.toModel()
+        } //임시
 
     override suspend fun getMyStudyGroupList(): ApiState<Unit> =
         organizationDataSource.getMyStudyGroupList().map { Unit } //임시

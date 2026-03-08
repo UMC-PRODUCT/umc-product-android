@@ -36,7 +36,6 @@
             android:id="@+id/cb_category"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:buttonTint="@color/primary500"
             android:checked="@{item.isChecked}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

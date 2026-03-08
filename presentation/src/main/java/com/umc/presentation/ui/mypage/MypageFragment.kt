@@ -23,6 +23,7 @@ import android.provider.Settings
 import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
 import com.umc.presentation.MainGraphDirections
+import com.umc.presentation.ui.mypage.dialog.BottomSheetAddCodeDialog
 
 @AndroidEntryPoint
 class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState, MypageFragmentEvent, MypageViewModel>(
@@ -136,6 +137,11 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
                     showType = "MYSCRAP"
                 )
                 findNavController().navigate(action)
+            }
+
+            is MypageFragmentEvent.NavigateToAddActivity -> {
+                val dialog = BottomSheetAddCodeDialog()
+                dialog.show(parentFragmentManager, "BottomSheetAddCodeDialog")
             }
 
 

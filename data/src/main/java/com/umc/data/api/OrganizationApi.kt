@@ -86,7 +86,7 @@ interface OrganizationApi {
 
     @GET(Endpoints.Organization.SCHOOL_ID)
     suspend fun getSchoolDetail(
-        @Path(PATH_SCHOOL_ID) schoolId : Int,
+        @Path(PATH_SCHOOL_ID) schoolId : Long,
     ): ApiResponse<SchoolDetailResponse>
 
     @GET(Endpoints.Organization.STUDY_GROUD_NAME)
