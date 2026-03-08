@@ -49,19 +49,26 @@ class AdminCheckViewModel @Inject constructor(
      */
     private suspend fun checkPermissionsAndUpdate(sessions: List<AdminSessionCheck>) {
         val uiModels = sessions.map { session ->
-            val authResponse = getAuthAccessUseCase(ResourceType.ATTENDANCE_SHEET, session.sheetId)
-
-            var hasApprove = false
-            if (authResponse is ApiState.Success) {
-                // permissions 리스트 중 APPROVE 타입이 있고, hasPermission이 true인지 확인
-                hasApprove = authResponse.data.permissions.any {
+            // 출석 승인 권한 체크 (ATTENDANCE_SHEET - APPROVE)
+            val approveAuthResponse = getAuthAccessUseCase(ResourceType.ATTENDANCE_SHEET, session.sheetId)
+            val hasApprove = if (approveAuthResponse is ApiState.Success) {
+                approveAuthResponse.data.permissions.any {
                     it.type == PermissionType.APPROVE && it.hasPermission
                 }
-            }
+            } else false
+
+            // 위치 변경 권한 체크 (SCHEDULE - WRITE)
+            val writeAuthResponse = getAuthAccessUseCase(ResourceType.SCHEDULE, session.id)
+            val hasWrite = if (writeAuthResponse is ApiState.Success) {
+                writeAuthResponse.data.permissions.any {
+                    it.type == PermissionType.WRITE && it.hasPermission
+                }
+            } else false
 
             AdminSessionUIModel(
                 session = session,
-                hasApprovePermission = hasApprove
+                hasApprovePermission = hasApprove,
+                hasWritePermission = hasWrite
             )
         }
         updateState { copy(adminSessions = uiModels) }

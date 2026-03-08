@@ -5,7 +5,8 @@ import com.umc.presentation.util.UFormat
 
 data class AdminSessionUIModel(
     val session: AdminSessionCheck,
-    val hasApprovePermission: Boolean = false
+    val hasApprovePermission: Boolean = false,
+    val hasWritePermission: Boolean = false
 ) {
     val formattedDate: String = UFormat.formatDate(session.date)
     val formattedTime: String = UFormat.formatDuration(session.startTime, session.endTime)
