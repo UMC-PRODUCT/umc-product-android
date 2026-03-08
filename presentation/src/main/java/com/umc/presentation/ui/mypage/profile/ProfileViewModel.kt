@@ -13,6 +13,7 @@ import com.umc.domain.model.mypage.UserActiveItem
 import com.umc.domain.model.request.member.LinkItem
 import com.umc.domain.model.request.member.UpdateLinkRequest
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
 import com.umc.domain.usecase.member.UpdateMyLinkUseCase
 import com.umc.domain.usecase.member.UpdateMyProfileUseCase
 import com.umc.domain.usecase.organization.GetSchoolNameUseCase
@@ -35,6 +36,7 @@ class ProfileViewModel @Inject constructor(
     private val updateMyProfileUseCase: UpdateMyProfileUseCase, //프로필 정보 업데이트
     private val updateMyLinkUseCase: UpdateMyLinkUseCase, //링크 정보 업데이트
     private val getSchoolNameUseCase: GetSchoolNameUseCase, //학교 이름 가져오기
+    private val getMyOAuthUseCase: GetMyOAuthUseCase, //내 OAuth 가져오기
     ) : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     ProfileFragmentUiState()){
 
@@ -55,6 +57,25 @@ class ProfileViewModel @Inject constructor(
             }
         }
 
+        getUserOAuth()
+
+    }
+
+    //소셜 정보(OAuth 받아오기)
+    fun getUserOAuth(){
+        viewModelScope.launch {
+            resultResponse(
+                response = getMyOAuthUseCase(),
+                successCallback = { myOAuth ->
+                    val platforms = myOAuth.map { LoginType.valueOf(it.provider) }
+                    updateState {
+                        copy(linkedPlatforms = platforms)
+                    }
+
+                },
+                errorCallback = {}
+            )
+        }
     }
 
     //유저 정보를 통해 활동 이력 및 기수파트 작성
@@ -231,7 +252,7 @@ class ProfileViewModel @Inject constructor(
 
 data class ProfileFragmentUiState(
     //유저 정보 (고정)
-    val loginType: LoginType = LoginType.KAKAO,
+    val linkedPlatforms: List<LoginType> = emptyList(),
     val userInfo : UserInfo = UserInfo(),
 
 

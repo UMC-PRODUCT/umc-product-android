@@ -160,6 +160,8 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
 
             is MypageFragmentEvent.NavigateToSocialSetting -> {
                 /**TODO 소셜 연동 이동 로직**/
+                val action = MainGraphDirections.actionGlobalToLogin()
+                findNavController().navigate(action)
             }
 
             is MypageFragmentEvent.NavigateToPersonalInformation -> {

@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.mypage
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LoginType
@@ -8,6 +9,7 @@ import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
+import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
 import com.umc.domain.usecase.member.DeleteUserUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
@@ -24,6 +26,7 @@ class MypageViewModel @Inject constructor(
     private val clearAllDataUseCase : ClearAllDataUseCase, //모든 정보 삭제하기
     private val deleteUserUseCase: DeleteUserUseCase, //회원 탈퇴
     private val getTermsByTypeUseCase: GetTermsByTypeUseCase, //타입으로 약관 가져오기
+    private val getMyOAuthUseCase: GetMyOAuthUseCase, //내 OAuth 가져오기
 ) : BaseViewModel<MypageFragmentUiState, MypageFragmentEvent>(
     MypageFragmentUiState()){
 
@@ -34,6 +37,8 @@ class MypageViewModel @Inject constructor(
             //유저 정보 가져오기
             getUserInfo()
 
+            //내 소셜 정보 가져오기
+            getUserOAuth()
         }
     }
 
@@ -94,11 +99,25 @@ class MypageViewModel @Inject constructor(
             }
 
         }
-            
-
 
     }
 
+    //소셜 정보(OAuth 받아오기)
+    fun getUserOAuth(){
+        viewModelScope.launch {
+            resultResponse(
+                response = getMyOAuthUseCase(),
+                successCallback = { myOAuth ->
+                    val platforms = myOAuth.map { LoginType.valueOf(it.provider) }
+                    updateState {
+                        copy(linkedPlatforms = platforms)
+                    }
+
+                },
+                errorCallback = {}
+            )
+        }
+    }
 
     //usecase를 통해 appdatastore에 저장된 내용 날리기
     fun deleteAllData(){
@@ -244,7 +263,8 @@ class MypageViewModel @Inject constructor(
 data class MypageFragmentUiState(
     // 현재 카카오 구글 로그인 2개로 비교하니 카카오를 기준으로 view 세팅
     val userInfo: UserInfo = UserInfo(),
-    val loginType: LoginType = LoginType.KAKAO,
+    val linkedPlatforms: List<LoginType> = emptyList(),
+    val bothLogin: Boolean = false,
     
     // 현재 직책
     val myRecentCarrer : String = "",
@@ -260,7 +280,15 @@ data class MypageFragmentUiState(
     val kakaoInquireChannelId : String = "_MDxhqX", //카카오 문의 채널
     
     
-) : UiState
+) : UiState {
+    //둘 다 연동되어 있으면(사이즈가 2 이상이면) 카드 숨기기
+    val isSocialCardVisible: Boolean
+        get() = linkedPlatforms.size < 2
+
+    //카카오가 있으면 구글을, 없으면(구글이 있거나 둘 다 없으면) 카카오를 제안합니다.
+    val targetPlatform: LoginType
+        get() = if (linkedPlatforms.contains(LoginType.KAKAO)) LoginType.GOOGLE else LoginType.KAKAO
+}
 
 sealed interface MypageFragmentEvent : UiEvent {
     //이동하기
