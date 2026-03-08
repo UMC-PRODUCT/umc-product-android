@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+        <import type="android.view.View" />
         <variable
             name="vm"
             type="com.umc.presentation.ui.act.ActViewModel" />
@@ -43,13 +44,15 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:text="@string/admin_label"
-                android:textColor="@color/neutral600" />
+                android:textColor="@color/neutral600"
+                android:visibility="@{vm.uiState.hasAdminAccess ? View.VISIBLE : View.GONE}" />
 
             <com.umc.presentation.component.USwitch
                 android:id="@+id/switch_admin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:checked="@{vm.uiState.isAdmin}" />
+                android:checked="@{vm.uiState.isAdmin}"
+                android:visibility="@{vm.uiState.hasAdminAccess ? View.VISIBLE : View.GONE}" />
 
         </LinearLayout>
 
