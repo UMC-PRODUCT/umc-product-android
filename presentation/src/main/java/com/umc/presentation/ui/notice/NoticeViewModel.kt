@@ -1,14 +1,13 @@
 package com.umc.presentation.ui.notice
 
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.ChallengerRecord
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.organization.GisuItem
-import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.GetNoticeListUseCase
-import com.umc.domain.usecase.organization.GetGisuListUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -18,14 +17,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NoticeViewModel @Inject constructor(
-    private val getGisuListUseCase: GetGisuListUseCase,
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getNoticeListUseCase: GetNoticeListUseCase
 ) : BaseViewModel<NoticeUiState, NoticeEvent>(
     NoticeUiState(),
 ) {
     init {
-        getDropDownList()
         getMyProfile()
     }
 
@@ -39,42 +36,64 @@ class NoticeViewModel @Inject constructor(
 
     private fun createChipsFromUserInfo(userInfo: UserInfo): List<NoticeChipState> {
         val chipList = mutableListOf<NoticeChipState>()
+
         chipList.add(NoticeChipState(text = "전체", isClicked = true))
 
+        // challengerRecords가 비어있으면 기본 "전체" 칩만 반환
+        if (userInfo.challengerRecords.isEmpty()) {
+            updateState { copy(canWriteNotice = false) }
+            return chipList
+        }
+
         // 공지 작성 권한 확인 (MEMBER가 아닌 경우에만 권한 있음)
-        val hasWritePermission = userInfo.roles.any { role ->
-            UserChallengerRole.from(role.roleType) != UserChallengerRole.MEMBER
+        val hasWritePermission = userInfo.challengerRecords.any { record ->
+            record.roles?.any { role ->
+                com.umc.domain.model.enums.UserChallengerRole.from(role.roleType) != com.umc.domain.model.enums.UserChallengerRole.MEMBER
+            } ?: false
         }
         updateState { copy(canWriteNotice = hasWritePermission) }
 
-        if (userInfo.schoolId != 0L) {
-            chipList.add(
-                NoticeChipState(
-                    text = userInfo.schoolName,
-                    schoolId = userInfo.schoolId
-                )
-            )
-        }
+        // challengerRecords를 순회하며 각 기수별 칩 생성
+        userInfo.challengerRecords.forEach { record ->
+            val gisuId = record.gisuId
 
-        userInfo.roles.forEach { role ->
-            val chapterName = role.chapterName
-            if (!chapterName.isNullOrEmpty() && chipList.none { it.text == "$chapterName 지부" }) {
-                chipList.add(
-                    NoticeChipState(
-                        text = "$chapterName 지부",
-                        chapterId = role.chapterId
+            if (record.schoolId != 0L && record.schoolName.isNotEmpty()) {
+                val schoolChipText = record.schoolName
+                if (chipList.none { it.text == schoolChipText }) {
+                    chipList.add(
+                        NoticeChipState(
+                            text = schoolChipText,
+                            schoolId = record.schoolId,
+                            gisuId = gisuId
+                        )
                     )
-                )
+                }
             }
 
-            val responsiblePart = role.responsiblePart
-            if (!responsiblePart.isNullOrEmpty() && chipList.none { it.text == responsiblePart }) {
-                chipList.add(
-                    NoticeChipState(
-                        text = responsiblePart,
-                        part = responsiblePart
+            if (!record.chapterName.isNullOrEmpty()) {
+                val chapterChipText = record.chapterName!!
+                if (chipList.none { it.text == chapterChipText }) {
+                    chipList.add(
+                        NoticeChipState(
+                            text = chapterChipText,
+                            chapterId = record.chapterId,
+                            gisuId = gisuId
+                        )
                     )
-                )
+                }
+            }
+
+            if (record.part.isNotEmpty()) {
+                val partChipText = record.part
+                if (chipList.none { it.text == partChipText }) {
+                    chipList.add(
+                        NoticeChipState(
+                            text = partChipText,
+                            part = record.part,
+                            gisuId = gisuId
+                        )
+                    )
+                }
             }
         }
 
@@ -87,11 +106,6 @@ class NoticeViewModel @Inject constructor(
         }
         updateChipList(newList)
 
-        if (clickedItem.text == "중앙운영사무국") {
-            updateState { copy(isShowSubChip = true) }
-        } else {
-            updateState { copy(isShowSubChip = false) }
-        }
         getNoticeList(
             chapterId = clickedItem.chapterId,
             schoolId = clickedItem.schoolId,
@@ -132,19 +146,28 @@ class NoticeViewModel @Inject constructor(
         emitEvent(NoticeEvent.MoveToWriteEvent)
     }
 
-    fun getDropDownList() = viewModelScope.launch {
-        resultResponse(
-            response = getGisuListUseCase(),
-            successCallback = {
-                val nowTitle = "${it.gisuList.find { it.isActive }?.generation}기 공지사항"
-                updateNowTitle(nowTitle, it.gisuList.find { it.isActive }?.gisuId?.toLong() ?: 0)
-                updateDropDownList(it.gisuList)
-            }
-        )
+    private fun createDropDownListFromChallengerRecords(challengerRecords: List<ChallengerRecord>): List<GisuItem> {
+        return challengerRecords.map { record ->
+            GisuItem(
+                gisuId = record.gisuId.toInt(),
+                generation = record.gisu.toInt(),
+                isActive = false
+            )
+        }.distinctBy { it.gisuId } // 중복 기수 제거
     }
 
     private fun getMyProfile() = viewModelScope.launch {
         getUserInfoUseCase().collect { userInfo ->
+            val dropdownList = createDropDownListFromChallengerRecords(userInfo.challengerRecords)
+            
+            // challengerRecords가 있으면 첫 번째 기수를 기본 선택
+            if (dropdownList.isNotEmpty()) {
+                val activeGisu = dropdownList.firstOrNull { it.isActive } ?: dropdownList.first()
+                val nowTitle = "${activeGisu.generation}기 공지사항"
+                updateNowTitle(nowTitle, activeGisu.gisuId.toLong())
+            }
+            
+            updateDropDownList(dropdownList)
             updateChipList(createChipsFromUserInfo(userInfo))
         }
     }

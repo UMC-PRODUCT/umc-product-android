@@ -1,13 +1,10 @@
 package com.umc.presentation.ui.login
 
-import android.content.Intent
-import android.provider.Settings
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
-import androidx.credentials.exceptions.NoCredentialException
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -15,10 +12,9 @@ import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.Scopes
 import com.google.android.gms.common.api.Scope
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
@@ -31,8 +27,6 @@ import com.umc.presentation.util.ULog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.security.MessageDigest
-import java.util.UUID
 
 @AndroidEntryPoint
 class LoginFragment : BaseFragment<FragmentLoginBinding, UiState, LoginEvent, LoginViewModel>(
@@ -118,36 +112,23 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, UiState, LoginEvent, Lo
     private fun signInGoogle() {
         lifecycleScope.launch {
             try {
-                val rawNonce = UUID.randomUUID().toString()
-                val hashedNonce = hashNonce(rawNonce)
+                val googleSignInOption = GetSignInWithGoogleOption.Builder(
+                    com.umc.presentation.BuildConfig.GOOGLE_LOGIN_KEY
+                ).build()
 
-                val googleIdOption = GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(com.umc.presentation.BuildConfig.GOOGLE_LOGIN_KEY)
-                    .setNonce(hashedNonce)
-                    .setAutoSelectEnabled(true)
-                    .build()
-
-                // 4. 요청 객체 생성
                 val request = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
+                    .addCredentialOption(googleSignInOption)
                     .build()
 
-                // 5. API 호출 (비동기)
                 val result = credentialManager.getCredential(
                     request = request,
                     context = requireActivity()
                 )
 
-
-                // 6. 결과 처리
                 handleSignIn(result)
 
-            } catch (e: NoCredentialException) {
-                ULog.d("사용 가능한 자격 증명이 없습니다.")
-                showGoogleAccountError()
             } catch (e: GetCredentialException) {
-                ULog.d("인증 실패: ${e.message}")
+                ULog.d("Google 로그인 실패: ${e.message}")
             }
         }
     }
@@ -197,21 +178,5 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, UiState, LoginEvent, Lo
 
         return authorizationResult.accessToken
             ?: throw IllegalStateException("Access Token을 받을 수 없습니다")
-    }
-
-    private fun showGoogleAccountError() {
-        ULog.d("Google 로그인 실패: 기기에 Google 계정이 없습니다.")
-        val intent = Intent(Settings.ACTION_ADD_ACCOUNT).apply {
-            putExtra(Settings.EXTRA_ACCOUNT_TYPES, arrayOf("com.google"))
-        }
-        startActivity(intent)
-    }
-
-    // 간단한 SHA-256 해시 함수 (Nonce용)
-    private fun hashNonce(rawNonce: String): String {
-        val bytes = rawNonce.toByteArray()
-        val md = MessageDigest.getInstance("SHA-256")
-        val digest = md.digest(bytes)
-        return digest.fold("") { str, it -> str + "%02x".format(it) }
     }
 }

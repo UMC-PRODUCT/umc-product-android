@@ -6,5 +6,6 @@ data class NoticeChipState(
     val schoolId: Long? = null,
     val chapterId: Long? = null,
     val part: String? = null,
-    val hanBottomSheet: Boolean = false
+    val hanBottomSheet: Boolean = false,
+    val gisuId: Long? = null
 )

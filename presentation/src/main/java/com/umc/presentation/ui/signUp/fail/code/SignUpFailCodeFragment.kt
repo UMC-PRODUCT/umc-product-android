@@ -3,8 +3,9 @@ package com.umc.presentation.ui.signUp.fail.code
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.umc.presentation.base.BaseFragment
+import com.umc.presentation.component.UMypageDialog
+import com.umc.presentation.component.UMypageDialogModel
 import com.umc.presentation.databinding.FragmentSignUpFailCodeBinding
-import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -45,12 +46,16 @@ class SignUpFailCodeFragment : BaseFragment<FragmentSignUpFailCodeBinding, SignU
                 val action = SignUpFailCodeFragmentDirections.actionSignUpFailCodeToHome()
                 findNavController().navigate(action)
             }
-            is SignUpFailCodeEvent.ShowErrorToast -> {
-                UToast.createToast(
-                    requireContext(),
-                    event.message,
-                    state = UToast.State.ERROR,
-                ).show()
+            is SignUpFailCodeEvent.ShowErrorDialog -> {
+                UMypageDialog(
+                    model = UMypageDialogModel(
+                        title = event.message,
+                        content = "",
+                        isTwoButton = false,
+                        confirmText = "확인"
+                    ),
+                    onPositive = {}
+                ).show(parentFragmentManager, null)
             }
         }
     }

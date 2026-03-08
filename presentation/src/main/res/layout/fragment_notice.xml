@@ -24,6 +24,7 @@
             android:layout_marginStart="24dp"
             android:layout_marginTop="18dp"
             android:text="@{vm.uiState.nowTitle}"
+            android:onClick="@{()->vm.onClickShowDropDown()}"
             android:textAppearance="@style/Title2Bold"
             android:textColor="@color/neutral800"
             app:layout_constraintStart_toStartOf="parent"

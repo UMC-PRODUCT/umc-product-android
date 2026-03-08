@@ -1,15 +1,21 @@
 package com.umc.presentation.ui.signUp.permission
 
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UserInfo
+import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class PermissionViewModel
 @Inject
-constructor() : BaseViewModel<PermissionUiState, PermissionEvent>(
+constructor(
+    private val getMyProfileUseCase: GetMyProfileUseCase,
+) : BaseViewModel<PermissionUiState, PermissionEvent>(
     PermissionUiState(),
 ) {
 
@@ -53,12 +59,26 @@ constructor() : BaseViewModel<PermissionUiState, PermissionEvent>(
         emitEvent(PermissionEvent.ShowPermissionDialog)
     }
 
-    fun signUp() {
-        //TODO 서버 통신 성공 시
-        emitEvent(PermissionEvent.MoveToMainEvent)
+    fun signUp() = viewModelScope.launch {
+        resultResponse(
+            response = getMyProfileUseCase(),
+            successCallback = { userInfo ->
+                if (hasChallengerRecords(userInfo)) {
+                    emitEvent(PermissionEvent.MoveToMainEvent)
+                } else {
+                    emitEvent(PermissionEvent.MoveToFailEvent)
+                }
+            },
+            errorCallback = {
+                emitEvent(PermissionEvent.MoveToFailEvent)
+            }
+        )
+    }
 
-        //TODO 실패 시
-        //emitEvent(PermissionEvent.MoveToFailEvent)
+    private fun hasChallengerRecords(userInfo: UserInfo): Boolean {
+        val hasRoleChallengerId = userInfo.roles.any { it.challengerId > 0 }
+        val hasRecordChallengerId = userInfo.challengerRecords.any { it.challengerId > 0 }
+        return hasRoleChallengerId || hasRecordChallengerId
     }
 
 }

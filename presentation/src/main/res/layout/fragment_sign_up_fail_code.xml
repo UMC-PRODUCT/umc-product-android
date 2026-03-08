@@ -85,6 +85,7 @@
             android:layout_marginHorizontal="24dp"
             android:layout_marginBottom="24dp"
             android:onClick="@{()->vm.register()}"
+            app:cardBackgroundColor="@color/primary500"
             app:backgroundColor="@color/primary500"
             app:cornerRadius="8dp"
             app:pressedColor="@color/primary700"

@@ -35,7 +35,7 @@ class SignUpFailCodeViewModel @Inject constructor(
                 emitEvent(SignUpFailCodeEvent.MoveToHome)
             },
             errorCallback = { failState ->
-                emitEvent(SignUpFailCodeEvent.ShowErrorToast(failState.message))
+                emitEvent(SignUpFailCodeEvent.ShowErrorDialog(failState.message))
             }
         )
     }
@@ -48,5 +48,5 @@ data class SignUpFailCodeState(
 sealed interface SignUpFailCodeEvent : UiEvent {
     object MoveToBack : SignUpFailCodeEvent
     object MoveToHome : SignUpFailCodeEvent
-    data class ShowErrorToast(val message: String) : SignUpFailCodeEvent
+    data class ShowErrorDialog(val message: String) : SignUpFailCodeEvent
 }

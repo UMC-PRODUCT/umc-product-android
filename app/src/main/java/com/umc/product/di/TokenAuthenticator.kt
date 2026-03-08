@@ -38,10 +38,6 @@ class TokenAuthenticator @Inject constructor(
                     response.request
                         .newBuilder()
                         .removeHeader("Authorization")
-                        .header(
-                            "Authorization",
-                            "Bearer ${appDataStoreRepository.getAccessToken()}",
-                        )
                         .build()
                 } else {
                     null

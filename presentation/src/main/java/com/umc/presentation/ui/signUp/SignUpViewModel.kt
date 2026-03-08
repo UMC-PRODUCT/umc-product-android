@@ -110,6 +110,7 @@ class SignUpViewModel @Inject constructor(
                         )
                     }
                     emitEvent(SignUpEvent.ShowVerifyToast)
+                    emitEvent(SignUpEvent.FocusVerifyCodeField)
                 },
                 errorCallback = {
                     errorEmailVerify()
@@ -259,4 +260,5 @@ sealed interface SignUpEvent : UiEvent {
     object ShowVerifyToast : SignUpEvent
     object ShowVerifyCompleteToast : SignUpEvent
     object ShowVerifyErrorToast : SignUpEvent
+    object FocusVerifyCodeField : SignUpEvent
 }
