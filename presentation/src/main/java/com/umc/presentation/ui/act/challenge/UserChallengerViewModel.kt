@@ -82,7 +82,7 @@ class UserChallengerViewModel @Inject constructor(
                     }
                 },
                 errorCallback = { failState ->
-                    emitEvent(UserChallengerEvent.ShowErrorToast(failState.message))
+                    emitEvent(AdminChallengerEvent.ShowToast(failState.message, isError = true))
                 }
             )
         }
@@ -136,7 +136,7 @@ class UserChallengerViewModel @Inject constructor(
                     emitEvent(UserChallengerEvent.NavigateToDetail(finalModel))
                 },
                 errorCallback = { failState ->
-                    emitEvent(UserChallengerEvent.ShowErrorToast(failState.message))
+                    emitEvent(AdminChallengerEvent.ShowToast(failState.message, isError = true))
                 }
             )
         }
@@ -151,5 +151,5 @@ data class UserChallengerUiState(
 
 sealed interface UserChallengerEvent : UiEvent {
     data class NavigateToDetail(val model: ChallengerInfoDialogModel) : UserChallengerEvent
-    data class ShowErrorToast(val message: String) : UserChallengerEvent
+    data class ShowToast(val message: String, val isError: Boolean = false) : UserChallengerEvent
 }

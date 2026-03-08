@@ -40,7 +40,9 @@ class UserCheckViewModel @Inject constructor(
                     updateState { copy(availableSessions = list, availableCount = list.size) }
                     list.forEach { fetchSessionDetail(it.session.id) }
                 },
-                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+                errorCallback = { failState ->
+                    emitEvent(UserCheckEvent.ShowToast(failState.message, isError = true))
+                }
             )
         }
     }
@@ -59,7 +61,9 @@ class UserCheckViewModel @Inject constructor(
                     }
                     updateState { copy(attendanceHistories = historyUIList) }
                 },
-                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+                errorCallback = { failState ->
+                    emitEvent(UserCheckEvent.ShowToast(failState.message, isError = true))
+                }
             )
         }
     }
@@ -85,7 +89,9 @@ class UserCheckViewModel @Inject constructor(
                         copy(availableSessions = updatedList)
                     }
                 },
-                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+                errorCallback = { failState ->
+                    emitEvent(UserCheckEvent.ShowToast(failState.message, isError = true))
+                }
             )
         }
     }
@@ -108,7 +114,9 @@ class UserCheckViewModel @Inject constructor(
             resultResponse(
                 response = postAttendanceCheckUseCase(request),
                 successCallback = { fetchAttendanceData() },
-                errorCallback = { failState -> emitEvent(UserCheckEvent.ShowToast(failState.message)) }
+                errorCallback = { failState ->
+                    emitEvent(UserCheckEvent.ShowToast(failState.message, isError = true))
+                }
             )
         }
     }
@@ -125,7 +133,7 @@ class UserCheckViewModel @Inject constructor(
                     fetchAttendanceHistory()
                 },
                 errorCallback = { failState ->
-                    emitEvent(UserCheckEvent.ShowToast(failState.message))
+                    emitEvent(UserCheckEvent.ShowToast(failState.message, isError = true))
                 }
             )
         }
@@ -182,7 +190,7 @@ data class UserCheckUiState(
 ) : UiState
 
 sealed class UserCheckEvent : UiEvent {
-    data class ShowToast(val message: String) : UserCheckEvent()
+    data class ShowToast(val message: String, val isError: Boolean = false) : UserCheckEvent()
     data class ShowReasonDialog(val sessionId: Long) : UserCheckEvent()
     data class NavigateToFailureReason(val sessionId: Long) : UserCheckEvent()
 }

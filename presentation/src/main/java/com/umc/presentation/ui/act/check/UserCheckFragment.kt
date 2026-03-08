@@ -21,6 +21,7 @@ import com.umc.presentation.ui.act.adapter.CheckAvailableAdapter
 import com.umc.presentation.ui.act.adapter.CheckHistoryAdapter
 import com.umc.presentation.ui.act.adapter.SectionHeaderAdapter
 import com.umc.presentation.ui.act.adapter.EmptyStateAdapter
+import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -167,7 +168,12 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
         when (event) {
             is UserCheckEvent.ShowReasonDialog -> showAttendanceReasonDialog(event.sessionId)
             is UserCheckEvent.ShowToast -> {
-                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+                val state = if (event.isError) UToast.State.ERROR else UToast.State.CHECK
+                UToast.createToast(
+                    context = requireContext(),
+                    message = event.message,
+                    state = state
+                ).show()
             }
             is UserCheckEvent.NavigateToFailureReason -> {
 
