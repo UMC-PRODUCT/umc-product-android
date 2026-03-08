@@ -30,11 +30,14 @@ class AdminCheckViewModel @Inject constructor(
     }
 
     fun fetchAdminSessions() {
+        startLoading()
+
         viewModelScope.launch {
             resultResponse(
                 response = getAdminSessionListUseCase(),
                 successCallback = { data ->
                     viewModelScope.launch {
+                        startLoading()
                         checkPermissionsAndUpdate(data)
                     }
                 },
@@ -72,6 +75,7 @@ class AdminCheckViewModel @Inject constructor(
             )
         }
         updateState { copy(adminSessions = uiModels) }
+        stopLoading()
     }
 
     /**
@@ -95,7 +99,8 @@ class AdminCheckViewModel @Inject constructor(
 }
 
 data class AdminCheckUiState(
-    val adminSessions: List<AdminSessionUIModel> = emptyList()
+    val adminSessions: List<AdminSessionUIModel> = emptyList(),
+    val isLoading: Boolean = true
 ) : UiState
 
 sealed class AdminCheckEvent : UiEvent {

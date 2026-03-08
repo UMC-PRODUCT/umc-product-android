@@ -2,6 +2,9 @@ package com.umc.presentation.ui.act.check
 
 import androidx.fragment.app.viewModels
 import com.umc.presentation.base.BaseFragment
+import com.umc.presentation.component.ULoadingDialog
+import com.umc.presentation.component.dismissLoading
+import com.umc.presentation.component.showLoadingDialog
 import com.umc.presentation.databinding.FragmentAdminCheckBinding
 import com.umc.presentation.ui.act.adapter.AdminCheckAdapter
 import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
@@ -14,6 +17,7 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
     FragmentAdminCheckBinding::inflate
 ) {
     override val viewModel: AdminCheckViewModel by viewModels()
+    private var loadingDialog: ULoadingDialog? = null
 
     private val adminAdapter by lazy {
         AdminCheckAdapter(
@@ -34,6 +38,19 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
     override fun initStates() {
         repeatOnStarted(viewLifecycleOwner) {
             launch {
+                viewModel.isLoading.collect { isLoading ->
+                    if (isLoading) {
+                        if (loadingDialog == null) {
+                            loadingDialog = childFragmentManager.showLoadingDialog()
+                        }
+                    } else {
+                        loadingDialog?.dismissLoading()
+                        loadingDialog = null
+                    }
+                }
+            }
+
+            launch {
                 viewModel.uiState.collect { state ->
                     adminAdapter.submitList(state.adminSessions)
                     binding.uiState = state
@@ -41,11 +58,15 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
             }
 
             launch {
-                viewModel.uiEvent.collect { event ->
-                    handleEvent(event)
-                }
+                viewModel.uiEvent.collect { event -> handleEvent(event) }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        loadingDialog?.dismissLoading()
+        loadingDialog = null
+        super.onDestroyView()
     }
 
     override fun handleEvent(event: AdminCheckEvent) {
