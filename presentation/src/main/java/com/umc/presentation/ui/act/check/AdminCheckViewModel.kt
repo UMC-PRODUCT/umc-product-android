@@ -38,11 +38,12 @@ class AdminCheckViewModel @Inject constructor(
                         checkPermissionsAndUpdate(data)
                     }
                 },
-                errorCallback = { failState -> emitEvent(AdminCheckEvent.ShowToast(failState.message)) }
+                errorCallback = { failState ->
+                    emitEvent(AdminCheckEvent.ShowToast(failState.message, isError = true))
+                }
             )
         }
     }
-
     /**
      * 각 세션별로 권한 체크를 병렬 실행
      */
@@ -74,11 +75,11 @@ class AdminCheckViewModel @Inject constructor(
             resultResponse(
                 response = updateScheduleLocationUseCase(sessionId, address, lat, lng),
                 successCallback = {
-                    emitEvent(AdminCheckEvent.ShowToast("출석 위치가 성공적으로 변경되었습니다."))
-                    fetchAdminSessions() // 변경 후 데이터 갱신
+                    emitEvent(AdminCheckEvent.ShowToast("출석 위치가 성공적으로 변경되었습니다.", isError = false))
+                    fetchAdminSessions()
                 },
                 errorCallback = { failState ->
-                    emitEvent(AdminCheckEvent.ShowToast(failState.message))
+                    emitEvent(AdminCheckEvent.ShowToast(failState.message, isError = true))
                 }
             )
         }
@@ -91,5 +92,5 @@ data class AdminCheckUiState(
 ) : UiState
 
 sealed class AdminCheckEvent : UiEvent {
-    data class ShowToast(val message: String) : AdminCheckEvent()
+    data class ShowToast(val message: String, val isError: Boolean = false) : AdminCheckEvent()
 }

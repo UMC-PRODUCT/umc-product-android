@@ -5,6 +5,7 @@ import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentAdminCheckBinding
 import com.umc.presentation.ui.act.adapter.AdminCheckAdapter
 import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
+import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -49,7 +50,15 @@ class AdminCheckFragment : BaseFragment<FragmentAdminCheckBinding, AdminCheckUiS
 
     override fun handleEvent(event: AdminCheckEvent) {
         when (event) {
-            is AdminCheckEvent.ShowToast -> { /* 토스트 출력 로직 */ }
+            is AdminCheckEvent.ShowToast -> {
+                val toastState = if (event.isError) UToast.State.ERROR else UToast.State.CHECK
+
+                UToast.createToast(
+                    context = requireContext(),
+                    message = event.message,
+                    state = toastState
+                ).show()
+            }
         }
     }
 
