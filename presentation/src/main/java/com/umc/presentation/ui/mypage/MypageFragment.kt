@@ -160,6 +160,7 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
 
             is MypageFragmentEvent.NavigateToSocialSetting -> {
                 /**TODO 소셜 연동 이동 로직**/
+                viewModel.deleteAllData()
                 val action = MainGraphDirections.actionGlobalToLogin()
                 findNavController().navigate(action)
             }

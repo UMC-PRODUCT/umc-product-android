@@ -170,7 +170,11 @@ class MypageViewModel @Inject constructor(
     }
 
     fun navigateToSocialSetting(){
-        emitEvent(MypageFragmentEvent.NavigateToSocialSetting)
+        viewModelScope.launch {
+            clearAllDataUseCase()
+            emitEvent(MypageFragmentEvent.NavigateToSocialSetting)
+        }
+
     }
 
     //개인정보처리 방침
@@ -264,7 +268,6 @@ data class MypageFragmentUiState(
     // 현재 카카오 구글 로그인 2개로 비교하니 카카오를 기준으로 view 세팅
     val userInfo: UserInfo = UserInfo(),
     val linkedPlatforms: List<LoginType> = emptyList(),
-    val bothLogin: Boolean = false,
     
     // 현재 직책
     val myRecentCarrer : String = "",
@@ -285,7 +288,7 @@ data class MypageFragmentUiState(
     val isSocialCardVisible: Boolean
         get() = linkedPlatforms.size < 2
 
-    //카카오가 있으면 구글을, 없으면(구글이 있거나 둘 다 없으면) 카카오를 제안합니다.
+    //카카오가 있으면 구글을, 없으면(구글이 있거나 둘 다 없으면) 카카오
     val targetPlatform: LoginType
         get() = if (linkedPlatforms.contains(LoginType.KAKAO)) LoginType.GOOGLE else LoginType.KAKAO
 }
