@@ -16,6 +16,7 @@ import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
 import com.umc.domain.usecase.member.UpdateMyLinkUseCase
 import com.umc.domain.usecase.member.UpdateMyProfileUseCase
+import com.umc.domain.usecase.organization.GetChapterDetailUseCase
 import com.umc.domain.usecase.organization.GetSchoolNameUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.presentation.base.BaseViewModel
@@ -36,6 +37,7 @@ class ProfileViewModel @Inject constructor(
     private val updateMyProfileUseCase: UpdateMyProfileUseCase, //프로필 정보 업데이트
     private val updateMyLinkUseCase: UpdateMyLinkUseCase, //링크 정보 업데이트
     private val getSchoolNameUseCase: GetSchoolNameUseCase, //학교 이름 가져오기
+    private val getChapterDetailUseCase: GetChapterDetailUseCase, //지부 이름 가져오기
     private val getMyOAuthUseCase: GetMyOAuthUseCase, //내 OAuth 가져오기
     ) : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     ProfileFragmentUiState()){
@@ -101,8 +103,8 @@ class ProfileViewModel @Inject constructor(
                                     position = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
                                 )
                             } 
-                            //그 외 (교내 회장)
-                            else {
+                            //그 외 - 학교일 때
+                            else if(roleItem.organizationType == "SCHOOL"){
                                 //들어갈 값
                                 var itemResult: UserActiveItem? = null
                                 resultResponse(
@@ -119,6 +121,29 @@ class ProfileViewModel @Inject constructor(
                                     }
                                 )
                                 itemResult!!
+                            }
+                            //그 외 - 지부일 때
+                            else if(roleItem.organizationType == "CHAPTER"){
+                                var itemResult: UserActiveItem? = null
+                                resultResponse(
+                                    response = getChapterDetailUseCase(roleItem.organizationId),
+                                    successCallback = { chapterInfo ->
+                                        //지부 이름 넣기
+                                        val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
+                                        itemResult = UserActiveItem(generationText, "${chapterInfo.name}지부 $label",label, )
+                                    },
+                                    errorCallback = {
+                                        val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
+                                        itemResult = UserActiveItem(generationText, label, label)
+                                    }
+                                )
+                                itemResult!!
+                            }
+                            //그 외 - 파트 자리 없고, central만 있는 경우
+                            else{
+                                val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
+                                val itemResult = UserActiveItem(generationText, label, "총괄")
+                                itemResult
                             }
                         }
                     }
