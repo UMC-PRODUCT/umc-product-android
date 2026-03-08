@@ -82,7 +82,7 @@ class UserChallengerViewModel @Inject constructor(
                     }
                 },
                 errorCallback = { failState ->
-                    emitEvent(AdminChallengerEvent.ShowToast(failState.message, isError = true))
+                    emitEvent(UserChallengerEvent.ShowToast(failState.message, isError = true))
                 }
             )
         }
@@ -136,7 +136,7 @@ class UserChallengerViewModel @Inject constructor(
                     emitEvent(UserChallengerEvent.NavigateToDetail(finalModel))
                 },
                 errorCallback = { failState ->
-                    emitEvent(AdminChallengerEvent.ShowToast(failState.message, isError = true))
+                    emitEvent(UserChallengerEvent.ShowToast(failState.message, isError = true))
                 }
             )
         }
