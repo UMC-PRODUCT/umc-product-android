@@ -22,6 +22,7 @@ import com.umc.presentation.extension.px
 import com.umc.presentation.ui.act.adapter.ChallengerHeaderAdapter
 import com.umc.presentation.ui.act.adapter.AdminChallengerAdapter
 import com.umc.presentation.util.UFormat
+import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -116,8 +117,12 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
                     showManageDialog(formattedModel, formattedModel.challengerId.toInt())
                 }
             }
-            is AdminChallengerEvent.ShowErrorToast -> {
-                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+            is AdminChallengerEvent.ShowToast -> {
+                UToast.createToast(
+                    context = requireContext(),
+                    message = event.message,
+                    state = if (event.isError) UToast.State.ERROR else UToast.State.CHECK
+                ).show()
             }
         }
     }
