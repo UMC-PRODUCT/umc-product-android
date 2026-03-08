@@ -217,7 +217,9 @@ constructor(
             }
 
 
-        val participantIds = state.selectedParticipants.map { it.id }
+        //내 ID도 추가(만약 이미 있으면 중복 체거)
+        val participantIds = (state.selectedParticipants.map { it.id } + state.myInfo.id).distinct()
+
 
 
         viewModelScope.launch {

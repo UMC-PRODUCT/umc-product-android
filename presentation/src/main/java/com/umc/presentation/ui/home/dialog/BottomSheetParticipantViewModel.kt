@@ -75,7 +75,7 @@ class BottomSheetParticipantViewModel @Inject constructor(
             resultResponse(
                 response = searchChallengerScheduleUseCase(
                     cursor = cursor,
-                    size = 20,
+                    size = 50,
                     name = state.searchQuery.ifBlank { null } // 빈 검색어는 null로 그 외는 searchParticipant에서 가져온 쿼리로
                 ),
                 successCallback = { response ->
