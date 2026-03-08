@@ -1,6 +1,11 @@
 package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.act.check.AdminSessionCheck
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.enums.PermissionType
+import com.umc.domain.model.enums.ResourceType
+import com.umc.domain.usecase.GetAuthAccessUseCase
 import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceApprovalUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceRejectionUseCase
@@ -16,10 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AdminCheckViewModel @Inject constructor(
     private val getAdminSessionListUseCase: GetAdminSessionListUseCase,
-    private val getPendingUsersUseCase: GetPendingUsersUseCase,
-    private val postAttendanceApprovalUseCase: PostAttendanceApprovalUseCase,
-    private val postAttendanceRejectionUseCase: PostAttendanceRejectionUseCase,
-    private val updateScheduleLocationUseCase: UpdateScheduleLocationUseCase
+    private val updateScheduleLocationUseCase: UpdateScheduleLocationUseCase,
+    private val getAuthAccessUseCase: GetAuthAccessUseCase
 ) : BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
 
     init {
@@ -31,14 +34,36 @@ class AdminCheckViewModel @Inject constructor(
             resultResponse(
                 response = getAdminSessionListUseCase(),
                 successCallback = { data ->
-                    val uiModels = data.map { domainModel ->
-                        AdminSessionUIModel(session = domainModel)
+                    viewModelScope.launch {
+                        checkPermissionsAndUpdate(data)
                     }
-                    updateState { copy(adminSessions = uiModels) }
                 },
                 errorCallback = { failState -> emitEvent(AdminCheckEvent.ShowToast(failState.message)) }
             )
         }
+    }
+
+    /**
+     * 각 세션별로 권한 체크를 병렬 실행
+     */
+    private suspend fun checkPermissionsAndUpdate(sessions: List<AdminSessionCheck>) {
+        val uiModels = sessions.map { session ->
+            val authResponse = getAuthAccessUseCase(ResourceType.ATTENDANCE_SHEET, session.sheetId)
+
+            var hasApprove = false
+            if (authResponse is ApiState.Success) {
+                // permissions 리스트 중 APPROVE 타입이 있고, hasPermission이 true인지 확인
+                hasApprove = authResponse.data.permissions.any {
+                    it.type == PermissionType.APPROVE && it.hasPermission
+                }
+            }
+
+            AdminSessionUIModel(
+                session = session,
+                hasApprovePermission = hasApprove
+            )
+        }
+        updateState { copy(adminSessions = uiModels) }
     }
 
     /**

@@ -257,7 +257,7 @@
                     android:layout_marginTop="24dp"
                     android:background="@drawable/bg_primary500_radius12"
                     android:padding="16dp"
-                    android:visibility='@{uiModel.session.pendingCount > 0 ? View.VISIBLE : View.GONE}'>
+                    android:visibility='@{(uiModel.session.pendingCount > 0 &amp;&amp; uiModel.hasApprovePermission) ? View.VISIBLE : View.GONE}'>
 
                     <ImageView
                         android:id="@+id/iv_admin_btn_icon"
