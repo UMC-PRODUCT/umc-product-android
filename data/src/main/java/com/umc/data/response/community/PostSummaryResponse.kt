@@ -20,6 +20,7 @@ data class PostSummaryResponse(
     @SerializedName("commentCount") val commentCount: Int,      // 댓글 수
     @SerializedName("likeCount") val likeCount: Int,            // 좋아요 수
     @SerializedName("isLiked") val isLiked: Boolean,            // 좋아요 여부
+    @SerializedName("authorPart") val authorPart: String,       // 게시글 작성자 부서
     @SerializedName("lightningInfo") val lightningInfo: LightningInfoResponse? // 번개 모임 상세 정보 (일반글은 null)
 ) {
     companion object {
@@ -49,7 +50,9 @@ data class PostSummaryResponse(
                 content = this.content,
                 lightningInfo = this.lightningInfo?.toLightningInfoDomain(),
                 //아래 부분은 더미 채우기 위한 부분으로 체크(summary에는 사용하지 않음)
-                userPart = UserPart.ANDROID,
+                userPart = try {
+                    UserPart.valueOf(this.category) }
+                catch (e: Exception) { UserPart.ANDROID},
                 isLiked = false,
                 isScrapped = false,
                 )

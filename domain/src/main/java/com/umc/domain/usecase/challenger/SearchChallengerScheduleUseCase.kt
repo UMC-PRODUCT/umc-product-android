@@ -9,6 +9,6 @@ class SearchChallengerScheduleUseCase @Inject constructor(
     private val repository: ChallengerRepository
 ){
     suspend operator fun invoke(cursor: Long?, size: Int, name: String?) =
-        repository.searchChallengerSchedule(cursor, size, name, name)
+        repository.searchChallengerSchedule(cursor, size, name)
 }
 

@@ -28,10 +28,11 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
         gisuId: Long?,
         part: String?,
         name: String?,
-        nickname: String?
+        nickname: String?,
+        keyword: String?
     ): ApiState<ChallengerCursorResponse> {
         return apiCall {
-            challengerApi.getChallengers(cursor, size, part, name, nickname, schoolId, null, gisuId)
+            challengerApi.getChallengers(cursor, size, part, name, nickname, keyword, schoolId, null, gisuId)
         }
     }
 
