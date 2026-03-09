@@ -197,8 +197,8 @@ class SignUpViewModel @Inject constructor(
                 successCallback = {
                     updateToken(it)
                 },
-                errorCallback = {
-                    ULog.d("회원가입 에러 로그")
+                errorCallback = { failState ->
+                    emitEvent(SignUpEvent.ShowRegisterErrorDialog(failState.message))
                 }
             )
         }
@@ -261,4 +261,5 @@ sealed interface SignUpEvent : UiEvent {
     object ShowVerifyCompleteToast : SignUpEvent
     object ShowVerifyErrorToast : SignUpEvent
     object FocusVerifyCodeField : SignUpEvent
+    data class ShowRegisterErrorDialog(val message: String) : SignUpEvent
 }

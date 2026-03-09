@@ -257,7 +257,6 @@
                     android:text="@string/notice_write_class_title"
                     android:textAppearance="@style/HeadlineBold"
                     android:textColor="@color/neutral800"
-                    android:visibility="@{vm.uiState.showClassSection ? View.VISIBLE : View.GONE}"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/layout_target" />
 
@@ -269,7 +268,6 @@
                     android:text="@string/notice_write_class_hint"
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral600"
-                    android:visibility="@{vm.uiState.showClassSection ? View.VISIBLE : View.GONE}"
                     app:layout_constraintBottom_toBottomOf="@id/text_class_title"
                     app:layout_constraintStart_toEndOf="@id/text_class_title"
                     app:layout_constraintTop_toTopOf="@id/text_class_title" />
@@ -281,7 +279,6 @@
                     android:layout_marginHorizontal="24dp"
                     android:layout_marginTop="16dp"
                     android:overScrollMode="never"
-                    android:visibility="@{vm.uiState.showClassSection ? View.VISIBLE : View.GONE}"
                     app:layout_constraintTop_toBottomOf="@id/text_class_title" />
 
                 <TextView
