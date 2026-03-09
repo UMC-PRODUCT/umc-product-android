@@ -5,9 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.NoticeCategory
 import com.umc.domain.model.enums.NoticeChipClassType
 import com.umc.domain.model.enums.UploadFileCategory
-import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.school.SchoolInfo
@@ -105,13 +105,11 @@ class NoticeWriteViewModel @Inject constructor(
     private fun loadUserInfoAndInit() = viewModelScope.launch {
         getUserInfoUseCase().collect { userInfo ->
             updateState { copy(userInfo = userInfo) }
-            val filteredDropDown = filterDropDownByUserRole(userInfo)
-            updateDropDownList(filteredDropDown)
-            
-            // Set default category based on user's first available role
-            val defaultCategory = getDefaultCategory(userInfo)
-            updateState { copy(category = defaultCategory) }
-            updateClassChipList(getNoticeChip(defaultCategory))
+            val dropDownList = getDropDownList()
+            updateDropDownList(dropDownList)
+
+            updateState { copy(category = getDefaultCategory(userInfo)) }
+            updateClassChipList(getNoticeChip())
         }
     }
 
@@ -159,29 +157,14 @@ class NoticeWriteViewModel @Inject constructor(
         }
     }
 
-    private fun getNoticeChip(category: NoticeCategory): List<NoticeChipState> {
-        val types = when (category) {
-            NoticeCategory.CENTRAL_OFFICE -> {
-                listOf(NoticeChipClassType.ALL, NoticeChipClassType.PART)
-            }
-            NoticeCategory.PART -> {
-                listOf(NoticeChipClassType.PART)
-            }
-            NoticeCategory.SCHOOL -> {
-                listOf(
-                    NoticeChipClassType.ALL,
-                    NoticeChipClassType.SCHOOL,
-                    NoticeChipClassType.PART
-                )
-            }
-            NoticeCategory.BRANCH -> {
-                listOf(
-                    NoticeChipClassType.ALL,
-                    NoticeChipClassType.BRANCH,
-                    NoticeChipClassType.PART
-                )
-            }
-        }
+    private fun getNoticeChip(): List<NoticeChipState> {
+        val types = listOf(
+            NoticeChipClassType.ALL,
+            NoticeChipClassType.OPERATOR,
+            NoticeChipClassType.BRANCH,
+            NoticeChipClassType.SCHOOL,
+            NoticeChipClassType.PART
+        )
         
         return types.map { type ->
             NoticeChipState(
@@ -295,32 +278,13 @@ class NoticeWriteViewModel @Inject constructor(
         }
     }
 
-    private fun filterDropDownByUserRole(userInfo: UserInfo): List<String> {
-        val roleTypes = userInfo.roles.map { it.roleType }.toSet()
-        
-        val availableCategories = mutableSetOf<NoticeCategory>()
-        
-        roleTypes.forEach { roleType ->
-            when (UserChallengerRole.from(roleType)) {
-                UserChallengerRole.CENTRAL_PRESIDENT,
-                UserChallengerRole.CENTRAL_VICE_PRESIDENT -> {
-                    availableCategories.add(NoticeCategory.CENTRAL_OFFICE)
-                }
-                UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER -> {
-                    availableCategories.add(NoticeCategory.PART)
-                }
-                UserChallengerRole.SCHOOL_PRESIDENT,
-                UserChallengerRole.SCHOOL_VICE_PRESIDENT -> {
-                    availableCategories.add(NoticeCategory.SCHOOL)
-                }
-                UserChallengerRole.CHAPTER_PRESIDENT -> {
-                    availableCategories.add(NoticeCategory.BRANCH)
-                }
-                else -> { /* 다른 역할은 드롭다운에 표시하지 않음 */ }
-            }
-        }
-        
-        return availableCategories.map { it.label }.toList()
+    private fun getDropDownList(): List<String> {
+        return listOf(
+            NoticeCategory.CENTRAL_OFFICE,
+            NoticeCategory.BRANCH,
+            NoticeCategory.SCHOOL,
+            NoticeCategory.PART
+        ).map { it.label }
     }
     
     private fun getDefaultCategory(userInfo: UserInfo): NoticeCategory {
@@ -354,7 +318,7 @@ class NoticeWriteViewModel @Inject constructor(
 
     fun updateCategory(category: NoticeCategory) {
         onClickShowDropDown()
-        updateClassChipList(getNoticeChip(category))
+        updateClassChipList(getNoticeChip())
         updateState {
             copy(
                 category = category,
@@ -377,7 +341,6 @@ class NoticeWriteViewModel @Inject constructor(
     }
 
     fun updateSelectImage(list: List<Uri>) {
-        // 새 이미지를 NoticeImageItem으로 변환 (uri만 있음, id는 0)
         val newImages = list.map { uri ->
             NoticeImageItem(uri = uri)
         }
@@ -566,7 +529,7 @@ class NoticeWriteViewModel @Inject constructor(
                 },
                 errorCallback = {
                     updateState { copy(isLoading = false) }
-                    emitEvent(NoticeWriteEvent.ShowError("공지사항 작성에 실패했습니다"))
+                    emitEvent(NoticeWriteEvent.ShowError(it.message))
                 }
             )
         }
@@ -729,8 +692,6 @@ data class NoticeWriteUiState(
     val isEditMode: Boolean = false,
     val editNoticeId: Long = 0L,
 ) : UiState {
-    val isShowClassSection: Boolean
-        get() = category != NoticeCategory.PART
     
     val isShowCategoryDropDown: Boolean
         get() = dropdownList.size > 1
