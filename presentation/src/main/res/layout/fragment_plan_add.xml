@@ -564,7 +564,7 @@
                         app:cardBackgroundColor="@color/primary500"
                         app:cornerRadius="8dp"
                         app:pressedColor="@color/primary700"
-                        app:text="@string/home_plan_add_plan_register"
+                        app:text="@{vm.uiState.editMode == false ? @string/home_plan_add_plan_register : @string/home_plan_add_plan_update}"
                         app:textAppearance="@style/HeadlineBold"
                         app:textColor="@color/neutral000"
                         app:layout_constraintStart_toEndOf="@id/planadd_guideline_bottom"

@@ -31,6 +31,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
         scheduleId = args.scheduleId
         if(scheduleId != -1L){
+
             viewModel.settingUpdateSchedule(scheduleId)
         }
 
