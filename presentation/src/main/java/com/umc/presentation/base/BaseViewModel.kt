@@ -13,8 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// JWT-0002: 토큰 만료/유효하지 않음 에러 코드
-const val JWT_EXPIRED_ERROR_CODE = "JWT-0002"
+// JWT 관련 에러 코드 접두사
+private const val JWT_ERROR_PREFIX = "JWT"
 
 // 공통 ViewModel 이벤트
 sealed interface CommonViewModelEvent {
@@ -32,7 +32,6 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
     val uiEvent: SharedFlow<EVENT>
         get() = _uiEvent.asSharedFlow()
 
-    // 공통 이벤트 (JWT-0002 등 전역 에러 처리용)
     private val _commonEvent = MutableSharedFlow<CommonViewModelEvent>()
     val commonEvent: SharedFlow<CommonViewModelEvent> = _commonEvent.asSharedFlow()
 
@@ -66,8 +65,8 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
 
         when (response) {
             is ApiState.Fail -> {
-                // JWT-0002 에러 체크: 토큰 만료 시 SplashFragment로 이동
-                if (response.failState.code == JWT_EXPIRED_ERROR_CODE) {
+                // JWT 관련 에러 체크: 토큰 만료/유효하지 않음 등의 JWT 에러 시 SplashFragment로 이동
+                if (response.failState.code.startsWith(JWT_ERROR_PREFIX)) {
                     emitCommonEvent(CommonViewModelEvent.MoveToSplash)
                 }
                 errorCallback?.invoke(response.failState)
