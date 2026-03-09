@@ -3,6 +3,7 @@ package com.umc.presentation.ui.notice
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.ChallengerRecord
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.organization.GisuItem
@@ -46,10 +47,8 @@ class NoticeViewModel @Inject constructor(
         }
 
         // 공지 작성 권한 확인 (MEMBER가 아닌 경우에만 권한 있음)
-        val hasWritePermission = userInfo.challengerRecords.any { record ->
-            record.roles?.any { role ->
-                com.umc.domain.model.enums.UserChallengerRole.from(role.roleType) != com.umc.domain.model.enums.UserChallengerRole.MEMBER
-            } ?: false
+        val hasWritePermission = userInfo.roles.any { role ->
+            UserChallengerRole.from(role.roleType) != UserChallengerRole.MEMBER
         }
         updateState { copy(canWriteNotice = hasWritePermission) }
 
