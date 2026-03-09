@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
             android:gravity="start"
-            android:text="추가할 활동의 인증코드를 입력해주세요."
+            android:text="운영진에게 발급받은 6자리 인증코드를 입력해주세요."
             android:textAppearance="@style/Title3Bold"
             android:textColor="@color/neutral800"
             app:layout_constraintStart_toStartOf="parent"
