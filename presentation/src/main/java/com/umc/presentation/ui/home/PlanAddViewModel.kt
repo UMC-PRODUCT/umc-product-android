@@ -84,6 +84,9 @@ constructor(
 
     //일정 수정 시 기존 일정 데이터로 UI 채우기
     fun settingUpdateSchedule(scheduleId: Long) {
+
+        updateState { copy(editMode = true) }
+
         viewModelScope.launch {
             resultResponse(
                 response = getScheduleDetailHomeUseCase(scheduleId),
@@ -376,6 +379,7 @@ data class PlanAddFragmentUiState(
 
     ////스케쥴 수정용 id
     val updateScheduleId : Long = -1L,
+    val editMode : Boolean = false,
 
 
     //운영진 여부 판단

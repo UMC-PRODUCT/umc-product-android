@@ -8,6 +8,7 @@ import com.umc.domain.model.enums.LinkType
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.enums.UserChallengerRole
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.mypage.UserActiveItem
 import com.umc.domain.model.request.member.LinkItem
@@ -99,7 +100,7 @@ class ProfileViewModel @Inject constructor(
                             if (roleItem.responsiblePart != null) {
                                 UserActiveItem(
                                     generation = generationText,
-                                    partName = "${roleItem.responsiblePart} Part",
+                                    partName = "${UserPart.from(roleItem.responsiblePart).label} Part",
                                     position = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
                                 )
                             } 
@@ -155,7 +156,7 @@ class ProfileViewModel @Inject constructor(
                             async {
                                 UserActiveItem(
                                     generation = generationText,
-                                    partName = "${recordItem.responsiblePart} Part",
+                                    partName = "${UserPart.from(recordItem.responsiblePart).label} Part",
                                     position = "챌린저"
                                 )
                             }
