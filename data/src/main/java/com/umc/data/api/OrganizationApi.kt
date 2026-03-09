@@ -1,5 +1,6 @@
 package com.umc.data.api
 
+import com.umc.data.response.organization.Chapter
 import com.umc.data.response.organization.ChapterBySchoolListResponse
 import com.umc.data.response.organization.ChapterResponse
 import com.umc.data.response.organization.GisuInfoResponse
@@ -78,6 +79,12 @@ interface OrganizationApi {
 
     @GET(Endpoints.Organization.CHAPTER)
     suspend fun getAllChapter(): ApiResponse<ChapterResponse>
+
+    @GET(Endpoints.Organization.CHAPTER_ID)
+    suspend fun getChapterDetail(
+        @Path("chapterId") chapterId: Long,
+    ): ApiResponse<Chapter>
+
 
     @GET(Endpoints.Organization.STUDY_GROUD_ID)
     suspend fun getStudyGroupDetail(

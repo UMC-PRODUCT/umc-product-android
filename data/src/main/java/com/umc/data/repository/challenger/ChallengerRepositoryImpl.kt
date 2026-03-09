@@ -44,14 +44,12 @@ class ChallengerRepositoryImpl @Inject constructor(
     override suspend fun searchChallengerSchedule(
         cursor: Long?,
         size: Int,
-        name: String?,
-        nickname: String?
+        keyword: String?
     ): ApiState<ParticipantSearchPage> {
         return challengerRemoteDataSource.getChallengerList(
             cursor = cursor,
             size = size,
-            name = name,
-            nickname = nickname
+            keyword = keyword
         ).map {
             it.toParticipantSearchPage()
         }

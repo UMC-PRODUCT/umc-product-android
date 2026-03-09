@@ -8,13 +8,16 @@ import com.umc.domain.model.enums.LinkType
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.enums.UserChallengerRole
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.mypage.UserActiveItem
 import com.umc.domain.model.request.member.LinkItem
 import com.umc.domain.model.request.member.UpdateLinkRequest
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
 import com.umc.domain.usecase.member.UpdateMyLinkUseCase
 import com.umc.domain.usecase.member.UpdateMyProfileUseCase
+import com.umc.domain.usecase.organization.GetChapterDetailUseCase
 import com.umc.domain.usecase.organization.GetSchoolNameUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.presentation.base.BaseViewModel
@@ -35,6 +38,8 @@ class ProfileViewModel @Inject constructor(
     private val updateMyProfileUseCase: UpdateMyProfileUseCase, //프로필 정보 업데이트
     private val updateMyLinkUseCase: UpdateMyLinkUseCase, //링크 정보 업데이트
     private val getSchoolNameUseCase: GetSchoolNameUseCase, //학교 이름 가져오기
+    private val getChapterDetailUseCase: GetChapterDetailUseCase, //지부 이름 가져오기
+    private val getMyOAuthUseCase: GetMyOAuthUseCase, //내 OAuth 가져오기
     ) : BaseViewModel<ProfileFragmentUiState, ProfileFragmentEvent>(
     ProfileFragmentUiState()){
 
@@ -55,6 +60,25 @@ class ProfileViewModel @Inject constructor(
             }
         }
 
+        getUserOAuth()
+
+    }
+
+    //소셜 정보(OAuth 받아오기)
+    fun getUserOAuth(){
+        viewModelScope.launch {
+            resultResponse(
+                response = getMyOAuthUseCase(),
+                successCallback = { myOAuth ->
+                    val platforms = myOAuth.map { LoginType.valueOf(it.provider) }
+                    updateState {
+                        copy(linkedPlatforms = platforms)
+                    }
+
+                },
+                errorCallback = {}
+            )
+        }
     }
 
     //유저 정보를 통해 활동 이력 및 기수파트 작성
@@ -76,12 +100,12 @@ class ProfileViewModel @Inject constructor(
                             if (roleItem.responsiblePart != null) {
                                 UserActiveItem(
                                     generation = generationText,
-                                    partName = "${roleItem.responsiblePart} Part",
+                                    partName = "${UserPart.from(roleItem.responsiblePart).label} Part",
                                     position = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
                                 )
                             } 
-                            //그 외 (교내 회장)
-                            else {
+                            //그 외 - 학교일 때
+                            else if(roleItem.organizationType == "SCHOOL"){
                                 //들어갈 값
                                 var itemResult: UserActiveItem? = null
                                 resultResponse(
@@ -99,6 +123,29 @@ class ProfileViewModel @Inject constructor(
                                 )
                                 itemResult!!
                             }
+                            //그 외 - 지부일 때
+                            else if(roleItem.organizationType == "CHAPTER"){
+                                var itemResult: UserActiveItem? = null
+                                resultResponse(
+                                    response = getChapterDetailUseCase(roleItem.organizationId),
+                                    successCallback = { chapterInfo ->
+                                        //지부 이름 넣기
+                                        val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
+                                        itemResult = UserActiveItem(generationText, "${chapterInfo.name}지부 $label",label, )
+                                    },
+                                    errorCallback = {
+                                        val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
+                                        itemResult = UserActiveItem(generationText, label, label)
+                                    }
+                                )
+                                itemResult!!
+                            }
+                            //그 외 - 파트 자리 없고, central만 있는 경우
+                            else{
+                                val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
+                                val itemResult = UserActiveItem(generationText, label, "총괄")
+                                itemResult
+                            }
                         }
                     }
 
@@ -109,7 +156,7 @@ class ProfileViewModel @Inject constructor(
                             async {
                                 UserActiveItem(
                                     generation = generationText,
-                                    partName = "${recordItem.responsiblePart} Part",
+                                    partName = "${UserPart.from(recordItem.responsiblePart).label} Part",
                                     position = "챌린저"
                                 )
                             }
@@ -231,7 +278,7 @@ class ProfileViewModel @Inject constructor(
 
 data class ProfileFragmentUiState(
     //유저 정보 (고정)
-    val loginType: LoginType = LoginType.KAKAO,
+    val linkedPlatforms: List<LoginType> = emptyList(),
     val userInfo : UserInfo = UserInfo(),
 
 

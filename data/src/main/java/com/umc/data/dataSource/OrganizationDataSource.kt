@@ -1,5 +1,6 @@
 package com.umc.data.dataSource
 
+import com.umc.data.response.organization.Chapter
 import com.umc.data.response.organization.ChapterBySchoolListResponse
 import com.umc.data.response.organization.ChapterResponse
 import com.umc.data.response.organization.GisuInfoResponse
@@ -41,6 +42,7 @@ interface OrganizationDataSource {
         sort: String
     ): ApiState<SchoolPageResponse>
     suspend fun getAllChapter(): ApiState<ChapterResponse>
+    suspend fun getChapterDetail(chapterId: Long): ApiState<Chapter>
     suspend fun getStudyGroupDetail(groupId: Long): ApiState<StudyGroupDetailResponse>
     suspend fun getSchoolDetail(schoolId: Long): ApiState<SchoolDetailResponse>
     suspend fun getMyStudyGroupList(): ApiState<MyStudyGroupListResponse>

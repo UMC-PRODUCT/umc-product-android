@@ -17,6 +17,13 @@ object Endpoints {
 
     }
 
+    //위의 Auth는 NormalRetrofit이고, 아래 Authentication은 AuthRetrofit이다.
+    object Authentication{
+        const val MEMBER_AUTH = "api/v1/member-oauth"
+        const val MEMBER_AUTH_SHOW = "$MEMBER_AUTH/me"
+
+    }
+
     object Attendance {
         const val ATTENDANCE = "api/v1/attendances"
         const val AVAILABLE = "$ATTENDANCE/available"
@@ -127,6 +134,8 @@ object Endpoints {
 
         const val CHAPTER = "api/v1/chapters"
         const val CHAPTER_WITH_SCHOOL = "$CHAPTER/with-schools"
+
+        const val CHAPTER_ID = "$CHAPTER/{chapterId}"
 
     }
 

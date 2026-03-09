@@ -17,7 +17,8 @@ interface ChallengerRemoteDataSource {
         gisuId: Long? = null,
         part: String? = null,
         name: String? = null,
-        nickname: String? = null
+        nickname: String? = null,
+        keyword: String? = null
     ): ApiState<ChallengerCursorResponse>
 
     suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit>

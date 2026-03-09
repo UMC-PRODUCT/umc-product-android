@@ -31,6 +31,7 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
         scheduleId = args.scheduleId
         if(scheduleId != -1L){
+
             viewModel.settingUpdateSchedule(scheduleId)
         }
 
@@ -72,7 +73,8 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                 /**TODO 이벤트를 통해 해당 정보를 서버에 넘겨야 한다.**/
 
                 //운영진 여부에 따라 분기 처리
-                if(viewModel.uiState.value.isManager){
+                //1. 운영진이면서 생성하는 경우 - 생성
+                if(viewModel.uiState.value.isManager && viewModel.uiState.value.editMode == false){
                     //다이얼로그 생성
                     val dialog = AddAttendanceDialog(
                         onReject = {
@@ -86,6 +88,10 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                     )
                     dialog.show(childFragmentManager, "AddAttendance")
                     
+                }
+                //2. 수정 모드인 경우 - 바로 true
+                else if(viewModel.uiState.value.editMode == true){
+                    viewModel.submitPlan(true)
                 }
                 else{
                     viewModel.submitPlan(false)
@@ -111,18 +117,6 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
             //인원 관련 터치 시 다이얼로그 로직
             binding.planaddCdvSearchParticipant.apply{
-
-                //수정 모드에 따른 UI 및 터치 로직
-                val isEditMode = viewModel.uiState.value.updateScheduleId != -1L
-                isEnabled = !isEditMode //수정 모드이면 터치 못하게 막기
-
-                val bgColor = if (isEditMode) {
-                    context.getColor(R.color.neutral100)
-                } else {
-                    context.getColor(R.color.neutral000)
-                }
-                setCardBackgroundColor(bgColor)
-
 
 
                 setOnClickListener {

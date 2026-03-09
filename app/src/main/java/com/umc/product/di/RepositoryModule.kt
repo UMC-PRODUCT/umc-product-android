@@ -7,6 +7,7 @@ import com.umc.data.repository.NoticeRepositoryImpl
 import com.umc.data.repository.NotificationRepositoryImpl
 import com.umc.data.repository.OrganizationRepositoryImpl
 import com.umc.data.repository.attendance.AttendanceRepositoryImpl
+import com.umc.data.repository.authentication.AuthenticationRepositoryImpl
 import com.umc.data.repository.authorize.AuthorizeRepositoryImpl
 import com.umc.data.repository.kakao.KakaoSearchRepositoryImpl
 import com.umc.data.repository.member.MemberRepositoryImpl
@@ -25,6 +26,7 @@ import com.umc.domain.repository.NoticeRepository
 import com.umc.domain.repository.NotificationRepository
 import com.umc.domain.repository.OrganizationRepository
 import com.umc.domain.repository.attendance.AttendanceRepository
+import com.umc.domain.repository.authentication.AuthenticationRepository
 import com.umc.domain.repository.authorize.AuthorizeRepository
 import com.umc.domain.repository.community.CommunityRepository
 import com.umc.domain.repository.curriculum.CurriculumRepository
@@ -123,4 +125,8 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindsNotificationRepository(repositoryImpl: NotificationRepositoryImpl): NotificationRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindsAuthenticationRepository(repositoryImpl: AuthenticationRepositoryImpl): AuthenticationRepository
 }

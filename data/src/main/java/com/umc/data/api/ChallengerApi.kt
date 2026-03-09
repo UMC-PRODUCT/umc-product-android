@@ -32,6 +32,7 @@ interface ChallengerApi {
         @Query("part") part: String?,
         @Query("name") name: String?,
         @Query("nickname") nickname: String?,
+        @Query("keyword") keyword: String?,
         @Query("schoolId") schoolId: Long?,
         @Query("chapterId") chapterId: Long?,
         @Query("gisuId") gisuId: Long?

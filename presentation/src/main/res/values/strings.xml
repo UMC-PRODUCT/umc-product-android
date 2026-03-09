@@ -31,6 +31,7 @@
     <string name="home_plan_add_location_title">"장소를 선택하세요"</string>
     <string name="csv_upload">CSV 업로드</string>
     <string name="home_plan_add_plan_register">일정 등록하기</string>
+    <string name="home_plan_add_plan_update">일정 수정하기</string>
 
     <string name="home_plan_add_dialog_add_attendance_title">출석부 생성</string>
     <string name="home_plan_add_dialog_add_attendance_content">출석부와 함께 일정을 생성하시겠습니까?</string>
@@ -47,7 +48,7 @@
     <string name="mypage_mypost">내가 쓴 글</string>
     <string name="mypage_mycomment">댓글 단 글</string>
     <string name="mypage_myscrap">스크랩</string>
-    <string name="mypage_addactivity">내 활동 추가</string>
+    <string name="mypage_addactivity">챌린저 기록 추가</string>
     <string name="mypage_setting_notice">알림 설정</string>
     <string name="mypage_setting_location">위치 설정</string>
     <string name="mypage_social">소셜 연동</string>

@@ -2,6 +2,7 @@ package com.umc.product.di
 
 import com.umc.data.api.AttendanceApi
 import com.umc.data.api.AuthApi
+import com.umc.data.api.AuthenticationApi
 import com.umc.data.api.AuthorizeApi
 import com.umc.data.api.MemberApi
 import com.umc.data.api.ChallengerApi
@@ -111,5 +112,11 @@ object ApiModule {
     @Provides
     fun provideNotificationApi(@AuthRetrofit retrofit: Retrofit): NotificationApi {
         return retrofit.create(NotificationApi::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideAuthenticationApi(@AuthRetrofit retrofit: Retrofit): AuthenticationApi {
+        return retrofit.create(AuthenticationApi::class.java)
     }
 }

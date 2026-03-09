@@ -20,7 +20,7 @@ interface ChallengerRepository {
     suspend fun grantChallengerPoint(id: Long, request: ChallengerPointRequest): ApiState<ChallengerManageDialogModel>
 
     // 일정 생성용 유저 검색하기
-    suspend fun searchChallengerSchedule(cursor: Long?, size: Int, name: String?, nickname: String?): ApiState<ParticipantSearchPage>
+    suspend fun searchChallengerSchedule(cursor: Long?, size: Int, keyword: String?): ApiState<ParticipantSearchPage>
 
     suspend fun getChallengerList(
         cursor: Long?,

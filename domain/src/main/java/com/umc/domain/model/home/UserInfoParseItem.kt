@@ -16,6 +16,7 @@ data class RolePartItem(
     val responsiblePart: String?, //ANDROID ...
     val challengerId: Long,
     val organizationId: Long,
+    val organizationType: String,
 )
 
 // 2. 기수별 최종 요약 모델
@@ -47,6 +48,7 @@ fun UserInfo.getGisuSummaryList(): List<GisuSummary> {
                     responsiblePart = it.responsiblePart,
                     challengerId = it.challengerId,
                     organizationId = it.organizationId ?: -1,
+                    organizationType = it.organizationType
                 )
             }
 
@@ -59,6 +61,7 @@ fun UserInfo.getGisuSummaryList(): List<GisuSummary> {
                     responsiblePart = it.part,
                     challengerId = it.challengerId,
                     organizationId = -1, //챌린저는 조직 ID 제거
+                    organizationType = ""
                 )
             }
 
