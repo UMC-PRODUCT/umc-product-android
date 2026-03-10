@@ -14,7 +14,8 @@ data class AttendanceAvailableResponse(
     @SerializedName("sheetId") val sheetId: Long,
     @SerializedName("recordId") val recordId: Long,
     @SerializedName("status") val status: String,
-    @SerializedName("statusDisplay") val statusDisplay: String?
+    @SerializedName("statusDisplay") val statusDisplay: String?,
+    @SerializedName("locationVerified") val locationVerified: Boolean
 ) {
     companion object {
         fun AttendanceAvailableResponse.toUserCheckAvailable(): UserCheckAvailable {
@@ -29,7 +30,7 @@ data class AttendanceAvailableResponse(
                 latitude = 0.0,
                 longitude = 0.0,
                 address = "",
-                isLocationCertified = null
+                isLocationCertified = locationVerified
             )
         }
     }
