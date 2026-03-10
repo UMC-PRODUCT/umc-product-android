@@ -1,17 +1,19 @@
 package com.umc.presentation.ui.community
 
 import android.view.View
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 import com.umc.domain.model.enums.ContentType
 import com.umc.domain.model.community.ContentItem
 import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentCommunityBinding
-import com.umc.presentation.ui.community.adapter.ContentAdapter
 import com.umc.presentation.ui.community.adapter.ContentItemDelegate
 import com.umc.presentation.ui.community.top.TopPostFragment
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,8 +26,6 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
 ), ContentItemDelegate {
 
     override val viewModel: CommunityViewModel by viewModels()
-
-    private lateinit var myContentAdapter : ContentAdapter
 
     override fun onItemClicked(item: ContentItem) {
         /**TODO. 이동 로직 작성하기**/
@@ -42,32 +42,9 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
             lifecycleOwner = viewLifecycleOwner
         }
 
-        //탭 초기화 및 설정
-        setTabLayout()
+        //viewPager 설정
+        setViewPager()
 
-        //어댑터 정의 및 연결
-        myContentAdapter = ContentAdapter(this)
-        binding.communityRcv.apply {
-            adapter = myContentAdapter
-
-            //무한 스크롤
-            // 무한 스크롤 리스너: 바닥 도달 시 다음 페이지 호출
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-
-                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                    val lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition()
-                    val totalItemCount = layoutManager.itemCount
-
-                    // 로딩 중이 아닐 때 바닥에서 2번째 아이템 근처면 다음 데이터 로드
-                    if (!viewModel.uiState.value.isPageLoading && lastVisibleItem >= totalItemCount - 2) {
-                        viewModel.fetchPosts(isRefresh = false)
-                    }
-                }
-            })
-
-        }
 
 
     }
@@ -78,7 +55,7 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
         repeatOnStarted(viewLifecycleOwner){
             launch {
                 viewModel.uiState.collect { state ->
-                    myContentAdapter.submitList(state.nowContents)
+
                 }
             }
 
@@ -94,13 +71,6 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
         super.handleEvent(event)
 
         when(event){
-            is CommunityFragmentEvent.NavigateWrite -> {
-                //전역 action을 이동
-                val action = CommunityFragmentDirections.actionCommunityToPostWrite(
-                    postId = -1L
-                )
-                findNavController().navigate(action)
-            }
             is CommunityFragmentEvent.NavigateSearch -> {
                 val action = CommunityFragmentDirections.actionCommunityToPostSearch()
                 findNavController().navigate(action)
@@ -109,84 +79,43 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
     }
 
 
+    private fun setViewPager(){
+        val tabTitles = listOf(getString(R.string.all),
+            getString(R.string.question),
+            "번개모임",
+            getString(R.string.community_top)
+        )
 
-    //탭 세팅 초기화
-    private fun setTabLayout(){
-        binding.communityTabLayout.apply {
-            removeAllTabs()
-
-            val tabTitles = listOf(
-                    getString(R.string.all),
-                    getString(R.string.question),
-                    "번개모임",
-                    getString(R.string.community_top),
-                )
-
-            tabTitles.forEach { title ->
-                addTab(newTab().setText(title))
-            }
-
-            //각 탭을 터치했을 때, Uistate의 값을 update
-            addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-                override fun onTabSelected(tab: TabLayout.Tab?) {
-                    val position = tab?.position ?: return
-                    
-                    //만약 탭 추가나 변경 시 CommunityType 변경 후 적용
-                    when(position){
-                        0, 1, 2 -> {
-                            //명예의 전당 탭 없애고 글쓰기 탭 보이기
-                            binding.communityFragmentContainerWrite.visibility = View.VISIBLE
-                            binding.communityFragmentContainerTop.visibility = View.GONE
-
-                            //타입 빌딩
-                            val type = when(position){
-                                0 -> ContentType.ALL
-                                1 -> ContentType.QUESTION
-                                2 -> ContentType.LIGHTNING
-                                else -> ContentType.ALL
-                            }
-                            //게시글 필터링
-                            viewModel.setNowTab(type)
+        val pagerAdapter = object : FragmentStateAdapter(this) {
+            override fun getItemCount(): Int = 4
+            override fun createFragment(position: Int): Fragment {
+                return when (position) {
+                    //명예의 전당
+                    3 -> TopPostFragment()
+                    else -> {
+                        //각 탭 이동
+                        val type = when(position) {
+                            0 -> ContentType.ALL
+                            1 -> ContentType.QUESTION
+                            else -> ContentType.LIGHTNING
                         }
-                        3-> {
-                            //명예의 전당 탭 보이고 글쓰기 탭 없애기
-                            binding.communityFragmentContainerWrite.visibility = View.GONE
-                            binding.communityFragmentContainerTop.visibility = View.VISIBLE
-                            
-                            //일단 탭 변경
-                            viewModel.setNowTab(ContentType.TOP)
-
-                            //중복 생성 로직 방지
-                            val currentFragment = childFragmentManager.findFragmentByTag("TopPostFragment")
-
-                            if (currentFragment == null) {
-                                childFragmentManager.beginTransaction()
-                                    .replace(
-                                        R.id.community_fragmentContainer_top,
-                                        TopPostFragment()
-                                    )
-                                    .commit()
-                            }
-                        }
+                        CommunityListFragment.newInstance(type)
                     }
                 }
-
-                override fun onTabUnselected(p0: TabLayout.Tab?) {
-
-                }
-
-                override fun onTabReselected(p0: TabLayout.Tab?) {
-
-                }
-            })
+            }
         }
 
-    }
+        binding.communityViewPager.adapter = pagerAdapter
 
-    override fun onResume() {
-        super.onResume()
-        // 다른 화면에서 돌아올 때마다 최신 데이터로 새로고침
-        viewModel.fetchPosts(isRefresh = true)
+        //TabLayout과 ViewPager2를 연결하여 스와이프 동기화
+        TabLayoutMediator(
+            binding.communityTabLayout,
+            binding.communityViewPager
+        ) { tab, position ->
+            tab.text = tabTitles[position]
+        }.attach()
+
+
     }
 
 
