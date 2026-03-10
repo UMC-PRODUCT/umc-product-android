@@ -1,6 +1,11 @@
 package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.act.check.AdminSessionCheck
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.enums.PermissionType
+import com.umc.domain.model.enums.ResourceType
+import com.umc.domain.usecase.GetAuthAccessUseCase
 import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceApprovalUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceRejectionUseCase
@@ -16,10 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AdminCheckViewModel @Inject constructor(
     private val getAdminSessionListUseCase: GetAdminSessionListUseCase,
-    private val getPendingUsersUseCase: GetPendingUsersUseCase,
-    private val postAttendanceApprovalUseCase: PostAttendanceApprovalUseCase,
-    private val postAttendanceRejectionUseCase: PostAttendanceRejectionUseCase,
-    private val updateScheduleLocationUseCase: UpdateScheduleLocationUseCase
+    private val updateScheduleLocationUseCase: UpdateScheduleLocationUseCase,
+    private val getAuthAccessUseCase: GetAuthAccessUseCase
 ) : BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
 
     init {
@@ -27,18 +30,52 @@ class AdminCheckViewModel @Inject constructor(
     }
 
     fun fetchAdminSessions() {
+        startLoading()
+
         viewModelScope.launch {
             resultResponse(
                 response = getAdminSessionListUseCase(),
                 successCallback = { data ->
-                    val uiModels = data.map { domainModel ->
-                        AdminSessionUIModel(session = domainModel)
+                    viewModelScope.launch {
+                        startLoading()
+                        checkPermissionsAndUpdate(data)
                     }
-                    updateState { copy(adminSessions = uiModels) }
                 },
-                errorCallback = { failState -> emitEvent(AdminCheckEvent.ShowToast(failState.message)) }
+                errorCallback = { failState ->
+                    emitEvent(AdminCheckEvent.ShowToast(failState.message, isError = true))
+                }
             )
         }
+    }
+    /**
+     * 각 세션별로 권한 체크를 병렬 실행
+     */
+    private suspend fun checkPermissionsAndUpdate(sessions: List<AdminSessionCheck>) {
+        val uiModels = sessions.map { session ->
+            // 출석 승인 권한 체크 (ATTENDANCE_SHEET - APPROVE)
+            val approveAuthResponse = getAuthAccessUseCase(ResourceType.ATTENDANCE_SHEET, session.sheetId)
+            val hasApprove = if (approveAuthResponse is ApiState.Success) {
+                approveAuthResponse.data.permissions.any {
+                    it.type == PermissionType.APPROVE && it.hasPermission
+                }
+            } else false
+
+            // 위치 변경 권한 체크 (SCHEDULE - WRITE)
+            val writeAuthResponse = getAuthAccessUseCase(ResourceType.SCHEDULE, session.id)
+            val hasWrite = if (writeAuthResponse is ApiState.Success) {
+                writeAuthResponse.data.permissions.any {
+                    it.type == PermissionType.WRITE && it.hasPermission
+                }
+            } else false
+
+            AdminSessionUIModel(
+                session = session,
+                hasApprovePermission = hasApprove,
+                hasWritePermission = hasWrite
+            )
+        }
+        updateState { copy(adminSessions = uiModels) }
+        stopLoading()
     }
 
     /**
@@ -49,11 +86,11 @@ class AdminCheckViewModel @Inject constructor(
             resultResponse(
                 response = updateScheduleLocationUseCase(sessionId, address, lat, lng),
                 successCallback = {
-                    emitEvent(AdminCheckEvent.ShowToast("출석 위치가 성공적으로 변경되었습니다."))
-                    fetchAdminSessions() // 변경 후 데이터 갱신
+                    emitEvent(AdminCheckEvent.ShowToast("출석 위치가 성공적으로 변경되었습니다.", isError = false))
+                    fetchAdminSessions()
                 },
                 errorCallback = { failState ->
-                    emitEvent(AdminCheckEvent.ShowToast(failState.message))
+                    emitEvent(AdminCheckEvent.ShowToast(failState.message, isError = true))
                 }
             )
         }
@@ -62,9 +99,10 @@ class AdminCheckViewModel @Inject constructor(
 }
 
 data class AdminCheckUiState(
-    val adminSessions: List<AdminSessionUIModel> = emptyList()
+    val adminSessions: List<AdminSessionUIModel> = emptyList(),
+    val isLoading: Boolean = true
 ) : UiState
 
 sealed class AdminCheckEvent : UiEvent {
-    data class ShowToast(val message: String) : AdminCheckEvent()
+    data class ShowToast(val message: String, val isError: Boolean = false) : AdminCheckEvent()
 }

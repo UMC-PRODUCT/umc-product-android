@@ -13,13 +13,10 @@ import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexWrap
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
-import com.umc.domain.model.enums.NoticeCategory
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.presentation.base.BaseFragment
-import com.umc.presentation.component.adapter.DropDownAdapter
-import com.umc.presentation.component.adapter.DropDownItem
 import com.umc.presentation.databinding.FragmentNoticeWriteBinding
 import com.umc.presentation.ui.notice.write.adapter.NoticeClassChipAdapter
 import com.umc.presentation.ui.notice.write.adapter.NoticeImageAdapter
@@ -29,10 +26,6 @@ import com.umc.presentation.ui.notice.write.model.NoticeImageItem
 import com.umc.presentation.ui.signUp.bottomSheet.SchoolSelectBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-
-private class StringDropDownItem(val text: String) : DropDownItem {
-    override val displayText: String get() = text
-}
 
 @AndroidEntryPoint
 class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWriteUiState, NoticeWriteEvent, NoticeWriteViewModel>(
@@ -44,14 +37,6 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
 
     private companion object {
         const val MAX_PICK_COUNT = 10
-    }
-
-    private val dropDownAdapter: DropDownAdapter<StringDropDownItem> by lazy {
-        DropDownAdapter(object : DropDownAdapter.DropDownDelegate<StringDropDownItem> {
-            override fun onClickItem(item: StringDropDownItem) {
-                viewModel.updateCategory(NoticeCategory.find(item.text))
-            }
-        })
     }
 
     private val noticeClassChipAdapter : NoticeClassChipAdapter by lazy {
@@ -88,14 +73,10 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
         binding.apply {
             vm = viewModel
 
-            // 수정 모드이면 noticeId만 전달하고 상세 조회는 ViewModel에서 처리
             if (args.isEditMode) {
                 viewModel.initEditMode(noticeId = args.noticeId)
-            }
-
-            recyclerDropdown.apply {
-                adapter = dropDownAdapter
-                layoutManager = LinearLayoutManager(context)
+            } else {
+                viewModel.setSelectedGisu(args.gisuId, args.gisuName)
             }
 
             recyclerClass.apply {
@@ -171,7 +152,6 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
 
             launch {
                 viewModel.uiState.collect { state ->
-                    dropDownAdapter.submitList(state.dropdownList.map { text -> StringDropDownItem(text) })
                     noticeClassChipAdapter.submitList(state.classList)
                     noticePartChipAdapter.submitList(state.partList)
                     noticeImageAdapter.submitList(state.selectImageList)
@@ -209,8 +189,10 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
 
     private fun showChapterBottomSheet() {
         val chapters = viewModel.uiState.value.chapterList
+        val selectedChapterId = viewModel.uiState.value.classList
+            .find { it.chapterId != null }?.chapterId
         if (chapters.isNotEmpty()) {
-            val bottomSheet = ChapterSelectBottomSheet.newInstance(chapters)
+            val bottomSheet = ChapterSelectBottomSheet.newInstance(chapters, selectedChapterId)
             bottomSheet.show(childFragmentManager, "")
         } else {
             Toast.makeText(requireContext(), "지부 목록을 불러오는 중입니다", Toast.LENGTH_SHORT).show()
@@ -219,8 +201,10 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
 
     private fun showSchoolBottomSheet() {
         val schoolList = viewModel.uiState.value.schoolList
+        val selectedSchoolId = viewModel.uiState.value.classList
+            .find { it.schoolId != null }?.schoolId
         if (schoolList.isNotEmpty()) {
-            val bottomSheet = SchoolSelectBottomSheet.newInstance(schoolList)
+            val bottomSheet = SchoolSelectBottomSheet.newInstance(schoolList, selectedSchoolId)
             bottomSheet.show(childFragmentManager, "")
         } else {
             Toast.makeText(requireContext(), "학교 목록을 불러오는 중입니다", Toast.LENGTH_SHORT).show()

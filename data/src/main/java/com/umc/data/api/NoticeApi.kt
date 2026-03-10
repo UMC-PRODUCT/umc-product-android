@@ -52,7 +52,6 @@ interface NoticeApi {
         @Path(PATH_NOTICE_ID) noticeId: Long
     ): ApiResponse<Unit>
 
-    // TODO 공지 리스트
     @GET(Endpoints.Notice.NOTICE)
     suspend fun getNotices(
         @Query(QUERY_GISU_ID) gisuId: Long,

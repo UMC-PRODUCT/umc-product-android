@@ -18,11 +18,13 @@ class ChapterSelectBottomSheet : BottomSheetDialogFragment() {
         const val CHAPTER_SELECT = "chapterSelect"
         const val BUNDLE_KEY_CHAPTER = "chapter_select_key"
         private const val ARG_CHAPTER_LIST = "arg_chapter_list"
+        private const val ARG_SELECTED_CHAPTER_ID = "arg_selected_chapter_id"
 
-        fun newInstance(chapterList: List<Chapter>): ChapterSelectBottomSheet {
+        fun newInstance(chapterList: List<Chapter>, selectedChapterId: Long? = null): ChapterSelectBottomSheet {
             return ChapterSelectBottomSheet().apply {
                 arguments = bundleOf(
-                    ARG_CHAPTER_LIST to ArrayList(chapterList)
+                    ARG_CHAPTER_LIST to ArrayList(chapterList),
+                    ARG_SELECTED_CHAPTER_ID to selectedChapterId
                 )
             }
         }
@@ -31,6 +33,10 @@ class ChapterSelectBottomSheet : BottomSheetDialogFragment() {
     private val chapterList: List<Chapter> by lazy {
         @Suppress("UNCHECKED_CAST")
         (arguments?.getSerializable(ARG_CHAPTER_LIST) as? ArrayList<Chapter>)?.toList() ?: emptyList()
+    }
+
+    private val selectedChapterId: Long? by lazy {
+        arguments?.getLong(ARG_SELECTED_CHAPTER_ID)?.takeIf { it != 0L }
     }
 
     private val chapterListAdapter: ChapterListAdapter by lazy {
@@ -64,6 +70,7 @@ class ChapterSelectBottomSheet : BottomSheetDialogFragment() {
         }
 
         chapterListAdapter.submitList(chapterList)
+        chapterListAdapter.setSelectedChapterId(selectedChapterId)
     }
 
     override fun onDestroyView() {

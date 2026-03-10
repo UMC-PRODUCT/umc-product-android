@@ -86,7 +86,7 @@ class AdminChallengerViewModel @Inject constructor(
                     }
                 },
                 errorCallback = { failState ->
-                    emitEvent(AdminChallengerEvent.ShowErrorToast(failState.message))
+                    emitEvent(AdminChallengerEvent.ShowToast(failState.message, isError = true))
                 }
             )
         }
@@ -104,7 +104,7 @@ class AdminChallengerViewModel @Inject constructor(
                     emitEvent(AdminChallengerEvent.ShowManageDialog(data))
                 },
                 errorCallback = { failState ->
-                    emitEvent(AdminChallengerEvent.ShowErrorToast(failState.message))
+                    emitEvent(AdminChallengerEvent.ShowToast(failState.message, isError = true))
                 }
             )
         }
@@ -118,11 +118,11 @@ class AdminChallengerViewModel @Inject constructor(
             resultResponse(
                 response = deleteChallengerPointUseCase(challengerPointId),
                 successCallback = {
-                    // 삭제 성공 시, 해당 챌린저의 상세 정보를 다시 불러와 다이얼로그를 갱신
+                    emitEvent(AdminChallengerEvent.ShowToast("기록이 삭제되었습니다.", isError = false)) // 성공
                     onChallengerClicked(challengerId)
                 },
                 errorCallback = { failState ->
-                    emitEvent(AdminChallengerEvent.ShowErrorToast(failState.message))
+                    emitEvent(AdminChallengerEvent.ShowToast(failState.message, isError = true)) // 에러
                 }
             )
         }
@@ -152,7 +152,7 @@ class AdminChallengerViewModel @Inject constructor(
                     emitEvent(AdminChallengerEvent.ShowManageDialog(data))
                 },
                 errorCallback = { failState ->
-                    emitEvent(AdminChallengerEvent.ShowErrorToast(failState.message))
+                    emitEvent(AdminChallengerEvent.ShowToast(failState.message, isError = true))
                 }
             )
         }
@@ -167,5 +167,5 @@ data class AdminChallengerUiState(
 
 sealed interface AdminChallengerEvent : UiEvent {
     data class ShowManageDialog(val model: ChallengerManageDialogModel) : AdminChallengerEvent
-    data class ShowErrorToast(val message: String) : AdminChallengerEvent
+    data class ShowToast(val message: String, val isError: Boolean = false) : AdminChallengerEvent
 }

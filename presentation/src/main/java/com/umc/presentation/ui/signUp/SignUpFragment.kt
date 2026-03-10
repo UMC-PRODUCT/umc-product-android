@@ -11,8 +11,9 @@ import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentSignUpBinding
 import com.umc.presentation.ui.signUp.bottomSheet.SchoolSelectBottomSheet
-import com.umc.presentation.util.ULog
 import com.umc.presentation.util.UToast
+import com.umc.presentation.component.UMypageDialog
+import com.umc.presentation.component.UMypageDialogModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -76,6 +77,12 @@ class SignUpFragment :
                     state = UToast.State.ERROR
                 ).show()
             }
+            SignUpEvent.FocusVerifyCodeField -> {
+                binding.textFieldVerifyCode.requestFocus()
+            }
+            is SignUpEvent.ShowRegisterErrorDialog -> {
+                showRegisterErrorDialog(event.message)
+            }
         }
     }
 
@@ -99,5 +106,17 @@ class SignUpFragment :
     private fun navigatePermission() {
         val action = SignUpFragmentDirections.actionSignUpToPermission()
         findNavController().navigate(action)
+    }
+
+    private fun showRegisterErrorDialog(message: String) {
+        UMypageDialog(
+            model = UMypageDialogModel(
+                title = message,
+                content = "",
+                isTwoButton = false,
+                confirmText = "확인"
+            ),
+            onPositive = { findNavController().popBackStack() }
+        ).show(parentFragmentManager, null)
     }
 }

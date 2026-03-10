@@ -5,7 +5,7 @@ object Endpoints {
     object Auth {
         //Authentication
         const val AUTH = "api/v1/auth"
-        const val REISSUE = "$AUTH/auth/renew"
+        const val REISSUE = "$AUTH/token/renew"
         const val LOGIN_KAKAO = "$AUTH/login/kakao"
         const val LOGIN_GOOGLE = "$AUTH/login/google"
         const val EMAIL_VERIFICATION = "$AUTH/email-verification"

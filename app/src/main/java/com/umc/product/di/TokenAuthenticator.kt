@@ -1,13 +1,11 @@
 package com.umc.product.di
 
 import android.util.Log
-import com.umc.domain.model.JwtToken
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.RefreshTokenRequest
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.repository.AuthRepository
 import com.umc.presentation.util.ULog
-import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -35,13 +33,11 @@ class TokenAuthenticator @Inject constructor(
             mutex.withLock {
                 if (verifyTokenIsRefreshed(accessToken, refreshToken)) {
                     Log.d("RETROFIT", "TokenAuthenticator - authenticate() called / 중단된 API 재요청")
+                    val newAccessToken = appDataStoreRepository.getAccessToken()
                     response.request
                         .newBuilder()
                         .removeHeader("Authorization")
-                        .header(
-                            "Authorization",
-                            "Bearer ${appDataStoreRepository.getAccessToken()}",
-                        )
+                        .addHeader("Authorization", "Bearer $newAccessToken")
                         .build()
                 } else {
                     null
@@ -56,7 +52,7 @@ class TokenAuthenticator @Inject constructor(
         val newAccess = appDataStoreRepository.getAccessToken()
 
         if (access != newAccess) {
-            true
+            return true
         }
 
         Log.d(

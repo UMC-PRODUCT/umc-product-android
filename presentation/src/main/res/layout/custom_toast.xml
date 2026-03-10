@@ -29,7 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="@style/Callout"
-            android:textColor="@color/white"
+            android:textColor="@color/neutral000"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/image_state"
             app:layout_constraintTop_toTopOf="parent"

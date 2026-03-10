@@ -3,10 +3,13 @@ package com.umc.presentation.ui.community.detail
 import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -82,7 +85,37 @@ class PostDetailFragment : BaseFragment<FragmentPostDetailBinding, PostDetailFra
             viewModel.initPostDetailData(postId)
         }
 
+        // 다른 영역 터치 시 키보드 숨기기 및 포커스 해제
+        setupTouchListenerToClearFocus()
 
+    }
+
+    private fun setupTouchListenerToClearFocus() {
+        binding.root.setOnTouchListener { view, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                val currentFocus = activity?.currentFocus
+                if (currentFocus == binding.postdetailEdtComment) {
+                    // 포커스 해제 및 키보드 숨기기
+                    binding.postdetailEdtComment.clearFocus()
+                    hideKeyboard()
+                }
+            }
+            false // 이벤트를 소비하지 않고 계속 전달
+        }
+
+        // RecyclerView 터치 시에도 포커스 해제
+        binding.postdetailRcv.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                binding.postdetailEdtComment.clearFocus()
+                hideKeyboard()
+            }
+            false
+        }
+    }
+
+    private fun hideKeyboard() {
+        val imm = context?.getSystemService<InputMethodManager>()
+        imm?.hideSoftInputFromWindow(binding.root.windowToken, 0)
     }
 
     override fun initStates() {

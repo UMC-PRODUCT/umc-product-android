@@ -19,11 +19,13 @@ class SchoolSelectBottomSheet: BottomSheetDialogFragment() {
         const val SCHOOL_SELECT = "schoolSelect"
         const val BUNDLE_KEY_SELECT = "school_select_key"
         private const val ARG_SCHOOL_LIST = "arg_school_list"
+        private const val ARG_SELECTED_SCHOOL_ID = "arg_selected_school_id"
 
-        fun newInstance(schoolList: List<SchoolInfo>): SchoolSelectBottomSheet {
+        fun newInstance(schoolList: List<SchoolInfo>, selectedSchoolId: Long? = null): SchoolSelectBottomSheet {
             return SchoolSelectBottomSheet().apply {
                 arguments = bundleOf(
-                    ARG_SCHOOL_LIST to schoolList
+                    ARG_SCHOOL_LIST to schoolList,
+                    ARG_SELECTED_SCHOOL_ID to selectedSchoolId
                 )
             }
         }
@@ -31,6 +33,10 @@ class SchoolSelectBottomSheet: BottomSheetDialogFragment() {
 
     private val schoolList : List<SchoolInfo> by lazy {
         (arguments?.getSerializable(ARG_SCHOOL_LIST) as? List<SchoolInfo>) ?: emptyList()
+    }
+
+    private val selectedSchoolId: Long? by lazy {
+        arguments?.getLong(ARG_SELECTED_SCHOOL_ID)?.takeIf { it != 0L }
     }
 
     private val schoolListAdapter : SchoolListAdapter by lazy {
@@ -65,6 +71,7 @@ class SchoolSelectBottomSheet: BottomSheetDialogFragment() {
             }
 
             schoolListAdapter.submitList(schoolList)
+            schoolListAdapter.setSelectedSchoolId(selectedSchoolId)
         }
     }
 

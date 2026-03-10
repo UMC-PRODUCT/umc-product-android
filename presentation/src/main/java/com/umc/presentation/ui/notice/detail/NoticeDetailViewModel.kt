@@ -3,6 +3,7 @@ package com.umc.presentation.ui.notice.detail
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.UDomainFormat.parseDateTime
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.home.GisuInfo
 import com.umc.domain.model.notice.ChallengerReadInfo
 import com.umc.domain.model.notice.NoticeDetail
 import com.umc.domain.model.notice.NoticeReadStatistics
@@ -10,6 +11,7 @@ import com.umc.domain.model.notice.NoticeTarget
 import com.umc.domain.model.notice.NoticeVote
 import com.umc.domain.model.notice.NoticeVoteOption
 import com.umc.domain.usecase.GetChallengerIdUseCase
+import com.umc.domain.usecase.GetGisuInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
 import com.umc.domain.usecase.notice.DeleteNoticeUseCase
@@ -37,6 +39,7 @@ class NoticeDetailViewModel @Inject constructor(
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getChallengerIdUseCase: GetChallengerIdUseCase,
     private val deleteNoticeUseCase: DeleteNoticeUseCase,
+    private val getGisuInfoUseCase: GetGisuInfoUseCase,
 ) : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
     NoticeFragmentUiState()
 ) {
@@ -96,24 +99,29 @@ class NoticeDetailViewModel @Inject constructor(
                 } ?: run {
                     selectedOptionIds = mutableSetOf()
                 }
-                
+
                 val formattedCreatedAt = getFormattedCreatedAt(detail.createdAt)
-                val formattedTargetInfo = getFormattedTargetInfo(detail.targetInfo)
                 val formattedVoteCondition = getFormattedVoteCondition(detail.vote)
 
-                updateState { 
-                    copy(
-                        detail = detail, 
-                        selectedVoteOptionIds = selectedOptionIds.toList(),
-                        isLoading = false,
-                        formattedCreatedAt = formattedCreatedAt,
-                        formattedTargetInfo = formattedTargetInfo,
-                        formattedVoteCondition = formattedVoteCondition
-                    ) 
+                // gisuId가 있으면 gisu 정보를 조회하여 기수 표시
+                val targetGisuId = detail.targetInfo.targetGisuId
+                if (targetGisuId != null) {
+                    fetchGisuAndUpdateTargetInfo(targetGisuId.toLong(), detail, formattedCreatedAt, formattedVoteCondition)
+                } else {
+                    val formattedTargetInfo = getFormattedTargetInfo(detail.targetInfo, null)
+                    updateState {
+                        copy(
+                            detail = detail,
+                            selectedVoteOptionIds = selectedOptionIds.toList(),
+                            isLoading = false,
+                            formattedCreatedAt = formattedCreatedAt,
+                            formattedTargetInfo = formattedTargetInfo,
+                            formattedVoteCondition = formattedVoteCondition
+                        )
+                    }
+                    checkIsAuthor()
+                    loadAuthorNickname(detail.authorChallengerId)
                 }
-                
-                checkIsAuthor()
-                loadAuthorNickname(detail.authorChallengerId)
             },
             errorCallback = {
                 updateState { copy(isLoading = false) }
@@ -128,10 +136,53 @@ class NoticeDetailViewModel @Inject constructor(
         } else ""
     }
 
-    private fun getFormattedTargetInfo(targetInfo: NoticeTarget): String {
+    private fun getFormattedTargetInfo(targetInfo: NoticeTarget, gisu: Long?): String {
         val chapterStr = if (targetInfo.targetChapterId != null) "/${targetInfo.targetChapterId}장" else "/전체"
-        val partsStr = if (targetInfo.targetParts.isNotEmpty()) "/${targetInfo.targetParts[0]}" else ""
-        return "수신대상: ${targetInfo.targetGisuId + 1}기${chapterStr}${partsStr}"
+        val partsStr = if (!targetInfo.targetParts.isNullOrEmpty()) "/${targetInfo.targetParts!![0]}" else ""
+        val gisuNumber = gisu?.plus(1) ?: targetInfo.targetGisuId?.plus(1)
+        return "수신대상: ${gisuNumber}기${chapterStr}${partsStr}"
+    }
+
+    private fun fetchGisuAndUpdateTargetInfo(
+        gisuId: Long,
+        detail: NoticeDetail,
+        formattedCreatedAt: String,
+        formattedVoteCondition: String
+    ) = viewModelScope.launch {
+        resultResponse(
+            response = getGisuInfoUseCase(gisuId),
+            successCallback = { gisuInfo ->
+                val formattedTargetInfo = getFormattedTargetInfo(detail.targetInfo, gisuInfo.gisu)
+                updateState {
+                    copy(
+                        detail = detail,
+                        selectedVoteOptionIds = selectedOptionIds.toList(),
+                        isLoading = false,
+                        formattedCreatedAt = formattedCreatedAt,
+                        formattedTargetInfo = formattedTargetInfo,
+                        formattedVoteCondition = formattedVoteCondition
+                    )
+                }
+                checkIsAuthor()
+                loadAuthorNickname(detail.authorChallengerId)
+            },
+            errorCallback = {
+                // gisu 조회 실패 시 targetGisuId로 fallback
+                val formattedTargetInfo = getFormattedTargetInfo(detail.targetInfo, null)
+                updateState {
+                    copy(
+                        detail = detail,
+                        selectedVoteOptionIds = selectedOptionIds.toList(),
+                        isLoading = false,
+                        formattedCreatedAt = formattedCreatedAt,
+                        formattedTargetInfo = formattedTargetInfo,
+                        formattedVoteCondition = formattedVoteCondition
+                    )
+                }
+                checkIsAuthor()
+                loadAuthorNickname(detail.authorChallengerId)
+            }
+        )
     }
 
     private fun getFormattedVoteCondition(vote: NoticeVote?): String {

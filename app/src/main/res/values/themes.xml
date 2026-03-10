@@ -12,6 +12,7 @@
         <item name="colorTextSecondarySemantic">@color/neutral600</item>
         <item name="colorTextDisablePlaceholderSemantic">@color/neutral400</item>
         <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
 

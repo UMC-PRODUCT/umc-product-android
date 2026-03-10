@@ -69,7 +69,7 @@
                 android:id="@+id/btn_admin_change_location"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:visibility="@{uiModel.session.status == AdminSessionStatus.COMPLETED ? View.GONE : View.VISIBLE}"
+                android:visibility="@{uiModel.session.status != AdminSessionStatus.COMPLETED &amp;&amp; uiModel.hasWritePermission ? View.VISIBLE : View.GONE}"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:backgroundColor="@color/neutral000"
@@ -107,7 +107,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="@{uiModel.session.date}"
+                    android:text="@{uiModel.formattedDate}"
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral600"
                     app:layout_constraintBottom_toBottomOf="@+id/iv_admin_calendar"
@@ -257,7 +257,7 @@
                     android:layout_marginTop="24dp"
                     android:background="@drawable/bg_primary500_radius12"
                     android:padding="16dp"
-                    android:visibility='@{uiModel.session.pendingCount > 0 ? View.VISIBLE : View.GONE}'>
+                    android:visibility='@{(uiModel.session.pendingCount > 0 &amp;&amp; uiModel.hasApprovePermission) ? View.VISIBLE : View.GONE}'>
 
                     <ImageView
                         android:id="@+id/iv_admin_btn_icon"

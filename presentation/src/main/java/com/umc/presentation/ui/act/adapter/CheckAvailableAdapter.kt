@@ -1,9 +1,12 @@
 package com.umc.presentation.ui.act.adapter
 
+import android.annotation.SuppressLint
+import android.graphics.PointF
 import android.transition.AutoTransition
 import android.transition.TransitionManager
 import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
@@ -12,9 +15,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.*
 import com.naver.maps.map.overlay.CircleOverlay
+import com.naver.maps.map.overlay.Marker
+import com.naver.maps.map.overlay.OverlayImage
 import com.naver.maps.map.util.FusedLocationSource
 import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemActCheckAvailableBinding
+import com.umc.presentation.extension.px
 import com.umc.presentation.ui.act.check.CheckAvailableUIModel
 
 class CheckAvailableAdapter(
@@ -44,11 +50,33 @@ class CheckAvailableAdapter(
         private var naverMap: NaverMap? = null
         private var currentModel: CheckAvailableUIModel? = null
         private var circleOverlay: CircleOverlay? = null
+        private var sessionMarker: Marker? = null
 
         init {
             // MapView 초기화 시점 최적화
             binding.mapView.onCreate(null)
             binding.mapView.getMapAsync(this)
+            setupTouchIntercept() // 리사이클러뷰 스크롤 간섭 방지 로직 추가
+        }
+
+        /**
+         * 지도를 드래그할 때 리사이클러뷰가 터치 이벤트를 가로채지 못하게 설정
+         */
+        @SuppressLint("ClickableViewAccessibility")
+        private fun setupTouchIntercept() {
+            binding.mapView.setOnTouchListener { _, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                        // 지도를 터치/드래그 중일 때는 부모 뷰(RecyclerView)의 스크롤을 막음
+                        binding.root.parent.requestDisallowInterceptTouchEvent(true)
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        // 터치가 끝나면 다시 허용
+                        binding.root.parent.requestDisallowInterceptTouchEvent(false)
+                    }
+                }
+                false // 이벤트를 소비하지 않고 네이버 지도 라이브러리에 전달하여 드래그가 작동하게 함
+            }
         }
 
         fun bind(uiModel: CheckAvailableUIModel) {
@@ -86,18 +114,27 @@ class CheckAvailableAdapter(
         override fun onMapReady(map: NaverMap) {
             this.naverMap = map
 
-            // 초기 UI 및 제스처 설정
+            sessionMarker = Marker().apply {
+                icon = OverlayImage.fromResource(R.drawable.ic_location_marker)
+                width = 32.px
+                height = 32.px
+                anchor = PointF(0.5f, 0.5f) // 마커 정중앙을 좌표에 고정
+            }
+
             map.uiSettings.apply {
                 isZoomControlEnabled = false
                 isLocationButtonEnabled = false
                 isCompassEnabled = false
                 isScaleBarEnabled = false
-                setAllGesturesEnabled(false)
+
+                setAllGesturesEnabled(true)
+                isZoomGesturesEnabled = false
 
                 logoGravity = Gravity.TOP or Gravity.START
                 setLogoMargin(20, 20, 0, 0)
             }
 
+            map.locationSource = this@CheckAvailableAdapter.locationSource
             updateMapContent(map)
         }
 
@@ -106,7 +143,11 @@ class CheckAvailableAdapter(
             val sessionPos = LatLng(model.session.latitude, model.session.longitude)
             val context = binding.root.context
 
-            // 오버레이 객체 재사용 로직
+            sessionMarker?.apply {
+                position = sessionPos
+                this.map = map
+            }
+
             if (circleOverlay == null) {
                 circleOverlay = CircleOverlay().apply {
                     radius = GEOFENCE_RADIUS
@@ -135,8 +176,8 @@ class CheckAvailableAdapter(
                 map.moveCamera(cameraUpdate)
             }
 
-            map.locationTrackingMode = LocationTrackingMode.None
-            map.locationOverlay.isVisible = false
+            map.locationTrackingMode = LocationTrackingMode.NoFollow
+            map.locationOverlay.isVisible = true
         }
     }
 

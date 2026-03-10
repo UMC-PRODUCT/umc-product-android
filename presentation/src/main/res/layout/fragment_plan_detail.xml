@@ -78,48 +78,6 @@
                 android:padding="8dp">
 
                 <LinearLayout
-                    android:id="@+id/layout_menu_report"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="@{vm.uiState.isAuthor ? View.GONE : View.VISIBLE}">
-
-                    <!--
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackground"
-                        android:gravity="center_vertical"
-                        android:onClick="@{() -> vm.reportPlan()}"
-                        android:padding="12dp">
-
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/ic_error_filled"
-                            app:tint="@color/danger500" />
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
-                            android:text="신고하기"
-                            android:textAppearance="@style/Subheadline"
-                            android:textColor="@color/danger500" />
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_next_small"
-                            app:tint="@color/danger500" />
-                    </LinearLayout>
-                    -->
-
-                </LinearLayout>
-
-
-                <LinearLayout
                     android:id="@+id/layout_menu_edit_delete"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

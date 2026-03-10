@@ -13,6 +13,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+// JWT 관련 에러 코드 접두사
+private const val JWT_ERROR_PREFIX = "JWT"
+
+// 공통 ViewModel 이벤트
+sealed interface CommonViewModelEvent {
+    data object MoveToSplash : CommonViewModelEvent
+}
+
 abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
     initialPageState: STATE,
 ) : ViewModel() {
@@ -23,6 +31,9 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
     private val _uiEvent = MutableSharedFlow<EVENT>()
     val uiEvent: SharedFlow<EVENT>
         get() = _uiEvent.asSharedFlow()
+
+    private val _commonEvent = MutableSharedFlow<CommonViewModelEvent>()
+    val commonEvent: SharedFlow<CommonViewModelEvent> = _commonEvent.asSharedFlow()
 
     // 로딩 상태 관리
     private val _isLoading = MutableStateFlow(false)
@@ -38,6 +49,12 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
         }
     }
 
+    private fun emitCommonEvent(event: CommonViewModelEvent) {
+        viewModelScope.launch {
+            _commonEvent.emit(event)
+        }
+    }
+
     protected fun <D> resultResponse(
         response: ApiState<D>,
         successCallback: (D) -> Unit,
@@ -48,6 +65,10 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
 
         when (response) {
             is ApiState.Fail -> {
+                // JWT 관련 에러 체크: 토큰 만료/유효하지 않음 등의 JWT 에러 시 SplashFragment로 이동
+                if (response.failState.code.startsWith(JWT_ERROR_PREFIX)) {
+                    emitCommonEvent(CommonViewModelEvent.MoveToSplash)
+                }
                 errorCallback?.invoke(response.failState)
             }
             is ApiState.Success -> {

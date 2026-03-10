@@ -13,6 +13,7 @@ import com.umc.presentation.databinding.FragmentUserChallengerBinding
 import com.umc.presentation.extension.px
 import com.umc.presentation.ui.act.adapter.ChallengerHeaderAdapter
 import com.umc.presentation.ui.act.adapter.UserChallengerAdapter
+import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -105,8 +106,12 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
             is UserChallengerEvent.NavigateToDetail -> {
                 ChallengerInfoDialog(event.model).show(childFragmentManager, "ChallengerInfoDialog")
             }
-            is UserChallengerEvent.ShowErrorToast -> {
-                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+            is UserChallengerEvent.ShowToast -> {
+                UToast.createToast(
+                    context = requireContext(),
+                    message = event.message,
+                    state = if (event.isError) UToast.State.ERROR else UToast.State.CHECK
+                ).show()
             }
         }
     }
