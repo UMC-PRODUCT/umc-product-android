@@ -25,7 +25,7 @@ class BottomSheetAddParticipantAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: ParticipantItem) {
-            val nameType = "${item.name}/${item.nickname}"
+            val nameType = "${item.name}/${item.nickname}(${item.gisu}기)"
             binding.item = item
             binding.itemTvName.text = nameType
             binding.itemTvSchool.text = item.school
