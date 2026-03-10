@@ -157,10 +157,10 @@ constructor(
         }
 
         //신고 로직 수행
-        fun reportPlan(){
-            updateState { copy(isMenuVisible = false) }
-            emitEvent(PlanDetailFragmentEvent.ReportPlan)
-        }
+        //fun reportPlan(){
+        //    updateState { copy(isMenuVisible = false) }
+        //    emitEvent(PlanDetailFragmentEvent.ReportPlan)
+        //}
 
         //수정 로직 수행
         fun editPlan(){
@@ -234,7 +234,7 @@ sealed interface PlanDetailFragmentEvent : UiEvent {
     //토글 이벤트
     object ToggleMenu : PlanDetailFragmentEvent
     //신고하기 이벤트
-    object ReportPlan : PlanDetailFragmentEvent
+    //object ReportPlan : PlanDetailFragmentEvent
     //수정하기 이벤트
     object EditPlan : PlanDetailFragmentEvent
     //삭제하기 이벤트 (다이얼로그로 확인)
