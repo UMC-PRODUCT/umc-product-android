@@ -48,8 +48,7 @@ interface ChallengerRepository {
         schoolId: Long?,
         gisuId: Long?,
         part: String?,
-        name: String?,
-        nickname: String?
+        keyword: String?,
     ): ApiState<ChallengerList>
 
 }

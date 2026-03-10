@@ -14,9 +14,8 @@ class SearchChallengerCursorUseCase @Inject constructor(
         schoolId: Long?,
         gisuId: Long?,
         part: String?,
-        name: String?,
-        nickname: String?
+        keyword: String?,
     ): ApiState<ChallengerList> {
-        return repository.searchChallengerCursor(cursor, size, schoolId, gisuId, part, name, nickname)
+        return repository.searchChallengerCursor(cursor, size, schoolId, gisuId, part, keyword)
     }
 }
