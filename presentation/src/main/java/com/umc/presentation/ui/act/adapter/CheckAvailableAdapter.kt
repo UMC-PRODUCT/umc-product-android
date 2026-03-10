@@ -127,8 +127,7 @@ class CheckAvailableAdapter(
                 isCompassEnabled = false
                 isScaleBarEnabled = false
 
-                setAllGesturesEnabled(true)
-                isZoomGesturesEnabled = false
+                setAllGesturesEnabled(false)
 
                 logoGravity = Gravity.TOP or Gravity.START
                 setLogoMargin(20, 20, 0, 0)
