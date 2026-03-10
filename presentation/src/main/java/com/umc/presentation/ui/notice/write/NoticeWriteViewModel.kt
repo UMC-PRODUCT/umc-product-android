@@ -21,6 +21,7 @@ import com.umc.domain.usecase.notice.CreateNoticeUseCase
 import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
 import com.umc.domain.usecase.notice.UpdateNoticeUseCase
 import com.umc.domain.usecase.organization.GetChapterListUseCase
+import com.umc.domain.usecase.organization.GetChapterWithSchoolUseCase
 import com.umc.domain.usecase.school.GetAllSchoolUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.presentation.base.BaseViewModel
@@ -46,6 +47,7 @@ class NoticeWriteViewModel @Inject constructor(
     private val addNoticeLinksUseCase: AddNoticeLinksUseCase,
     private val uploadFileUseCase: UploadFileUseCase,
     private val getChapterListUseCase: GetChapterListUseCase,
+    private val getChapterWithSchoolUseCase: GetChapterWithSchoolUseCase,
     private val getAllSchoolUseCase: GetAllSchoolUseCase,
     private val getUserInfoUseCase: GetUserInfoUseCase
 ) : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
@@ -104,6 +106,10 @@ class NoticeWriteViewModel @Inject constructor(
                     activeGisuName = gisuName.takeIf { it.isNotEmpty() }
                 )
             }
+            // 특정 기수가 선택되고, 전체 기수가 아닌 경우 해당 기수의 지부/학교 로드
+            if (!uiState.value.isAllGisuSelected) {
+                loadChaptersAndSchoolsForGisu(gisuId.toInt())
+            }
         }
     }
 
@@ -132,6 +138,24 @@ class NoticeWriteViewModel @Inject constructor(
             response = getAllSchoolUseCase(),
             successCallback = { schools ->
                 updateState { copy(schoolList = schools) }
+            }
+        )
+    }
+
+    /**
+     * 특정 기수에 해당하는 지부와 학교 리스트를 로드
+     * 전체 기수가 아닌 경우에 사용
+     */
+    private fun loadChaptersAndSchoolsForGisu(gisuId: Int) = viewModelScope.launch {
+        resultResponse(
+            response = getChapterWithSchoolUseCase(gisuId),
+            successCallback = { chapterWithSchool ->
+                updateState {
+                    copy(
+                        chapterList = chapterWithSchool.chapterList,
+                        schoolList = chapterWithSchool.schoolList
+                    )
+                }
             }
         )
     }
@@ -463,7 +487,20 @@ class NoticeWriteViewModel @Inject constructor(
     }
 
     fun onClickToggleAllGisu() {
-        updateState { copy(isAllGisuSelected = !isAllGisuSelected) }
+        val newIsAllGisuSelected = !uiState.value.isAllGisuSelected
+        updateState { copy(isAllGisuSelected = newIsAllGisuSelected) }
+        
+        // 전체 기수 토글 시 지부/학교 리스트 갱신
+        if (newIsAllGisuSelected) {
+            // 전체 기수 선택됨 -> 전체 지부/학교 로드
+            loadChapters()
+            loadSchools()
+        } else {
+            // 특정 기수 선택됨 -> 해당 기수의 지부/학교 로드
+            uiState.value.activeGisuId?.let { gisuId ->
+                loadChaptersAndSchoolsForGisu(gisuId)
+            }
+        }
     }
 
     fun onClickSubmit() = viewModelScope.launch {
