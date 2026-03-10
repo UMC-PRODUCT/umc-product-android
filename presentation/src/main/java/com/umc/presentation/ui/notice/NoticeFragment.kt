@@ -117,7 +117,13 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
     }
 
     private fun navigateToNoticeWrite() {
-        val action = NoticeFragmentDirections.actionNoticeFragmentToNoticeWriteFragment()
+        val selectedGisuId = viewModel.uiState.value.selectedGisu
+        val selectedGisu = viewModel.uiState.value.dropdownList.find { it.gisuId.toLong() == selectedGisuId }
+        val gisuName = selectedGisu?.let { "${it.generation}기" } ?: ""
+        val action = NoticeFragmentDirections.actionNoticeFragmentToNoticeWriteFragment(
+            gisuId = selectedGisuId,
+            gisuName = gisuName
+        )
         findNavController().navigate(action)
     }
 

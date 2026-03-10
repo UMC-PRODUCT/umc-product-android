@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.signUp.adapter
 
+import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.presentation.databinding.ItemSchoolBinding
@@ -9,10 +10,11 @@ class SchoolListViewHolder(
     private val listener: SchoolListAdapter.SchoolListDelegate
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(item: SchoolInfo) {
+    fun bind(item: SchoolInfo, isSelected: Boolean) {
         binding.apply {
             root.setOnClickListener { listener.onClickNotice(item) }
             textSchool.text = item.schoolName
+            imageCheck.visibility = if (isSelected) View.VISIBLE else View.GONE
         }
     }
 }

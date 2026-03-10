@@ -150,7 +150,6 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
             android:onClick="@{() -> vm.onClickWriteNotice()}"
-            android:visibility="@{vm.uiState.canWriteNotice ? View.VISIBLE : View.GONE}"
             app:cardBackgroundColor="@color/primary500"
             app:contentPaddingBottom="12dp"
             app:contentPaddingLeft="16dp"
@@ -164,6 +163,8 @@
             app:text="@string/notice_write"
             app:textAppearance="@style/HeadlineBold"
             app:textColor="@color/neutral000" />
+
+<!--        android:visibility="@{vm.uiState.canWriteNotice ? View.VISIBLE : View.GONE}"-->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
