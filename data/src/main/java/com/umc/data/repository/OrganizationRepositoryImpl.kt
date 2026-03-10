@@ -9,6 +9,7 @@ import com.umc.data.response.organization.SchoolNameResponse.Companion.toModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.organization.Chapter
+import com.umc.domain.model.organization.ChapterWithSchool
 import com.umc.domain.model.organization.GisuList
 import com.umc.domain.model.home.GisuInfo
 import com.umc.domain.model.organization.StudyGroupDetail
@@ -100,8 +101,14 @@ class OrganizationRepositoryImpl @Inject constructor(
     override suspend fun getActiveGisu(): ApiState<Unit> =
         organizationDataSource.getActiveGisu().map { Unit } //임시
 
-    override suspend fun getChapterWithSchool(gisuId: Int): ApiState<Unit> =
-        organizationDataSource.getChapterWithSchool(gisuId).map { Unit } //임시
+    override suspend fun getChapterWithSchool(gisuId: Int): ApiState<ChapterWithSchool> =
+        organizationDataSource.getChapterWithSchool(gisuId).map { response ->
+            val chapters = response.chapters.map { Chapter(it.chapterId, it.chapterName) }
+            val schools = response.chapters.flatMap { chapter ->
+                chapter.schools.map { it.toModel() }
+            }.distinctBy { it.schoolId }
+            ChapterWithSchool(chapters, schools)
+        }
 
     override suspend fun getGisuInfo(gisuId: Long): ApiState<GisuInfo> =
         organizationDataSource.getGisuInfo(gisuId).map { it.toModel() }

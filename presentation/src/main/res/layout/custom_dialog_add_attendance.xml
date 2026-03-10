@@ -66,7 +66,7 @@
                 app:contentPaddingLeft="8dp"
                 app:text="@string/home_plan_add_dialog_add_attendance_yes"
                 app:textColor="@color/neutral800"
-                app:cardBackgroundColor="@color/neutral000"
+                app:cardBackgroundColor="@color/primary500"
                 app:pressedColor="@color/neutral200"
                 app:borderColor="@color/neutral300"
                 app:borderWidth="1dp"

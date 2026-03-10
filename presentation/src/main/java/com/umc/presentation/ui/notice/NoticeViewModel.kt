@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.ChallengerRecord
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.UserChallengerRole
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.organization.GisuItem
@@ -83,7 +84,7 @@ class NoticeViewModel @Inject constructor(
             }
 
             if (record.part.isNotEmpty()) {
-                val partChipText = record.part
+                val partChipText = UserPart.from(record.part).label
                 if (chipList.none { it.text == partChipText }) {
                     chipList.add(
                         NoticeChipState(

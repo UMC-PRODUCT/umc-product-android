@@ -17,6 +17,8 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import com.umc.presentation.R
 import com.umc.presentation.component.ULoadingDialog
+import com.umc.presentation.component.UMypageDialog
+import com.umc.presentation.component.UMypageDialogModel
 import com.umc.presentation.util.ULog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -84,15 +86,27 @@ abstract class BaseFragment<B : ViewDataBinding, STATE : UiState, EVENT : UiEven
     }
 
     /**
-     * JWT-0002 토큰 만료 시 SplashFragment로 이동
+     * JWT 토큰 만료/유효하지 않음 등의 JWT 에러 시 SplashFragment로 이동
+     * 이동 전 "로그인이 만료되었습니다" 다이얼로그 표시
      */
     private fun moveToSplash() {
-        try {
-            ULog.d("테스트 moveToSplash")
-            navController.navigate(R.id.action_global_to_login)
-        } catch (_: IllegalArgumentException) {
-            // 이미 현재 destination이면 무시
-        }
+        val dialog = UMypageDialog(
+            model = UMypageDialogModel(
+                title = "로그인이 만료되었습니다",
+                content = "",
+                isTwoButton = false,
+                confirmText = "확인"
+            ),
+            onPositive = {
+                try {
+                    ULog.d("테스트 moveToSplash")
+                    navController.navigate(R.id.action_global_to_login)
+                } catch (_: IllegalArgumentException) {
+                    // 이미 현재 destination이면 무시
+                }
+            }
+        )
+        dialog.show(parentFragmentManager, "SessionExpiredDialog")
     }
 
     private fun showLoadingDialog() {

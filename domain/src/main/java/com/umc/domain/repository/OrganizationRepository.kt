@@ -2,6 +2,7 @@ package com.umc.domain.repository
 
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.organization.Chapter
+import com.umc.domain.model.organization.ChapterWithSchool
 import com.umc.domain.model.organization.GisuList
 import com.umc.domain.model.home.GisuInfo
 import com.umc.domain.model.request.organization.AssignSchoolRequest
@@ -59,7 +60,7 @@ interface OrganizationRepository {
 
     suspend fun getActiveGisu(): ApiState<Unit> //GisuItemResponse
 
-    suspend fun getChapterWithSchool(gisuId: Int): ApiState<Unit> //ChapterBySchoolListResponse
+    suspend fun getChapterWithSchool(gisuId: Int): ApiState<ChapterWithSchool>
 
     suspend fun getGisuInfo(gisuId: Long): ApiState<GisuInfo> //GisuInfoResponse
 
