@@ -274,7 +274,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="24dp"
                     android:layout_marginTop="24dp"
-                    android:visibility="@{vm.uiState.detail.targetInfo != null ? View.VISIBLE : View.GONE}"
                     app:buttonElevation="0"
                     app:cardBackgroundColor="@color/neutral200"
                     app:contentPaddingBottom="2dp"
@@ -284,6 +283,7 @@
                     app:cornerRadius="4dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/image_back"
+                    app:noticeCentralVisibility="@{vm.uiState.detail.targetInfo}"
                     app:text="중앙"
                     app:textAppearance="@style/Caption1Bold"
                     app:textColor="@color/neutral700" />
@@ -302,7 +302,7 @@
                     android:layout_height="wrap_content"
                     android:visibility="@{(vm.uiState.detail.targetInfo.targetChapterId != null) ? View.VISIBLE : View.GONE}"
                     app:buttonElevation="0"
-                    app:cardBackgroundColor="@color/neutral200"
+                    app:cardBackgroundColor="@color/accent100"
                     app:contentPaddingBottom="2dp"
                     app:contentPaddingLeft="8dp"
                     app:contentPaddingRight="8dp"
@@ -310,9 +310,9 @@
                     app:cornerRadius="4dp"
                     app:layout_constraintStart_toEndOf="@id/space_central_chapter"
                     app:layout_constraintTop_toTopOf="@id/ubutton_central"
-                    app:text="지부"
+                    app:noticeChapterText="@{vm.uiState.detail.targetInfo}"
                     app:textAppearance="@style/Caption1Bold"
-                    app:textColor="@color/neutral700" />
+                    app:textColor="@color/accent500" />
 
                 <Space
                     android:id="@+id/space_chapter_school"
@@ -336,7 +336,7 @@
                     app:cornerRadius="4dp"
                     app:layout_constraintStart_toEndOf="@id/space_chapter_school"
                     app:layout_constraintTop_toTopOf="@id/ubutton_central"
-                    app:text="학교"
+                    app:text="교내"
                     app:textAppearance="@style/Caption1Bold"
                     app:textColor="@color/primary600" />
 
@@ -362,7 +362,7 @@
                     app:cornerRadius="4dp"
                     app:layout_constraintStart_toEndOf="@id/space_school_part"
                     app:layout_constraintTop_toTopOf="@id/ubutton_central"
-                    app:text="@{vm.uiState.detail.targetInfo.targetParts[0]}"
+                    app:noticePartText="@{vm.uiState.detail.targetInfo}"
                     app:textAppearance="@style/Caption1Bold"
                     app:textColor="@color/success700" />
 

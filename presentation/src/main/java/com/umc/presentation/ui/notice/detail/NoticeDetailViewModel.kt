@@ -20,6 +20,7 @@ import com.umc.domain.usecase.notice.GetNoticeReadStatisticsUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatusUseCase
 import com.umc.domain.usecase.notice.SendNoticeReminderUseCase
 import com.umc.domain.usecase.notice.SubmitVoteResponseUseCase
+import com.umc.domain.usecase.organization.GetChapterDetailUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -40,6 +41,7 @@ class NoticeDetailViewModel @Inject constructor(
     private val getChallengerIdUseCase: GetChallengerIdUseCase,
     private val deleteNoticeUseCase: DeleteNoticeUseCase,
     private val getGisuInfoUseCase: GetGisuInfoUseCase,
+    private val getChapterDetailUseCase: GetChapterDetailUseCase,
 ) : BaseViewModel<NoticeFragmentUiState, NoticeFragmentEvent>(
     NoticeFragmentUiState()
 ) {
@@ -103,24 +105,12 @@ class NoticeDetailViewModel @Inject constructor(
                 val formattedCreatedAt = getFormattedCreatedAt(detail.createdAt)
                 val formattedVoteCondition = getFormattedVoteCondition(detail.vote)
 
-                // gisuId가 있으면 gisu 정보를 조회하여 기수 표시
-                val targetGisuId = detail.targetInfo.targetGisuId
-                if (targetGisuId != null) {
-                    fetchGisuAndUpdateTargetInfo(targetGisuId.toLong(), detail, formattedCreatedAt, formattedVoteCondition)
+                // chapterId가 있으면 chapter 정보를 조회하여 이름 가져오기
+                val targetChapterId = detail.targetInfo.targetChapterId
+                if (targetChapterId != null) {
+                    fetchChapterAndUpdateDetail(targetChapterId.toLong(), detail, formattedCreatedAt, formattedVoteCondition)
                 } else {
-                    val formattedTargetInfo = getFormattedTargetInfo(detail.targetInfo, null)
-                    updateState {
-                        copy(
-                            detail = detail,
-                            selectedVoteOptionIds = selectedOptionIds.toList(),
-                            isLoading = false,
-                            formattedCreatedAt = formattedCreatedAt,
-                            formattedTargetInfo = formattedTargetInfo,
-                            formattedVoteCondition = formattedVoteCondition
-                        )
-                    }
-                    checkIsAuthor()
-                    loadAuthorNickname(detail.authorChallengerId)
+                    updateDetailState(detail, formattedCreatedAt, formattedVoteCondition, null)
                 }
             },
             errorCallback = {
@@ -128,6 +118,56 @@ class NoticeDetailViewModel @Inject constructor(
                 emitEvent(NoticeFragmentEvent.ShowError("공지사항을 불러오는데 실패했습니다"))
             }
         )
+    }
+
+    private fun fetchChapterAndUpdateDetail(
+        chapterId: Long,
+        detail: NoticeDetail,
+        formattedCreatedAt: String,
+        formattedVoteCondition: String
+    ) = viewModelScope.launch {
+        resultResponse(
+            response = getChapterDetailUseCase(chapterId),
+            successCallback = { chapter ->
+                // chapter 이름을 targetInfo에 설정
+                val updatedDetail = detail.copy(
+                    targetInfo = detail.targetInfo.copy(
+                        targetChapterName = chapter.name
+                    )
+                )
+                updateDetailState(updatedDetail, formattedCreatedAt, formattedVoteCondition, null)
+            },
+            errorCallback = {
+                // chapter 조회 실패 시 원본 detail 사용
+                updateDetailState(detail, formattedCreatedAt, formattedVoteCondition, null)
+            }
+        )
+    }
+
+    private fun updateDetailState(
+        detail: NoticeDetail,
+        formattedCreatedAt: String,
+        formattedVoteCondition: String,
+        gisu: Long?
+    ) {
+        val targetGisuId = detail.targetInfo.targetGisuId
+        if (targetGisuId != null && gisu == null) {
+            fetchGisuAndUpdateTargetInfo(targetGisuId.toLong(), detail, formattedCreatedAt, formattedVoteCondition)
+        } else {
+            val formattedTargetInfo = getFormattedTargetInfo(detail.targetInfo, gisu)
+            updateState {
+                copy(
+                    detail = detail,
+                    selectedVoteOptionIds = selectedOptionIds.toList(),
+                    isLoading = false,
+                    formattedCreatedAt = formattedCreatedAt,
+                    formattedTargetInfo = formattedTargetInfo,
+                    formattedVoteCondition = formattedVoteCondition
+                )
+            }
+            checkIsAuthor()
+            loadAuthorNickname(detail.authorChallengerId)
+        }
     }
 
     private fun getFormattedCreatedAt(date: String): String {

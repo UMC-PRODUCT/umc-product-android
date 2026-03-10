@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             app:buttonElevation="0"
-            app:cardBackgroundColor="@color/neutral200"
+            app:cardBackgroundColor="@color/accent100"
             app:contentPaddingBottom="2dp"
             app:contentPaddingLeft="8dp"
             app:contentPaddingRight="8dp"
@@ -53,7 +53,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:text="지부"
             app:textAppearance="@style/Caption1Bold"
-            app:textColor="@color/neutral700" />
+            app:textColor="@color/accent500" />
 
         <Space
             android:id="@+id/space_chapter_school"
@@ -77,7 +77,7 @@
             app:cornerRadius="4dp"
             app:layout_constraintStart_toEndOf="@id/space_chapter_school"
             app:layout_constraintTop_toTopOf="parent"
-            app:text="학교"
+            app:text="교내"
             app:textAppearance="@style/Caption1Bold"
             app:textColor="@color/primary600" />
 

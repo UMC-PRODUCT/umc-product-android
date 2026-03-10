@@ -23,8 +23,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="18dp"
-            android:text="@{vm.uiState.nowTitle}"
             android:onClick="@{()->vm.onClickShowDropDown()}"
+            android:text="@{vm.uiState.nowTitle}"
             android:textAppearance="@style/Title2Bold"
             android:textColor="@color/neutral800"
             app:layout_constraintStart_toStartOf="parent"
@@ -150,6 +150,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
             android:onClick="@{() -> vm.onClickWriteNotice()}"
+            android:visibility="@{vm.uiState.canWriteNotice ? View.VISIBLE : View.GONE}"
             app:cardBackgroundColor="@color/primary500"
             app:contentPaddingBottom="12dp"
             app:contentPaddingLeft="16dp"
@@ -164,7 +165,6 @@
             app:textAppearance="@style/HeadlineBold"
             app:textColor="@color/neutral000" />
 
-<!--        android:visibility="@{vm.uiState.canWriteNotice ? View.VISIBLE : View.GONE}"-->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

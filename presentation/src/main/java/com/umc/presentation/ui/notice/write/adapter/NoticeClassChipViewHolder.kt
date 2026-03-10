@@ -14,7 +14,7 @@ class NoticeClassChipViewHolder(
 
     fun bind(item: NoticeChipState) {
         binding.itemChip.apply {
-            setText(item.text)
+            setText(item.selectedDisplayName ?: item.text)
             setTextStyle(R.style.CalloutBold)
             setOnClickListener { listener.onClickChip(item) }
         }

@@ -241,7 +241,8 @@ class NoticeWriteViewModel @Inject constructor(
         if (branchIndex != -1) {
             currentList[branchIndex] = currentList[branchIndex].copy(
                 isClicked = false,
-                chapterId = null
+                chapterId = null,
+                selectedDisplayName = null
             )
         }
         return currentList
@@ -252,7 +253,8 @@ class NoticeWriteViewModel @Inject constructor(
         if (schoolIndex != -1) {
             currentList[schoolIndex] = currentList[schoolIndex].copy(
                 isClicked = false,
-                schoolId = null
+                schoolId = null,
+                selectedDisplayName = null
             )
         }
         return currentList
@@ -264,13 +266,14 @@ class NoticeWriteViewModel @Inject constructor(
 
         // 이미 선택된 chapter인지 확인
         val alreadySelectedChapter = currentList.find { it.chapterId == chapter.id.toLong() }
-        
+
         if (alreadySelectedChapter != null) {
-            // 이미 선택된 경우 선택 해제 (chapterId 제거, isClicked = false)
+            // 이미 선택된 경우 선택 해제 (chapterId 제거, isClicked = false, selectedDisplayName = null)
             if (branchIndex != -1) {
                 currentList[branchIndex] = currentList[branchIndex].copy(
                     isClicked = false,
-                    chapterId = null
+                    chapterId = null,
+                    selectedDisplayName = null
                 )
             }
             updateClassChipList(currentList)
@@ -284,7 +287,8 @@ class NoticeWriteViewModel @Inject constructor(
         if (branchIndex != -1) {
             currentList[branchIndex] = currentList[branchIndex].copy(
                 isClicked = true,
-                chapterId = chapter.id.toLong()
+                chapterId = chapter.id.toLong(),
+                selectedDisplayName = chapter.name
             )
         }
 
@@ -297,13 +301,14 @@ class NoticeWriteViewModel @Inject constructor(
 
         // 이미 선택된 school인지 확인
         val alreadySelectedSchool = currentList.find { it.schoolId == school.schoolId.toLong() }
-        
+
         if (alreadySelectedSchool != null) {
-            // 이미 선택된 경우 선택 해제 (schoolId 제거, isClicked = false)
+            // 이미 선택된 경우 선택 해제 (schoolId 제거, isClicked = false, selectedDisplayName = null)
             if (schoolIndex != -1) {
                 currentList[schoolIndex] = currentList[schoolIndex].copy(
                     isClicked = false,
-                    schoolId = null
+                    schoolId = null,
+                    selectedDisplayName = null
                 )
             }
             updateClassChipList(currentList)
@@ -317,7 +322,8 @@ class NoticeWriteViewModel @Inject constructor(
         if (schoolIndex != -1) {
             currentList[schoolIndex] = currentList[schoolIndex].copy(
                 isClicked = true,
-                schoolId = school.schoolId.toLong()
+                schoolId = school.schoolId.toLong(),
+                selectedDisplayName = school.schoolName
             )
         }
 

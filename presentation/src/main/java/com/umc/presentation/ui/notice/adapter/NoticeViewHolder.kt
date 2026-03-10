@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.notice.adapter
 
 import androidx.recyclerview.widget.RecyclerView
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.notice.NoticeTarget
 import com.umc.presentation.R
@@ -31,7 +32,7 @@ class NoticeViewHolder(
     }
 
     private fun setCategories(target: NoticeTarget) {
-        if (target.targetGisuId != 0) {
+        if (target.targetGisuId != 0 || (target.targetChapterId == null && target.targetSchoolId == null && target.targetParts.isEmpty())) {
             binding.ubuttonCentral.visible()
         } else {
             binding.ubuttonCentral.gone()
@@ -39,6 +40,7 @@ class NoticeViewHolder(
 
         if (target.targetChapterId != null) {
             binding.ubuttonChapter.visible()
+            binding.ubuttonChapter.setText(target.targetChapterName ?: "지부")
             binding.spaceCentralChapter.visible()
         } else {
             binding.ubuttonChapter.gone()
@@ -56,7 +58,7 @@ class NoticeViewHolder(
         if (target.targetParts.isNotEmpty()) {
             binding.ubuttonPart.visible()
             binding.spaceSchoolPart.visible()
-            binding.ubuttonPart.setText(target.targetParts.first())
+            binding.ubuttonPart.setText(UserPart.from(target.targetParts.first()).label)
         } else {
             binding.ubuttonPart.gone()
             binding.spaceSchoolPart.gone()
