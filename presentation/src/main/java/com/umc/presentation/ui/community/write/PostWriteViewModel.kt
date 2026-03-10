@@ -19,6 +19,9 @@ import com.umc.presentation.base.UiState
 import com.umc.presentation.util.UToast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -44,6 +47,23 @@ constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun formatUtcToLocal(utcString: String): String {
+        return try {
+            // UTC 문자열 파싱 (ISO 8601 형식 대응)
+            val instant = Instant.parse(utcString)
+
+            //기기 시스템 타임존으로 변환
+            val localDateTime = instant.atZone(ZoneId.systemDefault())
+
+            //원하는 형식으로 포맷팅 (yy.MM.dd HH:mm)
+            val formatter = DateTimeFormatter.ofPattern("yy.MM.dd HH:mm")
+            localDateTime.format(formatter)
+        } catch (e: Exception) {
+            //파싱 실패 시 원본 혹은 빈 값 반환
+            utcString
         }
     }
 
@@ -196,6 +216,8 @@ constructor(
                 maxParticipants = state.lightPeople.toIntOrNull() ?: 0,
                 openChatUrl = state.lightOpenChat
             )
+
+            Log.d("log_community", "param: $param")
 
             resultResponse(
                 response = updateCommunityPostLightningPostUseCase(state.updatePostId, param),
