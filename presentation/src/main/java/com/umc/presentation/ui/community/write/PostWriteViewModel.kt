@@ -217,8 +217,6 @@ constructor(
                 openChatUrl = state.lightOpenChat
             )
 
-            Log.d("log_community", "param: $param")
-
             resultResponse(
                 response = updateCommunityPostLightningPostUseCase(state.updatePostId, param),
                 successCallback = {
@@ -238,6 +236,8 @@ constructor(
                 content = state.content,
                 category = state.selectCommunityCategory.name // "FREE", "QUESTION" 등
             )
+
+            Log.d("log_community", "일반수정param: $param")
             
             resultResponse(
                 response = updateCommunityPostUseCase(state.updatePostId, param),
