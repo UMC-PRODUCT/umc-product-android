@@ -29,6 +29,7 @@
             android:layout_marginTop="28dp"
             android:text="승인 대기 명단"
             android:textAppearance="@style/Title3Bold"
+            android:textColor="@color/neutral800"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/view_handle" />
 
