@@ -98,6 +98,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/neutral000"
                     app:strokeColor="@color/neutral300"
                     app:strokeWidth="1dp"
                     app:placeholderText="예: React 실습 A팀"

@@ -130,7 +130,7 @@ class AdminActStudyScheduleAddFragment :
             android.R.style.Theme_Holo_Light_Dialog_NoActionBar
         }
 
-        TimePickerDialog(
+        val dialog = TimePickerDialog(
             requireContext(),
             themeResId,
             { _, hour, minute ->
@@ -142,7 +142,10 @@ class AdminActStudyScheduleAddFragment :
             cal.get(Calendar.HOUR_OF_DAY),
             cal.get(Calendar.MINUTE),
             false
-        ).show()
+        )
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
     }
 
     private fun moveBackPressed() {
