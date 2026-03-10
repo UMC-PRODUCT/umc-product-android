@@ -101,7 +101,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
 
         // 알람 빌더 생성
         val builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(com.umc.presentation.R.drawable.ic_logo_umc) //일단 UMC 로고 임시
+            .setSmallIcon(com.umc.presentation.R.drawable.ic_app_store_logo) //일단 UMC 로고 임시
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true) // 클릭하면 알림이 자동으로 사라짐
