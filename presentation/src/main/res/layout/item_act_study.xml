@@ -77,6 +77,13 @@
                 android:alpha='@{item.isLocked ? 0.35f : 1f}'
                 android:enabled='@{!item.isLocked}'>
 
+                <androidx.constraintlayout.widget.Barrier
+                    android:id="@+id/end_controls_barrier"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:barrierDirection="start"
+                    app:constraint_referenced_ids="btn_best,btn_status,iv_arrow" />
+
 
                 <LinearLayout
                     android:id="@+id/layout_tags"
@@ -182,13 +189,16 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
+                    android:layout_marginEnd="8dp"
+                    android:maxLines="2"
+                    android:ellipsize="end"
                     android:text="@{item.title}"
                     android:textAppearance="@style/HeadlineBold"
                     android:textColor="@color/neutral800"
                     app:layout_constraintTop_toBottomOf="@id/layout_tags"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    tools:text="HTML/CSS 기초" />
+                    app:layout_constraintEnd_toStartOf="@id/end_controls_barrier"
+                    tools:text="1주차 - Spring Boot 시작하기" />
 
                 <TextView
                     android:id="@+id/tv_description"
@@ -417,20 +427,7 @@
                 </LinearLayout>
 
 
-                <LinearLayout
-                    android:id="@+id/layout_lock_overlay"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:orientation="horizontal"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="#40FFFFFF"
-                    android:visibility='@{item.isLocked ? View.VISIBLE : View.GONE}'
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    tools:visibility="gone" />
+
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
