@@ -43,13 +43,15 @@ object UserCheckBindingAdapters {
     @JvmStatic
     @BindingAdapter("sessionIconByTag")
     fun setSessionIconByTag(view: ImageView, tags: List<CategoryType>?) {
-        if (tags.isNullOrEmpty()) {
+        // 리스트가 비었거나, 첫 번째 요소가 null인 경우를 모두 체크
+        val firstTag = tags?.firstOrNull()
+
+        if (firstTag == null) {
             view.setImageResource(R.drawable.ic_people_color)
             return
         }
 
-        // 첫 번째 태그에 따라 아이콘 분기 처리
-        val iconRes = when (tags.first()) {
+        val iconRes = when (firstTag) {
             CategoryType.NETWORKING -> R.drawable.ic_networking_on
             CategoryType.PROJECT -> R.drawable.ic_project_on
             CategoryType.DUES -> R.drawable.ic_fees_on
