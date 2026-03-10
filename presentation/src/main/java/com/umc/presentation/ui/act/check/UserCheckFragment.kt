@@ -113,7 +113,6 @@ class UserCheckFragment : BaseFragment<FragmentUserCheckBinding, UserCheckUiStat
                 viewModel.uiState.collect { state ->
                     // 가용한 세션 업데이트
                     availableAdapter.submitList(state.availableSessions)
-                    availableHeaderAdapter.updateCount(state.availableCount)
 
                     // 빈 화면 처리 (EmptyStateAdapter)
                     val availableEmptyList = if (state.availableSessions.isEmpty()) {
