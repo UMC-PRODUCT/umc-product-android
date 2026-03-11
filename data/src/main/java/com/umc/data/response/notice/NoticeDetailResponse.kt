@@ -18,7 +18,7 @@ data class NoticeDetailResponse(
     val id: Long,
     val title: String,
     val content: String,
-    val authorChallengerId: Long,
+    val authorMemberId: Long,
     val vote: NoticeVoteResponse?,
     val images: List<NoticeImageResponse>,
     val links: List<NoticeLinkResponse>,
@@ -31,7 +31,7 @@ data class NoticeDetailResponse(
             id = id,
             title = title,
             content = content,
-            authorChallengerId = authorChallengerId,
+            authorChallengerId = authorMemberId,
             vote = vote?.toModel(),
             images = images.map { it.toModel() },
             links = links.map { it.toModel() },
@@ -124,16 +124,16 @@ data class NoticeLinkResponse(
 
 @Serializable
 data class NoticeTargetResponse(
-    val targetGisuId: Int?,
-    val targetChapterId: Int?,
-    val targetSchoolId: Int?,
+    val targetGisuId: String?,
+    val targetChapterId: String?,
+    val targetSchoolId: String?,
     val targetParts: List<String>?
 ) {
     companion object {
         fun NoticeTargetResponse.toModel(): NoticeTarget = NoticeTarget(
-            targetGisuId = targetGisuId ?: 0,
-            targetChapterId = targetChapterId,
-            targetSchoolId = targetSchoolId,
+            targetGisuId = targetGisuId?.toIntOrNull() ?: 0,
+            targetChapterId = targetChapterId?.toIntOrNull(),
+            targetSchoolId = targetSchoolId?.toIntOrNull(),
             targetParts = targetParts ?: emptyList()
         )
     }

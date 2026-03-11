@@ -68,8 +68,7 @@ class ChallengerPickerViewModel @Inject constructor(
                         schoolId = state.selectedSchoolId,
                         gisuId = state.selectedGisuId,
                         part = state.part,
-                        name = q.takeIf { it.isNotBlank() },
-                        nickname = null
+                        keyword = q.takeIf { it.isNotBlank() },
                     ),
                     successCallback = { data ->
                         nextCursor = data.nextCursor

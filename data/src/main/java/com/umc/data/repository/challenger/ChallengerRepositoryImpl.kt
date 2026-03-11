@@ -93,8 +93,7 @@ class ChallengerRepositoryImpl @Inject constructor(
         schoolId: Long?,
         gisuId: Long?,
         part: String?,
-        name: String?,
-        nickname: String?
+        keyword: String?
     ): ApiState<ChallengerList> {
         return challengerRemoteDataSource.getChallengerList(
             cursor = cursor,
@@ -102,8 +101,7 @@ class ChallengerRepositoryImpl @Inject constructor(
             schoolId = schoolId,
             gisuId = gisuId,
             part = part,
-            name = name,
-            nickname = nickname
+            keyword = keyword
         ).map { it.toModel() }
     }
 }

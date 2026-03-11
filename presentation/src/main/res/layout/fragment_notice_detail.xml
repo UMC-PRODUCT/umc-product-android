@@ -19,91 +19,102 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/text_check_unconfirmed"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_read_statistics"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="16dp"
-            android:gravity="center"
-            android:onClick="@{()->vm.onClickShowBottomSheet()}"
-            android:text="@string/notice_detail_unconfirmed_people_check"
-            android:textAppearance="@style/Footnote"
-            android:textColor="@color/neutral600"
+            android:visibility="@{vm.uiState.isCurrentUserMember ? View.GONE : View.VISIBLE}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent">
 
-        <com.google.android.material.progressindicator.LinearProgressIndicator
-            android:id="@+id/progressBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="16dp"
-            android:indeterminate="false"
-            android:max="100"
-            android:progress="@{vm.uiState.readStatistics != null ? (int)(vm.uiState.readStatistics.readRate * 100) : 0}"
-            app:indicatorColor="@color/success500"
-            app:layout_constraintBottom_toTopOf="@id/text_check_unconfirmed"
-            app:trackColor="@color/neutral200"
-            app:trackCornerRadius="999dp"
-            app:trackThickness="6dp" />
+            <TextView
+                android:id="@+id/text_check_unconfirmed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                android:gravity="center"
+                android:onClick="@{()->vm.onClickShowBottomSheet()}"
+                android:text="@string/notice_detail_unconfirmed_people_check"
+                android:textAppearance="@style/Footnote"
+                android:textColor="@color/neutral600"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
 
-        <ImageView
-            android:id="@+id/image_check"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginBottom="21dp"
-            android:src="@drawable/ic_check_success"
-            app:layout_constraintBottom_toTopOf="@id/progressBar"
-            app:layout_constraintStart_toStartOf="@id/progressBar" />
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/progressBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                android:indeterminate="false"
+                android:max="100"
+                android:progress="@{vm.uiState.readStatistics != null ? (int)(vm.uiState.readStatistics.readRate * 100) : 0}"
+                app:indicatorColor="@color/success500"
+                app:layout_constraintBottom_toTopOf="@id/text_check_unconfirmed"
+                app:trackColor="@color/neutral200"
+                app:trackCornerRadius="999dp"
+                app:trackThickness="6dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/notice_detail_confirmed_people_check"
-            android:textAppearance="@style/HeadlineBold"
-            android:textColor="@color/neutral800"
-            app:layout_constraintBottom_toBottomOf="@id/image_check"
-            app:layout_constraintStart_toEndOf="@id/image_check"
-            app:layout_constraintTop_toTopOf="@id/image_check" />
+            <ImageView
+                android:id="@+id/image_check"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="21dp"
+                android:src="@drawable/ic_check_success"
+                app:layout_constraintBottom_toTopOf="@id/progressBar"
+                app:layout_constraintStart_toStartOf="@id/progressBar" />
 
-        <TextView
-            android:id="@+id/text_all_check"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.totalCount) : "0"}'
-            android:textAppearance="@style/Body"
-            android:textColor="@color/neutral800"
-            app:layout_constraintBottom_toBottomOf="@id/image_check"
-            app:layout_constraintEnd_toEndOf="@id/progressBar"
-            app:layout_constraintTop_toTopOf="@id/image_check" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/notice_detail_confirmed_people_check"
+                android:textAppearance="@style/HeadlineBold"
+                android:textColor="@color/neutral800"
+                app:layout_constraintBottom_toBottomOf="@id/image_check"
+                app:layout_constraintStart_toEndOf="@id/image_check"
+                app:layout_constraintTop_toTopOf="@id/image_check" />
 
-        <TextView
-            android:id="@+id/text_now_check"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.readCount) + "/" : "0/"}'
-            android:textAppearance="@style/Body"
-            android:textColor="@color/success500"
-            app:layout_constraintBottom_toBottomOf="@id/image_check"
-            app:layout_constraintEnd_toStartOf="@id/text_all_check"
-            app:layout_constraintTop_toTopOf="@id/image_check" />
+            <TextView
+                android:id="@+id/text_all_check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.totalCount) : "0"}'
+                android:textAppearance="@style/Body"
+                android:textColor="@color/neutral800"
+                app:layout_constraintBottom_toBottomOf="@id/image_check"
+                app:layout_constraintEnd_toEndOf="@id/progressBar"
+                app:layout_constraintTop_toTopOf="@id/image_check" />
 
-        <View
-            android:id="@+id/view_divider"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginBottom="15dp"
-            android:background="@color/neutral200"
-            app:layout_constraintBottom_toTopOf="@id/image_check" />
+            <TextView
+                android:id="@+id/text_now_check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.readCount) + "/" : "0/"}'
+                android:textAppearance="@style/Body"
+                android:textColor="@color/success500"
+                app:layout_constraintBottom_toBottomOf="@id/image_check"
+                app:layout_constraintEnd_toStartOf="@id/text_all_check"
+                app:layout_constraintTop_toTopOf="@id/image_check" />
+
+            <View
+                android:id="@+id/view_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="15dp"
+                android:background="@color/neutral200"
+                app:layout_constraintBottom_toTopOf="@id/image_check" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toBottomOf="@id/view_divider"
+            app:layout_constraintBottom_toTopOf="@id/layout_read_statistics"
             app:layout_constraintTop_toTopOf="parent">
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -142,7 +153,7 @@
                     android:layout_marginTop="8dp"
                     android:padding="12dp"
                     android:src="@drawable/ic_menu_kebab"
-                    android:visibility="@{vm.uiState.isCurrentUserMember ? View.GONE : View.VISIBLE}"
+                    android:visibility="@{vm.uiState.isAuthor ? View.VISIBLE : View.GONE}"
                     android:onClick="@{()->vm.onClickMenu()}"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -152,7 +163,7 @@
                     android:layout_width="180dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:visibility="@{vm.uiState.isCurrentUserMember || !vm.uiState.isMenuVisible ? View.GONE : View.VISIBLE}"
+                    android:visibility="@{vm.uiState.isAuthor &amp;&amp; vm.uiState.isMenuVisible ? View.VISIBLE : View.GONE}"
                     app:cardBackgroundColor="@color/neutral000"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="8dp"
@@ -274,7 +285,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="24dp"
                     android:layout_marginTop="24dp"
-                    android:visibility="@{vm.uiState.detail.targetInfo != null ? View.VISIBLE : View.GONE}"
                     app:buttonElevation="0"
                     app:cardBackgroundColor="@color/neutral200"
                     app:contentPaddingBottom="2dp"
@@ -284,6 +294,7 @@
                     app:cornerRadius="4dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/image_back"
+                    app:noticeCentralVisibility="@{vm.uiState.detail.targetInfo}"
                     app:text="중앙"
                     app:textAppearance="@style/Caption1Bold"
                     app:textColor="@color/neutral700" />
@@ -302,7 +313,7 @@
                     android:layout_height="wrap_content"
                     android:visibility="@{(vm.uiState.detail.targetInfo.targetChapterId != null) ? View.VISIBLE : View.GONE}"
                     app:buttonElevation="0"
-                    app:cardBackgroundColor="@color/neutral200"
+                    app:cardBackgroundColor="@color/accent100"
                     app:contentPaddingBottom="2dp"
                     app:contentPaddingLeft="8dp"
                     app:contentPaddingRight="8dp"
@@ -310,9 +321,9 @@
                     app:cornerRadius="4dp"
                     app:layout_constraintStart_toEndOf="@id/space_central_chapter"
                     app:layout_constraintTop_toTopOf="@id/ubutton_central"
-                    app:text="지부"
+                    app:noticeChapterText="@{vm.uiState.detail.targetInfo}"
                     app:textAppearance="@style/Caption1Bold"
-                    app:textColor="@color/neutral700" />
+                    app:textColor="@color/accent500" />
 
                 <Space
                     android:id="@+id/space_chapter_school"
@@ -336,7 +347,7 @@
                     app:cornerRadius="4dp"
                     app:layout_constraintStart_toEndOf="@id/space_chapter_school"
                     app:layout_constraintTop_toTopOf="@id/ubutton_central"
-                    app:text="학교"
+                    app:text="교내"
                     app:textAppearance="@style/Caption1Bold"
                     app:textColor="@color/primary600" />
 
@@ -362,7 +373,7 @@
                     app:cornerRadius="4dp"
                     app:layout_constraintStart_toEndOf="@id/space_school_part"
                     app:layout_constraintTop_toTopOf="@id/ubutton_central"
-                    app:text="@{vm.uiState.detail.targetInfo.targetParts[0]}"
+                    app:noticePartText="@{vm.uiState.detail.targetInfo}"
                     app:textAppearance="@style/Caption1Bold"
                     app:textColor="@color/success700" />
 

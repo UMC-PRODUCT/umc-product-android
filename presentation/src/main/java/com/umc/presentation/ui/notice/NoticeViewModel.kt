@@ -10,6 +10,7 @@ import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.organization.GisuItem
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.GetNoticeListUseCase
+import com.umc.domain.usecase.organization.GetChapterDetailUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -20,7 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class NoticeViewModel @Inject constructor(
     private val getUserInfoUseCase: GetUserInfoUseCase,
-    private val getNoticeListUseCase: GetNoticeListUseCase
+    private val getNoticeListUseCase: GetNoticeListUseCase,
+    private val getChapterDetailUseCase: GetChapterDetailUseCase
 ) : BaseViewModel<NoticeUiState, NoticeEvent>(
     NoticeUiState(),
 ) {
@@ -205,11 +207,39 @@ class NoticeViewModel @Inject constructor(
                         isLastPage = !noticeSearch.hasNext
                     )
                 }
+                loadChapterNamesForNotices(noticeSearch.content)
             },
             errorCallback = {
                 updateState { copy(isPageLoading = false) }
             }
         )
+    }
+
+    private fun loadChapterNamesForNotices(notices: List<NoticeSummary>) = viewModelScope.launch {
+        val chapterIds = notices.mapNotNull { it.targetInfo.targetChapterId }.distinct()
+
+        chapterIds.forEach { chapterId ->
+            resultResponse(
+                response = getChapterDetailUseCase(chapterId.toLong()),
+                successCallback = { chapter ->
+                    // 해당 chapterId를 가진 notice들의 targetChapterName 업데이트
+                    updateState {
+                        val updatedList = noticeList.map { notice ->
+                            if (notice.targetInfo.targetChapterId == chapterId) {
+                                notice.copy(
+                                    targetInfo = notice.targetInfo.copy(
+                                        targetChapterName = chapter.name
+                                    )
+                                )
+                            } else {
+                                notice
+                            }
+                        }
+                        copy(noticeList = updatedList)
+                    }
+                }
+            )
+        }
     }
 
     fun loadNextPage() {

@@ -51,6 +51,7 @@ data class NoticeLink(
 data class NoticeTarget(
     val targetGisuId: Int = 0,
     val targetChapterId: Int? = null,
+    val targetChapterName: String? = null,
     val targetSchoolId: Int? = null,
     val targetParts: List<String> = emptyList()
 )

@@ -23,9 +23,9 @@ object AuthNetworkModule {
         loggingInterceptor: HttpLoggingInterceptor,
     ): OkHttpClient {
         return OkHttpClient.Builder()
-            .readTimeout(30, TimeUnit.SECONDS)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(35, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
+            .connectTimeout(120, TimeUnit.SECONDS)
+            .writeTimeout(120, TimeUnit.SECONDS)
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authenticationInterceptor)
             .authenticator(authenticator)
