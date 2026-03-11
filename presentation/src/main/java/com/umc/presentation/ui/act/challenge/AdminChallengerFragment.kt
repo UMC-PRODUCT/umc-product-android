@@ -43,19 +43,26 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
             viewModel.onChallengerClicked(id)
         }
 
-        binding.rvAdminChallengerList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
+        binding.rvAdminChallengerList.apply {
+            adapter = groupAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+            clipToPadding = false
+            setPadding(0, 0, 0, 64.px)
 
-                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                val lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition()
-                val totalItemCount = layoutManager.itemCount
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
 
-                if (lastVisibleItem >= totalItemCount - 5) {
-                    viewModel.fetchNextPage()
+                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                    val lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition()
+                    val totalItemCount = layoutManager.itemCount
+
+                    if (lastVisibleItem >= totalItemCount - 5) {
+                        viewModel.fetchNextPage()
+                    }
                 }
-            }
-        })
+            })
+        }
     }
 
     override fun initStates() {

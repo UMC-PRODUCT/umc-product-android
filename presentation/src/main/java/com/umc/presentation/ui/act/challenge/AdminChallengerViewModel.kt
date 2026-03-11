@@ -67,11 +67,12 @@ class AdminChallengerViewModel @Inject constructor(
 
     fun fetchNextPage(isFirstPage: Boolean = false) {
         val currentState = uiState.value
+        // 검색 중 첫 페이지 진입 조건 추가
+        val isSearchFirstPage = currentState.searchQuery.isNotBlank() && currentState.allChallengers.isEmpty()
 
-        if (!isFirstPage && (!currentState.hasNext || currentState.isPageLoading)) return
+        if (!isFirstPage && !isSearchFirstPage && (!currentState.hasNext || currentState.isPageLoading)) return
 
         viewModelScope.launch {
-            // 로딩 시작 상태 반영
             updateState { copy(isPageLoading = true) }
 
             val isSearching = currentState.searchQuery.isNotBlank()
@@ -79,11 +80,11 @@ class AdminChallengerViewModel @Inject constructor(
 
             resultResponse(
                 response = getAdminChallengerListUseCase(
-                    cursor = if (isFirstPage) null else currentState.nextCursor,
+                    cursor = if (isFirstPage || isSearchFirstPage) null else currentState.nextCursor,
                     size = 50,
                     schoolId = currentState.schoolId,
                     gisuId = currentState.gisuId,
-                    keyword = if (isSearching) currentState.searchQuery else null,
+                    keyword = if (isSearching) currentState.searchQuery else null, // keyword 사용
                     part = requestPart?.name
                 ),
                 successCallback = { data ->
@@ -91,7 +92,7 @@ class AdminChallengerViewModel @Inject constructor(
                     val hasMoreParts = currentState.currentPartIndex < partOrder.size - 1
 
                     updateState {
-                        val mergedList = if (isFirstPage) data.challengers
+                        val mergedList = if (isFirstPage || isSearchFirstPage) data.challengers
                         else (allChallengers + data.challengers).distinctBy { it.id }
 
                         copy(
@@ -101,10 +102,11 @@ class AdminChallengerViewModel @Inject constructor(
                             nextCursor = if (currentPartFinished && hasMoreParts) null else data.nextCursor,
                             hasNext = if (currentPartFinished) hasMoreParts else data.hasNext,
                             currentPartIndex = if (currentPartFinished && hasMoreParts) currentPartIndex + 1 else currentPartIndex,
-                            isPageLoading = false // 3. 성공 시 확실히 로딩 해제
+                            isPageLoading = false
                         )
                     }
 
+                    // 빈 파트 자동 스킵 로직
                     if (currentPartFinished && hasMoreParts && data.challengers.isEmpty()) {
                         fetchNextPage(isFirstPage = false)
                     }
@@ -122,22 +124,28 @@ class AdminChallengerViewModel @Inject constructor(
         searchJob = viewModelScope.launch {
             delay(500L)
             updateState {
-                copy(searchQuery = query, allChallengers = emptyList(), currentPartIndex = 0, nextCursor = null, hasNext = true)
+                copy(
+                    searchQuery = query,
+                    allChallengers = emptyList(),
+                    isPageLoading = false, // 로딩 상태 초기화
+                    currentPartIndex = 0,
+                    nextCursor = null,
+                    hasNext = true
+                )
             }
             fetchNextPage(isFirstPage = true)
         }
     }
 
     private fun makeChallengerGroups(list: List<AdminChallenger>, partCounts: List<UserPartCount>): List<AdminChallengerGroupUIModel> {
-        return UserPart.entries
-            .filter { it != UserPart.UNKNOWN }
-            .mapNotNull { part ->
-                val members = list.filter { it.part == part }
-                val currentPartCount = partCounts.find { it.part == part } ?: UserPartCount(part, 0)
-                if (members.isNotEmpty()) {
-                    AdminChallengerGroupUIModel(part, members, currentPartCount)
-                } else null
-            }
+        // User 버전과 동일하게 entries 기반으로 매핑
+        return UserPart.entries.filter { it != UserPart.UNKNOWN }.mapNotNull { part ->
+            val members = list.filter { it.part == part }
+            val currentPartCount = partCounts.find { it.part == part } ?: UserPartCount(part, 0)
+            if (members.isNotEmpty()) {
+                AdminChallengerGroupUIModel(part, members, currentPartCount)
+            } else null
+        }
     }
 
     /**
