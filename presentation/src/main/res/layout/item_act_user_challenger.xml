@@ -16,14 +16,12 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_card_middle"
-        android:paddingHorizontal="16dp">
+        android:layout_height="wrap_content">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingVertical="16dp"
+            android:padding="16dp"
             app:layout_constraintTop_toTopOf="parent">
 
             <com.google.android.material.imageview.ShapeableImageView
@@ -31,7 +29,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/ic_profile_default"
-                app:profileImageUrl="@{model.profileImage}"
+                app:profileImageUrl="@{uiModel.challenger.profileImage}"
                 android:scaleType="centerCrop"
                 app:strokeWidth="1dp"
                 app:strokeColor="@color/neutral100"
@@ -45,7 +43,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="@{@string/challenger_name_nickname_format(model.name, model.nickname)}"
+                android:text="@{uiModel.displayName}"
                 android:textAppearance="@style/BodyBold"
                 android:textColor="@color/neutral800"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -58,7 +56,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text='@{model.generation + "기"}'
+                android:text='@{uiModel.displayGeneration}'
                 android:textAppearance="@style/Subheadline"
                 android:textColor="@color/neutral400"
                 app:layout_constraintBottom_toBottomOf="@+id/tv_challenger_name"

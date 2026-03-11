@@ -3,6 +3,7 @@ package com.umc.presentation.ui.act.challenge
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.act.challenger.AdminChallenger
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
+import com.umc.domain.model.act.challenger.UserPartCount
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.PointType
 import com.umc.domain.model.enums.UserPart
@@ -16,6 +17,8 @@ import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,6 +31,9 @@ class AdminChallengerViewModel @Inject constructor(
     private val grantChallengerPointUseCase: GrantChallengerPointUseCase,
     private val deleteChallengerPointUseCase: DeleteChallengerPointUseCase
 ) : BaseViewModel<AdminChallengerUiState, AdminChallengerEvent>(AdminChallengerUiState()) {
+
+    private var searchJob: Job? = null
+    private val partOrder = UserPart.entries.filter { it != UserPart.UNKNOWN }
 
     init {
         observeUserInfo()
@@ -44,51 +50,101 @@ class AdminChallengerViewModel @Inject constructor(
                             old.roles.firstOrNull()?.gisuId == new.roles.firstOrNull()?.gisuId
                 }
                 .collect { userInfo ->
-                    val currentGisuId = userInfo.roles.firstOrNull()?.gisuId
-                    startFetchingAll(userInfo.schoolId, currentGisuId)
+                    updateState {
+                        copy(
+                            schoolId = userInfo.schoolId,
+                            gisuId = userInfo.roles.firstOrNull()?.gisuId,
+                            allChallengers = emptyList(),
+                            currentPartIndex = 0,
+                            nextCursor = null,
+                            hasNext = true
+                        )
+                    }
+                    fetchNextPage(isFirstPage = true)
                 }
         }
     }
 
-    /**
-     * 리스트 초기화 후 첫 페이지부터 불러오기
-     */
-    private fun startFetchingAll(schoolId: Long, gisuId: Long?) {
-        updateState { copy(allChallengers = emptyList(), filteredChallengers = emptyList()) }
-        val accumulator = mutableListOf<AdminChallenger>()
-        fetchAllPages(schoolId, gisuId, null, accumulator)
-    }
+    fun fetchNextPage(isFirstPage: Boolean = false) {
+        val currentState = uiState.value
+        // 검색 중 첫 페이지 진입 조건 추가
+        val isSearchFirstPage = currentState.searchQuery.isNotBlank() && currentState.allChallengers.isEmpty()
 
-    /**
-     * 모든 페이지를 순차적으로 요청
-     */
-    private fun fetchAllPages(
-        schoolId: Long,
-        gisuId: Long?,
-        cursor: Long?,
-        accumulator: MutableList<AdminChallenger>
-    ) {
+        if (!isFirstPage && !isSearchFirstPage && (!currentState.hasNext || currentState.isPageLoading)) return
+
         viewModelScope.launch {
-            resultResponse(
-                response = getAdminChallengerListUseCase(cursor, 50, schoolId, gisuId),
-                successCallback = { data ->
-                    accumulator.addAll(data.challengers)
+            updateState { copy(isPageLoading = true) }
 
-                    if (data.hasNext) {
-                        fetchAllPages(schoolId, gisuId, data.nextCursor, accumulator)
-                    } else {
-                        updateState {
-                            copy(
-                                allChallengers = accumulator,
-                                filteredChallengers = accumulator
-                            )
-                        }
+            val isSearching = currentState.searchQuery.isNotBlank()
+            val requestPart = if (isSearching) null else partOrder.getOrNull(currentState.currentPartIndex)
+
+            resultResponse(
+                response = getAdminChallengerListUseCase(
+                    cursor = if (isFirstPage || isSearchFirstPage) null else currentState.nextCursor,
+                    size = 50,
+                    schoolId = currentState.schoolId,
+                    gisuId = currentState.gisuId,
+                    keyword = if (isSearching) currentState.searchQuery else null, // keyword 사용
+                    part = requestPart?.name
+                ),
+                successCallback = { data ->
+                    val currentPartFinished = !data.hasNext && !isSearching
+                    val hasMoreParts = currentState.currentPartIndex < partOrder.size - 1
+
+                    updateState {
+                        val mergedList = if (isFirstPage || isSearchFirstPage) data.challengers
+                        else (allChallengers + data.challengers).distinctBy { it.id }
+
+                        copy(
+                            allChallengers = mergedList,
+                            partCounts = data.partCounts,
+                            filteredGroups = makeChallengerGroups(mergedList, data.partCounts),
+                            nextCursor = if (currentPartFinished && hasMoreParts) null else data.nextCursor,
+                            hasNext = if (currentPartFinished) hasMoreParts else data.hasNext,
+                            currentPartIndex = if (currentPartFinished && hasMoreParts) currentPartIndex + 1 else currentPartIndex,
+                            isPageLoading = false
+                        )
+                    }
+
+                    // 빈 파트 자동 스킵 로직
+                    if (currentPartFinished && hasMoreParts && data.challengers.isEmpty()) {
+                        fetchNextPage(isFirstPage = false)
                     }
                 },
-                errorCallback = { failState ->
-                    emitEvent(AdminChallengerEvent.ShowToast(failState.message, isError = true))
+                errorCallback = { fail ->
+                    updateState { copy(isPageLoading = false) }
+                    emitEvent(AdminChallengerEvent.ShowToast(fail.message, isError = true))
                 }
             )
+        }
+    }
+
+    fun filterList(query: String) {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            delay(500L)
+            updateState {
+                copy(
+                    searchQuery = query,
+                    allChallengers = emptyList(),
+                    isPageLoading = false, // 로딩 상태 초기화
+                    currentPartIndex = 0,
+                    nextCursor = null,
+                    hasNext = true
+                )
+            }
+            fetchNextPage(isFirstPage = true)
+        }
+    }
+
+    private fun makeChallengerGroups(list: List<AdminChallenger>, partCounts: List<UserPartCount>): List<AdminChallengerGroupUIModel> {
+        // User 버전과 동일하게 entries 기반으로 매핑
+        return UserPart.entries.filter { it != UserPart.UNKNOWN }.mapNotNull { part ->
+            val members = list.filter { it.part == part }
+            val currentPartCount = partCounts.find { it.part == part } ?: UserPartCount(part, 0)
+            if (members.isNotEmpty()) {
+                AdminChallengerGroupUIModel(part, members, currentPartCount)
+            } else null
         }
     }
 
@@ -128,22 +184,6 @@ class AdminChallengerViewModel @Inject constructor(
         }
     }
 
-    fun filterList(query: String) {
-        val allChallengers = uiState.value.allChallengers
-
-        if (query.isBlank()) {
-            // 검색어가 비어있으면 전체 리스트를 보여줌
-            updateState { copy(filteredChallengers = allChallengers, searchQuery = "") }
-        } else {
-            val filtered = allChallengers.filter {
-                it.name.contains(query, ignoreCase = true) ||
-                        it.nickname.contains(query, ignoreCase = true)
-            }
-            updateState { copy(filteredChallengers = filtered, searchQuery = query) }
-        }
-    }
-
-    // 상세 정보 API 호출 함수
     fun onChallengerClicked(id: Int) {
         viewModelScope.launch {
             resultResponse(
@@ -160,9 +200,16 @@ class AdminChallengerViewModel @Inject constructor(
 }
 
 data class AdminChallengerUiState(
+    val schoolId: Long = 0,
+    val gisuId: Long? = null,
+    val currentPartIndex: Int = 0,
     val allChallengers: List<AdminChallenger> = emptyList(),
-    val filteredChallengers: List<AdminChallenger> = emptyList(),
-    val searchQuery: String = ""
+    val partCounts: List<UserPartCount> = emptyList(),
+    val filteredGroups: List<AdminChallengerGroupUIModel> = emptyList(),
+    val searchQuery: String = "",
+    val isPageLoading: Boolean = false,
+    val nextCursor: Long? = null,
+    val hasNext: Boolean = true
 ) : UiState
 
 sealed interface AdminChallengerEvent : UiEvent {

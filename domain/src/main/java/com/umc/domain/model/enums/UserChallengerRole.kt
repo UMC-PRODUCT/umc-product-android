@@ -9,9 +9,9 @@ enum class UserChallengerRole(val displayName: String?, val isVisible: Boolean) 
     CHAPTER_PRESIDENT("지부장", false),
 
     // UI에 표시할 역할들
-    SCHOOL_PRESIDENT("교내 회장", true),
-    SCHOOL_VICE_PRESIDENT("교내 부회장", true),
-    SCHOOL_PART_LEADER("교내 파트장", true),
+    SCHOOL_PRESIDENT("회장", true),
+    SCHOOL_VICE_PRESIDENT("부회장", true),
+    SCHOOL_PART_LEADER("파트장", true),
 
     SCHOOL_ETC_ADMIN("교내 운영진", false),
     CHALLENGER("챌린저", false),

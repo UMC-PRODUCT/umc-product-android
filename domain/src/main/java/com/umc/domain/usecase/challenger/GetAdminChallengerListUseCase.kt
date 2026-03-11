@@ -12,8 +12,10 @@ class GetAdminChallengerListUseCase @Inject constructor(
         cursor: Long?,
         size: Int,
         schoolId: Long?,
-        gisuId: Long?
+        gisuId: Long?,
+        keyword: String? = null,
+        part: String? = null
     ): ApiState<AdminChallengerList> {
-        return repository.getAdminChallengerList(cursor, size, schoolId, gisuId)
+        return repository.getAdminChallengerList(cursor, size, schoolId, gisuId, keyword, part)
     }
 }
