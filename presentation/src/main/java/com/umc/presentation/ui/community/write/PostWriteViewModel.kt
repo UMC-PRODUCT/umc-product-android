@@ -224,12 +224,16 @@ constructor(
                 },
                 errorCallback = { error ->
 
-                    val errorMessageList: List<Pair<String, String>> = listOf(
+                    val errorMessages = mapOf(
                         "COMMON-400" to "오픈 채팅 링크는 http:// 또는 https://로 시작해야 합니다",
-                        "COMMON-0001" to "모임 시간은 현재 이후여야 합니다.",
+                        "COMMON-0001" to "모임 시간은 현재 이후여야 합니다."
                     )
 
-                    emitEvent(PostWriteFragmentEvent.MakeErrorTaost(error.message))
+                    val errorMessage = "게시글 작성에 실패했습니다."
+
+                    Log.d("log_community", "${error.code}..${errorMessages[error.code]}")
+
+                    emitEvent(PostWriteFragmentEvent.MakeErrorTaost(errorMessage))
                 }
             )
             
