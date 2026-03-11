@@ -223,18 +223,12 @@ class UserStudyViewModel @Inject constructor(
 
 
     private fun applyLockRule(list: List<ActStudyItemUiModel>): List<ActStudyItemUiModel> {
-        val sorted = list.sortedBy { it.week.toString().toIntOrNull() ?: 0 }
-        var prevEvaluated = true
-
-        return sorted.mapIndexed { index, item ->
-            val locked = if (index == 0) false else !prevEvaluated
-            prevEvaluated = (item.status == StudyStatus.PASS || item.status == StudyStatus.FAIL)
-
-            item.copy(
-                isLocked = locked,
-                isExpanded = if (locked) false else item.isExpanded
-            )
-        }
+        return list.sortedBy { it.week }
+            .map { item ->
+                item.copy(
+                    isExpanded = if (item.isLocked) false else item.isExpanded
+                )
+            }
     }
 
 
