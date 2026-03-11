@@ -10,10 +10,12 @@ import com.umc.domain.model.notice.NoticeReadStatistics
 import com.umc.domain.model.notice.NoticeTarget
 import com.umc.domain.model.notice.NoticeVote
 import com.umc.domain.model.notice.NoticeVoteOption
+import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.usecase.GetChallengerIdUseCase
 import com.umc.domain.usecase.GetGisuInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
+import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.notice.DeleteNoticeUseCase
 import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatisticsUseCase
@@ -24,6 +26,7 @@ import com.umc.domain.usecase.organization.GetChapterDetailUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import com.umc.presentation.util.ULog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -36,7 +39,7 @@ class NoticeDetailViewModel @Inject constructor(
     private val getNoticeReadStatisticsUseCase: GetNoticeReadStatisticsUseCase,
     private val sendNoticeReminderUseCase: SendNoticeReminderUseCase,
     private val submitVoteResponseUseCase: SubmitVoteResponseUseCase,
-    private val getChallengerDetailUseCase: GetChallengerDetailUseCase,
+    private val getMemberProfileUseCase: GetMemberProfileUseCase,
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getChallengerIdUseCase: GetChallengerIdUseCase,
     private val deleteNoticeUseCase: DeleteNoticeUseCase,
@@ -53,17 +56,41 @@ class NoticeDetailViewModel @Inject constructor(
     fun init(noticeId: Long) {
         currentNoticeId = noticeId
         loadNoticeDetail()
-        loadReadStatistics()
-        loadReadStatus()
-        loadUnReadStatus()
-        loadCurrentUserInfo()
+        loadCurrentUserInfoAndCheckPermission()
     }
 
-    private fun loadCurrentUserInfo() = viewModelScope.launch {
+    private fun loadCurrentUserInfoAndCheckPermission() = viewModelScope.launch {
         val userInfo = getUserInfoUseCase().first()
         currentUserChallengerId = getChallengerIdUseCase()
         checkIsMember(userInfo)
         checkIsAuthor()
+        
+        // 권한 체크 후 통계/현황 조회
+        if (hasAdminPermission(userInfo)) {
+            loadReadStatistics()
+            loadReadStatus()
+            loadUnReadStatus()
+        }
+    }
+
+    private fun hasAdminPermission(userInfo: UserInfo): Boolean {
+        val adminRoles = setOf(
+            UserChallengerRole.SUPER_ADMIN,
+            UserChallengerRole.CENTRAL_PRESIDENT,
+            UserChallengerRole.CENTRAL_VICE_PRESIDENT,
+            UserChallengerRole.CENTRAL_OPERATING_TEAM_MEMBER,
+            UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER,
+            UserChallengerRole.CHAPTER_PRESIDENT,
+            UserChallengerRole.SCHOOL_PRESIDENT,
+            UserChallengerRole.SCHOOL_VICE_PRESIDENT,
+            UserChallengerRole.SCHOOL_PART_LEADER,
+            UserChallengerRole.SCHOOL_ETC_ADMIN
+        )
+        
+        return userInfo.roles.any { role ->
+            val userRole = UserChallengerRole.from(role.roleType)
+            adminRoles.contains(userRole)
+        }
     }
 
     private fun checkIsAuthor() {
@@ -177,10 +204,10 @@ class NoticeDetailViewModel @Inject constructor(
     }
 
     private fun getFormattedTargetInfo(targetInfo: NoticeTarget, gisu: Long?): String {
-        val chapterStr = if (targetInfo.targetChapterId != null) "/${targetInfo.targetChapterId}장" else "/전체"
-        val partsStr = if (!targetInfo.targetParts.isNullOrEmpty()) "/${targetInfo.targetParts!![0]}" else ""
-        val gisuNumber = gisu?.plus(1) ?: targetInfo.targetGisuId?.plus(1)
-        return "수신대상: ${gisuNumber}기${chapterStr}${partsStr}"
+        val chapterStr = if (targetInfo.targetChapterId != null) "${targetInfo.targetChapterId}장" else "전체"
+        val partsStr = if (!targetInfo.targetParts.isNullOrEmpty()) "/${targetInfo.targetParts[0]}" else ""
+        val gisuStr = gisu?.let { "${it}기/" } ?: ""
+        return "수신대상: ${gisuStr}${chapterStr}${partsStr}"
     }
 
     private fun fetchGisuAndUpdateTargetInfo(
@@ -244,9 +271,9 @@ class NoticeDetailViewModel @Inject constructor(
         startLoading()
 
         resultResponse(
-            response = getChallengerDetailUseCase(authorChallengerId),
-            successCallback = { challengerDetail ->
-                updateState { copy(authorNickname = challengerDetail.name) }
+            response = getMemberProfileUseCase(authorChallengerId),
+            successCallback = { memberDetail ->
+                updateState { copy(authorNickname = "${memberDetail.nickname}/${memberDetail.name}") }
             },
             errorCallback = {
                 updateState { copy(authorNickname = "알수없음") }
