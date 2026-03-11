@@ -222,8 +222,18 @@ constructor(
                 successCallback = {
                     emitEvent(PostWriteFragmentEvent.ClickBackPressed)
                 },
-                errorCallback = {
-                    emitEvent(PostWriteFragmentEvent.MakeErrorTaost("번개글 수정에 실패했습니다."))
+                errorCallback = { error ->
+
+                    val errorMessages = mapOf(
+                        "COMMON-400" to "오픈 채팅 링크는 http:// 또는 https://로 시작해야 합니다",
+                        "COMMON-0001" to "모임 시간은 현재 이후여야 합니다."
+                    )
+
+                    val errorMessage = "게시글 작성에 실패했습니다."
+
+                    Log.d("log_community", "${error.code}..${errorMessages[error.code]}")
+
+                    emitEvent(PostWriteFragmentEvent.MakeErrorTaost(errorMessage))
                 }
             )
             
