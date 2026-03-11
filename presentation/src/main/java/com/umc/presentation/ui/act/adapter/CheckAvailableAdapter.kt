@@ -189,8 +189,8 @@ class CheckAvailableAdapter(
     }
 
     companion object {
-        private const val GEOFENCE_RADIUS = 50.0
+        private const val GEOFENCE_RADIUS = 100.0
         private const val GEOFENCE_STROKE_WIDTH = 3
-        private const val CAMERA_ZOOM_LEVEL = 16.0
+        private const val CAMERA_ZOOM_LEVEL = 15.05
     }
 }
