@@ -3,7 +3,6 @@ package com.umc.presentation.ui.notice.detail
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.UDomainFormat.parseDateTime
 import com.umc.domain.model.UserInfo
-import com.umc.domain.model.home.GisuInfo
 import com.umc.domain.model.notice.ChallengerReadInfo
 import com.umc.domain.model.notice.NoticeDetail
 import com.umc.domain.model.notice.NoticeReadStatistics
@@ -14,7 +13,6 @@ import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.usecase.GetChallengerIdUseCase
 import com.umc.domain.usecase.GetGisuInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
-import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
 import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.notice.DeleteNoticeUseCase
 import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
@@ -53,108 +51,60 @@ class NoticeDetailViewModel @Inject constructor(
     private var selectedOptionIds: MutableSet<Long> = mutableSetOf()
     private var currentUserChallengerId: Long = -1L
 
-    fun init(noticeId: Long) {
+    fun init(noticeId: Long) = viewModelScope.launch {
         currentNoticeId = noticeId
-        loadNoticeDetail()
-        loadCurrentUserInfoAndCheckPermission()
+        // 공지 상세 로드 완료 후 권한 체크 및 통계 조회
+        loadNoticeDetailSync()
     }
 
-    private fun loadCurrentUserInfoAndCheckPermission() = viewModelScope.launch {
-        val userInfo = getUserInfoUseCase().first()
-        currentUserChallengerId = getChallengerIdUseCase()
-        checkIsMember(userInfo)
-        checkIsAuthor()
-        
-        // 권한 체크 후 통계/현황 조회
-        if (hasAdminPermission(userInfo)) {
-            loadReadStatistics()
-            loadReadStatus()
-            loadUnReadStatus()
-        }
-    }
-
-    private fun hasAdminPermission(userInfo: UserInfo): Boolean {
-        val adminRoles = setOf(
-            UserChallengerRole.SUPER_ADMIN,
-            UserChallengerRole.CENTRAL_PRESIDENT,
-            UserChallengerRole.CENTRAL_VICE_PRESIDENT,
-            UserChallengerRole.CENTRAL_OPERATING_TEAM_MEMBER,
-            UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER,
-            UserChallengerRole.CHAPTER_PRESIDENT,
-            UserChallengerRole.SCHOOL_PRESIDENT,
-            UserChallengerRole.SCHOOL_VICE_PRESIDENT,
-            UserChallengerRole.SCHOOL_PART_LEADER,
-            UserChallengerRole.SCHOOL_ETC_ADMIN
-        )
-        
-        return userInfo.roles.any { role ->
-            val userRole = UserChallengerRole.from(role.roleType)
-            adminRoles.contains(userRole)
-        }
-    }
-
-    private fun checkIsAuthor() {
-        val isAuthor = currentUserChallengerId == uiState.value.detail.authorChallengerId && currentUserChallengerId != -1L
-        updateState { copy(isAuthor = isAuthor) }
-    }
-
-    private fun checkIsMember(userInfo: UserInfo) {
-        val hasOnlyMemberRole = userInfo.roles.isNotEmpty() &&
-            userInfo.roles.all { it.roleType == "MEMBER" }
-        
-        updateState { 
-            copy(isCurrentUserMember = hasOnlyMemberRole) 
-        }
-    }
-
-    fun onClickMenu() {
-        updateState { copy(isMenuVisible = !isMenuVisible) }
-    }
-
-    private fun loadNoticeDetail() = viewModelScope.launch {
+    private fun loadNoticeDetailSync() {
         if (currentNoticeId == 0L) {
             emitEvent(NoticeFragmentEvent.ShowError("유효하지 않은 공지사항 ID입니다"))
-            return@launch
+            return
         }
 
         updateState { copy(isLoading = true) }
         startLoading()
 
-        resultResponse(
-            response = getNoticeDetailUseCase(currentNoticeId),
-            successCallback = { detail ->
-                detail.vote?.mySelectedOptionIds?.let { ids ->
-                    selectedOptionIds = ids.toMutableSet()
-                } ?: run {
-                    selectedOptionIds = mutableSetOf()
-                }
+        viewModelScope.launch {
+            val response = getNoticeDetailUseCase(currentNoticeId)
+            resultResponse(
+                response = response,
+                successCallback = { detail ->
+                    detail.vote?.mySelectedOptionIds?.let { ids ->
+                        selectedOptionIds = ids.toMutableSet()
+                    } ?: run {
+                        selectedOptionIds = mutableSetOf()
+                    }
 
-                val formattedCreatedAt = getFormattedCreatedAt(detail.createdAt)
-                val formattedVoteCondition = getFormattedVoteCondition(detail.vote)
+                    val formattedCreatedAt = getFormattedCreatedAt(detail.createdAt)
+                    val formattedVoteCondition = getFormattedVoteCondition(detail.vote)
 
-                // chapterId가 있으면 chapter 정보를 조회하여 이름 가져오기
-                val targetChapterId = detail.targetInfo.targetChapterId
-                if (targetChapterId != null) {
-                    fetchChapterAndUpdateDetail(targetChapterId.toLong(), detail, formattedCreatedAt, formattedVoteCondition)
-                } else {
-                    updateDetailState(detail, formattedCreatedAt, formattedVoteCondition, null)
+                    // chapterId가 있으면 chapter 정보를 조회하여 이름 가져오기
+                    val targetChapterId = detail.targetInfo.targetChapterId
+                    if (targetChapterId != null) {
+                        fetchChapterAndUpdateDetailSync(targetChapterId.toLong(), detail, formattedCreatedAt, formattedVoteCondition)
+                    } else {
+                        updateDetailState(detail, formattedCreatedAt, formattedVoteCondition, null)
+                    }
+                },
+                errorCallback = {
+                    updateState { copy(isLoading = false) }
+                    emitEvent(NoticeFragmentEvent.ShowError("공지사항을 불러오는데 실패했습니다"))
                 }
-            },
-            errorCallback = {
-                updateState { copy(isLoading = false) }
-                emitEvent(NoticeFragmentEvent.ShowError("공지사항을 불러오는데 실패했습니다"))
-            }
-        )
+            )
+        }
     }
 
-    private fun fetchChapterAndUpdateDetail(
+    private fun fetchChapterAndUpdateDetailSync(
         chapterId: Long,
         detail: NoticeDetail,
         formattedCreatedAt: String,
-        formattedVoteCondition: String
+        formattedVoteCondition: String,
     ) = viewModelScope.launch {
+        val response = getChapterDetailUseCase(chapterId)
         resultResponse(
-            response = getChapterDetailUseCase(chapterId),
+            response = response,
             successCallback = { chapter ->
                 // chapter 이름을 targetInfo에 설정
                 val updatedDetail = detail.copy(
@@ -171,6 +121,179 @@ class NoticeDetailViewModel @Inject constructor(
         )
     }
 
+    private fun loadCurrentUserInfoAndCheckPermission(targetInfo: NoticeTarget) = viewModelScope.launch {
+        val userInfo = getUserInfoUseCase().first()
+        currentUserChallengerId = getChallengerIdUseCase()
+        checkIsMember(userInfo)
+        checkIsAuthor()
+        
+        // 권한 체크 후 통계/현황 조회
+        if (hasAdminPermission(userInfo, targetInfo)) {
+            loadReadStatistics()
+            loadReadStatus()
+            loadUnReadStatus()
+        }
+    }
+
+    private fun hasAdminPermission(userInfo: UserInfo, targetInfo: NoticeTarget): Boolean {
+        ULog.d("[hasAdminPermission] 시작 - userId: ${userInfo.id}, roles: ${userInfo.roles.map { it.roleType }}")
+        ULog.d("[hasAdminPermission] targetInfo - chapterId: ${targetInfo.targetChapterId}, schoolId: ${targetInfo.targetSchoolId}, gisuId: ${targetInfo.targetGisuId}, parts: ${targetInfo.targetParts}")
+
+        // 1. 총괄단(SUPER_ADMIN)은 모든 공지에 대해 수신 조회 가능
+        val isSuperAdmin = userInfo.roles.any {
+            it.roleType == UserChallengerRole.SUPER_ADMIN.name ||
+                    it.roleType == UserChallengerRole.CENTRAL_PRESIDENT.name ||
+                    it.roleType == UserChallengerRole.CENTRAL_VICE_PRESIDENT.name
+        }
+        ULog.d("[hasAdminPermission] 1. 총괄단 체크 - isSuperAdmin: $isSuperAdmin")
+        if (isSuperAdmin) {
+            ULog.d("[hasAdminPermission] ✓ 총괄단 권한으로 통과")
+            return true
+        }
+
+        val targetChapterId = targetInfo.targetChapterId
+        val targetSchoolId = targetInfo.targetSchoolId
+        val targetGisuId = targetInfo.targetGisuId
+        val hasPart = !targetInfo.targetParts.isNullOrEmpty()
+
+        ULog.d("[hasAdminPermission] 공지 타입 분석 - hasPart: $hasPart, targetChapterId: $targetChapterId, targetSchoolId: $targetSchoolId, targetGisuId: $targetGisuId")
+
+        // 2. 기수파트공지 (gisuId != 0 && part가 비어있지 않음) -> 중앙운영진
+        if (targetGisuId != 0 && hasPart) {
+            ULog.d("[hasAdminPermission] 2. 기수파트공지 체크 시작")
+            val centralTeamRoles = setOf(
+                UserChallengerRole.CENTRAL_OPERATING_TEAM_MEMBER.name,
+                UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER.name
+            )
+            val hasPermission = userInfo.roles.any { role ->
+                val matches = centralTeamRoles.contains(role.roleType) && role.gisuId == targetGisuId.toLong()
+                ULog.d("[hasAdminPermission]    기수파트공지 체크 - role: ${role.roleType}, gisuId: ${role.gisuId}, targetGisuId: $targetGisuId, matches: $matches")
+                matches
+            }
+            ULog.d("[hasAdminPermission] 2. 기수파트공지 결과 - hasPermission: $hasPermission")
+            if (hasPermission) {
+                ULog.d("[hasAdminPermission] ✓ 기수파트공지 권한으로 통과")
+                return true
+            }
+        }
+
+        // 3. 지부파트공지 (chapterId != null && part가 비어있지 않음) -> 해당 지부장
+        if (targetChapterId != null && hasPart) {
+            ULog.d("[hasAdminPermission] 3. 지부파트공지 체크 시작 - targetChapterId: $targetChapterId")
+            val hasPermission = userInfo.roles.any { role ->
+                val matches = role.roleType == UserChallengerRole.CHAPTER_PRESIDENT.name && role.chapterId == targetChapterId.toLong()
+                ULog.d("[hasAdminPermission]    지부파트공지 체크 - role: ${role.roleType}, chapterId: ${role.chapterId}, matches: $matches")
+                matches
+            }
+            ULog.d("[hasAdminPermission] 3. 지부파트공지 결과 - hasPermission: $hasPermission")
+            if (hasPermission) {
+                ULog.d("[hasAdminPermission] ✓ 지부파트공지 권한으로 통과")
+                return true
+            }
+        }
+
+        // 4. 학교파트공지 (schoolId != null && part가 비어있지 않음) -> 학교 운영진
+        if (targetSchoolId != null && hasPart) {
+            ULog.d("[hasAdminPermission] 4. 학교파트공지 체크 시작 - targetSchoolId: $targetSchoolId")
+            val schoolAdminRoles = setOf(
+                UserChallengerRole.SCHOOL_PRESIDENT.name,
+                UserChallengerRole.SCHOOL_VICE_PRESIDENT.name,
+                UserChallengerRole.SCHOOL_PART_LEADER.name,
+                UserChallengerRole.SCHOOL_ETC_ADMIN.name
+            )
+            ULog.d("[hasAdminPermission]    schoolAdminRoles: $schoolAdminRoles")
+            val hasPermission = userInfo.roles.any { role ->
+                val roleMatches = schoolAdminRoles.contains(role.roleType)
+                val orgMatches = role.organizationId == targetSchoolId.toLong()
+                ULog.d("[hasAdminPermission]    학교파트공지 체크 - role: ${role.roleType}, orgId: ${role.organizationId}, roleMatches: $roleMatches, orgMatches: $orgMatches")
+                roleMatches && orgMatches
+            }
+            ULog.d("[hasAdminPermission] 4. 학교파트공지 결과 - hasPermission: $hasPermission")
+            if (hasPermission) {
+                ULog.d("[hasAdminPermission] ✓ 학교파트공지 권한으로 통과")
+                return true
+            }
+        }
+
+        // 5. 지부공지 (chapterId != null && part가 비어있음) -> 해당 지부장
+        if (targetChapterId != null) {
+            ULog.d("[hasAdminPermission] 5. 지부공지 체크 시작 - targetChapterId: $targetChapterId")
+            val hasPermission = userInfo.roles.any { role ->
+                val matches = role.roleType == UserChallengerRole.CHAPTER_PRESIDENT.name && role.chapterId == targetChapterId.toLong()
+                ULog.d("[hasAdminPermission]    지부공지 체크 - role: ${role.roleType}, chapterId: ${role.chapterId}, matches: $matches")
+                matches
+            }
+            ULog.d("[hasAdminPermission] 5. 지부공지 결과 - hasPermission: $hasPermission")
+            if (hasPermission) {
+                ULog.d("[hasAdminPermission] ✓ 지부공지 권한으로 통과")
+                return true
+            }
+        }
+
+        // 6. 학교공지 (schoolId != null && part가 비어있음) -> 학교 운영진
+        if (targetSchoolId != null) {
+            ULog.d("[hasAdminPermission] 6. 학교공지 체크 시작 - targetSchoolId: $targetSchoolId")
+            val schoolAdminRoles = setOf(
+                UserChallengerRole.SCHOOL_PRESIDENT.name,
+                UserChallengerRole.SCHOOL_VICE_PRESIDENT.name,
+                UserChallengerRole.SCHOOL_PART_LEADER.name,
+                UserChallengerRole.SCHOOL_ETC_ADMIN.name
+            )
+            val hasPermission = userInfo.roles.any { role ->
+                val roleMatches = schoolAdminRoles.contains(role.roleType)
+                val orgMatches = role.organizationId == targetSchoolId.toLong()
+                ULog.d("[hasAdminPermission]    학교공지 체크 - role: ${role.roleType}, orgId: ${role.organizationId}, roleMatches: $roleMatches, orgMatches: $orgMatches")
+                roleMatches && orgMatches
+            }
+            ULog.d("[hasAdminPermission] 6. 학교공지 결과 - hasPermission: $hasPermission")
+            if (hasPermission) {
+                ULog.d("[hasAdminPermission] ✓ 학교공지 권한으로 통과")
+                return true
+            }
+        }
+
+        // 7. 기수공지(gisuId와 상관없이) -> 중앙운영진들 가능
+        ULog.d("[hasAdminPermission] 7. 기수공지/전체공지 체크 시작 - targetGisuId: $targetGisuId")
+        val centralTeamRoles = setOf(
+            UserChallengerRole.CENTRAL_OPERATING_TEAM_MEMBER.name,
+            UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER.name
+        )
+        val isCentralTeamMember = userInfo.roles.any { role ->
+            val roleMatches = centralTeamRoles.contains(role.roleType)
+            val gisuMatches = targetGisuId == 0 || role.gisuId == targetGisuId.toLong()
+            ULog.d("[hasAdminPermission]    기수공지 체크 - role: ${role.roleType}, gisuId: ${role.gisuId}, roleMatches: $roleMatches, gisuMatches: $gisuMatches")
+            roleMatches && gisuMatches
+        }
+        ULog.d("[hasAdminPermission] 7. 기수공지/전체공지 결과 - isCentralTeamMember: $isCentralTeamMember")
+        if (isCentralTeamMember) {
+            ULog.d("[hasAdminPermission] ✓ 기수공지/전체공지 권한으로 통과")
+            return true
+        }
+
+        ULog.d("[hasAdminPermission] ✗ 모든 권한 체크 실패 - 접근 거부")
+        return false
+    }
+
+    private fun checkIsAuthor() {
+        val isAuthor = currentUserChallengerId == uiState.value.detail.authorChallengerId && currentUserChallengerId != -1L
+        updateState { copy(isAuthor = isAuthor) }
+    }
+
+    private fun checkIsMember(userInfo: UserInfo) {
+        // hasAdminPermission과 동일한 로직으로 체크 (반대로)
+        val targetInfo = uiState.value.detail.targetInfo
+        ULog.d("checkIsMember 에서 보냄")
+        val adminPermission = hasAdminPermission(userInfo, targetInfo)
+        
+        updateState { 
+            copy(isCurrentUserMember = !adminPermission) 
+        }
+    }
+
+    fun onClickMenu() {
+        updateState { copy(isMenuVisible = !isMenuVisible) }
+    }
+
     private fun updateDetailState(
         detail: NoticeDetail,
         formattedCreatedAt: String,
@@ -182,6 +305,7 @@ class NoticeDetailViewModel @Inject constructor(
             fetchGisuAndUpdateTargetInfo(targetGisuId.toLong(), detail, formattedCreatedAt, formattedVoteCondition)
         } else {
             val formattedTargetInfo = getFormattedTargetInfo(detail.targetInfo, gisu)
+            ULog.d("detail Target ${detail.targetInfo}")
             updateState {
                 copy(
                     detail = detail,
@@ -192,7 +316,7 @@ class NoticeDetailViewModel @Inject constructor(
                     formattedVoteCondition = formattedVoteCondition
                 )
             }
-            checkIsAuthor()
+            loadCurrentUserInfoAndCheckPermission(detail.targetInfo)
             loadAuthorNickname(detail.authorChallengerId)
         }
     }
@@ -220,6 +344,7 @@ class NoticeDetailViewModel @Inject constructor(
             response = getGisuInfoUseCase(gisuId),
             successCallback = { gisuInfo ->
                 val formattedTargetInfo = getFormattedTargetInfo(detail.targetInfo, gisuInfo.gisu)
+                ULog.d("detail Target2 ${detail.targetInfo}")
                 updateState {
                     copy(
                         detail = detail,
@@ -230,7 +355,7 @@ class NoticeDetailViewModel @Inject constructor(
                         formattedVoteCondition = formattedVoteCondition
                     )
                 }
-                checkIsAuthor()
+                loadCurrentUserInfoAndCheckPermission(detail.targetInfo)
                 loadAuthorNickname(detail.authorChallengerId)
             },
             errorCallback = {
@@ -246,7 +371,7 @@ class NoticeDetailViewModel @Inject constructor(
                         formattedVoteCondition = formattedVoteCondition
                     )
                 }
-                checkIsAuthor()
+                loadCurrentUserInfoAndCheckPermission(detail.targetInfo)
                 loadAuthorNickname(detail.authorChallengerId)
             }
         )
@@ -415,8 +540,10 @@ class NoticeDetailViewModel @Inject constructor(
         resultResponse(
             response = submitVoteResponseUseCase(voteId, optionIds),
             successCallback = {
-                loadNoticeDetail()
-                emitEvent(NoticeFragmentEvent.ShowSuccess("투표가 완료되었습니다"))
+                viewModelScope.launch {
+                    loadNoticeDetailSync()
+                    emitEvent(NoticeFragmentEvent.ShowSuccess("투표가 완료되었습니다"))
+                }
             },
             errorCallback = {
                 updateState { copy(isSubmittingVote = false) }

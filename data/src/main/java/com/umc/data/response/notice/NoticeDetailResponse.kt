@@ -124,16 +124,16 @@ data class NoticeLinkResponse(
 
 @Serializable
 data class NoticeTargetResponse(
-    val targetGisuId: Int?,
-    val targetChapterId: Int?,
-    val targetSchoolId: Int?,
+    val targetGisuId: String?,
+    val targetChapterId: String?,
+    val targetSchoolId: String?,
     val targetParts: List<String>?
 ) {
     companion object {
         fun NoticeTargetResponse.toModel(): NoticeTarget = NoticeTarget(
-            targetGisuId = targetGisuId ?: 0,
-            targetChapterId = targetChapterId,
-            targetSchoolId = targetSchoolId,
+            targetGisuId = targetGisuId?.toIntOrNull() ?: 0,
+            targetChapterId = targetChapterId?.toIntOrNull(),
+            targetSchoolId = targetSchoolId?.toIntOrNull(),
             targetParts = targetParts ?: emptyList()
         )
     }
