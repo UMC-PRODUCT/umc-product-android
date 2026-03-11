@@ -274,7 +274,13 @@ constructor(
 
     //번개 오픈 채팅 링크 업데이트
     fun updateLightOpenChat(openChat: String) {
-        updateState { copy(lightOpenChat = openChat) }
+        val isValid = openChat.isEmpty() || openChat.startsWith("https://open.kakao.com/")
+        updateState {
+            copy(
+                lightOpenChat = openChat,
+                isOpenChatValid = isValid
+            )
+        }
     }
 
     //뒤로 가기
@@ -303,6 +309,7 @@ data class PostWriteFragmentUiState(
     val lightPeople : String = "",
     val lightPlace : String = "",
     val lightOpenChat : String = "",
+    val isOpenChatValid: Boolean = true,
 
 
     ) : UiState

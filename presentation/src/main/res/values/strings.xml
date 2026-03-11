@@ -106,6 +106,7 @@
     <string name="community_write_light_place_placeholder">예: 강남역 3번 출구</string>
     <string name="community_write_light_openchat">오픈 채팅 링크</string>
     <string name="community_write_light_openchat_placeholder">링크를 입력해주세요</string>
+    <string name="community_write_light_openchat_error">https://open.kakao.com/로 시작해야 합니다</string>
 
     <string name="community_search_placehold">제목, 내용 검색</string>
     <string name="community_search_recent">최근 검색어</string>
