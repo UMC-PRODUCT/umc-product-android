@@ -26,14 +26,18 @@ interface ChallengerRepository {
         cursor: Long?,
         size: Int,
         schoolId: Long?,
-        gisuId: Long?
+        gisuId: Long?,
+        keyword: String? = null,
+        part: String? = null
     ): ApiState<ChallengerList>
 
     suspend fun getAdminChallengerList(
         cursor: Long?,
         size: Int,
         schoolId: Long?,
-        gisuId: Long?
+        gisuId: Long?,
+        keyword: String? = null,
+        part: String? = null
     ): ApiState<AdminChallengerList>
 
     suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit>

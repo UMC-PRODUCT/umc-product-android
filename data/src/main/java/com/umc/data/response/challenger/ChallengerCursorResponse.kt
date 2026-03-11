@@ -33,6 +33,7 @@ data class ChallengerCursorResponse(
     fun toAdminList(): AdminChallengerList {
         return AdminChallengerList(
             challengers = cursor.content.map { it.toAdminModel() },
+            partCounts = partCounts.map { it.toModel() }, // partCounts 매핑 추가
             nextCursor = cursor.nextCursor,
             hasNext = cursor.hasNext
         )
@@ -82,7 +83,7 @@ data class ChallengerCursorItemResponse(
             name = name,
             nickname = nickname,
             generation = gisu,
-            part = UserPart.valueOf(part),
+            part = UserPart.from(part),
             role = extractDisplayRole(roleTypes),
             pointSum = if (pointSum < 0) 0.0 else pointSum,
             profileImage = profileImageLink,
@@ -96,7 +97,7 @@ data class ChallengerCursorItemResponse(
             name = name,
             nickname = nickname,
             generation = gisu,
-            part = UserPart.valueOf(part),
+            part = UserPart.from(part),
             outCount = 0, // 초기값 설정
             warningCount = 0, // 초기값 설정
             profileImage = profileImageLink
@@ -111,7 +112,7 @@ data class ChallengerCursorItemResponse(
             nickname = nickname,
             school = schoolName,
             gisu = gisu.toLong(),
-            userPart = UserPart.valueOf(part),
+            userPart = UserPart.from(part),
             profileImage = profileImageLink ?: ""
             
         )
@@ -137,7 +138,7 @@ data class ChallengerPartCountResponse( // 명확성을 위해 이름 변경
     val count: Int
 ) {
     fun toModel(): UserPartCount = UserPartCount(
-        part = UserPart.valueOf(part),
+        part = UserPart.from(part),
         count = count
     )
 }

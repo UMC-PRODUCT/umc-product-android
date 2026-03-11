@@ -42,23 +42,20 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
 
         binding.rvChallengerList.apply {
             adapter = groupAdapter
+            layoutManager = LinearLayoutManager(requireContext())
             clipToPadding = false
             setPadding(0, 0, 0, 64.px)
 
-            // 하단 스크롤 리스너: 바닥 감지 및 페이징 호출
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
 
-                    if (dy > 0) { // 아래로 스크롤 중일 때만 체크
-                        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                        val lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition()
-                        val totalItemCount = layoutManager.itemCount
+                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                    val lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition()
+                    val totalItemCount = layoutManager.itemCount
 
-                        // 마지막 아이템 근처에 도달하면 다음 페이지 요청
-                        if (lastVisibleItem >= totalItemCount - 2) {
-                            viewModel.fetchNextPage()
-                        }
+                    if (lastVisibleItem >= totalItemCount - 5) {
+                        viewModel.fetchNextPage()
                     }
                 }
             })

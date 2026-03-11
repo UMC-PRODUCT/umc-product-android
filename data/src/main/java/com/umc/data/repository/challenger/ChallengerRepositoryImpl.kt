@@ -55,28 +55,28 @@ class ChallengerRepositoryImpl @Inject constructor(
         }
     }
 
-
     override suspend fun getChallengerList(
-        cursor: Long?,
-        size: Int,
-        schoolId: Long?,
-        gisuId: Long?
+        cursor: Long?, size: Int,
+        schoolId: Long?, gisuId: Long?,
+        keyword: String?, part: String?
     ): ApiState<ChallengerList> {
-        return challengerRemoteDataSource.getChallengerList(cursor, size, schoolId, gisuId).map {
-            it.toModel()
-        }
+        return challengerRemoteDataSource.getChallengerList(
+            cursor = cursor, size = size,
+            schoolId = schoolId, gisuId = gisuId,
+            keyword = keyword, part = part
+        ).map { it.toModel() }
     }
 
     override suspend fun getAdminChallengerList(
-        cursor: Long?,
-        size: Int,
-        schoolId: Long?,
-        gisuId: Long?
+        cursor: Long?, size: Int,
+        schoolId: Long?, gisuId: Long?,
+        keyword: String?, part: String?
     ): ApiState<AdminChallengerList> {
-        return challengerRemoteDataSource.getChallengerList(cursor, size, schoolId, gisuId)
-            .map { response ->
-                response.toAdminList()
-            }
+        return challengerRemoteDataSource.getChallengerList(
+            cursor = cursor, size = size,
+            schoolId = schoolId, gisuId = gisuId,
+            keyword = keyword, part = part
+        ).map { it.toAdminList() }
     }
 
     override suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit> {
