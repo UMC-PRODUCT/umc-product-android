@@ -3,6 +3,7 @@ package com.umc.presentation.ui.act.challenge
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.UserChallenger
+import com.umc.domain.model.act.challenger.UserPartCount
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.repository.AppDataStoreRepository
@@ -62,16 +63,11 @@ class UserChallengerViewModel @Inject constructor(
      */
     fun fetchNextPage(isFirstPage: Boolean = false) {
         val state = uiState.value
-
-        // 더 불러올 데이터가 없거나 이미 요청 중이면 중단하여 중복 호출 방지
         if (!isFirstPage && (!state.hasNext || state.isPageLoading)) return
 
         viewModelScope.launch {
             updateState { copy(isPageLoading = true) }
-
-            val currentCursor = if (isFirstPage) null else state.nextCursor
-
-            val response = getChallengerListUseCase(currentCursor, 50, state.schoolId, state.gisuId)
+            val response = getChallengerListUseCase(if (isFirstPage) null else state.nextCursor, 20, state.schoolId, state.gisuId)
 
             when (response) {
                 is ApiState.Success -> {
@@ -81,7 +77,8 @@ class UserChallengerViewModel @Inject constructor(
                     updateState {
                         copy(
                             allChallengers = newList,
-                            filteredGroups = makeChallengerGroups(newList),
+                            partCounts = data.partCounts,
+                            filteredGroups = makeChallengerGroups(newList, data.partCounts),
                             nextCursor = data.nextCursor,
                             hasNext = data.hasNext,
                             isPageLoading = false
@@ -117,28 +114,35 @@ class UserChallengerViewModel @Inject constructor(
     }
     */
 
-    private fun makeChallengerGroups(list: List<UserChallenger>): List<ChallengerGroupUIModel> {
+    private fun makeChallengerGroups(
+        list: List<UserChallenger>,
+        partCounts: List<UserPartCount>
+    ): List<ChallengerGroupUIModel> {
         return UserPart.entries
             .filter { it != UserPart.UNKNOWN }
             .mapNotNull { part ->
                 val members = list.filter { it.part == part }
+
+                val currentPartCount = partCounts.find { it.part == part } ?: UserPartCount(part, 0)
+
                 if (members.isNotEmpty()) {
                     ChallengerGroupUIModel(
                         part = part,
                         items = members.mapIndexed { index, c ->
                             UserChallengerUIModel(c, index == members.size - 1)
-                        }
+                        },
+                        partCount = currentPartCount
                     )
                 } else null
             }
     }
 
     fun filterList(query: String) {
-        val all = uiState.value.allChallengers
-        val filtered = if (query.isBlank()) all else {
-            all.filter { it.name.contains(query, true) || it.nickname.contains(query, true) }
+        val state = uiState.value
+        val filtered = if (query.isBlank()) state.allChallengers else {
+            state.allChallengers.filter { it.name.contains(query, true) || it.nickname.contains(query, true) }
         }
-        updateState { copy(filteredGroups = makeChallengerGroups(filtered), searchQuery = query) }
+        updateState { copy(filteredGroups = makeChallengerGroups(filtered, state.partCounts), searchQuery = query) }
     }
 
     fun navigateToDetail(id: Long) {
@@ -173,6 +177,7 @@ data class UserChallengerUiState(
     val schoolId: Long = 0,
     val gisuId: Long? = null,
     val allChallengers: List<UserChallenger> = emptyList(),
+    val partCounts: List<UserPartCount> = emptyList(),
     val filteredGroups: List<ChallengerGroupUIModel> = emptyList(),
     val searchQuery: String = "",
     val isPageLoading: Boolean = false,
