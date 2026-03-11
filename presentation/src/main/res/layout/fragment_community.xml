@@ -66,70 +66,13 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-
-        <!--명예의 전당 보여주는 곳-->
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/community_fragmentContainer_top"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/community_view_pager"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/community_tab_layout"
             app:layout_constraintBottom_toBottomOf="parent" />
 
-        <!--글쓰기 탭을 보여주는 곳-->
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/community_fragmentContainer_write"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:background="@color/neutral100"
-            android:paddingVertical="24dp"
-            android:paddingHorizontal="16dp"
-            android:visibility="visible"
-            app:layout_constraintTop_toBottomOf="@id/community_tab_layout"
-            app:layout_constraintBottom_toBottomOf="parent"
-            >
-
-            <TextView
-                android:id="@+id/community_tv_no_result"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/community_top_no_result"
-                android:textAppearance="@style/Footnote"
-                android:textColor="@color/neutral800"
-                android:visibility="@{vm.uiState.nowContents.empty ? View.VISIBLE : View.GONE}"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/community_rcv"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                app:layout_constraintBottom_toBottomOf="parent"
-                tools:listitem="@layout/item_mypage_content"/>
-
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/community_btn_add"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:src="@drawable/ic_plus"
-                android:padding="16dp"
-                android:onClick="@{()->vm.navigateWrite()}"
-                app:tint="@color/neutral000"
-                app:backgroundTint="@color/primary500"
-                app:fabSize="normal"
-                app:elevation="6dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

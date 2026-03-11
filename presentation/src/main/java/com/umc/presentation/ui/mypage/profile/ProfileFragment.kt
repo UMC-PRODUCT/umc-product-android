@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,6 +20,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlin.getValue
 import coil.load
+import com.umc.domain.model.enums.UploadFileCategory
 
 @AndroidEntryPoint
 class ProfileFragment : BaseFragment<FragmentProfileBinding, ProfileFragmentUiState, ProfileFragmentEvent, ProfileViewModel>(
@@ -30,8 +32,38 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding, ProfileFragmentUiSt
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         // 갤러리에서 사진을 선택하고 돌아왔을 때 실행
         if (uri != null) {
-            // 뷰모델에 선택된 URI 전달
-            viewModel.settingImage(uri)
+
+            /**여기서 파일 확장자 및 크기 비교!**/
+            val fileSize = context?.contentResolver?.openAssetFileDescriptor(uri, "r")?.use {
+                it.length
+            } ?: 0L
+            //fileType은 MINETYPE -> image/jpg 이런 형식
+            val fileType = context?.contentResolver?.getType(uri) ?: ""
+            //extenstion은 확장자 -> JPG
+            val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(fileType) ?: ""
+
+            val maxSize = UploadFileCategory.PROFILE_IMAGE.maxSizeBytes
+            
+            //1. 타입 비교
+            if(UploadFileCategory.PROFILE_IMAGE.alloweType.isNotEmpty() 
+                && !UploadFileCategory.PROFILE_IMAGE.alloweType.contains(extension.lowercase())){
+                Toast.makeText(requireContext(), 
+                    "${UploadFileCategory.PROFILE_IMAGE.label}에 허용되지 않는 파일 형식(${extension})입니다.", Toast.LENGTH_SHORT).show()
+
+            }
+            //2. 크기 비교
+            else if(fileSize > maxSize) {
+                val maxSizeMb = UploadFileCategory.PROFILE_IMAGE.maxSizeBytes / (1024 * 1024)
+                Toast.makeText(requireContext(), 
+                    "${UploadFileCategory.PROFILE_IMAGE.label}은 최대 ${maxSizeMb}MB까지 업로드 가능합니다.", Toast.LENGTH_SHORT).show()
+
+            }
+
+            //3. 성공
+            else {
+                // 뷰모델에 선택된 URI 전달
+                viewModel.settingImage(uri)
+            }
         }
     }
     

@@ -162,7 +162,12 @@ class PostWriteFragment : BaseFragment<FragmentPostWriteBinding, PostWriteFragme
             is PostWriteFragmentEvent.SetTextfields -> {
                 binding.writeTextfieldTitle.setText(viewModel.uiState.value.title)
                 binding.writeTextfieldContent.setText(viewModel.uiState.value.content)
-                binding.writeTextfieldTime.setText(viewModel.uiState.value.lightTime)
+
+                //시간은 바꿔라!
+                val showUITime = viewModel.formatUtcToLocal(viewModel.uiState.value.lightTime)
+
+                binding.writeTextfieldTime.setText(showUITime)
+
                 binding.writeTextfieldPlace.setText(viewModel.uiState.value.lightPlace)
                 binding.writeTextfieldPeople.setText(viewModel.uiState.value.lightPeople)
                 binding.writeTextfieldOpenchat.setText(viewModel.uiState.value.lightOpenChat)

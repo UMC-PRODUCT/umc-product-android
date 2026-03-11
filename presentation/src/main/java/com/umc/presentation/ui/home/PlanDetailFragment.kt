@@ -109,10 +109,6 @@ class PlanDetailFragment : BaseFragment<FragmentPlanDetailBinding, PlanDetailFra
 
             }
 
-            //일정 신고 로직
-            is PlanDetailFragmentEvent.ReportPlan -> {
-
-            }
 
 
             is PlanDetailFragmentEvent.MoveBackPressedEvent -> {
