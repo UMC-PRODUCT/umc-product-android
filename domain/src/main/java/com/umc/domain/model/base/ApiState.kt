@@ -25,7 +25,7 @@ fun <T> ApiState<ApiResponse<T>>.mapSuccessData() : ApiState<T> {
 data class FailState(
     val success: Boolean = false,
     val code: String,
-    val message: String
+    val message: String,
 ) {
     companion object {
         private const val EMPTY = ""
