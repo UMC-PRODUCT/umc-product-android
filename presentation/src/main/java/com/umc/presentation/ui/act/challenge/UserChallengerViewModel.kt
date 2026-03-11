@@ -2,9 +2,9 @@ package com.umc.presentation.ui.act.challenge
 
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
-import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.domain.model.act.challenger.UserChallenger
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.attendance.GetChallengerAttendanceHistoryUseCase
 import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
@@ -30,9 +30,6 @@ class UserChallengerViewModel @Inject constructor(
         observeUserInfo()
     }
 
-    /**
-     * DataStore의 유저 정보를 관찰
-     */
     private fun observeUserInfo() {
         viewModelScope.launch {
             appDataStoreRepository.getUserInfo()
@@ -42,93 +39,122 @@ class UserChallengerViewModel @Inject constructor(
                 }
                 .collect { userInfo ->
                     val currentGisuId = userInfo.roles.firstOrNull()?.gisuId
-                    startFetchingAll(userInfo.schoolId, currentGisuId)
+
+                    updateState {
+                        copy(
+                            schoolId = userInfo.schoolId,
+                            gisuId = currentGisuId,
+                            allChallengers = emptyList(),
+                            filteredGroups = emptyList(),
+                            nextCursor = null,
+                            hasNext = true
+                        )
+                    }
+
+                    // 초기 데이터 요청 (첫 페이지)
+                    fetchNextPage(isFirstPage = true)
                 }
         }
     }
 
+    /**
+     * 다음 페이지 데이터를 요청하는 페이징 로직
+     */
+    fun fetchNextPage(isFirstPage: Boolean = false) {
+        val state = uiState.value
+
+        // 더 불러올 데이터가 없거나 이미 요청 중이면 중단하여 중복 호출 방지
+        if (!isFirstPage && (!state.hasNext || state.isPageLoading)) return
+
+        viewModelScope.launch {
+            updateState { copy(isPageLoading = true) }
+
+            val currentCursor = if (isFirstPage) null else state.nextCursor
+
+            val response = getChallengerListUseCase(currentCursor, 50, state.schoolId, state.gisuId)
+
+            when (response) {
+                is ApiState.Success -> {
+                    val data = response.data
+                    val newList = if (isFirstPage) data.challengers else state.allChallengers + data.challengers
+
+                    updateState {
+                        copy(
+                            allChallengers = newList,
+                            filteredGroups = makeChallengerGroups(newList),
+                            nextCursor = data.nextCursor,
+                            hasNext = data.hasNext,
+                            isPageLoading = false
+                        )
+                    }
+                }
+                is ApiState.Fail -> {
+                    updateState { copy(isPageLoading = false) }
+                    emitEvent(UserChallengerEvent.ShowToast(response.failState.message, isError = true))
+                }
+            }
+        }
+    }
+
+    /*
     private fun startFetchingAll(schoolId: Long, gisuId: Long?) {
-        updateState { copy(allChallengers = emptyList(), filteredChallengers = emptyList()) }
+        updateState { copy(allChallengers = emptyList(), filteredGroups = emptyList()) }
         val accumulator = mutableListOf<UserChallenger>()
         fetchAllPages(schoolId, gisuId, null, accumulator)
     }
 
-    /**
-     * hasNext가 false일 때까지 모든 페이지를 순차적으로 요청
-     */
-    private fun fetchAllPages(
-        schoolId: Long,
-        gisuId: Long?,
-        cursor: Long?,
-        accumulator: MutableList<UserChallenger>
-    ) {
+    private fun fetchAllPages(schoolId: Long, gisuId: Long?, cursor: Long?, accumulator: MutableList<UserChallenger>) {
         viewModelScope.launch {
             resultResponse(
                 response = getChallengerListUseCase(cursor, 50, schoolId, gisuId),
                 successCallback = { data ->
                     accumulator.addAll(data.challengers)
-
-                    if (data.hasNext) {
-                        // 다음 페이지가 있으면 다시 호출
-                        fetchAllPages(schoolId, gisuId, data.nextCursor, accumulator)
-                    } else {
-                        // 모든 데이터 확보 후 UI를 한 번에 갱신
-                        updateState {
-                            copy(
-                                allChallengers = accumulator,
-                                filteredChallengers = accumulator
-                            )
-                        }
-                    }
-                },
-                errorCallback = { failState ->
-                    emitEvent(UserChallengerEvent.ShowToast(failState.message, isError = true))
+                    if (data.hasNext) fetchAllPages(schoolId, gisuId, data.nextCursor, accumulator)
+                    else updateState { copy(allChallengers = accumulator, filteredGroups = makeChallengerGroups(accumulator)) }
                 }
             )
         }
     }
+    */
 
-    /**
-     * 클라이언트 측 로컬 필터링 수행
-     */
-    fun filterList(query: String) {
-        val allChallengers = uiState.value.allChallengers
-
-        if (query.isBlank()) {
-            // 검색어가 비어있으면 전체 리스트를 보여줌
-            updateState { copy(filteredChallengers = allChallengers, searchQuery = "") }
-        } else {
-            val filtered = allChallengers.filter {
-                it.name.contains(query, ignoreCase = true) ||
-                        it.nickname.contains(query, ignoreCase = true)
+    private fun makeChallengerGroups(list: List<UserChallenger>): List<ChallengerGroupUIModel> {
+        return UserPart.entries
+            .filter { it != UserPart.UNKNOWN }
+            .mapNotNull { part ->
+                val members = list.filter { it.part == part }
+                if (members.isNotEmpty()) {
+                    ChallengerGroupUIModel(
+                        part = part,
+                        items = members.mapIndexed { index, c ->
+                            UserChallengerUIModel(c, index == members.size - 1)
+                        }
+                    )
+                } else null
             }
-            updateState { copy(filteredChallengers = filtered, searchQuery = query) }
+    }
+
+    fun filterList(query: String) {
+        val all = uiState.value.allChallengers
+        val filtered = if (query.isBlank()) all else {
+            all.filter { it.name.contains(query, true) || it.nickname.contains(query, true) }
         }
+        updateState { copy(filteredGroups = makeChallengerGroups(filtered), searchQuery = query) }
     }
 
     fun navigateToDetail(id: Long) {
         val selectedChallenger = uiState.value.allChallengers.find { it.id == id }
 
         viewModelScope.launch {
-            // 병렬 호출
             val detailDeferred = async { getChallengerDetailUseCase(id) }
             val historyDeferred = async { getChallengerAttendanceHistoryUseCase(id) }
 
             val detailResult = detailDeferred.await()
             val historyResult = historyDeferred.await()
 
-            // 상세 정보 결과 처리
             resultResponse(
                 response = detailResult,
                 successCallback = { detail ->
-                    // 히스토리 결과 처리
-                    val historyList = if (historyResult is ApiState.Success) {
-                        historyResult.data
-                    } else {
-                        emptyList()
-                    }
-
-                    // 최종 모델 생성
+                    val historyList = if (historyResult is ApiState.Success) historyResult.data else emptyList()
                     val finalModel = detail.copy(
                         warningCount = selectedChallenger?.pointSum ?: 0.0,
                         history = historyList
@@ -144,9 +170,14 @@ class UserChallengerViewModel @Inject constructor(
 }
 
 data class UserChallengerUiState(
+    val schoolId: Long = 0,
+    val gisuId: Long? = null,
     val allChallengers: List<UserChallenger> = emptyList(),
-    val filteredChallengers: List<UserChallenger> = emptyList(),
-    val searchQuery: String = ""
+    val filteredGroups: List<ChallengerGroupUIModel> = emptyList(),
+    val searchQuery: String = "",
+    val isPageLoading: Boolean = false,
+    val nextCursor: Long? = null,
+    val hasNext: Boolean = true
 ) : UiState
 
 sealed interface UserChallengerEvent : UiEvent {
