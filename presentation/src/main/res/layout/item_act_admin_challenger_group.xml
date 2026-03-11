@@ -23,18 +23,13 @@
             android:paddingVertical="12dp"
             android:gravity="center_vertical">
 
-            <View
-                android:layout_width="4dp"
-                android:layout_height="16dp"
-                android:background="@color/primary500" />
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:text="@{group.part.label}"
                 android:textAppearance="@style/HeadlineBold"
-                android:textColor="@color/primary500"
+                android:textColor="@color/neutral800"
                 tools:text="Android" />
 
             <TextView
@@ -43,7 +38,7 @@
                 android:layout_marginStart="4dp"
                 android:text='@{"(" + group.partCount.count + ")"}'
                 android:textAppearance="@style/Subheadline"
-                android:textColor="@color/neutral900"
+                android:textColor="@color/neutral800"
                 tools:text="(12)" />
         </LinearLayout>
 
