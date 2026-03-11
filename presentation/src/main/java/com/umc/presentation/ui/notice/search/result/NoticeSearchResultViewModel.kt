@@ -7,7 +7,6 @@ import com.umc.domain.usecase.notice.SearchNoticeListUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
-import com.umc.presentation.ui.notice.search.NoticeSearchEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -104,7 +103,7 @@ data class NoticeSearchResultUiState(
     val currentPage: Int = 0,
     val isPageLoading: Boolean = false,
     val isLastPage: Boolean = false,
-    val selectedGisu: Long = 0
+    val selectedGisu: Long = 0,
 ) : UiState
 
 sealed interface NoticeSearchResultEvent : UiEvent {
