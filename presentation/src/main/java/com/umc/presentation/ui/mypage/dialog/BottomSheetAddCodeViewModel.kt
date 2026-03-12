@@ -32,6 +32,7 @@ class BottomSheetAddCodeViewModel @Inject constructor(
                 code = uiState.value.code,
             )
             Log.d("log_mypage", "register: $request")
+            startLoading()
             resultResponse(
                 response = addChallengerRecordMemberUseCase(request),
                 successCallback = {
