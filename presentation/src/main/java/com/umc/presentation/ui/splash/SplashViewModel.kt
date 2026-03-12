@@ -28,13 +28,6 @@ class SplashViewModel @Inject constructor(
         viewModelScope.launch {
             delay(3.seconds)
 
-            /*
-            TokenManagerProvider.instance.manager.getToken()?.let { token ->
-                Log.d("KakaoToken", "카카오 accessToken: ${token.accessToken}")
-            }
-
-             */
-
             resultResponse(
                 response = getMyProfileUseCase(),
                 successCallback = { userInfo ->

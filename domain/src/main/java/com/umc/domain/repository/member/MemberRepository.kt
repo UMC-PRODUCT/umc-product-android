@@ -13,7 +13,7 @@ interface MemberRepository {
 
     suspend fun updateMyProfile(profileImageId : String): ApiState<UserInfo>
     suspend fun updateMyLink(request: UpdateLinkRequest): ApiState<UserInfo>
-    suspend fun deleteUser(): ApiState<Unit>
+    suspend fun deleteUser(kakaoAccessToken : String, googleAccessToken : String): ApiState<Unit>
 
 
 }

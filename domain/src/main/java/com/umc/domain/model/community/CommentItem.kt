@@ -5,6 +5,7 @@ data class CommentItem (
     val postId: Long,
     val challengerId: Long,
     val challengerName: String?,
+    val challengerNickName: String?,
     val challengerProfileImage: String,
     val content: String,
     val createdAt: String,   // "2026.02.07 15:16" 형태로 합쳐진 결과물

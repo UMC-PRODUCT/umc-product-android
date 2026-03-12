@@ -2,6 +2,7 @@ package com.umc.data.dataSource.remote.member
 
 import com.umc.data.api.MemberApi
 import com.umc.data.dataSource.base.apiCall
+import com.umc.data.request.member.DeleteUserRequest
 import com.umc.data.request.member.UpdateMyLinkRequest
 import com.umc.data.request.member.UpdateMyProfileRequest
 import com.umc.data.response.JwtLoginResponse
@@ -33,7 +34,7 @@ class MemberRemoteDataSourceImpl @Inject constructor(
         return apiCall { memberApi.updateMyLink(request) }
     }
 
-    override suspend fun deleteUser(): ApiState<Unit> {
-        return apiCall { memberApi.deleteUser() }
+    override suspend fun deleteUser(request: DeleteUserRequest): ApiState<Unit> {
+        return apiCall { memberApi.deleteUser(request) }
     }
 }
