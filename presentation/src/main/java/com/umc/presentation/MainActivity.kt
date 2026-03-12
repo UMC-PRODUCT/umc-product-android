@@ -11,13 +11,13 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.google.firebase.messaging.FirebaseMessaging
 import com.umc.presentation.base.BaseActivity
 import com.umc.presentation.databinding.ActivityMainBinding
+import com.umc.presentation.util.InAppUpdateManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import androidx.core.graphics.drawable.toDrawable
-import androidx.navigation.findNavController
-import com.google.firebase.messaging.FirebaseMessaging
 
 @AndroidEntryPoint
 class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, MainActivityEvent, MainActivityViewModel>(
@@ -25,6 +25,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
 ) {
     override val viewModel: MainActivityViewModel by viewModels()
     private lateinit var navController: NavController
+    private lateinit var inAppUpdateManager: InAppUpdateManager
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -42,11 +43,15 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
     override fun initView() {
         //enableEdgeToEdge()
 
+        // In-App Update Manager 초기화
+        inAppUpdateManager = InAppUpdateManager(this)
+
         binding.apply {
             vm = viewModel
             initNavigation()
             checkFCMToken() //FCM 토큰 체크
             checkPermissionNotification() //알람 권한 체크
+            checkForAppUpdate() // 앱 업데이트 체크
 
             window.setBackgroundDrawable(getColor(R.color.neutral000).toDrawable())
         }
@@ -68,6 +73,21 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // FLEXIBLE 업데이트의 경우 다운로드 완료 후 설치 대기 중인지 확인
+        if (::inAppUpdateManager.isInitialized) {
+            inAppUpdateManager.checkForPendingInstall()
+        }
+    }
+
+    // 앱 업데이트 체크
+    private fun checkForAppUpdate() {
+        inAppUpdateManager.checkForUpdate(onUpdateFailed = {
+            Log.d("InAppUpdate", "업데이트 체크 실패 또는 업데이트 불가")
+        })
     }
 
     // 토큰 세팅 체크

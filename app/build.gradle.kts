@@ -124,6 +124,10 @@ dependencies {
 
     //coli (이미지)
     implementation(libs.coil)
+
+    // Play In-App Update
+    implementation(libs.play.update)
+    implementation(libs.play.update.ktx)
 }
 
 fun getApiKey(propertyKey: String): String {
