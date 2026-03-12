@@ -12,7 +12,10 @@ data class PostSearchSummaryResponse (
     @SerializedName("title") val title: String,
     @SerializedName("content") val content: String,
     @SerializedName("category") val category: String,
-    @SerializedName("authorName") val authorName: String,
+    @SerializedName("authorChallengerId") val authorChallengerId: Long?,             // 게시글 작성자 ID
+    @SerializedName("authorMemberId") val authorMemberId: Long?,             // 게시글 작성자 ID
+    @SerializedName("authorName") val authorName: String?,       // 게시글 작성자 이름
+    @SerializedName("authorNickname") val authorNickName: String?,
     @SerializedName("likeCount") val likeCount: Int,
     @SerializedName("commentCount") val commentCount: Int,
     @SerializedName("authorPart") val authorPart: String,
@@ -33,7 +36,10 @@ data class PostSearchSummaryResponse (
                     CommunityCategoryType.FREE
                 },
                 // 일부는 직접 (추후 서버 요청)
-                username = this.authorName,
+                username = this.authorName ?: "",
+                userNickName = this.authorNickName ?: "",
+                userId = this.authorChallengerId ?: -1L,
+                userMemberId = this.authorMemberId ?: -1L,
                 writeTime = "${writeDay} ${writeTime}", // TODO: 서버 응답에 생성일자가 추가되면 파싱 로직 적용
                 likes = likeCount,
                 comments = commentCount,

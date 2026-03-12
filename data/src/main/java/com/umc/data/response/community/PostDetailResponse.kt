@@ -13,8 +13,10 @@ data class PostDetailResponse(
     @SerializedName("title") val title: String,                // 게시글 제목
     @SerializedName("content") val content: String,            // 게시글 본문
     @SerializedName("category") val category: String,          // 게시글 카테고리
-    @SerializedName("authorId")val authorId: Long,             // 게시글 작성자 ID
-    @SerializedName("authorName")val authorName: String,       // 게시글 작성자 이름
+    @SerializedName("authorChallengerId")val authorChallengerId: Long?,
+    @SerializedName("authorMemberId") val authorMemberId: Long?, // 게시글 작성자 ID
+    @SerializedName("authorName")val authorName: String?,       // 게시글 작성자 이름
+    @SerializedName("authorNickname") val authorNickName: String?,
     @SerializedName("authorProfileImage") val authorProfileImage: String?, // 게시글 작성자 프로필 이미지
     @SerializedName("authorPart") val authorPart: String,           // 게시글 작성자 유저파트
     @SerializedName("lightningInfo") val lightningInfo: LightningInfoResponse?, // 번개 모임 상세 정보 (일반글은 null)
@@ -44,8 +46,10 @@ data class PostDetailResponse(
                 } catch (e: Exception) {
                     CommunityCategoryType.FREE
                 },
-                username = this.authorName,
-                userId = this.authorId,
+                username = this.authorName ?: "알 수 없음",
+                userNickName = this.authorNickName ?: "",
+                userId = this.authorChallengerId ?: -1L,
+                userMemberId = this.authorMemberId ?: -1L,
                 writeTime = formatTime,
                 likes = this.likeCount,
                 comments = this.commentCount,

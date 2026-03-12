@@ -430,7 +430,7 @@ data class PlanAddFragmentUiState(
         CategoryItem(CategoryType.HACKATHON.label, R.drawable.ic_hackathon_off, R.drawable.ic_hackathon_on),
         CategoryItem(CategoryType.WORKSHOP.label, R.drawable.ic_workshop_off, R.drawable.ic_workshop_on),
         /**아이콘 임시조치**/
-        CategoryItem(CategoryType.AFTER_PARTY.label, R.drawable.ic_leadership_off, R.drawable.ic_leadership_off)
+        CategoryItem(CategoryType.AFTER_PARTY.label, R.drawable.ic_afterparty_off, R.drawable.ic_afterparty_on)
 
         ),
     val isSelectedCategory: Boolean = false, //UI에 placeholder or text 보여줄지 판단하는 변수
