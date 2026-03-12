@@ -31,6 +31,7 @@ constructor(
     }
 
     fun login(token: String, loginType: LoginType) = viewModelScope.launch {
+        startLoading()
         resultResponse(
             response = postLoginUseCase(loginType = loginType, token = token),
             successCallback = {
@@ -39,6 +40,9 @@ constructor(
                     saveToken(it)
                 }
             },
+            errorCallback = { failState ->
+                emitEvent(LoginEvent.ShowErrorToast(failState.message))
+            }
         )
     }
 
@@ -47,6 +51,9 @@ constructor(
             response = saveTokenUseCase(request),
             successCallback = {
                 registerFcmToken()
+            },
+            errorCallback = { failState ->
+                emitEvent(LoginEvent.ShowErrorToast(failState.message))
             }
         )
     }
@@ -83,4 +90,6 @@ sealed interface LoginEvent : UiEvent {
     object MoveToMainEvent : LoginEvent
 
     data class MoveToSignUpEvent(val oAuthToken: String) : LoginEvent
+
+    data class ShowErrorToast(val message: String) : LoginEvent
 }

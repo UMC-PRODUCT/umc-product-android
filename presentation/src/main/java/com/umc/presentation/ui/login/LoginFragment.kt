@@ -24,6 +24,7 @@ import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.base.UiState
 import com.umc.presentation.databinding.FragmentLoginBinding
 import com.umc.presentation.util.ULog
+import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -74,6 +75,13 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, UiState, LoginEvent, Lo
             is LoginEvent.MoveToSignUpEvent -> moveToSignUp(event.oAuthToken)
             LoginEvent.MoveToMainEvent -> moveToHome()
             LoginEvent.GoogleLoginEvent -> signInGoogle()
+            is LoginEvent.ShowErrorToast -> {
+                UToast.createToast(
+                    requireContext(),
+                    event.message,
+                    state = UToast.State.ERROR
+                ).show()
+            }
         }
     }
 
