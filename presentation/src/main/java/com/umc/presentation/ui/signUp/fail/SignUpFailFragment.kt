@@ -26,6 +26,11 @@ class SignUpFailFragment : BaseFragment<FragmentSignUpFailBinding, UiState, Sign
             val spannableString = SpannableString(textInquiry.text)
             spannableString.setSpan(UnderlineSpan(), 0, spannableString.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             textInquiry.text = spannableString
+
+            // Add underline to the logout text
+            val logoutSpannable = SpannableString(textLogout.text)
+            logoutSpannable.setSpan(UnderlineSpan(), 0, logoutSpannable.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            textLogout.text = logoutSpannable
         }
     }
 
@@ -61,6 +66,9 @@ class SignUpFailFragment : BaseFragment<FragmentSignUpFailBinding, UiState, Sign
             SignUpFailEvent.MoveToKakaoInquiry -> {
                 val intent = Intent(Intent.ACTION_VIEW, "https://pf.kakao.com/_MDxhqX/chat".toUri())
                 startActivity(intent)
+            }
+            SignUpFailEvent.MoveToLogin -> {
+                findNavController().navigate(com.umc.presentation.R.id.action_global_to_login)
             }
         }
     }

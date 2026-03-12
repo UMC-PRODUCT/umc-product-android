@@ -57,6 +57,21 @@
             android:textAppearance="@style/Subheadline"
             android:textColor="@color/neutral600" />
 
+        <TextView
+            android:id="@+id/text_logout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:onClick="@{()->vm.onClickLogout()}"
+            android:text="로그아웃하기"
+            
+            android:textAppearance="@style/Footnote"
+            android:textColor="@color/neutral600"
+            android:clickable="true"
+            android:focusable="true" />
+
         <com.umc.presentation.component.UButton
             android:id="@+id/button_next"
             android:layout_width="match_parent"
