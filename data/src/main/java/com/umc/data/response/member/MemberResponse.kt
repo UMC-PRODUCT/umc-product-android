@@ -20,7 +20,7 @@ data class MemberResponse(
     @SerializedName("schoolId") val schoolId: Long,
     @SerializedName("schoolName") val schoolName: String,
     @SerializedName("profileImageLink") val profileImageLink: String?,
-    @SerializedName("status") val status: String,
+    @SerializedName("status") val status: String?,
     @SerializedName("roles") val roles: List<MemberRoleResponse>?,
     @SerializedName("challengerRecords") val challengerRecords: List<MemberChallengerRecordResponse>?,
     @SerializedName("profile") val profile: MemberProfileResponse?
@@ -35,7 +35,7 @@ data class MemberResponse(
             schoolId = schoolId,
             schoolName = schoolName,
             profileImageLink = profileImageLink ?: "",
-            status = status,
+            status = status ?: "ACTIVE",
             roles = roles?.map { it.toDomain() }.orEmpty(),
             challengerRecords = challengerRecords?.map { it.toDomain() }.orEmpty(),
             profile = profile?.toDomain() ?: ProfileInfo.empty()
@@ -92,7 +92,7 @@ data class MemberChallengerRecordResponse(
     @SerializedName("schoolId") val schoolId: Long,
     @SerializedName("schoolName") val schoolName: String,
     @SerializedName("profileImageLink") val profileImageLink: String?,
-    @SerializedName("status") val status: String
+    @SerializedName("status") val status: String?
 ) {
     companion object{
         fun MemberChallengerRecordResponse.toDomain(): ChallengerRecord = ChallengerRecord(
@@ -114,7 +114,7 @@ data class MemberChallengerRecordResponse(
             schoolId = schoolId,
             schoolName = schoolName,
             profileImageLink = profileImageLink ?: "",
-            status = status
+            status = status ?: ""
 
         )
     }

@@ -107,4 +107,15 @@ class AppDataStoreRepositoryImpl @Inject constructor(
     override suspend fun clearNotifications() {
         appDataStore.clearNotifications()
     }
+
+    // 읽은 공지사항 ID 관리 구현
+    override fun getReadNoticeIds(): Flow<Set<Long>> = appDataStore.readNoticeIdsFlow
+
+    override suspend fun addReadNoticeId(noticeId: Long) {
+        appDataStore.addReadNoticeId(noticeId)
+    }
+
+    override suspend fun clearReadNoticeIds() {
+        appDataStore.clearReadNoticeIds()
+    }
 }

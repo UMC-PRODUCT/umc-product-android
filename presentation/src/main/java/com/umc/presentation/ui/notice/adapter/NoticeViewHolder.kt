@@ -16,7 +16,8 @@ class NoticeViewHolder(
     private val listener: NoticeAdapter.NoticeDelegate
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(item: NoticeSummary) {
+    fun bind(item: NoticeSummary, readNoticeIds: Set<Long>) {
+        val isRead = readNoticeIds.contains(item.id)
         binding.apply {
             root.setOnClickListener { listener.onClickNotice(item) }
             layoutNotice.setBackgroundResource(
@@ -29,6 +30,9 @@ class NoticeViewHolder(
             textContent.text = item.content
             textAuthor.text = item.authorNickname
             textSeeCount.text = "조회 ${item.viewCount}"
+            
+            if (isRead) viewNew.gone() else viewNew.visible()
+            if (item.shouldSendNotification) imageNotification.visible() else imageNotification.gone()
         }
     }
 
