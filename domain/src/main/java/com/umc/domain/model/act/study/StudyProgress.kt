@@ -14,7 +14,7 @@ data class StudyProgress(
 )
 
 data class WorkbookProgress(
-    val challengerWorkbookId: Long,
+    val originalWorkbookId: Long,
     val weekNo: Int,
     val title: String,
     val description: String,

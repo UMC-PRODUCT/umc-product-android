@@ -91,6 +91,8 @@
             app:borderWidth="1dp"
             app:contentPaddingTop="10dp"
             app:contentPaddingBottom="10dp"
+            app:prevIcon="@drawable/ic_go_website"
+            app:prevIconTint="@color/black"
             app:layout_constraintTop_toTopOf="@id/et_url"
             app:layout_constraintBottom_toBottomOf="@id/et_url"
             app:layout_constraintEnd_toEndOf="parent" />
