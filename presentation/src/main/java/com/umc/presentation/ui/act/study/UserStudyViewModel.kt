@@ -84,43 +84,42 @@ class UserStudyViewModel @Inject constructor(
             return
         }
 
-
         updateItem(itemId) { it.copy(submitState = SubmitState.REQUESTED, isExpanded = true) }
 
-
-        if (itemId <= 0L) {
-            emitEvent(UserStudyEvent.ShowToast("제출 요청 완료! (임시 처리: 서버 워크북 ID 없음)"))
+        if (item.id <= 0L) {
+            updateItem(itemId) { it.copy(submitState = SubmitState.CONFIRMING) }
+            emitEvent(UserStudyEvent.ShowToast("원본 워크북 ID가 없어 제출할 수 없습니다."))
             return
         }
 
         viewModelScope.launch {
-            submitWorkbook(itemId, link)
+            submitWorkbook(item.id, link)
         }
     }
 
 
 
 
-    private suspend fun submitWorkbook(itemId: Long, link: String) {
+    private suspend fun submitWorkbook(originalWorkbookId: Long, link: String) {
         if (USE_FAKE_SUBMIT) {
             delay(800)
-            updateItem(itemId) {
+            updateItem(originalWorkbookId) {
                 it.copy(
                     status = StudyStatus.PASS,
                     submitState = SubmitState.IDLE,
                     isExpanded = false
                 )
             }
-            emitEvent(UserStudyEvent.ShowToast("제출 완료! "))
+            emitEvent(UserStudyEvent.ShowToast("제출 완료!"))
             return
         }
 
         startLoading()
 
-        Log.d("UserStudy", "submit id=$itemId, link=$link")
-        Log.d("UserStudy", "submit API call itemId=$itemId link=$link")
+        Log.d("UserStudy", "submit originalWorkbookId=$originalWorkbookId, link=$link")
+        Log.d("UserStudy", "submit API call originalWorkbookId=$originalWorkbookId link=$link")
 
-        when (val res = submitChallengerWorkbookUseCase(itemId, link)) {
+        when (val res = submitChallengerWorkbookUseCase(originalWorkbookId, link)) {
             is ApiState.Success -> {
                 stopLoading()
                 load()
@@ -128,7 +127,7 @@ class UserStudyViewModel @Inject constructor(
             }
             is ApiState.Fail -> {
                 stopLoading()
-                updateItem(itemId) { it.copy(submitState = SubmitState.CONFIRMING) }
+                updateItem(originalWorkbookId) { it.copy(submitState = SubmitState.CONFIRMING) }
                 emitEvent(UserStudyEvent.ShowToast(res.failState.message))
             }
         }
@@ -152,10 +151,11 @@ class UserStudyViewModel @Inject constructor(
 
                             Log.d(
                                 "UserStudy",
-                                "week=${wb.weekNo} id=${wb.challengerWorkbookId} state=${wb.status}"
+                                "week=${wb.weekNo} originalWorkbookId=${wb.originalWorkbookId} state=${wb.status}"
                             )
+
                             ActStudyItemUiModel(
-                                id = wb.challengerWorkbookId ?: -wb.weekNo.toLong(),
+                                id = wb.originalWorkbookId,
                                 platform = wb.missionType.toPlatformText(),
                                 title = wb.title,
                                 status = status,
@@ -187,7 +187,6 @@ class UserStudyViewModel @Inject constructor(
             }
         }
     }
-
 
     fun toggleExpand(index: Int) {
         updateState {

@@ -15,7 +15,7 @@ interface CurriculumRemoteDataSource {
     ): ApiState<CurriculumProgressResponse>
 
     suspend fun submitChallengerWorkbook(
-        challengerWorkbookId: Long,
+        originalWorkbookId: Long,
         submission: String
     ): ApiState<Unit>
 
