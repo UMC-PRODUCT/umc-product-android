@@ -293,6 +293,15 @@ class NoticeWriteViewModel @Inject constructor(
         }
 
         updateClassChipList(currentList)
+
+        // 전체 기수 선택 해제 (지부 선택 시 전체 기수는 해제되어야 함)
+        if (uiState.value.isAllGisuSelected) {
+            updateState { copy(isAllGisuSelected = false) }
+            // 해당 기수의 지부/학교로 다시 로드
+            uiState.value.activeGisuId?.let { gisuId ->
+                loadChaptersAndSchoolsForGisu(gisuId)
+            }
+        }
     }
 
     fun onSchoolSelected(school: SchoolInfo) {
@@ -501,6 +510,10 @@ class NoticeWriteViewModel @Inject constructor(
             // 전체 기수 선택됨 -> 전체 지부/학교 로드
             loadChapters()
             loadSchools()
+            // 전체 기수 선택 시 지부 선택 해제
+            val currentList = uiState.value.classList.toMutableList()
+            val updatedList = unselectBranchIfSelected(currentList)
+            updateClassChipList(updatedList)
         } else {
             // 특정 기수 선택됨 -> 해당 기수의 지부/학교 로드
             uiState.value.activeGisuId?.let { gisuId ->
