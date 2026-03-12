@@ -2,10 +2,12 @@ package com.umc.presentation.ui.act.study.group.model
 
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.organization.StudyGroupPage
 import com.umc.domain.model.request.organization.ChallengerListRequest
 import com.umc.domain.model.request.organization.EditStudyGroupRequest
 import com.umc.domain.repository.OrganizationRepository
+import com.umc.domain.repository.member.MemberRepository
 import com.umc.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -14,14 +16,59 @@ import javax.inject.Inject
 @HiltViewModel
 class AdminStudyGroupViewModel @Inject constructor(
     private val organizationRepository: OrganizationRepository,
+    private val memberRepository: MemberRepository,
 ) : BaseViewModel<AdminStudyGroupState, AdminStudyGroupEvent>(AdminStudyGroupState()) {
 
     private var loaded = false
+    private var canManageStudyGroup: Boolean = false
+
+    init {
+        loadMyPermission()
+    }
+
+    private fun loadMyPermission() {
+        viewModelScope.launch {
+            when (val res = memberRepository.getMyProfile()) {
+                is ApiState.Success -> {
+                    canManageStudyGroup = res.data.roles.any {
+                        it.roleType == "CENTRAL_PRESIDENT"
+                    }
+                }
+
+                is ApiState.Fail -> {
+                    canManageStudyGroup = false
+                }
+            }
+        }
+    }
+
+    fun onClickCreateGroup() {
+//        if (!canManageStudyGroup) {
+//            emitEvent(AdminStudyGroupEvent.ShowToast("현재 권한으로는 스터디 그룹을 생성할 수 없습니다."))
+//            return
+//        }
+
+        emitEvent(AdminStudyGroupEvent.ClickCreateGroup)
+    }
+
+    fun onClickEditMembers(groupId: Long) {
+//        if (!canManageStudyGroup) {
+//            emitEvent(AdminStudyGroupEvent.ShowToast("현재 권한으로는 스터디원을 수정할 수 없습니다."))
+//            return
+//        }
+
+        emitEvent(AdminStudyGroupEvent.ClickEditMembers(groupId))
+    }
 
     fun replaceGroupMembers(
         groupId: Long,
         pickedMemberChallengerIds: List<Long>,
     ) {
+        if (!canManageStudyGroup) {
+            emitEvent(AdminStudyGroupEvent.ShowToast("현재 권한으로는 스터디원을 수정할 수 없습니다."))
+            return
+        }
+
         viewModelScope.launch {
             val req = ChallengerListRequest(
                 challengerIds = pickedMemberChallengerIds.distinct()
@@ -68,7 +115,6 @@ class AdminStudyGroupViewModel @Inject constructor(
                             )
                         }
 
-
                         val memberIds = members.map { it.challengerId }.distinct()
 
                         AdminStudyGroupItemUiModel(
@@ -80,7 +126,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                             leaderProfileImageUrl = leaderProfile,
                             members = members,
                             memberChallengerIds = memberIds,
-                            createdAtRaw = "", // detail에서 채움
+                            createdAtRaw = "",
                             memberCount = memberIds.size,
                             leaderUniv = "",
                         )
@@ -144,7 +190,6 @@ class AdminStudyGroupViewModel @Inject constructor(
                         )
                     }
 
-
                     val memberIds = members.map { it.challengerId }.distinct()
 
                     updateState {
@@ -173,12 +218,7 @@ class AdminStudyGroupViewModel @Inject constructor(
     }
 }
 
-private fun String.toPartUiLabel(): String = when (this.uppercase()) {
-    "WEB" -> "Web"
-    "ANDROID" -> "Android"
-    "IOS" -> "iOS"
-    "SERVER" -> "Server"
-    "DESIGN" -> "Design"
-    "PLAN" -> "Plan"
-    else -> this
+private fun String.toPartUiLabel(): String {
+    val part = UserPart.from(this)
+    return if (part == UserPart.UNKNOWN) this else part.label
 }

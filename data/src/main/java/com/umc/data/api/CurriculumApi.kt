@@ -23,7 +23,6 @@ interface CurriculumApi {
 
     @POST(Endpoints.Curriculum.SUBMIT)
     suspend fun submitChallengerWorkbook(
-        @Path("challengerWorkbookId") challengerWorkbookId: Long,
         @Body body: ChallengerWorkbookSubmitRequest
     ): ApiResponse<Unit>
 

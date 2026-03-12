@@ -32,13 +32,15 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun submitChallengerWorkbook(
-        challengerWorkbookId: Long,
+        originalWorkbookId: Long,
         submission: String
     ): ApiState<Unit> {
         return try {
             val res = curriculumApi.submitChallengerWorkbook(
-                challengerWorkbookId = challengerWorkbookId,
-                body = ChallengerWorkbookSubmitRequest(submission)
+                body = ChallengerWorkbookSubmitRequest(
+                    submission = submission,
+                    originalWorkbookId = originalWorkbookId
+                )
             )
             ApiState.Success(res.result ?: Unit)
         } catch (e: Exception) {

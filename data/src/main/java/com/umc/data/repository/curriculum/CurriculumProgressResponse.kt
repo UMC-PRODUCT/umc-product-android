@@ -27,7 +27,7 @@ data class CurriculumProgressResponse(
 }
 
 data class WorkbookProgressResponse(
-    @SerializedName("challengerWorkbookId") val challengerWorkbookId: String?,
+    @SerializedName("originalWorkbookId") val originalWorkbookId: String?,
     @SerializedName("weekNo") val weekNo: String?,
     @SerializedName("title") val title: String?,
     @SerializedName("description") val description: String?,
@@ -37,7 +37,7 @@ data class WorkbookProgressResponse(
     @SerializedName("isInProgress") val isInProgress: Boolean?
 ) {
     fun toModel(): WorkbookProgress = WorkbookProgress(
-        challengerWorkbookId = challengerWorkbookId?.toLongOrNull() ?: 0L,
+        originalWorkbookId = originalWorkbookId?.toLongOrNull() ?: 0L,
         weekNo = weekNo?.toIntOrNull() ?: 0,
         title = title.orEmpty(),
         description = description.orEmpty(),
@@ -46,5 +46,4 @@ data class WorkbookProgressResponse(
         isReleased = isReleased ?: false,
         isInProgress = isInProgress ?: false
     )
-
 }

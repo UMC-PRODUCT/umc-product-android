@@ -213,14 +213,18 @@ class AdminStudyGroupAddFragment :
 
     private fun showPickMembers() {
         val serverPart = selectedServerPartOrNull()
+        val leaderId = selectedLeader?.challengerId
 
         PickMembersBottomSheet(
             schoolName = "",
             part = serverPart,
-            preSelectedChallengerIds = selectedMembers.map { it.challengerId }.toSet()
+            preSelectedChallengerIds = selectedMembers.map { it.challengerId }.toSet(),
+            excludedChallengerId = leaderId
         ) { picked ->
             selectedMembers.clear()
-            selectedMembers.addAll(picked)
+            selectedMembers.addAll(
+                picked.filterNot { it.challengerId == leaderId }
+            )
             viewModel.setMembers(selectedMembers)
             renderSelectedMembers()
         }.show(childFragmentManager, "PickMembers")
