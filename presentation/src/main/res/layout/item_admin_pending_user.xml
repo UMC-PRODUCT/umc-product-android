@@ -57,7 +57,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="12dp"
-                android:text='@{uiModel.name + "(" + uiModel.nickname + ")"}'
+                android:text='@{uiModel.nickname + "(" + uiModel.name + ")"}'
                 android:textAppearance="@style/SubheadlineBold"
                 android:textColor="@color/neutral800"
                 android:ellipsize="end"

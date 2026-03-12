@@ -106,7 +106,7 @@
                         android:id="@+id/tv_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text='@{item.name + "(" + item.nickname + ")"}'
+                        android:text='@{item.nickname + "(" + item.name + ")"}'
                         android:textAppearance="@style/BodyBold"
                         android:textColor="@color/neutral800"
                         tools:text="홍길동(닉네임)" />
