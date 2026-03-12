@@ -3,6 +3,7 @@ package com.umc.presentation.ui.notice.search.result
 import android.view.inputmethod.EditorInfo
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.notice.NoticeSummary
+import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.notice.SearchNoticeListUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -15,10 +16,25 @@ import javax.inject.Inject
 class NoticeSearchResultViewModel
 @Inject
 constructor(
-    private val searchNoticeListUseCase: SearchNoticeListUseCase
+    private val searchNoticeListUseCase: SearchNoticeListUseCase,
+    private val appDataStoreRepository: AppDataStoreRepository
 ) : BaseViewModel<NoticeSearchResultUiState, NoticeSearchResultEvent>(
     NoticeSearchResultUiState(),
 ) {
+
+    init {
+        collectReadNoticeIds()
+    }
+
+    private fun collectReadNoticeIds() = viewModelScope.launch {
+        appDataStoreRepository.getReadNoticeIds().collect { readIds ->
+            updateState { copy(readNoticeIds = readIds) }
+        }
+    }
+
+    fun markNoticeAsRead(noticeId: Long) = viewModelScope.launch {
+        appDataStoreRepository.addReadNoticeId(noticeId)
+    }
 
     fun initSearch(query: String, gisuId: Long) {
         updateState {
@@ -93,6 +109,7 @@ constructor(
     }
 
     fun onClickNotice(noticeId: Long) {
+        markNoticeAsRead(noticeId)
         emitEvent(NoticeSearchResultEvent.MoveToNoticeDetail(noticeId))
     }
 }
@@ -104,6 +121,7 @@ data class NoticeSearchResultUiState(
     val isPageLoading: Boolean = false,
     val isLastPage: Boolean = false,
     val selectedGisu: Long = 0,
+    val readNoticeIds: Set<Long> = emptySet()
 ) : UiState
 
 sealed interface NoticeSearchResultEvent : UiEvent {
