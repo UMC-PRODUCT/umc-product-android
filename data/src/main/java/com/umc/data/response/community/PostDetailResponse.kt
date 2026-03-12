@@ -46,7 +46,7 @@ data class PostDetailResponse(
                 } catch (e: Exception) {
                     CommunityCategoryType.FREE
                 },
-                username = this.authorName ?: "알 수 없음",
+                username = this.authorName ?: "",
                 userNickName = this.authorNickName ?: "",
                 userId = this.authorChallengerId ?: -1L,
                 userMemberId = this.authorMemberId ?: -1L,
