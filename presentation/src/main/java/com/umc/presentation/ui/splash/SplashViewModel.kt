@@ -1,6 +1,9 @@
 package com.umc.presentation.ui.splash
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.kakao.sdk.auth.TokenManagerProvider
+import com.kakao.sdk.user.UserApiClient
 import com.umc.domain.model.UserInfo
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.base.BaseViewModel
@@ -24,6 +27,14 @@ class SplashViewModel @Inject constructor(
     private fun initFun() {
         viewModelScope.launch {
             delay(3.seconds)
+
+            /*
+            TokenManagerProvider.instance.manager.getToken()?.let { token ->
+                Log.d("KakaoToken", "카카오 accessToken: ${token.accessToken}")
+            }
+
+             */
+
             resultResponse(
                 response = getMyProfileUseCase(),
                 successCallback = { userInfo ->
