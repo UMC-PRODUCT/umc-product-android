@@ -17,7 +17,6 @@ import com.umc.presentation.R
 import com.umc.presentation.databinding.BottomSheetMemberPickerBinding
 import com.umc.presentation.ui.act.study.common.picker.ChallengerPickerViewModel
 import com.umc.presentation.ui.act.study.common.model.MemberUiModel
-
 import com.umc.presentation.ui.act.study.common.picker.adapter.MemberPickerAdapter
 import com.umc.presentation.ui.act.study.common.picker.adapter.buildMemberSectionRows
 import com.umc.presentation.ui.act.study.group.create.adater.SelectedMemberAdapter
@@ -30,6 +29,7 @@ class PickMembersBottomSheet(
     private val schoolName: String,
     private val part: String?,
     private val preSelectedChallengerIds: Set<Long>,
+    private val excludedChallengerId: Long? = null,
     private val onConfirmed: (List<MemberUiModel>) -> Unit,
 ) : BottomSheetDialogFragment() {
 
@@ -42,6 +42,7 @@ class PickMembersBottomSheet(
     private val selectedMap = linkedMapOf<Long, MemberUiModel>()
 
     private var sent = false
+    private var shouldApplyOnDismiss = false
     private lateinit var listAdapter: MemberPickerAdapter
     private lateinit var selectedAdapter: SelectedMemberAdapter
 
@@ -60,7 +61,9 @@ class PickMembersBottomSheet(
         binding.tvTitle.setText(R.string.study_member_add_placeholder)
 
         selectedChallengerIds.clear()
-        selectedChallengerIds.addAll(preSelectedChallengerIds)
+        selectedChallengerIds.addAll(
+            preSelectedChallengerIds.filterNot { it == excludedChallengerId }
+        )
         selectedMap.clear()
 
         val layoutManager = LinearLayoutManager(requireContext())
@@ -69,6 +72,9 @@ class PickMembersBottomSheet(
             onSinglePick = {},
             onToggle = { member ->
                 val id = member.challengerId
+
+                if (id == excludedChallengerId) return@MemberPickerAdapter
+
                 if (selectedChallengerIds.contains(id)) {
                     selectedChallengerIds.remove(id)
                     selectedMap.remove(id)
@@ -112,9 +118,8 @@ class PickMembersBottomSheet(
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
-                latestMembers = state.items
+                latestMembers = state.items.filterNot { it.challengerId == excludedChallengerId }
 
-                // 최신 리스트에 선택된 멤버 정보 보강
                 for (m in latestMembers) {
                     if (selectedChallengerIds.contains(m.challengerId)) {
                         selectedMap.putIfAbsent(m.challengerId, m)
@@ -139,6 +144,7 @@ class PickMembersBottomSheet(
         }
 
         binding.btnConfirm.setOnClickListener {
+            shouldApplyOnDismiss = true
             binding.searchBar.setText("")
             binding.root.requestFocus()
             enterConfirmedMode()
@@ -191,7 +197,9 @@ class PickMembersBottomSheet(
     }
 
     private fun renderSelectedList() {
-        val picked = selectedMap.values.toList()
+        val picked = selectedMap.values
+            .filterNot { it.challengerId == excludedChallengerId }
+
         selectedAdapter.submitList(picked)
         if (picked.isEmpty()) enterEmptyMode()
     }
@@ -204,7 +212,8 @@ class PickMembersBottomSheet(
         binding.emptySpace.visibility = if (mode == Mode.EMPTY) View.VISIBLE else View.GONE
     }
 
-    private fun allPicked(): List<MemberUiModel> = selectedMap.values.toList()
+    private fun allPicked(): List<MemberUiModel> =
+        selectedMap.values.filterNot { it.challengerId == excludedChallengerId }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return (super.onCreateDialog(savedInstanceState) as BottomSheetDialog).apply {
@@ -234,7 +243,7 @@ class PickMembersBottomSheet(
     }
 
     override fun onDismiss(dialog: DialogInterface) {
-        if (!sent) {
+        if (!sent && shouldApplyOnDismiss) {
             sent = true
             onConfirmed(allPicked())
         }
