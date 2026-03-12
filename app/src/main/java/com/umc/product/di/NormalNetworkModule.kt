@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
+import com.umc.product.base.BASE_URL
 import com.umc.product.extension.isJsonArray
 import com.umc.product.extension.isJsonObject
 import dagger.Module
@@ -70,7 +71,7 @@ object NormalNetworkModule {
         gsonConverterFactory: GsonConverterFactory,
     ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://dev.api.umc.it.kr/")
+            .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(gsonConverterFactory)
             .build()
