@@ -1,6 +1,7 @@
 package com.umc.data.repository.member
 
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSource
+import com.umc.data.request.member.DeleteUserRequest
 import com.umc.data.request.member.LinkItemRequest
 import com.umc.data.request.member.UpdateMyLinkRequest
 import com.umc.data.request.member.UpdateMyProfileRequest
@@ -57,8 +58,9 @@ class MemberRepositoryImpl @Inject constructor(
         return memberRemoteDataSource.updateMyLink(request).map { it.toDomain() }
     }
 
-    override suspend fun deleteUser(): ApiState<Unit> {
-        val response = memberRemoteDataSource.deleteUser()
+    override suspend fun deleteUser(kakaoAccessToken: String, googleAccessToken: String): ApiState<Unit> {
+        val request = DeleteUserRequest(kakaoAccessToken, googleAccessToken)
+        val response = memberRemoteDataSource.deleteUser(request)
         if (response is ApiState.Success) {
             clearTokensUseCase()
         }

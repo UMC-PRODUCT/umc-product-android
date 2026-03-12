@@ -2,10 +2,13 @@ package com.umc.presentation.ui.community.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.community.ContentItem
+import com.umc.domain.model.enums.CommunityCategoryType
+import com.umc.presentation.R
 import com.umc.presentation.databinding.ItemMypageContentBinding
 
 interface ContentItemDelegate {
@@ -31,6 +34,26 @@ ListAdapter<ContentItem, ContentAdapter.ContentViewHolder>(ContentDiffCallback){
         fun bind(item: ContentItem, delegate: ContentItemDelegate) {
             // <variable name="item">에 데이터를 주입
             binding.item = item
+            val context = binding.root.context
+
+            when (item.category) {
+                CommunityCategoryType.FREE -> {
+                    binding.itemCdvCategory.setUBackgroundColor(ContextCompat.getColor(context, R.color.success100))
+                    binding.itemCdvCategory.setUBorderColor(ContextCompat.getColor(context, R.color.success300))
+                    binding.itemCdvCategory.setTextColor(ContextCompat.getColor(context, R.color.success500))
+                }
+                CommunityCategoryType.QUESTION -> {
+                    binding.itemCdvCategory.setUBackgroundColor(ContextCompat.getColor(context, R.color.accent100))
+                    binding.itemCdvCategory.setUBorderColor(ContextCompat.getColor(context, R.color.accent200))
+                    binding.itemCdvCategory.setTextColor(ContextCompat.getColor(context, R.color.accent500))
+                }
+                CommunityCategoryType.LIGHTNING -> {
+                    binding.itemCdvCategory.setUBackgroundColor(ContextCompat.getColor(context, R.color.warning100))
+                    binding.itemCdvCategory.setUBorderColor(ContextCompat.getColor(context, R.color.warning300))
+                    binding.itemCdvCategory.setTextColor(ContextCompat.getColor(context, R.color.warning500))
+                }
+                else -> { }
+            }
 
             // 클릭 리스너 연결
             binding.root.setOnClickListener {

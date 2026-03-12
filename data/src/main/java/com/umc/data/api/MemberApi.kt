@@ -1,6 +1,7 @@
 package com.umc.data.api
 
 
+import com.umc.data.request.member.DeleteUserRequest
 import com.umc.data.request.member.UpdateMyLinkRequest
 import com.umc.data.request.member.UpdateMyProfileRequest
 import com.umc.data.response.JwtLoginResponse
@@ -45,6 +46,8 @@ interface MemberApi {
     ): ApiResponse<JwtLoginResponse>
 
     @DELETE(Endpoints.Member.MEMBER)
-    suspend fun deleteUser(): ApiResponse<Unit>
+    suspend fun deleteUser(
+        @Body request: DeleteUserRequest
+    ): ApiResponse<Unit>
 
 }

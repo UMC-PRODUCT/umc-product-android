@@ -14,4 +14,5 @@ enum class CategoryType(val label: String) {
     STUDY("스터디"),
     HACKATHON("해커톤"),
     WORKSHOP("워크샵"),
+    AFTER_PARTY("뒷풀이")
 }

@@ -7,7 +7,7 @@ import javax.inject.Inject
 class DeleteUserUseCase @Inject constructor(
     private val memberRepository: MemberRepository
 ) {
-    suspend operator fun invoke(): ApiState<Unit> {
-        return memberRepository.deleteUser()
+    suspend operator fun invoke(kakaoAccessToken: String, googleAccessToken: String): ApiState<Unit> {
+        return memberRepository.deleteUser(kakaoAccessToken, googleAccessToken)
     }
 }

@@ -112,6 +112,10 @@ constructor(
         setCardBackgroundColor(ColorStateList.valueOf(color))
     }
 
+    fun setUBorderColor(color: Int) {
+        this.strokeColor = color
+    }
+
     override fun setEnabled(enabled: Boolean) {
         super.setEnabled(enabled)
     }

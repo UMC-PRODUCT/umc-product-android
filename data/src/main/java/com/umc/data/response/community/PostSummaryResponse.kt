@@ -13,8 +13,10 @@ data class PostSummaryResponse(
     @SerializedName("title") val title: String,                // 게시글 제목
     @SerializedName("content") val content: String,            // 게시글 본문
     @SerializedName("category") val category: String,          // 게시글 카테고리
-    @SerializedName("authorId")val authorId: Long,             // 게시글 작성자 ID
-    @SerializedName("authorName")val authorName: String,       // 게시글 작성자 이름
+    @SerializedName("authorChallengerId") val authorChallengerId: Long?,             // 게시글 작성자 ID
+    @SerializedName("authorMemberId") val authorMemberId: Long?,             // 게시글 작성자 ID
+    @SerializedName("authorName") val authorName: String?,       // 게시글 작성자 이름
+    @SerializedName("authorNickname") val authorNickName: String?,
     @SerializedName("authorProfileImage")val authorProfileImage: String?,       // 게시글 작성자 프로필 이미지
     @SerializedName("createdAt") val createdAt: String?,        // 게시글 생성 시간
     @SerializedName("commentCount") val commentCount: Int,      // 댓글 수
@@ -41,8 +43,10 @@ data class PostSummaryResponse(
                 } catch (e: Exception) {
                     CommunityCategoryType.FREE
                 },
-                userId = this.authorId,
-                username = this.authorName,
+                userId = this.authorChallengerId ?: -1L,
+                userMemberId = this.authorMemberId ?: -1L,
+                username = this.authorName ?: "",
+                userNickName = this.authorNickName ?: "",
                 userProfileImage = this.authorProfileImage ?: "",
                 writeTime = formatTime,
                 likes = this.likeCount,

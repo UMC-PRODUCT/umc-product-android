@@ -132,7 +132,7 @@ constructor(
             resultResponse(
                 response = commentsResult,
                 successCallback = {
-                    fetchedComments = it
+                    fetchedComments = it.sortedBy { it.createdAt }
                 },
                 errorCallback = {
 
@@ -190,8 +190,9 @@ constructor(
             resultResponse(
                 response = getCommunityPostCommentUseCase(postId),
                 successCallback = { updatedComments ->
+                    val sortedComments = updatedComments.sortedBy { it.createdAt }
                     // 최신 댓글 목록으로 UI 재조립
-                    rebuildDetailList(uiState.value.nowContent, updatedComments)
+                    rebuildDetailList(uiState.value.nowContent, sortedComments)
                 }
             )
         }

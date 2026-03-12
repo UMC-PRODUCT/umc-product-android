@@ -20,10 +20,16 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import coil.load
 import android.provider.Settings
+import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.auth.api.identity.AuthorizationRequest
+import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.common.Scopes
+import com.google.android.gms.common.api.Scope
 import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
 import com.umc.presentation.MainGraphDirections
 import com.umc.presentation.ui.mypage.dialog.BottomSheetAddCodeDialog
+import kotlinx.coroutines.tasks.await
 
 @AndroidEntryPoint
 class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState, MypageFragmentEvent, MypageViewModel>(
@@ -59,6 +65,12 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             vm = viewModel
             lifecycleOwner = viewLifecycleOwner
         }
+
+        lifecycleScope.launch {
+            val googleToken = requestGoogleAccessToken()
+            viewModel.getKakaoAndGoogleToken(googleToken)
+        }
+
 
         
     }
@@ -305,6 +317,21 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
         val url = "https://pf.kakao.com/$channelId/chat"
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivity(intent)
+    }
+
+    //구글 토큰 얻기
+    private suspend fun requestGoogleAccessToken(): String {
+        val authorizationRequest = AuthorizationRequest.builder()
+            .setRequestedScopes(
+                listOf(Scope(Scopes.PROFILE), Scope(Scopes.EMAIL))
+            )
+            .build()
+
+        val authorizationResult = Identity.getAuthorizationClient(requireActivity())
+            .authorize(authorizationRequest)
+            .await()
+
+        return authorizationResult.accessToken ?: ""
     }
 
 
