@@ -461,7 +461,7 @@ data class PlanAddFragmentUiState(
             **/
 
 
-            return isTextValid && isSelectedCategory
+            return isTextValid && isSelectedCategory && planLocation != ""
         }
 }
 
