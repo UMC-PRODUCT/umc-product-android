@@ -15,6 +15,7 @@ data class AdminChallenger(
 
 data class AdminChallengerList(
     val challengers: List<AdminChallenger>,
+    val partCounts: List<UserPartCount>,
     val nextCursor: Long?,
     val hasNext: Boolean
 )

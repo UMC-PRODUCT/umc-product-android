@@ -85,7 +85,7 @@
                 android:gravity="start"
                 android:textAppearance="@style/Title3Bold"
                 android:textColor="@color/neutral800"
-                android:text="@{vm.uiState.userInfo.name}"
+                android:text="@{vm.uiState.userInfo.name + '/' + vm.uiState.userInfo.nickname}"
                 android:layout_marginStart="8dp"
                 app:layout_constraintStart_toEndOf="@id/mypage_circleimv_profile"
                 app:layout_constraintTop_toTopOf="parent"

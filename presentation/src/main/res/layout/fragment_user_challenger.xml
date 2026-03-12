@@ -16,11 +16,8 @@
             android:id="@+id/layout_fixed_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/bg_card_top"
-            android:paddingTop="16dp"
-            android:paddingBottom="12dp"
+            android:background="@color/neutral000"
+            android:paddingVertical="12dp"
             app:layout_constraintTop_toTopOf="parent">
 
             <com.umc.presentation.component.USearchBar
@@ -28,7 +25,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="0dp"
                 app:cornerRadius="8dp"
                 app:placeholderText="@string/challenger_search_placeholder"
                 app:onTextChanged="@{(text) -> viewModel.filterList(text)}"
@@ -39,10 +35,11 @@
             android:id="@+id/rv_challenger_list"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginHorizontal="16dp"
             android:background="@android:color/transparent"
             android:clipToPadding="false"
-            android:visibility="@{(viewModel.uiState.filteredChallengers.empty &amp;&amp; !viewModel.uiState.searchQuery.empty) ? View.GONE : View.VISIBLE}"
+            android:paddingTop="8dp"
+            android:paddingBottom="16dp"
+            android:visibility="@{(viewModel.uiState.filteredGroups.empty &amp;&amp; !viewModel.uiState.searchQuery.empty) ? View.GONE : View.VISIBLE}"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintTop_toBottomOf="@id/layout_fixed_header"
             app:layout_constraintBottom_toBottomOf="parent" />
@@ -52,9 +49,10 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
-            android:background="@drawable/bg_card_bottom"
-            android:visibility="@{(viewModel.uiState.filteredChallengers.empty &amp;&amp; !viewModel.uiState.searchQuery.empty) ? View.VISIBLE : View.GONE}"
+            android:background="@drawable/bg_neutral000_radius16"
+            android:visibility="@{(viewModel.uiState.filteredGroups.empty &amp;&amp; !viewModel.uiState.searchQuery.empty) ? View.VISIBLE : View.GONE}"
             app:layout_constraintTop_toBottomOf="@id/layout_fixed_header"
             app:layout_constraintBottom_toBottomOf="parent">
 
@@ -68,10 +66,9 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintVertical_bias="0.2" />
+                app:layout_constraintVertical_bias="0.4" />
 
             <TextView
-                android:id="@+id/tv_empty_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
@@ -81,7 +78,6 @@
                 app:layout_constraintTop_toBottomOf="@id/iv_empty_icon"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

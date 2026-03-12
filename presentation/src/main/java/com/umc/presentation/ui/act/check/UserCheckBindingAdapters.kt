@@ -47,7 +47,7 @@ object UserCheckBindingAdapters {
         val firstTag = tags?.firstOrNull()
 
         if (firstTag == null) {
-            view.setImageResource(R.drawable.ic_people_color)
+            view.setImageResource(R.drawable.ic_general_on)
             return
         }
 
@@ -64,7 +64,7 @@ object UserCheckBindingAdapters {
             CategoryType.STUDY -> R.drawable.ic_study_on
             CategoryType.HACKATHON -> R.drawable.ic_workshop_on
             CategoryType.WORKSHOP -> R.drawable.ic_workshop_on
-            else -> R.drawable.ic_people_color
+            else -> R.drawable.ic_general_on
         }
         view.setImageResource(iconRes)
     }

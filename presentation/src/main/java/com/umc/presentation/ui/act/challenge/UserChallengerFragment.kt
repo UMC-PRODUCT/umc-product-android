@@ -2,17 +2,13 @@ package com.umc.presentation.ui.act.challenge
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.viewModels
-import androidx.recyclerview.widget.ConcatAdapter
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.enums.UserPart
-import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentUserChallengerBinding
 import com.umc.presentation.extension.px
-import com.umc.presentation.ui.act.adapter.ChallengerHeaderAdapter
-import com.umc.presentation.ui.act.adapter.UserChallengerAdapter
+import com.umc.presentation.ui.act.adapter.UserChallengerGroupAdapter
 import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -22,9 +18,8 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
     FragmentUserChallengerBinding::inflate
 ) {
     override val viewModel: UserChallengerViewModel by viewModels()
-    private val partOrder = UserPart.entries
-    private val headerAdapters = mutableMapOf<UserPart, ChallengerHeaderAdapter>()
-    private val itemAdapters = mutableMapOf<UserPart, UserChallengerAdapter>()
+
+    private lateinit var groupAdapter: UserChallengerGroupAdapter
 
     override fun initView() {
         binding.viewModel = viewModel
@@ -32,6 +27,7 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
 
         setupRecyclerView()
 
+        // 배경 터치 시 키보드 내리기
         binding.root.setOnClickListener {
             val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
             imm.hideSoftInputFromWindow(binding.searchBar.windowToken, 0)
@@ -40,67 +36,47 @@ class UserChallengerFragment : BaseFragment<FragmentUserChallengerBinding, UserC
     }
 
     private fun setupRecyclerView() {
-        val mainConcatAdapter = ConcatAdapter()
-
-        partOrder.forEach { part ->
-            val headerAdapter = ChallengerHeaderAdapter(part.label)
-            val itemAdapter = UserChallengerAdapter { id ->
-                viewModel.navigateToDetail(id)
-            }
-
-            headerAdapters[part] = headerAdapter
-            itemAdapters[part] = itemAdapter
-
-            mainConcatAdapter.addAdapter(headerAdapter)
-            mainConcatAdapter.addAdapter(itemAdapter)
+        groupAdapter = UserChallengerGroupAdapter { id ->
+            viewModel.navigateToDetail(id)
         }
-
-        val footerAdapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-                object : RecyclerView.ViewHolder(
-                    LayoutInflater.from(parent.context).inflate(R.layout.item_challenger_list_footer, parent, false)
-                ) {}
-            override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
-            override fun getItemCount() = 1
-        }
-        mainConcatAdapter.addAdapter(footerAdapter)
 
         binding.rvChallengerList.apply {
-            adapter = mainConcatAdapter
+            adapter = groupAdapter
+            layoutManager = LinearLayoutManager(requireContext())
             clipToPadding = false
             setPadding(0, 0, 0, 64.px)
+
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+
+                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                    val lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition()
+                    val totalItemCount = layoutManager.itemCount
+
+                    if (lastVisibleItem >= totalItemCount - 5) {
+                        viewModel.fetchNextPage()
+                    }
+                }
+            })
         }
     }
 
     override fun initStates() {
         repeatOnStarted(viewLifecycleOwner) {
             launch {
+                // UI 상태 관찰 및 어댑터 업데이트
                 viewModel.uiState.collect { state ->
-                    val grouped = state.filteredChallengers.groupBy { it.part }
-
-                    partOrder.forEach { part ->
-                        val list = grouped[part] ?: emptyList()
-
-                        headerAdapters[part]?.updateCount(list.size)
-
-                        val uiList = list.mapIndexed { index, challenger ->
-                            UserChallengerUIModel(
-                                challenger = challenger,
-                                isLastInPart = index == list.size - 1
-                            )
-                        }
-
-                        itemAdapters[part]?.submitList(uiList)
-                    }
+                    groupAdapter.submitList(state.filteredGroups)
                 }
             }
-            launch { viewModel.uiEvent.collect { handleEvent(it) } }
+            launch {
+                // 일회성 이벤트(토스트, 화면 이동) 처리
+                viewModel.uiEvent.collect { handleEvent(it) }
+            }
         }
     }
 
-    /**
-     * ViewModel에서 발생한 이벤트를 처리
-     */
     override fun handleEvent(event: UserChallengerEvent) {
         when (event) {
             is UserChallengerEvent.NavigateToDetail -> {

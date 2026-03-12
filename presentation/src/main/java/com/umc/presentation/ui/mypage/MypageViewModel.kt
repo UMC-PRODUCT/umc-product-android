@@ -2,6 +2,8 @@ package com.umc.presentation.ui.mypage
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.auth.api.identity.Identity
+import com.kakao.sdk.auth.TokenManagerProvider
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.TermsType
@@ -16,8 +18,10 @@ import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -227,11 +231,28 @@ class MypageViewModel @Inject constructor(
         emitEvent(MypageFragmentEvent.DeleteUser)
     }
 
+
+    //카카오 및 구글 토큰 get(회원 탈퇴)
+    fun getKakaoAndGoogleToken(googleToken: String){
+        //카카오 토큰
+        TokenManagerProvider.instance.manager.getToken()?.let { token ->
+            updateState {
+                copy(kakaoToken = token.accessToken)
+            }
+        }
+
+        updateState {
+            copy(googleToken = googleToken)
+        }
+
+    }
+
     //2. 유저 삭제 로직(여기서 실징 수행)
     fun deleteUser(){
+
         viewModelScope.launch {
             resultResponse(
-                response = deleteUserUseCase(),
+                response = deleteUserUseCase(uiState.value.kakaoToken, uiState.value.googleToken),
                 successCallback = {
                     viewModelScope.launch {
                         // 회원 탈퇴 성공 시 dataStore의 모든 데이터 삭제
@@ -281,6 +302,10 @@ data class MypageFragmentUiState(
     val websiteUMC : String = "https://umc.it.kr",
     val instagramUMC : String = "https://www.instagram.com/uni_makeus_challenge/",
     val kakaoInquireChannelId : String = "_MDxhqX", //카카오 문의 채널
+
+    //구글 토큰
+    val googleToken : String = "",
+    val kakaoToken : String = "",
     
     
 ) : UiState {

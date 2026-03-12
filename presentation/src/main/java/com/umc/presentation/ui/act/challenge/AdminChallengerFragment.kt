@@ -2,27 +2,19 @@ package com.umc.presentation.ui.act.challenge
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
-import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
-import com.umc.domain.model.enums.UserPart
-import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
-import com.umc.presentation.component.UBasicDialog
-import com.umc.presentation.component.UBasicDialogModel
-import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
-import com.umc.domain.model.act.challenger.ChallengerPoint
-import com.umc.domain.model.enums.PointType
 import com.umc.presentation.databinding.FragmentAdminChallengerBinding
 import com.umc.presentation.extension.px
-import com.umc.presentation.ui.act.adapter.ChallengerHeaderAdapter
-import com.umc.presentation.ui.act.adapter.AdminChallengerAdapter
+import com.umc.presentation.ui.act.adapter.AdminChallengerGroupAdapter
 import com.umc.presentation.util.UFormat
 import com.umc.presentation.util.UToast
+import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
+import com.umc.domain.model.enums.PointType
+import com.umc.presentation.component.UBasicDialog
+import com.umc.presentation.component.UBasicDialogModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -31,9 +23,7 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
     FragmentAdminChallengerBinding::inflate
 ) {
     override val viewModel: AdminChallengerViewModel by viewModels()
-    private val partOrder = UserPart.entries
-    private val headerAdapters = mutableMapOf<UserPart, ChallengerHeaderAdapter>()
-    private val itemAdapters = mutableMapOf<UserPart, AdminChallengerAdapter>()
+    private lateinit var groupAdapter: AdminChallengerGroupAdapter
 
     override fun initView() {
         binding.viewModel = viewModel
@@ -41,7 +31,6 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
 
         setupRecyclerView()
 
-        // 배경 클릭 시 포커스 해제
         binding.root.setOnClickListener {
             binding.searchBar.clearFocus()
             val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
@@ -50,38 +39,29 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
     }
 
     private fun setupRecyclerView() {
-        val mainConcatAdapter = ConcatAdapter()
-
-        partOrder.forEach { part ->
-            val headerAdapter = ChallengerHeaderAdapter(part.label)
-
-            val itemAdapter = AdminChallengerAdapter { challenger ->
-                viewModel.onChallengerClicked(challenger.id)
-            }
-
-            headerAdapters[part] = headerAdapter
-            itemAdapters[part] = itemAdapter
-
-            mainConcatAdapter.addAdapter(headerAdapter)
-            mainConcatAdapter.addAdapter(itemAdapter)
+        groupAdapter = AdminChallengerGroupAdapter { id ->
+            viewModel.onChallengerClicked(id)
         }
-
-        // 하단 여백용 푸터
-        val footerAdapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-                object : RecyclerView.ViewHolder(
-                    LayoutInflater.from(parent.context).inflate(R.layout.item_challenger_list_footer, parent, false)
-                ) {}
-            override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
-            override fun getItemCount() = 1
-        }
-        mainConcatAdapter.addAdapter(footerAdapter)
 
         binding.rvAdminChallengerList.apply {
-            adapter = mainConcatAdapter
+            adapter = groupAdapter
             layoutManager = LinearLayoutManager(requireContext())
             clipToPadding = false
             setPadding(0, 0, 0, 64.px)
+
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+
+                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                    val lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition()
+                    val totalItemCount = layoutManager.itemCount
+
+                    if (lastVisibleItem >= totalItemCount - 5) {
+                        viewModel.fetchNextPage()
+                    }
+                }
+            })
         }
     }
 
@@ -89,12 +69,7 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
         repeatOnStarted(viewLifecycleOwner) {
             launch {
                 viewModel.uiState.collect { state ->
-                    val grouped = state.filteredChallengers.groupBy { it.part }
-                    partOrder.forEach { part ->
-                        val list = grouped[part] ?: emptyList()
-                        headerAdapters[part]?.updateCount(list.size)
-                        itemAdapters[part]?.submitList(list)
-                    }
+                    groupAdapter.submitList(state.filteredGroups)
                 }
             }
             launch { viewModel.uiEvent.collect { handleEvent(it) } }
@@ -108,14 +83,7 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
                     point.copy(date = UFormat.parseDateTime(point.date).first)
                 }
                 val formattedModel = event.model.copy(history = formattedHistory)
-
-                val existingDialog = childFragmentManager.findFragmentByTag("UChallengerManageDialog") as? ChallengerManageDialog
-
-                if (existingDialog != null && existingDialog.isAdded) {
-                    existingDialog.updateData(formattedModel)
-                } else {
-                    showManageDialog(formattedModel, formattedModel.challengerId.toInt())
-                }
+                showManageDialog(formattedModel, formattedModel.challengerId.toInt())
             }
             is AdminChallengerEvent.ShowToast -> {
                 UToast.createToast(

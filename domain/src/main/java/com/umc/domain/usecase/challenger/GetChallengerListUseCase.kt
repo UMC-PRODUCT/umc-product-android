@@ -12,6 +12,8 @@ class GetChallengerListUseCase @Inject constructor(
         cursor: Long?,
         size: Int,
         schoolId: Long?,
-        gisuId: Long?
-    ): ApiState<ChallengerList> = repository.getChallengerList(cursor, size, schoolId, gisuId)
+        gisuId: Long?,
+        keyword: String? = null,
+        part: String? = null
+    ): ApiState<ChallengerList> = repository.getChallengerList(cursor, size, schoolId, gisuId, keyword, part)
 }

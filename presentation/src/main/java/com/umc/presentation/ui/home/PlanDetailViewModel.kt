@@ -14,6 +14,7 @@ import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
@@ -91,7 +92,8 @@ constructor(
             when {
                 finalDDayValue == 0 -> {
                     dDayString = "D-DAY"
-                    isTodayCheck = true
+                    //여기서 startTime과 endTime 사이에 현 시간이 있는지 판단
+                    isTodayCheck = checkTodayTime(item)
                 }
                 finalDDayValue > 31 -> {
                     dDayString = "참여 예정"
@@ -134,6 +136,25 @@ constructor(
 
         }
 
+    //D-Day일 때 시간 체크 함수
+    private fun checkTodayTime(item: PlanDetailItem): Boolean{
+        if(item.isAllDay){
+            return true
+        }
+
+        //시간 get
+        val nowTime = LocalTime.now()
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+
+        val start = LocalTime.parse(item.startTime, formatter)
+        val end = LocalTime.parse(item.endTime, formatter)
+
+        //종료 시간 이전인지만 확인
+        val isTimeInRange = !nowTime.isAfter(end)
+        
+        return isTimeInRange
+    }
+
         //일정 계산하는 포맷 함수
         private fun calculateTargetDate(startDay: String, plusDay: Int): String {
             return try {
@@ -156,11 +177,7 @@ constructor(
             updateState { copy(isMenuVisible = !isMenuVisible) }
         }
 
-        //신고 로직 수행
-        //fun reportPlan(){
-        //    updateState { copy(isMenuVisible = false) }
-        //    emitEvent(PlanDetailFragmentEvent.ReportPlan)
-        //}
+
 
         //수정 로직 수행
         fun editPlan(){

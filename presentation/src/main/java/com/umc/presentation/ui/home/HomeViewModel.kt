@@ -170,6 +170,7 @@ class HomeViewModel @Inject constructor(
             updateState {
                 copy(
                     userName = userInfo.name,
+                    userNickName = userInfo.nickname,
                     gisuTag = gisuTags
                 )
             }
@@ -375,6 +376,7 @@ data class HomeFragmentUiState(
 
     // 유저 정보 영역
     val userName: String = "",
+    val userNickName: String = "",
     val growDay: Int = 0,
     val gisuTag: List<String> = emptyList(),
 
