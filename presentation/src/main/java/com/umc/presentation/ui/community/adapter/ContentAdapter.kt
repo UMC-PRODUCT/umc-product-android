@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.domain.model.community.ContentItem
+import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.presentation.databinding.ItemMypageContentBinding
 
 interface ContentItemDelegate {
@@ -31,6 +32,8 @@ ListAdapter<ContentItem, ContentAdapter.ContentViewHolder>(ContentDiffCallback){
         fun bind(item: ContentItem, delegate: ContentItemDelegate) {
             // <variable name="item">에 데이터를 주입
             binding.item = item
+
+
 
             // 클릭 리스너 연결
             binding.root.setOnClickListener {
