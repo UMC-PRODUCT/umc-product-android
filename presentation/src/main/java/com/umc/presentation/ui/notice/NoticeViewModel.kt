@@ -18,16 +18,30 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.umc.domain.repository.AppDataStoreRepository
+
 @HiltViewModel
 class NoticeViewModel @Inject constructor(
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getNoticeListUseCase: GetNoticeListUseCase,
-    private val getChapterDetailUseCase: GetChapterDetailUseCase
+    private val getChapterDetailUseCase: GetChapterDetailUseCase,
+    private val appDataStoreRepository: AppDataStoreRepository
 ) : BaseViewModel<NoticeUiState, NoticeEvent>(
     NoticeUiState(),
 ) {
     init {
         getMyProfile()
+        collectReadNoticeIds()
+    }
+
+    private fun collectReadNoticeIds() = viewModelScope.launch {
+        appDataStoreRepository.getReadNoticeIds().collect { readIds ->
+            updateState { copy(readNoticeIds = readIds) }
+        }
+    }
+
+    fun markNoticeAsRead(noticeId: Long) = viewModelScope.launch {
+        appDataStoreRepository.addReadNoticeId(noticeId)
     }
 
     private fun updateChipList(chipList: List<NoticeChipState>) {
@@ -261,7 +275,8 @@ data class NoticeUiState(
     val currentPage: Int = 0,
     val isPageLoading: Boolean = false,
     val isLastPage: Boolean = false,
-    val canWriteNotice: Boolean = false
+    val canWriteNotice: Boolean = false,
+    val readNoticeIds: Set<Long> = emptySet()
 ) : UiState
 
 sealed interface NoticeEvent : UiEvent {

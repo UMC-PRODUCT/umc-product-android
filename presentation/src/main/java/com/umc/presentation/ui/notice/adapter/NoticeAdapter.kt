@@ -5,7 +5,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.umc.domain.model.notice.Notice
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.presentation.databinding.ItemNoticeBinding
 
@@ -14,6 +13,12 @@ class NoticeAdapter(
 ) : ListAdapter<NoticeSummary, RecyclerView.ViewHolder> (
     NoticeDiffCallBack()
 ) {
+    private var readNoticeIds: Set<Long> = emptySet()
+
+    fun setReadNoticeIds(ids: Set<Long>) {
+        readNoticeIds = ids
+        notifyDataSetChanged()
+    }
 
     interface NoticeDelegate {
         fun onClickNotice(item: NoticeSummary)
@@ -21,7 +26,7 @@ class NoticeAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when(holder) {
-            is NoticeViewHolder -> holder.bind(currentList[position])
+            is NoticeViewHolder -> holder.bind(currentList[position], readNoticeIds)
         }
     }
 

@@ -181,6 +181,36 @@ class AppDataStore @Inject constructor(
     }
 
 
+    // 공지사항 : 읽은 공지 ID 목록 Flow
+    val readNoticeIdsFlow: Flow<Set<Long>> = context.dataStore.data.map { prefs ->
+        val json = prefs[KEY_READ_NOTICE_IDS] ?: "[]"
+        gson.fromJson(json, Array<Long>::class.java).toSet()
+    }
+
+    // 공지사항 : 읽은 공지 ID 추가
+    suspend fun addReadNoticeId(noticeId: Long) {
+        context.dataStore.edit { prefs ->
+            val currentJson = prefs[KEY_READ_NOTICE_IDS] ?: "[]"
+            val currentSet = gson.fromJson(currentJson, Array<Long>::class.java).toMutableSet()
+            currentSet.add(noticeId)
+            // 최대 1000개까지만 저장 (메모리 관리)
+            val trimmedSet = if (currentSet.size > 1000) {
+                currentSet.drop(currentSet.size - 1000).toSet()
+            } else {
+                currentSet
+            }
+            prefs[KEY_READ_NOTICE_IDS] = gson.toJson(trimmedSet)
+        }
+    }
+
+    // 공지사항 : 읽은 공지 ID 목록 전체 삭제
+    suspend fun clearReadNoticeIds() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_READ_NOTICE_IDS)
+        }
+    }
+
+
     //------------JWT 관련 로직-----------------//
     suspend fun saveTokens(accessToken: String, refreshToken: String) {
         context.dataStore.edit { prefs ->
@@ -270,6 +300,9 @@ class AppDataStore @Inject constructor(
 
         // 알림 저장 KEY
         val KEY_NOTIFICATIONS = stringPreferencesKey("notifications")
+
+        // 읽은 공지사항 ID 목록 KEY
+        val KEY_READ_NOTICE_IDS = stringPreferencesKey("read_notice_ids")
     }
 
 }

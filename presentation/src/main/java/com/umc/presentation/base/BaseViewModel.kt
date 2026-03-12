@@ -66,12 +66,14 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
         when (response) {
             is ApiState.Fail -> {
                 // JWT 관련 에러 체크: 토큰 만료/유효하지 않음 등의 JWT 에러 시 SplashFragment로 이동
+                stopLoading()
                 if (response.failState.code.startsWith(JWT_ERROR_PREFIX)) {
                     emitCommonEvent(CommonViewModelEvent.MoveToSplash)
                 }
                 errorCallback?.invoke(response.failState)
             }
             is ApiState.Success -> {
+                stopLoading()
                 successCallback.invoke(response.data)
             }
         }

@@ -32,8 +32,6 @@ class PermissionFragment :
     override fun initView() {
         binding.apply {
             vm = viewModel
-
-            UToast.createToast(requireActivity(), R.string.name, state = UToast.State.NONE).show()
         }
     }
 

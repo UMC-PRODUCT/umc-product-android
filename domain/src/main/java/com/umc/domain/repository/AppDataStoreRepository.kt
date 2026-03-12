@@ -45,4 +45,9 @@ interface AppDataStoreRepository {
     fun getNotifications(): Flow<List<NotificationItem>>
     suspend fun addNotification(notification: NotificationItem)
     suspend fun clearNotifications()
+
+    // 읽은 공지사항 ID 관리
+    fun getReadNoticeIds(): Flow<Set<Long>>
+    suspend fun addReadNoticeId(noticeId: Long)
+    suspend fun clearReadNoticeIds()
 }

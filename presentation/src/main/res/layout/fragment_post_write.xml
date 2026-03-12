@@ -358,7 +358,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:background="@color/neutral000"
-                app:strokeColor="@color/neutral300"
+                app:backgroundColor="@{vm.uiState.isOpenChatValid ? @color/neutral000 : @color/danger100}"
+                app:strokeColor="@{vm.uiState.isOpenChatValid ? @color/neutral300 : @color/danger500}"
                 app:strokeWidth="1dp"
                 app:cardBackgroundColor="@color/neutral000"
                 app:layout_constraintStart_toStartOf="parent"
@@ -366,8 +367,21 @@
                 app:layout_constraintTop_toBottomOf="@id/write_tv_light_openchat"
                 app:placeholderText="@string/community_write_light_openchat_placeholder"
                 app:textAppearance="@style/Body"
+                app:textColor="@{vm.uiState.isOpenChatValid ? @color/neutral800 : @color/danger500}"
                 app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}"
                 />
+
+            <TextView
+                android:id="@+id/write_tv_light_openchat_error"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/community_write_light_openchat_error"
+                android:textAppearance="@style/Footnote"
+                android:textColor="@color/danger500"
+                android:visibility="@{vm.uiState.isOpenChatValid ? View.GONE : View.VISIBLE}"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/write_textfield_openchat" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>

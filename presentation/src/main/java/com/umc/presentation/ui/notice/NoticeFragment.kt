@@ -46,6 +46,7 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
     private val noticeAdapter : NoticeAdapter by lazy {
         NoticeAdapter(object : NoticeAdapter.NoticeDelegate {
             override fun onClickNotice(item: NoticeSummary) {
+                viewModel.markNoticeAsRead(item.id)
                 navigateToNoticeDetail(item.id)
             }
         })
@@ -99,6 +100,7 @@ class NoticeFragment : BaseFragment<FragmentNoticeBinding, NoticeUiState, Notice
                     dropDownAdapter.submitList(it.dropdownList.map { gisu -> GisuDropDownItem(gisu) })
                     noticeChipAdapter.submitList(it.chipList)
                     noticeAdapter.submitList(it.noticeList)
+                    noticeAdapter.setReadNoticeIds(it.readNoticeIds)
                 }
             }
         }
