@@ -14,5 +14,5 @@ data class AdminSessionCheck(
     val attendedChallengers: Int,   // 출석 완료 인원
     val pendingCount: Int,          // 승인 대기 인원
     val pendingUsers: List<AdminPendingUser>,
-    val sheetId: Long
+    val sheetId: Long?
 )

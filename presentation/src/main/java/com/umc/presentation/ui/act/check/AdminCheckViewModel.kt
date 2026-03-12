@@ -51,29 +51,32 @@ class AdminCheckViewModel @Inject constructor(
      * 각 세션별로 권한 체크를 병렬 실행
      */
     private suspend fun checkPermissionsAndUpdate(sessions: List<AdminSessionCheck>) {
-        val uiModels = sessions.map { session ->
-            // 출석 승인 권한 체크 (ATTENDANCE_SHEET - APPROVE)
-            val approveAuthResponse = getAuthAccessUseCase(ResourceType.ATTENDANCE_SHEET, session.sheetId)
-            val hasApprove = if (approveAuthResponse is ApiState.Success) {
-                approveAuthResponse.data.permissions.any {
-                    it.type == PermissionType.APPROVE && it.hasPermission
-                }
-            } else false
+        val uiModels = sessions
+            .filter { it.sheetId != null }
+            .map { session ->
+                // 출석 승인 권한 체크
+                val approveAuthResponse = getAuthAccessUseCase(ResourceType.ATTENDANCE_SHEET, session.sheetId!!)
+                val hasApprove = if (approveAuthResponse is ApiState.Success) {
+                    approveAuthResponse.data.permissions.any {
+                        it.type == PermissionType.APPROVE && it.hasPermission
+                    }
+                } else false
 
-            // 위치 변경 권한 체크 (SCHEDULE - WRITE)
-            val writeAuthResponse = getAuthAccessUseCase(ResourceType.SCHEDULE, session.id)
-            val hasWrite = if (writeAuthResponse is ApiState.Success) {
-                writeAuthResponse.data.permissions.any {
-                    it.type == PermissionType.WRITE && it.hasPermission
-                }
-            } else false
+                // 위치 변경 권한 체크
+                val writeAuthResponse = getAuthAccessUseCase(ResourceType.SCHEDULE, session.id)
+                val hasWrite = if (writeAuthResponse is ApiState.Success) {
+                    writeAuthResponse.data.permissions.any {
+                        it.type == PermissionType.WRITE && it.hasPermission
+                    }
+                } else false
 
-            AdminSessionUIModel(
-                session = session,
-                hasApprovePermission = hasApprove,
-                hasWritePermission = hasWrite
-            )
-        }
+                AdminSessionUIModel(
+                    session = session,
+                    hasApprovePermission = hasApprove,
+                    hasWritePermission = hasWrite
+                )
+            }
+
         updateState { copy(adminSessions = uiModels) }
         stopLoading()
     }
