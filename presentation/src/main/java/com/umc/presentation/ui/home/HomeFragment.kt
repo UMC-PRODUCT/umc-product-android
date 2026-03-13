@@ -155,9 +155,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
         //val action = HomeFragmentDirections.actionHomeToNotification()
         //findNavController().navigate(action)
 
-        val dialog = BottomSheetRewardPunishDialog(false)
+        val dilog = BottomSheetRewardEtcDialog()
+        dilog.show(parentFragmentManager, "BottomSheetRewardEtc")
+
+        //val dialog = BottomSheetRewardPunishDialog(false)
         // childFragmentManager를 사용하여 생명주기를 안전하게 관리합니다.
-        dialog.show(childFragmentManager, "BottomSheetRewardPunish")
+        //dialog.show(childFragmentManager, "BottomSheetRewardPunish")
 
     }
 

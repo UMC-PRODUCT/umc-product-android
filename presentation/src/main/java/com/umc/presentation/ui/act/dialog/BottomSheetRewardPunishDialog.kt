@@ -5,10 +5,13 @@ import androidx.fragment.app.viewModels
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.umc.domain.model.enums.PunishCategory
+import com.umc.domain.model.enums.RewardType
 import com.umc.presentation.base.BaseBottomSheetFragment
 import com.umc.presentation.databinding.LayoutBottomSheetRewardPunishBinding
 import com.umc.presentation.ui.act.adapter.RewardCategoryAdapter
 import com.umc.presentation.ui.act.adapter.RewardCategoryDelegate
+import com.umc.presentation.ui.act.adapter.RewardSelectAdapter
+import com.umc.presentation.ui.act.adapter.RewardSelectDelegate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -22,7 +25,8 @@ class BottomSheetRewardPunishDialog(
 {
     override val viewModel: BottomSheetRewardPunishViewModel by viewModels()
 
-    private lateinit var rewardCategoryAdapter: RewardCategoryAdapter
+    private lateinit var rewardCategoryAdapter: RewardCategoryAdapter //벌점 카테고리 어댑터
+    private lateinit var rewardSelectAdapter: RewardSelectAdapter
 
     override fun onStart() {
         super.onStart()
@@ -61,6 +65,25 @@ class BottomSheetRewardPunishDialog(
         binding.rcvPunishTag.adapter = rewardCategoryAdapter
         rewardCategoryAdapter.submitList(PunishCategory.entries) //얘는 enum꺼 이용
 
+        rewardSelectAdapter = RewardSelectAdapter(object : RewardSelectDelegate {
+            override fun onClickReward(item: RewardType) {
+                viewModel.setRewardType(item)
+            }
+        })
+        binding.rcvRewardList.adapter = rewardSelectAdapter
+
+        //초기 초기화
+        if(isReward){
+            //상점
+            val rewardList = RewardType.getBonusList()
+            viewModel.setRewardList(rewardList)
+        }
+        else{
+            //벌점
+            val rewardList = RewardType.getPenaltyList()
+            viewModel.setRewardList(rewardList)
+        }
+
     }
 
     override fun initStates() {
@@ -70,7 +93,12 @@ class BottomSheetRewardPunishDialog(
             launch {
                 viewModel.uiState.collect { state ->
                     //선택 바뀔 때마다 호출
+                    //카테고리 누를 때 변화
                     rewardCategoryAdapter.updateSelection(state.currentFilter)
+                    //리스트 변화 및 누를 때 호출
+                    rewardSelectAdapter.submitList(state.displayList)
+                    rewardSelectAdapter.updateSelection(state.selectedItem)
+
                 }
             }
 

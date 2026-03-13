@@ -252,6 +252,8 @@
             app:strokeWidth="1dp"
             app:strokeColor="@color/neutral300"
             app:layout_constraintTop_toBottomOf="@id/tv_reason_title"
+            app:layout_constraintBottom_toTopOf="@id/btn_submit"
+            app:layout_constraintVertical_bias="0"
             app:placeholderText="@string/reward_etc_placeholder"
             app:textAppearance="@style/Subheadline"
             app:text="@{vm.uiState.description}"
@@ -264,8 +266,6 @@
             android:id="@+id/btn_submit"
             android:layout_width="0dp"
             android:layout_height="52dp"
-            android:layout_marginTop="48dp"
-            android:layout_marginStart="8dp"
             android:onClick="@{()->vm.submitReward()}"
             android:visibility="@{vm.uiState.submitOk == true ? View.VISIBLE : View.GONE}"
             app:cardBackgroundColor="@color/primary500"
@@ -276,15 +276,13 @@
             app:textColor="@color/neutral000"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textfield_reason"
+            app:layout_constraintBottom_toBottomOf="parent"
             />
 
         <com.umc.presentation.component.UButton
             android:id="@+id/btn_submit_cancel"
             android:layout_width="0dp"
             android:layout_height="52dp"
-            android:layout_marginTop="48dp"
-            android:layout_marginStart="8dp"
             android:visibility="@{vm.uiState.submitOk == false ? View.VISIBLE : View.GONE}"
             app:cardBackgroundColor="@color/neutral300"
             app:cornerRadius="8dp"
@@ -294,7 +292,7 @@
             app:textColor="@color/neutral000"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textfield_reason"
+            app:layout_constraintBottom_toBottomOf="parent"
             />
 
 

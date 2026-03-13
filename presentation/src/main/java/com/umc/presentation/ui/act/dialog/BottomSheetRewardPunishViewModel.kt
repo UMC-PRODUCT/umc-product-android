@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.act.dialog
 
+import android.util.Log
 import com.umc.domain.model.enums.PunishCategory
 import com.umc.domain.model.enums.RewardType
 import com.umc.presentation.base.BaseViewModel
@@ -23,12 +24,41 @@ BottomSheetRewardPunishUiState())
     
     //벌점 다이얼로그 시 벌점 카테고리 선택
     fun setPunishCategory(category: PunishCategory) {
+
+        val punishList = RewardType.getPenaltyList()
+        val resultList = when (category) {
+            //운영자
+            PunishCategory.ADMIN -> punishList.filter { it.category == PunishCategory.ADMIN }
+            //회장단
+            PunishCategory.CORE -> punishList.filter { it.category == PunishCategory.CORE }
+            //전체
+            PunishCategory.ALL -> punishList
+        }
+
         updateState { copy(currentFilter = category) }
+        setRewardList(resultList)
     }
+
+    //선택한 상벌점 카테고리 선택
+    fun setRewardType(item: RewardType) {
+        updateState { copy(selectedItem = item) }
+    }
+
+    //상벌점 리스트 선택
+    fun setRewardList(list: List<RewardType>) {
+        updateState { copy(displayList = list) }
+    }
+
 
     //textfield 변경
     fun onTextChanged(text: String) {
         updateState { copy(description = text) }
+    }
+
+    //상벌점 제출
+    fun submitReward(){
+        Log.d("log_reward", "submitReward: ${uiState.value.selectedItem}")
+        Log.d("log_reward", "desription: ${uiState.value.description}")
     }
 }
 
