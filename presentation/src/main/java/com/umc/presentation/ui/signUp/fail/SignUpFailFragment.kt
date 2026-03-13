@@ -4,6 +4,7 @@ import android.content.Intent
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.UnderlineSpan
+import androidx.activity.OnBackPressedCallback
 import androidx.core.net.toUri
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -57,6 +58,16 @@ class SignUpFailFragment : BaseFragment<FragmentSignUpFailBinding, SignUpFailUiS
             val googleToken = requestGoogleAccessToken()
             viewModel.setGoogleToken(googleToken)
         }
+
+        // Handle system back button - close app
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    requireActivity().finish()
+                }
+            }
+        )
     }
 
     override fun initStates() {
@@ -79,7 +90,7 @@ class SignUpFailFragment : BaseFragment<FragmentSignUpFailBinding, SignUpFailUiS
 
     override fun handleEvent(event: SignUpFailEvent) {
         when (event) {
-            SignUpFailEvent.MoveToBack -> findNavController().popBackStack()
+            SignUpFailEvent.MoveToBack -> requireActivity().finish()
             SignUpFailEvent.MoveToHomePage -> {
                 val intent = Intent(Intent.ACTION_VIEW, "https://umc.it.kr".toUri())
                 startActivity(intent)

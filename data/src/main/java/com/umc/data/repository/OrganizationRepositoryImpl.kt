@@ -93,6 +93,7 @@ class OrganizationRepositoryImpl @Inject constructor(
     override suspend fun getAllSchool(): ApiState<List<SchoolInfo>> =
         organizationDataSource.getAllSchool().map {
             it.schools.map { item -> item.toModel() }
+                .sortedBy { school -> school.schoolName }
         }
 
     override suspend fun getAllGisu(): ApiState<GisuList> =

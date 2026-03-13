@@ -3,9 +3,11 @@ package com.umc.presentation.ui.login
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
 import com.umc.domain.model.JwtToken
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.usecase.PostLoginUseCase
 import com.umc.domain.usecase.appDataStore.SaveTokenUseCase
+import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.notification.RegisterFcmTokenUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -22,7 +24,8 @@ class LoginViewModel
 constructor(
     private val postLoginUseCase: PostLoginUseCase,
     private val saveTokenUseCase: SaveTokenUseCase,
-    private val registerFcmTokenUseCase: RegisterFcmTokenUseCase
+    private val registerFcmTokenUseCase: RegisterFcmTokenUseCase,
+    private val getMyProfileUseCase: GetMyProfileUseCase
 ) : BaseViewModel<UiState, LoginEvent>(
     UiState.Default,
 ) {
@@ -50,12 +53,34 @@ constructor(
         resultResponse(
             response = saveTokenUseCase(request),
             successCallback = {
-                registerFcmToken()
+                checkUserChallengerRecord()
             },
             errorCallback = { failState ->
                 emitEvent(LoginEvent.ShowErrorToast(failState.message))
             }
         )
+    }
+
+    private fun checkUserChallengerRecord() = viewModelScope.launch {
+        resultResponse(
+            response = getMyProfileUseCase(),
+            successCallback = { userInfo ->
+                if (hasChallengerId(userInfo)) {
+                    registerFcmToken()
+                } else {
+                    emitEvent(LoginEvent.MoveToSignUpFailEvent)
+                }
+            },
+            errorCallback = {
+                emitEvent(LoginEvent.ShowErrorToast("사용자 정보를 불러오는데 실패했습니다."))
+            }
+        )
+    }
+
+    private fun hasChallengerId(userInfo: UserInfo): Boolean {
+        val hasRoleChallengerId = userInfo.roles.any { it.challengerId > 0 }
+        val hasRecordChallengerId = userInfo.challengerRecords.any { it.challengerId > 0 }
+        return hasRoleChallengerId || hasRecordChallengerId
     }
 
     private fun registerFcmToken() = viewModelScope.launch {
@@ -88,6 +113,8 @@ sealed interface LoginEvent : UiEvent {
     object GoogleLoginEvent: LoginEvent
 
     object MoveToMainEvent : LoginEvent
+
+    object MoveToSignUpFailEvent : LoginEvent
 
     data class MoveToSignUpEvent(val oAuthToken: String) : LoginEvent
 

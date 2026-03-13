@@ -74,6 +74,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, UiState, LoginEvent, Lo
             LoginEvent.KakaoLoginEvent -> signInKakao()
             is LoginEvent.MoveToSignUpEvent -> moveToSignUp(event.oAuthToken)
             LoginEvent.MoveToMainEvent -> moveToHome()
+            LoginEvent.MoveToSignUpFailEvent -> moveToSignUpFail()
             LoginEvent.GoogleLoginEvent -> signInGoogle()
             is LoginEvent.ShowErrorToast -> {
                 UToast.createToast(
@@ -92,6 +93,11 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, UiState, LoginEvent, Lo
 
     private fun moveToSignUp(token: String) {
         val action = LoginFragmentDirections.actionLoginToSignUp(token = token)
+        findNavController().navigate(action)
+    }
+
+    private fun moveToSignUpFail() {
+        val action = LoginFragmentDirections.actionLoginToSignUpFail()
         findNavController().navigate(action)
     }
 
