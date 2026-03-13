@@ -20,6 +20,7 @@ import com.umc.presentation.component.calendar.EventDecorator
 import com.umc.presentation.component.calendar.SelectedDecorator
 import com.umc.presentation.component.calendar.TodayDecorator
 import com.umc.presentation.databinding.FragmentHomeBinding
+import com.umc.presentation.ui.act.dialog.BottomSheetRewardEtcDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.threeten.bp.DayOfWeek
@@ -148,9 +149,16 @@ class HomeFragment : BaseFragment<FragmentHomeBinding, HomeFragmentUiState, Home
 
     }
 
+    /**테스트 용동**/
     private fun moveToNotification(){
-        val action = HomeFragmentDirections.actionHomeToNotification()
-        findNavController().navigate(action)
+        //val action = HomeFragmentDirections.actionHomeToNotification()
+        //findNavController().navigate(action)
+
+
+        val dialog = BottomSheetRewardEtcDialog()
+        // childFragmentManager를 사용하여 생명주기를 안전하게 관리합니다.
+        dialog.show(childFragmentManager, "BottomSheetRewardEtc")
+
     }
 
     private fun moveToPlanAdd(){
