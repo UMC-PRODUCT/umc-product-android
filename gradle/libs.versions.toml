@@ -38,6 +38,7 @@ coil = "2.6.0"
 credentials = "1.2.1"
 googleId = "1.1.0"
 googlePlayServicesAuth = "21.2.0"
+playInAppUpdate = "2.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -100,6 +101,9 @@ androidx-credentials-play-services-auth = { group = "androidx.credentials", name
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleId" }
 # Google Play Services Auth (Access Token 용)
 google-play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "googlePlayServicesAuth" }
+# Play In-App Update
+play-update = { group = "com.google.android.play", name = "app-update", version.ref = "playInAppUpdate" }
+play-update-ktx = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "playInAppUpdate" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

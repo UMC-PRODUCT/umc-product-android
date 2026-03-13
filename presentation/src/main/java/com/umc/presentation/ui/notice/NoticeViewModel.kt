@@ -54,8 +54,9 @@ class NoticeViewModel @Inject constructor(
 
     private fun createChipsFromUserInfo(userInfo: UserInfo): List<NoticeChipState> {
         val chipList = mutableListOf<NoticeChipState>()
+        val savedSelectedText = uiState.value.selectedChipText
 
-        chipList.add(NoticeChipState(text = "전체", isClicked = true))
+        chipList.add(NoticeChipState(text = "전체", isClicked = savedSelectedText == "전체"))
 
         // challengerRecords가 비어있으면 기본 "전체" 칩만 반환
         if (userInfo.challengerRecords.isEmpty()) {
@@ -76,11 +77,13 @@ class NoticeViewModel @Inject constructor(
             if (record.schoolId != 0L && record.schoolName.isNotEmpty()) {
                 val schoolChipText = record.schoolName
                 if (chipList.none { it.text == schoolChipText }) {
+                    val isSelected = schoolChipText == savedSelectedText
                     chipList.add(
                         NoticeChipState(
                             text = schoolChipText,
                             schoolId = record.schoolId,
-                            gisuId = gisuId
+                            gisuId = gisuId,
+                            isClicked = isSelected
                         )
                     )
                 }
@@ -89,11 +92,13 @@ class NoticeViewModel @Inject constructor(
             if (!record.chapterName.isNullOrEmpty()) {
                 val chapterChipText = record.chapterName!!
                 if (chipList.none { it.text == chapterChipText }) {
+                    val isSelected = chapterChipText == savedSelectedText
                     chipList.add(
                         NoticeChipState(
                             text = chapterChipText,
                             chapterId = record.chapterId,
-                            gisuId = gisuId
+                            gisuId = gisuId,
+                            isClicked = isSelected
                         )
                     )
                 }
@@ -102,11 +107,13 @@ class NoticeViewModel @Inject constructor(
             if (record.part.isNotEmpty()) {
                 val partChipText = UserPart.from(record.part).label
                 if (chipList.none { it.text == partChipText }) {
+                    val isSelected = partChipText == savedSelectedText
                     chipList.add(
                         NoticeChipState(
                             text = partChipText,
                             part = record.part,
-                            gisuId = gisuId
+                            gisuId = gisuId,
+                            isClicked = isSelected
                         )
                     )
                 }
@@ -121,6 +128,7 @@ class NoticeViewModel @Inject constructor(
             chip.copy(isClicked = (chip.text == clickedItem.text))
         }
         updateChipList(newList)
+        updateState { copy(selectedChipText = clickedItem.text) }
 
         getNoticeList(
             chapterId = clickedItem.chapterId,
@@ -269,6 +277,7 @@ data class NoticeUiState(
     val nowTitle: String = "",
     val selectedGisu: Long = 0,
     val selectedSubChip: String = "파트",
+    val selectedChipText: String = "전체",
     val dropdownList: List<GisuItem> = emptyList(),
     val chipList: List<NoticeChipState> = emptyList(),
     val noticeList: List<NoticeSummary> = emptyList(),

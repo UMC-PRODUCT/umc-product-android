@@ -65,7 +65,7 @@ class BottomSheetSearchParticipantAdapter(
     inner class ItemViewHolder(private val binding: ItemBottomSheetParticipantSearchBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(user: ParticipantItem) {
-            val nameType = "${user.name}/${user.nickname}(${user.gisu}기)"
+            val nameType = "${user.nickname}/${user.name}(${user.gisu}기)"
             binding.item = user
             binding.itemTvName.text = nameType
             binding.itemTvSchool.text = user.school

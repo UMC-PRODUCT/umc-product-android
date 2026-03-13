@@ -38,8 +38,9 @@
                 android:textAppearance="@style/SubheadlineBold"
                 android:textColor="@color/neutral900"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintTop_toTopOf="@id/ub_part_badge"
                 app:layout_constraintEnd_toStartOf="@id/ub_part_badge"
+                app:layout_constraintBottom_toBottomOf="@id/ub_part_badge"
                 app:layout_constraintHorizontal_chainStyle="packed"
                 tools:text="React A팀" />
 
@@ -68,8 +69,7 @@
                 app:borderColor="@color/primary200"
 
                 app:layout_constraintStart_toEndOf="@id/tv_group_title"
-                app:layout_constraintTop_toTopOf="@id/tv_group_title"
-                app:layout_constraintBottom_toBottomOf="@id/tv_group_title"
+                app:layout_constraintTop_toTopOf="parent"
 
                 tools:text="Web" />
 

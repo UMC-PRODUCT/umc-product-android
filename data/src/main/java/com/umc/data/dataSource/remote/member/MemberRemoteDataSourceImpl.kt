@@ -35,6 +35,6 @@ class MemberRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun deleteUser(request: DeleteUserRequest): ApiState<Unit> {
-        return apiCall { memberApi.deleteUser(request) }
+        return apiCall { memberApi.deleteUser() }
     }
 }

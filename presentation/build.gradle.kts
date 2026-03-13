@@ -114,6 +114,10 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
     implementation(libs.google.play.services.auth)
+
+    // Play In-App Update
+    implementation(libs.play.update)
+    implementation(libs.play.update.ktx)
 }
 
 fun getApiKey(propertyKey: String): String {

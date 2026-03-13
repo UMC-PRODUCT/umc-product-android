@@ -231,7 +231,7 @@
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="14dp"
                 android:gravity="start|center_vertical"
-                android:text="@{vm.uiState.userInfo.name + `/` + vm.uiState.userInfo.nickname}"
+                android:text="@{vm.uiState.userInfo.nickname + `/` + vm.uiState.userInfo.name}"
                 android:textAppearance="@style/Callout"
                 android:textColor="@color/neutral600" />
 
