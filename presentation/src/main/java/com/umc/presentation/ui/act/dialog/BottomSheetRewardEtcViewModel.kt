@@ -14,6 +14,10 @@ class BottomSheetRewardEtcViewModel @Inject constructor(
     BottomSheetRewardEtcUiState()
 )
 {
+    //챌린저 아이디 저장
+    fun setChallengerId(challengerId: Long){
+        updateState { copy(challengerId = challengerId) }
+    }
 
     //상점 -1
     fun minusReward() {
@@ -66,6 +70,8 @@ class BottomSheetRewardEtcViewModel @Inject constructor(
 
 
 data class BottomSheetRewardEtcUiState(
+    val challengerId : Long = -1L,
+
     val description: String = "",
     val reward: Int = 0,
     val punish: Int = 0,

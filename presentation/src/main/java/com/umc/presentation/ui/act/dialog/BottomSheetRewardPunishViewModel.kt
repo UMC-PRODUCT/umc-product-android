@@ -17,6 +17,12 @@ class BottomSheetRewardPunishViewModel @Inject constructor(
 BottomSheetRewardPunishUiState())
 {
 
+
+    //챌린저 아이디 저장
+    fun setChallengerId(challengerId: Long){
+        updateState { copy(challengerId = challengerId) }
+    }
+
     //시작 시 상/벌점 모드 체크
     fun setRewardMode(isReward: Boolean){
         updateState { copy(isReward = isReward) }
@@ -69,6 +75,8 @@ BottomSheetRewardPunishUiState())
 
 
 data class BottomSheetRewardPunishUiState(
+    val challengerId : Long = -1L,
+
     val isReward : Boolean = true, //상점 or 벌점 모드로 진입했는지 여부(이지선다)
     val currentFilter: PunishCategory = PunishCategory.ALL, //벌점 시 필터링
     val displayList: List<RewardType> = emptyList(), //상/벌점 리스트

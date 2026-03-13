@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class BottomSheetRewardPunishDialog(
+    private val challengerId: Long,
     private val isReward: Boolean
 )
     : BaseBottomSheetFragment<LayoutBottomSheetRewardPunishBinding, BottomSheetRewardPunishUiState, BottomSheetRewardPunishEvent, BottomSheetRewardPunishViewModel>(
@@ -56,7 +57,11 @@ class BottomSheetRewardPunishDialog(
 
             viewModel.setRewardMode(isReward)
         }
+        
+        //챌린저 정보 저장
+        viewModel.setChallengerId(challengerId)
 
+        //어댑터 설정
         rewardCategoryAdapter = RewardCategoryAdapter(object : RewardCategoryDelegate {
             override fun onClickCategory(item: PunishCategory) {
                 viewModel.setPunishCategory(item)

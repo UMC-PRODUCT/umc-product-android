@@ -11,7 +11,9 @@ import kotlinx.coroutines.launch
 
 
 @AndroidEntryPoint
-class BottomSheetRewardEtcDialog()
+class BottomSheetRewardEtcDialog(
+    private val challengerId: Long,
+)
     : BaseBottomSheetFragment<LayoutBottomSheetRewardEtcBinding, BottomSheetRewardEtcUiState, BottomSheetRewardEtcEvent, BottomSheetRewardEtcViewModel>(
         LayoutBottomSheetRewardEtcBinding::inflate
 ){
@@ -45,6 +47,9 @@ class BottomSheetRewardEtcDialog()
             vm = viewModel
             lifecycleOwner = viewLifecycleOwner
         }
+
+        viewModel.setChallengerId(challengerId)
+
     }
 
     override fun initStates() {
