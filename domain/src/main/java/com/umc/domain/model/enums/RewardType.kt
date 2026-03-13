@@ -1,6 +1,15 @@
 package com.umc.domain.model.enums
 
-enum class RewardType(val label: String, val score: Int) {
+import com.umc.domain.model.enums.PunishCategory
+
+
+//벌점 종류(필터링 용도)
+enum class PunishCategory(val label: String) {
+    ALL("전체"), ADMIN("운영진"), CORE("회장단")
+}
+
+enum class RewardType(val label: String, val score: Int,
+                      val category: PunishCategory = PunishCategory.ALL) {
     //상점
     BLOG_CHALLENGE("블로그 챌린지", 3),
     BEST_WORKBOOK("베스트 워크북 선정", 2),
@@ -17,10 +26,10 @@ enum class RewardType(val label: String, val score: Int) {
     EVENT_LATE_CANCEL("행사 기간 외 취소", -4),
     EVENT_NO_SHOW("노쇼(무단 결석)", -10),
 
-    PART_LEAD_FEEDBACK_LATE("기간 외 피드백", -4),
+    PART_LEAD_FEEDBACK_LATE("기간 외 피드백", -4,  PunishCategory.ADMIN),
 
-    SCHOOL_CORE_MEETING_ABSENT("회의 무단 불참", -4),
-    SCHOOL_CORE_TASK_NOT_COMPLETED("업무 무단 불이행", -4),
+    SCHOOL_CORE_MEETING_ABSENT("회의 무단 불참", -4,  PunishCategory.CORE),
+    SCHOOL_CORE_TASK_NOT_COMPLETED("업무 무단 불이행", -4,PunishCategory.CORE),
 
     WARNING("경고", 0),
     OUT("제명", 0),
