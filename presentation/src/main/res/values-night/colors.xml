@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+
+    <color name="primary100">#1B2965</color>
+    <color name="primary200">#253888</color>
+    <color name="primary300">#3149B5</color>
+    <color name="primary400">#3657D8</color>
+    <color name="primary500">#4264F0</color>
+    <color name="primary600">#617FFF</color>
+    <color name="primary700">#94A7FF</color>
+    <color name="primary800">#C7D2FF</color>
+    <color name="primary900">#E0E7FF</color>
+
+
+    <color name="accent100">#4D1E00</color>
+    <color name="accent200">#7A3000</color>
+    <color name="accent300">#A84200</color>
+    <color name="accent400">#DB5500</color>
+    <color name="accent500">#FF6C0F</color>
+    <color name="accent600">#FF924D</color>
+    <color name="accent700">#FFAA75</color>
+    <color name="accent800">#FFCDAD</color>
+    <color name="accent900">#FFEDE0</color>
+
+
+    <color name="neutral000">#121212</color>
+    <color name="neutral100">#28292F</color>
+    <color name="neutral200">#3A3F46</color>
+    <color name="neutral300">#626C75</color>
+    <color name="neutral400">#7C8792</color>
+    <color name="neutral500">#A6ADB5</color>
+    <color name="neutral600">#C2C7CC</color>
+    <color name="neutral700">#DCDDE0</color>
+    <color name="neutral800">#EBEDEF</color>
+    <color name="neutral900">#F7F7F7</color>
+
+
+    <color name="success100">#174A39</color>
+    <color name="success300">#0D824B</color>
+    <color name="success500">#12B76A</color>
+    <color name="success700">#99E0BF</color>
+    <color name="success900">#E7F8F0</color>
+
+
+    <color name="warning100">#5C3A00</color>
+    <color name="warning300">#A86B00</color>
+    <color name="warning500">#F59E00</color>
+    <color name="warning700">#FFCD75</color>
+    <color name="warning900">#FFFAE0</color>
+
+
+    <color name="danger100">#6C1F19</color>
+    <color name="danger300">#AB3027</color>
+    <color name="danger500">#F14437</color>
+    <color name="danger700">#F9AFA9</color>
+    <color name="danger900">#FEECEB</color>
+
+    <color name="kakaoColor">#FEE500</color>
+
+</resources>

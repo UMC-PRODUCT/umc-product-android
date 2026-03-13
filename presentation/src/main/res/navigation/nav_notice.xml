@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_notice"
+    app:startDestination="@id/noticeFragment">
+
+    <fragment
+        android:id="@+id/noticeFragment"
+        android:name="com.umc.presentation.ui.notice.NoticeFragment"
+        android:label="공지 화면"
+        tools:layout="@layout/fragment_notice">
+        <action
+            android:id="@+id/action_noticeFragment_to_noticeSearchFragment"
+            app:destination="@id/noticeSearchFragment" />
+
+        <action
+            android:id="@+id/action_noticeFragment_to_noticeWriteFragment"
+            app:destination="@id/noticeWriteFragment" />
+
+        <action
+            android:id="@+id/action_noticeFragment_to_noticeDetailFragment"
+            app:destination="@id/noticeDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/noticeSearchFragment"
+        android:name="com.umc.presentation.ui.notice.search.NoticeSearchFragment"
+        android:label="공지검색"
+        tools:layout="@layout/fragment_notice_search">
+
+        <argument
+            android:name="gisuId"
+            android:defaultValue="0L"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_noticeSearchFragment_to_noticeSearchResultFragment"
+            app:destination="@id/noticeSearchResultFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/noticeSearchResultFragment"
+        android:name="com.umc.presentation.ui.notice.search.result.NoticeSearchResultFragment"
+        android:label="공지검색결과"
+        tools:layout="@layout/fragment_notice_search_result">
+
+        <argument
+            android:name="search"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <argument
+            android:name="gisuId"
+            android:defaultValue="0L"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_noticeSearchResultFragment_to_noticeDetailFragment"
+            app:destination="@id/noticeDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/noticeWriteFragment"
+        android:name="com.umc.presentation.ui.notice.write.NoticeWriteFragment"
+        android:label="공지작성"
+        tools:layout="@layout/fragment_notice_write">
+
+        <argument
+            android:name="noticeId"
+            android:defaultValue="0L"
+            app:argType="long" />
+
+        <argument
+            android:name="isEditMode"
+            android:defaultValue="false"
+            app:argType="boolean" />
+
+        <argument
+            android:name="gisuId"
+            android:defaultValue="0L"
+            app:argType="long" />
+
+        <argument
+            android:name="gisuName"
+            android:defaultValue=""
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/noticeDetailFragment"
+        android:name="com.umc.presentation.ui.notice.detail.NoticeDetailFragment"
+        android:label="공지 화면"
+        tools:layout="@layout/fragment_notice_detail">
+
+        <argument
+            android:name="noticeId"
+            android:defaultValue="0L"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_noticeDetailFragment_to_noticeWriteFragment"
+            app:destination="@id/noticeWriteFragment" />
+    </fragment>
+</navigation>

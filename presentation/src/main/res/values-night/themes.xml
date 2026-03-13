@@ -1,0 +1,27 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.UMCProduct" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your dark theme here. -->
+
+    </style>
+
+    <style name="Theme.UMCProduct" parent="Base.Theme.UMCProduct">
+        <item name="colorBackgroundSemantic">@color/neutral100</item>
+        <item name="colorBorderSemantic">@color/neutral200</item>
+        <item name="colorTextPrimarySemantic">@color/neutral800</item>
+        <item name="colorTextSecondarySemantic">@color/neutral600</item>
+        <item name="colorTextDisablePlaceholderSemantic">@color/neutral400</item>
+    </style>
+
+    <style name="CircleImageAppearance">
+        <item name="cornerSize">50%</item> </style>
+
+
+    <style name="TransparentBottomSheetDialogTheme" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/CustomBottomSheetStyle</item>
+    </style>
+
+    <style name="CustomBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+</resources>

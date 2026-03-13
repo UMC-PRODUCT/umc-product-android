@@ -1,0 +1,492 @@
+package com.umc.presentation.ui.community.detail
+
+import android.util.Log
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UserInfo
+import com.umc.domain.model.enums.CategoryType
+import com.umc.domain.model.enums.CommunityCategoryType
+import com.umc.domain.model.enums.ContentType
+import com.umc.domain.model.enums.RecruitType
+import com.umc.domain.model.enums.UserPart
+import com.umc.domain.model.community.CommentItem
+import com.umc.domain.model.community.ContentItem
+import com.umc.domain.model.enums.PermissionType
+import com.umc.domain.model.enums.ResourceType
+import com.umc.domain.usecase.GetAuthAccessUseCase
+import com.umc.domain.usecase.GetChallengerIdUseCase
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.community.DeleteCommunityCommentUseCase
+import com.umc.domain.usecase.community.DeleteCommunityPostUseCase
+import com.umc.domain.usecase.community.GetCommunityPostCommentUseCase
+import com.umc.domain.usecase.community.GetCommunityPostDetailUseCase
+import com.umc.domain.usecase.community.ReportCommentUseCase
+import com.umc.domain.usecase.community.ReportPostUseCase
+import com.umc.domain.usecase.community.UpdateLikePostUseCase
+import com.umc.domain.usecase.community.UpdateScrapPostUseCase
+import com.umc.domain.usecase.community.WriteCommunityPostCommentUseCase
+import com.umc.presentation.base.BaseViewModel
+import com.umc.presentation.base.UiEvent
+import com.umc.presentation.base.UiState
+import com.umc.presentation.ui.home.PlanDetailFragmentEvent
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+
+@HiltViewModel
+class PostDetailViewModel @Inject
+constructor(
+    private val getCommunityPostDetailUseCase: GetCommunityPostDetailUseCase, //게시글 상세 불러오기
+    private val getCommunityPostCommentUseCase: GetCommunityPostCommentUseCase, //게시글 댓글들 불러오기
+    private val writeCommunityPostCommentUseCase: WriteCommunityPostCommentUseCase, //댓글 작성하기
+    private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 불러오기
+    private val deleteCommunityPostUseCase: DeleteCommunityPostUseCase, //게시글 삭제하기
+    private val deleteCommunityCommentUseCase: DeleteCommunityCommentUseCase, //댓글 삭제하기
+    private val updateLikePostUseCase: UpdateLikePostUseCase, //좋아요 토글
+    private val updateScrapPostUseCase: UpdateScrapPostUseCase, //스크랩 토글
+    private val reportPostUseCase: ReportPostUseCase, //게시글 신고하기
+    private val getChallengerIdUseCase: GetChallengerIdUseCase, //내 ID 가져오기
+    private val getAuthAccessUseCase: GetAuthAccessUseCase, //리소스 권한 조회
+    private val reportCommentUseCase: ReportCommentUseCase, //댓글 신고하기
+
+    ) : BaseViewModel<PostDetailFragmentUiState, PostDetailFragmentEvent>(
+    PostDetailFragmentUiState()
+) {
+
+    //시작 시 한 번 rebuild
+    init {
+        rebuildDetailList(uiState.value.nowContent, uiState.value.nowCommentList)
+    }
+
+
+    // 리스트 재조립 로직
+    private fun rebuildDetailList(content: ContentItem, comments: List<CommentItem>) {
+        val uiList = mutableListOf<PostDetailItem>()
+
+        //본문
+        uiList.add(PostDetailItem.Header(content))
+        //댓글 수
+        uiList.add(PostDetailItem.CommentHeader(comments.size))
+        //댓글이 비면 엠티
+        if (comments.isEmpty()) {
+            uiList.add(PostDetailItem.EmptyComment)
+        } 
+        //그렇지 않으면 댓글 뾰로롱
+        else {
+            uiList.addAll(comments.map { PostDetailItem.Comment(it) })
+        }
+
+        //얘를 업데이트
+        updateState {
+            copy(
+                nowDetailList = uiList, //결과물 저장
+                nowContent = content, // 현재 게시글 데이터 저장
+                nowCommentList = comments // 현재 댓글 리스트 저장
+            )
+        }
+    }
+
+    //게시글 정보 + 댓글 정보 + 유저 정보 가져오기
+    fun initPostDetailData(postId: Long){
+        viewModelScope.launch {
+            //0. 유저 정보 가져오기 (별도 분리)
+            launch {
+                getUserInfoUseCase().collect { userInfo ->
+                    updateState { copy(myInfo = userInfo) }
+                }
+            }
+
+            //0. 유저 challengerId 가져오기
+            launch {
+                val challengerId = getChallengerIdUseCase()
+                updateState {
+                    copy(myChallengerId = challengerId)
+                }
+            }
+
+            //1. 서로 다른 usecase를 비동기로 실행
+            val detailDeferred = async {
+                getCommunityPostDetailUseCase(postId) }
+            val commentsDeferred = async {
+                getCommunityPostCommentUseCase(postId) }
+
+            //2. 대기
+            val detailResult = detailDeferred.await()
+            val commentsResult = commentsDeferred.await()
+
+            //3. 결과를 담은 item 생성 = 둘 다 정상으로 받아올 때 수행
+            var fetchedContent: ContentItem? = null
+            var fetchedComments: List<CommentItem>? = null
+
+            //3. 결과를 따로 처리 (본문)
+            resultResponse(
+                response = detailResult,
+                successCallback = {
+                    fetchedContent = it
+                },
+                errorCallback = {
+
+                }
+            )
+            resultResponse(
+                response = commentsResult,
+                successCallback = {
+                    fetchedComments = it.sortedBy { it.createdAt }
+                },
+                errorCallback = {
+
+
+                }
+            )
+
+            //4. 댓글만 받아왔거나 다 실패한 경우 나가기
+            if(fetchedContent == null && fetchedComments == null){
+                emitEvent(PostDetailFragmentEvent.ShowErrorToast("게시글을 불러오는데 실패했습니다."))
+                emitEvent(PostDetailFragmentEvent.MoveBackPressed)
+            }
+
+            //5. 둘다 정상이면 한 번에 재조립
+            else if (fetchedContent != null && fetchedComments != null) {
+                checkIsAuthor(fetchedContent.postId)
+                rebuildDetailList(fetchedContent, fetchedComments)
+            }
+
+            //6. 게시글만 받아왔을 경우 (일단 빌드)
+            else if(fetchedContent != null){
+                checkIsAuthor(fetchedContent.postId)
+                rebuildDetailList(fetchedContent, uiState.value.nowCommentList)
+                emitEvent(PostDetailFragmentEvent.ShowErrorToast("댓글을 불러오는데 실패했습니다."))
+            }
+
+
+
+        }
+    }
+
+    //댓글 추가하는 함수
+    fun addComment(text: String) {
+        if(text.length < 1){return}
+
+        viewModelScope.launch {
+            val postId = uiState.value.nowContent.postId
+            val myId = uiState.value.myChallengerId
+
+            resultResponse(
+                response = writeCommunityPostCommentUseCase(postId, myId, text),
+                successCallback = {
+                    //작성 성공 시 refresh
+                    refreshComments(postId)
+                },
+                errorCallback = {}
+            )
+        }
+
+    }
+
+    //댓글만 갱신할 때 함수
+    private fun refreshComments(postId: Long) {
+        viewModelScope.launch {
+            resultResponse(
+                response = getCommunityPostCommentUseCase(postId),
+                successCallback = { updatedComments ->
+                    val sortedComments = updatedComments.sortedBy { it.createdAt }
+                    // 최신 댓글 목록으로 UI 재조립
+                    rebuildDetailList(uiState.value.nowContent, sortedComments)
+                }
+            )
+        }
+    }
+
+    //게시글만 갱신할 때 함수
+    /**게시글 수정 및 갱신은 별도의 페이지에서 작성하므로 쓰일 일은 없었다,,,**/
+    private fun refreshContent(postId: Long){
+        viewModelScope.launch {
+            resultResponse(
+                response = getCommunityPostDetailUseCase(postId),
+                successCallback = { updatedContent ->
+                    // 최신 포스트 목록으로 재조립
+                    rebuildDetailList(updatedContent, uiState.value.nowCommentList)
+                }
+            )
+        }
+    }
+
+    //게시글이 현재 유저 것인지 비교
+    fun checkIsAuthor(postId : Long){
+        viewModelScope.launch { 
+            resultResponse(
+                response = getAuthAccessUseCase(ResourceType.COMMUNITY_POST, postId),
+                successCallback = { authAccess ->
+                    //삭제 or 수정권한 있는지 체크
+                    val isAuthor = authAccess.permissions.any { item ->
+                        (item.type == PermissionType.DELETE || item.type == PermissionType.EDIT)
+                                && item.hasPermission
+                    }
+                    Log.d("log_community", "권한 결과: $isAuthor")
+
+                    updateState {
+                        if(isAuthor){
+                            copy(isAuthor = true)
+                        }
+                        else{
+                            copy(isAuthor = false)
+                        }
+                    }
+            
+                },
+                errorCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("게시글 권한을 불러오는데 실패했습니다."))
+                }
+            )
+        }
+    }
+
+
+    // 좋아요 토글
+    fun toggleLike() {
+
+        /**서버에 반영**/
+        viewModelScope.launch {
+            resultResponse(
+                response = updateLikePostUseCase(uiState.value.nowContent.postId),
+                successCallback = {
+
+                    //성공하면 UI 업데이트
+                    val current = uiState.value.nowContent
+                    val newIsLiked = !current.isLiked
+                    val newLikes = it.likeCount
+
+                    val updatedContent = current.copy(isLiked = newIsLiked, likes = newLikes)
+                    rebuildDetailList(updatedContent, uiState.value.nowCommentList)
+                },
+                errorCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("좋아요 설정을 실패했습니다."))
+
+                }
+            )
+        }
+    }
+
+    // 스크랩 토글
+    fun toggleScrap(){
+
+        /**서버에 반영**/
+        viewModelScope.launch {
+            resultResponse(
+                response = updateScrapPostUseCase(uiState.value.nowContent.postId),
+                successCallback = {
+                    //성공하면 UI 업데이트
+                    val current = uiState.value.nowContent
+                    val newIsScrapped = !current.isScrapped
+                    val newScraps = it.scrapCount
+
+                    val updatedContent = current.copy(isScrapped = newIsScrapped, scraps = newScraps)
+                    rebuildDetailList(updatedContent, uiState.value.nowCommentList)
+                },
+                errorCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("스크랩을 실패했습니다."))
+
+                }
+            )
+        }
+    }
+
+
+    //게시글 신고
+    fun reportPost(){
+        val postId = uiState.value.nowContent.postId
+        viewModelScope.launch {
+            resultResponse(
+                response = reportPostUseCase(postId),
+                successCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("게시글 신고가 완료되었습니다"))
+                },
+                errorCallback = { error ->
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast(error.message))
+                }
+            )
+        }
+
+    }
+
+    //댓글 신고
+    fun reportComment(commentId: Long){
+        viewModelScope.launch {
+            resultResponse(
+                response = reportCommentUseCase(commentId),
+                successCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("댓글 신고가 완료되었습니다"))
+                },
+                errorCallback = { error ->
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast(error.message))
+                }
+            )
+        }
+    }
+
+
+    //게시글 삭제 로직
+    fun deletePost(){
+        viewModelScope.launch {
+            resultResponse(
+                response = deleteCommunityPostUseCase(uiState.value.nowContent.postId),
+                successCallback = {
+                    emitEvent(PostDetailFragmentEvent.MoveBackPressed)
+                },
+                errorCallback = {
+                    
+                }
+            )
+        }
+    }
+
+    //댓글 메뉴 바 눌렀을 때, 자신 댓글인지 판단
+    fun onCommentMenuClicked(item: CommentItem) {
+        viewModelScope.launch {
+            resultResponse(
+                // 댓글 권한 조회를 위해 POST_COMMENT 타입 사용 (없다면 Enum에 추가 필요)
+                response = getAuthAccessUseCase(ResourceType.COMMUNITY_COMMENT, item.commentId),
+                successCallback = { authAccess ->
+                    // DELETE 또는 EDIT 권한이 있는지 체크 (팀장님 로직 적용)
+                    val isAuthor = authAccess.permissions.any { p ->
+                        (p.type == PermissionType.DELETE || p.type == PermissionType.EDIT)
+                                && p.hasPermission
+                    }
+
+                    // 권한 결과와 함께 이벤트를 던져 Fragment가 팝업을 띄우게 함
+                    emitEvent(PostDetailFragmentEvent.ShowCommentMenu(item, isAuthor))
+                },
+                errorCallback = {
+                    emitEvent(PostDetailFragmentEvent.ShowErrorToast("권한 정보를 불러오지 못했습니다."))
+                }
+            )
+        }
+    }
+
+    //댓글 추가
+    fun onClickCommentAdd(){
+        emitEvent(PostDetailFragmentEvent.OnClickCommentAdd)
+    }
+
+    //메뉴 버튼 열기
+    fun onClickOpenMenu(){
+        updateState { copy(isMenuVisible = !isMenuVisible) }
+    }
+    
+    //게시글 신고 다이얼로그 열기
+    fun onClickReportPost(){
+        emitEvent(PostDetailFragmentEvent.ReportPost)
+    }
+    //게시글 수정
+    fun onClickEditPost(){
+        emitEvent(PostDetailFragmentEvent.EditPost)
+    }
+    //게시글 삭제
+    fun onClickDeletePost(){
+        emitEvent(PostDetailFragmentEvent.DeletePost)
+    }
+
+
+
+    //댓글 삭제
+    fun onClickeDeleteComment(item: CommentItem){
+        val postId = uiState.value.nowContent.postId
+        val commentId = item.commentId
+        val challengerId = item.challengerId //이미 id 비교 로직을 거쳤기 때문에, 댓글의 challengerId 사용해도 부압
+        viewModelScope.launch {
+            resultResponse(
+                response =deleteCommunityCommentUseCase(postId, commentId, challengerId),
+                successCallback = {
+                    //댓글만 다시 갱신하기
+                    refreshComments(postId)
+                },
+                errorCallback = {
+                    
+                }
+            )
+        }
+
+    }
+
+    //뒤로가기
+    fun moveBackPressed(){
+        emitEvent(PostDetailFragmentEvent.MoveBackPressed)
+    }
+
+
+
+
+
+}
+
+
+data class PostDetailFragmentUiState(
+    //메뉴 창 열기
+    val isAuthor : Boolean = true,
+    val isMenuVisible : Boolean = false,
+
+    //보여줄 view들이 담긴 곳 (recyclerview가 inflate할것들 - 게시글하고 댓글들 조립한 곳들)
+    val nowDetailList : List<PostDetailItem> = emptyList(),
+
+    //내 ID
+    /**TODO. 얘는 MemberId인지 ChallengerId인지 확인 필요**/
+    val myInfo : UserInfo? = null,
+    val myChallengerId : Long = -1L,
+
+    //현재 게시글
+    val nowContent: ContentItem = ContentItem(
+        // 1. 리스트 및 API 핵심 데이터
+        postId = -1L,
+        title = "",
+        category = CommunityCategoryType.FREE,
+
+        // 2. API 미제공 (기본값/X)
+        username = "",           // X: 익명 여부에 따라 매퍼에서 채울 예정
+        writeTime = "",         // X: 서버 시간 파싱 전까지 임시값
+        likes = 0,                   // X: 현재 API엔 없지만 UI 확인용
+        comments = 0,                 // X: 현재 API엔 없지만 UI 확인용
+
+        // 3. 본문 및 세부 데이터
+        content = "",
+        lightningInfo = null,         // 일반 게시글이므로 null
+
+        // 4. 기타 연동 예정 필드 (X)
+        userPart = UserPart.ANDROID,  // X: 작성자 파트 정보
+        isLiked = false,              // 다른 API 연동 전까지 기본값
+        isScrapped = false,             // UI 테스트를 위해 true 설정
+        scraps = 0
+    ),
+
+    //현재 댓글 리스트
+    val nowCommentList : List<CommentItem> = emptyList(),
+
+
+    ) : UiState
+
+sealed interface PostDetailFragmentEvent : UiEvent {
+    
+    //댓글 추가 이벤트
+    object OnClickCommentAdd : PostDetailFragmentEvent
+
+    //신고하기 이벤트
+    object ReportPost : PostDetailFragmentEvent
+    //수정하기 이벤트
+    object EditPost : PostDetailFragmentEvent
+    //삭제하기 이벤트
+    object DeletePost : PostDetailFragmentEvent
+
+    //댓글 신고하기 이벤트
+    data class ReportComment(val commentId: Long) : PostDetailFragmentEvent
+
+    //댓글 메뉴 누를시 권한 확인 이벤트
+    data class ShowCommentMenu(val item: CommentItem, val canDelete: Boolean) : PostDetailFragmentEvent
+
+    //오류 토스트 이벤트
+    data class ShowErrorToast(val errorMessage: String) : PostDetailFragmentEvent
+
+    object MoveBackPressed : PostDetailFragmentEvent
+
+
+
+}

@@ -1,0 +1,26 @@
+plugins {
+    id("java-library")
+    alias(libs.plugins.jetbrains.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.android.ksp)
+}
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+dependencies {
+    // 안드로이드 의존성이 없는 'core' 버전만 가져옵니다.
+    implementation(libs.kotlinx.coroutines.core)
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
+    }
+}
+
+dependencies {
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.hilt.core)
+}

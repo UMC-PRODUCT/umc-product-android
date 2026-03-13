@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="com.umc.domain.model.enums.RecruitType" />
+        <import type="com.umc.domain.model.enums.ContentType" />
+        <import type="com.umc.domain.model.enums.CategoryType" />
+
+        <variable
+            name="item"
+            type="com.umc.domain.model.community.CommentItem" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="12dp"
+        android:background="@color/neutral000">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/item_circleimv_profile"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_profile_default"
+            android:layout_marginTop="8dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/neutral200"
+            app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+            app:layout_constraintTop_toTopOf="@id/item_tv_username"
+            app:layout_constraintStart_toStartOf="parent"
+            />
+
+        <TextView
+            android:id="@+id/item_tv_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAppearance="@style/SubheadlineBold"
+            android:textColor="@color/neutral800"
+            android:text='@{item.challengerName == null ? "알 수 없음" : item.challengerNickName + "/" + item.challengerName}'
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@id/item_circleimv_profile"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="홍길동(닉네임)"
+            />
+
+        <TextView
+            android:id="@+id/item_tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAppearance="@style/Footnote"
+            android:textColor="@color/neutral600"
+            android:text="@{item.createdAt}"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@id/item_tv_username"
+            app:layout_constraintTop_toTopOf="@id/item_tv_username"
+            app:layout_constraintBottom_toBottomOf="@id/item_tv_username"
+            tools:text="1시간 전"
+            />
+
+        <TextView
+            android:id="@+id/item_tv_comment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAppearance="@style/Body"
+            android:textColor="@color/neutral800"
+            android:text="@{item.content}"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp"
+            app:layout_constraintStart_toStartOf="@id/item_tv_username"
+            app:layout_constraintTop_toBottomOf="@id/item_tv_username"
+            app:layout_constraintEnd_toStartOf="@id/item_btn_menu"
+            tools:text="홍길동(닉네임)"
+            />
+
+        <ImageView
+            android:id="@+id/item_btn_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_menu_kebab"
+            app:tint="@color/neutral500"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

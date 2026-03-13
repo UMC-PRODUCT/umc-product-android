@@ -1,0 +1,342 @@
+package com.umc.presentation.ui.community.write
+
+import android.util.Log
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UserInfo
+import com.umc.domain.model.community.CreateLightningPost
+import com.umc.domain.model.community.CreatePost
+import com.umc.domain.model.enums.CommunityCategoryType
+import com.umc.domain.model.home.CategoryItem
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.community.CreateCommunityLightningPostUseCase
+import com.umc.domain.usecase.community.CreateCommunityPostUseCase
+import com.umc.domain.usecase.community.GetCommunityPostDetailUseCase
+import com.umc.domain.usecase.community.UpdateCommunityLightningPostUseCase
+import com.umc.domain.usecase.community.UpdateCommunityPostUseCase
+import com.umc.presentation.base.BaseViewModel
+import com.umc.presentation.base.UiEvent
+import com.umc.presentation.base.UiState
+import com.umc.presentation.util.UToast
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
+
+@HiltViewModel
+class PostWriteViewModel @Inject
+constructor(
+    private val createCommunityPostUseCase: CreateCommunityPostUseCase, //게시글 생성
+    private val createCommunityLightningPostUseCase: CreateCommunityLightningPostUseCase, //번개 게시글 생성
+    private val updateCommunityPostUseCase: UpdateCommunityPostUseCase, //게시글 수정
+    private val updateCommunityPostLightningPostUseCase: UpdateCommunityLightningPostUseCase, //번개글 수정
+    private val getCommunityPostDetailUseCase: GetCommunityPostDetailUseCase, //게시글 상세 불러오기 (게시글 수정)
+    private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 가져오기
+
+) : BaseViewModel<PostWriteFragmentUiState, PostWriteFragmentEvent>(
+    PostWriteFragmentUiState()
+) {
+
+    init{
+        viewModelScope.launch {
+            getUserInfoUseCase().collect { userInfo ->
+                updateState {
+                    copy(
+                        myInfo = userInfo,
+                    )
+                }
+            }
+        }
+    }
+
+    fun formatUtcToLocal(utcString: String): String {
+        return try {
+            // UTC 문자열 파싱 (ISO 8601 형식 대응)
+            val instant = Instant.parse(utcString)
+
+            //기기 시스템 타임존으로 변환
+            val localDateTime = instant.atZone(ZoneId.systemDefault())
+
+            //원하는 형식으로 포맷팅 (yy.MM.dd HH:mm)
+            val formatter = DateTimeFormatter.ofPattern("yy.MM.dd HH:mm")
+            localDateTime.format(formatter)
+        } catch (e: Exception) {
+            //파싱 실패 시 원본 혹은 빈 값 반환
+            utcString
+        }
+    }
+
+    //category(글 카테고리) 선택
+    fun onClickContentCategorySelect(){
+        emitEvent(PostWriteFragmentEvent.ClickCategorySelect)
+    }
+
+    //카테고리 선택을 반영
+    fun updateContentCategory(category: CommunityCategoryType) {
+        updateState {
+            // 초기값 "카테고리 선택"이 실제 선택된 라벨(예: "번개")로 바뀝니다.
+            copy(selectCommunityCategory = category)
+        }
+
+        //추가 카테고리가 번개냐?
+        if(category.label == CommunityCategoryType.LIGHTNING.label){
+            setLightCardView(true)
+        }
+        else{
+            setLightCardView(false)
+        }
+
+    }
+
+    //게시글 수정일 시 게시글 데이터를 받와야 작성 채우기
+    fun settingUpdatePost(postId : Long){
+        viewModelScope.launch {
+            resultResponse(
+                response = getCommunityPostDetailUseCase(postId),
+                successCallback = {
+                    //번개 글인지 확인
+                    val isLightPost = if(it.lightningInfo != null) true else false
+                    setLightCardView(isLightPost)
+                    val time = it.lightningInfo?.meetAt ?: ""
+                    val people = it.lightningInfo?.maxParticipants.toString() ?: ""
+                    val place = it.lightningInfo?.location ?: ""
+                    val openChat = it.lightningInfo?.openChatUrl ?: ""
+
+                    updateState {
+                        copy(
+                            updatePostId = postId,
+                            title = it.title,
+                            content = it.content,
+                            selectCommunityCategory = it.category,
+                            isLight = isLightPost,
+                            lightTime = time,
+                            lightPeople = people,
+                            lightPlace = place,
+                            lightOpenChat = openChat
+                        )
+                    }
+
+                    emitEvent(PostWriteFragmentEvent.SetTextfields)
+
+                },
+                errorCallback = {}
+            )
+        }
+    }
+
+
+
+    //제목 업데이트
+    fun updateTitle(title: String) {
+        updateState { copy(title = title) }
+    }
+
+    //본문 업데이트
+    fun updateContent(content: String) {
+        updateState { copy(content = content) }
+    }
+
+
+    //게시글 등록 시 로직 (확인을 누를 시, 데이터에 맞춰, 게시글 수정/생성 + 일반글/번개글 작성)
+    fun createPost(){
+        //분기 로직 (1. 게시글 수정인가 생성인가 / 2. 일반 글인가 / 3. 번개 글인가)
+        val state = uiState.value
+        val isUpdateMode = state.updatePostId != -1L
+        val isLightning = state.selectCommunityCategory == CommunityCategoryType.LIGHTNING
+        val myId = state.myInfo.id
+
+        viewModelScope.launch {
+            if (isUpdateMode) {
+                // 게시글 수정 로직 (수정 API 규격에 맞춰 호출)
+                handleUpdatePost(state)
+            } else {
+                // 신규 게시글 작성 로직
+                if (isLightning) {
+                    handleCreateLightningPost(myId, state)
+                } else {
+                    handleCreateNormalPost(myId, state)
+                }
+            }
+        }
+
+    }
+
+    // 일반 게시글 작성 핸들러
+    private suspend fun handleCreateNormalPost(challengerId: Long, state: PostWriteFragmentUiState) {
+        val param = CreatePost(
+            title = state.title,
+            content = state.content,
+            category = state.selectCommunityCategory.name // "FREE", "QUESTION" 등
+        )
+
+        resultResponse(
+            response = createCommunityPostUseCase(challengerId, param),
+            successCallback = {
+                emitEvent(PostWriteFragmentEvent.ClickBackPressed)
+            },
+            errorCallback = {
+                emitEvent(PostWriteFragmentEvent.MakeErrorTaost(it.message))
+            }
+        )
+    }
+
+    // 번개 게시글 작성 핸들러
+    private suspend fun handleCreateLightningPost(challengerId: Long, state: PostWriteFragmentUiState) {
+        val param = CreateLightningPost(
+            title = state.title,
+            content = state.content,
+            meetAt = state.lightTime,
+            location = state.lightPlace,
+            maxParticipants = state.lightPeople.toIntOrNull() ?: 0,
+            openChatUrl = state.lightOpenChat
+        )
+
+        resultResponse(
+            response = createCommunityLightningPostUseCase(challengerId,param),
+            successCallback = {
+                emitEvent(PostWriteFragmentEvent.ClickBackPressed)
+            },
+            errorCallback = {
+                emitEvent(PostWriteFragmentEvent.MakeErrorTaost("번개 게시글 작성에 실패했습니다."))
+            }
+        )
+    }
+
+    // 게시글 수정 핸들러
+    private suspend fun handleUpdatePost(state: PostWriteFragmentUiState) {
+        val isLightning = state.selectCommunityCategory == CommunityCategoryType.LIGHTNING
+        if(isLightning){
+            // TODO: 번개 게시글에 대해서는 수정 있는지 확인
+            val param = CreateLightningPost(
+                title = state.title,
+                content = state.content,
+                meetAt = state.lightTime,
+                location = state.lightPlace,
+                maxParticipants = state.lightPeople.toIntOrNull() ?: 0,
+                openChatUrl = state.lightOpenChat
+            )
+
+            resultResponse(
+                response = updateCommunityPostLightningPostUseCase(state.updatePostId, param),
+                successCallback = {
+                    emitEvent(PostWriteFragmentEvent.ClickBackPressed)
+                },
+                errorCallback = { error ->
+
+                    val errorMessages = mapOf(
+                        "COMMON-400" to "오픈 채팅 링크는 http:// 또는 https://로 시작해야 합니다",
+                        "COMMON-0001" to "모임 시간은 현재 이후여야 합니다."
+                    )
+
+                    val errorMessage = "게시글 작성에 실패했습니다."
+
+                    Log.d("log_community", "${error.code}..${errorMessages[error.code]}")
+
+                    emitEvent(PostWriteFragmentEvent.MakeErrorTaost(errorMessage))
+                }
+            )
+            
+
+
+        }
+        else{
+            val param = CreatePost(
+                title = state.title,
+                content = state.content,
+                category = state.selectCommunityCategory.name // "FREE", "QUESTION" 등
+            )
+
+            Log.d("log_community", "일반수정param: $param")
+            
+            resultResponse(
+                response = updateCommunityPostUseCase(state.updatePostId, param),
+                successCallback = {
+                    emitEvent(PostWriteFragmentEvent.ClickBackPressed)
+                },
+                errorCallback = {
+                    emitEvent(PostWriteFragmentEvent.MakeErrorTaost("게시글 수정에 실패했습니다."))
+                }
+            )
+        }
+    }
+
+    
+    //번개 관련
+    fun setLightCardView(nowLight : Boolean){
+        updateState { copy(isLight = nowLight) }
+    }
+
+    //번개 날짜/시간 업데이트
+    fun updateLightTime(time: String) {
+        updateState { copy(lightTime = time) }
+    }
+
+    //번개 최대 인원 업데이트
+    fun updateLightPeople(people: String) {
+        updateState { copy(lightPeople = people) }
+    }
+
+    //번개 장소 업데이트
+    fun updateLightPlace(place: String) {
+        updateState { copy(lightPlace = place) }
+    }
+
+    //번개 오픈 채팅 링크 업데이트
+    fun updateLightOpenChat(openChat: String) {
+        val isValid = openChat.isEmpty() || openChat.startsWith("https://open.kakao.com/")
+        updateState {
+            copy(
+                lightOpenChat = openChat,
+                isOpenChatValid = isValid
+            )
+        }
+    }
+
+    //뒤로 가기
+    fun onClickBackPressed(){
+        emitEvent(PostWriteFragmentEvent.ClickBackPressed)
+    }
+}
+
+data class PostWriteFragmentUiState(
+    //챌린저 내 정보
+    val myInfo : UserInfo = UserInfo(),
+
+    //게시글 수정을 위한 게시글 ID
+    val updatePostId : Long = -1L,
+
+    val selectCommunityCategory : CommunityCategoryType = CommunityCategoryType.FREE,
+
+    //작성한 내용들
+    val title: String = "",
+    val content: String = "",
+
+
+    //번개 관련 내용들
+    val isLight : Boolean = false,
+    val lightTime : String = "",
+    val lightPeople : String = "",
+    val lightPlace : String = "",
+    val lightOpenChat : String = "",
+    val isOpenChatValid: Boolean = true,
+
+
+    ) : UiState
+
+sealed interface PostWriteFragmentEvent : UiEvent {
+
+    //카테고리 선택 눌렀을 때 뾰료룡
+    object ClickCategorySelect : PostWriteFragmentEvent
+
+
+    //뒤로 갈 때
+    object ClickBackPressed : PostWriteFragmentEvent
+
+    //채울 떄
+    object SetTextfields : PostWriteFragmentEvent
+
+    //경고 토스트 생성
+    data class MakeErrorTaost(val message: String) : PostWriteFragmentEvent
+
+}

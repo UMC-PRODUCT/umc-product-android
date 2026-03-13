@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="item"
+            type="com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitItemUiModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_neutral000_radius16"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="24dp">
+
+        <ImageView
+            android:id="@+id/iv_close"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/ic_close_big"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="스터디 검토"
+            android:textAppearance="@style/Title3Bold"
+            android:textColor="@color/neutral800"
+            app:layout_constraintBottom_toBottomOf="@id/iv_close"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/iv_close" />
+
+        <TextView
+            android:id="@+id/tv_desc"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:text='@{@string/admin_study_submit_desc(item.nickname, item.weekText)}'
+            android:textAppearance="@style/Caption1"
+            android:textColor="@color/neutral500"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_title" />
+
+        <TextView
+            android:id="@+id/tv_url_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="제출 URL"
+            android:textAppearance="@style/HeadlineBold"
+            android:textColor="@color/neutral800"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_desc" />
+
+
+        <com.umc.presentation.component.UTextField
+            android:id="@+id/et_url"
+            android:layout_width="0dp"
+            android:layout_height="53dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="12dp"
+            app:cornerRadius="12dp"
+            app:focusStrokeColor="@color/primary500"
+            app:placeholderText="http://github.com"
+            app:strokeColor="@color/neutral300"
+            app:strokeWidth="1dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btn_go"
+            app:layout_constraintTop_toBottomOf="@id/tv_url_label" />
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/btn_go"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            app:text="이동"
+            app:textAppearance="@style/Caption1Bold"
+            app:textColor="@color/neutral700"
+            app:cardBackgroundColor="@color/neutral000"
+            app:borderColor="@color/neutral300"
+            app:borderWidth="1dp"
+            app:contentPaddingTop="10dp"
+            app:contentPaddingBottom="10dp"
+            app:prevIcon="@drawable/ic_go_website"
+            app:prevIconTint="@color/black"
+            app:layout_constraintTop_toTopOf="@id/et_url"
+            app:layout_constraintBottom_toBottomOf="@id/et_url"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_feedback_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="피드백"
+            android:textAppearance="@style/HeadlineBold"
+            android:textColor="@color/neutral800"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/et_url" />
+
+
+        <com.umc.presentation.component.UTextField
+            android:id="@+id/et_feedback"
+            android:layout_width="0dp"
+            android:layout_height="112dp"
+            android:layout_marginTop="8dp"
+            app:cornerRadius="12dp"
+
+            app:placeholderText="학생에게 전달할 피드백을 입력하세요."
+            app:strokeColor="@color/neutral300"
+            app:strokeWidth="1dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_feedback_label" />
+
+        <LinearLayout
+            android:id="@+id/layout_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/et_feedback"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/btn_reject"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                app:text="반려"
+                app:textAppearance="@style/Caption1Bold"
+                app:textColor="@color/danger500"
+                app:cardBackgroundColor="@color/neutral000"
+                app:borderColor="@color/danger500"
+                app:borderWidth="1dp"
+                app:prevIcon="@drawable/ic_check_failed" />
+
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/btn_approve"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                app:text="통과"
+                app:textAppearance="@style/Caption1Bold"
+                app:textColor="@color/success500"
+                app:cardBackgroundColor="@color/neutral000"
+                app:borderColor="@color/success500"
+                app:borderWidth="1dp"
+                app:prevIcon="@drawable/ic_check_success" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

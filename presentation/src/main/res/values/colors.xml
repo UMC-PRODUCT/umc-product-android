@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="primary100">#EBEFFF</color>
+    <color name="primary200">#CCD6FF</color>
+    <color name="primary300">#99ABFF</color>
+    <color name="primary400">#6683FF</color>
+    <color name="primary500">#4869F0</color>
+    <color name="primary600">#3A5AD9</color>
+    <color name="primary700">#324BB9</color>
+    <color name="primary800">#26398C</color>
+    <color name="primary900">#1D2C6C</color>
+
+
+    <color name="accent100">#FFF0E5</color>
+    <color name="accent200">#FFD0B2</color>
+    <color name="accent300">#FFB180</color>
+    <color name="accent400">#FF924D</color>
+    <color name="accent500">#FF731A</color>
+    <color name="accent600">#E55900</color>
+    <color name="accent700">#B24600</color>
+    <color name="accent800">#803200</color>
+    <color name="accent900">#4D1E00</color>
+
+
+    <color name="neutral000">#FFFFFF</color>
+    <color name="neutral100">#F4F5F7</color>
+    <color name="neutral200">#E7E8EA</color>
+    <color name="neutral300">#CDD1D5</color>
+    <color name="neutral400">#B2B8BF</color>
+    <color name="neutral500">#8A949E</color>
+    <color name="neutral600">#6D7882</color>
+    <color name="neutral700">#464C54</color>
+    <color name="neutral800">#34363E</color>
+    <color name="neutral900">#1F2124</color>
+
+
+    <color name="success100">#E7F8F0</color>
+    <color name="success300">#99E0BF</color>
+    <color name="success500">#12B76A</color>
+    <color name="success700">#0D824B</color>
+    <color name="success900">#184E3C</color>
+
+
+    <color name="warning100">#FFFBE5</color>
+    <color name="warning300">#FFD180</color>
+    <color name="warning500">#FFA500</color>
+    <color name="warning700">#B27100</color>
+    <color name="warning900">#664100</color>
+
+
+    <color name="danger100">#FEECEB</color>
+    <color name="danger300">#F9AFA9</color>
+    <color name="danger500">#F14437</color>
+    <color name="danger700">#AB3027</color>
+    <color name="danger900">#6C1F19</color>
+
+    <color name="kakaoColor">#FEE500</color>
+
+    <color name="geofence_fill">#0D51A2FF</color>
+    <color name="geofence_stroke">#4D51A2FF</color>
+
+</resources>

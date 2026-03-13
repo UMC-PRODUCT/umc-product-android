@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="vm"
+            type="com.umc.presentation.ui.act.study.group.model.AdminStudyGroupViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/neutral000"
+        android:paddingTop="12dp">
+
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cv_header"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/neutral000"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/neutral200"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/primary100"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tv_header_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="스터디 그룹 관리"
+                    android:textAppearance="@style/SubheadlineBold"
+                    android:textColor="@color/primary600"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/btn_create_group"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    tools:text="스터디 그룹 관리" />
+
+                <TextView
+                    android:id="@+id/tv_header_desc"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="스터디 그룹을 생성하고 멤버를 관리하세요"
+                    android:textAppearance="@style/Footnote"
+                    android:textColor="@color/neutral500"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    android:breakStrategy="balanced"
+                    android:hyphenationFrequency="none"
+                    app:layout_constraintStart_toStartOf="@id/tv_header_title"
+                    app:layout_constraintTop_toBottomOf="@id/tv_header_title"
+                    app:layout_constraintEnd_toStartOf="@id/btn_create_group"/>
+
+
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/btn_create_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    app:buttonElevation="0"
+                    app:cornerRadius="10dp"
+                    app:contentPaddingLeft="14dp"
+                    app:contentPaddingRight="14dp"
+                    app:textAppearance="@style/Caption1Bold"
+                    app:text="그룹 생성"
+                    app:cardBackgroundColor="@color/primary500"
+                    app:textColor="@color/neutral000"
+                    app:prevIcon="@drawable/ic_add_filled"
+                    app:prevIconTint="@color/neutral000"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_groups"
+            android:background="@color/neutral100"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="12dp"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="16dp"
+            android:clipToPadding="false"
+            tools:listitem="@layout/item_admin_study_group"
+            app:layout_constraintTop_toBottomOf="@id/cv_header"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

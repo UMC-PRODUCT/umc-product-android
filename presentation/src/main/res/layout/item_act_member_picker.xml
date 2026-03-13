@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <import type="android.view.View" />
+
+        <variable
+            name="item"
+            type="com.umc.presentation.ui.act.study.common.model.MemberUiModel" />
+
+        <variable
+            name="isMulti"
+            type="Boolean" />
+
+        <variable
+            name="isChecked"
+            type="Boolean" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/root"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/neutral000"
+        android:paddingHorizontal="12dp">
+
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/iv_profile"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_profile_default"
+            android:scaleType="centerInside"
+            android:background="@color/neutral000"
+            app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/neutral400"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text='@{item.nickname + "/" + item.name + "(" + item.gisuLabel + ")"}'
+            android:textAppearance="@style/CalloutBold"
+            android:textColor="@color/neutral900"
+            app:layout_constraintStart_toEndOf="@id/iv_profile"
+            app:layout_constraintEnd_toStartOf="@id/right_area"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tv_sub"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+
+        <TextView
+            android:id="@+id/tv_sub"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text='@{item.schoolName}'
+            android:textAppearance="@style/Caption1"
+            android:textColor="@color/neutral600"
+            app:layout_constraintStart_toEndOf="@id/iv_profile"
+            app:layout_constraintEnd_toStartOf="@id/right_area"
+            app:layout_constraintTop_toBottomOf="@id/tv_name"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/right_area"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/btn_select"
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:visibility='@{isMulti ? View.GONE : View.VISIBLE}'
+                app:text="@string/select"
+                app:cardBackgroundColor="@color/neutral000"
+                app:borderColor="@color/neutral300"
+                app:borderWidth="1dp"
+                app:textColor="@color/neutral700"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+
+            <ImageView
+                android:id="@+id/iv_check"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="8dp"
+                android:src='@{isChecked ? @drawable/ic_check_box : @drawable/ic_check_box_empty}'
+                android:visibility='@{isMulti ? View.VISIBLE : View.GONE}'
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

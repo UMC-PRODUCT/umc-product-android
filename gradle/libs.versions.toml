@@ -1,17 +1,48 @@
 [versions]
 agp = "8.12.3"
-kotlin = "2.0.21"
+kotlin = "2.2.21"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
-appcompat = "1.7.1"
-material = "1.13.0"
+appcompat = "1.6.1"
+material = "1.11.0"
 activity = "1.12.2"
-constraintlayout = "2.2.1"
+constraintlayout = "2.1.4"
+hilt = "2.57.2"
+ksp = "2.2.21-2.0.4"
+recyclerview = "1.4.0"
+retrofit = "3.0.0"
+okHttp = "5.3.2"
+lifecycle = "2.10.0"
+coroutines = "1.10.2"
+navigation = "2.9.6"
+jetbrainsKotlinJvm = "2.2.21"
+legacySupportV4 = "1.0.0"
+lifecycleLivedataKtx = "2.6.1"
+fragmentKtx = "1.5.6"
+materialCalendarView = "2.0.1"
+ktlintPlugin = "12.1.2"
+threetenabp = "1.3.1"
+kakao = "2.23.2"
+annotationJvm = "1.9.1"
+flexbox = "3.0.0"
+opencsv = "5.7.1"
+googleServices = "4.4.4"
+firebaseBom = "34.8.0"
+kotlinx-serialization = "1.9.0"
+kotlinxCoroutines = "1.7.3"
+datastore = "1.0.0"
+gson = "2.10.1"
+coil = "2.6.0"
+credentials = "1.2.1"
+googleId = "1.1.0"
+googlePlayServicesAuth = "21.2.0"
+playInAppUpdate = "2.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -19,8 +50,72 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+hilt-core = { group = "com.google.dagger", name = "hilt-core", version.ref = "hilt" }
+retrofit-android = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+okhttp-android = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okHttp"}
+okhttp-log = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okHttp"}
+androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigation" }
+navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigation" }
+androidx-legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacySupportV4" }
+androidx-lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycleLivedataKtx" }
+androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+
+
+#material calendar
+material-calendarview = { group = "com.github.prolificinteractive", name = "material-calendarview", version.ref = "materialCalendarView" }
+threeten-abp = { group = "com.jakewharton.threetenabp", name = "threetenabp", version.ref = "threetenabp" }
+
+#flexboxlayout
+google-flexbox = { group = "com.google.android.flexbox", name = "flexbox", version.ref = "flexbox" }
+
+# kakao login
+kakao-user = { group = "com.kakao.sdk", name = "v2-all", version.ref = "kakao" }
+
+# opencsv
+opencsv = { group = "com.opencsv", name = "opencsv", version.ref = "opencsv" }
+
+# pure coroutines
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+
+#dataStore & Gson
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+google-code-gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
+#coli
+coil = { group = "io.coil-kt", name = "coil", version.ref = "coil" }
+
+# Credential Manager 핵심 라이브러리
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+# Google Play Services 인증 지원 (구버전 안드로이드 호환용)
+androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
+# Google ID (Sign in with Google 옵션)
+googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleId" }
+# Google Play Services Auth (Access Token 용)
+google-play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "googlePlayServicesAuth" }
+# Play In-App Update
+play-update = { group = "com.google.android.play", name = "app-update", version.ref = "playInAppUpdate" }
+play-update-ktx = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "playInAppUpdate" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-
+kotlin-android-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintPlugin" }
+androidx-navigation-safeargs = { id = "androidx.navigation.safeargs", version.ref = "navigation" }
+androidx-navigation-safeargs-kotlin = { id = "androidx.navigation.safeargs.kotlin" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }

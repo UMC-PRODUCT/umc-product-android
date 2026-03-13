@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="item"
+            type="com.umc.domain.model.act.challenger.ChallengerPoint" />
+        <variable
+            name="isEditMode"
+            type="Boolean" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text='@{item.date ?? "2024.01.01"}'
+            android:textAppearance="@style/Subheadline"
+            android:textColor="@color/neutral500"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="2024.01.01" />
+
+        <TextView
+            android:id="@+id/tv_type"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@{item.title}"
+            android:textAppearance="@style/Subheadline"
+            android:textColor="@color/neutral800"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/tv_status"
+            app:layout_constraintStart_toEndOf="@id/tv_date"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="스터디 미제출" />
+
+        <TextView
+            android:id="@+id/tv_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text='@{item.pointType.name().equals("OUT") ? "아웃 +1" : "경고 +1"}'
+            android:textAppearance="@style/Subheadline"
+            android:textColor='@{item.pointType.name().equals("OUT") ? @color/neutral800 : @color/neutral800}'
+            app:layout_constraintBottom_toBottomOf="@id/tv_type"
+            app:layout_constraintEnd_toStartOf="@id/btn_remove"
+            app:layout_constraintTop_toTopOf="@id/tv_type"
+            tools:text="아웃 +1" />
+
+        <ImageView
+            android:id="@+id/btn_remove"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:padding="4dp"
+            android:src="@drawable/ic_close_big"
+            android:visibility="@{isEditMode ? View.VISIBLE : View.GONE}"
+            app:layout_constraintBottom_toBottomOf="@id/tv_type"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/tv_type"
+            app:tint="@color/neutral400"
+            tools:visibility="visible" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

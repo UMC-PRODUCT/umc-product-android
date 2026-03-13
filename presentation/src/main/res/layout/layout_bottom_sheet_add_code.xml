@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+
+    <data>
+        <variable
+            name="vm"
+            type="com.umc.presentation.ui.mypage.dialog.BottomSheetAddCodeViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_bottom_sheet_neutral000_radius28"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="24dp"
+        >
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/view_handle"
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:layout_marginTop="12dp"
+            android:background="@color/neutral600"
+            app:cardBackgroundColor="@color/neutral600"
+            app:cornerRadius="100dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:gravity="start"
+            android:text="운영진에게 발급받은\n6자리 인증코드를 입력해주세요."
+            android:textAppearance="@style/Title3Bold"
+            android:textColor="@color/neutral800"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btn_upload_csv"
+            app:layout_constraintTop_toBottomOf="@id/view_handle" />
+
+        <TextView
+            android:id="@+id/tv_title_code"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="인증코드"
+            android:textAppearance="@style/HeadlineBold"
+            android:textColor="@color/neutral800"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_title"
+            />
+
+        <com.umc.presentation.component.UTextField
+            android:id="@+id/text_field_code"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/neutral000"
+            app:backgroundColor="@color/neutral000"
+            app:cornerRadius="8dp"
+            android:maxLength="6"
+            app:focusStrokeColor="@color/primary500"
+            app:strokeColor="@color/neutral300"
+            app:onTextChanged="@{vm::onCodeChanged}"
+            app:placeholderText="6자리 코드를 입력하세요"
+            app:strokeWidth="1dp"
+            app:text="@{vm.uiState.code}"
+            app:textAppearance="@style/Body"
+            app:textColor="@color/neutral800"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_title_code"
+            />
+
+        <com.umc.presentation.component.UButton
+            android:id="@+id/btn_confirm"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:visibility="visible"
+            android:onClick="@{()->vm.register()}"
+            android:clickable="true"
+            app:cardBackgroundColor="@color/primary500"
+            app:pressedColor="@color/primary700"
+            app:borderWidth="0dp"
+            app:text="추가하기"
+            app:textAppearance="@style/SubheadlineBold"
+            app:textColor="@color/neutral000"
+            app:buttonElevation="0"
+            app:contentPaddingBottom="4dp"
+            app:contentPaddingTop="4dp"
+            app:contentPaddingLeft="8dp"
+            app:contentPaddingRight="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            />
+
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

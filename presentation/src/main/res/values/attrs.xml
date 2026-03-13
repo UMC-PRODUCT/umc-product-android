@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="colorBackgroundSemantic" format="color"/>
+    <attr name="colorBorderSemantic" format="color"/>
+    <attr name="colorTextPrimarySemantic" format="color"/>
+    <attr name="colorTextSecondarySemantic" format="color"/>
+    <attr name="colorTextDisablePlaceholderSemantic" format="color"/>
+
+
+    <attr name="text" format="string" />
+    <attr name="textColor" format="color" />
+    <attr name="textAppearance" format="reference"/>
+
+    <attr name="backgroundColor" format="color" />
+
+    <attr name="borderColor" format="color" />
+    <attr name="borderWidth" format="dimension" />
+    <attr name="cornerRadius" format="dimension" />
+
+    <attr name="buttonElevation" format="integer" />
+
+    <attr name="pressedColor" format="reference"/>
+
+    <!-- 공통 TextField -->
+    <declare-styleable name="UTextField">
+        <attr name="text"/>
+        <attr name="textColor"/>
+        <attr name="textAppearance"/>
+        <attr name="placeholderText"/>
+        <attr name="placeholderTextColor"/>
+
+        <attr name="prevIcon" format="reference"/>
+        <attr name="prevIconTint" format="color|reference" />
+        <attr name="prevIconSize" format="dimension" />
+        <attr name="prevIconPadding" format="dimension" />
+
+        <attr name="cornerRadius"/>
+
+        <attr name="focusStrokeColor" format="color"/>
+
+        <attr name="android:inputType" />
+        <attr name="android:focusable" />
+
+    </declare-styleable>
+
+    <!-- 공통 Button -->
+    <declare-styleable name="UButton">
+        <attr name="text"/>
+        <attr name="textColor"/>
+        <attr name="textAppearance"/>
+
+        <attr name="backgroundColor"/>
+
+        <attr name="borderColor"/>
+        <attr name="borderWidth"/>
+        <attr name="cornerRadius"/>
+
+        <attr name="buttonElevation"/>
+        <attr name="pressedColor"/>
+
+        <attr name="prevIcon"/>
+        <attr name="prevIconTint"/>
+        <attr name="topIcon" format="reference"/>
+    </declare-styleable>
+
+
+    <!-- 공통 Switch -->
+    <declare-styleable name="USwitch">
+        <attr name="android:checked" />
+        <attr name="backgroundColorOn" format="color" />
+        <attr name="backgroundColorOff" format="color" />
+        <attr name="thumbColorOn" format="color" />
+        <attr name="thumbColorOff" format="color" />
+    </declare-styleable>
+
+    <!-- 공통 Chip -->
+    <declare-styleable name="UChip">
+        <attr name="text"/>
+        <attr name="textColor"/>
+        <attr name="textAppearance"/>
+        <attr name="backgroundColor"/>
+        <attr name="borderColor"/>
+        <attr name="borderWidth"/>
+        <attr name="pressedColor"/>
+        <attr name="showCloseIcon" format="boolean"/>
+        <attr name="nextIcon" format="reference"/>
+    </declare-styleable>
+
+    <!-- 공통 SearchBar -->
+    <declare-styleable name="USearchBar">
+        <attr name="text" />
+        <attr name="textColor" />
+        <attr name="textAppearance" />
+        <attr name="placeholderText" />
+        <attr name="placeholderTextColor" />
+
+        <attr name="prevIcon" />
+        <attr name="prevIconTint" />
+        <attr name="prevIconSize" />
+        <attr name="prevIconPadding" />
+
+        <attr name="cornerRadius" />
+        <attr name="backgroundColor" />
+        <attr name="focusStrokeColor" />
+    </declare-styleable>
+
+</resources>

@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+        <import type="com.umc.domain.model.enums.CheckAvailableStatus" />
+        <variable
+            name="uiModel"
+            type="com.umc.presentation.ui.act.check.CheckAvailableUIModel" />
+    </data>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cv_available_root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginVertical="6dp"
+        app:cardBackgroundColor="@color/neutral000"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
+        app:rippleColor="@android:color/transparent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cv_session_icon_container"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:cardBackgroundColor="@android:color/transparent"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:id="@+id/iv_session_icon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:sessionIconByTag="@{uiModel.session.tags}"
+                    tools:src="@drawable/ic_networking_on" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/tv_session_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:text="@{uiModel.session.title}"
+                android:textAppearance="@style/BodyBold"
+                android:textColor="@color/neutral800"
+                android:ellipsize="end"
+                android:maxLines="1"
+                app:layout_constraintBottom_toTopOf="@+id/layout_session_time_group"
+                app:layout_constraintEnd_toStartOf="@+id/btn_status_badge"
+                app:layout_constraintStart_toEndOf="@+id/cv_session_icon_container"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed"
+                tools:text="스터디" />
+
+            <LinearLayout
+                android:id="@+id/layout_session_time_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="@+id/cv_session_icon_container"
+                app:layout_constraintStart_toStartOf="@+id/tv_session_title"
+                app:layout_constraintTop_toBottomOf="@+id/tv_session_title">
+
+                <ImageView
+                    android:id="@+id/iv_session_clock"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_clock" />
+
+                <TextView
+                    android:id="@+id/tv_session_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="@{uiModel.formattedTime}"
+                    android:textAppearance="@style/Caption1"
+                    android:textColor="@color/neutral600"
+                    tools:text="14:00 - 18:00" />
+            </LinearLayout>
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/btn_status_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                app:buttonElevation="0"
+                app:cornerRadius="4dp"
+                app:contentPaddingBottom="4dp"
+                app:contentPaddingTop="4dp"
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintStart_toEndOf="@+id/tv_session_title"
+                app:layout_constraintEnd_toStartOf="@+id/iv_dropdown_arrow"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="@+id/cv_session_icon_container"
+                app:text="@{uiModel.session.status.text}"
+                app:attendanceStatusStyle="@{uiModel.session.status}"
+                app:textAppearance="@style/Caption1Bold"
+                tools:text="출석 전" />
+
+            <ImageView
+                android:id="@+id/iv_dropdown_arrow"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                app:layout_constraintBottom_toBottomOf="@+id/cv_session_icon_container"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:src="@{uiModel.isExpanded ? @drawable/ic_dropdown_up : @drawable/ic_dropdown_down}"
+                tools:src="@drawable/ic_dropdown_down" />
+
+            <LinearLayout
+                android:id="@+id/layout_expand"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                android:visibility="@{uiModel.isExpanded ? View.VISIBLE : View.GONE}"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/cv_session_icon_container"
+                tools:visibility="visible">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cv_map_wrapper"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp">
+
+                    <FrameLayout
+                        android:id="@+id/map_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <com.naver.maps.map.MapView
+                            android:id="@+id/map_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+                    </FrameLayout>
+
+                    <include
+                        android:id="@+id/layout_location_status"
+                        layout="@layout/layout_location_status"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:layout_margin="6dp"
+                        app:uiModel="@{uiModel}" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <LinearLayout
+                    android:id="@+id/layout_status_before"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="@{uiModel.session.status == CheckAvailableStatus.BEFORE ? View.VISIBLE : View.GONE}">
+
+                    <com.umc.presentation.component.UButton
+                        android:id="@+id/btn_attendance_request"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:enabled="@{uiModel.withinRange}"
+                        app:backgroundColor="@{uiModel.withinRange ? @color/primary500 : @color/neutral300}"
+                        app:cornerRadius="8dp"
+                        app:contentPaddingTop="13dp"
+                        app:contentPaddingBottom="13dp"
+                        app:contentPaddingLeft="8dp"
+                        app:contentPaddingRight="8dp"
+                        app:text="@string/attendance_request_button"
+                        app:textAppearance="@style/CalloutBold" />
+
+                    <LinearLayout
+                        android:id="@+id/layout_fail_reason_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:paddingTop="16dp"
+                        android:paddingHorizontal="16dp"
+                        android:orientation="horizontal"
+                        android:visibility="@{uiModel.withinRange ? View.GONE : View.VISIBLE}"
+                        android:clickable="@{!uiModel.withinRange}"
+                        android:enabled="@{!uiModel.withinRange}">
+
+                        <TextView
+                            android:id="@+id/tv_fail_reason_question"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/attendance_fail_reason_question"
+                            android:textAppearance="@style/Footnote"
+                            android:textColor="@color/neutral500" />
+
+                        <TextView
+                            android:id="@+id/tv_fail_reason_action"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:text="@string/attendance_fail_reason_action"
+                            android:textAppearance="@style/Footnote"
+                            android:textColor="@{uiModel.withinRange ? @color/neutral400 : @color/accent500}"
+                            tools:textColor="@color/accent500" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cv_status_pending"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/warning100"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    android:visibility="@{uiModel.session.status == CheckAvailableStatus.PENDING ? View.VISIBLE : View.GONE}">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingVertical="16dp">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_act_hourglass"
+                            app:tint="@color/warning500" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/attendance_status_pending_title"
+                            android:textAppearance="@style/HeadlineBold"
+                            android:textColor="@color/warning900" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textAppearance="@style/Footnote"
+                            android:textColor="@color/warning700"
+                            android:text="출석 정보를 확인하고 있습니다."/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cv_status_completed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/success100"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    android:visibility="@{uiModel.session.status == CheckAvailableStatus.COMPLETED ? View.VISIBLE : View.GONE}">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingVertical="24dp">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_check_success"
+                            app:tint="@color/success700" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/attendance_status_completed_description"
+                            android:textAppearance="@style/FootnoteBold"
+                            android:textColor="@color/success700" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+</layout>
