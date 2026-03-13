@@ -72,7 +72,7 @@ class BottomSheetRewardPunishDialog(
         })
         binding.rcvRewardList.adapter = rewardSelectAdapter
 
-        //초기 초기화
+        //상벌점에 따른 리스트 초기화 작업
         if(isReward){
             //상점
             val rewardList = RewardType.getBonusList()
@@ -83,6 +83,7 @@ class BottomSheetRewardPunishDialog(
             val rewardList = RewardType.getPenaltyList()
             viewModel.setRewardList(rewardList)
         }
+
 
     }
 

@@ -56,7 +56,7 @@ class RewardSelectAdapter(
             binding.item = item
 
             // 현재 아이템이 선택된 아이템인지 여부 확인
-            val isSelected = item == selectedReward
+            val isSelected = (item == selectedReward)
             binding.isSelected = isSelected
 
             //점수 색상 및 텍스트 설정

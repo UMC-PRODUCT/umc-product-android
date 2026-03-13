@@ -35,13 +35,18 @@ BottomSheetRewardPunishUiState())
             PunishCategory.ALL -> punishList
         }
 
-        updateState { copy(currentFilter = category) }
+        updateState { copy(
+            currentFilter = category,
+            selectedItem = null,
+            ) }
         setRewardList(resultList)
+        Log.d("log_reward", "setPunishCategory: ${uiState.value.displayList}")
     }
 
     //선택한 상벌점 카테고리 선택
     fun setRewardType(item: RewardType) {
-        updateState { copy(selectedItem = item) }
+        val checkedItem = if (uiState.value.selectedItem == item) null else item
+        updateState { copy(selectedItem = checkedItem) }
     }
 
     //상벌점 리스트 선택

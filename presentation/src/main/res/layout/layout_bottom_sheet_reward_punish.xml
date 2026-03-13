@@ -9,163 +9,131 @@
             type="com.umc.presentation.ui.act.dialog.BottomSheetRewardPunishViewModel" />
     </data>
 
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layout_root"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clickable="true"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
         android:background="@drawable/bg_bottom_sheet_neutral000_radius28"
-        android:paddingHorizontal="16dp"
-        android:paddingBottom="24dp"
+        android:fillViewport="true">
 
-        >
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/view_handle"
-            android:layout_width="40dp"
-            android:layout_height="4dp"
-            android:layout_marginTop="12dp"
-            android:background="@color/neutral600"
-            app:cardBackgroundColor="@color/neutral600"
-            app:cornerRadius="100dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tv_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:gravity="start"
-            android:text="@{vm.uiState.isReward ? @string/reward_title : @string/punish_title}"
-            android:textAppearance="@style/Title3Bold"
-            android:textColor="@color/neutral800"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/view_handle"
-            tools:text="@string/reward_title"
-            />
-
-        <TextView
-            android:id="@+id/tv_content"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="start"
-            android:text="@{vm.uiState.isReward ? @string/reward_content : @string/punish_content}"
-            android:textAppearance="@style/Subheadline"
-            android:textColor="@color/neutral600"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_title"
-            tools:text="@string/reward_content"
-            />
-
-        <!--벌점 카테고리-->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rcv_punish_tag"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal"
-            android:visibility="@{vm.uiState.isReward ? View.GONE : View.VISIBLE}"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintTop_toBottomOf="@id/tv_content"/>
-
-        <!--상벌점 리스트-->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rcv_reward_list"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
             android:orientation="vertical"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintTop_toBottomOf="@+id/rcv_punish_tag"
-            app:layout_constraintBottom_toTopOf="@id/guideline_vertical"
-            app:layout_constrainedHeight="true"
-            app:layout_constraintVertical_bias="0"
-            android:nestedScrollingEnabled="true"
-            android:overScrollMode="never"
-            />
-        
-        <androidx.constraintlayout.widget.Guideline
-            android:id='@+id/guideline_vertical'
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.55"/>
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="24dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/view_handle"
+                android:layout_width="40dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="12dp"
+                android:layout_gravity="center_horizontal"
+                app:cardBackgroundColor="@color/neutral600"
+                app:cornerRadius="100dp" />
+
+            <TextView
+                android:id="@+id/tv_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:gravity="start"
+                android:text="@{vm.uiState.isReward ? @string/reward_title : @string/punish_title}"
+                android:textAppearance="@style/Title3Bold"
+                android:textColor="@color/neutral800"
+                tools:text="@string/reward_title" />
+
+            <TextView
+                android:id="@+id/tv_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="start"
+                android:text="@{vm.uiState.isReward ? @string/reward_content : @string/punish_content}"
+                android:textAppearance="@style/Subheadline"
+                android:textColor="@color/neutral600"
+                tools:text="@string/reward_content" />
+
+            <!-- 벌점 카테고리 -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rcv_punish_tag"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:visibility="@{vm.uiState.isReward ? View.GONE : View.VISIBLE}"
+                android:nestedScrollingEnabled="true"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+            <!-- 상벌점 리스트 - 높이를 코드에서 동적으로 제한 -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rcv_reward_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                android:nestedScrollingEnabled="false"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
 
-        <!--메모-->
-        <TextView
-            android:id="@+id/tv_memo_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="start"
-            android:text="@string/memo"
-            android:textAppearance="@style/CalloutBold"
-            android:textColor="@color/neutral800"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/rcv_reward_list" />
-
-        <com.umc.presentation.component.UTextField
-            android:id="@+id/textfield_memo"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_marginTop="16dp"
-            android:background="@color/neutral000"
-            app:cardBackgroundColor="@color/neutral000"
-            android:gravity="top|start"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/neutral300"
-            app:layout_constraintTop_toBottomOf="@+id/tv_memo_title"
-            app:placeholderText="@string/memo_placeholder"
-            app:textAppearance="@style/Subheadline"
-            app:text="@{vm.uiState.description}"
-            app:onTextChanged="@{vm::onTextChanged}"
-            />
+            <TextView
+                android:id="@+id/tv_memo_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="start"
+                android:text="@string/memo"
+                android:textAppearance="@style/CalloutBold"
+                android:textColor="@color/neutral800" />
 
 
-        <!--등록 버튼-->
-        <com.umc.presentation.component.UButton
-            android:id="@+id/btn_submit"
-            android:layout_width="0dp"
-            android:layout_height="52dp"
-            android:onClick="@{()->vm.submitReward()}"
-            android:visibility="@{vm.uiState.submitOk == true ? View.VISIBLE : View.GONE}"
-            app:cardBackgroundColor="@color/primary500"
-            app:cornerRadius="8dp"
-            app:pressedColor="@color/primary700"
-            app:text="@string/reward_submit"
-            app:textAppearance="@style/HeadlineBold"
-            app:textColor="@color/neutral000"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            />
+            <com.umc.presentation.component.UTextField
+                android:id="@+id/textfield_memo"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_marginTop="16dp"
+                android:background="@color/neutral000"
+                android:gravity="top|start"
+                app:cardBackgroundColor="@color/neutral000"
+                app:strokeColor="@color/neutral300"
+                app:strokeWidth="1dp"
+                app:placeholderText="@string/memo_placeholder"
+                app:textAppearance="@style/Subheadline"
+                app:text="@{vm.uiState.description}"
+                app:onTextChanged="@{vm::onTextChanged}" />
 
-        <com.umc.presentation.component.UButton
-            android:id="@+id/btn_submit_cancel"
-            android:layout_width="0dp"
-            android:layout_height="52dp"
-            android:visibility="@{vm.uiState.submitOk == false ? View.VISIBLE : View.GONE}"
-            app:cardBackgroundColor="@color/neutral300"
-            app:cornerRadius="8dp"
-            app:pressedColor="@color/neutral300"
-            app:text="@string/reward_submit"
-            app:textAppearance="@style/HeadlineBold"
-            app:textColor="@color/neutral000"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            />
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="16dp">
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/btn_submit"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:onClick="@{()->vm.submitReward()}"
+                    android:visibility="@{vm.uiState.submitOk == true ? View.VISIBLE : View.GONE}"
+                    app:cardBackgroundColor="@color/primary500"
+                    app:cornerRadius="8dp"
+                    app:pressedColor="@color/primary700"
+                    app:text="@string/reward_submit"
+                    app:textAppearance="@style/HeadlineBold"
+                    app:textColor="@color/neutral000" />
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/btn_submit_cancel"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:visibility="@{vm.uiState.submitOk == false ? View.VISIBLE : View.GONE}"
+                    app:cardBackgroundColor="@color/neutral300"
+                    app:cornerRadius="8dp"
+                    app:pressedColor="@color/neutral300"
+                    app:text="@string/reward_submit"
+                    app:textAppearance="@style/HeadlineBold"
+                    app:textColor="@color/neutral000" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
 </layout>
