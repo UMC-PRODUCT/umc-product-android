@@ -11,6 +11,8 @@
         <item name="colorTextPrimarySemantic">@color/neutral800</item>
         <item name="colorTextSecondarySemantic">@color/neutral600</item>
         <item name="colorTextDisablePlaceholderSemantic">@color/neutral400</item>
+        <item name="android:statusBarColor">@color/neutral000</item>
+        <item name="android:navigationBarColor">@color/neutral000</item>
     </style>
 
     <style name="CircleImageAppearance">
