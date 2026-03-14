@@ -14,6 +14,7 @@ class PostLoginUseCase @Inject constructor(
     suspend operator fun invoke(loginType: LoginType, token: String): ApiState<JwtToken> {
         return when(loginType) {
             LoginType.KAKAO -> authRepository.kakaoLogin(LoginRequest(token))
+            LoginType.APPLE,
             LoginType.GOOGLE -> authRepository.googleLogin(LoginRequest(token))
         }
     }
