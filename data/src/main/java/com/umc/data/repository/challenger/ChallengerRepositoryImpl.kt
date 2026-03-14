@@ -1,8 +1,11 @@
 package com.umc.data.repository.challenger
 
 import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSource
+import com.umc.data.request.challenger.AddChallengerPointRequest
 import com.umc.data.response.challenger.ChallengerResponse.Companion.toManageModel
 import com.umc.data.response.challenger.ChallengerResponse.Companion.toModel
+import com.umc.data.response.member.MemberResponse.Companion.toDomain
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.act.challenger.AdminChallengerList
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerList
@@ -103,5 +106,22 @@ class ChallengerRepositoryImpl @Inject constructor(
             part = part,
             keyword = keyword
         ).map { it.toModel() }
+    }
+
+    //챌린저 상벌점 추가
+    override suspend fun addChallengerPoint(
+        challengerId: Long,
+        pointType: String,
+        pointValue: Int,
+        description: String
+    ): ApiState<UserInfo> {
+        val request = AddChallengerPointRequest(
+            pointType = pointType,
+            pointValue = pointValue,
+            description = description
+        )
+        return challengerRemoteDataSource.addChallengerPoint(challengerId, request).map {
+            it.toDomain()
+        }
     }
 }

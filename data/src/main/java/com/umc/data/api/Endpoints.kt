@@ -46,6 +46,9 @@ object Endpoints {
 
         const val CHALLENGER_RECORD = "api/v1/challenger-record"
         const val CHALLENGER_RECORD_MEMBER = "api/v1/challenger-record/member"
+
+        const val CHALLENGER_POINT = "api/v1/challenger/{challengerId}/points"
+
     }
 
     object Member {
