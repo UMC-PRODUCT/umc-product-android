@@ -28,6 +28,8 @@ import com.google.android.gms.common.api.Scope
 import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
 import com.umc.presentation.MainGraphDirections
+import com.umc.presentation.ui.act.dialog.BottomSheetRewardEtcDialog
+import com.umc.presentation.ui.act.dialog.BottomSheetRewardPunishDialog
 import com.umc.presentation.ui.mypage.dialog.BottomSheetAddCodeDialog
 import kotlinx.coroutines.tasks.await
 
@@ -213,10 +215,16 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             
 
             is MypageFragmentEvent.NavigateToWebstieUmc -> {
+                //val dialog = BottomSheetRewardEtcDialog(13L)
+                //dialog.show(parentFragmentManager, "BottomSheetRewardEtcDialog")
+
                 openWebpage(viewModel.uiState.value.websiteUMC)
             }
 
             is MypageFragmentEvent.NavigateToInstagramUmc -> {
+                val dialog = BottomSheetRewardPunishDialog(13L, false)
+                dialog.show(parentFragmentManager, "BottomSheetRewardPunishDialog")
+
                 openWebpage(viewModel.uiState.value.instagramUMC)
             }
 

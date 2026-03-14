@@ -13,7 +13,7 @@ enum class RewardType(val label: String, val score: Int,
     //상점
     BLOG_CHALLENGE("블로그 챌린지", 3),
     BEST_WORKBOOK("베스트 워크북 선정", 2),
-    BEST_WORKBOOK_V2("베스트 워크북 V2", 2),
+    BEST_WORKBOOK_V2("베스트 워크북 V2", 0),
     UMC_EVENT_REVIEW("행사 리뷰어", 1),
     PEER_REVIEW_SUBMISSION("PeerReview 작성", 1),
 

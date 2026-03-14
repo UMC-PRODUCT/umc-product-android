@@ -1,18 +1,22 @@
 package com.umc.presentation.ui.act.dialog
 
 import android.util.Log
+import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.enums.PunishCategory
 import com.umc.domain.model.enums.RewardType
+import com.umc.domain.model.request.challenger.ChallengerPointRequest
+import com.umc.domain.usecase.challenger.AddChallengerPointUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
 class BottomSheetRewardPunishViewModel @Inject constructor(
-
+    private val addChallengerPointUseCase: AddChallengerPointUseCase
 ) : BaseViewModel<BottomSheetRewardPunishUiState, BottomSheetRewardPunishEvent>(
 BottomSheetRewardPunishUiState())
 {
@@ -68,9 +72,25 @@ BottomSheetRewardPunishUiState())
 
     //상벌점 제출
     fun submitReward(){
-        Log.d("log_reward", "submitReward: ${uiState.value.selectedItem}")
-        Log.d("log_reward", "desription: ${uiState.value.description}")
+        /**TODO: 수정**/
+        val challengerId = uiState.value.challengerId
+        val pointType = uiState.value.selectedItem?.name ?: ""
+        val pointValue = uiState.value.selectedItem?.score ?: 0
+        val description = uiState.value.description
+
+        viewModelScope.launch {
+            resultResponse(
+                response = addChallengerPointUseCase(challengerId, pointType, pointValue, description),
+                successCallback = {
+                    emitEvent(BottomSheetRewardPunishEvent.SendSuccess)
+                },
+                errorCallback = { error ->
+                    emitEvent(BottomSheetRewardPunishEvent.SendFail(error.message))
+                }
+            )
+        }
     }
+
 }
 
 
@@ -89,5 +109,6 @@ data class BottomSheetRewardPunishUiState(
 
 
 sealed interface BottomSheetRewardPunishEvent: UiEvent {
-
+    object SendSuccess : BottomSheetRewardPunishEvent
+    data class SendFail(val message: String) : BottomSheetRewardPunishEvent
 }

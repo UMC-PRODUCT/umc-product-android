@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.act.dialog
 
 import android.view.View
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -119,6 +120,14 @@ class BottomSheetRewardPunishDialog(
 
     fun handleEvent(event: BottomSheetRewardPunishEvent) {
         when (event) {
+            is BottomSheetRewardPunishEvent.SendSuccess -> {
+                Toast.makeText(requireContext(), "상/벌점이 등록되었습니다.", Toast.LENGTH_SHORT).show()
+                dismiss()
+            }
+
+            is BottomSheetRewardPunishEvent.SendFail -> {
+                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+            }
             else -> {}
         }
 

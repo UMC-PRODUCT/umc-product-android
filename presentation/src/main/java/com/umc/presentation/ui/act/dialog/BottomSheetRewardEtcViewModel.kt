@@ -1,15 +1,19 @@
 package com.umc.presentation.ui.act.dialog
 
 import android.util.Log
+import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.enums.RewardType
+import com.umc.domain.usecase.challenger.AddChallengerPointUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class BottomSheetRewardEtcViewModel @Inject constructor(
-
+    private val addChallengerPointUseCase: AddChallengerPointUseCase
 ) : BaseViewModel<BottomSheetRewardEtcUiState, BottomSheetRewardEtcEvent>(
     BottomSheetRewardEtcUiState()
 )
@@ -62,8 +66,22 @@ class BottomSheetRewardEtcViewModel @Inject constructor(
 
     //상벌점 등록
     fun submitReward(){
-        Log.d("log_reward", "상점: ${uiState.value.reward}, 벌점: ${uiState.value.punish}")
-        Log.d("Log_reward", "설명: ${uiState.value.description}")
+        val challengerId = uiState.value.challengerId
+        val pointType = RewardType.CUSTOM.name
+        val pointValue = uiState.value.reward - uiState.value.punish
+        val description = uiState.value.description
+
+        viewModelScope.launch {
+            resultResponse(
+                response = addChallengerPointUseCase(challengerId, pointType, pointValue, description),
+                successCallback = {
+                    emitEvent(BottomSheetRewardEtcEvent.SendSuccess)
+                },
+                errorCallback = { error ->
+                    emitEvent(BottomSheetRewardEtcEvent.SendFail(error.message))
+                }
+            )
+        }
     }
     
 }
@@ -80,6 +98,7 @@ data class BottomSheetRewardEtcUiState(
 }
 
 sealed interface BottomSheetRewardEtcEvent: UiEvent {
-
+    object SendSuccess : BottomSheetRewardEtcEvent
+    data class SendFail(val message: String) : BottomSheetRewardEtcEvent
 }
 
