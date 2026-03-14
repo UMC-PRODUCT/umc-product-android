@@ -222,8 +222,8 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             }
 
             is MypageFragmentEvent.NavigateToInstagramUmc -> {
-                val dialog = BottomSheetRewardPunishDialog(13L, false)
-                dialog.show(parentFragmentManager, "BottomSheetRewardPunishDialog")
+                //val dialog = BottomSheetRewardPunishDialog(13L, false)
+                //dialog.show(parentFragmentManager, "BottomSheetRewardPunishDialog")
 
                 openWebpage(viewModel.uiState.value.instagramUMC)
             }
