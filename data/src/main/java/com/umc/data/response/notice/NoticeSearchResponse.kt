@@ -38,9 +38,9 @@ data class NoticeSummaryResponse(
     val viewCount: Int,
     val createdAt: String,
     val targetInfo: NoticeTargetResponse,
-    val authorChallengerId: Long,
-    val authorNickname: String,
-    val authorName: String
+    val authorChallengerId: Long?,
+    val authorNickname: String?,
+    val authorName: String?
 ) {
     companion object {
         fun NoticeSummaryResponse.toModel(): NoticeSummary = NoticeSummary(
@@ -51,9 +51,9 @@ data class NoticeSummaryResponse(
             viewCount = viewCount,
             createdAt = createdAt,
             targetInfo = targetInfo.toModel(),
-            authorChallengerId = authorChallengerId,
-            authorNickname = authorNickname,
-            authorName = authorName
+            authorChallengerId = authorChallengerId ?: 0,
+            authorNickname = authorNickname ?: "",
+            authorName = authorName ?: ""
         )
     }
 }

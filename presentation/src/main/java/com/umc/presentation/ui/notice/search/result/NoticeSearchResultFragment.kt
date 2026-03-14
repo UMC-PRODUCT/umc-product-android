@@ -59,6 +59,7 @@ class NoticeSearchResultFragment : BaseFragment<FragmentNoticeSearchResultBindin
             launch {
                 viewModel.uiState.collect { state ->
                     noticeAdapter.submitList(state.noticeList)
+                    noticeAdapter.setReadNoticeIds(state.readNoticeIds)
                 }
             }
         }

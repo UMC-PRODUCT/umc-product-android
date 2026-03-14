@@ -32,8 +32,8 @@ android {
         applicationId = "com.umc.product"
         minSdk = 24
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.0.5"
+        versionCode = 13
+        versionName = "1.1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -124,6 +124,10 @@ dependencies {
 
     //coli (이미지)
     implementation(libs.coil)
+
+    // Play In-App Update
+    implementation(libs.play.update)
+    implementation(libs.play.update.ktx)
 }
 
 fun getApiKey(propertyKey: String): String {

@@ -46,6 +46,12 @@
         <action
             android:id="@+id/action_login_to_sign_up"
             app:destination="@id/signUpFragment"/>
+
+        <action
+            android:id="@+id/action_login_to_sign_up_fail"
+            app:destination="@id/signUpFailFragment"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment

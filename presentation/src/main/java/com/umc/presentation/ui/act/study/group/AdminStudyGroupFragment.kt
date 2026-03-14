@@ -56,12 +56,12 @@ class AdminStudyGroupFragment :
                 )
             },
             onClickAddMember = { item ->
-                showPickMembersForGroup(item)
+                viewModel.onClickEditMembers(item.groupId)
             }
         )
 
         binding.btnCreateGroup.setOnClickListener {
-            findNavController().navigate(R.id.adminStudyGroupAddFragment)
+            viewModel.onClickCreateGroup()
         }
 
         binding.rvGroups.layoutManager = LinearLayoutManager(requireContext())
@@ -78,7 +78,21 @@ class AdminStudyGroupFragment :
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiEvent.collect { event ->
                 when (event) {
-                    is AdminStudyGroupEvent.ShowToast -> showToast(event.message)
+                    is AdminStudyGroupEvent.ClickCreateGroup -> {
+                        findNavController().navigate(R.id.adminStudyGroupAddFragment)
+                    }
+
+                    is AdminStudyGroupEvent.ClickEditMembers -> {
+                        val item = viewModel.uiState.value.groups
+                            .firstOrNull { it.groupId == event.groupId }
+                            ?: return@collect
+
+                        showPickMembersForGroup(item)
+                    }
+
+                    is AdminStudyGroupEvent.ShowToast -> {
+                        showToast(event.message)
+                    }
                 }
             }
         }

@@ -64,6 +64,7 @@ object UserCheckBindingAdapters {
             CategoryType.STUDY -> R.drawable.ic_study_on
             CategoryType.HACKATHON -> R.drawable.ic_workshop_on
             CategoryType.WORKSHOP -> R.drawable.ic_workshop_on
+            CategoryType.AFTER_PARTY -> R.drawable.ic_afterparty_on
             else -> R.drawable.ic_general_on
         }
         view.setImageResource(iconRes)

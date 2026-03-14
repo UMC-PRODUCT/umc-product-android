@@ -192,6 +192,7 @@ class SignUpViewModel @Inject constructor(
                 )
             )
 
+            startLoading()
             resultResponse(
                 response = registerUseCase(request),
                 successCallback = {

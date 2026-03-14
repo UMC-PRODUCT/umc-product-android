@@ -12,6 +12,7 @@ import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
 import com.umc.domain.usecase.GetGisuInfoUseCase
+import com.umc.domain.usecase.organization.GetGisuListUseCase
 
 import com.umc.domain.usecase.schedule.GetScheduleMonthUseCase
 
@@ -19,6 +20,7 @@ import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import com.umc.presentation.util.GisuCache
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -36,6 +38,7 @@ class HomeViewModel @Inject constructor(
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val getScheduleMonthUseCase: GetScheduleMonthUseCase, //월별 일정 가져오기
     private val getGisuInfoUseCase: GetGisuInfoUseCase, //기수 정보 가져오기
+    private val getGisuListUseCase: GetGisuListUseCase, //전체 기수 리스트 가져오기
 ) : BaseViewModel<HomeFragmentUiState, HomeFragmentEvent>(
             HomeFragmentUiState()) {
 
@@ -51,6 +54,9 @@ class HomeViewModel @Inject constructor(
 
         //3. 금일(월) 데이터 가져오기
         getScheduleMonth(today.year, today.month)
+
+        //4. 전체 기수 리스트 캐시
+        loadGisuList()
 
     }
 
@@ -131,6 +137,17 @@ class HomeViewModel @Inject constructor(
                 }
             )
         }
+    }
+
+    //전체 기수 리스트 캐시
+    private fun loadGisuList() = viewModelScope.launch {
+        resultResponse(
+            response = getGisuListUseCase(),
+            successCallback = { gisuList ->
+                // 전역 캐시에 저장
+                GisuCache.setGisuList(gisuList.gisuList)
+            }
+        )
     }
 
     //UserInfo를 받아았을 때 이를 파싱해서 UI 요소로 분할하는 함수
@@ -385,9 +402,6 @@ data class HomeFragmentUiState(
     val allPlans: List<SchedulePlanItem> = listOf(
     ), //월별 모든 일정
     val plusDays : Int = 0, //연속 날짜 처리 용도
-
-
-
 
 ) : UiState
 

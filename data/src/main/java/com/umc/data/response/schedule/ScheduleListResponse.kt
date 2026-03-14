@@ -15,7 +15,7 @@ data class ScheduleListResponse (
     @SerializedName("startTime") val startTime: String,
     @SerializedName("endTime") val endTime: String,
     @SerializedName("locationName") val locationName: String,
-    @SerializedName("sheetId") val sheetId: Long,
+    @SerializedName("sheetId") val sheetId: Long?,
     @SerializedName("totalCount") val totalCount: Int,
     @SerializedName("presentCount") val presentCount: Int,
     @SerializedName("pendingCount") val pendingCount: Int,
