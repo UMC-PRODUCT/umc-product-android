@@ -2,6 +2,7 @@ package com.umc.presentation.ui.notice.write
 
 import android.net.Uri
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UDomainFormat.formatDateForServer
 import com.umc.domain.model.enums.NoticeChipClassType
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.enums.UserPart
@@ -30,12 +31,7 @@ import com.umc.presentation.base.UiState
 import com.umc.presentation.ui.notice.write.model.NoticeImageItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -683,8 +679,8 @@ class NoticeWriteViewModel @Inject constructor(
                         title = state.voteTitle,
                         isAnonymous = state.canAnonymity,
                         allowMultipleChoice = state.canSelectMultiple,
-                        startsAt = formatDateForServer(state.voteStartDate),
-                        endsAtExclusive = formatDateForServer(state.voteEndDate),
+                        startsAt = state.voteStartDate.formatDateForServer(),
+                        endsAtExclusive = state.voteEndDate.formatDateForServer(),
                         options = validOptions
                 )
                 resultResponse(
@@ -751,33 +747,3 @@ fun formatDateForDisplay(calendar: Calendar): String {
     return "${year}년 ${month}월 ${day}일"
 }
 
-// 날짜 문자열을 기기 로컬 시간대 자정(00:00:00)으로 해석 후 UTC ISO 문자열로 변환
-fun formatDateForServer(dateString: String): String {
-    val input = dateString.trim()
-    val koreanRegex = """(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일""".toRegex()
-    val dotRegex = """(\d{4})\.(\d{1,2})\.(\d{1,2})""".toRegex()
-    val dashRegex = """(\d{4})-(\d{1,2})-(\d{1,2})""".toRegex()
-
-    val localDate = when {
-        koreanRegex.matches(input) -> {
-            val (year, month, day) = koreanRegex.find(input)!!.destructured
-            LocalDate.of(year.toInt(), month.toInt(), day.toInt())
-        }
-        dotRegex.matches(input) -> {
-            val (year, month, day) = dotRegex.find(input)!!.destructured
-            LocalDate.of(year.toInt(), month.toInt(), day.toInt())
-        }
-        dashRegex.matches(input) -> {
-            val (year, month, day) = dashRegex.find(input)!!.destructured
-            LocalDate.of(year.toInt(), month.toInt(), day.toInt())
-        }
-        else -> runCatching { LocalDate.parse(input) }.getOrNull()
-    } ?: return ""
-
-    val localMidnight = localDate.atStartOfDay(ZoneId.systemDefault())
-    val utcInstant = localMidnight.withZoneSameInstant(ZoneOffset.UTC).toInstant()
-
-    return DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-        .withZone(ZoneOffset.UTC)
-        .format(utcInstant)
-}
