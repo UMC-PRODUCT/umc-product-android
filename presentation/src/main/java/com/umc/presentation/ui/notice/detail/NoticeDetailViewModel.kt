@@ -310,6 +310,7 @@ class NoticeDetailViewModel @Inject constructor(
                 copy(
                     detail = detail,
                     selectedVoteOptionIds = selectedOptionIds.toList(),
+                    isVoteEditMode = false,
                     isLoading = false,
                     formattedCreatedAt = formattedCreatedAt,
                     formattedTargetInfo = formattedTargetInfo,
@@ -349,6 +350,7 @@ class NoticeDetailViewModel @Inject constructor(
                     copy(
                         detail = detail,
                         selectedVoteOptionIds = selectedOptionIds.toList(),
+                        isVoteEditMode = false,
                         isLoading = false,
                         formattedCreatedAt = formattedCreatedAt,
                         formattedTargetInfo = formattedTargetInfo,
@@ -365,6 +367,7 @@ class NoticeDetailViewModel @Inject constructor(
                     copy(
                         detail = detail,
                         selectedVoteOptionIds = selectedOptionIds.toList(),
+                        isVoteEditMode = false,
                         isLoading = false,
                         formattedCreatedAt = formattedCreatedAt,
                         formattedTargetInfo = formattedTargetInfo,
@@ -527,7 +530,19 @@ class NoticeDetailViewModel @Inject constructor(
         }
     }
 
-    fun onClickSubmitVote() = viewModelScope.launch {
+    private fun isAlreadyVoted(): Boolean {
+        return uiState.value.detail.vote?.mySelectedOptionIds?.isNotEmpty() == true
+    }
+
+    fun onClickVoteAction() {
+        if (isAlreadyVoted() && !uiState.value.isVoteEditMode) {
+            updateState { copy(isVoteEditMode = true) }
+            return
+        }
+        onClickSubmitVote()
+    }
+
+    private fun onClickSubmitVote() = viewModelScope.launch {
         val vote = uiState.value.detail.vote ?: return@launch
         val voteId = vote.voteId
         val optionIds = selectedOptionIds.toList()
@@ -622,6 +637,7 @@ data class NoticeFragmentUiState(
     val isMenuVisible: Boolean = false,
     val isCurrentUserMember: Boolean = false,
     val isAuthor: Boolean = false,
+    val isVoteEditMode: Boolean = false,
 ) : UiState
 
 sealed interface NoticeFragmentEvent : UiEvent {

@@ -638,11 +638,11 @@
                         android:layout_height="wrap_content"
                         app:cardBackgroundColor="@color/primary500"
                         app:contentPaddingBottom="13dp"
-                        android:onClick="@{()->vm.onClickSubmitVote()}"
+                        android:onClick="@{()->vm.onClickVoteAction()}"
                         app:contentPaddingTop="13dp"
                         app:cornerRadius="8dp"
                         app:layout_constraintTop_toBottomOf="@id/recycler_vote"
-                        app:text="@string/notice_detail_vote"
+                        app:text='@{vm.uiState.detail.vote != null &amp;&amp; vm.uiState.detail.vote.mySelectedOptionIds != null &amp;&amp; !vm.uiState.detail.vote.mySelectedOptionIds.isEmpty() &amp;&amp; !vm.uiState.isVoteEditMode ? @string/notice_detail_vote_edit : @string/notice_detail_vote}'
                         app:textAppearance="@style/CalloutBold"
                         app:textColor="@color/neutral000" />
 

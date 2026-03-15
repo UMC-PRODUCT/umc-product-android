@@ -274,6 +274,7 @@
     <string name="notice_write_anonymity">익명 투표</string>
     <string name="notice_detail_about_link_title">관련 링크 바로가기</string>
     <string name="notice_detail_vote">투표하기</string>
+    <string name="notice_detail_vote_edit">투표 수정</string>
     <string name="notice_detail_unconfirmed_people_check">미확인 인원 확인하기</string>
     <string name="notice_detail_confirmed_people_check">수신 확인 현황</string>
     <string name="notice_detail_now_confirmed_people">공지 열람 현황</string>

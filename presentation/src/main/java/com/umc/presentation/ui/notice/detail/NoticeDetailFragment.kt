@@ -112,7 +112,7 @@ class NoticeDetailFragment :
                         noticeDetailVoteAdapter.submitList(options)
                     }
                     noticeDetailVoteAdapter.setSelectedOptionIds(state.selectedVoteOptionIds.toSet())
-                    val isVoted = state.detail.vote?.mySelectedOptionIds?.isNotEmpty() == true
+                    val isVoted = state.detail.vote?.mySelectedOptionIds?.isNotEmpty() == true && !state.isVoteEditMode
                     noticeDetailVoteAdapter.setVotedState(isVoted, state.detail.vote)
                     imageList = state.detail.images
                     noticeDetailImageAdapter.submitList(imageList)
