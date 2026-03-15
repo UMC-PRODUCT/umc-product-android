@@ -101,5 +101,15 @@
         <action
             android:id="@+id/action_noticeDetailFragment_to_noticeWriteFragment"
             app:destination="@id/noticeWriteFragment" />
+
+        <action
+            android:id="@+id/action_noticeDetailFragment_to_noticeVoteParticipantsFragment"
+            app:destination="@id/noticeVoteParticipantsFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/noticeVoteParticipantsFragment"
+        android:name="com.umc.presentation.ui.notice.detail.NoticeVoteParticipantsFragment"
+        android:label="투표자 목록"
+        tools:layout="@layout/fragment_notice_vote_participants" />
 </navigation>

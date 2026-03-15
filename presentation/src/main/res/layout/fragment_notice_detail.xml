@@ -636,9 +636,10 @@
                         android:id="@+id/text_vote_participants"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:onClick="@{()->vm.onClickVoteParticipants()}"
                         android:text='@{String.valueOf(vm.uiState.detail.vote.totalParticipants) + "명 참여"}'
                         android:textAppearance="@style/FootnoteBold"
-                        android:layout_marginEnd="8dp"
                         android:textColor="@color/neutral600"
                         app:layout_constraintEnd_toStartOf="@id/image_vote_participants_arrow"
                         app:layout_constraintTop_toBottomOf="@id/recycler_vote"
@@ -648,11 +649,12 @@
                         android:id="@+id/image_vote_participants_arrow"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="@null"
-                        android:visibility='@{vm.uiState.detail.vote != null &amp;&amp; !vm.uiState.detail.vote.isAnonymous ? View.VISIBLE : View.GONE}'
-                        android:src="@drawable/ic_arrow_next"
                         android:layout_marginEnd="4dp"
+                        android:contentDescription="@null"
+                        android:onClick="@{()->vm.onClickVoteParticipants()}"
+                        android:src="@drawable/ic_arrow_next"
                         android:tint="@color/neutral300"
+                        android:visibility='@{vm.uiState.detail.vote != null &amp;&amp; !vm.uiState.detail.vote.isAnonymous ? View.VISIBLE : View.GONE}'
                         app:layout_constraintBottom_toBottomOf="@id/text_vote_participants"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/text_vote_participants"

@@ -80,14 +80,16 @@ data class NoticeVoteOptionResponse(
     val optionId: Long,
     val content: String,
     val voteCount: Int,
-    val voteRate: Double
+    val voteRate: Double,
+    val selectedMemberIds: List<Long>? = null
 ) {
     companion object {
         fun NoticeVoteOptionResponse.toModel(): NoticeVoteOption = NoticeVoteOption(
             optionId = optionId,
             content = content,
             voteCount = voteCount,
-            voteRate = voteRate
+            voteRate = voteRate,
+            selectedMemberIds = selectedMemberIds ?: emptyList()
         )
     }
 }

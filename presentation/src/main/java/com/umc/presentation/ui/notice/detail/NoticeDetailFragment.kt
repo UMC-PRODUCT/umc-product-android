@@ -136,7 +136,10 @@ class NoticeDetailFragment :
             is NoticeFragmentEvent.ShowSuccess -> {
                 Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
             }
-        }
+            NoticeFragmentEvent.MoveToVoteParticipantsFragment -> {
+                moveToVoteParticipants()
+            }
+}
     }
 
     private fun showBottomSheet() {
@@ -177,6 +180,11 @@ class NoticeDetailFragment :
         } else {
             "0 / 0"
         }
+    }
+
+    private fun moveToVoteParticipants() {
+        val action = NoticeDetailFragmentDirections.actionNoticeDetailFragmentToNoticeVoteParticipantsFragment()
+        findNavController().navigate(action)
     }
 
     private fun moveToLinkUrl(rawUrl: String?) {

@@ -279,6 +279,9 @@
     <string name="notice_detail_confirmed_people_check">수신 확인 현황</string>
     <string name="notice_detail_now_confirmed_people">공지 열람 현황</string>
     <string name="notice_detail_send_notification">재알림 보내기</string>
+    <string name="notice_vote_participants_title">투표 현황</string>
+    <string name="notice_vote_participants_empty">참여자가 없습니다</string>
+    <string name="notice_vote_people_count">%1$d명</string>
 
     <!-- Dialog -->
     <string name="common_cancel">취소</string>
@@ -286,6 +289,7 @@
     <string name="common_approve">승인하기</string>
     <string name="common_reject">반려하기</string>
     <string name="common_submit">제출하기</string>
+    <string name="common_back">뒤로가기</string>
 
     <string name="admin_approve_title">출석 요청을 승인하시겠습니까?</string>
     <string name="admin_reject_title">출석 요청을 반려하시겠습니까?</string>

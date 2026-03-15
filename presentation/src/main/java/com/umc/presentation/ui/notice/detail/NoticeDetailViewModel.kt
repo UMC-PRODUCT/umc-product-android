@@ -9,6 +9,7 @@ import com.umc.domain.model.notice.NoticeReadStatistics
 import com.umc.domain.model.notice.NoticeTarget
 import com.umc.domain.model.notice.NoticeVote
 import com.umc.domain.model.notice.NoticeVoteOption
+import com.umc.domain.model.notice.NoticeVoteParticipant
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.usecase.GetChallengerIdUseCase
 import com.umc.domain.usecase.GetGisuInfoUseCase
@@ -586,6 +587,44 @@ class NoticeDetailViewModel @Inject constructor(
         emitEvent(NoticeFragmentEvent.ShowBottomSheetEvent)
     }
 
+    fun onClickVoteParticipants() = viewModelScope.launch {
+        val vote = uiState.value.detail.vote ?: return@launch
+        if (vote.isAnonymous) return@launch
+
+        val allMemberIds = vote.options
+            .flatMap { it.selectedMemberIds }
+            .distinct()
+
+        val memberInfoMap = mutableMapOf<Long, NoticeVoteParticipant>()
+
+        allMemberIds.forEach { memberId ->
+            resultResponse(
+                response = getMemberProfileUseCase(memberId),
+                successCallback = { data ->
+                    memberInfoMap[memberId] = NoticeVoteParticipant(
+                        memberId = data.id,
+                        nickname = data.nickname,
+                        name = data.name,
+                        profileImageUrl = data.profileImageLink
+                    )
+                },
+                errorCallback = {
+                }
+            )
+        }
+
+        val sections = vote.options.map { option ->
+            VoteOptionParticipants(
+                optionId = option.optionId,
+                optionTitle = option.content,
+                participants = option.selectedMemberIds.mapNotNull { memberInfoMap[it] }
+            )
+        }
+
+        updateState { copy(voteParticipantSections = sections) }
+        emitEvent(NoticeFragmentEvent.MoveToVoteParticipantsFragment)
+    }
+
     fun onClickSendReminder(targetChallengerIds: List<Long>) = viewModelScope.launch {
         if (currentNoticeId == 0L) return@launch
 
@@ -653,6 +692,7 @@ data class NoticeFragmentUiState(
     val isCurrentUserMember: Boolean = false,
     val isAuthor: Boolean = false,
     val isVoteEditMode: Boolean = false,
+    val voteParticipantSections: List<VoteOptionParticipants> = emptyList(),
 ) : UiState
 
 sealed interface NoticeFragmentEvent : UiEvent {
@@ -661,4 +701,11 @@ sealed interface NoticeFragmentEvent : UiEvent {
     data class MoveToEditPostEvent(val noticeId: Long) : NoticeFragmentEvent
     data class ShowError(val message: String) : NoticeFragmentEvent
     data class ShowSuccess(val message: String) : NoticeFragmentEvent
+    object MoveToVoteParticipantsFragment : NoticeFragmentEvent
 }
+
+data class VoteOptionParticipants(
+    val optionId: Long,
+    val optionTitle: String,
+    val participants: List<NoticeVoteParticipant>
+)
