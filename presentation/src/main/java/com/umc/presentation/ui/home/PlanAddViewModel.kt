@@ -98,6 +98,7 @@ constructor(
                     
                     //유저 정보를 위해 getMemberProfileUsecase로 호출
                     viewModelScope.launch {
+                        /**추가 로직**/
                         //async로 대기하자
                         val participantsIds = listOf<Long>(16L, 17L, 18L)
                         //detail.participantMemberIds
@@ -129,7 +130,7 @@ constructor(
                             )
                             item
                         }
-
+                        /**추가 로직 종료**/
 
                         updateState {
                             //1. 도메인 String -> 내부 연산용 Calendar 생성
@@ -152,10 +153,10 @@ constructor(
                             }
 
                             //5. 참석자 매칭
-                            val participantSummaryText = when{
-                                detail.participantMemberIds.isEmpty() -> ""
-                                detail.participantMemberIds.size == 1 -> uiState.value.myInfo.name
-                                else -> "${uiState.value.myInfo.name} 외 ${detail.participantMemberIds.size - 1}명"
+                            val participantSummaryText = when {
+                                participants.isEmpty() -> ""
+                                participants.size == 1 -> participants[0].name
+                                else -> "${participants[0].name} 외 ${participants.size - 1}명"
                             }
 
 
