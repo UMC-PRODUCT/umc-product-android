@@ -387,8 +387,8 @@ class NoticeDetailViewModel @Inject constructor(
         return vote?.let {
             val choiceType = if (it.allowMultipleChoice) "복수선택" else "단일선택"
             val anonymity = if (it.isAnonymous) "익명" else "실명"
-            val startDate = it.startDateKst.parseDateTime().first
-            val endDate = it.endDateKst.parseDateTime().first
+            val startDate = it.startsAt.parseDateTime().first
+            val endDate = it.endsAtExclusive.parseDateTime().first
             "${startDate} ~ ${endDate} • ${choiceType} • ${anonymity}"
         } ?: ""
     }
