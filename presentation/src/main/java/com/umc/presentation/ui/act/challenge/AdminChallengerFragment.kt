@@ -1,8 +1,10 @@
 package com.umc.presentation.ui.act.challenge
 
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.presentation.base.BaseFragment
@@ -17,6 +19,7 @@ import com.umc.presentation.component.UBasicDialog
 import com.umc.presentation.component.UBasicDialogModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import com.umc.presentation.R
 
 @AndroidEntryPoint
 class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, AdminChallengerUiState, AdminChallengerEvent, AdminChallengerViewModel>(
@@ -78,13 +81,15 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
 
     override fun handleEvent(event: AdminChallengerEvent) {
         when (event) {
-            is AdminChallengerEvent.ShowManageDialog -> {
-                val formattedHistory = event.model.history.map { point ->
-                    point.copy(date = UFormat.parseDateTime(point.date).first)
-                }
-                val formattedModel = event.model.copy(history = formattedHistory)
-                showManageDialog(formattedModel, formattedModel.challengerId.toInt())
+            is AdminChallengerEvent.NavigateToDetail -> {
+                findNavController().navigate(
+                    R.id.action_activityManagementFragment_to_adminChallengerDetailFragment,
+                    Bundle().apply {
+                        putLong("challengerId", event.challengerId.toLong())
+                    }
+                )
             }
+
             is AdminChallengerEvent.ShowToast -> {
                 UToast.createToast(
                     context = requireContext(),
@@ -95,31 +100,4 @@ class AdminChallengerFragment : BaseFragment<FragmentAdminChallengerBinding, Adm
         }
     }
 
-    private fun showManageDialog(model: ChallengerManageDialogModel, challengerId: Int) {
-        val dialog = ChallengerManageDialog(
-            model = model,
-            onAbsenceSubmit = { reason ->
-                // 아웃 부여 시 POINT_TYPE을 OUT으로 전송
-                viewModel.grantPoint(challengerId, PointType.OUT, reason)
-            },
-            onWarningSubmit = { reason ->
-                // 경고 부여 시 POINT_TYPE을 WARNING으로 전송
-                viewModel.grantPoint(challengerId, PointType.WARNING, reason)
-            },
-            onDeleteHistory = { point ->
-                val warningDialog = UBasicDialog(
-                    model = UBasicDialogModel.Warning(
-                        title = "해당 기록을 삭제하시겠습니까?",
-                        content = "삭제된 기록은 복구가 어렵습니다.",
-                        positiveText = "삭제하기"
-                    ),
-                    onConfirm = {
-                        viewModel.deletePoint(challengerId, point.id)
-                    }
-                )
-                warningDialog.show(childFragmentManager, "DeleteWarningDialog")
-            }
-        )
-        dialog.show(childFragmentManager, "UChallengerManageDialog")
-    }
 }
