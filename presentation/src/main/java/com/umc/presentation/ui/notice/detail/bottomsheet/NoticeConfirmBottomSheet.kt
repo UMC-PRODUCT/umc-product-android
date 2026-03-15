@@ -12,7 +12,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.umc.presentation.R
 import com.umc.presentation.databinding.BottomSheetNoticeConfirmedPeopleBinding
@@ -30,7 +29,7 @@ class NoticeConfirmBottomSheet : BottomSheetDialogFragment() {
 
     private val noticePeopleAdapter: NoticePeopleAdapter by lazy { NoticePeopleAdapter() }
 
-    private var isShowingRead: Boolean = true
+    private var isShowingRead: Boolean = false
 
     private var _binding: BottomSheetNoticeConfirmedPeopleBinding? = null
     private val binding get() = _binding!!
@@ -79,9 +78,9 @@ class NoticeConfirmBottomSheet : BottomSheetDialogFragment() {
         observeUiState()
         observeUiEvent()
 
-        // 초기 리스트 설정
-        updateList()
-    }
+        // 초기 탭(미확인) 설정 및 리스트 로드
+        onClickUnConfirmButton()
+}
 
     private fun observeUiState() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -96,10 +95,6 @@ class NoticeConfirmBottomSheet : BottomSheetDialogFragment() {
                         // 현재 선택된 탭에 따라 리스트 업데이트
                         updateList()
 
-                        // 로딩 표시
-                        if (state.isLoadingReadStatus) {
-                            // TODO: 로딩 UI 표시
-                        }
 
                         // 알림 발송 중 표시
                         if (state.isSendingReminder) {
