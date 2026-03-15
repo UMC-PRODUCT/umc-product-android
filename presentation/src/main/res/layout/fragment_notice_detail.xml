@@ -51,7 +51,7 @@
                 android:layout_marginBottom="16dp"
                 android:indeterminate="false"
                 android:max="100"
-                android:progress="@{vm.uiState.readStatistics != null ? (int)(vm.uiState.readStatistics.readRate * 100) : 0}"
+                android:progress="@{vm.uiState.readStatistics != null &amp;&amp; vm.uiState.readStatistics.totalCount > 0 ? (int)(((float) vm.uiState.readStatistics.readCount / vm.uiState.readStatistics.totalCount) * 100) : 0}"
                 app:indicatorColor="@color/success500"
                 app:layout_constraintBottom_toTopOf="@id/text_check_unconfirmed"
                 app:trackColor="@color/neutral200"
