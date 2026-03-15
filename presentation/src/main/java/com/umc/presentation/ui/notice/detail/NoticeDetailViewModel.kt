@@ -551,7 +551,7 @@ class NoticeDetailViewModel @Inject constructor(
         val optionIds = selectedOptionIds.toList()
         val isEditMode = uiState.value.isVoteEditMode
 
-        if (voteId == -1L || optionIds.isEmpty()) return@launch
+        if (voteId == -1L) return@launch
 
         updateState { copy(isSubmittingVote = true) }
         startLoading()
@@ -575,9 +575,7 @@ class NoticeDetailViewModel @Inject constructor(
             errorCallback = {
                 updateState { copy(isSubmittingVote = false) }
                 emitEvent(
-                    NoticeFragmentEvent.ShowError(
-                        if (isEditMode) "투표 수정에 실패했습니다" else "투표 제출에 실패했습니다"
-                    )
+                    NoticeFragmentEvent.ShowError(it.message)
                 )
             }
         )

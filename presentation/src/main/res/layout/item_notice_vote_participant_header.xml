@@ -9,11 +9,10 @@
 
     <TextView
         android:id="@+id/text_option_title"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="@style/SubheadlineBold"
         android:textColor="@color/neutral800"
-        app:layout_constraintEnd_toStartOf="@id/text_option_count"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="짜장면" />
@@ -24,8 +23,9 @@
         android:layout_height="wrap_content"
         android:textAppearance="@style/FootnoteBold"
         android:textColor="@color/primary500"
+        android:layout_marginStart="8dp"
         app:layout_constraintBottom_toBottomOf="@id/text_option_title"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/text_option_title"
         app:layout_constraintTop_toTopOf="@id/text_option_title"
         tools:text="2명" />
 
