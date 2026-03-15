@@ -83,7 +83,7 @@ class AdminChallengerViewModel @Inject constructor(
                     cursor = if (isFirstPage || isSearchFirstPage) null else currentState.nextCursor,
                     size = 50,
                     schoolId = currentState.schoolId,
-                    gisuId = currentState.gisuId,
+                    gisuId = null, //currentState.gisuId
                     keyword = if (isSearching) currentState.searchQuery else null, // keyword 사용
                     part = requestPart?.name
                 ),
