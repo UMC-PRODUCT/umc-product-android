@@ -10,4 +10,5 @@ data class UpdateSchedule(
     val longitude: Double,               // 경도
     val description: String,             // 메모 및 상세 설명
     val tags: List<String>,              // 태그 목록 (예: "STUDY", "PROJECT")
+    val participantMemberIds: List<Long>, //참여자 리스트
 )

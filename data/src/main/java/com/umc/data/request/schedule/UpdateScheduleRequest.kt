@@ -13,4 +13,5 @@ data class UpdateScheduleRequest (
     @SerializedName("longitude") val longitude: Double,         // 경도
     @SerializedName("description") val description: String,     // 설명
     @SerializedName("tags") val tags: List<String>,
+    @SerializedName("participantMemberIds") val participantMemberIds: List<Long>,
 )

@@ -121,7 +121,9 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
                 setOnClickListener {
                     // 뷰모델을 생성자로 전달하여 상태를 공유합니다.
-                    val participantDialog = BottomSheetParticipantDialog { selectedParticipant, selectedParticipantString ->
+                    val participantDialog = BottomSheetParticipantDialog(
+                        viewModel.uiState.value.selectedParticipants
+                    ) { selectedParticipant, selectedParticipantString ->
                         viewModel.updateParticipants(selectedParticipant, selectedParticipantString)
                     }
 
