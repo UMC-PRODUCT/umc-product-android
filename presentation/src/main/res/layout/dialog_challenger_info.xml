@@ -166,9 +166,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text='@{String.valueOf(model.warningCount)}'
+                    android:text='@{String.valueOf((int)model.totalPoints)}'
                     android:textAppearance="@style/HeadlineBold"
-                    android:textColor="@color/danger500"
                     app:layout_constraintTop_toBottomOf="@id/tv_warning_label"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"

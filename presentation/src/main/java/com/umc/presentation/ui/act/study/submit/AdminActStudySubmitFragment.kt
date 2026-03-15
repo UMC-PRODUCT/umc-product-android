@@ -114,7 +114,7 @@ class AdminActStudySubmitFragment :
                 when (event) {
                     is AdminActStudySubmitEvent.ShowBestDialog -> showBestDialog(event.item)
                     is AdminActStudySubmitEvent.ShowReviewDialog -> showReviewDialog(event.item)
-                    is AdminActStudySubmitEvent.ShowToast -> { /* showToast(event.message) */ }
+                    is AdminActStudySubmitEvent.ShowToast -> showToast(event.message)
                 }
             }
         }
@@ -205,5 +205,9 @@ class AdminActStudySubmitFragment :
             viewModel.onAction(AdminActStudySubmitAction.SubmitReview(true, url, feedback))
             reviewDialog?.dismiss()
         }
+    }
+
+    private fun showToast(message: String) {
+        android.widget.Toast.makeText(requireContext(), message, android.widget.Toast.LENGTH_SHORT).show()
     }
 }

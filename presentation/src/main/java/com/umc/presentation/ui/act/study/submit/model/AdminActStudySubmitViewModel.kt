@@ -52,6 +52,23 @@ class AdminActStudySubmitViewModel @Inject constructor(
             }
 
             is AdminActStudySubmitAction.ClickBest -> {
+                val state = uiState.value
+
+                if (state.selectedGroupId == null) {
+                    emitEvent(AdminActStudySubmitEvent.ShowToast("베스트 지정은 그룹을 선택한 뒤 진행해주세요."))
+                    return
+                }
+
+                val alreadyBest = state.items.any { current ->
+                    current.status == "BEST" &&
+                            current.challengerWorkbookId != action.item.challengerWorkbookId
+                }
+
+                if (alreadyBest) {
+                    emitEvent(AdminActStudySubmitEvent.ShowToast("같은 그룹의 같은 주차에는 베스트를 1명만 선택할 수 있어요."))
+                    return
+                }
+
                 updateState { copy(bestDialogTarget = action.item) }
                 emitEvent(AdminActStudySubmitEvent.ShowBestDialog(action.item))
             }
@@ -67,7 +84,25 @@ class AdminActStudySubmitViewModel @Inject constructor(
                 updateState { copy(reviewDialogTarget = null) }
 
             is AdminActStudySubmitAction.ConfirmBest -> {
-                val target = uiState.value.bestDialogTarget ?: return
+                val state = uiState.value
+                val target = state.bestDialogTarget ?: return
+
+                if (state.selectedGroupId == null) {
+                    emitEvent(AdminActStudySubmitEvent.ShowToast("베스트 지정은 그룹을 선택한 뒤 진행해주세요."))
+                    updateState { copy(bestDialogTarget = null) }
+                    return
+                }
+
+                val alreadyBest = state.items.any { current ->
+                    current.status == "BEST" &&
+                            current.challengerWorkbookId != target.challengerWorkbookId
+                }
+
+                if (alreadyBest) {
+                    emitEvent(AdminActStudySubmitEvent.ShowToast("같은 그룹의 같은 주차에는 이미 베스트가 있어요."))
+                    updateState { copy(bestDialogTarget = null) }
+                    return
+                }
 
                 viewModelScope.launch {
                     when (val res = selectBestWorkbookUseCase(
@@ -203,9 +238,21 @@ class AdminActStudySubmitViewModel @Inject constructor(
             resultResponse(
                 response = res,
                 successCallback = { page ->
-                    val newItems = page.content
+                    val filtered = page.content
                         .filter { it.status in listOf("SUBMITTED", "PASS", "FAIL", "BEST") }
-                        .map { it.toUiModel(state.selectedWeek) }
+
+                    val hasAnyBest = filtered.any { it.status == "BEST" }
+
+                    val newItems = filtered.map { item ->
+                        val reviewEnabled = item.status !in listOf("PASS", "FAIL")
+                        val bestEnabled = !hasAnyBest && item.status != "BEST"
+
+                        item.toUiModel(
+                            weekNo = state.selectedWeek,
+                            isBestEnabled = bestEnabled,
+                            isReviewEnabled = reviewEnabled
+                        )
+                    }
 
                     updateState {
                         copy(

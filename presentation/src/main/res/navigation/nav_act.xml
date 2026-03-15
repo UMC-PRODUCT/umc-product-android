@@ -5,6 +5,10 @@
     android:id="@+id/nav_act"
     app:startDestination="@id/activityManagementFragment">
 
+
+
+
+
     <fragment
         android:id="@+id/activityManagementFragment"
         android:name="com.umc.presentation.ui.act.ActFragment"
@@ -15,6 +19,34 @@
             android:id="@+id/action_to_schedule_add"
             app:destination="@id/adminActStudyScheduleAddFragment" />
 
+        <action
+            android:id="@+id/action_activityManagementFragment_to_adminChallengerDetailFragment"
+            app:destination="@id/adminChallengerDetailFragment" />
+    </fragment>
+
+
+
+    <fragment
+        android:id="@+id/adminChallengerFragment"
+        android:name="com.umc.presentation.ui.act.challenge.AdminChallengerFragment"
+        android:label="챌린저 관리"
+        tools:layout="@layout/fragment_admin_challenger">
+
+        <action
+            android:id="@+id/action_adminChallengerFragment_to_adminChallengerDetailFragment"
+            app:destination="@id/adminChallengerDetailFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminChallengerDetailFragment"
+        android:name="com.umc.presentation.ui.act.challenge.AdminChallengerDetailFragment"
+        android:label="챌린저 상세"
+        tools:layout="@layout/fragment_admin_challenger_detail">
+
+        <argument
+            android:name="challengerId"
+            app:argType="long" />
 
     </fragment>
 
