@@ -151,7 +151,11 @@ class NoticeViewModel @Inject constructor(
 
     fun updateNowTitle(title: String, gisu: Long) {
         updateState {
-            copy(nowTitle = title, selectedGisu = gisu)
+            copy(
+                nowTitle = title,
+                selectedGisu = gisu,
+                selectedChipText = "전체"
+            )
         }
         cachedUserInfo?.let { userInfo ->
             updateChipList(createChipsFromUserInfo(userInfo))
