@@ -142,7 +142,13 @@ class UserChallengerViewModel @Inject constructor(
                 response = detailResult,
                 successCallback = { detail ->
                     val historyList = if (historyResult is ApiState.Success) historyResult.data else emptyList()
-                    emitEvent(UserChallengerEvent.NavigateToDetail(detail.copy(warningCount = selectedChallenger?.pointSum ?: 0.0, history = historyList)))
+                    emitEvent(
+                        UserChallengerEvent.NavigateToDetail(
+                            detail.copy(
+                                history = historyList
+                            )
+                        )
+                    )
                 }
             )
         }
