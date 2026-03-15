@@ -2,7 +2,11 @@ package com.umc.presentation.ui.act.study.submit.model
 
 import com.umc.domain.model.curriculum.WorkbookSubmissionItem
 
-fun WorkbookSubmissionItem.toUiModel(weekNo: Int): AdminActStudySubmitItemUiModel =
+fun WorkbookSubmissionItem.toUiModel(
+    weekNo: Int,
+    isBestEnabled: Boolean,
+    isReviewEnabled: Boolean,
+): AdminActStudySubmitItemUiModel =
     AdminActStudySubmitItemUiModel(
         challengerWorkbookId = challengerWorkbookId,
         userId = challengerId,
@@ -14,5 +18,7 @@ fun WorkbookSubmissionItem.toUiModel(weekNo: Int): AdminActStudySubmitItemUiMode
         submitUrl = "",
         schoolName = schoolName.ifBlank { "서울대학교" },
         profileImageUrl = profileImageUrl,
-        status = status
+        status = status,
+        isBestEnabled = isBestEnabled,
+        isReviewEnabled = isReviewEnabled
     )

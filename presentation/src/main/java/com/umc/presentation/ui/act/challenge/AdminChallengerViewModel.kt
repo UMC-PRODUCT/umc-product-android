@@ -2,17 +2,10 @@ package com.umc.presentation.ui.act.challenge
 
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.act.challenger.AdminChallenger
-import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.domain.model.act.challenger.UserPartCount
-import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.enums.PointType
 import com.umc.domain.model.enums.UserPart
-import com.umc.domain.model.request.challenger.ChallengerPointRequest
 import com.umc.domain.repository.AppDataStoreRepository
-import com.umc.domain.usecase.challenger.DeleteChallengerPointUseCase
-import com.umc.domain.usecase.challenger.GetAdminChallengerDetailUseCase
 import com.umc.domain.usecase.challenger.GetAdminChallengerListUseCase
-import com.umc.domain.usecase.challenger.GrantChallengerPointUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -26,10 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AdminChallengerViewModel @Inject constructor(
     private val appDataStoreRepository: AppDataStoreRepository,
-    private val getAdminChallengerListUseCase: GetAdminChallengerListUseCase,
-    private val getAdminChallengerDetailUseCase: GetAdminChallengerDetailUseCase,
-    private val grantChallengerPointUseCase: GrantChallengerPointUseCase,
-    private val deleteChallengerPointUseCase: DeleteChallengerPointUseCase
+    private val getAdminChallengerListUseCase: GetAdminChallengerListUseCase
 ) : BaseViewModel<AdminChallengerUiState, AdminChallengerEvent>(AdminChallengerUiState()) {
 
     private var searchJob: Job? = null
@@ -39,9 +29,6 @@ class AdminChallengerViewModel @Inject constructor(
         observeUserInfo()
     }
 
-    /**
-     * DataStore의 유저 정보를 관찰
-     */
     private fun observeUserInfo() {
         viewModelScope.launch {
             appDataStoreRepository.getUserInfo()
@@ -67,8 +54,8 @@ class AdminChallengerViewModel @Inject constructor(
 
     fun fetchNextPage(isFirstPage: Boolean = false) {
         val currentState = uiState.value
-        // 검색 중 첫 페이지 진입 조건 추가
-        val isSearchFirstPage = currentState.searchQuery.isNotBlank() && currentState.allChallengers.isEmpty()
+        val isSearchFirstPage =
+            currentState.searchQuery.isNotBlank() && currentState.allChallengers.isEmpty()
 
         if (!isFirstPage && !isSearchFirstPage && (!currentState.hasNext || currentState.isPageLoading)) return
 
@@ -83,8 +70,8 @@ class AdminChallengerViewModel @Inject constructor(
                     cursor = if (isFirstPage || isSearchFirstPage) null else currentState.nextCursor,
                     size = 50,
                     schoolId = currentState.schoolId,
-                    gisuId = null, //currentState.gisuId
-                    keyword = if (isSearching) currentState.searchQuery else null, // keyword 사용
+                    gisuId = currentState.gisuId,
+                    keyword = if (isSearching) currentState.searchQuery else null,
                     part = requestPart?.name
                 ),
                 successCallback = { data ->
@@ -92,8 +79,9 @@ class AdminChallengerViewModel @Inject constructor(
                     val hasMoreParts = currentState.currentPartIndex < partOrder.size - 1
 
                     updateState {
-                        val mergedList = if (isFirstPage || isSearchFirstPage) data.challengers
-                        else (allChallengers + data.challengers).distinctBy { it.id }
+                        val mergedList =
+                            if (isFirstPage || isSearchFirstPage) data.challengers
+                            else (allChallengers + data.challengers).distinctBy { it.id }
 
                         copy(
                             allChallengers = mergedList,
@@ -106,9 +94,8 @@ class AdminChallengerViewModel @Inject constructor(
                         )
                     }
 
-                    // 빈 파트 자동 스킵 로직
                     if (currentPartFinished && hasMoreParts && data.challengers.isEmpty()) {
-                        fetchNextPage(isFirstPage = false)
+                        fetchNextPage(false)
                     }
                 },
                 errorCallback = { fail ->
@@ -127,7 +114,7 @@ class AdminChallengerViewModel @Inject constructor(
                 copy(
                     searchQuery = query,
                     allChallengers = emptyList(),
-                    isPageLoading = false, // 로딩 상태 초기화
+                    isPageLoading = false,
                     currentPartIndex = 0,
                     nextCursor = null,
                     hasNext = true
@@ -137,65 +124,23 @@ class AdminChallengerViewModel @Inject constructor(
         }
     }
 
-    private fun makeChallengerGroups(list: List<AdminChallenger>, partCounts: List<UserPartCount>): List<AdminChallengerGroupUIModel> {
-        // User 버전과 동일하게 entries 기반으로 매핑
-        return UserPart.entries.filter { it != UserPart.UNKNOWN }.mapNotNull { part ->
-            val members = list.filter { it.part == part }
-            val currentPartCount = partCounts.find { it.part == part } ?: UserPartCount(part, 0)
-            if (members.isNotEmpty()) {
-                AdminChallengerGroupUIModel(part, members, currentPartCount)
-            } else null
-        }
-    }
-
-    /**
-     * 상벌점 기록 부여
-     */
-    fun grantPoint(challengerId: Int, type: PointType, description: String) {
-        viewModelScope.launch {
-            val request = ChallengerPointRequest(type, description)
-            resultResponse(
-                response = grantChallengerPointUseCase(challengerId.toLong(), request),
-                successCallback = { data ->
-                    emitEvent(AdminChallengerEvent.ShowManageDialog(data))
-                },
-                errorCallback = { failState ->
-                    emitEvent(AdminChallengerEvent.ShowToast(failState.message, isError = true))
-                }
-            )
-        }
-    }
-
-    /**
-     * 상벌점 기록 삭제
-     */
-    fun deletePoint(challengerId: Int, challengerPointId: Long) {
-        viewModelScope.launch {
-            resultResponse(
-                response = deleteChallengerPointUseCase(challengerPointId),
-                successCallback = {
-                    emitEvent(AdminChallengerEvent.ShowToast("기록이 삭제되었습니다.", isError = false)) // 성공
-                    onChallengerClicked(challengerId)
-                },
-                errorCallback = { failState ->
-                    emitEvent(AdminChallengerEvent.ShowToast(failState.message, isError = true)) // 에러
-                }
-            )
-        }
+    private fun makeChallengerGroups(
+        list: List<AdminChallenger>,
+        partCounts: List<UserPartCount>
+    ): List<AdminChallengerGroupUIModel> {
+        return UserPart.entries
+            .filter { it != UserPart.UNKNOWN }
+            .mapNotNull { part ->
+                val members = list.filter { it.part == part }
+                val currentPartCount = partCounts.find { it.part == part } ?: UserPartCount(part, 0)
+                if (members.isNotEmpty()) {
+                    AdminChallengerGroupUIModel(part, members, currentPartCount)
+                } else null
+            }
     }
 
     fun onChallengerClicked(id: Int) {
-        viewModelScope.launch {
-            resultResponse(
-                response = getAdminChallengerDetailUseCase(id.toLong()),
-                successCallback = { data ->
-                    emitEvent(AdminChallengerEvent.ShowManageDialog(data))
-                },
-                errorCallback = { failState ->
-                    emitEvent(AdminChallengerEvent.ShowToast(failState.message, isError = true))
-                }
-            )
-        }
+        emitEvent(AdminChallengerEvent.NavigateToDetail(id))
     }
 }
 
@@ -213,6 +158,6 @@ data class AdminChallengerUiState(
 ) : UiState
 
 sealed interface AdminChallengerEvent : UiEvent {
-    data class ShowManageDialog(val model: ChallengerManageDialogModel) : AdminChallengerEvent
+    data class NavigateToDetail(val challengerId: Int) : AdminChallengerEvent
     data class ShowToast(val message: String, val isError: Boolean = false) : AdminChallengerEvent
 }
