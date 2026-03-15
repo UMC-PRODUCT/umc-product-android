@@ -8,6 +8,7 @@ enum class UserPart(val label: String) {
     ANDROID("Android"),
     SPRINGBOOT("SpringBoot"),
     NODEJS("Node.js"),
+    ADMIN("Admin"),
     UNKNOWN("Unknown");
 
 
