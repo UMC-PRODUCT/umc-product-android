@@ -82,7 +82,7 @@
                 android:id="@+id/text_all_check"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.totalCount) : "0"}'
+                android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.totalCount) + " (" + (vm.uiState.readStatistics.totalCount > 0 ? String.valueOf((vm.uiState.readStatistics.readCount * 100) / vm.uiState.readStatistics.totalCount) : "0") + "%)" : "0 (0%)"}'
                 android:textAppearance="@style/Body"
                 android:textColor="@color/neutral800"
                 app:layout_constraintBottom_toBottomOf="@id/image_check"
@@ -93,7 +93,7 @@
                 android:id="@+id/text_now_check"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.readCount) + "/" : "0/"}'
+                android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.readCount) + " / " : "0 / "}'
                 android:textAppearance="@style/Body"
                 android:textColor="@color/success500"
                 app:layout_constraintBottom_toBottomOf="@id/image_check"
