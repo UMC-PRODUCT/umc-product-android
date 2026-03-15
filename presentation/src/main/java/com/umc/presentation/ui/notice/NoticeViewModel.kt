@@ -29,6 +29,8 @@ class NoticeViewModel @Inject constructor(
 ) : BaseViewModel<NoticeUiState, NoticeEvent>(
     NoticeUiState(),
 ) {
+    private var cachedUserInfo: UserInfo? = null
+
     init {
         getMyProfile()
         collectReadNoticeIds()
@@ -55,11 +57,17 @@ class NoticeViewModel @Inject constructor(
     private fun createChipsFromUserInfo(userInfo: UserInfo): List<NoticeChipState> {
         val chipList = mutableListOf<NoticeChipState>()
         val savedSelectedText = uiState.value.selectedChipText
+        val selectedGisu = uiState.value.selectedGisu
+        val filteredRecords = if (selectedGisu == 0L) {
+            userInfo.challengerRecords
+        } else {
+            userInfo.challengerRecords.filter { it.gisuId == selectedGisu }
+        }
 
         chipList.add(NoticeChipState(text = "전체", isClicked = savedSelectedText == "전체"))
 
-        // challengerRecords가 비어있으면 기본 "전체" 칩만 반환
-        if (userInfo.challengerRecords.isEmpty()) {
+        // 선택된 기수의 challengerRecords가 비어있으면 기본 "전체" 칩만 반환
+        if (filteredRecords.isEmpty()) {
             updateState { copy(canWriteNotice = false) }
             return chipList
         }
@@ -70,8 +78,8 @@ class NoticeViewModel @Inject constructor(
         }
         updateState { copy(canWriteNotice = hasWritePermission) }
 
-        // challengerRecords를 순회하며 각 기수별 칩 생성
-        userInfo.challengerRecords.forEach { record ->
+        // 선택된 기수의 challengerRecords를 순회하며 칩 생성
+        filteredRecords.forEach { record ->
             val gisuId = record.gisuId
 
             if (record.schoolId != 0L && record.schoolName.isNotEmpty()) {
@@ -145,6 +153,9 @@ class NoticeViewModel @Inject constructor(
         updateState {
             copy(nowTitle = title, selectedGisu = gisu)
         }
+        cachedUserInfo?.let { userInfo ->
+            updateChipList(createChipsFromUserInfo(userInfo))
+        }
         getNoticeList(gisuId = gisu)
     }
 
@@ -184,14 +195,15 @@ class NoticeViewModel @Inject constructor(
 
     private fun getMyProfile() = viewModelScope.launch {
         getUserInfoUseCase().collect { userInfo ->
+            cachedUserInfo = userInfo
             val dropdownList = createDropDownListFromChallengerRecords(userInfo.challengerRecords)
-            
+
             if (dropdownList.isNotEmpty()) {
                 val nowGisu = dropdownList.first()
                 val nowTitle = "${nowGisu.generation}기 공지사항"
                 updateNowTitle(nowTitle, nowGisu.gisuId.toLong())
             }
-            
+
             updateDropDownList(dropdownList)
             updateChipList(createChipsFromUserInfo(userInfo))
         }
