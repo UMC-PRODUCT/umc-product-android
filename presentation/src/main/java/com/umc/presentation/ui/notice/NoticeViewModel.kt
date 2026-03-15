@@ -177,18 +177,19 @@ class NoticeViewModel @Inject constructor(
                 generation = record.gisu.toInt(),
                 isActive = false
             )
-        }.distinctBy { it.gisuId } // 중복 기수 제거
+        }
+            .distinctBy { it.gisuId } // 중복 기수 제거
+            .sortedByDescending { it.generation } // 최신 기수부터 표시
     }
 
     private fun getMyProfile() = viewModelScope.launch {
         getUserInfoUseCase().collect { userInfo ->
             val dropdownList = createDropDownListFromChallengerRecords(userInfo.challengerRecords)
             
-            // challengerRecords가 있으면 첫 번째 기수를 기본 선택
             if (dropdownList.isNotEmpty()) {
-                val activeGisu = dropdownList.firstOrNull { it.isActive } ?: dropdownList.first()
-                val nowTitle = "${activeGisu.generation}기 공지사항"
-                updateNowTitle(nowTitle, activeGisu.gisuId.toLong())
+                val nowGisu = dropdownList.first()
+                val nowTitle = "${nowGisu.generation}기 공지사항"
+                updateNowTitle(nowTitle, nowGisu.gisuId.toLong())
             }
             
             updateDropDownList(dropdownList)
