@@ -54,4 +54,5 @@ interface NoticeRepository {
     suspend fun sendNoticeReminder(noticeId: Long, request: NoticeReminderRequest): ApiState<Unit>
     suspend fun markNoticeAsRead(noticeId: Long): ApiState<Unit>
     suspend fun submitVoteResponse(voteId: Long, request: VoteResponseRequest): ApiState<Unit>
+    suspend fun updateVoteResponse(voteId: Long, request: VoteResponseRequest): ApiState<Unit>
 }

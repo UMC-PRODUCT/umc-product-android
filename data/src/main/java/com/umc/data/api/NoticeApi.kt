@@ -19,6 +19,7 @@ import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.PUT
 import retrofit2.http.Query
 
 interface NoticeApi {
@@ -166,6 +167,13 @@ interface NoticeApi {
     // 투표 응답 제출
     @POST(Endpoints.Survey.VOTE_RESPONSES)
     suspend fun submitVoteResponse(
+        @Path(PATH_VOTE_ID) voteId: Long,
+        @Body request: VoteResponseRequest
+    ): ApiResponse<Unit>
+
+    // 투표 응답 수정
+    @PUT(Endpoints.Survey.VOTE_RESPONSES)
+    suspend fun updateVoteResponse(
         @Path(PATH_VOTE_ID) voteId: Long,
         @Body request: VoteResponseRequest
     ): ApiResponse<Unit>
