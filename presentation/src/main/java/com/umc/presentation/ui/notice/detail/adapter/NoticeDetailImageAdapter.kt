@@ -9,16 +9,22 @@ import coil.load
 import com.umc.domain.model.notice.NoticeImage
 import com.umc.presentation.databinding.ItemNoticeDetailImageBinding
 
-class NoticeDetailImageAdapter : ListAdapter<NoticeImage, NoticeDetailImageViewHolder>(
+class NoticeDetailImageAdapter(
+    private val delegate: NoticeDetailImageDelegate
+) : ListAdapter<NoticeImage, NoticeDetailImageViewHolder>(
     NoticeImageDiffCallback()
 ) {
+    interface NoticeDetailImageDelegate {
+        fun onClickImage(position: Int)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoticeDetailImageViewHolder {
         val binding = ItemNoticeDetailImageBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
             false
         )
-        return NoticeDetailImageViewHolder(binding)
+        return NoticeDetailImageViewHolder(binding, delegate)
     }
 
     override fun onBindViewHolder(holder: NoticeDetailImageViewHolder, position: Int) {
@@ -27,12 +33,20 @@ class NoticeDetailImageAdapter : ListAdapter<NoticeImage, NoticeDetailImageViewH
 }
 
 class NoticeDetailImageViewHolder(
-    private val binding: ItemNoticeDetailImageBinding
+    private val binding: ItemNoticeDetailImageBinding,
+    private val delegate: NoticeDetailImageAdapter.NoticeDetailImageDelegate
 ) : RecyclerView.ViewHolder(binding.root) {
 
     fun bind(item: NoticeImage) {
         binding.imageItem.load(item.url) {
             crossfade(true)
+        }
+
+        binding.root.setOnClickListener {
+            val position = bindingAdapterPosition
+            if (position != RecyclerView.NO_POSITION) {
+                delegate.onClickImage(position)
+            }
         }
     }
 }
