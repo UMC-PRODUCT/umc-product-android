@@ -20,6 +20,7 @@ import com.umc.domain.usecase.notice.GetNoticeReadStatisticsUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatusUseCase
 import com.umc.domain.usecase.notice.SendNoticeReminderUseCase
 import com.umc.domain.usecase.notice.SubmitVoteResponseUseCase
+import com.umc.domain.usecase.notice.UpdateVoteResponseUseCase
 import com.umc.domain.usecase.organization.GetChapterDetailUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -37,6 +38,7 @@ class NoticeDetailViewModel @Inject constructor(
     private val getNoticeReadStatisticsUseCase: GetNoticeReadStatisticsUseCase,
     private val sendNoticeReminderUseCase: SendNoticeReminderUseCase,
     private val submitVoteResponseUseCase: SubmitVoteResponseUseCase,
+    private val updateVoteResponseUseCase: UpdateVoteResponseUseCase,
     private val getMemberProfileUseCase: GetMemberProfileUseCase,
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getChallengerIdUseCase: GetChallengerIdUseCase,
@@ -546,6 +548,7 @@ class NoticeDetailViewModel @Inject constructor(
         val vote = uiState.value.detail.vote ?: return@launch
         val voteId = vote.voteId
         val optionIds = selectedOptionIds.toList()
+        val isEditMode = uiState.value.isVoteEditMode
 
         if (voteId == -1L || optionIds.isEmpty()) return@launch
 
@@ -553,16 +556,28 @@ class NoticeDetailViewModel @Inject constructor(
         startLoading()
 
         resultResponse(
-            response = submitVoteResponseUseCase(voteId, optionIds),
+            response = if (isEditMode) {
+                updateVoteResponseUseCase(voteId, optionIds)
+            } else {
+                submitVoteResponseUseCase(voteId, optionIds)
+            },
             successCallback = {
                 viewModelScope.launch {
                     loadNoticeDetailSync()
-                    emitEvent(NoticeFragmentEvent.ShowSuccess("투표가 완료되었습니다"))
+                    emitEvent(
+                        NoticeFragmentEvent.ShowSuccess(
+                            if (isEditMode) "투표가 수정되었습니다" else "투표가 완료되었습니다"
+                        )
+                    )
                 }
             },
             errorCallback = {
                 updateState { copy(isSubmittingVote = false) }
-                emitEvent(NoticeFragmentEvent.ShowError("투표 제출에 실패했습니다"))
+                emitEvent(
+                    NoticeFragmentEvent.ShowError(
+                        if (isEditMode) "투표 수정에 실패했습니다" else "투표 제출에 실패했습니다"
+                    )
+                )
             }
         )
     }
