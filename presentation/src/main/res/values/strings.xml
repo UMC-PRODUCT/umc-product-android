@@ -299,7 +299,7 @@
 
     <!-- Chalenger Dialog -->
     <string name="challenger_info_generation_label">활동 기수</string>
-    <string name="challenger_info_warning_label">누적 경고</string>
+    <string name="challenger_info_warning_label">총점수</string>
     <string name="challenger_info_history_label">출석/활동 기록</string>
     <string name="challenger_info_format_generation">%d기</string>
 
