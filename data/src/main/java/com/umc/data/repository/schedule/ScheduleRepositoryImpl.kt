@@ -95,7 +95,8 @@ class ScheduleRepositoryImpl @Inject constructor(
             latitude = request.latitude,
             longitude = request.longitude,
             description = request.description,
-            tags = request.tags
+            tags = request.tags,
+            participantMemberIds = request.participantMemberIds
         )
         return scheduleRemoteDataSource.updateSchedule(scheduleId, request)
     }

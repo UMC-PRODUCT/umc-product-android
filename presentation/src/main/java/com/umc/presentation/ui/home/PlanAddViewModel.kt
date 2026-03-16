@@ -15,6 +15,7 @@ import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchPlaceUseCase
 import com.umc.domain.usecase.appDataStore.recent.UpdateRecentSearchPlaceUseCase
 import com.umc.domain.usecase.kakao.GetSearchLocationUseCase
+import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.schedule.CreateScheduleUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailHomeUseCase
 import com.umc.domain.usecase.schedule.UpdateScheduleUseCase
@@ -23,6 +24,8 @@ import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -39,6 +42,7 @@ constructor(
     private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase, //일정 상세 정보 가져오기,
     private val createScheduleUseCase: CreateScheduleUseCase, //일정 생성하기
     private val updateScheduleUseCase: UpdateScheduleUseCase, //일정 수정하기
+    private val getMemberProfileUseCase: GetMemberProfileUseCase, //유저 정보 가져오기
 ) : BaseViewModel<PlanAddFragmentUiState, PlanAddFragmentEvent>(
     PlanAddFragmentUiState()){
 
@@ -91,49 +95,95 @@ constructor(
             resultResponse(
                 response = getScheduleDetailHomeUseCase(scheduleId),
                 successCallback = { detail ->
-                    updateState {
-                        //1. 도메인 String -> 내부 연산용 Calendar 생성
-                        val startCal = stringToCalendar(detail.startDay, detail.startTime)
-                        val endCal = stringToCalendar(detail.endDay, detail.endTime)
-
-                        //2. 도메인 시간 문자열 -> UI 표시용 "오전/오후" 변환
-                        val startTimeTextFormatted = formatToAmPm(detail.startTime)
-                        val endTimeTextFormatted = formatToAmPm(detail.endTime)
-
-                        //3. 카테고리 매칭
-                        val updatedCategories = categories.map { item ->
-                            item.copy(isChecked = detail.tags.any { it.label == item.name })
+                    
+                    //유저 정보를 위해 getMemberProfileUsecase로 호출
+                    viewModelScope.launch {
+                        /**추가 로직**/
+                        //async로 대기하자
+                        //val participantsIds = listOf<Long>(16L, 17L, 18L)
+                        val participantTasks = detail.participantMemberIds.map { memberId ->
+                            async { getMemberProfileUseCase(memberId) }
                         }
-                        val selectedOnes = updatedCategories.filter { it.isChecked }
-                        val summaryText = when {
-                            selectedOnes.isEmpty() -> ""
-                            selectedOnes.size <= 3 -> selectedOnes.joinToString(", ") { it.name }
-                            else -> "${selectedOnes.take(3).joinToString(", ") { it.name }} 외 ${selectedOnes.size - 3}개"
+                        val participants = participantTasks.awaitAll().mapNotNull { response ->
+                            var item: ParticipantItem? = null
+                            resultResponse(
+                                response = response,
+                                successCallback = { profile ->
+
+                                    //최신 기수 정보 가져오기
+                                    val gisuSummary = profile.getGisuSummaryList().maxByOrNull { it.gisu }
+                                    val challengerPart = UserPart.from(gisuSummary?.fromRecords?.get(0)?.responsiblePart)
+
+                                    item = ParticipantItem(
+                                        id = profile.id,
+                                        name = profile.name,
+                                        nickname = profile.nickname,
+                                        school = profile.schoolName,
+                                        profileImage = profile.profileImageLink,
+                                        gisu = gisuSummary?.gisu ?: 0L,
+                                        userPart = challengerPart
+                                    )
+                                },
+                                errorCallback = {
+                                }
+                            )
+                            item
+                        }
+                        /**추가 로직 종료**/
+
+                        updateState {
+                            //1. 도메인 String -> 내부 연산용 Calendar 생성
+                            val startCal = stringToCalendar(detail.startDay, detail.startTime)
+                            val endCal = stringToCalendar(detail.endDay, detail.endTime)
+
+                            //2. 도메인 시간 문자열 -> UI 표시용 "오전/오후" 변환
+                            val startTimeTextFormatted = formatToAmPm(detail.startTime)
+                            val endTimeTextFormatted = formatToAmPm(detail.endTime)
+
+                            //3. 카테고리 매칭
+                            val updatedCategories = categories.map { item ->
+                                item.copy(isChecked = detail.tags.any { it.label == item.name })
+                            }
+                            val selectedOnes = updatedCategories.filter { it.isChecked }
+                            val summaryText = when {
+                                selectedOnes.isEmpty() -> ""
+                                selectedOnes.size <= 3 -> selectedOnes.joinToString(", ") { it.name }
+                                else -> "${selectedOnes.take(3).joinToString(", ") { it.name }} 외 ${selectedOnes.size - 3}개"
+                            }
+
+                            //5. 참석자 매칭
+                            val participantSummaryText = when {
+                                participants.isEmpty() -> ""
+                                participants.size == 1 -> participants[0].name
+                                else -> "${participants[0].name} 외 ${participants.size - 1}명"
+                            }
+
+
+
+                            //4. 갱신 저장
+                            copy(
+                                updateScheduleId = scheduleId,
+                                planTitle = detail.name,
+                                planLocation = detail.locationName,
+                                latitude = detail.latitude,
+                                longitude = detail.longitude,
+                                planDetail = detail.description,
+                                isAllDay = detail.isAllDay,
+                                startDate = startCal, startTime = startCal,
+                                endDate = endCal, endTime = endCal,
+                                categories = updatedCategories,
+                                isSelectedCategory = true,
+                                // UI 표시용 텍스트 저장
+                                startDateText = detail.startDay, // "2026.02.05" 그대로 사용
+                                startTimeText = startTimeTextFormatted,
+                                endDateText = detail.endDay,
+                                endTimeText = endTimeTextFormatted,
+                                selectedCategoriesString = summaryText,
+                                selectedParticipants = participants,
+                                selectedParticipantsString = participantSummaryText
+                            )
                         }
 
-                        //4. 참석자 매칭
-
-                        
-                        //4. 갱신 저장
-                        copy(
-                            updateScheduleId = scheduleId,
-                            planTitle = detail.name,
-                            planLocation = detail.locationName,
-                            latitude = detail.latitude,
-                            longitude = detail.longitude,
-                            planDetail = detail.description,
-                            isAllDay = detail.isAllDay,
-                            startDate = startCal, startTime = startCal,
-                            endDate = endCal, endTime = endCal,
-                            categories = updatedCategories,
-                            isSelectedCategory = true,
-                            // UI 표시용 텍스트 저장
-                            startDateText = detail.startDay, // "2026.02.05" 그대로 사용
-                            startTimeText = startTimeTextFormatted,
-                            endDateText = detail.endDay,
-                            endTimeText = endTimeTextFormatted,
-                            selectedCategoriesString = summaryText,
-                        )
                     }
                 },
                 errorCallback = {}
@@ -237,7 +287,8 @@ constructor(
                     latitude = state.latitude,
                     longitude = state.longitude,
                     description = state.planDetail,
-                    tags = selectedTags
+                    tags = selectedTags,
+                    participantMemberIds = participantIds,
                 )
 
                 resultResponse(
@@ -469,5 +520,6 @@ sealed interface PlanAddFragmentEvent : UiEvent {
 
     //뒤로가기
     object MoveBackPressedEvent : PlanAddFragmentEvent
+    data class ShowErrorToast(val message: String) : PlanAddFragmentEvent
 
 }

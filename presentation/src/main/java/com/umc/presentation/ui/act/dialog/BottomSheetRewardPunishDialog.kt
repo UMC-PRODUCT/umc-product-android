@@ -13,13 +13,15 @@ import com.umc.presentation.ui.act.adapter.RewardCategoryAdapter
 import com.umc.presentation.ui.act.adapter.RewardCategoryDelegate
 import com.umc.presentation.ui.act.adapter.RewardSelectAdapter
 import com.umc.presentation.ui.act.adapter.RewardSelectDelegate
+import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class BottomSheetRewardPunishDialog(
     private val challengerId: Long,
-    private val isReward: Boolean
+    private val isReward: Boolean,
+    private val onConfirm:() -> Unit
 )
     : BaseBottomSheetFragment<LayoutBottomSheetRewardPunishBinding, BottomSheetRewardPunishUiState, BottomSheetRewardPunishEvent, BottomSheetRewardPunishViewModel>(
         LayoutBottomSheetRewardPunishBinding::inflate
@@ -121,12 +123,21 @@ class BottomSheetRewardPunishDialog(
     fun handleEvent(event: BottomSheetRewardPunishEvent) {
         when (event) {
             is BottomSheetRewardPunishEvent.SendSuccess -> {
-                Toast.makeText(requireContext(), "상/벌점이 등록되었습니다.", Toast.LENGTH_SHORT).show()
+                UToast.createToast(
+                    context = requireContext(),
+                    message = "상/벌점이 등록되었습니다.",
+                    state = UToast.State.CHECK
+                ).show()
+                onConfirm()
                 dismiss()
             }
 
             is BottomSheetRewardPunishEvent.SendFail -> {
-                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+                UToast.createToast(
+                    context = requireContext(),
+                    message = event.message,
+                    state = UToast.State.ERROR
+                ).show()
             }
             else -> {}
         }

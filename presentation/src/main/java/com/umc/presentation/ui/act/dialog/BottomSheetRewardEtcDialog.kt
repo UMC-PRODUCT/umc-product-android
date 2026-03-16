@@ -7,6 +7,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.umc.presentation.base.BaseBottomSheetFragment
 import com.umc.presentation.databinding.LayoutBottomSheetRewardEtcBinding
+import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class BottomSheetRewardEtcDialog(
     private val challengerId: Long,
+    private val onConfirm:() -> Unit,
 )
     : BaseBottomSheetFragment<LayoutBottomSheetRewardEtcBinding, BottomSheetRewardEtcUiState, BottomSheetRewardEtcEvent, BottomSheetRewardEtcViewModel>(
         LayoutBottomSheetRewardEtcBinding::inflate
@@ -75,11 +77,20 @@ class BottomSheetRewardEtcDialog(
     fun handleEvent(event: BottomSheetRewardEtcEvent) {
         when (event) {
             is BottomSheetRewardEtcEvent.SendSuccess -> {
-                Toast.makeText(requireContext(), "상/벌점이 등록되었습니다.", Toast.LENGTH_SHORT).show()
+                UToast.createToast(
+                    context = requireContext(),
+                    message = "상/벌점이 등록되었습니다.",
+                    state = UToast.State.CHECK
+                ).show()
+                onConfirm()
                 dismiss()
             }
             is BottomSheetRewardEtcEvent.SendFail -> {
-                Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+                UToast.createToast(
+                    context = requireContext(),
+                    message = event.message,
+                    state = UToast.State.ERROR
+                ).show()
             }
             else -> {}
         }
