@@ -31,7 +31,7 @@ class AdminStudyGroupViewModel @Inject constructor(
             when (val res = memberRepository.getMyProfile()) {
                 is ApiState.Success -> {
                     canManageStudyGroup = res.data.roles.any {
-                        it.roleType == "CENTRAL_PRESIDENT"
+                        it.roleType == "CENTRAL_PRESIDENT" || it.roleType == "SCHOOL_PRESIDENT"
                     }
                 }
 
