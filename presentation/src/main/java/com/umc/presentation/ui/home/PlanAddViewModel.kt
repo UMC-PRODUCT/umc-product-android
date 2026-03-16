@@ -100,9 +100,8 @@ constructor(
                     viewModelScope.launch {
                         /**추가 로직**/
                         //async로 대기하자
-                        val participantsIds = listOf<Long>(16L, 17L, 18L)
-                        //detail.participantMemberIds
-                        val participantTasks = participantsIds.map { memberId ->
+                        //val participantsIds = listOf<Long>(16L, 17L, 18L)
+                        val participantTasks = detail.participantMemberIds.map { memberId ->
                             async { getMemberProfileUseCase(memberId) }
                         }
                         val participants = participantTasks.awaitAll().mapNotNull { response ->

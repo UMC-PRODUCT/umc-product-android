@@ -25,6 +25,9 @@ class AdminChallengerDetailViewModel @Inject constructor(
     private val challengerId: Long = savedStateHandle.get<Long>("challengerId") ?: -1L
 
     init {
+
+        updateState { copy(challengedId = challengerId) }
+
         fetchDetail()
     }
 
@@ -112,4 +115,5 @@ class AdminChallengerDetailViewModel @Inject constructor(
             )
         }
     }
+
 }

@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class BottomSheetRewardEtcDialog(
     private val challengerId: Long,
+    private val onConfirm:() -> Unit,
 )
     : BaseBottomSheetFragment<LayoutBottomSheetRewardEtcBinding, BottomSheetRewardEtcUiState, BottomSheetRewardEtcEvent, BottomSheetRewardEtcViewModel>(
         LayoutBottomSheetRewardEtcBinding::inflate
@@ -76,6 +77,7 @@ class BottomSheetRewardEtcDialog(
         when (event) {
             is BottomSheetRewardEtcEvent.SendSuccess -> {
                 Toast.makeText(requireContext(), "상/벌점이 등록되었습니다.", Toast.LENGTH_SHORT).show()
+                onConfirm()
                 dismiss()
             }
             is BottomSheetRewardEtcEvent.SendFail -> {

@@ -19,7 +19,8 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class BottomSheetRewardPunishDialog(
     private val challengerId: Long,
-    private val isReward: Boolean
+    private val isReward: Boolean,
+    private val onConfirm:() -> Unit
 )
     : BaseBottomSheetFragment<LayoutBottomSheetRewardPunishBinding, BottomSheetRewardPunishUiState, BottomSheetRewardPunishEvent, BottomSheetRewardPunishViewModel>(
         LayoutBottomSheetRewardPunishBinding::inflate
@@ -122,6 +123,7 @@ class BottomSheetRewardPunishDialog(
         when (event) {
             is BottomSheetRewardPunishEvent.SendSuccess -> {
                 Toast.makeText(requireContext(), "상/벌점이 등록되었습니다.", Toast.LENGTH_SHORT).show()
+                onConfirm()
                 dismiss()
             }
 
