@@ -9,6 +9,8 @@ import com.umc.presentation.component.UBasicDialog
 import com.umc.presentation.component.UBasicDialogModel
 import com.umc.presentation.databinding.FragmentAdminChallengerDetailBinding
 import com.umc.presentation.ui.act.adapter.ChallengerHistoryAdapter
+import com.umc.presentation.ui.act.dialog.BottomSheetRewardEtcDialog
+import com.umc.presentation.ui.act.dialog.BottomSheetRewardPunishDialog
 import com.umc.presentation.util.UToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -72,27 +74,31 @@ class AdminChallengerDetailFragment : BaseFragment<
 
     private fun setupButtons() {
         binding.layoutAddPositive.setOnClickListener {
-            UToast.createToast(
-                context = requireContext(),
-                message = "어헛차!!",
-                state = UToast.State.CHECK
-            ).show()
+
+            val dialog = BottomSheetRewardPunishDialog(viewModel.uiState.value.challengedId, true){
+                viewModel.fetchDetail()
+            }
+            dialog.show(childFragmentManager, "BottomSheetRewardPunishDialog")
+
+
         }
 
         binding.layoutAddNegative.setOnClickListener {
-            UToast.createToast(
-                context = requireContext(),
-                message = "어헛차! 화이팅",
-                state = UToast.State.CHECK
-            ).show()
+
+            val dialog = BottomSheetRewardPunishDialog(viewModel.uiState.value.challengedId, false){
+                viewModel.fetchDetail()
+            }
+            dialog.show(childFragmentManager, "BottomSheetRewardPunishDialog")
+
         }
 
         binding.layoutAddEtc.setOnClickListener {
-            UToast.createToast(
-                context = requireContext(),
-                message = "어헛차! 아잣스!",
-                state = UToast.State.CHECK
-            ).show()
+
+            val dialog = BottomSheetRewardEtcDialog(viewModel.uiState.value.challengedId){
+                viewModel.fetchDetail()
+            }
+            dialog.show(childFragmentManager, "BottomSheetRewardEtcDialog")
+
         }
 
         binding.btnEditHistoryToggle.setOnClickListener {

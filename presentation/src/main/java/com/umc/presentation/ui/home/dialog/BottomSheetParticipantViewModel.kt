@@ -27,6 +27,9 @@ class BottomSheetParticipantViewModel @Inject constructor(
         //searchParticipants("")
     }
 
+    fun setSelectedParticipant(list : List<ParticipantItem>) {
+        updateState { copy(selectedParticipants = list) }
+    }
     //검색 작업 제어
     private var searchJob: Job? = null
 

@@ -30,6 +30,7 @@ import java.io.InputStreamReader
 
 @AndroidEntryPoint
 class BottomSheetParticipantDialog(
+    private val participants: List<ParticipantItem>,
     private val onConfirm: (List<ParticipantItem>, String) -> Unit
 ) : BottomSheetDialogFragment(), AddParticipantDelegate, SearchParticipantDelegate {
 
@@ -89,6 +90,11 @@ class BottomSheetParticipantDialog(
         observeState()
         //무한 스크롤 관리
         setupInfiniteScroll()
+        //데이터 넣기
+        viewModel.setSelectedParticipant(participants)
+
+
+
 
         //csv 파일 파싱
         binding.btnUploadCsv.setOnClickListener {

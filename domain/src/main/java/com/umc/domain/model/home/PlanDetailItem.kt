@@ -17,5 +17,6 @@ data class PlanDetailItem (
     val longitude: Double = 0.0,
     val status: String = "",
     val dDay: Int = -1,
+    val participantMemberIds: List<Long> = emptyList(),
     val requiresAttendanceApproval: Boolean = false
 )
