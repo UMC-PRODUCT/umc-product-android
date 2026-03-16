@@ -28,8 +28,6 @@ import com.google.android.gms.common.api.Scope
 import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
 import com.umc.presentation.MainGraphDirections
-import com.umc.presentation.ui.act.dialog.BottomSheetRewardEtcDialog
-import com.umc.presentation.ui.act.dialog.BottomSheetRewardPunishDialog
 import com.umc.presentation.ui.mypage.dialog.BottomSheetAddCodeDialog
 import kotlinx.coroutines.tasks.await
 

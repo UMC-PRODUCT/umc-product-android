@@ -32,7 +32,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:text='@{"(" + group.partCount.count + ")"}'
+                android:text='@{"(" + group.items.size() + ")"}'
                 android:textAppearance="@style/Subheadline"
                 android:textColor="@color/neutral800"
                 tools:text="(1)" />

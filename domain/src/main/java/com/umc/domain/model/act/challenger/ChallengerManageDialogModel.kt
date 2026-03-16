@@ -4,12 +4,14 @@ import com.umc.domain.model.enums.PointType
 
 data class ChallengerManageDialogModel(
     val challengerId: Long = 0L,
-    val name: String = "알수없음",
-    val university: String = "알수없음",
-    val part: String = "알수없음",
+    val name: String = "",
+    val nickname: String = "",
+    val university: String = "",
+    val part: String = "",
+    val gisu: Int = 0,
     val profileImageUrl: String = "",
-    val hasNewAbsence: Boolean = false,
-    val absenceCount: Int = 0,
+    val totalScore: Double = 0.0,
+    val positiveCount: Int = 0,
     val warningCount: Int = 0,
     val history: List<ChallengerPoint> = emptyList()
 )

@@ -51,7 +51,7 @@
                 android:layout_marginBottom="16dp"
                 android:indeterminate="false"
                 android:max="100"
-                android:progress="@{vm.uiState.readStatistics != null ? (int)(vm.uiState.readStatistics.readRate * 100) : 0}"
+                android:progress="@{vm.uiState.readStatistics != null &amp;&amp; vm.uiState.readStatistics.totalCount > 0 ? (int)(((float) vm.uiState.readStatistics.readCount / vm.uiState.readStatistics.totalCount) * 100) : 0}"
                 app:indicatorColor="@color/success500"
                 app:layout_constraintBottom_toTopOf="@id/text_check_unconfirmed"
                 app:trackColor="@color/neutral200"
@@ -110,12 +110,140 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <ImageView
+            android:id="@+id/image_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:onClick="@{()->vm.onClickBackPressed()}"
+            android:padding="12dp"
+            android:src="@drawable/ic_back"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/notice_tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="@string/home_notice_title"
+            android:textAppearance="@style/Title2Bold"
+            android:textColor="@color/neutral800"
+            app:layout_constraintBottom_toBottomOf="@id/image_back"
+            app:layout_constraintStart_toEndOf="@id/image_back"
+            app:layout_constraintTop_toTopOf="@id/image_back" />
+
+        <ImageView
+            android:id="@+id/notice_btn_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:onClick="@{()->vm.onClickMenu()}"
+            android:padding="12dp"
+            android:src="@drawable/ic_menu_kebab"
+            android:visibility="@{vm.uiState.isAuthor ? View.VISIBLE : View.GONE}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/postdetail_layout_kebab_menu"
+            android:layout_width="180dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:visibility="@{vm.uiState.isAuthor &amp;&amp; vm.uiState.isMenuVisible ? View.VISIBLE : View.GONE}"
+            app:cardBackgroundColor="@color/neutral000"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="8dp"
+            app:layout_constraintEnd_toEndOf="@id/notice_btn_menu"
+            app:layout_constraintTop_toBottomOf="@id/notice_btn_menu">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <LinearLayout
+                    android:id="@+id/layout_menu_edit_delete"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:onClick="@{() -> vm.onClickEditPost()}"
+                        android:padding="12dp">
+
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_edit"
+                            app:tint="@color/neutral800" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:text="수정하기"
+                            android:textAppearance="@style/Subheadline"
+                            android:textColor="@color/neutral800" />
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_next_small"
+                            app:tint="@color/neutral800" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="4dp"
+                        android:background="@color/neutral200" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:onClick="@{() -> vm.onClickDeletePost()}"
+                        android:padding="12dp">
+
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_trash_can"
+                            app:tint="@color/danger500" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:text="삭제하기"
+                            android:textAppearance="@style/Subheadline"
+                            android:textColor="@color/danger500" />
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_next_small"
+                            app:tint="@color/danger500" />
+                    </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@id/layout_read_statistics"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/image_back">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -123,134 +251,6 @@
                 android:background="@color/neutral000"
                 android:paddingBottom="32dp">
 
-                <ImageView
-                    android:id="@+id/image_back"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:onClick="@{()->vm.onClickBackPressed()}"
-                    android:padding="12dp"
-                    android:src="@drawable/ic_back"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/notice_tv_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:text="@string/home_notice_title"
-                    android:textAppearance="@style/Title2Bold"
-                    android:textColor="@color/neutral800"
-                    app:layout_constraintBottom_toBottomOf="@id/image_back"
-                    app:layout_constraintStart_toEndOf="@id/image_back"
-                    app:layout_constraintTop_toTopOf="@id/image_back" />
-
-                <ImageView
-                    android:id="@+id/notice_btn_menu"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:padding="12dp"
-                    android:src="@drawable/ic_menu_kebab"
-                    android:visibility="@{vm.uiState.isAuthor ? View.VISIBLE : View.GONE}"
-                    android:onClick="@{()->vm.onClickMenu()}"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/postdetail_layout_kebab_menu"
-                    android:layout_width="180dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:visibility="@{vm.uiState.isAuthor &amp;&amp; vm.uiState.isMenuVisible ? View.VISIBLE : View.GONE}"
-                    app:cardBackgroundColor="@color/neutral000"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="8dp"
-                    app:layout_constraintEnd_toEndOf="@id/notice_btn_menu"
-                    app:layout_constraintTop_toBottomOf="@id/notice_btn_menu">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <LinearLayout
-                            android:id="@+id/layout_menu_edit_delete"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="?attr/selectableItemBackground"
-                                android:gravity="center_vertical"
-                                android:onClick="@{() -> vm.onClickEditPost()}"
-                                android:padding="12dp">
-
-                                <ImageView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:src="@drawable/ic_edit"
-                                    app:tint="@color/neutral800" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="8dp"
-                                    android:layout_weight="1"
-                                    android:text="수정하기"
-                                    android:textAppearance="@style/Subheadline"
-                                    android:textColor="@color/neutral800" />
-
-                                <ImageView
-                                    android:layout_width="24dp"
-                                    android:layout_height="24dp"
-                                    android:src="@drawable/ic_next_small"
-                                    app:tint="@color/neutral800" />
-                            </LinearLayout>
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="1dp"
-                                android:layout_marginVertical="4dp"
-                                android:background="@color/neutral200" />
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="?attr/selectableItemBackground"
-                                android:gravity="center_vertical"
-                                android:onClick="@{() -> vm.onClickDeletePost()}"
-                                android:padding="12dp">
-
-                                <ImageView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:src="@drawable/ic_trash_can"
-                                    app:tint="@color/danger500" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="8dp"
-                                    android:layout_weight="1"
-                                    android:text="삭제하기"
-                                    android:textAppearance="@style/Subheadline"
-                                    android:textColor="@color/danger500" />
-
-                                <ImageView
-                                    android:layout_width="24dp"
-                                    android:layout_height="24dp"
-                                    android:src="@drawable/ic_next_small"
-                                    app:tint="@color/danger500" />
-                            </LinearLayout>
-                        </LinearLayout>
-
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
 
                 <!--                <com.umc.presentation.component.UButton-->
                 <!--                    android:id="@+id/ubutton_must_read"-->
@@ -293,7 +293,7 @@
                     app:contentPaddingTop="2dp"
                     app:cornerRadius="4dp"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/image_back"
+                    app:layout_constraintTop_toTopOf="parent"
                     app:noticeCentralVisibility="@{vm.uiState.detail.targetInfo}"
                     app:text="중앙"
                     app:textAppearance="@style/Caption1Bold"
@@ -382,11 +382,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="24dp"
-                    android:layout_marginTop="64dp"
+                    android:layout_marginTop="24dp"
                     android:text="@{vm.uiState.detail.title}"
                     android:textAppearance="@style/Title2Bold"
                     android:textColor="@color/neutral800"
-                    app:layout_constraintTop_toBottomOf="@id/image_back"
+                    app:layout_constraintTop_toBottomOf="@id/ubutton_central"
                     tools:text="[필독] 12기 활동 " />
 
                 <com.google.android.material.imageview.ShapeableImageView
@@ -652,6 +652,49 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
 
         </androidx.core.widget.NestedScrollView>
+
+        <FrameLayout
+            android:id="@+id/layout_image_full_screen"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:alpha="0.92"
+            android:background="@color/neutral900"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/view_pager_full_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <ImageView
+                android:id="@+id/image_close_full_screen"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/bg_neutral000_radius999"
+                android:padding="8dp"
+                android:src="@drawable/ic_close_big"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:id="@+id/text_image_page_indicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="40dp"
+                android:textAppearance="@style/Caption1Bold"
+                android:textColor="@color/neutral000"
+                tools:text="1 / 3" />
+
+        </FrameLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -19,6 +19,6 @@ data class ChallengerInfoDialogModel(
     val part: String = "알수없음",
     val generation: Int = 0,
     val profileImageUrl: String = "",
-    val warningCount: Double = 0.0,
+    val totalPoints: Double = 0.0,
     val history: List<ChallengerInfoHistory> = emptyList()
 )
