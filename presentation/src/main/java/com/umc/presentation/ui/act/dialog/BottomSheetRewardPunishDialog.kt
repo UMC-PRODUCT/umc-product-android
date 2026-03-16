@@ -70,6 +70,7 @@ class BottomSheetRewardPunishDialog(
                 viewModel.setPunishCategory(item)
             }
         })
+        binding.rcvRewardList.itemAnimator = null
         binding.rcvPunishTag.adapter = rewardCategoryAdapter
         rewardCategoryAdapter.submitList(PunishCategory.entries) //얘는 enum꺼 이용
 
