@@ -15,7 +15,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/neutral100"
+        android:background="@color/neutral000"
         android:paddingHorizontal="16dp"
         android:paddingBottom="32dp"
         >
@@ -53,6 +53,7 @@
             android:src="@drawable/ic_menu_kebab"
             android:onClick="@{() -> vm.toggleKebabMenu()}"
             app:tint="@color/neutral800"
+            android:visibility="@{vm.uiState.isAuthor ? View.VISIBLE : View.GONE}"
             app:layout_constraintTop_toTopOf="@id/plandetail_tv_big_title"
             app:layout_constraintBottom_toBottomOf="@id/plandetail_tv_big_title"
             app:layout_constraintEnd_toEndOf="parent"

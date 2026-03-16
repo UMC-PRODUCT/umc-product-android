@@ -50,11 +50,6 @@ class AdminStudyGroupViewModel @Inject constructor(
     }
 
     fun onClickEditMembers(groupId: Long) {
-//        if (!canManageStudyGroup) {
-//            emitEvent(AdminStudyGroupEvent.ShowToast("현재 권한으로는 스터디원을 수정할 수 없습니다."))
-//            return
-//        }
-
         emitEvent(AdminStudyGroupEvent.ClickEditMembers(groupId))
     }
 
@@ -62,11 +57,6 @@ class AdminStudyGroupViewModel @Inject constructor(
         groupId: Long,
         pickedMemberChallengerIds: List<Long>,
     ) {
-        if (!canManageStudyGroup) {
-            emitEvent(AdminStudyGroupEvent.ShowToast("현재 권한으로는 스터디원을 수정할 수 없습니다."))
-            return
-        }
-
         viewModelScope.launch {
             val req = ChallengerListRequest(
                 challengerIds = pickedMemberChallengerIds.distinct()
@@ -81,7 +71,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                     loadGroups(force = true)
                 },
                 errorCallback = { fail ->
-                    emitEvent(AdminStudyGroupEvent.ShowToast(fail.message ?: "스터디원 수정 실패"))
+                    emitEvent(AdminStudyGroupEvent.ShowToast(fail.message))
                 }
             )
         }

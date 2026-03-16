@@ -8,6 +8,7 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
@@ -54,6 +55,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
             checkForAppUpdate() // 앱 업데이트 체크
 
             window.setBackgroundDrawable(getColor(R.color.neutral000).toDrawable())
+            applySystemBarIconAppearance()
         }
 
 
@@ -77,6 +79,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
 
     override fun onResume() {
         super.onResume()
+        applySystemBarIconAppearance()
         // FLEXIBLE 업데이트의 경우 다운로드 완료 후 설치 대기 중인지 확인
         if (::inAppUpdateManager.isInitialized) {
             inAppUpdateManager.checkForPendingInstall()
@@ -143,6 +146,17 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainActivityUiState, Main
             }
             else -> binding.mainBnv.visibility = View.GONE
         }
+    }
+
+    private fun applySystemBarIconAppearance() {
+        val isNightMode = (resources.configuration.uiMode and
+                android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+                android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+        val insetsController = WindowInsetsControllerCompat(window, window.decorView)
+        val isLightAppearance = !isNightMode
+        insetsController.isAppearanceLightStatusBars = isLightAppearance
+        insetsController.isAppearanceLightNavigationBars = isLightAppearance
     }
 
     /*

@@ -82,7 +82,7 @@
                 android:id="@+id/text_all_check"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.totalCount) : "0"}'
+                android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.totalCount) + " (" + (vm.uiState.readStatistics.totalCount > 0 ? String.valueOf((vm.uiState.readStatistics.readCount * 100) / vm.uiState.readStatistics.totalCount) : "0") + "%)" : "0 (0%)"}'
                 android:textAppearance="@style/Body"
                 android:textColor="@color/neutral800"
                 app:layout_constraintBottom_toBottomOf="@id/image_check"
@@ -93,7 +93,7 @@
                 android:id="@+id/text_now_check"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.readCount) + "/" : "0/"}'
+                android:text='@{vm.uiState.readStatistics != null ? String.valueOf(vm.uiState.readStatistics.readCount) + " / " : "0 / "}'
                 android:textAppearance="@style/Body"
                 android:textColor="@color/success500"
                 app:layout_constraintBottom_toBottomOf="@id/image_check"
@@ -632,17 +632,46 @@
                         android:overScrollMode="never"
                         app:layout_constraintTop_toBottomOf="@id/text_vote_condition" />
 
+                    <TextView
+                        android:id="@+id/text_vote_participants"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:onClick="@{()->vm.onClickVoteParticipants()}"
+                        android:text='@{String.valueOf(vm.uiState.detail.vote.totalParticipants) + "명 참여"}'
+                        android:textAppearance="@style/FootnoteBold"
+                        android:textColor="@color/neutral600"
+                        app:layout_constraintEnd_toStartOf="@id/image_vote_participants_arrow"
+                        app:layout_constraintTop_toBottomOf="@id/recycler_vote"
+                        tools:text="4명 참여" />
+
+                    <ImageView
+                        android:id="@+id/image_vote_participants_arrow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:contentDescription="@null"
+                        android:onClick="@{()->vm.onClickVoteParticipants()}"
+                        android:src="@drawable/ic_arrow_next"
+                        android:tint="@color/neutral300"
+                        android:visibility='@{vm.uiState.detail.vote != null &amp;&amp; !vm.uiState.detail.vote.isAnonymous ? View.VISIBLE : View.GONE}'
+                        app:layout_constraintBottom_toBottomOf="@id/text_vote_participants"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/text_vote_participants"
+                        tools:ignore="UseAppTint" />
+
                     <com.umc.presentation.component.UButton
                         android:id="@+id/ubutton_add_vote"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:onClick="@{()->vm.onClickVoteAction()}"
                         app:cardBackgroundColor="@color/primary500"
                         app:contentPaddingBottom="13dp"
-                        android:onClick="@{()->vm.onClickSubmitVote()}"
                         app:contentPaddingTop="13dp"
                         app:cornerRadius="8dp"
-                        app:layout_constraintTop_toBottomOf="@id/recycler_vote"
-                        app:text="@string/notice_detail_vote"
+                        app:layout_constraintTop_toBottomOf="@id/text_vote_participants"
+                        app:text='@{vm.uiState.detail.vote != null &amp;&amp; vm.uiState.detail.vote.mySelectedOptionIds != null &amp;&amp; !vm.uiState.detail.vote.mySelectedOptionIds.isEmpty() &amp;&amp; !vm.uiState.isVoteEditMode ? @string/notice_detail_vote_edit : @string/notice_detail_vote}'
                         app:textAppearance="@style/CalloutBold"
                         app:textColor="@color/neutral000" />
 

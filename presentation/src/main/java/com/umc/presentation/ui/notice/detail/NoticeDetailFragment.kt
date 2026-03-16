@@ -112,7 +112,7 @@ class NoticeDetailFragment :
                         noticeDetailVoteAdapter.submitList(options)
                     }
                     noticeDetailVoteAdapter.setSelectedOptionIds(state.selectedVoteOptionIds.toSet())
-                    val isVoted = state.detail.vote?.mySelectedOptionIds?.isNotEmpty() == true
+                    val isVoted = state.detail.vote?.mySelectedOptionIds?.isNotEmpty() == true && !state.isVoteEditMode
                     noticeDetailVoteAdapter.setVotedState(isVoted, state.detail.vote)
                     imageList = state.detail.images
                     noticeDetailImageAdapter.submitList(imageList)
@@ -136,7 +136,10 @@ class NoticeDetailFragment :
             is NoticeFragmentEvent.ShowSuccess -> {
                 Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
             }
-        }
+            NoticeFragmentEvent.MoveToVoteParticipantsFragment -> {
+                moveToVoteParticipants()
+            }
+}
     }
 
     private fun showBottomSheet() {
@@ -177,6 +180,11 @@ class NoticeDetailFragment :
         } else {
             "0 / 0"
         }
+    }
+
+    private fun moveToVoteParticipants() {
+        val action = NoticeDetailFragmentDirections.actionNoticeDetailFragmentToNoticeVoteParticipantsFragment()
+        findNavController().navigate(action)
     }
 
     private fun moveToLinkUrl(rawUrl: String?) {

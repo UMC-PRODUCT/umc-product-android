@@ -2,6 +2,7 @@ package com.umc.presentation.ui.notice.write
 
 import android.net.Uri
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UDomainFormat.formatDateForServer
 import com.umc.domain.model.enums.NoticeChipClassType
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.enums.UserPart
@@ -30,11 +31,7 @@ import com.umc.presentation.base.UiState
 import com.umc.presentation.ui.notice.write.model.NoticeImageItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
 import javax.inject.Inject
 
 @HiltViewModel
@@ -682,8 +679,8 @@ class NoticeWriteViewModel @Inject constructor(
                         title = state.voteTitle,
                         isAnonymous = state.canAnonymity,
                         allowMultipleChoice = state.canSelectMultiple,
-                        startsAt = formatDateForServer(state.voteStartDate),
-                        endsAtExclusive = formatDateForServer(state.voteEndDate),
+                        startsAt = state.voteStartDate.formatDateForServer(),
+                        endsAtExclusive = state.voteEndDate.formatDateForServer(),
                         options = validOptions
                 )
                 resultResponse(
@@ -750,20 +747,3 @@ fun formatDateForDisplay(calendar: Calendar): String {
     return "${year}년 ${month}월 ${day}일"
 }
 
-// 날짜를 ISO 8601 형식(2026-02-15T18:35:12.445Z)으로 변환
-fun formatDateForServer(dateString: String): String {
-    // "2025년 2월 16일" -> ISO 8601
-    val regex = """(\d{4})년 (\d{1,2})월 (\d{1,2})일""".toRegex()
-    val matchResult = regex.find(dateString)
-    
-    return if (matchResult != null) {
-        val (year, month, day) = matchResult.destructured
-        // ISO 8601 형식: YYYY-MM-DDTHH:mm:ss.sssZ
-        String.format(Locale.US, "%04d-%02d-%02dT00:00:00.000Z", year.toInt(), month.toInt(), day.toInt())
-    } else {
-        // 파싱 실패 시 현재 시간 반환
-        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-        sdf.timeZone = TimeZone.getTimeZone("UTC")
-        sdf.format(Date())
-    }
-}

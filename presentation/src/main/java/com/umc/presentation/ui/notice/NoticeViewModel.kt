@@ -29,6 +29,8 @@ class NoticeViewModel @Inject constructor(
 ) : BaseViewModel<NoticeUiState, NoticeEvent>(
     NoticeUiState(),
 ) {
+    private var cachedUserInfo: UserInfo? = null
+
     init {
         getMyProfile()
         collectReadNoticeIds()
@@ -55,11 +57,17 @@ class NoticeViewModel @Inject constructor(
     private fun createChipsFromUserInfo(userInfo: UserInfo): List<NoticeChipState> {
         val chipList = mutableListOf<NoticeChipState>()
         val savedSelectedText = uiState.value.selectedChipText
+        val selectedGisu = uiState.value.selectedGisu
+        val filteredRecords = if (selectedGisu == 0L) {
+            userInfo.challengerRecords
+        } else {
+            userInfo.challengerRecords.filter { it.gisuId == selectedGisu }
+        }
 
         chipList.add(NoticeChipState(text = "전체", isClicked = savedSelectedText == "전체"))
 
-        // challengerRecords가 비어있으면 기본 "전체" 칩만 반환
-        if (userInfo.challengerRecords.isEmpty()) {
+        // 선택된 기수의 challengerRecords가 비어있으면 기본 "전체" 칩만 반환
+        if (filteredRecords.isEmpty()) {
             updateState { copy(canWriteNotice = false) }
             return chipList
         }
@@ -70,8 +78,8 @@ class NoticeViewModel @Inject constructor(
         }
         updateState { copy(canWriteNotice = hasWritePermission) }
 
-        // challengerRecords를 순회하며 각 기수별 칩 생성
-        userInfo.challengerRecords.forEach { record ->
+        // 선택된 기수의 challengerRecords를 순회하며 칩 생성
+        filteredRecords.forEach { record ->
             val gisuId = record.gisuId
 
             if (record.schoolId != 0L && record.schoolName.isNotEmpty()) {
@@ -143,7 +151,14 @@ class NoticeViewModel @Inject constructor(
 
     fun updateNowTitle(title: String, gisu: Long) {
         updateState {
-            copy(nowTitle = title, selectedGisu = gisu)
+            copy(
+                nowTitle = title,
+                selectedGisu = gisu,
+                selectedChipText = "전체"
+            )
+        }
+        cachedUserInfo?.let { userInfo ->
+            updateChipList(createChipsFromUserInfo(userInfo))
         }
         getNoticeList(gisuId = gisu)
     }
@@ -177,20 +192,22 @@ class NoticeViewModel @Inject constructor(
                 generation = record.gisu.toInt(),
                 isActive = false
             )
-        }.distinctBy { it.gisuId } // 중복 기수 제거
+        }
+            .distinctBy { it.gisuId } // 중복 기수 제거
+            .sortedByDescending { it.generation } // 최신 기수부터 표시
     }
 
     private fun getMyProfile() = viewModelScope.launch {
         getUserInfoUseCase().collect { userInfo ->
+            cachedUserInfo = userInfo
             val dropdownList = createDropDownListFromChallengerRecords(userInfo.challengerRecords)
-            
-            // challengerRecords가 있으면 첫 번째 기수를 기본 선택
+
             if (dropdownList.isNotEmpty()) {
-                val activeGisu = dropdownList.firstOrNull { it.isActive } ?: dropdownList.first()
-                val nowTitle = "${activeGisu.generation}기 공지사항"
-                updateNowTitle(nowTitle, activeGisu.gisuId.toLong())
+                val nowGisu = dropdownList.first()
+                val nowTitle = "${nowGisu.generation}기 공지사항"
+                updateNowTitle(nowTitle, nowGisu.gisuId.toLong())
             }
-            
+
             updateDropDownList(dropdownList)
             updateChipList(createChipsFromUserInfo(userInfo))
         }
