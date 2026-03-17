@@ -46,6 +46,8 @@ BaseViewModel<CommunityListFragmentUiState, CommunityListFragmentEvent>(
                 ContentType.ALL -> null
                 ContentType.QUESTION -> CommunityCategoryType.QUESTION.name
                 ContentType.LIGHTNING -> CommunityCategoryType.LIGHTNING.name
+                ContentType.HABIT -> CommunityCategoryType.HABIT.name
+                ContentType.INFORMATION -> CommunityCategoryType.INFORMATION.name
                 else -> null
             }
 
