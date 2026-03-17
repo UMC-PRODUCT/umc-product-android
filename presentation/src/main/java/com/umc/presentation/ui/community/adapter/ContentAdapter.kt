@@ -52,6 +52,16 @@ ListAdapter<ContentItem, ContentAdapter.ContentViewHolder>(ContentDiffCallback){
                     binding.itemCdvCategory.setUBorderColor(ContextCompat.getColor(context, R.color.warning300))
                     binding.itemCdvCategory.setTextColor(ContextCompat.getColor(context, R.color.warning500))
                 }
+                CommunityCategoryType.INFORMATION -> {
+                    binding.itemCdvCategory.setUBackgroundColor(ContextCompat.getColor(context, R.color.primary100))
+                    binding.itemCdvCategory.setUBorderColor(ContextCompat.getColor(context, R.color.primary300))
+                    binding.itemCdvCategory.setTextColor(ContextCompat.getColor(context, R.color.primary500))
+                }
+                CommunityCategoryType.HABIT -> {
+                    binding.itemCdvCategory.setUBackgroundColor(ContextCompat.getColor(context, R.color.neutral100))
+                    binding.itemCdvCategory.setUBorderColor(ContextCompat.getColor(context, R.color.neutral300))
+                    binding.itemCdvCategory.setTextColor(ContextCompat.getColor(context, R.color.neutral500))
+                }
                 else -> { }
             }
 
