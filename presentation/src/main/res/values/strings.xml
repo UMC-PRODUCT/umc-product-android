@@ -197,8 +197,7 @@
     <string name="sign_up_fail_title">UMC 챌린저 인증 실패</string>
     <string name="sign_up_fail_content">죄송합니다. 입력하신 정보로 등록된\nUMC 챌린저 정보를 찾을 수 없습니다.</string>
     <string name="sign_up_fail_homepage">UMC 공식 홈페이지 방문</string>
-    <string name="sign_up_fail_prev_user">기존에 활동하셨던 챌린저인가요?</string>
-    <string name="sign_up_fail_prev_user_enter">기존에 활동하셨던\n챌린저인가요?</string>
+    <string name="sign_up_fail_prev_user">UMC 챌린저 인증하기</string>
     <string name="sign_up_fail_prev_user_hint">인증코드를 입력하여 서비스를 이용하실 수 있어요</string>
     <string name="sign_up_fail_qa_email">카카오톡으로 문의하기</string>
 
