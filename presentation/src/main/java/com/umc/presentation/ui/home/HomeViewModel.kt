@@ -171,7 +171,8 @@ class HomeViewModel @Inject constructor(
                 copy(
                     userName = userInfo.name,
                     userNickName = userInfo.nickname,
-                    gisuTag = gisuTags
+                    gisuTag = gisuTags,
+                    activeString = "${latestGisu?.gisu}기 활동 상태"
                 )
             }
 
@@ -233,27 +234,24 @@ class HomeViewModel @Inject constructor(
     private fun calculateUserPoint(userInfo: UserInfo){
         //가장 최신 기수 챌린저 정보 가져오기
         val recentChallenge = userInfo.challengerRecords.maxByOrNull { it.gisu }
+        Log.d("log_home", "$recentChallenge")
         
         //일단은 totalPoint로 계산 TODO: 차후 로직 변경 가능
-        val recentTotalPoint = recentChallenge?.totalPoint ?: 0.0
+        var sangjumtmp = 0
+        var buljumtmp = 0
 
-        val warningStatus = when {
-            recentTotalPoint <= 0.0 -> WarningStatus.NORMAL    // 0이하 (0)
-            recentTotalPoint < 2.0 -> WarningStatus.WARNING    // 2 이하인 경우 (1~1.9)
-            else -> WarningStatus.DANGER                       // 2 이상인 경우 (2~)
-        }
-
-        val warningStatusText = when(warningStatus){
-            WarningStatus.DANGER -> "경고가 2회 누적되었습니다."
-            WarningStatus.WARNING -> "경고가 1회 누적되었습니다."
-            WarningStatus.NORMAL -> "누적된 경고가 없습니다."
-
+        //challengerPoints를 돌면서 더하기 빼기
+        for (point in recentChallenge?.points ?: emptyList()){
+            val nowPoint = point.value.toInt()
+            if(nowPoint > 0){sangjumtmp += nowPoint}
+            else{buljumtmp += nowPoint}
         }
 
         updateState {
             copy(
-                warningStatus = warningStatus,
-                warningStatusText = warningStatusText
+                sangjum = sangjumtmp,
+                buljum = buljumtmp,
+                total = sangjumtmp + buljumtmp
             )
         }
 
@@ -321,6 +319,7 @@ class HomeViewModel @Inject constructor(
         return if (today.isAfter(latestEndDate)) {
             //종료일로부터 오늘까지 며칠 지났는지 계산
             val days = ChronoUnit.DAYS.between(latestEndDate, today)
+            /**수정**/
             Pair(days, UserType.OB)
         } else {
             //오늘이 종료일 이전이거나 종료일 당일인 경우
@@ -388,12 +387,12 @@ data class HomeFragmentUiState(
     val alarmExist: Boolean = false,
 
     //상태에 따른 텍스트
-    val warningStatusText: String
-        = when(warningStatus){
-            WarningStatus.DANGER -> "경고가 2회 누적되었습니다."
-            WarningStatus.WARNING -> "경고가 1회 누적되었습니다."
-            WarningStatus.NORMAL -> "누적된 경고가 없습니다."
-        },
+
+    val activeString: String = "0기 활동 상태",
+    val sangjum: Int = 0,
+    val buljum: Int = 0,
+    val total: Int = 0,
+
 
 
 

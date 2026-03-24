@@ -22,7 +22,7 @@ data class TrophyBody(
 )
 
 data class TrophyWrite(
-    val challengerId: Long,
+    //val challengerId: Long,
     val week: Int,
     val title: String,
     val content: String,
