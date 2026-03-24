@@ -169,7 +169,7 @@ class CommunityRepositoryImpl @Inject constructor(
 
     override suspend fun createTrophy(request: TrophyWrite): ApiState<TrophyBody> {
         val request = CreateTrophyRequest(
-            challengerId = request.challengerId,
+            //challengerId = request.challengerId,
             title = request.title,
             content = request.content,
             url = request.url,
