@@ -84,8 +84,8 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
             getString(R.string.all),
             "정보",
             getString(R.string.question),
-            "취미",
-            "번개모임",
+            "자유",
+            "번개",
             getString(R.string.community_top)
         )
 
@@ -101,7 +101,7 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
                             0 -> ContentType.ALL
                             1 -> ContentType.INFORMATION
                             2 -> ContentType.QUESTION
-                            3 -> ContentType.HABIT
+                            3 -> ContentType.FREE
                             else -> ContentType.LIGHTNING
                         }
                         CommunityListFragment.newInstance(type)
