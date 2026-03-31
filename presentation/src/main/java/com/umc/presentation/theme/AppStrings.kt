@@ -1,4 +1,4 @@
-package com.umc.presentation.ui.strings
+package com.umc.presentation.theme
 
 object AppStrings {
     const val APP_NAME = "UMC product"

@@ -1,4 +1,4 @@
-package com.umc.presentation.ui.theme
+package com.umc.presentation.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
