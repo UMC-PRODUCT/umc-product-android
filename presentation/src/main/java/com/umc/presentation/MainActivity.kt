@@ -6,9 +6,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.umc.presentation.splash.SplashScreen
+import androidx.navigation.compose.rememberNavController
 import com.umc.presentation.ui.theme.UmcTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -29,7 +30,13 @@ private fun UmcApp() {
         Surface(
             modifier = Modifier.fillMaxSize(),
         ) {
-            SplashScreen()
+            val navController = rememberNavController()
+            MainNavHost(
+                navHostController = navController,
+                onMoveMain = {
+                    Text(text = "TODO: ChoiceSignUp or Main screen")
+                }
+            )
         }
     }
 }
