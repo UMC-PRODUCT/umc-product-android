@@ -64,6 +64,7 @@ fun UmcTheme(
 ) {
     MaterialTheme(
         colorScheme = if (darkTheme) DarkColors else LightColors,
+        typography = UmcTypography,
         content = content,
     )
 }
