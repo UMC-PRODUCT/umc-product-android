@@ -4,9 +4,9 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.android.ksp)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.androidx.navigation.safeargs.kotlin)
-    alias(libs.plugins.kotlin.kapt)
 }
 
 android {
@@ -46,8 +46,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
-        dataBinding = true
-        viewBinding = true
+        compose = true
         buildConfig = true
     }
 }
@@ -59,13 +58,14 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.legacy.support.v4)
-    implementation(libs.androidx.lifecycle.livedata.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.androidx.fragment.ktx)
-    implementation(libs.navigation.fragment)
-    implementation(libs.navigation.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -77,19 +77,10 @@ dependencies {
     // COROUTINE
     implementation(libs.kotlinx.coroutines.android)
 
-    // NAVIGATION
-    implementation(libs.navigation.fragment)
-    implementation(libs.navigation.ui)
-    
-    // materialCalendarView
-    implementation(libs.material.calendarview)
-    implementation(libs.threeten.abp)
 
     // KAKAO
     implementation(libs.kakao.user)
 
-    // RECYCLER VIEW
-    implementation(libs.androidx.recyclerview)
 
     //opencsv
     implementation(libs.opencsv)
