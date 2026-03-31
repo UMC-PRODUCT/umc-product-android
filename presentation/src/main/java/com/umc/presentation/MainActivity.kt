@@ -33,9 +33,6 @@ private fun UmcApp() {
             val navController = rememberNavController()
             MainNavHost(
                 navHostController = navController,
-                onMoveMain = {
-                    Text(text = "TODO: ChoiceSignUp or Main screen")
-                }
             )
         }
     }
