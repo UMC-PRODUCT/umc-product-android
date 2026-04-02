@@ -1,6 +1,7 @@
 package com.umc.presentation.ui.act.study.submit.model
 
 import com.umc.domain.model.curriculum.WorkbookSubmissionItem
+import com.umc.domain.model.enums.UserPart
 
 fun WorkbookSubmissionItem.toUiModel(
     weekNo: Int,
@@ -12,7 +13,7 @@ fun WorkbookSubmissionItem.toUiModel(
         userId = challengerId,
         name = memberName.ifBlank { "홍길동" },
         nickname = challengerName.ifBlank { "" },
-        partLabel = part.name,
+        partLabel = UserPart.ifGetSpring(part),
         weekText = "${weekNo}주차",
         studyTitle = workbookTitle,
         submitUrl = "",

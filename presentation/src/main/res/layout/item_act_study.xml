@@ -4,8 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <import type="android.view.View" />
+
         <import type="com.umc.domain.model.enums.SubmitState" />
+
         <variable
             name="item"
             type="com.umc.presentation.ui.act.study.ActStudyItemUiModel" />
@@ -21,21 +24,21 @@
             android:layout_width="32dp"
             android:layout_height="0dp"
             android:layout_marginStart="16dp"
-            app:layout_constraintTop_toTopOf="@id/cv_item"
+            android:alpha='@{item.isLocked ? 0.35f : 1f}'
             app:layout_constraintBottom_toBottomOf="@id/cv_item"
             app:layout_constraintStart_toStartOf="parent"
-            android:alpha='@{item.isLocked ? 0.35f : 1f}'
+            app:layout_constraintTop_toTopOf="@id/cv_item"
+            app:timelineLocked="@{item.isLocked}"
             app:timelineStatus="@{item.status}"
-            app:timelineWeek="@{item.week}"
-            app:timelineLocked="@{item.isLocked}">
+            app:timelineWeek="@{item.week}">
 
             <ImageView
                 android:id="@+id/iv_timeline_status"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
                 tools:ignore="ContentDescription" />
 
             <TextView
@@ -45,9 +48,9 @@
                 android:gravity="center"
                 android:textAppearance="@style/FootnoteBold"
                 android:textColor="@color/neutral000"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
                 tools:text="3" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -56,26 +59,28 @@
             android:id="@+id/cv_item"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginVertical="6dp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginVertical="6dp"
-            app:layout_constraintStart_toEndOf="@id/timeline_column"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            android:animateLayoutChanges="true"
+            android:outlineProvider="none"
+            android:stateListAnimator="@null"
             app:cardBackgroundColor="@color/neutral000"
             app:cardCornerRadius="16dp"
             app:cardElevation="0dp"
-            app:strokeWidth="0dp"
-            android:stateListAnimator="@null"
-            android:outlineProvider="none"
-            app:rippleColor="@android:color/transparent">
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/timeline_column"
+            app:layout_constraintTop_toTopOf="parent"
+            app:rippleColor="@android:color/transparent"
+            app:strokeWidth="0dp">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp"
                 android:alpha='@{item.isLocked ? 0.35f : 1f}'
-                android:enabled='@{!item.isLocked}'>
+                android:animateLayoutChanges="true"
+                android:enabled='@{!item.isLocked}'
+                android:padding="16dp">
 
                 <androidx.constraintlayout.widget.Barrier
                     android:id="@+id/end_controls_barrier"
@@ -89,10 +94,10 @@
                     android:id="@+id/layout_tags"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    app:layout_constraintStart_toStartOf="parent"
+                    android:orientation="horizontal"
                     app:layout_constraintEnd_toStartOf="@id/btn_best"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent">
 
                     <com.umc.presentation.component.UButton
@@ -103,9 +108,9 @@
                         app:backgroundColor="@color/neutral000"
                         app:borderColor="@color/neutral200"
                         app:borderWidth="1dp"
-                        app:cornerRadius="6dp"
                         app:contentPaddingLeft="8dp"
                         app:contentPaddingRight="8dp"
+                        app:cornerRadius="6dp"
                         app:text='@{"Week " + item.week}'
                         app:textAppearance="@style/FootnoteBold"
                         app:textColor="@color/neutral700"
@@ -122,13 +127,13 @@
                         android:focusable="false"
                         app:borderColor="@color/neutral200"
                         app:borderWidth="1dp"
-                        app:cornerRadius="6dp"
                         app:contentPaddingLeft="8dp"
                         app:contentPaddingRight="8dp"
+                        app:cornerRadius="6dp"
+                        app:platformTagStyle="@{true}"
                         app:text="@{item.platform}"
                         app:textAppearance="@style/FootnoteBold"
-                        app:textColor="@color/neutral700"
-                        app:platformTagStyle="@{true}" />
+                        app:textColor="@color/neutral700" />
                 </LinearLayout>
 
 
@@ -137,38 +142,38 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="6dp"
+                    android:visibility="gone"
+                    app:bestBadgeStyle="@{item.isBest}"
                     app:buttonElevation="0"
-                    app:cornerRadius="4dp"
+                    app:contentPaddingBottom="4dp"
                     app:contentPaddingLeft="8dp"
                     app:contentPaddingRight="8dp"
                     app:contentPaddingTop="4dp"
-                    app:contentPaddingBottom="4dp"
-                    app:prevIcon="@drawable/ic_best"
-                    app:text="Best"
-                    app:textAppearance="@style/Caption1Bold"
-                    app:bestBadgeStyle="@{item.isBest}"
-                    android:visibility="gone"
+                    app:cornerRadius="4dp"
+                    app:layout_constraintBottom_toBottomOf="@id/top_anchor"
                     app:layout_constraintEnd_toStartOf="@id/btn_status"
                     app:layout_constraintTop_toTopOf="@id/top_anchor"
-                    app:layout_constraintBottom_toBottomOf="@id/top_anchor" />
+                    app:prevIcon="@drawable/ic_best"
+                    app:text="Best"
+                    app:textAppearance="@style/Caption1Bold" />
 
                 <com.umc.presentation.component.UButton
                     android:id="@+id/btn_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
+                    android:visibility='@{item.isLocked ? View.GONE : View.VISIBLE}'
                     app:buttonElevation="0"
-                    app:cornerRadius="4dp"
+                    app:contentPaddingBottom="4dp"
                     app:contentPaddingLeft="8dp"
                     app:contentPaddingRight="8dp"
                     app:contentPaddingTop="4dp"
-                    app:contentPaddingBottom="4dp"
-                    app:textAppearance="@style/Caption1Bold"
-                    app:studyStatusStyle="@{item.status}"
-                    android:visibility='@{item.isLocked ? View.GONE : View.VISIBLE}'
+                    app:cornerRadius="4dp"
+                    app:layout_constraintBottom_toBottomOf="@id/top_anchor"
                     app:layout_constraintEnd_toStartOf="@id/iv_arrow"
                     app:layout_constraintTop_toTopOf="@id/top_anchor"
-                    app:layout_constraintBottom_toBottomOf="@id/top_anchor"
+                    app:studyStatusStyle="@{item.status}"
+                    app:textAppearance="@style/Caption1Bold"
                     tools:text="Pass" />
 
 
@@ -178,9 +183,9 @@
                     android:layout_height="24dp"
                     android:src='@{item.isExpanded ? @drawable/ic_dropdown_up : @drawable/ic_dropdown_down}'
                     android:visibility='@{item.isLocked ? View.GONE : View.VISIBLE}'
+                    app:layout_constraintBottom_toBottomOf="@id/top_anchor"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="@id/top_anchor"
-                    app:layout_constraintBottom_toBottomOf="@id/top_anchor"
                     tools:src="@drawable/ic_dropdown_down" />
 
 
@@ -190,14 +195,14 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:layout_marginEnd="8dp"
-                    android:maxLines="2"
                     android:ellipsize="end"
+                    android:maxLines="2"
                     android:text="@{item.title}"
                     android:textAppearance="@style/HeadlineBold"
                     android:textColor="@color/neutral800"
-                    app:layout_constraintTop_toBottomOf="@id/layout_tags"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/end_controls_barrier"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/layout_tags"
                     tools:text="1주차 - Spring Boot 시작하기" />
 
                 <TextView
@@ -209,21 +214,20 @@
                     android:textAppearance="@style/Footnote"
                     android:textColor="@color/neutral500"
                     android:visibility='@{(item.isExpanded &amp;&amp; !item.isLocked) ? View.VISIBLE : View.GONE}'
-                    app:layout_constraintTop_toBottomOf="@id/tv_title"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_title"
                     tools:text="컴포넌트 생명주기와 Hooks의 이해" />
-
 
 
                 <View
                     android:id="@+id/top_anchor"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="@id/tv_title"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent" />
 
 
                 <LinearLayout
@@ -232,10 +236,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:orientation="vertical"
-                    app:layout_constraintTop_toBottomOf="@id/tv_description"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
                     android:visibility='@{(item.isExpanded &amp;&amp; !item.isLocked) ? View.VISIBLE : View.GONE}'
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_description"
                     tools:visibility="visible">
 
 
@@ -260,11 +264,11 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             app:cornerRadius="12dp"
-                            app:strokeColor="@color/neutral300"
-                            app:strokeWidth="1dp"
                             app:focusStrokeColor="@color/primary500"
                             app:placeholderText="링크를 입력하세요."
                             app:placeholderTextColor="@color/neutral400"
+                            app:strokeColor="@color/neutral300"
+                            app:strokeWidth="1dp"
                             app:textAppearance="@style/Body"
                             app:textColor="@color/neutral800"
                             tools:text="http://~" />
@@ -275,9 +279,9 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
                             app:buttonElevation="0"
-                            app:cornerRadius="12dp"
-                            app:contentPaddingTop="13dp"
                             app:contentPaddingBottom="13dp"
+                            app:contentPaddingTop="13dp"
+                            app:cornerRadius="12dp"
                             app:prevIcon="@drawable/ic_blog_link"
                             app:prevIconTint="@color/neutral000"
                             app:text="링크 제출하기"
@@ -289,38 +293,38 @@
                         android:id="@+id/layout_confirm"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:gravity="center"
                         android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:orientation="vertical"
                         app:visibleWhenConfirming="@{item}"
                         tools:visibility="visible">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="18dp"
                             android:background="@drawable/bg_neutral100_radius16"
-                            android:gravity="center_horizontal">
+                            android:gravity="center_horizontal"
+                            android:orientation="vertical"
+                            android:padding="18dp">
 
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="학습을 완료하셨나요?"
-                                android:textAppearance="@style/SubheadlineBold"
-                                android:textColor="@color/neutral600"
                                 android:gravity="center"
-                                android:textAlignment="center"/>
+                                android:text="학습을 완료하셨나요?"
+                                android:textAlignment="center"
+                                android:textAppearance="@style/SubheadlineBold"
+                                android:textColor="@color/neutral600" />
 
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="10dp"
-                                android:text="버튼을 누르면 학습 인증 요청이 전송됩니다."
-                                android:textAppearance="@style/Footnote"
-                                android:textColor="@color/neutral500"
                                 android:gravity="center"
-                                android:textAlignment="center"/>
+                                android:text="버튼을 누르면 학습 인증 요청이 전송됩니다."
+                                android:textAlignment="center"
+                                android:textAppearance="@style/Footnote"
+                                android:textColor="@color/neutral500" />
                         </LinearLayout>
 
                         <com.umc.presentation.component.UButton
@@ -329,15 +333,15 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
                             app:buttonElevation="0"
-                            app:cornerRadius="12dp"
-                            app:contentPaddingTop="13dp"
+                            app:confirmButtonStyle="@{item.submitState == SubmitState.CONFIRMING}"
                             app:contentPaddingBottom="13dp"
-                            app:text="학습 완료 인증하기"
-                            app:textAppearance="@style/CalloutBold"
+                            app:contentPaddingTop="13dp"
+                            app:cornerRadius="12dp"
+                            app:enabledWhenConfirmReady="@{item}"
                             app:prevIcon="@drawable/ic_check_success"
                             app:prevIconTint="@color/neutral000"
-                            app:enabledWhenConfirmReady="@{item}"
-                            app:confirmButtonStyle="@{item.submitState == SubmitState.CONFIRMING}"
+                            app:text="학습 완료 인증하기"
+                            app:textAppearance="@style/CalloutBold"
                             tools:text="학습 완료 인증하기" />
                     </LinearLayout>
 
@@ -347,12 +351,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:orientation="horizontal"
+                        android:background="@drawable/bg_warning100_banner"
                         android:gravity="center"
+                        android:orientation="horizontal"
                         android:padding="12dp"
                         app:visibleWhenWaiting="@{item}"
-                        tools:visibility="gone"
-                        android:background="@drawable/bg_warning100_banner">
+                        tools:visibility="gone">
 
                         <ImageView
                             android:layout_width="20dp"
@@ -375,12 +379,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:orientation="horizontal"
+                        android:background="@drawable/bg_success100_banner"
                         android:gravity="center"
+                        android:orientation="horizontal"
                         android:padding="12dp"
                         app:visibleWhenResultPass="@{item}"
-                        tools:visibility="gone"
-                        android:background="@drawable/bg_success100_banner">
+                        tools:visibility="gone">
 
                         <ImageView
                             android:layout_width="20dp"
@@ -403,18 +407,19 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:orientation="horizontal"
+                        android:background="@drawable/bg_danger100_banner"
                         android:gravity="center"
+                        android:orientation="horizontal"
                         android:padding="12dp"
                         app:visibleWhenResultFail="@{item}"
-                        tools:visibility="gone"
-                        android:background="@drawable/bg_danger100_banner">
+                        tools:visibility="gone">
 
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_check_failed"
                             tools:ignore="ContentDescription" />
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -427,8 +432,6 @@
                 </LinearLayout>
 
 
-
-
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -437,8 +440,8 @@
             android:id="@+id/tags_bottom_anchor"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:layout_constraintStart_toStartOf="@id/timeline_column"
             app:layout_constraintEnd_toEndOf="@id/timeline_column"
+            app:layout_constraintStart_toStartOf="@id/timeline_column"
             app:layout_constraintTop_toTopOf="@id/cv_item" />
 
         <View
@@ -446,10 +449,10 @@
             android:layout_width="2dp"
             android:layout_height="0dp"
             android:background="@color/neutral200"
-            app:layout_constraintTop_toBottomOf="@id/tags_bottom_anchor"
             app:layout_constraintBottom_toBottomOf="@id/cv_item"
+            app:layout_constraintEnd_toEndOf="@id/timeline_column"
             app:layout_constraintStart_toStartOf="@id/timeline_column"
-            app:layout_constraintEnd_toEndOf="@id/timeline_column" />
+            app:layout_constraintTop_toBottomOf="@id/tags_bottom_anchor" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

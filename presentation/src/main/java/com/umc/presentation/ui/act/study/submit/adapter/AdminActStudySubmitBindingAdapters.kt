@@ -5,6 +5,7 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
 import com.google.android.material.card.MaterialCardView
 import com.umc.presentation.R
+import com.umc.presentation.component.UButton
 
 
 @BindingAdapter("markStatusIcon")
@@ -32,46 +33,21 @@ fun ImageView.bindMarkStatusIcon(status: String?) {
 }
 
 @BindingAdapter("markStatusStyle")
-fun MaterialCardView.bindMarkStatusStyle(status: String?) {
+fun UButton.bindMarkStatusStyle(status: String?) {
     val bg = when (status) {
-        "PASS" -> R.color.primary100
-
-        "FAIL" -> R.color.neutral100
+        "PASS", "BEST" -> R.color.success100
+        "FAIL" -> R.color.danger100
         else -> R.color.neutral000
     }
-    setCardBackgroundColor(ContextCompat.getColor(context, bg))
+    setUBackgroundColor(ContextCompat.getColor(context, bg))
 }
 
-@BindingAdapter("slotIcon")
-fun ImageView.bindSlotIcon(status: String?) {
-
-//    val (resId, tintColor) = when (status) {
-//        "SUBMITTED" -> R.drawable.ic_swipe to R.color.neutral300
-//        "PASS" -> R.drawable.ic_check_success to null
-//        "BEST" -> R.drawable.ic_check_success to null
-//        "FAIL" -> R.drawable.ic_check_failed to null
-//        else -> null to null
-//    }
-
-    val uiStatus = if (status == "BEST") "PASS" else status
-
-    val (resId, tintColor) = when (uiStatus) {
-        "SUBMITTED" -> R.drawable.ic_swipe to R.color.neutral300
-        "PASS" -> R.drawable.ic_check_success to null
-        "FAIL" -> R.drawable.ic_check_failed to null
-        else -> null to null
+@BindingAdapter("markStatusText")
+fun UButton.bindMarkStatusText(status: String?) {
+    val text = when (status) {
+        "FAIL" -> "Fail"
+        "PASS", "BEST" -> "Pass"
+        else -> ""
     }
-
-    if (resId == null) {
-        setImageDrawable(null)
-        return
-    }
-
-    setImageResource(resId)
-
-    imageTintList = tintColor?.let {
-        android.content.res.ColorStateList.valueOf(
-            ContextCompat.getColor(context, it)
-        )
-    }
+    setText(text)
 }
