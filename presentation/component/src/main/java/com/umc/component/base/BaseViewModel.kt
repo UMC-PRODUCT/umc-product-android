@@ -1,4 +1,4 @@
-package com.umc.presentation.base
+package com.umc.component.base
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.text.startsWith
 
 // JWT 관련 에러 코드 접두사
 private const val JWT_ERROR_PREFIX = "JWT"
