@@ -182,11 +182,14 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src='@{item.isExpanded ? @drawable/ic_dropdown_up : @drawable/ic_dropdown_down}'
-                    android:visibility='@{item.isLocked ? View.GONE : View.VISIBLE}'
+                    android:visibility="gone"
                     app:layout_constraintBottom_toBottomOf="@id/top_anchor"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="@id/top_anchor"
                     tools:src="@drawable/ic_dropdown_down" />
+
+<!--                android:src='@{item.isExpanded ? @drawable/ic_dropdown_up : @drawable/ic_dropdown_down}'-->
+<!--                android:visibility='@{item.isLocked ? View.GONE : View.VISIBLE}'-->
 
 
                 <TextView
@@ -236,11 +239,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:orientation="vertical"
-                    android:visibility='@{(item.isExpanded &amp;&amp; !item.isLocked) ? View.VISIBLE : View.GONE}'
+                    android:visibility="gone"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tv_description"
-                    tools:visibility="visible">
+                    app:layout_constraintTop_toBottomOf="@id/tv_description">
+
+<!--                    android:visibility='@{(item.isExpanded &amp;&amp; !item.isLocked) ? View.VISIBLE : View.GONE}'-->
 
 
                     <LinearLayout
