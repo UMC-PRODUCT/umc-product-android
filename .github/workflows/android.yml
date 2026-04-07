@@ -23,7 +23,7 @@ jobs:
           kakao.native.key="DUMMY"
           kakao.rest.key="DUMMY"
           naver.client.id="DUMMY"
-          google.login.key="DUMMY"
+          google.login.key=DUMMY
           EOF
 
       - name: Create Google Services JSON File
