@@ -6,7 +6,7 @@ enum class UserPart(val label: String) {
     WEB("Web"),
     IOS("IOS"),
     ANDROID("Android"),
-    SPRINGBOOT("Spring"),
+    SPRINGBOOT("SpringBoot"),
     NODEJS("Node.js"),
     ADMIN("Admin"),
     UNKNOWN("Unknown");
