@@ -35,6 +35,10 @@ enum class UserPart(val label: String) {
                 .filter { it != UNKNOWN }
                 .map { it.label }
         }
+
+        fun ifGetSpring(part : UserPart): String {
+            return if(part == SPRINGBOOT) "Spring" else part.label
+        }
     }
 
 }

@@ -21,6 +21,7 @@ import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import com.umc.presentation.util.GisuCache
+import com.umc.presentation.util.ULog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -91,6 +92,7 @@ class HomeViewModel @Inject constructor(
 
     // 서버에서 내 정보 가져오기
     fun getUserInfo() {
+        startLoading()
         viewModelScope.launch {
             resultResponse(
                 response = getMyProfileUseCase(),

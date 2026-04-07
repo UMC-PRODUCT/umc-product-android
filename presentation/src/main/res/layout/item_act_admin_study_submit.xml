@@ -46,39 +46,57 @@
                 android:id="@+id/right_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
                 android:layout_marginStart="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent">
+                app:layout_constraintTop_toTopOf="parent">
 
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/btn_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="7dp"
+                    android:visibility='@{(item.markStatus == null || item.isBest) ? View.GONE : View.VISIBLE}'
+                    app:buttonElevation="0"
+                    app:contentPaddingBottom="4dp"
+                    app:contentPaddingLeft="8dp"
+                    app:contentPaddingRight="8dp"
+                    app:contentPaddingTop="4dp"
+                    app:cornerRadius="4dp"
+                    app:markStatusStyle='@{item.markStatus}'
+                    app:markStatusText='@{item.markStatus}'
+                    app:textAppearance="@style/Caption1Bold"
+                    app:textColor='@{item.markStatus == "FAIL" ? @color/danger700 : @color/success700}'
+                    tools:text="Pass"
+                    tools:visibility="visible" />
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/btn_best"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:visibility='@{item.isBest ? View.VISIBLE : View.GONE}'
+                    app:cardBackgroundColor="@color/warning100"
+                    app:buttonElevation="0"
+                    app:contentPaddingBottom="4dp"
+                    app:contentPaddingLeft="8dp"
+                    app:contentPaddingRight="8dp"
+                    app:contentPaddingTop="4dp"
+                    app:cornerRadius="4dp"
+                    app:text="Best"
+                    app:textAppearance="@style/Caption1Bold"
+                    app:textColor="@color/warning500"
+                    tools:visibility="visible" />
 
                 <ImageView
-                    android:id="@+id/iv_best"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="10dp"
-                    android:src="@drawable/ic_best"
-                    app:tint="@color/warning500"
-                    android:visibility='@{item.isBest ? View.VISIBLE : View.GONE}'
-                    tools:ignore="ContentDescription"
-                    tools:visibility="visible"/>
-
-
-                <FrameLayout
-                    android:layout_width="56dp"
-                    android:layout_height="56dp">
-
-                    <ImageView
-                        android:id="@+id/iv_slot"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_gravity="center"
-                        app:slotIcon='@{item.slotStatus}'
-                        tools:src="@drawable/ic_swipe"
-                        tools:ignore="ContentDescription" />
-                </FrameLayout>
+                    android:id="@+id/iv_arrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_next"
+                    android:tint="@color/neutral500"
+                    tools:ignore="ContentDescription" />
 
             </LinearLayout>
 
@@ -120,10 +138,10 @@
                         android:focusable="false"
                         app:buttonElevation="0"
                         app:cornerRadius="6dp"
-                        app:contentPaddingLeft="10dp"
-                        app:contentPaddingRight="10dp"
-                        app:contentPaddingTop="4dp"
-                        app:contentPaddingBottom="4dp"
+                        app:contentPaddingLeft="8dp"
+                        app:contentPaddingRight="8dp"
+                        app:contentPaddingTop="2dp"
+                        app:contentPaddingBottom="2dp"
                         app:textAppearance="@style/Caption1Bold"
                         app:text="@{item.partLabel}"
                         app:backgroundColor="@color/neutral000"

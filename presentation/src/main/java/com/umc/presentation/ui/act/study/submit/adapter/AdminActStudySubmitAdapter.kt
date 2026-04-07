@@ -12,7 +12,6 @@ import coil.transform.CircleCropTransformation
 import com.umc.presentation.R
 
 class AdminActStudySubmitAdapter(
-    private val onClickBest: (AdminActStudySubmitItemUiModel) -> Unit,
     private val onClickReview: (AdminActStudySubmitItemUiModel) -> Unit,
 ) : ListAdapter<AdminActStudySubmitItemUiModel, AdminActStudySubmitAdapter.ViewHolder>(DIFF) {
 
@@ -22,7 +21,7 @@ class AdminActStudySubmitAdapter(
             parent,
             false
         )
-        return ViewHolder(binding, onClickBest, onClickReview)
+        return ViewHolder(binding, onClickReview)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -31,7 +30,6 @@ class AdminActStudySubmitAdapter(
 
     class ViewHolder(
         private val binding: ItemActAdminStudySubmitBinding,
-        private val onClickBest: (AdminActStudySubmitItemUiModel) -> Unit,
         private val onClickReview: (AdminActStudySubmitItemUiModel) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
 
@@ -49,7 +47,9 @@ class AdminActStudySubmitAdapter(
             }
 
             binding.executePendingBindings()
-            binding.root.setOnClickListener(null)
+            binding.root.setOnClickListener {
+                onClickReview(item)
+            }
 
         }
     }

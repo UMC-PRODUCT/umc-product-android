@@ -63,6 +63,7 @@ abstract class BaseFragment<B : ViewDataBinding, STATE : UiState, EVENT : UiEven
     private fun initLoadingDialog() {
         repeatOnStarted(viewLifecycleOwner) {
             viewModel.isLoading.collect { isLoading ->
+                ULog.d("하이", isLoading.toString())
                 if (isLoading) {
                     showLoadingDialog()
                 } else {
@@ -117,12 +118,19 @@ abstract class BaseFragment<B : ViewDataBinding, STATE : UiState, EVENT : UiEven
     }
 
     private fun dismissLoadingDialog() {
-        loadingDialog?.let {
-            if (it.isAdded) {
-                it.dismiss()
-            }
-        }
+        val dialog = loadingDialog
         loadingDialog = null
+
+        if (dialog == null) return
+
+        parentFragmentManager.executePendingTransactions()
+
+        val shownDialog = parentFragmentManager.findFragmentByTag(ULoadingDialog.TAG) as? ULoadingDialog
+        val targetDialog = shownDialog ?: dialog
+
+        runCatching {
+            targetDialog.dismissAllowingStateLoss()
+        }
     }
 
     private val onBackPressedCallback =

@@ -19,7 +19,8 @@ class UserStudyFragment :
 
     override fun initView() {
         adapter = ActStudyAdapter(
-            onToggle = { index -> viewModel.toggleExpand(index) },
+            //onToggle = { index -> viewModel.toggleExpand(index) },
+            onToggle = {  },
             onLongApprove = { itemId -> viewModel.debugApprove(itemId) },
             onSubmitClick = { itemId, link -> viewModel.onSubmitClick(itemId, link) },
             onConfirmClick = { id -> viewModel.onConfirmClick(id) },
