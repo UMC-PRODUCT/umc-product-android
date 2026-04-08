@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.umc.presentation.home" // 패키지명 확인!
+    namespace = "com.umc.presentation.home"
     compileSdk = 36
 
     defaultConfig {
@@ -23,21 +23,21 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
         jvmTarget = "11"
     }
-
-    // 2. 컴포즈 빌드 피처 활성화
+    
     buildFeatures {
         compose = true
     }
 }
 
 dependencies {
-    // 3. 컴포즈 필수 라이브러리들로 교체
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -48,4 +48,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    //Desugaring용 라이브러리 추가 -> API 24에서 상위 레벨 사용을 위함
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
