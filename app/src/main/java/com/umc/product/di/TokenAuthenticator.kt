@@ -5,7 +5,6 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.RefreshTokenRequest
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.repository.AuthRepository
-import com.umc.presentation.util.ULog
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -70,7 +69,7 @@ class TokenAuthenticator @Inject constructor(
             }
 
             is ApiState.Fail -> {
-                ULog.d("재발급 실패: ${state.failState.message}")
+                Log.d("재발급 실패", state.failState.message)
                 false
             }
         }
