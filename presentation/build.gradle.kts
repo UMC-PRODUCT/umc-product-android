@@ -118,6 +118,12 @@ dependencies {
     // Play In-App Update
     implementation(libs.play.update)
     implementation(libs.play.update.ktx)
+
+    // Rich text editor
+    implementation("jp.wasabeef:richeditor-android:2.0.0")
+
+    // Color picker
+    implementation("com.github.skydoves:colorpickerview:2.4.0")
 }
 
 fun getApiKey(propertyKey: String): String {

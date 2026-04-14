@@ -2,6 +2,11 @@ package com.umc.presentation.ui.notice.write
 
 import android.net.Uri
 import android.widget.Toast
+import com.skydoves.colorpickerview.ColorEnvelope
+import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
+import com.skydoves.colorpickerview.sliders.AlphaSlideBar
+import com.skydoves.colorpickerview.sliders.BrightnessSlideBar
+import com.skydoves.colorpickerview.ColorPickerDialog
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.doAfterTextChanged
@@ -109,9 +114,43 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
                 viewModel.updateTitle(text?.toString() ?: "")
             }
 
-            editTextContent.doAfterTextChanged { text ->
-                viewModel.updateContent(text?.toString() ?: "")
+            editTextContent.apply {
+                setEditorHeight(220)
+                setEditorFontSize(16)
+                setEditorFontColor(resources.getColor(com.umc.presentation.R.color.neutral800, null))
+                setPadding(16, 16, 16, 16)
+                setPlaceholder("내용을 입력해주세요")
+                setHtml(viewModel.uiState.value.content)
+                setOnTextChangeListener { html ->
+                    viewModel.updateContent(html)
+                }
             }
+
+            btnRichBold.setOnClickListener { editTextContent.setBold() }
+            btnRichItalic.setOnClickListener { editTextContent.setItalic() }
+            btnRichUnderline.setOnClickListener { editTextContent.setUnderline() }
+            btnRichStrike.setOnClickListener { editTextContent.setStrikeThrough() }
+            btnRichBullet.setOnClickListener { editTextContent.setBullets() }
+            btnRichNumber.setOnClickListener { editTextContent.setNumbers() }
+
+            // Heading 조정
+            btnRichTitle.setOnClickListener { editTextContent.setHeading(1) }      // 머리말
+            btnRichHeading.setOnClickListener { editTextContent.setHeading(2) }      // 머리말
+            btnRichSubheading.setOnClickListener { editTextContent.setHeading(3) }   // 부머리말
+            btnRichBody.setOnClickListener { editTextContent.setHeading(4) }          // 본문
+            btnRichMono.setOnClickListener { editTextContent.setHeading(5) }
+
+            // 텍스트 색 변경 (컬러피커)
+            btnRichColor.setOnClickListener {
+                showTextColorPicker { selectedColor ->
+                    editTextContent.setTextColor(selectedColor)
+                }
+            }
+
+            // 텍스트 정렬
+            btnRichAlignLeft.setOnClickListener { editTextContent.setAlignLeft() }
+            btnRichAlignCenter.setOnClickListener { editTextContent.setAlignCenter() }
+            btnRichAlignRight.setOnClickListener { editTextContent.setAlignRight() }
 
             imageBack.setOnClickListener {
                 findNavController().popBackStack()
@@ -185,6 +224,31 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
     private fun showBottomSheet() {
         val bottomSheet = NoticeVoteBottomSheet()
         bottomSheet.show(childFragmentManager, "")
+    }
+
+    private fun showTextColorPicker(onColorSelected: (Int) -> Unit) {
+        val colorPickerView = com.skydoves.colorpickerview.ColorPickerView(requireContext())
+        val alphaSlideBar = AlphaSlideBar(requireContext())
+        val brightnessSlideBar = BrightnessSlideBar(requireContext())
+
+        colorPickerView.attachAlphaSlider(alphaSlideBar)
+        colorPickerView.attachBrightnessSlider(brightnessSlideBar)
+
+        ColorPickerDialog.Builder(requireContext())
+            .setTitle("텍스트 색상")
+            .setPreferenceName("notice_write_text_color_picker")
+            .setPositiveButton(
+                "선택",
+                ColorEnvelopeListener { envelope: ColorEnvelope, _: Boolean ->
+                    onColorSelected(envelope.color)
+                },
+            )
+            .setNegativeButton("취소") { dialogInterface, _ ->
+                dialogInterface.dismiss()
+            }
+            .setColorPickerView(colorPickerView)
+            .setBottomSpace(12)
+            .show()
     }
 
     private fun showChapterBottomSheet() {
