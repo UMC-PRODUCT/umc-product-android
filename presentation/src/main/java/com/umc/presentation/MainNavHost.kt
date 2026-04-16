@@ -19,14 +19,16 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Login,
+        startDestination = MainDestination.Splash,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None },
     ) {
         composable<MainDestination.Splash> {
-            SplashRoute()
+            SplashRoute(
+                navigateToLogin = { navHostController.navigate(MainDestination.Login) }
+            )
         }
 
         composable<MainDestination.Login> {

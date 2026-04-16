@@ -26,13 +26,19 @@ class LoginViewModel @Inject constructor(
 ) : BaseViewModel<UiState, LoginEvent>(
     UiState.Default,
 ) {
+    // 로그인 시도
     fun login(token: String, loginType: LoginType) = viewModelScope.launch {
         startLoading()
         resultResponse(
             response = postLoginUseCase(loginType = loginType, token = token),
             successCallback = {
-                if (it.oAuthVerificationToken.isNotEmpty()) emitEvent(LoginEvent.MoveToSignUpEvent(it.oAuthVerificationToken))
+                // 만약 oAuthVerificationToken (회원가입용 토큰)이 발급되었다면
+                if (it.oAuthVerificationToken.isNotEmpty()) {
+                    // 회원가입으로 이동
+                    emitEvent(LoginEvent.MoveToSignUpEvent(it.oAuthVerificationToken))
+                }
                 else {
+                    // 아니면 로그인 성공 로직
                     saveToken(it)
                 }
             },
@@ -42,6 +48,7 @@ class LoginViewModel @Inject constructor(
         )
     }
 
+    // JWT 토큰 저장
     private fun saveToken(request: JwtToken) = viewModelScope.launch {
         resultResponse(
             response = saveTokenUseCase(request),
@@ -54,6 +61,7 @@ class LoginViewModel @Inject constructor(
         )
     }
 
+    // 내 정보 먼저 가져와서 해당 데이터로 챌린저 ID 확인
     private fun checkUserChallengerRecord() = viewModelScope.launch {
         resultResponse(
             response = getMyProfileUseCase(),
@@ -61,7 +69,8 @@ class LoginViewModel @Inject constructor(
                 if (hasChallengerId(userInfo)) {
                     registerFcmToken()
                 } else {
-                    emitEvent(LoginEvent.MoveToSignUpFailEvent)
+                    // 챌린저 코드 입력 화면으로 이동
+                    emitEvent(LoginEvent.MoveToInputCodeEvent)
                 }
             },
             errorCallback = {
@@ -70,12 +79,14 @@ class LoginViewModel @Inject constructor(
         )
     }
 
+    // 챌린저 ID 확인
     private fun hasChallengerId(userInfo: UserInfo): Boolean {
         val hasRoleChallengerId = userInfo.roles.any { it.challengerId > 0 }
         val hasRecordChallengerId = userInfo.challengerRecords.any { it.challengerId > 0 }
         return hasRoleChallengerId || hasRecordChallengerId
     }
 
+    // FCM 토큰 등록
     private fun registerFcmToken() = viewModelScope.launch {
         try {
             val fcmToken = FirebaseMessaging.getInstance().token.await()
@@ -98,7 +109,7 @@ sealed interface LoginEvent : UiEvent {
 
     object MoveToMainEvent : LoginEvent
 
-    object MoveToSignUpFailEvent : LoginEvent
+    object MoveToInputCodeEvent : LoginEvent
 
     data class MoveToSignUpEvent(val oAuthToken: String) : LoginEvent
 
