@@ -1,21 +1,28 @@
 package com.umc.presentation.login
 
-import android.app.Activity
 import android.content.Context
-import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,6 +52,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.umc.component.R
 
 @Composable
 fun LoginRoute(
@@ -81,56 +89,83 @@ fun LoginScreen(
     onClickKakaoLogin: () -> Unit = {},
     onClickGoogleLogin: () -> Unit = {},
 ) {
-    Box(
+    var animationStarted by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        animationStarted = true
+    }
+
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(neutral000()),
     ) {
+        // ic_logo + 22dp spacer + ic_logo_text 높이 추정값
+        val logoBlockHeight = 100.dp
+        val centerOffset = (maxHeight - logoBlockHeight) / 2
+
+        val logoTopOffset by animateDpAsState(
+            targetValue = if (animationStarted) 248.dp else centerOffset,
+            animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing),
+            label = "logoTopOffset",
+        )
+
+        val contentAlpha by animateFloatAsState(
+            targetValue = if (animationStarted) 1f else 0f,
+            animationSpec = tween(durationMillis = 400, delayMillis = 400),
+            label = "contentAlpha",
+        )
+
         Column(
             modifier = Modifier.align(Alignment.TopCenter),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(modifier = Modifier.height(248.dp))
+            Spacer(modifier = Modifier.height(logoTopOffset))
 
             Image(
-                painter = painterResource(id = com.umc.component.R.drawable.ic_logo),
+                painter = painterResource(id = R.drawable.ic_logo),
                 contentDescription = null,
             )
 
             Spacer(modifier = Modifier.height(22.dp))
 
             Image(
-                painter = painterResource(id = com.umc.component.R.drawable.ic_logo_text),
+                painter = painterResource(id = R.drawable.ic_logo_text),
                 contentDescription = null,
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Column(
+                modifier = Modifier.alpha(contentAlpha),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(modifier = Modifier.height(10.dp))
 
-            UText(
-                text = AppStrings.LOGIN_TITLE,
-                style = UmcTypographyTokens.Headline,
-                color = neutral600(),
-            )
+                UText(
+                    text = AppStrings.LOGIN_TITLE,
+                    style = UmcTypographyTokens.Headline,
+                    color = neutral600(),
+                )
 
-            Spacer(modifier = Modifier.height(145.dp))
+                Spacer(modifier = Modifier.height(145.dp))
 
-            Image(
-                painter = painterResource(id = com.umc.component.R.drawable.ic_kakao_login),
-                contentDescription = null,
-                modifier = Modifier.clickable {
-                    onClickKakaoLogin()
-                },
-            )
+                Image(
+                    painter = painterResource(id = com.umc.component.R.drawable.ic_kakao_login),
+                    contentDescription = null,
+                    modifier = Modifier.clickable {
+                        onClickKakaoLogin()
+                    },
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Image(
-                painter = painterResource(id = com.umc.component.R.drawable.ic_google_login),
-                contentDescription = null,
-                modifier = Modifier.clickable {
-                    onClickGoogleLogin()
-                },
-            )
+                Image(
+                    painter = painterResource(id = com.umc.component.R.drawable.ic_google_login),
+                    contentDescription = null,
+                    modifier = Modifier.clickable {
+                        onClickGoogleLogin()
+                    },
+                )
+            }
         }
     }
 }
