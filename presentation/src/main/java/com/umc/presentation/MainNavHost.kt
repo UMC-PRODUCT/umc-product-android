@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.splash.SplashRoute
 
 @Composable
@@ -18,7 +19,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Splash,
+        startDestination = MainDestination.Login,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -26,6 +27,10 @@ fun MainNavHost(
     ) {
         composable<MainDestination.Splash> {
             SplashRoute()
+        }
+
+        composable<MainDestination.Login> {
+            LoginRoute()
         }
     }
 }
