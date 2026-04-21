@@ -5,4 +5,7 @@ import kotlinx.serialization.Serializable
 sealed interface MainDestination {
     @Serializable
     data object Splash : MainDestination
+
+    @Serializable
+    data object Login : MainDestination
 }
