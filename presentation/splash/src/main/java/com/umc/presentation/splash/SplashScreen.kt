@@ -16,23 +16,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.theme.neutral000
+import com.umc.component.R
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun SplashRoute(
     viewModel: SplashViewModel = hiltViewModel(),
+    navigateToLogin: () -> Unit,
 ) {
-    // TODO uiState 처리는 생명주기에 맞춰서 아래 코드처럼 사용
-    // val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest {
-            // TODO 이벤트 처리는 여기서
+            when(it) {
+                SplashEvent.MoveToLoginEvent -> navigateToLogin()
+                SplashEvent.MoveToMainEvent -> TODO()
+                SplashEvent.MoveToInputCodeEvent -> TODO()
+            }
         }
     }
 
-    SplashScreen(
-        // uiState나 event 등 StateHoisting 사용
-    )
+    SplashScreen()
 
 }
 
@@ -48,14 +50,14 @@ fun SplashScreen() {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Image(
-                painter = painterResource(id = com.umc.component.R.drawable.ic_logo),
+                painter = painterResource(id = R.drawable.ic_logo),
                 contentDescription = null,
             )
 
             Spacer(modifier = Modifier.height(22.dp))
 
             Image(
-                painter = painterResource(id = com.umc.component.R.drawable.ic_logo_text),
+                painter = painterResource(id = R.drawable.ic_logo_text),
                 contentDescription = null,
             )
         }

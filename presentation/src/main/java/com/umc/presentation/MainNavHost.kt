@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.splash.SplashRoute
 
 @Composable
@@ -25,7 +26,13 @@ fun MainNavHost(
         popExitTransition = { ExitTransition.None },
     ) {
         composable<MainDestination.Splash> {
-            SplashRoute()
+            SplashRoute(
+                navigateToLogin = { navHostController.navigate(MainDestination.Login) }
+            )
+        }
+
+        composable<MainDestination.Login> {
+            LoginRoute()
         }
     }
 }

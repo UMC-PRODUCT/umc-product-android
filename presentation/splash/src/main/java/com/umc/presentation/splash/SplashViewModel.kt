@@ -34,7 +34,7 @@ class SplashViewModel @Inject constructor(
                         emitEvent(SplashEvent.MoveToMainEvent)
                     } else {
                         // 챌린저 정보가 없으면 코드 입력 페이지로
-                        emitEvent(SplashEvent.MoveToSignUpFailEvent)
+                        emitEvent(SplashEvent.MoveToInputCodeEvent)
                     }
                 },
                 errorCallback = {
@@ -59,5 +59,5 @@ sealed interface SplashEvent : UiEvent {
 
     object MoveToLoginEvent : SplashEvent
 
-    object MoveToSignUpFailEvent : SplashEvent
+    object MoveToInputCodeEvent : SplashEvent
 }
