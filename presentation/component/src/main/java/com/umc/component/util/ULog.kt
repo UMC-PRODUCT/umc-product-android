@@ -1,4 +1,4 @@
-package com.umc.presentation.util
+package com.umc.component.util
 
 import android.util.Log
 

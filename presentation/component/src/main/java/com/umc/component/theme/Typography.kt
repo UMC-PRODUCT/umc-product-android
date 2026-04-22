@@ -1,4 +1,4 @@
-package com.umc.presentation.theme
+package com.umc.component.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
@@ -6,7 +6,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.umc.presentation.R
+import com.umc.component.R
 
 private val pretendardRegular = FontFamily(Font(R.font.pretendard_regular, FontWeight.Normal))
 private val pretendardSemiBold = FontFamily(Font(R.font.pretendard_semibold, FontWeight.SemiBold))

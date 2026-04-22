@@ -9,6 +9,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ComposeCompilerApi
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -20,6 +22,21 @@ import java.time.LocalDate
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+
+@Composable
+fun HomeRoute(
+    //viewModel: HomeViewModel = ,
+) {
+    LaunchedEffect(viewModel){
+        viewModel.uiEvent.collectLatest{
+            //이벤트 처리
+        }
+    }
+
+    HomeScreen (
+
+    )
+}
 
 @Composable
 fun HomeScreen(

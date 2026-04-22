@@ -1,7 +1,8 @@
-package com.umc.presentation.fcm
+package com.umc.component.fcm
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -9,7 +10,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.umc.domain.model.home.NotificationItem
 import com.umc.domain.usecase.appDataStore.notification.AddNotificationUseCase
-import com.umc.presentation.R
+import com.umc.component.R
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -88,7 +89,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
     //포그라운드에서 메시지 받았을 때 처리
     private fun showNotification(title: String, body: String){
         val channelId = "umc_product_channel"
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         //안드로이드 8(오레오) 이상 시 알림 채널 설정 (제어 용도)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

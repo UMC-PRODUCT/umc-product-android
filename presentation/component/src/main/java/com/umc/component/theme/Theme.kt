@@ -1,4 +1,4 @@
-package com.umc.presentation.theme
+package com.umc.component.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

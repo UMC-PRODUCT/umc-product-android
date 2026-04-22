@@ -1,4 +1,4 @@
-package com.umc.presentation.component
+package com.umc.component.component
 
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
