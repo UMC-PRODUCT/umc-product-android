@@ -41,6 +41,7 @@ credentials = "1.2.1"
 googleId = "1.1.0"
 googlePlayServicesAuth = "21.2.0"
 playInAppUpdate = "2.1.0"
+hiltNavigationCompose = "1.2.0"
 desugar_jdk_libs = "2.0.4"
 
 [libraries]
@@ -63,6 +64,7 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 hilt-core = { group = "com.google.dagger", name = "hilt-core", version.ref = "hilt" }
+androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 retrofit-android = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 okhttp-android = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okHttp"}

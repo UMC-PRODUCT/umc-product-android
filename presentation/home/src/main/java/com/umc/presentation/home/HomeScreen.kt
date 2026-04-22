@@ -27,11 +27,11 @@ import androidx.compose.ui.graphics.Color
 fun HomeRoute(
     //viewModel: HomeViewModel = ,
 ) {
-    LaunchedEffect(viewModel){
-        viewModel.uiEvent.collectLatest{
-            //이벤트 처리
-        }
-    }
+    //LaunchedEffect(viewModel){
+    //    viewModel.uiEvent.collectLatest{
+    //        //이벤트 처리
+    //    }
+    //}
 
     HomeScreen (
 

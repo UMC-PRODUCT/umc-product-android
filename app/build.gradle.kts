@@ -62,9 +62,6 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    hilt {
-        enableAggregatingTask = false
-    }
     lint {
         disable += "Instantiatable"
     }
@@ -116,6 +113,7 @@ dependencies {
 
     //firebase
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
