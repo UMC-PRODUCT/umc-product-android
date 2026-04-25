@@ -33,10 +33,23 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.ui.unit.sp
+import com.umc.component.theme.UmcTypography
+import com.umc.component.theme.UmcTypographyTokens
+import com.umc.component.theme.danger500
+import com.umc.component.theme.neutral000
+import com.umc.component.theme.neutral600
+import com.umc.component.theme.neutral800
+import com.umc.component.theme.primary100
+import com.umc.component.theme.primary500
+import com.umc.component.theme.primary600
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.Instant
 
+
+/**
+ * 홈 화면에서 보여주는 달력 composible 함수
+ * **/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeCalendar(
@@ -95,7 +108,7 @@ fun HomeCalendar(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFFFFFFF)) /**임시 색깔 neutral000**/
+            .background(neutral000())
             .padding(16.dp)
     ) {
         //헤더 - 월정보(2026.04) 및 화살표
@@ -152,7 +165,8 @@ private fun CalendarHeader(
         Text(
             text = "${currentMonth.year}.${String.format("%02d", currentMonth.monthValue)}",
             //style =, /**임시 폰트**/
-            color = Color(0xFF34363E), /**임시 색깔 neutral800**/
+            color = neutral800(),
+            style = UmcTypographyTokens.HeadlineBold,
             modifier = Modifier.clickable { onTitleClick() }
         )
 
@@ -180,7 +194,8 @@ private fun CalendarBody(
                     text = day,
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center,
-                    color = if (index == 0) Color(0xFFF14437) else Color(0xFF6D7882), /**danger500 / neutral 600**/
+                    color = if (index == 0) danger500() else neutral600(),
+                    style = UmcTypographyTokens.Caption1
                 )
             }
         }
@@ -251,10 +266,10 @@ private fun DayItem(
     ) {
         //원 크기를 칸의 70% 정도로 조절
         val backgroundModifier = when {
-            isToday -> Modifier.fillMaxSize(0.7f).background(Color(0xFF4869F0), CircleShape)
+            isToday -> Modifier.fillMaxSize(0.7f).background(primary500(), CircleShape)
             isSelected -> Modifier.fillMaxSize(0.7f)
-                .background(Color(0xFFEBEFFF), CircleShape)
-                .border(1.dp, Color(0xFF3A5AD9), CircleShape)
+                .background(primary100(), CircleShape)
+                .border(1.dp, primary600(), CircleShape)
             else -> Modifier
         }
 
@@ -267,10 +282,11 @@ private fun DayItem(
                 text = date.dayOfMonth.toString(),
                 color = when {
                     isToday -> Color.White
-                    isSelected -> Color(0xFF3A5AD9)
-                    date.dayOfWeek.value == 7 -> Color(0xFFF14437)
-                    else -> Color(0xFF34363E)
+                    isSelected -> primary500()
+                    date.dayOfWeek.value == 7 -> danger500()
+                    else -> neutral800()
                 },
+                style = UmcTypographyTokens.Footnote,
                 fontSize = 14.sp
             )
         }
@@ -282,7 +298,7 @@ private fun DayItem(
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 2.dp)
                     .size(4.dp)
-                    .background(Color(0xFFE55900), CircleShape)
+                    .background(danger500(), CircleShape)
             )
         }
     }
