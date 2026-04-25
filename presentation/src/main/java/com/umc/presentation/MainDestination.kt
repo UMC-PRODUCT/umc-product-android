@@ -8,4 +8,7 @@ sealed interface MainDestination {
 
     @Serializable
     data object Login : MainDestination
+
+    @Serializable
+    data class SignUp(val oAuthVerificationToken: String) : MainDestination
 }

@@ -8,7 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.umc.presentation.login.LoginRoute
+import com.umc.presentation.signup.SignUpRoute
 import com.umc.presentation.splash.SplashRoute
 
 @Composable
@@ -19,7 +21,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Splash,
+        startDestination = MainDestination.SignUp(""),
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -32,7 +34,19 @@ fun MainNavHost(
         }
 
         composable<MainDestination.Login> {
-            LoginRoute()
+            LoginRoute(
+                navigateToSignUp = { oAuthToken ->
+                    navHostController.navigate(MainDestination.SignUp(oAuthToken))
+                }
+            )
+        }
+
+        composable<MainDestination.SignUp> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.SignUp>()
+            SignUpRoute(
+                oAuthVerificationToken = destination.oAuthVerificationToken,
+                navigateToBack = { navHostController.popBackStack() },
+            )
         }
     }
 }
