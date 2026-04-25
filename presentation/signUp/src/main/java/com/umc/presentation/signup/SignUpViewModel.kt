@@ -26,18 +26,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-/**
- * 회원가입 화면의 ViewModel.
- *
- * 회원가입 플로우 요약:
- * 1. 이메일 인증 요청 → 2. 인증 코드 확인 → 3. 회원 등록 → 4. 토큰 저장 → 5. FCM 토큰 등록
- *
- * oAuthVerificationToken 은 로그인 화면에서 소셜 로그인 후 서버로부터 받은 토큰으로,
- * 회원 등록 API 호출 시 반드시 포함해야 함. SignUpRoute 진입 시 setOAuthVerificationToken()으로 주입.
- *
- * 약관 동의는 서버에서 약관 ID를 조회한 뒤 자동으로 PRIVACY·SERVICE 두 항목에 동의 처리함.
- * 별도의 약관 동의 UI 없이 가입 완료 버튼 클릭만으로 처리되는 구조임에 유의.
- */
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val getAllSchoolUseCase: GetAllSchoolUseCase,
@@ -255,15 +243,6 @@ class SignUpViewModel @Inject constructor(
     }
 }
 
-/**
- * 회원가입 화면 UI 상태.
- *
- * @property emailVerificationId 이메일 인증 요청 후 서버에서 발급한 ID. 인증 코드 확인 시 사용
- * @property emailVerificationToken 인증 코드 확인 성공 후 서버에서 발급한 토큰. 회원 등록 시 사용
- * @property oAuthVerificationToken 소셜 로그인 후 발급된 토큰. 회원 등록 시 사용
- * @property verifyType 이메일 인증 단계 (NONE → REQUEST → VERIFY 또는 ERROR)
- * @property enableNextButton 모든 필수 항목 입력 및 이메일 인증 완료 시 true
- */
 data class SignUpState(
     val name: String = "",
     val nickname: String = "",
@@ -288,7 +267,6 @@ sealed interface SignUpEvent : UiEvent {
     object ShowVerifyToast : SignUpEvent
     object ShowVerifyCompleteToast : SignUpEvent
     object ShowVerifyErrorToast : SignUpEvent
-    /** 인증 코드 발송 성공 시 코드 입력 필드로 포커스를 이동시키기 위한 이벤트 */
     object FocusVerifyCodeField : SignUpEvent
     data class ShowRegisterErrorDialog(val message: String) : SignUpEvent
 }

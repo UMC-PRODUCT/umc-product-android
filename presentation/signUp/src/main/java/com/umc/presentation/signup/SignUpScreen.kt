@@ -19,7 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import com.umc.component.component.UText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -139,14 +139,14 @@ fun SignUpScreen(
                 tint = Color.Unspecified
             )
 
-            Text(
+            UText(
                 text = AppStrings.SIGN_UP,
                 style = UmcTypographyTokens.Title1Bold,
                 color = neutral800(),
                 modifier = Modifier.padding(start = 24.dp, top = 16.dp)
             )
 
-            Text(
+            UText(
                 text = AppStrings.SIGN_UP_SUB_TITLE,
                 style = UmcTypographyTokens.Body,
                 color = neutral600(),
@@ -212,7 +212,7 @@ fun SignUpScreen(
                     .clickable { onClickSchool() }
                     .padding(horizontal = 16.dp, vertical = 14.dp)
             ) {
-                Text(
+                UText(
                     text = uiState.school.schoolName.ifEmpty { AppStrings.SIGN_UP_SELECT_SCHOOL_PLACEHOLDER },
                     style = UmcTypographyTokens.Subheadline,
                     color = if (uiState.school.schoolName.isEmpty()) neutral300() else neutral800(),
@@ -275,7 +275,7 @@ fun SignUpScreen(
             }
 
             if (uiState.verifyType == EmailVerifyType.ERROR) {
-                Text(
+                UText(
                     text = AppStrings.SIGN_UP_ERROR_EMAIL,
                     style = UmcTypographyTokens.Footnote,
                     color = danger500(),
@@ -350,12 +350,12 @@ private fun FieldLabel(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start,
     ) {
-        Text(
+        UText(
             text = text,
             style = UmcTypographyTokens.HeadlineBold,
             color = neutral800(),
         )
-        Text(
+        UText(
             text = " *",
             style = UmcTypographyTokens.HeadlineBold,
             color = danger500(),

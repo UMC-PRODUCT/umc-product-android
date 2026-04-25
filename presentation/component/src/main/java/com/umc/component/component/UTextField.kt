@@ -16,7 +16,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -28,6 +27,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral300
@@ -120,7 +120,7 @@ fun UTextField(
                 // BasicTextField는 hint를 자체 지원하지 않아 수동으로 처리
                 Box(modifier = Modifier.weight(1f)) {
                     if (value.isEmpty()) {
-                        Text(
+                        UText(
                             text = placeholder,
                             style = textStyle.copy(color = placeholderColor),
                         )
