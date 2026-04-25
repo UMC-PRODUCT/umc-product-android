@@ -1,5 +1,6 @@
 package com.umc.presentation.signup
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,18 +15,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import com.umc.component.component.UText
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
@@ -41,6 +52,7 @@ import com.umc.component.theme.danger100
 import com.umc.component.theme.danger500
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral100
+import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral300
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
@@ -51,19 +63,19 @@ import com.umc.domain.model.enums.EmailVerifyType
 import com.umc.domain.model.school.SchoolInfo
 import kotlinx.coroutines.flow.collectLatest
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpRoute(
     viewModel: SignUpViewModel = hiltViewModel(),
     oAuthVerificationToken: String,
     navigateToBack: () -> Unit = {},
     navigateToPermission: () -> Unit = {},
-    onShowSchoolBottomSheet: (List<SchoolInfo>, (SchoolInfo) -> Unit) -> Unit = { _, _ -> },
-    onShowVerifyToast: () -> Unit = {},
-    onShowVerifyCompleteToast: () -> Unit = {},
-    onShowVerifyErrorToast: () -> Unit = {},
-    onShowRegisterErrorDialog: (String) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    var showSchoolBottomSheet by remember { mutableStateOf(false) }
+    var errorDialogMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.setOAuthVerificationToken(oAuthVerificationToken)
@@ -74,18 +86,15 @@ fun SignUpRoute(
             when (event) {
                 is SignUpEvent.MoveToBack -> navigateToBack()
                 is SignUpEvent.MoveToPermissionEvent -> navigateToPermission()
-                is SignUpEvent.ShowSchoolBottomSheet -> {
-                    onShowSchoolBottomSheet(
-                        viewModel.uiState.value.schoolList,
-                        viewModel::updateSelectSchool
-                    )
-                }
-
-                is SignUpEvent.ShowVerifyToast -> onShowVerifyToast()
-                is SignUpEvent.ShowVerifyCompleteToast -> onShowVerifyCompleteToast()
-                is SignUpEvent.ShowVerifyErrorToast -> onShowVerifyErrorToast()
+                is SignUpEvent.ShowSchoolBottomSheet -> showSchoolBottomSheet = true
+                is SignUpEvent.ShowVerifyToast ->
+                    Toast.makeText(context, AppStrings.SIGN_UP_EMAIL_VERIFY_SENT, Toast.LENGTH_SHORT).show()
+                is SignUpEvent.ShowVerifyCompleteToast ->
+                    Toast.makeText(context, AppStrings.SIGN_UP_EMAIL_VERIFY_COMPLETE, Toast.LENGTH_SHORT).show()
+                is SignUpEvent.ShowVerifyErrorToast ->
+                    Toast.makeText(context, AppStrings.SIGN_UP_EMAIL_VERIFY_ERROR, Toast.LENGTH_SHORT).show()
                 is SignUpEvent.FocusVerifyCodeField -> Unit
-                is SignUpEvent.ShowRegisterErrorDialog -> onShowRegisterErrorDialog(event.message)
+                is SignUpEvent.ShowRegisterErrorDialog -> errorDialogMessage = event.message
             }
         }
     }
@@ -102,6 +111,129 @@ fun SignUpRoute(
         onClickConfirm = viewModel::onClickConfirm,
         onClickNext = viewModel::register,
     )
+
+    if (showSchoolBottomSheet) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { showSchoolBottomSheet = false },
+            sheetState = sheetState,
+            containerColor = neutral000(),
+        ) {
+            SchoolSelectBottomSheetContent(
+                schoolList = uiState.schoolList,
+                selectedSchoolId = uiState.school.schoolId.takeIf { it != -1 }?.toLong(),
+                onSelectSchool = { school ->
+                    viewModel.updateSelectSchool(school)
+                    showSchoolBottomSheet = false
+                },
+            )
+        }
+    }
+
+    errorDialogMessage?.let { message ->
+        AlertDialog(
+            onDismissRequest = { errorDialogMessage = null },
+            title = {
+                UText(
+                    text = message,
+                    style = UmcTypographyTokens.HeadlineBold,
+                    color = neutral800(),
+                )
+            },
+            confirmButton = {
+                UButton(
+                    text = AppStrings.CONFIRM,
+                    onClick = {
+                        errorDialogMessage = null
+                        navigateToBack()
+                    },
+                    backgroundColor = primary500(),
+                    pressedColor = primary700(),
+                    textColor = neutral000(),
+                    textStyle = UmcTypographyTokens.HeadlineBold,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                )
+            },
+        )
+    }
+}
+
+@Composable
+private fun SchoolSelectBottomSheetContent(
+    schoolList: List<SchoolInfo>,
+    selectedSchoolId: Long?,
+    onSelectSchool: (SchoolInfo) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 24.dp, start = 24.dp, end = 24.dp)
+    ) {
+        UText(
+            text = AppStrings.SIGN_UP_SELECT_SCHOOL_PLACEHOLDER,
+            style = UmcTypographyTokens.Title3Bold,
+            color = neutral800(),
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        UText(
+            text = AppStrings.SIGN_UP_SELECT_SCHOOL_HINT,
+            style = UmcTypographyTokens.Subheadline,
+            color = neutral600(),
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(367.dp)
+        ) {
+            items(
+                items = schoolList,
+                key = { it.schoolId },
+            ) { school ->
+                val isSelected = school.schoolId.toLong() == selectedSchoolId
+                SchoolItem(
+                    school = school,
+                    isSelected = isSelected,
+                    onClick = { onSelectSchool(school) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SchoolItem(
+    school: SchoolInfo,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .background(neutral000())
+            .padding(vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        UText(
+            text = school.schoolName,
+            style = UmcTypographyTokens.Subheadline,
+            color = if (isSelected) primary500() else neutral800(),
+            modifier = Modifier.weight(1f),
+        )
+
+        if (isSelected) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_check_white),
+                contentDescription = null,
+                tint = primary500(),
+            )
+        }
+    }
 }
 
 @Composable
@@ -164,9 +296,7 @@ fun SignUpScreen(
                         .padding(end = 6.dp)
                 ) {
                     FieldLabel(text = AppStrings.NAME)
-
                     Spacer(modifier = Modifier.height(8.dp))
-
                     UTextField(
                         value = uiState.name,
                         onValueChange = onNameChanged,
@@ -182,9 +312,7 @@ fun SignUpScreen(
                         .padding(start = 6.dp)
                 ) {
                     FieldLabel(text = AppStrings.NICKNAME)
-
                     Spacer(modifier = Modifier.height(8.dp))
-
                     UTextField(
                         value = uiState.nickname,
                         onValueChange = onNicknameChanged,
@@ -201,9 +329,7 @@ fun SignUpScreen(
                 text = AppStrings.SCHOOL,
                 modifier = Modifier.padding(start = 24.dp)
             )
-
             Spacer(modifier = Modifier.height(8.dp))
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -225,9 +351,7 @@ fun SignUpScreen(
                 text = AppStrings.EMAIL,
                 modifier = Modifier.padding(start = 24.dp)
             )
-
             Spacer(modifier = Modifier.height(8.dp))
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -286,7 +410,6 @@ fun SignUpScreen(
             if (uiState.verifyType == EmailVerifyType.REQUEST || uiState.verifyType == EmailVerifyType.VERIFY) {
                 val isVerified = uiState.verifyType == EmailVerifyType.VERIFY
                 Spacer(modifier = Modifier.height(8.dp))
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
