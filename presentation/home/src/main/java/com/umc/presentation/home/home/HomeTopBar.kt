@@ -1,17 +1,15 @@
-package com.umc.presentation.home
+package com.umc.presentation.home.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.domain.model.enums.UserType
 import com.umc.component.R
+import com.umc.component.component.UButton
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral500
@@ -51,19 +50,14 @@ fun HomeTopBar(
         //OB냐 ACTIVE냐
         Row(verticalAlignment = Alignment.CenterVertically) {
             //유저 상태 배지 (ACTIVE / OB 분기 처리)
-            //XML의 UButton 커스텀 속성들을 Surface와 Text로 구현
-            Surface(
-                color = if (userType == UserType.ACTIVE) primary100() else neutral200(),
-                shape = RoundedCornerShape(4.dp),
-                modifier = Modifier.padding(end = 12.dp)
-            ) {
-                Text(
-                    text = userType.name,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    style = UmcTypographyTokens.FootnoteBold,
-                    color = if (userType == UserType.ACTIVE) primary600() else neutral700()
-                )
-            }
+            UButton(
+                text = userType.name,
+                cardBackgroundColor = if (userType == UserType.ACTIVE) primary100() else neutral200(),
+                textColor = if (userType == UserType.ACTIVE) primary600() else neutral700(),
+                textAppearance = UmcTypographyTokens.FootnoteBold,
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
 
             // 알림 버튼 (상태에 따라 점이 있는 아이콘으로 교체)
             IconButton(

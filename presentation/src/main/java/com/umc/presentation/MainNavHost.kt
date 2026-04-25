@@ -8,8 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.umc.presentation.splash.SplashScreen
-import com.umc.presentation.home.HomeScreen
+import com.umc.presentation.home.home.HomeRoute
+import com.umc.presentation.home.home.HomeScreen
 import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.splash.SplashRoute
 
@@ -39,7 +39,14 @@ fun MainNavHost(
             LoginRoute()
         }
         composable<MainDestination.Home> {
-            HomeScreen()
+            HomeRoute(
+                onNavigateToNotice = {
+                    //navHostController.navigate(MainDestination.Notice)
+                     },
+                onNavigateToPlanAdd = {},
+                onNavigateToPlanDetail = {},
+                onNavigateToNotification = {}
+            )
         }
     }
 }

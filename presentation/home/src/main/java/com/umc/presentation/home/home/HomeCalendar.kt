@@ -1,4 +1,4 @@
-package com.umc.presentation.home
+package com.umc.presentation.home.home
 
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -6,9 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -33,7 +30,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.ui.unit.sp
-import com.umc.component.theme.UmcTypography
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.danger500
 import com.umc.component.theme.neutral000
@@ -42,6 +38,7 @@ import com.umc.component.theme.neutral800
 import com.umc.component.theme.primary100
 import com.umc.component.theme.primary500
 import com.umc.component.theme.primary600
+import com.umc.presentation.home.R
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.Instant

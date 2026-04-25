@@ -1,4 +1,4 @@
-package com.umc.presentation.home
+package com.umc.presentation.home.home
 
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -34,13 +34,13 @@ class HomeViewModel @Inject constructor(
         val today = LocalDate.now()
 
         //유저 정보 가져오기
-        getUserInfo()
+        //getUserInfo()
 
         //금일(월) 데이터 가져오기 (LocalDate 사용)
         getScheduleMonth(today.year, today.monthValue)
 
         //전체 기수 리스트 캐시
-        loadGisuList()
+        //loadGisuList()
     }
 
     //날짜 문자열 변환 유틸 함수 (LocalDate 포맷터 활용)
