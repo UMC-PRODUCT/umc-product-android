@@ -1,20 +1,25 @@
 package com.umc.presentation.home.home
 
+import android.util.Log
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.enums.WarningStatus
 import com.umc.domain.model.home.SchedulePlanItem
+import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
 import com.umc.domain.usecase.GetGisuInfoUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.organization.GetGisuListUseCase
 import com.umc.domain.usecase.schedule.GetScheduleMonthUseCase
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -34,13 +39,13 @@ class HomeViewModel @Inject constructor(
         val today = LocalDate.now()
 
         //유저 정보 가져오기
-        //getUserInfo()
+        getUserInfo()
 
         //금일(월) 데이터 가져오기 (LocalDate 사용)
         getScheduleMonth(today.year, today.monthValue)
 
         //전체 기수 리스트 캐시
-        //loadGisuList()
+        loadGisuList()
     }
 
     //날짜 문자열 변환 유틸 함수 (LocalDate 포맷터 활용)
@@ -66,6 +71,166 @@ class HomeViewModel @Inject constructor(
         }.toSet()
 
         updateState { copy(eventDates = dates) }
+    }
+
+    //전체 기수 리스트 캐시
+    private fun loadGisuList() = viewModelScope.launch {
+        resultResponse(
+            response = getGisuListUseCase(),
+            successCallback = { gisuList ->
+                // 전역 캐시에 저장
+                //GisuCache.setGisuList(gisuList.gisuList)
+            }
+        )
+    }
+
+    // 서버에서 내 정보 가져오기
+    fun getUserInfo() {
+        viewModelScope.launch {
+            resultResponse(
+                response = getMyProfileUseCase(),
+                successCallback = { userInfo ->
+                    Log.d("log_home", "$userInfo")
+                    settingUserInfoToUI(userInfo)
+
+                },
+                errorCallback = {
+                    /**TODO. 에러 토스트 메시지 등을 전송**/
+                }
+            )
+        }
+    }
+
+    //UserInfo를 받아았을 때 이를 파싱해서 UI 요소로 분할하는 함수
+    fun settingUserInfoToUI(userInfo: UserInfo){
+        // 기수별 정보가 담긴 것.
+        val gisuSummaryList = userInfo.getGisuSummaryList()
+
+        //1. 기수 태그 정보 (11기, 12기, 13기... 생성)
+        val gisuTags: List<String> = gisuSummaryList
+            .sortedBy { it.gisu } // 기수 번호 낮은 순으로 정렬
+            .map { "${it.gisu}기" } // String 포맷팅
+
+        // 2. 최신기수를 가져오기
+        val latestGisu = gisuSummaryList.maxByOrNull { it.gisu }
+        val startGisu = gisuSummaryList.minByOrNull { it.gisu }
+
+
+        viewModelScope.launch {
+            //3. 기본 정보 우선 업데이트
+            updateState {
+                copy(
+                    userName = userInfo.name,
+                    userNickName = userInfo.nickname,
+                    gisuTag = gisuTags,
+                    activeString = "${latestGisu?.gisu}기 활동 상태"
+                )
+            }
+
+            //최신 기수 정보랑 제일 오래된 기수 정보 둘 다 병렬로 실행(YB는 옛날꺼 필요)
+            coroutineScope {
+                val latestResponseDeferred = async {
+                    latestGisu?.let { getGisuInfoUseCase(it.gisuId) }
+                }
+                val startResponseDeferred = async {
+                    startGisu?.let { getGisuInfoUseCase(it.gisuId) }
+                }
+
+                val latestResponse = latestResponseDeferred.await()
+                val startResponse = startResponseDeferred.await()
+
+                if (latestResponse != null && startResponse != null){
+                    //최신 기수 정보를 성공적으로 받아올 때,
+                    resultResponse(
+                        response = latestResponse,
+                        successCallback = { latestGisuInfo ->
+                            //시작 기수 정보 성공적으로 받아올 때
+                            resultResponse(
+                                response = startResponse,
+                                successCallback = { startGisuInfo ->
+                                    //5. 성공 시 날짜 계산
+                                    val (passedDay, userStatus) = getPassedDaysStatus(latestGisuInfo.startAt, latestGisuInfo.endAt,
+                                        startGisuInfo.startAt, startGisuInfo.endAt)
+
+                                    updateState {
+                                        copy(
+                                            userType = userStatus,
+                                            growDay = passedDay.toInt(),
+                                        )
+                                    }
+                                },
+                                errorCallback = {
+                                    //시작 기수 정보 받기 실패
+                                }
+                            )
+
+
+                        },
+                        errorCallback = {
+                            //최신 기수 정보 받기 실패
+                        }
+                    )
+                }
+
+
+            }
+        }
+
+        //5. 점수 계산을 통해, 현재 상태 변경하기
+        calculateUserPoint(userInfo)
+
+    }
+
+    //최신 기수 날짜 정보를 통해, OB인지 ACTIVE인지 판단하고, 몇일 지났는지 표현
+    fun getPassedDaysStatus(latestStartDateStr: String, latestEndDateStr: String,
+                            oldStartDateStr: String, oldEndDateStr: String): Pair<Long, UserType> {
+        val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
+        val latestStartDate = LocalDate.parse(latestStartDateStr, formatter)
+        val latestEndDate = LocalDate.parse(latestEndDateStr, formatter)
+        val oldStartDate = LocalDate.parse(oldStartDateStr, formatter)
+        val oldEndDate = LocalDate.parse(oldEndDateStr, formatter)
+
+        val today = LocalDate.now() // 2026-02-16
+
+        //오늘이 종료일보다 뒤면 (OB)
+        return if (today.isAfter(latestEndDate)) {
+            //종료일로부터 오늘까지 며칠 지났는지 계산
+            val days = ChronoUnit.DAYS.between(latestEndDate, today)
+            /**수정**/
+            Pair(days, UserType.OB)
+        } else {
+            //오늘이 종료일 이전이거나 종료일 당일인 경우
+            //시작일로부터 오늘까지 며칠 지났는지 계산
+            val days = ChronoUnit.DAYS.between(oldStartDate, today)
+            Pair(days, UserType.ACTIVE)
+        }
+    }
+
+    //UserInfo의 chllengerspoint를 바탕으로 현재 상태(패널티)를 계산하는 함수
+    private fun calculateUserPoint(userInfo: UserInfo){
+        //가장 최신 기수 챌린저 정보 가져오기
+        val recentChallenge = userInfo.challengerRecords.maxByOrNull { it.gisu }
+        Log.d("log_home", "$recentChallenge")
+
+        //일단은 totalPoint로 계산 TODO: 차후 로직 변경 가능
+        var sangjumtmp = 0
+        var buljumtmp = 0
+
+        //challengerPoints를 돌면서 더하기 빼기
+        for (point in recentChallenge?.points ?: emptyList()){
+            val nowPoint = point.value.toInt()
+            if(nowPoint > 0){sangjumtmp += nowPoint}
+            else{buljumtmp += nowPoint}
+        }
+
+        updateState {
+            copy(
+                sangjum = sangjumtmp,
+                buljum = buljumtmp,
+                total = sangjumtmp + buljumtmp
+            )
+        }
+
     }
 
     //월별 정보 받아오기

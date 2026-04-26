@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.home.HomeScreen
+import com.umc.presentation.home.schedule.ScheduleAddRoute
 import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.splash.SplashRoute
 
@@ -38,14 +39,30 @@ fun MainNavHost(
         composable<MainDestination.Login> {
             LoginRoute()
         }
+
+        /**홈 화면 탭에 대한 내용입니다.**/
+        //홈 화면
         composable<MainDestination.Home> {
             HomeRoute(
                 onNavigateToNotice = {
                     //navHostController.navigate(MainDestination.Notice)
                      },
-                onNavigateToPlanAdd = {},
+                onNavigateToPlanAdd = {
+                    navHostController.navigate(MainDestination.ScheduleAdd)
+                },
                 onNavigateToPlanDetail = {},
                 onNavigateToNotification = {}
+            )
+        }
+        //일정 생성
+        composable<MainDestination.ScheduleAdd> {
+            ScheduleAddRoute(
+                onShowCategoryDialog = {},
+                onShowLocationDialog = {},
+                onShowParticipantDialog = {},
+                onShowDatePicker = {},
+                onShowTimePicker = {},
+                onShowAttendanceDialog = { _, _ -> }
             )
         }
     }
