@@ -20,8 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UChip
+import com.umc.component.component.USwitch
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
+import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral300
 import com.umc.component.theme.neutral500
@@ -55,10 +57,9 @@ fun ScheduleDateCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(text = "하루 종일", style = UmcTypographyTokens.Callout, color = neutral600())
-                Switch(
+                USwitch(
                     checked = uiState.isAllDay,
                     onCheckedChange = onAlldayChanged,
-                    colors = SwitchDefaults.colors(checkedThumbColor = primary500())
                 )
             }
 
