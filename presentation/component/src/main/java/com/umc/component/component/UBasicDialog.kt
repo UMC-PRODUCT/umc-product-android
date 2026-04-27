@@ -41,22 +41,16 @@ import com.umc.component.theme.neutral800
  * 중앙에 아이콘이랑 아래에 설명 및 확인/취소 버튼이 존재하는 형태입니다.
  *
  * 사용 데이터는 presentation -> component -> model -> UBasicDialogModel을 참고해주세요
+ * @param type: WARNING(경고), CANCEL(반려), SUCCESS(성공)
+ * @param title: 다이얼로그 제목
+ * @param content: 다이얼로그 내용
+ * @param negativeText: 취소 버튼의 텍스트(정의 x시 '취소')
+ * @param confirmText: 확인 버튼의 텍스트
+ * 위의 인자들은 UBasicDialogModel의 인자
+ * 
+ * @param onConfirm: 확인 시 처리 로직
+ * @param onDismiss: 취소 시 처리 로직
  *
- * 사용 예.
- * UBasicDialog(
- *             model = UBasicDialogModel.Warning(
- *                 title = "해당 일정을 삭제하시겠습니까",
- *                 content = "삭제된 일정은 복구할 수 없습니다.",
- *                 positiveText = "삭제하기"
- *             ),
- *             onConfirm = {
- *                 viewModel.deletePlan()
- *                 showDeleteDialog = false
- *             },
- *             onDismiss = {
- *                 showDeleteDialog = false
- *             }
- *         )
  *
  */
 
@@ -166,7 +160,7 @@ fun UBasicDialog(
 
                     //확인
                     UButton(
-                        text = model.positiveText,
+                        text = model.confirmText,
                         modifier = Modifier.weight(1f).height(52.dp),
                         cardBackgroundColor = neutral000(),
                         borderColor = positiveColor as Color,

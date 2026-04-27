@@ -12,14 +12,14 @@ import com.umc.component.theme.*
  * @param title: 다이얼로그 제목
  * @param content: 다이얼로그 내용
  * @param negativeText: 취소 버튼의 텍스트(정의 x시 '취소')
- * @param positiveText: 확인 버튼의 텍스트
+ * @param confirmText: 확인 버튼의 텍스트
  *
  * **/
 sealed class UBasicDialogModel(
     val title: String, //제목
     val content: String?, //내용
     val negativeText: String, //취소 버튼의 텍스트
-    val positiveText: String, //확인 버튼의 텍스트
+    val confirmText: String, //확인 버튼의 텍스트
     val type: DialogType
 ) {
 
