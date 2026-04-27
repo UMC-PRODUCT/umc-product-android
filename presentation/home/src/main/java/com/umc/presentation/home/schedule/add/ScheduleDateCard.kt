@@ -1,4 +1,4 @@
-package com.umc.presentation.home.schedule
+package com.umc.presentation.home.schedule.add
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -9,11 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,14 +20,15 @@ import com.umc.component.component.UChip
 import com.umc.component.component.USwitch
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral300
 import com.umc.component.theme.neutral500
 import com.umc.component.theme.neutral600
-import com.umc.component.theme.primary500
 
-/**일정 등록에서 일시 (하루 종일) or 시작/종료 날짜를 선택하는 섹션**/
+/**일정 등록에서 일시 (하루 종일) or 시작/종료 날짜를 선택하는 섹션
+ *
+ * 하루 종일 + DateTimeRow(UChip 같이 존재)
+ * **/
 @Composable
 fun ScheduleDateCard(
     uiState: ScheduleAddUiState,

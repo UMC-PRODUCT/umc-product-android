@@ -1,4 +1,4 @@
-package com.umc.presentation.home.schedule
+package com.umc.presentation.home.schedule.add
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
@@ -30,7 +30,6 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
-import kotlin.compareTo
 
 @HiltViewModel
 class ScheduleAddViewModel @Inject

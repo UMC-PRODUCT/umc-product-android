@@ -1,4 +1,4 @@
-package com.umc.presentation.home.schedule
+package com.umc.presentation.home.schedule.add
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
@@ -14,32 +14,29 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.R
 import com.umc.component.component.UButton
-import com.umc.component.component.UChip
-import com.umc.component.component.UText
 import com.umc.component.theme.*
 import kotlinx.coroutines.flow.collectLatest
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
 
 @Composable
 fun ScheduleAddRoute(
     viewModel: ScheduleAddViewModel = hiltViewModel(),
-    onShowCategoryDialog: () -> Unit,
-    onShowLocationDialog: () -> Unit,
-    onShowParticipantDialog: () -> Unit,
-    onShowDatePicker: (isStart: Boolean) -> Unit,
-    onShowTimePicker: (isStart: Boolean) -> Unit,
     onShowAttendanceDialog: (onConfirm: () -> Unit, onReject: () -> Unit) -> Unit
 ){
 
     val uiState by viewModel.uiState.collectAsState()
+    //뒤로 가기 디스패처
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+
+    //다이얼로그 표시 여부 체크
+    var showCategoryDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel){
         viewModel.uiEvent.collectLatest { event ->
@@ -56,13 +53,13 @@ fun ScheduleAddRoute(
         onTitleChanged = viewModel::updatePlanTitle,
         onDetailChanged = viewModel::updatePlanDetail,
         onAlldayChanged = viewModel::setAllday,
-        onCategoryClick = onShowCategoryDialog,
-        onLocationClick = onShowLocationDialog,
-        onParticipantClick = onShowParticipantDialog,
-        onStartDateClick = { onShowDatePicker(true) },
-        onStartTimeClick = { onShowTimePicker(true) },
-        onEndDateClick = { onShowDatePicker(false) },
-        onEndTimeClick = { onShowTimePicker(false) },
+        onCategoryClick = { showCategoryDialog = true },
+        onLocationClick = {  },
+        onParticipantClick = {  },
+        onStartDateClick = {  },
+        onStartTimeClick = {  },
+        onEndDateClick = {  },
+        onEndTimeClick = {  },
         onRegisterClick = {
             //운영진 여부 및 수정 모드에 따른 분기 로직
             if (uiState.isManager && !uiState.editMode) {
@@ -75,6 +72,15 @@ fun ScheduleAddRoute(
             }
         }
     )
+
+    //다이얼로그 정의
+    if (showCategoryDialog) {
+        ScheduleCategoryBottomSheet(
+            viewModel = viewModel,
+            onDismissRequest = { showCategoryDialog = false },
+            onConfirm = { showCategoryDialog = false }
+        )
+    }
 
 
 }
@@ -302,7 +308,9 @@ fun ScheduleAddActionButtons(
     Row(modifier = Modifier.fillMaxWidth()) {
         UButton(
             text = "취소",
-            modifier = Modifier.weight(1f).height(52.dp),
+            modifier = Modifier
+                .weight(1f)
+                .height(52.dp),
             cardBackgroundColor = neutral000(),
             borderColor = neutral300(),
             borderWidth = 1.dp,
@@ -312,7 +320,9 @@ fun ScheduleAddActionButtons(
         Spacer(modifier = Modifier.width(16.dp))
         UButton(
             text = if (editMode) "수정" else "등록",
-            modifier = Modifier.weight(1f).height(52.dp),
+            modifier = Modifier
+                .weight(1f)
+                .height(52.dp),
             cardBackgroundColor = if (registerOk) primary500() else neutral300(),
             textColor = neutral000(),
             onClick = onRegisterClick
