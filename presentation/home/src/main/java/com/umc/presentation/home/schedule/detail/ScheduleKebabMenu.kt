@@ -17,7 +17,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
+import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.danger500
 import com.umc.component.theme.neutral000
@@ -91,7 +91,7 @@ fun MenuItem(icon: Int, text: String, color: Color, onClick: () -> Unit) {
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Text(
+        UText(
             text = text,
             style = UmcTypographyTokens.Subheadline,
             color = color,

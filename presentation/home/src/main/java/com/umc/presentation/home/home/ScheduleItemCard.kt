@@ -14,7 +14,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral200
@@ -84,8 +84,8 @@ fun ActiveScheduleItem(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(text = item.dayOfWeek, style = UmcTypographyTokens.Caption2Bold, color = primary500())
-                    Text(text = item.day, style = UmcTypographyTokens.CalloutBold, color = primary500())
+                    UText(text = item.dayOfWeek, style = UmcTypographyTokens.Caption2Bold, color = primary500())
+                    UText(text = item.day, style = UmcTypographyTokens.CalloutBold, color = primary500())
                 }
             }
 
@@ -95,8 +95,8 @@ fun ActiveScheduleItem(
                     .weight(1f)
                     .padding(horizontal = 16.dp)
             ) {
-                Text(text = item.title, style = UmcTypographyTokens.CalloutBold, color = neutral800())
-                Text(text = item.time, style = UmcTypographyTokens.Footnote, color = neutral600())
+                UText(text = item.title, style = UmcTypographyTokens.CalloutBold, color = neutral800())
+                UText(text = item.time, style = UmcTypographyTokens.Footnote, color = neutral600())
             }
 
             //D-Day 버튼
@@ -151,8 +151,8 @@ fun DefaultScheduleItem(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(text = item.dayOfWeek, style = UmcTypographyTokens.Caption2Bold, color = neutral300())
-                    Text(text = item.day, style = UmcTypographyTokens.CalloutBold, color = neutral300())
+                    UText(text = item.dayOfWeek, style = UmcTypographyTokens.Caption2Bold, color = neutral300())
+                    UText(text = item.day, style = UmcTypographyTokens.CalloutBold, color = neutral300())
                 }
             }
 
@@ -161,8 +161,8 @@ fun DefaultScheduleItem(
                     .weight(1f)
                     .padding(horizontal = 16.dp)
             ) {
-                Text(text = item.title, style = UmcTypographyTokens.CalloutBold, color = neutral400())
-                Text(text = item.time, style = UmcTypographyTokens.Footnote, color = neutral400())
+                UText(text = item.title, style = UmcTypographyTokens.CalloutBold, color = neutral400())
+                UText(text = item.time, style = UmcTypographyTokens.Footnote, color = neutral400())
             }
 
             androidx.compose.material3.Icon(

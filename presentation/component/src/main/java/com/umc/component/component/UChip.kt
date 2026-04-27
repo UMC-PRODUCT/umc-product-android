@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,7 +70,7 @@ fun UChip(
                 horizontalArrangement = Arrangement.Center
             ) {
 
-                Text(
+                UText(
                     text = text,
                     style = textAppearance,
                     color = textColor

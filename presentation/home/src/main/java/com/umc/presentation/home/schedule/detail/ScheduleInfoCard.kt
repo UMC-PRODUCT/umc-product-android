@@ -14,13 +14,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
+import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral300
@@ -96,7 +96,7 @@ fun InfoRow(
         Spacer(modifier = Modifier.width(16.dp))
 
         Column {
-            Text(text = title,
+            UText(text = title,
                 style = UmcTypographyTokens.BodyBold,
                 color = neutral800()
             )
@@ -104,7 +104,7 @@ fun InfoRow(
             Spacer(modifier = Modifier.height(8.dp))
 
             //정보 1 (2026.04.30 or 장소이름)
-            Text(text = content1,
+            UText(text = content1,
                 style = UmcTypographyTokens.Subheadline,
                 color = neutral600()
             )
@@ -112,7 +112,7 @@ fun InfoRow(
             //정보 2 (시간 정보)
             if (content2 != null) {
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = content2,
+                UText(text = content2,
                     style = UmcTypographyTokens.Subheadline,
                     color = neutral600()
                 )
@@ -122,7 +122,7 @@ fun InfoRow(
             if (isMapAction) {
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Text(
+                UText(
                     text = "지도 보기",
                     style = UmcTypographyTokens.Footnote,
                     color = primary500(),

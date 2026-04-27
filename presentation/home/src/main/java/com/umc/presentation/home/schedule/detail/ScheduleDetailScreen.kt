@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,6 +34,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.R
 import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UButton
+import com.umc.component.component.UText
 import com.umc.component.component.model.UBasicDialogModel
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.accent500
@@ -158,14 +158,14 @@ fun ScheduleDetailScreen(
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-            Text(text = uiState.title,
+            UText(text = uiState.title,
                 style = UmcTypographyTokens.Title2Bold,
                 color = neutral800()
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(text = uiState.startDate,
+            UText(text = uiState.startDate,
                 style = UmcTypographyTokens.Subheadline,
                 color = neutral600()
             )
@@ -183,14 +183,14 @@ fun ScheduleDetailScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             //4. 상세 안내 영역
-            Text(text = "상세 안내",
+            UText(text = "상세 안내",
                 style = UmcTypographyTokens.Title3Bold,
                 color = neutral800()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
+            UText(
                 text = uiState.detail,
                 style = UmcTypographyTokens.Body,
                 color = neutral600(),
@@ -260,7 +260,7 @@ fun ScheduleDetailTopBar(
                 tint = neutral800()
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Text(text = "일정 상세", style = UmcTypographyTokens.Title2Bold, color = neutral800())
+            UText(text = "일정 상세", style = UmcTypographyTokens.Title2Bold, color = neutral800())
         }
         //메뉴 버튼
         Icon(

@@ -11,13 +11,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UChip
 import com.umc.component.component.USwitch
+import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral200
@@ -54,7 +54,7 @@ fun ScheduleDateCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "하루 종일", style = UmcTypographyTokens.Callout, color = neutral600())
+                UText(text = "하루 종일", style = UmcTypographyTokens.Callout, color = neutral600())
                 USwitch(
                     checked = uiState.isAllDay,
                     onCheckedChange = onAlldayChanged,
@@ -105,7 +105,7 @@ fun DateTimeRow(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, style = UmcTypographyTokens.Callout, color = neutral600())
+        UText(text = label, style = UmcTypographyTokens.Callout, color = neutral600())
         Spacer(modifier = Modifier.weight(1f))
         UChip(text = dateText,
             onClick = onDateClick,

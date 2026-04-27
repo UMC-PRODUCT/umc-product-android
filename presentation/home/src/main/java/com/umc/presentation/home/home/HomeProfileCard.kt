@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,7 +22,9 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
+import com.umc.component.component.HuggText
 import com.umc.component.component.UButton
+import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral600
@@ -80,14 +81,14 @@ fun HomeProfileCard(uiState: HomeUiState) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // 유저 이름 (닉네임 + 실명)
-                Text(
+                UText(
                     text = "${uiState.userNickName}(${uiState.userName})",
                     style = UmcTypographyTokens.Title3,
                     color = neutral700()
                 )
 
                 //성장 일수 (Spannable 대신 하위 함수 호출)
-                Text(
+                HuggText(
                     text = growthText,
                     style = UmcTypographyTokens.Title3Bold,
                     modifier = Modifier.padding(top = 8.dp)

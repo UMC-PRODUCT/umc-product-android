@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -160,7 +159,7 @@ private fun CalendarHeader(
             Icon(painterResource(id = R.drawable.ic_calendar_arrow_left), contentDescription = null)
         }
 
-        Text(
+        UText(
             text = "${currentMonth.year}.${String.format("%02d", currentMonth.monthValue)}",
             //style =, /**임시 폰트**/
             color = neutral800(),
@@ -188,7 +187,7 @@ private fun CalendarBody(
         Row(modifier = Modifier.fillMaxWidth()) {
             val daysOfWeek = listOf("일", "월", "화", "수", "목", "금", "토")
             daysOfWeek.forEachIndexed { index, day ->
-                Text(
+                UText(
                     text = day,
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center,
@@ -276,7 +275,7 @@ private fun DayItem(
             modifier = backgroundModifier,
             contentAlignment = Alignment.Center
         ) {
-            Text(
+            UText(
                 text = date.dayOfMonth.toString(),
                 color = when {
                     isToday -> Color.White
@@ -320,10 +319,10 @@ private fun CalendarDatePickerDialog(
                 datePickerState.selectedDateMillis?.let { millis ->
                     onDateSelected(millis.toLocalDate())
                 }
-            }) { Text("확인") }
+            }) { UText("확인") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("취소") }
+            TextButton(onClick = onDismiss) { UText("취소") }
         }
     ) {
         DatePicker(state = datePickerState)

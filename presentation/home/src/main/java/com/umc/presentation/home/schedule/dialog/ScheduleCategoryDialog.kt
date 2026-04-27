@@ -19,7 +19,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -29,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UButton
+import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral300
@@ -72,13 +72,13 @@ fun ScheduleCategoryBottomSheet(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
+                    UText(
                         text = "태그를 추가하세요",
                         style = UmcTypographyTokens.Title3Bold,
                         color = neutral800()
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
+                    UText(
                         text = "중복 선택이 가능합니다",
                         style = UmcTypographyTokens.Footnote,
                         color = neutral600()
@@ -142,7 +142,7 @@ fun CategoryItemRow(
         Spacer(modifier = Modifier.width(16.dp))
 
         //2. 카테고리 이름
-        Text(
+        UText(
             text = item.name,
             style = UmcTypographyTokens.HeadlineBold,
             color = neutral800(),

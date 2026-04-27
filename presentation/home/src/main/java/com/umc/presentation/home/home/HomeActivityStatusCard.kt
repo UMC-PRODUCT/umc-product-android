@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.component.UButton
 import com.umc.component.theme.UmcTypographyTokens
 import androidx.compose.ui.graphics.Color
+import com.umc.component.component.UText
 import com.umc.component.theme.danger100
 import com.umc.component.theme.danger500
 import com.umc.component.theme.neutral000
@@ -46,7 +46,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
         Column(modifier = Modifier.padding(16.dp)) {
 
             //X기 활동 상태
-            Text(
+            UText(
                 text = uiState.activeString,
                 style = UmcTypographyTokens.HeadlineBold,
                 color = neutral800()
@@ -117,7 +117,7 @@ private fun ScoreCard(
             textAppearance = UmcTypographyTokens.Caption1Bold,
             cornerRadius = 4.dp
         )
-        Text(
+        UText(
             text = score.toString(),
             modifier = Modifier.padding(top = 8.dp),
             style = UmcTypographyTokens.HeadlineBold,
