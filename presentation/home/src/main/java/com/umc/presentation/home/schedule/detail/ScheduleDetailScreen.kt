@@ -152,9 +152,10 @@ fun ScheduleDetailScreen(
             //2. D-day 및 제목
             UButton(
                 text = uiState.dDay,
-                cardBackgroundColor = primary100(),
+                backgroundColor = primary100(),
                 textColor = primary600(),
-                textAppearance = UmcTypographyTokens.FootnoteBold,
+                textStyle = UmcTypographyTokens.FootnoteBold,
+                onClick = {}
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -201,9 +202,9 @@ fun ScheduleDetailScreen(
             if(uiState.isToday){
                 UButton(
                     text = "출석 체크하기",
-                    cardBackgroundColor = accent500(),
+                    backgroundColor = accent500(),
                     textColor = neutral000(),
-                    textAppearance = UmcTypographyTokens.HeadlineBold,
+                    textStyle = UmcTypographyTokens.HeadlineBold,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)

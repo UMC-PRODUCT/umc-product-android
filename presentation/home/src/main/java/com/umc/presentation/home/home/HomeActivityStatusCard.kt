@@ -112,10 +112,11 @@ private fun ScoreCard(
         //UButton 컴포저블을 활용하여 일관된 디자인 유지
         UButton(
             text = label,
-            cardBackgroundColor = bgColor,
+            backgroundColor = bgColor,
             textColor = color,
-            textAppearance = UmcTypographyTokens.Caption1Bold,
-            cornerRadius = 4.dp
+            textStyle = UmcTypographyTokens.Caption1Bold,
+            cornerRadius = 4.dp,
+            onClick = {}
         )
         UText(
             text = score.toString(),

@@ -65,15 +65,15 @@ fun HomeProfileCard(uiState: HomeUiState) {
                 // 기수 태그 (FlexboxLayout 대응)
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     uiState.gisuTag.forEach { tag ->
                         UButton(
                             text = tag,
-                            cardBackgroundColor = neutral000(),
+                            backgroundColor = neutral000(),
                             textColor = primary600(),
-                            textAppearance = UmcTypographyTokens.Caption1Bold
+                            textStyle = UmcTypographyTokens.Caption1Bold,
+                            onClick = {},
+                            modifier = Modifier.padding(end = 4.dp),
                         )
                     }
                 }

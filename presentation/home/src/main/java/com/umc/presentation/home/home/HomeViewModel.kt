@@ -302,8 +302,8 @@ class HomeViewModel @Inject constructor(
     // 이벤트 헬퍼 함수들
     fun onClickNotice() = emitEvent(HomeEvent.MoveNoticeEvent)
     fun onClickNotification() = emitEvent(HomeEvent.MoveNotificationEvent)
-    fun onClickScheduleAdd() = emitEvent(HomeEvent.MovePlanAddEvent)
-    fun onClickScheduleDetail(plan: SchedulePlanItem) = emitEvent(HomeEvent.MovePlanDetailEvent(plan))
+    fun onClickScheduleAdd() = emitEvent(HomeEvent.MoveScheduleAddEvent)
+    fun onClickScheduleDetail(plan: SchedulePlanItem) = emitEvent(HomeEvent.MoveScheduleDetailEvent(plan))
 }
 
 

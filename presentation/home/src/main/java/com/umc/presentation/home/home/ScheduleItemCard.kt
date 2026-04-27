@@ -103,10 +103,11 @@ fun ActiveScheduleItem(
             if (item.dDay != null) {
                 UButton(
                     text = item.dDay!!,
-                    cardBackgroundColor = neutral200(),
+                    backgroundColor = neutral200(),
                     textColor = neutral700(),
-                    textAppearance = UmcTypographyTokens.Caption1Bold,
-                    modifier = Modifier.padding(end = 16.dp)
+                    textStyle = UmcTypographyTokens.Caption1Bold,
+                    modifier = Modifier.padding(end = 16.dp),
+                    onClick = {}
                 )
             }
 

@@ -88,7 +88,7 @@ fun ScheduleCategoryBottomSheet(
                 //확인 버튼
                 UButton(
                     text = "확인",
-                    cardBackgroundColor = primary500(),
+                    backgroundColor = primary500(),
                     textColor = neutral000(),
                     onClick = onConfirm,
                     modifier = Modifier.padding(start = 8.dp)

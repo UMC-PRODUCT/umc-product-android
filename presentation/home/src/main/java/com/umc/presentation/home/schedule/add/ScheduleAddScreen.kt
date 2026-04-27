@@ -312,7 +312,7 @@ fun ScheduleAddActionButtons(
             modifier = Modifier
                 .weight(1f)
                 .height(52.dp),
-            cardBackgroundColor = neutral000(),
+            backgroundColor = neutral000(),
             borderColor = neutral300(),
             borderWidth = 1.dp,
             textColor = neutral800(),
@@ -324,7 +324,7 @@ fun ScheduleAddActionButtons(
             modifier = Modifier
                 .weight(1f)
                 .height(52.dp),
-            cardBackgroundColor = if (registerOk) primary500() else neutral300(),
+            backgroundColor = if (registerOk) primary500() else neutral300(),
             textColor = neutral000(),
             onClick = onRegisterClick
         )

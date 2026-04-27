@@ -52,9 +52,10 @@ fun HomeTopBar(
             //유저 상태 배지 (ACTIVE / OB 분기 처리)
             UButton(
                 text = userType.name,
-                cardBackgroundColor = if (userType == UserType.ACTIVE) primary100() else neutral200(),
+                backgroundColor = if (userType == UserType.ACTIVE) primary100() else neutral200(),
                 textColor = if (userType == UserType.ACTIVE) primary600() else neutral700(),
-                textAppearance = UmcTypographyTokens.FootnoteBold,
+                textStyle = UmcTypographyTokens.FootnoteBold,
+                onClick = {}
             )
 
             Spacer(modifier = Modifier.width(8.dp))
