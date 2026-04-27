@@ -1,6 +1,5 @@
 package com.umc.presentation.signup
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,7 +20,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -34,8 +32,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,15 +43,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.danger100
 import com.umc.component.theme.danger500
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral300
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
@@ -72,10 +74,12 @@ fun SignUpRoute(
     navigateToPermission: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
     var showSchoolBottomSheet by remember { mutableStateOf(false) }
     var errorDialogMessage by remember { mutableStateOf<String?>(null) }
+    var toastData by remember { mutableStateOf<UToastData?>(null) }
+    var focusCodeField by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(Unit) {
         viewModel.setOAuthVerificationToken(oAuthVerificationToken)
@@ -88,72 +92,68 @@ fun SignUpRoute(
                 is SignUpEvent.MoveToPermissionEvent -> navigateToPermission()
                 is SignUpEvent.ShowSchoolBottomSheet -> showSchoolBottomSheet = true
                 is SignUpEvent.ShowVerifyToast ->
-                    Toast.makeText(context, AppStrings.SIGN_UP_EMAIL_VERIFY_SENT, Toast.LENGTH_SHORT).show()
+                    toastData = UToastData(AppStrings.SIGN_UP_EMAIL_VERIFY_SENT, UToastState.CHECK)
                 is SignUpEvent.ShowVerifyCompleteToast ->
-                    Toast.makeText(context, AppStrings.SIGN_UP_EMAIL_VERIFY_COMPLETE, Toast.LENGTH_SHORT).show()
+                    toastData = UToastData(AppStrings.SIGN_UP_EMAIL_VERIFY_COMPLETE, UToastState.CHECK)
                 is SignUpEvent.ShowVerifyErrorToast ->
-                    Toast.makeText(context, AppStrings.SIGN_UP_EMAIL_VERIFY_ERROR, Toast.LENGTH_SHORT).show()
-                is SignUpEvent.FocusVerifyCodeField -> Unit
+                    toastData = UToastData(AppStrings.SIGN_UP_EMAIL_VERIFY_ERROR, UToastState.ERROR)
+                is SignUpEvent.FocusVerifyCodeField -> focusCodeField = true
                 is SignUpEvent.ShowRegisterErrorDialog -> errorDialogMessage = event.message
             }
         }
     }
 
-    SignUpScreen(
-        uiState = uiState,
-        onClickBack = viewModel::onClickBack,
-        onNameChanged = viewModel::onNameChanged,
-        onNicknameChanged = viewModel::onNicknameChanged,
-        onClickSchool = viewModel::onClickSchool,
-        onEmailChanged = viewModel::onEmailChanged,
-        onClickVerify = viewModel::onClickVerify,
-        onCodeChanged = viewModel::onCodeChanged,
-        onClickConfirm = viewModel::onClickConfirm,
-        onClickNext = viewModel::register,
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        SignUpScreen(
+            uiState = uiState,
+            onClickBack = viewModel::onClickBack,
+            onNameChanged = viewModel::onNameChanged,
+            onNicknameChanged = viewModel::onNicknameChanged,
+            onClickSchool = viewModel::onClickSchool,
+            onEmailChanged = viewModel::onEmailChanged,
+            onClickVerify = viewModel::onClickVerify,
+            onCodeChanged = viewModel::onCodeChanged,
+            onClickConfirm = viewModel::onClickConfirm,
+            onClickNext = viewModel::register,
+            focusCodeField = focusCodeField,
+            onCodeFieldFocused = { focusCodeField = false },
+        )
 
-    if (showSchoolBottomSheet) {
-        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ModalBottomSheet(
-            onDismissRequest = { showSchoolBottomSheet = false },
-            sheetState = sheetState,
-            containerColor = neutral000(),
-        ) {
-            SchoolSelectBottomSheetContent(
-                schoolList = uiState.schoolList,
-                selectedSchoolId = uiState.school.schoolId.takeIf { it != -1 }?.toLong(),
-                onSelectSchool = { school ->
-                    viewModel.updateSelectSchool(school)
-                    showSchoolBottomSheet = false
+        if (showSchoolBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showSchoolBottomSheet = false },
+                sheetState = sheetState,
+                containerColor = neutral000(),
+            ) {
+                SchoolSelectBottomSheetContent(
+                    schoolList = uiState.schoolList,
+                    selectedSchoolId = uiState.school.schoolId.takeIf { it != -1 }?.toLong(),
+                    onSelectSchool = { school ->
+                        viewModel.updateSelectSchool(school)
+                        showSchoolBottomSheet = false
+                    },
+                )
+            }
+        }
+
+        errorDialogMessage?.let { message ->
+            UDialog(
+                title = message,
+                onDismissRequest = { errorDialogMessage = null },
+                confirmText = AppStrings.CONFIRM,
+                onConfirm = {
+                    errorDialogMessage = null
+                    navigateToBack()
                 },
             )
         }
-    }
 
-    errorDialogMessage?.let { message ->
-        AlertDialog(
-            onDismissRequest = { errorDialogMessage = null },
-            title = {
-                UText(
-                    text = message,
-                    style = UmcTypographyTokens.HeadlineBold,
-                    color = neutral800(),
-                )
-            },
-            confirmButton = {
-                UButton(
-                    text = AppStrings.CONFIRM,
-                    onClick = {
-                        errorDialogMessage = null
-                        navigateToBack()
-                    },
-                    backgroundColor = primary500(),
-                    pressedColor = primary700(),
-                    textColor = neutral000(),
-                    textStyle = UmcTypographyTokens.HeadlineBold,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                )
-            },
+        UToastHost(
+            data = toastData,
+            onDismiss = { toastData = null },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 56.dp),
         )
     }
 }
@@ -248,8 +248,18 @@ fun SignUpScreen(
     onCodeChanged: (String) -> Unit = {},
     onClickConfirm: () -> Unit = {},
     onClickNext: () -> Unit = {},
+    focusCodeField: Boolean = false,
+    onCodeFieldFocused: () -> Unit = {},
 ) {
     val scrollState = rememberScrollState()
+    val codeFieldFocusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(focusCodeField) {
+        if (focusCodeField) {
+            codeFieldFocusRequester.requestFocus()
+            onCodeFieldFocused()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -425,7 +435,9 @@ fun SignUpScreen(
                         textColor = if (isVerified) neutral600() else neutral800(),
                         backgroundColor = if (isVerified) neutral100() else neutral000(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .focusRequester(codeFieldFocusRequester),
                     )
 
                     Spacer(modifier = Modifier.width(16.dp))
