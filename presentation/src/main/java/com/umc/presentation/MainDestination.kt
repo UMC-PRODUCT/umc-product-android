@@ -17,5 +17,14 @@ sealed interface MainDestination {
     //일정 생성
     @Serializable
     data object ScheduleAdd : MainDestination
+    
+    //일정 수정
+    @Serializable
+    data class ScheduleEdit(val scheduleId: Long) : MainDestination
+    
+    //일정 상세
+    @Serializable
+    data class ScheduleDetail(val scheduleId: Long, val plusDay: Int) : MainDestination
+
 
 }

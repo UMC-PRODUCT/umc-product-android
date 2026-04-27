@@ -8,8 +8,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
+import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
 import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.splash.SplashRoute
 
@@ -46,19 +48,44 @@ fun MainNavHost(
                 onNavigateToNotice = {
                     //navHostController.navigate(MainDestination.Notice)
                      },
-                onNavigateToPlanAdd = {
+                onNavigateToScheduleAdd = {
                     navHostController.navigate(MainDestination.ScheduleAdd)
                 },
-                onNavigateToPlanDetail = {},
+                onNavigateToScheduleDetail = {
+                    navHostController.navigate(MainDestination.ScheduleDetail(it.id, it.plusDay))
+                },
                 onNavigateToNotification = {}
             )
         }
         //일정 생성
         composable<MainDestination.ScheduleAdd> {
             ScheduleAddRoute(
-
                 onShowAttendanceDialog = { _, _ -> }
             )
         }
+        //일정 수정
+        composable<MainDestination.ScheduleEdit> { data ->
+            //Destination 클래스 형태로 데이터를 추출
+            val editRoute = data.toRoute<MainDestination.ScheduleEdit>()
+
+            ScheduleAddRoute(
+                //추출한 객체에서 scheduleId에 접근
+                scheduleId = editRoute.scheduleId,
+                onShowAttendanceDialog = { _, _ -> }
+            )
+        }
+        //일정 상세
+        composable<MainDestination.ScheduleDetail>{ data ->
+            val detailRoute = data.toRoute<MainDestination.ScheduleDetail>()
+
+            ScheduleDetailRoute(
+                scheduleId = detailRoute.scheduleId,
+                plusDay = detailRoute.plusDay
+            )
+        }
+
+
+
+
     }
 }

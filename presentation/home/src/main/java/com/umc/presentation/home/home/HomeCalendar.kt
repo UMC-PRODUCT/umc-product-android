@@ -30,6 +30,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.ui.unit.sp
+import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.danger500
 import com.umc.component.theme.neutral000
@@ -284,7 +285,6 @@ private fun DayItem(
                     else -> neutral800()
                 },
                 style = UmcTypographyTokens.Footnote,
-                fontSize = 14.sp
             )
         }
 

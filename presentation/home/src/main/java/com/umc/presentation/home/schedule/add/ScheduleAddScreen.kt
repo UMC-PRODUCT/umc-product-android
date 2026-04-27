@@ -28,6 +28,7 @@ import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
 @Composable
 fun ScheduleAddRoute(
     viewModel: ScheduleAddViewModel = hiltViewModel(),
+    scheduleId: Long = -1,
     onShowAttendanceDialog: (onConfirm: () -> Unit, onReject: () -> Unit) -> Unit
 ){
 

@@ -23,6 +23,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,7 +33,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.R
+import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UButton
+import com.umc.component.component.model.UBasicDialogModel
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.accent500
 import com.umc.component.theme.neutral000
@@ -45,7 +50,7 @@ import java.net.URLEncoder
 
 
 @Composable
-fun scheduleDetailRoute(
+fun ScheduleDetailRoute(
     scheduleId: Long, //상세 보기할 일정 ID
     plusDay: Int, //시작일로부터 몇일 +
     viewModel : ScheduleDetailViewModel = hiltViewModel()
@@ -58,6 +63,9 @@ fun scheduleDetailRoute(
 
     //지도 가져오기 위한 context
     val context = LocalContext.current
+
+    //다이얼로그 노출 여부 체크
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     //초기 데이터 로드
     LaunchedEffect(scheduleId, plusDay) {
@@ -72,6 +80,7 @@ fun scheduleDetailRoute(
                 //일정 수정
                 is ScheduleDetailEvent.EditPlan -> {}
 
+                is ScheduleDetailEvent.CheckDeletePlan -> { showDeleteDialog = true }
 
                 else -> {}
             }
@@ -91,6 +100,24 @@ fun scheduleDetailRoute(
         ) },
         onAttendanceClick = viewModel::onClickConfirmAttention
     )
+
+    //UBsaicDialog 사용(경고 버전)
+    if(showDeleteDialog){
+        UBasicDialog(
+            model = UBasicDialogModel.Warning(
+                title = "해당 일정을 삭제하시겠습니까",
+                content = "삭제된 일정은 복구할 수 없습니다.",
+                positiveText = "삭제하기"
+            ),
+            onConfirm = {
+                viewModel.deletePlan()
+                showDeleteDialog = false
+            },
+            onDismiss = {
+                showDeleteDialog = false
+            }
+        )
+    }
 
 }
 

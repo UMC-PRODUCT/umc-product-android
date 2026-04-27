@@ -302,8 +302,8 @@ class HomeViewModel @Inject constructor(
     // 이벤트 헬퍼 함수들
     fun onClickNotice() = emitEvent(HomeEvent.MoveNoticeEvent)
     fun onClickNotification() = emitEvent(HomeEvent.MoveNotificationEvent)
-    fun onClickPlanAdd() = emitEvent(HomeEvent.MovePlanAddEvent)
-    fun onClickPlanDetail(plan: SchedulePlanItem) = emitEvent(HomeEvent.MovePlanDetailEvent(plan))
+    fun onClickScheduleAdd() = emitEvent(HomeEvent.MovePlanAddEvent)
+    fun onClickScheduleDetail(plan: SchedulePlanItem) = emitEvent(HomeEvent.MovePlanDetailEvent(plan))
 }
 
 
@@ -347,8 +347,8 @@ data class HomeUiState(
 sealed interface HomeEvent : UiEvent {
     object MoveNoticeEvent : HomeEvent //공시사항 이동
     object MoveNotificationEvent : HomeEvent //알림 이동
-    data class MovePlanDetailEvent(val plan: SchedulePlanItem) : HomeEvent //일정 상세 이동
-    object MovePlanAddEvent : HomeEvent //일정 추가 이동
+    data class MoveScheduleDetailEvent(val plan: SchedulePlanItem) : HomeEvent //일정 상세 이동
+    object MoveScheduleAddEvent : HomeEvent //일정 추가 이동
 
     object OpenDatePickerEvent : HomeEvent //날짜 선택 다이얼로그 열기
 

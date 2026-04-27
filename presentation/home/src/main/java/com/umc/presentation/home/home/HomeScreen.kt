@@ -62,8 +62,8 @@ fun HomeRoute(
     viewModel: HomeViewModel = hiltViewModel(),
     onNavigateToNotice: () -> Unit,
     onNavigateToNotification: () -> Unit,
-    onNavigateToPlanDetail: (SchedulePlanItem) -> Unit,
-    onNavigateToPlanAdd: () -> Unit,
+    onNavigateToScheduleDetail: (SchedulePlanItem) -> Unit,
+    onNavigateToScheduleAdd: () -> Unit,
 ) {
 
     val uiState by viewModel.uiState.collectAsState()
@@ -80,9 +80,9 @@ fun HomeRoute(
                 //알림 이동
                 is HomeEvent.MoveNotificationEvent -> onNavigateToNotification()
                 //일정 상세 이동
-                is HomeEvent.MovePlanDetailEvent -> onNavigateToPlanDetail(event.plan)
+                is HomeEvent.MoveScheduleDetailEvent -> onNavigateToScheduleDetail(event.plan)
                 //일정 추가 이동
-                is HomeEvent.MovePlanAddEvent -> onNavigateToPlanAdd()
+                is HomeEvent.MoveScheduleAddEvent -> onNavigateToScheduleAdd()
                 else -> {}
             }
         }
@@ -94,8 +94,8 @@ fun HomeRoute(
         onMonthChange = { month -> viewModel.getScheduleMonth(month.year, month.monthValue) },
         onChangeViewMode = viewModel::onChangeViewMode, //달력 + 일정 or 일정 보여줄 지 결정
         onNotificationClick = viewModel::onClickNotification, //Topbar에서 알람 터치 시
-        onPlanAddClick = viewModel::onClickPlanAdd, //일정 추가 터치 시
-        onPlanDetailClick = viewModel::onClickPlanDetail,
+        onScheduleAddClick = viewModel::onClickScheduleAdd, //일정 추가 터치 시
+        onScheduleDetailClick = viewModel::onClickScheduleDetail,
         onNoticeClick = viewModel::onClickNotice
     )
 }
@@ -108,8 +108,8 @@ fun HomeScreen(
     onMonthChange: (YearMonth) -> Unit,
     onChangeViewMode: (HomeViewMode) -> Unit,
     onNotificationClick: () -> Unit,
-    onPlanAddClick: () -> Unit,
-    onPlanDetailClick: (SchedulePlanItem) -> Unit,
+    onScheduleAddClick: () -> Unit,
+    onScheduleDetailClick: (SchedulePlanItem) -> Unit,
     onNoticeClick: () -> Unit,
 ) {
 
@@ -155,7 +155,7 @@ fun HomeScreen(
             ) {
                 HomePlanHeader(
                     viewMode = uiState.viewMode,
-                    onAddClick = onPlanAddClick,
+                    onAddClick = onScheduleAddClick,
                     onChangeViewMode = onChangeViewMode
                 )
                 Spacer(modifier = Modifier.height(32.dp))
@@ -202,7 +202,7 @@ fun HomeScreen(
                                 Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                                     ScheduleItemCard(
                                         item = plan,
-                                        onItemClick = onPlanDetailClick
+                                        onItemClick = onScheduleDetailClick
                                     )
                                 }
                             }
@@ -217,7 +217,7 @@ fun HomeScreen(
                             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                                 ScheduleItemCard(
                                     item = plan,
-                                    onItemClick = onPlanDetailClick
+                                    onItemClick = onScheduleDetailClick
                                 )
                             }
                         }
@@ -327,8 +327,8 @@ private fun HomeScreenPreview() {
         onMonthChange = {},
         onChangeViewMode = {},
         onNotificationClick = {},
-        onPlanAddClick = {},
-        onPlanDetailClick = {},
+        onScheduleAddClick = {},
+        onScheduleDetailClick = {},
         onNoticeClick = {}
     )
 }
