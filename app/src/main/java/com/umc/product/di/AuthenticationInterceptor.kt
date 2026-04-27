@@ -28,7 +28,7 @@ class AuthenticationInterceptor @Inject constructor(
 
             val request =
                 chain.request().newBuilder()
-                    .addHeader("Authorization", "Bearer ${tempToken}").build()
+                    .addHeader("Authorization", "Bearer ${accessToken}").build()
 
             Log.d(
                 "RETROFIT",
