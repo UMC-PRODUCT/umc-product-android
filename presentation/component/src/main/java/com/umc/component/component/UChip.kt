@@ -27,7 +27,7 @@ import com.umc.component.R
  * @param modifier 레이아웃 수정을 위한 Modifier
  * @param backgroundColor 칩 배경색 (XML: backgroundColor)
  * @param textColor 텍스트 및 닫기 아이콘 색상 (XML: textColor)
- * @param textAppearance 텍스트 스타일 (XML: textAppearance)
+ * @param textStyle 텍스트 스타일 (XML: textAppearance)
  * @param borderWidth 외곽선 두께 (XML: borderWidth)
  * @param borderColor 외곽선 색상 (XML: borderColor)
  * @param showCloseIcon 닫기(X) 버튼 표시 여부 (XML: showCloseIcon)
@@ -42,7 +42,7 @@ fun UChip(
     modifier: Modifier = Modifier,
     backgroundColor: Color = primary500(),
     textColor: Color = neutral000(),
-    textAppearance: TextStyle = UmcTypographyTokens.SubheadlineBold,
+    textStyle: TextStyle = UmcTypographyTokens.SubheadlineBold,
     borderWidth: Dp = 0.dp,
     borderColor: Color = Color.Transparent,
     showCloseIcon: Boolean = false,
@@ -72,7 +72,7 @@ fun UChip(
 
                 UText(
                     text = text,
-                    style = textAppearance,
+                    style = textStyle,
                     color = textColor
                 )
 

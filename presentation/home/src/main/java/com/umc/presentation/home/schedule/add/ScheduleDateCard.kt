@@ -113,7 +113,7 @@ fun DateTimeRow(
             borderColor = neutral200(),
             borderWidth = 1.dp,
             textColor = neutral500(),
-            textAppearance = UmcTypographyTokens.SubheadlineBold)
+            textStyle = UmcTypographyTokens.SubheadlineBold)
         if (showTime) {
             Spacer(modifier = Modifier.width(8.dp))
             UChip(text = timeText,
@@ -122,7 +122,7 @@ fun DateTimeRow(
                 borderColor = neutral200(),
                 borderWidth = 1.dp,
                 textColor = neutral500(),
-                textAppearance = UmcTypographyTokens.SubheadlineBold)
+                textStyle = UmcTypographyTokens.SubheadlineBold)
         }
     }
 }
