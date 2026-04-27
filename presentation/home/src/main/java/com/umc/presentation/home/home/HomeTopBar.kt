@@ -2,6 +2,7 @@ package com.umc.presentation.home.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,7 +56,8 @@ fun HomeTopBar(
                 backgroundColor = if (userType == UserType.ACTIVE) primary100() else neutral200(),
                 textColor = if (userType == UserType.ACTIVE) primary600() else neutral700(),
                 textStyle = UmcTypographyTokens.FootnoteBold,
-                onClick = {}
+                onClick = {},
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
             )
 
             Spacer(modifier = Modifier.width(8.dp))

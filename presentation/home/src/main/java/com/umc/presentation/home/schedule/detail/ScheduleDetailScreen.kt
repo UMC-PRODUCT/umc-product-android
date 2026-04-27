@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.R
@@ -141,7 +142,7 @@ fun ScheduleDetailScreen(
     ) {
 
         Column(modifier = Modifier.fillMaxSize()) {
-            //1. 상단 바
+            //1. 상단 바 & 케밥 메뉴
             ScheduleDetailTopBar(
                 onBackClick = onBackClick,
                 onMenuClick = onMenuClick
@@ -216,24 +217,23 @@ fun ScheduleDetailScreen(
                 Spacer(modifier = Modifier.height(32.dp))
             }
 
-            //6. 케밥 메뉴(버튼 누를 때 나오기)
-            Box(
-                modifier =Modifier
-                    .fillMaxSize()
-                    .padding(top = 56.dp),
-                contentAlignment = Alignment.TopEnd
-            ) {
-                ScheduleKebabMenu(
-                    isVisible = uiState.isMenuVisible,
-                    isAuthor = uiState.isAuthor,
-                    onEditClick = onEditClick,
-                    onDeleteClick = onDeleteClick
-                )
-            }
-
         }
 
 
+        //6. 케밥 메뉴(버튼 누를 때 나오기)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 56.dp),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            ScheduleKebabMenu(
+                isVisible = uiState.isMenuVisible,
+                isAuthor = uiState.isAuthor,
+                onEditClick = onEditClick,
+                onDeleteClick = onDeleteClick
+            )
+        }
     }
 
 }
@@ -308,4 +308,30 @@ private fun openNaverMap(
         //UToast.createToast(requireContext(), "지도를 열 수 없습니다.", )
         Toast.makeText(context, "지도를 열 수 없습니다.", Toast.LENGTH_SHORT).show()
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewScheduleDetailMenuOpen() {
+    val mockUiState = ScheduleDetailUiState(
+        title = "삭제/수정 테스트 중",
+        dDay = "D-14",
+        startDate = "2026.05.10",
+        todayDate = "2026.05.10",
+        todayTime = "10:00-12:00",
+        place = "온라인(Zoom)",
+        detail = "이 화면은 케밥 메뉴가 열렸을 때의 레이아웃을 확인하기 위한 프리뷰입니다.",
+        isAuthor = true,
+        isMenuVisible = true // 메뉴 열림 상태
+    )
+
+    ScheduleDetailScreen(
+        uiState = mockUiState,
+        onBackClick = {},
+        onMenuClick = {},
+        onEditClick = {},
+        onDeleteClick = {},
+        onMapClick = {},
+        onAttendanceClick = {}
+    )
 }

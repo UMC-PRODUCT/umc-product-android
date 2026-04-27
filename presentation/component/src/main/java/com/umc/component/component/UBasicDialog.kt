@@ -151,7 +151,7 @@ fun UBasicDialog(
                         modifier = Modifier
                             .weight(1f)
                             .height(52.dp),
-                        cardBackgroundColor = neutral000(),
+                        backgroundColor = neutral000(),
                         borderColor = neutral300(),
                         borderWidth = 1.dp,
                         textColor = neutral800(),
@@ -162,7 +162,7 @@ fun UBasicDialog(
                     UButton(
                         text = model.confirmText,
                         modifier = Modifier.weight(1f).height(52.dp),
-                        cardBackgroundColor = neutral000(),
+                        backgroundColor = neutral000(),
                         borderColor = positiveColor as Color,
                         borderWidth = 1.dp,
                         textColor = positiveColor as Color,
