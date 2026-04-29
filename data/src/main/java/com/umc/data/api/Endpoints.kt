@@ -180,11 +180,7 @@ object Endpoints {
         const val NOTICE_READ_STATICS = "$NOTICE_DETAIL/read-statics"
         const val NOTICE_LINKS = "$NOTICE_DETAIL/links"
         const val NOTICE_IMAGES = "$NOTICE_DETAIL/images"
-    }
-
-    object Survey {
-        const val SURVEY = "api/v1/surveys"
-        const val VOTE_RESPONSES = "$SURVEY/votes/{voteId}/responses"
+        const val VOTE_RESPONSES = "$NOTICE_DETAIL/votes/{voteId}/responses"
     }
 
     object Notification {

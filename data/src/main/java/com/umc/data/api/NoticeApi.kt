@@ -165,14 +165,14 @@ interface NoticeApi {
     ): ApiResponse<Unit>
 
     // 투표 응답 제출
-    @POST(Endpoints.Survey.VOTE_RESPONSES)
+    @POST(Endpoints.Notice.VOTE_RESPONSES)
     suspend fun submitVoteResponse(
         @Path(PATH_VOTE_ID) voteId: Long,
         @Body request: VoteResponseRequest
     ): ApiResponse<Unit>
 
     // 투표 응답 수정
-    @PUT(Endpoints.Survey.VOTE_RESPONSES)
+    @PUT(Endpoints.Notice.VOTE_RESPONSES)
     suspend fun updateVoteResponse(
         @Path(PATH_VOTE_ID) voteId: Long,
         @Body request: VoteResponseRequest
