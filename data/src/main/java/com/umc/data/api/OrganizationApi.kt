@@ -62,7 +62,7 @@ interface OrganizationApi {
         @Path(PATH_GISU_ID) gisuId: Int
     ): ApiResponse<Unit>
 
-    @GET(Endpoints.Organization.STUDY_GROUP)
+    @GET(Endpoints.Organization.MY_STUDY_GROUP)
     suspend fun getMyStudyGroup(
         @Query(QUERY_CURSOR) cursor: Long?,
         @Query(QUERY_SIZE) size: Int,

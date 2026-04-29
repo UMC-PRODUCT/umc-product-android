@@ -126,6 +126,7 @@ object Endpoints {
         const val SCHOOL_ALL = "$SCHOOL/all"
 
         const val STUDY_GROUP = "api/v1/study-groups"
+        const val MY_STUDY_GROUP = "$STUDY_GROUP/me"
         const val STUDY_GROUD_ID = "$STUDY_GROUP/{groupId}"
         const val STUDY_GROUD_NAME = "$STUDY_GROUP/names"
         const val STUDY_MEMBER = "$STUDY_GROUD_ID/members"

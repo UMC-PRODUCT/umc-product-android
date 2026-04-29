@@ -1,0 +1,4 @@
+R_DEF: Internal format may change without notice
+local
+drawable ic_calendar_arrow_left
+drawable ic_calendar_arrow_right
