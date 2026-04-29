@@ -4,6 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class EditStudyGroupRequest(
-    val name: String,
-    val part: String
+    val name: String
 )

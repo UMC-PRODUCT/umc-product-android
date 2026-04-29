@@ -127,9 +127,9 @@ object Endpoints {
 
         const val STUDY_GROUP = "api/v1/study-groups"
         const val MY_STUDY_GROUP = "$STUDY_GROUP/me"
-        const val STUDY_GROUD_ID = "$STUDY_GROUP/{groupId}"
+        const val STUDY_GROUP_ID = "$STUDY_GROUP/{groupId}"
         const val STUDY_GROUD_NAME = "$STUDY_GROUP/names"
-        const val STUDY_MEMBER = "$STUDY_GROUD_ID/members"
+        const val STUDY_MEMBER = "$STUDY_GROUP_ID/members"
         const val GISU = "api/v1/gisu"
         const val GISU_ID = "$GISU/{gisuId}"
         const val GISU_ALL = "$GISU/all"
