@@ -10,7 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.splash.SplashRoute
-
+import com.umc.presentation.study.UserStudyRoute
 @Composable
 fun MainNavHost(
     navHostController: NavHostController,
@@ -27,12 +27,25 @@ fun MainNavHost(
     ) {
         composable<MainDestination.Splash> {
             SplashRoute(
-                navigateToLogin = { navHostController.navigate(MainDestination.Login) }
+                navigateToLogin = { navHostController.navigate(MainDestination.Login) },
+                navigateToMain = {
+                    // 테스트용: 메인 대신 스터디 화면으로 이동
+                    navHostController.navigate(MainDestination.Study) {
+                        popUpTo(MainDestination.Splash) { inclusive = true } // 뒤로가기 시 스플래쉬 안 돌아가게
+                    }
+                },
+                navigateToInputCode = {
+                    navHostController.navigate(MainDestination.Login) // 일단 로그인으로
+                }
             )
         }
 
         composable<MainDestination.Login> {
             LoginRoute()
+        }
+
+        composable<MainDestination.Study> {
+            UserStudyRoute()
         }
     }
 }

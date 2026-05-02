@@ -56,6 +56,7 @@ import com.umc.component.R
 
 @Composable
 fun LoginRoute(
+    navigateToStudy: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -64,6 +65,7 @@ fun LoginRoute(
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest {
             // TODO 이벤트 처리
+            navigateToStudy()
         }
     }
 
