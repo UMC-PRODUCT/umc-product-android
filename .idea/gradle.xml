@@ -17,6 +17,7 @@
             <option value="$PROJECT_DIR$/presentation/component" />
             <option value="$PROJECT_DIR$/presentation/login" />
             <option value="$PROJECT_DIR$/presentation/splash" />
+            <option value="$PROJECT_DIR$/presentation/study" />
           </set>
         </option>
       </GradleProjectSettings>
