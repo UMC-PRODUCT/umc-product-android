@@ -9,6 +9,5 @@ sealed interface MainDestination {
     @Serializable
     data object Login : MainDestination
 
-    @Serializable
-    data object Study : MainDestination
+
 }

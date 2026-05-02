@@ -10,7 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.splash.SplashRoute
-import com.umc.presentation.study.UserStudyRoute
+
 @Composable
 fun MainNavHost(
     navHostController: NavHostController,
@@ -41,8 +41,6 @@ fun MainNavHost(
             LoginRoute()
         }
 
-        composable<MainDestination.Study> {
-            UserStudyRoute()
-        }
+
     }
 }
