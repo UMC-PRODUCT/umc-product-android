@@ -29,13 +29,10 @@ fun MainNavHost(
             SplashRoute(
                 navigateToLogin = { navHostController.navigate(MainDestination.Login) },
                 navigateToMain = {
-                    // 테스트용: 메인 대신 스터디 화면으로 이동
-                    navHostController.navigate(MainDestination.Study) {
-                        popUpTo(MainDestination.Splash) { inclusive = true } // 뒤로가기 시 스플래쉬 안 돌아가게
-                    }
+                    // TODO: 메인 화면 완성 후 연결
                 },
                 navigateToInputCode = {
-                    navHostController.navigate(MainDestination.Login) // 일단 로그인으로
+                    // TODO: 코드 입력 화면 완성 후 연결
                 }
             )
         }
