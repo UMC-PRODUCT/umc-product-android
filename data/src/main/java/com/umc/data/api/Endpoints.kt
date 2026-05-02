@@ -149,8 +149,9 @@ object Endpoints {
     }
 
     object Curriculum {
-        const val CURRICULUM = "api/v1/curriculums"
-        const val CHALLENGER_ME_PROGRESS = "$CURRICULUM/challengers/me/progress"
+
+        const val CURRICULUM_OVERVIEW = "api/v2/curriculums/overview"
+        const val CHALLENGER_ME_PROGRESS = "api/v2/curriculums/progress/me"
         const val SUBMIT = "api/v1/workbooks/submission"
         const val WORKBOOK_SUBMISSIONS = "api/v1/curriculums/workbook-submissions"
         const val STUDY_GROUPS = "api/v1/curriculums/study-groups"

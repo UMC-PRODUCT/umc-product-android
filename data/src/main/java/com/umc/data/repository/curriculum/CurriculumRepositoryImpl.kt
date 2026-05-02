@@ -7,6 +7,7 @@ import com.umc.domain.model.base.CursorPage
 import com.umc.domain.model.base.map
 import com.umc.domain.model.curriculum.StudyGroup
 import com.umc.domain.model.curriculum.WorkbookSubmissionItem
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.study.StudyProgress
 import com.umc.domain.repository.curriculum.CurriculumRepository
 import javax.inject.Inject
@@ -15,11 +16,21 @@ class CurriculumRepositoryImpl @Inject constructor(
     private val remote: CurriculumRemoteDataSource
 ) : CurriculumRepository {
 
-    override suspend fun getMyCurriculumProgress(
-        page: Int?,
-        limit: Int?
+
+    override suspend fun getCurriculumOverview(
+        gisuId: Long,
+        part: String,
     ): ApiState<StudyProgress> {
-        return when (val res = remote.getMyCurriculumProgress(page, limit)) {
+        return when (val res = remote.getCurriculumOverview(gisuId, part)) {
+            is ApiState.Success -> ApiState.Success(res.data.toModel(UserPart.from(part)))
+            is ApiState.Fail -> res
+        }
+    }
+
+    override suspend fun getMyCurriculumProgress(
+        gisuId: Long
+    ): ApiState<StudyProgress> {
+        return when (val res = remote.getMyCurriculumProgress(gisuId)) {
             is ApiState.Success -> ApiState.Success(res.data.toModel())
             is ApiState.Fail -> res
         }
