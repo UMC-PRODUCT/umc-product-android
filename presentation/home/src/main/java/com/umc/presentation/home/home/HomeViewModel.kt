@@ -7,10 +7,12 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.util.UTimeFormat
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.enums.WarningStatus
+import com.umc.domain.model.home.GisuSummary
 import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
@@ -36,7 +38,7 @@ class HomeViewModel @Inject constructor(
     HomeUiState())
 {
     init {
-        val today = LocalDate.now()
+        val today = UTimeFormat.getToday()
 
         //유저 정보 가져오기
         getUserInfo()
@@ -101,85 +103,69 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    //UserInfo를 받아았을 때 이를 파싱해서 UI 요소로 분할하는 함수
-    fun settingUserInfoToUI(userInfo: UserInfo){
-        // 기수별 정보가 담긴 것.
-        val gisuSummaryList = userInfo.getGisuSummaryList()
+    //유저 정보 세팅의 메인 흐름 제어
+    fun settingUserInfoToUI(userInfo: UserInfo) {
+        val gisuSummaryList = userInfo.getGisuSummaryList() //최신 기수 정보
+        val gisuTags = extractGisuTags(gisuSummaryList) //기수 태그(프로필 카드)
+        val latestGisu = gisuSummaryList.maxByOrNull { it.gisu } //최신 기수
+        val startGisu = gisuSummaryList.minByOrNull { it.gisu } //시작 기수
 
-        //1. 기수 태그 정보 (11기, 12기, 13기... 생성)
-        val gisuTags: List<String> = gisuSummaryList
-            .sortedBy { it.gisu } // 기수 번호 낮은 순으로 정렬
-            .map { "${it.gisu}기" } // String 포맷팅
-
-        // 2. 최신기수를 가져오기
-        val latestGisu = gisuSummaryList.maxByOrNull { it.gisu }
-        val startGisu = gisuSummaryList.minByOrNull { it.gisu }
-
-
-        viewModelScope.launch {
-            //3. 기본 정보 우선 업데이트
-            updateState {
-                copy(
-                    userName = userInfo.name,
-                    userNickName = userInfo.nickname,
-                    gisuTag = gisuTags,
-                    activeString = "${latestGisu?.gisu}기 활동 상태"
-                )
-            }
-
-            //최신 기수 정보랑 제일 오래된 기수 정보 둘 다 병렬로 실행(YB는 옛날꺼 필요)
-            coroutineScope {
-                val latestResponseDeferred = async {
-                    latestGisu?.let { getGisuInfoUseCase(it.gisuId) }
-                }
-                val startResponseDeferred = async {
-                    startGisu?.let { getGisuInfoUseCase(it.gisuId) }
-                }
-
-                val latestResponse = latestResponseDeferred.await()
-                val startResponse = startResponseDeferred.await()
-
-                if (latestResponse != null && startResponse != null){
-                    //최신 기수 정보를 성공적으로 받아올 때,
-                    resultResponse(
-                        response = latestResponse,
-                        successCallback = { latestGisuInfo ->
-                            //시작 기수 정보 성공적으로 받아올 때
-                            resultResponse(
-                                response = startResponse,
-                                successCallback = { startGisuInfo ->
-                                    //5. 성공 시 날짜 계산
-                                    val (passedDay, userStatus) = getPassedDaysStatus(latestGisuInfo.startAt, latestGisuInfo.endAt,
-                                        startGisuInfo.startAt, startGisuInfo.endAt)
-
-                                    updateState {
-                                        copy(
-                                            userType = userStatus,
-                                            growDay = passedDay.toInt(),
-                                        )
-                                    }
-                                },
-                                errorCallback = {
-                                    //시작 기수 정보 받기 실패
-                                }
-                            )
-
-
-                        },
-                        errorCallback = {
-                            //최신 기수 정보 받기 실패
-                        }
-                    )
-                }
-
-
-            }
+        //기본 정보 즉시 업데이트
+        updateState {
+            copy(
+                userName = userInfo.name,
+                userNickName = userInfo.nickname,
+                gisuTag = gisuTags,
+                activeString = "${latestGisu?.gisu ?: 0}기 활동 상태"
+            )
         }
 
-        //5. 점수 계산을 통해, 현재 상태 변경하기
-        calculateUserPoint(userInfo)
+        //상세 기수 정보 로드 및 상태 계산 (비동기)
+        loadGisuDetailAndCalculateStatus(latestGisu?.gisuId, startGisu?.gisuId)
 
+        //점수 계산 (동기)
+        calculateUserPoint(userInfo)
     }
+
+    //기수 태그 추출 (8기 / 9기 / 10기)
+    private fun extractGisuTags(summaryList: List<GisuSummary>): List<String> {
+        return summaryList.sortedBy { it.gisu }.map { "${it.gisu}기" }
+    }
+
+    //비동기 데이터 로드 및 계산 로직
+    private fun loadGisuDetailAndCalculateStatus(latestGisuId: Long?, startGisuId: Long?) {
+        if (latestGisuId == null || startGisuId == null) return
+
+        viewModelScope.launch {
+            coroutineScope {
+                val latestDeferred = async { getGisuInfoUseCase(latestGisuId) }
+                val startDeferred = async { getGisuInfoUseCase(startGisuId) }
+
+                val latestRes = latestDeferred.await()
+                val startRes = startDeferred.await()
+
+                /**시작 기수와 최신 기수의 시작&종료 날짜 받아오기**/
+                //최신 기수 정보를 성공적으로 받아올 때
+                resultResponse(response = latestRes, successCallback = { latestInfo ->
+                    //시작 기수 정보 성공적으로 받아올 때
+                    resultResponse(response = startRes, successCallback = { startInfo ->
+                        val (passedDay, userStatus) = getPassedDaysStatus(
+                            latestInfo.startAt, latestInfo.endAt,
+                            startInfo.startAt, startInfo.endAt
+                        )
+
+                        updateState {
+                            copy(
+                                userType = userStatus,
+                                growDay = passedDay.toInt()
+                            )
+                        }
+                    })
+                })
+            }
+        }
+    }
+
 
     //최신 기수 날짜 정보를 통해, OB인지 ACTIVE인지 판단하고, 몇일 지났는지 표현
     fun getPassedDaysStatus(latestStartDateStr: String, latestEndDateStr: String,

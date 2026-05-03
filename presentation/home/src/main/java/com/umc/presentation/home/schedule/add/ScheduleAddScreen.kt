@@ -23,6 +23,7 @@ import com.umc.component.component.UButton
 import com.umc.component.theme.*
 import kotlinx.coroutines.flow.collectLatest
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
 
 @Composable
@@ -32,7 +33,7 @@ fun ScheduleAddRoute(
     onShowAttendanceDialog: (onConfirm: () -> Unit, onReject: () -> Unit) -> Unit
 ){
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     //뒤로 가기 디스패처
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
