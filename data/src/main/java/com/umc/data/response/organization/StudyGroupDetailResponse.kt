@@ -29,7 +29,7 @@ fun StudyGroupDetailResponse.toModel(): StudyGroupDetail {
         part = studyPart,
         partDisplayName = UserPart.from(studyPart).label,
         schools = schoolsInfo,
-        createdAt = "2026.05.03", /**임시 -> 서버 업데이트 후 체크**/
+        createdAt = createdAt,
         memberCount = memberModels.size,
         leader = leaderModel,
         members = memberModels
@@ -43,7 +43,7 @@ data class StudyGroupDetailResponse(
     val studyPart: String = "",
     //val partDisplayName: String = "",
     //val schools: List<StudyGroupSchoolResponse> = emptyList(),
-    //val createdAt: String = "",
+    val createdAt: String = "",
     //val memberCount: Int = 0,
     val mentors: List<GroupMemberResponse> = emptyList(),
     val members: List<GroupMemberResponse> = emptyList(),
