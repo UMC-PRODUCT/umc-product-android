@@ -36,9 +36,11 @@ import retrofit2.http.Query
 interface OrganizationApi {
 
     companion object {
-        const val PATH_GROUP_ID = "groupId"
+        const val PATH_GROUP_ID = "studyGroupId"
         const val PATH_GISU_ID = "gisuId"
         const val PATH_SCHOOL_ID = "schoolId"
+        const val PATH_MEMBER_ID = "memberId"
+        const val PATH_MENTOR_ID = "mentorId"
         const val QUERY_CURSOR = "cursor"
         const val QUERY_SIZE = "size"
         const val QUERY_KEYWORD = "keyword"
@@ -62,7 +64,19 @@ interface OrganizationApi {
         @Path(PATH_GISU_ID) gisuId: Int
     ): ApiResponse<Unit>
 
-    
+    //담당 파트장 제거
+    @DELETE(Endpoints.Organization.STUDY_GROUP_MENTOR)
+    suspend fun deleteStudyGroupMentor(
+        @Path(PATH_GROUP_ID) studyGroupId: Long,
+        @Path(PATH_MENTOR_ID) mentorId: Long
+    ): ApiResponse<Unit>
+
+    //스터디원 제거
+    @DELETE(Endpoints.Organization.STUDY_GROUP_MEMBER)
+    suspend fun deleteStudyGroupMember(
+        @Path(PATH_GROUP_ID) studyGroupId: Long,
+        @Path(PATH_MEMBER_ID) memberId: Long
+    ): ApiResponse<Unit>
 
     @GET(Endpoints.Organization.MY_STUDY_GROUP)
     suspend fun getMyStudyGroup(
@@ -129,6 +143,20 @@ interface OrganizationApi {
     suspend fun editGroup(
         @Path(PATH_GROUP_ID) groupId: Long,
         @Body request: EditStudyGroupRequest
+    ): ApiResponse<Unit>
+
+    //담당 파트장 추가
+    @PATCH(Endpoints.Organization.STUDY_GROUP_MENTOR)
+    suspend fun addStudyGroupMentor(
+        @Path(PATH_GROUP_ID) studyGroupId: Long,
+        @Path(PATH_MENTOR_ID) mentorId: Long
+    ): ApiResponse<Unit>
+
+    //스터디원 추가
+    @PATCH(Endpoints.Organization.STUDY_GROUP_MEMBER)
+    suspend fun addStudyGroupMember(
+        @Path(PATH_GROUP_ID) studyGroupId: Long,
+        @Path(PATH_MEMBER_ID) memberId: Long
     ): ApiResponse<Unit>
 
     @PATCH(Endpoints.Organization.SCHOOL_ID)

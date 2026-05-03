@@ -30,6 +30,13 @@ class OrganizationRepositoryImpl @Inject constructor(
     override suspend fun deleteStudyGroup(groupId: Long): ApiState<Unit> =
         organizationDataSource.deleteStudyGroup(groupId)
 
+    override suspend fun deleteStudyGroupMember(studyGroupId: Long, memberId: Long): ApiState<Unit> =
+        organizationDataSource.deleteStudyGroupMember(studyGroupId, memberId)
+
+    override suspend fun deleteStudyGroupMentor(studyGroupId: Long, mentorId: Long): ApiState<Unit> =
+        organizationDataSource.deleteStudyGroupMentor(studyGroupId, mentorId)
+
+
     override suspend fun deleteGisu(gisuId: Int): ApiState<Unit> =
         organizationDataSource.deleteGisu(gisuId)
 
@@ -118,6 +125,12 @@ class OrganizationRepositoryImpl @Inject constructor(
     // PATCH
     override suspend fun editGroup(groupId: Long, request: EditStudyGroupRequest): ApiState<Unit> =
         organizationDataSource.editGroup(groupId, request)
+
+    override suspend fun addStudyGroupMember(studyGroupId: Long, memberId: Long): ApiState<Unit> =
+        organizationDataSource.addStudyGroupMember(studyGroupId, memberId)
+
+    override suspend fun addStudyGroupMentor(studyGroupId: Long, mentorId: Long): ApiState<Unit> =
+        organizationDataSource.addStudyGroupMentor(studyGroupId, mentorId)
 
     override suspend fun editSchool(schoolId: Int, request: EditSchoolRequest): ApiState<Unit> =
         organizationDataSource.editSchool(schoolId, request)

@@ -30,7 +30,11 @@ interface OrganizationDataSource {
     // DELETE
     suspend fun deleteSchool(request: SchoolIdRequest): ApiState<Unit>
     suspend fun deleteStudyGroup(groupId: Long): ApiState<Unit>
+    suspend fun deleteStudyGroupMentor(studyGroupId: Long, mentorId: Long): ApiState<Unit>
+    suspend fun deleteStudyGroupMember(studyGroupId: Long, memberId: Long): ApiState<Unit>
     suspend fun deleteGisu(gisuId: Int): ApiState<Unit>
+
+
 
     // GET
     suspend fun getMyStudyGroup(cursor: Long?, size: Int): ApiState<StudyGroupListResponse>
@@ -57,9 +61,13 @@ interface OrganizationDataSource {
 
     // PATCH
     suspend fun editGroup(groupId: Long, request: EditStudyGroupRequest): ApiState<Unit>
+    suspend fun addStudyGroupMentor(studyGroupId: Long, mentorId: Long): ApiState<Unit>
+    suspend fun addStudyGroupMember(studyGroupId: Long, memberId: Long): ApiState<Unit>
+
     suspend fun editSchool(schoolId: Int, request: EditSchoolRequest): ApiState<Unit>
     suspend fun unassignSchool(schoolId: Int, request: UnAssignSchoolRequest): ApiState<Unit>
     suspend fun assignSchool(schoolId: Int, request: AssignSchoolRequest): ApiState<Unit>
+
 
     // POST
     suspend fun createStudyGroup(request: CreateStudyGroupRequest): ApiState<Unit>
