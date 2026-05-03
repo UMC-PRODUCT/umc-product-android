@@ -1,5 +1,6 @@
 package com.umc.data.response.organization
 
+import com.umc.domain.model.enums.UserPart
 import kotlinx.serialization.Serializable
 import com.umc.domain.model.organization.*
 
@@ -8,7 +9,7 @@ fun StudyGroupDetailResponse.toModel(): StudyGroupDetail {
     val memberModels = members.map { it.toModel() }
 
     val leaderModel =
-        leader?.toModel()
+        mentors.firstOrNull()?.toModel()
             ?: memberModels.firstOrNull()
             ?: StudyGroupMember(
                 challengerId = 0L,
@@ -17,28 +18,34 @@ fun StudyGroupDetailResponse.toModel(): StudyGroupDetail {
                 profileImageUrl = null
             )
 
+
+    //기존 schools 대신 members를 통해 학교 정보 생성
+    val schoolsInfo = members.map { StudyGroupSchool(it.schoolId, it.schoolName) }
+
+
     return StudyGroupDetail(
-        groupId = groupId,
+        groupId = studyGroupId,
         name = name,
-        part = part,
-        partDisplayName = partDisplayName,
-        schools = schools.map { StudyGroupSchool(it.schoolId, it.schoolName) },
-        createdAt = createdAt,
-        memberCount = if (memberCount > 0) memberCount else memberModels.size,
+        part = studyPart,
+        partDisplayName = UserPart.from(studyPart).label,
+        schools = schoolsInfo,
+        createdAt = "2026.05.03", /**임시 -> 서버 업데이트 후 체크**/
+        memberCount = memberModels.size,
         leader = leaderModel,
         members = memberModels
     )
 }
 @Serializable
 data class StudyGroupDetailResponse(
-    val groupId: Long = 0,
+    val studyGroupId: Long = 0,
     val name: String = "",
-    val part: String = "",
-    val partDisplayName: String = "",
-    val schools: List<StudyGroupSchoolResponse> = emptyList(),
-    val createdAt: String = "",
-    val memberCount: Int = 0,
-    val leader: GroupMemberResponse? = null,
+    val gisuId: Long = 0,
+    val studyPart: String = "",
+    //val partDisplayName: String = "",
+    //val schools: List<StudyGroupSchoolResponse> = emptyList(),
+    //val createdAt: String = "",
+    //val memberCount: Int = 0,
+    val mentors: List<GroupMemberResponse> = emptyList(),
     val members: List<GroupMemberResponse> = emptyList(),
 )
 

@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="11">
-      <module name="UMC_product.presentation.component" target="21" />
-      <module name="UMC_product.presentation.home" target="21" />
-      <module name="UMC_product.presentation.login" target="21" />
-      <module name="UMC_product.presentation.splash" target="21" />
-    </bytecodeTargetLevel>
+    <bytecodeTargetLevel target="11" />
   </component>
 </project>
