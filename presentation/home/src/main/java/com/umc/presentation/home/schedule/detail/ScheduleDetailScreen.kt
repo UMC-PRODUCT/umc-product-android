@@ -55,8 +55,6 @@ import java.net.URLEncoder
 
 @Composable
 fun ScheduleDetailRoute(
-    scheduleId: Long, //상세 보기할 일정 ID
-    plusDay: Int, //시작일로부터 몇일 +
     viewModel : ScheduleDetailViewModel = hiltViewModel()
 ){
 
@@ -72,10 +70,6 @@ fun ScheduleDetailRoute(
     //다이얼로그 노출 여부 체크
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    //초기 데이터 로드
-    LaunchedEffect(scheduleId, plusDay) {
-        viewModel.getScheduleDetail(scheduleId, plusDay)
-    }
 
     LaunchedEffect(viewModel){
         viewModel.uiEvent.collectLatest { event ->

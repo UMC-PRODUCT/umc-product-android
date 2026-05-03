@@ -1,5 +1,6 @@
 package com.umc.presentation.home.schedule.detail
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
@@ -21,13 +22,22 @@ import javax.inject.Inject
 @HiltViewModel
 class ScheduleDetailViewModel @Inject
 constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase, //일정 상세 정보 가져오기
     private val deleteScheduleUseCase: DeleteScheduleUseCase, //일정 삭제하기
     private val getAuthAccessUseCase: GetAuthAccessUseCase, //리소스 권한 조회
 ) : BaseViewModel<ScheduleDetailUiState, ScheduleDetailEvent>(
     ScheduleDetailUiState()){
 
+    private val checkScheduleId: Long = savedStateHandle.get<Long>("scheduleId") ?: -1L
+    private val checkPlusDay: Int = savedStateHandle.get<Int>("plusDay") ?: -1
 
+
+    init{
+        if(checkScheduleId != -1L && checkPlusDay != -1) {
+            getScheduleDetail(checkScheduleId, checkPlusDay)
+        }
+    }
 
 
     //서버에서 게시글 상세 정보 가져오기

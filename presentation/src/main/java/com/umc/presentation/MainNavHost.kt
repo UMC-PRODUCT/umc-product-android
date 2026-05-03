@@ -52,7 +52,8 @@ fun MainNavHost(
                     navHostController.navigate(MainDestination.ScheduleAdd)
                 },
                 onNavigateToScheduleDetail = {
-                    navHostController.navigate(MainDestination.ScheduleDetail(it.id, it.plusDay))
+                    //여기서 인자를 던지면, savedStateHandle에서 받아채서 ViewModel에서 처리
+                    navHostController.navigate(MainDestination.ScheduleDetail(scheduleId = it.id, plusDay = it.plusDay))
                 },
                 onNavigateToNotification = {}
             )
@@ -64,23 +65,16 @@ fun MainNavHost(
             )
         }
         //일정 수정
-        composable<MainDestination.ScheduleEdit> { data ->
-            //Destination 클래스 형태로 데이터를 추출
-            val editRoute = data.toRoute<MainDestination.ScheduleEdit>()
-
+        composable<MainDestination.ScheduleEdit> {
             ScheduleAddRoute(
-                //추출한 객체에서 scheduleId에 접근
-                scheduleId = editRoute.scheduleId,
                 onShowAttendanceDialog = { _, _ -> }
             )
         }
         //일정 상세
         composable<MainDestination.ScheduleDetail>{ data ->
-            val detailRoute = data.toRoute<MainDestination.ScheduleDetail>()
 
             ScheduleDetailRoute(
-                scheduleId = detailRoute.scheduleId,
-                plusDay = detailRoute.plusDay
+
             )
         }
 

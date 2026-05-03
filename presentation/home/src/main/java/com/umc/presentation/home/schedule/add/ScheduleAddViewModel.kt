@@ -1,6 +1,7 @@
 package com.umc.presentation.home.schedule.add
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.umc.component.R
 import com.umc.component.base.BaseViewModel
@@ -36,6 +37,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ScheduleAddViewModel @Inject
 constructor(
+    savedStateHandle: SavedStateHandle,
     private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 가져오기
     private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase, //일정 상세 정보 가져오기,
     private val createScheduleUseCase: CreateScheduleUseCase, //일정 생성하기
@@ -50,10 +52,14 @@ constructor(
     private val parseDateSdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
     private val parseTimeSdf = SimpleDateFormat("HH:mm", Locale.KOREAN)
 
-
+    private val checkScheduleId: Long = savedStateHandle.get<Long>("scheduleId") ?: -1L
 
     init {
         loadInitialData()
+
+        if(checkScheduleId != -1L){
+            settingUpdateSchedule(checkScheduleId)
+        }
     }
 
     /**초기 데이터 가져오는 작업들 정의 및 파싱 함수들 정의**/
@@ -84,7 +90,7 @@ constructor(
     }
 
     //일정 수정 시 기존 일정 데이터로 UI 채우기
-    fun settingUpdateSchedule(scheduleId: Long) {
+    private fun settingUpdateSchedule(scheduleId: Long) {
 
         updateState {
             copy(
