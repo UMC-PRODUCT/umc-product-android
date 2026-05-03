@@ -29,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
+import com.umc.component.component.UText
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.BodyBold
 import com.umc.component.theme.UmcTypographyTokens.Caption1
@@ -47,8 +48,6 @@ import com.umc.component.theme.primary500
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.enums.AdminSessionStatus
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @Composable
 fun AttendanceRoute() {
@@ -105,7 +104,7 @@ fun AdminSessionCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
+                    UText(
                         text = session.title,
                         style = Title3Bold,
                         color = neutral800()
@@ -115,8 +114,8 @@ fun AdminSessionCard(
                             color = primary100(),
                             shape = RoundedCornerShape(6.dp)
                         ) {
-                            Text(
-                                text = session.status.toLabel(),
+                            UText(
+                                text = session.status.toString(),
                                 style = Caption1Bold,
                                 color = primary500(),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -143,7 +142,7 @@ fun AdminSessionCard(
                         tint = neutral600(),
                         modifier = Modifier.size(14.dp)
                     )
-                    Text(
+                    UText(
                         text = "위치 변경",
                         style = SubheadlineBold,
                         color = neutral600()
@@ -157,7 +156,7 @@ fun AdminSessionCard(
             ) {
                 CardMetaItem(
                     iconRes = R.drawable.ic_calendar,
-                    text = session.date.toCardDateText()
+                    text = session.date
                 )
                 CardMetaItem(
                     iconRes = R.drawable.ic_clock,
@@ -221,7 +220,7 @@ fun AdminSessionCard(
                         tint = primary500(),
                         modifier = Modifier.size(18.dp)
                     )
-                    Text(
+                    UText(
                         text = "승인 대기 명단 확인하기",
                         style = BodyBold,
                         color = neutral800()
@@ -253,7 +252,7 @@ private fun CardMetaItem(
             tint = neutral600(),
             modifier = Modifier.size(14.dp)
         )
-        Text(
+        UText(
             text = text,
             style = Caption1,
             color = neutral600()
@@ -279,12 +278,12 @@ private fun StatItem(
             tint = neutral600(),
             modifier = Modifier.size(18.dp)
         )
-        Text(
+        UText(
             text = label,
             style = Subheadline,
             color = neutral600()
         )
-        Text(
+        UText(
             text = value,
             style = SubheadlineBold,
             color = neutral800()
@@ -302,25 +301,6 @@ private fun VerticalDivider() {
             .background(neutral200())
     )
 }
-
-private fun AdminSessionStatus.toLabel(): String = when (this) {
-    AdminSessionStatus.IN_PROGRESS -> "진행 중"
-    AdminSessionStatus.COMPLETED -> "종료"
-}
-
-private fun String.toCardDateText(): String = runCatching {
-    val date = LocalDate.parse(this, DateTimeFormatter.ISO_LOCAL_DATE)
-    val dayOfWeek = when (date.dayOfWeek.value) {
-        1 -> "월"
-        2 -> "화"
-        3 -> "수"
-        4 -> "목"
-        5 -> "금"
-        6 -> "토"
-        else -> "일"
-    }
-    "${date.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))} ($dayOfWeek)"
-}.getOrDefault(this)
 
 private fun sampleSessions(): List<AdminSessionCheck> = listOf(
     AdminSessionCheck(
