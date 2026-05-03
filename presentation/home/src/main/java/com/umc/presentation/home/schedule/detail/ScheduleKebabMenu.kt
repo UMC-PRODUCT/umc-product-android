@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.danger500
 import com.umc.component.theme.neutral000
@@ -60,7 +61,7 @@ fun ScheduleKebabMenu(
             ) {
                 MenuItem(
                     icon = R.drawable.ic_edit,
-                    text = "수정하기",
+                    text = AppStrings.NOTICE_WRITE_VOTE_EDIT,
                     color = neutral800(),
                     onClick = onEditClick)
 
@@ -70,7 +71,7 @@ fun ScheduleKebabMenu(
 
                 MenuItem(
                     icon = R.drawable.ic_trash_can,
-                    text = "삭제하기",
+                    text = AppStrings.NOTICE_WRITE_VOTE_DELETE,
                     color = danger500(),
                     onClick = onDeleteClick)
             }

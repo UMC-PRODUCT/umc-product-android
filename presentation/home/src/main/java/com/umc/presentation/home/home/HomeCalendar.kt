@@ -38,12 +38,13 @@ import com.umc.component.theme.neutral800
 import com.umc.component.theme.primary100
 import com.umc.component.theme.primary500
 import com.umc.component.theme.primary600
-import com.umc.presentation.home.R
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.Instant
 import com.umc.component.util.UTimeFormat.toLocalDate
 import com.umc.component.util.UTimeFormat.toMillis
+import com.umc.component.R
+import com.umc.component.theme.AppStrings
 
 
 /**
@@ -344,10 +345,10 @@ private fun CalendarDatePickerDialog(
                 datePickerState.selectedDateMillis?.let { millis ->
                     onDateSelected(millis.toLocalDate())
                 }
-            }) { UText("확인") }
+            }) { UText(AppStrings.CONFIRM) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { UText("취소") }
+            TextButton(onClick = onDismiss) { UText(AppStrings.CANCEL) }
         }
     ) {
         DatePicker(state = datePickerState)

@@ -37,6 +37,7 @@ import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.model.UBasicDialogModel
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.accent500
 import com.umc.component.theme.neutral000
@@ -197,7 +198,7 @@ fun ScheduleDetailScreen(
             )
 
             //4. 상세 안내 영역
-            UText(text = "상세 안내",
+            UText(text = AppStrings.HOME_PLAN_DETAIL_PLAN_NOTICE,
                 style = UmcTypographyTokens.Title3Bold,
                 color = neutral800()
             )
@@ -217,7 +218,7 @@ fun ScheduleDetailScreen(
             //5. 하단 출석 버튼
             if(uiState.isToday){
                 UButton(
-                    text = "출석 체크하기",
+                    text = AppStrings.HOME_PLAN_DETAIL_CHECK_CONFIRM,
                     backgroundColor = accent500(),
                     textColor = neutral000(),
                     textStyle = UmcTypographyTokens.HeadlineBold,
@@ -281,7 +282,10 @@ fun ScheduleDetailTopBar(
             Spacer(modifier = Modifier
                 .width(16.dp)
             )
-            UText(text = "일정 상세", style = UmcTypographyTokens.Title2Bold, color = neutral800())
+            UText(text = AppStrings.HOME_PLAN_DETAIL_TITLE,
+                style = UmcTypographyTokens.Title2Bold,
+                color = neutral800()
+            )
         }
         //메뉴 버튼
         Icon(

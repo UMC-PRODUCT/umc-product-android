@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.component.UChip
 import com.umc.component.component.USwitch
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral200
@@ -54,7 +55,7 @@ fun ScheduleDateCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                UText(text = "하루 종일", style = UmcTypographyTokens.Callout, color = neutral600())
+                UText(text = AppStrings.ALLDAY, style = UmcTypographyTokens.Callout, color = neutral600())
                 USwitch(
                     checked = uiState.isAllDay,
                     onCheckedChange = onAlldayChanged,
@@ -65,7 +66,7 @@ fun ScheduleDateCard(
 
             // 시작 일시
             DateTimeRow(
-                label = "시작",
+                label = AppStrings.START,
                 dateText = uiState.startDateText,
                 timeText = uiState.startTimeText,
                 showTime = !uiState.isAllDay,
@@ -77,7 +78,7 @@ fun ScheduleDateCard(
 
             // 종료 일시
             DateTimeRow(
-                label = "종료",
+                label = AppStrings.END,
                 dateText = uiState.endDateText,
                 timeText = uiState.endTimeText,
                 showTime = !uiState.isAllDay,

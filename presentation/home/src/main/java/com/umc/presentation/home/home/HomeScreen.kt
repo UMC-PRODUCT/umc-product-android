@@ -41,6 +41,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral100
@@ -272,7 +273,7 @@ fun HomePlanHeader(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         UText(
-            text = "다가오는 일정",
+            text = AppStrings.HOME_PLAN_TITLE,
             style = UmcTypographyTokens.Title3Bold,
             color = neutral800()
         )

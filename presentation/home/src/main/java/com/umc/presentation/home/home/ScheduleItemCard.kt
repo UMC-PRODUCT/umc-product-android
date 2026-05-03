@@ -86,8 +86,16 @@ fun ActiveScheduleItem(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    UText(text = item.dayOfWeek, style = UmcTypographyTokens.Caption2Bold, color = primary500())
-                    UText(text = item.day, style = UmcTypographyTokens.CalloutBold, color = primary500())
+                    UText(
+                        text = item.dayOfWeek,
+                        style = UmcTypographyTokens.Caption2Bold,
+                        color = primary500()
+                    )
+                    UText(
+                        text = item.day,
+                        style = UmcTypographyTokens.CalloutBold,
+                        color = primary500()
+                    )
                 }
             }
 
@@ -97,8 +105,14 @@ fun ActiveScheduleItem(
                     .weight(1f)
                     .padding(horizontal = 16.dp)
             ) {
-                UText(text = item.title, style = UmcTypographyTokens.CalloutBold, color = neutral800())
-                UText(text = item.time, style = UmcTypographyTokens.Footnote, color = neutral600())
+                UText(text = item.title,
+                    style = UmcTypographyTokens.CalloutBold,
+                    color = neutral800()
+                )
+                UText(text = item.time,
+                    style = UmcTypographyTokens.Footnote,
+                    color = neutral600()
+                )
             }
 
             //D-Day 버튼
@@ -157,8 +171,14 @@ fun DefaultScheduleItem(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    UText(text = item.dayOfWeek, style = UmcTypographyTokens.Caption2Bold, color = neutral300())
-                    UText(text = item.day, style = UmcTypographyTokens.CalloutBold, color = neutral300())
+                    UText(text = item.dayOfWeek,
+                        style = UmcTypographyTokens.Caption2Bold,
+                        color = neutral300()
+                    )
+                    UText(text = item.day,
+                        style = UmcTypographyTokens.CalloutBold,
+                        color = neutral300()
+                    )
                 }
             }
 
@@ -167,8 +187,14 @@ fun DefaultScheduleItem(
                     .weight(1f)
                     .padding(horizontal = 16.dp)
             ) {
-                UText(text = item.title, style = UmcTypographyTokens.CalloutBold, color = neutral400())
-                UText(text = item.time, style = UmcTypographyTokens.Footnote, color = neutral400())
+                UText(text = item.title,
+                    style = UmcTypographyTokens.CalloutBold,
+                    color = neutral400()
+                )
+                UText(text = item.time,
+                    style = UmcTypographyTokens.Footnote,
+                    color = neutral400()
+                )
             }
 
             androidx.compose.material3.Icon(

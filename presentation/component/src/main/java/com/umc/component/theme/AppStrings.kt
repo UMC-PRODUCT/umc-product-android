@@ -13,7 +13,7 @@ object AppStrings {
     const val HOME_PLAN_DETAIL_LOCATION = "장소"
     const val HOME_PLAN_DETAIL_SHOW_MAP = "지도 보기"
     const val HOME_PLAN_DETAIL_PLAN_NOTICE = "상세 안내"
-    const val HOME_PLAN_DETAIL_CHECK_CONFIRM = "출석 체크 하러가기"
+    const val HOME_PLAN_DETAIL_CHECK_CONFIRM = "출석 체크"
     const val HOME_PLAN_ADD_TITLE = "일정 등록"
     const val HOME_PLAN_ADD_PLAN_NAME = "일정 제목"
     const val HOME_PLAN_ADD_PLAN_NAME_PLACEHOLDER = "일정 제목을 입력하세요"

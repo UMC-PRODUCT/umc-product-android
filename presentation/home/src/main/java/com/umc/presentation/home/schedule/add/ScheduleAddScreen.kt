@@ -126,13 +126,19 @@ fun ScheduleAddScreen(
             )
 
             //3. 일정 제목
-            ScheduleInputSection(title = "일정 제목", required = true) {
+            ScheduleInputSection(
+                title = AppStrings.HOME_PLAN_ADD_PLAN_NAME,
+                required = true
+            ) {
                 OutlinedTextField(
                     value = uiState.planTitle,
                     onValueChange = onTitleChanged,
                     modifier = Modifier
                         .fillMaxWidth(),
-                    placeholder = { Text("일정 제목을 입력해 주세요", color = neutral400()) },
+                    placeholder = { Text(
+                        AppStrings.HOME_PLAN_ADD_PLAN_NAME_PLACEHOLDER,
+                        color = neutral400()
+                    ) },
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = neutral300(),
@@ -146,9 +152,12 @@ fun ScheduleAddScreen(
             )
             
             //4. 태그
-            ScheduleInputSection(title = "태그", required = true) {
+            ScheduleInputSection(
+                title = AppStrings.HOME_PLAN_ADD_PLAN_CATEGORY,
+                required = true
+            ) {
                 SelectableField(
-                    text = if (!uiState.isSelectedCategory) "태그를 선택해 주세요" else uiState.selectedCategoriesString,
+                    text = if (!uiState.isSelectedCategory) AppStrings.HOME_PLAN_ADD_PLAN_TAG_PLACEHOLDER else uiState.selectedCategoriesString,
                     isPlaceholder = !uiState.isSelectedCategory,
                     onClick = onCategoryClick
                 )
@@ -159,9 +168,12 @@ fun ScheduleAddScreen(
             )
 
             //5. 장소
-            ScheduleInputSection(title = "장소", required = true) {
+            ScheduleInputSection(
+                title = AppStrings.HOME_PLAN_DETAIL_LOCATION,
+                required = true
+            ) {
                 SelectableField(
-                    text = if (uiState.planLocation.isEmpty()) "위치를 입력해 주세요" else uiState.planLocation,
+                    text = if (uiState.planLocation.isEmpty()) AppStrings.HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER else uiState.planLocation,
                     isPlaceholder = uiState.planLocation.isEmpty(),
                     onClick = onLocationClick
                 )
@@ -172,7 +184,10 @@ fun ScheduleAddScreen(
             )
 
             //6. 일시
-            ScheduleInputSection(title = "일시", required = false) {
+            ScheduleInputSection(
+                title = AppStrings.HOME_PLAN_DETAIL_CALENDAR,
+                required = false
+            ) {
                 ScheduleDateCard(
                     uiState = uiState,
                     onAlldayChanged = onAlldayChanged,
@@ -188,14 +203,14 @@ fun ScheduleAddScreen(
             )
 
             //7. 상세 안내
-            ScheduleInputSection(title = "상세 안내", required = false) {
+            ScheduleInputSection(title = AppStrings.HOME_PLAN_ADD_PLAN_DETAIL_INFORMATION, required = false) {
                 OutlinedTextField(
                     value = uiState.planDetail,
                     onValueChange = onDetailChanged,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(144.dp),
-                    placeholder = { Text("상세 내용을 입력해 주세요", color = neutral400()) },
+                    placeholder = { Text(AppStrings.HOME_PLAN_ADD_PLAN_DETAIL_PLACEHOLDER, color = neutral400()) },
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = neutral300(),
@@ -209,9 +224,9 @@ fun ScheduleAddScreen(
             )
 
             //8. 챌린저 명단
-            ScheduleInputSection(title = "챌린저 명단", required = false) {
+            ScheduleInputSection(title = AppStrings.HOME_PLAN_ADD_PLAN_ATTEND, required = false) {
                 SelectableField(
-                    text = if (!uiState.isSelectedParticipant) "챌린저를 선택해 주세요" else uiState.selectedParticipantsString,
+                    text = if (!uiState.isSelectedParticipant) AppStrings.HOME_PLAN_ADD_PLAN_CHALLENGER_PLACEHOLDER else uiState.selectedParticipantsString,
                     isPlaceholder = !uiState.isSelectedParticipant,
                     onClick = onParticipantClick
                 )
@@ -261,7 +276,7 @@ fun ScheduleAddTopBar(onBackClick: () -> Unit){
             .width(16.dp)
         )
         Text(
-            text = "일정 추가",
+            text = AppStrings.HOME_PLAN_ADD_TITLE,
             style = UmcTypographyTokens.Title2Bold,
             color = neutral800()
         )
@@ -280,9 +295,17 @@ fun ScheduleInputSection(
         .fillMaxWidth()
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = title, style = UmcTypographyTokens.HeadlineBold, color = neutral800())
+            Text(
+                text = title,
+                style = UmcTypographyTokens.HeadlineBold,
+                color = neutral800()
+            )
             if (required) {
-                Text(text = "*", style = UmcTypographyTokens.HeadlineBold, color = danger500(), modifier = Modifier.padding(start = 4.dp))
+                Text(text = "*",
+                    style = UmcTypographyTokens.HeadlineBold,
+                    color = danger500(),
+                    modifier = Modifier.padding(start = 4.dp)
+                )
             }
         }
         Spacer(modifier = Modifier
@@ -336,7 +359,7 @@ fun ScheduleAddActionButtons(
         .fillMaxWidth()
     ) {
         UButton(
-            text = "취소",
+            text = AppStrings.CANCEL,
             modifier = Modifier
                 .weight(1f)
                 .height(52.dp),
@@ -350,7 +373,7 @@ fun ScheduleAddActionButtons(
             .width(16.dp)
         )
         UButton(
-            text = if (editMode) "수정" else "등록",
+            text = if (editMode) AppStrings.EDIT else AppStrings.REGISTER,
             modifier = Modifier
                 .weight(1f)
                 .height(52.dp),

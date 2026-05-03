@@ -21,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral300
@@ -51,7 +52,7 @@ fun ScheduleInfoCard(
             //일시
             InfoRow(
                 iconRes = R.drawable.ic_calendar_color,
-                title = "일시",
+                title = AppStrings.HOME_PLAN_DETAIL_CALENDAR,
                 content1 = todayDate,
                 content2 = todayTime
             )
@@ -63,7 +64,7 @@ fun ScheduleInfoCard(
             //장소
             InfoRow(
                 iconRes = R.drawable.ic_calendar_color,
-                title = "장소",
+                title = AppStrings.HOME_PLAN_DETAIL_LOCATION,
                 content1 = place,
                 isMapAction = true,
                 onMapClick = onMapClick
@@ -136,7 +137,7 @@ fun InfoRow(
                 )
 
                 UText(
-                    text = "지도 보기",
+                    text = AppStrings.HOME_PLAN_DETAIL_SHOW_MAP,
                     style = UmcTypographyTokens.Footnote,
                     color = primary500(),
                     modifier = Modifier

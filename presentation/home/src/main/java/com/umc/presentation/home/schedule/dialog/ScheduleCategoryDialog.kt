@@ -29,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral300
@@ -75,7 +76,7 @@ fun ScheduleCategoryBottomSheet(
                     .weight(1f)
                 ) {
                     UText(
-                        text = "태그를 추가하세요",
+                        text = AppStrings.HOME_PLAN_ADD_PLAN_TAG_BOTTOMSHEET_TITLE,
                         style = UmcTypographyTokens.Title3Bold,
                         color = neutral800()
                     )
@@ -83,7 +84,7 @@ fun ScheduleCategoryBottomSheet(
                         .height(4.dp)
                     )
                     UText(
-                        text = "중복 선택이 가능합니다",
+                        text = AppStrings.HOME_PLAN_ADD_PLAN_TAG_BOTTOMSHEET_CONTENT,
                         style = UmcTypographyTokens.Footnote,
                         color = neutral600()
                     )
@@ -91,7 +92,7 @@ fun ScheduleCategoryBottomSheet(
 
                 //확인 버튼
                 UButton(
-                    text = "확인",
+                    text = AppStrings.CONFIRM,
                     backgroundColor = primary500(),
                     textColor = neutral000(),
                     onClick = onConfirm,
