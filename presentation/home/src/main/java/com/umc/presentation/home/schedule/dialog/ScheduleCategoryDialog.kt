@@ -43,11 +43,12 @@ import com.umc.presentation.home.schedule.add.ScheduleAddViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleCategoryBottomSheet(
-    viewModel: ScheduleAddViewModel,
+    categories: List<CategoryItem>, //다이얼로그에 보여줄 CategoryItem List
+    onCategoryClick: (CategoryItem) -> Unit, //해당 카테고리 클릭 시
     onDismissRequest: () -> Unit, //종료될때
     onConfirm: () -> Unit //확인 누를 시
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -113,11 +114,11 @@ fun ScheduleCategoryBottomSheet(
                     .fillMaxWidth()
                     .heightIn(max = 400.dp)
             ) {
-                items(uiState.categories) { category ->
+                items(categories) { category ->
                     CategoryItemRow(
                         item = category,
                         //토글하면 바로 ViewModel에 반영하기
-                        onToggle = { viewModel.selectCategory(it) }
+                        onToggle = { onCategoryClick(it) }
                     )
                 }
             }

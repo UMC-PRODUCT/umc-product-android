@@ -161,9 +161,15 @@ private fun CalendarHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        IconButton(onClick = onPrevClick) {
-            Icon(painterResource(id = R.drawable.ic_calendar_arrow_left), contentDescription = null)
-        }
+            Icon(
+                painter = painterResource(id = R.drawable.ic_calendar_arrow_left),
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(CircleShape) // 클릭 영역을 원형으로 제한
+                    .clickable { onPrevClick() }
+                    .padding(12.dp)
+            )
+
 
         UText(
             text = "${currentMonth.year}.${String.format("%02d", currentMonth.monthValue)}",
@@ -174,9 +180,14 @@ private fun CalendarHeader(
                 .clickable { onTitleClick() }
         )
 
-        IconButton(onClick = onNextClick) {
-            Icon(painterResource(id = R.drawable.ic_calendar_arrow_right), contentDescription = null)
-        }
+        Icon(
+            painter = painterResource(id = R.drawable.ic_calendar_arrow_right),
+            contentDescription = null,
+            modifier = Modifier
+                .clip(CircleShape) // 클릭 영역을 원형으로 제한
+                .clickable { onNextClick() }
+                .padding(12.dp) // IconButton의 기본 터치 영역 확보를 위해 패딩 추가
+        )
     }
 }
 
@@ -364,8 +375,3 @@ private fun getDaysInMonth(month: YearMonth): List<LocalDate?> {
     //리스트 반환 (null null null 1 2 3 .. 31)
     return List(firstDayOfWeek) { null } + List(daysInMonth) { month.atDay(it + 1) }
 }
-
-//DatePicker의 밀리초(Long)과 LocalDate의 변환
-//fun LocalDate.toMillis() = this.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
-//fun Long.toLocalDate(): LocalDate = Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()

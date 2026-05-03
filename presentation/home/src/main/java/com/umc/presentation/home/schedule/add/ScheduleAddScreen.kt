@@ -23,7 +23,10 @@ import com.umc.component.component.UButton
 import com.umc.component.theme.*
 import kotlinx.coroutines.flow.collectLatest
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.umc.component.component.UText
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
 
 @Composable
@@ -35,6 +38,7 @@ fun ScheduleAddRoute(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     //뒤로 가기 디스패처
+    /**TODO. 삭제 - MainActivity에서 적용할 예정**/
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     //다이얼로그 표시 여부 체크
@@ -78,7 +82,8 @@ fun ScheduleAddRoute(
     //다이얼로그 정의
     if (showCategoryDialog) {
         ScheduleCategoryBottomSheet(
-            viewModel = viewModel,
+            onCategoryClick = viewModel::selectCategory,
+            categories = uiState.categories,
             onDismissRequest = { showCategoryDialog = false },
             onConfirm = { showCategoryDialog = false }
         )
@@ -266,17 +271,21 @@ fun ScheduleAddTopBar(onBackClick: () -> Unit){
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        IconButton(onClick = onBackClick) {
+
           Icon(
               painter = painterResource(id=R.drawable.ic_back),
               contentDescription = null,
-              tint = neutral800()
+              tint = neutral800(),
+              modifier = Modifier
+                  .clickable { onBackClick() }
+                  .padding(end = 16.dp)
+                  .clip(CircleShape)
           )
-        }
+
         Spacer(modifier = Modifier
             .width(16.dp)
         )
-        Text(
+        UText(
             text = AppStrings.HOME_PLAN_ADD_TITLE,
             style = UmcTypographyTokens.Title2Bold,
             color = neutral800()
@@ -296,13 +305,13 @@ fun ScheduleInputSection(
         .fillMaxWidth()
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
+            UText(
                 text = title,
                 style = UmcTypographyTokens.HeadlineBold,
                 color = neutral800()
             )
             if (required) {
-                Text(text = "*",
+                UText(text = "*",
                     style = UmcTypographyTokens.HeadlineBold,
                     color = danger500(),
                     modifier = Modifier.padding(start = 4.dp)
@@ -334,7 +343,7 @@ fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
+            UText(
                 text = text,
                 modifier = Modifier
                     .weight(1f),

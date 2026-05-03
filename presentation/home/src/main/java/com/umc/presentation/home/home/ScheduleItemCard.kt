@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -197,7 +197,7 @@ fun DefaultScheduleItem(
                 )
             }
 
-            androidx.compose.material3.Icon(
+            Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_next),
                 contentDescription = null,
                 tint = neutral300()

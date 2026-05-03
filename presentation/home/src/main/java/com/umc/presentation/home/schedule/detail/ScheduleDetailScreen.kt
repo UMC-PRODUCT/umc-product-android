@@ -62,6 +62,7 @@ fun ScheduleDetailRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     //뒤로 가기 디스패처
+    /**TODO. 삭제 - MainActivity에서 적용할 예정**/
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     //지도 가져오기 위한 context

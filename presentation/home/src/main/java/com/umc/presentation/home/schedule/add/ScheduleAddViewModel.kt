@@ -6,12 +6,14 @@ import com.umc.component.R
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.util.UTimeFormat
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.model.home.LocationItem
 import com.umc.domain.model.home.ParticipantItem
+import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
@@ -59,7 +61,6 @@ constructor(
     private fun loadInitialData() {
         viewModelScope.launch {
             //유저 정보 가져오기
-            launch {
                 getUserInfoUseCase().collect { userInfo ->
 
                     //기수 요약 리스트 작성
@@ -78,111 +79,121 @@ constructor(
                         )
                     }
                 }
-            }
+
         }
     }
 
     //일정 수정 시 기존 일정 데이터로 UI 채우기
     fun settingUpdateSchedule(scheduleId: Long) {
 
-        updateState { copy(editMode = true) }
+        updateState {
+            copy(
+                editMode = true,
+                updateScheduleId = scheduleId
+            )
+        }
 
         viewModelScope.launch {
             resultResponse(
                 response = getScheduleDetailHomeUseCase(scheduleId),
                 successCallback = { detail ->
 
-                    //유저 정보를 위해 getMemberProfileUsecase로 호출
-                    viewModelScope.launch {
-                        /**추가 로직**/
-                        //async로 대기하자
-                        //val participantsIds = listOf<Long>(16L, 17L, 18L)
-                        val participantTasks = detail.participantMemberIds.map { memberId ->
-                            async { getMemberProfileUseCase(memberId) }
-                        }
-                        val participants = participantTasks.awaitAll().mapNotNull { response ->
-                            var item: ParticipantItem? = null
-                            resultResponse(
-                                response = response,
-                                successCallback = { profile ->
-
-                                    //최신 기수 정보 가져오기
-                                    val gisuSummary = profile.getGisuSummaryList().maxByOrNull { it.gisu }
-                                    val challengerPart = UserPart.from(gisuSummary?.fromRecords?.get(0)?.responsiblePart)
-
-                                    item = ParticipantItem(
-                                        id = profile.id,
-                                        name = profile.name,
-                                        nickname = profile.nickname,
-                                        school = profile.schoolName,
-                                        profileImage = profile.profileImageLink,
-                                        gisu = gisuSummary?.gisu ?: 0L,
-                                        userPart = challengerPart
-                                    )
-                                },
-                                errorCallback = {
-                                }
-                            )
-                            item
-                        }
-                        /**추가 로직 종료**/
-
-                        updateState {
-                            //1. 도메인 String -> 내부 연산용 Calendar 생성
-                            val startCal = stringToCalendar(detail.startDay, detail.startTime)
-                            val endCal = stringToCalendar(detail.endDay, detail.endTime)
-
-                            //2. 도메인 시간 문자열 -> UI 표시용 "오전/오후" 변환
-                            val startTimeTextFormatted = formatToAmPm(detail.startTime)
-                            val endTimeTextFormatted = formatToAmPm(detail.endTime)
-
-                            //3. 카테고리 매칭
-                            val updatedCategories = categories.map { item ->
-                                item.copy(isChecked = detail.tags.any { it.label == item.name })
-                            }
-                            val selectedOnes = updatedCategories.filter { it.isChecked }
-                            val summaryText = when {
-                                selectedOnes.isEmpty() -> ""
-                                selectedOnes.size <= 3 -> selectedOnes.joinToString(", ") { it.name }
-                                else -> "${selectedOnes.take(3).joinToString(", ") { it.name }} 외 ${selectedOnes.size - 3}개"
-                            }
-
-                            //5. 참석자 매칭
-                            val participantSummaryText = when {
-                                participants.isEmpty() -> ""
-                                participants.size == 1 -> participants[0].name
-                                else -> "${participants[0].name} 외 ${participants.size - 1}명"
-                            }
-
-
-
-                            //4. 갱신 저장
-                            copy(
-                                updateScheduleId = scheduleId,
-                                planTitle = detail.name,
-                                planLocation = detail.locationName,
-                                latitude = detail.latitude,
-                                longitude = detail.longitude,
-                                planDetail = detail.description,
-                                isAllDay = detail.isAllDay,
-                                startDate = startCal, startTime = startCal,
-                                endDate = endCal, endTime = endCal,
-                                categories = updatedCategories,
-                                isSelectedCategory = true,
-                                // UI 표시용 텍스트 저장
-                                startDateText = detail.startDay, // "2026.02.05" 그대로 사용
-                                startTimeText = startTimeTextFormatted,
-                                endDateText = detail.endDay,
-                                endTimeText = endTimeTextFormatted,
-                                selectedCategoriesString = summaryText,
-                                selectedParticipants = participants,
-                                selectedParticipantsString = participantSummaryText
-                            )
-                        }
-
+                    //1. 참석자들 프로필 정보 로드
+                    loadParticipantsProfiles(detail.participantMemberIds) { participants ->
+                        //2. 받아온 데이터를 UI 상태에 맞게 가공 및 반영
+                        applyScheduleDetail(detail, participants)
                     }
                 },
                 errorCallback = {}
+            )
+        }
+    }
+
+    //일정 참여자 ID List를 이용해, 참여자 리스트(ParticipantItem)을 생성
+    private fun loadParticipantsProfiles(
+        memberIds: List<Long>,
+        onComplete: (List<ParticipantItem>) -> Unit
+    ) {
+        viewModelScope.launch {
+            //각 유저들의 memberId로 정보들 불러오기
+            val tasks = memberIds.map { id -> async { getMemberProfileUseCase(id) } }
+            val responses = tasks.awaitAll()
+
+            //각 유저들에 대한 ParticipantItem 만들기
+            val participants = responses.mapNotNull { res ->
+                var item: ParticipantItem? = null
+                resultResponse(
+                    response = res,
+                    successCallback = { profile ->
+                        //최신 기수 정보 가져오기
+                        val gisuSummary = profile.getGisuSummaryList().maxByOrNull { it.gisu }
+                        item = ParticipantItem(
+                            id = profile.id,
+                            name = profile.name,
+                            nickname = profile.nickname,
+                            school = profile.schoolName,
+                            profileImage = profile.profileImageLink,
+                            gisu = gisuSummary?.gisu ?: 0L,
+                            userPart = UserPart.from(gisuSummary?.fromRecords?.get(0)?.responsiblePart)
+                        )
+                    })
+                    item
+            }
+
+            //UI 작업 함수 핸들링
+            onComplete(participants)
+        }
+    }
+
+    //가져온 정보를 바탕으로 불러온 일정 정보들을 ViewModel에 반영하는 함수
+    private fun applyScheduleDetail(detail: PlanDetailItem, participants: List<ParticipantItem>){
+        updateState {
+            //1. 도메인 String -> 내부 연산용 Calendar 생성
+            val startCal = stringToCalendar(detail.startDay, detail.startTime)
+            val endCal = stringToCalendar(detail.endDay, detail.endTime)
+
+            //2. 도메인 시간 문자열 -> UI 표시용 "오전/오후" 변환
+            val startTimeTextFormatted = UTimeFormat.formatToAmPm(detail.startTime)
+            val endTimeTextFormatted = UTimeFormat.formatToAmPm(detail.endTime)
+
+            //3. 카테고리 매칭
+            val updatedCategories = categories.map { item ->
+                item.copy(isChecked = detail.tags.any { it.label == item.name })
+            }
+            val selectedOnes = updatedCategories.filter { it.isChecked }
+            val summaryText = when {
+                selectedOnes.isEmpty() -> ""
+                selectedOnes.size <= 3 -> selectedOnes.joinToString(", ") { it.name }
+                else -> "${selectedOnes.take(3).joinToString(", ") { it.name }} 외 ${selectedOnes.size - 3}개"
+            }
+
+            //4. 참석자 매칭
+            val participantSummaryText = when {
+                participants.isEmpty() -> ""
+                participants.size == 1 -> participants[0].name
+                else -> "${participants[0].name} 외 ${participants.size - 1}명"
+            }
+
+            //5. 갱신 저장
+            copy(
+                planTitle = detail.name,
+                planLocation = detail.locationName,
+                latitude = detail.latitude,
+                longitude = detail.longitude,
+                planDetail = detail.description,
+                isAllDay = detail.isAllDay,
+                startDate = startCal, startTime = startCal,
+                endDate = endCal, endTime = endCal,
+                categories = updatedCategories,
+                isSelectedCategory = true,
+                // UI 표시용 텍스트 저장
+                startDateText = detail.startDay, // "2026.02.05" 그대로 사용
+                startTimeText = startTimeTextFormatted,
+                endDateText = detail.endDay,
+                endTimeText = endTimeTextFormatted,
+                selectedCategoriesString = summaryText,
+                selectedParticipants = participants,
+                selectedParticipantsString = participantSummaryText
             )
         }
     }
@@ -232,16 +243,6 @@ constructor(
         return sdf.format(combineCal.time)
     }
 
-
-    // 24시간 형식 ("14:00") -> 12시간 AM/PM 형식 ("오후 02:00")으로 바꾸는 포맷 함수
-    private fun formatToAmPm(time: String): String {
-        return try {
-            val date = parseTimeSdf.parse(time) // "HH:mm" 포맷으로 읽기
-            date?.let { timeDisplaySdf.format(it) } ?: "시간 선택"
-        } catch (e: Exception) {
-            "시간 선택"
-        }
-    }
 
 
     /**일정을 생성 or 수정하는 함수
@@ -332,42 +333,74 @@ constructor(
             copy(
                 selectedParticipants = participants,
                 selectedParticipantsString = participantsString
-            ) }
+            )
+        }
     }
 
     // 일정 이름 변경
-    fun updatePlanTitle(title: String) = updateState { copy(planTitle = title) }
+    fun updatePlanTitle(title: String) = updateState {
+        copy(
+            planTitle = title
+        )
+    }
 
     // 일정 상세내용 변경
-    fun updatePlanDetail(detail: String) = updateState { copy(planDetail = detail) }
+    fun updatePlanDetail(detail: String) = updateState {
+        copy(
+            planDetail = detail
+        )
+    }
 
     // 일정 위치 변경
     fun updatePlanLocation(location: LocationItem) = updateState {
-        copy(planLocation = location.title, latitude = location.latitude, longitude = location.longitude)
+        copy(
+            planLocation = location.title,
+            latitude = location.latitude,
+            longitude = location.longitude
+        )
     }
 
     // 일정 시작 날짜 변경
     fun updateStartDate(year: Int, month: Int, day: Int) {
         val newCal = (uiState.value.startDate.clone() as Calendar).apply { set(year, month, day) }
-        updateState { copy(startDate = newCal, startDateText = dateDisplaySdf.format(newCal.time)) }
+        updateState {
+            copy(
+                startDate = newCal,
+                startDateText = dateDisplaySdf.format(newCal.time)
+            )
+        }
     }
 
     // 일정 시작 시간 변경
     fun updateStartTime(hour: Int, minute: Int) {
         val newCal = (uiState.value.startTime.clone() as Calendar).apply { set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute) }
-        updateState { copy(startTime = newCal, startTimeText = timeDisplaySdf.format(newCal.time)) }
+        updateState {
+            copy(startTime = newCal,
+                startTimeText = timeDisplaySdf.format(newCal.time)
+            )
+        }
     }
 
     // 일정 종료 날짜 변경
     fun updateEndDate(year: Int, month: Int, day: Int) {
         val newCal = (uiState.value.endDate.clone() as Calendar).apply { set(year, month, day) }
-        updateState { copy(endDate = newCal, endDateText = dateDisplaySdf.format(newCal.time)) }
+        updateState {
+            copy(
+                endDate = newCal,
+                endDateText = dateDisplaySdf.format(newCal.time)
+            )
+        }
     }
 
     // 일정 종료 시간 변경
     fun updateEndTime(hour: Int, minute: Int) {
         val newCal = (uiState.value.endTime.clone() as Calendar).apply { set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute) }
-        updateState { copy(endTime = newCal, endTimeText = timeDisplaySdf.format(newCal.time)) }
+        updateState {
+            copy(
+                endTime = newCal,
+                endTimeText = timeDisplaySdf.format(newCal.time)
+            )
+        }
     }
 
     // 카테고리를 선택하면 진행하는 함수
@@ -409,7 +442,11 @@ constructor(
     //하루종일 관련
     //모집 중 스위치 누를 때마다 상태 변화하고 필터링
     fun setAllday(isAllday: Boolean) {
-        updateState { copy(isAllDay = isAllday) }
+        updateState {
+            copy(
+                isAllDay = isAllday
+            )
+        }
     }
 }
 
