@@ -106,7 +106,9 @@ fun DateTimeRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         UText(text = label, style = UmcTypographyTokens.Callout, color = neutral600())
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier
+            .weight(1f)
+        )
         UChip(text = dateText,
             onClick = onDateClick,
             backgroundColor = neutral000(),
@@ -115,7 +117,9 @@ fun DateTimeRow(
             textColor = neutral500(),
             textStyle = UmcTypographyTokens.SubheadlineBold)
         if (showTime) {
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier
+                .width(8.dp)
+            )
             UChip(text = timeText,
                 onClick = onTimeClick,
                 backgroundColor = neutral000(),

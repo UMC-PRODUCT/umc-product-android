@@ -214,7 +214,7 @@ private fun signInGoogle(
 ) {
     scope.launch {
         /**인식 X**/
-
+/*
         try {
 
             val googleSignInOption = GetSignInWithGoogleOption.Builder(
@@ -236,7 +236,7 @@ private fun signInGoogle(
             ULog.d("Google 로그인 실패: ${e.message}")
         }
 
-
+*/
     }
 
 }

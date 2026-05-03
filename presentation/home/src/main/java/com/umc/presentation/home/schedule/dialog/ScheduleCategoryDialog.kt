@@ -71,13 +71,17 @@ fun ScheduleCategoryBottomSheet(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column(modifier = Modifier
+                    .weight(1f)
+                ) {
                     UText(
                         text = "태그를 추가하세요",
                         style = UmcTypographyTokens.Title3Bold,
                         color = neutral800()
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier
+                        .height(4.dp)
+                    )
                     UText(
                         text = "중복 선택이 가능합니다",
                         style = UmcTypographyTokens.Footnote,
@@ -91,12 +95,15 @@ fun ScheduleCategoryBottomSheet(
                     backgroundColor = primary500(),
                     textColor = neutral000(),
                     onClick = onConfirm,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier
+                        .padding(start = 8.dp)
 
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier
+                .height(24.dp)
+            )
 
             //리사이클러뷰 대응
             LazyColumn(
@@ -139,14 +146,17 @@ fun CategoryItemRow(
             contentDescription = null,
         )
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier
+            .width(16.dp)
+        )
 
         //2. 카테고리 이름
         UText(
             text = item.name,
             style = UmcTypographyTokens.HeadlineBold,
             color = neutral800(),
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
         )
 
         //3. 체크박스

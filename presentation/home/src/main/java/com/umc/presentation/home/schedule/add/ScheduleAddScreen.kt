@@ -121,14 +121,17 @@ fun ScheduleAddScreen(
                 .padding(horizontal = 16.dp)
                 .verticalScroll(scrollState)
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier
+                .height(16.dp)
+            )
 
             //3. 일정 제목
             ScheduleInputSection(title = "일정 제목", required = true) {
                 OutlinedTextField(
                     value = uiState.planTitle,
                     onValueChange = onTitleChanged,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     placeholder = { Text("일정 제목을 입력해 주세요", color = neutral400()) },
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -138,7 +141,9 @@ fun ScheduleAddScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier
+                .height(32.dp)
+            )
             
             //4. 태그
             ScheduleInputSection(title = "태그", required = true) {
@@ -149,7 +154,9 @@ fun ScheduleAddScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier
+                .height(32.dp)
+            )
 
             //5. 장소
             ScheduleInputSection(title = "장소", required = true) {
@@ -160,7 +167,9 @@ fun ScheduleAddScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier
+                .height(32.dp)
+            )
 
             //6. 일시
             ScheduleInputSection(title = "일시", required = false) {
@@ -174,7 +183,9 @@ fun ScheduleAddScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier
+                .height(32.dp)
+            )
 
             //7. 상세 안내
             ScheduleInputSection(title = "상세 안내", required = false) {
@@ -193,7 +204,9 @@ fun ScheduleAddScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier
+                .height(32.dp)
+            )
 
             //8. 챌린저 명단
             ScheduleInputSection(title = "챌린저 명단", required = false) {
@@ -204,7 +217,9 @@ fun ScheduleAddScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier
+                .height(48.dp)
+            )
             
             //9. 하단 버튼들
             ScheduleAddActionButtons(
@@ -214,7 +229,9 @@ fun ScheduleAddScreen(
                 onRegisterClick = onRegisterClick
             )
 
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier
+                .height(64.dp)
+            )
 
         }
 
@@ -240,7 +257,9 @@ fun ScheduleAddTopBar(onBackClick: () -> Unit){
               tint = neutral800()
           )
         }
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier
+            .width(16.dp)
+        )
         Text(
             text = "일정 추가",
             style = UmcTypographyTokens.Title2Bold,
@@ -257,14 +276,19 @@ fun ScheduleInputSection(
     required: Boolean,
     content: @Composable () -> Unit //하위 컴포지블 작성
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = title, style = UmcTypographyTokens.HeadlineBold, color = neutral800())
             if (required) {
                 Text(text = "*", style = UmcTypographyTokens.HeadlineBold, color = danger500(), modifier = Modifier.padding(start = 4.dp))
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier
+            .height(16.dp)
+        )
+
         content()
     }
 }
@@ -281,13 +305,15 @@ fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit) {
         color = neutral000()
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = text,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f),
                 style = UmcTypographyTokens.Body,
                 color = if (isPlaceholder) neutral400() else neutral800(),
                 maxLines = 1,
@@ -306,7 +332,9 @@ fun ScheduleAddActionButtons(
     onCancelClick: () -> Unit,
     onRegisterClick: () -> Unit
 ) {
-    Row(modifier = Modifier.fillMaxWidth()) {
+    Row(modifier = Modifier
+        .fillMaxWidth()
+    ) {
         UButton(
             text = "취소",
             modifier = Modifier
@@ -318,7 +346,9 @@ fun ScheduleAddActionButtons(
             textColor = neutral800(),
             onClick = onCancelClick
         )
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier
+            .width(16.dp)
+        )
         UButton(
             text = if (editMode) "수정" else "등록",
             modifier = Modifier

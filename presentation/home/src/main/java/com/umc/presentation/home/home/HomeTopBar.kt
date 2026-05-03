@@ -60,12 +60,15 @@ fun HomeTopBar(
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier
+                .width(8.dp)
+            )
 
             // 알림 버튼 (상태에 따라 점이 있는 아이콘으로 교체)
             IconButton(
                 onClick = onNotificationClick,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier
+                    .size(24.dp)
             ) {
                 Icon(
                     painter = painterResource(

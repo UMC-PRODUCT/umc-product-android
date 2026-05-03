@@ -49,19 +49,24 @@ fun ScheduleKebabMenu(
         exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut()
     ) {
         Surface(
-            modifier = Modifier.width(180.dp),
+            modifier = Modifier
+                .width(180.dp),
             shape = RoundedCornerShape(16.dp),
             shadowElevation = 8.dp,
             color = neutral000()
         ) {
-            Column(modifier = Modifier.padding(8.dp)) {
+            Column(modifier = Modifier
+                .padding(8.dp)
+            ) {
                 MenuItem(
                     icon = R.drawable.ic_edit,
                     text = "수정하기",
                     color = neutral800(),
                     onClick = onEditClick)
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = neutral200())
+                HorizontalDivider(modifier = Modifier
+                    .padding(vertical = 4.dp),
+                    color = neutral200())
 
                 MenuItem(
                     icon = R.drawable.ic_trash_can,
@@ -89,13 +94,16 @@ fun MenuItem(icon: Int, text: String, color: Color, onClick: () -> Unit) {
             contentDescription = null,
             tint = color)
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier
+            .width(8.dp)
+        )
 
         UText(
             text = text,
             style = UmcTypographyTokens.Subheadline,
             color = color,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
         )
 
         Icon(

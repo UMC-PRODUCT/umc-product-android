@@ -139,7 +139,9 @@ fun HomeScreen(
                 HomeProfileCard(uiState = uiState)
 
                 if (uiState.userType == UserType.ACTIVE) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier
+                        .height(16.dp)
+                    )
                     HomeActivityStatusCard(uiState = uiState)
                 }
             }
@@ -158,7 +160,9 @@ fun HomeScreen(
                     onAddClick = onScheduleAddClick,
                     onChangeViewMode = onChangeViewMode
                 )
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier
+                    .height(32.dp)
+                )
             }
         }
 
@@ -173,11 +177,14 @@ fun HomeScreen(
                 color = neutral000(),
                 shadowElevation = 0.dp
             ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                ) {
                     if (uiState.viewMode == HomeViewMode.CALENDAR) {
                         //달력 모드
                         HomeCalendar(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier
+                                .padding(16.dp),
                             selectedDate = uiState.selectedDate,
                             eventDates = uiState.eventDates,
                             onDateClick = onDateClick,
@@ -195,40 +202,54 @@ fun HomeScreen(
                                     .background(neutral200())
                             )
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier
+                                .height(16.dp)
+                            )
 
                             //달력 아래 일일 일정들
                             uiState.dailyPlans.forEach { plan ->
-                                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                Box(modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                ) {
                                     ScheduleItemCard(
                                         item = plan,
                                         onItemClick = onScheduleDetailClick
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier
+                                .height(16.dp)
+                            )
                         }
                     }
 
                     else {
                         //리스트 모드
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier
+                            .height(16.dp)
+                        )
                         uiState.allPlans.forEach { plan ->
-                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            Box(modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                            ) {
                                 ScheduleItemCard(
                                     item = plan,
                                     onItemClick = onScheduleDetailClick
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier
+                            .height(16.dp)
+                        )
                     }
                 }
             }
         }
 
         // 바닥 여백
-        item { Spacer(modifier = Modifier.height(64.dp)) }
+        item { Spacer(modifier = Modifier
+            .height(64.dp)
+        ) }
     }
 }
 
@@ -245,7 +266,8 @@ fun HomePlanHeader(
     onChangeViewMode: (HomeViewMode) -> Unit
 ) {
     Row (
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -264,7 +286,9 @@ fun HomePlanHeader(
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier
+                .width(8.dp)
+            )
 
             //뷰 전환 선택기
             Surface(
@@ -272,17 +296,23 @@ fun HomePlanHeader(
                 shape = RoundedCornerShape(8.dp)
             ) {
 
-                Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+                Row(modifier = Modifier
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
                     //달력 + 일정 버튼
                     Icon(
                         painter = painterResource(
                             id = if (viewMode == HomeViewMode.CALENDAR) R.drawable.ic_home_grid_on else R.drawable.ic_home_grid_off
                         ),
                         contentDescription = "Calendar Mode",
-                        modifier = Modifier.size(24.dp).clickable { onChangeViewMode(HomeViewMode.CALENDAR) },
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable { onChangeViewMode(HomeViewMode.CALENDAR) },
                         tint = Color.Unspecified
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier
+                        .width(8.dp)
+                    )
 
                     //일정 리스트 버튼
                     Icon(
@@ -290,7 +320,9 @@ fun HomePlanHeader(
                             id = if (viewMode == HomeViewMode.LIST) R.drawable.ic_home_list_on else R.drawable.ic_home_list_off
                         ),
                         contentDescription = "List Mode",
-                        modifier = Modifier.size(24.dp).clickable { onChangeViewMode(HomeViewMode.LIST) },
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable { onChangeViewMode(HomeViewMode.LIST) },
                         tint = Color.Unspecified
                     )
                 }

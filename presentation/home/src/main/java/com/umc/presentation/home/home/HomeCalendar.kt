@@ -131,7 +131,9 @@ fun HomeCalendar(
             onTitleClick = { showDatePicker = true }
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier
+            .height(24.dp)
+        )
 
         //달력 몸통 (요일 + 날짜)
         CalendarBody(
@@ -153,7 +155,8 @@ private fun CalendarHeader(
     onTitleClick: () -> Unit //제목 누를 시 로직 (DatePicker)
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -166,7 +169,8 @@ private fun CalendarHeader(
             //style =, /**임시 폰트**/
             color = neutral800(),
             style = UmcTypographyTokens.HeadlineBold,
-            modifier = Modifier.clickable { onTitleClick() }
+            modifier = Modifier
+                .clickable { onTitleClick() }
         )
 
         IconButton(onClick = onNextClick) {
@@ -186,12 +190,15 @@ private fun CalendarBody(
 ) {
     Column {
         // 요일 헤더
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier
+            .fillMaxWidth()
+        ) {
             val daysOfWeek = listOf("일", "월", "화", "수", "목", "금", "토")
             daysOfWeek.forEachIndexed { index, day ->
                 UText(
                     text = day,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f),
                     textAlign = TextAlign.Center,
                     color = if (index == 0) danger500() else neutral600(),
                     style = UmcTypographyTokens.Caption1
@@ -199,24 +206,33 @@ private fun CalendarBody(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier
+            .height(12.dp)
+        )
 
         //날짜 표시 페이저
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth(),
             verticalAlignment = Alignment.Top
         ) { page ->
             val pageMonth = YearMonth.from(LocalDate.now()).plusMonths((page - initialPage).toLong())
             val days = remember(pageMonth) { getDaysInMonth(pageMonth) }
 
             //Column으로 1주 표현
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+            ) {
                 //리스트를 7개씩 잘라서 만들자 (null,null,null,1,2,3,4 .. 31)을 7개씩
                 days.chunked(7).forEach { week ->
-                    Row(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                    ) {
                         week.forEach { date ->
-                            Box(modifier = Modifier.weight(1f)) {
+                            Box(modifier = Modifier
+                                .weight(1f)
+                            ) {
                                 if (date != null) {
                                     DayItem(
                                         date = date,
@@ -226,14 +242,19 @@ private fun CalendarBody(
                                         onClick = { onDateClick(date) }
                                     )
                                 } else {
-                                    Spacer(modifier = Modifier.aspectRatio(1f))
+                                    Spacer(modifier = Modifier
+                                        .aspectRatio(1f)
+                                    )
                                 }
                             }
                         }
                         // 마지막 줄 빈칸 채우기
                         if (week.size < 7) {
                             repeat(7 - week.size) {
-                                Spacer(modifier = Modifier.weight(1f).aspectRatio(1f))
+                                Spacer(modifier = Modifier
+                                    .weight(1f)
+                                    .aspectRatio(1f)
+                                )
                             }
                         }
                     }
@@ -265,7 +286,9 @@ private fun DayItem(
     ) {
         //원 크기를 칸의 70% 정도로 조절
         val backgroundModifier = when {
-            isToday -> Modifier.fillMaxSize(0.7f).background(primary500(), CircleShape)
+            isToday -> Modifier
+                .fillMaxSize(0.7f)
+                .background(primary500(), CircleShape)
             isSelected -> Modifier.fillMaxSize(0.7f)
                 .background(primary100(), CircleShape)
                 .border(1.dp, primary600(), CircleShape)

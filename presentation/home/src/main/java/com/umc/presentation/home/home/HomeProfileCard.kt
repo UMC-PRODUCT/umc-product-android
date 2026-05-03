@@ -60,11 +60,14 @@ fun HomeProfileCard(uiState: HomeUiState) {
         colors = CardDefaults.cardColors(containerColor = primary100()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Box(modifier = Modifier.padding(16.dp)) {
+        Box(modifier = Modifier
+            .padding(16.dp)
+        ) {
             Column {
                 // 기수 태그 (FlexboxLayout 대응)
                 FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth(),
                 ) {
                     uiState.gisuTag.forEach { tag ->
                         UButton(
@@ -73,12 +76,15 @@ fun HomeProfileCard(uiState: HomeUiState) {
                             textColor = primary600(),
                             textStyle = UmcTypographyTokens.Caption1Bold,
                             onClick = {},
-                            modifier = Modifier.padding(end = 4.dp),
+                            modifier = Modifier
+                                .padding(end = 4.dp),
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier
+                    .height(16.dp)
+                )
 
                 // 유저 이름 (닉네임 + 실명)
                 UText(
@@ -91,7 +97,8 @@ fun HomeProfileCard(uiState: HomeUiState) {
                 HuggText(
                     text = growthText,
                     style = UmcTypographyTokens.Title3Bold,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier
+                        .padding(top = 8.dp)
                 )
             }
 

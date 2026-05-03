@@ -38,13 +38,15 @@ fun ScheduleInfoCard(
     onMapClick: () -> Unit
 ){
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, neutral300()),
         color = neutral000()
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 16.dp)
+            modifier = Modifier
+                .padding(vertical = 16.dp)
         ) {
             //일시
             InfoRow(
@@ -54,7 +56,9 @@ fun ScheduleInfoCard(
                 content2 = todayTime
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+            HorizontalDivider(modifier = Modifier
+                .padding(vertical = 16.dp)
+            )
 
             //장소
             InfoRow(
@@ -81,7 +85,8 @@ fun InfoRow(
     onMapClick: (() -> Unit)? = null
 ) {
     Row(
-        modifier = Modifier.padding(horizontal = 16.dp)
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
     ) {
         //정보 아이콘
         Icon(
@@ -93,7 +98,9 @@ fun InfoRow(
                 .align(Alignment.CenterVertically)
         )
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier
+            .width(16.dp)
+        )
 
         Column {
             UText(text = title,
@@ -101,7 +108,9 @@ fun InfoRow(
                 color = neutral800()
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier
+                .height(8.dp)
+            )
 
             //정보 1 (2026.04.30 or 장소이름)
             UText(text = content1,
@@ -111,7 +120,9 @@ fun InfoRow(
 
             //정보 2 (시간 정보)
             if (content2 != null) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier
+                    .height(4.dp)
+                )
                 UText(text = content2,
                     style = UmcTypographyTokens.Subheadline,
                     color = neutral600()
@@ -120,13 +131,16 @@ fun InfoRow(
 
             ////지도 보기
             if (isMapAction) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier
+                    .height(4.dp)
+                )
 
                 UText(
                     text = "지도 보기",
                     style = UmcTypographyTokens.Footnote,
                     color = primary500(),
-                    modifier = Modifier.clickable { onMapClick?.invoke() }
+                    modifier = Modifier
+                        .clickable { onMapClick?.invoke() }
                 )
             }
         }

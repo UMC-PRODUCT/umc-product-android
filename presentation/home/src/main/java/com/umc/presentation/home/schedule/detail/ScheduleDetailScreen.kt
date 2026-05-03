@@ -141,14 +141,18 @@ fun ScheduleDetailScreen(
             .padding(horizontal = 16.dp)
     ) {
 
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier
+            .fillMaxSize()
+        ) {
             //1. 상단 바 & 케밥 메뉴
             ScheduleDetailTopBar(
                 onBackClick = onBackClick,
                 onMenuClick = onMenuClick
             )
 
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier
+                .height(36.dp)
+            )
 
             //2. D-day 및 제목
             UButton(
@@ -159,20 +163,26 @@ fun ScheduleDetailScreen(
                 onClick = {}
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier
+                .height(16.dp)
+            )
             UText(text = uiState.title,
                 style = UmcTypographyTokens.Title2Bold,
                 color = neutral800()
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier
+                .height(8.dp)
+            )
 
             UText(text = uiState.startDate,
                 style = UmcTypographyTokens.Subheadline,
                 color = neutral600()
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier
+                .height(24.dp)
+            )
 
             //3. 일시 및 장소 영역
             ScheduleInfoCard(
@@ -182,7 +192,9 @@ fun ScheduleDetailScreen(
                 onMapClick = onMapClick
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier
+                .height(40.dp)
+            )
 
             //4. 상세 안내 영역
             UText(text = "상세 안내",
@@ -190,13 +202,16 @@ fun ScheduleDetailScreen(
                 color = neutral800()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier
+                .height(16.dp)
+            )
 
             UText(
                 text = uiState.detail,
                 style = UmcTypographyTokens.Body,
                 color = neutral600(),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
             )
 
             //5. 하단 출석 버튼
@@ -214,7 +229,9 @@ fun ScheduleDetailScreen(
                 )
             }
             else {
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier
+                    .height(32.dp)
+                )
             }
 
         }
@@ -257,17 +274,21 @@ fun ScheduleDetailTopBar(
             Icon(
                 painter = painterResource(id = R.drawable.ic_back),
                 contentDescription = null,
-                modifier = Modifier.clickable { onBackClick() },
+                modifier = Modifier
+                    .clickable { onBackClick() },
                 tint = neutral800()
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier
+                .width(16.dp)
+            )
             UText(text = "일정 상세", style = UmcTypographyTokens.Title2Bold, color = neutral800())
         }
         //메뉴 버튼
         Icon(
             painter = painterResource(id = R.drawable.ic_menu_kebab),
             contentDescription = null,
-            modifier = Modifier.clickable { onMenuClick() },
+            modifier = Modifier
+                .clickable { onMenuClick() },
             tint = neutral800()
         )
 

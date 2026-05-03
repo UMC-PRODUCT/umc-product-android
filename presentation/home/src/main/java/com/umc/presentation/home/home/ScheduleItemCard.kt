@@ -71,12 +71,14 @@ fun ActiveScheduleItem(
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             //날짜 정보
             Surface(
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier
+                    .size(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 color = primary100()
             ) {
@@ -106,7 +108,8 @@ fun ActiveScheduleItem(
                     backgroundColor = neutral200(),
                     textColor = neutral700(),
                     textStyle = UmcTypographyTokens.Caption1Bold,
-                    modifier = Modifier.padding(end = 16.dp),
+                    modifier = Modifier
+                        .padding(end = 16.dp),
                     onClick = {}
                 )
             }
@@ -139,11 +142,13 @@ fun DefaultScheduleItem(
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier
+                    .size(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 color = neutral000(),
                 border = BorderStroke(1.dp, neutral200())

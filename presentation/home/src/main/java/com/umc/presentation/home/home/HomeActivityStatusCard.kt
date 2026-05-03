@@ -38,12 +38,15 @@ import com.umc.component.theme.success500
 @Composable
 fun HomeActivityStatusCard(uiState: HomeUiState) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = neutral200()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier
+            .padding(16.dp)
+        ) {
 
             //X기 활동 상태
             UText(
@@ -52,21 +55,27 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                 color = neutral800()
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier
+                .height(12.dp)
+            )
 
             //상벌점 판
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 color = neutral000()
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     //상점
                     ScoreCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f),
                         label = "상점",
                         score = uiState.sangjum,
                         color = success500(),
@@ -77,7 +86,8 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
 
                     //벌점
                     ScoreCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f),
                         label = "벌점",
                         score = uiState.buljum,
                         color = danger500(),
@@ -88,7 +98,8 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
 
                     //총합
                     ScoreCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f),
                         label = "총합",
                         score = uiState.total,
                         color = primary500(),
@@ -120,7 +131,8 @@ private fun ScoreCard(
         )
         UText(
             text = score.toString(),
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier
+                .padding(top = 8.dp),
             style = UmcTypographyTokens.HeadlineBold,
             color = neutral900()
         )
@@ -130,5 +142,9 @@ private fun ScoreCard(
 //카드 분할 선
 @Composable
 private fun VerticalDivider() {
-    Box(modifier = Modifier.width(1.dp).height(54.dp).background(neutral200()))
+    Box(modifier = Modifier
+        .width(1.dp)
+        .height(54.dp)
+        .background(neutral200())
+    )
 }
