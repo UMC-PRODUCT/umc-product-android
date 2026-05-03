@@ -62,6 +62,8 @@ interface OrganizationApi {
         @Path(PATH_GISU_ID) gisuId: Int
     ): ApiResponse<Unit>
 
+    
+
     @GET(Endpoints.Organization.MY_STUDY_GROUP)
     suspend fun getMyStudyGroup(
         @Query(QUERY_CURSOR) cursor: Long?,
@@ -96,7 +98,7 @@ interface OrganizationApi {
         @Path(PATH_SCHOOL_ID) schoolId : Long,
     ): ApiResponse<SchoolDetailResponse>
 
-    @GET(Endpoints.Organization.STUDY_GROUD_NAME)
+    @GET(Endpoints.Organization.STUDY_GROUP_NAME)
     suspend fun getMyStudyGroupList(): ApiResponse<MyStudyGroupListResponse>
 
     @GET(Endpoints.Organization.SCHOOL_UNASSIGNED)
