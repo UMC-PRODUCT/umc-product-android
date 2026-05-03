@@ -3,6 +3,7 @@ package com.umc.presentation.home.schedule.detail
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import android.content.Context
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -109,9 +110,9 @@ fun ScheduleDetailRoute(
     if(showDeleteDialog){
         UBasicDialog(
             model = UBasicDialogModel.Warning(
-                title = "해당 일정을 삭제하시겠습니까",
-                content = "삭제된 일정은 복구할 수 없습니다.",
-                positiveText = "삭제하기"
+                title = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_TITLE,
+                content = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONTENT,
+                positiveText = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONFIRM
             ),
             onConfirm = {
                 viewModel.deletePlan()
@@ -306,7 +307,7 @@ fun ScheduleDetailTopBar(
 
 //지도를 열고 닫는 로직
 private fun openNaverMap(
-    context: android.content.Context,
+    context: Context,
     placeName: String, //장소 이름
     latitude: Double, //위도
     longitude: Double //경도
@@ -314,8 +315,8 @@ private fun openNaverMap(
     try {
 
         // 네이버 지도 앱에 접근을 시도해보기
-        val encodedTitle = java.net.URLEncoder.encode(placeName, "UTF-8")
-        val appUri = android.net.Uri.parse(
+        val encodedTitle = URLEncoder.encode(placeName, "UTF-8")
+        val appUri = Uri.parse(
             "nmap://map?lat=$latitude&lng=$longitude&zoom=15&title=$encodedTitle&appname=${context.packageName}"
         )
         val appIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, appUri)
@@ -333,7 +334,7 @@ private fun openNaverMap(
     } catch (e: Exception) {
         e.printStackTrace()
         //UToast.createToast(requireContext(), "지도를 열 수 없습니다.", )
-        Toast.makeText(context, "지도를 열 수 없습니다.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, AppStrings.HOME_PLAN_DETAIL_MAP_ERROR, Toast.LENGTH_SHORT).show()
     }
 }
 
