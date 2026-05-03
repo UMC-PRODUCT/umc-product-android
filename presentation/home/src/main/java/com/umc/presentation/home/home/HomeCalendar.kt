@@ -42,6 +42,8 @@ import com.umc.presentation.home.R
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.Instant
+import com.umc.component.util.UTimeFormat.toLocalDate
+import com.umc.component.util.UTimeFormat.toMillis
 
 
 /**
@@ -340,6 +342,6 @@ private fun getDaysInMonth(month: YearMonth): List<LocalDate?> {
 }
 
 //DatePicker의 밀리초(Long)과 LocalDate의 변환
-fun LocalDate.toMillis() = this.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+//fun LocalDate.toMillis() = this.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-fun Long.toLocalDate(): LocalDate = Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
+//fun Long.toLocalDate(): LocalDate = Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
