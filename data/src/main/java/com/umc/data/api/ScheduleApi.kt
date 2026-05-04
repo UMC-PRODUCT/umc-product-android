@@ -3,7 +3,6 @@ package com.umc.data.api
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
-import com.umc.data.response.schedule.ScheduleDetailResponse
 import com.umc.data.response.schedule.ScheduleMeResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.domain.model.base.ApiResponse
@@ -27,10 +26,10 @@ interface ScheduleApi {
     ): ApiResponse<List<ScheduleMeResponse>>
 
     //세부 일정 가져오기
-    @GET(Endpoints.Schedule.DETAIL)
+    @GET(Endpoints.Schedule.DETAIL_V2)
     suspend fun getScheduleDetail(
         @Path("scheduleId") scheduleId: Long
-    ): ApiResponse<ScheduleDetailResponse>
+    ): ApiResponse<ScheduleMeResponse>
 
     //일정 출석부 통합 삭제하기
     @DELETE(Endpoints.Schedule.DELETE)

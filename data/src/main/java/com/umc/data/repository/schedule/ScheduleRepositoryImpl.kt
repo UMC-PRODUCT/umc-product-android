@@ -4,10 +4,10 @@ import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
-import com.umc.data.response.schedule.ScheduleDetailResponse.Companion.toModel
-import com.umc.data.response.schedule.ScheduleDetailResponse.Companion.toPlanDetailDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toAdminDomain
+import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toModel
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toMonthDomain
+import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toPlanDetailDomain
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.base.ApiState

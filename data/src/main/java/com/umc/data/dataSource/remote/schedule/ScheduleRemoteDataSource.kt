@@ -3,7 +3,6 @@ package com.umc.data.dataSource.remote.schedule
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
-import com.umc.data.response.schedule.ScheduleDetailResponse
 import com.umc.data.response.schedule.ScheduleMeResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.domain.model.base.ApiState
@@ -15,7 +14,7 @@ interface ScheduleRemoteDataSource {
     suspend fun getSchedules(from: String, to: String, isAttendanceRequired: Boolean): ApiState<List<ScheduleMeResponse>>
 
     //일정 상세정보 가져오기
-    suspend fun getScheduleDetail(scheduleId: Long): ApiState<ScheduleDetailResponse>
+    suspend fun getScheduleDetail(scheduleId: Long): ApiState<ScheduleMeResponse>
 
     //일정 삭제하기
     suspend fun deleteScheduleWithAttendance(scheduleId: Long): ApiState<Unit>

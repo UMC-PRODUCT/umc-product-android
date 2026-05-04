@@ -3,7 +3,11 @@ package com.umc.data.response.schedule
 import com.google.gson.annotations.SerializedName
 import com.umc.domain.model.UDomainFormat.parseDateTime
 import com.umc.domain.model.act.check.AdminSessionCheck
+import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.enums.AdminSessionStatus
+import com.umc.domain.model.enums.CategoryType
+import com.umc.domain.model.enums.CheckAvailableStatus
+import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -68,6 +72,52 @@ data class ScheduleMeResponse(
                 endTime = endTime,
                 status = attendanceStatus ?: "",
                 dDay = dDay
+            )
+        }
+
+        fun ScheduleMeResponse.toPlanDetailDomain(): PlanDetailItem {
+            val (startDay, startTime) = startsAt.parseDateTime()
+            val (endDay, endTime) = endsAt.parseDateTime()
+
+            val today = LocalDate.now()
+            val startDate = runCatching {
+                LocalDate.parse(startDay, DATE_FORMATTER)
+            }.getOrDefault(today)
+            val dDay = ChronoUnit.DAYS.between(today, startDate).toInt()
+
+            return PlanDetailItem(
+                scheduleId = scheduleId,
+                name = name,
+                description = description ?: "",
+                tags = tags?.mapNotNull { runCatching { CategoryType.valueOf(it) }.getOrNull() } ?: emptyList(),
+                startDay = startDay,
+                startTime = startTime,
+                endDay = endDay,
+                endTime = endTime,
+                isAllDay = false,
+                locationName = location?.locationName ?: "",
+                latitude = location?.latitude ?: 0.0,
+                longitude = location?.longitude ?: 0.0,
+                status = attendanceStatus ?: "",
+                dDay = dDay,
+                participantMemberIds = participants?.map { it.memberId } ?: emptyList(),
+                requiresAttendanceApproval = false
+            )
+        }
+
+        fun ScheduleMeResponse.toModel(): UserCheckAvailable {
+            return UserCheckAvailable(
+                id = scheduleId,
+                title = name,
+                tags = tags?.mapNotNull { runCatching { CategoryType.valueOf(it) }.getOrNull() },
+                sheetId = 0,
+                startTime = startsAt,
+                endTime = endsAt,
+                status = CheckAvailableStatus.BEFORE,
+                latitude = location?.latitude ?: 0.0,
+                longitude = location?.longitude ?: 0.0,
+                address = location?.locationName ?: "",
+                isLocationCertified = null
             )
         }
 

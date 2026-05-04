@@ -5,7 +5,6 @@ import com.umc.data.dataSource.base.apiCall
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
-import com.umc.data.response.schedule.ScheduleDetailResponse
 import com.umc.data.response.schedule.ScheduleMeResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.domain.model.base.ApiState
@@ -26,8 +25,8 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
     }
 
     //일정 상세 조회
-    override suspend fun getScheduleDetail(scheduleId: Long): ApiState<ScheduleDetailResponse> {
-        return apiCall {scheduleApi.getScheduleDetail(scheduleId)}
+    override suspend fun getScheduleDetail(scheduleId: Long): ApiState<ScheduleMeResponse> {
+        return apiCall { scheduleApi.getScheduleDetail(scheduleId) }
     }
 
     //일정 삭제하기
