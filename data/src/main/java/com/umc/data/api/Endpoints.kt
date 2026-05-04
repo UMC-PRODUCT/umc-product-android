@@ -66,7 +66,8 @@ object Endpoints {
     object Schedule {
         const val SCHEDULE = "api/v1/schedules"
         const val DETAIL = "$SCHEDULE/{scheduleId}"
-        const val MONTH = "$SCHEDULE/my-list"
+
+        const val SCHEDULES_ME = "api/v2/schedules/me"
 
         const val SCHEDULE_WITH_ATTENDANCE = "$SCHEDULE/with-attendance"
 

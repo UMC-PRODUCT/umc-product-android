@@ -1,7 +1,6 @@
 package com.umc.domain.repository.schedule
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.home.schedule.ScheduleListModel
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.home.PlanDetailItem
@@ -10,9 +9,6 @@ import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
 
 interface ScheduleRepository {
-
-    //일정 리스트 가져오기
-    suspend fun getScheduleList(): ApiState<List<ScheduleListModel>>
 
     //일정 상세 정보 가져오기 (홈 화면 -> 일정 상세)
     suspend fun getScheduleDetailHome(scheduleId: Long): ApiState<PlanDetailItem>

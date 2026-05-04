@@ -3,10 +3,8 @@ package com.umc.data.api
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
-import com.umc.data.response.member.MemberResponse
 import com.umc.data.response.schedule.ScheduleDetailResponse
-import com.umc.data.response.schedule.ScheduleListResponse
-import com.umc.data.response.schedule.ScheduleMonthResponse
+import com.umc.data.response.schedule.ScheduleMeResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.schedule.UpdateLocationRequest
@@ -20,22 +18,19 @@ import retrofit2.http.Query
 
 interface ScheduleApi {
 
-    //일정 목록 가져오기
-    @GET(Endpoints.Schedule.SCHEDULE)
-    suspend fun getScheduleList(): ApiResponse<List<ScheduleListResponse>>
+    //기간별 내 일정 목록 조회 (월별/전체 통합)
+    @GET(Endpoints.Schedule.SCHEDULES_ME)
+    suspend fun getSchedules(
+        @Query("from") from: String,
+        @Query("to") to: String,
+        @Query("isAttendanceRequired") isAttendanceRequired: Boolean
+    ): ApiResponse<List<ScheduleMeResponse>>
 
     //세부 일정 가져오기
     @GET(Endpoints.Schedule.DETAIL)
     suspend fun getScheduleDetail(
         @Path("scheduleId") scheduleId: Long
     ): ApiResponse<ScheduleDetailResponse>
-
-    //월별 일정 조회하기
-    @GET(Endpoints.Schedule.MONTH)
-    suspend fun getMonthSchedule(
-        @Query("year") year: Int,
-        @Query("month") month: Int
-    ): ApiResponse<List<ScheduleMonthResponse>>
 
     //일정 출석부 통합 삭제하기
     @DELETE(Endpoints.Schedule.DELETE)

@@ -6,8 +6,7 @@ import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
 import com.umc.data.response.schedule.ScheduleDetailResponse
-import com.umc.data.response.schedule.ScheduleListResponse
-import com.umc.data.response.schedule.ScheduleMonthResponse
+import com.umc.data.response.schedule.ScheduleMeResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.schedule.UpdateLocationRequest
@@ -17,22 +16,18 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
     private val scheduleApi: ScheduleApi
 ) : ScheduleRemoteDataSource {
 
-    //일정 리스트 조회
-    override suspend fun getScheduleList(): ApiState<List<ScheduleListResponse>> {
-        return apiCall {scheduleApi.getScheduleList()}
+    //기간별 내 일정 조회
+    override suspend fun getSchedules(
+        from: String,
+        to: String,
+        isAttendanceRequired: Boolean
+    ): ApiState<List<ScheduleMeResponse>> {
+        return apiCall { scheduleApi.getSchedules(from, to, isAttendanceRequired) }
     }
 
     //일정 상세 조회
     override suspend fun getScheduleDetail(scheduleId: Long): ApiState<ScheduleDetailResponse> {
         return apiCall {scheduleApi.getScheduleDetail(scheduleId)}
-    }
-
-    //워별 일정 조회
-    override suspend fun getMonthSchedule(
-        year: Int,
-        month: Int
-    ): ApiState<List<ScheduleMonthResponse>> {
-        return apiCall {scheduleApi.getMonthSchedule(year, month)}
     }
 
     //일정 삭제하기

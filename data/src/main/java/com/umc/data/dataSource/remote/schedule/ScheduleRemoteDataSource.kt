@@ -4,22 +4,18 @@ import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
 import com.umc.data.response.schedule.ScheduleDetailResponse
-import com.umc.data.response.schedule.ScheduleListResponse
-import com.umc.data.response.schedule.ScheduleMonthResponse
+import com.umc.data.response.schedule.ScheduleMeResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.schedule.UpdateLocationRequest
 
 interface ScheduleRemoteDataSource {
 
-    //일정 목록 가져오기
-    suspend fun getScheduleList(): ApiState<List<ScheduleListResponse>>
+    //기간별 내 일정 목록 조회
+    suspend fun getSchedules(from: String, to: String, isAttendanceRequired: Boolean): ApiState<List<ScheduleMeResponse>>
 
     //일정 상세정보 가져오기
     suspend fun getScheduleDetail(scheduleId: Long): ApiState<ScheduleDetailResponse>
-
-    //월별 일정 가져오기
-    suspend fun getMonthSchedule(year: Int, month: Int): ApiState<List<ScheduleMonthResponse>>
 
     //일정 삭제하기
     suspend fun deleteScheduleWithAttendance(scheduleId: Long): ApiState<Unit>
