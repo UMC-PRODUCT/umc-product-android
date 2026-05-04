@@ -1,5 +1,6 @@
 ﻿package com.example.presentation.act.attendance
 
+import androidx.annotation.ColorInt
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,7 +9,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,21 +30,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
+import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.BodyBold
+import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Caption1
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
+import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
+import com.umc.component.theme.black
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral300
 import com.umc.component.theme.neutral600
+import com.umc.component.theme.neutral700
 import com.umc.component.theme.neutral800
 import com.umc.component.theme.primary100
 import com.umc.component.theme.primary500
@@ -86,81 +96,73 @@ fun AdminSessionCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = neutral000()),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    UText(
-                        text = session.title,
-                        style = Title3Bold,
-                        color = neutral800()
-                    )
-                    if (session.status == AdminSessionStatus.IN_PROGRESS) {
-                        Surface(
-                            color = primary100(),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            UText(
-                                text = session.status.toString(),
-                                style = Caption1Bold,
-                                color = primary500(),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
+                Column {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        UText(
+                            text = session.title,
+                            style = Title3Bold,
+                            color = neutral800()
+                        )
+                        if (session.status == AdminSessionStatus.IN_PROGRESS) {
+                            Surface(
+                                color = primary100(),
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                UText(
+                                    text = session.status.text,
+                                    style = Caption1,
+                                    color = primary500(),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CardMetaItem(
+                            iconRes = R.drawable.ic_calendar,
+                            text = session.date
+                        )
+                        CardMetaItem(
+                            iconRes = R.drawable.ic_clock,
+                            text = "${session.startTime} - ${session.endTime}"
+                        )
                     }
                 }
 
-                Row(
-                    modifier = Modifier
-                        .border(
-                            width = 1.dp,
-                            color = neutral200(),
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                        .clickable(onClick = onChangeLocationClick)
-                        .padding(horizontal = 10.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_location),
-                        contentDescription = null,
-                        tint = neutral600(),
-                        modifier = Modifier.size(14.dp)
-                    )
-                    UText(
-                        text = "위치 변경",
-                        style = SubheadlineBold,
-                        color = neutral600()
-                    )
-                }
-            }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                CardMetaItem(
-                    iconRes = R.drawable.ic_calendar,
-                    text = session.date
-                )
-                CardMetaItem(
-                    iconRes = R.drawable.ic_clock,
-                    text = "${session.startTime} - ${session.endTime}"
+                UButton(
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    text = AppStrings.ADMIN_CHECK_CHANGE_LOCATION,
+                    textColor = neutral700(),
+                    prevIcon = painterResource(id = R.drawable.ic_location),
+                    prevIconTint = neutral700(),
+                    backgroundColor = neutral100(),
+                    onClick = onChangeLocationClick,
+                    prevIconSize = DpSize(18.dp, 18.dp)
                 )
             }
 
@@ -197,44 +199,85 @@ fun AdminSessionCard(
                 )
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        width = 1.dp,
-                        color = primary500(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .clickable(onClick = onPendingListClick)
-                    .padding(horizontal = 14.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_person),
-                        contentDescription = null,
-                        tint = primary500(),
-                        modifier = Modifier.size(18.dp)
-                    )
-                    UText(
-                        text = "승인 대기 명단 확인하기",
-                        style = BodyBold,
-                        color = neutral800()
-                    )
-                }
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_arrow_next),
-                    contentDescription = null,
-                    tint = primary500(),
-                    modifier = Modifier.size(18.dp)
-                )
+            if(session.status == AdminSessionStatus.IN_PROGRESS) {
+                checkAttendanceListButton(onPendingListClick)
+            } else {
+                SuccessCheckAllAttendanceButton()
             }
         }
     }
+}
+
+@Composable
+private fun emptyScreen() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_people),
+                contentDescription = null,
+                tint = neutral600(),
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            UText(
+                text = AppStrings.ATTENDANCE_EMPTY_ADMIN_SESSIONS,
+                style = Subheadline,
+                color = neutral600()
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun preview() {
+    UmcTheme(darkTheme = false) {
+        emptyScreen()
+    }
+}
+
+@Composable
+private fun checkAttendanceListButton(
+    onPendingListClick :() -> Unit
+) {
+    UButton(
+        modifier = Modifier.fillMaxWidth(),
+        prevIcon = painterResource(id = R.drawable.ic_person),
+        prevIconTint = primary500(),
+        text = AppStrings.ADMIN_CHECK_PENDING_LIST_TRIGGER,
+        textColor = black(),
+        textStyle = CalloutBold,
+        endIcon = painterResource(id = R.drawable.ic_arrow_next),
+        endIconTint = primary500(),
+        endIconSize = DpSize(7.dp,12.dp),
+        backgroundColor = neutral000(),
+        pressedColor = neutral000(),
+        borderColor = primary500(),
+        borderWidth = 1.dp,
+        onClick = onPendingListClick,
+        contentPadding = PaddingValues(16.dp)
+    )
+}
+
+@Composable
+private fun SuccessCheckAllAttendanceButton() {
+    UButton(
+        modifier = Modifier.fillMaxWidth(),
+        prevIcon = painterResource(id = R.drawable.ic_check_success),
+        text = AppStrings.ADMIN_CHECK_COMPLETED_MESSAGE,
+        enabled = false,
+        textColor = black(),
+        textStyle = CalloutBold,
+        backgroundColor = neutral000(),
+        borderColor = neutral200(),
+        borderWidth = 1.dp,
+        onClick = {},
+        contentPadding = PaddingValues(16.dp)
+    )
 }
 
 @Composable
@@ -250,11 +293,11 @@ private fun CardMetaItem(
             painter = painterResource(id = iconRes),
             contentDescription = null,
             tint = neutral600(),
-            modifier = Modifier.size(14.dp)
+            modifier = Modifier.size(18.dp)
         )
         UText(
             text = text,
-            style = Caption1,
+            style = Footnote,
             color = neutral600()
         )
     }
@@ -270,13 +313,13 @@ private fun StatItem(
     Column(
         modifier = modifier.padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
             tint = neutral600(),
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(24.dp)
         )
         UText(
             text = label,
