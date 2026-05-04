@@ -206,6 +206,7 @@ object AppStrings {
     const val ADMIN_CHECK_STATS_ATTENDANCE_RATE = "출석률"
     const val ADMIN_CHECK_STATS_ATTENDANCE_COUNT = "출석 인원"
     const val ADMIN_CHECK_STATS_PENDING_COUNT = "승인 대기"
+    const val ADMIN_CHECK_STATS_PENDING_TITLE = "승인 대기 명단"
     const val ADMIN_CHECK_PENDING_LIST_TRIGGER = "승인 대기 명단 확인하기"
     const val ADMIN_CHECK_COMPLETED_MESSAGE = "모든 출석 승인이 완료되었습니다."
     const val ADMIN_PENDING_USER_REQUEST_TIME_FORMAT = "%1\$s 요청"
