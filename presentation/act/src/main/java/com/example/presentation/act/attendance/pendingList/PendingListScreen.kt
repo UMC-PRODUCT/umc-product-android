@@ -1,5 +1,6 @@
 package com.example.presentation.act.attendance.pendingList
 
+import android.graphics.Paint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,9 +20,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,26 +50,52 @@ import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral300
+import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral700
 import com.umc.component.theme.neutral800
+import com.umc.component.theme.primary500
 import com.umc.domain.model.act.check.AdminPendingUser
 
 @Composable
 fun PendingListRoute() {
-    PendingListScreen(users = sampleList())
+    var isSelectApproveMode by rememberSaveable { mutableStateOf(false) }
+    var selectedUserIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
+
+
+    PendingListScreen(
+        users = sampleList(),
+        isSelectApproveMode = isSelectApproveMode,
+        selectedUserIds = selectedUserIds,
+        onSelectApproveClick = {
+            isSelectApproveMode = !isSelectApproveMode
+        },
+        onCheckedChange = { userId, isChecked ->
+            selectedUserIds = if (isChecked) {
+                selectedUserIds + userId
+            } else {
+                selectedUserIds - userId
+            }
+        }
+    )
 }
 
 
 @Composable
 fun PendingListScreen(
     users: List<AdminPendingUser>,
+    isSelectApproveMode: Boolean = false,
+    selectedUserIds: Set<Long> = emptySet(),
     onSelectApproveClick: () -> Unit = {},
+    onCheckedChange: (Long, Boolean) -> Unit = { _, _ -> },
     onReasonClick: (AdminPendingUser) -> Unit = {},
     onRejectClick: (AdminPendingUser) -> Unit = {},
     onApproveClick: (AdminPendingUser) -> Unit = {},
     modifier: Modifier = Modifier,
+
 ) {
+    val hasSelectedUsers = selectedUserIds.isNotEmpty()
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -83,18 +116,32 @@ fun PendingListScreen(
                 style = Title3Bold,
                 color = neutral800()
             )
-            UButton(
-                prevIcon = painterResource(id = R.drawable.ic_check_success),
-                prevIconTint = neutral800(),
-                prevIconSize = DpSize(18.dp, 18.dp),
-                text = AppStrings.ADMIN_CHECK_STATS_CHOOSE_PENDING,
-                textStyle = SubheadlineBold,
-                textColor = neutral700(),
-                backgroundColor = neutral100(),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                cornerRadius = 8.dp,
-                onClick = onSelectApproveClick
-            )
+
+            if(!isSelectApproveMode) {
+                UButton(
+                    prevIcon = painterResource(id = R.drawable.ic_check_success),
+                    prevIconTint = neutral800(),
+                    prevIconSize = DpSize(18.dp, 18.dp),
+                    text = AppStrings.ADMIN_CHECK_STATS_CHOOSE_PENDING,
+                    textStyle = SubheadlineBold,
+                    textColor = neutral700(),
+                    backgroundColor = neutral100(),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    cornerRadius = 8.dp,
+                    onClick = onSelectApproveClick
+                )
+            } else {
+                UButton(
+                    text = AppStrings.CONFIRM,
+                    textStyle = SubheadlineBold,
+                    textColor = if(hasSelectedUsers)neutral700() else neutral300(),
+                    backgroundColor = neutral100(),
+                    enabled = hasSelectedUsers,
+                    contentPadding = PaddingValues(8.dp),
+                    cornerRadius = 8.dp,
+                    onClick = onSelectApproveClick
+                )
+            }
         }
 
         Spacer(Modifier.height(24.dp))
@@ -108,7 +155,10 @@ fun PendingListScreen(
                 HorizontalDivider(modifier = Modifier.fillMaxWidth().height(1.dp), color = neutral200())
 
                 PendingUserRow(
+                    isSelectApproveMode = isSelectApproveMode,
+                    checked = selectedUserIds.contains(user.id),
                     user = user,
+                    onCheckedChange = { isChecked -> onCheckedChange(user.id, isChecked) },
                     onReasonClick = { onReasonClick(user) },
                     onRejectClick = { onRejectClick(user) },
                     onApproveClick = { onApproveClick(user) }
@@ -140,7 +190,10 @@ private fun DragHeader(
 
 @Composable
 private fun PendingUserRow(
+    isSelectApproveMode: Boolean,
+    checked: Boolean,
     user: AdminPendingUser,
+    onCheckedChange: (Boolean) -> Unit,
     onReasonClick: () -> Unit,
     onRejectClick: () -> Unit,
     onApproveClick: () -> Unit,
@@ -151,6 +204,25 @@ private fun PendingUserRow(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if(isSelectApproveMode) {
+            Box(
+                modifier = Modifier.size(48.dp),
+                contentAlignment = Alignment.Center
+            ){
+                Checkbox(
+                    modifier = Modifier.size(24.dp),
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = primary500(),
+                        checkmarkColor = neutral000(),
+                        uncheckedColor = neutral400()
+                    ),
+                    checked = checked,
+                    onCheckedChange = onCheckedChange
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+
         Box(
             modifier = Modifier
                 .size(32.dp)
@@ -181,25 +253,26 @@ private fun PendingUserRow(
             )
         }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if(user.hasLateReason) {
+        if(!isSelectApproveMode) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if(user.hasLateReason) {
+                    ActionIcon(
+                        iconRes = R.drawable.ic_warning,
+                        onClick = onReasonClick
+                    )
+                }
+
                 ActionIcon(
-                    iconRes = R.drawable.ic_warning,
-                    onClick = onReasonClick
+                    iconRes = R.drawable.ic_check_failed,
+                    onClick = onRejectClick
+                )
+                ActionIcon(
+                    iconRes = R.drawable.ic_check_success,
+                    onClick = onApproveClick
                 )
             }
-
-            ActionIcon(
-                iconRes = R.drawable.ic_check_failed,
-                onClick = onRejectClick
-            )
-            ActionIcon(
-                iconRes = R.drawable.ic_check_success,
-                onClick = onApproveClick
-            )
         }
     }
 }
@@ -210,15 +283,19 @@ private fun ActionIcon(
     onClick: () -> Unit,
     tint: Color = Color.Unspecified,
 ) {
-    Icon(
-        painter = painterResource(id = iconRes),
-        contentDescription = null,
-        tint = tint,
+    Box(
         modifier = Modifier
-            .size(30.dp)
-            .clickable(onClick = onClick)
-            .padding(3.dp)
-    )
+            .size(48.dp)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(24.dp)
+        )
+    }
 }
 
 private fun sampleList(): List<AdminPendingUser> = listOf(
@@ -298,6 +375,31 @@ private fun sampleList(): List<AdminPendingUser> = listOf(
 @Composable
 private fun PendingListScreenPreview() {
     UmcTheme(darkTheme = false) {
-        PendingListScreen(users = sampleList())
+        PendingListScreen(
+            users = sampleList(),
+        )
+    }
+}
+
+@Preview(showBackground = false)
+@Composable
+private fun isSelectApproveModePreview() {
+    UmcTheme(darkTheme = false) {
+        PendingListScreen(
+            users = sampleList(),
+            isSelectApproveMode = true
+        )
+    }
+}
+
+@Preview(showBackground = false)
+@Composable
+private fun checkedPendingListPreview() {
+    UmcTheme(darkTheme = false) {
+        PendingListScreen(
+            users = sampleList(),
+            isSelectApproveMode = true,
+            selectedUserIds = setOf(2L, 4L)
+        )
     }
 }
