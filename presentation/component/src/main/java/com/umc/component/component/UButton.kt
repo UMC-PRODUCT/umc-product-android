@@ -71,6 +71,7 @@ fun UButton(
     prevIcon: Painter? = null,
     prevIconTint: Color? = null,
     prevIconSize: DpSize? = null,
+    prevIconMargin: Dp? = null,
     topIcon: Painter? = null,
     topIconTint: Color? = null,
     endIcon: Painter? = null,
@@ -120,7 +121,7 @@ fun UButton(
                             height = (prevIconSize?.height ?: 24.dp)
                         ),
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(prevIconMargin?: 8.dp))
                 }
 
                 UText(
