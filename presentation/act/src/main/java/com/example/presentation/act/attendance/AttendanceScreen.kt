@@ -1,9 +1,7 @@
 ﻿package com.example.presentation.act.attendance
 
-import androidx.annotation.ColorInt
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,7 +22,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +34,6 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
-import com.umc.component.theme.UmcTypographyTokens.BodyBold
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Caption1
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
@@ -47,6 +43,7 @@ import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.black
 import com.umc.component.theme.neutral000
+import com.umc.component.theme.neutral050
 import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral300
@@ -73,10 +70,10 @@ fun AttendanceScreen(
 ) {
     LazyColumn(
         modifier = modifier
+            .fillMaxSize()
             .background(neutral100())
-            .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(items = sessions, key = { it.id }) { session ->
             AdminSessionCard(
@@ -97,7 +94,7 @@ fun AdminSessionCard(
 ) {
     Card(
         modifier = modifier
-            .fillMaxWidth(),
+            .width(380.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = neutral000()),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -128,8 +125,20 @@ fun AdminSessionCard(
                             ) {
                                 UText(
                                     text = session.status.text,
-                                    style = Caption1,
+                                    style = Caption1Bold,
                                     color = primary500(),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        } else {
+                            Surface(
+                                color = neutral050(),
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                UText(
+                                    text = session.status.text,
+                                    style = Caption1Bold,
+                                    color = neutral600(),
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
                             }
@@ -160,6 +169,7 @@ fun AdminSessionCard(
                     textColor = neutral700(),
                     prevIcon = painterResource(id = R.drawable.ic_location),
                     prevIconTint = neutral700(),
+                    prevIconMargin = 6.dp,
                     backgroundColor = neutral100(),
                     onClick = onChangeLocationClick,
                     prevIconSize = DpSize(18.dp, 18.dp)
@@ -234,7 +244,7 @@ private fun emptyScreen() {
 
 @Preview(showBackground = true)
 @Composable
-private fun preview() {
+private fun emptyScreenPreview() {
     UmcTheme(darkTheme = false) {
         emptyScreen()
     }
@@ -349,7 +359,7 @@ private fun sampleSessions(): List<AdminSessionCheck> = listOf(
     AdminSessionCheck(
         id = 1L,
         title = "4주차 정기세션",
-        date = "2026-04-30",
+        date = "2026.04.30 (목)",
         startTime = "14:00",
         endTime = "18:00",
         status = AdminSessionStatus.IN_PROGRESS,
@@ -363,7 +373,7 @@ private fun sampleSessions(): List<AdminSessionCheck> = listOf(
     AdminSessionCheck(
         id = 2L,
         title = "3주차 정기세션",
-        date = "2026-04-23",
+        date = "2026.04.23 (목)",
         startTime = "14:00",
         endTime = "18:00",
         status = AdminSessionStatus.COMPLETED,
