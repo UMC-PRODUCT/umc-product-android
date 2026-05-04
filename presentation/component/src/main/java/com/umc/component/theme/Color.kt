@@ -26,6 +26,7 @@ internal val lightAccent700 = Color(0xFFB24600)
 internal val lightAccent800 = Color(0xFF803200)
 internal val lightAccent900 = Color(0xFF4D1E00)
 internal val lightNeutral000 = Color(0xFFFFFFFF)
+internal val lightNeutral050 = Color(0xFFF7F8FA)
 internal val lightNeutral100 = Color(0xFFF4F5F7)
 internal val lightNeutral200 = Color(0xFFE7E8EA)
 internal val lightNeutral300 = Color(0xFFCDD1D5)
@@ -76,6 +77,8 @@ internal val darkAccent700 = Color(0xFFFFAA75)
 internal val darkAccent800 = Color(0xFFFFCDAD)
 internal val darkAccent900 = Color(0xFFFFEDE0)
 internal val darkNeutral000 = Color(0xFF121212)
+internal val darkNeutral050 = Color(0xFF0D121C)
+
 internal val darkNeutral100 = Color(0xFF28292F)
 internal val darkNeutral200 = Color(0xFF3A3F46)
 internal val darkNeutral300 = Color(0xFF626C75)
@@ -164,6 +167,9 @@ fun accent900(): Color = if (isSystemInDarkTheme()) darkAccent900 else lightAcce
 
 @Composable
 fun neutral000(): Color = if (isSystemInDarkTheme()) darkNeutral000 else lightNeutral000
+
+@Composable
+fun neutral050(): Color = if (isSystemInDarkTheme()) darkNeutral050 else lightNeutral050
 
 @Composable
 fun neutral100(): Color = if (isSystemInDarkTheme()) darkNeutral100 else lightNeutral100
