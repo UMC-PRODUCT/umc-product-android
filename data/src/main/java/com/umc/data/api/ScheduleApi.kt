@@ -3,6 +3,7 @@ package com.umc.data.api
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
+import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
 import com.umc.data.response.schedule.ScheduleMeResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.domain.model.base.ApiResponse
@@ -16,6 +17,10 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ScheduleApi {
+
+    //일정 생성·수정 권한 조회
+    @GET(Endpoints.Schedule.CAPABILITIES)
+    suspend fun getScheduleCapabilities(): ApiResponse<ScheduleCapabilitiesResponse>
 
     //기간별 내 일정 목록 조회 (월별/전체 통합)
     @GET(Endpoints.Schedule.SCHEDULES_ME)

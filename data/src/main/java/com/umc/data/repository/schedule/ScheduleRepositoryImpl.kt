@@ -4,11 +4,13 @@ import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
+import com.umc.data.response.schedule.ScheduleCapabilitiesResponse.Companion.toDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toAdminDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toModel
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toMonthDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toPlanDetailDomain
 import com.umc.domain.model.act.check.AdminSessionCheck
+import com.umc.domain.model.home.schedule.ScheduleCapabilities
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
@@ -35,6 +37,11 @@ class ScheduleRepositoryImpl @Inject constructor(
     private val utcIsoFormatter = DateTimeFormatter
         .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
         .withZone(ZoneOffset.UTC)
+
+    //일정 생성·수정 권한 조회
+    override suspend fun getScheduleCapabilities(): ApiState<ScheduleCapabilities> {
+        return scheduleRemoteDataSource.getScheduleCapabilities().map { it.toDomain() }
+    }
 
     //일정 상세 정보 가져오기 (홈 화면 -> 일정 상세)
     override suspend fun getScheduleDetailHome(scheduleId: Long): ApiState<PlanDetailItem> {

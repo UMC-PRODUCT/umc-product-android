@@ -5,6 +5,7 @@ import com.umc.data.dataSource.base.apiCall
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
+import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
 import com.umc.data.response.schedule.ScheduleMeResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.domain.model.base.ApiState
@@ -14,6 +15,11 @@ import javax.inject.Inject
 class ScheduleRemoteDataSourceImpl @Inject constructor(
     private val scheduleApi: ScheduleApi
 ) : ScheduleRemoteDataSource {
+
+    //일정 생성·수정 권한 조회
+    override suspend fun getScheduleCapabilities(): ApiState<ScheduleCapabilitiesResponse> {
+        return apiCall { scheduleApi.getScheduleCapabilities() }
+    }
 
     //기간별 내 일정 조회
     override suspend fun getSchedules(
