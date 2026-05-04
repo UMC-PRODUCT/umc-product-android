@@ -43,6 +43,8 @@ googlePlayServicesAuth = "21.2.0"
 playInAppUpdate = "2.1.0"
 hiltNavigationCompose = "1.2.0"
 desugar_jdk_libs = "2.0.4"
+coil-compose = "2.6.0"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -105,6 +107,7 @@ google-code-gson = { group = "com.google.code.gson", name = "gson", version.ref 
 
 #coli
 coil = { group = "io.coil-kt", name = "coil", version.ref = "coil" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil-compose" }
 
 # Credential Manager 핵심 라이브러리
 androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }

@@ -9,6 +9,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.mypage.mypage.MypageRoute
 import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
 import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
@@ -25,7 +26,7 @@ fun MainNavHost(
         navController = navHostController,
 
         //시작 화면 (일단 임시로 home)
-        startDestination = MainDestination.Home,
+        startDestination = MainDestination.Mypage,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -76,6 +77,16 @@ fun MainNavHost(
             ScheduleDetailRoute(
 
             )
+        }
+
+        /**마이페이지 관련 정의**/
+        composable<MainDestination.Mypage>{
+            MypageRoute(
+                onNavigateToEditProfile = {},
+                onNavigateToMyPost = {},
+                onNavigateToLogin = {}
+            )
+
         }
 
 

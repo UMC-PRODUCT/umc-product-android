@@ -62,4 +62,16 @@ dependencies {
 
     //Desugaring용 라이브러리 추가 -> API 24에서 상위 레벨 사용을 위함
     coreLibraryDesugaring(libs.android.desugarJdkLibs)
+
+    //카카오
+    implementation(libs.kakao.user)
+
+    //구글
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.google.play.services.auth)
+
+    //비동기 이미지
+    implementation(libs.coil.compose)
 }
