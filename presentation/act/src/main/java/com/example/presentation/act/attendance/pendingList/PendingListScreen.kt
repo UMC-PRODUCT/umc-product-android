@@ -134,8 +134,8 @@ fun PendingListScreen(
                 UButton(
                     text = AppStrings.CONFIRM,
                     textStyle = SubheadlineBold,
-                    textColor = if(hasSelectedUsers)neutral700() else neutral300(),
-                    backgroundColor = neutral100(),
+                    textColor = if(hasSelectedUsers)neutral000() else neutral300(),
+                    backgroundColor = if(hasSelectedUsers)primary500() else neutral100(),
                     enabled = hasSelectedUsers,
                     contentPadding = PaddingValues(8.dp),
                     cornerRadius = 8.dp,
