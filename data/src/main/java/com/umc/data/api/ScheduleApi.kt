@@ -50,7 +50,7 @@ interface ScheduleApi {
     ): ApiResponse<Long>
 
     //일정 수정하기
-    @PATCH(Endpoints.Schedule.DETAIL)
+    @PATCH(Endpoints.Schedule.DETAIL_V2)
     suspend fun updateSchedule(
         @Path("scheduleId") scheduleId: Long,
         @Body request: UpdateScheduleRequest

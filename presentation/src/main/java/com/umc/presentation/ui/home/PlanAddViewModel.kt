@@ -261,16 +261,22 @@ constructor(
         viewModelScope.launch {
             if (isEditMode) {
                 // [기존 일정 수정]
+                val attendancePolicyForUpdate = if (isAttendance) UpdateSchedule.AttendancePolicy(
+                    checkInStartAt = getIsoDateTime(state.checkInStartDate, state.checkInStartTime),
+                    onTimeEndAt = getIsoDateTime(state.onTimeEndDate, state.onTimeEndTime),
+                    lateEndAt = getIsoDateTime(state.lateEndDate, state.lateEndTime)
+                ) else null
+
                 val request = UpdateSchedule(
                     name = state.planTitle,
-                    startsAt = startsAt,
-                    endsAt = endsAt,
-                    isAllDay = state.isAllDay,
-                    locationName = state.planLocation,
-                    latitude = state.latitude,
-                    longitude = state.longitude,
                     description = state.planDetail,
                     tags = selectedTags,
+                    startsAt = startsAt,
+                    endsAt = endsAt,
+                    location = UpdateSchedule.Location(state.latitude, state.longitude, state.planLocation),
+                    isOnline = null, // UI에서 대면/비대면 전환 미지원, 기존 상태 유지
+                    isAttendanceRequired = if (isAttendance) true else null,
+                    attendancePolicy = attendancePolicyForUpdate,
                     participantMemberIds = participantIds,
                 )
 

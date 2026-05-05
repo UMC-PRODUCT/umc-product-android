@@ -103,19 +103,23 @@ class ScheduleRepositoryImpl @Inject constructor(
 
     //일정 수정하기
     override suspend fun updateSchedule(scheduleId: Long, request: UpdateSchedule): ApiState<Unit> {
-        val request = UpdateScheduleRequest(
+        val req = UpdateScheduleRequest(
             name = request.name,
-            startsAt = request.startsAt,
-            endsAt = request.endsAt,
-            isAllDay = request.isAllDay,
-            locationName = request.locationName,
-            latitude = request.latitude,
-            longitude = request.longitude,
             description = request.description,
             tags = request.tags,
+            startsAt = request.startsAt,
+            endsAt = request.endsAt,
+            location = request.location?.let {
+                UpdateScheduleRequest.LocationRequest(it.latitude, it.longitude, it.locationName)
+            },
+            isOnline = request.isOnline,
+            isAttendanceRequired = request.isAttendanceRequired,
+            attendancePolicy = request.attendancePolicy?.let {
+                UpdateScheduleRequest.AttendancePolicyRequest(it.checkInStartAt, it.onTimeEndAt, it.lateEndAt)
+            },
             participantMemberIds = request.participantMemberIds
         )
-        return scheduleRemoteDataSource.updateSchedule(scheduleId, request)
+        return scheduleRemoteDataSource.updateSchedule(scheduleId, req)
     }
 
     //일정 삭제하기
