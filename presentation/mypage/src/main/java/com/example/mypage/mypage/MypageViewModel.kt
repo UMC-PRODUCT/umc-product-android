@@ -12,14 +12,17 @@ import com.umc.domain.model.enums.TermsType
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
+import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
 import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
 import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
+import com.umc.domain.usecase.challenger.AddChallengerRecordMemberUseCase
 import com.umc.domain.usecase.member.DeleteUserUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.code
 
 @HiltViewModel
 class MypageViewModel @Inject constructor(
@@ -28,6 +31,7 @@ class MypageViewModel @Inject constructor(
     private val deleteUserUseCase: DeleteUserUseCase, //회원 탈퇴
     private val getTermsByTypeUseCase: GetTermsByTypeUseCase, //타입으로 약관 가져오기
     private val getMyOAuthUseCase: GetMyOAuthUseCase, //내 OAuth 가져오기
+    private val addChallengerRecordMemberUseCase: AddChallengerRecordMemberUseCase, //챌린저 코드 추가
 ) : BaseViewModel<MypageUiState, MypageEvent>(
     MypageUiState()){
 
@@ -264,6 +268,41 @@ class MypageViewModel @Inject constructor(
         }
     }
 
+    //코드 추가 다이얼로그에서 바꿀 때
+    fun onCodeChanged(code: String) {
+        updateState { copy(code = code) }
+    }
+
+    //챌린저 코드를 추가할 떄 서버에게 보내고 유저 정보 업데이트 로직
+    fun addChallengerCode() {
+        viewModelScope.launch {
+            val request = ChallengerRecordMemberRequest(
+                code = uiState.value.code,
+            )
+
+            startLoading()
+            resultResponse(
+                response = addChallengerRecordMemberUseCase(request),
+                successCallback = {
+                    //유저 정보 업데이트를 위한 호출
+                    viewModelScope.launch {
+                        resultResponse(
+                            response = getMyProfileUseCase(),
+                            successCallback = {
+                                emitEvent(MypageEvent.ConfirmAddCode)
+                            },
+                            errorCallback = {
+                                emitEvent(MypageEvent.ConfirmAddCode)
+                            }
+                        )
+                    }
+                },
+                errorCallback = { failState ->
+                    emitEvent(MypageEvent.FailAddCode(failState.message))
+                }
+            )
+        }
+    }
 
 
     fun logout(){
@@ -303,6 +342,9 @@ data class MypageUiState(
     //구글 토큰
     val googleToken : String = "",
     val kakaoToken : String = "",
+
+    //활동 추가 코드
+    val code : String = "",
 
 
     ) : UiState {
@@ -352,6 +394,10 @@ sealed interface MypageEvent : UiEvent {
 
     //처음으로 이동
     object MoveToOnBoardPage : MypageEvent
+
+    //챌린저 코드 다이얼로그 전용
+    object ConfirmAddCode : MypageEvent
+    data class FailAddCode(val message: String): MypageEvent
 
 
 }

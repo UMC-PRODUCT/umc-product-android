@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,7 +29,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +43,7 @@ import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.example.mypage.dialog.AddCodeDialog
 import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
 import com.umc.component.component.UBasicDialog
@@ -72,48 +76,93 @@ fun MypageRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    var showAddCodeDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+    var showDeleteUserDialog by remember { mutableStateOf(false) }
 
-    //임시 다이얼로그
-    /**UBASICDIALOG -> UDIALOG**/
-    /*val logoutDialogModel =
-        UBasicDialog(
-            model = UBasicDialogModel.Warning(
-                title = "로그아웃",
-                content = "로그아웃 하시겠습니까?",
-                positiveText = "로그아웃",
-                negativeText = "취소"
-            ),
-            onConfirm = {},
-            onDismiss = {}
-        )
+    //OutLink 3종(깃허브,링크드인,블로그)
+    var selectedOutLinkType by remember { mutableStateOf<OutLinkType?>(null) }
+    var showOutLinkDialog by remember { mutableStateOf(false) }
 
-     */
 
 
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
             when(event){
-                is MypageEvent.NavigateToGithub -> handleOutLink(context, uiState.githubUrl, OutLinkType.GITHUB)
-                is MypageEvent.NavigateToBlog -> handleOutLink(context, uiState.blogUrl, OutLinkType.BLOG)
-                is MypageEvent.NavigateToLinkedin -> handleOutLink(context, uiState.linkedinUrl, OutLinkType.LINKEDIN)
+                //깃허브 누를 때
+                is MypageEvent.NavigateToGithub -> {
+                    if (uiState.githubUrl.isBlank()) {
+                        selectedOutLinkType = OutLinkType.GITHUB
+                        showOutLinkDialog = true
+                    } else {
+                        openWebpage(context, uiState.githubUrl)
+                    }
+                }
+                //블로그 누를 때
+                is MypageEvent.NavigateToBlog -> {
+                    if (uiState.blogUrl.isBlank()) {
+                        selectedOutLinkType = OutLinkType.BLOG
+                        showOutLinkDialog = true
+                    } else {
+                        openWebpage(context, uiState.blogUrl)
+                    }
+                }
+                //링크드인 누를 때
+                is MypageEvent.NavigateToLinkedin -> {
+                    if (uiState.linkedinUrl.isBlank()) {
+                        selectedOutLinkType = OutLinkType.LINKEDIN
+                        showOutLinkDialog = true
+                    } else {
+                        openWebpage(context, uiState.linkedinUrl)
+                    }
+                }
+                //프로필 누를 때 (이동)
                 is MypageEvent.NavigateToEditProfile -> onNavigateToEditProfile()
+                //내가 쓴 글 누를 때 (이동)
                 is MypageEvent.NavigateToMypost -> onNavigateToMyPost("MYPOST")
+                //댓글 단 글 누를 때 (이동)
                 is MypageEvent.NavigateToMyComment -> onNavigateToMyPost("MYCOMMENT")
+                //스크랩 누를 때 (이동)
                 is MypageEvent.NavigateToScrap -> onNavigateToMyPost("MYSCRAP")
-                is MypageEvent.NavigateToAddActivity -> { /* TODO: BottomSheet 띄우기 */ }
+                //챌린저 기록 추가 누를 때 (이동)
+                is MypageEvent.NavigateToAddActivity -> {
+                    showAddCodeDialog = true
+                }
+                //UMC 카카오톡 문의 누를 때
                 is MypageEvent.NavigateToAssistUmc -> openKakaoChannel(context, event.channelId)
+                //알림 설정 누를 때 + 위치 설정 누를 때
                 is MypageEvent.NavigateToSettingNotice,
                 is MypageEvent.NavigateToSettingLocation -> openPermissionPage(context)
+                //개인정보처리 방침 누를 때
                 is MypageEvent.NavigateToPersonalInformation -> openWebpage(context, event.privacyTerms)
+                //이용약관 누를 때
                 is MypageEvent.NavigateToUseManual -> openWebpage(context, event.manualTerms)
+                //UMC 웹사이트 누를 때
                 is MypageEvent.NavigateToWebstieUmc -> openWebpage(context, uiState.websiteUMC)
+                //UMC 인스타그램 누를 때
                 is MypageEvent.NavigateToInstagramUmc -> openWebpage(context, uiState.instagramUMC)
+                //로그아웃 누를 때
                 is MypageEvent.Logout -> {
-                    // Compose용 공통 다이얼로그 호출 로직 (생략된 컴포넌트 가정)
-                    viewModel.deleteAllData()
-                    onNavigateToLogin()
+                    showLogoutDialog = true
                 }
+                //회원탈퇴 누를 때
+                is MypageEvent.DeleteUser -> {
+                    showDeleteUserDialog = true
+                }
+                //온보드 누를 때
                 is MypageEvent.MoveToOnBoardPage -> onNavigateToLogin()
+
+                //챌린저 기록 추가 시 (다이얼로그)
+                is MypageEvent.ConfirmAddCode -> {
+                    Toast.makeText(context, "활동기록이 추가되었습니다.", Toast.LENGTH_SHORT).show()
+                    showAddCodeDialog = false
+                }
+                //챌린저 기록 추가 실패 시(다이얼로그)
+                is MypageEvent.FailAddCode -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    showAddCodeDialog = false
+
+                }
                 else -> {}
             }
         }
@@ -140,43 +189,78 @@ fun MypageRoute(
         onInstagramClick = viewModel::navigateToInstagramUmc //인스타그램 이동
     )
 
+    //OutLink 다이얼로그 관련
+    /**TODO : 다이얼로그 형태 바꾸기**/
+    if(showOutLinkDialog && selectedOutLinkType != null){
+        val name = when(selectedOutLinkType) {
+            OutLinkType.GITHUB -> "Github를"
+            OutLinkType.LINKEDIN -> "LinkedIn을"
+            OutLinkType.BLOG -> "Blog를"
+            else -> ""
+        }
+
+        UBasicDialog(
+            model = UBasicDialogModel.Warning(
+                title = "${name} 열 수 없어요.",
+                content = "아직 등록된 링크가 없습니다. 프로필에서 링크를 추가해 주세요.",
+                positiveText = "확인",
+            ),
+            onConfirm = {
+                showOutLinkDialog = false
+                selectedOutLinkType = null
+            },
+            onDismiss = {
+                showOutLinkDialog = false
+                selectedOutLinkType = null
+            }
+        )
+    }
+
+    //챌린저 코드 다이얼로그 관련
+    if(showAddCodeDialog){
+        AddCodeDialog(
+            code = uiState.code,
+            onCodeChanged = viewModel::onCodeChanged,
+            onConfirmClick = viewModel::addChallengerCode,
+            onDismissRequest = {showAddCodeDialog = false}
+        )
+    }
+
+    //로그아웃 다이얼로그 관련
+    /**TODO : 다이얼로그 형태 바꾸기**/
+    if(showLogoutDialog){
+        UBasicDialog(
+            model = UBasicDialogModel.Warning(
+                title = AppStrings.MYPAGE_LOGOUT_TITLE,
+                content = AppStrings.MYPAGE_LOGOUT_CONTENT,
+                positiveText = "로그아웃",
+                negativeText = "취소"
+            ),
+            onConfirm = {showLogoutDialog = false},
+            onDismiss = {showLogoutDialog = false}
+        )
+    }
+
+    //회원 탈퇴 관련
+    /**TODO : 다이얼로그 형태 바꾸기**/
+    if(showDeleteUserDialog){
+        UBasicDialog(
+            model = UBasicDialogModel.Warning(
+                title = AppStrings.MYPAGE_DELTE_USER_TITLE,
+                content = AppStrings.MYPAGE_DELTE_USER_CONTENT,
+                positiveText = "로그아웃",
+                negativeText = "취소"
+            ),
+            onConfirm = {showDeleteUserDialog = false},
+            onDismiss = {showDeleteUserDialog = false}
+        )
+    }
+
 
     }
 
 
 
-//url 여부와 타입에 따라 다이얼로그를 열 지 아니면, 실행할지 로직
-private fun handleOutLink(context: Context, url: String, type: OutLinkType) {
-    val model = setDialogContent(type)
-
-    if(url == ""){
-        //val dialog = UMypageDialog(model){/**NO LOGIC**/}
-        //dialog.show(parentFragmentManager, "MyPageDialog")
-    }
-    else{
-        openWebpage(context, url)
-    }
-}
-
-//outLink 3종 다이얼로그 포멧 만들기
-/**TODO: UDialog 사용예정**/
-private fun setDialogContent(type : OutLinkType)  {
-    var name = ""
-    if(type == OutLinkType.GITHUB){name = "Github를"}
-    else if(type == OutLinkType.LINKEDIN){name = "LinkedIn을"}
-    else if(type == OutLinkType.BLOG){name = "Blog를"}
-
-    /*
-    return UMypageDialogModel(
-        title = "${name} 열 수 없어요.",
-        content = "아직 등록된 링크가 없습니다. 프로필에서 링크를 추가해 주세요.",
-        isTwoButton = false,
-        confirmText = "확인"
-    )
-
-     */
-
-}
 
 //웹페이지 이동
 private fun openWebpage(context: Context, url: String) {
@@ -504,14 +588,15 @@ fun MypageProfileCard(uiState: MypageUiState, onClick: () -> Unit){
                             platform = LoginType.KAKAO
                         )
                     }
-                    else if(uiState.linkedPlatforms.contains(LoginType.GOOGLE)){
+                    if(uiState.linkedPlatforms.contains(LoginType.GOOGLE)){
                         SocialBadge(
                             platform = LoginType.GOOGLE
                         )
                     }
                 }
                 //학교 정보
-                UText(text = uiState.userInfo.schoolName, 
+                UText(text = uiState.userInfo.schoolName,
+                    modifier = Modifier.padding(top = 4.dp),
                     style = UmcTypographyTokens.Headline, 
                     color = neutral600()
                 )
@@ -614,7 +699,8 @@ fun SocialBadge(platform: LoginType) {
 
     Surface(
         modifier = Modifier
-            .padding(end = 4.dp),
+            .padding(end = 4.dp)
+            .padding(start = 4.dp),
         color = bgColor,
         shape = RoundedCornerShape(4.dp)
     ) {
