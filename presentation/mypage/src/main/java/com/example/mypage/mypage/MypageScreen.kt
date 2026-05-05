@@ -606,7 +606,8 @@ fun MypageProfileCard(uiState: MypageUiState, onClick: () -> Unit){
                         text = uiState.myRecentCarrer,
                         onClick = {},
                         modifier = Modifier
-                            .padding(top = 8.dp),
+                            .padding(top = 8.dp)
+                            .height(24.dp),
                         backgroundColor = neutral000(),
                         borderColor = neutral100(),
                         borderWidth = 1.dp,
