@@ -1,6 +1,8 @@
 package com.example.mypage.mycontent
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
@@ -15,11 +17,21 @@ import javax.inject.Inject
 @HiltViewModel
 class MyContentViewModel @Inject
 constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val getMyPostsUseCase: GetMyPostsUseCase,
     private val getMyScrappedPostsUseCase: GetMyScrappedPostsUseCase,
     private val getMyCommentedPostsUseCase: GetMyCommentedPostsUseCase,
 ) : BaseViewModel<MyContentUiState, MyContentEvent>(
     MyContentUiState()){
+
+    private val checkShowType: String = savedStateHandle.get<String>("showType") ?: ""
+
+    init{
+        if(checkShowType != ""){
+            initShowType(checkShowType)
+        }
+    }
+
 
 
     fun onClickBackPressed(){

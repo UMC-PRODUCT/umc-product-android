@@ -70,7 +70,7 @@ import com.umc.domain.model.enums.OutLinkType
 fun MypageRoute(
     viewModel: MypageViewModel = hiltViewModel(),
     onNavigateToEditProfile: () -> Unit, //프로필 페이지 이동
-    onNavigateToMyPost: (String) -> Unit, //내가 쓴 글 이동
+    onNavigateToMyContent: (String) -> Unit, //내가 쓴 글 이동
     onNavigateToLogin: () -> Unit, //로그인 이동(로그아웃 or 탈퇴)
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -119,11 +119,11 @@ fun MypageRoute(
                 //프로필 누를 때 (이동)
                 is MypageEvent.NavigateToEditProfile -> onNavigateToEditProfile()
                 //내가 쓴 글 누를 때 (이동)
-                is MypageEvent.NavigateToMypost -> onNavigateToMyPost("MYPOST")
+                is MypageEvent.NavigateToMypost -> onNavigateToMyContent("MYPOST")
                 //댓글 단 글 누를 때 (이동)
-                is MypageEvent.NavigateToMyComment -> onNavigateToMyPost("MYCOMMENT")
+                is MypageEvent.NavigateToMyComment -> onNavigateToMyContent("MYCOMMENT")
                 //스크랩 누를 때 (이동)
-                is MypageEvent.NavigateToScrap -> onNavigateToMyPost("MYSCRAP")
+                is MypageEvent.NavigateToScrap -> onNavigateToMyContent("MYSCRAP")
                 //챌린저 기록 추가 누를 때 (이동)
                 is MypageEvent.NavigateToAddActivity -> {
                     showAddCodeDialog = true

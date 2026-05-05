@@ -31,6 +31,10 @@ sealed interface MainDestination {
     @Serializable
     data object Mypage : MainDestination
 
+    //내 활동 (showType: "MYPOST", "MYCOMMENT", "MYSCRAP")
+    @Serializable
+    data class MyContent(val showType: String) : MainDestination
+
 
 
 }
