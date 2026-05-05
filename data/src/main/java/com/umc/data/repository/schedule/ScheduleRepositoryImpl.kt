@@ -76,23 +76,29 @@ class ScheduleRepositoryImpl @Inject constructor(
 
     //일정 생성하기
     override suspend fun createSchedule(request: CreateSchedule): ApiState<Long> {
-        val request = CreateScheduleRequest(
+        val req = CreateScheduleRequest(
             name = request.name,
+            description = request.description,
+            tags = request.tags,
             startsAt = request.startsAt,
             endsAt = request.endsAt,
-            isAllDay = request.isAllDay,
-            locationName = request.locationName,
-            latitude = request.latitude,
-            longitude = request.longitude,
-            description = request.description,
-            participantMemberIds = request.participantMemberIds,
-            tags = request.tags,
-            gisuId = request.gisuId,
-            requiresApproval = request.requiresApproval
+            location = request.location?.let {
+                CreateScheduleRequest.LocationRequest(
+                    latitude = it.latitude,
+                    longitude = it.longitude,
+                    locationName = it.locationName
+                )
+            },
+            attendancePolicy = request.attendancePolicy?.let {
+                CreateScheduleRequest.AttendancePolicyRequest(
+                    checkInStartAt = it.checkInStartAt,
+                    onTimeEndAt = it.onTimeEndAt,
+                    lateEndAt = it.lateEndAt
+                )
+            },
+            participantMemberIds = request.participantMemberIds
         )
-        return scheduleRemoteDataSource.createScheduleWithAttendance(request).map {
-            it.toLong()
-        }
+        return scheduleRemoteDataSource.createSchedule(req)
     }
 
     //일정 수정하기

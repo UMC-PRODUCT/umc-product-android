@@ -43,12 +43,11 @@ interface ScheduleApi {
     ): ApiResponse<Unit>
 
 
-    //일정 출석부 통합 생성하기
-    /**response로 일정 id가 string으로 오니 Long으로 변환**/
-    @POST(Endpoints.Schedule.SCHEDULE_WITH_ATTENDANCE)
-    suspend fun createScheduleWithAttendance(
+    //일정 생성하기 (v2)
+    @POST(Endpoints.Schedule.CREATE_V2)
+    suspend fun createSchedule(
         @Body request: CreateScheduleRequest
-    ): ApiResponse<String>
+    ): ApiResponse<Long>
 
     //일정 수정하기
     @PATCH(Endpoints.Schedule.DETAIL)

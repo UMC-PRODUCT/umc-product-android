@@ -41,8 +41,8 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
     }
 
     //일정 생성하기
-    override suspend fun createScheduleWithAttendance(request: CreateScheduleRequest): ApiState<String> {
-        return apiCall {scheduleApi.createScheduleWithAttendance(request)}
+    override suspend fun createSchedule(request: CreateScheduleRequest): ApiState<Long> {
+        return apiCall { scheduleApi.createSchedule(request) }
     }
 
     //일정 수정하기

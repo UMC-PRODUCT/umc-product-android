@@ -70,6 +70,7 @@ object Endpoints {
         const val SCHEDULES_ME = "api/v2/schedules/me"
         const val DETAIL_V2 = "api/v2/schedules/{scheduleId}"
         const val CAPABILITIES = "api/v2/schedules/capabilities"
+        const val CREATE_V2 = "api/v2/schedules"
 
         const val SCHEDULE_WITH_ATTENDANCE = "$SCHEDULE/with-attendance"
 

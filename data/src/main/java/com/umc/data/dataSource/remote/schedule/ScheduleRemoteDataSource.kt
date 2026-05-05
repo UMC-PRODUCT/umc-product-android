@@ -24,7 +24,7 @@ interface ScheduleRemoteDataSource {
     suspend fun deleteScheduleWithAttendance(scheduleId: Long): ApiState<Unit>
 
     //일정 생성하기
-    suspend fun createScheduleWithAttendance(request: CreateScheduleRequest): ApiState<String>
+    suspend fun createSchedule(request: CreateScheduleRequest): ApiState<Long>
 
     //일정 수정하기
     suspend fun updateSchedule(scheduleId: Long, request: UpdateScheduleRequest): ApiState<Unit>
