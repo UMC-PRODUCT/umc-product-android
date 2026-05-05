@@ -158,7 +158,9 @@ fun ScheduleDetailScreen(
                 backgroundColor = primary100(),
                 textColor = primary600(),
                 textStyle = UmcTypographyTokens.FootnoteBold,
-                onClick = {}
+                onClick = {},
+                modifier = Modifier
+                    .height(24.dp),
             )
 
             Spacer(modifier = Modifier

@@ -294,7 +294,8 @@ fun HomeProfileCard(uiState: HomeUiState) {
                             textStyle = UmcTypographyTokens.Caption1Bold,
                             onClick = {},
                             modifier = Modifier
-                                .padding(end = 4.dp),
+                                .padding(end = 4.dp)
+                                .height(24.dp),
                         )
                     }
                 }
@@ -506,7 +507,9 @@ private fun ScoreCard(
             textColor = color,
             textStyle = UmcTypographyTokens.Caption1Bold,
             cornerRadius = 4.dp,
-            onClick = {}
+            onClick = {},
+            modifier = Modifier
+                .height(24.dp),
         )
         UText(
             text = score.toString(),
