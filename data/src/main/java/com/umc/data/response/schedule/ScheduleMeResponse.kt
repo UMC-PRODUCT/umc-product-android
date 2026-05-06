@@ -1,6 +1,7 @@
 package com.umc.data.response.schedule
 
 import com.google.gson.annotations.SerializedName
+import com.umc.domain.model.UDomainFormat.isAllDayInKst
 import com.umc.domain.model.UDomainFormat.parseDateTime
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.act.check.UserCheckAvailable
@@ -94,7 +95,7 @@ data class ScheduleMeResponse(
                 startTime = startTime,
                 endDay = endDay,
                 endTime = endTime,
-                isAllDay = false,
+                isAllDay = isAllDayInKst(startsAt, endsAt),
                 locationName = location?.locationName ?: "",
                 latitude = location?.latitude ?: 0.0,
                 longitude = location?.longitude ?: 0.0,

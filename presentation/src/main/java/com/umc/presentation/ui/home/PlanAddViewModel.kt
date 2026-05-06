@@ -9,6 +9,8 @@ import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.model.home.LocationItem
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.model.home.getGisuSummaryList
+import com.umc.domain.model.UDomainFormat.formatAllDayEndForServer
+import com.umc.domain.model.UDomainFormat.formatDateForServer
 import com.umc.domain.model.UDomainFormat.formatDateTimeForServer
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
@@ -239,8 +241,16 @@ constructor(
         val isEditMode = state.updateScheduleId != -1L
 
         //날짜 데이터 ISO 8601 포맷으로 변환
-        val startsAt = getIsoDateTime(state.startDate, state.startTime)
-        val endsAt = getIsoDateTime(state.endDate, state.endTime)
+        val startsAt = if (state.isAllDay) {
+            dateDisplaySdf.format(state.startDate.time).formatDateForServer()
+        } else {
+            getIsoDateTime(state.startDate, state.startTime)
+        }
+        val endsAt = if (state.isAllDay) {
+            dateDisplaySdf.format(state.endDate.time).formatAllDayEndForServer()
+        } else {
+            getIsoDateTime(state.endDate, state.endTime)
+        }
 
         Log.d("log_home", "startsAt: $startsAt, endsAt: $endsAt")
 
