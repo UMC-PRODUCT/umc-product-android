@@ -46,9 +46,7 @@ import coil.compose.AsyncImage
 import com.example.mypage.dialog.AddCodeDialog
 import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
-import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UText
-import com.umc.component.component.model.UBasicDialogModel
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
@@ -56,7 +54,10 @@ import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.R
+import com.umc.component.component.DialogType
+import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UButton
+import com.umc.component.component.UDialog
 import com.umc.component.theme.danger500
 import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral500
@@ -199,21 +200,17 @@ fun MypageRoute(
             else -> ""
         }
 
-        UBasicDialog(
-            model = UBasicDialogModel.Warning(
-                title = "${name} 열 수 없어요.",
-                content = "아직 등록된 링크가 없습니다. 프로필에서 링크를 추가해 주세요.",
-                positiveText = "확인",
-            ),
-            onConfirm = {
+        UDialog(
+            title = "${name} 열 수 없어요.",
+            content = "아직 등록된 링크가 없습니다. 프로필에서 링크를 추가해 주세요.",
+            onDismissRequest = {
                 showOutLinkDialog = false
                 selectedOutLinkType = null
             },
-            onDismiss = {
-                showOutLinkDialog = false
-                selectedOutLinkType = null
-            }
+            isTwoButton = false,
+            confirmText = "확인"
         )
+
     }
 
     //챌린저 코드 다이얼로그 관련
@@ -227,33 +224,63 @@ fun MypageRoute(
     }
 
     //로그아웃 다이얼로그 관련
-    /**TODO : 다이얼로그 형태 바꾸기**/
     if(showLogoutDialog){
+
         UBasicDialog(
-            model = UBasicDialogModel.Warning(
-                title = AppStrings.MYPAGE_LOGOUT_TITLE,
-                content = AppStrings.MYPAGE_LOGOUT_CONTENT,
-                positiveText = "로그아웃",
-                negativeText = "취소"
-            ),
-            onConfirm = {showLogoutDialog = false},
-            onDismiss = {showLogoutDialog = false}
+            title = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_TITLE,
+            content = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONTENT,
+            positiveText = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONFIRM,
+            type = DialogType.WARNING,
+            onPositive = {
+                /**TODO: 로그아웃 로직 연결*/
+                showLogoutDialog = false
+            },
+            onNegative = {
+                showLogoutDialog = false
+            },
+            onDismissRequest = {showLogoutDialog = false}
         )
+        /*
+        UDialog(
+            title = AppStrings.MYPAGE_LOGOUT_TITLE,
+            content = AppStrings.MYPAGE_LOGOUT_CONTENT,
+            isTwoButton = true,
+            positiveText = "로그아웃",
+            negativeText = "취소",
+            onPositive = {
+                /**TODO: 로그아웃 로직 연결*/
+                showLogoutDialog = false
+            },
+            onNegative = {
+                showLogoutDialog = false
+            },
+            onDismissRequest = {showLogoutDialog = false}
+        )
+
+         */
     }
 
     //회원 탈퇴 관련
     /**TODO : 다이얼로그 형태 바꾸기**/
     if(showDeleteUserDialog){
-        UBasicDialog(
-            model = UBasicDialogModel.Warning(
-                title = AppStrings.MYPAGE_DELTE_USER_TITLE,
-                content = AppStrings.MYPAGE_DELTE_USER_CONTENT,
-                positiveText = "로그아웃",
-                negativeText = "취소"
-            ),
-            onConfirm = {showDeleteUserDialog = false},
-            onDismiss = {showDeleteUserDialog = false}
+
+        UDialog(
+            title = AppStrings.MYPAGE_DELTE_USER_TITLE,
+            content = AppStrings.MYPAGE_DELTE_USER_CONTENT,
+            isTwoButton = true,
+            positiveText = "계정 삭제",
+            negativeText = "취소",
+            onPositive = {
+                /**TODO: 회원 탈퇴 로직 연결*/
+                showDeleteUserDialog = false
+            },
+            onNegative = {
+                showDeleteUserDialog = false
+            },
+            onDismissRequest = {showDeleteUserDialog = false}
         )
+
+
     }
 
 

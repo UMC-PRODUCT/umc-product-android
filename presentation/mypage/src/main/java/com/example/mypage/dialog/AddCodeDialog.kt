@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
@@ -68,6 +69,17 @@ fun AddCodeDialog(
                 modifier = Modifier.padding(top = 40.dp)
             )
 
+            UTextField(
+                value = code,
+                onValueChange = onCodeChanged,
+                placeholder = AppStrings.MYPAGE_ADDCODE_CONTENT,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+
+            )
+
+            /*
             OutlinedTextField(
                 value = code,
                 onValueChange = onCodeChanged,
@@ -85,6 +97,8 @@ fun AddCodeDialog(
                     focusedBorderColor = primary500()
                 )
             )
+
+             */
 
             Spacer(modifier = Modifier
                 .height(32.dp)
