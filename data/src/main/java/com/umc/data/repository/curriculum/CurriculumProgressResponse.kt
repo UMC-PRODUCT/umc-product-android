@@ -1,49 +1,35 @@
 package com.umc.data.response.curriculum
 
 import com.google.gson.annotations.SerializedName
-import com.umc.domain.model.enums.UserPart
-import com.umc.domain.model.enums.WorkbookMissionType
-import com.umc.domain.model.enums.WorkbookStatus
 import com.umc.domain.model.study.StudyProgress
-import com.umc.domain.model.study.WorkbookProgress
+import com.umc.domain.model.study.WeeklyCurriculum
 
-data class CurriculumProgressResponse(
-    @SerializedName("curriculumId") val curriculumId: String?,
-    @SerializedName("curriculumTitle") val curriculumTitle: String?,
-    @SerializedName("part") val part: String?,
-    @SerializedName("completedCount") val completedCount: String?,
-    @SerializedName("totalCount") val totalCount: String?,
-    @SerializedName("workbooks") val workbooks: List<WorkbookProgressResponse>?
+data class CurriculumOverviewResponse(
+    @SerializedName("curriculumId") val curriculumId: Long?,
+    @SerializedName("title") val title: String?,
+    @SerializedName("weeks") val weeks: List<WeeklyCurriculumResponse>?
 ) {
     fun toModel(): StudyProgress = StudyProgress(
-        curriculumId = curriculumId?.toLongOrNull() ?: 0L,
-        curriculumTitle = curriculumTitle.orEmpty(),
-        part = UserPart.from(part),
-        completedCount = completedCount?.toIntOrNull() ?: 0,
-        totalCount = totalCount?.toIntOrNull() ?: 0,
-        workbooks = workbooks.orEmpty().map { it.toModel() }
+        curriculumId = curriculumId ?: 0L,
+        curriculumTitle = title.orEmpty(),
+        weeks = weeks.orEmpty().map { it.toModel() }
     )
-
 }
 
-data class WorkbookProgressResponse(
-    @SerializedName("originalWorkbookId") val originalWorkbookId: String?,
-    @SerializedName("weekNo") val weekNo: String?,
+data class WeeklyCurriculumResponse(
+    @SerializedName("weeklyCurriculumId") val weeklyCurriculumId: Long?,
+    @SerializedName("weekNo") val weekNo: Int?,
     @SerializedName("title") val title: String?,
-    @SerializedName("description") val description: String?,
-    @SerializedName("missionType") val missionType: String?,
-    @SerializedName("status") val status: String?,
-    @SerializedName("isReleased") val isReleased: Boolean?,
-    @SerializedName("isInProgress") val isInProgress: Boolean?
+    @SerializedName("isExtra") val isExtra: Boolean?,
+    @SerializedName("startsAt") val startsAt: String?,
+    @SerializedName("endsAt") val endsAt: String?
 ) {
-    fun toModel(): WorkbookProgress = WorkbookProgress(
-        originalWorkbookId = originalWorkbookId?.toLongOrNull() ?: 0L,
-        weekNo = weekNo?.toIntOrNull() ?: 0,
+    fun toModel(): WeeklyCurriculum = WeeklyCurriculum(
+        weeklyCurriculumId = weeklyCurriculumId ?: 0L,
+        weekNo = weekNo ?: 0,
         title = title.orEmpty(),
-        description = description.orEmpty(),
-        missionType = WorkbookMissionType.from(missionType),
-        status = WorkbookStatus.from(status),
-        isReleased = isReleased ?: false,
-        isInProgress = isInProgress ?: false
+        isExtra = isExtra ?: false,
+        startsAt = startsAt.orEmpty(),
+        endsAt = endsAt.orEmpty()
     )
 }

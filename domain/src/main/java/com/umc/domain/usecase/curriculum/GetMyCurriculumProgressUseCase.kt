@@ -5,13 +5,14 @@ import com.umc.domain.model.study.StudyProgress
 import com.umc.domain.repository.curriculum.CurriculumRepository
 import javax.inject.Inject
 
-class GetMyCurriculumProgressUseCase @Inject constructor(
+class GetCurriculumOverviewUseCase @Inject constructor(
     private val repository: CurriculumRepository
 ) {
     suspend operator fun invoke(
-        page: Int? = null,
-        limit: Int? = null
+        gisuId: Long,
+        part: String,
+        weekNo: Long? = null
     ): ApiState<StudyProgress> {
-        return repository.getMyCurriculumProgress(page, limit)
+        return repository.getCurriculumOverview(gisuId, part, weekNo)
     }
 }
