@@ -11,7 +11,6 @@ import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.act.check.UserCheckHistory
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
-import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.model.request.attendance.AttendanceReasonRequest
 import com.umc.domain.repository.attendance.AttendanceRepository
 import javax.inject.Inject
@@ -24,10 +23,6 @@ class AttendanceRepositoryImpl @Inject constructor(
         return attendanceRemoteDataSource.getAttendanceAvailable().map { responseList ->
             responseList.map { it.toUserCheckAvailable() }
         }
-    }
-
-    override suspend fun postAttendanceCheck(request: AttendanceCheckRequest): ApiState<String> {
-        return attendanceRemoteDataSource.postAttendanceCheck(request)
     }
 
     override suspend fun getPendingUsers(scheduleId: Long): ApiState<List<AdminPendingUser>> {

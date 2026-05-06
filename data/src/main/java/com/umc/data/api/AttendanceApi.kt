@@ -5,7 +5,6 @@ import com.umc.data.response.attendance.AttendanceAvailableResponse
 import com.umc.data.response.attendance.ChallengerAttendanceHistoryResponse
 import com.umc.data.response.attendance.UserCheckHistoryResponse
 import com.umc.domain.model.base.ApiResponse
-import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.model.request.attendance.AttendanceReasonRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -15,11 +14,6 @@ import retrofit2.http.Path
 interface AttendanceApi {
     @GET(Endpoints.Attendance.AVAILABLE)
     suspend fun getAttendanceAvailable(): ApiResponse<List<AttendanceAvailableResponse>>
-
-    @POST(Endpoints.Attendance.CHECK)
-    suspend fun postAttendanceCheck(
-        @Body request: AttendanceCheckRequest
-    ): ApiResponse<String>
 
     @GET(Endpoints.Attendance.PENDING)
     suspend fun getPendingUsers(

@@ -45,4 +45,7 @@ interface ScheduleRepository {
 
     // 스터디 그룹 일정 생성
     suspend fun createStudyGroupSchedule(request: CreateStudyGroupSchedule): ApiState<Long>
+
+    // 일정 출석 요청
+    suspend fun postAttendanceRequest(scheduleId: Long, locationVerified: Boolean, latitude: Double?, longitude: Double?): ApiState<Unit>
 }

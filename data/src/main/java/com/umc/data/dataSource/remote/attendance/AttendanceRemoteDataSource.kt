@@ -5,12 +5,10 @@ import com.umc.data.response.attendance.AttendanceAvailableResponse
 import com.umc.data.response.attendance.ChallengerAttendanceHistoryResponse
 import com.umc.data.response.attendance.UserCheckHistoryResponse
 import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.model.request.attendance.AttendanceReasonRequest
 
 interface AttendanceRemoteDataSource {
     suspend fun getAttendanceAvailable(): ApiState<List<AttendanceAvailableResponse>>
-    suspend fun postAttendanceCheck(request: AttendanceCheckRequest): ApiState<String>
     suspend fun getPendingUsers(scheduleId: Long): ApiState<List<AdminPendingUserResponse>>
     suspend fun approveAttendance(recordId: Long): ApiState<Unit>
     suspend fun rejectAttendance(recordId: Long): ApiState<Unit>

@@ -1,12 +1,11 @@
 package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
-import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
 import com.umc.domain.usecase.attendance.GetAttendanceHistoryUseCase
-import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceReasonUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailUseCase
+import com.umc.domain.usecase.schedule.PostScheduleAttendanceUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -19,7 +18,7 @@ class UserCheckViewModel @Inject constructor(
     private val getAttendanceAvailableUseCase: GetAttendanceAvailableUseCase,
     private val getAttendanceHistoryUseCase: GetAttendanceHistoryUseCase,
     private val getScheduleDetailUseCase: GetScheduleDetailUseCase,
-    private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase,
+    private val postScheduleAttendanceUseCase: PostScheduleAttendanceUseCase,
     private val postAttendanceReasonUseCase: PostAttendanceReasonUseCase
 ) : BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
 
@@ -101,18 +100,12 @@ class UserCheckViewModel @Inject constructor(
      */
     fun requestAttendance(sheetId: Long) {
         val sessionUIModel = uiState.value.availableSessions.find { it.session.sheetId == sheetId }
-        val isVerified = sessionUIModel?.isWithinRange ?: false
-
-        val request = AttendanceCheckRequest(
-            attendanceSheetId = sheetId,
-            latitude = lastUserLat,
-            longitude = lastUserLng,
-            locationVerified = isVerified
-        )
+        val scheduleId = sessionUIModel?.session?.id ?: return
+        val isVerified = sessionUIModel.isWithinRange
 
         viewModelScope.launch {
             resultResponse(
-                response = postAttendanceCheckUseCase(request),
+                response = postScheduleAttendanceUseCase(scheduleId, isVerified, lastUserLat, lastUserLng),
                 successCallback = { fetchAttendanceData() },
                 errorCallback = { failState ->
                     emitEvent(UserCheckEvent.ShowToast(failState.message, isError = true))
