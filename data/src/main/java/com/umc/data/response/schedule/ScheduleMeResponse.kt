@@ -117,7 +117,7 @@ data class ScheduleMeResponse(
                 sheetId = scheduleId,
                 startTime = startsAt,
                 endTime = endsAt,
-                status = CheckAvailableStatus.BEFORE,
+                status = CheckAvailableStatus.fromServerValue(attendanceStatus),
                 latitude = location?.latitude ?: 0.0,
                 longitude = location?.longitude ?: 0.0,
                 address = location?.locationName ?: "",

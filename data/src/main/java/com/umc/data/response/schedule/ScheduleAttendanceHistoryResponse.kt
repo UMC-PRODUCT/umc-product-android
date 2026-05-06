@@ -46,14 +46,13 @@ data class ScheduleAttendanceHistoryResponse(
         fun ScheduleAttendanceHistoryResponse.toUserCheckHistory(): UserCheckHistory {
             val myStatus = participants
                 ?.mapNotNull { it.attendanceStatus }
-                ?.firstOrNull() ?: ""
+                ?.firstOrNull()
             return UserCheckHistory(
                 id = scheduleId,
                 title = name,
                 startTime = startsAt,
                 endTime = endsAt,
-                status = runCatching { CheckHistoryStatus.valueOf(myStatus) }
-                    .getOrDefault(CheckHistoryStatus.ABSENT),
+                status = CheckHistoryStatus.fromServerValue(myStatus),
                 tags = tags?.mapNotNull { runCatching { CategoryType.valueOf(it) }.getOrNull() }
             )
         }
