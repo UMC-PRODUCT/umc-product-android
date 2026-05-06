@@ -20,6 +20,7 @@ import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
 import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.data.request.schedule.DecideAttendanceRequest
+import com.umc.data.request.schedule.ExcuseAttendanceRequest
 import com.umc.data.request.schedule.ScheduleAttendanceRequest
 import com.umc.domain.model.act.check.AttendanceDecision
 import com.umc.domain.model.request.schedule.UpdateLocationRequest
@@ -138,6 +139,17 @@ class ScheduleRepositoryImpl @Inject constructor(
     ): ApiState<Unit> {
         val request = UpdateLocationRequest(locationName, latitude, longitude)
         return scheduleRemoteDataSource.updateScheduleLocation(scheduleId, request).map {}
+    }
+
+    override suspend fun postAttendanceExcuse(
+        scheduleId: Long,
+        excuseReason: String,
+        isVerified: Boolean,
+        latitude: Double?,
+        longitude: Double?
+    ): ApiState<Unit> {
+        val request = ExcuseAttendanceRequest(excuseReason, isVerified, latitude, longitude)
+        return scheduleRemoteDataSource.postAttendanceExcuse(scheduleId, request)
     }
 
     override suspend fun postAttendanceDecide(

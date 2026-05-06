@@ -3,6 +3,7 @@ package com.umc.data.api
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.DecideAttendanceRequest
+import com.umc.data.request.schedule.ExcuseAttendanceRequest
 import com.umc.data.request.schedule.ScheduleAttendanceRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
@@ -84,6 +85,13 @@ interface ScheduleApi {
     suspend fun postAttendanceDecide(
         @Path("scheduleId") scheduleId: Long,
         @Body requests: List<DecideAttendanceRequest>
+    ): ApiResponse<Unit>
+
+    // 사유 출석 제출
+    @POST(Endpoints.Schedule.ATTENDANCE_EXCUSE)
+    suspend fun postAttendanceExcuse(
+        @Path("scheduleId") scheduleId: Long,
+        @Body request: ExcuseAttendanceRequest
     ): ApiResponse<Unit>
 }
 

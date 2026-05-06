@@ -3,8 +3,8 @@ package com.umc.presentation.ui.act.check
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
 import com.umc.domain.usecase.attendance.GetAttendanceHistoryUseCase
-import com.umc.domain.usecase.attendance.PostAttendanceReasonUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailUseCase
+import com.umc.domain.usecase.schedule.PostScheduleAttendanceExcuseUseCase
 import com.umc.domain.usecase.schedule.PostScheduleAttendanceUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -19,7 +19,7 @@ class UserCheckViewModel @Inject constructor(
     private val getAttendanceHistoryUseCase: GetAttendanceHistoryUseCase,
     private val getScheduleDetailUseCase: GetScheduleDetailUseCase,
     private val postScheduleAttendanceUseCase: PostScheduleAttendanceUseCase,
-    private val postAttendanceReasonUseCase: PostAttendanceReasonUseCase
+    private val postScheduleAttendanceExcuseUseCase: PostScheduleAttendanceExcuseUseCase
 ) : BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
 
     private var lastUserLat: Double? = null
@@ -115,12 +115,16 @@ class UserCheckViewModel @Inject constructor(
     }
 
     /**
-     * 출석 사유 제출
+     * 사유 출석 제출
      */
     fun submitAttendanceReason(sheetId: Long, reason: String) {
+        val sessionUIModel = uiState.value.availableSessions.find { it.session.sheetId == sheetId }
+        val scheduleId = sessionUIModel?.session?.id ?: return
+        val isVerified = sessionUIModel.isWithinRange
+
         viewModelScope.launch {
             resultResponse(
-                response = postAttendanceReasonUseCase(sheetId, reason),
+                response = postScheduleAttendanceExcuseUseCase(scheduleId, reason, isVerified, lastUserLat, lastUserLng),
                 successCallback = {
                     fetchAttendanceData()
                     fetchAttendanceHistory()

@@ -5,10 +5,7 @@ import com.umc.data.response.attendance.AttendanceAvailableResponse
 import com.umc.data.response.attendance.ChallengerAttendanceHistoryResponse
 import com.umc.data.response.attendance.UserCheckHistoryResponse
 import com.umc.domain.model.base.ApiResponse
-import com.umc.domain.model.request.attendance.AttendanceReasonRequest
-import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface AttendanceApi {
@@ -19,11 +16,6 @@ interface AttendanceApi {
     suspend fun getPendingUsers(
         @Path("scheduleId") scheduleId: Long
     ): ApiResponse<List<AdminPendingUserResponse>>
-
-    @POST(Endpoints.Attendance.REASON)
-    suspend fun postAttendanceReason(
-        @Body request: AttendanceReasonRequest
-    ): ApiResponse<String>
 
     @GET(Endpoints.Attendance.HISTORY)
     suspend fun getAttendanceHistory(): ApiResponse<List<UserCheckHistoryResponse>>

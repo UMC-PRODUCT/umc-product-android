@@ -3,6 +3,7 @@ package com.umc.data.dataSource.remote.schedule
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.DecideAttendanceRequest
+import com.umc.data.request.schedule.ExcuseAttendanceRequest
 import com.umc.data.request.schedule.ScheduleAttendanceRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
@@ -43,5 +44,8 @@ interface ScheduleRemoteDataSource {
 
     // 출석 요청 승인/거절
     suspend fun postAttendanceDecide(scheduleId: Long, requests: List<DecideAttendanceRequest>): ApiState<Unit>
+
+    // 사유 출석 제출
+    suspend fun postAttendanceExcuse(scheduleId: Long, request: ExcuseAttendanceRequest): ApiState<Unit>
 }
 

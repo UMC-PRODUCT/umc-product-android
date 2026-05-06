@@ -52,4 +52,7 @@ interface ScheduleRepository {
 
     // 출석 요청 승인/거절
     suspend fun postAttendanceDecide(scheduleId: Long, decisions: List<AttendanceDecision>): ApiState<Unit>
+
+    // 사유 출석 제출
+    suspend fun postAttendanceExcuse(scheduleId: Long, excuseReason: String, isVerified: Boolean, latitude: Double?, longitude: Double?): ApiState<Unit>
 }
