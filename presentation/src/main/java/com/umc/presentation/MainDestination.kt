@@ -35,6 +35,10 @@ sealed interface MainDestination {
     @Serializable
     data class MyContent(val showType: String) : MainDestination
 
+    //프로필 페이지
+    @Serializable
+    data object MyProfile : MainDestination
+
 
 
 }

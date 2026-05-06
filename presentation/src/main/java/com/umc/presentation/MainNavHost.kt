@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
+import com.example.mypage.profile.ProfileRoute
 import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
 import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
@@ -84,6 +85,7 @@ fun MainNavHost(
         composable<MainDestination.Mypage>{
             MypageRoute(
                 onNavigateToEditProfile = {
+                    navHostController.navigate(MainDestination.MyProfile)
                 },
                 onNavigateToMyContent = {type ->
                     navHostController.navigate(MainDestination.MyContent(showType = type))
@@ -100,6 +102,11 @@ fun MainNavHost(
                     /**TODO id를 줘서 커뮤니티 게시글 상세 페이지로 이동*/
                 }
             )
+        }
+
+        //내 프로필
+        composable<MainDestination.MyProfile> {
+            ProfileRoute()
         }
 
 

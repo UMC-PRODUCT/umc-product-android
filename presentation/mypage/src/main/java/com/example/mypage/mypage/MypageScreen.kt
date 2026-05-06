@@ -226,21 +226,7 @@ fun MypageRoute(
     //로그아웃 다이얼로그 관련
     if(showLogoutDialog){
 
-        UBasicDialog(
-            title = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_TITLE,
-            content = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONTENT,
-            positiveText = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONFIRM,
-            type = DialogType.WARNING,
-            onPositive = {
-                /**TODO: 로그아웃 로직 연결*/
-                showLogoutDialog = false
-            },
-            onNegative = {
-                showLogoutDialog = false
-            },
-            onDismissRequest = {showLogoutDialog = false}
-        )
-        /*
+
         UDialog(
             title = AppStrings.MYPAGE_LOGOUT_TITLE,
             content = AppStrings.MYPAGE_LOGOUT_CONTENT,
@@ -257,11 +243,10 @@ fun MypageRoute(
             onDismissRequest = {showLogoutDialog = false}
         )
 
-         */
+
     }
 
     //회원 탈퇴 관련
-    /**TODO : 다이얼로그 형태 바꾸기**/
     if(showDeleteUserDialog){
 
         UDialog(
@@ -387,7 +372,9 @@ fun MypageScreen(
             UText(
                 text = AppStrings.MYPAGE_TITLE,
                 style = UmcTypographyTokens.Title2Bold,
-                modifier = Modifier.padding(top = 18.dp)
+                modifier = Modifier
+                    .padding(top = 18.dp)
+                    .padding(horizontal = 16.dp)
             )
         }
 
