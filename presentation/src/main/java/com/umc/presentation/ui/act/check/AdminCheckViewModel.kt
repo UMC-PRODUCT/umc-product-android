@@ -7,8 +7,6 @@ import com.umc.domain.model.enums.PermissionType
 import com.umc.domain.model.enums.ResourceType
 import com.umc.domain.usecase.GetAuthAccessUseCase
 import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
-import com.umc.domain.usecase.attendance.PostAttendanceApprovalUseCase
-import com.umc.domain.usecase.attendance.PostAttendanceRejectionUseCase
 import com.umc.domain.usecase.schedule.GetAdminSessionListUseCase
 import com.umc.domain.usecase.schedule.UpdateScheduleLocationUseCase
 import com.umc.presentation.base.BaseViewModel

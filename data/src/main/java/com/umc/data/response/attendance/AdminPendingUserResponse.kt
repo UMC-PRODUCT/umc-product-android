@@ -18,6 +18,7 @@ data class AdminPendingUserResponse(
         fun AdminPendingUserResponse.toAdminPendingUser(): AdminPendingUser {
             return AdminPendingUser(
                 id = attendanceId,
+                memberId = memberId,
                 name = memberName,
                 nickname = nickname,
                 university = schoolName,

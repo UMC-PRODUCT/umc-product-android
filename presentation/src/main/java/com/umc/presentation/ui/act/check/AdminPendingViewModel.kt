@@ -2,9 +2,9 @@ package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.act.check.AdminPendingUser
+import com.umc.domain.model.act.check.AttendanceDecision
 import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
-import com.umc.domain.usecase.attendance.PostAttendanceApprovalUseCase
-import com.umc.domain.usecase.attendance.PostAttendanceRejectionUseCase
+import com.umc.domain.usecase.schedule.PostScheduleAttendanceDecideUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
@@ -15,8 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AdminPendingViewModel @Inject constructor(
     private val getPendingUsersUseCase: GetPendingUsersUseCase,
-    private val postAttendanceApprovalUseCase: PostAttendanceApprovalUseCase,
-    private val postAttendanceRejectionUseCase: PostAttendanceRejectionUseCase
+    private val postScheduleAttendanceDecideUseCase: PostScheduleAttendanceDecideUseCase
 ) : BaseViewModel<AdminPendingUiState, AdminPendingEvent>(AdminPendingUiState()) {
 
     /**
@@ -54,19 +53,22 @@ class AdminPendingViewModel @Inject constructor(
     }
 
     /**
-     * 선택된 유저들 일괄 승인 (반복 호출)
+     * 선택된 유저들 일괄 승인
      */
     fun approveSelected(sessionId: Long) {
-        val recordIds = uiState.value.selectedIds.toList()
-        if (recordIds.isEmpty()) return
+        val state = uiState.value
+        val decisions = state.pendingUsers
+            .filter { it.id in state.selectedIds }
+            .map { AttendanceDecision(it.memberId, isApproved = true) }
+        if (decisions.isEmpty()) return
 
         viewModelScope.launch {
             resultResponse(
-                response = postAttendanceApprovalUseCase(recordIds),
+                response = postScheduleAttendanceDecideUseCase(sessionId, decisions),
                 successCallback = {
-                    emitEvent(AdminPendingEvent.ShowToast("${recordIds.size}명의 승인이 완료되었습니다."))
+                    emitEvent(AdminPendingEvent.ShowToast("${decisions.size}명의 승인이 완료되었습니다."))
                     toggleSelectionMode(false)
-                    fetchPendingUsers(sessionId) // 서버 데이터 기준으로 목록 갱신
+                    fetchPendingUsers(sessionId)
                 },
                 errorCallback = { fail ->
                     emitEvent(AdminPendingEvent.ShowToast(fail.message))
@@ -76,12 +78,17 @@ class AdminPendingViewModel @Inject constructor(
     }
 
     /**
-     * 개별 유저 승인
+     * 개별 유저 승인 (attendanceId 기준으로 memberId 조회 후 결정)
      */
     fun approveUsers(sessionId: Long, recordIds: List<Long>) {
+        val decisions = uiState.value.pendingUsers
+            .filter { it.id in recordIds }
+            .map { AttendanceDecision(it.memberId, isApproved = true) }
+        if (decisions.isEmpty()) return
+
         viewModelScope.launch {
             resultResponse(
-                response = postAttendanceApprovalUseCase(recordIds),
+                response = postScheduleAttendanceDecideUseCase(sessionId, decisions),
                 successCallback = {
                     emitEvent(AdminPendingEvent.ShowToast("승인이 완료되었습니다."))
                     fetchPendingUsers(sessionId)
@@ -94,12 +101,17 @@ class AdminPendingViewModel @Inject constructor(
     }
 
     /**
-     * 개별 유저 반려
+     * 개별 유저 반려 (attendanceId 기준으로 memberId 조회 후 결정)
      */
     fun rejectUsers(sessionId: Long, recordIds: List<Long>) {
+        val decisions = uiState.value.pendingUsers
+            .filter { it.id in recordIds }
+            .map { AttendanceDecision(it.memberId, isApproved = false) }
+        if (decisions.isEmpty()) return
+
         viewModelScope.launch {
             resultResponse(
-                response = postAttendanceRejectionUseCase(recordIds),
+                response = postScheduleAttendanceDecideUseCase(sessionId, decisions),
                 successCallback = {
                     emitEvent(AdminPendingEvent.ShowToast("반려 처리가 완료되었습니다."))
                     fetchPendingUsers(sessionId)

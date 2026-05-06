@@ -20,16 +20,6 @@ interface AttendanceApi {
         @Path("scheduleId") scheduleId: Long
     ): ApiResponse<List<AdminPendingUserResponse>>
 
-    @POST(Endpoints.Attendance.APPROVE)
-    suspend fun approveAttendance(
-        @Path("recordId") recordId: Long
-    ): ApiResponse<Unit>
-
-    @POST(Endpoints.Attendance.REJECT)
-    suspend fun rejectAttendance(
-        @Path("recordId") recordId: Long
-    ): ApiResponse<Unit>
-
     @POST(Endpoints.Attendance.REASON)
     suspend fun postAttendanceReason(
         @Body request: AttendanceReasonRequest

@@ -19,7 +19,9 @@ import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
 import com.umc.domain.model.home.schedule.UpdateSchedule
+import com.umc.data.request.schedule.DecideAttendanceRequest
 import com.umc.data.request.schedule.ScheduleAttendanceRequest
+import com.umc.domain.model.act.check.AttendanceDecision
 import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import com.umc.domain.repository.schedule.ScheduleRepository
 import java.time.LocalDate
@@ -136,6 +138,16 @@ class ScheduleRepositoryImpl @Inject constructor(
     ): ApiState<Unit> {
         val request = UpdateLocationRequest(locationName, latitude, longitude)
         return scheduleRemoteDataSource.updateScheduleLocation(scheduleId, request).map {}
+    }
+
+    override suspend fun postAttendanceDecide(
+        scheduleId: Long,
+        decisions: List<AttendanceDecision>
+    ): ApiState<Unit> {
+        val requests = decisions.map {
+            DecideAttendanceRequest(it.participantMemberId, it.isApproved, it.reason)
+        }
+        return scheduleRemoteDataSource.postAttendanceDecide(scheduleId, requests)
     }
 
     override suspend fun postAttendanceRequest(

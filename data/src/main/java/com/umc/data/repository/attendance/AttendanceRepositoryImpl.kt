@@ -31,12 +31,6 @@ class AttendanceRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun approveAttendance(recordId: Long): ApiState<Unit> =
-        attendanceRemoteDataSource.approveAttendance(recordId)
-
-    override suspend fun rejectAttendance(recordId: Long): ApiState<Unit> =
-        attendanceRemoteDataSource.rejectAttendance(recordId)
-
     override suspend fun postAttendanceReason(request: AttendanceReasonRequest): ApiState<String> {
         return attendanceRemoteDataSource.postAttendanceReason(request)
     }

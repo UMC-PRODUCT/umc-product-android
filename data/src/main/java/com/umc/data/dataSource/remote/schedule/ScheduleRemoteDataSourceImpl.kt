@@ -4,6 +4,7 @@ import com.umc.data.api.ScheduleApi
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
+import com.umc.data.request.schedule.DecideAttendanceRequest
 import com.umc.data.request.schedule.ScheduleAttendanceRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
@@ -74,6 +75,13 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
         request: ScheduleAttendanceRequest
     ): ApiState<Unit> {
         return apiCall { scheduleApi.postAttendanceRequest(scheduleId, request) }
+    }
+
+    override suspend fun postAttendanceDecide(
+        scheduleId: Long,
+        requests: List<DecideAttendanceRequest>
+    ): ApiState<Unit> {
+        return apiCall { scheduleApi.postAttendanceDecide(scheduleId, requests) }
     }
 
 }

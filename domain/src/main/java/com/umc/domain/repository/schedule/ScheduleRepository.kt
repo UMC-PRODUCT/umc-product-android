@@ -5,6 +5,7 @@ import com.umc.domain.model.home.schedule.ScheduleCapabilities
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.home.PlanDetailItem
+import com.umc.domain.model.act.check.AttendanceDecision
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
@@ -48,4 +49,7 @@ interface ScheduleRepository {
 
     // 일정 출석 요청
     suspend fun postAttendanceRequest(scheduleId: Long, locationVerified: Boolean, latitude: Double?, longitude: Double?): ApiState<Unit>
+
+    // 출석 요청 승인/거절
+    suspend fun postAttendanceDecide(scheduleId: Long, decisions: List<AttendanceDecision>): ApiState<Unit>
 }
