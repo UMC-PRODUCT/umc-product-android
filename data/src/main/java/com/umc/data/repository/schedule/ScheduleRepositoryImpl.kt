@@ -6,7 +6,6 @@ import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
 import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse.Companion.toAdminDomain
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse.Companion.toDomain
-import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toAdminDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toModel
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toMonthDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toPlanDetailDomain
@@ -25,9 +24,7 @@ import com.umc.data.request.schedule.DecideAttendanceRequest
 import com.umc.data.request.schedule.ExcuseAttendanceRequest
 import com.umc.data.request.schedule.ScheduleAttendanceRequest
 import com.umc.domain.model.act.check.AttendanceDecision
-import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import com.umc.domain.repository.schedule.ScheduleRepository
-import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -78,14 +75,6 @@ class ScheduleRepositoryImpl @Inject constructor(
         val (from, to) = monthToUtcRange(now.year, now.monthValue)
         return scheduleRemoteDataSource.getSchedules(from, to, isAttendanceRequired).map { list ->
             list.map { it.toModel() }
-        }
-    }
-
-    //운영진 일정 리스트 가져오기 - 출석 필요 일정, 현재 기준 ±6개월 범위
-    override suspend fun getAdminScheduleList(): ApiState<List<AdminSessionCheck>> {
-        val (from, to) = adminScheduleUtcRange()
-        return scheduleRemoteDataSource.getSchedules(from, to, isAttendanceRequired = true).map { list ->
-            list.map { it.toAdminDomain() }
         }
     }
 
@@ -140,16 +129,6 @@ class ScheduleRepositoryImpl @Inject constructor(
     //일정 삭제하기
     override suspend fun deleteSchedule(scheduleId: Long): ApiState<Unit> {
         return scheduleRemoteDataSource.deleteScheduleWithAttendance(scheduleId)
-    }
-
-    override suspend fun updateScheduleLocation(
-        scheduleId: Long,
-        locationName: String,
-        latitude: Double,
-        longitude: Double
-    ): ApiState<Unit> {
-        val request = UpdateLocationRequest(locationName, latitude, longitude)
-        return scheduleRemoteDataSource.updateScheduleLocation(scheduleId, request).map {}
     }
 
     override suspend fun postAttendanceExcuse(
@@ -245,16 +224,4 @@ class ScheduleRepositoryImpl @Inject constructor(
         return utcIsoFormatter.format(from) to utcIsoFormatter.format(to)
     }
 
-    // 현재 기준 ±6개월 범위를 UTC ISO8601로 변환
-    private fun adminScheduleUtcRange(): Pair<String, String> {
-        val today = LocalDate.now()
-        val from: ZonedDateTime = today.minusMonths(6)
-            .atStartOfDay(ZoneId.systemDefault())
-            .withZoneSameInstant(ZoneOffset.UTC)
-        val to: ZonedDateTime = today.plusMonths(6)
-            .atTime(23, 59, 59, 999_000_000)
-            .atZone(ZoneId.systemDefault())
-            .withZoneSameInstant(ZoneOffset.UTC)
-        return utcIsoFormatter.format(from) to utcIsoFormatter.format(to)
-    }
 }

@@ -76,8 +76,6 @@ object Endpoints {
 
         const val DELETE = "$SCHEDULE/{scheduleId}/with-attendance"
 
-        const val LOCATION = "$SCHEDULE/{scheduleId}/location"
-
         const val CREATE_STUDY_GROUP_SCHEDULE = "$SCHEDULE/study-group"
 
         const val ATTENDANCE_REQUEST = "api/v2/schedules/{scheduleId}/attendances/request"

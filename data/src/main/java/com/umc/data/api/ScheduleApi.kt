@@ -10,9 +10,7 @@ import com.umc.data.response.schedule.AttendanceDecisionResponse
 import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
 import com.umc.data.response.schedule.ScheduleMeResponse
-import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.domain.model.base.ApiResponse
-import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -60,14 +58,6 @@ interface ScheduleApi {
         @Path("scheduleId") scheduleId: Long,
         @Body request: UpdateScheduleRequest
     ) : ApiResponse<Unit>
-
-    // 일정 위치 변경하기
-    @PATCH(Endpoints.Schedule.LOCATION)
-    suspend fun updateScheduleLocation(
-        @Path("scheduleId") scheduleId: Long,
-        @Body request: UpdateLocationRequest
-    ): ApiResponse<UpdateLocationResponse>
-
 
     // 스터디 그룹 일정 생성
     @POST(Endpoints.Schedule.CREATE_STUDY_GROUP_SCHEDULE)

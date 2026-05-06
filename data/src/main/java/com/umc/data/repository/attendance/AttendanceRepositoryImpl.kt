@@ -1,10 +1,8 @@
 package com.umc.data.repository.attendance
 
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSource
-import com.umc.data.response.attendance.AdminPendingUserResponse.Companion.toAdminPendingUser
 import com.umc.data.response.attendance.ChallengerAttendanceHistoryResponse.Companion.toChallengerInfoHistory
 import com.umc.domain.model.act.challenger.ChallengerInfoHistory
-import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.repository.attendance.AttendanceRepository
@@ -13,12 +11,6 @@ import javax.inject.Inject
 class AttendanceRepositoryImpl @Inject constructor(
     private val attendanceRemoteDataSource: AttendanceRemoteDataSource
 ) : AttendanceRepository {
-
-    override suspend fun getPendingUsers(scheduleId: Long): ApiState<List<AdminPendingUser>> {
-        return attendanceRemoteDataSource.getPendingUsers(scheduleId).map { responseList ->
-            responseList.map { it.toAdminPendingUser() }
-        }
-    }
 
     override suspend fun getChallengerAttendanceHistory(challengerId: Long): ApiState<List<ChallengerInfoHistory>> {
         return attendanceRemoteDataSource.getChallengerAttendanceHistory(challengerId).map { responseList ->

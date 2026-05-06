@@ -10,9 +10,7 @@ import com.umc.data.response.schedule.AttendanceDecisionResponse
 import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
 import com.umc.data.response.schedule.ScheduleMeResponse
-import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.request.schedule.UpdateLocationRequest
 
 interface ScheduleRemoteDataSource {
 
@@ -33,10 +31,6 @@ interface ScheduleRemoteDataSource {
 
     //일정 수정하기
     suspend fun updateSchedule(scheduleId: Long, request: UpdateScheduleRequest): ApiState<Unit>
-
-    // 위치 변경하기
-    suspend fun updateScheduleLocation(scheduleId: Long, request: UpdateLocationRequest): ApiState<UpdateLocationResponse>
-
 
     // 스터디 그룹 일정 만들기
     suspend fun createStudyGroupSchedule(request: CreateStudyGroupScheduleRequest): ApiState<Long>

@@ -12,9 +12,7 @@ import com.umc.data.response.schedule.AttendanceDecisionResponse
 import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
 import com.umc.data.response.schedule.ScheduleMeResponse
-import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import javax.inject.Inject
 
 class ScheduleRemoteDataSourceImpl @Inject constructor(
@@ -57,15 +55,6 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
     ): ApiState<Unit> {
         return apiCall {scheduleApi.updateSchedule(scheduleId, request)}
     }
-
-    // 위치 변경하기
-    override suspend fun updateScheduleLocation(
-        scheduleId: Long,
-        request: UpdateLocationRequest
-    ): ApiState<UpdateLocationResponse> {
-        return apiCall { scheduleApi.updateScheduleLocation(scheduleId, request) }
-    }
-
 
     override suspend fun createStudyGroupSchedule(
         request: CreateStudyGroupScheduleRequest

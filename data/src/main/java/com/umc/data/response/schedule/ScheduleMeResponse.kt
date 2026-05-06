@@ -3,10 +3,7 @@ package com.umc.data.response.schedule
 import com.google.gson.annotations.SerializedName
 import com.umc.domain.model.UDomainFormat.isAllDayInKst
 import com.umc.domain.model.UDomainFormat.parseDateTime
-import com.umc.domain.model.act.check.AdminPendingUser
-import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.act.check.UserCheckAvailable
-import com.umc.domain.model.enums.AdminSessionStatus
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.home.PlanDetailItem
@@ -130,39 +127,5 @@ data class ScheduleMeResponse(
             )
         }
 
-        fun ScheduleMeResponse.toAdminDomain(): AdminSessionCheck {
-            val (date, startTime) = startsAt.parseDateTime()
-            val (_, endTime) = endsAt.parseDateTime()
-
-            val pendingStatuses = setOf("PRESENT_PENDING", "LATE_PENDING", "EXCUSED_PENDING")
-            val pendingParticipants = participants?.filter { it.attendanceStatus in pendingStatuses } ?: emptyList()
-
-            return AdminSessionCheck(
-                id = scheduleId,
-                title = name,
-                date = date,
-                startTime = startTime,
-                endTime = endTime,
-                status = AdminSessionStatus.fromScheduleTimes(startsAt, endsAt),
-                attendanceRate = 0,
-                totalChallengers = participants?.size ?: 0,
-                attendedChallengers = 0,
-                pendingCount = pendingParticipants.size,
-                pendingUsers = pendingParticipants.map { p ->
-                    AdminPendingUser(
-                        id = p.memberId,
-                        memberId = p.memberId,
-                        name = p.name,
-                        nickname = p.nickname,
-                        university = p.schoolName,
-                        profileImageUrl = p.profileImageUrl,
-                        requestTime = "",
-                        hasLateReason = p.excuseReason != null,
-                        lateReason = p.excuseReason
-                    )
-                },
-                sheetId = scheduleId
-            )
-        }
     }
 }

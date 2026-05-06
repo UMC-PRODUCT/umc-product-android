@@ -9,8 +9,7 @@ import com.umc.presentation.databinding.ItemAdminCheckSessionBinding
 import com.umc.presentation.ui.act.check.AdminSessionUIModel
 
 class AdminCheckAdapter(
-    private val onChangeLocation: (Long) -> Unit,
-    private val onShowPendingList: (Long) -> Unit // 바텀시트를 띄우기 위한 콜백 추가
+    private val onShowPendingList: (Long) -> Unit
 ) : ListAdapter<AdminSessionUIModel, AdminCheckAdapter.ViewHolder>(AdminCheckDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -29,11 +28,6 @@ class AdminCheckAdapter(
 
         fun bind(uiModel: AdminSessionUIModel) {
             binding.uiModel = uiModel
-
-            // 위치 변경 버튼 클릭
-            binding.btnAdminChangeLocation.setOnClickListener {
-                onChangeLocation(uiModel.session.id)
-            }
 
             // 승인 대기 명단 확인 버튼 클릭 (바텀시트 호출)
             binding.btnAdminPendingListTrigger.setOnClickListener {
