@@ -6,6 +6,7 @@ import com.umc.data.request.schedule.DecideAttendanceRequest
 import com.umc.data.request.schedule.ExcuseAttendanceRequest
 import com.umc.data.request.schedule.ScheduleAttendanceRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
+import com.umc.data.response.schedule.AttendanceDecisionResponse
 import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
 import com.umc.data.response.schedule.ScheduleMeResponse
@@ -86,7 +87,7 @@ interface ScheduleApi {
     suspend fun postAttendanceDecide(
         @Path("scheduleId") scheduleId: Long,
         @Body requests: List<DecideAttendanceRequest>
-    ): ApiResponse<Unit>
+    ): ApiResponse<List<AttendanceDecisionResponse>>
 
     // 사유 출석 제출
     @POST(Endpoints.Schedule.ATTENDANCE_EXCUSE)

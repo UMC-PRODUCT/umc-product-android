@@ -6,6 +6,7 @@ import com.umc.data.request.schedule.DecideAttendanceRequest
 import com.umc.data.request.schedule.ExcuseAttendanceRequest
 import com.umc.data.request.schedule.ScheduleAttendanceRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
+import com.umc.data.response.schedule.AttendanceDecisionResponse
 import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
 import com.umc.data.response.schedule.ScheduleMeResponse
@@ -44,7 +45,7 @@ interface ScheduleRemoteDataSource {
     suspend fun postAttendanceRequest(scheduleId: Long, request: ScheduleAttendanceRequest): ApiState<Unit>
 
     // 출석 요청 승인/거절
-    suspend fun postAttendanceDecide(scheduleId: Long, requests: List<DecideAttendanceRequest>): ApiState<Unit>
+    suspend fun postAttendanceDecide(scheduleId: Long, requests: List<DecideAttendanceRequest>): ApiState<List<AttendanceDecisionResponse>>
 
     // 사유 출석 제출
     suspend fun postAttendanceExcuse(scheduleId: Long, request: ExcuseAttendanceRequest): ApiState<Unit>

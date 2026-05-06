@@ -170,7 +170,7 @@ class ScheduleRepositoryImpl @Inject constructor(
         val requests = decisions.map {
             DecideAttendanceRequest(it.participantMemberId, it.isApproved, it.reason)
         }
-        return scheduleRemoteDataSource.postAttendanceDecide(scheduleId, requests)
+        return scheduleRemoteDataSource.postAttendanceDecide(scheduleId, requests).map {}
     }
 
     override suspend fun postAttendanceRequest(
