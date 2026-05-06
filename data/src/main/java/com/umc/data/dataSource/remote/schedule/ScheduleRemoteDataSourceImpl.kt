@@ -8,6 +8,7 @@ import com.umc.data.request.schedule.DecideAttendanceRequest
 import com.umc.data.request.schedule.ExcuseAttendanceRequest
 import com.umc.data.request.schedule.ScheduleAttendanceRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
+import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
 import com.umc.data.response.schedule.ScheduleMeResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
@@ -90,6 +91,14 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
         request: ExcuseAttendanceRequest
     ): ApiState<Unit> {
         return apiCall { scheduleApi.postAttendanceExcuse(scheduleId, request) }
+    }
+
+    override suspend fun getAttendanceHistory(
+        from: String?,
+        to: String?,
+        attendanceStatus: String?
+    ): ApiState<List<ScheduleAttendanceHistoryResponse>> {
+        return apiCall { scheduleApi.getAttendanceHistory(from, to, attendanceStatus) }
     }
 
 }

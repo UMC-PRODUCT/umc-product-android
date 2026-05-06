@@ -8,6 +8,7 @@ import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.act.check.AttendanceDecision
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
+import com.umc.domain.model.act.check.UserCheckHistory
 import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
 
 interface ScheduleRepository {
@@ -20,6 +21,9 @@ interface ScheduleRepository {
 
     //월별 일정 가져오기
     suspend fun getMonthSchedule(year: Int, month: Int): ApiState<List<ScheduleMonthModel>>
+
+    // 출석 가능 세션 조회 (isAttendanceRequired=true)
+    suspend fun getAttendanceAvailableSessions(): ApiState<List<UserCheckAvailable>>
 
   
     suspend fun getScheduleDetail(scheduleId: Long): ApiState<UserCheckAvailable>
@@ -55,4 +59,7 @@ interface ScheduleRepository {
 
     // 사유 출석 제출
     suspend fun postAttendanceExcuse(scheduleId: Long, excuseReason: String, isVerified: Boolean, latitude: Double?, longitude: Double?): ApiState<Unit>
+
+    // 출석 이력 조회
+    suspend fun getAttendanceHistory(from: String? = null, to: String? = null, attendanceStatus: String? = null): ApiState<List<UserCheckHistory>>
 }

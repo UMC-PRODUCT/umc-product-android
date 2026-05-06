@@ -2,13 +2,9 @@ package com.umc.data.repository.attendance
 
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSource
 import com.umc.data.response.attendance.AdminPendingUserResponse.Companion.toAdminPendingUser
-import com.umc.data.response.attendance.AttendanceAvailableResponse.Companion.toUserCheckAvailable
 import com.umc.data.response.attendance.ChallengerAttendanceHistoryResponse.Companion.toChallengerInfoHistory
 import com.umc.domain.model.act.challenger.ChallengerInfoHistory
-import com.umc.data.response.attendance.UserCheckHistoryResponse.Companion.toUserCheckHistory
 import com.umc.domain.model.act.check.AdminPendingUser
-import com.umc.domain.model.act.check.UserCheckAvailable
-import com.umc.domain.model.act.check.UserCheckHistory
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.repository.attendance.AttendanceRepository
@@ -18,21 +14,9 @@ class AttendanceRepositoryImpl @Inject constructor(
     private val attendanceRemoteDataSource: AttendanceRemoteDataSource
 ) : AttendanceRepository {
 
-    override suspend fun getAttendanceAvailable(): ApiState<List<UserCheckAvailable>> {
-        return attendanceRemoteDataSource.getAttendanceAvailable().map { responseList ->
-            responseList.map { it.toUserCheckAvailable() }
-        }
-    }
-
     override suspend fun getPendingUsers(scheduleId: Long): ApiState<List<AdminPendingUser>> {
         return attendanceRemoteDataSource.getPendingUsers(scheduleId).map { responseList ->
             responseList.map { it.toAdminPendingUser() }
-        }
-    }
-
-    override suspend fun getAttendanceHistory(): ApiState<List<UserCheckHistory>> {
-        return attendanceRemoteDataSource.getAttendanceHistory().map { responseList ->
-            responseList.map { it.toUserCheckHistory() }
         }
     }
 

@@ -10,7 +10,10 @@ import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
@@ -111,7 +114,7 @@ data class ScheduleMeResponse(
                 id = scheduleId,
                 title = name,
                 tags = tags?.mapNotNull { runCatching { CategoryType.valueOf(it) }.getOrNull() },
-                sheetId = 0,
+                sheetId = scheduleId,
                 startTime = startsAt,
                 endTime = endsAt,
                 status = CheckAvailableStatus.BEFORE,
@@ -132,13 +135,13 @@ data class ScheduleMeResponse(
                 date = date,
                 startTime = startTime,
                 endTime = endTime,
-                status = AdminSessionStatus.fromServerValue(attendanceStatus ?: ""),
+                status = AdminSessionStatus.fromScheduleTimes(startsAt, endsAt),
                 attendanceRate = 0,
                 totalChallengers = participants?.size ?: 0,
                 attendedChallengers = 0,
                 pendingCount = 0,
                 pendingUsers = emptyList(),
-                sheetId = null
+                sheetId = scheduleId
             )
         }
     }

@@ -12,6 +12,7 @@ import com.umc.domain.usecase.schedule.UpdateScheduleLocationUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
+import com.umc.presentation.util.ULog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,10 +35,7 @@ class AdminCheckViewModel @Inject constructor(
             resultResponse(
                 response = getAdminSessionListUseCase(),
                 successCallback = { data ->
-                    viewModelScope.launch {
-                        startLoading()
-                        checkPermissionsAndUpdate(data)
-                    }
+                    checkPermissionsAndUpdate(data)
                 },
                 errorCallback = { failState ->
                     emitEvent(AdminCheckEvent.ShowToast(failState.message, isError = true))
@@ -48,7 +46,8 @@ class AdminCheckViewModel @Inject constructor(
     /**
      * 각 세션별로 권한 체크를 병렬 실행
      */
-    private suspend fun checkPermissionsAndUpdate(sessions: List<AdminSessionCheck>) {
+    private fun checkPermissionsAndUpdate(sessions: List<AdminSessionCheck>) = viewModelScope.launch {
+        ULog.d("하이 $sessions")
         val uiModels = sessions
             .filter { it.sheetId != null }
             .map { session ->

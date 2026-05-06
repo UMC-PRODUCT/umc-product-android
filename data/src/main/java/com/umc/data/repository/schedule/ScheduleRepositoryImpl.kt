@@ -4,12 +4,14 @@ import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
+import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse.Companion.toUserCheckHistory
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse.Companion.toDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toAdminDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toModel
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toMonthDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toPlanDetailDomain
 import com.umc.domain.model.act.check.AdminSessionCheck
+import com.umc.domain.model.act.check.UserCheckHistory
 import com.umc.domain.model.home.schedule.ScheduleCapabilities
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.base.ApiState
@@ -67,6 +69,15 @@ class ScheduleRepositoryImpl @Inject constructor(
         val (from, to) = monthToUtcRange(year, month)
         return scheduleRemoteDataSource.getSchedules(from, to, isAttendanceRequired = false).map { list ->
             list.map { it.toMonthDomain() }
+        }
+    }
+
+    // 출석 가능 세션 조회 - 현재 월 기준 isAttendanceRequired=true
+    override suspend fun getAttendanceAvailableSessions(): ApiState<List<UserCheckAvailable>> {
+        val now = ZonedDateTime.now(ZoneId.systemDefault())
+        val (from, to) = monthToUtcRange(now.year, now.monthValue)
+        return scheduleRemoteDataSource.getSchedules(from, to, isAttendanceRequired = true).map { list ->
+            list.map { it.toModel() }
         }
     }
 
@@ -188,6 +199,16 @@ class ScheduleRepositoryImpl @Inject constructor(
             requiresApproval = request.requiresApproval
         )
         return scheduleRemoteDataSource.createStudyGroupSchedule(req)
+    }
+
+    override suspend fun getAttendanceHistory(
+        from: String?,
+        to: String?,
+        attendanceStatus: String?
+    ): ApiState<List<UserCheckHistory>> {
+        return scheduleRemoteDataSource.getAttendanceHistory(from, to, attendanceStatus).map { list ->
+            list.map { it.toUserCheckHistory() }
+        }
     }
 
     // 로컬 시간대 기준 해당 월의 시작(00:00:00.000) ~ 끝(23:59:59.999)을 UTC ISO8601로 변환

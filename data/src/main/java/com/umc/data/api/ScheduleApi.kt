@@ -6,6 +6,7 @@ import com.umc.data.request.schedule.DecideAttendanceRequest
 import com.umc.data.request.schedule.ExcuseAttendanceRequest
 import com.umc.data.request.schedule.ScheduleAttendanceRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
+import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
 import com.umc.data.response.schedule.ScheduleMeResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
@@ -93,5 +94,13 @@ interface ScheduleApi {
         @Path("scheduleId") scheduleId: Long,
         @Body request: ExcuseAttendanceRequest
     ): ApiResponse<Unit>
+
+    // 출석 이력 조회
+    @GET(Endpoints.Schedule.ATTENDANCE_HISTORY)
+    suspend fun getAttendanceHistory(
+        @Query("from") from: String? = null,
+        @Query("to") to: String? = null,
+        @Query("attendanceStatus") attendanceStatus: String? = null
+    ): ApiResponse<List<ScheduleAttendanceHistoryResponse>>
 }
 
