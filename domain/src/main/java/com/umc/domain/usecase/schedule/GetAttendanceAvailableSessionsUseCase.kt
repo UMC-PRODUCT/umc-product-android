@@ -8,6 +8,6 @@ import javax.inject.Inject
 class GetAttendanceAvailableSessionsUseCase @Inject constructor(
     private val scheduleRepository: ScheduleRepository
 ) {
-    suspend operator fun invoke(): ApiState<List<UserCheckAvailable>> =
-        scheduleRepository.getAttendanceAvailableSessions()
+    suspend operator fun invoke(isAttendanceRequired: Boolean = true): ApiState<List<UserCheckAvailable>> =
+        scheduleRepository.getAttendanceAvailableSessions(isAttendanceRequired)
 }

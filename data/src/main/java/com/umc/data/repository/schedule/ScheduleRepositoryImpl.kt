@@ -4,14 +4,13 @@ import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
-import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse.Companion.toUserCheckHistory
+import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse.Companion.toAdminDomain
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse.Companion.toDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toAdminDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toModel
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toMonthDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toPlanDetailDomain
 import com.umc.domain.model.act.check.AdminSessionCheck
-import com.umc.domain.model.act.check.UserCheckHistory
 import com.umc.domain.model.home.schedule.ScheduleCapabilities
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.base.ApiState
@@ -72,11 +71,11 @@ class ScheduleRepositoryImpl @Inject constructor(
         }
     }
 
-    // 출석 가능 세션 조회 - 현재 월 기준 isAttendanceRequired=true
-    override suspend fun getAttendanceAvailableSessions(): ApiState<List<UserCheckAvailable>> {
+    // 출석 가능 세션 조회 (true) / 이력 조회 (false) - 현재 월 기준
+    override suspend fun getAttendanceAvailableSessions(isAttendanceRequired: Boolean): ApiState<List<UserCheckAvailable>> {
         val now = ZonedDateTime.now(ZoneId.systemDefault())
         val (from, to) = monthToUtcRange(now.year, now.monthValue)
-        return scheduleRemoteDataSource.getSchedules(from, to, isAttendanceRequired = true).map { list ->
+        return scheduleRemoteDataSource.getSchedules(from, to, isAttendanceRequired).map { list ->
             list.map { it.toModel() }
         }
     }
@@ -205,9 +204,9 @@ class ScheduleRepositoryImpl @Inject constructor(
         from: String?,
         to: String?,
         attendanceStatus: String?
-    ): ApiState<List<UserCheckHistory>> {
+    ): ApiState<List<AdminSessionCheck>> {
         return scheduleRemoteDataSource.getAttendanceHistory(from, to, attendanceStatus).map { list ->
-            list.map { it.toUserCheckHistory() }
+            list.map { it.toAdminDomain() }
         }
     }
 

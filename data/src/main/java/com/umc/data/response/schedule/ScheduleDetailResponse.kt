@@ -34,6 +34,7 @@ data class ScheduleDetailResponse(
                 startTime = startsAt,
                 endTime = endsAt,
                 status = CheckAvailableStatus.BEFORE,
+                rawStatus = null,
                 latitude = latitude ?: 0.0,
                 longitude = longitude ?: 0.0,
                 address = locationName ?: "",

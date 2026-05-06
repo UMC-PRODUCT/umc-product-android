@@ -2,26 +2,19 @@ package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.act.check.AdminSessionCheck
-import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.enums.PermissionType
-import com.umc.domain.model.enums.ResourceType
-import com.umc.domain.usecase.GetAuthAccessUseCase
-import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
-import com.umc.domain.usecase.schedule.GetAdminSessionListUseCase
+import com.umc.domain.usecase.schedule.GetScheduleAttendanceHistoryUseCase
 import com.umc.domain.usecase.schedule.UpdateScheduleLocationUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
-import com.umc.presentation.util.ULog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class AdminCheckViewModel @Inject constructor(
-    private val getAdminSessionListUseCase: GetAdminSessionListUseCase,
-    private val updateScheduleLocationUseCase: UpdateScheduleLocationUseCase,
-    private val getAuthAccessUseCase: GetAuthAccessUseCase
+    private val getScheduleAttendanceHistoryUseCase: GetScheduleAttendanceHistoryUseCase,
+    private val updateScheduleLocationUseCase: UpdateScheduleLocationUseCase
 ) : BaseViewModel<AdminCheckUiState, AdminCheckEvent>(AdminCheckUiState()) {
 
     init {
@@ -33,7 +26,7 @@ class AdminCheckViewModel @Inject constructor(
 
         viewModelScope.launch {
             resultResponse(
-                response = getAdminSessionListUseCase(),
+                response = getScheduleAttendanceHistoryUseCase(),
                 successCallback = { data ->
                     checkPermissionsAndUpdate(data)
                 },
@@ -47,30 +40,13 @@ class AdminCheckViewModel @Inject constructor(
      * 각 세션별로 권한 체크를 병렬 실행
      */
     private fun checkPermissionsAndUpdate(sessions: List<AdminSessionCheck>) = viewModelScope.launch {
-        ULog.d("하이 $sessions")
         val uiModels = sessions
             .filter { it.sheetId != null }
             .map { session ->
-                // 출석 승인 권한 체크
-                val approveAuthResponse = getAuthAccessUseCase(ResourceType.ATTENDANCE_SHEET, session.sheetId!!)
-                val hasApprove = if (approveAuthResponse is ApiState.Success) {
-                    approveAuthResponse.data.permissions.any {
-                        it.type == PermissionType.APPROVE && it.hasPermission
-                    }
-                } else false
-
-                // 위치 변경 권한 체크
-                val writeAuthResponse = getAuthAccessUseCase(ResourceType.SCHEDULE, session.id)
-                val hasWrite = if (writeAuthResponse is ApiState.Success) {
-                    writeAuthResponse.data.permissions.any {
-                        it.type == PermissionType.WRITE && it.hasPermission
-                    }
-                } else false
-
                 AdminSessionUIModel(
                     session = session,
-                    hasApprovePermission = hasApprove,
-                    hasWritePermission = hasWrite
+                    hasApprovePermission = true,
+                    hasWritePermission = true
                 )
             }
 

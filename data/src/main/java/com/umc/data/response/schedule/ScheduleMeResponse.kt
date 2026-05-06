@@ -3,6 +3,7 @@ package com.umc.data.response.schedule
 import com.google.gson.annotations.SerializedName
 import com.umc.domain.model.UDomainFormat.isAllDayInKst
 import com.umc.domain.model.UDomainFormat.parseDateTime
+import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.enums.AdminSessionStatus
@@ -51,7 +52,10 @@ data class ScheduleMeResponse(
         @SerializedName("nickname") val nickname: String,
         @SerializedName("schoolId") val schoolId: Long,
         @SerializedName("schoolName") val schoolName: String,
-        @SerializedName("profileImageUrl") val profileImageUrl: String?
+        @SerializedName("profileImageUrl") val profileImageUrl: String?,
+        @SerializedName("attendanceStatus") val attendanceStatus: String?,
+        @SerializedName("isLocationVerified") val isLocationVerified: Boolean?,
+        @SerializedName("excuseReason") val excuseReason: String?
     )
 
     companion object {
@@ -118,6 +122,7 @@ data class ScheduleMeResponse(
                 startTime = startsAt,
                 endTime = endsAt,
                 status = CheckAvailableStatus.fromServerValue(attendanceStatus),
+                rawStatus = attendanceStatus,
                 latitude = location?.latitude ?: 0.0,
                 longitude = location?.longitude ?: 0.0,
                 address = location?.locationName ?: "",
@@ -129,6 +134,9 @@ data class ScheduleMeResponse(
             val (date, startTime) = startsAt.parseDateTime()
             val (_, endTime) = endsAt.parseDateTime()
 
+            val pendingStatuses = setOf("PRESENT_PENDING", "LATE_PENDING", "EXCUSED_PENDING")
+            val pendingParticipants = participants?.filter { it.attendanceStatus in pendingStatuses } ?: emptyList()
+
             return AdminSessionCheck(
                 id = scheduleId,
                 title = name,
@@ -139,8 +147,20 @@ data class ScheduleMeResponse(
                 attendanceRate = 0,
                 totalChallengers = participants?.size ?: 0,
                 attendedChallengers = 0,
-                pendingCount = 0,
-                pendingUsers = emptyList(),
+                pendingCount = pendingParticipants.size,
+                pendingUsers = pendingParticipants.map { p ->
+                    AdminPendingUser(
+                        id = p.memberId,
+                        memberId = p.memberId,
+                        name = p.name,
+                        nickname = p.nickname,
+                        university = p.schoolName,
+                        profileImageUrl = p.profileImageUrl,
+                        requestTime = "",
+                        hasLateReason = p.excuseReason != null,
+                        lateReason = p.excuseReason
+                    )
+                },
                 sheetId = scheduleId
             )
         }
