@@ -84,6 +84,7 @@ object Endpoints {
         const val ATTENDANCE_DECIDE = "api/v2/schedules/{scheduleId}/attendances/decide"
         const val ATTENDANCE_EXCUSE = "api/v2/schedules/{scheduleId}/attendances/excuse"
         const val ATTENDANCE_HISTORY = "api/v2/schedules/attendance"
+        const val ATTENDANCE_DETAIL = "api/v2/schedules/{scheduleId}/attendance"
     }
 
     object Community{

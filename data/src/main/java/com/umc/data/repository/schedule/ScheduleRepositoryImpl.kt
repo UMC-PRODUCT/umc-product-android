@@ -10,6 +10,7 @@ import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toAdminDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toModel
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toMonthDomain
 import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toPlanDetailDomain
+import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.home.schedule.ScheduleCapabilities
 import com.umc.domain.model.act.check.UserCheckAvailable
@@ -207,6 +208,27 @@ class ScheduleRepositoryImpl @Inject constructor(
     ): ApiState<List<AdminSessionCheck>> {
         return scheduleRemoteDataSource.getAttendanceHistory(from, to, attendanceStatus).map { list ->
             list.map { it.toAdminDomain() }
+        }
+    }
+
+    override suspend fun getPendingUsers(scheduleId: Long): ApiState<List<AdminPendingUser>> {
+        val pendingStatuses = setOf("PRESENT_PENDING", "LATE_PENDING", "EXCUSED_PENDING", "ABSENT_EXCUSE_PENDING", "LATE_EXCUSE_PENDING")
+        return scheduleRemoteDataSource.getScheduleAttendanceDetail(scheduleId, attendanceStatus = null).map { response ->
+            response.participants
+                ?.filter { it.attendanceStatus in pendingStatuses }
+                ?.map { p ->
+                    AdminPendingUser(
+                        id = p.memberId,
+                        memberId = p.memberId,
+                        name = p.name,
+                        nickname = p.nickname,
+                        university = p.schoolName,
+                        profileImageUrl = p.profileImageUrl,
+                        requestTime = "",
+                        hasLateReason = p.excuseReason != null,
+                        lateReason = p.excuseReason
+                    )
+                } ?: emptyList()
         }
     }
 

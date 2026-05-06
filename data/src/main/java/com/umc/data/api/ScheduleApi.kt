@@ -102,5 +102,12 @@ interface ScheduleApi {
         @Query("to") to: String? = null,
         @Query("attendanceStatus") attendanceStatus: String? = null
     ): ApiResponse<List<ScheduleAttendanceHistoryResponse>>
+
+    // 단일 일정 출석 현황 조회
+    @GET(Endpoints.Schedule.ATTENDANCE_DETAIL)
+    suspend fun getScheduleAttendanceDetail(
+        @Path("scheduleId") scheduleId: Long,
+        @Query("attendanceStatus") attendanceStatus: String? = null
+    ): ApiResponse<ScheduleAttendanceHistoryResponse>
 }
 

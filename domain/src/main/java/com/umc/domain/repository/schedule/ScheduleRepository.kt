@@ -1,4 +1,5 @@
 package com.umc.domain.repository.schedule
+import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.home.schedule.ScheduleCapabilities
@@ -61,4 +62,7 @@ interface ScheduleRepository {
 
     // 출석 이력 조회 (admin용)
     suspend fun getAttendanceHistory(from: String? = null, to: String? = null, attendanceStatus: String? = null): ApiState<List<AdminSessionCheck>>
+
+    // 단일 일정 승인 대기 유저 조회
+    suspend fun getPendingUsers(scheduleId: Long): ApiState<List<AdminPendingUser>>
 }

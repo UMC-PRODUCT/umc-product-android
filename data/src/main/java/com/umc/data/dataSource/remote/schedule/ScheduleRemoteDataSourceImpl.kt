@@ -101,4 +101,11 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
         return apiCall { scheduleApi.getAttendanceHistory(from, to, attendanceStatus) }
     }
 
+    override suspend fun getScheduleAttendanceDetail(
+        scheduleId: Long,
+        attendanceStatus: String?
+    ): ApiState<ScheduleAttendanceHistoryResponse> {
+        return apiCall { scheduleApi.getScheduleAttendanceDetail(scheduleId, attendanceStatus) }
+    }
+
 }

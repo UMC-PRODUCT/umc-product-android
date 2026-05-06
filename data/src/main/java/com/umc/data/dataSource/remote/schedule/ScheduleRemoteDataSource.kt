@@ -51,5 +51,8 @@ interface ScheduleRemoteDataSource {
 
     // 출석 이력 조회
     suspend fun getAttendanceHistory(from: String?, to: String?, attendanceStatus: String?): ApiState<List<ScheduleAttendanceHistoryResponse>>
+
+    // 단일 일정 출석 현황 조회
+    suspend fun getScheduleAttendanceDetail(scheduleId: Long, attendanceStatus: String?): ApiState<ScheduleAttendanceHistoryResponse>
 }
 
