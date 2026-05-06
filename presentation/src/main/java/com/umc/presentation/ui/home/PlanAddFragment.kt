@@ -66,6 +66,11 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
 
             planaddBtnBack.setOnClickListener { moveBackPressed() }
 
+            //비대면 체크박스
+            planaddLayoutOnlineCheck.setOnClickListener {
+                viewModel.toggleOnlineCheck()
+            }
+
             //출석부 함께 생성 체크박스
             planaddLayoutAttendanceCheck.setOnClickListener {
                 viewModel.toggleAttendanceCheck()
@@ -88,14 +93,12 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
                 viewModel.submitPlan(viewModel.uiState.value.isAttendanceChecked)
             }
 
-            //장소 선택 부분 터치시 다이얼로그 로직
+            //장소 선택 부분 터치시 다이얼로그 로직 (비대면 체크 시 비활성)
             binding.planaddCdvPlanLocation.setOnClickListener {
-                // 앞서 만든 BottomSheetDialog 생성
+                if (viewModel.uiState.value.isOnlineChecked) return@setOnClickListener
                 val locationDialog = BottomSheetLocationDialog { selectedItem ->
-                    // 선택된 장소(LocationItem)의 제목을 뷰모델 이벤트로 전달
                     viewModel.updatePlanLocation(selectedItem)
                 }
-                // 다이얼로그 표시
                 locationDialog.show(childFragmentManager, "LocationSelect")
             }
 

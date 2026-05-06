@@ -273,8 +273,8 @@ constructor(
                     tags = selectedTags,
                     startsAt = startsAt,
                     endsAt = endsAt,
-                    location = UpdateSchedule.Location(state.latitude, state.longitude, state.planLocation),
-                    isOnline = null, // UI에서 대면/비대면 전환 미지원, 기존 상태 유지
+                    location = if (state.isOnlineChecked) null else UpdateSchedule.Location(state.latitude, state.longitude, state.planLocation),
+                    isOnline = if (state.isOnlineChecked) true else null,
                     isAttendanceRequired = if (isAttendance) true else null,
                     attendancePolicy = attendancePolicyForUpdate,
                     participantMemberIds = participantIds,
@@ -301,7 +301,7 @@ constructor(
                     tags = selectedTags,
                     startsAt = startsAt,
                     endsAt = endsAt,
-                    location = CreateSchedule.Location(
+                    location = if (state.isOnlineChecked) null else CreateSchedule.Location(
                         latitude = state.latitude,
                         longitude = state.longitude,
                         locationName = state.planLocation
@@ -411,6 +411,19 @@ constructor(
     // 출석부 함께 생성 체크 토글
     fun toggleAttendanceCheck() {
         updateState { copy(isAttendanceChecked = !isAttendanceChecked) }
+    }
+
+    // 비대면 체크 토글 (체크 시 장소 초기화)
+    fun toggleOnlineCheck() {
+        val newChecked = !uiState.value.isOnlineChecked
+        updateState {
+            copy(
+                isOnlineChecked = newChecked,
+                planLocation = if (newChecked) "" else planLocation,
+                latitude = if (newChecked) 0.0 else latitude,
+                longitude = if (newChecked) 0.0 else longitude
+            )
+        }
     }
 
     // 출석 정책 시간 업데이트
@@ -528,7 +541,10 @@ data class PlanAddFragmentUiState(
     val lateEndTimeText: String = "시간 선택",
 
     // 출석부 함께 생성 체크 여부 (운영진 전용)
-    val isAttendanceChecked: Boolean = false
+    val isAttendanceChecked: Boolean = false,
+
+    // 비대면 진행 여부
+    val isOnlineChecked: Boolean = false
 
     ) : UiState {
     //참여자 명단(recyclerview를 보여주는지 체크 여부)
@@ -553,7 +569,7 @@ data class PlanAddFragmentUiState(
             **/
 
 
-            return isTextValid && isSelectedCategory && planLocation != ""
+            return isTextValid && isSelectedCategory && (isOnlineChecked || planLocation != "")
         }
 }
 

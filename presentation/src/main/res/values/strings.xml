@@ -45,6 +45,7 @@
     <string name="attendance_date_placeholder">날짜 선택</string>
     <string name="attendance_time_placeholder">시간 선택</string>
     <string name="planadd_attendance_check_label">출석부도 함께 생성하기</string>
+    <string name="planadd_online_check_label">비대면으로 진행하고 싶어요</string>
 
     <!-- mypage -->
     <string name="mypage_title">마이페이지</string>
