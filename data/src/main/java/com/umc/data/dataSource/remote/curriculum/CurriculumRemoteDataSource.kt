@@ -1,18 +1,19 @@
 package com.umc.data.dataSource.remote.curriculum
 
 import com.umc.data.mapper.toFailState
-import com.umc.data.response.curriculum.CurriculumProgressResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
+import com.umc.data.response.curriculum.CurriculumOverviewResponse
 import com.umc.domain.model.curriculum.StudyGroup
 
 
 interface CurriculumRemoteDataSource {
 
-    suspend fun getMyCurriculumProgress(
-        page: Int?,
-        limit: Int?
-    ): ApiState<CurriculumProgressResponse>
+    suspend fun getCurriculumOverview(
+        gisuId: Long,
+        part: String,
+        weekNo: Long? = null
+    ): ApiState<CurriculumOverviewResponse>
 
     suspend fun submitChallengerWorkbook(
         originalWorkbookId: Long,

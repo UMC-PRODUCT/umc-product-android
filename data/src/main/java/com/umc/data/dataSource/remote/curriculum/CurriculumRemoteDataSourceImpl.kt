@@ -2,11 +2,11 @@ package com.umc.data.dataSource.remote.curriculum
 
 import com.umc.data.api.CurriculumApi
 import com.umc.data.request.curriculum.ChallengerWorkbookSubmitRequest
-import com.umc.data.response.curriculum.CurriculumProgressResponse
 import com.umc.domain.model.base.ApiState
 import javax.inject.Inject
 import com.umc.data.mapper.toFailState
 import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
+import com.umc.data.response.curriculum.CurriculumOverviewResponse
 import com.umc.domain.model.base.FailState
 
 import com.umc.domain.model.base.ApiResponse
@@ -17,9 +17,13 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
     private val curriculumApi: CurriculumApi
 ) : CurriculumRemoteDataSource {
 
-    override suspend fun getMyCurriculumProgress(page: Int?, limit: Int?): ApiState<CurriculumProgressResponse> {
+    override suspend fun getCurriculumOverview(
+        gisuId: Long,
+        part: String,
+        weekNo: Long?
+    ): ApiState<CurriculumOverviewResponse> {
         return try {
-            val res = curriculumApi.getMyCurriculumProgress(page, limit)
+            val res = curriculumApi.getCurriculumOverview(gisuId, part, weekNo)
             val body = res.result
             if (body == null) {
                 ApiState.Fail(failState = IllegalStateException("Empty body").toFailState())
