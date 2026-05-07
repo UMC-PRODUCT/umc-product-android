@@ -15,11 +15,12 @@ class CurriculumRepositoryImpl @Inject constructor(
     private val remote: CurriculumRemoteDataSource
 ) : CurriculumRepository {
 
-    override suspend fun getMyCurriculumProgress(
-        page: Int?,
-        limit: Int?
+    override suspend fun getCurriculumOverview(
+        gisuId: Long,
+        part: String,
+        weekNo: Long?
     ): ApiState<StudyProgress> {
-        return when (val res = remote.getMyCurriculumProgress(page, limit)) {
+        return when (val res = remote.getCurriculumOverview(gisuId, part, weekNo)) {
             is ApiState.Success -> ApiState.Success(res.data.toModel())
             is ApiState.Fail -> res
         }
