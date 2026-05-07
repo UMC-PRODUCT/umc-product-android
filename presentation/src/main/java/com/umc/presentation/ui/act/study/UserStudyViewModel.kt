@@ -60,7 +60,11 @@ class UserStudyViewModel @Inject constructor(
     private fun observeUserInfo() {
         viewModelScope.launch {
             appDataStoreRepository.getUserInfo()
-                .distinctUntilChanged()
+                .distinctUntilChanged { old, new ->
+                    val oldR = old.challengerRecords.firstOrNull()
+                    val newR = new.challengerRecords.firstOrNull()
+                    oldR?.gisuId == newR?.gisuId && oldR?.part == newR?.part
+                }
                 .collect { userInfo ->
                     val record = userInfo.challengerRecords.firstOrNull()
                     val gisuId = record?.gisuId ?: return@collect
