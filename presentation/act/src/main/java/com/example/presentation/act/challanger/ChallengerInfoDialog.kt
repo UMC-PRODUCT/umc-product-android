@@ -145,7 +145,7 @@ fun ChallengerInfoDialog(
                 )
             }
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(24.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
