@@ -47,6 +47,7 @@ import com.umc.component.theme.neutral050
 import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral300
+import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral700
 import com.umc.component.theme.neutral800
@@ -226,12 +227,19 @@ private fun emptyScreen() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_people),
-                contentDescription = null,
-                tint = neutral600(),
-                modifier = Modifier.size(32.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(48.dp),
+                contentAlignment = Alignment.Center
+            ){
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_people),
+                    contentDescription = null,
+                    tint = neutral400(),
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(4.dp))
             UText(
                 text = AppStrings.ATTENDANCE_EMPTY_ADMIN_SESSIONS,
