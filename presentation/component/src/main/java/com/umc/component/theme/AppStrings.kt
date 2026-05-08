@@ -301,7 +301,8 @@ object AppStrings {
     const val STUDY_LEADER_ADD_PLACEHOLDER = "담당 파트장을 추가하세요"
     const val STUDY_LEADER_SEARCH_TITLE = "담당 파트장을 검색하세요"
     const val DELETE = "삭제"
-    const val ACT_LOCATION_UPDATE = "지도에서 새로운 출석 체크 위치를 지정해주세요.\\n이 위치 반경 50m 이내에서만 출석할 수 있습니다."
+    const val ACT_LOCATION_TITLE="출석 위치 변경"
+    const val ACT_LOCATION_UPDATE = "지도에서 새로운 출석 체크 위치를 지정해주세요.\n이 위치 반경 50m 이내에서만 출석할 수 있습니다."
     const val EMPTY_SEARCH_RESULT = "검색 결과가 없습니다"
     const val LOADING_DEFAULT_MESSAGE = "로딩 중입니다."
 }
