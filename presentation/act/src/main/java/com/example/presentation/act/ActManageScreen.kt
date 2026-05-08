@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.presentation.act.attendance.AttendanceRoute
+import com.example.presentation.act.challanger.ChallengerRoute
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.AppStrings.ADMIN_LABEL
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
@@ -127,7 +128,7 @@ private fun ActManageScreen(
         ) { page ->
             when (page) {
                 0 -> AttendanceRoute()
-//                2 -> NoticeScreen()
+                2 -> ChallengerRoute()
             }
         }
     }
