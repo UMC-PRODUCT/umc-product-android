@@ -139,13 +139,13 @@ fun FixLocationScreen() {
                     .weight(1f)
                     .wrapContentHeight(),
                 singleLine = true,
-                textStyle = Subheadline,
+                textStyle = Body,
                 cursorBrush = SolidColor(neutral800()),
                 decorationBox = { innerTextField ->
                     if (searchKeyword.isBlank()) {
                         UText(
                             text = AppStrings.ACT_LOCATION_SEARCH_PLACEHOLDER,
-                            style = Subheadline,
+                            style = Body,
                             color = neutral400()
                         )
                     }
