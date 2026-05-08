@@ -104,7 +104,7 @@ object AppStrings {
     const val COMMUNITY_WRITE_LIGHT_OPENCHAT_PLACEHOLDER = "링크를 입력해주세요"
     const val COMMUNITY_WRITE_LIGHT_OPENCHAT_ERROR = "https://open.kakao.com/로 시작해야 합니다"
     const val COMMUNITY_SEARCH_PLACEHOLD = "제목, 내용 검색"
-    const val COMMUNITY_SEARCH_RECENT = "최근 검색어"
+    const val COMMUNITY_SEARCH_RECENT = "최근 검색"
     const val COMMUNITY_SEARCH_DELETEALL = "전체 삭제"
     const val COMMUNITY_TOP_NO_RESULT = "게시글이 존재하지 않습니다"
     const val SIGN_UP = "회원가입"
@@ -303,6 +303,7 @@ object AppStrings {
     const val DELETE = "삭제"
     const val ACT_LOCATION_TITLE="출석 위치 변경"
     const val ACT_LOCATION_UPDATE = "지도에서 새로운 출석 체크 위치를 지정해주세요.\n이 위치 반경 50m 이내에서만 출석할 수 있습니다."
+    const val ACT_LOCATION_SEARCH_PLACEHOLDER = "위치를 입력하세요"
     const val EMPTY_SEARCH_RESULT = "검색 결과가 없습니다"
     const val LOADING_DEFAULT_MESSAGE = "로딩 중입니다."
 }
