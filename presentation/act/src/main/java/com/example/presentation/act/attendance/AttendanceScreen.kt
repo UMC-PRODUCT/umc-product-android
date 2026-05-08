@@ -35,7 +35,6 @@ import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
-import com.umc.component.theme.UmcTypographyTokens.Caption1
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
@@ -220,7 +219,7 @@ fun AdminSessionCard(
 }
 
 @Composable
-private fun emptyScreen() {
+private fun EmptyScreen() {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.align(Alignment.Center),
@@ -254,7 +253,7 @@ private fun emptyScreen() {
 @Composable
 private fun emptyScreenPreview() {
     UmcTheme(darkTheme = false) {
-        emptyScreen()
+        EmptyScreen()
     }
 }
 
