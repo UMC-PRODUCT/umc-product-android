@@ -33,6 +33,7 @@ import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.danger100
+import com.umc.component.theme.danger500
 import com.umc.component.theme.danger700
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral050
@@ -44,8 +45,10 @@ import com.umc.component.theme.neutral900
 import com.umc.component.theme.primary100
 import com.umc.component.theme.primary500
 import com.umc.component.theme.success100
+import com.umc.component.theme.success500
 import com.umc.component.theme.success700
 import com.umc.component.theme.warning100
+import com.umc.component.theme.warning500
 import com.umc.component.theme.warning700
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerInfoHistory
@@ -164,7 +167,7 @@ fun ChallengerInfoDialog(
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
 
             Column(
                 modifier = Modifier
@@ -173,7 +176,7 @@ fun ChallengerInfoDialog(
                     .border(1.dp, neutral200(), RoundedCornerShape(12.dp))
                     .background(neutral000())
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 model.history.forEach { history ->
                     HistoryItemRow(history = history)
@@ -241,21 +244,22 @@ private fun HistoryItemRow(history: ChallengerInfoHistory) {
         CheckHistoryStatus.ABSENT -> danger100()
     }
     val textColor = when (history.status) {
-        CheckHistoryStatus.PRESENT -> success700()
-        CheckHistoryStatus.LATE -> warning700()
-        CheckHistoryStatus.ABSENT -> danger700()
+        CheckHistoryStatus.PRESENT -> success500()
+        CheckHistoryStatus.LATE -> warning500()
+        CheckHistoryStatus.ABSENT -> danger500()
     }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .background(bgColor)
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .height(24.dp)
+                .padding(horizontal = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             UText(
@@ -268,7 +272,7 @@ private fun HistoryItemRow(history: ChallengerInfoHistory) {
         UText(
             text = history.title,
             style = Subheadline,
-            color = neutral900()
+            color = neutral800()
         )
     }
 }
