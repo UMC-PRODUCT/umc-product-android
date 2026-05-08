@@ -114,7 +114,7 @@ fun ChallengerInfoDialog(
                 UText(
                     text = model.name,
                     style = Title3Bold,
-                    color = neutral900()
+                    color = neutral800()
                 )
 
                 InfoChip(
