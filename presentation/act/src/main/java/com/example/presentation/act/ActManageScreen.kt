@@ -1,6 +1,7 @@
 package com.example.presentation.act
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,7 +19,9 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,18 +31,24 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.presentation.act.admin.attendance.AttendanceRoute
 import com.example.presentation.act.admin.challanger.ChallengerRoute
+import com.example.presentation.act.normal.attendance.NormalAttendanceRoute
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.AppStrings.ADMIN_LABEL
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title2Bold
-import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
 import kotlinx.coroutines.launch
+
+private data class ManageTab(
+    val title: String,
+    val content: @Composable () -> Unit
+)
 
 @Composable
 fun ActManageRoute(
@@ -57,11 +66,21 @@ private fun ActManageScreen(
     uiState: ActViewModel.ActivityManagementUiState,
     onAdminCheckedChange: (Boolean) -> Unit
 ) {
-    val tabs = listOf(
-        AppStrings.TAB_ATTENDANCE_ADMIN,
-        AppStrings.TAB_STUDY_ADMIN,
-        AppStrings.TAB_CHALLENGE_ADMIN
-    )
+    val tabs = remember(uiState.isAdmin) {
+        if (uiState.isAdmin) {
+            listOf(
+                ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { AttendanceRoute() },
+                ManageTab(AppStrings.TAB_STUDY_ADMIN) { ComingSoonScreen() },
+                ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { ChallengerRoute() }
+            )
+        } else {
+            listOf(
+                ManageTab(AppStrings.TAB_ATTENDANCE_USER) { NormalAttendanceRoute() },
+                ManageTab(AppStrings.TAB_STUDY_USER) { ComingSoonScreen() },
+                ManageTab(AppStrings.TAB_CHALLENGE_USER) { ComingSoonScreen() }
+            )
+        }
+    }
 
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -69,6 +88,12 @@ private fun ActManageScreen(
     )
 
     val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(tabs.size) {
+        if (pagerState.currentPage >= tabs.size) {
+            pagerState.scrollToPage(tabs.lastIndex)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -97,7 +122,7 @@ private fun ActManageScreen(
             },
             divider = {}
         ) {
-            tabs.forEachIndexed { index, title ->
+            tabs.forEachIndexed { index, tab ->
                 Tab(
                     selected = pagerState.currentPage == index,
                     onClick = {
@@ -107,7 +132,7 @@ private fun ActManageScreen(
                     },
                     text = {
                         Text(
-                            text = title,
+                            text = tab.title,
                             color = if (pagerState.currentPage == index) {
                                 neutral800()
                             } else {
@@ -126,24 +151,21 @@ private fun ActManageScreen(
                 .fillMaxSize()
                 .background(neutral100())
         ) { page ->
-            when (page) {
-                0 -> AttendanceRoute()
-                2 -> ChallengerRoute()
-            }
+            tabs[page].content()
         }
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-private fun ActScreenPreview() {
-    UmcTheme(darkTheme = false) {
-        ActManageScreen(
-            uiState = ActViewModel.ActivityManagementUiState(
-                isAdmin = true,
-                hasAdminAccess = true
-            ),
-            onAdminCheckedChange = {}
+private fun ComingSoonScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "준비 중인 화면입니다.",
+            style = Subheadline,
+            color = neutral600()
         )
     }
 }
@@ -194,4 +216,32 @@ fun AdminToggle(
         checked = isAdmin,
         onCheckedChange = onAdminChanged
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AdminActScreenPreview() {
+    UmcTheme(darkTheme = false) {
+        ActManageScreen(
+            uiState = ActViewModel.ActivityManagementUiState(
+                isAdmin = true,
+                hasAdminAccess = true
+            ),
+            onAdminCheckedChange = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NormalActScreenPreview() {
+    UmcTheme(darkTheme = false) {
+        ActManageScreen(
+            uiState = ActViewModel.ActivityManagementUiState(
+                isAdmin = false,
+                hasAdminAccess = true
+            ),
+            onAdminCheckedChange = {}
+        )
+    }
 }
