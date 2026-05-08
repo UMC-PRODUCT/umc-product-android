@@ -1,4 +1,4 @@
-﻿package com.example.presentation.act.attendance
+﻿package com.example.presentation.act.admin.attendance
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

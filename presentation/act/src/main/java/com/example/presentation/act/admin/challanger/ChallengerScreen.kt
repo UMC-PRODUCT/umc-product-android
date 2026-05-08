@@ -1,4 +1,4 @@
-package com.example.presentation.act.challanger
+package com.example.presentation.act.admin.challanger
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

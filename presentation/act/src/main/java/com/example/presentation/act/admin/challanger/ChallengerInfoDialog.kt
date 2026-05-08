@@ -1,4 +1,4 @@
-package com.example.presentation.act.challanger
+package com.example.presentation.act.admin.challanger
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,7 +34,6 @@ import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.danger100
 import com.umc.component.theme.danger500
-import com.umc.component.theme.danger700
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral050
 import com.umc.component.theme.neutral200
@@ -46,10 +45,8 @@ import com.umc.component.theme.primary100
 import com.umc.component.theme.primary500
 import com.umc.component.theme.success100
 import com.umc.component.theme.success500
-import com.umc.component.theme.success700
 import com.umc.component.theme.warning100
 import com.umc.component.theme.warning500
-import com.umc.component.theme.warning700
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.domain.model.enums.CheckHistoryStatus

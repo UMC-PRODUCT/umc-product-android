@@ -1,4 +1,4 @@
-package com.example.presentation.act.attendance.pendingList
+package com.example.presentation.act.admin.attendance.pendingList
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

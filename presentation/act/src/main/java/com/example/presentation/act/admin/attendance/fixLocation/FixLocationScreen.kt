@@ -1,4 +1,4 @@
-package com.example.presentation.act.attendance.fixLocation
+package com.example.presentation.act.admin.attendance.fixLocation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
