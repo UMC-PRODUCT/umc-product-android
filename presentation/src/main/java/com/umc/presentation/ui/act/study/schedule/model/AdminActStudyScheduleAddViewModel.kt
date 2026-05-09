@@ -2,7 +2,11 @@ package com.umc.presentation.ui.act.study.schedule.model
 
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
+import com.umc.domain.usecase.curriculum.GetCurriculumOverviewUseCase
+import com.umc.domain.usecase.organization.GetActiveGisuUseCase
+import com.umc.domain.usecase.schedule.CreateScheduleUseCase
 import com.umc.domain.usecase.schedule.CreateStudyGroupScheduleUseCase
 import com.umc.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +19,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AdminActStudyScheduleAddViewModel @Inject constructor(
+    private val createScheduleUseCase: CreateScheduleUseCase,
     private val createStudyGroupScheduleUseCase: CreateStudyGroupScheduleUseCase,
+    private val getCurriculumOverviewUseCase: GetCurriculumOverviewUseCase,
+    private val getActiveGisuUseCase: GetActiveGisuUseCase,
 ) : BaseViewModel<AdminActStudyScheduleAddState, AdminActStudyScheduleAddEvent>(
     AdminActStudyScheduleAddState()
 ) {
@@ -111,49 +118,84 @@ class AdminActStudyScheduleAddViewModel @Inject constructor(
             return
         }
 
-        val lat = if (s.isOnline) 0.0 else (s.latitude ?: return)
-        val lng = if (s.isOnline) 0.0 else (s.longitude ?: return)
+        val week = s.selectedWeek
+        if (week == null) {
+            emitEvent(AdminActStudyScheduleAddEvent.ShowToast("주차를 선택해주세요."))
+            return
+        }
 
-        val startsAt = toUtcIsoString(mergeDateTime(s.startDate, s.startTime))
-        val endsAt = toUtcIsoString(mergeDateTime(s.endDate, s.endTime))
+        val location = if (s.isOnline) null else {
+            val lat = s.latitude ?: run {
+                emitEvent(AdminActStudyScheduleAddEvent.ShowToast("장소를 선택해주세요."))
+                return
+            }
+            val lng = s.longitude ?: return
+            CreateSchedule.Location(lat, lng, s.locationName.trim())
+        }
 
         val attendancePolicy = if (s.isAttendancePolicyFilled) {
-            CreateStudyGroupSchedule.AttendancePolicy(
+            CreateSchedule.AttendancePolicy(
                 checkInStartAt = toUtcIsoString(mergeDateTime(s.checkInStartDate, s.checkInStartTime)),
                 onTimeEndAt = toUtcIsoString(mergeDateTime(s.onTimeEndDate, s.onTimeEndTime)),
                 lateEndAt = toUtcIsoString(mergeDateTime(s.lateEndDate, s.lateEndTime)),
             )
         } else null
 
-        val req = CreateStudyGroupSchedule(
+        val scheduleReq = CreateSchedule(
             name = s.studyName.trim(),
-            startsAt = startsAt,
-            endsAt = endsAt,
-            isAllDay = false,
-            locationName = if (s.isOnline) "" else s.locationName.trim(),
-            latitude = lat,
-            longitude = lng,
             description = "",
             tags = listOf("STUDY"),
-            studyGroupId = s.groupId,
-            gisuId = 1L,
-            requiresApproval = true,
-            participantMemberIds = s.selectedParticipants.map { it.id },
+            startsAt = toUtcIsoString(mergeDateTime(s.startDate, s.startTime)),
+            endsAt = toUtcIsoString(mergeDateTime(s.endDate, s.endTime)),
+            location = location,
             attendancePolicy = attendancePolicy,
+            participantMemberIds = s.selectedParticipants.map { it.id },
         )
 
         viewModelScope.launch {
-            when (val result = createStudyGroupScheduleUseCase(req)) {
-                is ApiState.Success -> {
-                    emitEvent(AdminActStudyScheduleAddEvent.ShowToast("스터디 일정이 등록되었습니다."))
-                }
-                is ApiState.Fail -> {
-                    emitEvent(
-                        AdminActStudyScheduleAddEvent.ShowToast(
-                            "일정 등록 실패: ${result.failState.message}"
-                        )
-                    )
-                }
+            // 1단계: 현재 활성 기수 조회
+            val gisuResult = getActiveGisuUseCase()
+            if (gisuResult is ApiState.Fail) {
+                emitEvent(AdminActStudyScheduleAddEvent.ShowToast("기수 정보를 불러오지 못했습니다."))
+                return@launch
+            }
+            val gisuId = (gisuResult as ApiState.Success).data
+
+            // 2단계: 해당 주차의 weeklyCurriculumId 조회 (커리큘럼 overview)
+            val curriculumResult = getCurriculumOverviewUseCase(
+                gisuId = gisuId,
+                part = s.groupPart,
+                weekNo = week.toLong(),
+            )
+            if (curriculumResult is ApiState.Fail) {
+                emitEvent(AdminActStudyScheduleAddEvent.ShowToast("커리큘럼 정보를 불러오지 못했습니다."))
+                return@launch
+            }
+            val studyProgress = (curriculumResult as ApiState.Success).data
+            val weeklyCurriculumId = studyProgress.weeks.firstOrNull { it.weekNo == week }?.weeklyCurriculumId
+            if (weeklyCurriculumId == null) {
+                emitEvent(AdminActStudyScheduleAddEvent.ShowToast("${week}주차 커리큘럼을 찾을 수 없습니다."))
+                return@launch
+            }
+
+            // 3단계: 일정 생성 (v2)
+            val scheduleResult = createScheduleUseCase(scheduleReq)
+            if (scheduleResult is ApiState.Fail) {
+                emitEvent(AdminActStudyScheduleAddEvent.ShowToast("일정 등록 실패: ${scheduleResult.failState.message}"))
+                return@launch
+            }
+            val scheduleId = (scheduleResult as ApiState.Success).data
+
+            // 4단계: 스터디 그룹 일정 연결
+            when (val linkResult = createStudyGroupScheduleUseCase(
+                CreateStudyGroupSchedule(
+                    studyGroupId = s.groupId,
+                    scheduleId = scheduleId,
+                    weeklyCurriculumId = weeklyCurriculumId,
+                )
+            )) {
+                is ApiState.Success -> emitEvent(AdminActStudyScheduleAddEvent.ShowToast("스터디 일정이 등록되었습니다."))
+                is ApiState.Fail -> emitEvent(AdminActStudyScheduleAddEvent.ShowToast("일정 등록 실패: ${linkResult.failState.message}"))
             }
         }
     }

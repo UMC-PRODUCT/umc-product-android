@@ -9,7 +9,6 @@ import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.act.check.AttendanceDecision
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
-import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
 
 interface ScheduleRepository {
 
@@ -36,9 +35,6 @@ interface ScheduleRepository {
 
     //일정 삭제하기
     suspend fun deleteSchedule(scheduleId: Long) : ApiState<Unit>
-
-    // 스터디 그룹 일정 생성
-    suspend fun createStudyGroupSchedule(request: CreateStudyGroupSchedule): ApiState<Long>
 
     // 일정 출석 요청
     suspend fun postAttendanceRequest(scheduleId: Long, locationVerified: Boolean, latitude: Double?, longitude: Double?): ApiState<Unit>

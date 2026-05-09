@@ -2,7 +2,6 @@ package com.umc.data.repository.schedule
 
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.request.schedule.CreateScheduleRequest
-import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
 import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse.Companion.toAdminDomain
 import com.umc.data.response.schedule.ScheduleCapabilitiesResponse.Companion.toDomain
@@ -17,7 +16,6 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.home.schedule.CreateSchedule
-import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
 import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.data.request.schedule.DecideAttendanceRequest
@@ -160,32 +158,6 @@ class ScheduleRepositoryImpl @Inject constructor(
     ): ApiState<Unit> {
         val request = ScheduleAttendanceRequest(locationVerified, latitude, longitude)
         return scheduleRemoteDataSource.postAttendanceRequest(scheduleId, request)
-    }
-
-    override suspend fun createStudyGroupSchedule(request: CreateStudyGroupSchedule): ApiState<Long> {
-        val req = CreateStudyGroupScheduleRequest(
-            name = request.name,
-            startsAt = request.startsAt,
-            endsAt = request.endsAt,
-            isAllDay = request.isAllDay,
-            locationName = request.locationName,
-            latitude = request.latitude,
-            longitude = request.longitude,
-            description = request.description,
-            tags = request.tags,
-            studyGroupId = request.studyGroupId,
-            gisuId = request.gisuId,
-            requiresApproval = request.requiresApproval,
-            participantMemberIds = request.participantMemberIds,
-            attendancePolicy = request.attendancePolicy?.let {
-                CreateStudyGroupScheduleRequest.AttendancePolicyRequest(
-                    checkInStartAt = it.checkInStartAt,
-                    onTimeEndAt = it.onTimeEndAt,
-                    lateEndAt = it.lateEndAt,
-                )
-            }
-        )
-        return scheduleRemoteDataSource.createStudyGroupSchedule(req)
     }
 
     override suspend fun getAttendanceHistory(

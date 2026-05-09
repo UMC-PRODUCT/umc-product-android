@@ -76,7 +76,7 @@ object Endpoints {
 
         const val DELETE = "$SCHEDULE/{scheduleId}/with-attendance"
 
-        const val CREATE_STUDY_GROUP_SCHEDULE = "$SCHEDULE/study-group"
+        const val CREATE_STUDY_GROUP_SCHEDULE = "api/v1/study-groups/schedules"
 
         const val ATTENDANCE_REQUEST = "api/v2/schedules/{scheduleId}/attendances/request"
         const val ATTENDANCE_DECIDE = "api/v2/schedules/{scheduleId}/attendances/decide"

@@ -1,7 +1,6 @@
 package com.umc.data.dataSource.remote.schedule
 
 import com.umc.data.request.schedule.CreateScheduleRequest
-import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.DecideAttendanceRequest
 import com.umc.data.request.schedule.ExcuseAttendanceRequest
 import com.umc.data.request.schedule.ScheduleAttendanceRequest
@@ -31,9 +30,6 @@ interface ScheduleRemoteDataSource {
 
     //일정 수정하기
     suspend fun updateSchedule(scheduleId: Long, request: UpdateScheduleRequest): ApiState<Unit>
-
-    // 스터디 그룹 일정 만들기
-    suspend fun createStudyGroupSchedule(request: CreateStudyGroupScheduleRequest): ApiState<Long>
 
     // 일정 출석 요청
     suspend fun postAttendanceRequest(scheduleId: Long, request: ScheduleAttendanceRequest): ApiState<Unit>

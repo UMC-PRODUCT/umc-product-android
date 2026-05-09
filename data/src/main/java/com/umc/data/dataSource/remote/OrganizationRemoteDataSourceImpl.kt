@@ -3,6 +3,7 @@ package com.umc.data.dataSource.remote
 import com.umc.data.api.OrganizationApi
 import com.umc.data.dataSource.OrganizationDataSource
 import com.umc.data.dataSource.base.apiCall
+import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.response.organization.*
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.organization.*
@@ -144,5 +145,9 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun getGisuInfo(gisuId: Long): ApiState<GisuInfoResponse> {
         return apiCall { organizationApi.getGisuInfo(gisuId) }
+    }
+
+    override suspend fun createStudyGroupSchedule(request: CreateStudyGroupScheduleRequest): ApiState<Long> {
+        return apiCall { organizationApi.createStudyGroupSchedule(request) }
     }
 }

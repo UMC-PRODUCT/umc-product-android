@@ -18,6 +18,7 @@ import com.umc.domain.model.request.organization.AssignSchoolRequest
 import com.umc.domain.model.request.organization.ChallengerListRequest
 import com.umc.domain.model.request.organization.CreateChapterRequest
 import com.umc.domain.model.request.organization.CreateGisuRequest
+import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.domain.model.request.organization.CreateStudyGroupRequest
 import com.umc.domain.model.request.organization.EditSchoolRequest
 import com.umc.domain.model.request.organization.EditStudyGroupRequest
@@ -214,5 +215,9 @@ interface OrganizationApi {
         @Path("gisuId") gisuId: Long,
     ): ApiResponse<GisuInfoResponse>
 
+    @POST(Endpoints.Schedule.CREATE_STUDY_GROUP_SCHEDULE)
+    suspend fun createStudyGroupSchedule(
+        @Body request: CreateStudyGroupScheduleRequest
+    ): ApiResponse<Long>
 
 }
