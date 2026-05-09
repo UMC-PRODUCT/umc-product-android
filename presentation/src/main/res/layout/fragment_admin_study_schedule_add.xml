@@ -5,7 +5,6 @@
     tools:context=".ui.act.study.schedule.AdminActStudyScheduleAddFragment">
 
     <data>
-
         <import type="android.view.View" />
 
         <variable
@@ -17,13 +16,11 @@
             type="com.umc.presentation.ui.act.study.schedule.model.AdminActStudyScheduleAddState" />
     </data>
 
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/neutral000"
         android:paddingHorizontal="16dp">
-
 
         <ImageView
             android:id="@+id/btn_back"
@@ -53,6 +50,7 @@
             android:layout_height="0dp"
             android:layout_marginTop="24dp"
             android:fillViewport="true"
+            android:isScrollContainer="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -62,19 +60,72 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
+                <!-- 팀 정보 카드 -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/card_group_info"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_rectangle_neutral100_radius8"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="14dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
 
+                    <ImageView
+                        android:id="@+id/iv_group_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_people"
+                        android:tint="@color/neutral600"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/tv_group_title"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:text="@{state.groupTitle}"
+                        android:textAppearance="@style/HeadlineBold"
+                        android:textColor="@color/neutral800"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/tv_group_part"
+                        app:layout_constraintStart_toEndOf="@id/iv_group_icon"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/tv_group_part"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_rectangle_primary100_radius8"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="@{state.groupPart}"
+                        android:textAppearance="@style/Callout"
+                        android:textColor="@color/primary500"
+                        android:visibility="@{state.groupPart.isEmpty() ? View.GONE : View.VISIBLE}"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <!-- 스터디명 -->
                 <TextView
                     android:id="@+id/tv_study_name_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
                     android:text="스터디명"
                     android:textAppearance="@style/HeadlineBold"
                     android:textColor="@color/neutral800"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toBottomOf="@id/card_group_info" />
 
                 <TextView
-                    android:id="@+id/tv_study_name_required"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
@@ -89,6 +140,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    android:background="@color/neutral000"
                     app:cardBackgroundColor="@color/neutral000"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tv_study_name_label"
@@ -96,9 +148,113 @@
                     app:strokeColor="@color/neutral300"
                     app:strokeWidth="1dp"
                     app:text="@{state.studyName}"
-                    app:textAppearance="@style/Subheadline" />
+                    app:textAppearance="@style/Subheadline"
+                    app:imeAction="@{android.view.inputmethod.EditorInfo.IME_ACTION_DONE}" />
 
+                <!-- 장소 -->
+                <TextView
+                    android:id="@+id/tv_location_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:text="장소"
+                    android:textAppearance="@style/HeadlineBold"
+                    android:textColor="@color/neutral800"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/et_study_name" />
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="*"
+                    android:textAppearance="@style/HeadlineBold"
+                    android:textColor="@color/danger500"
+                    app:layout_constraintStart_toEndOf="@id/tv_location_label"
+                    app:layout_constraintTop_toTopOf="@id/tv_location_label" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_location"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@{state.isOnline ? @color/neutral100 : @color/neutral000}"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_location_label"
+                    app:strokeColor="@{state.isOnline ? @color/neutral200 : @color/neutral300}"
+                    app:strokeWidth="1dp">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/tv_location_value"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:text='@{state.isOnline ? @string/home_plan_add_plan_location_placeholder : (state.locationName.isEmpty() ? @string/home_plan_add_plan_location_placeholder : state.locationName)}'
+                            android:textAppearance="@style/Body"
+                            android:textColor='@{state.isOnline ? @color/neutral300 : (state.locationName.isEmpty() ? @color/neutral400 : @color/neutral800)}'
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toStartOf="@id/iv_location_go"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <ImageView
+                            android:id="@+id/iv_location_go"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_arrow_next"
+                            android:tint="@{state.isOnline ? @color/neutral300 : @color/neutral600}"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 비대면 체크박스 -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layout_online_check"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@{state.isOnline ? @drawable/bg_rectangle_primary100_radius8 : @drawable/bg_rectangle_neutral100_radius8}"
+                    android:padding="8dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/card_location">
+
+                    <ImageView
+                        android:id="@+id/imv_online_check"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@{state.isOnline ? @drawable/ic_check_box : @drawable/ic_check_box_empty}"
+                        android:tint="@{state.isOnline ? @color/primary500 : @color/neutral400}"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/planadd_online_check_label"
+                        android:textAppearance="@style/Subheadline"
+                        android:textColor="@{state.isOnline ? @color/primary500 : @color/neutral600}"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/imv_online_check"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <!-- 일시 -->
                 <TextView
                     android:id="@+id/tv_date_label"
                     android:layout_width="wrap_content"
@@ -108,10 +264,9 @@
                     android:textAppearance="@style/HeadlineBold"
                     android:textColor="@color/neutral800"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/et_study_name" />
+                    app:layout_constraintTop_toBottomOf="@id/layout_online_check" />
 
                 <TextView
-                    android:id="@+id/tv_date_required"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
@@ -126,6 +281,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    android:background="@color/neutral000"
                     app:cardBackgroundColor="@color/neutral000"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp"
@@ -241,40 +397,29 @@
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-
+                <!-- 챌린저 명단 -->
                 <TextView
-                    android:id="@+id/tv_location_label"
+                    android:id="@+id/tv_participant_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="32dp"
-                    android:text="장소"
+                    android:text="@string/home_plan_add_plan_attend"
                     android:textAppearance="@style/HeadlineBold"
                     android:textColor="@color/neutral800"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/card_datetime" />
 
-                <TextView
-                    android:id="@+id/tv_location_required"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:text="*"
-                    android:textAppearance="@style/HeadlineBold"
-                    android:textColor="@color/danger500"
-                    app:layout_constraintStart_toEndOf="@id/tv_location_label"
-                    app:layout_constraintTop_toTopOf="@id/tv_location_label" />
-
                 <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/card_location"
+                    android:id="@+id/card_participant"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     app:cardBackgroundColor="@color/neutral000"
-                    app:cardCornerRadius="16dp"
+                    app:cardCornerRadius="8dp"
                     app:cardElevation="0dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tv_location_label"
+                    app:layout_constraintTop_toBottomOf="@id/tv_participant_label"
                     app:strokeColor="@color/neutral300"
                     app:strokeWidth="1dp">
 
@@ -284,88 +429,301 @@
                         android:padding="16dp">
 
                         <TextView
-                            android:id="@+id/tv_location_value"
+                            android:id="@+id/tv_participant_placeholder"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="8dp"
-                            android:text='@{state.locationName.isEmpty() ? @string/home_plan_add_plan_location_placeholder : state.locationName}'
-                            android:textAppearance="@style/Subheadline"
-                            android:textColor='@{state.locationName.isEmpty() ? @color/neutral400 : @color/neutral800}'
+                            android:text='@{state.isSelectedParticipant ? state.selectedParticipantsString : @string/home_plan_add_plan_participant_placeholder}'
+                            android:textAppearance="@style/Body"
+                            android:textColor='@{state.isSelectedParticipant ? @color/neutral800 : @color/neutral400}'
                             app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@id/iv_location_go"
+                            app:layout_constraintEnd_toStartOf="@id/iv_participant_go"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
                         <ImageView
-                            android:id="@+id/iv_location_go"
+                            android:id="@+id/iv_participant_go"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:src="@drawable/ic_arrow_next"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:tint="@color/neutral500" />
+                            app:layout_constraintTop_toTopOf="parent" />
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-
-                <androidx.constraintlayout.widget.Guideline
-                    android:id="@+id/guideline_mid"
+                <!-- 출석 정책 -->
+                <TextView
+                    android:id="@+id/tv_attendance_policy_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    app:layout_constraintGuide_percent="0.5" />
-
-                <com.umc.presentation.component.UButton
-                    android:id="@+id/btn_cancel"
-                    android:layout_width="0dp"
-                    android:layout_height="52dp"
-                    android:layout_marginTop="48dp"
-                    android:layout_marginEnd="8dp"
-                    app:borderColor="@color/neutral300"
-                    app:borderWidth="1dp"
-                    app:cardBackgroundColor="@color/neutral000"
-                    app:cornerRadius="8dp"
-                    app:layout_constraintEnd_toStartOf="@id/guideline_mid"
+                    android:layout_marginTop="32dp"
+                    android:text="출석"
+                    android:textAppearance="@style/HeadlineBold"
+                    android:textColor="@color/neutral800"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/card_location"
-                    app:pressedColor="@color/neutral200"
-                    app:text="취소"
-                    app:textAppearance="@style/HeadlineBold"
-                    app:textColor="@color/neutral800" />
+                    app:layout_constraintTop_toBottomOf="@id/card_participant" />
 
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_attendance_policy"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/neutral000"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_attendance_policy_label"
+                    app:strokeColor="@color/neutral300"
+                    app:strokeWidth="1dp">
 
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingVertical="16dp">
+
+                        <!-- 출석 시작 -->
+                        <TextView
+                            android:id="@+id/tv_check_in_start"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:text="@string/start"
+                            android:textAppearance="@style/Callout"
+                            android:textColor="@color/neutral600"
+                            app:layout_constraintBottom_toBottomOf="@id/chip_check_in_start_date"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/chip_check_in_start_date" />
+
+                        <com.umc.presentation.component.UChip
+                            android:id="@+id/chip_check_in_start_date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            app:backgroundColor="@color/neutral000"
+                            app:borderColor="@color/neutral200"
+                            app:borderWidth="1dp"
+                            app:layout_constraintEnd_toStartOf="@id/chip_check_in_start_time"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:pressedColor="@color/neutral300"
+                            app:text="@{state.checkInStartDateText}"
+                            app:textAppearance="@style/SubheadlineBold"
+                            app:textColor="@color/neutral500" />
+
+                        <com.umc.presentation.component.UChip
+                            android:id="@+id/chip_check_in_start_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="16dp"
+                            app:backgroundColor="@color/neutral000"
+                            app:borderColor="@color/neutral200"
+                            app:borderWidth="1dp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:pressedColor="@color/neutral300"
+                            app:text="@{state.checkInStartTimeText}"
+                            app:textAppearance="@style/SubheadlineBold"
+                            app:textColor="@color/neutral500" />
+
+                        <View
+                            android:id="@+id/div_attendance_1"
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="16dp"
+                            android:background="@color/neutral300"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/chip_check_in_start_date" />
+
+                        <!-- 출석 종료 -->
+                        <TextView
+                            android:id="@+id/tv_on_time_end"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:text="@string/end"
+                            android:textAppearance="@style/Callout"
+                            android:textColor="@color/neutral600"
+                            app:layout_constraintBottom_toBottomOf="@id/chip_on_time_end_date"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/chip_on_time_end_date" />
+
+                        <com.umc.presentation.component.UChip
+                            android:id="@+id/chip_on_time_end_date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:layout_marginTop="16dp"
+                            app:backgroundColor="@color/neutral000"
+                            app:borderColor="@color/neutral200"
+                            app:borderWidth="1dp"
+                            app:layout_constraintEnd_toStartOf="@id/chip_on_time_end_time"
+                            app:layout_constraintTop_toBottomOf="@id/div_attendance_1"
+                            app:pressedColor="@color/neutral300"
+                            app:text="@{state.onTimeEndDateText}"
+                            app:textAppearance="@style/SubheadlineBold"
+                            app:textColor="@color/neutral500" />
+
+                        <com.umc.presentation.component.UChip
+                            android:id="@+id/chip_on_time_end_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="16dp"
+                            android:layout_marginTop="16dp"
+                            app:backgroundColor="@color/neutral000"
+                            app:borderColor="@color/neutral200"
+                            app:borderWidth="1dp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/div_attendance_1"
+                            app:pressedColor="@color/neutral300"
+                            app:text="@{state.onTimeEndTimeText}"
+                            app:textAppearance="@style/SubheadlineBold"
+                            app:textColor="@color/neutral500" />
+
+                        <View
+                            android:id="@+id/div_attendance_2"
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="16dp"
+                            android:background="@color/neutral300"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/chip_on_time_end_date" />
+
+                        <!-- 지각 인정 -->
+                        <TextView
+                            android:id="@+id/tv_late_end"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:text="지각"
+                            android:textAppearance="@style/Callout"
+                            android:textColor="@color/neutral600"
+                            app:layout_constraintBottom_toBottomOf="@id/chip_late_end_date"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/chip_late_end_date" />
+
+                        <com.umc.presentation.component.UChip
+                            android:id="@+id/chip_late_end_date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:layout_marginTop="16dp"
+                            app:backgroundColor="@color/neutral000"
+                            app:borderColor="@color/neutral200"
+                            app:borderWidth="1dp"
+                            app:layout_constraintEnd_toStartOf="@id/chip_late_end_time"
+                            app:layout_constraintTop_toBottomOf="@id/div_attendance_2"
+                            app:pressedColor="@color/neutral300"
+                            app:text="@{state.lateEndDateText}"
+                            app:textAppearance="@style/SubheadlineBold"
+                            app:textColor="@color/neutral500" />
+
+                        <com.umc.presentation.component.UChip
+                            android:id="@+id/chip_late_end_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="16dp"
+                            android:layout_marginTop="16dp"
+                            app:backgroundColor="@color/neutral000"
+                            app:borderColor="@color/neutral200"
+                            app:borderWidth="1dp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/div_attendance_2"
+                            app:pressedColor="@color/neutral300"
+                            app:text="@{state.lateEndTimeText}"
+                            app:textAppearance="@style/SubheadlineBold"
+                            app:textColor="@color/neutral500" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 주차 선택 -->
+                <TextView
+                    android:id="@+id/tv_week_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:text="주차"
+                    android:textAppearance="@style/HeadlineBold"
+                    android:textColor="@color/neutral800"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/card_attendance_policy" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_week"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/neutral000"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_week_label"
+                    app:strokeColor="@color/neutral300"
+                    app:strokeWidth="1dp">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/tv_week_value"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:text="@{state.weekDisplayText}"
+                            android:textAppearance="@style/Body"
+                            android:textColor="@{state.weekDisplayText.equals(`주차 선택`) ? @color/neutral400 : @color/neutral800}"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toStartOf="@id/iv_week_go"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <ImageView
+                            android:id="@+id/iv_week_go"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_arrow_next"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 등록 버튼 -->
                 <com.umc.presentation.component.UButton
                     android:id="@+id/btn_register"
                     android:layout_width="0dp"
                     android:layout_height="52dp"
-                    android:layout_marginStart="8dp"
                     android:layout_marginTop="48dp"
                     android:visibility="@{state.isRegisterOk ? View.VISIBLE : View.GONE}"
                     app:cardBackgroundColor="@color/primary500"
                     app:cornerRadius="8dp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/guideline_mid"
-                    app:layout_constraintTop_toBottomOf="@id/card_location"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/card_week"
                     app:pressedColor="@color/primary700"
                     app:text="일정 등록하기"
                     app:textAppearance="@style/HeadlineBold"
                     app:textColor="@color/neutral000" />
 
-
                 <com.umc.presentation.component.UButton
                     android:id="@+id/btn_register_disabled"
                     android:layout_width="0dp"
                     android:layout_height="52dp"
-                    android:layout_marginStart="8dp"
                     android:layout_marginTop="48dp"
                     android:visibility="@{state.isRegisterOk ? View.GONE : View.VISIBLE}"
                     app:cardBackgroundColor="@color/neutral300"
                     app:cornerRadius="8dp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/guideline_mid"
-                    app:layout_constraintTop_toBottomOf="@id/card_location"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/card_week"
                     app:pressedColor="@color/neutral300"
                     app:text="일정 등록하기"
                     app:textAppearance="@style/HeadlineBold"

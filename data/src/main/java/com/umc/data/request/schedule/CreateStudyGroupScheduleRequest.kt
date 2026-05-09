@@ -15,4 +15,12 @@ data class CreateStudyGroupScheduleRequest(
     @SerializedName("studyGroupId") val studyGroupId: Long,
     @SerializedName("gisuId") val gisuId: Long,
     @SerializedName("requiresApproval") val requiresApproval: Boolean,
-)
+    @SerializedName("participantMemberIds") val participantMemberIds: List<Long> = emptyList(),
+    @SerializedName("attendancePolicy") val attendancePolicy: AttendancePolicyRequest? = null,
+) {
+    data class AttendancePolicyRequest(
+        @SerializedName("checkInStartAt") val checkInStartAt: String,
+        @SerializedName("onTimeEndAt") val onTimeEndAt: String,
+        @SerializedName("lateEndAt") val lateEndAt: String,
+    )
+}

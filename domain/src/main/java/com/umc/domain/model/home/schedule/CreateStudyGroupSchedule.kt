@@ -13,4 +13,12 @@ data class CreateStudyGroupSchedule(
     val studyGroupId: Long,
     val gisuId: Long,
     val requiresApproval: Boolean,
-)
+    val participantMemberIds: List<Long> = emptyList(),
+    val attendancePolicy: AttendancePolicy? = null,
+) {
+    data class AttendancePolicy(
+        val checkInStartAt: String,
+        val onTimeEndAt: String,
+        val lateEndAt: String,
+    )
+}

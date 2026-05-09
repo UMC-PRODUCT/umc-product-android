@@ -175,7 +175,15 @@ class ScheduleRepositoryImpl @Inject constructor(
             tags = request.tags,
             studyGroupId = request.studyGroupId,
             gisuId = request.gisuId,
-            requiresApproval = request.requiresApproval
+            requiresApproval = request.requiresApproval,
+            participantMemberIds = request.participantMemberIds,
+            attendancePolicy = request.attendancePolicy?.let {
+                CreateStudyGroupScheduleRequest.AttendancePolicyRequest(
+                    checkInStartAt = it.checkInStartAt,
+                    onTimeEndAt = it.onTimeEndAt,
+                    lateEndAt = it.lateEndAt,
+                )
+            }
         )
         return scheduleRemoteDataSource.createStudyGroupSchedule(req)
     }

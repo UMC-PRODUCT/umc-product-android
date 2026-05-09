@@ -23,7 +23,7 @@ class AdminActStudyScheduleAddViewModel @Inject constructor(
     fun handleEvent(event: AdminActStudyScheduleAddEvent) {
         when (event) {
             is AdminActStudyScheduleAddEvent.Init ->
-                updateState { copy(groupId = event.groupId) }
+                updateState { copy(groupId = event.groupId, groupTitle = event.groupTitle, groupPart = event.groupPart) }
 
             is AdminActStudyScheduleAddEvent.UpdateStudyName ->
                 updateState { copy(studyName = event.text) }
@@ -32,6 +32,12 @@ class AdminActStudyScheduleAddViewModel @Inject constructor(
                 updateState { copy(locationName = event.name, latitude = event.lat, longitude = event.lng) }
 
             AdminActStudyScheduleAddEvent.ClickLocationCard -> Unit
+
+            AdminActStudyScheduleAddEvent.ToggleOnline ->
+                updateState { copy(isOnline = !isOnline) }
+
+            is AdminActStudyScheduleAddEvent.UpdateParticipants ->
+                updateState { copy(selectedParticipants = event.participants, selectedParticipantsString = event.summaryString) }
 
             is AdminActStudyScheduleAddEvent.UpdateStartDate -> {
                 val newCal = (uiState.value.startDate.clone() as Calendar).apply {
@@ -63,6 +69,34 @@ class AdminActStudyScheduleAddViewModel @Inject constructor(
                 updateState { copy(endTime = newCal, endTimeText = AdminActStudyScheduleAddState.timeSdf.format(newCal.time)) }
             }
 
+            is AdminActStudyScheduleAddEvent.UpdateCheckInStartDate -> {
+                val newCal = (uiState.value.checkInStartDate.clone() as Calendar).apply { set(event.year, event.month, event.day) }
+                updateState { copy(checkInStartDate = newCal, checkInStartDateText = AdminActStudyScheduleAddState.dateSdf.format(newCal.time)) }
+            }
+            is AdminActStudyScheduleAddEvent.UpdateCheckInStartTime -> {
+                val newCal = (uiState.value.checkInStartTime.clone() as Calendar).apply { set(Calendar.HOUR_OF_DAY, event.hour); set(Calendar.MINUTE, event.minute) }
+                updateState { copy(checkInStartTime = newCal, checkInStartTimeText = AdminActStudyScheduleAddState.timeSdf.format(newCal.time)) }
+            }
+            is AdminActStudyScheduleAddEvent.UpdateOnTimeEndDate -> {
+                val newCal = (uiState.value.onTimeEndDate.clone() as Calendar).apply { set(event.year, event.month, event.day) }
+                updateState { copy(onTimeEndDate = newCal, onTimeEndDateText = AdminActStudyScheduleAddState.dateSdf.format(newCal.time)) }
+            }
+            is AdminActStudyScheduleAddEvent.UpdateOnTimeEndTime -> {
+                val newCal = (uiState.value.onTimeEndTime.clone() as Calendar).apply { set(Calendar.HOUR_OF_DAY, event.hour); set(Calendar.MINUTE, event.minute) }
+                updateState { copy(onTimeEndTime = newCal, onTimeEndTimeText = AdminActStudyScheduleAddState.timeSdf.format(newCal.time)) }
+            }
+            is AdminActStudyScheduleAddEvent.UpdateLateEndDate -> {
+                val newCal = (uiState.value.lateEndDate.clone() as Calendar).apply { set(event.year, event.month, event.day) }
+                updateState { copy(lateEndDate = newCal, lateEndDateText = AdminActStudyScheduleAddState.dateSdf.format(newCal.time)) }
+            }
+            is AdminActStudyScheduleAddEvent.UpdateLateEndTime -> {
+                val newCal = (uiState.value.lateEndTime.clone() as Calendar).apply { set(Calendar.HOUR_OF_DAY, event.hour); set(Calendar.MINUTE, event.minute) }
+                updateState { copy(lateEndTime = newCal, lateEndTimeText = AdminActStudyScheduleAddState.timeSdf.format(newCal.time)) }
+            }
+
+            is AdminActStudyScheduleAddEvent.SelectWeek ->
+                updateState { copy(selectedWeek = event.week) }
+
             AdminActStudyScheduleAddEvent.ClickRegister -> postCreate()
 
             is AdminActStudyScheduleAddEvent.ShowToast -> Unit
@@ -77,25 +111,35 @@ class AdminActStudyScheduleAddViewModel @Inject constructor(
             return
         }
 
-        val lat = s.latitude ?: return
-        val lng = s.longitude ?: return
+        val lat = if (s.isOnline) 0.0 else (s.latitude ?: return)
+        val lng = if (s.isOnline) 0.0 else (s.longitude ?: return)
 
         val startsAt = toUtcIsoString(mergeDateTime(s.startDate, s.startTime))
         val endsAt = toUtcIsoString(mergeDateTime(s.endDate, s.endTime))
+
+        val attendancePolicy = if (s.isAttendancePolicyFilled) {
+            CreateStudyGroupSchedule.AttendancePolicy(
+                checkInStartAt = toUtcIsoString(mergeDateTime(s.checkInStartDate, s.checkInStartTime)),
+                onTimeEndAt = toUtcIsoString(mergeDateTime(s.onTimeEndDate, s.onTimeEndTime)),
+                lateEndAt = toUtcIsoString(mergeDateTime(s.lateEndDate, s.lateEndTime)),
+            )
+        } else null
 
         val req = CreateStudyGroupSchedule(
             name = s.studyName.trim(),
             startsAt = startsAt,
             endsAt = endsAt,
             isAllDay = false,
-            locationName = s.locationName.trim(),
+            locationName = if (s.isOnline) "" else s.locationName.trim(),
             latitude = lat,
             longitude = lng,
             description = "",
             tags = listOf("STUDY"),
             studyGroupId = s.groupId,
             gisuId = 1L,
-            requiresApproval = true
+            requiresApproval = true,
+            participantMemberIds = s.selectedParticipants.map { it.id },
+            attendancePolicy = attendancePolicy,
         )
 
         viewModelScope.launch {

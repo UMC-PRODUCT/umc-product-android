@@ -80,6 +80,16 @@
             android:name="groupId"
             app:argType="long" />
 
+        <argument
+            android:name="groupTitle"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <argument
+            android:name="groupPart"
+            android:defaultValue=""
+            app:argType="string" />
+
     </fragment>
 
     <fragment

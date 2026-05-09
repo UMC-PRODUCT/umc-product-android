@@ -89,6 +89,23 @@ class AdminStudyGroupViewModel @Inject constructor(
             resultResponse(
                 response = res,
                 successCallback = { page ->
+                    val dummy = AdminStudyGroupItemUiModel(
+                        groupId = -999L,
+                        title = "[더미] 안드로이드 스터디",
+                        partLabel = "Android",
+                        leaderName = "더미 리더",
+                        leaderChallengerId = -1L,
+                        leaderProfileImageUrl = null,
+                        members = listOf(
+                            AdminStudyGroupMemberUiModel(challengerId = -1L, name = "더미 멤버1", profileImageUrl = null),
+                            AdminStudyGroupMemberUiModel(challengerId = -2L, name = "더미 멤버2", profileImageUrl = null),
+                        ),
+                        memberChallengerIds = listOf(-1L, -2L),
+                        createdAtRaw = "2026-05-10",
+                        memberCount = 2,
+                        leaderUniv = "UMC 대학교",
+                    )
+
                     val initialList = page.content.map { summary ->
 
                         val leaderName = summary.leader?.name.orEmpty()
@@ -120,7 +137,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                         )
                     }
 
-                    updateState { copy(groups = initialList) }
+                    updateState { copy(groups = listOf(dummy) + initialList) }
 
                     initialList.forEach { item ->
                         loadGroupDetailAndMerge(item.groupId)

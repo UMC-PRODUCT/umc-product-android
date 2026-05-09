@@ -52,7 +52,11 @@ class AdminStudyGroupFragment :
             onClickAddSchedule = { item ->
                 findNavController().navigate(
                     R.id.action_to_schedule_add,
-                    bundleOf("groupId" to item.groupId)
+                    bundleOf(
+                        "groupId" to item.groupId,
+                        "groupTitle" to item.title,
+                        "groupPart" to item.partLabel,
+                    )
                 )
             },
             onClickAddMember = { item ->
