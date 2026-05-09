@@ -49,7 +49,8 @@ data class GroupMemberResponse(
 
     @Serializable(with = FlexibleLongSerializer::class)
     val memberId: Long = 0L,
-
-    val name: String = "",
+    val schoolId: Long = 0L,
+    val schoolName: String = "",
+    val memberName: String = "",
     val profileImageUrl: String? = null
 )

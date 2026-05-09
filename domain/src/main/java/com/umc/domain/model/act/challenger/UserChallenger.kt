@@ -5,6 +5,7 @@ import com.umc.domain.model.enums.UserPart
 
 data class UserChallenger(
     val id: Long,
+    val memberId: Long,
     val name: String,
     val nickname: String,
     val generation: Int,
