@@ -33,6 +33,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.android.datatransport.runtime.BuildConfig
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.Scopes
@@ -212,7 +213,10 @@ private fun signInGoogle(
     onLoginSuccess : (String) -> Unit
 ) {
     scope.launch {
+        /**인식 X**/
+/*
         try {
+
             val googleSignInOption = GetSignInWithGoogleOption.Builder(
                 BuildConfig.GOOGLE_LOGIN_KEY
             ).build()
@@ -231,7 +235,10 @@ private fun signInGoogle(
         } catch (e: GetCredentialException) {
             ULog.d("Google 로그인 실패: ${e.message}")
         }
+
+*/
     }
+
 }
 
 private fun handleSignIn(
