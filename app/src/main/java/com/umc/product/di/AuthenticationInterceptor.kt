@@ -26,6 +26,7 @@ class AuthenticationInterceptor @Inject constructor(
 
             val accessToken = runBlocking { appDataStoreRepository.getAccessToken() }
 
+
             val request =
                 chain.request().newBuilder()
                     .addHeader("Authorization", "Bearer ${accessToken}").build()

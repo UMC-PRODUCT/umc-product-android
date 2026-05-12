@@ -1,5 +1,6 @@
 package com.umc.presentation.ui.act.study.group.create.model
 
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.base.UiState
 import com.umc.presentation.ui.act.study.common.model.MemberUiModel
@@ -9,6 +10,7 @@ data class AdminStudyGroupAddState(
     val partLabel: String = "Web", // UI 표시용
     val leader: MemberUiModel? = null,
     val selectedMembers: List<MemberUiModel> = emptyList(),
+    val userInfo: UserInfo? = null,
 
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,

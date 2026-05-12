@@ -25,6 +25,9 @@ interface OrganizationRepository {
     suspend fun deleteSchool(request: SchoolIdRequest): ApiState<Unit>
 
     suspend fun deleteStudyGroup(groupId: Long): ApiState<Unit>
+
+    suspend fun deleteStudyGroupMentor(studyGroupId: Long, mentorId: Long): ApiState<Unit>
+    suspend fun deleteStudyGroupMember(studyGroupId: Long, memberId: Long): ApiState<Unit>
     
     suspend fun deleteGisu(gisuId: Int): ApiState<Unit>
 
@@ -66,6 +69,9 @@ interface OrganizationRepository {
 
     // PATCH
     suspend fun editGroup(groupId: Long, request: EditStudyGroupRequest): ApiState<Unit>
+    suspend fun addStudyGroupMentor(studyGroupId: Long, mentorId: Long): ApiState<Unit>
+    suspend fun addStudyGroupMember(studyGroupId: Long, memberId: Long): ApiState<Unit>
+
 
     suspend fun editSchool(schoolId: Int, request: EditSchoolRequest): ApiState<Unit>
 
