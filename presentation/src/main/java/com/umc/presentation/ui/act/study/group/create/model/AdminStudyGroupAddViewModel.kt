@@ -73,7 +73,7 @@ class AdminStudyGroupAddViewModel @Inject constructor(
         val partEnum = UserPart.from(state.partLabel)
 
         //기수 정보(최신 기수)
-        val gisuSummaryList = uiState.value.userInfo!!.getGisuSummaryList()
+        val gisuSummaryList = uiState.value.userInfo?.getGisuSummaryList() ?: emptyList()
         val latestGisu = gisuSummaryList.maxByOrNull { it.gisu }
 
         if (partEnum == UserPart.UNKNOWN) {
