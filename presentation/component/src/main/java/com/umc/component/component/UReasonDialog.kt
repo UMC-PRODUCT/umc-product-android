@@ -36,23 +36,18 @@ import com.umc.component.theme.success100
 import com.umc.component.theme.success500
 
 /**
- * UMC 공용 다이얼로그 컴포넌트.
+ * 출석 사유 확인용 단일 버튼 다이얼로그 컴포넌트.
  *
- * `isAccept` 값에 따라 상단 아이콘/강조 색상이 success 또는 danger 톤으로 변경되며,
- * 단일 버튼(`isTwoButton=false`)과 이중 버튼(`isTwoButton=true`) 모드를 지원한다.
+ * 제목을 중심으로 선택적으로 부제목과 사유 본문(content)을 표시하며,
+ * 하단의 확인 버튼 1개로 닫힘/확인 동작을 처리한다.
  *
- * @param isAccept true면 승인(success), false면 반려/실패(danger) 스타일 적용
  * @param title 다이얼로그 제목 (필수)
  * @param subtitle 부제목/설명 텍스트. null 또는 blank면 표시하지 않음
+ * @param content 사유 본문 텍스트. null 또는 blank면 표시하지 않음
  * @param onDismissRequest 배경 터치 등으로 다이얼로그가 닫힐 때 호출
  * @param modifier 외부 Column에 적용할 Modifier
- * @param isTwoButton true이면 부정+긍정 2버튼 모드, false이면 단일 확인 버튼 모드
- * @param confirmText 단일 버튼 모드의 버튼 텍스트. 기본값 "확인"
- * @param onConfirm 단일 버튼 클릭 시 호출. 기본값은 onDismissRequest
- * @param negativeText 이중 버튼 모드의 취소 버튼 텍스트. 기본값 "취소"
- * @param positiveText 이중 버튼 모드의 긍정 버튼 텍스트
- * @param onNegative 취소 버튼 클릭 시 호출. 기본값은 onDismissRequest
- * @param onPositive 긍정 버튼 클릭 시 호출
+ * @param confirmText 확인 버튼 텍스트. 기본값 "확인"
+ * @param onConfirm 확인 버튼 클릭 시 호출. 기본값은 onDismissRequest
  */
 
 @Composable
@@ -130,7 +125,7 @@ fun UReasonDialog(
     }
 }
 
-@Preview(widthDp = 370)
+@Preview(showBackground = false)
 @Composable
 fun dialogReasonPreview() {
     UReasonDialog(
