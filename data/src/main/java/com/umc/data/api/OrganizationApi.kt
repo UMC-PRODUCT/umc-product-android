@@ -215,7 +215,7 @@ interface OrganizationApi {
         @Path("gisuId") gisuId: Long,
     ): ApiResponse<GisuInfoResponse>
 
-    @POST(Endpoints.Schedule.CREATE_STUDY_GROUP_SCHEDULE)
+    @POST(Endpoints.Organization.CREATE_STUDY_GROUP_SCHEDULE)
     suspend fun createStudyGroupSchedule(
         @Body request: CreateStudyGroupScheduleRequest
     ): ApiResponse<Long>

@@ -76,8 +76,6 @@ object Endpoints {
 
         const val DELETE = "$SCHEDULE/{scheduleId}/with-attendance"
 
-        const val CREATE_STUDY_GROUP_SCHEDULE = "api/v1/study-groups/schedules"
-
         const val ATTENDANCE_REQUEST = "api/v2/schedules/{scheduleId}/attendances/request"
         const val ATTENDANCE_DECIDE = "api/v2/schedules/{scheduleId}/attendances/decide"
         const val ATTENDANCE_EXCUSE = "api/v2/schedules/{scheduleId}/attendances/excuse"
@@ -139,6 +137,7 @@ object Endpoints {
         const val STUDY_GROUP_MENTOR = "$STUDY_GROUP/{studyGroupId}/mentors/{mentorId}"
         const val STUDY_GROUP_MEMBER = "$STUDY_GROUP/{studyGroupId}/members/{memberId}"
         const val STUDY_MEMBER = "$STUDY_GROUP_ID/members"
+        const val CREATE_STUDY_GROUP_SCHEDULE = "$STUDY_GROUP/schedules"
         const val GISU = "api/v1/gisu"
         const val GISU_ID = "$GISU/{gisuId}"
         const val GISU_ALL = "$GISU/all"
