@@ -13,6 +13,7 @@ import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
 import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
 import com.umc.presentation.login.LoginRoute
+import com.umc.presentation.signup.SignUpRoute
 import com.umc.presentation.splash.SplashRoute
 
 @Composable
@@ -23,9 +24,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-
-        //시작 화면 (일단 임시로 home)
-        startDestination = MainDestination.Home,
+        startDestination = MainDestination.Splash,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -38,7 +37,19 @@ fun MainNavHost(
         }
 
         composable<MainDestination.Login> {
-            LoginRoute()
+            LoginRoute(
+                navigateToSignUp = { oAuthToken ->
+                    navHostController.navigate(MainDestination.SignUp(oAuthToken))
+                }
+            )
+        }
+
+        composable<MainDestination.SignUp> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.SignUp>()
+            SignUpRoute(
+                oAuthVerificationToken = destination.oAuthVerificationToken,
+                navigateToBack = { navHostController.popBackStack() },
+            )
         }
 
         /**홈 화면 탭에 대한 내용입니다.**/
