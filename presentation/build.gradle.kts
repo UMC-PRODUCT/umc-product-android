@@ -59,6 +59,7 @@ dependencies {
     implementation(project(":presentation:home"))
     implementation(project(":presentation:signUp"))
     implementation(project(":presentation:permission"))
+    implementation(project(":presentation:failCode"))
     implementation(project(":presentation:component"))
 
     implementation(libs.androidx.core.ktx)
