@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.umc.failcode.SignUpFailRoute
+import com.umc.failcode.code.SignUpFailCodeRoute
 import com.umc.permission.PermissionRoute
 import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
@@ -26,7 +27,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.SignUpFail,
+        startDestination = MainDestination.SignUpFailCode,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -73,9 +74,20 @@ fun MainNavHost(
 
         composable<MainDestination.SignUpFail> {
             SignUpFailRoute(
-                navigateToCode = { /* TODO: 인증코드 입력 화면 연결 */ },
+                navigateToCode = { navHostController.navigate(MainDestination.SignUpFailCode) },
                 navigateToLogin = {
                     navHostController.navigate(MainDestination.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable<MainDestination.SignUpFailCode> {
+            SignUpFailCodeRoute(
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToHome = {
+                    navHostController.navigate(MainDestination.Home) {
                         popUpTo(0) { inclusive = true }
                     }
                 },

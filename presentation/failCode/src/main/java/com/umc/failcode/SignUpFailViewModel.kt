@@ -44,10 +44,6 @@ class SignUpFailViewModel @Inject constructor(
         emitEvent(SignUpFailEvent.MoveToLogin)
     }
 
-    fun onClickDeleteUser() {
-        emitEvent(SignUpFailEvent.ShowDeleteUserDialog)
-    }
-
     /**
      * 회원탈퇴. 카카오·구글 토큰으로 서버 탈퇴 API 호출 후 로컬 데이터를 전체 초기화.
      * googleToken은 화면 진입 시 Route에서 Google Identity API를 통해 주입됨
@@ -84,5 +80,4 @@ sealed interface SignUpFailEvent : UiEvent {
     data object MoveToCode : SignUpFailEvent
     data object MoveToKakaoInquiry : SignUpFailEvent
     data object MoveToLogin : SignUpFailEvent
-    data object ShowDeleteUserDialog : SignUpFailEvent
 }

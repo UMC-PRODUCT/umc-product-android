@@ -89,7 +89,6 @@ fun SignUpFailRoute(
                     context.startActivity(intent)
                 }
                 SignUpFailEvent.MoveToLogin -> navigateToLogin()
-                SignUpFailEvent.ShowDeleteUserDialog -> { /* dialog state is managed in SignUpFailScreen */ }
             }
         }
     }
@@ -179,12 +178,17 @@ fun SignUpFailScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             UText(
                 text = AppStrings.SIGN_UP_FAIL_LOGOUT,
-                style = UmcTypographyTokens.Footnote.copy(textDecoration = TextDecoration.Underline),
+                style = UmcTypographyTokens
+                    .Footnote.copy(textDecoration = TextDecoration.Underline),
                 color = neutral600(),
-                modifier = Modifier.clickable { onClickLogout() },
+                modifier = Modifier.clickable {
+                    onClickLogout()
+                }
             )
 
             Box(
@@ -197,9 +201,12 @@ fun SignUpFailScreen(
 
             UText(
                 text = AppStrings.SIGN_UP_FAIL_DELETE_USER,
-                style = UmcTypographyTokens.Footnote.copy(textDecoration = TextDecoration.Underline),
+                style = UmcTypographyTokens.Footnote
+                    .copy(textDecoration = TextDecoration.Underline),
                 color = danger500(),
-                modifier = Modifier.clickable { showDeleteDialog = true },
+                modifier = Modifier.clickable {
+                    showDeleteDialog = true
+                }
             )
         }
 
