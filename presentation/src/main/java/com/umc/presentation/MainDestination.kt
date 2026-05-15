@@ -15,6 +15,12 @@ sealed interface MainDestination {
     @Serializable
     data object Permission : MainDestination
 
+    @Serializable
+    data object SignUpFail : MainDestination
+
+    @Serializable
+    data object SignUpFailCode : MainDestination
+
     /**홈 화면 섹션**/
     //홈 화면
     @Serializable
