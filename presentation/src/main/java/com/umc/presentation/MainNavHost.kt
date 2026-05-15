@@ -9,6 +9,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.umc.permission.PermissionRoute
 import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
 import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
@@ -24,7 +25,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Splash,
+        startDestination = MainDestination.Permission,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -49,6 +50,19 @@ fun MainNavHost(
             SignUpRoute(
                 oAuthVerificationToken = destination.oAuthVerificationToken,
                 navigateToBack = { navHostController.popBackStack() },
+                navigateToPermission = { navHostController.navigate(MainDestination.Permission) },
+            )
+        }
+
+        composable<MainDestination.Permission> {
+            PermissionRoute(
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToMain = {
+                    navHostController.navigate(MainDestination.Home) {
+                        popUpTo(MainDestination.Splash) { inclusive = true }
+                    }
+                },
+                navigateToFail = { navHostController.popBackStack() },
             )
         }
 

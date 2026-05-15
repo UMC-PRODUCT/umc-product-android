@@ -272,9 +272,12 @@ fun SignUpScreen(
                 .verticalScroll(scrollState)
                 .padding(bottom = 16.dp)
         ) {
+            Spacer(modifier = Modifier.height(8.dp))
+
             Icon(
                 modifier = Modifier
-                    .padding(6.dp)
+                    .padding(start = 4.dp)
+                    .padding(12.dp)
                     .clickable { onClickBack() },
                 painter = painterResource(id = R.drawable.ic_back),
                 contentDescription = null,
