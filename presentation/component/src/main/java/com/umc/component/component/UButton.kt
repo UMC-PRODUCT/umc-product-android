@@ -1,31 +1,33 @@
 package com.umc.component.component
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
 
@@ -54,7 +56,7 @@ import com.umc.component.theme.neutral000
 @Composable
 fun UButton(
     text: String,
-    onClick: () -> Unit,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     backgroundColor: Color = Color.Black,
@@ -73,23 +75,24 @@ fun UButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val currentBackground = if (isPressed && enabled) pressedColor else backgroundColor
+    val shape = RoundedCornerShape(cornerRadius)
 
-    // defaultMinSize(0.dp)로 Material3 Button 기본 최소 크기(58×40dp)를 제거.
-    // modifier가 크기를 지정하지 않으면 콘텐츠 크기에 맞게 줄어듦
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        shape = RoundedCornerShape(cornerRadius),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = currentBackground,
-            disabledContainerColor = backgroundColor,
-            contentColor = textColor,
-            disabledContentColor = textColor,
-        ),
-        border = if (borderWidth > 0.dp) BorderStroke(borderWidth, borderColor) else null,
-        contentPadding = contentPadding,
-        interactionSource = interactionSource,
-        modifier = modifier.defaultMinSize(minWidth = 0.dp, minHeight = 0.dp),
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .clip(shape)
+            .background(currentBackground)
+            .then(
+                if (borderWidth > 0.dp) Modifier.border(borderWidth, borderColor, shape)
+                else Modifier
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(),
+                enabled = enabled,
+                onClick = onClick,
+            )
+            .padding(contentPadding),
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             if (topIcon != null) {
