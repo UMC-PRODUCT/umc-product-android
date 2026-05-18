@@ -130,6 +130,7 @@ dependencies {
 
     //naver maps
     implementation(libs.naver.maps.sdk)
+    implementation(libs.naver.maps.compose)
     implementation(libs.googleplay.services.location)
 }
 

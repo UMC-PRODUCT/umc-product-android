@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.component.UText
+import com.umc.presentation.home.schedule.dialog.LocationSearchBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
 
 @Composable
@@ -42,6 +43,7 @@ fun ScheduleAddRoute(
 
     //다이얼로그 표시 여부 체크
     var showCategoryDialog by remember { mutableStateOf(false) }
+    var showLocationDialog by remember {mutableStateOf(false)}
 
     LaunchedEffect(viewModel){
         viewModel.uiEvent.collectLatest { event ->
@@ -59,7 +61,7 @@ fun ScheduleAddRoute(
         onDetailChanged = viewModel::updatePlanDetail,
         onAlldayChanged = viewModel::setAllday,
         onCategoryClick = { showCategoryDialog = true },
-        onLocationClick = {  },
+        onLocationClick = { showLocationDialog = true },
         onParticipantClick = {  },
         onStartDateClick = {  },
         onStartTimeClick = {  },
@@ -85,6 +87,16 @@ fun ScheduleAddRoute(
             categories = uiState.categories,
             onDismissRequest = { showCategoryDialog = false },
             onConfirm = { showCategoryDialog = false }
+        )
+    }
+
+    if (showLocationDialog) {
+        LocationSearchBottomSheet(
+            onDismissRequest = { showLocationDialog = false },
+            onLocationSelected = {
+                viewModel.updatePlanLocation(it)
+                showLocationDialog = false
+            }
         )
     }
 

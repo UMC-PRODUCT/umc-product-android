@@ -28,7 +28,7 @@ fun MainNavHost(
         navController = navHostController,
 
         //시작 화면 (일단 임시로 home)
-        startDestination = MainDestination.Mypage,
+        startDestination = MainDestination.Home,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
