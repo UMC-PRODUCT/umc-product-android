@@ -45,7 +45,7 @@ class LocationSearchViewModel @Inject constructor(
             copy(
                 selectedPlace = LocationItem(
                     title = "현재 설정된 위치",
-                    address = "지도를 움직여 정확한 장소를 선택하세요.",
+                    address = "지도를 움직이거나 검색하여 장소를 선택하세요.",
                     latitude = lat,
                     longitude = lng
                 )

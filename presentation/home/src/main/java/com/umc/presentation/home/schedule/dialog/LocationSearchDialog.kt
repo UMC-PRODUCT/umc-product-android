@@ -89,12 +89,14 @@ fun LocationSearchBottomSheet(
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
 
+                //위도 경도로 지도를 이동
                 is LocationSearchEvent.MoveCameraTo -> {
                     cameraPositionState.animate(
                         CameraUpdate.scrollTo(LatLng(event.lat, event.lng))
                     )
                 }
 
+                //위치 결정 시
                 is LocationSearchEvent.LocationConfirmed -> {
                     onLocationSelected(event.placeInfo)
                     onDismissRequest()
@@ -106,7 +108,7 @@ fun LocationSearchBottomSheet(
     //제스처 이동 완료 시 지점 좌표 기반 주소 데이터 파싱
     /**사용자가 지도를 움직일 떄만 title이 변경되도로**/
     LaunchedEffect(cameraPositionState.isMoving) {
-        // 카메라가 멈췄고(&), 움직인 원인이 사용자의 제스처(손가락 드래그)일 때만 역지오코딩을 수행합니다!
+        // 카메라가 멈추고, 움직인 원인이 사용자의 제스처(손가락 드래그)일 때만 역지오코딩을 수행
         if (!cameraPositionState.isMoving && cameraPositionState.cameraUpdateReason == CameraUpdateReason.GESTURE) {
             val center = cameraPositionState.position.target
             if (center.latitude != 0.0) {
@@ -127,7 +129,7 @@ fun LocationSearchBottomSheet(
         modifier = Modifier
             .fillMaxHeight(0.9f)
     ){
-        // 겉을 감싸는 부모 Column에 가변 스크롤(verticalScroll)을 부여하여 겹침 방지
+        
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -141,6 +143,7 @@ fun LocationSearchBottomSheet(
                 searchQuery = uiState.searchQuery,
                 onQueryChanged = viewModel::onQueryChanged,
                 onSearchClick = {
+                    //검색 클릭 시 카카오 API를 통한 장소 검색
                     viewModel.searchLocation(uiState.searchQuery)
                     focusManager.clearFocus()
                 }
@@ -148,11 +151,11 @@ fun LocationSearchBottomSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            //2. 네이버 지도
+            //2. 네이버 지도 뷰
             LocationNaverMapContent(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(240.dp),
+                    .height(260.dp),
                 cameraPositionState = cameraPositionState
             )
 
@@ -167,14 +170,14 @@ fun LocationSearchBottomSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // [분기 제어 영역] 검색어 입력 유무에 따른 하단 리스트 스위칭
+            //4. 분기 영역 : 검색어 입력 유무에 따른 하단 리스트 스위칭
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
             ) {
                 if (uiState.searchQuery.isEmpty()) {
-                    // 검색 X시: 최근 검색 기록 리스트 노출
+                    //검색하지 않을 경우: 최근 검색 기록 리스트 노출
                     RecentSearchList(
                         recentSearchList = uiState.recentSearchList,
                         onItemClick = { recentText ->
@@ -184,7 +187,7 @@ fun LocationSearchBottomSheet(
                         }
                     )
                 } else {
-                    // 검색 O시: 카카오 API 검색 결과 리스트 노출
+                    //검색할 겨우: 카카오 API 검색 결과 리스트 노출
                     SearchResultList(
                         searchResultList = uiState.searchResultList,
                         onItemClick = { clickedItem ->
@@ -214,18 +217,22 @@ fun LocationHeaderAndSearchBar(
             text = "장소를 선택하세요",
             style = UmcTypographyTokens.Title3Bold,
             color = neutral800(),
-            modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier
+                .padding(top = 8.dp)
         )
 
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             UTextField(
                 value = searchQuery,
                 onValueChange = onQueryChanged,
                 placeholder = "장소 또는 주소를 입력하세요",
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { onSearchClick() })
             )
@@ -256,13 +263,14 @@ fun LocationNaverMapContent(
     //현재 컴포지블이 그려지는 있는 안드로이드 뷰
     val localView = LocalView.current
 
+    /**TODO: ModalDialog랑 지도 상의 터치(스와이프) 이벤트 중복 어떻게 해결할까....**/
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .pointerInteropFilter { motionEvent ->
                 when (motionEvent.action) {
                     MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
-                        // 1. 부모(바텀시트)가 가로채는 것은 네이티브 레벨에서 락을 겁니다.
+                        // 1. 부모(바텀시트)가 가로채는 것은 네이티브 레벨에서 락
                         localView.parent?.requestDisallowInterceptTouchEvent(true)
                         // 2. 기존 true에서 false로 변경!
                         // 이 이벤트를 소비하지 않고 아래에 있는 NaverMap 컴포저블로 고스란히 흘려보냅니다.
@@ -303,7 +311,8 @@ fun SelectedLocationCard(
     onConfirmClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = neutral100())
     ) {
