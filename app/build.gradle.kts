@@ -127,6 +127,10 @@ dependencies {
     // Play In-App Update
     implementation(libs.play.update)
     implementation(libs.play.update.ktx)
+
+    //naver maps
+    implementation(libs.naver.maps.sdk)
+    implementation(libs.googleplay.services.location)
 }
 
 fun getApiKey(propertyKey: String): String {
