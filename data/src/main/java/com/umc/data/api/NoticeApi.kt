@@ -114,7 +114,7 @@ interface NoticeApi {
     @PATCH(Endpoints.Notice.NOTICE_IMAGES)
     suspend fun updateNoticeImages(
         @Path(PATH_NOTICE_ID) noticeId: Long,
-        @Body request: NoticeUpdateRequest
+        @Body request: NoticeImageRequest
     ): ApiResponse<Unit>
 
     // 공지사항 기본 정보 수정
@@ -155,13 +155,6 @@ interface NoticeApi {
     suspend fun addNoticeLinks(
         @Path(PATH_NOTICE_ID) noticeId: Long,
         @Body request: NoticeLinkRequest,
-    ): ApiResponse<Unit>
-
-    // 공지사항 이미지 추가
-    @POST(Endpoints.Notice.NOTICE_IMAGES)
-    suspend fun updateNotice(
-        @Path(PATH_NOTICE_ID) noticeId: Long,
-        @Body request: NoticeImageRequest
     ): ApiResponse<Unit>
 
     // 투표 응답 제출
