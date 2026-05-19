@@ -38,6 +38,7 @@ interface NoticeApi {
         const val QUERY_ORGANIZATION_IDS = "organizationIds"
         const val QUERY_STATUS = "status"
         const val QUERY_KEYWORD = "keyword"
+        const val QUERY_NOTICE_TAB = "noticeTab"
     }
 
     // 공지사항 삭제
@@ -56,6 +57,7 @@ interface NoticeApi {
     @GET(Endpoints.Notice.NOTICE)
     suspend fun getNotices(
         @Query(QUERY_GISU_ID) gisuId: Long,
+        @Query(QUERY_NOTICE_TAB) noticeTab: String,
         @Query(QUERY_CHAPTER_ID) chapterId: Long? = null,
         @Query(QUERY_SCHOOL_ID) schoolId: Long? = null,
         @Query(QUERY_PART) part: String? = null,
@@ -90,6 +92,7 @@ interface NoticeApi {
     suspend fun searchNotices(
         @Query(QUERY_KEYWORD) keyword: String = "",
         @Query(QUERY_GISU_ID) gisuId: Long,
+        @Query(QUERY_NOTICE_TAB) noticeTab: String,
         @Query(QUERY_CHAPTER_ID) chapterId: Long? = null,
         @Query(QUERY_SCHOOL_ID) schoolId: Long? = null,
         @Query(QUERY_PART) part: String? = null,

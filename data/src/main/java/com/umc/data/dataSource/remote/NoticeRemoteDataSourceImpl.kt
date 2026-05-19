@@ -30,13 +30,14 @@ class NoticeRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun getNotices(
         gisuId: Long,
+        noticeTab: String,
         chapterId: Long?,
         schoolId: Long?,
         part: String?,
         page: Int,
         size: Int
     ): ApiState<NoticeSearchResponse> =
-        apiCall { noticeApi.getNotices(gisuId, chapterId, schoolId, part, page, size) }
+        apiCall { noticeApi.getNotices(gisuId, noticeTab, chapterId, schoolId, part, page, size) }
 
     override suspend fun getNoticeDetail(noticeId: Long): ApiState<NoticeDetailResponse> =
         apiCall { noticeApi.getNoticeDetail(noticeId) }
@@ -56,13 +57,14 @@ class NoticeRemoteDataSourceImpl @Inject constructor(
     override suspend fun searchNotices(
         keyword: String,
         gisuId: Long,
+        noticeTab: String,
         chapterId: Long?,
         schoolId: Long?,
         part: String?,
         page: Int,
         size: Int
     ): ApiState<NoticeSearchResponse> =
-        apiCall { noticeApi.searchNotices(keyword, gisuId, chapterId, schoolId, part, page, size) }
+        apiCall { noticeApi.searchNotices(keyword, gisuId, noticeTab, chapterId, schoolId, part, page, size) }
 
     override suspend fun editNoticeLinks(noticeId: Long, request: NoticeLinkRequest): ApiState<Unit> =
         apiCall { noticeApi.editNoticeLinks(noticeId, request) }

@@ -11,6 +11,7 @@ class SearchNoticeListUseCase @Inject constructor(
     suspend operator fun invoke(
         keyword: String,
         gisuId: Long,
+        noticeTab: String = "CHALLENGER",
         chapterId: Long? = null,
         schoolId: Long? = null,
         part: String? = null,
@@ -20,6 +21,7 @@ class SearchNoticeListUseCase @Inject constructor(
         return noticeRepository.searchNotices(
             keyword = keyword,
             gisuId = gisuId,
+            noticeTab = noticeTab,
             chapterId = chapterId,
             schoolId = schoolId,
             part = part,

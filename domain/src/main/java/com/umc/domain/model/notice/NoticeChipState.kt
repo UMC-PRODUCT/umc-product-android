@@ -8,5 +8,6 @@ data class NoticeChipState(
     val part: String? = null,
     val hanBottomSheet: Boolean = false,
     val gisuId: Long? = null,
-    val selectedDisplayName: String? = null
+    val selectedDisplayName: String? = null,
+    val isStaffNoticeChip: Boolean = false
 )

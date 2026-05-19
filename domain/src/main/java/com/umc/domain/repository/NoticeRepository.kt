@@ -18,6 +18,7 @@ interface NoticeRepository {
     suspend fun deleteNoticeVote(noticeId: Long): ApiState<Unit>
     suspend fun getNotices(
         gisuId: Long,
+        noticeTab: String,
         chapterId: Long? = null,
         schoolId: Long? = null,
         part: String? = null,
@@ -38,6 +39,7 @@ interface NoticeRepository {
     suspend fun searchNotices(
         keyword: String = "",
         gisuId: Long,
+        noticeTab: String,
         chapterId: Long? = null,
         schoolId: Long? = null,
         part: String? = null,
