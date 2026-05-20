@@ -22,30 +22,14 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
         gisuId: Long,
         part: String,
     ): ApiState<CurriculumOverviewResponse> {
-        return try {
-            val res = curriculumApi.getCurriculumOverview(gisuId, part)
-            val body = res.result
-            if (body == null) {
-                ApiState.Fail(failState = IllegalStateException("Empty body").toFailState())
-            } else {
-                ApiState.Success(body)
-            }
-        } catch (e: Exception) {
-            ApiState.Fail(failState = e.toFailState())
+        return fetch {
+            curriculumApi.getCurriculumOverview(gisuId, part)
         }
     }
 
     override suspend fun getMyCurriculumProgress(gisuId: Long): ApiState<CurriculumProgressResponse> {
-        return try {
-            val res = curriculumApi.getMyCurriculumProgress(gisuId)
-            val body = res.result
-            if (body == null) {
-                ApiState.Fail(failState = IllegalStateException("Empty body").toFailState())
-            } else {
-                ApiState.Success(body)
-            }
-        } catch (e: Exception) {
-            ApiState.Fail(failState = e.toFailState())
+        return fetch {
+            curriculumApi.getMyCurriculumProgress(gisuId)
         }
     }
 

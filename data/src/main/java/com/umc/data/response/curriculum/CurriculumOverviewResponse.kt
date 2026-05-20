@@ -6,6 +6,8 @@ import com.umc.domain.model.study.StudyProgress
 import com.umc.domain.model.study.WorkbookProgress
 import com.umc.domain.model.enums.WorkbookMissionType
 import com.umc.domain.model.enums.WorkbookStatus
+import java.time.Instant
+
 
 data class CurriculumOverviewResponse(
     @SerializedName("curriculumId") val curriculumId: Long?,
@@ -24,7 +26,7 @@ data class CurriculumOverviewResponse(
 
 data class WeeklyOverviewResponse(
     @SerializedName("weeklyCurriculumId") val weeklyCurriculumId: Long?,
-    @SerializedName("weekNo") val weekNo: Int?,
+    @SerializedName("weekNo") val weekNo: Long?,
     @SerializedName("title") val title: String?,
     @SerializedName("isExtra") val isExtra: Boolean?,
     @SerializedName("startsAt") val startsAt: String?,
@@ -32,12 +34,37 @@ data class WeeklyOverviewResponse(
 ) {
     fun toModel(): WorkbookProgress = WorkbookProgress(
         originalWorkbookId = weeklyCurriculumId ?: 0L,
-        weekNo = weekNo ?: 0,
+        weekNo = weekNo?.toInt() ?: 0,
         title = title.orEmpty(),
         description = "",
         missionType = WorkbookMissionType.UNKNOWN,
         status = WorkbookStatus.UNKNOWN,
-        isReleased = true,
-        isInProgress = false
+        isReleased = isReleasedNow(),
+        isInProgress = isInProgressNow()
     )
+
+    private fun parseMillis(dateStr: String): Long? {
+        return try {
+            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault())
+            sdf.timeZone = java.util.TimeZone.getTimeZone("UTC")
+            sdf.parse(dateStr)?.time
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun isReleasedNow(): Boolean {
+        val starts = startsAt ?: return false
+        val startsMillis = parseMillis(starts) ?: return false
+        return System.currentTimeMillis() > startsMillis
+    }
+
+    private fun isInProgressNow(): Boolean {
+        val starts = startsAt ?: return false
+        val ends = endsAt ?: return false
+        val startsMillis = parseMillis(starts) ?: return false
+        val endsMillis = parseMillis(ends) ?: return false
+        val now = System.currentTimeMillis()
+        return now > startsMillis && now < endsMillis
+    }
 }

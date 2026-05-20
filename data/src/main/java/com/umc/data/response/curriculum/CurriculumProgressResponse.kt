@@ -21,13 +21,13 @@ data class CurriculumProgressResponse(
         },
         totalCount = weeks.orEmpty().size,
         workbooks = weeks.orEmpty().flatMap { week ->
-            week.originalWorkbooks.orEmpty().map { it.toModel(week.weekNo) }
+            week.originalWorkbooks.orEmpty().map { it.toModel(week.weekNo?.toInt()) }
         }
     )
 }
 data class WeeklyProgressResponse(
     @SerializedName("weeklyCurriculumId") val weeklyCurriculumId: Long?,
-    @SerializedName("weekNo") val weekNo: Int?,
+    @SerializedName("weekNo") val weekNo: Long?,
     @SerializedName("title") val title: String?,
     @SerializedName("status") val status: String?,
     @SerializedName("originalWorkbooks") val originalWorkbooks: List<WorkbookProgressResponse>?
@@ -48,7 +48,11 @@ data class WorkbookProgressResponse(
         weekNo = weekNo ?: 0,
         title = title.orEmpty(),
         description = description.orEmpty(),
-        missionType = WorkbookMissionType.LINK, // missions에서 파악
+        missionType = missions
+            ?.firstOrNull()
+            ?.missionType
+            ?.let { WorkbookMissionType.from(it) }
+            ?: WorkbookMissionType.UNKNOWN,
         status = WorkbookStatus.from(status),
         isReleased = isDeployedToMember ?: false,
         isInProgress = status == "IN_PROGRESS"

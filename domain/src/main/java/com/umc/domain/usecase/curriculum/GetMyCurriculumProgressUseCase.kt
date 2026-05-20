@@ -9,8 +9,8 @@ class GetMyCurriculumProgressUseCase @Inject constructor(
     private val repository: CurriculumRepository
 ) {
     suspend operator fun invoke(
-        gisuId: Long = 3L,
-        part: String = "SPRINGBOOT" // 일단 하드코딩, 나중에 로그인 정보에서 가져오기
+        gisuId: Long,
+        part: String
     ): ApiState<StudyProgress> {
         return repository.getCurriculumOverview(gisuId, part)
     }
