@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -123,7 +124,8 @@ fun ActiveScheduleItem(
                     textColor = neutral700(),
                     textStyle = UmcTypographyTokens.Caption1Bold,
                     modifier = Modifier
-                        .padding(end = 16.dp),
+                        .padding(end = 16.dp)
+                        .height(24.dp),
                     onClick = {}
                 )
             }

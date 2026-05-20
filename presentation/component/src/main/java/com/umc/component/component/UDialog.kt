@@ -43,6 +43,7 @@ import com.umc.component.theme.neutral800
  * @param onNegative 취소 버튼 클릭 시 호출. 기본값은 onDismissRequest
  * @param onPositive 긍정 버튼 클릭 시 호출
  */
+
 @Composable
 fun UDialog(
     title: String,

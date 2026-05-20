@@ -30,4 +30,18 @@ sealed interface MainDestination {
     data class ScheduleDetail(val scheduleId: Long, val plusDay: Int) : MainDestination
 
 
+    /**마이 페이지 섹션**/
+    @Serializable
+    data object Mypage : MainDestination
+
+    //내 활동 (showType: "MYPOST", "MYCOMMENT", "MYSCRAP")
+    @Serializable
+    data class MyContent(val showType: String) : MainDestination
+
+    //프로필 페이지
+    @Serializable
+    data object MyProfile : MainDestination
+
+
+
 }
