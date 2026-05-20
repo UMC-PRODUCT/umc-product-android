@@ -65,7 +65,6 @@ fun LoginRoute(
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest {
             // TODO 이벤트 처리
-            navigateToStudy()
         }
     }
 
