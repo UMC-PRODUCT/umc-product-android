@@ -1,5 +1,6 @@
 package com.umc.presentation.study.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -17,16 +18,13 @@ import com.umc.component.theme.*
  */
 @Composable
 fun StudyEmptyCard(modifier: Modifier = Modifier) {
-    Card(
+    Box(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral000()),
-        elevation = CardDefaults.cardElevation(0.dp),
+            .fillMaxSize()
+            .background(neutral000()),
+        contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {

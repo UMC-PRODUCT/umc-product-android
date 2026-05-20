@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.*
@@ -27,8 +28,9 @@ fun StudyStatusBadge(
     modifier: Modifier = Modifier,
 ) {
     val (bg, textColor, label) = when {
+        //나중에 컬러 다 바뀌면 바꾸겠습니다!
         item.status == StudyStatus.PASS ->
-            Triple(success100(), success700(), AppStrings.STUDY_BADGE_PASS)
+            Triple(Color(0xFFE4FCEC), success700(), AppStrings.STUDY_BADGE_PASS)
         item.status == StudyStatus.FAIL ->
             Triple(danger100(), danger700(), AppStrings.STUDY_BADGE_FAIL)
         item.submitState == SubmitState.REQUESTED ->

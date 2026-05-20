@@ -35,25 +35,7 @@ fun StudyExpandedContent(
     onConfirmClick: (Long) -> Unit,
 ) {
     when {
-        // 링크 입력 화면
-        item.status == StudyStatus.IN_PROGRESS &&
-                (item.submitState == SubmitState.IDLE || item.submitState == SubmitState.READY) -> {
-            StudyLinkInputSection(item = item, onSubmitClick = onSubmitClick)
-        }
-        // 제출 확인 화면
-        item.submitState == SubmitState.CONFIRMING -> {
-            StudyConfirmSection(item = item, onConfirmClick = onConfirmClick)
-        }
-        // 대기중 배너
-        item.submitState == SubmitState.REQUESTED -> {
-            StudyStatusBanner(
-                iconRes = R.drawable.ic_act_hourglass,
-                text = AppStrings.STUDY_STATUS_WAITING,
-                textColor = warning700(),
-                backgroundColor = warning100(),
-            )
-        }
-        // 통과 배너
+        // PASS 배너
         item.status == StudyStatus.PASS -> {
             StudyStatusBanner(
                 iconRes = R.drawable.ic_check_success,
@@ -71,6 +53,26 @@ fun StudyExpandedContent(
                 backgroundColor = danger100(),
             )
         }
+        // 대기중 배너
+        item.submitState == SubmitState.REQUESTED -> {
+            StudyStatusBanner(
+                iconRes = R.drawable.ic_act_hourglass,
+                text = AppStrings.STUDY_STATUS_WAITING,
+                textColor = warning700(),
+                backgroundColor = warning100(),
+            )
+        }
+        // 제출 확인 화면
+        item.submitState == SubmitState.CONFIRMING -> {
+            StudyConfirmSection(item = item, onConfirmClick = onConfirmClick)
+        }
+        // 링크 입력 화면
+        item.status == StudyStatus.IN_PROGRESS &&
+                (item.submitState == SubmitState.IDLE || item.submitState == SubmitState.READY) -> {
+            StudyLinkInputSection(item = item, onSubmitClick = onSubmitClick)
+        }
+        // 매핑 안 되는 상태 (아무것도 표시 안 함)
+        else -> Unit
     }
 }
 

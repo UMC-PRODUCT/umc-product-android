@@ -100,7 +100,7 @@ fun StudyCurriculumCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(progress / 100f)
+                        .fillMaxWidth(progress.coerceIn(0, 100) / 100f)
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(3.dp))
                         .background(primary500())

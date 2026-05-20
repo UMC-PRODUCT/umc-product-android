@@ -25,7 +25,7 @@ data class ActStudyItemUiModel(
     val platform: String,
     val title: String,
     val status: StudyStatus,
-    val week: Int = id.toInt(),
+    val week: Int,
     val isExpanded: Boolean = false,
     val link: String = "",
     val input: String = "",

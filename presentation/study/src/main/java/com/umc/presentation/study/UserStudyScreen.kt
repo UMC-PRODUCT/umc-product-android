@@ -1,6 +1,6 @@
 package com.umc.presentation.study
 
-
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,27 +8,46 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.theme.neutral100
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.study.component.StudyCurriculumCard
 import com.umc.presentation.study.component.StudyEmptyCard
 import com.umc.presentation.study.component.StudyItemRow
+import kotlinx.coroutines.flow.collectLatest
 
-/**
- * 스터디/활동 화면 전체 레이아웃
- *
- * - 상단: 커리큘럼 카드 (달성률, 프로그레스바)
- * - 중단: 주차별 스터디 아이템 리스트
- * - 빈 상태: 아이템 없을 때 안내 카드 표시
- *
- * @param state UI 상태
- * @param onToggle 카드 펼치기/접기 콜백 (index)
- * @param onSubmitClick 링크 제출 콜백 (itemId, link)
- * @param onConfirmClick 학습 완료 인증 콜백 (itemId)
- */
+@Composable
+fun UserStudyRoute(
+    viewModel: UserStudyViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(viewModel) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is UserStudyEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    UserStudyScreen(
+        state = state,
+        onToggle = { index -> viewModel.toggleExpand(index) },
+        onSubmitClick = { id, link -> viewModel.onSubmitClick(id, link) },
+        onConfirmClick = { id -> viewModel.onConfirmClick(id) },
+    )
+}
+
 @Composable
 fun UserStudyScreen(
     state: UserStudyState,
@@ -39,25 +58,24 @@ fun UserStudyScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral100()) // 배경색
+            .background(neutral100())
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 16.dp)
-        ) {
-            item {
-                StudyCurriculumCard(
-                    part = state.part,
-                    title = state.title,
-                    percentText = state.percentText,
-                    progress = state.progress,
-                    subText = state.subText,
-                )
-            }
-
-            if (state.items.isEmpty()) {
-                item { StudyEmptyCard() }
-            } else {
+        if (state.items.isEmpty()) {
+            StudyEmptyCard()
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                item {
+                    StudyCurriculumCard(
+                        part = state.part,
+                        title = state.title,
+                        percentText = state.percentText,
+                        progress = state.progress,
+                        subText = state.subText,
+                    )
+                }
                 itemsIndexed(
                     items = state.items,
                     key = { _, item -> item.id }
@@ -73,7 +91,6 @@ fun UserStudyScreen(
         }
     }
 }
-
 @Preview(showBackground = true)
 @Composable
 private fun UserStudyScreenPreview() {
