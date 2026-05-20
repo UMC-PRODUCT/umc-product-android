@@ -343,7 +343,7 @@ constructor(
 
     
     /**---ScheduleChallengerDialog에서의 실질 로직---**/
-
+/*
     // 유저 검색 로직
     fun searchParticipants(query: String) {
         //이전 작업 취소
@@ -458,7 +458,18 @@ constructor(
         }
     }
 
+
+ */
     /***---------------------------------***/
+
+    // 다이얼로그에서 가져온 참여자 정보를 업데이트 하는 함수
+    fun updateParticipants(participants: List<ParticipantItem>, participantsString: String) {
+        updateState {
+            copy(
+                selectedParticipants = participants,
+                selectedParticipantsString = participantsString
+            ) }
+    }
 
     // 일정 이름 변경
     fun updatePlanTitle(title: String) = updateState {
@@ -613,12 +624,15 @@ data class ScheduleAddUiState(
 
     //인원 검색 관련
     /**xml과 달리 별도의 ViewModel 사용 X**/
+    /*
     val searchQuery: String = "",  // 검색 텍스트 창
     val isSearching: Boolean = false, // 검색 모드 활성화 여부
     val searchResults: List<ParticipantItem> = emptyList(), // 검색 결과 명단
     val nextCursor: Long? = null, // 무한 스크롤 페이징용 커서
     val hasNext: Boolean = true, // 다음 페이지 존재 여부
     val isLoading: Boolean = false,
+
+     */
     val selectedParticipants: List<ParticipantItem> = emptyList(), //선택된 참여자 결과(recyclerview에 쓰임)
     val selectedParticipantsString : String = "", //cdv에 보여줄 string
 

@@ -29,15 +29,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.component.UText
 import com.umc.presentation.home.schedule.dialog.LocationSearchBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
-import com.umc.presentation.home.schedule.dialog.ScheduleChallengerBottomSheet
+import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddBottomSheet
+import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddDialogViewModel
 
 @Composable
 fun ScheduleAddRoute(
     viewModel: ScheduleAddViewModel = hiltViewModel(),
+    participantViewModel: ScheduleChallengerAddDialogViewModel = hiltViewModel(),
     onShowAttendanceDialog: (onConfirm: () -> Unit, onReject: () -> Unit) -> Unit
 ){
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val participantUiState by participantViewModel.uiState.collectAsStateWithLifecycle()
+
     //뒤로 가기 디스패처
     /**TODO. 삭제 - MainActivity에서 적용할 예정**/
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
@@ -64,7 +69,11 @@ fun ScheduleAddRoute(
         onAlldayChanged = viewModel::setAllday,
         onCategoryClick = { showCategoryDialog = true },
         onLocationClick = { showLocationDialog = true },
-        onParticipantClick = { showParticipantDialog = true },
+        onParticipantClick = {
+            //일정 추가에 있는 챌린저 정보를 다이얼로그 뷰모델에 전달(챌린저 추가/삭제 유지)
+            participantViewModel.setSelectedParticipant(uiState.selectedParticipants)
+            showParticipantDialog = true
+                             },
         onStartDateClick = {  },
         onStartTimeClick = {  },
         onEndDateClick = {  },
@@ -103,24 +112,26 @@ fun ScheduleAddRoute(
     }
 
     if (showParticipantDialog) {
-        ScheduleChallengerBottomSheet(
-            searchQuery = uiState.searchQuery,
-            isSearching = uiState.isSearching,
-            isLoading = uiState.isLoading,
-            hasNext = uiState.hasNext,
-            selectedParticipants = uiState.selectedParticipants,
-            selectedParticipantsString = uiState.selectedParticipantsString,
-            searchResults = uiState.searchResults,
+        ScheduleChallengerAddBottomSheet(
+            searchQuery = participantUiState.searchQuery,
+            isSearching = participantUiState.isSearching,
+            isLoading = participantUiState.isLoading,
+            hasNext = participantUiState.hasNext,
+            selectedParticipants = participantUiState.selectedParticipants,
+            selectedParticipantsString = participantUiState.selectedParticipantsString,
+            searchResults = participantUiState.searchResults,
 
-            onQueryChanged = viewModel::searchParticipants,
-            onLoadMore = viewModel::loadMoreParticipants,
-            onToggleParticipant = viewModel::toggleParticipant,
-            onConfirm = { _, _ ->
-                //단일 소스 아키텍처이므로 상태가 이미 실시간 뷰모델에 정착
+            onQueryChanged = participantViewModel::searchParticipants,
+            onLoadMore = participantViewModel::loadMoreParticipants,
+            onToggleParticipant = participantViewModel::toggleParticipant,
+            onConfirm = { finalParticipants, summaryString ->
+                //다이얼로그가 들고 있던최종 명단을
+                //메인 뷰모델 내부로 전달하며 창을 종료
+                viewModel.updateParticipants(finalParticipants, summaryString)
                 showParticipantDialog = false
             },
             onDismissRequest = {
-                viewModel.clearParticipantSearch()
+                participantViewModel.clearParticipantSearch()
                 showParticipantDialog = false
             }
         )
