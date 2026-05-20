@@ -23,13 +23,15 @@ import kotlinx.coroutines.flow.collectLatest
 fun SplashRoute(
     viewModel: SplashViewModel = hiltViewModel(),
     navigateToLogin: () -> Unit,
+    navigateToMain: () -> Unit = {},
+    navigateToInputCode: () -> Unit = {},
 ) {
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest {
             when(it) {
                 SplashEvent.MoveToLoginEvent -> navigateToLogin()
-                SplashEvent.MoveToMainEvent -> TODO()
-                SplashEvent.MoveToInputCodeEvent -> TODO()
+                SplashEvent.MoveToMainEvent -> navigateToMain()
+                SplashEvent.MoveToInputCodeEvent -> navigateToInputCode()
             }
         }
     }

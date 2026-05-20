@@ -35,7 +35,13 @@ fun MainNavHost(
     ) {
         composable<MainDestination.Splash> {
             SplashRoute(
-                navigateToLogin = { navHostController.navigate(MainDestination.Login) }
+                navigateToLogin = { navHostController.navigate(MainDestination.Login) },
+                navigateToMain = {
+                    // TODO: 메인 화면 완성 후 연결
+                },
+                navigateToInputCode = {
+                    // TODO: 코드 입력 화면 완성 후 연결
+                }
             )
         }
 
@@ -119,8 +125,6 @@ fun MainNavHost(
         composable<MainDestination.MyProfile> {
             ProfileRoute()
         }
-
-
 
 
     }

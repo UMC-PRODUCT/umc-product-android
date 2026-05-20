@@ -57,6 +57,7 @@ import com.umc.component.R
 
 @Composable
 fun LoginRoute(
+    navigateToStudy: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel(),
     navigateToSignUp: (String) -> Unit = {},
 ) {

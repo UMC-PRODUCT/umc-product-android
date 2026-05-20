@@ -7,6 +7,7 @@ import com.umc.domain.model.base.ApiState
 import javax.inject.Inject
 import com.umc.data.mapper.toFailState
 import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
+import com.umc.data.response.curriculum.CurriculumOverviewResponse
 import com.umc.domain.model.base.FailState
 
 import com.umc.domain.model.base.ApiResponse
@@ -17,17 +18,18 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
     private val curriculumApi: CurriculumApi
 ) : CurriculumRemoteDataSource {
 
-    override suspend fun getMyCurriculumProgress(page: Int?, limit: Int?): ApiState<CurriculumProgressResponse> {
-        return try {
-            val res = curriculumApi.getMyCurriculumProgress(page, limit)
-            val body = res.result
-            if (body == null) {
-                ApiState.Fail(failState = IllegalStateException("Empty body").toFailState())
-            } else {
-                ApiState.Success(body)
-            }
-        } catch (e: Exception) {
-            ApiState.Fail(failState = e.toFailState())
+    override suspend fun getCurriculumOverview(
+        gisuId: Long,
+        part: String,
+    ): ApiState<CurriculumOverviewResponse> {
+        return fetch {
+            curriculumApi.getCurriculumOverview(gisuId, part)
+        }
+    }
+
+    override suspend fun getMyCurriculumProgress(gisuId: Long): ApiState<CurriculumProgressResponse> {
+        return fetch {
+            curriculumApi.getMyCurriculumProgress(gisuId)
         }
     }
 
