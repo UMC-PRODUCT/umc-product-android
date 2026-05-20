@@ -50,6 +50,8 @@ import com.naver.maps.map.compose.MapUiSettings
 import com.naver.maps.map.compose.ExperimentalNaverMapApi
 import com.naver.maps.map.compose.LocationTrackingMode
 
+/**일정 생성에서 장소 설정을 담당하는 다이얼로그**/
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalNaverMapApi::class)
 @Composable
 fun LocationSearchBottomSheet(
@@ -126,8 +128,7 @@ fun LocationSearchBottomSheet(
         },
 
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        modifier = Modifier
-            .fillMaxHeight(0.9f)
+
     ){
         
         Column(
@@ -168,7 +169,7 @@ fun LocationSearchBottomSheet(
             )
 
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             //4. 분기 영역 : 검색어 입력 유무에 따른 하단 리스트 스위칭
             Box(

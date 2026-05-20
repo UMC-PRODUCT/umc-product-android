@@ -65,4 +65,7 @@ dependencies {
     implementation(libs.naver.maps.sdk)
     implementation(libs.naver.maps.compose)
     implementation(libs.googleplay.services.location)
+
+    //비동기 이미지
+    implementation(libs.coil.compose)
 }

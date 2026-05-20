@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.component.UText
 import com.umc.presentation.home.schedule.dialog.LocationSearchBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
+import com.umc.presentation.home.schedule.dialog.ScheduleChallengerBottomSheet
 
 @Composable
 fun ScheduleAddRoute(
@@ -44,6 +45,7 @@ fun ScheduleAddRoute(
     //다이얼로그 표시 여부 체크
     var showCategoryDialog by remember { mutableStateOf(false) }
     var showLocationDialog by remember {mutableStateOf(false)}
+    var showParticipantDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel){
         viewModel.uiEvent.collectLatest { event ->
@@ -62,7 +64,7 @@ fun ScheduleAddRoute(
         onAlldayChanged = viewModel::setAllday,
         onCategoryClick = { showCategoryDialog = true },
         onLocationClick = { showLocationDialog = true },
-        onParticipantClick = {  },
+        onParticipantClick = { showParticipantDialog = true },
         onStartDateClick = {  },
         onStartTimeClick = {  },
         onEndDateClick = {  },
@@ -96,6 +98,30 @@ fun ScheduleAddRoute(
             onLocationSelected = {
                 viewModel.updatePlanLocation(it)
                 showLocationDialog = false
+            }
+        )
+    }
+
+    if (showParticipantDialog) {
+        ScheduleChallengerBottomSheet(
+            searchQuery = uiState.searchQuery,
+            isSearching = uiState.isSearching,
+            isLoading = uiState.isLoading,
+            hasNext = uiState.hasNext,
+            selectedParticipants = uiState.selectedParticipants,
+            selectedParticipantsString = uiState.selectedParticipantsString,
+            searchResults = uiState.searchResults,
+
+            onQueryChanged = viewModel::searchParticipants,
+            onLoadMore = viewModel::loadMoreParticipants,
+            onToggleParticipant = viewModel::toggleParticipant,
+            onConfirm = { _, _ ->
+                //단일 소스 아키텍처이므로 상태가 이미 실시간 뷰모델에 정착
+                showParticipantDialog = false
+            },
+            onDismissRequest = {
+                viewModel.clearParticipantSearch()
+                showParticipantDialog = false
             }
         )
     }

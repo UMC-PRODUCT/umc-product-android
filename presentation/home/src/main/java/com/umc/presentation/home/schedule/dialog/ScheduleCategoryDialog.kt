@@ -40,6 +40,8 @@ import com.umc.component.theme.primary500
 import com.umc.domain.model.home.CategoryItem
 import com.umc.presentation.home.schedule.add.ScheduleAddViewModel
 
+/**일정 생성에서 카테고리 선택을 담당하는 다이얼로그**/
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleCategoryBottomSheet(
