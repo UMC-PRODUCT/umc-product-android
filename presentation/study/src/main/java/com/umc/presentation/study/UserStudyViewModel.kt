@@ -1,16 +1,33 @@
 package com.umc.presentation.study
 
 import androidx.lifecycle.viewModelScope
+import com.umc.component.base.UiEvent
+import com.umc.component.base.UiState
+import com.umc.component.base.BaseViewModel
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.StudyStatus
 import com.umc.domain.model.enums.SubmitState
+import com.umc.domain.model.enums.UserPart
+import com.umc.domain.model.enums.WorkbookStatus
 import com.umc.domain.usecase.curriculum.GetMyCurriculumProgressUseCase
-import com.umc.component.base.BaseViewModel
-import com.umc.component.base.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+
+data class UserStudyState(
+    val title: String = "",
+    val part: UserPart = UserPart.UNKNOWN,
+    val items: List<ActStudyItemUiModel> = emptyList(),
+) : UiState {
+    val totalCount: Int get() = items.size
+    val passCount: Int get() = items.count { it.status == StudyStatus.PASS }
+    val progress: Int get() = if (totalCount == 0) 0 else (passCount * 100 / totalCount)
+    val percentText: String get() = "$progress%"
+    val subText: String get() = AppStrings.STUDY_COMPLETE_FORMAT.format(passCount, totalCount)
+}
+
 
 sealed interface UserStudyEvent : UiEvent {
     data class ShowToast(val message: String) : UserStudyEvent
@@ -22,8 +39,7 @@ class UserStudyViewModel @Inject constructor(
 ) : BaseViewModel<UserStudyState, UserStudyEvent>(UserStudyState()) {
 
     companion object {
-        // TODO: 더미 데이터 제거 - 실제 API 연결 후 false로 변경
-        private const val USE_DUMMY = true
+        private const val USE_DUMMY = false
 
         // TODO: 하드코딩 제거 후 로그인 유저 정보에서 가져오기
         private const val GISU_ID = 3L
@@ -100,13 +116,13 @@ class UserStudyViewModel @Inject constructor(
     private fun load() {
         startLoading()
         viewModelScope.launch {
-            when (val result = getMyStudyProgressUseCase(
+            when (val resultResponse = getMyStudyProgressUseCase(
                 // TODO: 하드코딩 제거 후 로그인 유저 정보에서 gisuId, part 가져오기..
                 gisuId = GISU_ID,
                 part = PART
             )) {
                 is ApiState.Success -> {
-                    val data = result.data
+                    val data = resultResponse.data
                     val uiItems = data.workbooks
                         .sortedBy { it.weekNo }
                         .map { wb ->
@@ -114,13 +130,20 @@ class UserStudyViewModel @Inject constructor(
                                 id = wb.originalWorkbookId,
                                 platform = "Github",
                                 title = wb.title,
-                                status = StudyStatus.IN_PROGRESS,
+                                status = when (wb.status) {
+                                    WorkbookStatus.PASS, WorkbookStatus.BEST -> StudyStatus.PASS
+                                    WorkbookStatus.FAIL -> StudyStatus.FAIL
+                                    WorkbookStatus.PENDING,
+                                    WorkbookStatus.IN_PROGRESS,
+                                    WorkbookStatus.SUBMITTED,
+                                    WorkbookStatus.UNKNOWN -> StudyStatus.IN_PROGRESS
+                                },
                                 week = wb.weekNo,
                                 submitState = SubmitState.IDLE,
                                 isExpanded = false,
                                 link = "",
                                 description = "",
-                                isLocked = false,
+                                isLocked = !wb.isReleased,
                                 isBest = false,
                             )
                         }
@@ -135,7 +158,7 @@ class UserStudyViewModel @Inject constructor(
                 }
                 is ApiState.Fail -> {
                     stopLoading()
-                    emitEvent(UserStudyEvent.ShowToast(result.failState.message))
+                    emitEvent(UserStudyEvent.ShowToast(resultResponse.failState.message))
                 }
             }
         }
@@ -193,7 +216,7 @@ class UserStudyViewModel @Inject constructor(
         updateItem(itemId) {
             it.copy(submitState = SubmitState.REQUESTED, isExpanded = true)
         }
-        emitEvent(UserStudyEvent.ShowToast("제출 완료! (테스트)"))
+        emitEvent(UserStudyEvent.ShowToast("제출 완료!"))
     }
 
     private fun updateItem(
