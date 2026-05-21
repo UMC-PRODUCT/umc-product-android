@@ -36,7 +36,6 @@ import com.umc.component.theme.UmcTypographyTokens.Body
 import com.umc.component.theme.UmcTypographyTokens.BodyBold
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
-import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral100
@@ -45,7 +44,6 @@ import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral700
 import com.umc.component.theme.neutral800
-import com.umc.component.theme.neutral900
 
 @Composable
 fun AttendanceReasonDialog(
