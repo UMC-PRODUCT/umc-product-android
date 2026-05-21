@@ -44,33 +44,41 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
+import com.umc.component.theme.UmcTypographyTokens.BodyBold
 import com.umc.component.theme.UmcTypographyTokens.Callout
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Caption1
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 import com.umc.component.theme.UmcTypographyTokens.Footnote
+import com.umc.component.theme.UmcTypographyTokens.FootnoteBold
+import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.danger500
 import com.umc.component.theme.indigo600
 import com.umc.component.theme.neutral000
+import com.umc.component.theme.neutral050
 import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
+import com.umc.component.theme.neutral300
 import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral500
 import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral700
 import com.umc.component.theme.neutral800
 import com.umc.component.theme.primary100
 import com.umc.component.theme.primary500
+import com.umc.component.theme.success100
 import com.umc.component.theme.success500
+import com.umc.component.theme.warning100
 import com.umc.component.theme.warning500
+import com.umc.component.theme.warning700
+import com.umc.component.theme.warning900
 
 private data class AvailableSessionItem(
     val id: Long,
     val title: String,
     val timeRange: String,
-    val statusText: String,
+    val status: SessionState,
     val isLocationCertified: Boolean,
     val address: String
 )
@@ -81,6 +89,12 @@ private data class HistorySessionItem(
     val timeRange: String,
     val status: AttendanceState
 )
+
+private enum class SessionState(val label: String) {
+    BEFORE("출석 전"),
+    WAITING("승인 대기"),
+    SUCCESS("출석 완료")
+}
 
 private enum class AttendanceState(val label: String) {
     ATTEND("출석"),
@@ -130,6 +144,8 @@ private fun AvailableSession(
     sessions: List<AvailableSessionItem>
 ) {
     var expandedSessionId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var isCheckable by rememberSaveable { mutableStateOf(false) }
+    var isWaiting by rememberSaveable { mutableStateOf(false) }
 
     Column {
         Text(
@@ -154,7 +170,7 @@ private fun AvailableSession(
                         onExpandToggle = {
                             expandedSessionId =
                                 if (expandedSessionId == session.id) null else session.id
-                        }
+                        },
                     )
                 }
             }
@@ -210,7 +226,7 @@ private fun MyAttendance(
 private fun AvailableSessionCard(
     session: AvailableSessionItem,
     isExpanded: Boolean,
-    onExpandToggle: () -> Unit
+    onExpandToggle: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -236,9 +252,17 @@ private fun AvailableSessionCard(
             }
 
             StatusChip(
-                text = session.statusText,
-                background = neutral100(),
-                textColor = neutral700()
+                text = session.status.label,
+                background = when (session.status) {
+                    SessionState.BEFORE -> neutral050()
+                    SessionState.WAITING -> warning100()
+                    SessionState.SUCCESS -> success100()
+                },
+                textColor = when (session.status) {
+                    SessionState.BEFORE -> neutral600()
+                    SessionState.WAITING -> warning500()
+                    SessionState.SUCCESS -> success500()
+                }
             )
 
             Spacer(modifier = Modifier.size(8.dp))
@@ -260,13 +284,17 @@ private fun AvailableSessionCard(
             enter = expandVertically() + fadeIn(),
             exit = shrinkVertically() + fadeOut()
         ) {
-            AvailableSessionExpandedContent(session = session)
+            AvailableSessionExpandedContent(
+                session = session
+            )
         }
     }
 }
 
 @Composable
-private fun AvailableSessionExpandedContent(session: AvailableSessionItem) {
+private fun AvailableSessionExpandedContent(
+    session: AvailableSessionItem
+) {
     Column() {
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -282,7 +310,7 @@ private fun AvailableSessionExpandedContent(session: AvailableSessionItem) {
                 contentDescription = null,
                 tint = Color.Unspecified,
                 modifier = Modifier
-                    .size(52.dp)
+                    .size(32.dp)
                     .align(Alignment.Center)
             )
 
@@ -302,74 +330,189 @@ private fun AvailableSessionExpandedContent(session: AvailableSessionItem) {
                     .align(Alignment.BottomCenter)
 
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_check_success),
-                        contentDescription = null,
-                        tint = Color.Unspecified,
-                        modifier = Modifier.size(15.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    UText(
-                        text = AppStrings.LOCATION_CERTIFIED,
-                        style = Caption1Bold,
-                        color = success500()
-                    )
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    UText(
-                        text = session.address,
-                        style = Caption1,
-                        color = neutral600()
-                    )
+                if(session.isLocationCertified) {
+                    CanCheckLocation(session)
+                } else {
+                    CantCheckLocation(session)
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        UButton(
-            modifier = Modifier
-                .fillMaxWidth(),
-            cornerRadius = 8.dp,
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
-            backgroundColor = primary500(),
-            text = AppStrings.ATTENDANCE_REQUEST_BUTTON,
-            textStyle = CalloutBold,
-            prevIcon = painterResource(R.drawable.ic_location_white),
-            prevIconSize = DpSize(20.dp, 20.dp),
-            onClick = {}
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            UText(
-                text = AppStrings.ATTENDANCE_FAIL_REASON_QUESTION,
-                color = neutral600(),
-                style = Footnote
-            )
-            Spacer(modifier = Modifier.width(3.dp))
-            UText(
-                text = AppStrings.ATTENDANCE_FAIL_REASON_ACTION,
-                color = indigo600(),
-                style = Footnote,
-                modifier = Modifier.clickable(
-                 onClick = { }
+        when(session.status) {
+            SessionState.BEFORE -> {
+                UButton(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    enabled = session.isLocationCertified,
+                    cornerRadius = 8.dp,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
+                    backgroundColor = if(session.isLocationCertified) primary500() else neutral100(),
+                    text = AppStrings.ATTENDANCE_REQUEST_BUTTON,
+                    textStyle = CalloutBold,
+                    textColor = if(session.isLocationCertified) neutral000() else neutral300(),
+                    prevIcon = painterResource(R.drawable.ic_location_white),
+                    prevIconTint = if(session.isLocationCertified) neutral000() else neutral300(),
+                    prevIconSize = DpSize(20.dp, 20.dp),
+                    onClick = {}
                 )
-            )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    UText(
+                        text = AppStrings.ATTENDANCE_FAIL_REASON_QUESTION,
+                        color = neutral600(),
+                        style = Footnote
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    UText(
+                        text = AppStrings.ATTENDANCE_FAIL_REASON_ACTION,
+                        color = indigo600(),
+                        style = Footnote,
+                        modifier = Modifier.clickable(
+                            onClick = { }
+                        )
+                    )
+                }
+            }
+
+            SessionState.WAITING -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(warning100()),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 50.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(32.dp),
+                            painter = painterResource(R.drawable.ic_act_hourglass),
+                            contentDescription = null,
+                            tint = Color.Unspecified
+                        )
+                        UText(
+                            text = AppStrings.ATTENDANCE_STATUS_PENDING_TITLE,
+                            style = HeadlineBold,
+                            color = warning900()
+                        )
+                        UText(
+                            text = AppStrings.ATTENDANCE_STATUS_PENDING_DESCRIPTION,
+                            style = Footnote,
+                            color = warning700()
+                        )
+                    }
+                }
+            }
+
+            SessionState.SUCCESS -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(success100()),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 50.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(32.dp),
+                            painter = painterResource(R.drawable.ic_check_success),
+                            contentDescription = null,
+                            tint = Color.Unspecified
+                        )
+                        UText(
+                            text = AppStrings.ATTENDANCE_STATUS_COMPLETED_DESCRIPTION,
+                            style = FootnoteBold,
+                            color = success500()
+                        )
+                    }
+                }
+            }
         }
     }
+}
 
+@Composable
+private fun CanCheckLocation(
+    session: AvailableSessionItem
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_check_success),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(15.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        UText(
+            text = AppStrings.LOCATION_CERTIFIED,
+            style = Caption1Bold,
+            color = success500()
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        UText(
+            text = session.address,
+            style = Caption1,
+            color = neutral600()
+        )
+    }
+}
+
+@Composable
+private fun CantCheckLocation(
+    session: AvailableSessionItem
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_check_failed),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(15.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        UText(
+            text = AppStrings.LOCATION_CERTIFICATION_FAILED,
+            style = Caption1Bold,
+            color = danger500()
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        UText(
+            text = session.address,
+            style = Caption1,
+            color = neutral600()
+        )
+    }
 }
 
 @Composable
@@ -388,7 +531,7 @@ private fun HistorySessionRow(session: HistorySessionItem) {
             Text(
                 text = session.title,
                 color = neutral800(),
-                style = Subheadline
+                style = BodyBold
             )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -417,7 +560,7 @@ private fun SessionIcon() {
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            painter = painterResource(id = R.drawable.ic_people),
+            painter = painterResource(id = R.drawable.ic_people_color),
             contentDescription = null,
             tint = primary500(),
             modifier = Modifier.size(22.dp)
@@ -508,16 +651,24 @@ private fun sampleAvailableSessions(): List<AvailableSessionItem> = listOf(
         id = 1L,
         title = "정기 세션 3주차",
         timeRange = "14:00 - 18:00",
-        statusText = "출석 전",
-        isLocationCertified = true,
+        status = SessionState.BEFORE,
+        isLocationCertified = false,
         address = "서울 강남구 역삼동 마루 18"
     ),
     AvailableSessionItem(
         id = 2L,
         title = "정기 세션 3주차",
         timeRange = "14:00 - 18:00",
-        statusText = "출석 전",
-        isLocationCertified = false,
+        status = SessionState.SUCCESS,
+        isLocationCertified = true,
+        address = "서울 강남구 역삼동 마루 18"
+    ),
+    AvailableSessionItem(
+        id = 3L,
+        title = "정기 세션 3주차",
+        timeRange = "14:00 - 18:00",
+        status = SessionState.WAITING,
+        isLocationCertified = true,
         address = "서울 강남구 역삼동 마루 18"
     )
 )
@@ -560,9 +711,9 @@ private fun NormalAttendanceScreenPreview() {
     }
 }
 
-@Preview(showBackground = true, name = "Available Session Expanded")
+@Preview(showBackground = true)
 @Composable
-private fun AvailableSessionCardExpandedPreview() {
+private fun AvailableSessionCardCanCheckPreview() {
     UmcTheme(darkTheme = false) {
         Box(
             modifier = Modifier
@@ -574,6 +725,25 @@ private fun AvailableSessionCardExpandedPreview() {
                 session = sampleAvailableSessions().first(),
                 isExpanded = true,
                 onExpandToggle = {}
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Available Session Expanded")
+@Composable
+private fun AvailableSessionCardCantCheckPreview() {
+    UmcTheme(darkTheme = false) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(neutral100())
+                .padding(16.dp)
+        ) {
+            AvailableSessionCard(
+                session = sampleAvailableSessions().first(),
+                isExpanded = true,
+                onExpandToggle = {},
             )
         }
     }
