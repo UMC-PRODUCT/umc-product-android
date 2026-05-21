@@ -9,9 +9,9 @@ class GetMyCurriculumProgressUseCase @Inject constructor(
     private val repository: CurriculumRepository
 ) {
     suspend operator fun invoke(
-        page: Int? = null,
-        limit: Int? = null
+        gisuId: Long,
+        part: String
     ): ApiState<StudyProgress> {
-        return repository.getMyCurriculumProgress(page, limit)
+        return repository.getCurriculumOverview(gisuId, part)
     }
 }

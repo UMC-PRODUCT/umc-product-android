@@ -60,4 +60,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    //Desugaring용 라이브러리 추가 -> API 24에서 상위 레벨 사용을 위함
+    coreLibraryDesugaring(libs.android.desugarJdkLibs)
 }
