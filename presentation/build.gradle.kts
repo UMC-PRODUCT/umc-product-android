@@ -56,7 +56,11 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":presentation:splash"))
     implementation(project(":presentation:login"))
+    implementation(project(":presentation:home"))
+    implementation(project(":presentation:mypage"))
+    implementation(project(":presentation:signUp"))
     implementation(project(":presentation:component"))
+    implementation(project(":presentation:study"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
