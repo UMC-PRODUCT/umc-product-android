@@ -1,9 +1,16 @@
 package com.example.presentation.act.normal.attendance
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,27 +18,41 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
+import com.umc.component.component.UButton
+import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Callout
+import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Caption1
+import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.danger500
+import com.umc.component.theme.indigo600
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
@@ -49,7 +70,9 @@ private data class AvailableSessionItem(
     val id: Long,
     val title: String,
     val timeRange: String,
-    val statusText: String
+    val statusText: String,
+    val isLocationCertified: Boolean,
+    val address: String
 )
 
 private data class HistorySessionItem(
@@ -106,6 +129,8 @@ private fun AvailableSession(
     isEmpty: Boolean,
     sessions: List<AvailableSessionItem>
 ) {
+    var expandedSessionId by rememberSaveable { mutableStateOf<Long?>(null) }
+
     Column {
         Text(
             text = AppStrings.ATTENDANCE_HEADER_AVAILABLE,
@@ -123,7 +148,14 @@ private fun AvailableSession(
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 sessions.forEach { session ->
-                    AvailableSessionCard(session = session)
+                    AvailableSessionCard(
+                        session = session,
+                        isExpanded = expandedSessionId == session.id,
+                        onExpandToggle = {
+                            expandedSessionId =
+                                if (expandedSessionId == session.id) null else session.id
+                        }
+                    )
                 }
             }
         }
@@ -175,45 +207,169 @@ private fun MyAttendance(
 }
 
 @Composable
-private fun AvailableSessionCard(session: AvailableSessionItem) {
-    Row(
+private fun AvailableSessionCard(
+    session: AvailableSessionItem,
+    isExpanded: Boolean,
+    onExpandToggle: () -> Unit
+) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(neutral000(), RoundedCornerShape(12.dp))
             .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        SessionIcon()
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SessionIcon()
 
-        Spacer(modifier = Modifier.size(12.dp))
+            Spacer(modifier = Modifier.size(12.dp))
 
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = session.title,
-                color = neutral800(),
-                style = Subheadline
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = session.title,
+                    color = neutral800(),
+                    style = Subheadline
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                SessionTimeText(timeRange = session.timeRange)
+            }
+
+            StatusChip(
+                text = session.statusText,
+                background = neutral100(),
+                textColor = neutral700()
             )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.size(8.dp))
 
-            SessionTimeText(timeRange = session.timeRange)
+            Icon(
+                painter = painterResource(
+                    id = if (isExpanded) R.drawable.ic_dropdown_up else R.drawable.ic_dropdown_down
+                ),
+                contentDescription = null,
+                tint = neutral400(),
+                modifier = Modifier
+                    .size(18.dp)
+                    .clickable(onClick = onExpandToggle)
+            )
         }
 
-        StatusChip(
-            text = session.statusText,
-            background = neutral100(),
-            textColor = neutral700()
-        )
-
-        Spacer(modifier = Modifier.size(8.dp))
-
-        Icon(
-            painter = painterResource(id = R.drawable.ic_dropdown_down),
-            contentDescription = null,
-            tint = neutral400(),
-            modifier = Modifier.size(18.dp)
-        )
+        AnimatedVisibility(
+            visible = isExpanded,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            AvailableSessionExpandedContent(session = session)
+        }
     }
+}
+
+@Composable
+private fun AvailableSessionExpandedContent(session: AvailableSessionItem) {
+    Column() {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(neutral200())
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_location_marker),
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier
+                    .size(52.dp)
+                    .align(Alignment.Center)
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(horizontal = 6.dp)
+                    .padding(bottom = 6.dp)
+                    .shadow(
+                        elevation = 6.dp,
+                        shape = RoundedCornerShape(4.dp),
+                        clip = false
+                    )
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(neutral000())
+                    .align(Alignment.BottomCenter)
+
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_check_success),
+                        contentDescription = null,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    UText(
+                        text = AppStrings.LOCATION_CERTIFIED,
+                        style = Caption1Bold,
+                        color = success500()
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    UText(
+                        text = session.address,
+                        style = Caption1,
+                        color = neutral600()
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        UButton(
+            modifier = Modifier
+                .fillMaxWidth(),
+            cornerRadius = 8.dp,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
+            backgroundColor = primary500(),
+            text = AppStrings.ATTENDANCE_REQUEST_BUTTON,
+            textStyle = CalloutBold,
+            prevIcon = painterResource(R.drawable.ic_location_white),
+            prevIconSize = DpSize(20.dp, 20.dp),
+            onClick = {}
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            UText(
+                text = AppStrings.ATTENDANCE_FAIL_REASON_QUESTION,
+                color = neutral600(),
+                style = Footnote
+            )
+            Spacer(modifier = Modifier.width(3.dp))
+            UText(
+                text = AppStrings.ATTENDANCE_FAIL_REASON_ACTION,
+                color = indigo600(),
+                style = Footnote,
+                modifier = Modifier.clickable(
+                 onClick = { }
+                )
+            )
+        }
+    }
+
 }
 
 @Composable
@@ -352,13 +508,17 @@ private fun sampleAvailableSessions(): List<AvailableSessionItem> = listOf(
         id = 1L,
         title = "정기 세션 3주차",
         timeRange = "14:00 - 18:00",
-        statusText = "출석 전"
+        statusText = "출석 전",
+        isLocationCertified = true,
+        address = "서울 강남구 역삼동 마루 18"
     ),
     AvailableSessionItem(
         id = 2L,
         title = "정기 세션 3주차",
         timeRange = "14:00 - 18:00",
-        statusText = "출석 전"
+        statusText = "출석 전",
+        isLocationCertified = false,
+        address = "서울 강남구 역삼동 마루 18"
     )
 )
 
@@ -397,5 +557,24 @@ private fun NormalAttendanceEmptyScreenPreview() {
 private fun NormalAttendanceScreenPreview() {
     UmcTheme(darkTheme = false) {
         NormalAttendanceScreen(isEmpty = false)
+    }
+}
+
+@Preview(showBackground = true, name = "Available Session Expanded")
+@Composable
+private fun AvailableSessionCardExpandedPreview() {
+    UmcTheme(darkTheme = false) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(neutral100())
+                .padding(16.dp)
+        ) {
+            AvailableSessionCard(
+                session = sampleAvailableSessions().first(),
+                isExpanded = true,
+                onExpandToggle = {}
+            )
+        }
     }
 }
