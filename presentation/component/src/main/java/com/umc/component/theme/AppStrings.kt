@@ -209,7 +209,7 @@ object AppStrings {
     const val ATTENDANCE_FAIL_REASON_QUESTION = "위치 인증이 안 되나요?"
     const val ATTENDANCE_FAIL_REASON_ACTION = "사유 제출하기"
     const val ATTENDANCE_STATUS_PENDING_TITLE = "승인 대기중"
-    const val ATTENDANCE_STATUS_PENDING_DESCRIPTION = "%1\$s님이 출석 정보를 확인하고 있습니다."
+    const val ATTENDANCE_STATUS_PENDING_DESCRIPTION = "스터디장님이 출석 정보를 확인하고 있습니다."
     const val ATTENDANCE_STATUS_COMPLETED_DESCRIPTION = "출석 요청 처리가 완료되었습니다."
     const val ATTENDANCE_EMPTY_AVAILABLE = "아직 출석 가능한 세션이 없어요"
     const val ATTENDANCE_EMPTY_HISTORY = "아직 진행된 세션이 없어요"
