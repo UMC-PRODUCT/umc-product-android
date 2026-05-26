@@ -67,6 +67,7 @@ fun FixLocationScreen() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .height(700.dp)
             .imePadding()
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(neutral000())
@@ -189,8 +190,7 @@ private fun DragHeader(
         modifier = modifier
             .padding(vertical = 16.dp)
             .fillMaxWidth()
-            .wrapContentHeight()
-            ,
+            .wrapContentHeight(),
         contentAlignment = Alignment.Center
     ) {
         Box(

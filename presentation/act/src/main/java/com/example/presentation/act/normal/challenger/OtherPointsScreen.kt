@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -20,7 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,9 +61,9 @@ fun OtherPointsScreen(
     modifier: Modifier = Modifier,
     onSubmitClick: (reward: Int, punish: Int, reason: String) -> Unit = { _, _, _ -> }
 ) {
-    var rewardScore by remember { mutableStateOf(0) }
-    var punishScore by remember { mutableStateOf(0) }
-    var reason by remember { mutableStateOf("안 했음") }
+    var rewardScore by rememberSaveable { mutableStateOf(0) }
+    var punishScore by rememberSaveable { mutableStateOf(0) }
+    var reason by rememberSaveable { mutableStateOf("") }
     val hasScore = rewardScore > 0 || punishScore > 0
     val hasReason = reason.isNotBlank()
     val isSubmitEnabled = hasScore && hasReason
@@ -70,6 +71,8 @@ fun OtherPointsScreen(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .height(700.dp)
+            .imePadding()
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(neutral000())
             .padding(horizontal = 16.dp)
@@ -114,7 +117,7 @@ fun OtherPointsScreen(
 
         UText(
             text = AppStrings.REWARD_ETC_REASON,
-            style = SubheadlineBold,
+            style = CalloutBold,
             color = neutral800()
         )
 
@@ -125,7 +128,7 @@ fun OtherPointsScreen(
             onValueChange = { reason = it }
         )
 
-        Spacer(modifier = Modifier.height(128.dp))
+        Spacer(modifier = Modifier.weight(1f))
 
         UButton(
             modifier = Modifier.fillMaxWidth(),
@@ -139,7 +142,7 @@ fun OtherPointsScreen(
             onClick = { onSubmitClick(rewardScore, punishScore, reason) }
         )
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
