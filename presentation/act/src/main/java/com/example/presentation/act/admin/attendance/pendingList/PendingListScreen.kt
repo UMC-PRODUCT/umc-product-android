@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.component.UDialog
+import com.umc.component.component.UReasonDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
@@ -73,6 +75,8 @@ fun PendingListScreen(
 ) {
     var isSelectApproveMode by remember { mutableStateOf(false) }
     var selectedUserIds by remember { mutableStateOf(setOf<Long>()) }
+    var dialogState by remember { mutableStateOf<PendingDialogState?>(null) }
+    val isConfirmEnabled = selectedUserIds.isNotEmpty()
 
     Column(
         modifier = modifier
@@ -94,23 +98,37 @@ fun PendingListScreen(
                 style = Title3Bold,
                 color = neutral800()
             )
-            UButton(
-                prevIcon = painterResource(id = R.drawable.ic_check_success),
-                prevIconTint = neutral800(),
-                prevIconSize = DpSize(18.dp, 18.dp),
-                text = AppStrings.ADMIN_CHECK_STATS_CHOOSE_PENDING,
-                textStyle = SubheadlineBold,
-                textColor = neutral700(),
-                backgroundColor = neutral100(),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                cornerRadius = 8.dp,
-                onClick = {
-                    val nextMode = !isSelectApproveMode
-                    isSelectApproveMode = nextMode
-                    if (!nextMode) selectedUserIds = emptySet()
-                    onSelectApproveClick()
-                }
-            )
+
+            if(isSelectApproveMode) {
+                UButton(
+                    text = AppStrings.CONFIRM,
+                    textStyle = SubheadlineBold,
+                    textColor = if(isConfirmEnabled) neutral000() else neutral300(),
+                    enabled = isConfirmEnabled,
+                    backgroundColor = if (isConfirmEnabled) indigo500() else neutral100(),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                    cornerRadius = 8.dp,
+                    onClick = { }
+                )
+            } else {
+                UButton(
+                    prevIcon = painterResource(id = R.drawable.ic_check_success),
+                    prevIconTint = neutral800(),
+                    prevIconSize = DpSize(18.dp, 18.dp),
+                    text = AppStrings.ADMIN_CHECK_STATS_CHOOSE_PENDING,
+                    textStyle = SubheadlineBold,
+                    textColor = neutral700(),
+                    backgroundColor = neutral100(),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    cornerRadius = 8.dp,
+                    onClick = {
+                        val nextMode = !isSelectApproveMode
+                        isSelectApproveMode = nextMode
+                        if (!nextMode) selectedUserIds = emptySet()
+                        onSelectApproveClick()
+                    }
+                )
+            }
         }
 
         Spacer(Modifier.height(24.dp))
@@ -134,13 +152,65 @@ fun PendingListScreen(
                             selectedUserIds - user.id
                         }
                     },
-                    onReasonClick = { onReasonClick(user) },
-                    onRejectClick = { onRejectClick(user) },
-                    onApproveClick = { onApproveClick(user) }
+                    onReasonClick = { dialogState = PendingDialogState.Reason(user) },
+                    onRejectClick = { dialogState = PendingDialogState.Reject(user) },
+                    onApproveClick = { dialogState = PendingDialogState.Approve(user) }
                 )
             }
         }
     }
+
+    when (val currentDialog = dialogState) {
+        is PendingDialogState.Reason -> {
+            UReasonDialog(
+                title = AppStrings.ADMIN_REASON_CHECK_TITLE,
+                subtitle = AppStrings.ADMIN_REASON_CHECK_SUBTITLE.format(currentDialog.user.name),
+                content = currentDialog.user.lateReason,
+                onDismissRequest = { dialogState = null },
+                confirmText = AppStrings.COMMON_CONFIRM,
+                onConfirm = { dialogState = null }
+            )
+        }
+        is PendingDialogState.Reject -> {
+            UDialog(
+                isAccept = false,
+                title = AppStrings.ADMIN_REJECT_TITLE,
+                subtitle = AppStrings.ADMIN_APPROVE_CONTENT,
+                onDismissRequest = { dialogState = null },
+                isTwoButton = true,
+                negativeText = AppStrings.COMMON_CANCEL,
+                positiveText = AppStrings.COMMON_REJECT,
+                onNegative = { dialogState = null },
+                onPositive = {
+                    onRejectClick(currentDialog.user)
+                    dialogState = null
+                }
+            )
+        }
+        is PendingDialogState.Approve -> {
+            UDialog(
+                isAccept = true,
+                title = AppStrings.ADMIN_APPROVE_TITLE,
+                subtitle = AppStrings.ADMIN_APPROVE_CONTENT,
+                onDismissRequest = { dialogState = null },
+                isTwoButton = true,
+                negativeText = AppStrings.COMMON_CANCEL,
+                positiveText = AppStrings.COMMON_APPROVE,
+                onNegative = { dialogState = null },
+                onPositive = {
+                    onApproveClick(currentDialog.user)
+                    dialogState = null
+                }
+            )
+        }
+        null -> Unit
+    }
+}
+
+private sealed interface PendingDialogState {
+    data class Reason(val user: AdminPendingUser) : PendingDialogState
+    data class Reject(val user: AdminPendingUser) : PendingDialogState
+    data class Approve(val user: AdminPendingUser) : PendingDialogState
 }
 
 @Composable
@@ -347,5 +417,58 @@ private fun sampleList(): List<AdminPendingUser> = listOf(
 private fun PendingListScreenPreview() {
     UmcTheme(darkTheme = false) {
         PendingListScreen(users = sampleList())
+    }
+}
+
+@Preview(showBackground = false)
+@Composable
+private fun ReasonDialog() {
+    UmcTheme(darkTheme = false) {
+        UReasonDialog (
+            title = AppStrings.ADMIN_REASON_CHECK_TITLE,
+            subtitle = AppStrings.ADMIN_REASON_CHECK_SUBTITLE.format(
+                "홍길동"
+            ),
+            content = "지하철 연착으로 인해 5분 정도 늦을 것 같습니다. 죄송합니다!",
+            onDismissRequest = {  },
+            confirmText = AppStrings.COMMON_CONFIRM,
+            onConfirm = {  }
+        )
+    }
+}
+
+@Preview(showBackground = false)
+@Composable
+private fun AcceptDialog() {
+    UmcTheme(darkTheme = false) {
+        UDialog (
+            isAccept = true,
+            title = AppStrings.ADMIN_APPROVE_TITLE,
+            subtitle = AppStrings.ADMIN_APPROVE_CONTENT,
+            onDismissRequest = {  },
+            isTwoButton = true,
+            negativeText = AppStrings.COMMON_CANCEL,
+            positiveText = AppStrings.COMMON_APPROVE,
+            onNegative = {  },
+            onPositive = {  }
+        )
+    }
+}
+
+@Preview(showBackground = false)
+@Composable
+private fun RejectDialog() {
+    UmcTheme(darkTheme = false) {
+        UDialog (
+            isAccept = false,
+            title = AppStrings.ADMIN_APPROVE_TITLE,
+            subtitle = AppStrings.ADMIN_APPROVE_CONTENT,
+            onDismissRequest = {  },
+            isTwoButton = true,
+            negativeText = AppStrings.COMMON_CANCEL,
+            positiveText = AppStrings.COMMON_REJECT,
+            onNegative = {  },
+            onPositive = {  }
+        )
     }
 }
