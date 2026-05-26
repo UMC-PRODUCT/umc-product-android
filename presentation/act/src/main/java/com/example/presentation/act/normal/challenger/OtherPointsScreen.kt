@@ -37,6 +37,7 @@ import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Callout
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
+import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
@@ -78,6 +79,8 @@ fun OtherPointsScreen(
             .padding(horizontal = 16.dp)
     ) {
         DragHeader()
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         UText(
             text = AppStrings.REWARD_ETC_TITLE,
@@ -134,10 +137,10 @@ fun OtherPointsScreen(
             modifier = Modifier.fillMaxWidth(),
             text = AppStrings.REWARD_SUBMIT,
             enabled = isSubmitEnabled,
-            textStyle = SubheadlineBold,
+            textStyle = HeadlineBold,
             textColor = if (isSubmitEnabled) neutral000() else neutral300(),
             backgroundColor = if (isSubmitEnabled) indigo500() else neutral100(),
-            contentPadding = PaddingValues(vertical = 14.dp),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
             cornerRadius = 8.dp,
             onClick = { onSubmitClick(rewardScore, punishScore, reason) }
         )
