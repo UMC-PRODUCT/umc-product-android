@@ -31,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
+import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
@@ -68,6 +69,15 @@ fun NormalChallengerDetailRoute() {
 fun NormalChallengerDetailScreen(
 ) {
     var isEditMode by remember { mutableStateOf(false) }
+    var history by remember {
+        mutableStateOf(
+            listOf(
+                HistoryDetail(date = "2024.01.01", content = "스터디 미제출", score = -1),
+                HistoryDetail(date = "2024.01.01", content = "베스트 워크북 수행", score = 1)
+            )
+        )
+    }
+    var deleteTarget by remember { mutableStateOf<HistoryDetail?>(null) }
 
     val ui = ChallengerDetailUi(
         nicknameWithName = "홍길동(닉네임)",
@@ -75,10 +85,7 @@ fun NormalChallengerDetailScreen(
         totalScore = 0,
         school = "중앙대학교",
         part = "Web",
-        history = listOf(
-            HistoryDetail(date = "2024.01.01", content = "스터디 미제출", score = -1),
-            HistoryDetail(date = "2024.01.01", content = "베스트 워크북 수행", score = 1)
-        )
+        history = history
     )
 
     LazyColumn(
@@ -119,13 +126,33 @@ fun NormalChallengerDetailScreen(
                 totalPlusCount = 1,
                 totalMinusCount = 1,
                 history = ui.history,
-                isEditMode = isEditMode
+                isEditMode = isEditMode,
+                onDeleteClick = { item ->
+                    deleteTarget = item
+                }
             )
         }
 
         item{
             EditChip(onEditClick = { isEditMode = !isEditMode })
         }
+    }
+
+    deleteTarget?.let { target ->
+        UDialog(
+            isAccept = false,
+            title = AppStrings.CHALLENGER_MANAGE_DELETE_TITLE,
+            subtitle = AppStrings.CHALLENGER_MANAGE_DELETE_SUBTITLE,
+            onDismissRequest = { deleteTarget = null },
+            isTwoButton = true,
+            negativeText = AppStrings.COMMON_CANCEL,
+            positiveText = AppStrings.DELETE,
+            onNegative = { deleteTarget = null },
+            onPositive = {
+                history = history - target
+                deleteTarget = null
+            }
+        )
     }
 }
 
@@ -431,7 +458,8 @@ private fun HistorySection(
     totalPlusCount: Int,
     totalMinusCount: Int,
     history: List<HistoryDetail>,
-    isEditMode: Boolean
+    isEditMode: Boolean,
+    onDeleteClick: (HistoryDetail) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -479,7 +507,8 @@ private fun HistorySection(
             history.forEach { item ->
                 HistoryRow(
                     item = item,
-                    isEditMode = isEditMode
+                    isEditMode = isEditMode,
+                    onDeleteClick = { onDeleteClick(item) }
                 )
             }
         }
@@ -551,7 +580,8 @@ private fun ScoreCountChip(
 @Composable
 private fun HistoryRow(
     item: HistoryDetail,
-    isEditMode: Boolean
+    isEditMode: Boolean,
+    onDeleteClick: () -> Unit
 ) {
     val scoreText = if (item.score > 0) "+${item.score}" else item.score.toString()
     val scoreBgColor = if (item.score > 0) success100() else danger100()
@@ -597,7 +627,11 @@ private fun HistoryRow(
             Spacer(modifier = Modifier.width(16.dp))
 
             Box(
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable(
+                        onClick = onDeleteClick
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -634,5 +668,23 @@ private data class HistoryDetail(
 private fun PreviewScreen() {
     UmcTheme(darkTheme = false) {
         NormalChallengerDetailScreen()
+    }
+}
+
+@Preview(showBackground = false)
+@Composable
+private fun previewDeleteDialog() {
+    UmcTheme(darkTheme = false) {
+        UDialog(
+            isAccept = false,
+            title = AppStrings.CHALLENGER_MANAGE_DELETE_TITLE,
+            subtitle = AppStrings.CHALLENGER_MANAGE_DELETE_SUBTITLE,
+            onDismissRequest = {  },
+            isTwoButton = true,
+            negativeText = AppStrings.COMMON_CANCEL,
+            positiveText = AppStrings.DELETE,
+            onNegative = {  },
+            onPositive = {  }
+        )
     }
 }
