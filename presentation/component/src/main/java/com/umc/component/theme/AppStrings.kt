@@ -270,6 +270,7 @@ object AppStrings {
     const val COMMON_SUBMIT = "제출하기"
     const val COMMON_BACK = "뒤로가기"
     const val ADMIN_APPROVE_TITLE = "출석 요청을 승인하시겠습니까?"
+    const val ADMIN_APPROVE_CONTENT = "이 작업은 되돌릴 수 없습니다"
     const val ADMIN_REJECT_TITLE = "출석 요청을 반려하시겠습니까?"
     const val ADMIN_REASON_CHECK_TITLE = "출석 사유 확인"
     const val ADMIN_REASON_CHECK_SUBTITLE = "%1\$s님이 작성하신 사유입니다."
