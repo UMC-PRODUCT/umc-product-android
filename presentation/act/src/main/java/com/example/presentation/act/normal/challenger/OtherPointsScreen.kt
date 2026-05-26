@@ -242,7 +242,7 @@ private fun ReasonInput(
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        textStyle = Callout.copy(color = neutral800()),
+        textStyle = Callout,
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)
