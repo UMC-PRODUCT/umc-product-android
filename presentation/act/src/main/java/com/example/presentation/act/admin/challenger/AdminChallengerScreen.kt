@@ -282,8 +282,7 @@ private fun ChallengerMemberRow(member: ChallengerMemberUi) {
 
         Row(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
+                .weight(1f),
             verticalAlignment = Alignment.CenterVertically
         ) {
             UText(
@@ -360,4 +359,3 @@ fun previewMainUnfocused() {
         ChallengerScreen()
     }
 }
-

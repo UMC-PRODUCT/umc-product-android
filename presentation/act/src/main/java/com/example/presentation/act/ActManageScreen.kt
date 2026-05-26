@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.presentation.act.admin.attendance.AttendanceRoute
 import com.example.presentation.act.admin.challenger.ChallengerRoute
 import com.example.presentation.act.normal.attendance.NormalAttendanceRoute
+import com.example.presentation.act.normal.challenger.NormalChallengerRoute
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.AppStrings.ADMIN_LABEL
 import com.umc.component.theme.UmcTheme
@@ -77,7 +78,7 @@ private fun ActManageScreen(
             listOf(
                 ManageTab(AppStrings.TAB_ATTENDANCE_USER) { NormalAttendanceRoute() },
                 ManageTab(AppStrings.TAB_STUDY_USER) { ComingSoonScreen() },
-                ManageTab(AppStrings.TAB_CHALLENGE_USER) { ComingSoonScreen() }
+                ManageTab(AppStrings.TAB_CHALLENGE_USER) { NormalChallengerRoute() }
             )
         }
     }
