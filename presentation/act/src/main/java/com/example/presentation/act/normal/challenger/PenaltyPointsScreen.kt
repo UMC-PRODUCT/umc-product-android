@@ -75,7 +75,8 @@ fun PenaltyPointsScreen(
         selectedFilter == PenaltyFilter.ALL || it.filter == selectedFilter
     }
     val selectedPenalty = penalties.firstOrNull { it.id == selectedPenaltyId }
-    val isSubmitEnabled = selectedPenalty != null
+    val hasMemo = memo.isNotBlank()
+    val isSubmitEnabled = selectedPenalty != null && hasMemo
 
     Column(
         modifier = modifier
@@ -141,7 +142,7 @@ fun PenaltyPointsScreen(
             onValueChange = { memo = it }
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.weight(1f))
 
         UButton(
             modifier = Modifier.fillMaxWidth(),
@@ -157,7 +158,7 @@ fun PenaltyPointsScreen(
             }
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(72.dp))
     }
 }
 
