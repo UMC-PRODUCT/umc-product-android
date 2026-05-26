@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.presentation.act.admin.attendance.AttendanceRoute
-import com.example.presentation.act.admin.challanger.ChallengerRoute
+import com.example.presentation.act.admin.challenger.ChallengerRoute
 import com.example.presentation.act.normal.attendance.NormalAttendanceRoute
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.AppStrings.ADMIN_LABEL
