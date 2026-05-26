@@ -51,6 +51,7 @@ internal val lightDanger300 = Color(0xFFF9AFA9)
 internal val lightDanger500 = Color(0xFFF14437)
 internal val lightDanger700 = Color(0xFFAB3027)
 internal val lightDanger900 = Color(0xFF6C1F19)
+internal val lightIndigo500 = Color(0xFF5468FC)
 internal val lightIndigo600 = Color(0xFF444CE7)
 
 internal val lightKakaoColor = Color(0xFFFEE500)
@@ -105,6 +106,7 @@ internal val darkDanger300 = Color(0xFFAB3027)
 internal val darkDanger500 = Color(0xFFF14437)
 internal val darkDanger700 = Color(0xFFF9AFA9)
 internal val darkDanger900 = Color(0xFFFEECEB)
+internal val darkIndigo500 = Color(0xFF75E71FD)
 internal val darkIndigo600 = Color(0xFF728EFD)
 internal val darkKakaoColor = Color(0xFFFEE500)
 
@@ -245,6 +247,8 @@ fun danger700(): Color = if (isSystemInDarkTheme()) darkDanger700 else lightDang
 
 @Composable
 fun danger900(): Color = if (isSystemInDarkTheme()) darkDanger900 else lightDanger900
+@Composable
+fun indigo500(): Color = if (isSystemInDarkTheme()) darkIndigo500 else lightIndigo500
 
 @Composable
 fun indigo600(): Color = if (isSystemInDarkTheme()) darkIndigo600 else lightIndigo600
