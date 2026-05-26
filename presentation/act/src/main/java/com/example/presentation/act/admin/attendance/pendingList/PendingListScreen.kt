@@ -81,6 +81,7 @@ fun PendingListScreen(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .height(700.dp)
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(neutral000())
             .padding(horizontal = 16.dp)
