@@ -47,6 +47,7 @@ import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
+import com.umc.component.theme.neutral900
 import com.umc.component.theme.warning100
 import com.umc.component.theme.warning300
 import com.umc.component.theme.warning500
@@ -77,6 +78,8 @@ private fun EmptyScreen() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(64.dp))
+
             Icon(
                 painter = painterResource(id = R.drawable.ic_search),
                 contentDescription = null,
@@ -154,7 +157,7 @@ private fun SearchBar(
             textStyle = Body,
             backgroundColor = neutral100(),
             strokeColor = neutral100(),
-            focusStrokeColor = neutral100(),
+            focusStrokeColor = neutral900(),
             prevIcon = painterResource(R.drawable.ic_search),
             prevIconTint = neutral400()
         )

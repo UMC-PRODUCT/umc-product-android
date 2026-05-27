@@ -296,7 +296,7 @@ private fun MemoInput(
         textStyle = Callout.copy(color = neutral800()),
         backgroundColor = neutral000(),
         strokeColor = neutral300(),
-        focusStrokeColor = neutral300(),
+        focusStrokeColor = neutral900(),
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)

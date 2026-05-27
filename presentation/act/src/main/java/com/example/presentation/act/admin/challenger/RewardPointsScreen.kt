@@ -47,6 +47,7 @@ import com.umc.component.theme.neutral300
 import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
+import com.umc.component.theme.neutral900
 import com.umc.component.theme.success100
 import com.umc.component.theme.success500
 import com.umc.domain.model.enums.RewardType
@@ -260,7 +261,7 @@ private fun MemoInput(
         textStyle = Callout,
         backgroundColor = neutral000(),
         strokeColor = neutral300(),
-        focusStrokeColor = neutral300(),
+        focusStrokeColor = neutral900(),
         modifier = Modifier
             .fillMaxWidth()
             .height(92.dp)

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,6 +47,7 @@ import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
+import com.umc.component.theme.neutral900
 
 @Composable
 fun FixLocationRoute(
@@ -141,21 +144,9 @@ fun FixLocationScreen(
             textStyle = Body,
             backgroundColor = neutral100(),
             strokeColor = neutral100(),
-            focusStrokeColor = neutral100(),
+            focusStrokeColor = neutral900(),
             prevIcon = painterResource(R.drawable.ic_search),
             prevIconTint = neutral400()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        UText(
-            text = "검색",
-            style = Body,
-            color = neutral800(),
-            modifier = Modifier
-                .align(Alignment.End)
-                .clickable(onClick = onSearchClick)
-                .padding(horizontal = 8.dp, vertical = 6.dp)
         )
 
         Spacer(Modifier.height(40.dp))
