@@ -16,8 +16,8 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.presentation.study.admin.submit.AdminSubmitRoute
+import com.umc.presentation.study.normal.UserStudyRoute
 import kotlinx.coroutines.launch
-
 @Composable
 fun ActStudyRoute() {
     ActStudyScreen()
@@ -25,6 +25,17 @@ fun ActStudyRoute() {
 
 @Composable
 fun ActStudyScreen() {
+    val isAdmin = true
+
+    if (isAdmin) {
+        AdminStudyScreen()
+    } else {
+        UserStudyRoute()
+    }
+}
+
+@Composable
+private fun AdminStudyScreen() {
     val tabs = listOf("제출 현황", "스터디 그룹")
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
@@ -34,7 +45,6 @@ fun ActStudyScreen() {
             .fillMaxSize()
             .background(neutral000())
     ) {
-        // 커스텀 탭
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -78,7 +88,7 @@ fun ActStudyScreen() {
         ) { page ->
             when (page) {
                 0 -> AdminSubmitRoute()
-                1 -> { /* TODO: 스터디 그룹 */ }
+                1 -> { /* 스터디 그룹 */ }
             }
         }
     }

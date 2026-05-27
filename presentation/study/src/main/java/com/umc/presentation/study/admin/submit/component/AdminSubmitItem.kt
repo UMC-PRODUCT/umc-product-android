@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,6 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
+import com.umc.component.component.UText
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.BodyBold
 import com.umc.component.theme.UmcTypographyTokens.Caption1
@@ -55,7 +55,7 @@ fun AdminSubmitItem(
         // 이름, 파트, 학교, 스터디 제목
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
+                UText(
                     text = "${item.nickname}(${item.name})",
                     style = BodyBold,
                     color = neutral800()
@@ -66,14 +66,14 @@ fun AdminSubmitItem(
                         .border(1.dp, neutral200(), RoundedCornerShape(4.dp))
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
-                    Text(text = item.partLabel, style = Caption1Bold, color = neutral700())
+                    UText(text = item.partLabel, style = Caption1Bold, color = neutral700())
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = item.schoolName, style = Caption1, color = neutral500())
-                Text(text = " | ", style = Caption1, color = neutral500())
-                Text(
+                UText(text = item.schoolName, style = Caption1, color = neutral500())
+                UText(text = " | ", style = Caption1, color = neutral500())
+                UText(
                     text = item.studyTitle,
                     style = Caption1,
                     color = neutral500(),
@@ -92,7 +92,7 @@ fun AdminSubmitItem(
                         .background(success100(), RoundedCornerShape(4.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
-                    Text(text = "Pass", style = Caption1Bold, color = success700())
+                    UText(text = "Pass", style = Caption1Bold, color = success700())
                 }
                 Spacer(modifier = Modifier.width(7.dp))
             }
@@ -102,7 +102,7 @@ fun AdminSubmitItem(
                         .background(danger100(), RoundedCornerShape(4.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
-                    Text(text = "Fail", style = Caption1Bold, color = danger700())
+                    UText(text = "Fail", style = Caption1Bold, color = danger700())
                 }
                 Spacer(modifier = Modifier.width(7.dp))
             }
@@ -112,7 +112,7 @@ fun AdminSubmitItem(
                         .background(warning100(), RoundedCornerShape(4.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
-                    Text(text = "Best", style = Caption1Bold, color = warning500())
+                    UText(text = "Best", style = Caption1Bold, color = warning500())
                 }
                 Spacer(modifier = Modifier.width(7.dp))
             }

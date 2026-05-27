@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.umc.component.component.UText
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.FootnoteBold
 import com.umc.presentation.study.admin.submit.component.AdminSubmitFilterBar
@@ -66,11 +67,7 @@ fun AdminSubmitScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "제출 내역이 없어요",
-                    style = FootnoteBold,
-                    color = neutral500()
-                )
+                UText(text = "제출 내역이 없어요", style = FootnoteBold, color = neutral500())
             }
         } else {
             LazyColumn(

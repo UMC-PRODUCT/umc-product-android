@@ -39,9 +39,9 @@ class UserStudyViewModel @Inject constructor(
 ) : BaseViewModel<UserStudyState, UserStudyEvent>(UserStudyState()) {
 
     companion object {
-        private const val USE_DUMMY = false
+        private const val USE_DUMMY = true
 
-        // TODO: 하드코딩 제거 후 로그인 유저 정보에서 가져오기
+        // 하드코딩 제거 후 로그인 유저 정보에서 가져오기
         private const val GISU_ID = 3L
         private const val PART = "SPRINGBOOT"
     }
