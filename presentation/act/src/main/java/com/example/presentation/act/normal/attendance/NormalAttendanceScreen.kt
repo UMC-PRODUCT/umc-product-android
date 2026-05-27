@@ -621,17 +621,18 @@ fun EmptyComponent(
 ) {
     Box(
         modifier = Modifier
-            .background(color = neutral000(), shape = RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .background(color = neutral000())
             .fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .padding(8.dp)
                     .size(48.dp),
                 contentAlignment = Alignment.Center
             ) {
