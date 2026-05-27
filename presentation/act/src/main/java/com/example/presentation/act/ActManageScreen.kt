@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -30,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.presentation.act.admin.attendance.AttendanceRoute
-import com.example.presentation.act.admin.challenger.ChallengerRoute
+import com.example.presentation.act.admin.challenger.AdminChallengerRoute
 import com.example.presentation.act.normal.attendance.NormalAttendanceRoute
 import com.example.presentation.act.normal.challenger.NormalChallengerRoute
 import com.umc.component.component.USwitch
@@ -73,7 +72,7 @@ private fun ActManageScreen(
             listOf(
                 ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { AttendanceRoute() },
                 ManageTab(AppStrings.TAB_STUDY_ADMIN) { ComingSoonScreen() },
-                ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { ChallengerRoute() }
+                ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { AdminChallengerRoute() }
             )
         } else {
             listOf(

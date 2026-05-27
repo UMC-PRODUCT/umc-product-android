@@ -1,13 +1,13 @@
-package com.example.presentation.act.admin.challenger
+package com.example.presentation.act.normal.challenger
 
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
-import com.umc.domain.model.act.challenger.AdminChallenger
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
+import com.umc.domain.model.act.challenger.UserChallenger
 import com.umc.domain.usecase.challenger.GetAdminChallengerDetailUseCase
-import com.umc.domain.usecase.challenger.GetAdminChallengerListUseCase
+import com.umc.domain.usecase.challenger.GetChallengerListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -15,11 +15,11 @@ import javax.inject.Inject
 private const val PAGE_SIZE = 30
 
 @HiltViewModel
-class AdminChallengerViewModel @Inject constructor(
-    private val getAdminChallengerListUseCase: GetAdminChallengerListUseCase,
-    private val getAdminChallengerDetailUseCase: GetAdminChallengerDetailUseCase,
-) : BaseViewModel<AdminChallengerUiState, AdminChallengerEvent>(
-    AdminChallengerUiState()
+class NormalChallengerViewModel @Inject constructor(
+    private val getNormalChallengerListUseCase: GetChallengerListUseCase,
+    private val getNormalChallengerDetailUseCase: GetAdminChallengerDetailUseCase,
+) : BaseViewModel<NormalChallengerUiState, NormalChallengerEvent>(
+    NormalChallengerUiState()
 ) {
     init {
         getChallengers()
@@ -37,7 +37,7 @@ class AdminChallengerViewModel @Inject constructor(
         viewModelScope.launch {
             startLoading()
             resultResponse(
-                response = getAdminChallengerListUseCase(
+                response = getNormalChallengerListUseCase(
                     cursor = cursor,
                     size = PAGE_SIZE,
                     schoolId = null,
@@ -61,7 +61,7 @@ class AdminChallengerViewModel @Inject constructor(
                     }
                 },
                 errorCallback = { failState ->
-                    emitEvent(AdminChallengerEvent.ShowToast(failState.message))
+                    emitEvent(NormalChallengerEvent.ShowToast(failState.message))
                 }
             )
         }
@@ -77,12 +77,12 @@ class AdminChallengerViewModel @Inject constructor(
         viewModelScope.launch {
             startLoading()
             resultResponse(
-                response = getAdminChallengerDetailUseCase(challengerId),
+                response = getNormalChallengerDetailUseCase(challengerId),
                 successCallback = { detail ->
                     updateState { copy(selectedChallenger = detail) }
                 },
                 errorCallback = { failState ->
-                    emitEvent(AdminChallengerEvent.ShowToast(failState.message))
+                    emitEvent(NormalChallengerEvent.ShowToast(failState.message))
                 }
             )
         }
@@ -93,51 +93,45 @@ class AdminChallengerViewModel @Inject constructor(
     }
 }
 
-data class AdminChallengerUiState(
+data class NormalChallengerUiState(
     val searchKeyword: String = "",
-    val challengers: List<AdminChallenger> = emptyList(),
+    val challengers: List<UserChallenger> = emptyList(),
     val selectedChallenger: ChallengerManageDialogModel? = null,
     val nextCursor: Long? = null,
     val hasNext: Boolean = false,
 ) : UiState {
-    val sections: List<AdminChallengerSectionUi>
+    val sections: List<NormalChallengerSectionUi>
         get() = challengers
             .groupBy { it.part.label }
             .map { (partName, members) ->
-                AdminChallengerSectionUi(
+                NormalChallengerSectionUi(
                     partName = partName,
                     members = members.map { it.toMemberUi() }
                 )
             }
 }
 
-data class AdminChallengerSectionUi(
+data class NormalChallengerSectionUi(
     val partName: String,
-    val members: List<AdminChallengerMemberUi>,
+    val members: List<NormalChallengerMemberUi>,
 )
 
-data class AdminChallengerMemberUi(
+data class NormalChallengerMemberUi(
     val id: Long,
     val nicknameWithName: String,
     val generation: String,
     val roleBadge: String? = null,
 )
 
-sealed interface AdminChallengerEvent : UiEvent {
-    data class ShowToast(val message: String) : AdminChallengerEvent
+sealed interface NormalChallengerEvent : UiEvent {
+    data class ShowToast(val message: String) : NormalChallengerEvent
 }
 
-private fun AdminChallenger.toMemberUi(): AdminChallengerMemberUi {
-    val badge = when {
-        outCount > 0 -> "아웃 $outCount"
-        warningCount > 0 -> "경고 $warningCount"
-        else -> null
-    }
-
-    return AdminChallengerMemberUi(
-        id = id.toLong(),
+private fun UserChallenger.toMemberUi(): NormalChallengerMemberUi {
+    return NormalChallengerMemberUi(
+        id = id,
         nicknameWithName = "$name($nickname)",
         generation = "${generation}기",
-        roleBadge = badge
+        roleBadge = role.displayName?.takeIf { role.isVisible }
     )
 }

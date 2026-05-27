@@ -2,12 +2,12 @@ package com.example.presentation.act.normal.challenger
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -23,15 +22,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
@@ -46,26 +44,36 @@ import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral300
 import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
-import com.umc.component.theme.neutral900
 import com.umc.component.theme.warning100
+import com.umc.component.theme.warning300
 import com.umc.component.theme.warning500
 
 
 @Composable
-fun NormalChallengerRoute() {
-    NormalChallengerScreen()
+fun NormalChallengerRoute(
+    viewModel: NormalChallengerViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    NormalChallengerScreen(
+        uiState = uiState,
+        onSearchKeywordChange = viewModel::onSearchKeywordChanged,
+        onMemberClick = viewModel::getChallengerDetail,
+        onDismissDialog = viewModel::dismissChallengerDetail
+    )
 }
 
 
 @Composable
 private fun EmptyScreen() {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
         Column(
-            modifier = Modifier.align(Alignment.Center),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -87,37 +95,11 @@ private fun EmptyScreen() {
 
 @Composable
 fun NormalChallengerScreen(
+    uiState: NormalChallengerUiState = NormalChallengerUiState(),
+    onSearchKeywordChange: (String) -> Unit = {},
+    onMemberClick: (Long) -> Unit = {},
+    onDismissDialog: () -> Unit = {},
 ) {
-    var searchKeyword by rememberSaveable { mutableStateOf("") }
-    var isSearchFocused by rememberSaveable { mutableStateOf(false) }
-
-    val sectionTestData = listOf(
-        ChallengerSectionUi(
-            partName = "PM",
-            members = listOf(
-                ChallengerMemberUi(
-                    nicknameWithName = "홍길동(닉네임)",
-                    generation = "기수",
-                    totalScore = 1
-                )
-            )
-        ),
-        ChallengerSectionUi(
-            partName = "Design",
-            members = listOf(
-                ChallengerMemberUi("홍길동(닉네임)", "기수", 1),
-                ChallengerMemberUi("홍길동(닉네임)", "기수", 1)
-            )
-        ),
-        ChallengerSectionUi(
-            partName = "Web",
-            members = listOf(
-                ChallengerMemberUi("홍길동(닉네임)", "기수", 1),
-                ChallengerMemberUi("홍길동(닉네임)", "기수", 1)
-            )
-        )
-    )
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -126,27 +108,34 @@ fun NormalChallengerScreen(
     ) {
         item {
             SearchBar(
-                searchKeyword = searchKeyword,
-                onSearchKeywordChange = { searchKeyword = it },
-                effectiveSearchFocused = isSearchFocused,
-                onSearchFocusChange = { focused ->
-                    isSearchFocused = focused
-                }
+                searchKeyword = uiState.searchKeyword,
+                onSearchKeywordChange = onSearchKeywordChange,
             )
         }
-        items(sectionTestData) { section ->
-            ChallengerSection(section = section)
+        if (uiState.sections.isEmpty()) {
+            item { EmptyScreen() }
+        } else {
+            items(uiState.sections) { section ->
+                ChallengerSection(
+                    section = section,
+                    onMemberClick = onMemberClick
+                )
+            }
         }
     }
 
+    uiState.selectedChallenger?.let { selectedChallenger ->
+        NormalChallengerInfoDialog(
+            model = selectedChallenger,
+            onDismissRequest = onDismissDialog
+        )
+    }
 }
 
 @Composable
 private fun SearchBar(
     searchKeyword: String,
     onSearchKeywordChange: (String) -> Unit,
-    effectiveSearchFocused: Boolean,
-    onSearchFocusChange: (Boolean) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -160,21 +149,23 @@ private fun SearchBar(
             onValueChange = onSearchKeywordChange,
             modifier = Modifier.fillMaxWidth(),
             placeholder = AppStrings.CHALLENGER_SEARCH_PLACEHOLDER,
-            placeholderColor = if (effectiveSearchFocused) neutral900() else neutral400(),
+            placeholderColor = neutral400(),
             textColor = neutral800(),
             textStyle = Body,
-            backgroundColor = if (effectiveSearchFocused) neutral000() else neutral100(),
-            strokeColor = if (effectiveSearchFocused) neutral900() else neutral100(),
-            focusStrokeColor = neutral900(),
-            prevIcon = if (effectiveSearchFocused) null else painterResource(R.drawable.ic_search),
-            prevIconTint = neutral400(),
-            onFocusChange = onSearchFocusChange
+            backgroundColor = neutral100(),
+            strokeColor = neutral100(),
+            focusStrokeColor = neutral100(),
+            prevIcon = painterResource(R.drawable.ic_search),
+            prevIconTint = neutral400()
         )
     }
 }
 
 @Composable
-private fun ChallengerSection(section: ChallengerSectionUi) {
+private fun ChallengerSection(
+    section: NormalChallengerSectionUi,
+    onMemberClick: (Long) -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -205,17 +196,24 @@ private fun ChallengerSection(section: ChallengerSectionUi) {
                 .background(neutral000())
         ) {
             section.members.forEach { member ->
-                ChallengerMemberRow(member = member)
+                ChallengerMemberRow(
+                    member = member,
+                    onClick = { onMemberClick(member.id) }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun ChallengerMemberRow(member: ChallengerMemberUi) {
+private fun ChallengerMemberRow(
+    member: NormalChallengerMemberUi,
+    onClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -240,8 +238,7 @@ private fun ChallengerMemberRow(member: ChallengerMemberUi) {
 
         Row(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
+                .weight(1f),
             verticalAlignment = Alignment.CenterVertically
         ) {
             UText(
@@ -257,19 +254,19 @@ private fun ChallengerMemberRow(member: ChallengerMemberUi) {
             )
         }
 
-        member.totalScore.let { score ->
+        member.roleBadge?.let { role ->
             Box(
                 modifier = Modifier
-                    .wrapContentWidth()
+                    .width(37.dp)
                     .height(24.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .background(warning100())
-                    .border(1.dp, warning100(), RoundedCornerShape(4.dp))
+                    .border(1.dp, warning300(), RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 UText(
-                    text = "총점수 $score",
+                    text = role,
                     style = Caption1Bold,
                     color = warning500()
                 )
@@ -292,20 +289,9 @@ private fun ChallengerMemberRow(member: ChallengerMemberUi) {
     }
 }
 
-private data class ChallengerSectionUi(
-    val partName: String,
-    val members: List<ChallengerMemberUi>
-)
-
-private data class ChallengerMemberUi(
-    val nicknameWithName: String,
-    val generation: String,
-    val totalScore: Int
-)
-
 @Preview(showBackground = true)
 @Composable
-private fun preview() {
+fun preview() {
     UmcTheme(darkTheme = false) {
         EmptyScreen()
     }
@@ -313,8 +299,10 @@ private fun preview() {
 
 @Preview(showBackground = true, name = "Unfocused State")
 @Composable
-private fun PreviewMainUnfocused() {
+fun previewMainUnfocused() {
     UmcTheme(darkTheme = false) {
-        NormalChallengerScreen()
+        NormalChallengerScreen(
+            uiState = NormalChallengerUiState()
+        )
     }
 }

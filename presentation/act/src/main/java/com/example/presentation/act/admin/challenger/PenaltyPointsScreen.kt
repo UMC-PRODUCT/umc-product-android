@@ -1,4 +1,4 @@
-package com.example.presentation.act.normal.challenger
+package com.example.presentation.act.admin.challenger
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.component.UChip
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
@@ -53,7 +54,6 @@ import com.umc.component.theme.neutral500
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
 import com.umc.component.theme.neutral900
-import com.umc.component.theme.success100
 
 @Composable
 fun PenaltyPointsRoute() {
@@ -190,20 +190,14 @@ private fun FilterTabs(
         PenaltyFilter.entries.forEach { filter ->
             val selected = selectedFilter == filter
 
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(if (selected) neutral900() else neutral100())
-                    .clickable { onFilterSelected(filter) }
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                UText(
-                    text = filter.label,
-                    style = SubheadlineBold,
-                    color = if (selected) neutral000() else neutral500()
-                )
-            }
+            UChip(
+                text = filter.label,
+                backgroundColor = if (selected) neutral900() else neutral100(),
+                textColor = if (selected) neutral000() else neutral500(),
+                textStyle = SubheadlineBold,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                onClick = { onFilterSelected(filter) }
+            )
         }
     }
 }

@@ -2,7 +2,6 @@ package com.example.presentation.act.admin.challenger
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -23,14 +23,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
@@ -45,38 +46,25 @@ import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral300
 import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
 import com.umc.component.theme.neutral900
 import com.umc.component.theme.warning100
-import com.umc.component.theme.warning300
 import com.umc.component.theme.warning500
 
 
 @Composable
-fun ChallengerRoute(
-    viewModel: AdminChallengerViewModel = hiltViewModel()
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    ChallengerScreen(
-        uiState = uiState,
-        onSearchKeywordChange = viewModel::onSearchKeywordChanged,
-        onMemberClick = viewModel::getChallengerDetail,
-        onDismissDialog = viewModel::dismissChallengerDetail
-    )
+fun AdminChallengerRoute() {
+    AdminChallengerScreen()
 }
 
 
 @Composable
 private fun EmptyScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
+            modifier = Modifier.align(Alignment.Center),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -97,12 +85,38 @@ private fun EmptyScreen() {
 }
 
 @Composable
-fun ChallengerScreen(
-    uiState: AdminChallengerUiState = AdminChallengerUiState(),
-    onSearchKeywordChange: (String) -> Unit = {},
-    onMemberClick: (Long) -> Unit = {},
-    onDismissDialog: () -> Unit = {},
+fun AdminChallengerScreen(
 ) {
+    var searchKeyword by rememberSaveable { mutableStateOf("") }
+    var isSearchFocused by rememberSaveable { mutableStateOf(false) }
+
+    val sectionTestData = listOf(
+        ChallengerSectionUi(
+            partName = "PM",
+            members = listOf(
+                ChallengerMemberUi(
+                    nicknameWithName = "홍길동(닉네임)",
+                    generation = "기수",
+                    totalScore = 1
+                )
+            )
+        ),
+        ChallengerSectionUi(
+            partName = "Design",
+            members = listOf(
+                ChallengerMemberUi("홍길동(닉네임)", "기수", 1),
+                ChallengerMemberUi("홍길동(닉네임)", "기수", 1)
+            )
+        ),
+        ChallengerSectionUi(
+            partName = "Web",
+            members = listOf(
+                ChallengerMemberUi("홍길동(닉네임)", "기수", 1),
+                ChallengerMemberUi("홍길동(닉네임)", "기수", 1)
+            )
+        )
+    )
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -111,34 +125,27 @@ fun ChallengerScreen(
     ) {
         item {
             SearchBar(
-                searchKeyword = uiState.searchKeyword,
-                onSearchKeywordChange = onSearchKeywordChange,
+                searchKeyword = searchKeyword,
+                onSearchKeywordChange = { searchKeyword = it },
+                effectiveSearchFocused = isSearchFocused,
+                onSearchFocusChange = { focused ->
+                    isSearchFocused = focused
+                }
             )
         }
-        if (uiState.sections.isEmpty()) {
-            item { EmptyScreen() }
-        } else {
-            items(uiState.sections) { section ->
-                ChallengerSection(
-                    section = section,
-                    onMemberClick = onMemberClick
-                )
-            }
+        items(sectionTestData) { section ->
+            ChallengerSection(section = section)
         }
     }
 
-    uiState.selectedChallenger?.let { selectedChallenger ->
-        ChallengerInfoDialog(
-            model = selectedChallenger,
-            onDismissRequest = onDismissDialog
-        )
-    }
 }
 
 @Composable
 private fun SearchBar(
     searchKeyword: String,
     onSearchKeywordChange: (String) -> Unit,
+    effectiveSearchFocused: Boolean,
+    onSearchFocusChange: (Boolean) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -152,23 +159,21 @@ private fun SearchBar(
             onValueChange = onSearchKeywordChange,
             modifier = Modifier.fillMaxWidth(),
             placeholder = AppStrings.CHALLENGER_SEARCH_PLACEHOLDER,
-            placeholderColor = neutral400(),
+            placeholderColor = if (effectiveSearchFocused) neutral900() else neutral400(),
             textColor = neutral800(),
             textStyle = Body,
-            backgroundColor = neutral100(),
-            strokeColor = neutral100(),
-            focusStrokeColor = neutral100(),
-            prevIcon = painterResource(R.drawable.ic_search),
-            prevIconTint = neutral400()
+            backgroundColor = if (effectiveSearchFocused) neutral000() else neutral100(),
+            strokeColor = if (effectiveSearchFocused) neutral900() else neutral100(),
+            focusStrokeColor = neutral900(),
+            prevIcon = if (effectiveSearchFocused) null else painterResource(R.drawable.ic_search),
+            prevIconTint = neutral400(),
+            onFocusChange = onSearchFocusChange
         )
     }
 }
 
 @Composable
-private fun ChallengerSection(
-    section: AdminChallengerSectionUi,
-    onMemberClick: (Long) -> Unit,
-) {
+private fun ChallengerSection(section: ChallengerSectionUi) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -199,24 +204,17 @@ private fun ChallengerSection(
                 .background(neutral000())
         ) {
             section.members.forEach { member ->
-                ChallengerMemberRow(
-                    member = member,
-                    onClick = { onMemberClick(member.id) }
-                )
+                ChallengerMemberRow(member = member)
             }
         }
     }
 }
 
 @Composable
-private fun ChallengerMemberRow(
-    member: AdminChallengerMemberUi,
-    onClick: () -> Unit,
-) {
+private fun ChallengerMemberRow(member: ChallengerMemberUi) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -241,7 +239,8 @@ private fun ChallengerMemberRow(
 
         Row(
             modifier = Modifier
-                .weight(1f),
+                .weight(1f)
+                .fillMaxHeight(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             UText(
@@ -257,19 +256,19 @@ private fun ChallengerMemberRow(
             )
         }
 
-        member.roleBadge?.let { role ->
+        member.totalScore.let { score ->
             Box(
                 modifier = Modifier
-                    .width(37.dp)
+                    .wrapContentWidth()
                     .height(24.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .background(warning100())
-                    .border(1.dp, warning300(), RoundedCornerShape(4.dp))
+                    .border(1.dp, warning100(), RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 UText(
-                    text = role,
+                    text = "총점수 $score",
                     style = Caption1Bold,
                     color = warning500()
                 )
@@ -292,9 +291,20 @@ private fun ChallengerMemberRow(
     }
 }
 
+private data class ChallengerSectionUi(
+    val partName: String,
+    val members: List<ChallengerMemberUi>
+)
+
+private data class ChallengerMemberUi(
+    val nicknameWithName: String,
+    val generation: String,
+    val totalScore: Int
+)
+
 @Preview(showBackground = true)
 @Composable
-fun preview() {
+private fun preview() {
     UmcTheme(darkTheme = false) {
         EmptyScreen()
     }
@@ -302,8 +312,8 @@ fun preview() {
 
 @Preview(showBackground = true, name = "Unfocused State")
 @Composable
-fun previewMainUnfocused() {
+private fun PreviewMainUnfocused() {
     UmcTheme(darkTheme = false) {
-        ChallengerScreen()
+        AdminChallengerScreen()
     }
 }
