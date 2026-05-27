@@ -9,10 +9,13 @@ data class AdminSubmitItemUiModel(
     val studyTitle: String,
     val schoolName: String,
     val status: String,
+    val submitUrl: String = "",
 ) {
     val isBest: Boolean get() = status == "BEST"
     val markStatus: String? get() = when (status) {
-        "PASS", "FAIL", "BEST" -> status
+        "PASS" -> "PASS"
+        "FAIL" -> "FAIL"
+        "BEST" -> "PASS"
         else -> null
     }
 }

@@ -73,10 +73,92 @@ class AdminSubmitViewModel @Inject constructor() :
 
     fun onAction(action: AdminSubmitAction) {
         when (action) {
-            is AdminSubmitAction.SelectWeek ->
-                updateState { copy(selectedWeek = action.week) }
-            is AdminSubmitAction.SelectGroup ->
-                updateState { copy(selectedGroupName = action.name) }
+
+            // 바텀시트 열기/닫기
+            is AdminSubmitAction.OpenBottomSheet ->
+                updateState { copy(bottomSheetItem = action.item, feedback = "", pendingStatus = null) }
+            is AdminSubmitAction.CloseBottomSheet ->
+                updateState { copy(bottomSheetItem = null, feedback = "", pendingStatus = null) }
+
+            // 피드백 입력
+            is AdminSubmitAction.OnFeedbackChanged ->
+                updateState { copy(feedback = action.feedback) }
+
+            // 탭 전환
+            is AdminSubmitAction.OnReviewTabChanged ->
+                updateState { copy(reviewTabIndex = action.index) }
+
+
+            // 현황 변경 (Pass/Fail 선택)
+            is AdminSubmitAction.ChangeStatus ->
+                updateState { copy(pendingStatus = action.status) }
+
+            // 완료하기
+            is AdminSubmitAction.CompleteChange -> {
+                val status = uiState.value.pendingStatus ?: return
+                updateState {
+                    copy(
+                        items = items.map {
+                            if (it.id == bottomSheetItem?.id) it.copy(status = status) else it
+                        },
+                        bottomSheetItem = null,
+                        feedback = "",
+                        pendingStatus = null
+                    )
+                }
+                emitEvent(AdminSubmitEvent.ShowToast("변경 완료!"))
+            }
+
+            is AdminSubmitAction.ConfirmApprove -> {
+                updateState {
+                    copy(
+                        items = items.map {
+                            if (it.id == bottomSheetItem?.id) it.copy(status = "PASS") else it
+                        },
+                        bottomSheetItem = null,
+                        feedback = "",
+                        showApproveDialog = false
+                    )
+                }
+                emitEvent(AdminSubmitEvent.ShowToast("통과 처리됐어요."))
+            }
+            is AdminSubmitAction.ConfirmReject -> {
+                updateState {
+                    copy(
+                        items = items.map {
+                            if (it.id == bottomSheetItem?.id) it.copy(status = "FAIL") else it
+                        },
+                        bottomSheetItem = null,
+                        feedback = "",
+                        showRejectDialog = false
+                    )
+                }
+                emitEvent(AdminSubmitEvent.ShowToast("반려 처리됐어요."))
+            }
+
+            //바텀시트
+            is AdminSubmitAction.DismissDialog -> {
+                updateState { copy(showApproveDialog = false, showRejectDialog = false) }
+            }
+            is AdminSubmitAction.SubmitReview -> {
+                if (action.pass) updateState { copy(showApproveDialog = true) }
+                else updateState { copy(showRejectDialog = true) }
+            }
+
+            is AdminSubmitAction.OpenWeekBottomSheet ->
+                updateState { copy(showWeekBottomSheet = true) }
+            is AdminSubmitAction.CloseWeekBottomSheet ->
+                updateState { copy(showWeekBottomSheet = false) }
+            is AdminSubmitAction.OpenGroupBottomSheet ->
+                updateState { copy(showGroupBottomSheet = true) }
+            is AdminSubmitAction.CloseGroupBottomSheet ->
+                updateState { copy(showGroupBottomSheet = false) }
+            is AdminSubmitAction.SelectWeek -> {
+                updateState { copy(selectedWeek = action.week, showWeekBottomSheet = false) }
+            }
+            is AdminSubmitAction.SelectGroup -> {
+                updateState { copy(selectedGroupName = action.name, showGroupBottomSheet = false) }
+            }
         }
     }
 }
