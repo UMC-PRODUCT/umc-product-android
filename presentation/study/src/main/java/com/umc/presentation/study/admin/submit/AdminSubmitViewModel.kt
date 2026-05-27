@@ -147,18 +147,74 @@ class AdminSubmitViewModel @Inject constructor() :
 
             is AdminSubmitAction.OpenWeekBottomSheet ->
                 updateState { copy(showWeekBottomSheet = true) }
+
             is AdminSubmitAction.CloseWeekBottomSheet ->
                 updateState { copy(showWeekBottomSheet = false) }
+
             is AdminSubmitAction.OpenGroupBottomSheet ->
                 updateState { copy(showGroupBottomSheet = true) }
+
             is AdminSubmitAction.CloseGroupBottomSheet ->
                 updateState { copy(showGroupBottomSheet = false) }
+
             is AdminSubmitAction.SelectWeek -> {
                 updateState { copy(selectedWeek = action.week, showWeekBottomSheet = false) }
             }
             is AdminSubmitAction.SelectGroup -> {
                 updateState { copy(selectedGroupName = action.name, showGroupBottomSheet = false) }
             }
+
+            is AdminSubmitAction.OnBestCommentChanged ->
+                updateState {
+                    copy(
+                        items = items.map {
+                            if (it.id == bottomSheetItem?.id) it.copy(bestComment = action.comment) else it
+                        },
+                        bottomSheetItem = bottomSheetItem?.copy(bestComment = action.comment)
+                    )
+                }
+
+            is AdminSubmitAction.ConfirmBest ->
+                updateState {
+                    copy(
+                        items = items.map {
+                            if (it.id == bottomSheetItem?.id) it.copy(isBestRegistered = true) else it
+                        },
+                        bottomSheetItem = bottomSheetItem?.copy(isBestRegistered = true),
+                        isEditingBest = false,
+                        showBestConfirmDialog = false
+                    )
+                }
+
+            is AdminSubmitAction.CancelBest ->
+                updateState { copy(showBestCancelDialog = true) }
+
+            is AdminSubmitAction.RegisterBest ->
+                updateState { copy(showBestConfirmDialog = true) }
+
+            is AdminSubmitAction.ConfirmCancelBest ->
+                updateState {
+                    copy(
+                        items = items.map {
+                            if (it.id == bottomSheetItem?.id) it.copy(
+                                isBestRegistered = false,
+                                bestComment = ""
+                            ) else it
+                        },
+                        bottomSheetItem = bottomSheetItem?.copy(isBestRegistered = false, bestComment = ""),
+                        isEditingBest = false,
+                        showBestCancelDialog = false
+                    )
+                }
+
+            is AdminSubmitAction.EditBest ->
+                updateState { copy(isEditingBest = true) }
+
+            is AdminSubmitAction.CompleteBest ->
+                updateState { copy(showBestConfirmDialog = true) }
+
+            is AdminSubmitAction.DismissBestDialog ->
+                updateState { copy(showBestConfirmDialog = false, showBestCancelDialog = false) }
         }
     }
 }

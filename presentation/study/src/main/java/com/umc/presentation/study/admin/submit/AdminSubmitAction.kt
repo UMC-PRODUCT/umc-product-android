@@ -22,4 +22,13 @@ sealed interface AdminSubmitAction {
     data object OpenGroupBottomSheet : AdminSubmitAction
     data object CloseWeekBottomSheet : AdminSubmitAction
     data object CloseGroupBottomSheet : AdminSubmitAction
+
+    data class OnBestCommentChanged(val comment: String) : AdminSubmitAction
+    data object RegisterBest : AdminSubmitAction        // 등록하기
+    data object CancelBest : AdminSubmitAction          // 등록 취소하기
+    data object EditBest : AdminSubmitAction            // 수정하기
+    data object CompleteBest : AdminSubmitAction        // 완료하기
+    data object ConfirmBest : AdminSubmitAction         // 선정 확인
+    data object ConfirmCancelBest : AdminSubmitAction   // 취소 확인
+    data object DismissBestDialog : AdminSubmitAction   // 다이얼로그 닫기
 }

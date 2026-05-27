@@ -19,10 +19,18 @@ data class AdminSubmitState(
     val showApproveDialog: Boolean = false,
     val showRejectDialog: Boolean = false,
 
+    //워크북 제출
     val showWeekBottomSheet: Boolean = false,
     val showGroupBottomSheet: Boolean = false,
+
+    // 베스트 워크북
+    val isEditingBest: Boolean = false,     // 수정 모드
+    val showBestConfirmDialog: Boolean = false,   // 선정하기 다이얼로그
+    val showBestCancelDialog: Boolean = false,    // 취소하기 다이얼로그
 ) : UiState {
     val isBottomSheetOpen: Boolean get() = bottomSheetItem != null
     val isSubmitEnabled: Boolean get() = feedback.isNotBlank()
     val isReviewed: Boolean get() = bottomSheetItem?.markStatus != null
+    val bestComment: String get() = bottomSheetItem?.bestComment ?: ""
+    val isBestRegistered: Boolean get() = bottomSheetItem?.isBestRegistered ?: false
 }
