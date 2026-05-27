@@ -19,10 +19,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,8 +28,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UDialog
+import com.umc.component.component.UInfoChip
+import com.umc.component.component.UInfoChipType
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
@@ -43,8 +45,6 @@ import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Title2Bold
-import com.umc.component.theme.accent100
-import com.umc.component.theme.accent500
 import com.umc.component.theme.danger100
 import com.umc.component.theme.danger500
 import com.umc.component.theme.neutral000
@@ -54,39 +54,40 @@ import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
 import com.umc.component.theme.neutral900
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary500
 import com.umc.component.theme.success100
 import com.umc.component.theme.success500
+import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 
 
 @Composable
-fun AdminChallengerDetailRoute() {
-    AdminChallengerDetailScreen()
+fun AdminChallengerDetailRoute(
+    challengerId: Long = 0L,
+    viewModel: AdminChallengerViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(challengerId) {
+        viewModel.getChallengerDetail(challengerId)
+    }
+
+    AdminChallengerDetailScreen(
+        uiState = uiState,
+        onEditClick = viewModel::toggleDetailEditMode,
+        onDeleteClick = viewModel::selectDeleteTarget,
+        onDismissDelete = { viewModel.selectDeleteTarget(null) },
+        onConfirmDelete = viewModel::deleteSelectedPoint
+    )
 }
 
 @Composable
 fun AdminChallengerDetailScreen(
+    uiState: AdminChallengerUiState = AdminChallengerUiState(),
+    onEditClick: () -> Unit = {},
+    onDeleteClick: (Long) -> Unit = {},
+    onDismissDelete: () -> Unit = {},
+    onConfirmDelete: () -> Unit = {}
 ) {
-    var isEditMode by remember { mutableStateOf(false) }
-    var history by remember {
-        mutableStateOf(
-            listOf(
-                HistoryDetail(date = "2024.01.01", content = "스터디 미제출", score = -1),
-                HistoryDetail(date = "2024.01.01", content = "베스트 워크북 수행", score = 1)
-            )
-        )
-    }
-    var deleteTarget by remember { mutableStateOf<HistoryDetail?>(null) }
-
-    val ui = ChallengerDetailUi(
-        nicknameWithName = "홍길동(닉네임)",
-        generation = "기수",
-        totalScore = 0,
-        school = "중앙대학교",
-        part = "Web",
-        history = history
-    )
+    val ui = uiState.detail.toDetailUi()
 
     LazyColumn(
         modifier = Modifier
@@ -123,35 +124,30 @@ fun AdminChallengerDetailScreen(
 
         item {
             HistorySection(
-                totalPlusCount = 1,
-                totalMinusCount = 1,
+                totalPlusCount = ui.totalPlusCount,
+                totalMinusCount = ui.totalMinusCount,
                 history = ui.history,
-                isEditMode = isEditMode,
-                onDeleteClick = { item ->
-                    deleteTarget = item
-                }
+                isEditMode = uiState.isDetailEditMode,
+                onDeleteClick = { item -> onDeleteClick(item.id) }
             )
         }
 
         item{
-            EditChip(onEditClick = { isEditMode = !isEditMode })
+            EditChip(onEditClick = onEditClick)
         }
     }
 
-    deleteTarget?.let { target ->
+    if (uiState.deleteTarget != null) {
         UDialog(
             isAccept = false,
             title = AppStrings.CHALLENGER_MANAGE_DELETE_TITLE,
             subtitle = AppStrings.CHALLENGER_MANAGE_DELETE_SUBTITLE,
-            onDismissRequest = { deleteTarget = null },
+            onDismissRequest = onDismissDelete,
             isTwoButton = true,
             negativeText = AppStrings.COMMON_CANCEL,
             positiveText = AppStrings.DELETE,
-            onNegative = { deleteTarget = null },
-            onPositive = {
-                history = history - target
-                deleteTarget = null
-            }
+            onNegative = onDismissDelete,
+            onPositive = onConfirmDelete
         )
     }
 }
@@ -248,16 +244,14 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
                 color = neutral600()
             )
             Spacer(modifier = Modifier.width(16.dp))
-            InfoChip(
+            UInfoChip(
                 text = ui.school,
-                background = accent100(),
-                textColor = accent500()
+                type = UInfoChipType.SCHOOL
             )
             Spacer(modifier = Modifier.width(8.dp))
-            InfoChip(
+            UInfoChip(
                 text = ui.part,
-                background = primary100(),
-                textColor = primary500()
+                type = UInfoChipType.PART
             )
         }
 
@@ -274,28 +268,6 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
                 color = neutral800()
             )
         }
-    }
-}
-
-@Composable
-private fun InfoChip(
-    text: String,
-    background: Color,
-    textColor: Color
-) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(background)
-            .height(24.dp)
-            .padding(horizontal = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        UText(
-            text = text,
-            style = Caption1Bold,
-            color = textColor
-        )
     }
 }
 
@@ -654,14 +626,53 @@ private data class ChallengerDetailUi(
     val totalScore: Int,
     val school : String,
     val part : String,
+    val totalPlusCount: Int,
+    val totalMinusCount: Int,
     val history : List<HistoryDetail>
 )
 
 private data class HistoryDetail(
+    val id: Long,
     val date : String,
     val content : String,
     val score : Int
 )
+
+private fun ChallengerManageDialogModel?.toDetailUi(): ChallengerDetailUi {
+    if (this == null) {
+        return ChallengerDetailUi(
+            nicknameWithName = "홍길동(닉네임)",
+            generation = "기수",
+            totalScore = 0,
+            school = "중앙대학교",
+            part = "Web",
+            totalPlusCount = 1,
+            totalMinusCount = 1,
+            history = listOf(
+                HistoryDetail(id = 1L, date = "2024.01.01", content = "스터디 미제출", score = -1),
+                HistoryDetail(id = 2L, date = "2024.01.01", content = "베스트 워크북 수행", score = 1)
+            )
+        )
+    }
+
+    return ChallengerDetailUi(
+        nicknameWithName = "$name($nickname)",
+        generation = "${gisu}기",
+        totalScore = totalScore.toInt(),
+        school = university,
+        part = part,
+        totalPlusCount = positiveCount,
+        totalMinusCount = warningCount,
+        history = history.map { point ->
+            HistoryDetail(
+                id = point.id,
+                date = point.date,
+                content = point.title,
+                score = point.value.toInt()
+            )
+        }
+    )
+}
 
 @Preview(showBackground = true, name = "Unfocused State")
 @Composable

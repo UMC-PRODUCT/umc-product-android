@@ -13,14 +13,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ActViewModel @Inject constructor(
-    private val getMyProfileUseCase: GetMyProfileUseCase
+    private val getMyProfileUseCase: GetMyProfileUseCase //내 프로필 정보 조회
 ) : BaseViewModel<ActUiState, ActEvent>(
     ActUiState()
 ) {
+    //초기 유저 정보 조회
     init {
         getUserInfo()
     }
 
+    //내 정보와 관리자 권한 여부 조회
     fun getUserInfo() {
         viewModelScope.launch {
             resultResponse(
@@ -45,6 +47,7 @@ class ActViewModel @Inject constructor(
         }
     }
 
+    //관리자 모드 전환
     fun setAdminMode(isAdmin: Boolean) {
         updateState {
             copy(isAdmin = isAdmin && hasAdminAccess)
@@ -53,11 +56,15 @@ class ActViewModel @Inject constructor(
 }
 
 data class ActUiState(
+    //내 프로필 정보
     val userInfo: UserInfo = UserInfo(),
+    //현재 관리자 모드 여부
     val isAdmin: Boolean = false,
+    //관리자 권한 보유 여부
     val hasAdminAccess: Boolean = false,
 ) : UiState
 
 sealed interface ActEvent : UiEvent {
+    //토스트 표시
     data class ShowToast(val message: String) : ActEvent
 }
