@@ -1,6 +1,7 @@
 package com.example.presentation.act.admin.attendance.fixLocation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,23 +19,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Body
@@ -48,14 +47,31 @@ import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
 
 @Composable
-fun FixLocationRoute() {
-    FixLocationScreen()
+fun FixLocationRoute(
+    scheduleId: Long = 0L,
+    viewModel: FixLocationViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    FixLocationScreen(
+        uiState = uiState,
+        onSearchKeywordChange = viewModel::onSearchKeywordChanged,
+        onSearchClick = viewModel::searchLocation,
+        onLocationClick = { location ->
+            viewModel.selectLocation(location)
+            viewModel.updateLocation(scheduleId)
+        }
+    )
 }
 
 
 @Composable
-fun FixLocationScreen() {
-    var searchKeyword by rememberSaveable { mutableStateOf("") }
+fun FixLocationScreen(
+    uiState: FixLocationUiState = FixLocationUiState(),
+    onSearchKeywordChange: (String) -> Unit = {},
+    onSearchClick: () -> Unit = {},
+    onLocationClick: (com.umc.domain.model.home.LocationItem) -> Unit = {},
+) {
     val recentAddressTestData = listOf(
         "서울특별시 강남구 테헤란로 427",
         "서울특별시 송파구 올림픽로 300",
@@ -113,47 +129,34 @@ fun FixLocationScreen() {
 
         Spacer(Modifier.height(24.dp))
 
-        Row(
+        UTextField(
+            value = uiState.searchKeyword,
+            onValueChange = onSearchKeywordChange,
             modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(neutral100())
                 .fillMaxWidth()
-                .heightIn(52.dp)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_search),
-                modifier = Modifier.size(24.dp),
-                contentDescription = null,
-                tint = neutral400()
+                .heightIn(52.dp),
+            placeholder = AppStrings.ACT_LOCATION_SEARCH_PLACEHOLDER,
+            placeholderColor = neutral400(),
+            textColor = neutral800(),
+            textStyle = Body,
+            backgroundColor = neutral100(),
+            strokeColor = neutral100(),
+            focusStrokeColor = neutral100(),
+            prevIcon = painterResource(R.drawable.ic_search),
+            prevIconTint = neutral400()
+        )
 
-            )
+        Spacer(Modifier.height(8.dp))
 
-            Spacer(Modifier.width(10.dp))
-
-            BasicTextField(
-                value = searchKeyword,
-                onValueChange = { searchKeyword = it },
-                modifier = Modifier
-                    .weight(1f)
-                    .wrapContentHeight(),
-                singleLine = true,
-                textStyle = Body,
-                cursorBrush = SolidColor(neutral800()),
-                decorationBox = { innerTextField ->
-                    if (searchKeyword.isBlank()) {
-                        UText(
-                            text = AppStrings.ACT_LOCATION_SEARCH_PLACEHOLDER,
-                            style = Body,
-                            color = neutral400()
-                        )
-                    }
-                    innerTextField()
-                }
-            )
-        }
+        UText(
+            text = "검색",
+            style = Body,
+            color = neutral800(),
+            modifier = Modifier
+                .align(Alignment.End)
+                .clickable(onClick = onSearchClick)
+                .padding(horizontal = 8.dp, vertical = 6.dp)
+        )
 
         Spacer(Modifier.height(40.dp))
 
@@ -169,13 +172,25 @@ fun FixLocationScreen() {
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            items(recentAddressTestData) { address ->
-                UText(
-                    text = address,
-                    style = Body,
-                    color = neutral600(),
-                )
-                Spacer(Modifier.height(16.dp))
+            if (uiState.searchResults.isNotEmpty()) {
+                items(uiState.searchResults) { location ->
+                    UText(
+                        text = location.address.ifBlank { location.title },
+                        style = Body,
+                        color = neutral600(),
+                        modifier = Modifier.clickable { onLocationClick(location) }
+                    )
+                    Spacer(Modifier.height(16.dp))
+                }
+            } else {
+                items(uiState.recentAddresses.ifEmpty { recentAddressTestData }) { address ->
+                    UText(
+                        text = address,
+                        style = Body,
+                        color = neutral600(),
+                    )
+                    Spacer(Modifier.height(16.dp))
+                }
             }
         }
 

@@ -23,12 +23,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
@@ -57,17 +60,26 @@ import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.enums.AdminSessionStatus
 
 @Composable
-fun AttendanceRoute() {
+fun AttendanceRoute(
+    viewModel: AdminAttendanceViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     AttendanceScreen(
-        sessions = sampleSessions()
+        uiState = uiState
     )
 }
 
 @Composable
 fun AttendanceScreen(
-    sessions: List<AdminSessionCheck>,
+    uiState: AdminAttendanceUiState,
     modifier: Modifier = Modifier
 ) {
+    if (uiState.isEmpty) {
+        EmptyScreen()
+        return
+    }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -75,7 +87,7 @@ fun AttendanceScreen(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(items = sessions, key = { it.id }) { session ->
+        items(items = uiState.sessions, key = { it.id }) { session ->
             AdminSessionCard(
                 session = session,
                 onChangeLocationClick = {},
@@ -210,7 +222,7 @@ fun AdminSessionCard(
             }
 
             if(session.status == AdminSessionStatus.IN_PROGRESS) {
-                checkAttendanceListButton(onPendingListClick)
+                CheckAttendanceListButton(onPendingListClick)
             } else {
                 SuccessCheckAllAttendanceButton()
             }
@@ -398,7 +410,7 @@ private fun sampleSessions(): List<AdminSessionCheck> = listOf(
 private fun AttendanceScreenPreview() {
     UmcTheme(darkTheme = false) {
         AttendanceScreen(
-            sessions = sampleSessions()
+            uiState = AdminAttendanceUiState(sessions = sampleSessions())
         )
     }
 }

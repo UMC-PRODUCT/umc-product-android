@@ -33,6 +33,7 @@ import com.example.presentation.act.admin.attendance.AttendanceRoute
 import com.example.presentation.act.admin.challenger.ChallengerRoute
 import com.example.presentation.act.normal.attendance.NormalAttendanceRoute
 import com.example.presentation.act.normal.challenger.NormalChallengerRoute
+import com.umc.component.component.USwitch
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.AppStrings.ADMIN_LABEL
 import com.umc.component.theme.UmcTheme
@@ -64,7 +65,7 @@ fun ActManageRoute(
 
 @Composable
 private fun ActManageScreen(
-    uiState: ActViewModel.ActivityManagementUiState,
+    uiState: ActUiState,
     onAdminCheckedChange: (Boolean) -> Unit
 ) {
     val tabs = remember(uiState.isAdmin) {
@@ -213,7 +214,7 @@ fun AdminToggle(
     isAdmin: Boolean,
     onAdminChanged: (Boolean) -> Unit
 ) {
-    Switch(
+    USwitch(
         checked = isAdmin,
         onCheckedChange = onAdminChanged
     )
@@ -224,7 +225,7 @@ fun AdminToggle(
 private fun AdminActScreenPreview() {
     UmcTheme(darkTheme = false) {
         ActManageScreen(
-            uiState = ActViewModel.ActivityManagementUiState(
+            uiState = ActUiState(
                 isAdmin = true,
                 hasAdminAccess = true
             ),
@@ -238,7 +239,7 @@ private fun AdminActScreenPreview() {
 private fun NormalActScreenPreview() {
     UmcTheme(darkTheme = false) {
         ActManageScreen(
-            uiState = ActViewModel.ActivityManagementUiState(
+            uiState = ActUiState(
                 isAdmin = false,
                 hasAdminAccess = true
             ),
