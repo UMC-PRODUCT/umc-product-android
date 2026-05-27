@@ -1,4 +1,4 @@
-package com.example.presentation.act.admin.challenger
+package com.example.presentation.act.normal.challenger
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,14 +36,11 @@ import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.danger100
 import com.umc.component.theme.danger500
 import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral050
 import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
 import com.umc.component.theme.neutral900
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary500
 import com.umc.component.theme.success100
 import com.umc.component.theme.success500
 import com.umc.component.theme.warning100
@@ -54,7 +51,7 @@ import com.umc.domain.model.enums.CheckHistoryStatus
 import com.umc.domain.model.enums.PointType
 
 @Composable
-fun ChallengerInfoDialog(
+fun NormalChallengerInfoDialog(
     model: ChallengerManageDialogModel,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier
@@ -273,7 +270,7 @@ private fun formatPoint(point: Double): String {
 @Composable
 private fun ChallengerInfoDialogPreview() {
     UmcTheme(darkTheme = false) {
-        ChallengerInfoDialog(
+        NormalChallengerInfoDialog(
             model = ChallengerManageDialogModel(
                 name = "김디자",
                 university = "중앙대학교",

@@ -1,4 +1,4 @@
-package com.example.presentation.act.normal.challenger
+package com.example.presentation.act.admin.challenger
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -61,12 +61,12 @@ import com.umc.component.theme.success500
 
 
 @Composable
-fun NormalChallengerDetailRoute() {
-    NormalChallengerDetailScreen()
+fun AdminChallengerDetailRoute() {
+    AdminChallengerDetailScreen()
 }
 
 @Composable
-fun NormalChallengerDetailScreen(
+fun AdminChallengerDetailScreen(
 ) {
     var isEditMode by remember { mutableStateOf(false) }
     var history by remember {
@@ -667,7 +667,7 @@ private data class HistoryDetail(
 @Composable
 private fun PreviewScreen() {
     UmcTheme(darkTheme = false) {
-        NormalChallengerDetailScreen()
+        AdminChallengerDetailScreen()
     }
 }
 
