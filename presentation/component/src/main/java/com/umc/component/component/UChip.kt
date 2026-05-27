@@ -43,6 +43,9 @@ fun UChip(
     backgroundColor: Color = primary500(),
     textColor: Color = neutral000(),
     textStyle: TextStyle = UmcTypographyTokens.SubheadlineBold,
+    cornerRadius: Dp = 100.dp,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 7.dp),
+    minHeight: Dp? = null,
     borderWidth: Dp = 0.dp,
     borderColor: Color = Color.Transparent,
     showCloseIcon: Boolean = false,
@@ -56,7 +59,7 @@ fun UChip(
     if (isVisible) {
         Surface(
             modifier = modifier,
-            shape = RoundedCornerShape(100.dp),
+            shape = RoundedCornerShape(cornerRadius),
             color = backgroundColor,
             contentColor = textColor,
             border = if (borderWidth > 0.dp) BorderStroke(borderWidth, borderColor) else null,
@@ -65,7 +68,8 @@ fun UChip(
         ) {
             Row(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 7.dp),
+                    .then(if (minHeight != null) Modifier.heightIn(min = minHeight) else Modifier)
+                    .padding(contentPadding),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
