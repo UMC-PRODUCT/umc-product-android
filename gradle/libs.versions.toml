@@ -42,6 +42,7 @@ googleId = "1.1.0"
 googlePlayServicesAuth = "21.2.0"
 playInAppUpdate = "2.1.0"
 hiltNavigationCompose = "1.2.0"
+runtime = "1.11.0"
 desugar_jdk_libs = "2.0.4"
 coil-compose = "2.6.0"
 
@@ -121,6 +122,7 @@ google-play-services-auth = { group = "com.google.android.gms", name = "play-ser
 # Play In-App Update
 play-update = { group = "com.google.android.play", name = "app-update", version.ref = "playInAppUpdate" }
 play-update-ktx = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "playInAppUpdate" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

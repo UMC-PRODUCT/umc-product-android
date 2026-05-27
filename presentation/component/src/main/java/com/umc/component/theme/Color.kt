@@ -26,6 +26,7 @@ internal val lightAccent700 = Color(0xFFB24600)
 internal val lightAccent800 = Color(0xFF803200)
 internal val lightAccent900 = Color(0xFF4D1E00)
 internal val lightNeutral000 = Color(0xFFFFFFFF)
+internal val lightNeutral050 = Color(0xFFF7F8FA)
 internal val lightNeutral100 = Color(0xFFF4F5F7)
 internal val lightNeutral200 = Color(0xFFE7E8EA)
 internal val lightNeutral300 = Color(0xFFCDD1D5)
@@ -50,6 +51,9 @@ internal val lightDanger300 = Color(0xFFF9AFA9)
 internal val lightDanger500 = Color(0xFFF14437)
 internal val lightDanger700 = Color(0xFFAB3027)
 internal val lightDanger900 = Color(0xFF6C1F19)
+internal val lightIndigo500 = Color(0xFF5468FC)
+internal val lightIndigo600 = Color(0xFF444CE7)
+
 internal val lightKakaoColor = Color(0xFFFEE500)
 internal val lightGeofenceFill = Color(0x0D51A2FF)
 internal val lightGeofenceStroke = Color(0x4D51A2FF)
@@ -76,6 +80,8 @@ internal val darkAccent700 = Color(0xFFFFAA75)
 internal val darkAccent800 = Color(0xFFFFCDAD)
 internal val darkAccent900 = Color(0xFFFFEDE0)
 internal val darkNeutral000 = Color(0xFF121212)
+internal val darkNeutral050 = Color(0xFF0D121C)
+
 internal val darkNeutral100 = Color(0xFF28292F)
 internal val darkNeutral200 = Color(0xFF3A3F46)
 internal val darkNeutral300 = Color(0xFF626C75)
@@ -100,6 +106,8 @@ internal val darkDanger300 = Color(0xFFAB3027)
 internal val darkDanger500 = Color(0xFFF14437)
 internal val darkDanger700 = Color(0xFFF9AFA9)
 internal val darkDanger900 = Color(0xFFFEECEB)
+internal val darkIndigo500 = Color(0xFF5E71FD)
+internal val darkIndigo600 = Color(0xFF728EFD)
 internal val darkKakaoColor = Color(0xFFFEE500)
 
 @Composable
@@ -164,6 +172,9 @@ fun accent900(): Color = if (isSystemInDarkTheme()) darkAccent900 else lightAcce
 
 @Composable
 fun neutral000(): Color = if (isSystemInDarkTheme()) darkNeutral000 else lightNeutral000
+
+@Composable
+fun neutral050(): Color = if (isSystemInDarkTheme()) darkNeutral050 else lightNeutral050
 
 @Composable
 fun neutral100(): Color = if (isSystemInDarkTheme()) darkNeutral100 else lightNeutral100
@@ -236,6 +247,12 @@ fun danger700(): Color = if (isSystemInDarkTheme()) darkDanger700 else lightDang
 
 @Composable
 fun danger900(): Color = if (isSystemInDarkTheme()) darkDanger900 else lightDanger900
+@Composable
+fun indigo500(): Color = if (isSystemInDarkTheme()) darkIndigo500 else lightIndigo500
+
+@Composable
+fun indigo600(): Color = if (isSystemInDarkTheme()) darkIndigo600 else lightIndigo600
+
 
 @Composable
 fun kakaoColor(): Color = if (isSystemInDarkTheme()) darkKakaoColor else lightKakaoColor
