@@ -47,6 +47,7 @@ import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral500
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
+import com.umc.component.theme.neutral900
 import com.umc.component.theme.success500
 
 @Composable
@@ -264,7 +265,7 @@ private fun ReasonInput(
         textStyle = Callout,
         backgroundColor = neutral000(),
         strokeColor = neutral300(),
-        focusStrokeColor = neutral300(),
+        focusStrokeColor = neutral900(),
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)

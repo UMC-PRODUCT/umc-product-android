@@ -70,12 +70,16 @@ fun AdminChallengerRoute(
 
 @Composable
 private fun EmptyScreen() {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
         Column(
-            modifier = Modifier.align(Alignment.Center),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(64.dp))
+
             Icon(
                 painter = painterResource(id = R.drawable.ic_search),
                 contentDescription = null,
@@ -146,7 +150,7 @@ private fun SearchBar(
             textStyle = Body,
             backgroundColor = neutral100(),
             strokeColor = neutral100(),
-            focusStrokeColor = neutral100(),
+            focusStrokeColor = neutral900(),
             prevIcon = painterResource(R.drawable.ic_search),
             prevIconTint = neutral400()
         )
