@@ -95,12 +95,10 @@ fun AdminSubmitBottomSheet(
                     ReviewContent(item = item, state = state, onAction = onAction)
                 }
             } else {
-                Box(
-                    modifier = Modifier.fillMaxWidth().height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    UText(text = "베스트 워크북 준비 중", style = Body, color = neutral400())
-                }
+                AdminSubmitBestWorkbookContent(
+                    state = state,
+                    onAction = onAction
+                )
             }
         }
     }
