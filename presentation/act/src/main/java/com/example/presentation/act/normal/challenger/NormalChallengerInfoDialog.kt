@@ -45,14 +45,13 @@ import com.umc.component.theme.success100
 import com.umc.component.theme.success500
 import com.umc.component.theme.warning100
 import com.umc.component.theme.warning500
-import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
-import com.umc.domain.model.act.challenger.ChallengerPoint
+import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
+import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.domain.model.enums.CheckHistoryStatus
-import com.umc.domain.model.enums.PointType
 
 @Composable
 fun NormalChallengerInfoDialog(
-    model: ChallengerManageDialogModel,
+    model: ChallengerInfoDialogModel,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -132,13 +131,13 @@ fun NormalChallengerInfoDialog(
                 InfoStatCard(
                     modifier = Modifier.weight(1f),
                     title = "활동 기수",
-                    value = if (model.gisu > 0) "${model.gisu}기" else "-"
+                    value = if (model.generation > 0) "${model.generation}기" else "-"
                 )
 
                 InfoStatCard(
                     modifier = Modifier.weight(1f),
                     title = "총점수",
-                    value = formatPoint(model.totalScore)
+                    value = formatPoint(model.totalPoints)
                 )
             }
 
@@ -209,14 +208,13 @@ private fun InfoStatCard(
 }
 
 @Composable
-private fun HistoryItemRow(history: ChallengerPoint) {
-    val status = history.toStatus()
-    val bgColor = when (status) {
+private fun HistoryItemRow(history: ChallengerInfoHistory) {
+    val bgColor = when (history.status) {
         CheckHistoryStatus.PRESENT -> success100()
         CheckHistoryStatus.LATE -> warning100()
         CheckHistoryStatus.ABSENT -> danger100()
     }
-    val textColor = when (status) {
+    val textColor = when (history.status) {
         CheckHistoryStatus.PRESENT -> success500()
         CheckHistoryStatus.LATE -> warning500()
         CheckHistoryStatus.ABSENT -> danger500()
@@ -236,7 +234,7 @@ private fun HistoryItemRow(history: ChallengerPoint) {
             contentAlignment = Alignment.Center
         ) {
             UText(
-                text = status.text,
+                text = history.status.text,
                 style = Caption1Bold,
                 color = textColor
             )
@@ -247,14 +245,6 @@ private fun HistoryItemRow(history: ChallengerPoint) {
             style = Subheadline,
             color = neutral800()
         )
-    }
-}
-
-private fun ChallengerPoint.toStatus(): CheckHistoryStatus {
-    return when {
-        value > 0 -> CheckHistoryStatus.PRESENT
-        value < 0 -> CheckHistoryStatus.LATE
-        else -> CheckHistoryStatus.ABSENT
     }
 }
 
@@ -271,16 +261,16 @@ private fun formatPoint(point: Double): String {
 private fun ChallengerInfoDialogPreview() {
     UmcTheme(darkTheme = false) {
         NormalChallengerInfoDialog(
-            model = ChallengerManageDialogModel(
+            model = ChallengerInfoDialogModel(
                 name = "김디자",
                 university = "중앙대학교",
                 part = "Web",
-                gisu = 12,
-                totalScore = 1.0,
+                generation = 12,
+                totalPoints = 1.0,
                 history = listOf(
-                    ChallengerPoint(id = 1L, title = "우수 워크북", pointType = PointType.BEST_WORKBOOK, value = 1.0),
-                    ChallengerPoint(id = 2L, title = "지각", pointType = PointType.STUDY_LATE, value = -0.5),
-                    ChallengerPoint(id = 3L, title = "결석", pointType = PointType.STUDY_ABSENT, value = -1.0)
+                    ChallengerInfoHistory(title = "우수 워크북", status = CheckHistoryStatus.PRESENT),
+                    ChallengerInfoHistory(title = "지각", status = CheckHistoryStatus.LATE),
+                    ChallengerInfoHistory(title = "결석", status = CheckHistoryStatus.ABSENT)
                 )
             ),
             onDismissRequest = {}

@@ -2,6 +2,7 @@ package com.example.presentation.act.admin.challenger
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,15 +24,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
@@ -55,8 +55,16 @@ import com.umc.component.theme.warning500
 
 
 @Composable
-fun AdminChallengerRoute() {
-    AdminChallengerScreen()
+fun AdminChallengerRoute(
+    viewModel: AdminChallengerViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    AdminChallengerScreen(
+        uiState = uiState,
+        onSearchKeywordChange = viewModel::onSearchKeywordChanged,
+        onMemberClick = viewModel::getChallengerDetail
+    )
 }
 
 
@@ -86,37 +94,10 @@ private fun EmptyScreen() {
 
 @Composable
 fun AdminChallengerScreen(
+    uiState: AdminChallengerUiState = AdminChallengerUiState(),
+    onSearchKeywordChange: (String) -> Unit = {},
+    onMemberClick: (Long) -> Unit = {},
 ) {
-    var searchKeyword by rememberSaveable { mutableStateOf("") }
-    var isSearchFocused by rememberSaveable { mutableStateOf(false) }
-
-    val sectionTestData = listOf(
-        ChallengerSectionUi(
-            partName = "PM",
-            members = listOf(
-                ChallengerMemberUi(
-                    nicknameWithName = "홍길동(닉네임)",
-                    generation = "기수",
-                    totalScore = 1
-                )
-            )
-        ),
-        ChallengerSectionUi(
-            partName = "Design",
-            members = listOf(
-                ChallengerMemberUi("홍길동(닉네임)", "기수", 1),
-                ChallengerMemberUi("홍길동(닉네임)", "기수", 1)
-            )
-        ),
-        ChallengerSectionUi(
-            partName = "Web",
-            members = listOf(
-                ChallengerMemberUi("홍길동(닉네임)", "기수", 1),
-                ChallengerMemberUi("홍길동(닉네임)", "기수", 1)
-            )
-        )
-    )
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -125,16 +106,19 @@ fun AdminChallengerScreen(
     ) {
         item {
             SearchBar(
-                searchKeyword = searchKeyword,
-                onSearchKeywordChange = { searchKeyword = it },
-                effectiveSearchFocused = isSearchFocused,
-                onSearchFocusChange = { focused ->
-                    isSearchFocused = focused
-                }
+                searchKeyword = uiState.searchKeyword,
+                onSearchKeywordChange = onSearchKeywordChange
             )
         }
-        items(sectionTestData) { section ->
-            ChallengerSection(section = section)
+        if (uiState.sections.isEmpty()) {
+            item { EmptyScreen() }
+        } else {
+            items(uiState.sections) { section ->
+                ChallengerSection(
+                    section = section,
+                    onMemberClick = onMemberClick
+                )
+            }
         }
     }
 
@@ -144,8 +128,6 @@ fun AdminChallengerScreen(
 private fun SearchBar(
     searchKeyword: String,
     onSearchKeywordChange: (String) -> Unit,
-    effectiveSearchFocused: Boolean,
-    onSearchFocusChange: (Boolean) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -159,21 +141,23 @@ private fun SearchBar(
             onValueChange = onSearchKeywordChange,
             modifier = Modifier.fillMaxWidth(),
             placeholder = AppStrings.CHALLENGER_SEARCH_PLACEHOLDER,
-            placeholderColor = if (effectiveSearchFocused) neutral900() else neutral400(),
+            placeholderColor = neutral400(),
             textColor = neutral800(),
             textStyle = Body,
-            backgroundColor = if (effectiveSearchFocused) neutral000() else neutral100(),
-            strokeColor = if (effectiveSearchFocused) neutral900() else neutral100(),
-            focusStrokeColor = neutral900(),
-            prevIcon = if (effectiveSearchFocused) null else painterResource(R.drawable.ic_search),
-            prevIconTint = neutral400(),
-            onFocusChange = onSearchFocusChange
+            backgroundColor = neutral100(),
+            strokeColor = neutral100(),
+            focusStrokeColor = neutral100(),
+            prevIcon = painterResource(R.drawable.ic_search),
+            prevIconTint = neutral400()
         )
     }
 }
 
 @Composable
-private fun ChallengerSection(section: ChallengerSectionUi) {
+private fun ChallengerSection(
+    section: AdminChallengerSectionUi,
+    onMemberClick: (Long) -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -204,17 +188,24 @@ private fun ChallengerSection(section: ChallengerSectionUi) {
                 .background(neutral000())
         ) {
             section.members.forEach { member ->
-                ChallengerMemberRow(member = member)
+                ChallengerMemberRow(
+                    member = member,
+                    onClick = { onMemberClick(member.id) }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun ChallengerMemberRow(member: ChallengerMemberUi) {
+private fun ChallengerMemberRow(
+    member: AdminChallengerMemberUi,
+    onClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -290,17 +281,6 @@ private fun ChallengerMemberRow(member: ChallengerMemberUi) {
         }
     }
 }
-
-private data class ChallengerSectionUi(
-    val partName: String,
-    val members: List<ChallengerMemberUi>
-)
-
-private data class ChallengerMemberUi(
-    val nicknameWithName: String,
-    val generation: String,
-    val totalScore: Int
-)
 
 @Preview(showBackground = true)
 @Composable

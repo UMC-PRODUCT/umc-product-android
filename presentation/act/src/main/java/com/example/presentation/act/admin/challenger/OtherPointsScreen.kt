@@ -18,9 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
@@ -51,20 +50,36 @@ import com.umc.component.theme.neutral800
 import com.umc.component.theme.success500
 
 @Composable
-fun OtherPointsRoute() {
-    OtherPointsScreen()
+fun OtherPointsRoute(
+    challengerId: Long = 0L,
+    viewModel: AdminChallengerViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    OtherPointsScreen(
+        uiState = uiState,
+        onRewardMinusClick = viewModel::decreaseRewardScore,
+        onRewardPlusClick = viewModel::increaseRewardScore,
+        onPunishMinusClick = viewModel::decreasePunishScore,
+        onPunishPlusClick = viewModel::increasePunishScore,
+        onReasonChange = viewModel::onCustomReasonChanged,
+        onSubmitClick = { viewModel.grantCustomPoint(challengerId) }
+    )
 }
 
 @Composable
 fun OtherPointsScreen(
     modifier: Modifier = Modifier,
-    onSubmitClick: (reward: Int, punish: Int, reason: String) -> Unit = { _, _, _ -> }
+    uiState: AdminChallengerUiState = AdminChallengerUiState(),
+    onRewardMinusClick: () -> Unit = {},
+    onRewardPlusClick: () -> Unit = {},
+    onPunishMinusClick: () -> Unit = {},
+    onPunishPlusClick: () -> Unit = {},
+    onReasonChange: (String) -> Unit = {},
+    onSubmitClick: () -> Unit = {}
 ) {
-    var rewardScore by rememberSaveable { mutableStateOf(0) }
-    var punishScore by rememberSaveable { mutableStateOf(0) }
-    var reason by rememberSaveable { mutableStateOf("") }
-    val hasScore = rewardScore > 0 || punishScore > 0
-    val hasReason = reason.isNotBlank()
+    val hasScore = uiState.customRewardScore > 0 || uiState.customPunishScore > 0
+    val hasReason = uiState.customReason.isNotBlank()
     val isSubmitEnabled = hasScore && hasReason
 
     Column(
@@ -98,20 +113,20 @@ fun OtherPointsScreen(
 
         ScoreStepper(
             label = AppStrings.REWARD,
-            value = rewardScore,
+            value = uiState.customRewardScore,
             valueColor = success500(),
-            onMinusClick = { if (rewardScore > 0) rewardScore-- },
-            onPlusClick = { rewardScore++ }
+            onMinusClick = onRewardMinusClick,
+            onPlusClick = onRewardPlusClick
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         ScoreStepper(
             label = AppStrings.PUNISH,
-            value = punishScore,
+            value = uiState.customPunishScore,
             valueColor = danger500(),
-            onMinusClick = { if (punishScore > 0) punishScore-- },
-            onPlusClick = { punishScore++ }
+            onMinusClick = onPunishMinusClick,
+            onPlusClick = onPunishPlusClick
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -125,8 +140,8 @@ fun OtherPointsScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         ReasonInput(
-            value = reason,
-            onValueChange = { reason = it }
+            value = uiState.customReason,
+            onValueChange = onReasonChange
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -140,7 +155,7 @@ fun OtherPointsScreen(
             backgroundColor = if (isSubmitEnabled) indigo500() else neutral100(),
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
             cornerRadius = 8.dp,
-            onClick = { onSubmitClick(rewardScore, punishScore, reason) }
+            onClick = onSubmitClick
         )
 
         Spacer(modifier = Modifier.height(24.dp))

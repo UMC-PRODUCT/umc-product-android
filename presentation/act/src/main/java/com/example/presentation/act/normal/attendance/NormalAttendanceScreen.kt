@@ -26,9 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +36,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
@@ -73,48 +72,37 @@ import com.umc.component.theme.warning100
 import com.umc.component.theme.warning500
 import com.umc.component.theme.warning700
 import com.umc.component.theme.warning900
-
-private data class AvailableSessionItem(
-    val id: Long,
-    val title: String,
-    val timeRange: String,
-    val status: SessionState,
-    val isLocationCertified: Boolean,
-    val address: String
-)
-
-private data class HistorySessionItem(
-    val id: Long,
-    val title: String,
-    val timeRange: String,
-    val status: AttendanceState
-)
-
-private enum class SessionState(val label: String) {
-    BEFORE("출석 전"),
-    WAITING("승인 대기"),
-    SUCCESS("출석 완료")
-}
-
-private enum class AttendanceState(val label: String) {
-    ATTEND("출석"),
-    LATE("지각"),
-    ABSENT("결석")
-}
+import com.umc.domain.model.enums.CheckAvailableStatus
+import com.umc.domain.model.enums.CheckHistoryStatus
 
 @Composable
-fun NormalAttendanceRoute() {
-    NormalAttendanceScreen()
+fun NormalAttendanceRoute(
+    viewModel: NormalAttendanceViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    NormalAttendanceScreen(
+        uiState = uiState,
+        onExpandToggle = viewModel::toggleSessionExpanded,
+        onAttendanceClick = viewModel::requestAttendance,
+        onReasonClick = viewModel::openReasonDialog,
+        onReasonChange = viewModel::onReasonChanged,
+        onDismissReason = viewModel::dismissReasonDialog,
+        onSubmitReason = viewModel::submitReason
+    )
 }
 
 @Composable
 fun NormalAttendanceScreen(
     modifier: Modifier = Modifier,
-    isEmpty: Boolean = false
+    uiState: NormalAttendanceUiState = NormalAttendanceUiState(),
+    onExpandToggle: (Long) -> Unit = {},
+    onAttendanceClick: (NormalAvailableSessionUi) -> Unit = {},
+    onReasonClick: (Long) -> Unit = {},
+    onReasonChange: (String) -> Unit = {},
+    onDismissReason: () -> Unit = {},
+    onSubmitReason: () -> Unit = {},
 ) {
-    val availableSessions = sampleAvailableSessions()
-    val historySessions = sampleHistorySessions()
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -124,29 +112,42 @@ fun NormalAttendanceScreen(
     ) {
         item {
             AvailableSession(
-                isEmpty = isEmpty,
-                sessions = availableSessions
+                isEmpty = uiState.isAvailableEmpty,
+                sessions = uiState.availableSessions,
+                expandedSessionId = uiState.expandedSessionId,
+                onExpandToggle = onExpandToggle,
+                onAttendanceClick = onAttendanceClick,
+                onReasonClick = onReasonClick
             )
         }
 
         item {
             MyAttendance(
-                isEmpty = isEmpty,
-                sessions = historySessions
+                isEmpty = uiState.isHistoryEmpty,
+                sessions = uiState.historySessions
             )
         }
+    }
+
+    if (uiState.reasonSessionId != null) {
+        AttendanceReasonDialog(
+            reason = uiState.reason,
+            onReasonChange = onReasonChange,
+            onDismissRequest = onDismissReason,
+            onSubmit = { onSubmitReason() }
+        )
     }
 }
 
 @Composable
 private fun AvailableSession(
     isEmpty: Boolean,
-    sessions: List<AvailableSessionItem>
+    sessions: List<NormalAvailableSessionUi>,
+    expandedSessionId: Long?,
+    onExpandToggle: (Long) -> Unit,
+    onAttendanceClick: (NormalAvailableSessionUi) -> Unit,
+    onReasonClick: (Long) -> Unit,
 ) {
-    var expandedSessionId by rememberSaveable { mutableStateOf<Long?>(null) }
-    var isCheckable by rememberSaveable { mutableStateOf(false) }
-    var isWaiting by rememberSaveable { mutableStateOf(false) }
-
     Column {
         Text(
             text = AppStrings.ATTENDANCE_HEADER_AVAILABLE,
@@ -167,10 +168,9 @@ private fun AvailableSession(
                     AvailableSessionCard(
                         session = session,
                         isExpanded = expandedSessionId == session.id,
-                        onExpandToggle = {
-                            expandedSessionId =
-                                if (expandedSessionId == session.id) null else session.id
-                        },
+                        onExpandToggle = { onExpandToggle(session.id) },
+                        onAttendanceClick = { onAttendanceClick(session) },
+                        onReasonClick = { onReasonClick(session.id) }
                     )
                 }
             }
@@ -181,7 +181,7 @@ private fun AvailableSession(
 @Composable
 private fun MyAttendance(
     isEmpty: Boolean,
-    sessions: List<HistorySessionItem>
+    sessions: List<NormalHistorySessionUi>
 ) {
     Column {
         Text(
@@ -224,9 +224,11 @@ private fun MyAttendance(
 
 @Composable
 private fun AvailableSessionCard(
-    session: AvailableSessionItem,
+    session: NormalAvailableSessionUi,
     isExpanded: Boolean,
     onExpandToggle: () -> Unit,
+    onAttendanceClick: () -> Unit,
+    onReasonClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -252,16 +254,16 @@ private fun AvailableSessionCard(
             }
 
             StatusChip(
-                text = session.status.label,
+                text = session.status.text,
                 background = when (session.status) {
-                    SessionState.BEFORE -> neutral050()
-                    SessionState.WAITING -> warning100()
-                    SessionState.SUCCESS -> success100()
+                    CheckAvailableStatus.BEFORE -> neutral050()
+                    CheckAvailableStatus.PENDING -> warning100()
+                    CheckAvailableStatus.COMPLETED -> success100()
                 },
                 textColor = when (session.status) {
-                    SessionState.BEFORE -> neutral600()
-                    SessionState.WAITING -> warning500()
-                    SessionState.SUCCESS -> success500()
+                    CheckAvailableStatus.BEFORE -> neutral600()
+                    CheckAvailableStatus.PENDING -> warning500()
+                    CheckAvailableStatus.COMPLETED -> success500()
                 }
             )
 
@@ -285,7 +287,9 @@ private fun AvailableSessionCard(
             exit = shrinkVertically() + fadeOut()
         ) {
             AvailableSessionExpandedContent(
-                session = session
+                session = session,
+                onAttendanceClick = onAttendanceClick,
+                onReasonClick = onReasonClick
             )
         }
     }
@@ -293,7 +297,9 @@ private fun AvailableSessionCard(
 
 @Composable
 private fun AvailableSessionExpandedContent(
-    session: AvailableSessionItem
+    session: NormalAvailableSessionUi,
+    onAttendanceClick: () -> Unit,
+    onReasonClick: () -> Unit,
 ) {
     Column() {
         Spacer(modifier = Modifier.height(16.dp))
@@ -341,7 +347,7 @@ private fun AvailableSessionExpandedContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         when(session.status) {
-            SessionState.BEFORE -> {
+            CheckAvailableStatus.BEFORE -> {
                 UButton(
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -355,7 +361,7 @@ private fun AvailableSessionExpandedContent(
                     prevIcon = painterResource(R.drawable.ic_location_white),
                     prevIconTint = if(session.isLocationCertified) neutral000() else neutral300(),
                     prevIconSize = DpSize(20.dp, 20.dp),
-                    onClick = {}
+                    onClick = onAttendanceClick
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -375,13 +381,13 @@ private fun AvailableSessionExpandedContent(
                         color = indigo600(),
                         style = Footnote,
                         modifier = Modifier.clickable(
-                            onClick = { }
+                            onClick = onReasonClick
                         )
                     )
                 }
             }
 
-            SessionState.WAITING -> {
+            CheckAvailableStatus.PENDING -> {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -416,7 +422,7 @@ private fun AvailableSessionExpandedContent(
                 }
             }
 
-            SessionState.SUCCESS -> {
+            CheckAvailableStatus.COMPLETED -> {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -451,7 +457,7 @@ private fun AvailableSessionExpandedContent(
 
 @Composable
 private fun CanCheckLocation(
-    session: AvailableSessionItem
+    session: NormalAvailableSessionUi
 ) {
     Row(
         modifier = Modifier
@@ -484,7 +490,7 @@ private fun CanCheckLocation(
 
 @Composable
 private fun CantCheckLocation(
-    session: AvailableSessionItem
+    session: NormalAvailableSessionUi
 ) {
     Row(
         modifier = Modifier
@@ -516,7 +522,7 @@ private fun CantCheckLocation(
 }
 
 @Composable
-private fun HistorySessionRow(session: HistorySessionItem) {
+private fun HistorySessionRow(session: NormalHistorySessionUi) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -540,11 +546,11 @@ private fun HistorySessionRow(session: HistorySessionItem) {
         }
 
         StatusChip(
-            text = session.status.label,
+            text = session.status.text,
             background = when (session.status) {
-                AttendanceState.ATTEND -> success500()
-                AttendanceState.LATE -> warning500()
-                AttendanceState.ABSENT -> danger500()
+                CheckHistoryStatus.PRESENT -> success500()
+                CheckHistoryStatus.LATE -> warning500()
+                CheckHistoryStatus.ABSENT -> danger500()
             },
             textColor = neutral000()
         )
@@ -646,51 +652,60 @@ fun EmptyComponent(
     }
 }
 
-private fun sampleAvailableSessions(): List<AvailableSessionItem> = listOf(
-    AvailableSessionItem(
+private fun sampleAvailableSessions(): List<NormalAvailableSessionUi> = listOf(
+    NormalAvailableSessionUi(
         id = 1L,
+        sheetId = 1L,
         title = "정기 세션 3주차",
         timeRange = "14:00 - 18:00",
-        status = SessionState.BEFORE,
+        status = CheckAvailableStatus.BEFORE,
         isLocationCertified = false,
-        address = "서울 강남구 역삼동 마루 18"
+        address = "서울 강남구 역삼동 마루 18",
+        latitude = null,
+        longitude = null
     ),
-    AvailableSessionItem(
+    NormalAvailableSessionUi(
         id = 2L,
+        sheetId = 2L,
         title = "정기 세션 3주차",
         timeRange = "14:00 - 18:00",
-        status = SessionState.SUCCESS,
+        status = CheckAvailableStatus.COMPLETED,
         isLocationCertified = true,
-        address = "서울 강남구 역삼동 마루 18"
+        address = "서울 강남구 역삼동 마루 18",
+        latitude = null,
+        longitude = null
     ),
-    AvailableSessionItem(
+    NormalAvailableSessionUi(
         id = 3L,
+        sheetId = 3L,
         title = "정기 세션 3주차",
         timeRange = "14:00 - 18:00",
-        status = SessionState.WAITING,
+        status = CheckAvailableStatus.PENDING,
         isLocationCertified = true,
-        address = "서울 강남구 역삼동 마루 18"
+        address = "서울 강남구 역삼동 마루 18",
+        latitude = null,
+        longitude = null
     )
 )
 
-private fun sampleHistorySessions(): List<HistorySessionItem> = listOf(
-    HistorySessionItem(
+private fun sampleHistorySessions(): List<NormalHistorySessionUi> = listOf(
+    NormalHistorySessionUi(
         id = 1L,
         title = "정기 세션",
         timeRange = "14:00 - 18:00",
-        status = AttendanceState.ATTEND
+        status = CheckHistoryStatus.PRESENT
     ),
-    HistorySessionItem(
+    NormalHistorySessionUi(
         id = 2L,
         title = "정기 세션",
         timeRange = "14:00 - 18:00",
-        status = AttendanceState.LATE
+        status = CheckHistoryStatus.LATE
     ),
-    HistorySessionItem(
+    NormalHistorySessionUi(
         id = 3L,
         title = "정기 세션",
         timeRange = "14:00 - 18:00",
-        status = AttendanceState.ABSENT
+        status = CheckHistoryStatus.ABSENT
     )
 )
 
@@ -698,7 +713,7 @@ private fun sampleHistorySessions(): List<HistorySessionItem> = listOf(
 @Composable
 private fun NormalAttendanceEmptyScreenPreview() {
     UmcTheme(darkTheme = false) {
-        NormalAttendanceScreen(isEmpty = true)
+        NormalAttendanceScreen()
     }
 }
 
@@ -707,7 +722,12 @@ private fun NormalAttendanceEmptyScreenPreview() {
 @Composable
 private fun NormalAttendanceScreenPreview() {
     UmcTheme(darkTheme = false) {
-        NormalAttendanceScreen(isEmpty = false)
+        NormalAttendanceScreen(
+            uiState = NormalAttendanceUiState(
+                availableSessions = sampleAvailableSessions(),
+                historySessions = sampleHistorySessions()
+            )
+        )
     }
 }
 
@@ -724,7 +744,9 @@ private fun AvailableSessionCardCanCheckPreview() {
             AvailableSessionCard(
                 session = sampleAvailableSessions().first(),
                 isExpanded = true,
-                onExpandToggle = {}
+                onExpandToggle = {},
+                onAttendanceClick = {},
+                onReasonClick = {}
             )
         }
     }
@@ -744,6 +766,8 @@ private fun AvailableSessionCardCantCheckPreview() {
                 session = sampleAvailableSessions().first(),
                 isExpanded = true,
                 onExpandToggle = {},
+                onAttendanceClick = {},
+                onReasonClick = {}
             )
         }
     }

@@ -19,15 +19,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UChip
@@ -54,27 +53,40 @@ import com.umc.component.theme.neutral500
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
 import com.umc.component.theme.neutral900
+import com.umc.domain.model.enums.PunishCategory
+import com.umc.domain.model.enums.RewardType
 
 @Composable
-fun PenaltyPointsRoute() {
-    PenaltyPointsScreen()
+fun PenaltyPointsRoute(
+    challengerId: Long = 0L,
+    viewModel: AdminChallengerViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    PenaltyPointsScreen(
+        uiState = uiState,
+        onFilterSelected = viewModel::selectPenaltyFilter,
+        onSelectPenalty = viewModel::selectPenalty,
+        onMemoChange = viewModel::onMemoChanged,
+        onSubmitClick = { viewModel.grantPenalty(challengerId) }
+    )
 }
 
 @Composable
 fun PenaltyPointsScreen(
     modifier: Modifier = Modifier,
     penalties: List<PenaltyPointItem> = defaultPenaltyItems(),
-    onSubmitClick: (PenaltyPointItem, String) -> Unit = { _, _ -> }
+    uiState: AdminChallengerUiState = AdminChallengerUiState(),
+    onFilterSelected: (PunishCategory) -> Unit = {},
+    onSelectPenalty: (RewardType) -> Unit = {},
+    onMemoChange: (String) -> Unit = {},
+    onSubmitClick: () -> Unit = {}
 ) {
-    var selectedFilter by rememberSaveable { mutableStateOf(PenaltyFilter.ALL) }
-    var selectedPenaltyId by rememberSaveable { mutableStateOf<Long?>(null) }
-    var memo by rememberSaveable { mutableStateOf("") }
-
     val filteredPenalties = penalties.filter {
-        selectedFilter == PenaltyFilter.ALL || it.filter == selectedFilter
+        uiState.selectedPenaltyFilter == PunishCategory.ALL || it.filter == uiState.selectedPenaltyFilter
     }
-    val selectedPenalty = penalties.firstOrNull { it.id == selectedPenaltyId }
-    val hasMemo = memo.isNotBlank()
+    val selectedPenalty = uiState.selectedPenaltyType
+    val hasMemo = uiState.pointMemo.isNotBlank()
     val isSubmitEnabled = selectedPenalty != null && hasMemo
 
     Column(
@@ -107,23 +119,16 @@ fun PenaltyPointsScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         FilterTabs(
-            selectedFilter = selectedFilter,
-            onFilterSelected = {
-                selectedFilter = it
-                if (selectedPenaltyId != null && penalties.none { item ->
-                        item.id == selectedPenaltyId && (it == PenaltyFilter.ALL || item.filter == it)
-                    }) {
-                    selectedPenaltyId = null
-                }
-            }
+            selectedFilter = uiState.selectedPenaltyFilter,
+            onFilterSelected = onFilterSelected
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         PenaltyList(
             penalties = filteredPenalties,
-            selectedPenaltyId = selectedPenaltyId,
-            onSelectPenalty = { selectedPenaltyId = it }
+            selectedPenaltyType = uiState.selectedPenaltyType,
+            onSelectPenalty = onSelectPenalty
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -137,8 +142,8 @@ fun PenaltyPointsScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         MemoInput(
-            value = memo,
-            onValueChange = { memo = it }
+            value = uiState.pointMemo,
+            onValueChange = onMemoChange
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -152,9 +157,7 @@ fun PenaltyPointsScreen(
             backgroundColor = if (isSubmitEnabled) indigo500() else neutral100(),
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
             cornerRadius = 8.dp,
-            onClick = {
-                selectedPenalty?.let { onSubmitClick(it, memo) }
-            }
+            onClick = onSubmitClick
         )
 
         Spacer(modifier = Modifier.height(72.dp))
@@ -183,11 +186,11 @@ private fun DragHeader(
 
 @Composable
 private fun FilterTabs(
-    selectedFilter: PenaltyFilter,
-    onFilterSelected: (PenaltyFilter) -> Unit
+    selectedFilter: PunishCategory,
+    onFilterSelected: (PunishCategory) -> Unit
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        PenaltyFilter.entries.forEach { filter ->
+        PunishCategory.entries.forEach { filter ->
             val selected = selectedFilter == filter
 
             UChip(
@@ -205,15 +208,15 @@ private fun FilterTabs(
 @Composable
 private fun PenaltyList(
     penalties: List<PenaltyPointItem>,
-    selectedPenaltyId: Long?,
-    onSelectPenalty: (Long) -> Unit
+    selectedPenaltyType: RewardType?,
+    onSelectPenalty: (RewardType) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         penalties.forEachIndexed { index, item ->
             PenaltyRow(
                 item = item,
-                selected = selectedPenaltyId == item.id,
-                onClick = { onSelectPenalty(item.id) }
+                selected = selectedPenaltyType == item.type,
+                onClick = { onSelectPenalty(item.type) }
             )
 
             HorizontalDivider(
@@ -300,28 +303,24 @@ private fun MemoInput(
     )
 }
 
-enum class PenaltyFilter(val label: String) {
-    ALL("전체"),
-    STAFF("운영진"),
-    CHAIR("회장단")
-}
-
 data class PenaltyPointItem(
     val id: Long,
     val title: String,
     val score: Int,
-    val filter: PenaltyFilter
+    val filter: PunishCategory,
+    val type: RewardType,
 )
 
-private fun defaultPenaltyItems(): List<PenaltyPointItem> = listOf(
-    PenaltyPointItem(id = 1L, title = "과제 미수행", score = 4, filter = PenaltyFilter.CHAIR),
-    PenaltyPointItem(id = 2L, title = "스터디 무단 지각", score = 2, filter = PenaltyFilter.CHAIR),
-    PenaltyPointItem(id = 3L, title = "스터디 무단 불참", score = 4, filter = PenaltyFilter.CHAIR),
-    PenaltyPointItem(id = 4L, title = "행사 무단 지각", score = 2, filter = PenaltyFilter.STAFF),
-    PenaltyPointItem(id = 5L, title = "행사 중도 퇴실", score = 2, filter = PenaltyFilter.STAFF),
-    PenaltyPointItem(id = 6L, title = "행사 기간 외 취소", score = 4, filter = PenaltyFilter.STAFF),
-    PenaltyPointItem(id = 7L, title = "노쇼(무단 결석)", score = 10, filter = PenaltyFilter.CHAIR)
-)
+private fun defaultPenaltyItems(): List<PenaltyPointItem> =
+    RewardType.getPenaltyList().mapIndexed { index, type ->
+        PenaltyPointItem(
+            id = index.toLong(),
+            title = type.label,
+            score = -type.score,
+            filter = type.category,
+            type = type
+        )
+    }
 
 @Preview(showBackground = false)
 @Composable
