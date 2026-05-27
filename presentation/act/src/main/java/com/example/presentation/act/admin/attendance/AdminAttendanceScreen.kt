@@ -251,7 +251,7 @@ private fun EmptyScreen() {
 
 @Preview(showBackground = true)
 @Composable
-private fun emptyScreenPreview() {
+private fun EmptyScreenPreview() {
     UmcTheme(darkTheme = false) {
         EmptyScreen()
     }
