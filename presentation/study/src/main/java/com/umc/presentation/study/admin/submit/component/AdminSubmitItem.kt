@@ -2,6 +2,7 @@ package com.umc.presentation.study.admin.submit.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +24,7 @@ import com.umc.presentation.study.admin.submit.AdminSubmitItemUiModel
 @Composable
 fun AdminSubmitItem(
     item: AdminSubmitItemUiModel,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -30,6 +32,7 @@ fun AdminSubmitItem(
             .fillMaxWidth()
             .height(74.dp)
             .background(neutral000(), RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

@@ -19,7 +19,7 @@ fun AdminSubmitFilterBar(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         AdminSubmitDropdown(
-            text = "전체 주차",
+            text = "${selectedWeek}주차",
             onClick = onWeekClick
         )
         AdminSubmitDropdown(
