@@ -32,7 +32,9 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.umc.component.theme.UmcTypographyTokens
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.neutral300
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
@@ -183,5 +185,56 @@ fun UBasicDialog(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun UBasicWarningDialogPreview() {
+    UmcTheme(darkTheme = false) {
+        UBasicDialog(
+            title = "정말 삭제할까요?",
+            content = "삭제한 내용은 다시 복구할 수 없습니다.",
+            negativeText = "취소",
+            positiveText = "삭제",
+            type = DialogType.WARNING,
+            onPositive = {},
+            onNegative = {},
+            onDismissRequest = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun UBasicCancelDialogPreview() {
+    UmcTheme(darkTheme = false) {
+        UBasicDialog(
+            title = "요청을 반려할까요?",
+            content = "선택한 요청이 반려 처리됩니다.",
+            negativeText = "취소",
+            positiveText = "반려",
+            type = DialogType.CANCEL,
+            onPositive = {},
+            onNegative = {},
+            onDismissRequest = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun UBasicSuccessDialogPreview() {
+    UmcTheme(darkTheme = false) {
+        UBasicDialog(
+            title = "처리가 완료됐습니다.",
+            content = "변경 사항이 정상적으로 반영되었습니다.",
+            negativeText = "닫기",
+            positiveText = "확인",
+            type = DialogType.SUCCESS,
+            onPositive = {},
+            onNegative = {},
+            onDismissRequest = {}
+        )
     }
 }
