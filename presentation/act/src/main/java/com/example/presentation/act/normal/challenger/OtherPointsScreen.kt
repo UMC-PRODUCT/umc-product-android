@@ -1,7 +1,6 @@
 package com.example.presentation.act.normal.challenger
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Callout
@@ -242,33 +241,19 @@ private fun ReasonInput(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    BasicTextField(
+    UTextField(
         value = value,
         onValueChange = onValueChange,
+        placeholder = AppStrings.REWARD_ETC_PLACEHOLDER,
+        placeholderColor = neutral400(),
+        textColor = neutral800(),
         textStyle = Callout,
+        backgroundColor = neutral000(),
+        strokeColor = neutral300(),
+        focusStrokeColor = neutral300(),
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(neutral000())
-            .border(1.dp, neutral300(), RoundedCornerShape(8.dp)),
-        decorationBox = { innerTextField ->
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 15.dp),
-                contentAlignment = Alignment.TopStart
-            ) {
-                if (value.isBlank()) {
-                    UText(
-                        text = AppStrings.REWARD_ETC_PLACEHOLDER,
-                        style = Callout,
-                        color = neutral400()
-                    )
-                }
-                innerTextField()
-            }
-        }
     )
 }
 

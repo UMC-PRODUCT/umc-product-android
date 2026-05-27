@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,13 +29,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Body
@@ -157,61 +155,21 @@ private fun SearchBar(
             .fillMaxWidth()
             .wrapContentHeight()
     ) {
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (effectiveSearchFocused) neutral000() else neutral100())
-                .border(
-                    width = 1.dp,
-                    color = if (effectiveSearchFocused) neutral900() else neutral100(),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            if (!effectiveSearchFocused) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_search),
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = null,
-                    tint = neutral400()
-                )
-                Spacer(Modifier.width(10.dp))
-            }
-
-            BasicTextField(
-                value = searchKeyword,
-                onValueChange = onSearchKeywordChange,
-                modifier = Modifier
-                    .weight(1f)
-                    .onFocusChanged { onSearchFocusChange(it.isFocused) }
-                    .wrapContentHeight(),
-                singleLine = true,
-                textStyle = Body,
-                cursorBrush = SolidColor(neutral800()),
-                decorationBox = { innerTextField ->
-                    if (searchKeyword.isBlank()) {
-                        UText(
-                            text = AppStrings.CHALLENGER_SEARCH_PLACEHOLDER,
-                            style = Body,
-                            color = if (effectiveSearchFocused) neutral900() else neutral400()
-                        )
-                    }
-                    innerTextField()
-                }
-            )
-
-            if (effectiveSearchFocused) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_check_failed),
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = null,
-                    tint = neutral300()
-                )
-            }
-        }
+        UTextField(
+            value = searchKeyword,
+            onValueChange = onSearchKeywordChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = AppStrings.CHALLENGER_SEARCH_PLACEHOLDER,
+            placeholderColor = if (effectiveSearchFocused) neutral900() else neutral400(),
+            textColor = neutral800(),
+            textStyle = Body,
+            backgroundColor = if (effectiveSearchFocused) neutral000() else neutral100(),
+            strokeColor = if (effectiveSearchFocused) neutral900() else neutral100(),
+            focusStrokeColor = neutral900(),
+            prevIcon = if (effectiveSearchFocused) null else painterResource(R.drawable.ic_search),
+            prevIconTint = neutral400(),
+            onFocusChange = onSearchFocusChange
+        )
     }
 }
 
@@ -360,4 +318,3 @@ private fun PreviewMainUnfocused() {
         NormalChallengerScreen()
     }
 }
-
