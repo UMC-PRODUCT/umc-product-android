@@ -49,8 +49,8 @@ import com.umc.component.theme.neutral000
  *   기본값 PaddingValues(0.dp) — 지정하지 않으면 여백 없이 콘텐츠 크기 그대로 렌더링
  * @param prevIcon 텍스트 왼쪽에 표시할 아이콘 (선택)
  * @param prevIconTint prevIcon 틴트 색상. null 이면 원본 색상 유지
- * @param endIcon 텍스트 위에 표시할 아이콘 (선택)
- * @param endIconTint topIcon 틴트 색상. null 이면 원본 색상 유지
+ * @param endIcon 텍스트 오른쪽에 표시할 아이콘 (선택)
+ * @param endIconTint endIcon 틴트 색상. null 이면 원본 색상 유지
  * @param topIcon 텍스트 위에 표시할 아이콘 (선택)
  * @param topIconTint topIcon 틴트 색상. null 이면 원본 색상 유지
  */
