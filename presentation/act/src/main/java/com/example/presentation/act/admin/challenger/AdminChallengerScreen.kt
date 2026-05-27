@@ -2,6 +2,7 @@ package com.example.presentation.act.admin.challenger
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,23 +20,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Body
@@ -58,16 +56,27 @@ import com.umc.component.theme.warning500
 
 
 @Composable
-fun ChallengerRoute() {
-    ChallengerScreen()
+fun ChallengerRoute(
+    viewModel: AdminChallengerViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    ChallengerScreen(
+        uiState = uiState,
+        onSearchKeywordChange = viewModel::onSearchKeywordChanged,
+        onMemberClick = viewModel::getChallengerDetail,
+        onDismissDialog = viewModel::dismissChallengerDetail
+    )
 }
 
 
 @Composable
 private fun EmptyScreen() {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
         Column(
-            modifier = Modifier.align(Alignment.Center),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -89,37 +98,11 @@ private fun EmptyScreen() {
 
 @Composable
 fun ChallengerScreen(
+    uiState: AdminChallengerUiState = AdminChallengerUiState(),
+    onSearchKeywordChange: (String) -> Unit = {},
+    onMemberClick: (Long) -> Unit = {},
+    onDismissDialog: () -> Unit = {},
 ) {
-    var searchKeyword by rememberSaveable { mutableStateOf("") }
-    var isSearchFocused by rememberSaveable { mutableStateOf(false) }
-
-    val sectionTestData = listOf(
-        ChallengerSectionUi(
-            partName = "PM",
-            members = listOf(
-                ChallengerMemberUi(
-                    nicknameWithName = "홍길동(닉네임)",
-                    generation = "기수",
-                    roleBadge = "회장"
-                )
-            )
-        ),
-        ChallengerSectionUi(
-            partName = "Design",
-            members = listOf(
-                ChallengerMemberUi("홍길동(닉네임)", "기수"),
-                ChallengerMemberUi("홍길동(닉네임)", "기수")
-            )
-        ),
-        ChallengerSectionUi(
-            partName = "Web",
-            members = listOf(
-                ChallengerMemberUi("홍길동(닉네임)", "기수"),
-                ChallengerMemberUi("홍길동(닉네임)", "기수")
-            )
-        )
-    )
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -128,27 +111,34 @@ fun ChallengerScreen(
     ) {
         item {
             SearchBar(
-                searchKeyword = searchKeyword,
-                onSearchKeywordChange = { searchKeyword = it },
-                effectiveSearchFocused = isSearchFocused,
-                onSearchFocusChange = { focused ->
-                    isSearchFocused = focused
-                }
+                searchKeyword = uiState.searchKeyword,
+                onSearchKeywordChange = onSearchKeywordChange,
             )
         }
-        items(sectionTestData) { section ->
-            ChallengerSection(section = section)
+        if (uiState.sections.isEmpty()) {
+            item { EmptyScreen() }
+        } else {
+            items(uiState.sections) { section ->
+                ChallengerSection(
+                    section = section,
+                    onMemberClick = onMemberClick
+                )
+            }
         }
     }
 
+    uiState.selectedChallenger?.let { selectedChallenger ->
+        ChallengerInfoDialog(
+            model = selectedChallenger,
+            onDismissRequest = onDismissDialog
+        )
+    }
 }
 
 @Composable
 private fun SearchBar(
     searchKeyword: String,
     onSearchKeywordChange: (String) -> Unit,
-    effectiveSearchFocused: Boolean,
-    onSearchFocusChange: (Boolean) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -157,66 +147,28 @@ private fun SearchBar(
             .fillMaxWidth()
             .wrapContentHeight()
     ) {
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (effectiveSearchFocused) neutral000() else neutral100())
-                .border(
-                    width = 1.dp,
-                    color = if (effectiveSearchFocused) neutral900() else neutral100(),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            if (!effectiveSearchFocused) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_search),
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = null,
-                    tint = neutral400()
-                )
-                Spacer(Modifier.width(10.dp))
-            }
-
-            BasicTextField(
-                value = searchKeyword,
-                onValueChange = onSearchKeywordChange,
-                modifier = Modifier
-                    .weight(1f)
-                    .onFocusChanged { onSearchFocusChange(it.isFocused) }
-                    .wrapContentHeight(),
-                singleLine = true,
-                textStyle = Body,
-                cursorBrush = SolidColor(neutral800()),
-                decorationBox = { innerTextField ->
-                    if (searchKeyword.isBlank()) {
-                        UText(
-                            text = AppStrings.CHALLENGER_SEARCH_PLACEHOLDER,
-                            style = Body,
-                            color = if (effectiveSearchFocused) neutral900() else neutral400()
-                        )
-                    }
-                    innerTextField()
-                }
-            )
-
-            if (effectiveSearchFocused) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_check_failed),
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = null,
-                    tint = neutral300()
-                )
-            }
-        }
+        UTextField(
+            value = searchKeyword,
+            onValueChange = onSearchKeywordChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = AppStrings.CHALLENGER_SEARCH_PLACEHOLDER,
+            placeholderColor = neutral400(),
+            textColor = neutral800(),
+            textStyle = Body,
+            backgroundColor = neutral100(),
+            strokeColor = neutral100(),
+            focusStrokeColor = neutral100(),
+            prevIcon = painterResource(R.drawable.ic_search),
+            prevIconTint = neutral400()
+        )
     }
 }
 
 @Composable
-private fun ChallengerSection(section: ChallengerSectionUi) {
+private fun ChallengerSection(
+    section: AdminChallengerSectionUi,
+    onMemberClick: (Long) -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -247,17 +199,24 @@ private fun ChallengerSection(section: ChallengerSectionUi) {
                 .background(neutral000())
         ) {
             section.members.forEach { member ->
-                ChallengerMemberRow(member = member)
+                ChallengerMemberRow(
+                    member = member,
+                    onClick = { onMemberClick(member.id) }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun ChallengerMemberRow(member: ChallengerMemberUi) {
+private fun ChallengerMemberRow(
+    member: AdminChallengerMemberUi,
+    onClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -332,17 +291,6 @@ private fun ChallengerMemberRow(member: ChallengerMemberUi) {
         }
     }
 }
-
-private data class ChallengerSectionUi(
-    val partName: String,
-    val members: List<ChallengerMemberUi>
-)
-
-private data class ChallengerMemberUi(
-    val nicknameWithName: String,
-    val generation: String,
-    val roleBadge: String? = null
-)
 
 @Preview(showBackground = true)
 @Composable

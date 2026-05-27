@@ -24,6 +24,7 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
@@ -59,8 +62,22 @@ import com.umc.component.theme.neutral800
 import com.umc.domain.model.act.check.AdminPendingUser
 
 @Composable
-fun PendingListRoute() {
-    PendingListScreen(users = sampleList())
+fun PendingListRoute(
+    scheduleId: Long = 0L,
+    viewModel: PendingListViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(scheduleId) {
+        viewModel.getPendingUsers(scheduleId)
+    }
+
+    PendingListScreen(
+        users = uiState.users,
+        onApproveSelectedClick = viewModel::approveAll,
+        onRejectClick = viewModel::reject,
+        onApproveClick = viewModel::approve
+    )
 }
 
 
@@ -68,6 +85,7 @@ fun PendingListRoute() {
 fun PendingListScreen(
     users: List<AdminPendingUser>,
     onSelectApproveClick: () -> Unit = {},
+    onApproveSelectedClick: (List<Long>) -> Unit = {},
     onReasonClick: (AdminPendingUser) -> Unit = {},
     onRejectClick: (AdminPendingUser) -> Unit = {},
     onApproveClick: (AdminPendingUser) -> Unit = {},
@@ -109,7 +127,11 @@ fun PendingListScreen(
                     backgroundColor = if (isConfirmEnabled) indigo500() else neutral100(),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                     cornerRadius = 8.dp,
-                    onClick = { }
+                    onClick = {
+                        onApproveSelectedClick(selectedUserIds.toList())
+                        selectedUserIds = emptySet()
+                        isSelectApproveMode = false
+                    }
                 )
             } else {
                 UButton(

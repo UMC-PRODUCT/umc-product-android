@@ -19,12 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.umc.component.R
+import com.umc.component.component.UInfoChip
+import com.umc.component.component.UInfoChipType
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Callout
@@ -47,13 +48,14 @@ import com.umc.component.theme.success100
 import com.umc.component.theme.success500
 import com.umc.component.theme.warning100
 import com.umc.component.theme.warning500
-import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
-import com.umc.domain.model.act.challenger.ChallengerInfoHistory
+import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
+import com.umc.domain.model.act.challenger.ChallengerPoint
 import com.umc.domain.model.enums.CheckHistoryStatus
+import com.umc.domain.model.enums.PointType
 
 @Composable
 fun ChallengerInfoDialog(
-    model: ChallengerInfoDialogModel,
+    model: ChallengerManageDialogModel,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -114,15 +116,13 @@ fun ChallengerInfoDialog(
                     color = neutral800()
                 )
 
-                InfoChip(
+                UInfoChip(
                     text = model.university,
-                    background = neutral050(),
-                    textColor = neutral600()
+                    type = UInfoChipType.SCHOOL
                 )
-                InfoChip(
+                UInfoChip(
                     text = model.part,
-                    background = primary100(),
-                    textColor = primary500()
+                    type = UInfoChipType.PART
                 )
             }
 
@@ -135,13 +135,13 @@ fun ChallengerInfoDialog(
                 InfoStatCard(
                     modifier = Modifier.weight(1f),
                     title = "활동 기수",
-                    value = if (model.generation > 0) "${model.generation}기" else "-"
+                    value = if (model.gisu > 0) "${model.gisu}기" else "-"
                 )
 
                 InfoStatCard(
                     modifier = Modifier.weight(1f),
                     title = "총점수",
-                    value = formatPoint(model.totalPoints)
+                    value = formatPoint(model.totalScore)
                 )
             }
 
@@ -158,7 +158,7 @@ fun ChallengerInfoDialog(
                     modifier = Modifier.size(24.dp)
                 )
                 UText(
-                    text = "출석/활동 기록",
+                    text = "상벌점 기록",
                     style = HeadlineBold,
                     color = neutral900()
                 )
@@ -180,28 +180,6 @@ fun ChallengerInfoDialog(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun InfoChip(
-    text: String,
-    background: Color,
-    textColor: Color
-) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(background)
-            .height(24.dp)
-            .padding(horizontal = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        UText(
-            text = text,
-            style = Caption1Bold,
-            color = textColor
-        )
     }
 }
 
@@ -234,13 +212,14 @@ private fun InfoStatCard(
 }
 
 @Composable
-private fun HistoryItemRow(history: ChallengerInfoHistory) {
-    val bgColor = when (history.status) {
+private fun HistoryItemRow(history: ChallengerPoint) {
+    val status = history.toStatus()
+    val bgColor = when (status) {
         CheckHistoryStatus.PRESENT -> success100()
         CheckHistoryStatus.LATE -> warning100()
         CheckHistoryStatus.ABSENT -> danger100()
     }
-    val textColor = when (history.status) {
+    val textColor = when (status) {
         CheckHistoryStatus.PRESENT -> success500()
         CheckHistoryStatus.LATE -> warning500()
         CheckHistoryStatus.ABSENT -> danger500()
@@ -260,7 +239,7 @@ private fun HistoryItemRow(history: ChallengerInfoHistory) {
             contentAlignment = Alignment.Center
         ) {
             UText(
-                text = history.status.text,
+                text = status.text,
                 style = Caption1Bold,
                 color = textColor
             )
@@ -271,6 +250,14 @@ private fun HistoryItemRow(history: ChallengerInfoHistory) {
             style = Subheadline,
             color = neutral800()
         )
+    }
+}
+
+private fun ChallengerPoint.toStatus(): CheckHistoryStatus {
+    return when {
+        value > 0 -> CheckHistoryStatus.PRESENT
+        value < 0 -> CheckHistoryStatus.LATE
+        else -> CheckHistoryStatus.ABSENT
     }
 }
 
@@ -287,16 +274,16 @@ private fun formatPoint(point: Double): String {
 private fun ChallengerInfoDialogPreview() {
     UmcTheme(darkTheme = false) {
         ChallengerInfoDialog(
-            model = ChallengerInfoDialogModel(
+            model = ChallengerManageDialogModel(
                 name = "김디자",
                 university = "중앙대학교",
                 part = "Web",
-                generation = 12,
-                totalPoints = 1.0,
+                gisu = 12,
+                totalScore = 1.0,
                 history = listOf(
-                    ChallengerInfoHistory(title = "3주차 정기 세션", status = CheckHistoryStatus.PRESENT),
-                    ChallengerInfoHistory(title = "2주차 정기 세션", status = CheckHistoryStatus.LATE),
-                    ChallengerInfoHistory(title = "1주차 정기 세션", status = CheckHistoryStatus.ABSENT)
+                    ChallengerPoint(id = 1L, title = "우수 워크북", pointType = PointType.BEST_WORKBOOK, value = 1.0),
+                    ChallengerPoint(id = 2L, title = "지각", pointType = PointType.STUDY_LATE, value = -0.5),
+                    ChallengerPoint(id = 3L, title = "결석", pointType = PointType.STUDY_ABSENT, value = -1.0)
                 )
             ),
             onDismissRequest = {}
