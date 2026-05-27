@@ -18,15 +18,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
@@ -50,21 +49,33 @@ import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
 import com.umc.component.theme.success100
 import com.umc.component.theme.success500
+import com.umc.domain.model.enums.RewardType
 
 @Composable
-fun RewardPointsRoute() {
-    RewardPointsScreen()
+fun RewardPointsRoute(
+    challengerId: Long = 0L,
+    viewModel: AdminChallengerViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    RewardPointsScreen(
+        uiState = uiState,
+        onSelectReward = viewModel::selectReward,
+        onMemoChange = viewModel::onMemoChanged,
+        onSubmitClick = { viewModel.grantReward(challengerId) }
+    )
 }
 
 @Composable
 fun RewardPointsScreen(
     modifier: Modifier = Modifier,
     rewards: List<RewardPointItem> = defaultRewardItems(),
-    onSubmitClick: (RewardPointItem, String) -> Unit = { _, _ -> }
+    uiState: AdminChallengerUiState = AdminChallengerUiState(),
+    onSelectReward: (RewardType) -> Unit = {},
+    onMemoChange: (String) -> Unit = {},
+    onSubmitClick: () -> Unit = {}
 ) {
-    var selectedRewardId by remember { mutableStateOf<Long?>(null) }
-    var memo by remember { mutableStateOf("") }
-    val selectedReward = rewards.firstOrNull { it.id == selectedRewardId }
+    val selectedReward = uiState.selectedRewardType
     val isSubmitEnabled = selectedReward != null
 
     Column(
@@ -98,8 +109,8 @@ fun RewardPointsScreen(
 
         RewardListCard(
             rewards = rewards,
-            selectedRewardId = selectedRewardId,
-            onSelectReward = { selectedRewardId = it }
+            selectedRewardType = uiState.selectedRewardType,
+            onSelectReward = onSelectReward
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -113,8 +124,8 @@ fun RewardPointsScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         MemoInput(
-            value = memo,
-            onValueChange = { memo = it }
+            value = uiState.pointMemo,
+            onValueChange = onMemoChange
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -128,9 +139,7 @@ fun RewardPointsScreen(
             backgroundColor = if (isSubmitEnabled) indigo500() else neutral100(),
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
             cornerRadius = 8.dp,
-            onClick = {
-                selectedReward?.let { onSubmitClick(it, memo) }
-            }
+            onClick = onSubmitClick
         )
 
         Spacer(modifier = Modifier.height(72.dp))
@@ -160,8 +169,8 @@ private fun DragHeader(
 @Composable
 private fun RewardListCard(
     rewards: List<RewardPointItem>,
-    selectedRewardId: Long?,
-    onSelectReward: (Long) -> Unit
+    selectedRewardType: RewardType?,
+    onSelectReward: (RewardType) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -171,8 +180,8 @@ private fun RewardListCard(
         rewards.forEachIndexed { index, item ->
             RewardRow(
                 item = item,
-                selected = selectedRewardId == item.id,
-                onClick = { onSelectReward(item.id) }
+                selected = selectedRewardType == item.type,
+                onClick = { onSelectReward(item.type) }
             )
             
             HorizontalDivider(
@@ -261,15 +270,14 @@ private fun MemoInput(
 data class RewardPointItem(
     val id: Long,
     val title: String,
-    val score: Int
+    val score: Int,
+    val type: RewardType,
 )
 
-private fun defaultRewardItems(): List<RewardPointItem> = listOf(
-    RewardPointItem(id = 1L, title = "블로그 챌린지", score = 3),
-    RewardPointItem(id = 2L, title = "베스트 워크북 선정", score = 2),
-    RewardPointItem(id = 3L, title = "행사 리뷰어", score = 1),
-    RewardPointItem(id = 4L, title = "PeerReview 작성", score = 1)
-)
+private fun defaultRewardItems(): List<RewardPointItem> =
+    RewardType.getBonusList().mapIndexed { index, type ->
+        RewardPointItem(id = index.toLong(), title = type.label, score = type.score, type = type)
+    }
 
 @Preview(showBackground = false)
 @Composable

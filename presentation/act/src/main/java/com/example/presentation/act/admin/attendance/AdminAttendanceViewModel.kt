@@ -12,14 +12,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AdminAttendanceViewModel @Inject constructor(
-    private val getAdminSessionListUseCase: GetAdminSessionListUseCase,
+    private val getAdminSessionListUseCase: GetAdminSessionListUseCase, //관리자 세션 목록 조회
 ) : BaseViewModel<AdminAttendanceUiState, AdminAttendanceEvent>(
     AdminAttendanceUiState()
 ) {
+    //초기 관리자 세션 목록 조회
     init {
         getSessions()
     }
 
+    //관리자가 출석 관리할 세션 목록 조회
     fun getSessions() {
         viewModelScope.launch {
             startLoading()
@@ -37,12 +39,15 @@ class AdminAttendanceViewModel @Inject constructor(
 }
 
 data class AdminAttendanceUiState(
+    //관리자 세션 목록
     val sessions: List<AdminSessionCheck> = emptyList(),
 ) : UiState {
+    //세션 목록 비어있음 여부
     val isEmpty: Boolean
         get() = sessions.isEmpty()
 }
 
 sealed interface AdminAttendanceEvent : UiEvent {
+    //토스트 표시
     data class ShowToast(val message: String) : AdminAttendanceEvent
 }
