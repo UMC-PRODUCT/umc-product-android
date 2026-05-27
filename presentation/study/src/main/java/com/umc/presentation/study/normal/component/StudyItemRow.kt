@@ -1,4 +1,4 @@
-package com.umc.presentation.study.component
+package com.umc.presentation.study.normal.component
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
@@ -19,11 +19,11 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.*
-import com.umc.presentation.study.ActStudyItemUiModel
+import com.umc.presentation.study.normal.NormalStudyItemUiModel
 
 @Composable
 fun StudyItemRow(
-    item: ActStudyItemUiModel,
+    item: NormalStudyItemUiModel,
     onToggle: () -> Unit,
     onSubmitClick: (Long, String) -> Unit,
     onConfirmClick: (Long) -> Unit,

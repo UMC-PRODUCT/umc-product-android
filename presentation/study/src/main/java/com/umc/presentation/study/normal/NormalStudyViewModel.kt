@@ -1,4 +1,4 @@
-package com.umc.presentation.study
+package com.umc.presentation.study.normal
 
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.UiEvent
@@ -19,7 +19,7 @@ import javax.inject.Inject
 data class UserStudyState(
     val title: String = "",
     val part: UserPart = UserPart.UNKNOWN,
-    val items: List<ActStudyItemUiModel> = emptyList(),
+    val items: List<NormalStudyItemUiModel> = emptyList(),
 ) : UiState {
     val totalCount: Int get() = items.size
     val passCount: Int get() = items.count { it.status == StudyStatus.PASS }
@@ -39,9 +39,9 @@ class UserStudyViewModel @Inject constructor(
 ) : BaseViewModel<UserStudyState, UserStudyEvent>(UserStudyState()) {
 
     companion object {
-        private const val USE_DUMMY = false
+        private const val USE_DUMMY = true
 
-        // TODO: 하드코딩 제거 후 로그인 유저 정보에서 가져오기
+        // 하드코딩 제거 후 로그인 유저 정보에서 가져오기
         private const val GISU_ID = 3L
         private const val PART = "SPRINGBOOT"
     }
@@ -56,7 +56,7 @@ class UserStudyViewModel @Inject constructor(
             copy(
                 title = "10기 SpringBoot",
                 items = listOf(
-                    ActStudyItemUiModel(
+                    NormalStudyItemUiModel(
                         id = 1L,
                         week = 1,
                         platform = "Github",
@@ -67,7 +67,7 @@ class UserStudyViewModel @Inject constructor(
                         isLocked = false,
                         isBest = true,
                     ),
-                    ActStudyItemUiModel(
+                    NormalStudyItemUiModel(
                         id = 2L,
                         week = 2,
                         platform = "Github",
@@ -77,7 +77,7 @@ class UserStudyViewModel @Inject constructor(
                         submitState = SubmitState.IDLE,
                         isLocked = false,
                     ),
-                    ActStudyItemUiModel(
+                    NormalStudyItemUiModel(
                         id = 3L,
                         week = 3,
                         platform = "Github",
@@ -87,7 +87,7 @@ class UserStudyViewModel @Inject constructor(
                         submitState = SubmitState.READY,
                         isLocked = false,
                     ),
-                    ActStudyItemUiModel(
+                    NormalStudyItemUiModel(
                         id = 4L,
                         week = 4,
                         platform = "Github",
@@ -97,7 +97,7 @@ class UserStudyViewModel @Inject constructor(
                         submitState = SubmitState.IDLE,
                         isLocked = true,
                     ),
-                    ActStudyItemUiModel(
+                    NormalStudyItemUiModel(
                         id = 5L,
                         week = 5,
                         platform = "Github",
@@ -126,7 +126,7 @@ class UserStudyViewModel @Inject constructor(
                     val uiItems = data.workbooks
                         .sortedBy { it.weekNo }
                         .map { wb ->
-                            ActStudyItemUiModel(
+                            NormalStudyItemUiModel(
                                 id = wb.originalWorkbookId,
                                 platform = "Github",
                                 title = wb.title,
@@ -221,7 +221,7 @@ class UserStudyViewModel @Inject constructor(
 
     private fun updateItem(
         itemId: Long,
-        transform: (ActStudyItemUiModel) -> ActStudyItemUiModel
+        transform: (NormalStudyItemUiModel) -> NormalStudyItemUiModel
     ) {
         updateState {
             val updated = items.map { if (it.id == itemId) transform(it) else it }

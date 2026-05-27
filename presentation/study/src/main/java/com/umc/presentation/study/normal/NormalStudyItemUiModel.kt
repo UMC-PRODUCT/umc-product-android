@@ -1,4 +1,4 @@
-package com.umc.presentation.study
+package com.umc.presentation.study.normal
 
 import com.umc.domain.model.enums.StudyStatus
 import com.umc.domain.model.enums.SubmitState
@@ -20,7 +20,7 @@ import com.umc.domain.model.enums.WorkbookMissionType
  * @param isBest Best 선정 여부
  * @param missionType 미션 타입 (LINK, FILE, TEXT)
  */
-data class ActStudyItemUiModel(
+data class NormalStudyItemUiModel(
     val id: Long,
     val platform: String,
     val title: String,
