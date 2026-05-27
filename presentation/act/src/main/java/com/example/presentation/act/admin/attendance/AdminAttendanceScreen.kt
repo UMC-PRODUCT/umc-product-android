@@ -258,7 +258,7 @@ private fun emptyScreenPreview() {
 }
 
 @Composable
-private fun checkAttendanceListButton(
+private fun CheckAttendanceListButton(
     onPendingListClick :() -> Unit
 ) {
     UButton(
