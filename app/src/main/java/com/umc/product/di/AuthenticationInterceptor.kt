@@ -25,7 +25,7 @@ class AuthenticationInterceptor @Inject constructor(
             }
 
             val accessToken = runBlocking { appDataStoreRepository.getAccessToken() }
-            Log.d("RETROFIT", "AuthenticationInterceptor - intercept() called / accessToken: $accessToken")
+
 
             val request =
                 chain.request().newBuilder()

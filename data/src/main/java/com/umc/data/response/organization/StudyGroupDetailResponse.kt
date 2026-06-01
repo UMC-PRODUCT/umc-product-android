@@ -20,7 +20,8 @@ fun StudyGroupDetailResponse.toModel(): StudyGroupDetail {
 
 
     //기존 schools 대신 members를 통해 학교 정보 생성
-    val schoolsInfo = members.map { StudyGroupSchool(it.schoolId, it.schoolName) }
+    val schoolsInfo = members.distinctBy { it.schoolId }.map {
+        StudyGroupSchool(it.schoolId, it.schoolName) }
 
 
     return StudyGroupDetail(
