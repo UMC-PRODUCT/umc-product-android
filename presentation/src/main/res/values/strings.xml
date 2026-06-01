@@ -37,6 +37,15 @@
     <string name="home_plan_add_dialog_add_attendance_content">출석부와 함께 일정을 생성하시겠습니까?</string>
     <string name="home_plan_add_dialog_add_attendance_yes">네, 출석부도 같이 생성할게요</string>
     <string name="home_plan_add_dialog_add_attendance_no">아니요, 일정만 생성할게요</string>
+    <string name="attendance_policy_dialog_title">출석 정책 설정</string>
+    <string name="attendance_check_in_start">출석 시작</string>
+    <string name="attendance_on_time_end">출석 종료</string>
+    <string name="attendance_late_end">지각 인정</string>
+    <string name="attendance_policy_confirm">등록하기</string>
+    <string name="attendance_date_placeholder">날짜 선택</string>
+    <string name="attendance_time_placeholder">시간 선택</string>
+    <string name="planadd_attendance_check_label">출석부도 함께 생성하기</string>
+    <string name="planadd_online_check_label">비대면으로 진행하고 싶어요</string>
 
     <!-- mypage -->
     <string name="mypage_title">마이페이지</string>

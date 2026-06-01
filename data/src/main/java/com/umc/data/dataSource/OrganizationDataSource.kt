@@ -18,6 +18,7 @@ import com.umc.domain.model.request.organization.AssignSchoolRequest
 import com.umc.domain.model.request.organization.ChallengerListRequest
 import com.umc.domain.model.request.organization.CreateChapterRequest
 import com.umc.domain.model.request.organization.CreateGisuRequest
+import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.domain.model.request.organization.CreateStudyGroupRequest
 import com.umc.domain.model.request.organization.EditSchoolRequest
 import com.umc.domain.model.request.organization.EditStudyGroupRequest
@@ -75,6 +76,7 @@ interface OrganizationDataSource {
     suspend fun createGisu(request: CreateGisuRequest): ApiState<Unit>
     suspend fun createChapter(request: CreateChapterRequest): ApiState<Unit>
     suspend fun changeActiveGisu(gisuId: Int): ApiState<Unit>
+    suspend fun createStudyGroupSchedule(request: CreateStudyGroupScheduleRequest): ApiState<Long>
 
     // PUT
     suspend fun changeGroupMember(groupId: Long, request: ChallengerListRequest): ApiState<Unit>

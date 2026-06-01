@@ -1,44 +1,51 @@
 package com.umc.presentation.ui.act.check
 
 import androidx.lifecycle.viewModelScope
-import com.umc.domain.model.request.attendance.AttendanceCheckRequest
-import com.umc.domain.usecase.attendance.GetAttendanceAvailableUseCase
-import com.umc.domain.usecase.attendance.GetAttendanceHistoryUseCase
-import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
-import com.umc.domain.usecase.attendance.PostAttendanceReasonUseCase
-import com.umc.domain.usecase.schedule.GetScheduleDetailUseCase
+import com.umc.domain.model.act.check.UserCheckHistory
+import com.umc.domain.model.enums.CheckHistoryStatus
+import com.umc.domain.usecase.schedule.GetAttendanceAvailableSessionsUseCase
+import com.umc.domain.usecase.schedule.PostScheduleAttendanceExcuseUseCase
+import com.umc.domain.usecase.schedule.PostScheduleAttendanceUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
 import com.umc.presentation.base.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.time.ZonedDateTime
 import javax.inject.Inject
 
 @HiltViewModel
 class UserCheckViewModel @Inject constructor(
-    private val getAttendanceAvailableUseCase: GetAttendanceAvailableUseCase,
-    private val getAttendanceHistoryUseCase: GetAttendanceHistoryUseCase,
-    private val getScheduleDetailUseCase: GetScheduleDetailUseCase,
-    private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase,
-    private val postAttendanceReasonUseCase: PostAttendanceReasonUseCase
+    private val getAttendanceAvailableSessionsUseCase: GetAttendanceAvailableSessionsUseCase,
+    private val postScheduleAttendanceUseCase: PostScheduleAttendanceUseCase,
+    private val postScheduleAttendanceExcuseUseCase: PostScheduleAttendanceExcuseUseCase
 ) : BaseViewModel<UserCheckUiState, UserCheckEvent>(UserCheckUiState()) {
 
     private var lastUserLat: Double? = null
     private var lastUserLng: Double? = null
 
     init {
-        fetchAttendanceData()
+        fetchAttendanceAvailable()
         fetchAttendanceHistory()
     }
 
-    private fun fetchAttendanceData() {
+    fun fetchAttendanceAvailable() {
         viewModelScope.launch {
             resultResponse(
-                response = getAttendanceAvailableUseCase(),
+                response = getAttendanceAvailableSessionsUseCase(isAttendanceRequired = true),
                 successCallback = { data ->
-                    val list = data.map { CheckAvailableUIModel(session = it) }
+                    val now = ZonedDateTime.now()
+                    val list = data
+                        .filter { session ->
+                            runCatching {
+                                val end = session.endTime.let {
+                                    if (!it.endsWith("Z")) "${it}Z" else it
+                                }
+                                now.isBefore(ZonedDateTime.parse(end))
+                            }.getOrDefault(true)
+                        }
+                        .map { CheckAvailableUIModel(session = it, address = it.address) }
                     updateState { copy(availableSessions = list, availableCount = list.size) }
-                    list.forEach { fetchSessionDetail(it.session.id) }
                 },
                 errorCallback = { failState ->
                     emitEvent(UserCheckEvent.ShowToast(failState.message, isError = true))
@@ -50,11 +57,18 @@ class UserCheckViewModel @Inject constructor(
     private fun fetchAttendanceHistory() {
         viewModelScope.launch {
             resultResponse(
-                response = getAttendanceHistoryUseCase(),
+                response = getAttendanceAvailableSessionsUseCase(isAttendanceRequired = false),
                 successCallback = { data ->
-                    val historyUIList = data.mapIndexed { index, history ->
+                    val historyUIList = data.mapIndexed { index, session ->
                         CheckHistoryUIModel(
-                            history = history,
+                            history = UserCheckHistory(
+                                id = session.id,
+                                title = session.title,
+                                startTime = session.startTime,
+                                endTime = session.endTime,
+                                status = CheckHistoryStatus.fromServerValue(session.rawStatus),
+                                tags = session.tags
+                            ),
                             isFirst = index == 0,
                             isLast = index == data.size - 1
                         )
@@ -68,52 +82,18 @@ class UserCheckViewModel @Inject constructor(
         }
     }
 
-    private fun fetchSessionDetail(sessionId: Long) {
-        viewModelScope.launch {
-            resultResponse(
-                response = getScheduleDetailUseCase(sessionId),
-                successCallback = { detail ->
-                    updateState {
-                        val updatedList = availableSessions.map { uiModel ->
-                            if (uiModel.session.id == sessionId) {
-                                uiModel.copy(
-                                    address = detail.address,
-                                    session = uiModel.session.copy(
-                                        latitude = detail.latitude,
-                                        longitude = detail.longitude,
-                                        address = detail.address
-                                    )
-                                )
-                            } else uiModel
-                        }
-                        copy(availableSessions = updatedList)
-                    }
-                },
-                errorCallback = { failState ->
-                    emitEvent(UserCheckEvent.ShowToast(failState.message, isError = true))
-                }
-            )
-        }
-    }
-
     /**
      * 실시간 위치 기반 출석 요청
      */
     fun requestAttendance(sheetId: Long) {
         val sessionUIModel = uiState.value.availableSessions.find { it.session.sheetId == sheetId }
-        val isVerified = sessionUIModel?.isWithinRange ?: false
-
-        val request = AttendanceCheckRequest(
-            attendanceSheetId = sheetId,
-            latitude = lastUserLat,
-            longitude = lastUserLng,
-            locationVerified = isVerified
-        )
+        val scheduleId = sessionUIModel?.session?.id ?: return
+        val isVerified = sessionUIModel.isWithinRange
 
         viewModelScope.launch {
             resultResponse(
-                response = postAttendanceCheckUseCase(request),
-                successCallback = { fetchAttendanceData() },
+                response = postScheduleAttendanceUseCase(scheduleId, isVerified, lastUserLat, lastUserLng),
+                successCallback = { fetchAttendanceAvailable() },
                 errorCallback = { failState ->
                     emitEvent(UserCheckEvent.ShowToast(failState.message, isError = true))
                 }
@@ -122,14 +102,18 @@ class UserCheckViewModel @Inject constructor(
     }
 
     /**
-     * 출석 사유 제출
+     * 사유 출석 제출
      */
     fun submitAttendanceReason(sheetId: Long, reason: String) {
+        val sessionUIModel = uiState.value.availableSessions.find { it.session.sheetId == sheetId }
+        val scheduleId = sessionUIModel?.session?.id ?: return
+        val isVerified = sessionUIModel.isWithinRange
+
         viewModelScope.launch {
             resultResponse(
-                response = postAttendanceReasonUseCase(sheetId, reason),
+                response = postScheduleAttendanceExcuseUseCase(scheduleId, reason, isVerified, lastUserLat, lastUserLng),
                 successCallback = {
-                    fetchAttendanceData()
+                    fetchAttendanceAvailable()
                     fetchAttendanceHistory()
                 },
                 errorCallback = { failState ->

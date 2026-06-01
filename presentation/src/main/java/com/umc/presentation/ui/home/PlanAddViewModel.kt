@@ -9,6 +9,9 @@ import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.model.home.LocationItem
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.model.home.getGisuSummaryList
+import com.umc.domain.model.UDomainFormat.formatAllDayEndForServer
+import com.umc.domain.model.UDomainFormat.formatDateForServer
+import com.umc.domain.model.UDomainFormat.formatDateTimeForServer
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
@@ -31,7 +34,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.util.TimeZone
 import javax.inject.Inject
 
 
@@ -212,28 +214,11 @@ constructor(
         return cal
     }
 
-    /**
-     * Calendar 객체 두 개(날짜, 시간)를 합쳐 ISO 8601 문자열로 변환
-     * 예: 2026-02-08T09:57:19.628Z
-     * TODO 시간 형태 변경 -9시간
-     */
+    // 날짜 Calendar + 시간 Calendar → KST 기준으로 해석 후 UTC ISO8601 변환
     private fun getIsoDateTime(dateCal: Calendar, timeCal: Calendar): String {
-        //그냥 하나의 타임 포맷으로 바꾸자
-        val combineCal = Calendar.getInstance().apply {
-            set(Calendar.YEAR, dateCal.get(Calendar.YEAR))
-            set(Calendar.MONTH, dateCal.get(Calendar.MONTH))
-            set(Calendar.DAY_OF_MONTH, dateCal.get(Calendar.DAY_OF_MONTH))
-            set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY))
-            set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE))
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
-
-        return sdf.format(combineCal.time)
+        val dateStr = dateDisplaySdf.format(dateCal.time)  // "yyyy.MM.dd"
+        val timeStr = parseTimeSdf.format(timeCal.time)    // "HH:mm"
+        return dateStr.formatDateTimeForServer(timeStr)
     }
 
 
@@ -256,8 +241,16 @@ constructor(
         val isEditMode = state.updateScheduleId != -1L
 
         //날짜 데이터 ISO 8601 포맷으로 변환
-        val startsAt = getIsoDateTime(state.startDate, state.startTime)
-        val endsAt = getIsoDateTime(state.endDate, state.endTime)
+        val startsAt = if (state.isAllDay) {
+            dateDisplaySdf.format(state.startDate.time).formatDateForServer()
+        } else {
+            getIsoDateTime(state.startDate, state.startTime)
+        }
+        val endsAt = if (state.isAllDay) {
+            dateDisplaySdf.format(state.endDate.time).formatAllDayEndForServer()
+        } else {
+            getIsoDateTime(state.endDate, state.endTime)
+        }
 
         Log.d("log_home", "startsAt: $startsAt, endsAt: $endsAt")
 
@@ -278,48 +271,58 @@ constructor(
         viewModelScope.launch {
             if (isEditMode) {
                 // [기존 일정 수정]
+                val attendancePolicyForUpdate = if (isAttendance) UpdateSchedule.AttendancePolicy(
+                    checkInStartAt = getIsoDateTime(state.checkInStartDate, state.checkInStartTime),
+                    onTimeEndAt = getIsoDateTime(state.onTimeEndDate, state.onTimeEndTime),
+                    lateEndAt = getIsoDateTime(state.lateEndDate, state.lateEndTime)
+                ) else null
+
                 val request = UpdateSchedule(
                     name = state.planTitle,
-                    startsAt = startsAt,
-                    endsAt = endsAt,
-                    isAllDay = state.isAllDay,
-                    locationName = state.planLocation,
-                    latitude = state.latitude,
-                    longitude = state.longitude,
                     description = state.planDetail,
                     tags = selectedTags,
+                    startsAt = startsAt,
+                    endsAt = endsAt,
+                    location = if (state.isOnlineChecked) null else UpdateSchedule.Location(state.latitude, state.longitude, state.planLocation),
+                    isOnline = if (state.isOnlineChecked) true else null,
+                    isAttendanceRequired = if (isAttendance) true else null,
+                    attendancePolicy = attendancePolicyForUpdate,
                     participantMemberIds = participantIds,
                 )
 
                 resultResponse(
                     response = updateScheduleUseCase(state.updateScheduleId, request),
-                    successCallback = {
-                        emitEvent(PlanAddFragmentEvent.MoveBackPressedEvent)
-                                      },
+                    successCallback = { emitEvent(PlanAddFragmentEvent.MoveBackPressedEvent) },
                     errorCallback = { /* 에러 처리 */ }
                 )
             } else {
                 // [새 일정 생성]
+                val attendancePolicy = if (isAttendance) {
+                    CreateSchedule.AttendancePolicy(
+                        checkInStartAt = getIsoDateTime(state.checkInStartDate, state.checkInStartTime),
+                        onTimeEndAt = getIsoDateTime(state.onTimeEndDate, state.onTimeEndTime),
+                        lateEndAt = getIsoDateTime(state.lateEndDate, state.lateEndTime)
+                    )
+                } else null
+
                 val request = CreateSchedule(
                     name = state.planTitle,
-                    startsAt = startsAt,
-                    endsAt = endsAt,
-                    isAllDay = state.isAllDay,
-                    locationName = state.planLocation,
-                    latitude = state.latitude,
-                    longitude = state.longitude,
                     description = state.planDetail,
                     tags = selectedTags,
-                    participantMemberIds = participantIds,
-                    gisuId = state.nowGisuId,
-                    requiresApproval = isAttendance
+                    startsAt = startsAt,
+                    endsAt = endsAt,
+                    location = if (state.isOnlineChecked) null else CreateSchedule.Location(
+                        latitude = state.latitude,
+                        longitude = state.longitude,
+                        locationName = state.planLocation
+                    ),
+                    attendancePolicy = attendancePolicy,
+                    participantMemberIds = participantIds
                 )
 
                 resultResponse(
                     response = createScheduleUseCase(request),
-                    successCallback = {
-                        emitEvent(PlanAddFragmentEvent.MoveBackPressedEvent)
-                                      },
+                    successCallback = { emitEvent(PlanAddFragmentEvent.MoveBackPressedEvent) },
                     errorCallback = { /* 에러 처리 */ }
                 )
             }
@@ -411,12 +414,58 @@ constructor(
 
 
     //하루종일 관련
-    //모집 중 스위치 누를 때마다 상태 변화하고 필터링
     fun setAllday(isAllday: Boolean) {
         updateState { copy(isAllDay = isAllday) }
     }
 
-    
+    // 출석부 함께 생성 체크 토글
+    fun toggleAttendanceCheck() {
+        updateState { copy(isAttendanceChecked = !isAttendanceChecked) }
+    }
+
+    // 비대면 체크 토글 (체크 시 장소 초기화)
+    fun toggleOnlineCheck() {
+        val newChecked = !uiState.value.isOnlineChecked
+        updateState {
+            copy(
+                isOnlineChecked = newChecked,
+                planLocation = if (newChecked) "" else planLocation,
+                latitude = if (newChecked) 0.0 else latitude,
+                longitude = if (newChecked) 0.0 else longitude
+            )
+        }
+    }
+
+    // 출석 정책 시간 업데이트
+    fun updateCheckInStartDate(year: Int, month: Int, day: Int) {
+        val newCal = (uiState.value.checkInStartDate.clone() as Calendar).apply { set(year, month, day) }
+        updateState { copy(checkInStartDate = newCal, checkInStartDateText = dateDisplaySdf.format(newCal.time)) }
+    }
+
+    fun updateCheckInStartTime(hour: Int, minute: Int) {
+        val newCal = (uiState.value.checkInStartTime.clone() as Calendar).apply { set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute) }
+        updateState { copy(checkInStartTime = newCal, checkInStartTimeText = timeDisplaySdf.format(newCal.time)) }
+    }
+
+    fun updateOnTimeEndDate(year: Int, month: Int, day: Int) {
+        val newCal = (uiState.value.onTimeEndDate.clone() as Calendar).apply { set(year, month, day) }
+        updateState { copy(onTimeEndDate = newCal, onTimeEndDateText = dateDisplaySdf.format(newCal.time)) }
+    }
+
+    fun updateOnTimeEndTime(hour: Int, minute: Int) {
+        val newCal = (uiState.value.onTimeEndTime.clone() as Calendar).apply { set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute) }
+        updateState { copy(onTimeEndTime = newCal, onTimeEndTimeText = timeDisplaySdf.format(newCal.time)) }
+    }
+
+    fun updateLateEndDate(year: Int, month: Int, day: Int) {
+        val newCal = (uiState.value.lateEndDate.clone() as Calendar).apply { set(year, month, day) }
+        updateState { copy(lateEndDate = newCal, lateEndDateText = dateDisplaySdf.format(newCal.time)) }
+    }
+
+    fun updateLateEndTime(hour: Int, minute: Int) {
+        val newCal = (uiState.value.lateEndTime.clone() as Calendar).apply { set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute) }
+        updateState { copy(lateEndTime = newCal, lateEndTimeText = timeDisplaySdf.format(newCal.time)) }
+    }
 
 }
 
@@ -477,18 +526,35 @@ data class PlanAddFragmentUiState(
         CategoryItem(CategoryType.GENERAL.label, R.drawable.ic_general_off, R.drawable.ic_general_on),
 
         CategoryItem(CategoryType.LEADERSHIP.label, R.drawable.ic_leadership_off, R.drawable.ic_leadership_on),
-        CategoryItem(CategoryType.STUDY.label, R.drawable.ic_study_off, R.drawable.ic_study_on),
         CategoryItem(CategoryType.HACKATHON.label, R.drawable.ic_hackathon_off, R.drawable.ic_hackathon_on),
         CategoryItem(CategoryType.WORKSHOP.label, R.drawable.ic_workshop_off, R.drawable.ic_workshop_on),
         /**아이콘 임시조치**/
         CategoryItem(CategoryType.AFTER_PARTY.label, R.drawable.ic_afterparty_off, R.drawable.ic_afterparty_on)
 
         ),
-    val isSelectedCategory: Boolean = false, //UI에 placeholder or text 보여줄지 판단하는 변수
-    val selectedCategoriesString: String = ""
-    
+    val isSelectedCategory: Boolean = false,
+    val selectedCategoriesString: String = "",
 
-    
+    // 출석 정책 (운영진 전용)
+    val checkInStartDate: Calendar = Calendar.getInstance(),
+    val checkInStartTime: Calendar = Calendar.getInstance(),
+    val onTimeEndDate: Calendar = Calendar.getInstance(),
+    val onTimeEndTime: Calendar = Calendar.getInstance(),
+    val lateEndDate: Calendar = Calendar.getInstance(),
+    val lateEndTime: Calendar = Calendar.getInstance(),
+    val checkInStartDateText: String = "날짜 선택",
+    val checkInStartTimeText: String = "시간 선택",
+    val onTimeEndDateText: String = "날짜 선택",
+    val onTimeEndTimeText: String = "시간 선택",
+    val lateEndDateText: String = "날짜 선택",
+    val lateEndTimeText: String = "시간 선택",
+
+    // 출석부 함께 생성 체크 여부 (운영진 전용)
+    val isAttendanceChecked: Boolean = false,
+
+    // 비대면 진행 여부
+    val isOnlineChecked: Boolean = false
+
     ) : UiState {
     //참여자 명단(recyclerview를 보여주는지 체크 여부)
     val isSelectedParticipant: Boolean
@@ -512,7 +578,7 @@ data class PlanAddFragmentUiState(
             **/
 
 
-            return isTextValid && isSelectedCategory && planLocation != ""
+            return isTextValid && isSelectedCategory && (isOnlineChecked || planLocation != "")
         }
 }
 

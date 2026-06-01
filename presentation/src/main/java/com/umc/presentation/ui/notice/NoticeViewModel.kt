@@ -20,6 +20,8 @@ import javax.inject.Inject
 
 import com.umc.domain.repository.AppDataStoreRepository
 
+private const val STAFF_NOTICE_CHIP_TEXT = "운영진 공지"
+
 @HiltViewModel
 class NoticeViewModel @Inject constructor(
     private val getUserInfoUseCase: GetUserInfoUseCase,
@@ -77,6 +79,12 @@ class NoticeViewModel @Inject constructor(
             UserChallengerRole.from(role.roleType) != UserChallengerRole.MEMBER
         }
         updateState { copy(canWriteNotice = hasWritePermission) }
+
+        // 스태프 권한이 있을 경우 "운영진 공지" 칩을 "전체" 다음에 삽입
+        if (hasWritePermission) {
+            val staffChipSelected = savedSelectedText == STAFF_NOTICE_CHIP_TEXT
+            chipList.add(NoticeChipState(text = STAFF_NOTICE_CHIP_TEXT, isClicked = staffChipSelected, isStaffNoticeChip = true))
+        }
 
         // 선택된 기수의 challengerRecords를 순회하며 칩 생성
         filteredRecords.forEach { record ->
@@ -138,11 +146,17 @@ class NoticeViewModel @Inject constructor(
         updateChipList(newList)
         updateState { copy(selectedChipText = clickedItem.text) }
 
-        getNoticeList(
-            chapterId = clickedItem.chapterId,
-            schoolId = clickedItem.schoolId,
-            part = clickedItem.part
-        )
+        if (clickedItem.isStaffNoticeChip) {
+            getNoticeList(noticeTab = computeStaffNoticeTab(), isRefresh = true)
+        } else {
+            getNoticeList(
+                chapterId = clickedItem.chapterId,
+                schoolId = clickedItem.schoolId,
+                part = clickedItem.part,
+                noticeTab = "CHALLENGER",
+                isRefresh = true
+            )
+        }
     }
 
     fun onClickSearch() {
@@ -172,12 +186,6 @@ class NoticeViewModel @Inject constructor(
     fun onClickShowDropDown() {
         updateState {
             copy(isShowDropDown = !uiState.value.isShowDropDown)
-        }
-    }
-
-    fun updateSubChip(filter: String) {
-        updateState {
-            copy(selectedSubChip = filter)
         }
     }
 
@@ -218,19 +226,21 @@ class NoticeViewModel @Inject constructor(
         chapterId: Long? = null,
         schoolId: Long? = null,
         part: String? = null,
+        noticeTab: String = "CHALLENGER",
         isRefresh: Boolean = true
     ) = viewModelScope.launch {
         val state = uiState.value
 
         if (state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
 
-        updateState { copy(isPageLoading = true) }
+        updateState { copy(isPageLoading = true, currentNoticeTab = noticeTab) }
 
         val pageToFetch = if (isRefresh) 0 else state.currentPage
 
         resultResponse(
             response = getNoticeListUseCase(
                 gisuId = gisuId,
+                noticeTab = noticeTab,
                 chapterId = chapterId,
                 schoolId = schoolId,
                 part = part,
@@ -283,17 +293,25 @@ class NoticeViewModel @Inject constructor(
 
     fun loadNextPage() {
         if (!uiState.value.isPageLoading && !uiState.value.isLastPage) {
-            getNoticeList(isRefresh = false)
+            getNoticeList(noticeTab = uiState.value.currentNoticeTab, isRefresh = false)
+        }
+    }
+
+    private fun computeStaffNoticeTab(): String {
+        val roles = cachedUserInfo?.roles?.map { it.roleType } ?: return "CENTRAL_MEMBER"
+        return when {
+            roles.any { it in listOf("CENTRAL_PRESIDENT", "CENTRAL_VICE_PRESIDENT", "SUPER_ADMIN", "CHAPTER_PRESIDENT", "CENTRAL_OPERATING_TEAM_MEMBER", "CENTRAL_EDUCATION_TEAM_MEMBER") } -> "CENTRAL_MEMBER"
+            roles.any { it in listOf("SCHOOL_PRESIDENT", "SCHOOL_VICE_PRESIDENT", "SCHOOL_ETC_ADMIN") } -> "SCHOOL_CORE"
+            roles.any { it == "SCHOOL_PART_LEADER" } -> "SCHOOL_PART_LEADER"
+            else -> "CENTRAL_MEMBER"
         }
     }
 }
 
 data class NoticeUiState(
     val isShowDropDown: Boolean = false,
-    val isShowSubChip: Boolean = false,
     val nowTitle: String = "",
     val selectedGisu: Long = 0,
-    val selectedSubChip: String = "파트",
     val selectedChipText: String = "전체",
     val dropdownList: List<GisuItem> = emptyList(),
     val chipList: List<NoticeChipState> = emptyList(),
@@ -302,7 +320,8 @@ data class NoticeUiState(
     val isPageLoading: Boolean = false,
     val isLastPage: Boolean = false,
     val canWriteNotice: Boolean = false,
-    val readNoticeIds: Set<Long> = emptySet()
+    val readNoticeIds: Set<Long> = emptySet(),
+    val currentNoticeTab: String = "CHALLENGER"
 ) : UiState
 
 sealed interface NoticeEvent : UiEvent {

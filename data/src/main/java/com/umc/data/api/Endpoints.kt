@@ -66,16 +66,21 @@ object Endpoints {
     object Schedule {
         const val SCHEDULE = "api/v1/schedules"
         const val DETAIL = "$SCHEDULE/{scheduleId}"
-        const val MONTH = "$SCHEDULE/my-list"
+
+        const val SCHEDULES_ME = "api/v2/schedules/me"
+        const val DETAIL_V2 = "api/v2/schedules/{scheduleId}"
+        const val CAPABILITIES = "api/v2/schedules/capabilities"
+        const val CREATE_V2 = "api/v2/schedules"
 
         const val SCHEDULE_WITH_ATTENDANCE = "$SCHEDULE/with-attendance"
 
         const val DELETE = "$SCHEDULE/{scheduleId}/with-attendance"
 
-        const val LOCATION = "$SCHEDULE/{scheduleId}/location"
-
-        const val CREATE_STUDY_GROUP_SCHEDULE = "$SCHEDULE/study-group"
-
+        const val ATTENDANCE_REQUEST = "api/v2/schedules/{scheduleId}/attendances/request"
+        const val ATTENDANCE_DECIDE = "api/v2/schedules/{scheduleId}/attendances/decide"
+        const val ATTENDANCE_EXCUSE = "api/v2/schedules/{scheduleId}/attendances/excuse"
+        const val ATTENDANCE_HISTORY = "api/v2/schedules/attendance"
+        const val ATTENDANCE_DETAIL = "api/v2/schedules/{scheduleId}/attendance"
     }
 
     object Community{
@@ -132,6 +137,7 @@ object Endpoints {
         const val STUDY_GROUP_MENTOR = "$STUDY_GROUP/{studyGroupId}/mentors/{mentorId}"
         const val STUDY_GROUP_MEMBER = "$STUDY_GROUP/{studyGroupId}/members/{memberId}"
         const val STUDY_MEMBER = "$STUDY_GROUP_ID/members"
+        const val CREATE_STUDY_GROUP_SCHEDULE = "$STUDY_GROUP/schedules"
         const val GISU = "api/v1/gisu"
         const val GISU_ID = "$GISU/{gisuId}"
         const val GISU_ALL = "$GISU/all"
@@ -186,11 +192,7 @@ object Endpoints {
         const val NOTICE_READ_STATICS = "$NOTICE_DETAIL/read-statics"
         const val NOTICE_LINKS = "$NOTICE_DETAIL/links"
         const val NOTICE_IMAGES = "$NOTICE_DETAIL/images"
-    }
-
-    object Survey {
-        const val SURVEY = "api/v1/surveys"
-        const val VOTE_RESPONSES = "$SURVEY/votes/{voteId}/responses"
+        const val VOTE_RESPONSES = "$NOTICE_DETAIL/votes/{voteId}/responses"
     }
 
     object Notification {

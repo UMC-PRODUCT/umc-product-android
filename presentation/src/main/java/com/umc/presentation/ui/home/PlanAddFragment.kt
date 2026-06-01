@@ -9,7 +9,6 @@ import com.umc.presentation.R
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.FragmentPlanAddBinding
 import com.umc.presentation.extension.dp
-import com.umc.presentation.ui.home.dialog.AddAttendanceDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetCategoryPlanDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetLocationDialog
 import com.umc.presentation.ui.home.dialog.BottomSheetParticipantDialog
@@ -66,46 +65,40 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
             }
 
             planaddBtnBack.setOnClickListener { moveBackPressed() }
-            planaddBtnCancelPlan.setOnClickListener { moveBackPressed() }
+
+            //비대면 체크박스
+            planaddLayoutOnlineCheck.setOnClickListener {
+                viewModel.toggleOnlineCheck()
+            }
+
+            //출석부 함께 생성 체크박스
+            planaddLayoutAttendanceCheck.setOnClickListener {
+                viewModel.toggleAttendanceCheck()
+            }
+
+            //출석 시작 날짜/시간 chip
+            planaddChipCheckInStartDate.setOnClickListener { showAttendanceDatePicker(AttendanceField.CHECK_IN_START_DATE) }
+            planaddChipCheckInStartTime.setOnClickListener { showAttendanceTimePicker(AttendanceField.CHECK_IN_START_TIME) }
+
+            //출석 종료 날짜/시간 chip
+            planaddChipOnTimeEndDate.setOnClickListener { showAttendanceDatePicker(AttendanceField.ON_TIME_END_DATE) }
+            planaddChipOnTimeEndTime.setOnClickListener { showAttendanceTimePicker(AttendanceField.ON_TIME_END_TIME) }
+
+            //지각 인정 날짜/시간 chip
+            planaddChipLateEndDate.setOnClickListener { showAttendanceDatePicker(AttendanceField.LATE_END_DATE) }
+            planaddChipLateEndTime.setOnClickListener { showAttendanceTimePicker(AttendanceField.LATE_END_TIME) }
 
             //최종 확인 버튼
             planaddBtnRegisterPlan.setOnClickListener {
-                /**TODO 이벤트를 통해 해당 정보를 서버에 넘겨야 한다.**/
-
-                //운영진 여부에 따라 분기 처리
-                //1. 운영진이면서 생성하는 경우 - 생성
-                if(viewModel.uiState.value.isManager && viewModel.uiState.value.editMode == false){
-                    //다이얼로그 생성
-                    val dialog = AddAttendanceDialog(
-                        onReject = {
-                            viewModel.submitPlan(false)
-                        },
-                        onConfirm = {
-                            viewModel.submitPlan(true)
-
-                        }
-
-                    )
-                    dialog.show(childFragmentManager, "AddAttendance")
-                    
-                }
-                //2. 수정 모드인 경우 - 바로 true
-                else if(viewModel.uiState.value.editMode == true){
-                    viewModel.submitPlan(true)
-                }
-                else{
-                    viewModel.submitPlan(false)
-                }
+                viewModel.submitPlan(viewModel.uiState.value.isAttendanceChecked)
             }
 
-            //장소 선택 부분 터치시 다이얼로그 로직
+            //장소 선택 부분 터치시 다이얼로그 로직 (비대면 체크 시 비활성)
             binding.planaddCdvPlanLocation.setOnClickListener {
-                // 앞서 만든 BottomSheetDialog 생성
+                if (viewModel.uiState.value.isOnlineChecked) return@setOnClickListener
                 val locationDialog = BottomSheetLocationDialog { selectedItem ->
-                    // 선택된 장소(LocationItem)의 제목을 뷰모델 이벤트로 전달
                     viewModel.updatePlanLocation(selectedItem)
                 }
-                // 다이얼로그 표시
                 locationDialog.show(childFragmentManager, "LocationSelect")
             }
 
@@ -222,6 +215,55 @@ class PlanAddFragment : BaseFragment<FragmentPlanAddBinding, PlanAddFragmentUiSt
         dialog.show()
     }
 
+
+    //출석 정책 날짜 다이얼로그
+    private fun showAttendanceDatePicker(field: AttendanceField) {
+        val cal = field.getDateCal(viewModel.uiState.value)
+        DatePickerDialog(requireContext(), { _, year, month, day ->
+            when (field) {
+                AttendanceField.CHECK_IN_START_DATE -> viewModel.updateCheckInStartDate(year, month, day)
+                AttendanceField.ON_TIME_END_DATE    -> viewModel.updateOnTimeEndDate(year, month, day)
+                AttendanceField.LATE_END_DATE       -> viewModel.updateLateEndDate(year, month, day)
+                else -> {}
+            }
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+    }
+
+    //출석 정책 시간 다이얼로그
+    private fun showAttendanceTimePicker(field: AttendanceField) {
+        val cal = field.getTimeCal(viewModel.uiState.value)
+        val isDarkMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        val themeResId = if (isDarkMode) android.R.style.Theme_Holo_Dialog_NoActionBar
+                         else android.R.style.Theme_Holo_Light_Dialog_NoActionBar
+        val dialog = TimePickerDialog(requireContext(), themeResId, { _, hour, minute ->
+            when (field) {
+                AttendanceField.CHECK_IN_START_TIME -> viewModel.updateCheckInStartTime(hour, minute)
+                AttendanceField.ON_TIME_END_TIME    -> viewModel.updateOnTimeEndTime(hour, minute)
+                AttendanceField.LATE_END_TIME       -> viewModel.updateLateEndTime(hour, minute)
+                else -> {}
+            }
+        }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), false)
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
+    }
+
+    private enum class AttendanceField {
+        CHECK_IN_START_DATE, CHECK_IN_START_TIME,
+        ON_TIME_END_DATE, ON_TIME_END_TIME,
+        LATE_END_DATE, LATE_END_TIME;
+
+        fun getDateCal(state: PlanAddFragmentUiState): Calendar = when (this) {
+            CHECK_IN_START_DATE, CHECK_IN_START_TIME -> state.checkInStartDate
+            ON_TIME_END_DATE, ON_TIME_END_TIME       -> state.onTimeEndDate
+            LATE_END_DATE, LATE_END_TIME             -> state.lateEndDate
+        }
+
+        fun getTimeCal(state: PlanAddFragmentUiState): Calendar = when (this) {
+            CHECK_IN_START_DATE, CHECK_IN_START_TIME -> state.checkInStartTime
+            ON_TIME_END_DATE, ON_TIME_END_TIME       -> state.onTimeEndTime
+            LATE_END_DATE, LATE_END_TIME             -> state.lateEndTime
+        }
+    }
 
     //뒤로가기
     private fun moveBackPressed(){
