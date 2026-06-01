@@ -20,7 +20,8 @@ data class ScheduleDetailResponse(
     @SerializedName("longitude") val longitude: Double?,
     @SerializedName("status") val status: String?,
     @SerializedName("dDay") val dDay: Int?,
-    @SerializedName("requiresAttendanceApproval") val requiresAttendanceApproval: Boolean?
+    @SerializedName("requiresAttendanceApproval") val requiresAttendanceApproval: Boolean?,
+    @SerializedName("participantMemberIds") val participantMemberIds: List<Long>?
 ) {
     companion object {
         fun ScheduleDetailResponse.toModel(): UserCheckAvailable {
@@ -33,10 +34,11 @@ data class ScheduleDetailResponse(
                 startTime = startsAt,
                 endTime = endsAt,
                 status = CheckAvailableStatus.BEFORE,
+                rawStatus = null,
                 latitude = latitude ?: 0.0,
                 longitude = longitude ?: 0.0,
                 address = locationName ?: "",
-                isLocationCertified = null
+                isLocationCertified = null,
             )
         }
 
@@ -60,7 +62,8 @@ data class ScheduleDetailResponse(
                 longitude = longitude?: 0.0,
                 status = status ?: "",
                 dDay = dDay ?: -1,
-                requiresAttendanceApproval = requiresAttendanceApproval ?: false
+                requiresAttendanceApproval = requiresAttendanceApproval ?: false,
+                participantMemberIds = participantMemberIds ?: emptyList()
             )
         }
     }

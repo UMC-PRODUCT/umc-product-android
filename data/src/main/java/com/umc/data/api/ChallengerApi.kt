@@ -1,7 +1,9 @@
 package com.umc.data.api
 
+import com.umc.data.request.challenger.AddChallengerPointRequest
 import com.umc.data.response.challenger.ChallengerCursorResponse
 import com.umc.data.response.challenger.ChallengerResponse
+import com.umc.data.response.member.MemberResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
 import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
@@ -47,4 +49,12 @@ interface ChallengerApi {
     suspend fun addChallengerRecordMember(
         @Body request: ChallengerRecordMemberRequest
     ): ApiResponse<Unit>
+
+    //챌린저 상벌점 부여
+    @POST(Endpoints.Challenger.CHALLENGER_POINT)
+    suspend fun addChallengerPoint(
+        @Path("challengerId") challengerId: Long,
+        @Body request: AddChallengerPointRequest
+    ): ApiResponse<MemberResponse>
 }
+

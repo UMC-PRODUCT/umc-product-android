@@ -19,6 +19,7 @@ import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.PUT
 import retrofit2.http.Query
 
 interface NoticeApi {
@@ -37,6 +38,7 @@ interface NoticeApi {
         const val QUERY_ORGANIZATION_IDS = "organizationIds"
         const val QUERY_STATUS = "status"
         const val QUERY_KEYWORD = "keyword"
+        const val QUERY_NOTICE_TAB = "noticeTab"
     }
 
     // 공지사항 삭제
@@ -55,6 +57,7 @@ interface NoticeApi {
     @GET(Endpoints.Notice.NOTICE)
     suspend fun getNotices(
         @Query(QUERY_GISU_ID) gisuId: Long,
+        @Query(QUERY_NOTICE_TAB) noticeTab: String,
         @Query(QUERY_CHAPTER_ID) chapterId: Long? = null,
         @Query(QUERY_SCHOOL_ID) schoolId: Long? = null,
         @Query(QUERY_PART) part: String? = null,
@@ -89,6 +92,7 @@ interface NoticeApi {
     suspend fun searchNotices(
         @Query(QUERY_KEYWORD) keyword: String = "",
         @Query(QUERY_GISU_ID) gisuId: Long,
+        @Query(QUERY_NOTICE_TAB) noticeTab: String,
         @Query(QUERY_CHAPTER_ID) chapterId: Long? = null,
         @Query(QUERY_SCHOOL_ID) schoolId: Long? = null,
         @Query(QUERY_PART) part: String? = null,
@@ -113,7 +117,7 @@ interface NoticeApi {
     @PATCH(Endpoints.Notice.NOTICE_IMAGES)
     suspend fun updateNoticeImages(
         @Path(PATH_NOTICE_ID) noticeId: Long,
-        @Body request: NoticeUpdateRequest
+        @Body request: NoticeImageRequest
     ): ApiResponse<Unit>
 
     // 공지사항 기본 정보 수정
@@ -156,16 +160,16 @@ interface NoticeApi {
         @Body request: NoticeLinkRequest,
     ): ApiResponse<Unit>
 
-    // 공지사항 이미지 추가
-    @POST(Endpoints.Notice.NOTICE_IMAGES)
-    suspend fun updateNotice(
-        @Path(PATH_NOTICE_ID) noticeId: Long,
-        @Body request: NoticeImageRequest
+    // 투표 응답 제출
+    @POST(Endpoints.Notice.VOTE_RESPONSES)
+    suspend fun submitVoteResponse(
+        @Path(PATH_VOTE_ID) voteId: Long,
+        @Body request: VoteResponseRequest
     ): ApiResponse<Unit>
 
-    // 투표 응답 제출
-    @POST(Endpoints.Survey.VOTE_RESPONSES)
-    suspend fun submitVoteResponse(
+    // 투표 응답 수정
+    @PUT(Endpoints.Notice.VOTE_RESPONSES)
+    suspend fun updateVoteResponse(
         @Path(PATH_VOTE_ID) voteId: Long,
         @Body request: VoteResponseRequest
     ): ApiResponse<Unit>

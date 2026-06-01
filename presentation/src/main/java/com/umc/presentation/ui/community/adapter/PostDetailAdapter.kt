@@ -4,6 +4,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -97,6 +98,7 @@ class PostDetailAdapter(
             fun bind(item: ContentItem) {
                 //번개 게시글 시 상단 포커스
                 binding.item = item
+                val context = binding.root.context
 
                 //번개글 파실 로직
                 val postType = item.category
@@ -122,6 +124,38 @@ class PostDetailAdapter(
                     binding.itemLayoutLightning.visibility = View.GONE
                 }
 
+                //카테고리 색상
+                when(item.category){
+                    CommunityCategoryType.FREE -> {
+                        binding.itemCdvCategory.setUBackgroundColor(ContextCompat.getColor(context, R.color.success100))
+                        binding.itemCdvCategory.setUBorderColor(ContextCompat.getColor(context, R.color.success300))
+                        binding.itemCdvCategory.setTextColor(ContextCompat.getColor(context, R.color.success500))
+                    }
+                    CommunityCategoryType.QUESTION -> {
+                        binding.itemCdvCategory.setUBackgroundColor(ContextCompat.getColor(context, R.color.accent100))
+                        binding.itemCdvCategory.setUBorderColor(ContextCompat.getColor(context, R.color.accent200))
+                        binding.itemCdvCategory.setTextColor(ContextCompat.getColor(context, R.color.accent500))
+                    }
+                    CommunityCategoryType.LIGHTNING -> {
+                        binding.itemCdvCategory.setUBackgroundColor(ContextCompat.getColor(context, R.color.warning100))
+                        binding.itemCdvCategory.setUBorderColor(ContextCompat.getColor(context, R.color.warning300))
+                        binding.itemCdvCategory.setTextColor(ContextCompat.getColor(context, R.color.warning500))
+                    }
+
+                    //임시
+                    CommunityCategoryType.INFORMATION -> {
+                        binding.itemCdvCategory.setUBackgroundColor(ContextCompat.getColor(context, R.color.primary100))
+                        binding.itemCdvCategory.setUBorderColor(ContextCompat.getColor(context, R.color.primary300))
+                        binding.itemCdvCategory.setTextColor(ContextCompat.getColor(context, R.color.primary500))
+                    }
+                    CommunityCategoryType.HABIT -> {
+                        binding.itemCdvCategory.setUBackgroundColor(ContextCompat.getColor(context, R.color.neutral100))
+                        binding.itemCdvCategory.setUBorderColor(ContextCompat.getColor(context, R.color.neutral300))
+                        binding.itemCdvCategory.setTextColor(ContextCompat.getColor(context, R.color.neutral500))
+                    }
+
+                    else -> { }
+                }
 
 
                 Log.d("log_mypage", "작성자: ${item.userProfileImage}")

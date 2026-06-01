@@ -88,6 +88,7 @@ data class ChallengerCursorItemResponse(
             pointSum = if (pointSum < 0) 0.0 else pointSum,
             profileImage = profileImageLink,
             schoolName = schoolName,
+            memberId = memberId
         )
     }
 

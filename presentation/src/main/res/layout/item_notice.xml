@@ -11,107 +11,116 @@
         android:background="@drawable/bg_rect_neutral000_stroke_neutral200_radius12"
         android:padding="16dp">
 
-        <com.umc.presentation.component.UButton
-            android:id="@+id/ubutton_central"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_notice_category"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="visible"
-            app:buttonElevation="0"
-            app:cardBackgroundColor="@color/neutral200"
-            app:contentPaddingBottom="2dp"
-            app:contentPaddingLeft="8dp"
-            app:contentPaddingRight="8dp"
-            app:contentPaddingTop="2dp"
-            app:cornerRadius="4dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:text="중앙"
-            app:textAppearance="@style/Caption1Bold"
-            app:textColor="@color/neutral700" />
+            app:layout_constraintTop_toTopOf="parent">
 
-        <Space
-            android:id="@+id/space_central_chapter"
-            android:layout_width="4dp"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:layout_constraintStart_toEndOf="@id/ubutton_central"
-            app:layout_constraintTop_toTopOf="@id/ubutton_central" />
+            <com.umc.presentation.component.UButton
+                android:id="@+id/ubutton_central"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="visible"
+                app:buttonElevation="0"
+                app:cardBackgroundColor="@color/neutral200"
+                app:contentPaddingBottom="2dp"
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
+                app:contentPaddingTop="2dp"
+                app:cornerRadius="4dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:text="중앙"
+                app:textAppearance="@style/Caption1Bold"
+                app:textColor="@color/neutral700" />
 
-        <com.umc.presentation.component.UButton
-            android:id="@+id/ubutton_chapter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:buttonElevation="0"
-            app:cardBackgroundColor="@color/accent100"
-            app:contentPaddingBottom="2dp"
-            app:contentPaddingLeft="8dp"
-            app:contentPaddingRight="8dp"
-            app:contentPaddingTop="2dp"
-            app:cornerRadius="4dp"
-            app:layout_constraintStart_toEndOf="@id/space_central_chapter"
-            app:layout_constraintTop_toTopOf="parent"
-            app:text="지부"
-            app:textAppearance="@style/Caption1Bold"
-            app:textColor="@color/accent500" />
+            <Space
+                android:id="@+id/space_central_chapter"
+                android:layout_width="4dp"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@id/ubutton_central"
+                app:layout_constraintTop_toTopOf="@id/ubutton_central" />
 
-        <Space
-            android:id="@+id/space_chapter_school"
-            android:layout_width="4dp"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:layout_constraintStart_toEndOf="@id/ubutton_chapter"
-            app:layout_constraintTop_toTopOf="@id/ubutton_chapter" />
+            <com.umc.presentation.component.UButton
+                android:id="@+id/ubutton_chapter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:buttonElevation="0"
+                app:cardBackgroundColor="@color/accent100"
+                app:contentPaddingBottom="2dp"
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
+                app:contentPaddingTop="2dp"
+                app:cornerRadius="4dp"
+                app:layout_constraintStart_toEndOf="@id/space_central_chapter"
+                app:layout_constraintTop_toTopOf="parent"
+                app:text="지부"
+                app:textAppearance="@style/Caption1Bold"
+                app:textColor="@color/accent500" />
 
-        <com.umc.presentation.component.UButton
-            android:id="@+id/ubutton_school"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:buttonElevation="0"
-            app:cardBackgroundColor="@color/primary100"
-            app:contentPaddingBottom="2dp"
-            app:contentPaddingLeft="8dp"
-            app:contentPaddingRight="8dp"
-            app:contentPaddingTop="2dp"
-            app:cornerRadius="4dp"
-            app:layout_constraintStart_toEndOf="@id/space_chapter_school"
-            app:layout_constraintTop_toTopOf="parent"
-            app:text="교내"
-            app:textAppearance="@style/Caption1Bold"
-            app:textColor="@color/primary600" />
+            <Space
+                android:id="@+id/space_chapter_school"
+                android:layout_width="4dp"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@id/ubutton_chapter"
+                app:layout_constraintTop_toTopOf="@id/ubutton_chapter" />
 
-        <Space
-            android:id="@+id/space_school_part"
-            android:layout_width="4dp"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:layout_constraintStart_toEndOf="@id/ubutton_school"
-            app:layout_constraintTop_toTopOf="@id/ubutton_school" />
+            <com.umc.presentation.component.UButton
+                android:id="@+id/ubutton_school"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:buttonElevation="0"
+                app:cardBackgroundColor="@color/primary100"
+                app:contentPaddingBottom="2dp"
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
+                app:contentPaddingTop="2dp"
+                app:cornerRadius="4dp"
+                app:layout_constraintStart_toEndOf="@id/space_chapter_school"
+                app:layout_constraintTop_toTopOf="parent"
+                app:text="교내"
+                app:textAppearance="@style/Caption1Bold"
+                app:textColor="@color/primary600" />
 
-        <com.umc.presentation.component.UButton
-            android:id="@+id/ubutton_part"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:buttonElevation="0"
-            app:cardBackgroundColor="@color/success100"
-            app:contentPaddingBottom="2dp"
-            app:contentPaddingLeft="8dp"
-            app:contentPaddingRight="8dp"
-            app:contentPaddingTop="2dp"
-            app:cornerRadius="4dp"
-            app:layout_constraintStart_toEndOf="@id/space_school_part"
-            app:layout_constraintTop_toTopOf="parent"
-            app:text="파트"
-            app:textAppearance="@style/Caption1Bold"
-            app:textColor="@color/success700" />
+            <Space
+                android:id="@+id/space_school_part"
+                android:layout_width="4dp"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@id/ubutton_school"
+                app:layout_constraintTop_toTopOf="@id/ubutton_school" />
+
+            <com.umc.presentation.component.UButton
+                android:id="@+id/ubutton_part"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:buttonElevation="0"
+                app:cardBackgroundColor="@color/success100"
+                app:contentPaddingBottom="2dp"
+                app:contentPaddingLeft="8dp"
+                app:contentPaddingRight="8dp"
+                app:contentPaddingTop="2dp"
+                app:cornerRadius="4dp"
+                app:layout_constraintStart_toEndOf="@id/space_school_part"
+                app:layout_constraintTop_toTopOf="parent"
+                app:text="파트"
+                app:textAppearance="@style/Caption1Bold"
+                app:textColor="@color/success700" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <ImageView
             android:id="@+id/image_notification"
             app:layout_constraintEnd_toStartOf="@id/view_new"
-            app:layout_constraintTop_toTopOf="@id/ubutton_central"
-            app:layout_constraintBottom_toBottomOf="@id/ubutton_central"
+            app:layout_constraintTop_toTopOf="@id/layout_notice_category"
+            app:layout_constraintBottom_toBottomOf="@id/layout_notice_category"
             android:src="@drawable/ic_notice_notification"
             android:layout_marginEnd="6dp"
             android:layout_width="wrap_content"
@@ -143,8 +152,8 @@
         
         <View
             android:id="@+id/view_new"
-            app:layout_constraintTop_toTopOf="@id/ubutton_central"
-            app:layout_constraintBottom_toBottomOf="@id/ubutton_central"
+            app:layout_constraintTop_toTopOf="@id/layout_notice_category"
+            app:layout_constraintBottom_toBottomOf="@id/layout_notice_category"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginEnd="6dp"
             android:background="@drawable/bg_circle_accent500"
@@ -161,7 +170,7 @@
             android:text="중앙 해커톤 팀 빌딩 관련 공지"
             android:textAppearance="@style/BodyBold"
             android:textColor="@color/neutral800"
-            app:layout_constraintTop_toBottomOf="@id/ubutton_central"
+            app:layout_constraintTop_toBottomOf="@id/layout_notice_category"
             app:layout_constraintStart_toStartOf="parent"/>
 
         <TextView

@@ -80,23 +80,28 @@ class CommunityFragment : BaseFragment<FragmentCommunityBinding, CommunityFragme
 
 
     private fun setViewPager(){
-        val tabTitles = listOf(getString(R.string.all),
+        val tabTitles = listOf(
+            getString(R.string.all),
+            "정보",
             getString(R.string.question),
-            "번개모임",
+            "자유",
+            "번개",
             getString(R.string.community_top)
         )
 
         val pagerAdapter = object : FragmentStateAdapter(this) {
-            override fun getItemCount(): Int = 4
+            override fun getItemCount(): Int = tabTitles.size
             override fun createFragment(position: Int): Fragment {
                 return when (position) {
                     //명예의 전당
-                    3 -> TopPostFragment()
+                    5 -> TopPostFragment()
                     else -> {
                         //각 탭 이동
                         val type = when(position) {
                             0 -> ContentType.ALL
-                            1 -> ContentType.QUESTION
+                            1 -> ContentType.INFORMATION
+                            2 -> ContentType.QUESTION
+                            3 -> ContentType.FREE
                             else -> ContentType.LIGHTNING
                         }
                         CommunityListFragment.newInstance(type)

@@ -52,7 +52,11 @@ class AdminStudyGroupFragment :
             onClickAddSchedule = { item ->
                 findNavController().navigate(
                     R.id.action_to_schedule_add,
-                    bundleOf("groupId" to item.groupId)
+                    bundleOf(
+                        "groupId" to item.groupId,
+                        "groupTitle" to item.title,
+                        "groupPart" to item.partLabel,
+                    )
                 )
             },
             onClickAddMember = { item ->
@@ -187,11 +191,12 @@ class AdminStudyGroupFragment :
         )
 
         b.etGroupName.setText(item.title)
-        b.tvSelectedPart.text = item.partLabel.ifBlank { "Web" }
+        //b.tvSelectedPart.text = item.partLabel.ifBlank { "Web" }
 
         var isPartDropdownOpen = false
         val parts = UserPart.getFilterLabels()
 
+        /*
         val dropDownAdapter = DropDownAdapter(object : DropDownAdapter.DropDownDelegate {
             override fun onClickItem(text: String) {
                 b.tvSelectedPart.text = text
@@ -200,14 +205,17 @@ class AdminStudyGroupFragment :
                 b.ivArrow.animate().rotation(0f).setDuration(120).start()
             }
         })
+        */
+
 
         b.rvPartDropdown.apply {
-            adapter = dropDownAdapter
+            //adapter = dropDownAdapter
             layoutManager = LinearLayoutManager(context)
             itemAnimator = null
         }
-        dropDownAdapter.submitList(parts)
+        //dropDownAdapter.submitList(parts)
 
+        /*
         b.clPartDropdown.setOnClickListener {
             isPartDropdownOpen = !isPartDropdownOpen
             b.cardPartDropdown.visibility = if (isPartDropdownOpen) View.VISIBLE else View.GONE
@@ -223,6 +231,8 @@ class AdminStudyGroupFragment :
             }
         }
 
+         */
+
         b.ivClose.setOnClickListener { dialog.dismiss() }
         b.btnCancel.setOnClickListener { dialog.dismiss() }
 
@@ -230,13 +240,12 @@ class AdminStudyGroupFragment :
             val newName = b.etGroupName.getText().trim()
             if (newName.isBlank()) return@setOnClickListener
 
-            val uiPartLabel = b.tvSelectedPart.text.toString().trim()
-            val partEnum = UserPart.from(uiPartLabel)
-            if (partEnum == UserPart.UNKNOWN) return@setOnClickListener
+            //val uiPartLabel = b.tvSelectedPart.text.toString().trim()
+            //val partEnum = UserPart.from(uiPartLabel)
+            //if (partEnum == UserPart.UNKNOWN) return@setOnClickListener
 
             val req = EditStudyGroupRequest(
-                name = newName,
-                part = partEnum.name
+                name = newName
             )
 
             viewModel.editGroup(item.groupId, req)

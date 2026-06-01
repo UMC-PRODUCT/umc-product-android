@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="16dp"
-            android:text="@string/sign_up_fail_prev_user_enter"
+            android:text="@string/sign_up_fail_prev_user"
             android:textAppearance="@style/Title1Bold"
             android:textColor="@color/neutral800" />
 

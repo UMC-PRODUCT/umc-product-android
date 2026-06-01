@@ -50,6 +50,8 @@ object UserChallengerBindingAdapters {
             CheckHistoryStatus.PRESENT -> R.color.success500 to R.color.success100
             CheckHistoryStatus.LATE -> R.color.warning500 to R.color.warning100
             CheckHistoryStatus.ABSENT -> R.color.danger500 to R.color.danger100
+            CheckHistoryStatus.EXCUSED -> R.color.success500 to R.color.success100
+            CheckHistoryStatus.PRESENT_PENDING -> R.color.neutral600 to R.color.neutral100
         }
 
         val textColor = ContextCompat.getColor(view.context, textColorRes)

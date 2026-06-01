@@ -207,10 +207,10 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        app:cardBackgroundColor="@color/neutral000"
+                        app:cardBackgroundColor="@{vm.uiState.isOnlineChecked ? @color/neutral100 : @color/neutral000}"
                         app:cardCornerRadius="8dp"
                         app:cardElevation="0dp"
-                        app:strokeColor="@color/neutral300"
+                        app:strokeColor="@{vm.uiState.isOnlineChecked ? @color/neutral200 : @color/neutral300}"
                         app:strokeWidth="1dp"
                         app:layout_constraintTop_toBottomOf="@id/planadd_tv_plan_title_location"
                         app:layout_constraintStart_toStartOf="@id/planadd_tv_plan_title_location"
@@ -229,7 +229,7 @@
                                 android:textAppearance="@style/Body"
                                 android:layout_marginEnd="8dp"
                                 android:text='@{vm.uiState.planLocation.empty ? @string/home_plan_add_plan_location_placeholder : vm.uiState.planLocation}'
-                                android:textColor='@{vm.uiState.planLocation.empty ? @color/neutral400 : @color/neutral800}'
+                                android:textColor='@{vm.uiState.isOnlineChecked ? @color/neutral300 : (vm.uiState.planLocation.empty ? @color/neutral400 : @color/neutral800)}'
                                 app:layout_constraintTop_toTopOf="parent"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"
@@ -241,6 +241,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:src="@drawable/ic_arrow_next"
+                                android:tint="@{vm.uiState.isOnlineChecked ? @color/neutral300 : @color/neutral600}"
                                 app:layout_constraintTop_toTopOf="parent"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintEnd_toEndOf="parent"/>
@@ -251,6 +252,41 @@
 
                     </com.google.android.material.card.MaterialCardView>
 
+                    <!-- 비대면 체크박스 -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/planadd_layout_online_check"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@{vm.uiState.isOnlineChecked ? @drawable/bg_rectangle_primary100_radius8 : @drawable/bg_rectangle_neutral100_radius8}"
+                        android:padding="8dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_plan_location">
+
+                        <ImageView
+                            android:id="@+id/planadd_imv_online_check"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@{vm.uiState.isOnlineChecked ? @drawable/ic_check_box : @drawable/ic_check_box_empty}"
+                            android:tint="@{vm.uiState.isOnlineChecked ? @color/primary500 : @color/neutral400}"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"/>
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/planadd_online_check_label"
+                            android:textAppearance="@style/Subheadline"
+                            android:textColor="@{vm.uiState.isOnlineChecked ? @color/primary500 : @color/neutral600}"
+                            app:layout_constraintStart_toEndOf="@id/planadd_imv_online_check"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"/>
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
                     <!--일시-->
                     <TextView
@@ -262,7 +298,7 @@
                         android:textAppearance="@style/HeadlineBold"
                         android:textColor="@color/neutral800"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_plan_location" />
+                        app:layout_constraintTop_toBottomOf="@id/planadd_layout_online_check" />
 
 
                 <com.google.android.material.card.MaterialCardView
@@ -478,7 +514,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="32dp"
                         android:text="@string/home_plan_add_plan_attend"
-                        android:visibility="@{vm.uiState.editMode == true ? View.GONE : View.VISIBLE}"
                         android:textAppearance="@style/HeadlineBold"
                         android:textColor="@color/neutral800"
                         app:layout_constraintStart_toStartOf="parent"
@@ -491,7 +526,6 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:visibility="@{vm.uiState.editMode == true ? View.GONE : View.VISIBLE}"
                         app:cardBackgroundColor="@color/neutral000"
                         app:cardCornerRadius="8dp"
                         app:cardElevation="0dp"
@@ -536,41 +570,235 @@
 
                     </com.google.android.material.card.MaterialCardView>
 
+                    <!-- 출석부 함께 생성 체크박스 (운영진 전용) -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/planadd_layout_attendance_check"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:visibility="@{vm.uiState.isManager ? View.VISIBLE : View.GONE}"
+                        android:background="@{vm.uiState.isAttendanceChecked ? @drawable/bg_rectangle_primary100_radius8 : @drawable/bg_rectangle_neutral100_radius8}"
+                        android:padding="8dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_participant">
 
+                        <ImageView
+                            android:id="@+id/planadd_imv_attendance_check"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@{vm.uiState.isAttendanceChecked ? @drawable/ic_check_box : @drawable/ic_check_box_empty}"
+                            android:tint="@{vm.uiState.isAttendanceChecked ? @color/primary500 : @color/neutral400}"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"/>
 
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/planadd_attendance_check_label"
+                            android:textAppearance="@style/Subheadline"
+                            android:textColor="@{vm.uiState.isAttendanceChecked ? @color/primary500 : @color/neutral600}"
+                            app:layout_constraintStart_toEndOf="@id/planadd_imv_attendance_check"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"/>
 
-                    <androidx.constraintlayout.widget.Guideline
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <!-- 출석 정책 인라인 카드 (운영진 + 체크된 경우) -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/planadd_cdv_attendance_policy"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:visibility="@{vm.uiState.isManager &amp;&amp; vm.uiState.isAttendanceChecked ? View.VISIBLE : View.GONE}"
+                        app:cardBackgroundColor="@color/neutral000"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="@color/neutral300"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_layout_attendance_check">
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingVertical="16dp">
+
+                            <!-- 출석 시작 -->
+                            <TextView
+                                android:id="@+id/planadd_tv_check_in_start"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/attendance_check_in_start"
+                                android:textColor="@color/neutral600"
+                                android:textAppearance="@style/Callout"
+                                android:layout_marginStart="16dp"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="@id/planadd_chip_check_in_start_date"
+                                app:layout_constraintBottom_toBottomOf="@id/planadd_chip_check_in_start_date"/>
+
+                            <com.umc.presentation.component.UChip
+                                android:id="@+id/planadd_chip_check_in_start_date"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="8dp"
+                                app:text="@{vm.uiState.checkInStartDateText}"
+                                app:backgroundColor="@color/neutral000"
+                                app:pressedColor="@color/neutral300"
+                                app:borderColor="@color/neutral200"
+                                app:borderWidth="1dp"
+                                app:textAppearance="@style/SubheadlineBold"
+                                app:textColor="@color/neutral500"
+                                app:layout_constraintEnd_toStartOf="@id/planadd_chip_check_in_start_time"
+                                app:layout_constraintTop_toTopOf="parent"/>
+
+                            <com.umc.presentation.component.UChip
+                                android:id="@+id/planadd_chip_check_in_start_time"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="16dp"
+                                app:text="@{vm.uiState.checkInStartTimeText}"
+                                app:backgroundColor="@color/neutral000"
+                                app:pressedColor="@color/neutral300"
+                                app:borderColor="@color/neutral200"
+                                app:borderWidth="1dp"
+                                app:textAppearance="@style/SubheadlineBold"
+                                app:textColor="@color/neutral500"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"/>
+
+                            <!-- 구분선 1 -->
+                            <View
+                                android:id="@+id/planadd_divider_attendance_1"
+                                android:layout_width="0dp"
+                                android:layout_height="1dp"
+                                android:background="@color/neutral300"
+                                android:layout_marginTop="16dp"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toBottomOf="@id/planadd_chip_check_in_start_date"/>
+
+                            <!-- 출석 종료 -->
+                            <TextView
+                                android:id="@+id/planadd_tv_on_time_end"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/attendance_on_time_end"
+                                android:textColor="@color/neutral600"
+                                android:textAppearance="@style/Callout"
+                                android:layout_marginStart="16dp"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="@id/planadd_chip_on_time_end_date"
+                                app:layout_constraintBottom_toBottomOf="@id/planadd_chip_on_time_end_date"/>
+
+                            <com.umc.presentation.component.UChip
+                                android:id="@+id/planadd_chip_on_time_end_date"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="8dp"
+                                android:layout_marginTop="16dp"
+                                app:text="@{vm.uiState.onTimeEndDateText}"
+                                app:backgroundColor="@color/neutral000"
+                                app:pressedColor="@color/neutral300"
+                                app:borderColor="@color/neutral200"
+                                app:borderWidth="1dp"
+                                app:textAppearance="@style/SubheadlineBold"
+                                app:textColor="@color/neutral500"
+                                app:layout_constraintEnd_toStartOf="@id/planadd_chip_on_time_end_time"
+                                app:layout_constraintTop_toBottomOf="@id/planadd_divider_attendance_1"/>
+
+                            <com.umc.presentation.component.UChip
+                                android:id="@+id/planadd_chip_on_time_end_time"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="16dp"
+                                android:layout_marginTop="16dp"
+                                app:text="@{vm.uiState.onTimeEndTimeText}"
+                                app:backgroundColor="@color/neutral000"
+                                app:pressedColor="@color/neutral300"
+                                app:borderColor="@color/neutral200"
+                                app:borderWidth="1dp"
+                                app:textAppearance="@style/SubheadlineBold"
+                                app:textColor="@color/neutral500"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toBottomOf="@id/planadd_divider_attendance_1"/>
+
+                            <!-- 구분선 2 -->
+                            <View
+                                android:id="@+id/planadd_divider_attendance_2"
+                                android:layout_width="0dp"
+                                android:layout_height="1dp"
+                                android:background="@color/neutral300"
+                                android:layout_marginTop="16dp"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toBottomOf="@id/planadd_chip_on_time_end_date"/>
+
+                            <!-- 지각 인정 -->
+                            <TextView
+                                android:id="@+id/planadd_tv_late_end"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/attendance_late_end"
+                                android:textColor="@color/neutral600"
+                                android:textAppearance="@style/Callout"
+                                android:layout_marginStart="16dp"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="@id/planadd_chip_late_end_date"
+                                app:layout_constraintBottom_toBottomOf="@id/planadd_chip_late_end_date"/>
+
+                            <com.umc.presentation.component.UChip
+                                android:id="@+id/planadd_chip_late_end_date"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="8dp"
+                                android:layout_marginTop="16dp"
+                                app:text="@{vm.uiState.lateEndDateText}"
+                                app:backgroundColor="@color/neutral000"
+                                app:pressedColor="@color/neutral300"
+                                app:borderColor="@color/neutral200"
+                                app:borderWidth="1dp"
+                                app:textAppearance="@style/SubheadlineBold"
+                                app:textColor="@color/neutral500"
+                                app:layout_constraintEnd_toStartOf="@id/planadd_chip_late_end_time"
+                                app:layout_constraintTop_toBottomOf="@id/planadd_divider_attendance_2"
+                                app:layout_constraintBottom_toBottomOf="parent"/>
+
+                            <com.umc.presentation.component.UChip
+                                android:id="@+id/planadd_chip_late_end_time"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="16dp"
+                                android:layout_marginTop="16dp"
+                                app:text="@{vm.uiState.lateEndTimeText}"
+                                app:backgroundColor="@color/neutral000"
+                                app:pressedColor="@color/neutral300"
+                                app:borderColor="@color/neutral200"
+                                app:borderWidth="1dp"
+                                app:textAppearance="@style/SubheadlineBold"
+                                app:textColor="@color/neutral500"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toBottomOf="@id/planadd_divider_attendance_2"/>
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <androidx.constraintlayout.widget.Barrier
+                        android:id="@+id/planadd_barrier_bottom_content"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/planadd_guideline_bottom"
-                        app:layout_constraintGuide_percent="0.5"
-                        android:orientation="vertical"/>
-
-                    <com.umc.presentation.component.UButton
-                        android:id="@+id/planadd_btn_cancel_plan"
-                        android:layout_width="0dp"
-                        android:layout_height="52dp"
-                        android:layout_marginTop="48dp"
-                        android:layout_marginEnd="8dp"
-                        app:cardBackgroundColor="@color/neutral000"
-                        app:cornerRadius="8dp"
-                        app:pressedColor="@color/neutral200"
-                        app:text="@string/cancel"
-                        app:textAppearance="@style/HeadlineBold"
-                        app:textColor="@color/neutral800"
-                        app:borderWidth="1dp"
-                        app:borderColor="@color/neutral300"
-                        app:layout_constraintEnd_toStartOf="@id/planadd_guideline_bottom"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_participant"
-                        />
+                        app:barrierDirection="bottom"
+                        app:constraint_referenced_ids="planadd_cdv_search_participant,planadd_layout_attendance_check,planadd_cdv_attendance_policy"/>
 
                     <com.umc.presentation.component.UButton
                         android:id="@+id/planadd_btn_register_plan"
                         android:layout_width="0dp"
                         android:layout_height="52dp"
                         android:layout_marginTop="48dp"
-                        android:layout_marginStart="8dp"
                         android:visibility="@{vm.uiState.registerOk == true ? View.VISIBLE : View.GONE}"
                         app:cardBackgroundColor="@color/primary500"
                         app:cornerRadius="8dp"
@@ -578,9 +806,9 @@
                         app:text="@{vm.uiState.editMode == false ? @string/home_plan_add_plan_register : @string/home_plan_add_plan_update}"
                         app:textAppearance="@style/HeadlineBold"
                         app:textColor="@color/neutral000"
-                        app:layout_constraintStart_toEndOf="@id/planadd_guideline_bottom"
+                        app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_participant"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_barrier_bottom_content"
                         />
 
                     <com.umc.presentation.component.UButton
@@ -588,7 +816,6 @@
                         android:layout_width="0dp"
                         android:layout_height="52dp"
                         android:layout_marginTop="48dp"
-                        android:layout_marginStart="8dp"
                         android:visibility="@{vm.uiState.registerOk == false ? View.VISIBLE : View.GONE}"
                         app:cardBackgroundColor="@color/neutral300"
                         app:cornerRadius="8dp"
@@ -596,9 +823,9 @@
                         app:text="@{vm.uiState.editMode == false ? @string/home_plan_add_plan_register : @string/home_plan_add_plan_update}"
                         app:textAppearance="@style/HeadlineBold"
                         app:textColor="@color/neutral000"
-                        app:layout_constraintStart_toEndOf="@id/planadd_guideline_bottom"
+                        app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/planadd_cdv_search_participant"
+                        app:layout_constraintTop_toBottomOf="@id/planadd_barrier_bottom_content"
                         />
 
 

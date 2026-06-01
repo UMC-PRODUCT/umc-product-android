@@ -37,6 +37,15 @@
     <string name="home_plan_add_dialog_add_attendance_content">출석부와 함께 일정을 생성하시겠습니까?</string>
     <string name="home_plan_add_dialog_add_attendance_yes">네, 출석부도 같이 생성할게요</string>
     <string name="home_plan_add_dialog_add_attendance_no">아니요, 일정만 생성할게요</string>
+    <string name="attendance_policy_dialog_title">출석 정책 설정</string>
+    <string name="attendance_check_in_start">출석 시작</string>
+    <string name="attendance_on_time_end">출석 종료</string>
+    <string name="attendance_late_end">지각 인정</string>
+    <string name="attendance_policy_confirm">등록하기</string>
+    <string name="attendance_date_placeholder">날짜 선택</string>
+    <string name="attendance_time_placeholder">시간 선택</string>
+    <string name="planadd_attendance_check_label">출석부도 함께 생성하기</string>
+    <string name="planadd_online_check_label">비대면으로 진행하고 싶어요</string>
 
     <!-- mypage -->
     <string name="mypage_title">마이페이지</string>
@@ -197,8 +206,7 @@
     <string name="sign_up_fail_title">UMC 챌린저 인증 실패</string>
     <string name="sign_up_fail_content">죄송합니다. 입력하신 정보로 등록된\nUMC 챌린저 정보를 찾을 수 없습니다.</string>
     <string name="sign_up_fail_homepage">UMC 공식 홈페이지 방문</string>
-    <string name="sign_up_fail_prev_user">기존에 활동하셨던 챌린저인가요?</string>
-    <string name="sign_up_fail_prev_user_enter">기존에 활동하셨던\n챌린저인가요?</string>
+    <string name="sign_up_fail_prev_user">UMC 챌린저 인증하기</string>
     <string name="sign_up_fail_prev_user_hint">인증코드를 입력하여 서비스를 이용하실 수 있어요</string>
     <string name="sign_up_fail_qa_email">카카오톡으로 문의하기</string>
 
@@ -274,10 +282,14 @@
     <string name="notice_write_anonymity">익명 투표</string>
     <string name="notice_detail_about_link_title">관련 링크 바로가기</string>
     <string name="notice_detail_vote">투표하기</string>
+    <string name="notice_detail_vote_edit">투표 수정</string>
     <string name="notice_detail_unconfirmed_people_check">미확인 인원 확인하기</string>
     <string name="notice_detail_confirmed_people_check">수신 확인 현황</string>
     <string name="notice_detail_now_confirmed_people">공지 열람 현황</string>
     <string name="notice_detail_send_notification">재알림 보내기</string>
+    <string name="notice_vote_participants_title">투표 현황</string>
+    <string name="notice_vote_participants_empty">참여자가 없습니다</string>
+    <string name="notice_vote_people_count">%1$d명</string>
 
     <!-- Dialog -->
     <string name="common_cancel">취소</string>
@@ -285,6 +297,7 @@
     <string name="common_approve">승인하기</string>
     <string name="common_reject">반려하기</string>
     <string name="common_submit">제출하기</string>
+    <string name="common_back">뒤로가기</string>
 
     <string name="admin_approve_title">출석 요청을 승인하시겠습니까?</string>
     <string name="admin_reject_title">출석 요청을 반려하시겠습니까?</string>
@@ -299,7 +312,7 @@
 
     <!-- Chalenger Dialog -->
     <string name="challenger_info_generation_label">활동 기수</string>
-    <string name="challenger_info_warning_label">누적 경고</string>
+    <string name="challenger_info_warning_label">총점수</string>
     <string name="challenger_info_history_label">출석/활동 기록</string>
     <string name="challenger_info_format_generation">%d기</string>
 
@@ -315,6 +328,22 @@
     <string name="challenger_manage_action_edit_history">기록 수정</string>
 
     <string name="challenger_manage_reason_placeholder">사유를 입력하세요</string>
+
+
+    <!--reward dialog-->
+    <string name="reward_etc_title">기타 상벌점 부여하기</string>
+    <string name="reward_etc_content">기타 상벌점 사유와 점수를 입력해 주세요.</string>
+    <string name="reward">상점</string>
+    <string name="punish">벌점</string>
+    <string name="reward_etc_reason">사유</string>
+    <string name="reward_title">상점 부여하기</string>
+    <string name="reward_etc_placeholder">사유를 입력해주세요</string>
+    <string name="reward_content">챌린저의 활동 내역에 맞는 상점 항목을 선택해 주세요.</string>
+    <string name="punish_title">벌점 부여하기</string>
+    <string name="punish_content">챌린저의 활동 내역에 맞는 벌점 항목을 선택해 주세요.</string>
+    <string name="memo">메모</string>
+    <string name="memo_placeholder">메모를 입력해주세요.</string>
+    <string name="reward_submit">등록하기</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

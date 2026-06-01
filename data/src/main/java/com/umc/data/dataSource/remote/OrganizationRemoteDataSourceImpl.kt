@@ -3,6 +3,7 @@ package com.umc.data.dataSource.remote
 import com.umc.data.api.OrganizationApi
 import com.umc.data.dataSource.OrganizationDataSource
 import com.umc.data.dataSource.base.apiCall
+import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.response.organization.*
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.organization.*
@@ -18,6 +19,14 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun deleteStudyGroup(groupId: Long): ApiState<Unit> {
         return apiCall { organizationApi.deleteStudyGroup(groupId) }
+    }
+
+    override suspend fun deleteStudyGroupMember(studyGroupId: Long, memberId: Long): ApiState<Unit> {
+        return apiCall { organizationApi.deleteStudyGroupMember(studyGroupId, memberId)  }
+    }
+
+    override suspend fun deleteStudyGroupMentor(studyGroupId: Long, mentorId: Long): ApiState<Unit> {
+        return apiCall { organizationApi.deleteStudyGroupMentor(studyGroupId, mentorId) }
     }
 
     override suspend fun deleteGisu(gisuId: Int): ApiState<Unit> {
@@ -87,6 +96,14 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
         return apiCall { organizationApi.editGroup(groupId, request) }
     }
 
+    override suspend fun addStudyGroupMember(studyGroupId: Long, memberId: Long): ApiState<Unit> {
+        return apiCall { organizationApi.addStudyGroupMember(studyGroupId, memberId) }
+    }
+
+    override suspend fun addStudyGroupMentor(studyGroupId: Long, mentorId: Long): ApiState<Unit> {
+        return apiCall { organizationApi.addStudyGroupMentor(studyGroupId, mentorId) }
+    }
+
     override suspend fun editSchool(schoolId: Int, request: EditSchoolRequest): ApiState<Unit> {
         return apiCall { organizationApi.editSchool(schoolId, request) }
     }
@@ -128,5 +145,9 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun getGisuInfo(gisuId: Long): ApiState<GisuInfoResponse> {
         return apiCall { organizationApi.getGisuInfo(gisuId) }
+    }
+
+    override suspend fun createStudyGroupSchedule(request: CreateStudyGroupScheduleRequest): ApiState<Long> {
+        return apiCall { organizationApi.createStudyGroupSchedule(request) }
     }
 }

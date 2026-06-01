@@ -29,11 +29,19 @@ data class NoticeVote(
     val mySelectedOptionIds: List<Long> = emptyList()
 )
 
+data class NoticeVoteParticipant(
+    val memberId: Long = -1L,
+    val nickname: String = "",
+    val name: String = "",
+    val profileImageUrl: String = ""
+)
+
 data class NoticeVoteOption(
     val optionId: Long = -1L,
     val content: String = "",
     val voteCount: Int = 0,
-    val voteRate: Double = 0.0
+    val voteRate: Double = 0.0,
+    val selectedMemberIds: List<Long> = emptyList()
 )
 
 data class NoticeImage(

@@ -2,36 +2,46 @@ package com.umc.data.repository.schedule
 
 import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.request.schedule.CreateScheduleRequest
-import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
-import com.umc.data.response.schedule.ScheduleListResponse.Companion.toDomain
-import com.umc.data.response.schedule.ScheduleMonthResponse.Companion.toDomain
+import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse.Companion.toAdminDomain
+import com.umc.data.response.schedule.ScheduleCapabilitiesResponse.Companion.toDomain
+import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toModel
+import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toMonthDomain
+import com.umc.data.response.schedule.ScheduleMeResponse.Companion.toPlanDetailDomain
+import com.umc.domain.model.act.check.AdminPendingUser
+import com.umc.domain.model.act.check.AdminSessionCheck
+import com.umc.domain.model.home.schedule.ScheduleCapabilities
+import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
-import com.umc.domain.model.home.schedule.ScheduleListModel
-import com.umc.domain.model.home.schedule.ScheduleMonthModel
-import com.umc.domain.model.act.check.AdminSessionCheck
-import com.umc.data.response.schedule.ScheduleDetailResponse.Companion.toModel
-import com.umc.data.response.schedule.ScheduleListResponse.Companion.toAdminDomain
-import com.umc.data.response.schedule.ScheduleDetailResponse.Companion.toPlanDetailDomain
-import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.home.schedule.CreateSchedule
-import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
+import com.umc.domain.model.home.schedule.ScheduleMonthModel
 import com.umc.domain.model.home.schedule.UpdateSchedule
-import com.umc.domain.model.request.schedule.UpdateLocationRequest
+import com.umc.data.request.schedule.DecideAttendanceRequest
+import com.umc.data.request.schedule.ExcuseAttendanceRequest
+import com.umc.data.request.schedule.ScheduleAttendanceRequest
+import com.umc.domain.model.act.check.AttendanceDecision
 import com.umc.domain.repository.schedule.ScheduleRepository
+import java.time.YearMonth
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
 
 class ScheduleRepositoryImpl @Inject constructor(
     private val scheduleRemoteDataSource: ScheduleRemoteDataSource
 ) : ScheduleRepository {
 
-    //일정 리스트 가져오기
-    override suspend fun getScheduleList(): ApiState<List<ScheduleListModel>> {
-        return scheduleRemoteDataSource.getScheduleList().map { responseList ->
-            responseList.map { it.toDomain() }
-        }
+    private val utcIsoFormatter = DateTimeFormatter
+        .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        .withZone(ZoneOffset.UTC)
+
+    //일정 생성·수정 권한 조회
+    override suspend fun getScheduleCapabilities(): ApiState<ScheduleCapabilities> {
+        return scheduleRemoteDataSource.getScheduleCapabilities().map { it.toDomain() }
     }
 
     //일정 상세 정보 가져오기 (홈 화면 -> 일정 상세)
@@ -41,63 +51,77 @@ class ScheduleRepositoryImpl @Inject constructor(
 
     //일정 상세 정보 가져오기 (활동 탭)
     override suspend fun getScheduleDetail(scheduleId: Long): ApiState<UserCheckAvailable> {
-        return scheduleRemoteDataSource.getScheduleDetail(scheduleId.toLong()).map { response ->
+        return scheduleRemoteDataSource.getScheduleDetail(scheduleId).map { response ->
             response.toModel()
         }
     }
 
-    //월별 일정 조회
+    //월별 일정 조회 - 로컬 시간대 기준 해당 월의 시작/끝을 UTC로 변환해 조회
     override suspend fun getMonthSchedule(
         year: Int,
         month: Int
     ): ApiState<List<ScheduleMonthModel>> {
-        return scheduleRemoteDataSource.getMonthSchedule(year, month).map { responseList ->
-            responseList.map { it.toDomain() }
+        val (from, to) = monthToUtcRange(year, month)
+        return scheduleRemoteDataSource.getSchedules(from, to, isAttendanceRequired = false).map { list ->
+            list.map { it.toMonthDomain() }
         }
     }
 
-    //관리자 일정 리스트 가져오기
-    override suspend fun getAdminScheduleList(): ApiState<List<AdminSessionCheck>> {
-        return scheduleRemoteDataSource.getScheduleList().map { responseList ->
-            responseList.map { it.toAdminDomain() }
+    // 출석 가능 세션 조회 (true) / 이력 조회 (false) - 현재 월 기준
+    override suspend fun getAttendanceAvailableSessions(isAttendanceRequired: Boolean): ApiState<List<UserCheckAvailable>> {
+        val now = ZonedDateTime.now(ZoneId.systemDefault())
+        val (from, to) = monthToUtcRange(now.year, now.monthValue)
+        return scheduleRemoteDataSource.getSchedules(from, to, isAttendanceRequired).map { list ->
+            list.map { it.toModel() }
         }
     }
 
     //일정 생성하기
     override suspend fun createSchedule(request: CreateSchedule): ApiState<Long> {
-        val request = CreateScheduleRequest(
+        val req = CreateScheduleRequest(
             name = request.name,
+            description = request.description,
+            tags = request.tags,
             startsAt = request.startsAt,
             endsAt = request.endsAt,
-            isAllDay = request.isAllDay,
-            locationName = request.locationName,
-            latitude = request.latitude,
-            longitude = request.longitude,
-            description = request.description,
-            participantMemberIds = request.participantMemberIds,
-            tags = request.tags,
-            gisuId = request.gisuId,
-            requiresApproval = request.requiresApproval
+            location = request.location?.let {
+                CreateScheduleRequest.LocationRequest(
+                    latitude = it.latitude,
+                    longitude = it.longitude,
+                    locationName = it.locationName
+                )
+            },
+            attendancePolicy = request.attendancePolicy?.let {
+                CreateScheduleRequest.AttendancePolicyRequest(
+                    checkInStartAt = it.checkInStartAt,
+                    onTimeEndAt = it.onTimeEndAt,
+                    lateEndAt = it.lateEndAt
+                )
+            },
+            participantMemberIds = request.participantMemberIds
         )
-        return scheduleRemoteDataSource.createScheduleWithAttendance(request).map {
-            it.toLong()
-        }
+        return scheduleRemoteDataSource.createSchedule(req)
     }
 
     //일정 수정하기
     override suspend fun updateSchedule(scheduleId: Long, request: UpdateSchedule): ApiState<Unit> {
-        val request = UpdateScheduleRequest(
+        val req = UpdateScheduleRequest(
             name = request.name,
+            description = request.description,
+            tags = request.tags,
             startsAt = request.startsAt,
             endsAt = request.endsAt,
-            isAllDay = request.isAllDay,
-            locationName = request.locationName,
-            latitude = request.latitude,
-            longitude = request.longitude,
-            description = request.description,
-            tags = request.tags
+            location = request.location?.let {
+                UpdateScheduleRequest.LocationRequest(it.latitude, it.longitude, it.locationName)
+            },
+            isOnline = request.isOnline,
+            isAttendanceRequired = request.isAttendanceRequired,
+            attendancePolicy = request.attendancePolicy?.let {
+                UpdateScheduleRequest.AttendancePolicyRequest(it.checkInStartAt, it.onTimeEndAt, it.lateEndAt)
+            },
+            participantMemberIds = request.participantMemberIds
         )
-        return scheduleRemoteDataSource.updateSchedule(scheduleId, request)
+        return scheduleRemoteDataSource.updateSchedule(scheduleId, req)
     }
 
     //일정 삭제하기
@@ -105,31 +129,79 @@ class ScheduleRepositoryImpl @Inject constructor(
         return scheduleRemoteDataSource.deleteScheduleWithAttendance(scheduleId)
     }
 
-    override suspend fun updateScheduleLocation(
+    override suspend fun postAttendanceExcuse(
         scheduleId: Long,
-        locationName: String,
-        latitude: Double,
-        longitude: Double
+        excuseReason: String,
+        isVerified: Boolean,
+        latitude: Double?,
+        longitude: Double?
     ): ApiState<Unit> {
-        val request = UpdateLocationRequest(locationName, latitude, longitude)
-        return scheduleRemoteDataSource.updateScheduleLocation(scheduleId, request).map {}
+        val request = ExcuseAttendanceRequest(excuseReason, isVerified, latitude, longitude)
+        return scheduleRemoteDataSource.postAttendanceExcuse(scheduleId, request)
     }
 
-    override suspend fun createStudyGroupSchedule(request: CreateStudyGroupSchedule): ApiState<Long> {
-        val req = CreateStudyGroupScheduleRequest(
-            name = request.name,
-            startsAt = request.startsAt,
-            endsAt = request.endsAt,
-            isAllDay = request.isAllDay,
-            locationName = request.locationName,
-            latitude = request.latitude,
-            longitude = request.longitude,
-            description = request.description,
-            tags = request.tags,
-            studyGroupId = request.studyGroupId,
-            gisuId = request.gisuId,
-            requiresApproval = request.requiresApproval
-        )
-        return scheduleRemoteDataSource.createStudyGroupSchedule(req)
+    override suspend fun postAttendanceDecide(
+        scheduleId: Long,
+        decisions: List<AttendanceDecision>
+    ): ApiState<Unit> {
+        val requests = decisions.map {
+            DecideAttendanceRequest(it.participantMemberId, it.isApproved, it.reason)
+        }
+        return scheduleRemoteDataSource.postAttendanceDecide(scheduleId, requests).map {}
     }
+
+    override suspend fun postAttendanceRequest(
+        scheduleId: Long,
+        locationVerified: Boolean,
+        latitude: Double?,
+        longitude: Double?
+    ): ApiState<Unit> {
+        val request = ScheduleAttendanceRequest(locationVerified, latitude, longitude)
+        return scheduleRemoteDataSource.postAttendanceRequest(scheduleId, request)
+    }
+
+    override suspend fun getAttendanceHistory(
+        from: String?,
+        to: String?,
+        attendanceStatus: String?
+    ): ApiState<List<AdminSessionCheck>> {
+        return scheduleRemoteDataSource.getAttendanceHistory(from, to, attendanceStatus).map { list ->
+            list.map { it.toAdminDomain() }
+        }
+    }
+
+    override suspend fun getPendingUsers(scheduleId: Long): ApiState<List<AdminPendingUser>> {
+        val pendingStatuses = setOf("PRESENT_PENDING", "LATE_PENDING", "EXCUSED_PENDING", "ABSENT_EXCUSE_PENDING", "LATE_EXCUSE_PENDING")
+        return scheduleRemoteDataSource.getScheduleAttendanceDetail(scheduleId, attendanceStatus = null).map { response ->
+            response.participants
+                ?.filter { it.attendanceStatus in pendingStatuses }
+                ?.map { p ->
+                    AdminPendingUser(
+                        id = p.memberId,
+                        memberId = p.memberId,
+                        name = p.name,
+                        nickname = p.nickname,
+                        university = p.schoolName,
+                        profileImageUrl = p.profileImageUrl,
+                        requestTime = "",
+                        hasLateReason = p.excuseReason != null,
+                        lateReason = p.excuseReason
+                    )
+                } ?: emptyList()
+        }
+    }
+
+    // 로컬 시간대 기준 해당 월의 시작(00:00:00.000) ~ 끝(23:59:59.999)을 UTC ISO8601로 변환
+    private fun monthToUtcRange(year: Int, month: Int): Pair<String, String> {
+        val yearMonth = YearMonth.of(year, month)
+        val from: ZonedDateTime = yearMonth.atDay(1)
+            .atStartOfDay(ZoneId.systemDefault())
+            .withZoneSameInstant(ZoneOffset.UTC)
+        val to: ZonedDateTime = yearMonth.atEndOfMonth()
+            .atTime(23, 59, 59, 999_000_000)
+            .atZone(ZoneId.systemDefault())
+            .withZoneSameInstant(ZoneOffset.UTC)
+        return utcIsoFormatter.format(from) to utcIsoFormatter.format(to)
+    }
+
 }

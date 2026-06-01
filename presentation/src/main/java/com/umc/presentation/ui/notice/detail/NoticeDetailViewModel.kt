@@ -9,6 +9,7 @@ import com.umc.domain.model.notice.NoticeReadStatistics
 import com.umc.domain.model.notice.NoticeTarget
 import com.umc.domain.model.notice.NoticeVote
 import com.umc.domain.model.notice.NoticeVoteOption
+import com.umc.domain.model.notice.NoticeVoteParticipant
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.usecase.GetChallengerIdUseCase
 import com.umc.domain.usecase.GetGisuInfoUseCase
@@ -20,6 +21,7 @@ import com.umc.domain.usecase.notice.GetNoticeReadStatisticsUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatusUseCase
 import com.umc.domain.usecase.notice.SendNoticeReminderUseCase
 import com.umc.domain.usecase.notice.SubmitVoteResponseUseCase
+import com.umc.domain.usecase.notice.UpdateVoteResponseUseCase
 import com.umc.domain.usecase.organization.GetChapterDetailUseCase
 import com.umc.presentation.base.BaseViewModel
 import com.umc.presentation.base.UiEvent
@@ -37,6 +39,7 @@ class NoticeDetailViewModel @Inject constructor(
     private val getNoticeReadStatisticsUseCase: GetNoticeReadStatisticsUseCase,
     private val sendNoticeReminderUseCase: SendNoticeReminderUseCase,
     private val submitVoteResponseUseCase: SubmitVoteResponseUseCase,
+    private val updateVoteResponseUseCase: UpdateVoteResponseUseCase,
     private val getMemberProfileUseCase: GetMemberProfileUseCase,
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getChallengerIdUseCase: GetChallengerIdUseCase,
@@ -310,6 +313,7 @@ class NoticeDetailViewModel @Inject constructor(
                 copy(
                     detail = detail,
                     selectedVoteOptionIds = selectedOptionIds.toList(),
+                    isVoteEditMode = false,
                     isLoading = false,
                     formattedCreatedAt = formattedCreatedAt,
                     formattedTargetInfo = formattedTargetInfo,
@@ -349,6 +353,7 @@ class NoticeDetailViewModel @Inject constructor(
                     copy(
                         detail = detail,
                         selectedVoteOptionIds = selectedOptionIds.toList(),
+                        isVoteEditMode = false,
                         isLoading = false,
                         formattedCreatedAt = formattedCreatedAt,
                         formattedTargetInfo = formattedTargetInfo,
@@ -365,6 +370,7 @@ class NoticeDetailViewModel @Inject constructor(
                     copy(
                         detail = detail,
                         selectedVoteOptionIds = selectedOptionIds.toList(),
+                        isVoteEditMode = false,
                         isLoading = false,
                         formattedCreatedAt = formattedCreatedAt,
                         formattedTargetInfo = formattedTargetInfo,
@@ -380,9 +386,9 @@ class NoticeDetailViewModel @Inject constructor(
     private fun getFormattedVoteCondition(vote: NoticeVote?): String {
         return vote?.let {
             val choiceType = if (it.allowMultipleChoice) "복수선택" else "단일선택"
-            val anonymity = if (it.isAnonymous) "익명" else "신원공개"
-            val startDate = it.startDateKst.parseDateTime().first
-            val endDate = it.endDateKst.parseDateTime().first
+            val anonymity = if (it.isAnonymous) "익명" else "실명"
+            val startDate = it.startsAt.parseDateTime().first
+            val endDate = it.endsAtExclusive.parseDateTime().first
             "${startDate} ~ ${endDate} • ${choiceType} • ${anonymity}"
         } ?: ""
     }
@@ -527,33 +533,94 @@ class NoticeDetailViewModel @Inject constructor(
         }
     }
 
-    fun onClickSubmitVote() = viewModelScope.launch {
+    private fun isAlreadyVoted(): Boolean {
+        return uiState.value.detail.vote?.mySelectedOptionIds?.isNotEmpty() == true
+    }
+
+    fun onClickVoteAction() {
+        if (isAlreadyVoted() && !uiState.value.isVoteEditMode) {
+            updateState { copy(isVoteEditMode = true) }
+            return
+        }
+        onClickSubmitVote()
+    }
+
+    private fun onClickSubmitVote() = viewModelScope.launch {
         val vote = uiState.value.detail.vote ?: return@launch
         val voteId = vote.voteId
         val optionIds = selectedOptionIds.toList()
+        val isEditMode = uiState.value.isVoteEditMode
 
-        if (voteId == -1L || optionIds.isEmpty()) return@launch
+        if (voteId == -1L) return@launch
 
         updateState { copy(isSubmittingVote = true) }
         startLoading()
 
         resultResponse(
-            response = submitVoteResponseUseCase(voteId, optionIds),
+            response = if (isEditMode) {
+                updateVoteResponseUseCase(voteId, optionIds)
+            } else {
+                submitVoteResponseUseCase(voteId, optionIds)
+            },
             successCallback = {
                 viewModelScope.launch {
                     loadNoticeDetailSync()
-                    emitEvent(NoticeFragmentEvent.ShowSuccess("투표가 완료되었습니다"))
+                    emitEvent(
+                        NoticeFragmentEvent.ShowSuccess(
+                            if (isEditMode) "투표가 수정되었습니다" else "투표가 완료되었습니다"
+                        )
+                    )
                 }
             },
             errorCallback = {
                 updateState { copy(isSubmittingVote = false) }
-                emitEvent(NoticeFragmentEvent.ShowError("투표 제출에 실패했습니다"))
+                emitEvent(
+                    NoticeFragmentEvent.ShowError(it.message)
+                )
             }
         )
     }
 
     fun onClickShowBottomSheet() {
         emitEvent(NoticeFragmentEvent.ShowBottomSheetEvent)
+    }
+
+    fun onClickVoteParticipants() = viewModelScope.launch {
+        val vote = uiState.value.detail.vote ?: return@launch
+        if (vote.isAnonymous) return@launch
+
+        val allMemberIds = vote.options
+            .flatMap { it.selectedMemberIds }
+            .distinct()
+
+        val memberInfoMap = mutableMapOf<Long, NoticeVoteParticipant>()
+
+        allMemberIds.forEach { memberId ->
+            resultResponse(
+                response = getMemberProfileUseCase(memberId),
+                successCallback = { data ->
+                    memberInfoMap[memberId] = NoticeVoteParticipant(
+                        memberId = data.id,
+                        nickname = data.nickname,
+                        name = data.name,
+                        profileImageUrl = data.profileImageLink
+                    )
+                },
+                errorCallback = {
+                }
+            )
+        }
+
+        val sections = vote.options.map { option ->
+            VoteOptionParticipants(
+                optionId = option.optionId,
+                optionTitle = option.content,
+                participants = option.selectedMemberIds.mapNotNull { memberInfoMap[it] }
+            )
+        }
+
+        updateState { copy(voteParticipantSections = sections) }
+        emitEvent(NoticeFragmentEvent.MoveToVoteParticipantsFragment)
     }
 
     fun onClickSendReminder(targetChallengerIds: List<Long>) = viewModelScope.launch {
@@ -622,6 +689,8 @@ data class NoticeFragmentUiState(
     val isMenuVisible: Boolean = false,
     val isCurrentUserMember: Boolean = false,
     val isAuthor: Boolean = false,
+    val isVoteEditMode: Boolean = false,
+    val voteParticipantSections: List<VoteOptionParticipants> = emptyList(),
 ) : UiState
 
 sealed interface NoticeFragmentEvent : UiEvent {
@@ -630,4 +699,11 @@ sealed interface NoticeFragmentEvent : UiEvent {
     data class MoveToEditPostEvent(val noticeId: Long) : NoticeFragmentEvent
     data class ShowError(val message: String) : NoticeFragmentEvent
     data class ShowSuccess(val message: String) : NoticeFragmentEvent
+    object MoveToVoteParticipantsFragment : NoticeFragmentEvent
 }
+
+data class VoteOptionParticipants(
+    val optionId: Long,
+    val optionTitle: String,
+    val participants: List<NoticeVoteParticipant>
+)

@@ -14,6 +14,7 @@ fun UserChallenger.toMemberUiModel(): MemberUiModel {
         partLabel = partLabel,
         gisuLabel = gisuLabel,
         schoolName = schoolName,
-        profileImageUrl = profileImage
+        profileImageUrl = profileImage,
+        memberId = memberId
     )
 }

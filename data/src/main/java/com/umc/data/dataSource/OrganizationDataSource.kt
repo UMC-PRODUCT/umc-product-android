@@ -18,6 +18,7 @@ import com.umc.domain.model.request.organization.AssignSchoolRequest
 import com.umc.domain.model.request.organization.ChallengerListRequest
 import com.umc.domain.model.request.organization.CreateChapterRequest
 import com.umc.domain.model.request.organization.CreateGisuRequest
+import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.domain.model.request.organization.CreateStudyGroupRequest
 import com.umc.domain.model.request.organization.EditSchoolRequest
 import com.umc.domain.model.request.organization.EditStudyGroupRequest
@@ -30,7 +31,11 @@ interface OrganizationDataSource {
     // DELETE
     suspend fun deleteSchool(request: SchoolIdRequest): ApiState<Unit>
     suspend fun deleteStudyGroup(groupId: Long): ApiState<Unit>
+    suspend fun deleteStudyGroupMentor(studyGroupId: Long, mentorId: Long): ApiState<Unit>
+    suspend fun deleteStudyGroupMember(studyGroupId: Long, memberId: Long): ApiState<Unit>
     suspend fun deleteGisu(gisuId: Int): ApiState<Unit>
+
+
 
     // GET
     suspend fun getMyStudyGroup(cursor: Long?, size: Int): ApiState<StudyGroupListResponse>
@@ -57,9 +62,13 @@ interface OrganizationDataSource {
 
     // PATCH
     suspend fun editGroup(groupId: Long, request: EditStudyGroupRequest): ApiState<Unit>
+    suspend fun addStudyGroupMentor(studyGroupId: Long, mentorId: Long): ApiState<Unit>
+    suspend fun addStudyGroupMember(studyGroupId: Long, memberId: Long): ApiState<Unit>
+
     suspend fun editSchool(schoolId: Int, request: EditSchoolRequest): ApiState<Unit>
     suspend fun unassignSchool(schoolId: Int, request: UnAssignSchoolRequest): ApiState<Unit>
     suspend fun assignSchool(schoolId: Int, request: AssignSchoolRequest): ApiState<Unit>
+
 
     // POST
     suspend fun createStudyGroup(request: CreateStudyGroupRequest): ApiState<Unit>
@@ -67,6 +76,7 @@ interface OrganizationDataSource {
     suspend fun createGisu(request: CreateGisuRequest): ApiState<Unit>
     suspend fun createChapter(request: CreateChapterRequest): ApiState<Unit>
     suspend fun changeActiveGisu(gisuId: Int): ApiState<Unit>
+    suspend fun createStudyGroupSchedule(request: CreateStudyGroupScheduleRequest): ApiState<Long>
 
     // PUT
     suspend fun changeGroupMember(groupId: Long, request: ChallengerListRequest): ApiState<Unit>

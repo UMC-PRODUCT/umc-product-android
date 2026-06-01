@@ -12,6 +12,7 @@ import com.umc.domain.model.request.organization.CreateGisuRequest
 import com.umc.domain.model.request.organization.CreateStudyGroupRequest
 import com.umc.domain.model.request.organization.EditSchoolRequest
 import com.umc.domain.model.request.organization.EditStudyGroupRequest
+import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
 import com.umc.domain.model.request.organization.SchoolIdRequest
 import com.umc.domain.model.request.organization.SchoolRegistrationRequest
 import com.umc.domain.model.request.organization.UnAssignSchoolRequest
@@ -25,6 +26,9 @@ interface OrganizationRepository {
     suspend fun deleteSchool(request: SchoolIdRequest): ApiState<Unit>
 
     suspend fun deleteStudyGroup(groupId: Long): ApiState<Unit>
+
+    suspend fun deleteStudyGroupMentor(studyGroupId: Long, mentorId: Long): ApiState<Unit>
+    suspend fun deleteStudyGroupMember(studyGroupId: Long, memberId: Long): ApiState<Unit>
     
     suspend fun deleteGisu(gisuId: Int): ApiState<Unit>
 
@@ -58,7 +62,7 @@ interface OrganizationRepository {
 
     suspend fun getAllGisu(): ApiState<GisuList>
 
-    suspend fun getActiveGisu(): ApiState<Unit> //GisuItemResponse
+    suspend fun getActiveGisu(): ApiState<Long>
 
     suspend fun getChapterWithSchool(gisuId: Int): ApiState<ChapterWithSchool>
 
@@ -66,6 +70,9 @@ interface OrganizationRepository {
 
     // PATCH
     suspend fun editGroup(groupId: Long, request: EditStudyGroupRequest): ApiState<Unit>
+    suspend fun addStudyGroupMentor(studyGroupId: Long, mentorId: Long): ApiState<Unit>
+    suspend fun addStudyGroupMember(studyGroupId: Long, memberId: Long): ApiState<Unit>
+
 
     suspend fun editSchool(schoolId: Int, request: EditSchoolRequest): ApiState<Unit>
 
@@ -83,6 +90,8 @@ interface OrganizationRepository {
     suspend fun createChapter(request: CreateChapterRequest): ApiState<Unit>
 
     suspend fun changeActiveGisu(gisuId: Int): ApiState<Unit>
+
+    suspend fun createStudyGroupSchedule(request: CreateStudyGroupSchedule): ApiState<Long>
 
     // PUT
     suspend fun changeGroupMember(groupId: Long, request: ChallengerListRequest): ApiState<Unit>

@@ -41,7 +41,7 @@
             android:gravity="start"
             android:textAppearance="@style/SubheadlineBold"
             android:textColor="@color/neutral800"
-            android:text='@{item.challengerName == null ? "알 수 없음" : item.challengerNickName + "/" + item.challengerName}'
+            android:text='@{item.challengerName == null ? "알 수 없음" : item.challengerNickName + "(" + item.challengerName + ")"}'
             android:layout_marginStart="8dp"
             app:layout_constraintStart_toEndOf="@id/item_circleimv_profile"
             app:layout_constraintTop_toTopOf="parent"

@@ -38,7 +38,7 @@ fun GroupMemberResponse.toModel(): StudyGroupMember {
     return StudyGroupMember(
         challengerId = challengerId,
         memberId = memberId,
-        name = name,
+        name = memberName,
         profileImageUrl = profileImageUrl
     )
 }

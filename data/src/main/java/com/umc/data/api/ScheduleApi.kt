@@ -1,15 +1,15 @@
 package com.umc.data.api
 
 import com.umc.data.request.schedule.CreateScheduleRequest
-import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
+import com.umc.data.request.schedule.DecideAttendanceRequest
+import com.umc.data.request.schedule.ExcuseAttendanceRequest
+import com.umc.data.request.schedule.ScheduleAttendanceRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
-import com.umc.data.response.member.MemberResponse
-import com.umc.data.response.schedule.ScheduleDetailResponse
-import com.umc.data.response.schedule.ScheduleListResponse
-import com.umc.data.response.schedule.ScheduleMonthResponse
-import com.umc.data.response.schedule.UpdateLocationResponse
+import com.umc.data.response.schedule.AttendanceDecisionResponse
+import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse
+import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
+import com.umc.data.response.schedule.ScheduleMeResponse
 import com.umc.domain.model.base.ApiResponse
-import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -20,22 +20,23 @@ import retrofit2.http.Query
 
 interface ScheduleApi {
 
-    //일정 목록 가져오기
-    @GET(Endpoints.Schedule.SCHEDULE)
-    suspend fun getScheduleList(): ApiResponse<List<ScheduleListResponse>>
+    //일정 생성·수정 권한 조회
+    @GET(Endpoints.Schedule.CAPABILITIES)
+    suspend fun getScheduleCapabilities(): ApiResponse<ScheduleCapabilitiesResponse>
+
+    //기간별 내 일정 목록 조회 (월별/전체 통합)
+    @GET(Endpoints.Schedule.SCHEDULES_ME)
+    suspend fun getSchedules(
+        @Query("from") from: String,
+        @Query("to") to: String,
+        @Query("isAttendanceRequired") isAttendanceRequired: Boolean
+    ): ApiResponse<List<ScheduleMeResponse>>
 
     //세부 일정 가져오기
-    @GET(Endpoints.Schedule.DETAIL)
+    @GET(Endpoints.Schedule.DETAIL_V2)
     suspend fun getScheduleDetail(
         @Path("scheduleId") scheduleId: Long
-    ): ApiResponse<ScheduleDetailResponse>
-
-    //월별 일정 조회하기
-    @GET(Endpoints.Schedule.MONTH)
-    suspend fun getMonthSchedule(
-        @Query("year") year: Int,
-        @Query("month") month: Int
-    ): ApiResponse<List<ScheduleMonthResponse>>
+    ): ApiResponse<ScheduleMeResponse>
 
     //일정 출석부 통합 삭제하기
     @DELETE(Endpoints.Schedule.DELETE)
@@ -44,32 +45,53 @@ interface ScheduleApi {
     ): ApiResponse<Unit>
 
 
-    //일정 출석부 통합 생성하기
-    /**response로 일정 id가 string으로 오니 Long으로 변환**/
-    @POST(Endpoints.Schedule.SCHEDULE_WITH_ATTENDANCE)
-    suspend fun createScheduleWithAttendance(
+    //일정 생성하기 (v2)
+    @POST(Endpoints.Schedule.CREATE_V2)
+    suspend fun createSchedule(
         @Body request: CreateScheduleRequest
-    ): ApiResponse<String>
+    ): ApiResponse<Long>
 
     //일정 수정하기
-    @PATCH(Endpoints.Schedule.DETAIL)
+    @PATCH(Endpoints.Schedule.DETAIL_V2)
     suspend fun updateSchedule(
         @Path("scheduleId") scheduleId: Long,
         @Body request: UpdateScheduleRequest
     ) : ApiResponse<Unit>
 
-    // 일정 위치 변경하기
-    @PATCH(Endpoints.Schedule.LOCATION)
-    suspend fun updateScheduleLocation(
+    // 일정 출석 요청
+    @POST(Endpoints.Schedule.ATTENDANCE_REQUEST)
+    suspend fun postAttendanceRequest(
         @Path("scheduleId") scheduleId: Long,
-        @Body request: UpdateLocationRequest
-    ): ApiResponse<UpdateLocationResponse>
+        @Body request: ScheduleAttendanceRequest
+    ): ApiResponse<Unit>
 
+    // 출석 요청 승인/거절
+    @POST(Endpoints.Schedule.ATTENDANCE_DECIDE)
+    suspend fun postAttendanceDecide(
+        @Path("scheduleId") scheduleId: Long,
+        @Body requests: List<DecideAttendanceRequest>
+    ): ApiResponse<List<AttendanceDecisionResponse>>
 
-    // 스터디 그룹 일정 생성
-    @POST(Endpoints.Schedule.CREATE_STUDY_GROUP_SCHEDULE)
-    suspend fun createStudyGroupSchedule(
-        @Body request: CreateStudyGroupScheduleRequest
-    ): ApiResponse<Long>
+    // 사유 출석 제출
+    @POST(Endpoints.Schedule.ATTENDANCE_EXCUSE)
+    suspend fun postAttendanceExcuse(
+        @Path("scheduleId") scheduleId: Long,
+        @Body request: ExcuseAttendanceRequest
+    ): ApiResponse<Unit>
+
+    // 출석 이력 조회
+    @GET(Endpoints.Schedule.ATTENDANCE_HISTORY)
+    suspend fun getAttendanceHistory(
+        @Query("from") from: String? = null,
+        @Query("to") to: String? = null,
+        @Query("attendanceStatus") attendanceStatus: String? = null
+    ): ApiResponse<List<ScheduleAttendanceHistoryResponse>>
+
+    // 단일 일정 출석 현황 조회
+    @GET(Endpoints.Schedule.ATTENDANCE_DETAIL)
+    suspend fun getScheduleAttendanceDetail(
+        @Path("scheduleId") scheduleId: Long,
+        @Query("attendanceStatus") attendanceStatus: String? = null
+    ): ApiResponse<ScheduleAttendanceHistoryResponse>
 }
 

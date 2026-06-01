@@ -213,10 +213,16 @@ class MypageFragment : BaseFragment<FragmentMypageBinding, MypageFragmentUiState
             
 
             is MypageFragmentEvent.NavigateToWebstieUmc -> {
+                //val dialog = BottomSheetRewardEtcDialog(13L)
+                //dialog.show(parentFragmentManager, "BottomSheetRewardEtcDialog")
+
                 openWebpage(viewModel.uiState.value.websiteUMC)
             }
 
             is MypageFragmentEvent.NavigateToInstagramUmc -> {
+                //val dialog = BottomSheetRewardPunishDialog(13L, false)
+                //dialog.show(parentFragmentManager, "BottomSheetRewardPunishDialog")
+
                 openWebpage(viewModel.uiState.value.instagramUMC)
             }
 

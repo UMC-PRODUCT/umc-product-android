@@ -39,6 +39,8 @@ object CheckBindingAdapters {
             CheckHistoryStatus.PRESENT -> R.color.success500
             CheckHistoryStatus.LATE -> R.color.warning500
             CheckHistoryStatus.ABSENT -> R.color.danger500
+            CheckHistoryStatus.EXCUSED -> R.color.success500
+            CheckHistoryStatus.PRESENT_PENDING -> R.color.neutral400
         }
         view.setCardBackgroundColor(ContextCompat.getColor(view.context, colorRes))
     }

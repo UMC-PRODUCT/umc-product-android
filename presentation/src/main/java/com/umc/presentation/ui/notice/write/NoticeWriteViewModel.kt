@@ -2,7 +2,9 @@ package com.umc.presentation.ui.notice.write
 
 import android.net.Uri
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.UDomainFormat.formatDateForServer
 import com.umc.domain.model.enums.NoticeChipClassType
+import com.umc.domain.model.enums.RoleType
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.UserInfo
@@ -30,11 +32,7 @@ import com.umc.presentation.base.UiState
 import com.umc.presentation.ui.notice.write.model.NoticeImageItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
 import javax.inject.Inject
 
 @HiltViewModel
@@ -115,12 +113,22 @@ class NoticeWriteViewModel @Inject constructor(
 
     private fun loadUserInfoAndInit() = viewModelScope.launch {
         getUserInfoUseCase().collect { userInfo ->
-            updateState {
-                copy(
-                    userInfo = userInfo,
-                )
-            }
+            val permission = computeStaffNoticePermission(userInfo)
+            updateState { copy(userInfo = userInfo, staffNoticePermission = permission) }
             updateClassChipList(getNoticeChip())
+        }
+    }
+
+    private fun computeStaffNoticePermission(userInfo: UserInfo?): StaffNoticePermission {
+        val roleTypes = userInfo?.roles?.map { it.roleType } ?: return StaffNoticePermission.NONE
+        return when {
+            roleTypes.any { it == RoleType.CENTRAL_PRESIDENT.name || it == RoleType.CENTRAL_VICE_PRESIDENT.name } ->
+                StaffNoticePermission.CENTRAL
+            roleTypes.any { it == RoleType.CENTRAL_OPERATING_TEAM_MEMBER.name || it == RoleType.CENTRAL_EDUCATION_TEAM_MEMBER.name } ->
+                StaffNoticePermission.OPERATOR
+            roleTypes.any { it == RoleType.SCHOOL_PRESIDENT.name || it == RoleType.SCHOOL_VICE_PRESIDENT.name } ->
+                StaffNoticePermission.SCHOOL_HEAD
+            else -> StaffNoticePermission.NONE
         }
     }
 
@@ -176,19 +184,32 @@ class NoticeWriteViewModel @Inject constructor(
         }
     }
 
-    private fun getNoticeChip(): List<NoticeChipState> {
-        val types = listOf(
-            NoticeChipClassType.BRANCH,
-            NoticeChipClassType.SCHOOL,
-            NoticeChipClassType.PART
-        )
-        
-        return types.map { type ->
-            NoticeChipState(
-                text = type.label,
-                isClicked = type == NoticeChipClassType.ALL,
-                hanBottomSheet = type.hasBottomSheet
+    private fun getNoticeChip(isStaffNotice: Boolean = uiState.value.isStaffNotice): List<NoticeChipState> {
+        return if (isStaffNotice) getStaffNoticeChips() else getChallengerChips()
+    }
+
+    private fun getChallengerChips(): List<NoticeChipState> {
+        return listOf(NoticeChipClassType.BRANCH, NoticeChipClassType.SCHOOL, NoticeChipClassType.PART)
+            .map { type ->
+                NoticeChipState(text = type.label, isClicked = false, hanBottomSheet = type.hasBottomSheet)
+            }
+    }
+
+    private fun getStaffNoticeChips(): List<NoticeChipState> {
+        return when (uiState.value.staffNoticePermission) {
+            StaffNoticePermission.CENTRAL -> listOf(
+                NoticeChipState(text = STAFF_CHIP_CENTRAL, isClicked = false),
+                NoticeChipState(text = STAFF_CHIP_SCHOOL, isClicked = false),
+                NoticeChipState(text = STAFF_CHIP_PART, isClicked = false, hanBottomSheet = true)
             )
+            StaffNoticePermission.OPERATOR -> listOf(
+                NoticeChipState(text = STAFF_CHIP_SCHOOL, isClicked = false),
+                NoticeChipState(text = STAFF_CHIP_PART, isClicked = false, hanBottomSheet = true)
+            )
+            StaffNoticePermission.SCHOOL_HEAD -> listOf(
+                NoticeChipState(text = STAFF_CHIP_PART, isClicked = false, hanBottomSheet = true)
+            )
+            StaffNoticePermission.NONE -> emptyList()
         }
     }
 
@@ -205,11 +226,14 @@ class NoticeWriteViewModel @Inject constructor(
     }
 
     fun onClickClassChip(chip: NoticeChipState) {
+        if (uiState.value.isStaffNotice) {
+            handleStaffChipClick(chip)
+            return
+        }
+
         val selectedType = NoticeChipClassType.fromLabel(chip.text)
 
         if (selectedType.hasBottomSheet) {
-            // BRANCH 또는 SCHOOL을 선택한 경우에는 항상 BottomSheet만 표시
-            // 선택/해제는 BottomSheet에서 하위 항목을 선택/재선택하여 처리
             when (selectedType) {
                 NoticeChipClassType.BRANCH -> emitEvent(NoticeWriteEvent.ShowChapterBottomSheetEvent)
                 NoticeChipClassType.SCHOOL -> emitEvent(NoticeWriteEvent.ShowSchoolBottomSheetEvent)
@@ -218,21 +242,55 @@ class NoticeWriteViewModel @Inject constructor(
             return
         }
 
-        // PART 클릭 처리
         val newList = uiState.value.classList.map {
-            if (it.text == chip.text) {
-                it.copy(isClicked = !it.isClicked)
-            } else {
-                it
+            if (it.text == chip.text) it.copy(isClicked = !it.isClicked) else it
+        }
+
+        updateState { copy(isShowPartChip = newList.any { it.text == NoticeChipClassType.PART.label && it.isClicked }) }
+        updateClassChipList(newList)
+    }
+
+    private fun handleStaffChipClick(chip: NoticeChipState) {
+        when (chip.text) {
+            STAFF_CHIP_CENTRAL -> {
+                val newList = uiState.value.classList.map {
+                    if (it.text == STAFF_CHIP_CENTRAL) it.copy(isClicked = !it.isClicked) else it
+                }
+                updateClassChipList(newList)
+            }
+            STAFF_CHIP_SCHOOL -> {
+                // 중앙운영진: 학교회장단 대상(SCHOOL_CORE) - 바텀시트 없이 토글
+                val newList = uiState.value.classList.map {
+                    if (it.text == STAFF_CHIP_SCHOOL) it.copy(isClicked = !it.isClicked) else it
+                }
+                updateClassChipList(newList)
+            }
+            STAFF_CHIP_PART -> {
+                if (chip.isClicked) {
+                    val newList = uiState.value.classList.map {
+                        if (it.text == STAFF_CHIP_PART) it.copy(isClicked = false, part = null, selectedDisplayName = null) else it
+                    }
+                    updateClassChipList(newList)
+                } else {
+                    emitEvent(NoticeWriteEvent.ShowStaffPartBottomSheetEvent)
+                }
             }
         }
+    }
 
-        if (newList.any { it.text == NoticeChipClassType.PART.label && it.isClicked }) {
-            updateState { copy(isShowPartChip = true) }
+    fun onStaffPartSelected(partName: String?) {
+        val displayName = if (partName != null) {
+            UserPart.entries.find { it.name == partName }?.label ?: partName
         } else {
-            updateState { copy(isShowPartChip = false) }
+            "전체 파트"
         }
-
+        val newList = uiState.value.classList.map { chip ->
+            if (chip.text == STAFF_CHIP_PART) chip.copy(
+                isClicked = true,
+                part = partName,
+                selectedDisplayName = displayName
+            ) else chip
+        }
         updateClassChipList(newList)
     }
 
@@ -502,24 +560,38 @@ class NoticeWriteViewModel @Inject constructor(
     }
 
     fun onClickToggleAllGisu() {
+        // 운영진 공지는 targetGisuId 필수 → 전체 기수 선택 불가
+        if (uiState.value.isStaffNotice) {
+            emitEvent(NoticeWriteEvent.ShowError("운영진 공지는 특정 기수를 선택해야 합니다"))
+            return
+        }
+
         val newIsAllGisuSelected = !uiState.value.isAllGisuSelected
         updateState { copy(isAllGisuSelected = newIsAllGisuSelected) }
-        
-        // 전체 기수 토글 시 지부/학교 리스트 갱신
+
         if (newIsAllGisuSelected) {
-            // 전체 기수 선택됨 -> 전체 지부/학교 로드
             loadChapters()
             loadSchools()
-            // 전체 기수 선택 시 지부 선택 해제
             val currentList = uiState.value.classList.toMutableList()
             val updatedList = unselectBranchIfSelected(currentList)
             updateClassChipList(updatedList)
         } else {
-            // 특정 기수 선택됨 -> 해당 기수의 지부/학교 로드
             uiState.value.activeGisuId?.let { gisuId ->
                 loadChaptersAndSchoolsForGisu(gisuId)
             }
         }
+    }
+
+    fun onClickToggleStaffNotice() {
+        val newIsStaffNotice = !uiState.value.isStaffNotice
+        updateState {
+            copy(
+                isStaffNotice = newIsStaffNotice,
+                isAllGisuSelected = if (newIsStaffNotice) false else isAllGisuSelected,
+                isShowPartChip = false
+            )
+        }
+        updateClassChipList(getNoticeChip(isStaffNotice = newIsStaffNotice))
     }
 
     fun onClickSubmit() = viewModelScope.launch {
@@ -547,20 +619,55 @@ class NoticeWriteViewModel @Inject constructor(
             handleNoticeUpdate()
         } else {
             // 생성 모드
-            val targetParts = state.partList.filter { it.isClicked }.map { it.text.uppercase() }
-            val targetChapterId = state.classList.find { it.isClicked && it.chapterId != null }?.chapterId?.toInt()
-            val targetSchoolId = state.classList.find { it.isClicked && it.schoolId != null }?.schoolId?.toInt()
+            val targetNoticeTab = if (state.isStaffNotice) {
+                when (state.staffNoticePermission) {
+                    StaffNoticePermission.SCHOOL_HEAD -> StaffNoticeTab.SCHOOL_PART_LEADER.tabValue
+                    StaffNoticePermission.CENTRAL, StaffNoticePermission.OPERATOR -> when {
+                        state.classList.any { it.text == STAFF_CHIP_PART && it.isClicked } -> StaffNoticeTab.SCHOOL_PART_LEADER.tabValue
+                        state.classList.any { it.text == STAFF_CHIP_SCHOOL && it.isClicked } -> StaffNoticeTab.SCHOOL_CORE.tabValue
+                        else -> StaffNoticeTab.SCHOOL_CORE.tabValue
+                    }
+                    StaffNoticePermission.NONE -> "CHALLENGER"
+                }
+            } else "CHALLENGER"
+
+            val targetChapterId = if (state.isStaffNotice) null
+            else state.classList.find { it.isClicked && it.chapterId != null }?.chapterId?.toInt()
+
+            val targetSchoolId = when {
+                state.isStaffNotice && state.staffNoticePermission == StaffNoticePermission.SCHOOL_HEAD ->
+                    state.userInfo?.schoolId?.takeIf { it > 0 }?.toInt()
+                state.isStaffNotice -> null
+                else -> state.classList.find { it.isClicked && it.schoolId != null }?.schoolId?.toInt()
+            }
+
+            val targetParts = if (state.isStaffNotice) {
+                val partName = state.classList.find { it.text == STAFF_CHIP_PART && it.isClicked }?.part
+                if (partName != null) listOf(partName) else emptyList()
+            } else {
+                state.partList.filter { it.isClicked }.mapNotNull { it.part }
+            }
+
+            // 운영진 공지: targetGisuId 항상 필수 (isAllGisuSelected 무시)
+            val targetGisuId = when {
+                state.isStaffNotice -> activeGisuId
+                state.isAllGisuSelected -> null
+                else -> activeGisuId
+            }
+
             val targetRequest = NoticeTargetRequest(
-                targetGisuId = if (state.isAllGisuSelected) null else activeGisuId,
+                targetGisuId = targetGisuId,
                 targetChapterId = targetChapterId,
                 targetSchoolId = targetSchoolId,
-                targetParts = targetParts
+                targetParts = targetParts,
+                targetNoticeTab = targetNoticeTab
             )
 
             val createRequest = NoticeCreateRequest(
                 title = state.title,
                 content = state.content,
                 shouldNotify = state.shouldNotify,
+                mustRead = false, // 앱에서는 항상 false (UPMS 전용 기능)
                 targetInfo = targetRequest
             )
 
@@ -682,8 +789,8 @@ class NoticeWriteViewModel @Inject constructor(
                         title = state.voteTitle,
                         isAnonymous = state.canAnonymity,
                         allowMultipleChoice = state.canSelectMultiple,
-                        startsAt = formatDateForServer(state.voteStartDate),
-                        endsAtExclusive = formatDateForServer(state.voteEndDate),
+                        startsAt = state.voteStartDate.formatDateForServer(),
+                        endsAtExclusive = state.voteEndDate.formatDateForServer(),
                         options = validOptions
                 )
                 resultResponse(
@@ -708,7 +815,7 @@ data class NoticeWriteUiState(
     val isShowPartChip: Boolean = false,
     val isShowLink: Boolean = false,
     val isShowVote: Boolean = false,
-    val selectImageList: List<NoticeImageItem> = emptyList(), // 통합 이미지 리스트 (id, uri, url)
+    val selectImageList: List<NoticeImageItem> = emptyList(),
     val classList: List<NoticeChipState> = emptyList(),
     val partList: List<NoticeChipState> = emptyList(),
     val linkText: String = "",
@@ -731,16 +838,38 @@ data class NoticeWriteUiState(
     val isAllGisuSelected: Boolean = false,
     val isEditMode: Boolean = false,
     val editNoticeId: Long = 0L,
-) : UiState
+    val isStaffNotice: Boolean = false,
+    val staffNoticePermission: StaffNoticePermission = StaffNoticePermission.NONE,
+) : UiState {
+    val canWriteStaffNotice: Boolean get() = staffNoticePermission != StaffNoticePermission.NONE
+}
 
 sealed interface NoticeWriteEvent : UiEvent {
     object SelectImageEvent : NoticeWriteEvent
     object ShowBottomSheetEvent : NoticeWriteEvent
     object ShowChapterBottomSheetEvent : NoticeWriteEvent
     object ShowSchoolBottomSheetEvent : NoticeWriteEvent
+    object ShowStaffPartBottomSheetEvent : NoticeWriteEvent
     object SubmitSuccess : NoticeWriteEvent
     data class ShowError(val message: String) : NoticeWriteEvent
 }
+
+enum class StaffNoticeTab(val tabValue: String) {
+    CENTRAL_MEMBER("CENTRAL_MEMBER"),
+    SCHOOL_CORE("SCHOOL_CORE"),
+    SCHOOL_PART_LEADER("SCHOOL_PART_LEADER"),
+}
+
+enum class StaffNoticePermission {
+    NONE,
+    CENTRAL,     // 총괄단: CENTRAL_PRESIDENT, CENTRAL_VICE_PRESIDENT
+    OPERATOR,    // 중앙운영진: CENTRAL_OPERATING_TEAM_MEMBER, CENTRAL_EDUCATION_TEAM_MEMBER
+    SCHOOL_HEAD, // 학교회장단: SCHOOL_PRESIDENT, SCHOOL_VICE_PRESIDENT
+}
+
+private const val STAFF_CHIP_CENTRAL = "중앙운영진"
+private const val STAFF_CHIP_SCHOOL = "학교회장단"
+private const val STAFF_CHIP_PART = "파트"
 
 // 날짜를 "YYYY년 MM월 DD일" 형식으로 변환
 fun formatDateForDisplay(calendar: Calendar): String {
@@ -750,20 +879,3 @@ fun formatDateForDisplay(calendar: Calendar): String {
     return "${year}년 ${month}월 ${day}일"
 }
 
-// 날짜를 ISO 8601 형식(2026-02-15T18:35:12.445Z)으로 변환
-fun formatDateForServer(dateString: String): String {
-    // "2025년 2월 16일" -> ISO 8601
-    val regex = """(\d{4})년 (\d{1,2})월 (\d{1,2})일""".toRegex()
-    val matchResult = regex.find(dateString)
-    
-    return if (matchResult != null) {
-        val (year, month, day) = matchResult.destructured
-        // ISO 8601 형식: YYYY-MM-DDTHH:mm:ss.sssZ
-        String.format(Locale.US, "%04d-%02d-%02dT00:00:00.000Z", year.toInt(), month.toInt(), day.toInt())
-    } else {
-        // 파싱 실패 시 현재 시간 반환
-        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-        sdf.timeZone = TimeZone.getTimeZone("UTC")
-        sdf.format(Date())
-    }
-}

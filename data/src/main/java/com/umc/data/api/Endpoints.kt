@@ -46,6 +46,9 @@ object Endpoints {
 
         const val CHALLENGER_RECORD = "api/v1/challenger-record"
         const val CHALLENGER_RECORD_MEMBER = "api/v1/challenger-record/member"
+
+        const val CHALLENGER_POINT = "api/v1/challenger/{challengerId}/points"
+
     }
 
     object Member {
@@ -63,16 +66,21 @@ object Endpoints {
     object Schedule {
         const val SCHEDULE = "api/v1/schedules"
         const val DETAIL = "$SCHEDULE/{scheduleId}"
-        const val MONTH = "$SCHEDULE/my-list"
+
+        const val SCHEDULES_ME = "api/v2/schedules/me"
+        const val DETAIL_V2 = "api/v2/schedules/{scheduleId}"
+        const val CAPABILITIES = "api/v2/schedules/capabilities"
+        const val CREATE_V2 = "api/v2/schedules"
 
         const val SCHEDULE_WITH_ATTENDANCE = "$SCHEDULE/with-attendance"
 
         const val DELETE = "$SCHEDULE/{scheduleId}/with-attendance"
 
-        const val LOCATION = "$SCHEDULE/{scheduleId}/location"
-
-        const val CREATE_STUDY_GROUP_SCHEDULE = "$SCHEDULE/study-group"
-
+        const val ATTENDANCE_REQUEST = "api/v2/schedules/{scheduleId}/attendances/request"
+        const val ATTENDANCE_DECIDE = "api/v2/schedules/{scheduleId}/attendances/decide"
+        const val ATTENDANCE_EXCUSE = "api/v2/schedules/{scheduleId}/attendances/excuse"
+        const val ATTENDANCE_HISTORY = "api/v2/schedules/attendance"
+        const val ATTENDANCE_DETAIL = "api/v2/schedules/{scheduleId}/attendance"
     }
 
     object Community{
@@ -123,9 +131,13 @@ object Endpoints {
         const val SCHOOL_ALL = "$SCHOOL/all"
 
         const val STUDY_GROUP = "api/v1/study-groups"
-        const val STUDY_GROUD_ID = "$STUDY_GROUP/{groupId}"
-        const val STUDY_GROUD_NAME = "$STUDY_GROUP/names"
-        const val STUDY_MEMBER = "$STUDY_GROUD_ID/members"
+        const val MY_STUDY_GROUP = "$STUDY_GROUP/managed"
+        const val STUDY_GROUP_ID = "$STUDY_GROUP/{studyGroupId}"
+        const val STUDY_GROUP_NAME = "$STUDY_GROUP/names"
+        const val STUDY_GROUP_MENTOR = "$STUDY_GROUP/{studyGroupId}/mentors/{mentorId}"
+        const val STUDY_GROUP_MEMBER = "$STUDY_GROUP/{studyGroupId}/members/{memberId}"
+        const val STUDY_MEMBER = "$STUDY_GROUP_ID/members"
+        const val CREATE_STUDY_GROUP_SCHEDULE = "$STUDY_GROUP/schedules"
         const val GISU = "api/v1/gisu"
         const val GISU_ID = "$GISU/{gisuId}"
         const val GISU_ALL = "$GISU/all"
@@ -148,6 +160,9 @@ object Endpoints {
     object Curriculum {
         const val CURRICULUM = "api/v1/curriculums"
         const val CHALLENGER_ME_PROGRESS = "$CURRICULUM/challengers/me/progress"
+
+        const val CURRICULUM_OVERVIEW = "api/v2/curriculums/overview"
+
         const val SUBMIT = "api/v1/workbooks/submission"
         const val WORKBOOK_SUBMISSIONS = "api/v1/curriculums/workbook-submissions"
         const val STUDY_GROUPS = "api/v1/curriculums/study-groups"
@@ -177,11 +192,7 @@ object Endpoints {
         const val NOTICE_READ_STATICS = "$NOTICE_DETAIL/read-statics"
         const val NOTICE_LINKS = "$NOTICE_DETAIL/links"
         const val NOTICE_IMAGES = "$NOTICE_DETAIL/images"
-    }
-
-    object Survey {
-        const val SURVEY = "api/v1/surveys"
-        const val VOTE_RESPONSES = "$SURVEY/votes/{voteId}/responses"
+        const val VOTE_RESPONSES = "$NOTICE_DETAIL/votes/{voteId}/responses"
     }
 
     object Notification {

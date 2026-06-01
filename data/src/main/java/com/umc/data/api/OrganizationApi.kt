@@ -18,6 +18,7 @@ import com.umc.domain.model.request.organization.AssignSchoolRequest
 import com.umc.domain.model.request.organization.ChallengerListRequest
 import com.umc.domain.model.request.organization.CreateChapterRequest
 import com.umc.domain.model.request.organization.CreateGisuRequest
+import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.domain.model.request.organization.CreateStudyGroupRequest
 import com.umc.domain.model.request.organization.EditSchoolRequest
 import com.umc.domain.model.request.organization.EditStudyGroupRequest
@@ -36,9 +37,11 @@ import retrofit2.http.Query
 interface OrganizationApi {
 
     companion object {
-        const val PATH_GROUP_ID = "groupId"
+        const val PATH_GROUP_ID = "studyGroupId"
         const val PATH_GISU_ID = "gisuId"
         const val PATH_SCHOOL_ID = "schoolId"
+        const val PATH_MEMBER_ID = "memberId"
+        const val PATH_MENTOR_ID = "mentorId"
         const val QUERY_CURSOR = "cursor"
         const val QUERY_SIZE = "size"
         const val QUERY_KEYWORD = "keyword"
@@ -52,7 +55,7 @@ interface OrganizationApi {
         @Body request: SchoolIdRequest
     ): ApiResponse<Unit>
 
-    @DELETE(Endpoints.Organization.STUDY_GROUD_ID)
+    @DELETE(Endpoints.Organization.STUDY_GROUP_ID)
     suspend fun deleteStudyGroup(
         @Path(PATH_GROUP_ID) groupId: Long
     ): ApiResponse<Unit>
@@ -62,7 +65,21 @@ interface OrganizationApi {
         @Path(PATH_GISU_ID) gisuId: Int
     ): ApiResponse<Unit>
 
-    @GET(Endpoints.Organization.STUDY_GROUP)
+    //담당 파트장 제거
+    @DELETE(Endpoints.Organization.STUDY_GROUP_MENTOR)
+    suspend fun deleteStudyGroupMentor(
+        @Path(PATH_GROUP_ID) studyGroupId: Long,
+        @Path(PATH_MENTOR_ID) mentorId: Long
+    ): ApiResponse<Unit>
+
+    //스터디원 제거
+    @DELETE(Endpoints.Organization.STUDY_GROUP_MEMBER)
+    suspend fun deleteStudyGroupMember(
+        @Path(PATH_GROUP_ID) studyGroupId: Long,
+        @Path(PATH_MEMBER_ID) memberId: Long
+    ): ApiResponse<Unit>
+
+    @GET(Endpoints.Organization.MY_STUDY_GROUP)
     suspend fun getMyStudyGroup(
         @Query(QUERY_CURSOR) cursor: Long?,
         @Query(QUERY_SIZE) size: Int,
@@ -86,7 +103,7 @@ interface OrganizationApi {
     ): ApiResponse<Chapter>
 
 
-    @GET(Endpoints.Organization.STUDY_GROUD_ID)
+    @GET(Endpoints.Organization.STUDY_GROUP_ID)
     suspend fun getStudyGroupDetail(
         @Path(PATH_GROUP_ID) groupId: Long,
     ): ApiResponse<StudyGroupDetailResponse>
@@ -96,7 +113,7 @@ interface OrganizationApi {
         @Path(PATH_SCHOOL_ID) schoolId : Long,
     ): ApiResponse<SchoolDetailResponse>
 
-    @GET(Endpoints.Organization.STUDY_GROUD_NAME)
+    @GET(Endpoints.Organization.STUDY_GROUP_NAME)
     suspend fun getMyStudyGroupList(): ApiResponse<MyStudyGroupListResponse>
 
     @GET(Endpoints.Organization.SCHOOL_UNASSIGNED)
@@ -123,10 +140,24 @@ interface OrganizationApi {
         @Query(PATH_GISU_ID) gisuId: Int,
     ): ApiResponse<ChapterBySchoolListResponse>
 
-    @PATCH(Endpoints.Organization.STUDY_GROUD_ID)
+    @PATCH(Endpoints.Organization.STUDY_GROUP_ID)
     suspend fun editGroup(
         @Path(PATH_GROUP_ID) groupId: Long,
         @Body request: EditStudyGroupRequest
+    ): ApiResponse<Unit>
+
+    //담당 파트장 추가
+    @PATCH(Endpoints.Organization.STUDY_GROUP_MENTOR)
+    suspend fun addStudyGroupMentor(
+        @Path(PATH_GROUP_ID) studyGroupId: Long,
+        @Path(PATH_MENTOR_ID) mentorId: Long
+    ): ApiResponse<Unit>
+
+    //스터디원 추가
+    @PATCH(Endpoints.Organization.STUDY_GROUP_MEMBER)
+    suspend fun addStudyGroupMember(
+        @Path(PATH_GROUP_ID) studyGroupId: Long,
+        @Path(PATH_MEMBER_ID) memberId: Long
     ): ApiResponse<Unit>
 
     @PATCH(Endpoints.Organization.SCHOOL_ID)
@@ -184,5 +215,9 @@ interface OrganizationApi {
         @Path("gisuId") gisuId: Long,
     ): ApiResponse<GisuInfoResponse>
 
+    @POST(Endpoints.Organization.CREATE_STUDY_GROUP_SCHEDULE)
+    suspend fun createStudyGroupSchedule(
+        @Body request: CreateStudyGroupScheduleRequest
+    ): ApiResponse<Long>
 
 }

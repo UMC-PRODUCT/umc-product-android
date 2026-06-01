@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View"/>
+        <variable name="vm"
+            type="com.umc.presentation.ui.act.dialog.BottomSheetRewardPunishViewModel" />
+    </data>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_bottom_sheet_neutral000_radius28"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="24dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/view_handle"
+                android:layout_width="40dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="12dp"
+                android:layout_gravity="center_horizontal"
+                app:cardBackgroundColor="@color/neutral600"
+                app:cornerRadius="100dp" />
+
+            <TextView
+                android:id="@+id/tv_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:gravity="start"
+                android:text="@{vm.uiState.isReward ? @string/reward_title : @string/punish_title}"
+                android:textAppearance="@style/Title3Bold"
+                android:textColor="@color/neutral800"
+                tools:text="@string/reward_title" />
+
+            <TextView
+                android:id="@+id/tv_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="start"
+                android:text="@{vm.uiState.isReward ? @string/reward_content : @string/punish_content}"
+                android:textAppearance="@style/Subheadline"
+                android:textColor="@color/neutral600"
+                tools:text="@string/reward_content" />
+
+            <!-- 벌점 카테고리 -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rcv_punish_tag"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:visibility="@{vm.uiState.isReward ? View.GONE : View.VISIBLE}"
+                android:nestedScrollingEnabled="true"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+            <!-- 상벌점 리스트 - 높이를 코드에서 동적으로 제한 -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rcv_reward_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                android:nestedScrollingEnabled="false"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+
+            <TextView
+                android:id="@+id/tv_memo_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="start"
+                android:text="@string/memo"
+                android:textAppearance="@style/CalloutBold"
+                android:textColor="@color/neutral800" />
+
+
+            <com.umc.presentation.component.UTextField
+                android:id="@+id/textfield_memo"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_marginTop="16dp"
+                android:background="@color/neutral000"
+                android:gravity="top|start"
+                app:cardBackgroundColor="@color/neutral000"
+                app:strokeColor="@color/neutral300"
+                app:strokeWidth="1dp"
+                app:placeholderText="@string/memo_placeholder"
+                app:textAppearance="@style/Subheadline"
+                app:text="@{vm.uiState.description}"
+                app:onTextChanged="@{vm::onTextChanged}" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="16dp">
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/btn_submit"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:onClick="@{()->vm.submitReward()}"
+                    android:visibility="@{vm.uiState.submitOk == true ? View.VISIBLE : View.GONE}"
+                    app:cardBackgroundColor="@color/primary500"
+                    app:cornerRadius="8dp"
+                    app:pressedColor="@color/primary700"
+                    app:text="@string/reward_submit"
+                    app:textAppearance="@style/HeadlineBold"
+                    app:textColor="@color/neutral000" />
+
+                <com.umc.presentation.component.UButton
+                    android:id="@+id/btn_submit_cancel"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:visibility="@{vm.uiState.submitOk == false ? View.VISIBLE : View.GONE}"
+                    app:cardBackgroundColor="@color/neutral300"
+                    app:cornerRadius="8dp"
+                    app:pressedColor="@color/neutral300"
+                    app:text="@string/reward_submit"
+                    app:textAppearance="@style/HeadlineBold"
+                    app:textColor="@color/neutral000" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</layout>

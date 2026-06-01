@@ -3,36 +3,38 @@ package com.umc.data.dataSource.remote.schedule
 import com.umc.data.api.ScheduleApi
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.request.schedule.CreateScheduleRequest
-import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
+import com.umc.data.request.schedule.DecideAttendanceRequest
+import com.umc.data.request.schedule.ExcuseAttendanceRequest
+import com.umc.data.request.schedule.ScheduleAttendanceRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
-import com.umc.data.response.schedule.ScheduleDetailResponse
-import com.umc.data.response.schedule.ScheduleListResponse
-import com.umc.data.response.schedule.ScheduleMonthResponse
-import com.umc.data.response.schedule.UpdateLocationResponse
+import com.umc.data.response.schedule.AttendanceDecisionResponse
+import com.umc.data.response.schedule.ScheduleAttendanceHistoryResponse
+import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
+import com.umc.data.response.schedule.ScheduleMeResponse
 import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import javax.inject.Inject
 
 class ScheduleRemoteDataSourceImpl @Inject constructor(
     private val scheduleApi: ScheduleApi
 ) : ScheduleRemoteDataSource {
 
-    //일정 리스트 조회
-    override suspend fun getScheduleList(): ApiState<List<ScheduleListResponse>> {
-        return apiCall {scheduleApi.getScheduleList()}
+    //일정 생성·수정 권한 조회
+    override suspend fun getScheduleCapabilities(): ApiState<ScheduleCapabilitiesResponse> {
+        return apiCall { scheduleApi.getScheduleCapabilities() }
+    }
+
+    //기간별 내 일정 조회
+    override suspend fun getSchedules(
+        from: String,
+        to: String,
+        isAttendanceRequired: Boolean
+    ): ApiState<List<ScheduleMeResponse>> {
+        return apiCall { scheduleApi.getSchedules(from, to, isAttendanceRequired) }
     }
 
     //일정 상세 조회
-    override suspend fun getScheduleDetail(scheduleId: Long): ApiState<ScheduleDetailResponse> {
-        return apiCall {scheduleApi.getScheduleDetail(scheduleId)}
-    }
-
-    //워별 일정 조회
-    override suspend fun getMonthSchedule(
-        year: Int,
-        month: Int
-    ): ApiState<List<ScheduleMonthResponse>> {
-        return apiCall {scheduleApi.getMonthSchedule(year, month)}
+    override suspend fun getScheduleDetail(scheduleId: Long): ApiState<ScheduleMeResponse> {
+        return apiCall { scheduleApi.getScheduleDetail(scheduleId) }
     }
 
     //일정 삭제하기
@@ -41,8 +43,8 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
     }
 
     //일정 생성하기
-    override suspend fun createScheduleWithAttendance(request: CreateScheduleRequest): ApiState<String> {
-        return apiCall {scheduleApi.createScheduleWithAttendance(request)}
+    override suspend fun createSchedule(request: CreateScheduleRequest): ApiState<Long> {
+        return apiCall { scheduleApi.createSchedule(request) }
     }
 
     //일정 수정하기
@@ -53,19 +55,40 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
         return apiCall {scheduleApi.updateSchedule(scheduleId, request)}
     }
 
-    // 위치 변경하기
-    override suspend fun updateScheduleLocation(
+    override suspend fun postAttendanceRequest(
         scheduleId: Long,
-        request: UpdateLocationRequest
-    ): ApiState<UpdateLocationResponse> {
-        return apiCall { scheduleApi.updateScheduleLocation(scheduleId, request) }
+        request: ScheduleAttendanceRequest
+    ): ApiState<Unit> {
+        return apiCall { scheduleApi.postAttendanceRequest(scheduleId, request) }
     }
 
+    override suspend fun postAttendanceDecide(
+        scheduleId: Long,
+        requests: List<DecideAttendanceRequest>
+    ): ApiState<List<AttendanceDecisionResponse>> {
+        return apiCall { scheduleApi.postAttendanceDecide(scheduleId, requests) }
+    }
 
-    override suspend fun createStudyGroupSchedule(
-        request: CreateStudyGroupScheduleRequest
-    ): ApiState<Long> {
-        return apiCall { scheduleApi.createStudyGroupSchedule(request) }
+    override suspend fun postAttendanceExcuse(
+        scheduleId: Long,
+        request: ExcuseAttendanceRequest
+    ): ApiState<Unit> {
+        return apiCall { scheduleApi.postAttendanceExcuse(scheduleId, request) }
+    }
+
+    override suspend fun getAttendanceHistory(
+        from: String?,
+        to: String?,
+        attendanceStatus: String?
+    ): ApiState<List<ScheduleAttendanceHistoryResponse>> {
+        return apiCall { scheduleApi.getAttendanceHistory(from, to, attendanceStatus) }
+    }
+
+    override suspend fun getScheduleAttendanceDetail(
+        scheduleId: Long,
+        attendanceStatus: String?
+    ): ApiState<ScheduleAttendanceHistoryResponse> {
+        return apiCall { scheduleApi.getScheduleAttendanceDetail(scheduleId, attendanceStatus) }
     }
 
 }

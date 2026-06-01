@@ -6,14 +6,12 @@ import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.ItemTouchHelper
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.umc.presentation.base.BaseFragment
 import com.umc.presentation.databinding.CustomDialogBestBinding
 import com.umc.presentation.databinding.CustomDialogReviewBinding
 import com.umc.presentation.databinding.FragmentAdminStudySubmitBinding
 import com.umc.presentation.ui.act.study.submit.adapter.AdminActStudySubmitAdapter
-import com.umc.presentation.ui.act.study.submit.adapter.AdminStudySubmitSwipeController
 import com.umc.presentation.ui.act.study.submit.bottomsheet.AdminActStudySubmitGroupSelectBottomSheet
 import com.umc.presentation.ui.act.study.submit.bottomsheet.AdminActStudySubmitWeekSelectBottomSheet
 import com.umc.presentation.ui.act.study.submit.model.AdminActStudySubmitAction
@@ -35,7 +33,6 @@ class AdminActStudySubmitFragment :
     override val viewModel: AdminActStudySubmitViewModel by viewModels()
 
     private lateinit var adapter: AdminActStudySubmitAdapter
-    private lateinit var swipeController: AdminStudySubmitSwipeController
 
     private var bestDialog: androidx.appcompat.app.AlertDialog? = null
     private var reviewDialog: androidx.appcompat.app.AlertDialog? = null
@@ -50,28 +47,9 @@ class AdminActStudySubmitFragment :
 
 
         adapter = AdminActStudySubmitAdapter(
-            onClickBest = { item -> viewModel.onAction(AdminActStudySubmitAction.ClickBest(item)) },
             onClickReview = { item -> viewModel.onAction(AdminActStudySubmitAction.ClickReview(item)) },
         )
         binding.rvSubmit.adapter = adapter
-
-        swipeController = AdminStudySubmitSwipeController(
-            recyclerView = binding.rvSubmit,
-            isBestEnabled = { pos -> adapter.currentList.getOrNull(pos)?.isBestEnabled == true },
-            isReviewEnabled = { pos -> adapter.currentList.getOrNull(pos)?.isReviewEnabled == true },
-            onClickBest = { position ->
-                adapter.currentList.getOrNull(position)?.let { item ->
-                    viewModel.onAction(AdminActStudySubmitAction.ClickBest(item))
-                }
-            },
-            onClickReview = { position ->
-                adapter.currentList.getOrNull(position)?.let { item ->
-                    viewModel.onAction(AdminActStudySubmitAction.ClickReview(item))
-                }
-            }
-        )
-        ItemTouchHelper(swipeController).attachToRecyclerView(binding.rvSubmit)
-
 
         binding.clWeekDropdown.setOnClickListener {
             AdminActStudySubmitWeekSelectBottomSheet(
@@ -114,7 +92,7 @@ class AdminActStudySubmitFragment :
                 when (event) {
                     is AdminActStudySubmitEvent.ShowBestDialog -> showBestDialog(event.item)
                     is AdminActStudySubmitEvent.ShowReviewDialog -> showReviewDialog(event.item)
-                    is AdminActStudySubmitEvent.ShowToast -> { /* showToast(event.message) */ }
+                    is AdminActStudySubmitEvent.ShowToast -> showToast(event.message)
                 }
             }
         }
@@ -205,5 +183,9 @@ class AdminActStudySubmitFragment :
             viewModel.onAction(AdminActStudySubmitAction.SubmitReview(true, url, feedback))
             reviewDialog?.dismiss()
         }
+    }
+
+    private fun showToast(message: String) {
+        android.widget.Toast.makeText(requireContext(), message, android.widget.Toast.LENGTH_SHORT).show()
     }
 }

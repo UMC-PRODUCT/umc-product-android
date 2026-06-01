@@ -30,13 +30,14 @@ class NoticeRepositoryImpl @Inject constructor(
 
     override suspend fun getNotices(
         gisuId: Long,
+        noticeTab: String,
         chapterId: Long?,
         schoolId: Long?,
         part: String?,
         page: Int,
         size: Int
     ): ApiState<NoticeSearch> =
-        noticeRemoteDataSource.getNotices(gisuId, chapterId, schoolId, part, page, size)
+        noticeRemoteDataSource.getNotices(gisuId, noticeTab, chapterId, schoolId, part, page, size)
             .map { it.toModel() }
 
     override suspend fun getNoticeDetail(noticeId: Long): ApiState<NoticeDetail> =
@@ -63,13 +64,14 @@ class NoticeRepositoryImpl @Inject constructor(
     override suspend fun searchNotices(
         keyword: String,
         gisuId: Long,
+        noticeTab: String,
         chapterId: Long?,
         schoolId: Long?,
         part: String?,
         page: Int,
         size: Int
     ): ApiState<NoticeSearch> =
-        noticeRemoteDataSource.searchNotices(keyword, gisuId, chapterId, schoolId, part, page, size)
+        noticeRemoteDataSource.searchNotices(keyword, gisuId, noticeTab, chapterId, schoolId, part, page, size)
             .map { it.toModel() }
 
     override suspend fun editNoticeLinks(
@@ -86,7 +88,7 @@ class NoticeRepositoryImpl @Inject constructor(
 
     override suspend fun updateNoticeImages(
         noticeId: Long,
-        request: NoticeUpdateRequest
+        request: NoticeImageRequest
     ): ApiState<Unit> =
         noticeRemoteDataSource.updateNoticeImages(noticeId, request)
 
@@ -110,4 +112,7 @@ class NoticeRepositoryImpl @Inject constructor(
 
     override suspend fun submitVoteResponse(voteId: Long, request: VoteResponseRequest): ApiState<Unit> =
         noticeRemoteDataSource.submitVoteResponse(voteId, request)
+
+    override suspend fun updateVoteResponse(voteId: Long, request: VoteResponseRequest): ApiState<Unit> =
+        noticeRemoteDataSource.updateVoteResponse(voteId, request)
 }

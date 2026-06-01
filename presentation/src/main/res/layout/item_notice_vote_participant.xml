@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="displayName"
+            type="String" />
+
+        <variable
+            name="profileImageUrl"
+            type="String" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="12dp">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_participant_profile"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_profile_default"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:profileImageUrl="@{profileImageUrl}"
+            app:shapeAppearanceOverlay="@style/CircleImageAppearance"
+            app:strokeColor="@color/neutral100"
+            app:strokeWidth="1dp" />
+
+        <TextView
+            android:id="@+id/text_participant_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@{displayName}"
+            android:textAppearance="@style/BodyBold"
+            android:textColor="@color/neutral800"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/image_participant_profile"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="닉네임 / 이름" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

@@ -70,7 +70,7 @@
             app:tabIndicatorColor="@color/neutral800"
             app:tabSelectedTextColor="@color/neutral800"
             app:tabTextColor="@color/neutral400"
-            app:tabTextAppearance="@style/SubheadlineBold"
+            app:tabTextAppearance="@style/HeadlineBold"
             app:tabRippleColor="@android:color/transparent"
             app:layout_constraintTop_toBottomOf="@+id/header_layout"
             app:layout_constraintStart_toStartOf="parent"

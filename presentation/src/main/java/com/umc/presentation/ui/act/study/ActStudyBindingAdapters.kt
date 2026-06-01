@@ -96,55 +96,55 @@ fun View.enabledWhenConfirmReady(item: ActStudyItemUiModel?) {
     alpha = if (enabled) 1f else 0.4f
 }
 
-
-
-@BindingAdapter(
-    value = ["timelineStatus", "timelineWeek", "timelineLocked"],
-    requireAll = true
-)
-fun ConstraintLayout.bindTimeline(
-    status: StudyStatus?,
-    week: Int?,
-    locked: Boolean?
-) {
-    if (status == null || week == null || locked == null) return
-
-    val icon = findViewById<ImageView>(R.id.iv_timeline_status)
-    val number = findViewById<TextView>(R.id.tv_timeline_number)
-
-    if (locked) {
-        icon.setImageResource(R.drawable.ic_locked)
-        icon.visibility = View.VISIBLE
-        number.visibility = View.GONE
-        return
-    }
-
-
-    number.visibility = View.VISIBLE
-    number.text = week.toString()
-
-
-    icon.visibility = View.VISIBLE
-    icon.setImageResource(R.drawable.bg_primary500_circle)
-
-    when (status) {
-        StudyStatus.PASS -> {
-            icon.setImageResource(R.drawable.ic_check_success)
-            number.visibility = View.GONE
-        }
-
-        StudyStatus.FAIL -> {
-            icon.setImageResource(R.drawable.ic_check_failed)
-            number.visibility = View.GONE
-        }
-
-        StudyStatus.IN_PROGRESS -> {
-
-        }
-
-
-    }
-}
+//
+//
+//@BindingAdapter(
+//    value = ["timelineStatus", "timelineWeek", "timelineLocked"],
+//    requireAll = true
+//)
+//fun ConstraintLayout.bindTimeline(
+//    status: StudyStatus?,
+//    week: Int?,
+//    locked: Boolean?
+//) {
+//    if (status == null || week == null || locked == null) return
+//
+//    val icon = findViewById<ImageView>(R.id.iv_timeline_status)
+//    val number = findViewById<TextView>(R.id.tv_timeline_number)
+//
+//    if (locked) {
+//        icon.setImageResource(R.drawable.ic_locked)
+//        icon.visibility = View.VISIBLE
+//        number.visibility = View.GONE
+//        return
+//    }
+//
+//
+//    number.visibility = View.VISIBLE
+//    number.text = week.toString()
+//
+//
+//    icon.visibility = View.VISIBLE
+//    icon.setImageResource(R.drawable.bg_primary500_circle)
+//
+//    when (status) {
+//        StudyStatus.PASS -> {
+//            icon.setImageResource(R.drawable.ic_check_success)
+//            number.visibility = View.GONE
+//        }
+//
+//        StudyStatus.FAIL -> {
+//            icon.setImageResource(R.drawable.ic_check_failed)
+//            number.visibility = View.GONE
+//        }
+//
+//        StudyStatus.IN_PROGRESS -> {
+//
+//        }
+//
+//
+//    }
+//}
 
 @BindingAdapter("platformTagStyle")
 fun UButton.bindPlatformTagStyle(enabled: Boolean) {
