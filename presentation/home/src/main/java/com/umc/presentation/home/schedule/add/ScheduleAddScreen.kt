@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.component.UText
+import com.umc.presentation.home.home.CalendarDatePickerDialog
 import com.umc.presentation.home.schedule.dialog.LocationSearchBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddBottomSheet
@@ -52,6 +53,12 @@ fun ScheduleAddRoute(
     var showLocationDialog by remember {mutableStateOf(false)}
     var showParticipantDialog by remember { mutableStateOf(false) }
 
+    var showStartDatePicker by remember { mutableStateOf(false) }
+    var showEndDatePicker by remember { mutableStateOf(false) }
+
+    var showStartTimePicker by remember { mutableStateOf(false) }
+    var showEndTimePicker by remember { mutableStateOf(false) }
+
     LaunchedEffect(viewModel){
         viewModel.uiEvent.collectLatest { event ->
             when (event){
@@ -74,10 +81,10 @@ fun ScheduleAddRoute(
             participantViewModel.setSelectedParticipant(uiState.selectedParticipants)
             showParticipantDialog = true
                              },
-        onStartDateClick = {  },
-        onStartTimeClick = {  },
-        onEndDateClick = {  },
-        onEndTimeClick = {  },
+        onStartDateClick = { showStartDatePicker = true },
+        onStartTimeClick = { showStartTimePicker = true },
+        onEndDateClick = { showEndDatePicker = true },
+        onEndTimeClick = { showEndTimePicker = true },
         onRegisterClick = {
             //운영진 여부 및 수정 모드에 따른 분기 로직
             if (uiState.isManager && !uiState.editMode) {
@@ -134,6 +141,40 @@ fun ScheduleAddRoute(
                 participantViewModel.clearParticipantSearch()
                 showParticipantDialog = false
             }
+        )
+    }
+
+    if (showStartDatePicker) {
+        CalendarDatePickerDialog(
+            selectedDate = java.time.Instant.ofEpochMilli(uiState.startDate.timeInMillis)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDate(),
+            onDateSelected = { localDate ->
+                //Calendar.MONTH는 0부터 시작하므로 localDate.monthValue - 1
+                viewModel.updateStartDate(
+                    localDate.year,
+                    localDate.monthValue - 1,
+                    localDate.dayOfMonth)
+                showStartDatePicker = false
+            },
+            onDismiss = { showStartDatePicker = false }
+        )
+    }
+
+    if(showEndDatePicker){
+        CalendarDatePickerDialog(
+            selectedDate = java.time.Instant.ofEpochMilli(uiState.endDate.timeInMillis)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDate(),
+            onDateSelected = { localDate ->
+                viewModel.updateEndDate(
+                    localDate.year,
+                    localDate.monthValue - 1,
+                    localDate.dayOfMonth
+                )
+                showEndDatePicker = false
+            },
+            onDismiss = { showEndDatePicker = false }
         )
     }
 
