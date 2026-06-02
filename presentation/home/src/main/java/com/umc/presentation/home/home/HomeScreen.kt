@@ -154,7 +154,7 @@ fun HomeScreen(
 
                 HomeProfileCard(uiState = uiState)
 
-                if (uiState.userType == UserType.ACTIVE || uiState.userType == UserType.OB) {
+                if (uiState.userType == UserType.ACTIVE) {
                     Spacer(modifier = Modifier
                         .height(16.dp)
                     )

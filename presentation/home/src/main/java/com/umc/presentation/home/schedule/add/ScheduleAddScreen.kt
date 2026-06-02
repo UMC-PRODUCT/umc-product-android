@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.component.UText
+import com.umc.component.component.UTimePickerDialog
 import com.umc.presentation.home.home.CalendarDatePickerDialog
 import com.umc.presentation.home.schedule.dialog.LocationSearchBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
@@ -175,6 +176,30 @@ fun ScheduleAddRoute(
                 showEndDatePicker = false
             },
             onDismiss = { showEndDatePicker = false }
+        )
+    }
+
+    if(showStartTimePicker){
+        UTimePickerDialog(
+            initialHour = uiState.startTime.get(java.util.Calendar.HOUR_OF_DAY),
+            initialMinute = uiState.startTime.get(java.util.Calendar.MINUTE),
+            onConfirm = { hour, minute ->
+                viewModel.updateStartTime(hour, minute)
+                showStartTimePicker = false
+            },
+            onDismiss = { showStartTimePicker = false }
+        )
+    }
+
+    if(showEndTimePicker){
+        UTimePickerDialog(
+            initialHour = uiState.endTime.get(java.util.Calendar.HOUR_OF_DAY),
+            initialMinute = uiState.endTime.get(java.util.Calendar.MINUTE),
+            onConfirm = { hour, minute ->
+                viewModel.updateEndTime(hour, minute)
+                showEndTimePicker = false
+            },
+            onDismiss = { showEndTimePicker = false }
         )
     }
 
@@ -482,6 +507,8 @@ fun ScheduleAddActionButtons(
         )
     }
 }
+
+
 
 @Preview(showBackground = true)
 @Composable
