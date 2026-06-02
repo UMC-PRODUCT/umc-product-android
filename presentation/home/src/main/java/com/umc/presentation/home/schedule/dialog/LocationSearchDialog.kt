@@ -67,9 +67,7 @@ fun LocationSearchBottomSheet(
         skipPartiallyExpanded = true,
         confirmValueChange = { it != SheetValue.Hidden },
     )
-
-    // 바텀시트 전체가 유연하게 스크롤될 수 있도록 스크롤 상태 정의
-    val mainScrollState = rememberScrollState()
+    
 
     // 공식 SDK 가이드 기준 카메라 상태 초기화
     val cameraPositionState = rememberCameraPositionState()
