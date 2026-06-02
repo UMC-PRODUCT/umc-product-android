@@ -8,10 +8,14 @@ import com.umc.domain.model.curriculum.StudyGroup
 import com.umc.domain.model.curriculum.WorkbookSubmissionItem
 
 interface CurriculumRepository {
-    suspend fun getMyCurriculumProgress(page: Int?, limit: Int?): ApiState<StudyProgress>
+    suspend fun getMyCurriculumProgress(gisuId: Long): ApiState<StudyProgress>
 
     suspend fun submitChallengerWorkbook(challengerWorkbookId: Long, submission: String): ApiState<Unit>
 
+    suspend fun getCurriculumOverview(
+        gisuId: Long,
+        part: String,
+    ): ApiState<StudyProgress>
 
     suspend fun getWorkbookSubmissions(
         weekNo: Int,

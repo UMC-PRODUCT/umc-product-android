@@ -57,14 +57,20 @@ import com.umc.component.R
 
 @Composable
 fun LoginRoute(
+    navigateToStudy: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel(),
+    navigateToSignUp: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest {
-            // TODO 이벤트 처리
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is LoginEvent.MoveToSignUpEvent -> navigateToSignUp(event.oAuthToken)
+                // TODO: handle remaining events
+                else -> Unit
+            }
         }
     }
 
