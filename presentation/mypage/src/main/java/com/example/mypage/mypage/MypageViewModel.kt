@@ -22,7 +22,6 @@ import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.code
 
 @HiltViewModel
 class MypageViewModel @Inject constructor(

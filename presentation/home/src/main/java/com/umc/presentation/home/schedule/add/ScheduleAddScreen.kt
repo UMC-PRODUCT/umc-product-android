@@ -27,21 +27,38 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.component.UText
+import com.umc.component.component.UTimePickerDialog
+import com.umc.presentation.home.home.CalendarDatePickerDialog
+import com.umc.presentation.home.schedule.dialog.LocationSearchBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
+import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddBottomSheet
+import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddDialogViewModel
 
 @Composable
 fun ScheduleAddRoute(
     viewModel: ScheduleAddViewModel = hiltViewModel(),
+    participantViewModel: ScheduleChallengerAddDialogViewModel = hiltViewModel(),
     onShowAttendanceDialog: (onConfirm: () -> Unit, onReject: () -> Unit) -> Unit
 ){
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val participantUiState by participantViewModel.uiState.collectAsStateWithLifecycle()
+
     //뒤로 가기 디스패처
     /**TODO. 삭제 - MainActivity에서 적용할 예정**/
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     //다이얼로그 표시 여부 체크
     var showCategoryDialog by remember { mutableStateOf(false) }
+    var showLocationDialog by remember {mutableStateOf(false)}
+    var showParticipantDialog by remember { mutableStateOf(false) }
+
+    var showStartDatePicker by remember { mutableStateOf(false) }
+    var showEndDatePicker by remember { mutableStateOf(false) }
+
+    var showStartTimePicker by remember { mutableStateOf(false) }
+    var showEndTimePicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel){
         viewModel.uiEvent.collectLatest { event ->
@@ -59,12 +76,16 @@ fun ScheduleAddRoute(
         onDetailChanged = viewModel::updatePlanDetail,
         onAlldayChanged = viewModel::setAllday,
         onCategoryClick = { showCategoryDialog = true },
-        onLocationClick = {  },
-        onParticipantClick = {  },
-        onStartDateClick = {  },
-        onStartTimeClick = {  },
-        onEndDateClick = {  },
-        onEndTimeClick = {  },
+        onLocationClick = { showLocationDialog = true },
+        onParticipantClick = {
+            //일정 추가에 있는 챌린저 정보를 다이얼로그 뷰모델에 전달(챌린저 추가/삭제 유지)
+            participantViewModel.setSelectedParticipant(uiState.selectedParticipants)
+            showParticipantDialog = true
+                             },
+        onStartDateClick = { showStartDatePicker = true },
+        onStartTimeClick = { showStartTimePicker = true },
+        onEndDateClick = { showEndDatePicker = true },
+        onEndTimeClick = { showEndTimePicker = true },
         onRegisterClick = {
             //운영진 여부 및 수정 모드에 따른 분기 로직
             if (uiState.isManager && !uiState.editMode) {
@@ -85,6 +106,100 @@ fun ScheduleAddRoute(
             categories = uiState.categories,
             onDismissRequest = { showCategoryDialog = false },
             onConfirm = { showCategoryDialog = false }
+        )
+    }
+
+    if (showLocationDialog) {
+        LocationSearchBottomSheet(
+            onDismissRequest = { showLocationDialog = false },
+            onLocationSelected = {
+                viewModel.updatePlanLocation(it)
+                showLocationDialog = false
+            }
+        )
+    }
+
+    if (showParticipantDialog) {
+        ScheduleChallengerAddBottomSheet(
+            searchQuery = participantUiState.searchQuery,
+            isSearching = participantUiState.isSearching,
+            isLoading = participantUiState.isLoading,
+            hasNext = participantUiState.hasNext,
+            selectedParticipants = participantUiState.selectedParticipants,
+            selectedParticipantsString = participantUiState.selectedParticipantsString,
+            searchResults = participantUiState.searchResults,
+
+            onQueryChanged = participantViewModel::searchParticipants,
+            onLoadMore = participantViewModel::loadMoreParticipants,
+            onToggleParticipant = participantViewModel::toggleParticipant,
+            onConfirm = { finalParticipants, summaryString ->
+                //다이얼로그가 들고 있던최종 명단을
+                //메인 뷰모델 내부로 전달하며 창을 종료
+                viewModel.updateParticipants(finalParticipants, summaryString)
+                showParticipantDialog = false
+            },
+            onDismissRequest = {
+                participantViewModel.clearParticipantSearch()
+                showParticipantDialog = false
+            }
+        )
+    }
+
+    if (showStartDatePicker) {
+        CalendarDatePickerDialog(
+            selectedDate = java.time.Instant.ofEpochMilli(uiState.startDate.timeInMillis)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDate(),
+            onDateSelected = { localDate ->
+                //Calendar.MONTH는 0부터 시작하므로 localDate.monthValue - 1
+                viewModel.updateStartDate(
+                    localDate.year,
+                    localDate.monthValue - 1,
+                    localDate.dayOfMonth)
+                showStartDatePicker = false
+            },
+            onDismiss = { showStartDatePicker = false }
+        )
+    }
+
+    if(showEndDatePicker){
+        CalendarDatePickerDialog(
+            selectedDate = java.time.Instant.ofEpochMilli(uiState.endDate.timeInMillis)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDate(),
+            onDateSelected = { localDate ->
+                viewModel.updateEndDate(
+                    localDate.year,
+                    localDate.monthValue - 1,
+                    localDate.dayOfMonth
+                )
+                showEndDatePicker = false
+            },
+            onDismiss = { showEndDatePicker = false }
+        )
+    }
+
+    if(showStartTimePicker){
+        UTimePickerDialog(
+            initialHour = uiState.startTime.get(java.util.Calendar.HOUR_OF_DAY),
+            initialMinute = uiState.startTime.get(java.util.Calendar.MINUTE),
+            onConfirm = { hour, minute ->
+                viewModel.updateStartTime(hour, minute)
+                showStartTimePicker = false
+            },
+            onDismiss = { showStartTimePicker = false }
+        )
+    }
+
+    if(showEndTimePicker){
+        UTimePickerDialog(
+            initialHour = uiState.endTime.get(java.util.Calendar.HOUR_OF_DAY),
+            initialMinute = uiState.endTime.get(java.util.Calendar.MINUTE),
+            onConfirm = { hour, minute ->
+                viewModel.updateEndTime(hour, minute)
+                showEndTimePicker = false
+            },
+            onDismiss = { showEndTimePicker = false }
         )
     }
 
@@ -392,6 +507,8 @@ fun ScheduleAddActionButtons(
         )
     }
 }
+
+
 
 @Preview(showBackground = true)
 @Composable

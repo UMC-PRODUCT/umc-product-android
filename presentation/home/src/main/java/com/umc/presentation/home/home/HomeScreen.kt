@@ -7,14 +7,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +27,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -334,6 +338,8 @@ fun HomeProfileCard(uiState: HomeUiState) {
 }
 
 
+
+
 /**
  * 일정 제목 및 뷰 모드(달력/리스트) 전환 헤더
  */
@@ -423,8 +429,9 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
         colors = CardDefaults.cardColors(containerColor = neutral200()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Column(modifier = Modifier
-            .padding(16.dp)
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
         ) {
 
             //X기 활동 상태
@@ -434,56 +441,92 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                 color = neutral800()
             )
 
-            Spacer(modifier = Modifier
-                .height(12.dp)
+            Spacer(
+                modifier = Modifier
+                    .height(12.dp)
             )
 
-            //상벌점 판
-            Surface(
+            //상벌점 UI 표
+            Row(
                 modifier = Modifier
                     .fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                color = neutral000()
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+
+                //상벌점 2개판
+                Surface(
+                    modifier = Modifier.weight(2f),
+                    shape = RoundedCornerShape(8.dp),
+                    color = neutral000(),
                 ) {
-                    //상점
-                    ScoreCard(
+                    Row(
                         modifier = Modifier
-                            .weight(1f),
-                        label = AppStrings.REWARD,
-                        score = uiState.sangjum,
-                        color = success500(),
-                        bgColor = success100()
-                    )
+                            .height(IntrinsicSize.Min)
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        //상점
+                        ScoreCard(
+                            modifier = Modifier
+                                .weight(1f),
+                            label = AppStrings.REWARD,
+                            score = uiState.sangjum,
+                            color = success500(),
+                            bgColor = success100()
+                        )
 
-                    VerticalDivider()
+                        VerticalDivider(
+                            thickness = 1.dp,
+                            color = neutral200(),
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .padding(horizontal = 8.dp)
+                        )
 
-                    //벌점
-                    ScoreCard(
+
+                        //벌점
+                        ScoreCard(
+                            modifier = Modifier
+                                .weight(1f),
+                            label = AppStrings.PUNISH,
+                            score = uiState.buljum,
+                            color = danger500(),
+                            bgColor = danger100()
+                        )
+                    }
+                }
+
+                Image(
+                    painter = painterResource(
+                        id = R.drawable.ic_forward_circle
+                    ),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+
+                )
+
+                //총점
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    color = neutral000()
+                ) {
+                    Row(
                         modifier = Modifier
-                            .weight(1f),
-                        label = AppStrings.PUNISH,
-                        score = uiState.buljum,
-                        color = danger500(),
-                        bgColor = danger100()
-                    )
-
-                    VerticalDivider()
-
-                    //총합
-                    ScoreCard(
-                        modifier = Modifier
-                            .weight(1f),
-                        label = AppStrings.HAB,
-                        score = uiState.total,
-                        color = primary500(),
-                        bgColor = primary100()
-                    )
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        //총합
+                        ScoreCard(
+                            modifier = Modifier
+                                .weight(1f),
+                            label = AppStrings.HAB,
+                            score = uiState.total,
+                            color = primary500(),
+                            bgColor = primary100()
+                        )
+                    }
                 }
             }
         }
@@ -499,7 +542,13 @@ private fun ScoreCard(
     color: Color,
     bgColor: Color
 ) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+
+    Row(
+        modifier = modifier
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ){
         //UButton 컴포저블을 활용하여 일관된 디자인 유지
         UButton(
             text = label,
@@ -511,25 +560,20 @@ private fun ScoreCard(
             modifier = Modifier
                 .height(24.dp),
         )
+        Spacer(modifier = Modifier
+            .width(8.dp)
+        )
         UText(
-            text = score.toString(),
-            modifier = Modifier
-                .padding(top = 8.dp),
+            text = "${score}점",
+            modifier = Modifier,
             style = UmcTypographyTokens.HeadlineBold,
             color = neutral900()
         )
     }
+
 }
 
-//카드 분할 Divider
-@Composable
-private fun VerticalDivider() {
-    Box(modifier = Modifier
-        .width(1.dp)
-        .height(54.dp)
-        .background(neutral200())
-    )
-}
+
 
 
 

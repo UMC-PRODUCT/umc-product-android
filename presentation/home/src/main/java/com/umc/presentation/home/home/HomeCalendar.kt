@@ -24,6 +24,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TextButton
@@ -340,7 +341,7 @@ private fun DayItem(
 //DatePicker 다이얼로그
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CalendarDatePickerDialog(
+public fun CalendarDatePickerDialog(
     selectedDate: LocalDate, //선택한 날짜
     onDateSelected: (LocalDate) -> Unit, //날짜를 선택했을 때 콜백 함수
     onDismiss: () -> Unit //DatePicker 사라질 때 콜백 함수 (없애)
@@ -360,7 +361,10 @@ private fun CalendarDatePickerDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { UText(AppStrings.CANCEL) }
-        }
+        },
+        colors = DatePickerDefaults.colors(
+            containerColor = neutral000(),
+        )
     ) {
         DatePicker(state = datePickerState)
     }

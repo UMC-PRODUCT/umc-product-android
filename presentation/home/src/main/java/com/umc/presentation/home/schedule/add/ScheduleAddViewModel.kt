@@ -19,13 +19,16 @@ import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.challenger.SearchChallengerScheduleUseCase
 import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.schedule.CreateScheduleUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailHomeUseCase
 import com.umc.domain.usecase.schedule.UpdateScheduleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -33,6 +36,8 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
+import kotlin.plus
+import kotlin.text.isEmpty
 
 @HiltViewModel
 class ScheduleAddViewModel @Inject
@@ -43,6 +48,7 @@ constructor(
     private val createScheduleUseCase: CreateScheduleUseCase, //일정 생성하기
     private val updateScheduleUseCase: UpdateScheduleUseCase, //일정 수정하기
     private val getMemberProfileUseCase: GetMemberProfileUseCase, //유저 정보 가져오기
+    private val searchChallengerScheduleUseCase: SearchChallengerScheduleUseCase, //유저 검색
 ): BaseViewModel<ScheduleAddUiState, ScheduleAddEvent>(
     ScheduleAddUiState()
 ) {
@@ -53,6 +59,10 @@ constructor(
     private val parseTimeSdf = SimpleDateFormat("HH:mm", Locale.KOREAN)
 
     private val checkScheduleId: Long = savedStateHandle.get<Long>("scheduleId") ?: -1L
+
+    //검색 작업용 코루틴
+    private var searchJob: Job? = null
+
 
     init {
         loadInitialData()
@@ -331,16 +341,134 @@ constructor(
 
     }
 
+    
+    /**---ScheduleChallengerDialog에서의 실질 로직---**/
+/*
+    // 유저 검색 로직
+    fun searchParticipants(query: String) {
+        //이전 작업 취소
+        searchJob?.cancel()
 
-    /**viewModel 값 업데이트**/
+        //쿼리가 비어있으면 검색X
+        if (query.isBlank()) {
+            clearParticipantSearch()
+            return
+        }
+
+        //일단 현재 상태를 반영해서
+        updateState {
+            copy(
+                searchQuery = query,
+                searchResults = emptyList(),
+                nextCursor = null,
+                hasNext = true,
+                isSearching = query.isNotBlank()
+            )
+        }
+        searchJob = viewModelScope.launch {
+            delay(500) //'박ㅇ' 등이 완성되어 '박유수'가 될 때까지 기다림
+            fetchParticipants(isNextPage = false)
+        }
+    }
+    
+    
+    // 실질적으로 usecae로 유저 데이터를 가져오는 로직
+    private fun fetchParticipants(isNextPage: Boolean) {
+        val state = uiState.value
+
+        //API 호출중임을 표시
+        updateState {
+            copy(
+                isLoading = true,
+            ) }
+
+        viewModelScope.launch {
+            // UseCase 호출: 다음 페이지면 보관된 커서 사용, 아니면 null(처음)
+            val cursor = if (isNextPage) state.nextCursor else null
+
+            resultResponse(
+                response = searchChallengerScheduleUseCase(
+                    cursor = cursor,
+                    size = 50,
+                    name = state.searchQuery.ifBlank { null } // 빈 검색어는 null로 그 외는 searchParticipant에서 가져온 쿼리로
+                ),
+                successCallback = { response ->
+                    Log.d("log_home", "유저검색 성공: ${response.content}")
+                    updateState {
+                        copy(
+                            searchResults = response.content,
+                            nextCursor = response.nextCursor,
+                            hasNext = response.hasNext,
+                            isLoading = false
+                        )
+                    }
+                },
+                errorCallback = {
+                    //검색 실패 시, 로딩 해제 및 다음 꺼 X
+                    Log.d("log_home", "유저검색 실패: ${it.message}")
+                    updateState { copy(isLoading = false, hasNext = false) }
+                }
+            )
+        }
+    }
+
+    // 무한 스크롤 로직 (바닥 도달 시 추가 데이터 로드)
+    fun loadMoreParticipants() {
+        val state = uiState.value
+        // 로딩 중이거나 다음 페이지가 없으면 중단
+        if (state.isLoading || !state.hasNext) return
+
+        fetchParticipants(isNextPage = true)
+    }
+
+    // 인원 토글 로직
+    fun toggleParticipant(user: ParticipantItem) {
+        updateState {
+            val isExist = selectedParticipants.any { it.id == user.id }
+            val newList = if (isExist) {
+                selectedParticipants.filter { it.id != user.id }
+            } else {
+                selectedParticipants + user
+            }
+
+            //결과 스트링 작성
+            val summaryText = when {
+                newList.isEmpty() -> ""
+                newList.size == 1 -> newList[0].name
+                else -> "${newList[0].name} 외 ${newList.size - 1}명"
+            }
+
+            copy(selectedParticipants = newList,
+                selectedParticipantsString = summaryText
+            )
+        }
+    }
+
+
+
+    //검색 기록을 초기화하하고 중지하는 함수
+    fun clearParticipantSearch() {
+        searchJob?.cancel()
+        updateState {
+            copy(
+                searchResults = emptyList(), // 혹은 초기 리스트(allChallengers)
+                searchQuery = "",
+                isSearching = false
+            )
+        }
+    }
+
+
+ */
+    /***---------------------------------***/
+
     // 다이얼로그에서 가져온 참여자 정보를 업데이트 하는 함수
     fun updateParticipants(participants: List<ParticipantItem>, participantsString: String) {
         updateState {
             copy(
                 selectedParticipants = participants,
                 selectedParticipantsString = participantsString
-            )
-        }
+            ) }
     }
 
     // 일정 이름 변경
@@ -495,7 +623,16 @@ data class ScheduleAddUiState(
 
 
     //인원 검색 관련
-    /**TODO 일단은 이름만 받는다고 가정**/
+    /**xml과 달리 별도의 ViewModel 사용 X**/
+    /*
+    val searchQuery: String = "",  // 검색 텍스트 창
+    val isSearching: Boolean = false, // 검색 모드 활성화 여부
+    val searchResults: List<ParticipantItem> = emptyList(), // 검색 결과 명단
+    val nextCursor: Long? = null, // 무한 스크롤 페이징용 커서
+    val hasNext: Boolean = true, // 다음 페이지 존재 여부
+    val isLoading: Boolean = false,
+
+     */
     val selectedParticipants: List<ParticipantItem> = emptyList(), //선택된 참여자 결과(recyclerview에 쓰임)
     val selectedParticipantsString : String = "", //cdv에 보여줄 string
 

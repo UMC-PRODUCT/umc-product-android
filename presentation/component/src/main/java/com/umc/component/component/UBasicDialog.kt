@@ -138,10 +138,14 @@ fun UBasicDialog(
                     style = UmcTypographyTokens.Title3Bold,
                     color = neutral800())
 
-                if (content != null) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                content?.let { text ->
+                    Spacer(
+                        modifier = Modifier
+                        .height(16.dp)
+                    )
+
                     Text(
-                        text = content!!,
+                        text = text,
                         style = UmcTypographyTokens.Subheadline,
                         color = neutral600()
                     )
