@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,7 +39,9 @@ import java.time.LocalDate
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -60,6 +63,7 @@ import com.umc.component.theme.danger500
 import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
+import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral700
 import com.umc.component.theme.neutral800
@@ -154,14 +158,15 @@ fun HomeScreen(
                     onNotificationClick = onNotificationClick
                 )
 
-                HomeProfileCard(uiState = uiState)
+                //HomeProfileCard(uiState = uiState)
+                HomeProfileCardsRow(uiState = uiState)
 
-                if (uiState.userType == UserType.ACTIVE) {
+                //if (uiState.userType == UserType.ACTIVE) {
                     Spacer(modifier = Modifier
                         .height(16.dp)
                     )
                     HomeActivityStatusCard(uiState = uiState)
-                }
+                //}
             }
         }
 
@@ -271,6 +276,216 @@ fun HomeScreen(
     }
 }
 
+
+/**
+ * 프로필 카드 V2
+ *
+ * **/
+@Composable
+fun HomeProfileCardsRow(
+    uiState: HomeUiState
+) {
+
+    //Row에 2개의 카드를 표시
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+
+        //1. 좌측 누적 활동일 카드
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .height(108.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = neutral000())
+        ){
+            Box(modifier = Modifier.fillMaxSize()) {
+
+                Image(
+                    painter = painterResource(id = R.drawable.ic_home_attend_day_background),
+                    contentDescription = "누적 활동일 배경",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .height(100.dp)
+                        .aspectRatio(724f / 432f) //Figma 이미지의 비율 반영
+                        .align(Alignment.BottomEnd)
+                )
+
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                ) {
+                    UText(
+                        text = "누적 활동일",
+                        style = UmcTypographyTokens.BodyBold,
+                        color = neutral800()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(
+                                style = UmcTypographyTokens.Title3Bold.toSpanStyle().copy(
+                                    color = primary500(),
+                                )
+                            ) {
+                                append("${uiState.growDay}")
+                                append(" ")
+                            }
+                            // 나머지 부분
+                            withStyle(
+                                style = UmcTypographyTokens.Footnote.toSpanStyle().copy(
+                                    color = neutral700(),
+                                )
+                            ) {
+                                append("Days")
+                            }
+                        }
+                    )
+                }
+
+            }
+        }
+
+        //2. 우측 참여 기수 카드
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .height(108.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = neutral000())
+        ){
+            Box(modifier = Modifier.fillMaxSize()) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_home_attend_gisu_background),
+                    contentDescription = "참여 기수 배경",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .height(100.dp)
+                        .aspectRatio(724f / 432f)
+                        .align(Alignment.BottomEnd)
+                )
+
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                ) {
+                    UText(
+                        text = "참여 기수",
+                        style = UmcTypographyTokens.BodyBold,
+                        color = neutral800()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    GisuGrid(gisuStrings = uiState.gisuTag)
+
+
+                }
+            }
+        }
+
+
+
+    }
+}
+
+/**HomeProfileCardRows에 쓰이는 grid (2*2) 형태
+ * GisuChip을 item으로 쓴다.
+ *
+ * **/
+@Composable
+fun GisuGrid(gisuStrings: List<String>){
+
+    val latestGisus = gisuStrings.reversed() //최신 꺼 가져오기 위함.
+
+    val displayCount = if (gisuStrings.size > 4) 3 else gisuStrings.size // 5개 부터 마지막 부분에 표시해야 하므로 -2.
+    val hasMore = gisuStrings.size > 4 //4개보다 많은지 ( + 표시 )
+    val remainingCount = gisuStrings.size - 3 // +3 등 String에 표시될 숫자
+    
+    val addItems = mutableListOf<String>() //보여줄 item 리스트
+    if(hasMore){
+        addItems.add("MORE") //체크 용도(제일 마지막 출력을 위해 제일 먼저 넣는다)
+    }
+    addItems.addAll(latestGisus.take(displayCount))
+    
+    val gridItems = addItems.reversed() //뒤집기
+    
+    //2*2 격자 형태
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        //2행
+        gridItems.chunked(2).forEach { items ->
+            //2열
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                items.forEach { item ->
+                    //만약 More이면 남은 개수 표시 (+ N)
+                    if (item == "MORE") {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ){
+                            Icon(
+                                modifier = Modifier
+                                    .size(18.dp),
+                                painter = painterResource(id = R.drawable.ic_add_filled),
+                                contentDescription = "Add",
+                                tint = primary500()
+                            )
+
+                            UText(
+                                text = "$remainingCount",
+                                style = UmcTypographyTokens.Caption1Bold,
+                                color = primary500()
+                            )
+                        }
+
+
+                    } else {
+                        //일반 기수 칩
+                        GisuChip(item)
+                    }
+                }
+            }
+        }
+
+    }
+
+
+}
+
+/**HomeProfileCardRows 전용 기수 칩 
+ * 기수 int 정보 In시 `10기` 형태로 제공
+ * **/
+@Composable
+fun GisuChip(gisuString: String) {
+    Box(
+        modifier = Modifier
+            .background(color = primary100(), shape = RoundedCornerShape(4.dp))
+            .padding(horizontal = 4.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        UText(
+            text = gisuString,
+            style = UmcTypographyTokens.Caption1Bold,
+            color = primary500()
+        )
+    }
+}
+
+
+/**
+ * 프로필 카드 V1
+ * **/
+/*
 @Composable
 fun HomeProfileCard(uiState: HomeUiState) {
 
@@ -340,84 +555,7 @@ fun HomeProfileCard(uiState: HomeUiState) {
 }
 
 
-
-
-/**
- * 일정 제목 및 뷰 모드(달력/리스트) 전환 헤더
  */
-
-//Arrangement.SpaceBetween = 2개를 양 끝으로 밀어냄
-@Composable
-fun HomePlanHeader(
-    viewMode: HomeViewMode,
-    onAddClick: () -> Unit,
-    onChangeViewMode: (HomeViewMode) -> Unit
-) {
-    Row (
-        modifier = Modifier
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        UText(
-            text = AppStrings.HOME_PLAN_TITLE,
-            style = UmcTypographyTokens.Title3Bold,
-            color = neutral800()
-        )
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onAddClick) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_add_filled),
-                    contentDescription = "Add",
-                    tint = primary500()
-                )
-            }
-
-            Spacer(modifier = Modifier
-                .width(8.dp)
-            )
-
-            //뷰 전환 선택기
-            Surface(
-                color = neutral000(),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-
-                Row(modifier = Modifier
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    //달력 + 일정 버튼
-                    Icon(
-                        painter = painterResource(
-                            id = if (viewMode == HomeViewMode.CALENDAR) R.drawable.ic_home_grid_on else R.drawable.ic_home_grid_off
-                        ),
-                        contentDescription = "Calendar Mode",
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clickable { onChangeViewMode(HomeViewMode.CALENDAR) },
-                        tint = Color.Unspecified
-                    )
-                    Spacer(modifier = Modifier
-                        .width(8.dp)
-                    )
-
-                    //일정 리스트 버튼
-                    Icon(
-                        painter = painterResource(
-                            id = if (viewMode == HomeViewMode.LIST) R.drawable.ic_home_list_on else R.drawable.ic_home_list_off
-                        ),
-                        contentDescription = "List Mode",
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clickable { onChangeViewMode(HomeViewMode.LIST) },
-                        tint = Color.Unspecified
-                    )
-                }
-            }
-        }
-    }
-}
 
 /**
  * ACTIVE 유저 전용 상점/벌점/총합 점수판 카드
@@ -427,7 +565,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
     Card(
         modifier = Modifier
             .fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = neutral000()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
@@ -569,6 +707,101 @@ private fun ScoreCard(
 
     }
 }
+
+
+/**
+ * 일정 제목 및 뷰 모드(달력/리스트) 전환 헤더
+ */
+
+//Arrangement.SpaceBetween = 2개를 양 끝으로 밀어냄
+@Composable
+fun HomePlanHeader(
+    viewMode: HomeViewMode,
+    onAddClick: () -> Unit,
+    onChangeViewMode: (HomeViewMode) -> Unit
+) {
+    Row (
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+
+            UText(
+                text = AppStrings.HOME_PLAN_TITLE,
+                style = UmcTypographyTokens.Title3Bold,
+                color = neutral800()
+            )
+
+            IconButton(onClick = onAddClick) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_add_filled),
+                    contentDescription = "Add",
+                    tint = neutral800()
+                )
+            }
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+
+            //뷰 전환 선택기
+            Surface(
+                color = neutral000(),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+
+                Row(modifier = Modifier
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    //달력 + 일정 버튼
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                color = if (viewMode == HomeViewMode.CALENDAR) neutral800() else neutral000()
+                            )
+                            .clickable { onChangeViewMode(HomeViewMode.CALENDAR) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_home_grid_base),
+                            contentDescription = "Calendar Mode",
+                            modifier = Modifier.size(26.dp),
+                            tint = if (viewMode == HomeViewMode.CALENDAR) neutral000() else neutral400()
+                        )
+                    }
+                    Spacer(modifier = Modifier
+                        .width(8.dp)
+                    )
+
+                    //일정 리스트 버튼
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                color = if (viewMode == HomeViewMode.LIST) neutral800() else neutral000()
+                            )
+                            .clickable { onChangeViewMode(HomeViewMode.LIST) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_home_list_base),
+                            contentDescription = "List Mode",
+                            modifier = Modifier.size(26.dp),
+                            tint = if (viewMode == HomeViewMode.LIST) neutral000() else neutral400()
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 
 
 
