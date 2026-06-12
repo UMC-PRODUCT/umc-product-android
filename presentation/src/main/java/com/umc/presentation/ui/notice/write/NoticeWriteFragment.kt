@@ -22,6 +22,7 @@ import com.umc.presentation.ui.notice.write.adapter.NoticeClassChipAdapter
 import com.umc.presentation.ui.notice.write.adapter.NoticeImageAdapter
 import com.umc.presentation.ui.notice.write.bottomsheet.ChapterSelectBottomSheet
 import com.umc.presentation.ui.notice.write.bottomsheet.NoticeVoteBottomSheet
+import com.umc.presentation.ui.notice.write.bottomsheet.StaffPartSelectBottomSheet
 import com.umc.presentation.ui.notice.write.model.NoticeImageItem
 import com.umc.presentation.ui.signUp.bottomSheet.SchoolSelectBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
@@ -134,9 +135,15 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
             viewLifecycleOwner
         ) { _, bundle ->
             val selectedSchool = bundle.getSerializable(SchoolSelectBottomSheet.BUNDLE_KEY_SELECT) as? SchoolInfo
-            selectedSchool?.let {
-                viewModel.onSchoolSelected(it)
-            }
+            selectedSchool?.let { viewModel.onSchoolSelected(it) }
+        }
+
+        childFragmentManager.setFragmentResultListener(
+            StaffPartSelectBottomSheet.STAFF_PART_SELECT,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val partName = bundle.getString(StaffPartSelectBottomSheet.BUNDLE_KEY_PART_NAME)
+            viewModel.onStaffPartSelected(partName)
         }
     }
 
@@ -166,6 +173,7 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
             NoticeWriteEvent.ShowBottomSheetEvent -> showBottomSheet()
             NoticeWriteEvent.ShowChapterBottomSheetEvent -> showChapterBottomSheet()
             NoticeWriteEvent.ShowSchoolBottomSheetEvent -> showSchoolBottomSheet()
+            NoticeWriteEvent.ShowStaffPartBottomSheetEvent -> showStaffPartBottomSheet()
             NoticeWriteEvent.SubmitSuccess -> {
                 Toast.makeText(requireContext(), "공지사항이 작성되었습니다", Toast.LENGTH_SHORT).show()
                 findNavController().popBackStack()
@@ -209,5 +217,12 @@ class NoticeWriteFragment : BaseFragment<FragmentNoticeWriteBinding, NoticeWrite
         } else {
             Toast.makeText(requireContext(), "학교 목록을 불러오는 중입니다", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun showStaffPartBottomSheet() {
+        val selectedPartName = viewModel.uiState.value.classList
+            .find { it.text == "파트" && it.part != null }?.part
+        StaffPartSelectBottomSheet.newInstance(selectedPartName)
+            .show(childFragmentManager, "")
     }
 }

@@ -14,6 +14,8 @@ import com.umc.domain.model.organization.GisuList
 import com.umc.domain.model.home.GisuInfo
 import com.umc.domain.model.organization.StudyGroupDetail
 import com.umc.domain.model.organization.StudyGroupPage
+import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
+import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
 import com.umc.domain.model.request.organization.*
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.repository.OrganizationRepository
@@ -106,8 +108,8 @@ class OrganizationRepositoryImpl @Inject constructor(
     override suspend fun getAllGisu(): ApiState<GisuList> =
         organizationDataSource.getAllGisu().map { it.toModel() }
 
-    override suspend fun getActiveGisu(): ApiState<Unit> =
-        organizationDataSource.getActiveGisu().map { Unit } //임시
+    override suspend fun getActiveGisu(): ApiState<Long> =
+        organizationDataSource.getActiveGisu().map { it.gisuId.toLong() }
 
     override suspend fun getChapterWithSchool(gisuId: Int): ApiState<ChapterWithSchool> =
         organizationDataSource.getChapterWithSchool(gisuId).map { response ->
@@ -159,6 +161,15 @@ class OrganizationRepositoryImpl @Inject constructor(
 
     override suspend fun changeActiveGisu(gisuId: Int): ApiState<Unit> =
         organizationDataSource.changeActiveGisu(gisuId)
+
+    override suspend fun createStudyGroupSchedule(request: CreateStudyGroupSchedule): ApiState<Long> =
+        organizationDataSource.createStudyGroupSchedule(
+            CreateStudyGroupScheduleRequest(
+                studyGroupId = request.studyGroupId,
+                scheduleId = request.scheduleId,
+                weeklyCurriculumId = request.weeklyCurriculumId,
+            )
+        )
 
     // PUT
     override suspend fun changeGroupMember(

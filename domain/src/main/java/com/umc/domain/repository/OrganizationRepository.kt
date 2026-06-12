@@ -12,6 +12,7 @@ import com.umc.domain.model.request.organization.CreateGisuRequest
 import com.umc.domain.model.request.organization.CreateStudyGroupRequest
 import com.umc.domain.model.request.organization.EditSchoolRequest
 import com.umc.domain.model.request.organization.EditStudyGroupRequest
+import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
 import com.umc.domain.model.request.organization.SchoolIdRequest
 import com.umc.domain.model.request.organization.SchoolRegistrationRequest
 import com.umc.domain.model.request.organization.UnAssignSchoolRequest
@@ -61,7 +62,7 @@ interface OrganizationRepository {
 
     suspend fun getAllGisu(): ApiState<GisuList>
 
-    suspend fun getActiveGisu(): ApiState<Unit> //GisuItemResponse
+    suspend fun getActiveGisu(): ApiState<Long>
 
     suspend fun getChapterWithSchool(gisuId: Int): ApiState<ChapterWithSchool>
 
@@ -89,6 +90,8 @@ interface OrganizationRepository {
     suspend fun createChapter(request: CreateChapterRequest): ApiState<Unit>
 
     suspend fun changeActiveGisu(gisuId: Int): ApiState<Unit>
+
+    suspend fun createStudyGroupSchedule(request: CreateStudyGroupSchedule): ApiState<Long>
 
     // PUT
     suspend fun changeGroupMember(groupId: Long, request: ChallengerListRequest): ApiState<Unit>

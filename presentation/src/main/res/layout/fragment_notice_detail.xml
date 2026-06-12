@@ -482,9 +482,9 @@
                     android:layout_marginHorizontal="24dp"
                     android:layout_marginTop="32dp"
                     android:paddingBottom="24dp"
-                    android:text="@{vm.uiState.detail.content}"
                     android:textAppearance="@style/Body"
                     android:textColor="@color/neutral800"
+                    app:noticeMarkdownContent="@{vm.uiState.detail.content}"
                     app:layout_constraintTop_toBottomOf="@id/text_view_count"
                     tools:text="안녕하세요. 운영진입니다." />
 

@@ -58,32 +58,12 @@
                 app:cornerRadius="4dp"
                 app:layout_constrainedWidth="true"
                 app:layout_constraintStart_toEndOf="@+id/tv_admin_session_title"
-                app:layout_constraintEnd_toStartOf="@id/btn_admin_change_location"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/tv_admin_session_title"
                 app:layout_constraintBottom_toBottomOf="@+id/tv_admin_session_title"
                 app:text="@{uiModel.session.status.text}"
                 app:textAppearance="@style/Caption1Bold"
                 tools:text="진행 중" />
-
-            <com.umc.presentation.component.UButton
-                android:id="@+id/btn_admin_change_location"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="@{uiModel.session.status != AdminSessionStatus.COMPLETED &amp;&amp; uiModel.hasWritePermission ? View.VISIBLE : View.GONE}"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:backgroundColor="@color/neutral000"
-                app:borderColor="@color/neutral300"
-                app:borderWidth="1dp"
-                app:prevIcon="@drawable/ic_location_update"
-                app:cornerRadius="8dp"
-                app:contentPaddingLeft="8dp"
-                app:contentPaddingRight="8dp"
-                app:contentPaddingTop="4dp"
-                app:contentPaddingBottom="4dp"
-                app:text="@string/admin_check_change_location"
-                app:textAppearance="@style/SubheadlineBold"
-                app:textColor="@color/neutral700" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/layout_admin_session_info"

@@ -9,6 +9,7 @@ import com.umc.presentation.databinding.ItemNoticeBinding
 import com.umc.presentation.extension.gone
 import com.umc.presentation.extension.visible
 import com.umc.presentation.util.GisuCache
+import com.umc.presentation.util.MarkdownParser
 import com.umc.presentation.util.UFormat.parseDateTime
 
 class NoticeViewHolder(
@@ -27,7 +28,7 @@ class NoticeViewHolder(
             setCategories(item.targetInfo)
             textDate.text = parseDateTime(item.createdAt).first
             textTitle.text = item.title
-            textContent.text = item.content
+            textContent.text = MarkdownParser.toPlainText(item.content)
             textAuthor.text = item.authorNickname
             textSeeCount.text = "조회 ${item.viewCount}"
             

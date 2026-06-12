@@ -14,6 +14,7 @@ data class UserCheckAvailable(
     val startTime: String,
     val endTime: String,
     val status: CheckAvailableStatus,
+    val rawStatus: String?,
     val latitude: Double,
     val longitude: Double,
     val address: String,

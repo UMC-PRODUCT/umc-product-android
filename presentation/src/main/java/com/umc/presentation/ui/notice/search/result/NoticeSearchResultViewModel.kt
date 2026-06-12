@@ -67,6 +67,7 @@ constructor(
                 response = searchNoticeListUseCase(
                     keyword = query,
                     gisuId = activeGisu,
+                    noticeTab = "CHALLENGER",
                     page = pageToFetch,
                     size = 20
                 ),
