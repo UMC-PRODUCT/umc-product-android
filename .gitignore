@@ -13,3 +13,17 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# 모든 모듈의 빌드 산출물 (presentation/component, presentation/splash 등 옛 모듈 잔여물 포함)
+build/
+
+# 릴리즈 산출물 및 서명 키 (키스토어는 절대 커밋 금지)
+app/release/
+*.jks
+
+# IDE 플러그인
+/.idea/firebender/
+
+# Claude Code 로컬 설정 및 스킬
+.claude/
+skills/
