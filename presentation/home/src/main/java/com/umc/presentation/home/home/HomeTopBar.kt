@@ -2,7 +2,10 @@ package com.umc.presentation.home.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -68,24 +71,27 @@ fun HomeTopBar(
             Spacer(modifier = Modifier
                 .width(8.dp)
             )
-            
+
              */
 
             // 알림 버튼 (상태에 따라 점이 있는 아이콘으로 교체)
-            IconButton(
-                onClick = onNotificationClick,
+            Box(
                 modifier = Modifier
+                    .size(48.dp)
                     .background(color = neutral000(), shape = CircleShape)
                     .clip(CircleShape)
-                    .size(48.dp)
-                    .padding(12.dp)
+                    .clickable(
+                        onClick = onNotificationClick
+                    ),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     painter = painterResource(
                         id = if (alarmExist) R.drawable.ic_alarm_with_dot else R.drawable.ic_alarm
                     ),
                     contentDescription = "Notification",
-                    tint = neutral500()
+                    tint = neutral500(),
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
