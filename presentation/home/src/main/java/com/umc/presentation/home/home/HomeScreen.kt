@@ -27,6 +27,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,6 +45,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
@@ -141,10 +143,10 @@ fun HomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(neutral000())
+                    .background(neutral100())
                     .padding(horizontal = 16.dp)
                     .padding(top = 16.dp)
-                    .padding(bottom = 32.dp)
+
             ) {
                 HomeTopBar(
                     alarmExist = uiState.alarmExist,
@@ -169,7 +171,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .padding(top = 32.dp)
+                    .padding(top = 16.dp)
             ) {
                 HomePlanHeader(
                     viewMode = uiState.viewMode,
@@ -426,7 +428,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral200()),
+        colors = CardDefaults.cardColors(containerColor = neutral000()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
@@ -472,17 +474,12 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                             label = AppStrings.REWARD,
                             score = uiState.sangjum,
                             color = success500(),
-                            bgColor = success100()
                         )
 
-                        VerticalDivider(
-                            thickness = 1.dp,
-                            color = neutral200(),
+                        Spacer(
                             modifier = Modifier
-                                .fillMaxHeight()
-                                .padding(horizontal = 8.dp)
+                                .width(16.dp)
                         )
-
 
                         //벌점
                         ScoreCard(
@@ -491,40 +488,6 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                             label = AppStrings.PUNISH,
                             score = uiState.buljum,
                             color = danger500(),
-                            bgColor = danger100()
-                        )
-                    }
-                }
-
-                Image(
-                    painter = painterResource(
-                        id = R.drawable.ic_forward_circle
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp)
-
-                )
-
-                //총점
-                Surface(
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp),
-                    color = neutral000()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        //총합
-                        ScoreCard(
-                            modifier = Modifier
-                                .weight(1f),
-                            label = AppStrings.HAB,
-                            score = uiState.total,
-                            color = primary500(),
-                            bgColor = primary100()
                         )
                     }
                 }
@@ -539,38 +502,72 @@ private fun ScoreCard(
     modifier: Modifier,
     label: String,
     score: Int,
-    color: Color,
-    bgColor: Color
+    color: Color
 ) {
 
-    Row(
+    Card(
         modifier = modifier
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ){
-        //UButton 컴포저블을 활용하여 일관된 디자인 유지
-        UButton(
-            text = label,
-            backgroundColor = bgColor,
-            textColor = color,
-            textStyle = UmcTypographyTokens.Caption1Bold,
-            cornerRadius = 4.dp,
-            onClick = {},
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = neutral100()),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(
             modifier = Modifier
-                .height(24.dp),
-        )
-        Spacer(modifier = Modifier
-            .width(8.dp)
-        )
-        UText(
-            text = "${score}점",
-            modifier = Modifier,
-            style = UmcTypographyTokens.HeadlineBold,
-            color = neutral900()
-        )
-    }
+                .padding(horizontal = 16.dp)
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            //UButton 컴포저블을 활용하여 일관된 디자인 유지
+            Image(
+                painter = if(label == AppStrings.REWARD) painterResource(id = R.drawable.ic_like_color) else painterResource(id = R.drawable.ic_dislike_color),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(24.dp)
+            )
+            Spacer(
+                modifier = Modifier
+                    .width(8.dp)
+            )
 
+            UText(
+                text = label,
+                modifier = Modifier,
+                style = UmcTypographyTokens.HeadlineBold,
+                color = color
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+            )
+
+            Text(
+                text = buildAnnotatedString {
+                    //숫자 부분
+                    withStyle(
+                        style = UmcTypographyTokens.CalloutBold.toSpanStyle().copy(
+                            color = neutral900(),
+                            fontSize = 16.sp
+                        )
+                    ) {
+                        append(score.toString())
+                        append(" ")
+                    }
+                    // point
+                    withStyle(
+                        style = UmcTypographyTokens.Caption1.toSpanStyle().copy(
+                            color = neutral600(),
+                            fontSize = 12.sp
+                        )
+                    ) {
+                        append("point")
+                    }
+                }
+            )
+        }
+
+    }
 }
 
 

@@ -1,6 +1,7 @@
 package com.umc.presentation.home.home
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -9,17 +10,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.domain.model.enums.UserType
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.theme.UmcTypographyTokens
+import com.umc.component.theme.neutral000
 import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral500
 import com.umc.component.theme.neutral700
@@ -51,6 +55,7 @@ fun HomeTopBar(
         //OB냐 ACTIVE냐
         Row(verticalAlignment = Alignment.CenterVertically) {
             //유저 상태 배지 (ACTIVE / OB 분기 처리)
+            /*
             UButton(
                 text = userType.name,
                 backgroundColor = if (userType == UserType.ACTIVE) primary100() else neutral200(),
@@ -63,12 +68,17 @@ fun HomeTopBar(
             Spacer(modifier = Modifier
                 .width(8.dp)
             )
+            
+             */
 
             // 알림 버튼 (상태에 따라 점이 있는 아이콘으로 교체)
             IconButton(
                 onClick = onNotificationClick,
                 modifier = Modifier
-                    .size(24.dp)
+                    .background(color = neutral000(), shape = CircleShape)
+                    .clip(CircleShape)
+                    .size(48.dp)
+                    .padding(12.dp)
             ) {
                 Icon(
                     painter = painterResource(
