@@ -3,6 +3,7 @@ package com.umc.presentation.ui.signUp
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
 import com.umc.domain.model.JwtToken
+import com.umc.domain.model.enums.EmailVerifyPurpose
 import com.umc.domain.model.enums.EmailVerifyType
 import com.umc.domain.model.enums.TermsType
 import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
@@ -98,7 +99,11 @@ class SignUpViewModel @Inject constructor(
 
     fun onClickVerify() = viewModelScope.launch {
         if (isValidEmail()) {
-            val request = EmailVerificationRequest(email = uiState.value.email)
+            // 회원가입 흐름이므로 purpose 는 REGISTER 로 고정 (기본값과 동일하지만 명시)
+            val request = EmailVerificationRequest(
+                email = uiState.value.email,
+                purpose = EmailVerifyPurpose.REGISTER
+            )
             startLoading()
             resultResponse(
                 response = postEmailVerificationUseCase(request),
@@ -112,8 +117,14 @@ class SignUpViewModel @Inject constructor(
                     emitEvent(SignUpEvent.ShowVerifyToast)
                     emitEvent(SignUpEvent.FocusVerifyCodeField)
                 },
-                errorCallback = {
+                errorCallback = { failState ->
                     errorEmailVerify()
+                    when (failState.code) {
+                        // 이미 가입된 이메일 -> 발송 단계에서 차단 (409)
+                        CODE_EMAIL_ALREADY_EXISTS -> emitEvent(SignUpEvent.ShowEmailAlreadyExists)
+                        // 60초 발송 throttle (429)
+                        CODE_EMAIL_VERIFICATION_THROTTLED -> emitEvent(SignUpEvent.ShowVerifyThrottled)
+                    }
                 }
             )
         } else {
@@ -235,6 +246,13 @@ class SignUpViewModel @Inject constructor(
     fun setOAuthVerificationToken(token: String) {
         updateState { copy(oAuthVerificationToken = token) }
     }
+
+    companion object {
+        // 이미 가입된 이메일 (409 Conflict)
+        private const val CODE_EMAIL_ALREADY_EXISTS = "AUTHENTICATION-0026"
+        // 60초 발송 throttle (429 Too Many Requests)
+        private const val CODE_EMAIL_VERIFICATION_THROTTLED = "AUTHENTICATION-0027"
+    }
 }
 
 data class SignUpState(
@@ -261,6 +279,8 @@ sealed interface SignUpEvent : UiEvent {
     object ShowVerifyToast : SignUpEvent
     object ShowVerifyCompleteToast : SignUpEvent
     object ShowVerifyErrorToast : SignUpEvent
+    object ShowEmailAlreadyExists : SignUpEvent
+    object ShowVerifyThrottled : SignUpEvent
     object FocusVerifyCodeField : SignUpEvent
     data class ShowRegisterErrorDialog(val message: String) : SignUpEvent
 }

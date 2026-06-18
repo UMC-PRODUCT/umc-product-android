@@ -77,6 +77,20 @@ class SignUpFragment :
                     state = UToast.State.ERROR
                 ).show()
             }
+            SignUpEvent.ShowEmailAlreadyExists -> {
+                UToast.createToast(
+                    requireContext(),
+                    R.string.sign_up_email_already_exists,
+                    state = UToast.State.ERROR
+                ).show()
+            }
+            SignUpEvent.ShowVerifyThrottled -> {
+                UToast.createToast(
+                    requireContext(),
+                    R.string.sign_up_email_verify_throttled,
+                    state = UToast.State.ERROR
+                ).show()
+            }
             SignUpEvent.FocusVerifyCodeField -> {
                 binding.textFieldVerifyCode.requestFocus()
             }

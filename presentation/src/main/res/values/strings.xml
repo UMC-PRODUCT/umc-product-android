@@ -182,7 +182,9 @@
     <string name="sign_up_email_placeholder">example@univ.ac.kr</string>
     <string name="sign_up_email_verify_sent">이메일 인증 코드가 발송되었습니다</string>
     <string name="sign_up_email_verify_complete">이메일 인증이 완료되었습니다</string>
-    <string name="sign_up_email_verify_error">인증번호가 일치하지 않습니다</string>
+    <string name="sign_up_email_verify_error">인증에 실패했어요. 인증을 다시 요청해주세요</string>
+    <string name="sign_up_email_already_exists">이미 가입된 이메일이에요</string>
+    <string name="sign_up_email_verify_throttled">잠시 후 다시 시도해주세요 (약 60초)</string>
     <string name="sign_up_verify_request">인증 요청</string>
     <string name="sign_up_verify_confirm">인증 확인</string>
     <string name="sign_up_error_email">유효하지 않은 계정입니다</string>
