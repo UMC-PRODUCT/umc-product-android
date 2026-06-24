@@ -30,7 +30,14 @@ import com.umc.component.theme.*
 
 /**
  * 피그마에 나온 커스텀 timePicker 다이얼로그
- * 
+ *
+ *
+ * initialHour: 다이얼로그가 띄어질 때 보여줄 시간 (ex. 12)
+ * initialMinute: 다이얼로그가 띄어질 때 보여줄 분 (ex. 55)
+ * onConfirm = { hour, minute ->}: 확인을 눌렀을 때 처리함수,
+ * onDismiss = { showEndTimePicker = false }
+ *
+ *
  * **/
 @Composable
 fun UTimePickerDialog(

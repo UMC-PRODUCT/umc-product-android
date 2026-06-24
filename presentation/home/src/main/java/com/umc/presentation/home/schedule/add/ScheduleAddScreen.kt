@@ -26,6 +26,7 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.umc.component.component.UDateTimePickerDialog
 import com.umc.component.component.UText
 import com.umc.component.component.UTimePickerDialog
 import com.umc.presentation.home.home.CalendarDatePickerDialog
@@ -54,11 +55,18 @@ fun ScheduleAddRoute(
     var showLocationDialog by remember {mutableStateOf(false)}
     var showParticipantDialog by remember { mutableStateOf(false) }
 
+    /* 시간 + 날짜 한 번에 입력받아서 depricated
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
 
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
+
+     */
+
+    var showStartDateTimePicker by remember { mutableStateOf(false) }
+    var showEndDateTimePicker by remember { mutableStateOf(false) }
+
 
     LaunchedEffect(viewModel){
         viewModel.uiEvent.collectLatest { event ->
@@ -82,10 +90,10 @@ fun ScheduleAddRoute(
             participantViewModel.setSelectedParticipant(uiState.selectedParticipants)
             showParticipantDialog = true
                              },
-        onStartDateClick = { showStartDatePicker = true },
-        onStartTimeClick = { showStartTimePicker = true },
-        onEndDateClick = { showEndDatePicker = true },
-        onEndTimeClick = { showEndTimePicker = true },
+        onStartDateClick = { showStartDateTimePicker = true },
+        onStartTimeClick = { showStartDateTimePicker = true },
+        onEndDateClick = { showEndDateTimePicker = true },
+        onEndTimeClick = { showEndDateTimePicker = true },
         onRegisterClick = {
             //운영진 여부 및 수정 모드에 따른 분기 로직
             if (uiState.isManager && !uiState.editMode) {
@@ -145,6 +153,7 @@ fun ScheduleAddRoute(
         )
     }
 
+    /* 마찬가지로 depricated
     if (showStartDatePicker) {
         CalendarDatePickerDialog(
             selectedDate = java.time.Instant.ofEpochMilli(uiState.startDate.timeInMillis)
@@ -203,6 +212,27 @@ fun ScheduleAddRoute(
         )
     }
 
+     */
+
+    if (showStartDateTimePicker) {
+        UDateTimePickerDialog(
+            onConfirm = { utcDateTime ->
+                viewModel.updateStartDateTime(utcDateTime)
+                showStartDateTimePicker = false
+            },
+            onDismiss = { showStartDateTimePicker = false }
+        )
+    }
+
+    if (showEndDateTimePicker) {
+        UDateTimePickerDialog(
+            onConfirm = { utcDateTime ->
+                viewModel.updateEndDateTime(utcDateTime)
+                showEndDateTimePicker = false
+            },
+            onDismiss = { showEndDateTimePicker = false }
+        )
+    }
 
 }
 

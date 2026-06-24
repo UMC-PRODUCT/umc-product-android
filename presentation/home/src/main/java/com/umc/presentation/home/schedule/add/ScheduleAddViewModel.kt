@@ -7,6 +7,8 @@ import com.umc.component.R
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.component.UToast
+import com.umc.component.component.UToastState
 import com.umc.component.util.UTimeFormat
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.CategoryType
@@ -536,6 +538,51 @@ constructor(
             )
         }
     }
+
+    // 일정 시작 날짜/시간 통합 변경
+    fun updateStartDateTime(utcDateTime: String) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        try {
+            val date = sdf.parse(utcDateTime) ?: return
+            val newCal = Calendar.getInstance().apply { time = date }
+            updateState {
+                copy(
+                    startDate = newCal,
+                    startTime = newCal,
+                    startDateText = dateDisplaySdf.format(newCal.time),
+                    startTimeText = timeDisplaySdf.format(newCal.time)
+                )
+            }
+        } catch (e: Exception) {
+
+            Log.e("log_home", "Parsing Error: ${e.message}")
+        }
+    }
+
+    // 일정 종료 날짜/시간 통합 변경
+    fun updateEndDateTime(utcDateTime: String) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        try {
+            val date = sdf.parse(utcDateTime) ?: return
+            val newCal = Calendar.getInstance().apply { time = date }
+            updateState {
+                copy(
+                    endDate = newCal,
+                    endTime = newCal,
+                    endDateText = dateDisplaySdf.format(newCal.time),
+                    endTimeText = timeDisplaySdf.format(newCal.time)
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("log_home", "Parsing Error: ${e.message}")
+        }
+    }
+
+
 
     // 카테고리를 선택하면 진행하는 함수
     fun selectCategory(category: CategoryItem) {
