@@ -60,6 +60,8 @@ constructor(
     private val parseDateSdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
     private val parseTimeSdf = SimpleDateFormat("HH:mm", Locale.KOREAN)
 
+    private val dateTimeDisplaySdf = SimpleDateFormat("yyyy.MM.dd • a h:mm", Locale.KOREAN)
+
     private val checkScheduleId: Long = savedStateHandle.get<Long>("scheduleId") ?: -1L
 
     //검색 작업용 코루틴
@@ -342,127 +344,26 @@ constructor(
 
 
     }
-
     
-    /**---ScheduleChallengerDialog에서의 실질 로직---**/
-/*
-    // 유저 검색 로직
-    fun searchParticipants(query: String) {
-        //이전 작업 취소
-        searchJob?.cancel()
-
-        //쿼리가 비어있으면 검색X
-        if (query.isBlank()) {
-            clearParticipantSearch()
-            return
-        }
-
-        //일단 현재 상태를 반영해서
+    // 비대면 체크 상태 토글하는 함수
+    fun toggleOnlineCheck(isOnline: Boolean) {
         updateState {
             copy(
-                searchQuery = query,
-                searchResults = emptyList(),
-                nextCursor = null,
-                hasNext = true,
-                isSearching = query.isNotBlank()
-            )
-        }
-        searchJob = viewModelScope.launch {
-            delay(500) //'박ㅇ' 등이 완성되어 '박유수'가 될 때까지 기다림
-            fetchParticipants(isNextPage = false)
-        }
-    }
-    
-    
-    // 실질적으로 usecae로 유저 데이터를 가져오는 로직
-    private fun fetchParticipants(isNextPage: Boolean) {
-        val state = uiState.value
-
-        //API 호출중임을 표시
-        updateState {
-            copy(
-                isLoading = true,
-            ) }
-
-        viewModelScope.launch {
-            // UseCase 호출: 다음 페이지면 보관된 커서 사용, 아니면 null(처음)
-            val cursor = if (isNextPage) state.nextCursor else null
-
-            resultResponse(
-                response = searchChallengerScheduleUseCase(
-                    cursor = cursor,
-                    size = 50,
-                    name = state.searchQuery.ifBlank { null } // 빈 검색어는 null로 그 외는 searchParticipant에서 가져온 쿼리로
-                ),
-                successCallback = { response ->
-                    Log.d("log_home", "유저검색 성공: ${response.content}")
-                    updateState {
-                        copy(
-                            searchResults = response.content,
-                            nextCursor = response.nextCursor,
-                            hasNext = response.hasNext,
-                            isLoading = false
-                        )
-                    }
-                },
-                errorCallback = {
-                    //검색 실패 시, 로딩 해제 및 다음 꺼 X
-                    Log.d("log_home", "유저검색 실패: ${it.message}")
-                    updateState { copy(isLoading = false, hasNext = false) }
-                }
+                isOnlineChecked = isOnline,
+                //비대면 진행 시 기존 기입된 장소 정보는 초기화
+                planLocation = if (isOnline) "" else planLocation,
+                latitude = if (isOnline) 0.0 else latitude,
+                longitude = if (isOnline) 0.0 else longitude
             )
         }
     }
 
-    // 무한 스크롤 로직 (바닥 도달 시 추가 데이터 로드)
-    fun loadMoreParticipants() {
-        val state = uiState.value
-        // 로딩 중이거나 다음 페이지가 없으면 중단
-        if (state.isLoading || !state.hasNext) return
-
-        fetchParticipants(isNextPage = true)
-    }
-
-    // 인원 토글 로직
-    fun toggleParticipant(user: ParticipantItem) {
-        updateState {
-            val isExist = selectedParticipants.any { it.id == user.id }
-            val newList = if (isExist) {
-                selectedParticipants.filter { it.id != user.id }
-            } else {
-                selectedParticipants + user
-            }
-
-            //결과 스트링 작성
-            val summaryText = when {
-                newList.isEmpty() -> ""
-                newList.size == 1 -> newList[0].name
-                else -> "${newList[0].name} 외 ${newList.size - 1}명"
-            }
-
-            copy(selectedParticipants = newList,
-                selectedParticipantsString = summaryText
-            )
-        }
+    //출석부 생성 여부 토글하는 함수
+    fun toggleAttendanceCheck(isAttendance: Boolean) {
+        updateState { copy(isAttendanceChecked = isAttendance) }
     }
 
 
-
-    //검색 기록을 초기화하하고 중지하는 함수
-    fun clearParticipantSearch() {
-        searchJob?.cancel()
-        updateState {
-            copy(
-                searchResults = emptyList(), // 혹은 초기 리스트(allChallengers)
-                searchQuery = "",
-                isSearching = false
-            )
-        }
-    }
-
-
- */
-    /***---------------------------------***/
 
     // 다이얼로그에서 가져온 참여자 정보를 업데이트 하는 함수
     fun updateParticipants(participants: List<ParticipantItem>, participantsString: String) {
@@ -582,6 +483,71 @@ constructor(
         }
     }
 
+    //출석부 관련 시간 업데이트
+    //체크인 시간
+    fun updateCheckInStartDateTime(utcDateTime: String) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        try {
+            val date = sdf.parse(utcDateTime) ?: return
+            val newCal = Calendar.getInstance().apply { time = date }
+            updateState {
+                copy(
+                    checkInStartDate = newCal,
+                    checkInStartTime = newCal,
+                    checkInStartDateText = dateDisplaySdf.format(newCal.time),
+                    checkInStartTimeText = timeDisplaySdf.format(newCal.time)
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("log_home", "Parsing Error: ${e.message}")
+        }
+    }
+
+    //정시 종료 시간
+    fun updateOnTimeEndDateTime(utcDateTime: String) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        try {
+            val date = sdf.parse(utcDateTime) ?: return
+            val newCal = Calendar.getInstance().apply { time = date }
+            updateState {
+                copy(
+                    onTimeEndDate = newCal,
+                    onTimeEndTime = newCal,
+                    onTimeEndDateText = dateDisplaySdf.format(newCal.time),
+                    onTimeEndTimeText = timeDisplaySdf.format(newCal.time)
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("log_home", "Parsing Error: ${e.message}")
+        }
+    }
+
+    //지각 종료 시간
+    fun updateLateEndDateTime(utcDateTime: String) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        try {
+            val date = sdf.parse(utcDateTime) ?: return
+            val newCal = Calendar.getInstance().apply { time = date }
+            updateState {
+                copy(
+                    lateEndDate = newCal,
+                    lateEndTime = newCal,
+                    lateEndDateText = dateDisplaySdf.format(newCal.time),
+                    lateEndTimeText = timeDisplaySdf.format(newCal.time)
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("log_home", "Parsing Error: ${e.message}")
+        }
+    }
+    
+
 
 
     // 카테고리를 선택하면 진행하는 함수
@@ -663,25 +629,33 @@ data class ScheduleAddUiState(
     val endDate: Calendar = Calendar.getInstance(),
     val endTime: Calendar = Calendar.getInstance(),
     //(필수)
-    val startDateText: String = "시작 날짜",
-    val startTimeText: String = "시작 시간",
-    val endDateText : String = "종료 날짜",
-    val endTimeText : String = "종료 시간",
+    val startDateText: String = "",
+    val startTimeText: String = "",
+    val endDateText : String = "",
+    val endTimeText : String = "",
+    // 출석 정책 (운영진 전용)
+    val checkInStartDate: Calendar = Calendar.getInstance(),
+    val checkInStartTime: Calendar = Calendar.getInstance(),
+    val onTimeEndDate: Calendar = Calendar.getInstance(),
+    val onTimeEndTime: Calendar = Calendar.getInstance(),
+    val lateEndDate: Calendar = Calendar.getInstance(),
+    val lateEndTime: Calendar = Calendar.getInstance(),
+    val checkInStartDateText: String = "",
+    val checkInStartTimeText: String = "",
+    val onTimeEndDateText: String = "",
+    val onTimeEndTimeText: String = "",
+    val lateEndDateText: String = "",
+    val lateEndTimeText: String = "",
 
 
-    //인원 검색 관련
-    /**xml과 달리 별도의 ViewModel 사용 X**/
-    /*
-    val searchQuery: String = "",  // 검색 텍스트 창
-    val isSearching: Boolean = false, // 검색 모드 활성화 여부
-    val searchResults: List<ParticipantItem> = emptyList(), // 검색 결과 명단
-    val nextCursor: Long? = null, // 무한 스크롤 페이징용 커서
-    val hasNext: Boolean = true, // 다음 페이지 존재 여부
-    val isLoading: Boolean = false,
 
-     */
+
     val selectedParticipants: List<ParticipantItem> = emptyList(), //선택된 참여자 결과(recyclerview에 쓰임)
     val selectedParticipantsString : String = "", //cdv에 보여줄 string
+
+    val isOnlineChecked: Boolean = false,
+    val isAttendanceChecked: Boolean = false,
+
 
     //카테고리 리스트
     val categories: List<CategoryItem> = listOf(
@@ -715,24 +689,7 @@ data class ScheduleAddUiState(
 
 
     //최종 여부를 판단하는 실시간 계산
-    val isRegisterOk: Boolean
-        get() {
-            //1. 텍스트 3종 세트가 비어있지 않음
-            val isTextValid = planTitle.isNotBlank()
-
-            /** 필수 내용 수정
-            //2. 날짜/시간이 초기값이 아님
-            val isDateTimeValid = (isAllDay && (startDateText != "시작 날짜" && endDateText != "종료 날짜"))
-            || (!isAllDay && (startDateText != "시작 날짜" && startTimeText != "시작 시간" &&
-            endDateText != "종료 날짜" && endTimeText != "종료 시간"))
-
-            //3. 참여자가 1명 이상임
-            val isParticipantValid = isSelectedParticipant
-             **/
-
-
-            return isTextValid && isSelectedCategory && planLocation != ""
-        }
+    val isRegisterOk: Boolean get() = planTitle.isNotBlank() && isSelectedCategory && (isOnlineChecked || planLocation.isNotEmpty())
 }
 
 sealed interface ScheduleAddEvent : UiEvent {
