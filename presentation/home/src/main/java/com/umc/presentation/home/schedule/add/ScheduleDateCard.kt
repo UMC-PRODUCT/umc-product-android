@@ -43,10 +43,9 @@ import com.umc.component.theme.primary500
 fun ScheduleDateCard(
     uiState: ScheduleAddUiState,
     onAlldayChanged: (Boolean) -> Unit, //하루종일 선택 여부
-    onStartDateTimeClick: () -> Unit,
-    //onStartTimeClick: () -> Unit,
-    onEndDateTimeClick: () -> Unit,
-    //onEndTimeClick: () -> Unit
+    onStartDateTimeClick: () -> Unit, //시작 날짜및시간 선택 시 수행 함수
+    onEndDateTimeClick: () -> Unit, //종료 날짜및시간 선택 시 수행 함수
+
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -73,28 +72,24 @@ fun ScheduleDateCard(
 
             HorizontalDivider(color = neutral300())
 
-            // 시작 일시
+            //시작 일시
             DateTimeRow(
                 label = AppStrings.START,
                 dateText = uiState.startDateText,
                 timeText = uiState.startTimeText,
                 showTime = !uiState.isAllDay,
                 onDateTimeClick = onStartDateTimeClick,
-                //onDateClick = onStartDateClick,
-                //onTimeClick = onStartTimeClick
             )
 
             HorizontalDivider(color = neutral300())
 
-            // 종료 일시
+            //종료 일시
             DateTimeRow(
                 label = AppStrings.END,
                 dateText = uiState.endDateText,
                 timeText = uiState.endTimeText,
                 showTime = !uiState.isAllDay,
                 onDateTimeClick = onEndDateTimeClick,
-                //onDateClick = onEndDateClick,
-                //onTimeClick = onEndTimeClick
             )
         }
     }
@@ -127,7 +122,7 @@ fun DateTimeRow(
             modifier = Modifier.heightIn(min = 32.dp), // UChip의 일반적인 높이
             contentAlignment = Alignment.Center // 내부 콘텐츠를 항상 가운데 정렬
         ) {
-            if (dateText == "") {
+            if (dateText == "") { //초기 viewModel에는 ""이 IN 이걸로 구분
                 Icon(
                     painter = painterResource(id = R.drawable.ic_next),
                     contentDescription = null,
@@ -135,6 +130,7 @@ fun DateTimeRow(
                 )
             } else {
                 UChip(
+                    //showTime(하루종일 여부)로 출력 양식 변경
                     text = if (showTime) {
                         "${dateText} · ${timeText}"
                     } else dateText,
@@ -147,20 +143,5 @@ fun DateTimeRow(
             }
         }
 
-        /*
-        if (showTime) {
-            Spacer(modifier = Modifier
-                .width(8.dp)
-            )
-            UChip(text = timeText,
-                onClick = onTimeClick,
-                backgroundColor = neutral000(),
-                borderColor = neutral200(),
-                borderWidth = 1.dp,
-                textColor = neutral500(),
-                textStyle = UmcTypographyTokens.SubheadlineBold)
-        }
-
-         */
     }
 }
