@@ -294,18 +294,26 @@ constructor(
 
         viewModelScope.launch {
             if (isEditMode) {
+                
+                //[수정] 출석부 내용 추가
+                val attendancePolicy = if (isAttendance) UpdateSchedule.AttendancePolicy(
+                    checkInStartAt = getIsoDateTime(state.checkInStartDate, state.checkInStartTime),
+                    onTimeEndAt = getIsoDateTime(state.onTimeEndDate, state.onTimeEndTime),
+                    lateEndAt = getIsoDateTime(state.lateEndDate, state.lateEndTime)
+                ) else null
+                
                 // [기존 일정 수정]
                 val request = UpdateSchedule(
                     name = state.planTitle,
-                    startsAt = startsAt,
-                    endsAt = endsAt,
-                    isAllDay = state.isAllDay,
-                    locationName = state.planLocation,
-                    latitude = state.latitude,
-                    longitude = state.longitude,
                     description = state.planDetail,
                     tags = selectedTags,
-                    participantMemberIds = participantIds,
+                    startsAt = startsAt,
+                    endsAt = endsAt,
+                    location = if (state.isOnlineChecked) null else UpdateSchedule.Location(state.latitude, state.longitude, state.planLocation),
+                    isOnline = state.isOnlineChecked, // true: 비대면 전환
+                    isAttendanceRequired = isAttendance,
+                    attendancePolicy = attendancePolicy,
+                    participantMemberIds = participantIds
                 )
 
                 resultResponse(
@@ -316,20 +324,23 @@ constructor(
                     errorCallback = { /* 에러 처리 */ }
                 )
             } else {
-                // [새 일정 생성]
+                //[새 일정 생성]
+                //[수정]출석부 처리
+                val attendancePolicy = if (isAttendance) CreateSchedule.AttendancePolicy(
+                    checkInStartAt = getIsoDateTime(state.checkInStartDate, state.checkInStartTime),
+                    onTimeEndAt = getIsoDateTime(state.onTimeEndDate, state.onTimeEndTime),
+                    lateEndAt = getIsoDateTime(state.lateEndDate, state.lateEndTime)
+                ) else null
+
                 val request = CreateSchedule(
                     name = state.planTitle,
-                    startsAt = startsAt,
-                    endsAt = endsAt,
-                    isAllDay = state.isAllDay,
-                    locationName = state.planLocation,
-                    latitude = state.latitude,
-                    longitude = state.longitude,
                     description = state.planDetail,
                     tags = selectedTags,
-                    participantMemberIds = participantIds,
-                    gisuId = state.nowGisuId,
-                    requiresApproval = isAttendance
+                    startsAt = startsAt,
+                    endsAt = endsAt,
+                    location = if (state.isOnlineChecked) null else CreateSchedule.Location(state.latitude, state.longitude, state.planLocation),
+                    attendancePolicy = attendancePolicy,
+                    participantMemberIds = participantIds
                 )
 
                 resultResponse(
