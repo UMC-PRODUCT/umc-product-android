@@ -63,16 +63,8 @@ fun ScheduleAddRoute(
     var showCategoryDialog by remember { mutableStateOf(false) }
     var showLocationDialog by remember {mutableStateOf(false)}
     var showParticipantDialog by remember { mutableStateOf(false) }
-
-    /* 시간 + 날짜 한 번에 입력받아서 depricated
-    var showStartDatePicker by remember { mutableStateOf(false) }
-    var showEndDatePicker by remember { mutableStateOf(false) }
-
-    var showStartTimePicker by remember { mutableStateOf(false) }
-    var showEndTimePicker by remember { mutableStateOf(false) }
-
-     */
-
+    
+    //시작 및 종료 날짜 플래그
     var showStartDateTimePicker by remember { mutableStateOf(false) }
     var showEndDateTimePicker by remember { mutableStateOf(false) }
 
@@ -104,10 +96,8 @@ fun ScheduleAddRoute(
             participantViewModel.setSelectedParticipant(uiState.selectedParticipants)
             showParticipantDialog = true
                              },
-        onStartDateClick = { showStartDateTimePicker = true },
-        onStartTimeClick = { showStartDateTimePicker = true },
-        onEndDateClick = { showEndDateTimePicker = true },
-        onEndTimeClick = { showEndDateTimePicker = true },
+        onStartDateTimeClick = { showStartDateTimePicker = true },
+        onEndDateTimeClick = { showEndDateTimePicker = true },
         onOnlineChanged = viewModel::toggleOnlineCheck, //비대면 토글
         onAttendanceChanged = viewModel::toggleAttendanceCheck, //출석부 토글
         onCheckInDateTimeClick = {showCheckInStartPicker = true},
@@ -172,67 +162,6 @@ fun ScheduleAddRoute(
         )
     }
 
-    /* 마찬가지로 depricated
-    if (showStartDatePicker) {
-        CalendarDatePickerDialog(
-            selectedDate = java.time.Instant.ofEpochMilli(uiState.startDate.timeInMillis)
-                .atZone(java.time.ZoneId.systemDefault())
-                .toLocalDate(),
-            onDateSelected = { localDate ->
-                //Calendar.MONTH는 0부터 시작하므로 localDate.monthValue - 1
-                viewModel.updateStartDate(
-                    localDate.year,
-                    localDate.monthValue - 1,
-                    localDate.dayOfMonth)
-                showStartDatePicker = false
-            },
-            onDismiss = { showStartDatePicker = false }
-        )
-    }
-
-    if(showEndDatePicker){
-        CalendarDatePickerDialog(
-            selectedDate = java.time.Instant.ofEpochMilli(uiState.endDate.timeInMillis)
-                .atZone(java.time.ZoneId.systemDefault())
-                .toLocalDate(),
-            onDateSelected = { localDate ->
-                viewModel.updateEndDate(
-                    localDate.year,
-                    localDate.monthValue - 1,
-                    localDate.dayOfMonth
-                )
-                showEndDatePicker = false
-            },
-            onDismiss = { showEndDatePicker = false }
-        )
-    }
-
-    if(showStartTimePicker){
-        UTimePickerDialog(
-            initialHour = uiState.startTime.get(java.util.Calendar.HOUR_OF_DAY),
-            initialMinute = uiState.startTime.get(java.util.Calendar.MINUTE),
-            onConfirm = { hour, minute ->
-                viewModel.updateStartTime(hour, minute)
-                showStartTimePicker = false
-            },
-            onDismiss = { showStartTimePicker = false }
-        )
-    }
-
-    if(showEndTimePicker){
-        UTimePickerDialog(
-            initialHour = uiState.endTime.get(java.util.Calendar.HOUR_OF_DAY),
-            initialMinute = uiState.endTime.get(java.util.Calendar.MINUTE),
-            onConfirm = { hour, minute ->
-                viewModel.updateEndTime(hour, minute)
-                showEndTimePicker = false
-            },
-            onDismiss = { showEndTimePicker = false }
-        )
-    }
-
-     */
-
     if (showStartDateTimePicker) {
         UDateTimePickerDialog(
             onConfirm = { utcDateTime ->
@@ -295,10 +224,8 @@ fun ScheduleAddScreen(
     onCategoryClick: () -> Unit, //일정 태그(카테고리)를 누를 때
     onLocationClick: () -> Unit, //일정 장소를 누를 때
     onParticipantClick: () -> Unit, //일정 참여자를 누를 때
-    onStartDateClick: () -> Unit, //일정 시작 날짜를 수정 시
-    onStartTimeClick: () -> Unit, //일정 시작 시각 수정 시
-    onEndDateClick: () -> Unit, //일정 종료 날짜 수정 시
-    onEndTimeClick: () -> Unit, //일정 종료 시각 수정 시
+    onStartDateTimeClick: () -> Unit, //일정 시작 날짜를 수정 시
+    onEndDateTimeClick: () -> Unit, //일정 종료 날짜 수정 시
     onCheckInDateTimeClick: () -> Unit, //체크인 시작 시각 수정 시
     onOnDateTimeEndClick: () -> Unit, //정시 종료 시각 수정 시
     onLateDateTimeClick: () -> Unit, //지각 종료 시각 수정 시
@@ -381,12 +308,8 @@ fun ScheduleAddScreen(
                 ScheduleDateCard(
                     uiState = uiState,
                     onAlldayChanged = onAlldayChanged,
-                    onStartDateTimeClick = onStartDateClick,
-                    onEndDateTimeClick = onEndDateClick,
-                    //onStartDateClick = onStartDateClick,
-                    //onStartTimeClick = onStartTimeClick,
-                    //onEndDateClick = onEndDateClick,
-                    //onEndTimeClick = onEndTimeClick
+                    onStartDateTimeClick = onStartDateTimeClick,
+                    onEndDateTimeClick = onEndDateTimeClick,
                 )
             }
 
@@ -452,7 +375,6 @@ fun ScheduleAddScreen(
             Spacer(modifier = Modifier
                 .height(32.dp)
             )
-
 
 
             //7. 상세 안내
