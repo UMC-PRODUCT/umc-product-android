@@ -319,7 +319,7 @@ fun HomeProfileCardsRow(
                         .padding(12.dp)
                 ) {
                     UText(
-                        text = "누적 활동일",
+                        text = AppStrings.HOME_ACTIVATE_DAY,
                         style = UmcTypographyTokens.BodyBold,
                         color = neutral800()
                     )
@@ -376,7 +376,7 @@ fun HomeProfileCardsRow(
                         .padding(12.dp)
                 ) {
                     UText(
-                        text = "참여 기수",
+                        text = AppStrings.HOME_ATTEND_GISU,
                         style = UmcTypographyTokens.BodyBold,
                         color = neutral800()
                     )

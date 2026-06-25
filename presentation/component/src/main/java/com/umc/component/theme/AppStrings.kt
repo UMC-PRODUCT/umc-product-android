@@ -12,6 +12,9 @@ object AppStrings {
     const val HOME_PLAN_TITLE = "다가오는 일정"
     const val HOME_NOTIFICATION_TITLE = "알림 보관함"
     const val HOME_NOTICE_TITLE = "공지 상세"
+    
+    const val HOME_ACTIVATE_DAY = "누적 활동일"
+    const val HOME_ATTEND_GISU = "참여 기수"
     const val HOME_PLAN_DETAIL_TITLE = "일정 상세"
     const val HOME_PLAN_DETAIL_CALENDAR = "일시"
     const val HOME_PLAN_DETAIL_LOCATION = "장소"
