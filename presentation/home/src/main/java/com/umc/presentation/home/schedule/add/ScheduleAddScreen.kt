@@ -480,7 +480,8 @@ fun ScheduleAddTopBar(onBackClick: () -> Unit){
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 18.dp),
+            .padding(vertical = 18.dp)
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
 

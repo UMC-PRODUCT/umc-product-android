@@ -13,6 +13,7 @@ import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
 import com.umc.presentation.home.home.HomeRoute
+import com.umc.presentation.home.notification.NotificationRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
 import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
 import com.umc.presentation.login.LoginRoute
@@ -75,9 +76,17 @@ fun MainNavHost(
                     //여기서 인자를 던지면, savedStateHandle에서 받아채서 ViewModel에서 처리
                     navHostController.navigate(MainDestination.ScheduleDetail(scheduleId = it.id, plusDay = it.plusDay))
                 },
-                onNavigateToNotification = {}
+                onNavigateToNotification = {
+                    navHostController.navigate(MainDestination.Notification)
+                }
             )
         }
+        //공지 화면
+        composable<MainDestination.Notification>{
+            NotificationRoute()
+        }
+
+
         //일정 생성
         composable<MainDestination.ScheduleAdd> {
             ScheduleAddRoute(
