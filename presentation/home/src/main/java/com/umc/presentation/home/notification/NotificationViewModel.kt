@@ -32,6 +32,26 @@ class NotificationViewModel @Inject constructor(
             }
         }
     }
+    /*
+    * listOf(
+                            NotificationItem(
+                                title = "공지사항",
+                                content = "공지사항 내용",
+                                date = "2023.08.08"
+                            ),
+                            NotificationItem(
+                                title = "공지사항",
+                                content = "공지사항 내용",
+                                date = "2023.08.08"
+                            ),
+                            NotificationItem(
+                                title = "공지사항",
+                                content = "공지사항 내용",
+                                date = "2023.08.08"
+                            ),
+                        )
+    *
+    * */
 
     //뒤로가기
     fun onClickBackPressed() {

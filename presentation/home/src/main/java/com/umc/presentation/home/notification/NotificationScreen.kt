@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,8 +28,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.UmcTypography
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.neutral000
+import com.umc.component.theme.neutral200
+import com.umc.component.theme.neutral400
+import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral800
 import com.umc.domain.model.home.NotificationItem
 
@@ -72,13 +78,15 @@ fun NotificationScreen(
         //1. 상단 바
         NotificationTopBar(onBackClick = onBackClick)
 
-        Spacer(modifier = Modifier.height(32.dp))
 
         //2. 알람 공지 리스트
         LazyColumn(
-            modifier = Modifier.
-                fillMaxSize()
-        ) { }
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(notifications) { item ->
+                NotificationRow(item = item)
+            }
+        }
 
     }
 
@@ -117,16 +125,20 @@ fun NotificationTopBar(onBackClick: () -> Unit){
 
     }
 }
-/*
+
 /**알람 1개**/
 @Composable
 fun NotificationRow(item: NotificationItem) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background()
+            .background(neutral000())
     ) {
-        HorizontalDivider(thickness = 1.dp, color = Color(0xFFE0E0E0)) // neutral200
+
+        HorizontalDivider(
+            thickness = 1.dp,
+            color = neutral200()
+        )
 
         Row(
             modifier = Modifier
@@ -134,29 +146,29 @@ fun NotificationRow(item: NotificationItem) {
                 .fillMaxWidth()
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
+                UText(
                     text = item.title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF212121)
+                    style = UmcTypographyTokens.HeadlineBold,
+                    color = neutral800()
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
+
+                Spacer(modifier = Modifier
+                    .height(4.dp)
+                )
+
+                UText(
                     text = item.content,
-                    fontSize = 12.sp,
-                    color = Color(0xFF757575) // neutral600
+                    style = UmcTypographyTokens.Footnote,
+                    color = neutral600()
                 )
             }
-            Text(
+
+            UText(
                 text = item.date,
-                fontSize = 12.sp,
-                color = Color(0xFFBDBDBD), // neutral400
-                modifier = Modifier.padding(start = 16.dp)
+                style = UmcTypographyTokens.Footnote,
+                color = neutral400()
             )
         }
-
-        HorizontalDivider(thickness = 1.dp, color = Color(0xFFE0E0E0))
     }
 }
 
- */
