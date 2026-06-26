@@ -71,25 +71,29 @@ fun PermissionRoute(
             when (event) {
                 PermissionEvent.MoveToBack -> navigateToBack()
                 PermissionEvent.ShowPermissionDialog -> {
-                    val permissions = mutableListOf<String>()
-                    if (viewModel.uiState.value.isAlarmCheck) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            if (ContextCompat.checkSelfPermission(
-                                    context, Manifest.permission.POST_NOTIFICATIONS
-                                ) != PackageManager.PERMISSION_GRANTED
-                            ) {
-                                permissions += Manifest.permission.POST_NOTIFICATIONS
-                            }
+                    val permissions = buildList {
+                        if (uiState.isAlarmCheck && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            add(Manifest.permission.POST_NOTIFICATIONS)
                         }
-                    }
-                    if (viewModel.uiState.value.isLocationCheck) {
-                        if (ContextCompat.checkSelfPermission(
-                                context, Manifest.permission.ACCESS_FINE_LOCATION
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            permissions += Manifest.permission.ACCESS_FINE_LOCATION
+                        if (uiState.isLocationCheck) {
+                            add(Manifest.permission.ACCESS_FINE_LOCATION)
+                            add(Manifest.permission.ACCESS_COARSE_LOCATION)
                         }
+                        if (uiState.isPhotoCheck) {
+                            add(
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    Manifest.permission.READ_MEDIA_IMAGES
+                                } else {
+                                    Manifest.permission.READ_EXTERNAL_STORAGE
+                                }
+                            )
+                        }
+                    }.filter { permission ->
+                        ContextCompat.checkSelfPermission(
+                            context, permission
+                        ) != PackageManager.PERMISSION_GRANTED
                     }
+
                     if (permissions.isNotEmpty()) {
                         requestPermissionsLauncher.launch(permissions.toTypedArray())
                     } else {
