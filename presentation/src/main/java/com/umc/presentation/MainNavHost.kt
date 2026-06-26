@@ -9,6 +9,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.mypage.mycontent.MyContentRoute
+import com.example.mypage.mypage.MypageRoute
+import com.example.mypage.profile.ProfileRoute
 import com.umc.permission.PermissionRoute
 import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
@@ -25,7 +28,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Permission,
+        startDestination = MainDestination.Splash,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -33,7 +36,13 @@ fun MainNavHost(
     ) {
         composable<MainDestination.Splash> {
             SplashRoute(
-                navigateToLogin = { navHostController.navigate(MainDestination.Login) }
+                navigateToLogin = { navHostController.navigate(MainDestination.Login) },
+                navigateToMain = {
+                    // TODO: 메인 화면 완성 후 연결
+                },
+                navigateToInputCode = {
+                    // TODO: 코드 입력 화면 완성 후 연결
+                }
             )
         }
 
@@ -103,7 +112,33 @@ fun MainNavHost(
             )
         }
 
+        /**마이페이지 관련 정의**/
+        composable<MainDestination.Mypage>{
+            MypageRoute(
+                onNavigateToEditProfile = {
+                    navHostController.navigate(MainDestination.MyProfile)
+                },
+                onNavigateToMyContent = {type ->
+                    navHostController.navigate(MainDestination.MyContent(showType = type))
+                                        },
+                onNavigateToLogin = {}
+            )
 
+        }
+
+        //내 활동
+        composable<MainDestination.MyContent> {
+            MyContentRoute(
+                onNavigateToPostDetail = { id ->
+                    /**TODO id를 줘서 커뮤니티 게시글 상세 페이지로 이동*/
+                }
+            )
+        }
+
+        //내 프로필
+        composable<MainDestination.MyProfile> {
+            ProfileRoute()
+        }
 
 
     }
