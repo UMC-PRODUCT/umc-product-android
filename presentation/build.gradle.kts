@@ -60,6 +60,7 @@ dependencies {
     implementation(project(":presentation:mypage"))
     implementation(project(":presentation:signUp"))
     implementation(project(":presentation:permission"))
+    implementation(project(":presentation:failCode"))
     implementation(project(":presentation:component"))
     implementation(project(":presentation:study"))
 

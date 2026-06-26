@@ -12,6 +12,8 @@ import androidx.navigation.toRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
+import com.umc.failcode.SignUpFailRoute
+import com.umc.failcode.code.SignUpFailCodeRoute
 import com.umc.permission.PermissionRoute
 import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
@@ -71,7 +73,33 @@ fun MainNavHost(
                         popUpTo(MainDestination.Splash) { inclusive = true }
                     }
                 },
-                navigateToFail = { navHostController.popBackStack() },
+                navigateToFail = {
+                    navHostController.navigate(MainDestination.SignUpFail) {
+                        popUpTo(MainDestination.Permission) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable<MainDestination.SignUpFail> {
+            SignUpFailRoute(
+                navigateToCode = { navHostController.navigate(MainDestination.SignUpFailCode) },
+                navigateToLogin = {
+                    navHostController.navigate(MainDestination.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable<MainDestination.SignUpFailCode> {
+            SignUpFailCodeRoute(
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToHome = {
+                    navHostController.navigate(MainDestination.Home) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
             )
         }
 
