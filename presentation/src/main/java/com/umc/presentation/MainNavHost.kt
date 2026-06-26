@@ -12,6 +12,7 @@ import androidx.navigation.toRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
+import com.umc.permission.PermissionRoute
 import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
 import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
@@ -58,6 +59,19 @@ fun MainNavHost(
             SignUpRoute(
                 oAuthVerificationToken = destination.oAuthVerificationToken,
                 navigateToBack = { navHostController.popBackStack() },
+                navigateToPermission = { navHostController.navigate(MainDestination.Permission) },
+            )
+        }
+
+        composable<MainDestination.Permission> {
+            PermissionRoute(
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToMain = {
+                    navHostController.navigate(MainDestination.Home) {
+                        popUpTo(MainDestination.Splash) { inclusive = true }
+                    }
+                },
+                navigateToFail = { navHostController.popBackStack() },
             )
         }
 
