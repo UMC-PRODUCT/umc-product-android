@@ -25,13 +25,13 @@ import com.umc.component.R
  *
  * @param text 칩에 표시할 텍스트 (XML: text)
  * @param modifier 레이아웃 수정을 위한 Modifier
- * @param backgroundColor 칩 배경색 (XML: backgroundColor)
- * @param textColor 텍스트 및 닫기 아이콘 색상 (XML: textColor)
- * @param textStyle 텍스트 스타일 (XML: textAppearance)
- * @param borderWidth 외곽선 두께 (XML: borderWidth)
- * @param borderColor 외곽선 색상 (XML: borderColor)
- * @param showCloseIcon 닫기(X) 버튼 표시 여부 (XML: showCloseIcon)
- * @param nextIcon 후위 아이콘 리소스 ID (XML: nextIcon)
+ * @param backgroundColor 칩 배경색 (XML: backgroundColor) - 기본 primary500()
+ * @param textColor 텍스트 및 닫기 아이콘 색상 (XML: textColor) - 기본 neutral000()
+ * @param textStyle 텍스트 스타일 (XML: textAppearance) - 기본 UmcTypographyTokens.SubheadlineBold
+ * @param borderWidth 외곽선 두께 (XML: borderWidth) - 기본 0.dp
+ * @param borderColor 외곽선 색상 (XML: borderColor) - 기본 Color.Transparent
+ * @param showCloseIcon 닫기(X) 버튼 표시 여부 (XML: showCloseIcon) - 기본 false
+ * @param nextIcon 후위 아이콘 리소스 ID (XML: nextIcon) - 기본 false
  * @param onClick 칩 자체 클릭 리스너
  * @param onCloseClick 닫기 버튼 클릭 리스너 (XML: onCloseClickListener)
  */

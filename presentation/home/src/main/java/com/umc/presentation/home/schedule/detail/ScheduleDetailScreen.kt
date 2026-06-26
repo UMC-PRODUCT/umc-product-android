@@ -35,10 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
+import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
-import com.umc.component.component.model.UBasicDialogModel
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.accent500
@@ -103,16 +103,18 @@ fun ScheduleDetailRoute(
     //UBsaicDialog 사용(경고 버전)
     if(showDeleteDialog){
         UBasicDialog(
-            model = UBasicDialogModel.Warning(
-                title = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_TITLE,
-                content = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONTENT,
-                positiveText = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONFIRM
-            ),
-            onConfirm = {
+            title = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_TITLE,
+            content = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONTENT,
+            positiveText = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONFIRM,
+            type = DialogType.WARNING,
+            onPositive = {
                 viewModel.deletePlan()
                 showDeleteDialog = false
             },
-            onDismiss = {
+            onNegative = {
+                showDeleteDialog = false
+            },
+            onDismissRequest = {
                 showDeleteDialog = false
             }
         )
@@ -158,7 +160,9 @@ fun ScheduleDetailScreen(
                 backgroundColor = primary100(),
                 textColor = primary600(),
                 textStyle = UmcTypographyTokens.FootnoteBold,
-                onClick = {}
+                onClick = {},
+                modifier = Modifier
+                    .height(24.dp),
             )
 
             Spacer(modifier = Modifier

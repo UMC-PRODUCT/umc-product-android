@@ -10,15 +10,22 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
 import com.umc.data.response.curriculum.AvailableWeeksResponse
+import com.umc.data.response.curriculum.CurriculumOverviewResponse
 import com.umc.data.response.curriculum.StudyGroupResponse
 import retrofit2.http.PATCH
 
 interface CurriculumApi {
 
+    @GET(Endpoints.Curriculum.CURRICULUM_OVERVIEW)
+    suspend fun getCurriculumOverview(
+        @Query("gisuId") gisuId: Long,
+        @Query("part") part: String,
+        @Query("weekNo") weekNo: Long? = null
+    ): ApiResponse<CurriculumOverviewResponse>
+
     @GET(Endpoints.Curriculum.CHALLENGER_ME_PROGRESS)
     suspend fun getMyCurriculumProgress(
-        @Query("page") page: Int?,
-        @Query("limit") limit: Int?
+        @Query("gisuId") gisuId: Long
     ): ApiResponse<CurriculumProgressResponse>
 
     @POST(Endpoints.Curriculum.SUBMIT)
