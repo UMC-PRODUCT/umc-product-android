@@ -1,6 +1,8 @@
 package com.umc.failcode
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -64,10 +66,11 @@ fun SignUpFailRoute(
 
     LaunchedEffect(Unit) {
         val googleToken = runCatching {
+            val activity = context.findActivity() ?: error("Activity를 찾을 수 없습니다.")
             val authorizationRequest = AuthorizationRequest.builder()
                 .setRequestedScopes(listOf(Scope(Scopes.PROFILE), Scope(Scopes.EMAIL)))
                 .build()
-            val result = Identity.getAuthorizationClient(context as Activity)
+            val result = Identity.getAuthorizationClient(activity)
                 .authorize(authorizationRequest)
                 .await()
             result.accessToken ?: ""
@@ -78,7 +81,7 @@ fun SignUpFailRoute(
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
-                SignUpFailEvent.MoveToBack -> (context as? Activity)?.finish()
+                SignUpFailEvent.MoveToBack -> context.findActivity()?.finish()
                 SignUpFailEvent.MoveToHomePage -> {
                     val intent = Intent(Intent.ACTION_VIEW, "https://umc.it.kr".toUri())
                     context.startActivity(intent)
@@ -93,7 +96,7 @@ fun SignUpFailRoute(
         }
     }
 
-    BackHandler { (context as? Activity)?.finish() }
+    BackHandler { context.findActivity()?.finish() }
 
     SignUpFailScreen(
         onClickBack = viewModel::onClickBack,
@@ -258,4 +261,18 @@ fun SignUpFailScreen(
 @Composable
 private fun SignUpFailScreenPreview() {
     SignUpFailScreen()
+}
+
+/**
+ * LocalContext 는 ContextWrapper(예: Hilt 의 FragmentContextWrapper, ContextThemeWrapper)로
+ * 감싸져 있을 수 있어 단순 `context as Activity` 는 ClassCastException 위험이 있다.
+ * baseContext 체인을 거슬러 올라가며 실제 Activity 를 찾고, 없으면 null 을 반환한다.
+ */
+private fun Context.findActivity(): Activity? {
+    var current = this
+    while (current is ContextWrapper) {
+        if (current is Activity) return current
+        current = current.baseContext
+    }
+    return null
 }
