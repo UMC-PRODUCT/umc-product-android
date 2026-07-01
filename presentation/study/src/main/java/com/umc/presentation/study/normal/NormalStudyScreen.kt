@@ -1,4 +1,4 @@
-package com.umc.presentation.study
+package com.umc.presentation.study.normal
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -18,9 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.theme.neutral100
 import com.umc.domain.model.enums.UserPart
-import com.umc.presentation.study.component.StudyCurriculumCard
-import com.umc.presentation.study.component.StudyEmptyCard
-import com.umc.presentation.study.component.StudyItemRow
+import com.umc.presentation.study.normal.component.StudyCurriculumCard
+import com.umc.presentation.study.normal.component.StudyEmptyCard
+import com.umc.presentation.study.normal.component.StudyItemRow
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable

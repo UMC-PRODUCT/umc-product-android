@@ -1,4 +1,4 @@
-package com.umc.presentation.study.component
+package com.umc.presentation.study.normal.component
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,7 +14,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.*
 import com.umc.domain.model.enums.StudyStatus
 import com.umc.domain.model.enums.SubmitState
-import com.umc.presentation.study.ActStudyItemUiModel
+import com.umc.presentation.study.normal.NormalStudyItemUiModel
 
 /**
  * 카드 펼쳤을 때 나타나는 콘텐츠
@@ -30,7 +30,7 @@ import com.umc.presentation.study.ActStudyItemUiModel
  */
 @Composable
 fun StudyExpandedContent(
-    item: ActStudyItemUiModel,
+    item: NormalStudyItemUiModel,
     onSubmitClick: (Long, String) -> Unit,
     onConfirmClick: (Long) -> Unit,
 ) {
@@ -79,7 +79,7 @@ fun StudyExpandedContent(
 /** 링크 입력 + 제출 버튼 */
 @Composable
 private fun StudyLinkInputSection(
-    item: ActStudyItemUiModel,
+    item: NormalStudyItemUiModel,
     onSubmitClick: (Long, String) -> Unit,
 ) {
     var linkText by remember(item.id) { mutableStateOf(item.link) }
@@ -145,7 +145,7 @@ private fun StudyLinkInputSection(
 /** 학습 완료 확인 화면 */
 @Composable
 private fun StudyConfirmSection(
-    item: ActStudyItemUiModel,
+    item: NormalStudyItemUiModel,
     onConfirmClick: (Long) -> Unit,
 ) {
     Column {

@@ -1,4 +1,4 @@
-package com.umc.presentation.study.component
+package com.umc.presentation.study.normal.component
 
 
 import androidx.compose.foundation.layout.padding
@@ -12,7 +12,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.*
 import com.umc.domain.model.enums.StudyStatus
 import com.umc.domain.model.enums.SubmitState
-import com.umc.presentation.study.ActStudyItemUiModel
+import com.umc.presentation.study.normal.NormalStudyItemUiModel
 
 /**
  * 학습 상태 뱃지
@@ -24,7 +24,7 @@ import com.umc.presentation.study.ActStudyItemUiModel
  */
 @Composable
 fun StudyStatusBadge(
-    item: ActStudyItemUiModel,
+    item: NormalStudyItemUiModel,
     modifier: Modifier = Modifier,
 ) {
     val (bg, textColor, label) = when {
