@@ -49,20 +49,20 @@ import com.umc.component.component.UText
 import com.umc.component.component.getGrowthText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.danger100
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral700
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.neutral900
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary500
-import com.umc.component.theme.primary600
-import com.umc.component.theme.success100
-import com.umc.component.theme.success500
+import com.umc.component.theme.red100
+import com.umc.component.theme.red500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
+import com.umc.component.theme.grey800
+import com.umc.component.theme.grey900
+import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo500
+import com.umc.component.theme.indigo600
+import com.umc.component.theme.green100
+import com.umc.component.theme.green500
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.home.SchedulePlanItem
@@ -129,7 +129,7 @@ fun HomeScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(neutral100())
+            .background(grey100())
     ) {
 
         //1. 상단 섹션(유저 정보)
@@ -137,7 +137,7 @@ fun HomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(neutral000())
+                    .background(grey000())
                     .padding(horizontal = 16.dp)
                     .padding(top = 16.dp)
                     .padding(bottom = 32.dp)
@@ -186,7 +186,7 @@ fun HomeScreen(
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                color = neutral000(),
+                color = grey000(),
                 shadowElevation = 0.dp
             ) {
                 Column(modifier = Modifier
@@ -211,7 +211,7 @@ fun HomeScreen(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp)
                                     .height(1.dp)
-                                    .background(neutral200())
+                                    .background(grey200())
                             )
 
                             Spacer(modifier = Modifier
@@ -274,7 +274,7 @@ fun HomeProfileCard(uiState: HomeUiState) {
             .fillMaxWidth()
             .padding(top = 16.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = primary100()),
+        colors = CardDefaults.cardColors(containerColor = indigo100()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Box(modifier = Modifier
@@ -289,8 +289,8 @@ fun HomeProfileCard(uiState: HomeUiState) {
                     uiState.gisuTag.forEach { tag ->
                         UButton(
                             text = tag,
-                            backgroundColor = neutral000(),
-                            textColor = primary600(),
+                            backgroundColor = grey000(),
+                            textColor = indigo600(),
                             textStyle = UmcTypographyTokens.Caption1Bold,
                             onClick = {},
                             modifier = Modifier
@@ -308,7 +308,7 @@ fun HomeProfileCard(uiState: HomeUiState) {
                 UText(
                     text = "${uiState.userNickName}(${uiState.userName})",
                     style = UmcTypographyTokens.Title3,
-                    color = neutral700()
+                    color = grey700()
                 )
 
                 //성장 일수 (Spannable 대신 하위 함수 호출)
@@ -354,7 +354,7 @@ fun HomePlanHeader(
         UText(
             text = AppStrings.HOME_PLAN_TITLE,
             style = UmcTypographyTokens.Title3Bold,
-            color = neutral800()
+            color = grey800()
         )
 
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -362,7 +362,7 @@ fun HomePlanHeader(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_add_filled),
                     contentDescription = "Add",
-                    tint = primary500()
+                    tint = indigo500()
                 )
             }
 
@@ -372,7 +372,7 @@ fun HomePlanHeader(
 
             //뷰 전환 선택기
             Surface(
-                color = neutral000(),
+                color = grey000(),
                 shape = RoundedCornerShape(8.dp)
             ) {
 
@@ -420,7 +420,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral200()),
+        colors = CardDefaults.cardColors(containerColor = grey200()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(modifier = Modifier
@@ -431,7 +431,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
             UText(
                 text = uiState.activeString,
                 style = UmcTypographyTokens.HeadlineBold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(modifier = Modifier
@@ -443,7 +443,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                 modifier = Modifier
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                color = neutral000()
+                color = grey000()
             ) {
                 Row(
                     modifier = Modifier
@@ -457,8 +457,8 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                             .weight(1f),
                         label = AppStrings.REWARD,
                         score = uiState.sangjum,
-                        color = success500(),
-                        bgColor = success100()
+                        color = green500(),
+                        bgColor = green100()
                     )
 
                     VerticalDivider()
@@ -469,8 +469,8 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                             .weight(1f),
                         label = AppStrings.PUNISH,
                         score = uiState.buljum,
-                        color = danger500(),
-                        bgColor = danger100()
+                        color = red500(),
+                        bgColor = red100()
                     )
 
                     VerticalDivider()
@@ -481,8 +481,8 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                             .weight(1f),
                         label = AppStrings.HAB,
                         score = uiState.total,
-                        color = primary500(),
-                        bgColor = primary100()
+                        color = indigo500(),
+                        bgColor = indigo100()
                     )
                 }
             }
@@ -516,7 +516,7 @@ private fun ScoreCard(
             modifier = Modifier
                 .padding(top = 8.dp),
             style = UmcTypographyTokens.HeadlineBold,
-            color = neutral900()
+            color = grey900()
         )
     }
 }
@@ -527,7 +527,7 @@ private fun VerticalDivider() {
     Box(modifier = Modifier
         .width(1.dp)
         .height(54.dp)
-        .background(neutral200())
+        .background(grey200())
     )
 }
 

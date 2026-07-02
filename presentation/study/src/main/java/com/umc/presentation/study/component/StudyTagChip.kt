@@ -22,13 +22,13 @@ fun StudyTagChip(
 ) {
     Surface(
         shape = RoundedCornerShape(6.dp),
-        color = neutral000(),
-        modifier = modifier.border(1.dp, neutral200(), RoundedCornerShape(6.dp))
+        color = grey000(),
+        modifier = modifier.border(1.dp, grey200(), RoundedCornerShape(6.dp))
     ) {
         UText(
             text = text,
             style = UmcTypographyTokens.FootnoteBold,
-            color = neutral700(),
+            color = grey700(),
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
         )
     }

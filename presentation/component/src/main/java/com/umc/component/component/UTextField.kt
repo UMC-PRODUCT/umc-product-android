@@ -29,11 +29,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo500
 
 /**
  * UMC 공용 텍스트 입력 컴포넌트.
@@ -45,12 +45,12 @@ import com.umc.component.theme.primary500
  * @param onValueChange 텍스트 변경 콜백
  * @param modifier 외부 레이아웃 지정. 너비는 modifier로 제어 (기본값은 부모 너비에 맞게 fillMaxWidth)
  * @param placeholder 입력값이 없을 때 표시하는 힌트 텍스트
- * @param placeholderColor 힌트 텍스트 색상. 기본값 neutral400
- * @param textColor 입력 텍스트 색상. 기본값 neutral800
+ * @param placeholderColor 힌트 텍스트 색상. 기본값 grey400
+ * @param textColor 입력 텍스트 색상. 기본값 grey800
  * @param textStyle 입력 텍스트 스타일. 기본값 Callout
- * @param backgroundColor 배경색. 기본값 neutral000 (흰색)
- * @param strokeColor 비포커스 상태의 테두리 색상. 기본값 neutral300
- * @param focusStrokeColor 포커스 상태의 테두리 색상 및 커서 색상. 기본값 primary500
+ * @param backgroundColor 배경색. 기본값 grey000 (흰색)
+ * @param strokeColor 비포커스 상태의 테두리 색상. 기본값 grey300
+ * @param focusStrokeColor 포커스 상태의 테두리 색상 및 커서 색상. 기본값 indigo500
  * @param cornerRadius 모서리 둥글기. 기본값 8dp
  * @param enabled false 이면 입력 불가. strokeColor는 항상 strokeColor로 고정
  * @param keyboardOptions 키보드 타입·IME 액션 등 설정
@@ -65,12 +65,12 @@ fun UTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String = "",
-    placeholderColor: Color = neutral400(),
-    textColor: Color = neutral800(),
+    placeholderColor: Color = grey400(),
+    textColor: Color = grey800(),
     textStyle: TextStyle = UmcTypographyTokens.Callout,
-    backgroundColor: Color = neutral000(),
-    strokeColor: Color = neutral300(),
-    focusStrokeColor: Color = primary500(),
+    backgroundColor: Color = grey000(),
+    strokeColor: Color = grey300(),
+    focusStrokeColor: Color = indigo500(),
     cornerRadius: Dp = 8.dp,
     enabled: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,

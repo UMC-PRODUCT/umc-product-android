@@ -113,7 +113,7 @@ fun ScheduleAddScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000())
+            .background(grey000())
 
     ) {
         //1. 상단 바
@@ -142,12 +142,12 @@ fun ScheduleAddScreen(
                         .fillMaxWidth(),
                     placeholder = { Text(
                         AppStrings.HOME_PLAN_ADD_PLAN_NAME_PLACEHOLDER,
-                        color = neutral400()
+                        color = grey400()
                     ) },
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = neutral300(),
-                        focusedBorderColor = primary500()
+                        unfocusedBorderColor = grey300(),
+                        focusedBorderColor = indigo500()
                     )
                 )
             }
@@ -215,11 +215,11 @@ fun ScheduleAddScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(144.dp),
-                    placeholder = { Text(AppStrings.HOME_PLAN_ADD_PLAN_DETAIL_PLACEHOLDER, color = neutral400()) },
+                    placeholder = { Text(AppStrings.HOME_PLAN_ADD_PLAN_DETAIL_PLACEHOLDER, color = grey400()) },
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = neutral300(),
-                        focusedBorderColor = primary500()
+                        unfocusedBorderColor = grey300(),
+                        focusedBorderColor = indigo500()
                     )
                 )
             }
@@ -274,7 +274,7 @@ fun ScheduleAddTopBar(onBackClick: () -> Unit){
           Icon(
               painter = painterResource(id=R.drawable.ic_back),
               contentDescription = null,
-              tint = neutral800(),
+              tint = grey800(),
               modifier = Modifier
                   .clickable { onBackClick() }
                   .padding(end = 16.dp)
@@ -287,7 +287,7 @@ fun ScheduleAddTopBar(onBackClick: () -> Unit){
         UText(
             text = AppStrings.HOME_PLAN_ADD_TITLE,
             style = UmcTypographyTokens.Title2Bold,
-            color = neutral800()
+            color = grey800()
         )
 
     }
@@ -307,12 +307,12 @@ fun ScheduleInputSection(
             UText(
                 text = title,
                 style = UmcTypographyTokens.HeadlineBold,
-                color = neutral800()
+                color = grey800()
             )
             if (required) {
                 UText(text = "*",
                     style = UmcTypographyTokens.HeadlineBold,
-                    color = danger500(),
+                    color = red500(),
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }
@@ -333,8 +333,8 @@ fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit) {
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, neutral300()),
-        color = neutral000()
+        border = BorderStroke(1.dp, grey300()),
+        color = grey000()
     ) {
         Row(
             modifier = Modifier
@@ -347,11 +347,11 @@ fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit) {
                 modifier = Modifier
                     .weight(1f),
                 style = UmcTypographyTokens.Body,
-                color = if (isPlaceholder) neutral400() else neutral800(),
+                color = if (isPlaceholder) grey400() else grey800(),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Icon(painter = painterResource(id = R.drawable.ic_arrow_next), contentDescription = null, tint = neutral400())
+            Icon(painter = painterResource(id = R.drawable.ic_arrow_next), contentDescription = null, tint = grey400())
         }
     }
 }
@@ -372,10 +372,10 @@ fun ScheduleAddActionButtons(
             modifier = Modifier
                 .weight(1f)
                 .height(52.dp),
-            backgroundColor = neutral000(),
-            borderColor = neutral300(),
+            backgroundColor = grey000(),
+            borderColor = grey300(),
             borderWidth = 1.dp,
-            textColor = neutral800(),
+            textColor = grey800(),
             onClick = onCancelClick
         )
         Spacer(modifier = Modifier
@@ -386,8 +386,8 @@ fun ScheduleAddActionButtons(
             modifier = Modifier
                 .weight(1f)
                 .height(52.dp),
-            backgroundColor = if (registerOk) primary500() else neutral300(),
-            textColor = neutral000(),
+            backgroundColor = if (registerOk) indigo500() else grey300(),
+            textColor = grey000(),
             onClick = onRegisterClick
         )
     }

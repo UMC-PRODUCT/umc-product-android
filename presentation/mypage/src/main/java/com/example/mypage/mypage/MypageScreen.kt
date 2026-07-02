@@ -49,21 +49,21 @@ import com.kakao.sdk.user.UserApiClient
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral200
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.R
 import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral500
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral700
-import com.umc.component.theme.neutral800
+import com.umc.component.theme.red500
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey500
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
+import com.umc.component.theme.grey800
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.OutLinkType
 
@@ -364,7 +364,7 @@ fun MypageScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral100())
+            .background(grey100())
             .padding(horizontal = 16.dp)
     ) {
         item{
@@ -517,8 +517,8 @@ fun MypageScreen(
                 UButton(
                     text = AppStrings.DELETE_USER,
                     modifier = Modifier.weight(1f),
-                    backgroundColor = neutral000(),
-                    textColor = danger500(),
+                    backgroundColor = grey000(),
+                    textColor = red500(),
                     textStyle = UmcTypographyTokens.Body,
                     cornerRadius = 12.dp,
                     onClick = onDeleteUserClick
@@ -527,8 +527,8 @@ fun MypageScreen(
                 UButton(
                     text = AppStrings.LOGOUT,
                     modifier = Modifier.weight(1f),
-                    backgroundColor = neutral000(),
-                    textColor = neutral800(),
+                    backgroundColor = grey000(),
+                    textColor = grey800(),
                     textStyle = UmcTypographyTokens.Body,
                     cornerRadius = 12.dp,
                     onClick = onLogoutClick
@@ -566,7 +566,7 @@ fun MypageProfileCard(uiState: MypageUiState, onClick: () -> Unit){
             .padding(top = 24.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral000()),
+        colors = CardDefaults.cardColors(containerColor = grey000()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
@@ -581,7 +581,7 @@ fun MypageProfileCard(uiState: MypageUiState, onClick: () -> Unit){
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape)
-                    .border(1.dp, neutral200(), CircleShape),
+                    .border(1.dp, grey200(), CircleShape),
                 placeholder = painterResource(R.drawable.ic_profile_default),
                 error = painterResource(R.drawable.ic_profile_default)
             )
@@ -612,7 +612,7 @@ fun MypageProfileCard(uiState: MypageUiState, onClick: () -> Unit){
                 UText(text = uiState.userInfo.schoolName,
                     modifier = Modifier.padding(top = 4.dp),
                     style = UmcTypographyTokens.Headline, 
-                    color = neutral600()
+                    color = grey600()
                 )
                 //최근 정보
                 if (uiState.myRecentCarrer.isNotEmpty()) {
@@ -622,10 +622,10 @@ fun MypageProfileCard(uiState: MypageUiState, onClick: () -> Unit){
                         modifier = Modifier
                             .padding(top = 8.dp)
                             .height(24.dp),
-                        backgroundColor = neutral000(),
-                        borderColor = neutral100(),
+                        backgroundColor = grey000(),
+                        borderColor = grey100(),
                         borderWidth = 1.dp,
-                        textColor = neutral700(),
+                        textColor = grey700(),
                         textStyle = UmcTypographyTokens.Caption1Bold
                     )
                 }
@@ -634,7 +634,7 @@ fun MypageProfileCard(uiState: MypageUiState, onClick: () -> Unit){
             Icon(
                 painterResource(R.drawable.ic_arrow_next),
                 contentDescription = null,
-                tint = neutral500()
+                tint = grey500()
             )
         }
     }
@@ -647,7 +647,7 @@ fun MypageSectionTitle(text: String) {
     UText(
         text = text,
         style = UmcTypographyTokens.HeadlineBold,
-        color = neutral800(),
+        color = grey800(),
         modifier = Modifier
             .padding(top = 32.dp)
     )
@@ -661,7 +661,7 @@ fun MypageListCard(content: @Composable ColumnScope.() -> Unit) {
             .fillMaxWidth()
             .padding(top = 16.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral000()),
+        colors = CardDefaults.cardColors(containerColor = grey000()),
         elevation = CardDefaults.cardElevation(0.dp),
         content = content
     )
@@ -687,7 +687,7 @@ fun MypageListItem(
             contentDescription = null,
             modifier = Modifier
                 .size(24.dp),
-            tint = neutral800()
+            tint = grey800()
         )
         UText(
             text = text,
@@ -695,13 +695,13 @@ fun MypageListItem(
                 .padding(start = 12.dp)
                 .weight(1f),
             style = UmcTypographyTokens.Body,
-            color = neutral800()
+            color = grey800()
         )
         if (showArrow) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_next),
                 contentDescription = null,
-                tint = neutral400()
+                tint = grey400()
             )
         }
     }
@@ -710,7 +710,7 @@ fun MypageListItem(
 /**ProfileCard 옆에 있는 소셜 배지**/
 @Composable
 fun SocialBadge(platform: LoginType) {
-    val bgColor = if (platform == LoginType.KAKAO) Color(0xFFFEE500) else neutral100()
+    val bgColor = if (platform == LoginType.KAKAO) Color(0xFFFEE500) else grey100()
 
     Surface(
         modifier = Modifier
@@ -724,7 +724,7 @@ fun SocialBadge(platform: LoginType) {
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             style = UmcTypographyTokens.Caption1Bold,
-            color = neutral700()
+            color = grey700()
         )
     }
 }
@@ -757,19 +757,19 @@ fun MypageSocialLinkCard(
                     .padding(start = 12.dp)
                     .weight(1f),
                 style = UmcTypographyTokens.Body,
-                color = neutral800()
+                color = grey800()
             )
             UText(
                 text = "연동하기",
                 style = UmcTypographyTokens.Subheadline,
-                color = neutral800(),
+                color = grey800(),
                 modifier = Modifier
                     .padding(end = 8.dp)
             )
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_next),
                 contentDescription = null,
-                tint = neutral400()
+                tint = grey400()
             )
         }
     }

@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.umc.component.theme.neutral100
+import com.umc.component.theme.grey100
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.study.component.StudyCurriculumCard
 import com.umc.presentation.study.component.StudyEmptyCard
@@ -58,7 +58,7 @@ fun UserStudyScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral100())
+            .background(grey100())
     ) {
         if (state.items.isEmpty()) {
             StudyEmptyCard()

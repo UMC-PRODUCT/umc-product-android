@@ -16,8 +16,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.primary500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.indigo500
 import com.umc.component.R
 
 /**
@@ -25,8 +25,8 @@ import com.umc.component.R
  *
  * @param text 칩에 표시할 텍스트 (XML: text)
  * @param modifier 레이아웃 수정을 위한 Modifier
- * @param backgroundColor 칩 배경색 (XML: backgroundColor) - 기본 primary500()
- * @param textColor 텍스트 및 닫기 아이콘 색상 (XML: textColor) - 기본 neutral000()
+ * @param backgroundColor 칩 배경색 (XML: backgroundColor) - 기본 indigo500()
+ * @param textColor 텍스트 및 닫기 아이콘 색상 (XML: textColor) - 기본 grey000()
  * @param textStyle 텍스트 스타일 (XML: textAppearance) - 기본 UmcTypographyTokens.SubheadlineBold
  * @param borderWidth 외곽선 두께 (XML: borderWidth) - 기본 0.dp
  * @param borderColor 외곽선 색상 (XML: borderColor) - 기본 Color.Transparent
@@ -40,8 +40,8 @@ import com.umc.component.R
 fun UChip(
     text: String,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = primary500(),
-    textColor: Color = neutral000(),
+    backgroundColor: Color = indigo500(),
+    textColor: Color = grey000(),
     textStyle: TextStyle = UmcTypographyTokens.SubheadlineBold,
     borderWidth: Dp = 0.dp,
     borderColor: Color = Color.Transparent,
