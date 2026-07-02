@@ -3,6 +3,7 @@ package com.umc.presentation.home.notification
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -78,15 +79,51 @@ fun NotificationScreen(
         //1. 상단 바
         NotificationTopBar(onBackClick = onBackClick)
 
+        //2. 분기에 따른 화면
+        if(notifications.isEmpty()){
 
-        //2. 알람 공지 리스트
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(notifications) { item ->
-                NotificationRow(item = item)
+            //공지가 아무것도 없네요
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ){
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_notification_off),
+                    contentDescription = null,
+                    tint = neutral400()
+                )
+
+                UText(
+                    modifier = Modifier.
+                        padding(top = 16.dp),
+                    text = AppStrings.HOME_NOTIFICATION_NO_TITLE,
+                    style = UmcTypographyTokens.HeadlineBold,
+                    color = neutral600()
+                )
+
+                UText(
+                    modifier = Modifier.
+                        padding(top = 4.dp),
+                    text = AppStrings.HOME_NOTIFICATION_NO_CONTENT,
+                    style = UmcTypographyTokens.Subheadline,
+                    color = neutral400()
+                )
+
             }
         }
+
+        else {
+            //알람 공지 리스트
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(notifications) { item ->
+                    NotificationRow(item = item)
+                }
+            }
+        }
+
 
     }
 
