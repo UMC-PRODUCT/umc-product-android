@@ -62,7 +62,6 @@ class NotificationViewModel @Inject constructor(
 
 
 data class NotificationUiState(
-    val dummyData: String = "",
 
     // 알림 리스트 (DataStore에서 가져옴)
     val notifications: List<NotificationItem> = emptyList()

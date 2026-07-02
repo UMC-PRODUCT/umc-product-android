@@ -15,6 +15,8 @@ object AppStrings {
     
     const val HOME_ACTIVATE_DAY = "누적 활동일"
     const val HOME_ATTEND_GISU = "참여 기수"
+    const val HOME_NOTIFICATION_NO_TITLE = "알림 내역이 없습니다"
+    const val HOME_NOTIFICATION_NO_CONTENT = "새로운 소식이 도착하면 이곳에 표시됩니다."
     const val HOME_PLAN_DETAIL_TITLE = "일정 상세"
     const val HOME_PLAN_DETAIL_CALENDAR = "일시"
     const val HOME_PLAN_DETAIL_LOCATION = "장소"
