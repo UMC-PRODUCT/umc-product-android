@@ -64,9 +64,8 @@ fun AdminStudyGroupScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000())
+            .background(neutral100())
     ) {
-        AdminStudyGroupHeader()
 
         AdminStudyGroupCreateCard(
             onClick = {
@@ -158,3 +157,41 @@ private fun AdminStudyGroupScreenPreview() {
         )
     )
 }
+
+private fun previewState() = AdminStudyGroupState(
+    groups = listOf(
+        AdminStudyGroupItemUiModel(
+            groupId = 1L,
+            title = "React A팀",
+            partLabel = "Web",
+            leaderName = "홍길동",
+            leaderChallengerId = 1L,
+            leaderProfileImageUrl = null,
+            members = listOf(
+                AdminStudyGroupMemberUiModel(1, "홍길동"),
+                AdminStudyGroupMemberUiModel(2, "홍길동"),
+                AdminStudyGroupMemberUiModel(3, "홍길동"),
+            ),
+            memberChallengerIds = listOf(1, 2, 3),
+            createdAtRaw = "2024-03-01T00:00:00",
+            memberCount = 3,
+            leaderUniv = "중앙대",
+        ),
+        AdminStudyGroupItemUiModel(
+            groupId = 2L,
+            title = "React B팀",
+            partLabel = "Android",
+            leaderName = "김철수",
+            leaderChallengerId = 2L,
+            leaderProfileImageUrl = null,
+            members = listOf(
+                AdminStudyGroupMemberUiModel(4, "김철수"),
+                AdminStudyGroupMemberUiModel(5, "이영희"),
+            ),
+            memberChallengerIds = listOf(4, 5),
+            createdAtRaw = "2024-03-01T00:00:00",
+            memberCount = 2,
+            leaderUniv = "서울여대",
+        )
+    )
+)

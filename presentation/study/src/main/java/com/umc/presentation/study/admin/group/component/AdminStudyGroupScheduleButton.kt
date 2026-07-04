@@ -1,6 +1,5 @@
 package com.umc.presentation.study.admin.group.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,41 +16,31 @@ import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 
 @Composable
-fun AdminStudyGroupCreateCard(
+fun AdminStudyGroupScheduleButton(
     onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(top = 8.dp, bottom = 8.dp)
-            .background(neutral000(), RoundedCornerShape(8.dp))
-            .border(1.dp, neutral200(), RoundedCornerShape(8.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 13.dp),
+            .height(36.dp)
+            .border(1.dp, primary500(), RoundedCornerShape(6.dp))
+            .clickable { onClick() },
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_book_filled),
+            painter = painterResource(R.drawable.ic_calendar_color),
             contentDescription = null,
             tint = primary500(),
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(15.dp)
         )
 
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(4.dp))
 
         UText(
-            text = "스터디 그룹 생성하기",
+            text = "스터디 일정 등록하기",
             style = Caption1Bold,
-            color = neutral800(),
-            modifier = Modifier.weight(1f)
-        )
-
-        Icon(
-            painter = painterResource(R.drawable.ic_arrow_next),
-            contentDescription = null,
-            tint = neutral400(),
-            modifier = Modifier.size(18.dp)
+            color = neutral700()
         )
     }
 }
