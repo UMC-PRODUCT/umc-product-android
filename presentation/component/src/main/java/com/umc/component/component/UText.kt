@@ -58,7 +58,7 @@ fun UText(
 }
 
 @Composable
-fun HuggText(
+fun UText(
     text: AnnotatedString,
     modifier: Modifier = Modifier,
     color: Color = Color.Unspecified,

@@ -16,9 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -26,7 +24,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import java.time.LocalDate
@@ -36,16 +33,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
-import com.umc.component.component.HuggText
-import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.component.UButton
 import com.umc.component.component.getGrowthText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
@@ -54,7 +47,6 @@ import com.umc.component.theme.red500
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
-import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
@@ -312,7 +304,7 @@ fun HomeProfileCard(uiState: HomeUiState) {
                 )
 
                 //성장 일수 (Spannable 대신 하위 함수 호출)
-                HuggText(
+                UText(
                     text = getGrowthText(uiState.growDay),
                     style = UmcTypographyTokens.Title3Bold,
                     modifier = Modifier

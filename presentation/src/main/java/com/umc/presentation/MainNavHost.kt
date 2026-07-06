@@ -30,7 +30,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Splash,
+        startDestination = MainDestination.Login,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
