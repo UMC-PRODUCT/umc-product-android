@@ -19,6 +19,7 @@ import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
 import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
 import com.umc.presentation.login.LoginRoute
+import com.umc.presentation.login.emaillogin.EmailLoginRoute
 import com.umc.presentation.signup.SignUpRoute
 import com.umc.presentation.splash.SplashRoute
 
@@ -30,7 +31,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Login,
+        startDestination = MainDestination.EmailLogin,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -52,7 +53,16 @@ fun MainNavHost(
             LoginRoute(
                 navigateToSignUp = { oAuthToken ->
                     navHostController.navigate(MainDestination.SignUp(oAuthToken))
-                }
+                },
+                navigateToEmailLogin = {
+                    navHostController.navigate(MainDestination.EmailLogin)
+                },
+            )
+        }
+
+        composable<MainDestination.EmailLogin> {
+            EmailLoginRoute(
+                navigateToBack = { navHostController.popBackStack() },
             )
         }
 

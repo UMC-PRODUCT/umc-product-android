@@ -69,6 +69,7 @@ import com.umc.component.R
 fun LoginRoute(
     viewModel: LoginViewModel = hiltViewModel(),
     navigateToSignUp: (String) -> Unit = {},
+    navigateToEmailLogin: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -96,7 +97,8 @@ fun LoginRoute(
                 context = context,
                 onLoginSuccess = { token -> viewModel.login(token, LoginType.GOOGLE) }
             )
-        }
+        },
+        onClickEmailLogin = navigateToEmailLogin,
     )
 }
 
