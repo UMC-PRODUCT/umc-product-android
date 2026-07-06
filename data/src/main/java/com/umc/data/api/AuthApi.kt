@@ -7,6 +7,7 @@ import com.umc.data.response.RefreshTokenResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.EmailVerificationCompleteRequest
 import com.umc.domain.model.request.EmailVerificationRequest
+import com.umc.domain.model.request.LoginEmailRequest
 import com.umc.domain.model.request.LoginGoogleRequest
 import com.umc.domain.model.request.LoginRequest
 import com.umc.domain.model.request.RefreshTokenRequest
@@ -27,6 +28,11 @@ interface AuthApi {
     @POST(Endpoints.Auth.LOGIN_GOOGLE)
     suspend fun loginGoogle(
         @Body request: LoginRequest
+    ): ApiResponse<JwtLoginResponse>
+
+    @POST(Endpoints.Auth.LOGIN_EMAIL)
+    suspend fun loginEmail(
+        @Body request: LoginEmailRequest
     ): ApiResponse<JwtLoginResponse>
 
 

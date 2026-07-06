@@ -10,6 +10,7 @@ import com.umc.data.response.RefreshTokenResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.EmailVerificationCompleteRequest
 import com.umc.domain.model.request.EmailVerificationRequest
+import com.umc.domain.model.request.LoginEmailRequest
 import com.umc.domain.model.request.LoginGoogleRequest
 import com.umc.domain.model.request.LoginRequest
 import com.umc.domain.model.request.RefreshTokenRequest
@@ -29,6 +30,10 @@ class AuthRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun loginGoogle(request: LoginRequest): ApiState<JwtLoginResponse> {
         return apiCall { authApi.loginGoogle(request) }
+    }
+
+    override suspend fun loginEmail(request: LoginEmailRequest): ApiState<JwtLoginResponse> {
+        return apiCall { authApi.loginEmail(request) }
     }
 
     override suspend fun emailVerify(request: EmailVerificationRequest): ApiState<EmailVerificationResponse> {

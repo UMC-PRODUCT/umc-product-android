@@ -10,6 +10,7 @@ import com.umc.domain.model.JwtToken
 import com.umc.domain.model.base.map
 import com.umc.domain.model.request.EmailVerificationCompleteRequest
 import com.umc.domain.model.request.EmailVerificationRequest
+import com.umc.domain.model.request.LoginEmailRequest
 import com.umc.domain.model.request.LoginGoogleRequest
 import com.umc.domain.model.request.LoginRequest
 import com.umc.domain.model.request.RefreshTokenRequest
@@ -33,6 +34,12 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun googleLogin(request: LoginRequest): ApiState<JwtToken> {
         return authRemoteDataSource.loginGoogle(request).map {
+            it.toModel()
+        }
+    }
+
+    override suspend fun emailLogin(request: LoginEmailRequest): ApiState<JwtToken> {
+        return authRemoteDataSource.loginEmail(request).map {
             it.toModel()
         }
     }

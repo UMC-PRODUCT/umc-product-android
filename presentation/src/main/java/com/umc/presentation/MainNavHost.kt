@@ -63,6 +63,11 @@ fun MainNavHost(
         composable<MainDestination.EmailLogin> {
             EmailLoginRoute(
                 navigateToBack = { navHostController.popBackStack() },
+                navigateToMain = {
+                    navHostController.navigate(MainDestination.Home) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
             )
         }
 

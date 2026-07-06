@@ -2,8 +2,7 @@ package com.umc.presentation.login.emaillogin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,8 +14,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -35,6 +37,9 @@ import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
@@ -47,22 +52,48 @@ import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun EmailLoginRoute(
     viewModel: EmailLoginViewModel = hiltViewModel(),
     navigateToBack: () -> Unit = {},
+    navigateToMain: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    EmailLoginScreen(
-        uiState = uiState,
-        onClickBack = navigateToBack,
-        onEmailChanged = viewModel::updateEmail,
-        onPasswordChanged = viewModel::updatePassword,
-        onClickPasswordVisible = viewModel::togglePasswordVisible,
-        onClickLogin = viewModel::login,
-    )
+    var toastData by remember { mutableStateOf<UToastData?>(null) }
+
+    LaunchedEffect(viewModel) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is EmailLoginEvent.MoveToMainEvent -> navigateToMain()
+                is EmailLoginEvent.ShowErrorToast ->
+                    toastData = UToastData(event.message, UToastState.ERROR)
+                // TODO: handle remaining events
+                else -> Unit
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        EmailLoginScreen(
+            uiState = uiState,
+            onClickBack = navigateToBack,
+            onEmailChanged = viewModel::updateEmail,
+            onPasswordChanged = viewModel::updatePassword,
+            onClickPasswordVisible = viewModel::togglePasswordVisible,
+            onClickLogin = viewModel::login,
+        )
+
+        UToastHost(
+            data = toastData,
+            onDismiss = { toastData = null },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 56.dp),
+        )
+    }
 }
 
 @Composable
@@ -75,10 +106,6 @@ fun EmailLoginScreen(
     onClickLogin: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
-
-    // 이메일 필드 포커스 + 입력값 존재 시에만 지우기 아이콘 노출
-    val emailInteractionSource = remember { MutableInteractionSource() }
-    val isEmailFocused by emailInteractionSource.collectIsFocusedAsState()
 
     Column(
         modifier = Modifier
@@ -130,14 +157,14 @@ fun EmailLoginScreen(
                 keyboardActions = KeyboardActions(
                     onNext = { focusManager.moveFocus(FocusDirection.Down) },
                 ),
-                nextIcon = if (isEmailFocused && uiState.email.isNotEmpty()) {
-                    painterResource(id = R.drawable.ic_delete_filled)
+                // 아이콘을 항상 배치해 필드 높이를 고정하고, 입력값이 없을 땐 투명 처리로 숨김
+                nextIcon = painterResource(id = R.drawable.ic_delete_filled),
+                nextIconTint = if (uiState.email.isNotEmpty()) grey300() else Color.Transparent,
+                onClickNextIcon = if (uiState.email.isNotEmpty()) {
+                    { onEmailChanged("") }
                 } else {
                     null
                 },
-                nextIconTint = grey300(),
-                onClickNextIcon = { onEmailChanged("") },
-                interactionSource = emailInteractionSource,
                 modifier = Modifier.fillMaxWidth(),
             )
 

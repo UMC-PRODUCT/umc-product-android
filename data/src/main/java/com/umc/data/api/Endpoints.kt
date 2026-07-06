@@ -8,6 +8,7 @@ object Endpoints {
         const val REISSUE = "$AUTH/token/renew"
         const val LOGIN_KAKAO = "$AUTH/login/kakao"
         const val LOGIN_GOOGLE = "$AUTH/login/google"
+        const val LOGIN_EMAIL = "$AUTH/login/email"
         const val EMAIL_VERIFICATION = "$AUTH/email-verification"
         const val EMAIL_VERIFICATION_COMPLETE = "$EMAIL_VERIFICATION/code"
 
