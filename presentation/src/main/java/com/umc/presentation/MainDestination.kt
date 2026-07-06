@@ -12,8 +12,14 @@ sealed interface MainDestination {
     @Serializable
     data object EmailLogin : MainDestination
 
+    // 개인정보 입력 단계. signUpType(SOCIAL/EMAIL)에 따라 회원가입 API가 분기됨
     @Serializable
-    data class SignUp(val oAuthVerificationToken: String) : MainDestination
+    data class SignUp(
+        val signUpType: String,
+        val oAuthVerificationToken: String = "",
+        val emailVerificationToken: String = "",
+        val rawPassword: String = "",
+    ) : MainDestination
 
     @Serializable
     data class SocialSignUp(val oAuthVerificationToken: String) : MainDestination

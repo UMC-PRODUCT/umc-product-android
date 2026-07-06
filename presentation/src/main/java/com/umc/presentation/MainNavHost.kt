@@ -18,6 +18,7 @@ import com.umc.permission.PermissionRoute
 import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
 import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
+import com.umc.domain.model.enums.SignUpType
 import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.login.emaillogin.EmailLoginRoute
 import com.umc.presentation.signup.SignUpRoute
@@ -33,7 +34,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.EmailSignUp,
+        startDestination = MainDestination.SignUp(SignUpType.EMAIL.name,"","",""),
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -54,7 +55,8 @@ fun MainNavHost(
         composable<MainDestination.Login> {
             LoginRoute(
                 navigateToSignUp = { oAuthToken ->
-                    navHostController.navigate(MainDestination.SignUp(oAuthToken))
+                    // 소셜 로그인 후 미가입 회원 -> 이메일 인증 단계부터 진행
+                    navHostController.navigate(MainDestination.SocialSignUp(oAuthToken))
                 },
                 navigateToEmailLogin = {
                     navHostController.navigate(MainDestination.EmailLogin)
@@ -73,10 +75,14 @@ fun MainNavHost(
             )
         }
 
+        // 개인정보 입력 단계 (signUpType에 따라 소셜/이메일 회원가입 API 분기)
         composable<MainDestination.SignUp> { backStackEntry ->
             val destination = backStackEntry.toRoute<MainDestination.SignUp>()
             SignUpRoute(
+                signUpType = SignUpType.valueOf(destination.signUpType),
                 oAuthVerificationToken = destination.oAuthVerificationToken,
+                emailVerificationToken = destination.emailVerificationToken,
+                rawPassword = destination.rawPassword,
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToPermission = { navHostController.navigate(MainDestination.Permission) },
             )
@@ -88,8 +94,14 @@ fun MainNavHost(
             SocialSignUpRoute(
                 oAuthVerificationToken = destination.oAuthVerificationToken,
                 navigateToBack = { navHostController.popBackStack() },
-                navigateToNext = {
-                    // TODO: 다음 회원가입 단계 연결
+                navigateToNext = { oAuthToken, emailToken ->
+                    navHostController.navigate(
+                        MainDestination.SignUp(
+                            signUpType = SignUpType.SOCIAL.name,
+                            oAuthVerificationToken = oAuthToken,
+                            emailVerificationToken = emailToken,
+                        )
+                    )
                 },
             )
         }
@@ -98,8 +110,14 @@ fun MainNavHost(
         composable<MainDestination.EmailSignUp> {
             EmailSignUpRoute(
                 navigateToBack = { navHostController.popBackStack() },
-                navigateToNext = {
-                    // TODO: 다음 회원가입 단계 연결
+                navigateToNext = { emailToken, rawPassword ->
+                    navHostController.navigate(
+                        MainDestination.SignUp(
+                            signUpType = SignUpType.EMAIL.name,
+                            emailVerificationToken = emailToken,
+                            rawPassword = rawPassword,
+                        )
+                    )
                 },
             )
         }

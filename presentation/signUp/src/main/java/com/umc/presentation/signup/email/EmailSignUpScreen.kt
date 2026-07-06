@@ -65,7 +65,7 @@ import kotlinx.coroutines.flow.collectLatest
 fun EmailSignUpRoute(
     viewModel: EmailSignUpViewModel = hiltViewModel(),
     navigateToBack: () -> Unit = {},
-    navigateToNext: () -> Unit = {},
+    navigateToNext: (emailVerificationToken: String, rawPassword: String) -> Unit = { _, _ -> },
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -74,7 +74,8 @@ fun EmailSignUpRoute(
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
-                is EmailSignUpEvent.MoveToNextEvent -> navigateToNext()
+                is EmailSignUpEvent.MoveToNextEvent ->
+                    navigateToNext(event.emailVerificationToken, event.rawPassword)
                 is EmailSignUpEvent.ShowVerifyToast ->
                     toastData = UToastData(AppStrings.SIGN_UP_CODE_SENT_TOAST, UToastState.CHECK)
                 is EmailSignUpEvent.ShowVerifyCompleteToast ->

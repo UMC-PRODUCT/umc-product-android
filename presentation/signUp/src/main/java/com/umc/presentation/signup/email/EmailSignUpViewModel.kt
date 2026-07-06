@@ -103,8 +103,14 @@ class EmailSignUpViewModel @Inject constructor(
         )
     }
 
+    /** 인증·비밀번호 입력 완료 후 개인정보 입력 단계로 이동. 회원가입 API 호출에 필요한 값들을 함께 전달 */
     fun onClickNext() {
-        emitEvent(EmailSignUpEvent.MoveToNextEvent)
+        emitEvent(
+            EmailSignUpEvent.MoveToNextEvent(
+                emailVerificationToken = uiState.value.emailVerificationToken,
+                rawPassword = uiState.value.password,
+            )
+        )
     }
 
     private fun errorEmailVerify() {
@@ -137,7 +143,10 @@ data class EmailSignUpState(
 
 sealed interface EmailSignUpEvent : UiEvent {
 
-    object MoveToNextEvent : EmailSignUpEvent
+    data class MoveToNextEvent(
+        val emailVerificationToken: String,
+        val rawPassword: String,
+    ) : EmailSignUpEvent
 
     object ShowVerifyToast : EmailSignUpEvent
 

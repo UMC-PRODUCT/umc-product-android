@@ -97,8 +97,14 @@ class SocialSignUpViewModel @Inject constructor(
         )
     }
 
+    /** 인증 완료 후 개인정보 입력 단계로 이동. 회원가입 API 호출에 필요한 토큰들을 함께 전달 */
     fun onClickNext() {
-        emitEvent(SocialSignUpEvent.MoveToNextEvent)
+        emitEvent(
+            SocialSignUpEvent.MoveToNextEvent(
+                oAuthVerificationToken = uiState.value.oAuthVerificationToken,
+                emailVerificationToken = uiState.value.emailVerificationToken,
+            )
+        )
     }
 
     private fun errorEmailVerify() {
@@ -128,7 +134,10 @@ data class SocialSignUpState(
 
 sealed interface SocialSignUpEvent : UiEvent {
 
-    object MoveToNextEvent : SocialSignUpEvent
+    data class MoveToNextEvent(
+        val oAuthVerificationToken: String,
+        val emailVerificationToken: String,
+    ) : SocialSignUpEvent
 
     object ShowVerifyToast : SocialSignUpEvent
 

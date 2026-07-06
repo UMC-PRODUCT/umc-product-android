@@ -64,7 +64,7 @@ fun SocialSignUpRoute(
     oAuthVerificationToken: String = "",
     viewModel: SocialSignUpViewModel = hiltViewModel(),
     navigateToBack: () -> Unit = {},
-    navigateToNext: () -> Unit = {},
+    navigateToNext: (oAuthVerificationToken: String, emailVerificationToken: String) -> Unit = { _, _ -> },
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -77,7 +77,8 @@ fun SocialSignUpRoute(
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
-                is SocialSignUpEvent.MoveToNextEvent -> navigateToNext()
+                is SocialSignUpEvent.MoveToNextEvent ->
+                    navigateToNext(event.oAuthVerificationToken, event.emailVerificationToken)
                 is SocialSignUpEvent.ShowVerifyToast ->
                     toastData = UToastData(AppStrings.SIGN_UP_CODE_SENT_TOAST, UToastState.CHECK)
                 is SocialSignUpEvent.ShowVerifyCompleteToast ->
