@@ -21,6 +21,8 @@ import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
 import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.login.emaillogin.EmailLoginRoute
 import com.umc.presentation.signup.SignUpRoute
+import com.umc.presentation.signup.email.EmailSignUpRoute
+import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
 
 @Composable
@@ -31,7 +33,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.EmailLogin,
+        startDestination = MainDestination.EmailSignUp,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -41,10 +43,10 @@ fun MainNavHost(
             SplashRoute(
                 navigateToLogin = { navHostController.navigate(MainDestination.Login) },
                 navigateToMain = {
-                    // TODO: 메인 화면 완성 후 연결
+                    navHostController.navigate(MainDestination.Home)
                 },
                 navigateToInputCode = {
-                    // TODO: 코드 입력 화면 완성 후 연결
+                    navHostController.navigate(MainDestination.SignUpFailCode)
                 }
             )
         }
@@ -77,6 +79,28 @@ fun MainNavHost(
                 oAuthVerificationToken = destination.oAuthVerificationToken,
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToPermission = { navHostController.navigate(MainDestination.Permission) },
+            )
+        }
+
+        // 소셜 회원가입 (이메일 인증)
+        composable<MainDestination.SocialSignUp> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.SocialSignUp>()
+            SocialSignUpRoute(
+                oAuthVerificationToken = destination.oAuthVerificationToken,
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToNext = {
+                    // TODO: 다음 회원가입 단계 연결
+                },
+            )
+        }
+
+        // 이메일 회원가입 (이메일 인증 + 비밀번호 설정)
+        composable<MainDestination.EmailSignUp> {
+            EmailSignUpRoute(
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToNext = {
+                    // TODO: 다음 회원가입 단계 연결
+                },
             )
         }
 

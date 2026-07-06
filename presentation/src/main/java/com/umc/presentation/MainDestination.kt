@@ -16,6 +16,12 @@ sealed interface MainDestination {
     data class SignUp(val oAuthVerificationToken: String) : MainDestination
 
     @Serializable
+    data class SocialSignUp(val oAuthVerificationToken: String) : MainDestination
+
+    @Serializable
+    data object EmailSignUp : MainDestination
+
+    @Serializable
     data object Permission : MainDestination
 
     @Serializable
