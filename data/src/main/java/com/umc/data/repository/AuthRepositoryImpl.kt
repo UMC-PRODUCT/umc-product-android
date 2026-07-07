@@ -13,6 +13,7 @@ import com.umc.domain.model.request.EmailVerificationRequest
 import com.umc.domain.model.request.LoginEmailRequest
 import com.umc.domain.model.request.LoginGoogleRequest
 import com.umc.domain.model.request.LoginRequest
+import com.umc.domain.model.request.PasswordResetRequest
 import com.umc.domain.model.request.RefreshTokenRequest
 import com.umc.domain.repository.AuthRepository
 import javax.inject.Inject
@@ -54,6 +55,10 @@ class AuthRepositoryImpl @Inject constructor(
         return authRemoteDataSource.emailVerifyComplete(request).map {
             it.toModel()
         }
+    }
+
+    override suspend fun resetPassword(request: PasswordResetRequest): ApiState<Unit> {
+        return authRemoteDataSource.resetPassword(request)
     }
 
 

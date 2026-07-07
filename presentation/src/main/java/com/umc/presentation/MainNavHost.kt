@@ -22,6 +22,7 @@ import com.umc.domain.model.enums.SignUpType
 import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.login.emaillogin.EmailLoginRoute
 import com.umc.presentation.signup.SignUpRoute
+import com.umc.presentation.login.findpassword.FindPasswordRoute
 import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
@@ -72,6 +73,17 @@ fun MainNavHost(
                         popUpTo(0) { inclusive = true }
                     }
                 },
+                navigateToFindPassword = {
+                    navHostController.navigate(MainDestination.FindPassword)
+                },
+            )
+        }
+
+        // 비밀번호 찾기 (이메일 인증 후 새 비밀번호 설정)
+        composable<MainDestination.FindPassword> {
+            FindPasswordRoute(
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToLogin = { navHostController.popBackStack() },
             )
         }
 

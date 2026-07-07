@@ -10,8 +10,10 @@ import com.umc.domain.model.request.EmailVerificationRequest
 import com.umc.domain.model.request.LoginEmailRequest
 import com.umc.domain.model.request.LoginGoogleRequest
 import com.umc.domain.model.request.LoginRequest
+import com.umc.domain.model.request.PasswordResetRequest
 import com.umc.domain.model.request.RefreshTokenRequest
 import retrofit2.http.Body
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 
 interface AuthApi {
@@ -45,6 +47,12 @@ interface AuthApi {
     suspend fun emailVerificationComplete(
         @Body request: EmailVerificationCompleteRequest
     ): ApiResponse<EmailVerificationCompleteResponse>
+
+    //비밀번호 변경 (비밀번호 찾기)
+    @PATCH(Endpoints.Auth.PASSWORD_RESET)
+    suspend fun resetPassword(
+        @Body request: PasswordResetRequest
+    ): ApiResponse<Unit>
 
 
 

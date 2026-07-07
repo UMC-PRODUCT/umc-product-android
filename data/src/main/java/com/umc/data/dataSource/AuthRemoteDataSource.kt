@@ -10,6 +10,7 @@ import com.umc.domain.model.request.EmailVerificationRequest
 import com.umc.domain.model.request.LoginEmailRequest
 import com.umc.domain.model.request.LoginGoogleRequest
 import com.umc.domain.model.request.LoginRequest
+import com.umc.domain.model.request.PasswordResetRequest
 import com.umc.domain.model.request.RefreshTokenRequest
 
 interface AuthRemoteDataSource {
@@ -19,4 +20,5 @@ interface AuthRemoteDataSource {
     suspend fun loginEmail(request: LoginEmailRequest): ApiState<JwtLoginResponse>
     suspend fun emailVerify(request: EmailVerificationRequest): ApiState<EmailVerificationResponse>
     suspend fun emailVerifyComplete(request: EmailVerificationCompleteRequest): ApiState<EmailVerificationCompleteResponse>
+    suspend fun resetPassword(request: PasswordResetRequest): ApiState<Unit>
 }

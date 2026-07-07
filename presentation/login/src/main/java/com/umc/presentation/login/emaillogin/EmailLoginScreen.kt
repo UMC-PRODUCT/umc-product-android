@@ -59,6 +59,7 @@ fun EmailLoginRoute(
     viewModel: EmailLoginViewModel = hiltViewModel(),
     navigateToBack: () -> Unit = {},
     navigateToMain: () -> Unit = {},
+    navigateToFindPassword: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -84,6 +85,7 @@ fun EmailLoginRoute(
             onPasswordChanged = viewModel::updatePassword,
             onClickPasswordVisible = viewModel::togglePasswordVisible,
             onClickLogin = viewModel::login,
+            onClickFindPassword = navigateToFindPassword,
         )
 
         UToastHost(
@@ -104,6 +106,7 @@ fun EmailLoginScreen(
     onPasswordChanged: (String) -> Unit = {},
     onClickPasswordVisible: () -> Unit = {},
     onClickLogin: () -> Unit = {},
+    onClickFindPassword: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -224,7 +227,9 @@ fun EmailLoginScreen(
                 text = AppStrings.EMAIL_LOGIN_FIND_PASSWORD,
                 style = UmcTypographyTokens.Footnote,
                 color = grey500(),
-                modifier = Modifier.align(Alignment.End),
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .clickable { onClickFindPassword() },
             )
 
             Spacer(modifier = Modifier.weight(1f))

@@ -11,6 +11,7 @@ object Endpoints {
         const val LOGIN_EMAIL = "$AUTH/login/email"
         const val EMAIL_VERIFICATION = "$AUTH/email-verification"
         const val EMAIL_VERIFICATION_COMPLETE = "$EMAIL_VERIFICATION/code"
+        const val PASSWORD_RESET = "$AUTH/password/reset"
 
         //Authorization
         const val AUTHORIZATION = "api/v1/authorization"

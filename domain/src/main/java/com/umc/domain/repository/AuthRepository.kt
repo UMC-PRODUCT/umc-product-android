@@ -7,6 +7,7 @@ import com.umc.domain.model.request.EmailVerificationRequest
 import com.umc.domain.model.request.LoginEmailRequest
 import com.umc.domain.model.request.LoginGoogleRequest
 import com.umc.domain.model.request.LoginRequest
+import com.umc.domain.model.request.PasswordResetRequest
 import com.umc.domain.model.request.RefreshTokenRequest
 
 interface AuthRepository {
@@ -16,5 +17,6 @@ interface AuthRepository {
     suspend fun emailLogin(request: LoginEmailRequest): ApiState<JwtToken>
     suspend fun emailVerify(request: EmailVerificationRequest): ApiState<String>
     suspend fun emailVerifyComplete(request: EmailVerificationCompleteRequest): ApiState<String>
+    suspend fun resetPassword(request: PasswordResetRequest): ApiState<Unit>
 
 }
