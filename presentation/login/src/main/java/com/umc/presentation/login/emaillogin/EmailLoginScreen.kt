@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -226,14 +227,32 @@ fun EmailLoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            UText(
-                text = AppStrings.EMAIL_LOGIN_FIND_PASSWORD,
-                style = UmcTypographyTokens.Footnote,
-                color = grey500(),
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .clickable { onClickFindPassword() },
-            )
+            Row(
+                modifier = Modifier.align(Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                UText(
+                    text = AppStrings.EMAIL_LOGIN_FIND_PASSWORD,
+                    style = UmcTypographyTokens.Footnote,
+                    color = grey500(),
+                    modifier = Modifier.clickable { onClickFindPassword() },
+                )
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .height(10.dp),
+                    thickness = 1.dp,
+                    color = grey300(),
+                )
+
+                UText(
+                    text = AppStrings.SIGN_UP,
+                    style = UmcTypographyTokens.Footnote,
+                    color = grey500(),
+                    modifier = Modifier.clickable { onClickSignUp() },
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -250,19 +269,7 @@ fun EmailLoginScreen(
                     .height(48.dp),
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 이메일 회원가입 진입 링크
-            UText(
-                text = AppStrings.SIGN_UP,
-                style = UmcTypographyTokens.Footnote,
-                color = grey500(),
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .clickable { onClickSignUp() },
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
