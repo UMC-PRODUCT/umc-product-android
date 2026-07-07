@@ -35,7 +35,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Permission,
+        startDestination = MainDestination.Splash,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -62,6 +62,15 @@ fun MainNavHost(
                 navigateToEmailLogin = {
                     navHostController.navigate(MainDestination.EmailLogin)
                 },
+                navigateToMain = {
+                    navHostController.navigate(MainDestination.Home) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                navigateToInputCode = {
+                    // 챌린저 ID가 없는 회원 -> 코드 입력 화면으로 이동
+                    navHostController.navigate(MainDestination.SignUpFailCode)
+                },
             )
         }
 
@@ -75,6 +84,13 @@ fun MainNavHost(
                 },
                 navigateToFindPassword = {
                     navHostController.navigate(MainDestination.FindPassword)
+                },
+                navigateToInputCode = {
+                    // 챌린저 ID가 없는 회원 -> 코드 입력 화면으로 이동
+                    navHostController.navigate(MainDestination.SignUpFailCode)
+                },
+                navigateToSignUp = {
+                    navHostController.navigate(MainDestination.EmailSignUp)
                 },
             )
         }

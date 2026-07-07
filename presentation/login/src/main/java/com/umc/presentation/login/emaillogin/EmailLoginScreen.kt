@@ -60,6 +60,8 @@ fun EmailLoginRoute(
     navigateToBack: () -> Unit = {},
     navigateToMain: () -> Unit = {},
     navigateToFindPassword: () -> Unit = {},
+    navigateToInputCode: () -> Unit = {},
+    navigateToSignUp: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -69,10 +71,9 @@ fun EmailLoginRoute(
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
                 is EmailLoginEvent.MoveToMainEvent -> navigateToMain()
+                is EmailLoginEvent.MoveToInputCodeEvent -> navigateToInputCode()
                 is EmailLoginEvent.ShowErrorToast ->
                     toastData = UToastData(event.message, UToastState.ERROR)
-                // TODO: handle remaining events
-                else -> Unit
             }
         }
     }
@@ -86,6 +87,7 @@ fun EmailLoginRoute(
             onClickPasswordVisible = viewModel::togglePasswordVisible,
             onClickLogin = viewModel::login,
             onClickFindPassword = navigateToFindPassword,
+            onClickSignUp = navigateToSignUp,
         )
 
         UToastHost(
@@ -107,6 +109,7 @@ fun EmailLoginScreen(
     onClickPasswordVisible: () -> Unit = {},
     onClickLogin: () -> Unit = {},
     onClickFindPassword: () -> Unit = {},
+    onClickSignUp: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -247,7 +250,19 @@ fun EmailLoginScreen(
                     .height(48.dp),
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 이메일 회원가입 진입 링크
+            UText(
+                text = AppStrings.SIGN_UP,
+                style = UmcTypographyTokens.Footnote,
+                color = grey500(),
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .clickable { onClickSignUp() },
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

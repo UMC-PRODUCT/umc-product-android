@@ -37,17 +37,24 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.Scopes
 import com.google.android.gms.common.api.Scope
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.kakao.sdk.user.UserApiClient
 import com.umc.component.component.UText
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
@@ -70,36 +77,52 @@ fun LoginRoute(
     viewModel: LoginViewModel = hiltViewModel(),
     navigateToSignUp: (String) -> Unit = {},
     navigateToEmailLogin: () -> Unit = {},
+    navigateToMain: () -> Unit = {},
+    navigateToInputCode: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    var toastData by remember { mutableStateOf<UToastData?>(null) }
 
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
                 is LoginEvent.MoveToSignUpEvent -> navigateToSignUp(event.oAuthToken)
-                // TODO: handle remaining events
-                else -> Unit
+                is LoginEvent.MoveToMainEvent -> navigateToMain()
+                is LoginEvent.MoveToInputCodeEvent -> navigateToInputCode()
+                is LoginEvent.ShowErrorToast ->
+                    toastData = UToastData(event.message, UToastState.ERROR)
             }
         }
     }
 
-    LoginScreen(
-        onClickKakaoLogin = {
-            signInKakao(
-                context = context,
-                onLoginSuccess = { token -> viewModel.login(token, LoginType.KAKAO) }
-            )
-        },
-        onClickGoogleLogin = {
-            signInGoogle(
-                scope = scope,
-                context = context,
-                onLoginSuccess = { token -> viewModel.login(token, LoginType.GOOGLE) }
-            )
-        },
-        onClickEmailLogin = navigateToEmailLogin,
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        LoginScreen(
+            onClickKakaoLogin = {
+                signInKakao(
+                    context = context,
+                    onLoginSuccess = { token -> viewModel.login(token, LoginType.KAKAO) }
+                )
+            },
+            onClickGoogleLogin = {
+                signInGoogle(
+                    scope = scope,
+                    context = context,
+                    onLoginSuccess = { token -> viewModel.login(token, LoginType.GOOGLE) }
+                )
+            },
+            onClickEmailLogin = navigateToEmailLogin,
+        )
+
+        UToastHost(
+            data = toastData,
+            onDismiss = { toastData = null },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 56.dp),
+        )
+    }
 }
 
 @Composable
@@ -295,10 +318,7 @@ private fun signInGoogle(
     onLoginSuccess : (String) -> Unit
 ) {
     scope.launch {
-        /**인식 X**/
-/*
         try {
-
             val googleSignInOption = GetSignInWithGoogleOption.Builder(
                 BuildConfig.GOOGLE_LOGIN_KEY
             ).build()
@@ -317,10 +337,7 @@ private fun signInGoogle(
         } catch (e: GetCredentialException) {
             ULog.d("Google 로그인 실패: ${e.message}")
         }
-
-*/
     }
-
 }
 
 private fun handleSignIn(
