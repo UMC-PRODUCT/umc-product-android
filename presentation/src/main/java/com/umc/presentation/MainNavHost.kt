@@ -23,6 +23,8 @@ import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.login.emaillogin.EmailLoginRoute
 import com.umc.presentation.signup.SignUpRoute
 import com.umc.presentation.login.findpassword.FindPasswordRoute
+import com.umc.presentation.notice.NoticeRoute
+import com.umc.presentation.notice.search.NoticeSearchRoute
 import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
@@ -188,13 +190,41 @@ fun MainNavHost(
             )
         }
 
+        /**공지 탭에 대한 내용입니다.**/
+        //공지 목록
+        composable<MainDestination.Notice> {
+            NoticeRoute(
+                navigateToSearch = { gisuId ->
+                    navHostController.navigate(MainDestination.NoticeSearch(gisuId))
+                },
+                navigateToWrite = {
+                    // TODO: 공지 작성 화면 완성 후 연결
+                },
+                navigateToDetail = { noticeId ->
+                    // TODO: 공지 상세 화면 완성 후 연결
+                },
+            )
+        }
+
+        //공지 검색
+        composable<MainDestination.NoticeSearch> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.NoticeSearch>()
+            NoticeSearchRoute(
+                gisuId = destination.gisuId,
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToDetail = { noticeId ->
+                    // TODO: 공지 상세 화면 완성 후 연결
+                },
+            )
+        }
+
         /**홈 화면 탭에 대한 내용입니다.**/
         //홈 화면
         composable<MainDestination.Home> {
             HomeRoute(
                 onNavigateToNotice = {
-                    //navHostController.navigate(MainDestination.Notice)
-                     },
+                    navHostController.navigate(MainDestination.Notice)
+                },
                 onNavigateToScheduleAdd = {
                     navHostController.navigate(MainDestination.ScheduleAdd)
                 },
