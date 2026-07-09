@@ -49,6 +49,10 @@ sealed interface MainDestination {
     @Serializable
     data class NoticeSearch(val gisuId: Long) : MainDestination
 
+    //운영진 공지
+    @Serializable
+    data class AdminNotice(val gisuId: Long) : MainDestination
+
     /**홈 화면 섹션**/
     //홈 화면
     @Serializable
