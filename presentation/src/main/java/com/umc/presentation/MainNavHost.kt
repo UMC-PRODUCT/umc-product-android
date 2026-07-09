@@ -24,6 +24,7 @@ import com.umc.presentation.login.emaillogin.EmailLoginRoute
 import com.umc.presentation.signup.SignUpRoute
 import com.umc.presentation.login.findpassword.FindPasswordRoute
 import com.umc.presentation.notice.NoticeRoute
+import com.umc.presentation.notice.adminnotice.AdminNoticeRoute
 import com.umc.presentation.notice.search.NoticeSearchRoute
 import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
@@ -197,8 +198,26 @@ fun MainNavHost(
                 navigateToSearch = { gisuId ->
                     navHostController.navigate(MainDestination.NoticeSearch(gisuId))
                 },
+                navigateToAdminNotice = { gisuId ->
+                    navHostController.navigate(MainDestination.AdminNotice(gisuId))
+                },
                 navigateToWrite = {
                     // TODO: 공지 작성 화면 완성 후 연결
+                },
+                navigateToDetail = { noticeId ->
+                    // TODO: 공지 상세 화면 완성 후 연결
+                },
+            )
+        }
+
+        //운영진 공지 (권한별 탭 노출)
+        composable<MainDestination.AdminNotice> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.AdminNotice>()
+            AdminNoticeRoute(
+                gisuId = destination.gisuId,
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToSearch = { gisuId ->
+                    navHostController.navigate(MainDestination.NoticeSearch(gisuId))
                 },
                 navigateToDetail = { noticeId ->
                     // TODO: 공지 상세 화면 완성 후 연결

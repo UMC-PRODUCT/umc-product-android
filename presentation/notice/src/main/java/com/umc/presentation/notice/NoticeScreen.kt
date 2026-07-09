@@ -63,6 +63,7 @@ import kotlinx.coroutines.flow.collectLatest
 fun NoticeRoute(
     viewModel: NoticeViewModel = hiltViewModel(),
     navigateToSearch: (Long) -> Unit = {},
+    navigateToAdminNotice: (Long) -> Unit = {},
     navigateToWrite: () -> Unit = {},
     navigateToDetail: (Long) -> Unit = {},
 ) {
@@ -75,6 +76,7 @@ fun NoticeRoute(
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
                 is NoticeEvent.MoveToSearchEvent -> navigateToSearch(event.gisuId)
+                is NoticeEvent.MoveToAdminNoticeEvent -> navigateToAdminNotice(event.gisuId)
                 is NoticeEvent.MoveToWriteEvent -> navigateToWrite()
                 is NoticeEvent.MoveToDetailEvent -> navigateToDetail(event.noticeId)
             }
@@ -87,6 +89,7 @@ fun NoticeRoute(
             onClickShowDropDown = viewModel::onClickShowDropDown,
             onClickGisu = viewModel::onClickGisu,
             onClickSearch = viewModel::onClickSearch,
+            onClickAdminNotice = viewModel::onClickAdminNotice,
             onClickOrgChip = viewModel::onClickOrgChip,
             onClickSubChipAll = viewModel::onClickSubChipAll,
             onClickSubChipStaff = viewModel::onClickSubChipStaff,
@@ -119,6 +122,7 @@ fun NoticeScreen(
     onClickShowDropDown: () -> Unit = {},
     onClickGisu: (GisuItem) -> Unit = {},
     onClickSearch: () -> Unit = {},
+    onClickAdminNotice: () -> Unit = {},
     onClickOrgChip: (NoticeChipState) -> Unit = {},
     onClickSubChipAll: () -> Unit = {},
     onClickSubChipStaff: () -> Unit = {},
@@ -138,6 +142,7 @@ fun NoticeScreen(
                 onClickShowDropDown = onClickShowDropDown,
                 onClickGisu = onClickGisu,
                 onClickSearch = onClickSearch,
+                onClickAdminNotice = onClickAdminNotice,
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -254,6 +259,7 @@ private fun NoticeHeader(
     onClickShowDropDown: () -> Unit = {},
     onClickGisu: (GisuItem) -> Unit = {},
     onClickSearch: () -> Unit = {},
+    onClickAdminNotice: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -325,9 +331,7 @@ private fun NoticeHeader(
             painter = painterResource(id = R.drawable.ic_guard),
             contentDescription = null,
             tint = grey950(),
-            modifier = Modifier.clickable {
-                // TODO: 관리자 기능 연결
-            },
+            modifier = Modifier.clickable { onClickAdminNotice() },
         )
 
         Spacer(modifier = Modifier.width(16.dp))

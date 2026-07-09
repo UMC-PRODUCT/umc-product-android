@@ -214,6 +214,10 @@ class NoticeViewModel @Inject constructor(
         emitEvent(NoticeEvent.MoveToSearchEvent(uiState.value.selectedGisu))
     }
 
+    fun onClickAdminNotice() {
+        emitEvent(NoticeEvent.MoveToAdminNoticeEvent(uiState.value.selectedGisu))
+    }
+
     fun onClickWriteNotice() {
         emitEvent(NoticeEvent.MoveToWriteEvent)
     }
@@ -245,11 +249,9 @@ class NoticeViewModel @Inject constructor(
         val selectedOrg = state.orgChipList.firstOrNull {
             it.isClicked && it.text != AppStrings.ALL
         }
-        val noticeTab = if (state.selectedSubChip == NoticeSubChip.STAFF) {
-            computeStaffNoticeTab()
-        } else {
-            NOTICE_TAB_CHALLENGER
-        }
+        val isStaffNotice = state.selectedSubChip == NoticeSubChip.STAFF
+        // 일반 공지는 항상 CHALLENGER 고정, 운영진 공지만 role에 맞는 탭으로 조회 (서버 스펙)
+        val noticeTab = if (isStaffNotice) computeStaffNoticeTab() else NOTICE_TAB_CHALLENGER
 
         updateState { copy(isPageLoading = true, currentNoticeTab = noticeTab) }
 
@@ -259,7 +261,8 @@ class NoticeViewModel @Inject constructor(
             response = getNoticeListUseCase(
                 gisuId = state.selectedGisu,
                 noticeTab = noticeTab,
-                chapterId = selectedOrg?.chapterId,
+                // 운영진 공지는 schoolId 입력 여부로 중앙/교내 공지가 구분되므로 chapterId는 전달하지 않음
+                chapterId = if (isStaffNotice) null else selectedOrg?.chapterId,
                 schoolId = selectedOrg?.schoolId,
                 part = state.selectedPart?.name,
                 page = pageToFetch,
@@ -324,6 +327,8 @@ data class NoticeUiState(
 sealed interface NoticeEvent : UiEvent {
 
     data class MoveToSearchEvent(val gisuId: Long) : NoticeEvent
+
+    data class MoveToAdminNoticeEvent(val gisuId: Long) : NoticeEvent
 
     object MoveToWriteEvent : NoticeEvent
 
