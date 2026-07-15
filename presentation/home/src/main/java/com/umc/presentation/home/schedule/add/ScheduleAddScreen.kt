@@ -63,7 +63,7 @@ fun ScheduleAddRoute(
     var showCategoryDialog by remember { mutableStateOf(false) }
     var showLocationDialog by remember {mutableStateOf(false)}
     var showParticipantDialog by remember { mutableStateOf(false) }
-    
+
     //시작 및 종료 날짜 플래그
     var showStartDateTimePicker by remember { mutableStateOf(false) }
     var showEndDateTimePicker by remember { mutableStateOf(false) }
@@ -241,7 +241,7 @@ fun ScheduleAddScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000())
+            .background(grey000())
 
     ) {
         //1. 상단 바
@@ -270,12 +270,12 @@ fun ScheduleAddScreen(
                         .fillMaxWidth(),
                     placeholder = { Text(
                         AppStrings.HOME_PLAN_ADD_PLAN_NAME_PLACEHOLDER,
-                        color = neutral400()
+                        color = grey400()
                     ) },
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = neutral300(),
-                        focusedBorderColor = primary500()
+                        unfocusedBorderColor = grey300(),
+                        focusedBorderColor = indigo500()
                     )
                 )
             }
@@ -325,12 +325,12 @@ fun ScheduleAddScreen(
                     UText(
                         text = AppStrings.HOME_PLAN_DETAIL_LOCATION,
                         style = UmcTypographyTokens.HeadlineBold,
-                        color = neutral800()
+                        color = grey800()
                     )
 
                     UText(text = "*",
                         style = UmcTypographyTokens.HeadlineBold,
-                        color = danger500(),
+                        color = red500(),
                         modifier = Modifier.padding(start = 4.dp)
                     )
 
@@ -353,7 +353,7 @@ fun ScheduleAddScreen(
                     Spacer(modifier = Modifier.
                     width(8.dp)
                     )
-                    UText(text = AppStrings.HOME_PLAN_ADD_ONLINE_TITLE, style = UmcTypographyTokens.Body, color = neutral900())
+                    UText(text = AppStrings.HOME_PLAN_ADD_ONLINE_TITLE, style = UmcTypographyTokens.Body, color = grey900())
 
                 }
 
@@ -361,7 +361,7 @@ fun ScheduleAddScreen(
                     .height(8.dp)
                 )
 
-                
+
                 //content()
                 SelectableField(
                     text = if (uiState.planLocation.isEmpty()) AppStrings.HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER else uiState.planLocation,
@@ -385,11 +385,11 @@ fun ScheduleAddScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(144.dp),
-                    placeholder = { Text(AppStrings.HOME_PLAN_ADD_PLAN_DETAIL_PLACEHOLDER, color = neutral400()) },
+                    placeholder = { Text(AppStrings.HOME_PLAN_ADD_PLAN_DETAIL_PLACEHOLDER, color = grey400()) },
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = neutral300(),
-                        focusedBorderColor = primary500()
+                        unfocusedBorderColor = grey300(),
+                        focusedBorderColor = indigo500()
                     )
                 )
             }
@@ -428,7 +428,7 @@ fun ScheduleAddScreen(
                     UText(
                         text = AppStrings.HOME_PLAN_ADD_ATTENDANCE_TITLE,
                         style = UmcTypographyTokens.Body,
-                        color = neutral900()
+                        color = grey900()
                     )
 
                 }
@@ -489,7 +489,7 @@ fun ScheduleAddTopBar(onBackClick: () -> Unit){
           Icon(
               painter = painterResource(id=R.drawable.ic_back),
               contentDescription = null,
-              tint = neutral800(),
+              tint = grey800(),
               modifier = Modifier
                   .clickable { onBackClick() }
                   .padding(end = 16.dp)
@@ -502,7 +502,7 @@ fun ScheduleAddTopBar(onBackClick: () -> Unit){
         UText(
             text = AppStrings.HOME_PLAN_ADD_TITLE,
             style = UmcTypographyTokens.Title2Bold,
-            color = neutral800()
+            color = grey800()
         )
 
     }
@@ -522,12 +522,12 @@ fun ScheduleInputSection(
             UText(
                 text = title,
                 style = UmcTypographyTokens.HeadlineBold,
-                color = neutral800()
+                color = grey800()
             )
             if (required) {
                 UText(text = "*",
                     style = UmcTypographyTokens.HeadlineBold,
-                    color = danger500(),
+                    color = red500(),
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }
@@ -548,8 +548,8 @@ fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit, i
             .fillMaxWidth()
             .clickable(enabled = !isDisabled) { onClick() },
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, if (isDisabled) neutral200() else neutral300()),
-        color = if (isDisabled) neutral100() else neutral000()
+        border = BorderStroke(1.dp, if (isDisabled) grey200() else grey300()),
+        color = if (isDisabled) grey100() else grey000()
     ) {
         Row(
             modifier = Modifier
@@ -562,11 +562,11 @@ fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit, i
                 modifier = Modifier
                     .weight(1f),
                 style = UmcTypographyTokens.Body,
-                color = if (isPlaceholder) neutral400() else neutral800(),
+                color = if (isPlaceholder) grey400() else grey800(),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Icon(painter = painterResource(id = R.drawable.ic_arrow_next), contentDescription = null, tint = neutral400())
+            Icon(painter = painterResource(id = R.drawable.ic_arrow_next), contentDescription = null, tint = grey400())
         }
     }
 }
@@ -582,8 +582,8 @@ fun AttendanceDateCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, neutral300()),
-        color = neutral000()
+        border = BorderStroke(1.dp, grey300()),
+        color = grey000()
     ) {
         Column {
             //체크인 시간
@@ -594,7 +594,7 @@ fun AttendanceDateCard(
                 onDateTimeClick = {onCheckInStartClick()}
             )
 
-            HorizontalDivider(color = neutral300())
+            HorizontalDivider(color = grey300())
 
             //정시 종료 시간
             AttendanceTimeRow(
@@ -605,7 +605,7 @@ fun AttendanceDateCard(
             )
 
             //지각 종료 시간
-            HorizontalDivider(color = neutral300())
+            HorizontalDivider(color = grey300())
 
             AttendanceTimeRow(
                 label = AppStrings.HOME_PLAN_ADD_ATTENDANCE_LATEEND_TITLE,
@@ -638,7 +638,7 @@ fun AttendanceTimeRow(
         verticalAlignment = Alignment.CenterVertically,
 
         ) {
-        UText(text = label, style = UmcTypographyTokens.Callout, color = neutral600())
+        UText(text = label, style = UmcTypographyTokens.Callout, color = grey600())
 
         Spacer(modifier = Modifier
             .weight(1f)
@@ -652,15 +652,15 @@ fun AttendanceTimeRow(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_next),
                     contentDescription = null,
-                    tint = neutral400()
+                    tint = grey400()
                 )
             }
             else{
                 UChip(text = "${dateText} · ${timeText}",
-                    backgroundColor = primary100(),
-                    borderColor = neutral200(),
+                    backgroundColor = indigo100(),
+                    borderColor = grey200(),
                     borderWidth = 0.dp,
-                    textColor = primary500(),
+                    textColor = indigo500(),
                     textStyle = UmcTypographyTokens.SubheadlineBold)
             }
         }
@@ -687,10 +687,10 @@ fun ScheduleAddActionButtons(
             modifier = Modifier
                 .weight(1f)
                 .height(52.dp),
-            backgroundColor = neutral000(),
-            borderColor = neutral300(),
+            backgroundColor = grey000(),
+            borderColor = grey300(),
             borderWidth = 1.dp,
-            textColor = neutral800(),
+            textColor = grey800(),
             onClick = onCancelClick
         )
         Spacer(modifier = Modifier
@@ -701,8 +701,8 @@ fun ScheduleAddActionButtons(
             modifier = Modifier
                 .weight(1f)
                 .height(52.dp),
-            backgroundColor = if (registerOk) primary500() else neutral300(),
-            textColor = neutral000(),
+            backgroundColor = if (registerOk) indigo500() else grey300(),
+            textColor = grey000(),
             onClick = onRegisterClick
         )
     }

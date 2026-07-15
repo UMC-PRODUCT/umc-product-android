@@ -31,11 +31,12 @@ import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypography
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+
 import com.umc.domain.model.home.NotificationItem
 
 
@@ -71,7 +72,7 @@ fun NotificationScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000())
+            .background(grey000())
             .padding(bottom = 32.dp)
 
     ) {
@@ -91,7 +92,7 @@ fun NotificationScreen(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_notification_off),
                     contentDescription = null,
-                    tint = neutral400()
+                    tint = grey400()
                 )
 
                 UText(
@@ -99,7 +100,7 @@ fun NotificationScreen(
                         padding(top = 16.dp),
                     text = AppStrings.HOME_NOTIFICATION_NO_TITLE,
                     style = UmcTypographyTokens.HeadlineBold,
-                    color = neutral600()
+                    color = grey600()
                 )
 
                 UText(
@@ -107,7 +108,7 @@ fun NotificationScreen(
                         padding(top = 4.dp),
                     text = AppStrings.HOME_NOTIFICATION_NO_CONTENT,
                     style = UmcTypographyTokens.Subheadline,
-                    color = neutral400()
+                    color = grey400()
                 )
 
             }
@@ -144,7 +145,7 @@ fun NotificationTopBar(onBackClick: () -> Unit){
         Icon(
             painter = painterResource(id=R.drawable.ic_back),
             contentDescription = null,
-            tint = neutral800(),
+            tint = grey800(),
             modifier = Modifier
                 .clickable { onBackClick() }
                 .padding(end = 16.dp)
@@ -157,7 +158,7 @@ fun NotificationTopBar(onBackClick: () -> Unit){
         UText(
             text = AppStrings.HOME_NOTIFICATION_TITLE,
             style = UmcTypographyTokens.Title2Bold,
-            color = neutral800()
+            color = grey800()
         )
 
     }
@@ -169,12 +170,12 @@ fun NotificationRow(item: NotificationItem) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(neutral000())
+            .background(grey000())
     ) {
 
         HorizontalDivider(
             thickness = 1.dp,
-            color = neutral200()
+            color = grey200()
         )
 
         Row(
@@ -186,7 +187,7 @@ fun NotificationRow(item: NotificationItem) {
                 UText(
                     text = item.title,
                     style = UmcTypographyTokens.HeadlineBold,
-                    color = neutral800()
+                    color = grey800()
                 )
 
                 Spacer(modifier = Modifier
@@ -196,14 +197,14 @@ fun NotificationRow(item: NotificationItem) {
                 UText(
                     text = item.content,
                     style = UmcTypographyTokens.Footnote,
-                    color = neutral600()
+                    color = grey600()
                 )
             }
 
             UText(
                 text = item.date,
                 style = UmcTypographyTokens.Footnote,
-                color = neutral400()
+                color = grey400()
             )
         }
     }

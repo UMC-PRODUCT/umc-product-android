@@ -30,13 +30,13 @@ fun StudyStatusBadge(
     val (bg, textColor, label) = when {
         //나중에 컬러 다 바뀌면 바꾸겠습니다!
         item.status == StudyStatus.PASS ->
-            Triple(Color(0xFFE4FCEC), success700(), AppStrings.STUDY_BADGE_PASS)
+            Triple(Color(0xFFE4FCEC), green700(), AppStrings.STUDY_BADGE_PASS)
         item.status == StudyStatus.FAIL ->
-            Triple(danger100(), danger700(), AppStrings.STUDY_BADGE_FAIL)
+            Triple(red100(), red700(), AppStrings.STUDY_BADGE_FAIL)
         item.submitState == SubmitState.REQUESTED ->
-            Triple(primary100(), primary500(), AppStrings.STUDY_BADGE_IN_PROGRESS)
+            Triple(indigo100(), indigo500(), AppStrings.STUDY_BADGE_IN_PROGRESS)
         else ->
-            Triple(primary100(), primary500(), AppStrings.STUDY_BADGE_IN_PROGRESS)
+            Triple(indigo100(), indigo500(), AppStrings.STUDY_BADGE_IN_PROGRESS)
     }
 
     Surface(

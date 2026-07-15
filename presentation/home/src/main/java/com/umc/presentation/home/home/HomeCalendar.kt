@@ -32,13 +32,13 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.ui.unit.sp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary500
-import com.umc.component.theme.primary600
+import com.umc.component.theme.red500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo500
+import com.umc.component.theme.indigo600
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.Instant
@@ -109,7 +109,7 @@ fun HomeCalendar(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(neutral000())
+            .background(grey000())
             .padding(16.dp)
     ) {
         //헤더 - 월정보(2026.04) 및 화살표
@@ -175,7 +175,7 @@ private fun CalendarHeader(
         UText(
             text = "${currentMonth.year}.${String.format("%02d", currentMonth.monthValue)}",
             //style =, /**임시 폰트**/
-            color = neutral800(),
+            color = grey800(),
             style = UmcTypographyTokens.HeadlineBold,
             modifier = Modifier
                 .clickable { onTitleClick() }
@@ -213,7 +213,7 @@ private fun CalendarBody(
                     modifier = Modifier
                         .weight(1f),
                     textAlign = TextAlign.Center,
-                    color = if (index == 0) danger500() else neutral600(),
+                    color = if (index == 0) red500() else grey600(),
                     style = UmcTypographyTokens.Caption1
                 )
             }
@@ -301,10 +301,10 @@ private fun DayItem(
         val backgroundModifier = when {
             isToday -> Modifier
                 .fillMaxSize(0.7f)
-                .background(primary500(), CircleShape)
+                .background(indigo500(), CircleShape)
             isSelected -> Modifier.fillMaxSize(0.7f)
-                .background(primary100(), CircleShape)
-                .border(1.dp, primary600(), CircleShape)
+                .background(indigo100(), CircleShape)
+                .border(1.dp, indigo600(), CircleShape)
             else -> Modifier
         }
 
@@ -317,9 +317,9 @@ private fun DayItem(
                 text = date.dayOfMonth.toString(),
                 color = when {
                     isToday -> Color.White
-                    isSelected -> primary500()
-                    date.dayOfWeek.value == 7 -> danger500()
-                    else -> neutral800()
+                    isSelected -> indigo500()
+                    date.dayOfWeek.value == 7 -> red500()
+                    else -> grey800()
                 },
                 style = UmcTypographyTokens.Footnote,
             )
@@ -332,7 +332,7 @@ private fun DayItem(
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 2.dp)
                     .size(4.dp)
-                    .background(danger500(), CircleShape)
+                    .background(red500(), CircleShape)
             )
         }
     }
@@ -363,7 +363,7 @@ public fun CalendarDatePickerDialog(
             TextButton(onClick = onDismiss) { UText(AppStrings.CANCEL) }
         },
         colors = DatePickerDefaults.colors(
-            containerColor = neutral000(),
+            containerColor = grey000(),
         )
     ) {
         DatePicker(state = datePickerState)

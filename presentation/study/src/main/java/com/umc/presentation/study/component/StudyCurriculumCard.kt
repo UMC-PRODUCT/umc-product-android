@@ -30,7 +30,7 @@ fun StudyCurriculumCard(
             .fillMaxWidth()
             .padding(16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral000()),
+        colors = CardDefaults.cardColors(containerColor = grey000()),
         elevation = CardDefaults.cardElevation(0.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -44,24 +44,24 @@ fun StudyCurriculumCard(
                     painter = painterResource(R.drawable.ic_document),
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
-                    tint = primary500()
+                    tint = indigo500()
                 )
                 Spacer(Modifier.width(8.dp))
                 UText(
                     text = AppStrings.STUDY_PART_CURRICULUM.format(part.label.uppercase()),
                     style = UmcTypographyTokens.SubheadlineBold,
-                    color = primary500(),
+                    color = indigo500(),
                     modifier = Modifier.weight(1f)
                 )
                 // 달성률 뱃지
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = primary100(),
+                    color = indigo100(),
                 ) {
                     UText(
                         text = AppStrings.STUDY_ACHIEVEMENT_BADGE,
                         style = UmcTypographyTokens.Caption1Bold,
-                        color = primary500(),
+                        color = indigo500(),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
@@ -77,14 +77,14 @@ fun StudyCurriculumCard(
                 UText(
                     text = title,
                     style = UmcTypographyTokens.Title2Bold,
-                    color = neutral800(),
+                    color = grey800(),
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(Modifier.width(8.dp))
                 UText(
                     text = percentText,
                     style = UmcTypographyTokens.Title1Bold,
-                    color = primary500()
+                    color = indigo500()
                 )
             }
 
@@ -96,14 +96,14 @@ fun StudyCurriculumCard(
                     .fillMaxWidth()
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp))
-                    .background(neutral200())
+                    .background(grey200())
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(progress.coerceIn(0, 100) / 100f)
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(3.dp))
-                        .background(primary500())
+                        .background(indigo500())
                 )
             }
 
@@ -112,7 +112,7 @@ fun StudyCurriculumCard(
             UText(
                 text = subText,
                 style = UmcTypographyTokens.Footnote,
-                color = neutral500(),
+                color = grey500(),
                 modifier = Modifier.align(Alignment.End)
             )
         }

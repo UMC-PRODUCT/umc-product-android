@@ -47,14 +47,14 @@ fun UDateTimePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = neutral000(),
+        containerColor = grey000(),
         shape = RoundedCornerShape(12.dp),
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 UText(
                     text = AppStrings.DIALOG_DATETIME_TITLE,
                     style = UmcTypographyTokens.Title3Bold,
-                    color = neutral900(),
+                    color = grey900(),
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
 
@@ -67,7 +67,7 @@ fun UDateTimePickerDialog(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_calendar),
                         contentDescription = null,
-                        tint = neutral900(),
+                        tint = grey900(),
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(
@@ -77,7 +77,7 @@ fun UDateTimePickerDialog(
                     UText(
                         text = AppStrings.DIALOG_DATETIME_DATE,
                         style = UmcTypographyTokens.CalloutBold,
-                        color = neutral900()
+                        color = grey900()
                     )
                 }
 
@@ -89,14 +89,14 @@ fun UDateTimePickerDialog(
                         dateInput = digits
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    placeholder = { UText("YYYY . MM . DD", color = neutral400()) },
+                    placeholder = { UText("YYYY . MM . DD", color = grey400()) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 24.dp),
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = primary500(),
-                        unfocusedBorderColor = neutral200()
+                        focusedBorderColor = indigo500(),
+                        unfocusedBorderColor = grey200()
                     ),
                     //입력 시 자동으로 0000.00.00 형태로 바꿔주는 함수
                     visualTransformation = DateVisualTransformation()
@@ -111,7 +111,7 @@ fun UDateTimePickerDialog(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_clock),
                         contentDescription = null,
-                        tint = neutral900(),
+                        tint = grey900(),
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(
@@ -121,7 +121,7 @@ fun UDateTimePickerDialog(
                     UText(
                         text = AppStrings.DIALOG_DATETIME_TIME,
                         style = UmcTypographyTokens.CalloutBold,
-                        color = neutral900()
+                        color = grey900()
                     )
                 }
 
@@ -163,12 +163,12 @@ fun UDateTimePickerDialog(
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     placeholder = {
-                        UText("12:00", color = neutral400()) },
+                        UText("12:00", color = grey400()) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = primary500(),
-                        unfocusedBorderColor = neutral200()
+                        focusedBorderColor = indigo500(),
+                        unfocusedBorderColor = grey200()
                     ),
                     //분 입력 시 자동으로 :00 형태로 바꿔주는 함수
                     visualTransformation = TimeVisualTransformation()
@@ -182,8 +182,8 @@ fun UDateTimePickerDialog(
                 UButton(
                     text = AppStrings.CANCEL,
                     onClick = onDismiss,
-                    backgroundColor = neutral100(),
-                    textColor = neutral700(),
+                    backgroundColor = grey100(),
+                    textColor = grey700(),
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp)
@@ -222,8 +222,8 @@ fun UDateTimePickerDialog(
                             onConfirm(utcResult)
                         }
                     },
-                    backgroundColor = if (isConfirmEnabled) primary500() else neutral000(),
-                    textColor = if (isConfirmEnabled) neutral100() else neutral300(),
+                    backgroundColor = if (isConfirmEnabled) indigo500() else grey000(),
+                    textColor = if (isConfirmEnabled) grey100() else grey300(),
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp)
@@ -239,7 +239,7 @@ fun AmPmToggleButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) primary100() else neutral100())
+            .background(if (isSelected) indigo100() else grey100())
             .clickable { onClick() }
             .padding(horizontal = 12.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
@@ -247,7 +247,7 @@ fun AmPmToggleButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
         UText(
             text = text,
             style = UmcTypographyTokens.CalloutBold,
-            color = if (isSelected) primary500() else neutral400()
+            color = if (isSelected) indigo500() else grey400()
         )
     }
 }

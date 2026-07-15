@@ -15,7 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.umc.component.theme.neutral000
+import com.umc.component.theme.grey000
 import com.umc.component.R
 import kotlinx.coroutines.flow.collectLatest
 
@@ -45,7 +45,7 @@ fun SplashScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000()),
+            .background(grey000()),
         contentAlignment = Alignment.Center,
     ) {
         Column(

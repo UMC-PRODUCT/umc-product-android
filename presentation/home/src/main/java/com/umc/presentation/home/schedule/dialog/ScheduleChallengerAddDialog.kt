@@ -44,15 +44,15 @@ import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary500
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.component.R
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral400
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo500
+import com.umc.component.theme.red500
 import com.umc.domain.model.home.SearchResultItem
 
 /**일정 생성에서 챌린저를 선택하는 다이얼로그**/
@@ -107,8 +107,8 @@ fun ScheduleChallengerAddBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = neutral000(),
-        dragHandle = { BottomSheetDefaults.DragHandle(color = neutral600()) },
+        containerColor = grey000(),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
 
     ) {
@@ -139,7 +139,7 @@ fun ScheduleChallengerAddBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth(),
                 prevIcon = painterResource(R.drawable.ic_search),
-                prevIconTint = neutral400(),
+                prevIconTint = grey400(),
                 prevIconSize = 20.dp
             )
 
@@ -181,7 +181,7 @@ fun ScheduleChallengerAddBottomSheet(
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = primary500()
+                        color = indigo500()
                     )
                 }
 
@@ -212,15 +212,15 @@ fun ChallengerHeader(
         UText(
             text = AppStrings.HOME_PLAN_ADD_PLAN_PARTICIPANT_TITLE,
             style = UmcTypographyTokens.Title3Bold,
-            color = neutral800(),
+            color = grey800(),
             modifier = Modifier
                 .weight(1f)
         )
 
         UButton(
             text = AppStrings.CONFIRM,
-            backgroundColor = primary500(),
-            textColor = neutral000(),
+            backgroundColor = indigo500(),
+            textColor = grey000(),
             onClick = {
                 onConfirm(selectedParticipants, selectedParticipantsString)
                 onDismissRequest()
@@ -244,7 +244,7 @@ fun EmptyParticipantContent() {
             contentDescription = null,
             modifier = Modifier
                 .size(48.dp),
-            tint = neutral400()
+            tint = grey400()
         )
 
         Spacer(
@@ -255,7 +255,7 @@ fun EmptyParticipantContent() {
         UText(
             text = AppStrings.HOME_PLAN_ADD_PLAN_PARTICIPANT_NO_CHALLENGER,
             style = UmcTypographyTokens.Body,
-            color = neutral600()
+            color = grey600()
         )
     }
 }
@@ -338,7 +338,7 @@ fun AddedParticipantRow(
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .border(width = 1.dp, color = neutral200(), shape = CircleShape),
+                .border(width = 1.dp, color = grey200(), shape = CircleShape),
             placeholder = painterResource(R.drawable.ic_profile_default),
             error = painterResource(R.drawable.ic_profile_default)
         )
@@ -354,7 +354,7 @@ fun AddedParticipantRow(
             UText(
                 text = item.name,
                 style = UmcTypographyTokens.SubheadlineBold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(modifier = Modifier
@@ -364,7 +364,7 @@ fun AddedParticipantRow(
             UText(
                 text = item.school,
                 style = UmcTypographyTokens.Footnote,
-                color = neutral800()
+                color = grey800()
             )
         }
 
@@ -376,10 +376,10 @@ fun AddedParticipantRow(
         UButton(
             text = AppStrings.DELETE,
             onClick = onRemoveClick,
-            backgroundColor = neutral000(),
-            textColor = danger500(),
+            backgroundColor = grey000(),
+            textColor = red500(),
             textStyle = UmcTypographyTokens.SubheadlineBold,
-            borderColor = danger500(),
+            borderColor = red500(),
             borderWidth = 1.dp,
             cornerRadius = 8.dp,
 
@@ -411,7 +411,7 @@ fun SearchParticipantRow(
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .border(width = 1.dp, color = neutral200(), shape = CircleShape),
+                .border(width = 1.dp, color = grey200(), shape = CircleShape),
             placeholder = painterResource(R.drawable.ic_profile_default),
             error = painterResource(R.drawable.ic_profile_default)
         )
@@ -425,7 +425,7 @@ fun SearchParticipantRow(
             UText(
                 text = item.name,
                 style = UmcTypographyTokens.SubheadlineBold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(modifier = Modifier
@@ -435,7 +435,7 @@ fun SearchParticipantRow(
             UText(
                 text = item.school,
                 style = UmcTypographyTokens.Footnote,
-                color = neutral800()
+                color = grey800()
             )
         }
 
@@ -446,7 +446,7 @@ fun SearchParticipantRow(
             checked = isChecked,
             onCheckedChange = { onToggleClick() },
             modifier = Modifier.size(24.dp),
-            colors = CheckboxDefaults.colors(checkedColor = primary500())
+            colors = CheckboxDefaults.colors(checkedColor = indigo500())
         )
     }
 }
@@ -459,7 +459,7 @@ fun PartHeaderRow(title: String) {
     UText(
         text = title,
         style = UmcTypographyTokens.Body,
-        color = neutral800(),
+        color = grey800(),
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)

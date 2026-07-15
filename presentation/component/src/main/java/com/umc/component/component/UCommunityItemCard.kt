@@ -23,16 +23,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.accent100
-import com.umc.component.theme.accent200
-import com.umc.component.theme.accent500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
+import com.umc.component.theme.yellow100
+import com.umc.component.theme.yellow200
+import com.umc.component.theme.yellow500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
 import com.umc.domain.model.community.ContentItem
 import com.umc.component.R
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral400
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey400
 import com.umc.domain.model.enums.CommunityCategoryType
 import com.umc.domain.model.enums.UserPart
 
@@ -53,17 +53,17 @@ fun UCommunityItemCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral000()),
+        colors = CardDefaults.cardColors(containerColor = grey000()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // 카테고리 버튼
             UButton(
                 text = item.category.label,
-                backgroundColor = accent100(), // accent100 대응
-                borderColor = accent200(), // accent200 대응
+                backgroundColor = yellow100(), // accent 팔레트 제거로 yellow(구 warning)로 대체
+                borderColor = yellow200(), // accent 팔레트 제거로 yellow(구 warning)로 대체
                 borderWidth = 1.dp,
-                textColor = accent500(), // accent600 대응
+                textColor = yellow500(), // accent 팔레트 제거로 yellow(구 warning)로 대체
                 textStyle = UmcTypographyTokens.Caption1Bold,
                 cornerRadius = 4.dp,
                 onClick = {}, // 클릭 비활성화 (아이템 전체 클릭임)
@@ -75,7 +75,7 @@ fun UCommunityItemCard(
             UText(
                 text = item.title,
                 style = UmcTypographyTokens.HeadlineBold,
-                color = neutral800(),
+                color = grey800(),
                 modifier = Modifier.padding(top = 12.dp),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -96,17 +96,17 @@ fun UCommunityItemCard(
                     UText(
                         text = userText,
                         style = UmcTypographyTokens.Footnote,
-                        color = neutral600()
+                        color = grey600()
                     )
                     UText(
                         text = " | ",
                         style = UmcTypographyTokens.Footnote,
-                        color = neutral600()
+                        color = grey600()
                     )
                     UText(
                         text = item.writeTime,
                         style = UmcTypographyTokens.Footnote,
-                        color = neutral600()
+                        color = grey600()
                     )
                 }
 
@@ -118,12 +118,12 @@ fun UCommunityItemCard(
                         contentDescription = "Likes",
                         modifier = Modifier
                             .size(12.dp),
-                        tint = neutral400()
+                        tint = grey400()
                     )
                     UText(
                         text = item.likes.toString(),
                         style = UmcTypographyTokens.Footnote,
-                        color = neutral600(),
+                        color = grey600(),
                         modifier = Modifier.padding(start = 4.dp)
                     )
                     Spacer(
@@ -134,12 +134,12 @@ fun UCommunityItemCard(
                         painter = painterResource(id = R.drawable.ic_comment),
                         contentDescription = "Comments",
                         modifier = Modifier.size(16.dp),
-                        tint = neutral400()
+                        tint = grey400()
                     )
                     UText(
                         text = item.comments.toString(),
                         style = UmcTypographyTokens.Footnote,
-                        color = neutral600(),
+                        color = grey600(),
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
