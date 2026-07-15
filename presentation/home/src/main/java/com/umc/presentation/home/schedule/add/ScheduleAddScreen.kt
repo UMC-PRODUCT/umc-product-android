@@ -26,22 +26,53 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.umc.component.component.UChip
+import com.umc.component.component.UDateTimePickerDialog
+import com.umc.component.component.USwitch
 import com.umc.component.component.UText
+import com.umc.component.component.UTimePickerDialog
+import com.umc.presentation.home.home.CalendarDatePickerDialog
+import com.umc.presentation.home.schedule.dialog.LocationSearchBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
+import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddBottomSheet
+import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddDialogViewModel
+
+
+/**TODO. 할 거
+ * 1. time이랑 date 분리된거 dateTime으로 획일화
+ * 2. API 보내는거 조나단 껄로 변경
+ *
+ * **/
 
 @Composable
 fun ScheduleAddRoute(
     viewModel: ScheduleAddViewModel = hiltViewModel(),
+    participantViewModel: ScheduleChallengerAddDialogViewModel = hiltViewModel(),
     onShowAttendanceDialog: (onConfirm: () -> Unit, onReject: () -> Unit) -> Unit
 ){
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val participantUiState by participantViewModel.uiState.collectAsStateWithLifecycle()
+
     //뒤로 가기 디스패처
     /**TODO. 삭제 - MainActivity에서 적용할 예정**/
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     //다이얼로그 표시 여부 체크
     var showCategoryDialog by remember { mutableStateOf(false) }
+    var showLocationDialog by remember {mutableStateOf(false)}
+    var showParticipantDialog by remember { mutableStateOf(false) }
+
+    //시작 및 종료 날짜 플래그
+    var showStartDateTimePicker by remember { mutableStateOf(false) }
+    var showEndDateTimePicker by remember { mutableStateOf(false) }
+
+    //출석 정책용 view 플래그
+    var showCheckInStartPicker by remember { mutableStateOf(false) }
+    var showOnTimeEndPicker by remember { mutableStateOf(false) }
+    var showLateEndPicker by remember { mutableStateOf(false) }
+
 
     LaunchedEffect(viewModel){
         viewModel.uiEvent.collectLatest { event ->
@@ -59,12 +90,19 @@ fun ScheduleAddRoute(
         onDetailChanged = viewModel::updatePlanDetail,
         onAlldayChanged = viewModel::setAllday,
         onCategoryClick = { showCategoryDialog = true },
-        onLocationClick = {  },
-        onParticipantClick = {  },
-        onStartDateClick = {  },
-        onStartTimeClick = {  },
-        onEndDateClick = {  },
-        onEndTimeClick = {  },
+        onLocationClick = { showLocationDialog = true },
+        onParticipantClick = {
+            //일정 추가에 있는 챌린저 정보를 다이얼로그 뷰모델에 전달(챌린저 추가/삭제 유지)
+            participantViewModel.setSelectedParticipant(uiState.selectedParticipants)
+            showParticipantDialog = true
+                             },
+        onStartDateTimeClick = { showStartDateTimePicker = true },
+        onEndDateTimeClick = { showEndDateTimePicker = true },
+        onOnlineChanged = viewModel::toggleOnlineCheck, //비대면 토글
+        onAttendanceChanged = viewModel::toggleAttendanceCheck, //출석부 토글
+        onCheckInDateTimeClick = {showCheckInStartPicker = true},
+        onOnDateTimeEndClick = {showOnTimeEndPicker = true},
+        onLateDateTimeClick = {showLateEndPicker = true},
         onRegisterClick = {
             //운영진 여부 및 수정 모드에 따른 분기 로직
             if (uiState.isManager && !uiState.editMode) {
@@ -88,6 +126,91 @@ fun ScheduleAddRoute(
         )
     }
 
+    if (showLocationDialog) {
+        LocationSearchBottomSheet(
+            onDismissRequest = { showLocationDialog = false },
+            onLocationSelected = {
+                viewModel.updatePlanLocation(it)
+                showLocationDialog = false
+            }
+        )
+    }
+
+    if (showParticipantDialog) {
+        ScheduleChallengerAddBottomSheet(
+            searchQuery = participantUiState.searchQuery,
+            isSearching = participantUiState.isSearching,
+            isLoading = participantUiState.isLoading,
+            hasNext = participantUiState.hasNext,
+            selectedParticipants = participantUiState.selectedParticipants,
+            selectedParticipantsString = participantUiState.selectedParticipantsString,
+            searchResults = participantUiState.searchResults,
+
+            onQueryChanged = participantViewModel::searchParticipants,
+            onLoadMore = participantViewModel::loadMoreParticipants,
+            onToggleParticipant = participantViewModel::toggleParticipant,
+            onConfirm = { finalParticipants, summaryString ->
+                //다이얼로그가 들고 있던최종 명단을
+                //메인 뷰모델 내부로 전달하며 창을 종료
+                viewModel.updateParticipants(finalParticipants, summaryString)
+                showParticipantDialog = false
+            },
+            onDismissRequest = {
+                participantViewModel.clearParticipantSearch()
+                showParticipantDialog = false
+            }
+        )
+    }
+
+    if (showStartDateTimePicker) {
+        UDateTimePickerDialog(
+            onConfirm = { utcDateTime ->
+                viewModel.updateStartDateTime(utcDateTime)
+                showStartDateTimePicker = false
+            },
+            onDismiss = { showStartDateTimePicker = false }
+        )
+    }
+
+    if (showEndDateTimePicker) {
+        UDateTimePickerDialog(
+            onConfirm = { utcDateTime ->
+                viewModel.updateEndDateTime(utcDateTime)
+                showEndDateTimePicker = false
+            },
+            onDismiss = { showEndDateTimePicker = false }
+        )
+    }
+
+    if (showCheckInStartPicker) {
+        UDateTimePickerDialog(
+            onConfirm = { utcDateTime ->
+                viewModel.updateCheckInStartDateTime(utcDateTime)
+                showCheckInStartPicker = false
+            },
+            onDismiss = { showCheckInStartPicker = false }
+        )
+    }
+
+    if (showOnTimeEndPicker) {
+        UDateTimePickerDialog(
+            onConfirm = { utcDateTime ->
+                viewModel.updateOnTimeEndDateTime(utcDateTime)
+                showOnTimeEndPicker = false
+            },
+            onDismiss = { showOnTimeEndPicker = false }
+        )
+    }
+
+    if(showLateEndPicker){
+        UDateTimePickerDialog(
+            onConfirm = { utcDateTime ->
+                viewModel.updateLateEndDateTime(utcDateTime)
+                showLateEndPicker = false
+            },
+            onDismiss = { showLateEndPicker = false }
+        )
+    }
 
 }
 
@@ -101,10 +224,15 @@ fun ScheduleAddScreen(
     onCategoryClick: () -> Unit, //일정 태그(카테고리)를 누를 때
     onLocationClick: () -> Unit, //일정 장소를 누를 때
     onParticipantClick: () -> Unit, //일정 참여자를 누를 때
-    onStartDateClick: () -> Unit, //일정 시작 날짜를 수정 시
-    onStartTimeClick: () -> Unit, //일정 시작 시각 수정 시
-    onEndDateClick: () -> Unit, //일정 종료 날짜 수정 시
-    onEndTimeClick: () -> Unit, //일정 종료 시각 수정 시
+    onStartDateTimeClick: () -> Unit, //일정 시작 날짜를 수정 시
+    onEndDateTimeClick: () -> Unit, //일정 종료 날짜 수정 시
+    onCheckInDateTimeClick: () -> Unit, //체크인 시작 시각 수정 시
+    onOnDateTimeEndClick: () -> Unit, //정시 종료 시각 수정 시
+    onLateDateTimeClick: () -> Unit, //지각 종료 시각 수정 시
+
+    onOnlineChanged: (Boolean) -> Unit, //온라인 여부가 바뀔 때
+    onAttendanceChanged: (Boolean) -> Unit, //출석부 만들기 여부가 바뀔 때
+
     onRegisterClick: () -> Unit //일정 등록 시
 ){
 
@@ -172,23 +300,7 @@ fun ScheduleAddScreen(
                 .height(32.dp)
             )
 
-            //5. 장소
-            ScheduleInputSection(
-                title = AppStrings.HOME_PLAN_DETAIL_LOCATION,
-                required = true
-            ) {
-                SelectableField(
-                    text = if (uiState.planLocation.isEmpty()) AppStrings.HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER else uiState.planLocation,
-                    isPlaceholder = uiState.planLocation.isEmpty(),
-                    onClick = onLocationClick
-                )
-            }
-
-            Spacer(modifier = Modifier
-                .height(32.dp)
-            )
-
-            //6. 일시
+            //5. 일시
             ScheduleInputSection(
                 title = AppStrings.HOME_PLAN_DETAIL_CALENDAR,
                 required = false
@@ -196,16 +308,74 @@ fun ScheduleAddScreen(
                 ScheduleDateCard(
                     uiState = uiState,
                     onAlldayChanged = onAlldayChanged,
-                    onStartDateClick = onStartDateClick,
-                    onStartTimeClick = onStartTimeClick,
-                    onEndDateClick = onEndDateClick,
-                    onEndTimeClick = onEndTimeClick
+                    onStartDateTimeClick = onStartDateTimeClick,
+                    onEndDateTimeClick = onEndDateTimeClick,
                 )
             }
 
             Spacer(modifier = Modifier
                 .height(32.dp)
             )
+
+            //6. 장소
+            Column(modifier = Modifier
+                .fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    UText(
+                        text = AppStrings.HOME_PLAN_DETAIL_LOCATION,
+                        style = UmcTypographyTokens.HeadlineBold,
+                        color = grey800()
+                    )
+
+                    UText(text = "*",
+                        style = UmcTypographyTokens.HeadlineBold,
+                        color = red500(),
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+
+                }
+
+                Spacer(modifier = Modifier
+                    .height(8.dp)
+                )
+
+                //대면 비대면 여부
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    USwitch(
+                        checked = uiState.isOnlineChecked,
+                        onCheckedChange = onOnlineChanged,
+                    )
+                    Spacer(modifier = Modifier.
+                    width(8.dp)
+                    )
+                    UText(text = AppStrings.HOME_PLAN_ADD_ONLINE_TITLE, style = UmcTypographyTokens.Body, color = grey900())
+
+                }
+
+                Spacer(modifier = Modifier
+                    .height(8.dp)
+                )
+
+
+                //content()
+                SelectableField(
+                    text = if (uiState.planLocation.isEmpty()) AppStrings.HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER else uiState.planLocation,
+                    isPlaceholder = uiState.planLocation.isEmpty(),
+                    onClick = onLocationClick,
+                    isDisabled = uiState.isOnlineChecked
+                )
+            }
+
+
+            Spacer(modifier = Modifier
+                .height(32.dp)
+            )
+
 
             //7. 상세 안내
             ScheduleInputSection(title = AppStrings.HOME_PLAN_ADD_PLAN_DETAIL_INFORMATION, required = false) {
@@ -237,11 +407,55 @@ fun ScheduleAddScreen(
                 )
             }
 
-            Spacer(modifier = Modifier
-                .height(48.dp)
+            //9. 출석부 생성
+            if(true) {
+                Spacer(modifier = Modifier
+                    .height(8.dp)
+                )
+                //대면 비대면 여부
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    USwitch(
+                        checked = uiState.isAttendanceChecked,
+                        onCheckedChange = onAttendanceChanged,
+                    )
+                    Spacer(
+                        modifier = Modifier.width(8.dp)
+                    )
+                    UText(
+                        text = AppStrings.HOME_PLAN_ADD_ATTENDANCE_TITLE,
+                        style = UmcTypographyTokens.Body,
+                        color = grey900()
+                    )
+
+                }
+
+                Spacer(
+                    modifier = Modifier
+                        .height(8.dp)
+                )
+
+                if(uiState.isAttendanceChecked){
+                    AttendanceDateCard(
+                        uiState = uiState,
+                        onCheckInStartClick = onCheckInDateTimeClick,
+                        onOnTimeEndClick = onOnDateTimeEndClick,
+                        onLateEndClick = onLateDateTimeClick
+                    )
+                }
+
+
+            }
+
+            Spacer(
+                modifier = Modifier
+                    .height(48.dp)
             )
-            
-            //9. 하단 버튼들
+
+            //10. 하단 버튼들
             ScheduleAddActionButtons(
                 registerOk = uiState.isRegisterOk,
                 editMode = uiState.editMode,
@@ -266,7 +480,8 @@ fun ScheduleAddTopBar(onBackClick: () -> Unit){
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 18.dp),
+            .padding(vertical = 18.dp)
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -327,14 +542,14 @@ fun ScheduleInputSection(
 
 /**터치하여 선택하는 textField**/
 @Composable
-fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit) {
+fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit, isDisabled: Boolean = false) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable(enabled = !isDisabled) { onClick() },
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, grey300()),
-        color = grey000()
+        border = BorderStroke(1.dp, if (isDisabled) grey200() else grey300()),
+        color = if (isDisabled) grey100() else grey000()
     ) {
         Row(
             modifier = Modifier
@@ -355,6 +570,106 @@ fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit) {
         }
     }
 }
+
+/**출석부 생성 시 필요 field들의 집합**/
+@Composable
+fun AttendanceDateCard(
+    uiState: ScheduleAddUiState,
+    onCheckInStartClick: () -> Unit,
+    onOnTimeEndClick: () -> Unit,
+    onLateEndClick: () -> Unit,
+){
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, grey300()),
+        color = grey000()
+    ) {
+        Column {
+            //체크인 시간
+            AttendanceTimeRow(
+                label = AppStrings.HOME_PLAN_ADD_ATTENDANCE_CHECKIN_TITLE,
+                dateText = uiState.checkInStartDateText,
+                timeText = uiState.checkInStartTimeText,
+                onDateTimeClick = {onCheckInStartClick()}
+            )
+
+            HorizontalDivider(color = grey300())
+
+            //정시 종료 시간
+            AttendanceTimeRow(
+                label = AppStrings.HOME_PLAN_ADD_ATTENDANCE_ONTIMEEND_TITLE,
+                dateText = uiState.onTimeEndDateText,
+                timeText = uiState.onTimeEndTimeText,
+                onDateTimeClick = {onOnTimeEndClick()}
+            )
+
+            //지각 종료 시간
+            HorizontalDivider(color = grey300())
+
+            AttendanceTimeRow(
+                label = AppStrings.HOME_PLAN_ADD_ATTENDANCE_LATEEND_TITLE,
+                dateText = uiState.lateEndDateText,
+                timeText = uiState.lateEndTimeText,
+                onDateTimeClick = {onLateEndClick()}
+            )
+        }
+
+    }
+}
+
+/**출석부 생성 시 1개의 field를 담당하는 컴포지블 함수
+ *
+ *
+ * **/
+@Composable
+fun AttendanceTimeRow(
+    label: String,
+    dateText: String,
+    timeText: String,
+    onDateTimeClick: () -> Unit,
+){
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onDateTimeClick()}
+            .padding(horizontal = 16.dp)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+
+        ) {
+        UText(text = label, style = UmcTypographyTokens.Callout, color = grey600())
+
+        Spacer(modifier = Modifier
+            .weight(1f)
+        )
+
+        Box(
+            modifier = Modifier.heightIn(min = 32.dp), // UChip의 일반적인 높이
+            contentAlignment = Alignment.Center // 내부 콘텐츠를 항상 가운데 정렬
+        ){
+            if(dateText == ""){
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_next),
+                    contentDescription = null,
+                    tint = grey400()
+                )
+            }
+            else{
+                UChip(text = "${dateText} · ${timeText}",
+                    backgroundColor = indigo100(),
+                    borderColor = grey200(),
+                    borderWidth = 0.dp,
+                    textColor = indigo500(),
+                    textStyle = UmcTypographyTokens.SubheadlineBold)
+            }
+        }
+
+
+
+    }
+}
+
 
 /**일정 등록&취소 버튼**/
 @Composable
@@ -392,6 +707,8 @@ fun ScheduleAddActionButtons(
         )
     }
 }
+
+
 
 @Preview(showBackground = true)
 @Composable

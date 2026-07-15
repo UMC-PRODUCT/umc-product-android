@@ -26,6 +26,10 @@ sealed interface MainDestination {
     @Serializable
     data object Home : MainDestination
 
+    //공지 화면
+    @Serializable
+    data object Notification : MainDestination
+
     //일정 생성
     @Serializable
     data object ScheduleAdd : MainDestination
