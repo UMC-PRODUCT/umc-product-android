@@ -43,7 +43,7 @@ fun StudyTimelineColumn(
                     painter = painterResource(R.drawable.ic_locked),
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
-                    tint = neutral300()
+                    tint = grey300()
                 )
             }
             status == StudyStatus.PASS -> {
@@ -51,7 +51,7 @@ fun StudyTimelineColumn(
                     painter = painterResource(R.drawable.ic_check_success),
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
-                    tint = success500()
+                    tint = green500()
                 )
             }
             status == StudyStatus.FAIL -> {
@@ -59,7 +59,7 @@ fun StudyTimelineColumn(
                     painter = painterResource(R.drawable.ic_check_failed),
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
-                    tint = danger500()
+                    tint = red500()
                 )
             }
             else -> {
@@ -68,13 +68,13 @@ fun StudyTimelineColumn(
                     modifier = Modifier
                         .size(20.dp)
                         .clip(CircleShape)
-                        .background(primary500()),
+                        .background(indigo500()),
                     contentAlignment = Alignment.Center
                 ) {
                     UText(
                         text = week.toString(),
                         style = UmcTypographyTokens.Caption1Bold,
-                        color = neutral000(),
+                        color = grey000(),
                         textAlign = TextAlign.Center
                     )
                 }

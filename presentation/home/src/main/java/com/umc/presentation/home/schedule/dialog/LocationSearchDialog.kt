@@ -120,9 +120,9 @@ fun LocationSearchBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = neutral000(),
+        containerColor = grey000(),
         dragHandle = {
-            BottomSheetDefaults.DragHandle(color = neutral600())
+            BottomSheetDefaults.DragHandle(color = grey600())
         },
 
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
@@ -215,7 +215,7 @@ fun LocationHeaderAndSearchBar(
         UText(
             text = "장소를 선택하세요",
             style = UmcTypographyTokens.Title3Bold,
-            color = neutral800(),
+            color = grey800(),
             modifier = Modifier
                 .padding(top = 8.dp)
         )
@@ -241,8 +241,8 @@ fun LocationHeaderAndSearchBar(
             UButton(
                 text = "검색",
                 onClick = onSearchClick,
-                backgroundColor = primary500(),
-                textColor = neutral000(),
+                backgroundColor = indigo500(),
+                textColor = grey000(),
                 textStyle = UmcTypographyTokens.Caption1Bold,
                 cornerRadius = 8.dp
             )
@@ -298,7 +298,7 @@ fun LocationNaverMapContent(
                 .size(36.dp)
                 .align(Alignment.Center)
                 .padding(bottom = 18.dp), //핀 뾰족한 끝단 조준 보정 패딩
-            tint = primary500()
+            tint = indigo500()
         )
     }
 }
@@ -313,7 +313,7 @@ fun SelectedLocationCard(
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral100())
+        colors = CardDefaults.cardColors(containerColor = grey100())
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -324,21 +324,21 @@ fun SelectedLocationCard(
                 UText(
                     text = selectedPlace.title.ifBlank { "지정된 장소" },
                     style = UmcTypographyTokens.BodyBold,
-                    color = neutral800()
+                    color = grey800()
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 UText(
                     text = selectedPlace.address.ifBlank { "지도를 움직여 장소를 지정해 주세요." },
                     style = UmcTypographyTokens.Subheadline,
-                    color = neutral600()
+                    color = grey600()
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
             UButton(
                 text = "선택",
                 onClick = onConfirmClick,
-                backgroundColor = primary500(),
-                textColor = neutral000(),
+                backgroundColor = indigo500(),
+                textColor = grey000(),
                 textStyle = UmcTypographyTokens.Caption1Bold,
                 cornerRadius = 8.dp
             )
@@ -356,7 +356,7 @@ fun RecentSearchList(
         UText(
             text = "최근 검색어",
             style = UmcTypographyTokens.Title3Bold,
-            color = neutral800(),
+            color = grey800(),
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -372,13 +372,13 @@ fun RecentSearchList(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_history),
                         contentDescription = null,
-                        tint = neutral400(),
+                        tint = grey400(),
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    UText(text = recentText, style = UmcTypographyTokens.Body, color = neutral800())
+                    UText(text = recentText, style = UmcTypographyTokens.Body, color = grey800())
                 }
-                HorizontalDivider(color = neutral200(), thickness = 0.5.dp)
+                HorizontalDivider(color = grey200(), thickness = 0.5.dp)
             }
         }
     }
@@ -398,11 +398,11 @@ fun SearchResultList(
                     .clickable { onItemClick(placeItem) }
                     .padding(vertical = 12.dp, horizontal = 4.dp)
             ) {
-                UText(text = placeItem.title, style = UmcTypographyTokens.BodyBold, color = neutral800())
+                UText(text = placeItem.title, style = UmcTypographyTokens.BodyBold, color = grey800())
                 Spacer(modifier = Modifier.height(2.dp))
-                UText(text = placeItem.address, style = UmcTypographyTokens.Footnote, color = neutral600())
+                UText(text = placeItem.address, style = UmcTypographyTokens.Footnote, color = grey600())
                 Spacer(modifier = Modifier.padding(top = 6.dp))
-                HorizontalDivider(color = neutral200(), thickness = 0.5.dp)
+                HorizontalDivider(color = grey200(), thickness = 0.5.dp)
             }
         }
     }

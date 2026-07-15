@@ -26,12 +26,12 @@ import com.umc.domain.model.enums.UserType
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral500
-import com.umc.component.theme.neutral700
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary600
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey500
+import com.umc.component.theme.grey700
+import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo600
 
 /**
  * 로고, 알림 버튼, 유저 타입(ACTIVE/OB) 배지를 포함하는 상단 바
@@ -78,7 +78,7 @@ fun HomeTopBar(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .background(color = neutral000(), shape = CircleShape)
+                    .background(color = grey000(), shape = CircleShape)
                     .clip(CircleShape)
                     .clickable(
                         onClick = onNotificationClick
@@ -90,7 +90,7 @@ fun HomeTopBar(
                         id = if (alarmExist) R.drawable.ic_alarm_with_dot else R.drawable.ic_alarm
                     ),
                     contentDescription = "Notification",
-                    tint = neutral500(),
+                    tint = grey500(),
                     modifier = Modifier.size(24.dp)
                 )
             }

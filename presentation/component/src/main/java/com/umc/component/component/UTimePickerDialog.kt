@@ -59,7 +59,7 @@ fun UTimePickerDialog(
                 .fillMaxWidth(0.8f)
                 .wrapContentHeight(),
             shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = neutral000()),
+            colors = CardDefaults.cardColors(containerColor = grey000()),
             elevation = CardDefaults.cardElevation(0.dp)
         ) {
             Column(
@@ -101,7 +101,7 @@ fun UTimePickerDialog(
                         text = ":",
                         style = UmcTypographyTokens.Title1Bold, // 디자인에 맞게 큰 폰트 적용
                         fontSize = 57.sp,
-                        color = neutral800(),
+                        color = grey800(),
                         modifier = Modifier
                             .padding(horizontal = 8.dp)
                     )
@@ -141,7 +141,7 @@ fun UTimePickerDialog(
                         UText(
                             text = "시간",
                             style = UmcTypographyTokens.Caption1,
-                            color = neutral800(),
+                            color = grey800(),
                             modifier = Modifier.width(100.dp),
                             textAlign = TextAlign.Start
                         )
@@ -162,7 +162,7 @@ fun UTimePickerDialog(
                         UText(
                             text = "분",
                             style = UmcTypographyTokens.Caption1,
-                            color = neutral800(),
+                            color = grey800(),
                             modifier = Modifier.width(100.dp),
                             textAlign = TextAlign.Start
                         )
@@ -182,7 +182,7 @@ fun UTimePickerDialog(
                 ) {
                     UText(
                         text = AppStrings.CANCEL,
-                        color = primary500(),
+                        color = indigo500(),
                         style = UmcTypographyTokens.Subheadline,
                         modifier = Modifier
                             .clickable { onDismiss() }
@@ -195,7 +195,7 @@ fun UTimePickerDialog(
 
                     UText(
                         text = AppStrings.CONFIRM,
-                        color = primary500(),
+                        color = indigo500(),
                         style = UmcTypographyTokens.Subheadline,
                         modifier = Modifier
                             .clickable {
@@ -223,12 +223,12 @@ private fun TimeInputField(
     var isFocused by remember { mutableStateOf(false) }
 
     //포커싱 여부에 따른 색깔
-    val containerColor = if (isFocused) primary100() else neutral200()
-    val textColor = if (isFocused) primary500() else neutral800()
+    val containerColor = if (isFocused) indigo100() else grey200()
+    val textColor = if (isFocused) indigo500() else grey800()
 
     //포커스 시 8.dp 굵은 보더, 언포커스 시 보더 없음 처리
     val modifierWithBorder = if (isFocused) {
-        Modifier.border(4.dp, primary500(), RoundedCornerShape(12.dp))
+        Modifier.border(4.dp, indigo500(), RoundedCornerShape(12.dp))
     } else {
         Modifier
     }
@@ -253,7 +253,7 @@ private fun TimeInputField(
                 textAlign = TextAlign.Center
             ),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            cursorBrush = SolidColor(primary500()), //텍스트 커서 색상도 테마 일치
+            cursorBrush = SolidColor(indigo500()), //텍스트 커서 색상도 테마 일치
             //가운데 정렬을 위한 컨테이너 래핑
             decorationBox = { innerTextField ->
                 Box(

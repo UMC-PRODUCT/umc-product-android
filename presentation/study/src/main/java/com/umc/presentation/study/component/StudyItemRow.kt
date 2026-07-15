@@ -59,7 +59,7 @@ fun StudyItemRow(
                 modifier = Modifier
                     .width(2.dp)
                     .weight(1f)
-                    .background(neutral200())
+                    .background(grey200())
             )
         }
 
@@ -81,7 +81,7 @@ fun StudyItemRow(
                     )
                 ),
             shape = RoundedCornerShape(16.dp),
-            color = neutral000(),
+            color = grey000(),
             tonalElevation = 0.dp,
             shadowElevation = 0.dp,
         ) {
@@ -105,7 +105,7 @@ fun StudyItemRow(
                         UText(
                             text = item.title,
                             style = UmcTypographyTokens.HeadlineBold,
-                            color = neutral800(),
+                            color = grey800(),
                             maxLines = 2,
                         )
                     }
@@ -127,7 +127,7 @@ fun StudyItemRow(
                                 ),
                                 contentDescription = null,
                                 modifier = Modifier.size(24.dp),
-                                tint = neutral500()
+                                tint = grey500()
                             )
                         }
                     }
@@ -141,7 +141,7 @@ fun StudyItemRow(
                             UText(
                                 text = item.description,
                                 style = UmcTypographyTokens.Footnote,
-                                color = neutral500(),
+                                color = grey500(),
                             )
                         }
                         Spacer(Modifier.height(16.dp))

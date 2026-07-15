@@ -26,14 +26,14 @@ import com.umc.component.component.USwitch
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral500
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey500
+import com.umc.component.theme.grey600
+import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo500
 
 /**일정 등록에서 일시 (하루 종일) or 시작/종료 날짜를 선택하는 섹션
  *
@@ -50,8 +50,8 @@ fun ScheduleDateCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, neutral300()),
-        color = neutral000()
+        border = BorderStroke(1.dp, grey300()),
+        color = grey000()
     ) {
         Column {
             //하루 종일 파트
@@ -63,14 +63,14 @@ fun ScheduleDateCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                UText(text = AppStrings.ALLDAY, style = UmcTypographyTokens.Callout, color = neutral600())
+                UText(text = AppStrings.ALLDAY, style = UmcTypographyTokens.Callout, color = grey600())
                 USwitch(
                     checked = uiState.isAllDay,
                     onCheckedChange = onAlldayChanged,
                 )
             }
 
-            HorizontalDivider(color = neutral300())
+            HorizontalDivider(color = grey300())
 
             //시작 일시
             DateTimeRow(
@@ -81,7 +81,7 @@ fun ScheduleDateCard(
                 onDateTimeClick = onStartDateTimeClick,
             )
 
-            HorizontalDivider(color = neutral300())
+            HorizontalDivider(color = grey300())
 
             //종료 일시
             DateTimeRow(
@@ -113,7 +113,7 @@ fun DateTimeRow(
         verticalAlignment = Alignment.CenterVertically,
 
     ) {
-        UText(text = label, style = UmcTypographyTokens.Callout, color = neutral600())
+        UText(text = label, style = UmcTypographyTokens.Callout, color = grey600())
         Spacer(modifier = Modifier
             .weight(1f)
         )
@@ -126,7 +126,7 @@ fun DateTimeRow(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_next),
                     contentDescription = null,
-                    tint = neutral400()
+                    tint = grey400()
                 )
             } else {
                 UChip(
@@ -134,10 +134,10 @@ fun DateTimeRow(
                     text = if (showTime) {
                         "${dateText} · ${timeText}"
                     } else dateText,
-                    backgroundColor = primary100(),
-                    borderColor = neutral200(),
+                    backgroundColor = indigo100(),
+                    borderColor = grey200(),
                     borderWidth = 0.dp,
-                    textColor = primary500(),
+                    textColor = indigo500(),
                     textStyle = UmcTypographyTokens.SubheadlineBold
                 )
             }
