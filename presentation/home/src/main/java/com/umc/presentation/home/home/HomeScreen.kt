@@ -73,6 +73,7 @@ import com.umc.component.theme.indigo600
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import com.umc.component.theme.grey400
+import com.umc.component.theme.grey50
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.home.SchedulePlanItem
@@ -492,7 +493,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = grey200()),
+        colors = CardDefaults.cardColors(containerColor = grey000()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
@@ -523,7 +524,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                 Surface(
                     modifier = Modifier.weight(2f),
                     shape = RoundedCornerShape(8.dp),
-                    color = grey000(),
+                    color = grey50(),
                 ) {
                     Row(
                         modifier = Modifier
