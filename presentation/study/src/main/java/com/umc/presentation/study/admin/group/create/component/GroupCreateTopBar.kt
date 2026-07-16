@@ -52,7 +52,8 @@ fun GroupCreateTopBar(
             color = if (isRegisterEnabled) indigo500() else grey400(),
             modifier = Modifier
                 .padding(start = 12.dp)
-                .clickableIfEnabled(
+                .padding(8.dp) // 터치 영역 확보
+                .clickable(
                     enabled = isRegisterEnabled,
                     onClick = onRegisterClick
                 )
@@ -60,17 +61,3 @@ fun GroupCreateTopBar(
     }
 }
 
-private fun Modifier.clickableIfEnabled(
-    enabled: Boolean,
-    onClick: () -> Unit,
-): Modifier {
-    return if (enabled) {
-        this.then(
-            Modifier.padding(8.dp)
-        ).then(
-            Modifier.clickable { onClick() }
-        )
-    } else {
-        this.then(Modifier.padding(8.dp))
-    }
-}
