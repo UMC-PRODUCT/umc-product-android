@@ -137,7 +137,7 @@ private fun SubmitUrlSection(item: AdminSubmitItemUiModel) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_go_website),
+            painter = painterResource(R.drawable.ic_open_link),
             contentDescription = null,
             tint = grey600(),
             modifier = Modifier.size(16.dp)
