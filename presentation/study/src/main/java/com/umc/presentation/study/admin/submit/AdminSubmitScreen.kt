@@ -86,7 +86,7 @@ fun AdminSubmitScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000())
+            .background(grey000())
     ) {
         AdminSubmitFilterBar(
             selectedWeek = state.selectedWeek,
@@ -100,13 +100,13 @@ fun AdminSubmitScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                UText(text = "제출 내역이 없어요", style = FootnoteBold, color = neutral500())
+                UText(text = "제출 내역이 없어요", style = FootnoteBold, color = grey500())
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(neutral100()),
+                    .background(grey100()),
                 contentPadding = PaddingValues(
                     start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp
                 ),

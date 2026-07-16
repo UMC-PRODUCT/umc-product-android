@@ -24,17 +24,17 @@ fun AdminSubmitDropdown(
 ) {
     Row(
         modifier = Modifier
-            .background(neutral100(), RoundedCornerShape(1000.dp))
+            .background(grey100(), RoundedCornerShape(1000.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        UText(text = text, style = Caption1Bold, color = neutral500())
+        UText(text = text, style = Caption1Bold, color = grey500())
         Spacer(modifier = Modifier.width(4.dp))
         Icon(
             painter = painterResource(R.drawable.ic_dropdown_down),
             contentDescription = null,
-            tint = neutral500(),
+            tint = grey500(),
             modifier = Modifier.size(16.dp)
         )
     }
