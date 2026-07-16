@@ -88,7 +88,7 @@ fun AdminSubmitBestWorkbookContent(
 
     // 입력창
     BasicTextField(
-        value = state.bestComment,
+        value = state.bestCommentDraft,
         onValueChange = { onAction(AdminSubmitAction.OnBestCommentChanged(it)) },
         enabled = !state.isBestRegistered || state.isEditingBest,
         modifier = Modifier
@@ -100,7 +100,7 @@ fun AdminSubmitBestWorkbookContent(
         textStyle = Callout.copy(color = grey800()),
         decorationBox = { innerTextField ->
             Box(contentAlignment = Alignment.TopStart) {
-                if (state.bestComment.isEmpty()) {
+                if (state.bestCommentDraft.isEmpty()) {
                     UText(
                         text = "챌린저에게 전달할 피드백을 입력하세요.",
                         style = Callout,
@@ -118,9 +118,9 @@ fun AdminSubmitBestWorkbookContent(
             text = "등록하기",
             onClick = { onAction(AdminSubmitAction.RegisterBest) },
             modifier = Modifier.fillMaxWidth().height(52.dp),
-            enabled = state.bestComment.isNotBlank(),
-            backgroundColor = if (state.bestComment.isNotBlank()) indigo500() else grey200(),
-            textColor = if (state.bestComment.isNotBlank()) grey000() else grey300(),
+            enabled = state.bestCommentDraft.isNotBlank(),
+            backgroundColor = if (state.bestCommentDraft.isNotBlank()) indigo500() else grey200(),
+            textColor = if (state.bestCommentDraft.isNotBlank()) grey000() else grey300(),
             textStyle = HeadlineBold,
             cornerRadius = 8.dp,
         )
@@ -130,9 +130,9 @@ fun AdminSubmitBestWorkbookContent(
             text = "완료하기",
             onClick = { onAction(AdminSubmitAction.CompleteBest) },
             modifier = Modifier.fillMaxWidth().height(52.dp),
-            enabled = state.bestComment.isNotBlank(),
-            backgroundColor = if (state.bestComment.isNotBlank()) indigo500() else grey200(),
-            textColor = if (state.bestComment.isNotBlank()) grey000() else grey300(),
+            enabled = state.bestCommentDraft.isNotBlank(),
+            backgroundColor = if (state.bestCommentDraft.isNotBlank()) indigo500() else grey200(),
+            textColor = if (state.bestCommentDraft.isNotBlank()) grey000() else grey300(),
             textStyle = HeadlineBold,
             cornerRadius = 8.dp,
         )

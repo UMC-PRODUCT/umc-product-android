@@ -76,9 +76,25 @@ class AdminSubmitViewModel @Inject constructor() :
 
             // 바텀시트 열기/닫기
             is AdminSubmitAction.OpenBottomSheet ->
-                updateState { copy(bottomSheetItem = action.item, feedback = "", pendingStatus = null) }
+                updateState {
+                    copy(
+                        bottomSheetItem = action.item,
+                        feedback = "",
+                        bestCommentDraft = action.item.bestComment,
+                        pendingStatus = null,
+                        isEditingBest = false
+                    )
+                }
             is AdminSubmitAction.CloseBottomSheet ->
-                updateState { copy(bottomSheetItem = null, feedback = "", pendingStatus = null) }
+                updateState {
+                    copy(
+                        bottomSheetItem = null,
+                        feedback = "",
+                        bestCommentDraft = "",
+                        pendingStatus = null,
+                        isEditingBest = false
+                    )
+                }
 
             // 피드백 입력
             is AdminSubmitAction.OnFeedbackChanged ->
@@ -166,25 +182,35 @@ class AdminSubmitViewModel @Inject constructor() :
 
             is AdminSubmitAction.OnBestCommentChanged ->
                 updateState {
-                    copy(
-                        items = items.map {
-                            if (it.id == bottomSheetItem?.id) it.copy(bestComment = action.comment) else it
-                        },
-                        bottomSheetItem = bottomSheetItem?.copy(bestComment = action.comment)
-                    )
+                    copy(bestCommentDraft = action.comment)
                 }
 
-            is AdminSubmitAction.ConfirmBest ->
+            is AdminSubmitAction.ConfirmBest -> {
+                val targetId = uiState.value.bottomSheetItem?.id ?: return
+                val comment = uiState.value.bestCommentDraft.trim()
+
                 updateState {
                     copy(
-                        items = items.map {
-                            if (it.id == bottomSheetItem?.id) it.copy(isBestRegistered = true) else it
+                        items = items.map { item ->
+                            if (item.id == targetId) {
+                                item.copy(
+                                    bestComment = comment,
+                                    isBestRegistered = true
+                                )
+                            } else {
+                                item
+                            }
                         },
-                        bottomSheetItem = bottomSheetItem?.copy(isBestRegistered = true),
+                        bottomSheetItem = bottomSheetItem?.copy(
+                            bestComment = comment,
+                            isBestRegistered = true
+                        ),
+                        bestCommentDraft = comment,
                         isEditingBest = false,
                         showBestConfirmDialog = false
                     )
                 }
+            }
 
             is AdminSubmitAction.CancelBest ->
                 updateState { copy(showBestCancelDialog = true) }
@@ -196,12 +222,20 @@ class AdminSubmitViewModel @Inject constructor() :
                 updateState {
                     copy(
                         items = items.map {
-                            if (it.id == bottomSheetItem?.id) it.copy(
-                                isBestRegistered = false,
-                                bestComment = ""
-                            ) else it
+                            if (it.id == bottomSheetItem?.id) {
+                                it.copy(
+                                    isBestRegistered = false,
+                                    bestComment = ""
+                                )
+                            } else {
+                                it
+                            }
                         },
-                        bottomSheetItem = bottomSheetItem?.copy(isBestRegistered = false, bestComment = ""),
+                        bottomSheetItem = bottomSheetItem?.copy(
+                            isBestRegistered = false,
+                            bestComment = ""
+                        ),
+                        bestCommentDraft = "",
                         isEditingBest = false,
                         showBestCancelDialog = false
                     )
