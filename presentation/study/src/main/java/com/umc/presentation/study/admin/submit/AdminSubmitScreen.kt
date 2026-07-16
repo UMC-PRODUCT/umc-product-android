@@ -65,6 +65,16 @@ fun AdminSubmitScreen(
             type = DialogType.SUCCESS,
             positiveText = "승인하기",
             negativeText = "취소",
+            showCloseButton = false,
+
+            negativeBackgroundColor = grey100(),
+            negativeBorderColor = grey100(),
+            negativeTextColor = grey700(),
+
+            positiveBackgroundColor = green100(),
+            positiveBorderColor = green100(),
+            positiveTextColor = green500(),
+
             onPositive = { onAction(AdminSubmitAction.ConfirmApprove) },
             onNegative = { onAction(AdminSubmitAction.DismissDialog) },
             onDismissRequest = { onAction(AdminSubmitAction.DismissDialog) }
@@ -78,6 +88,16 @@ fun AdminSubmitScreen(
             type = DialogType.CANCEL,
             positiveText = "반려하기",
             negativeText = "취소",
+            showCloseButton = false,
+
+            negativeBackgroundColor = grey100(),
+            negativeBorderColor = grey100(),
+            negativeTextColor = grey700(),
+
+            positiveBackgroundColor = red100(),
+            positiveBorderColor = red100(),
+            positiveTextColor = red500(),
+
             onPositive = { onAction(AdminSubmitAction.ConfirmReject) },
             onNegative = { onAction(AdminSubmitAction.DismissDialog) },
             onDismissRequest = { onAction(AdminSubmitAction.DismissDialog) }

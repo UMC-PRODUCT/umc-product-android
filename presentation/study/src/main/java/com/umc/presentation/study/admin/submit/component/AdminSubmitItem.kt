@@ -95,7 +95,7 @@ fun AdminSubmitItem(
                         .background(green100(), RoundedCornerShape(4.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
-                    UText(text = "Pass", style = Caption1Bold, color = green700())
+                    UText(text = "Pass", style = Caption1Bold, color = green500())
                 }
                 Spacer(modifier = Modifier.width(7.dp))
             }
