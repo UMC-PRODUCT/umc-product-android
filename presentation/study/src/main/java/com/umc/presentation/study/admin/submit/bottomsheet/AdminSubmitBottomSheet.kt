@@ -39,7 +39,7 @@ fun AdminSubmitBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = { onAction(AdminSubmitAction.CloseBottomSheet) },
-        containerColor = neutral000(),
+        containerColor = grey000(),
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
@@ -53,7 +53,7 @@ fun AdminSubmitBottomSheet(
             UText(
                 text = "스터디 피드백 하기",
                 style = Title3Bold,
-                color = neutral800(),
+                color = grey800(),
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -61,7 +61,7 @@ fun AdminSubmitBottomSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(neutral100(), RoundedCornerShape(1000.dp))
+                    .background(grey100(), RoundedCornerShape(1000.dp))
                     .padding(4.dp)
             ) {
                 listOf("검토", "베스트 워크북").forEachIndexed { index, title ->
@@ -70,7 +70,7 @@ fun AdminSubmitBottomSheet(
                         modifier = Modifier
                             .weight(1f)
                             .background(
-                                if (isSelected) neutral000() else neutral100(),
+                                if (isSelected) grey000() else grey100(),
                                 RoundedCornerShape(1000.dp)
                             )
                             .clickable { onAction(AdminSubmitAction.OnReviewTabChanged(index)) }
@@ -80,7 +80,7 @@ fun AdminSubmitBottomSheet(
                         UText(
                             text = title,
                             style = HeadlineBold,
-                            color = if (isSelected) neutral800() else neutral400()
+                            color = if (isSelected) grey800() else grey400()
                         )
                     }
                 }
@@ -106,21 +106,21 @@ fun AdminSubmitBottomSheet(
 
 @Composable
 private fun SubmitUrlSection(item: AdminSubmitItemUiModel) {
-    UText(text = "제출 URL", style = SubheadlineBold, color = neutral800())
+    UText(text = "제출 URL", style = SubheadlineBold, color = grey800())
     Spacer(Modifier.height(8.dp))
 
     // url
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(neutral100(), RoundedCornerShape(8.dp))
-            .border(1.dp, neutral200(), RoundedCornerShape(8.dp))
+            .background(grey100(), RoundedCornerShape(8.dp))
+            .border(1.dp, grey200(), RoundedCornerShape(8.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         UText(
             text = item.submitUrl.ifBlank { "http://github.com" },
             style = UmcTypographyTokens.Callout,
-            color = if (item.submitUrl.isBlank()) neutral400() else neutral800()
+            color = if (item.submitUrl.isBlank()) grey400() else grey800()
         )
     }
 
@@ -130,7 +130,7 @@ private fun SubmitUrlSection(item: AdminSubmitItemUiModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(neutral100(), RoundedCornerShape(8.dp))
+            .background(grey100(), RoundedCornerShape(8.dp))
             .clickable { }
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.Center,
@@ -139,11 +139,11 @@ private fun SubmitUrlSection(item: AdminSubmitItemUiModel) {
         Icon(
             painter = painterResource(R.drawable.ic_go_website),
             contentDescription = null,
-            tint = neutral600(),
+            tint = grey600(),
             modifier = Modifier.size(16.dp)
         )
         Spacer(Modifier.width(6.dp))
-        UText(text = "링크 바로가기", style = SubheadlineBold, color = neutral600())
+        UText(text = "링크 바로가기", style = SubheadlineBold, color = grey600())
     }
 }
 
@@ -157,7 +157,7 @@ private fun ReviewContent(
 
     Spacer(Modifier.height(24.dp))
 
-    UText(text = "피드백", style = SubheadlineBold, color = neutral800())
+    UText(text = "피드백", style = SubheadlineBold, color = grey800())
     Spacer(Modifier.height(8.dp))
 
 
@@ -167,17 +167,17 @@ private fun ReviewContent(
         modifier = Modifier
             .fillMaxWidth()
             .height(120.dp)
-            .background(neutral000(), RoundedCornerShape(8.dp))
-            .border(1.dp, neutral300(), RoundedCornerShape(8.dp))
+            .background(grey000(), RoundedCornerShape(8.dp))
+            .border(1.dp, grey300(), RoundedCornerShape(8.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        textStyle = UmcTypographyTokens.Callout.copy(color = neutral800()),
+        textStyle = UmcTypographyTokens.Callout.copy(color = grey800()),
         decorationBox = { innerTextField ->
             Box(contentAlignment = Alignment.TopStart) {
                 if (state.feedback.isEmpty()) {
                     UText(
                         text = "챌린저에게 전달할 피드백을 입력하세요.",
                         style = UmcTypographyTokens.Callout,
-                        color = neutral400()
+                        color = grey400()
                     )
                 }
                 innerTextField()
@@ -197,24 +197,24 @@ private fun ReviewContent(
             onClick = { onAction(AdminSubmitAction.SubmitReview(false)) },
             modifier = Modifier.weight(1f).height(52.dp),
             enabled = state.isSubmitEnabled,
-            backgroundColor = if (state.isSubmitEnabled) danger100() else neutral100(),
-            textColor = if (state.isSubmitEnabled) danger500() else neutral300(),
+            backgroundColor = if (state.isSubmitEnabled) red100() else grey100(),
+            textColor = if (state.isSubmitEnabled) red500() else grey300(),
             textStyle = HeadlineBold,
             cornerRadius = 8.dp,
             prevIcon = painterResource(R.drawable.ic_check_failed),
-            prevIconTint = if (state.isSubmitEnabled) danger500() else neutral300(),
+            prevIconTint = if (state.isSubmitEnabled) red500() else grey300(),
         )
         UButton(
             text = "통과",
             onClick = { onAction(AdminSubmitAction.SubmitReview(true)) },
             modifier = Modifier.weight(1f).height(52.dp),
             enabled = state.isSubmitEnabled,
-            backgroundColor = if (state.isSubmitEnabled) success100() else neutral100(),
-            textColor = if (state.isSubmitEnabled) success500() else neutral300(),
+            backgroundColor = if (state.isSubmitEnabled) green100() else grey100(),
+            textColor = if (state.isSubmitEnabled) green500() else grey300(),
             textStyle = HeadlineBold,
             cornerRadius = 8.dp,
             prevIcon = painterResource(R.drawable.ic_check_success),
-            prevIconTint = if (state.isSubmitEnabled) success500() else neutral300(),
+            prevIconTint = if (state.isSubmitEnabled) green500() else grey300(),
         )
     }
 }
@@ -233,7 +233,7 @@ private fun ReviewedContent(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        UText(text = "피드백", style = SubheadlineBold, color = neutral800())
+        UText(text = "피드백", style = SubheadlineBold, color = grey800())
         Spacer(Modifier.weight(1f))
 
 
@@ -243,7 +243,7 @@ private fun ReviewedContent(
             modifier = Modifier.size(14.dp)
         )
         Spacer(Modifier.width(2.dp))
-        UText(text = "현황 변경", style = Caption1, color = neutral500())
+        UText(text = "현황 변경", style = Caption1, color = grey500())
         Spacer(Modifier.width(8.dp))
 
 
@@ -259,14 +259,14 @@ private fun ReviewedContent(
             }
 
             val bgColor = when {
-                isActive && status == "PASS" -> success100()
-                isActive && status == "FAIL" -> danger100()
-                else -> neutral100()
+                isActive && status == "PASS" -> green100()
+                isActive && status == "FAIL" -> red100()
+                else -> grey100()
             }
             val textColor = when {
-                isActive && status == "PASS" -> success700()
-                isActive && status == "FAIL" -> danger700()
-                else -> neutral400()
+                isActive && status == "PASS" -> green700()
+                isActive && status == "FAIL" -> red700()
+                else -> grey400()
             }
 
             Box(
@@ -294,17 +294,17 @@ private fun ReviewedContent(
         modifier = Modifier
             .fillMaxWidth()
             .height(120.dp)
-            .background(neutral000(), RoundedCornerShape(8.dp))
-            .border(1.dp, neutral300(), RoundedCornerShape(8.dp))
+            .background(grey000(), RoundedCornerShape(8.dp))
+            .border(1.dp, grey300(), RoundedCornerShape(8.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        textStyle = UmcTypographyTokens.Callout.copy(color = neutral800()),
+        textStyle = UmcTypographyTokens.Callout.copy(color = grey800()),
         decorationBox = { innerTextField ->
             Box(contentAlignment = Alignment.TopStart) {
                 if (state.feedback.isEmpty()) {
                     UText(
                         text = "챌린저에게 전달할 피드백을 입력된 상태",
                         style = UmcTypographyTokens.Callout,
-                        color = neutral400()
+                        color = grey400()
                     )
                 }
                 innerTextField()
@@ -320,8 +320,8 @@ private fun ReviewedContent(
         onClick = { onAction(AdminSubmitAction.CompleteChange) },
         modifier = Modifier.fillMaxWidth().height(52.dp),
         enabled = state.isSubmitEnabled,
-        backgroundColor = if (state.isSubmitEnabled) primary500() else neutral200(),
-        textColor = if (state.isSubmitEnabled) neutral000() else neutral300(),
+        backgroundColor = if (state.isSubmitEnabled) green500() else grey200(),
+        textColor = if (state.isSubmitEnabled) grey000() else grey300(),
         textStyle = HeadlineBold,
         cornerRadius = 8.dp,
     )

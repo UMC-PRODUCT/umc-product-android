@@ -60,14 +60,14 @@ fun AdminSubmitBestWorkbookContent(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(warning100())
+            .background(yellow100())
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.Top
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_error_filled),
             contentDescription = null,
-            tint = warning500(),
+            tint = yellow500(),
             modifier = Modifier
                 .size(16.dp)
                 .padding(top = 2.dp)
@@ -76,14 +76,14 @@ fun AdminSubmitBestWorkbookContent(
         UText(
             text = "우수한 스터디 제출물을 커뮤니티 '명예의 전당'에 등록될 수 있습니다.",
             style = Subheadline,
-            color = warning700()
+            color = yellow700()
         )
     }
 
     Spacer(Modifier.height(16.dp))
 
     // 추천사
-    UText(text = "추천사(커뮤니티 공개용)", style = SubheadlineBold, color = neutral800())
+    UText(text = "추천사(커뮤니티 공개용)", style = SubheadlineBold, color = grey800())
     Spacer(Modifier.height(8.dp))
 
     // 입력창
@@ -94,17 +94,17 @@ fun AdminSubmitBestWorkbookContent(
         modifier = Modifier
             .fillMaxWidth()
             .height(120.dp)
-            .background(neutral000(), RoundedCornerShape(8.dp))
-            .border(1.dp, neutral300(), RoundedCornerShape(8.dp))
+            .background(grey000(), RoundedCornerShape(8.dp))
+            .border(1.dp, grey300(), RoundedCornerShape(8.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        textStyle = Callout.copy(color = neutral800()),
+        textStyle = Callout.copy(color = grey800()),
         decorationBox = { innerTextField ->
             Box(contentAlignment = Alignment.TopStart) {
                 if (state.bestComment.isEmpty()) {
                     UText(
                         text = "챌린저에게 전달할 피드백을 입력하세요.",
                         style = Callout,
-                        color = neutral400()
+                        color = grey400()
                     )
                 }
                 innerTextField()
@@ -119,8 +119,8 @@ fun AdminSubmitBestWorkbookContent(
             onClick = { onAction(AdminSubmitAction.RegisterBest) },
             modifier = Modifier.fillMaxWidth().height(52.dp),
             enabled = state.bestComment.isNotBlank(),
-            backgroundColor = if (state.bestComment.isNotBlank()) primary500() else neutral200(),
-            textColor = if (state.bestComment.isNotBlank()) neutral000() else neutral300(),
+            backgroundColor = if (state.bestComment.isNotBlank()) indigo500() else grey200(),
+            textColor = if (state.bestComment.isNotBlank()) grey000() else grey300(),
             textStyle = HeadlineBold,
             cornerRadius = 8.dp,
         )
@@ -131,8 +131,8 @@ fun AdminSubmitBestWorkbookContent(
             onClick = { onAction(AdminSubmitAction.CompleteBest) },
             modifier = Modifier.fillMaxWidth().height(52.dp),
             enabled = state.bestComment.isNotBlank(),
-            backgroundColor = if (state.bestComment.isNotBlank()) primary500() else neutral200(),
-            textColor = if (state.bestComment.isNotBlank()) neutral000() else neutral300(),
+            backgroundColor = if (state.bestComment.isNotBlank()) indigo500() else grey200(),
+            textColor = if (state.bestComment.isNotBlank()) grey000() else grey300(),
             textStyle = HeadlineBold,
             cornerRadius = 8.dp,
         )
@@ -142,14 +142,14 @@ fun AdminSubmitBestWorkbookContent(
             text = "등록 취소하기",
             onClick = { onAction(AdminSubmitAction.CancelBest) },
             modifier = Modifier.fillMaxWidth().height(42.dp),
-            backgroundColor = neutral000(),
-            textColor = danger500(),
+            backgroundColor = grey000(),
+            textColor = red500(),
             textStyle = HeadlineBold,
             cornerRadius = 8.dp,
             borderWidth = 1.dp,
-            borderColor = danger500(),
+            borderColor = red500(),
             prevIcon = painterResource(R.drawable.ic_check_failed),
-            prevIconTint = danger500(),
+            prevIconTint = red500(),
             contentPadding = PaddingValues(horizontal = 13.dp, vertical = 12.dp),
         )
         Spacer(Modifier.height(55.dp))
@@ -157,12 +157,12 @@ fun AdminSubmitBestWorkbookContent(
             text = "수정하기",
             onClick = { onAction(AdminSubmitAction.EditBest) },
             modifier = Modifier.fillMaxWidth().height(42.dp),
-            backgroundColor = neutral000(),
-            textColor = neutral800(),
+            backgroundColor = grey000(),
+            textColor = grey800(),
             textStyle = HeadlineBold,
             cornerRadius = 8.dp,
             borderWidth = 1.dp,
-            borderColor = neutral300(),
+            borderColor = grey300(),
             contentPadding = PaddingValues(horizontal = 13.dp, vertical = 12.dp),
         )
     }
