@@ -302,7 +302,7 @@ private fun ReviewedContent(
             Box(contentAlignment = Alignment.TopStart) {
                 if (state.feedback.isEmpty()) {
                     UText(
-                        text = "챌린저에게 전달할 피드백을 입력된 상태",
+                        text = "챌린저에게 전달할 피드백을 입력하세요.",
                         style = UmcTypographyTokens.Callout,
                         color = grey400()
                     )
