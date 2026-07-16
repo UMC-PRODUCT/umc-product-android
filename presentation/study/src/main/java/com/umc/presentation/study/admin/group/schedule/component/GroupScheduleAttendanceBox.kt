@@ -31,8 +31,8 @@ fun GroupScheduleAttendanceBox(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .border(1.dp, neutral300(), RoundedCornerShape(12.dp))
-            .background(neutral000()),
+            .border(1.dp, grey300(), RoundedCornerShape(12.dp))
+            .background(grey000()),
     ) {
         AttendanceRow(
             title = "체크인 시작",
@@ -75,7 +75,7 @@ private fun AttendanceRow(
         UText(
             text = title,
             style = Body,
-            color = neutral600(),
+            color = grey600(),
             modifier = Modifier.weight(1f),
         )
 
@@ -83,19 +83,19 @@ private fun AttendanceRow(
             Icon(
                 painter = painterResource(R.drawable.ic_arrow_next),
                 contentDescription = null,
-                tint = neutral500(),
+                tint = grey500(),
                 modifier = Modifier.size(22.dp),
             )
         } else {
             Box(
                 modifier = Modifier
-                    .background(primary100(), RoundedCornerShape(999.dp))
+                    .background(indigo100(), RoundedCornerShape(999.dp))
                     .padding(horizontal = 14.dp, vertical = 7.dp),
             ) {
                 UText(
                     text = value,
                     style = HeadlineBold,
-                    color = primary500(),
+                    color = indigo500(),
                 )
             }
         }
@@ -108,6 +108,6 @@ private fun DividerLine() {
         modifier = Modifier
             .fillMaxWidth()
             .height(1.dp)
-            .background(neutral200()),
+            .background(grey200()),
     )
 }

@@ -47,9 +47,9 @@ fun GroupScheduleChallengerBottomSheet(
             onDismissRequest()
         },
         sheetState = sheetState,
-        containerColor = neutral000(),
+        containerColor = grey000(),
         dragHandle = {
-            BottomSheetDefaults.DragHandle(color = neutral600())
+            BottomSheetDefaults.DragHandle(color = grey600())
         },
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
@@ -84,7 +84,7 @@ fun GroupScheduleChallengerBottomSheet(
                     .fillMaxWidth()
                     .height(48.dp),
                 prevIcon = painterResource(R.drawable.ic_search),
-                prevIconTint = neutral800(),
+                prevIconTint = grey800(),
                 prevIconSize = 18.dp
             )
 
@@ -115,7 +115,7 @@ fun GroupScheduleChallengerBottomSheet(
                 if (state.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = primary500()
+                        color = indigo500()
                     )
                 }
             }
@@ -138,7 +138,7 @@ fun GroupScheduleChallengerHeader(
         UText(
             text = "초대할 챌린저를 추가하세요",
             style = UmcTypographyTokens.Title3Bold,
-            color = neutral800(),
+            color = grey800(),
             modifier = Modifier.weight(1f)
         )
 
@@ -150,8 +150,8 @@ fun GroupScheduleChallengerHeader(
                 modifier = Modifier
                     .width(52.dp)
                     .height(32.dp),
-                backgroundColor = if (isConfirmEnabled) primary500() else neutral100(),
-                textColor = if (isConfirmEnabled) neutral000() else neutral400(),
+                backgroundColor = if (isConfirmEnabled) indigo500() else grey100(),
+                textColor = if (isConfirmEnabled) grey000() else grey400(),
                 textStyle = UmcTypographyTokens.Caption1Bold,
                 cornerRadius = 8.dp
             )
@@ -171,7 +171,7 @@ fun GroupScheduleEmptyChallengerContent() {
             painter = painterResource(id = R.drawable.ic_people),
             contentDescription = null,
             modifier = Modifier.size(42.dp),
-            tint = neutral400()
+            tint = grey400()
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -179,7 +179,7 @@ fun GroupScheduleEmptyChallengerContent() {
         UText(
             text = "아직 초대한 챌린저가 없어요",
             style = UmcTypographyTokens.Body,
-            color = neutral600()
+            color = grey600()
         )
     }
 }
@@ -237,7 +237,7 @@ fun GroupScheduleAddedChallengerRow(
             UText(
                 text = item.displayName,
                 style = UmcTypographyTokens.Caption1Bold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -245,7 +245,7 @@ fun GroupScheduleAddedChallengerRow(
             UText(
                 text = item.school,
                 style = UmcTypographyTokens.Caption2,
-                color = neutral800()
+                color = grey800()
             )
         }
 
@@ -255,8 +255,8 @@ fun GroupScheduleAddedChallengerRow(
             modifier = Modifier
                 .width(44.dp)
                 .height(28.dp),
-            backgroundColor = danger500().copy(alpha = 0.12f),
-            textColor = danger500(),
+            backgroundColor = red500().copy(alpha = 0.12f),
+            textColor = red500(),
             textStyle = UmcTypographyTokens.Caption2Bold,
             cornerRadius = 6.dp
         )
@@ -284,7 +284,7 @@ fun GroupScheduleSearchChallengerRow(
             UText(
                 text = item.displayName,
                 style = UmcTypographyTokens.Caption1Bold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -292,7 +292,7 @@ fun GroupScheduleSearchChallengerRow(
             UText(
                 text = item.school,
                 style = UmcTypographyTokens.Caption2,
-                color = neutral800()
+                color = grey800()
             )
         }
 
@@ -301,8 +301,8 @@ fun GroupScheduleSearchChallengerRow(
             onCheckedChange = { onToggleClick() },
             modifier = Modifier.size(22.dp),
             colors = CheckboxDefaults.colors(
-                checkedColor = primary500(),
-                uncheckedColor = neutral400()
+                checkedColor = indigo500(),
+                uncheckedColor = grey400()
             )
         )
     }
@@ -314,14 +314,14 @@ fun GroupScheduleChallengerProfile() {
         modifier = Modifier
             .size(24.dp)
             .clip(CircleShape)
-            .background(neutral100())
-            .border(1.dp, neutral200(), CircleShape),
+            .background(grey100())
+            .border(1.dp, grey200(), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_profile_default),
             contentDescription = null,
-            tint = neutral400(),
+            tint = grey400(),
             modifier = Modifier.size(16.dp)
         )
     }

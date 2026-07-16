@@ -30,7 +30,7 @@ fun GroupScheduleAddTopBar(
         Icon(
             painter = painterResource(R.drawable.ic_back),
             contentDescription = null,
-            tint = neutral800(),
+            tint = grey800(),
             modifier = Modifier
                 .size(24.dp)
                 .clickable { onBackClick() },
@@ -41,14 +41,14 @@ fun GroupScheduleAddTopBar(
         UText(
             text = "스터디 일정 등록",
             style = Title2Bold,
-            color = neutral900(),
+            color = grey900(),
             modifier = Modifier.weight(1f),
         )
 
         Icon(
             painter = painterResource(R.drawable.ic_notification),
             contentDescription = null,
-            tint = neutral700(),
+            tint = grey700(),
             modifier = Modifier.size(22.dp),
         )
 
@@ -57,7 +57,7 @@ fun GroupScheduleAddTopBar(
         UText(
             text = "등록",
             style = HeadlineBold,
-            color = if (canRegister) primary500() else neutral300(),
+            color = if (canRegister) indigo500() else grey300(),
             modifier = Modifier.clickable(enabled = canRegister) {
                 onRegisterClick()
             },

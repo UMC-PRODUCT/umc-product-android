@@ -48,8 +48,8 @@ fun GroupCreateMemberBottomSheet(
             onDismissRequest()
         },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = neutral000(),
-        dragHandle = { BottomSheetDefaults.DragHandle(color = neutral600()) },
+        containerColor = grey000(),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
         Column(
@@ -83,7 +83,7 @@ fun GroupCreateMemberBottomSheet(
                     .fillMaxWidth()
                     .height(48.dp),
                 prevIcon = painterResource(R.drawable.ic_search),
-                prevIconTint = neutral800(),
+                prevIconTint = grey800(),
                 prevIconSize = 18.dp
             )
 
@@ -124,7 +124,7 @@ fun GroupCreateMemberBottomSheet(
                 if (state.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = primary500()
+                        color = indigo500()
                     )
                 }
             }
@@ -147,7 +147,7 @@ fun GroupCreateEmptyContent(
             painter = painterResource(id = R.drawable.ic_people),
             contentDescription = null,
             modifier = Modifier.size(42.dp),
-            tint = neutral400()
+            tint = grey400()
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -155,7 +155,7 @@ fun GroupCreateEmptyContent(
         UText(
             text = text,
             style = UmcTypographyTokens.Body,
-            color = neutral600()
+            color = grey600()
         )
     }
 }
@@ -179,7 +179,7 @@ fun GroupCreateAddedMemberRow(
             UText(
                 text = item.displayName,
                 style = UmcTypographyTokens.Caption1Bold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -187,7 +187,7 @@ fun GroupCreateAddedMemberRow(
             UText(
                 text = item.school,
                 style = UmcTypographyTokens.Caption2,
-                color = neutral800()
+                color = grey800()
             )
         }
 
@@ -197,8 +197,8 @@ fun GroupCreateAddedMemberRow(
             modifier = Modifier
                 .width(44.dp)
                 .height(28.dp),
-            backgroundColor = danger500().copy(alpha = 0.12f),
-            textColor = danger500(),
+            backgroundColor = red500().copy(alpha = 0.12f),
+            textColor = red500(),
             textStyle = UmcTypographyTokens.Caption2Bold,
             cornerRadius = 6.dp
         )
@@ -223,7 +223,7 @@ fun GroupCreatePickerHeader(
         UText(
             text = title,
             style = UmcTypographyTokens.Title3Bold,
-            color = neutral800(),
+            color = grey800(),
             modifier = Modifier.weight(1f)
         )
 
@@ -235,8 +235,8 @@ fun GroupCreatePickerHeader(
                 modifier = Modifier
                     .width(52.dp)
                     .height(32.dp),
-                backgroundColor = if (isConfirmEnabled) primary500() else neutral100(),
-                textColor = if (isConfirmEnabled) neutral000() else neutral400(),
+                backgroundColor = if (isConfirmEnabled) indigo500() else grey100(),
+                textColor = if (isConfirmEnabled) grey000() else grey400(),
                 textStyle = UmcTypographyTokens.Caption1Bold,
                 cornerRadius = 8.dp
             )
@@ -264,7 +264,7 @@ fun GroupCreateMultiSearchRow(
             UText(
                 text = item.displayName,
                 style = UmcTypographyTokens.Caption1Bold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -272,7 +272,7 @@ fun GroupCreateMultiSearchRow(
             UText(
                 text = item.school,
                 style = UmcTypographyTokens.Caption2,
-                color = neutral800()
+                color = grey800()
             )
         }
 
@@ -281,8 +281,8 @@ fun GroupCreateMultiSearchRow(
             onCheckedChange = { onToggleClick() },
             modifier = Modifier.size(22.dp),
             colors = CheckboxDefaults.colors(
-                checkedColor = primary500(),
-                uncheckedColor = neutral400()
+                checkedColor = indigo500(),
+                uncheckedColor = grey400()
             )
         )
     }
@@ -294,14 +294,14 @@ fun GroupCreateMemberProfile() {
         modifier = Modifier
             .size(24.dp)
             .clip(CircleShape)
-            .background(neutral100())
-            .border(1.dp, neutral200(), CircleShape),
+            .background(grey100())
+            .border(1.dp, grey200(), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_profile_default),
             contentDescription = null,
-            tint = neutral400(),
+            tint = grey400(),
             modifier = Modifier.size(16.dp)
         )
     }
@@ -314,7 +314,7 @@ fun GroupCreatePickerTitle(
     UText(
         text = title,
         style = UmcTypographyTokens.Title3Bold,
-        color = neutral800(),
+        color = grey800(),
         modifier = Modifier.padding(top = 4.dp)
     )
 }
@@ -341,7 +341,7 @@ fun GroupCreateSelectSearchRow(
             UText(
                 text = item.displayName,
                 style = UmcTypographyTokens.Caption1Bold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -349,7 +349,7 @@ fun GroupCreateSelectSearchRow(
             UText(
                 text = item.school,
                 style = UmcTypographyTokens.Caption2,
-                color = neutral800()
+                color = grey800()
             )
         }
 
@@ -359,8 +359,8 @@ fun GroupCreateSelectSearchRow(
             modifier = Modifier
                 .width(52.dp)
                 .height(30.dp),
-            backgroundColor = neutral100(),
-            textColor = neutral700(),
+            backgroundColor = grey100(),
+            textColor = grey700(),
             textStyle = UmcTypographyTokens.Caption2Bold,
             cornerRadius = 8.dp,
         )

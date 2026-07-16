@@ -40,7 +40,7 @@ fun AdminStudyGroupCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(neutral000(), RoundedCornerShape(12.dp))
+                .background(grey000(), RoundedCornerShape(12.dp))
                 .padding(16.dp)
         ) {
             Row(
@@ -49,21 +49,21 @@ fun AdminStudyGroupCard(
                 UText(
                     text = item.title,
                     style = SubheadlineBold,
-                    color = neutral900()
+                    color = grey900()
                 )
 
                 Spacer(Modifier.width(6.dp))
 
                 Box(
                     modifier = Modifier
-                        .background(primary100(), RoundedCornerShape(4.dp))
-                        .border(1.dp, primary200(), RoundedCornerShape(4.dp))
+                        .background(indigo100(), RoundedCornerShape(4.dp))
+                        .border(1.dp, indigo200(), RoundedCornerShape(4.dp))
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     UText(
                         text = item.partLabel,
                         style = Caption1Bold,
-                        color = primary600()
+                        color = indigo600()
                     )
                 }
 
@@ -72,7 +72,7 @@ fun AdminStudyGroupCard(
                 Icon(
                     painter = painterResource(R.drawable.ic_setting_outline),
                     contentDescription = null,
-                    tint = neutral500(),
+                    tint = grey500(),
                     modifier = Modifier
                         .size(22.dp)
                         .clickable { onSettingClick() }
@@ -84,7 +84,7 @@ fun AdminStudyGroupCard(
             UText(
                 text = "${item.createdAtText}  |  멤버 ${item.memberCount}명",
                 style = Footnote,
-                color = neutral500()
+                color = grey500()
             )
 
             Spacer(Modifier.height(14.dp))
@@ -92,7 +92,7 @@ fun AdminStudyGroupCard(
             UText(
                 text = "담당 파트장",
                 style = FootnoteBold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(Modifier.height(8.dp))
@@ -100,7 +100,7 @@ fun AdminStudyGroupCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(neutral100(), RoundedCornerShape(8.dp))
+                    .background(grey100(), RoundedCornerShape(8.dp))
                     .padding(horizontal = 10.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -108,13 +108,13 @@ fun AdminStudyGroupCard(
                     modifier = Modifier
                         .size(26.dp)
                         .clip(CircleShape)
-                        .background(neutral000()),
+                        .background(grey000()),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_profile_default),
                         contentDescription = null,
-                        tint = neutral400(),
+                        tint = grey400(),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -124,7 +124,7 @@ fun AdminStudyGroupCard(
                 UText(
                     text = item.leaderName,
                     style = Caption1Bold,
-                    color = neutral800()
+                    color = grey800()
                 )
 
                 Spacer(Modifier.width(5.dp))
@@ -132,21 +132,21 @@ fun AdminStudyGroupCard(
                 UText(
                     text = item.leaderUniv.ifBlank { "중앙대" },
                     style = Caption1,
-                    color = neutral500()
+                    color = grey500()
                 )
 
                 Spacer(Modifier.weight(1f))
 
                 Box(
                     modifier = Modifier
-                        .background(neutral000(), RoundedCornerShape(4.dp))
-                        .border(1.dp, neutral200(), RoundedCornerShape(4.dp))
+                        .background(grey000(), RoundedCornerShape(4.dp))
+                        .border(1.dp, grey200(), RoundedCornerShape(4.dp))
                         .padding(horizontal = 7.dp, vertical = 3.dp)
                 ) {
                     UText(
                         text = "Leader",
                         style = Caption1Bold,
-                        color = neutral600()
+                        color = grey600()
                     )
                 }
             }
@@ -156,7 +156,7 @@ fun AdminStudyGroupCard(
             UText(
                 text = "스터디원",
                 style = FootnoteBold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(Modifier.height(8.dp))
@@ -179,7 +179,7 @@ fun AdminStudyGroupCard(
                 Icon(
                     painter = painterResource(R.drawable.ic_add_filled),
                     contentDescription = null,
-                    tint = primary500(),
+                    tint = indigo500(),
                     modifier = Modifier
                         .size(20.dp)
                         .clickable { onAddMemberClick() }

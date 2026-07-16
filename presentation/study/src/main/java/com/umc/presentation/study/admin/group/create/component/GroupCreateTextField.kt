@@ -19,7 +19,7 @@ fun GroupCreateTextField(
         UText(
             text = title,
             style = UmcTypographyTokens.SubheadlineBold,
-            color = neutral800()
+            color = grey800()
         )
 
         Spacer(modifier = Modifier.height(8.dp))

@@ -16,9 +16,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens.FootnoteBold
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.green500
+import com.umc.component.theme.grey500
 import com.umc.presentation.study.admin.group.component.AdminStudyGroupCard
 import com.umc.presentation.study.admin.group.component.AdminStudyGroupCreateCard
 import com.umc.presentation.study.admin.group.component.AdminStudyGroupHeader
@@ -64,7 +65,7 @@ fun AdminStudyGroupScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral100())
+            .background(grey100())
     ) {
 
         AdminStudyGroupCreateCard(
@@ -77,20 +78,20 @@ fun AdminStudyGroupScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(neutral100()),
+                    .background(grey100()),
                 contentAlignment = Alignment.Center,
             ) {
                 UText(
                     text = "생성된 스터디 그룹이 없어요",
                     style = FootnoteBold,
-                    color = neutral500(),
+                    color = grey500(),
                 )
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(neutral100()),
+                    .background(grey100()),
                 contentPadding = PaddingValues(
                     start = 16.dp,
                     end = 16.dp,

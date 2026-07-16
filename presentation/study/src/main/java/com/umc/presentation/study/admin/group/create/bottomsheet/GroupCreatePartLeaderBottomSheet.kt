@@ -43,8 +43,8 @@ fun GroupCreatePartLeaderBottomSheet(
     ModalBottomSheet(
         onDismissRequest = { dismissWithApply() },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = neutral000(),
-        dragHandle = { BottomSheetDefaults.DragHandle(color = neutral600()) },
+        containerColor = grey000(),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
         Column(
@@ -72,7 +72,7 @@ fun GroupCreatePartLeaderBottomSheet(
                     .fillMaxWidth()
                     .height(48.dp),
                 prevIcon = painterResource(R.drawable.ic_search),
-                prevIconTint = neutral800(),
+                prevIconTint = grey800(),
                 prevIconSize = 18.dp
             )
 
@@ -118,7 +118,7 @@ fun GroupCreatePartLeaderBottomSheet(
                 if (state.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = primary500()
+                        color = indigo500()
                     )
                 }
             }
