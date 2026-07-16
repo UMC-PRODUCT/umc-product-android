@@ -6,13 +6,13 @@
 
 
     <path
-        android:fillColor="@color/danger500"
+        android:fillColor="@color/red500"
         android:pathData="M12,2
                           A10,10 0 1,1 12,22
                           A10,10 0 1,1 12,2" />
 
 
     <path
-        android:fillColor="@color/danger100"
+        android:fillColor="@color/red100"
         android:pathData="M7,11 H17 V13 H7 Z"/>
 </vector>

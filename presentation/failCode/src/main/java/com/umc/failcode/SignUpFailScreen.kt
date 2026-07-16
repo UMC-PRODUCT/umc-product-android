@@ -45,14 +45,14 @@ import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary500
-import com.umc.component.theme.primary700
+import com.umc.component.theme.red500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo500
+import com.umc.component.theme.indigo700
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.tasks.await
 
@@ -138,7 +138,7 @@ fun SignUpFailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000()),
+            .background(grey000()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(modifier = Modifier.height(8.dp))
@@ -167,7 +167,7 @@ fun SignUpFailScreen(
         UText(
             text = AppStrings.SIGN_UP_FAIL_TITLE,
             style = UmcTypographyTokens.Title2Bold,
-            color = neutral800(),
+            color = grey800(),
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -175,7 +175,7 @@ fun SignUpFailScreen(
         UText(
             text = AppStrings.SIGN_UP_FAIL_CONTENT,
             style = UmcTypographyTokens.Subheadline,
-            color = neutral600(),
+            color = grey600(),
             textAlign = TextAlign.Center,
         )
 
@@ -188,7 +188,7 @@ fun SignUpFailScreen(
                 text = AppStrings.SIGN_UP_FAIL_LOGOUT,
                 style = UmcTypographyTokens
                     .Footnote.copy(textDecoration = TextDecoration.Underline),
-                color = neutral600(),
+                color = grey600(),
                 modifier = Modifier.clickable {
                     onClickLogout()
                 }
@@ -199,14 +199,14 @@ fun SignUpFailScreen(
                     .padding(horizontal = 12.dp)
                     .width(1.dp)
                     .height(12.dp)
-                    .background(neutral400())
+                    .background(grey400())
             )
 
             UText(
                 text = AppStrings.SIGN_UP_FAIL_DELETE_USER,
                 style = UmcTypographyTokens.Footnote
                     .copy(textDecoration = TextDecoration.Underline),
-                color = danger500(),
+                color = red500(),
                 modifier = Modifier.clickable {
                     showDeleteDialog = true
                 }
@@ -218,9 +218,9 @@ fun SignUpFailScreen(
         UButton(
             text = AppStrings.SIGN_UP_FAIL_PREV_USER,
             onClick = onClickNext,
-            backgroundColor = primary500(),
-            pressedColor = primary700(),
-            textColor = neutral000(),
+            backgroundColor = indigo500(),
+            pressedColor = indigo700(),
+            textColor = grey000(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             contentPadding = PaddingValues(vertical = 15.dp),
             modifier = Modifier
@@ -233,11 +233,11 @@ fun SignUpFailScreen(
         UButton(
             text = AppStrings.SIGN_UP_FAIL_HOMEPAGE,
             onClick = onClickHomePage,
-            backgroundColor = neutral000(),
-            textColor = neutral800(),
+            backgroundColor = grey000(),
+            textColor = grey800(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             borderWidth = 1.dp,
-            borderColor = neutral300(),
+            borderColor = grey300(),
             contentPadding = PaddingValues(vertical = 15.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -249,7 +249,7 @@ fun SignUpFailScreen(
         UText(
             text = AppStrings.SIGN_UP_FAIL_QA_EMAIL,
             style = UmcTypographyTokens.Footnote.copy(textDecoration = TextDecoration.Underline),
-            color = neutral600(),
+            color = grey600(),
             modifier = Modifier
                 .padding(bottom = 16.dp)
                 .clickable { onClickKakaoInquiry() },

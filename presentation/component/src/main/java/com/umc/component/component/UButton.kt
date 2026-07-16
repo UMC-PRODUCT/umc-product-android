@@ -29,7 +29,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
+import com.umc.component.theme.grey000
 
 /**
  * UMC 공용 버튼 컴포넌트.
@@ -61,7 +61,7 @@ fun UButton(
     enabled: Boolean = true,
     backgroundColor: Color = Color.Black,
     pressedColor: Color = backgroundColor,
-    textColor: Color = neutral000(),
+    textColor: Color = grey000(),
     textStyle: TextStyle = UmcTypographyTokens.SubheadlineBold,
     cornerRadius: Dp = 8.dp,
     borderWidth: Dp = 0.dp,

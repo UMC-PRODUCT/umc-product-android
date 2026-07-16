@@ -60,4 +60,12 @@ dependencies {
 
     //Desugaring용 라이브러리 추가 -> API 24에서 상위 레벨 사용을 위함
     coreLibraryDesugaring(libs.android.desugarJdkLibs)
+
+    // NAVER MAPS & LOCATION
+    implementation(libs.naver.maps.sdk)
+    implementation(libs.naver.maps.compose)
+    implementation(libs.googleplay.services.location)
+
+    //비동기 이미지
+    implementation(libs.coil.compose)
 }
