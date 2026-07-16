@@ -23,7 +23,7 @@ fun AdminSubmitGroupBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = neutral000(),
+        containerColor = grey000(),
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
@@ -37,7 +37,7 @@ fun AdminSubmitGroupBottomSheet(
             UText(
                 text = "확인할 그룹을 선택하세요",
                 style = Title3Bold,
-                color = neutral800(),
+                color = grey800(),
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -52,7 +52,7 @@ fun AdminSubmitGroupBottomSheet(
                             }
                             .padding(vertical = 16.dp)
                     ) {
-                        UText(text = group, style = Body, color = neutral800())
+                        UText(text = group, style = Body, color = grey800())
                     }
                 }
             }

@@ -19,12 +19,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
+import com.umc.component.theme.red500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import androidx.compose.ui.graphics.Color
 
 /**
  * UMC 공용 다이얼로그 컴포넌트. UMypageDialog(XML)의 Compose 마이그레이션 버전.
@@ -42,6 +43,12 @@ import com.umc.component.theme.neutral800
  * @param positiveText 이중 버튼 모드의 긍정 버튼 텍스트
  * @param onNegative 취소 버튼 클릭 시 호출. 기본값은 onDismissRequest
  * @param onPositive 긍정 버튼 클릭 시 호출
+ * @param negativeBackgroundColor 이중 버튼 모드의 취소 버튼 배경색
+ * @param negativeBorderColor 이중 버튼 모드의 취소 버튼 테두리 색상
+ * @param negativeTextColor 이중 버튼 모드의 취소 버튼 텍스트 색상
+ * @param positiveBackgroundColor 이중 버튼 모드의 확인 버튼 배경색
+ * @param positiveBorderColor 이중 버튼 모드의 확인 버튼 테두리 색상
+ * @param positiveTextColor 이중 버튼 모드의 확인 버튼 텍스트 색상
  */
 
 @Composable
@@ -57,18 +64,26 @@ fun UDialog(
     positiveText: String = "",
     onNegative: () -> Unit = onDismissRequest,
     onPositive: () -> Unit = {},
+
+    // 이중 버튼 스타일 옵션
+    negativeBackgroundColor: Color = grey000(),
+    negativeTextColor: Color = grey800(),
+    negativeBorderColor: Color = grey300(),
+    positiveBackgroundColor: Color = grey000(),
+    positiveTextColor: Color = red500(),
+    positiveBorderColor: Color = red500(),
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .background(neutral000(), RoundedCornerShape(16.dp))
+                .background(grey000(), RoundedCornerShape(16.dp))
                 .padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 16.dp)
         ) {
             UText(
                 text = title,
                 style = UmcTypographyTokens.Title3Bold,
-                color = neutral800(),
+                color = grey800(),
             )
 
             if (content.isNotEmpty()) {
@@ -76,7 +91,7 @@ fun UDialog(
                 UText(
                     text = content,
                     style = UmcTypographyTokens.Subheadline,
-                    color = neutral600(),
+                    color = grey600(),
                 )
             }
 
@@ -88,24 +103,26 @@ fun UDialog(
                         text = negativeText,
                         onClick = onNegative,
                         modifier = Modifier.weight(1f),
-                        backgroundColor = neutral000(),
-                        textColor = neutral800(),
+                        backgroundColor = negativeBackgroundColor,
+                        textColor = negativeTextColor,
                         textStyle = UmcTypographyTokens.SubheadlineBold,
                         borderWidth = 1.dp,
-                        borderColor = neutral300(),
+                        borderColor = negativeBorderColor,
                         cornerRadius = 8.dp,
                         contentPadding = PaddingValues(vertical = 14.dp),
                     )
+
                     Spacer(modifier = Modifier.width(8.dp))
+
                     UButton(
                         text = positiveText,
                         onClick = onPositive,
                         modifier = Modifier.weight(1f),
-                        backgroundColor = neutral000(),
-                        textColor = danger500(),
+                        backgroundColor = positiveBackgroundColor,
+                        textColor = positiveTextColor,
                         textStyle = UmcTypographyTokens.SubheadlineBold,
                         borderWidth = 1.dp,
-                        borderColor = danger500(),
+                        borderColor = positiveBorderColor,
                         cornerRadius = 8.dp,
                         contentPadding = PaddingValues(vertical = 14.dp),
                     )
@@ -115,8 +132,8 @@ fun UDialog(
                     text = confirmText,
                     onClick = onConfirm,
                     modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = neutral800(),
-                    textColor = neutral000(),
+                    backgroundColor = grey800(),
+                    textColor = grey000(),
                     textStyle = UmcTypographyTokens.SubheadlineBold,
                     cornerRadius = 8.dp,
                     contentPadding = PaddingValues(vertical = 14.dp),
@@ -132,28 +149,28 @@ private fun UDialogSingleButtonPreview() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral200()),
+            .background(grey200()),
         contentAlignment = Alignment.Center,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .background(neutral000(), RoundedCornerShape(16.dp))
+                .background(grey000(), RoundedCornerShape(16.dp))
                 .padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 16.dp)
         ) {
             UText(
                 text = "회원가입에 실패했습니다.",
                 style = UmcTypographyTokens.Title3Bold,
-                color = neutral800(),
+                color = grey800(),
             )
             Spacer(modifier = Modifier.height(24.dp))
             UButton(
                 text = "확인",
                 onClick = {},
                 modifier = Modifier.fillMaxWidth(),
-                backgroundColor = neutral800(),
-                textColor = neutral000(),
+                backgroundColor = grey800(),
+                textColor = grey000(),
                 textStyle = UmcTypographyTokens.SubheadlineBold,
                 cornerRadius = 8.dp,
                 contentPadding = PaddingValues(vertical = 14.dp),
@@ -168,26 +185,26 @@ private fun UDialogTwoButtonPreview() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral200()),
+            .background(grey200()),
         contentAlignment = Alignment.Center,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .background(neutral000(), RoundedCornerShape(16.dp))
+                .background(grey000(), RoundedCornerShape(16.dp))
                 .padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 16.dp)
         ) {
             UText(
                 text = "정말 탈퇴하시겠습니까?",
                 style = UmcTypographyTokens.Title3Bold,
-                color = neutral800(),
+                color = grey800(),
             )
             Spacer(modifier = Modifier.height(8.dp))
             UText(
                 text = "탈퇴 시 모든 데이터가 삭제됩니다.",
                 style = UmcTypographyTokens.Subheadline,
-                color = neutral600(),
+                color = grey600(),
             )
             Spacer(modifier = Modifier.height(24.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -195,11 +212,11 @@ private fun UDialogTwoButtonPreview() {
                     text = "취소",
                     onClick = {},
                     modifier = Modifier.weight(1f),
-                    backgroundColor = neutral000(),
-                    textColor = neutral800(),
+                    backgroundColor = grey000(),
+                    textColor = grey800(),
                     textStyle = UmcTypographyTokens.SubheadlineBold,
                     borderWidth = 1.dp,
-                    borderColor = neutral300(),
+                    borderColor = grey300(),
                     cornerRadius = 8.dp,
                     contentPadding = PaddingValues(vertical = 14.dp),
                 )
@@ -208,11 +225,11 @@ private fun UDialogTwoButtonPreview() {
                     text = "탈퇴",
                     onClick = {},
                     modifier = Modifier.weight(1f),
-                    backgroundColor = neutral000(),
-                    textColor = danger500(),
+                    backgroundColor = grey000(),
+                    textColor = red500(),
                     textStyle = UmcTypographyTokens.SubheadlineBold,
                     borderWidth = 1.dp,
-                    borderColor = danger500(),
+                    borderColor = red500(),
                     cornerRadius = 8.dp,
                     contentPadding = PaddingValues(vertical = 14.dp),
                 )

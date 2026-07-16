@@ -21,7 +21,7 @@ fun StudyEmptyCard(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(neutral000()),
+            .background(grey000()),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -32,13 +32,13 @@ fun StudyEmptyCard(modifier: Modifier = Modifier) {
                 painter = painterResource(R.drawable.ic_book),
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
-                tint = neutral400()
+                tint = grey400()
             )
             Spacer(Modifier.height(12.dp))
             UText(
                 text = AppStrings.STUDY_EMPTY,
                 style = UmcTypographyTokens.FootnoteBold,
-                color = neutral500(),
+                color = grey500(),
             )
         }
     }

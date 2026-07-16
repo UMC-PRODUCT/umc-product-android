@@ -22,8 +22,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral800
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey800
 import kotlinx.coroutines.delay
 
 /** 토스트 상태. CHECK=성공 아이콘, ERROR=에러 아이콘, NONE=아이콘 없음 */
@@ -55,7 +55,7 @@ fun UToast(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp)
-            .background(neutral800(), RoundedCornerShape(8.dp))
+            .background(grey800(), RoundedCornerShape(8.dp))
             .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -74,14 +74,14 @@ fun UToast(
             UText(
                 text = message,
                 style = UmcTypographyTokens.Callout,
-                color = neutral000(),
+                color = grey000(),
                 modifier = Modifier.padding(start = 16.dp),
             )
         } else {
             UText(
                 text = message,
                 style = UmcTypographyTokens.Callout,
-                color = neutral000(),
+                color = grey000(),
             )
         }
     }

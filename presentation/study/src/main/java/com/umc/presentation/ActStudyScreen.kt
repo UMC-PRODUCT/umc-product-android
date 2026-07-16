@@ -43,13 +43,13 @@ private fun AdminStudyScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000())
+            .background(grey000())
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
-                .background(neutral100(), RoundedCornerShape(1000.dp))
+                .background(grey100(), RoundedCornerShape(1000.dp))
                 .padding(4.dp),
         ) {
             tabs.forEachIndexed { index, title ->
@@ -62,7 +62,7 @@ private fun AdminStudyScreen() {
                             shape = RoundedCornerShape(1000.dp)
                         )
                         .background(
-                            color = if (isSelected) neutral000() else neutral100(),
+                            color = if (isSelected) grey000() else grey100(),
                             shape = RoundedCornerShape(1000.dp)
                         )
                         .clickable {
@@ -76,7 +76,7 @@ private fun AdminStudyScreen() {
                     Text(
                         text = title,
                         style = HeadlineBold,
-                        color = if (isSelected) neutral800() else neutral400()
+                        color = if (isSelected) grey800() else grey400()
                     )
                 }
             }

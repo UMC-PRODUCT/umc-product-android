@@ -18,8 +18,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Density
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo600
 
 @Composable
 fun UText(
@@ -101,11 +101,11 @@ fun HuggText(
 @Composable
 fun getGrowthText(day: Int): AnnotatedString = buildAnnotatedString {
     // 강조할 부분 (색상 적용)
-    withStyle(style = SpanStyle(color = primary600())) {
+    withStyle(style = SpanStyle(color = indigo600())) {
         append("${day}일째")
     }
     // 나머지 부분
-    withStyle(style = SpanStyle(color = neutral800())) {
+    withStyle(style = SpanStyle(color = grey800())) {
         append(" 성장하고 있어요")
     }
 }

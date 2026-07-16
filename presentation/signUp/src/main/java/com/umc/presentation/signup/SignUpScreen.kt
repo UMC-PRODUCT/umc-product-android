@@ -51,16 +51,16 @@ import com.umc.component.component.UToastHost
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.danger100
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary500
-import com.umc.component.theme.primary700
-import com.umc.component.theme.success500
+import com.umc.component.theme.red100
+import com.umc.component.theme.red500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo500
+import com.umc.component.theme.indigo700
+import com.umc.component.theme.green500
 import com.umc.domain.model.enums.EmailVerifyType
 import com.umc.domain.model.school.SchoolInfo
 import kotlinx.coroutines.flow.collectLatest
@@ -123,7 +123,7 @@ fun SignUpRoute(
             ModalBottomSheet(
                 onDismissRequest = { showSchoolBottomSheet = false },
                 sheetState = sheetState,
-                containerColor = neutral000(),
+                containerColor = grey000(),
             ) {
                 SchoolSelectBottomSheetContent(
                     schoolList = uiState.schoolList,
@@ -172,7 +172,7 @@ private fun SchoolSelectBottomSheetContent(
         UText(
             text = AppStrings.SIGN_UP_SELECT_SCHOOL_PLACEHOLDER,
             style = UmcTypographyTokens.Title3Bold,
-            color = neutral800(),
+            color = grey800(),
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -180,7 +180,7 @@ private fun SchoolSelectBottomSheetContent(
         UText(
             text = AppStrings.SIGN_UP_SELECT_SCHOOL_HINT,
             style = UmcTypographyTokens.Subheadline,
-            color = neutral600(),
+            color = grey600(),
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -215,14 +215,14 @@ private fun SchoolItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .background(neutral000())
+            .background(grey000())
             .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         UText(
             text = school.schoolName,
             style = UmcTypographyTokens.Subheadline,
-            color = if (isSelected) primary500() else neutral800(),
+            color = if (isSelected) indigo500() else grey800(),
             modifier = Modifier.weight(1f),
         )
 
@@ -230,7 +230,7 @@ private fun SchoolItem(
             Icon(
                 painter = painterResource(id = R.drawable.ic_check_white),
                 contentDescription = null,
-                tint = primary500(),
+                tint = indigo500(),
             )
         }
     }
@@ -264,7 +264,7 @@ fun SignUpScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000())
+            .background(grey000())
     ) {
         Column(
             modifier = Modifier
@@ -287,14 +287,14 @@ fun SignUpScreen(
             UText(
                 text = AppStrings.SIGN_UP,
                 style = UmcTypographyTokens.Title1Bold,
-                color = neutral800(),
+                color = grey800(),
                 modifier = Modifier.padding(start = 24.dp, top = 16.dp)
             )
 
             UText(
                 text = AppStrings.SIGN_UP_SUB_TITLE,
                 style = UmcTypographyTokens.Body,
-                color = neutral600(),
+                color = grey600(),
                 modifier = Modifier.padding(start = 24.dp, top = 16.dp)
             )
 
@@ -347,14 +347,14 @@ fun SignUpScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
-                    .border(1.dp, neutral300(), RoundedCornerShape(8.dp))
+                    .border(1.dp, grey300(), RoundedCornerShape(8.dp))
                     .clickable { onClickSchool() }
                     .padding(horizontal = 16.dp, vertical = 14.dp)
             ) {
                 UText(
                     text = uiState.school.schoolName.ifEmpty { AppStrings.SIGN_UP_SELECT_SCHOOL_PLACEHOLDER },
                     style = UmcTypographyTokens.Subheadline,
-                    color = if (uiState.school.schoolName.isEmpty()) neutral300() else neutral800(),
+                    color = if (uiState.school.schoolName.isEmpty()) grey300() else grey800(),
                 )
             }
 
@@ -378,10 +378,10 @@ fun SignUpScreen(
                     onValueChange = onEmailChanged,
                     placeholder = AppStrings.SIGN_UP_EMAIL_PLACEHOLDER,
                     textStyle = UmcTypographyTokens.Subheadline,
-                    textColor = if (isEmailError) danger500() else neutral800(),
-                    backgroundColor = if (isEmailError) danger100() else neutral000(),
-                    strokeColor = if (isEmailError) danger500() else neutral300(),
-                    focusStrokeColor = if (isEmailError) danger500() else primary500(),
+                    textColor = if (isEmailError) red500() else grey800(),
+                    backgroundColor = if (isEmailError) red100() else grey000(),
+                    strokeColor = if (isEmailError) red500() else grey300(),
+                    focusStrokeColor = if (isEmailError) red500() else indigo500(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.weight(1f),
                 )
@@ -393,7 +393,7 @@ fun SignUpScreen(
                     || uiState.verifyType == EmailVerifyType.ERROR
                     || uiState.verifyType == EmailVerifyType.REQUEST
                     || uiState.verifyType == EmailVerifyType.VERIFY
-                ) neutral300() else primary500()
+                ) grey300() else indigo500()
                 val isVerifyButtonEnabled = (uiState.email.isNotEmpty()
                         && uiState.verifyType != EmailVerifyType.ERROR)
                         || uiState.verifyType == EmailVerifyType.REQUEST
@@ -404,8 +404,8 @@ fun SignUpScreen(
                     onClick = onClickVerify,
                     enabled = isVerifyButtonEnabled,
                     backgroundColor = verifyBgColor,
-                    pressedColor = primary700(),
-                    textColor = neutral000(),
+                    pressedColor = indigo700(),
+                    textColor = grey000(),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                     textStyle = UmcTypographyTokens.Footnote,
                 )
@@ -415,7 +415,7 @@ fun SignUpScreen(
                 UText(
                     text = AppStrings.SIGN_UP_ERROR_EMAIL,
                     style = UmcTypographyTokens.Footnote,
-                    color = danger500(),
+                    color = red500(),
                     modifier = Modifier.padding(start = 24.dp, top = 4.dp)
                 )
             }
@@ -435,8 +435,8 @@ fun SignUpScreen(
                         enabled = !isVerified,
                         placeholder = AppStrings.SIGN_UP_VERIFY_CODE_PLACEHOLDER,
                         textStyle = UmcTypographyTokens.Subheadline,
-                        textColor = if (isVerified) neutral600() else neutral800(),
-                        backgroundColor = if (isVerified) neutral100() else neutral000(),
+                        textColor = if (isVerified) grey600() else grey800(),
+                        backgroundColor = if (isVerified) grey100() else grey000(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier
                             .weight(1f)
@@ -449,12 +449,12 @@ fun SignUpScreen(
                         text = AppStrings.SIGN_UP_VERIFY_CONFIRM,
                         onClick = onClickConfirm,
                         enabled = !isVerified,
-                        backgroundColor = if (isVerified) neutral100() else neutral000(),
-                        textColor = if (isVerified) neutral300() else success500(),
+                        backgroundColor = if (isVerified) grey100() else grey000(),
+                        textColor = if (isVerified) grey300() else green500(),
                         textStyle = UmcTypographyTokens.Footnote,
                         borderWidth = 1.dp,
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
-                        borderColor = if (isVerified) neutral300() else success500(),
+                        borderColor = if (isVerified) grey300() else green500(),
                     )
                 }
             }
@@ -464,9 +464,9 @@ fun SignUpScreen(
             text = AppStrings.NEXT,
             onClick = onClickNext,
             enabled = uiState.enableNextButton,
-            backgroundColor = if (uiState.enableNextButton) primary500() else neutral300(),
-            pressedColor = primary700(),
-            textColor = neutral000(),
+            backgroundColor = if (uiState.enableNextButton) indigo500() else grey300(),
+            pressedColor = indigo700(),
+            textColor = grey000(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             modifier = Modifier
                 .fillMaxWidth()
@@ -491,12 +491,12 @@ private fun FieldLabel(
         UText(
             text = text,
             style = UmcTypographyTokens.HeadlineBold,
-            color = neutral800(),
+            color = grey800(),
         )
         UText(
             text = " *",
             style = UmcTypographyTokens.HeadlineBold,
-            color = danger500(),
+            color = red500(),
         )
     }
 }

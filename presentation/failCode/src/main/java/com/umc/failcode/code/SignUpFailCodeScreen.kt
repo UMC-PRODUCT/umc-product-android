@@ -32,11 +32,11 @@ import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary500
-import com.umc.component.theme.primary700
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo500
+import com.umc.component.theme.indigo700
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -85,7 +85,7 @@ fun SignUpFailCodeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000()),
+            .background(grey000()),
     ) {
         Icon(
             modifier = Modifier
@@ -100,21 +100,21 @@ fun SignUpFailCodeScreen(
         UText(
             text = AppStrings.SIGN_UP_FAIL_PREV_USER,
             style = UmcTypographyTokens.Title1Bold,
-            color = neutral800(),
+            color = grey800(),
             modifier = Modifier.padding(start = 24.dp, top = 16.dp),
         )
 
         UText(
             text = AppStrings.SIGN_UP_FAIL_PREV_USER_HINT,
             style = UmcTypographyTokens.Body,
-            color = neutral600(),
+            color = grey600(),
             modifier = Modifier.padding(start = 24.dp, top = 16.dp),
         )
 
         UText(
             text = AppStrings.SIGN_UP_FAIL_CODE_LABEL,
             style = UmcTypographyTokens.HeadlineBold,
-            color = neutral800(),
+            color = grey800(),
             modifier = Modifier.padding(start = 24.dp, top = 80.dp),
         )
 
@@ -135,9 +135,9 @@ fun SignUpFailCodeScreen(
         UButton(
             text = AppStrings.SIGN_UP_FAIL_CODE_SUBMIT,
             onClick = onClickRegister,
-            backgroundColor = primary500(),
-            pressedColor = primary700(),
-            textColor = neutral000(),
+            backgroundColor = indigo500(),
+            pressedColor = indigo700(),
+            textColor = grey000(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             contentPadding = PaddingValues(vertical = 16.dp),
             modifier = Modifier
