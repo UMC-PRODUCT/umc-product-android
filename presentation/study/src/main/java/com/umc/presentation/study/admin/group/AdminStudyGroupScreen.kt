@@ -22,7 +22,7 @@ import com.umc.component.theme.green500
 import com.umc.component.theme.grey500
 import com.umc.presentation.study.admin.group.component.AdminStudyGroupCard
 import com.umc.presentation.study.admin.group.component.AdminStudyGroupCreateCard
-import com.umc.presentation.study.admin.group.component.AdminStudyGroupHeader
+
 import com.umc.presentation.study.admin.group.dialog.AdminStudyGroupDeleteDialog
 import com.umc.presentation.study.admin.group.dialog.AdminStudyGroupEditDialog
 
