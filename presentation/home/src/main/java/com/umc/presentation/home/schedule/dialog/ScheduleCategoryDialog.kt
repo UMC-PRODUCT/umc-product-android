@@ -32,13 +32,15 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo500
 import com.umc.domain.model.home.CategoryItem
 import com.umc.presentation.home.schedule.add.ScheduleAddViewModel
+
+/**일정 생성에서 카테고리 선택을 담당하는 다이얼로그**/
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,9 +56,9 @@ fun ScheduleCategoryBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = neutral000(),
+        containerColor = grey000(),
         dragHandle = {
-            BottomSheetDefaults.DragHandle(color = neutral600())
+            BottomSheetDefaults.DragHandle(color = grey600())
         },
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     ) {
@@ -80,7 +82,7 @@ fun ScheduleCategoryBottomSheet(
                     UText(
                         text = AppStrings.HOME_PLAN_ADD_PLAN_TAG_BOTTOMSHEET_TITLE,
                         style = UmcTypographyTokens.Title3Bold,
-                        color = neutral800()
+                        color = grey800()
                     )
                     Spacer(modifier = Modifier
                         .height(4.dp)
@@ -88,15 +90,15 @@ fun ScheduleCategoryBottomSheet(
                     UText(
                         text = AppStrings.HOME_PLAN_ADD_PLAN_TAG_BOTTOMSHEET_CONTENT,
                         style = UmcTypographyTokens.Footnote,
-                        color = neutral600()
+                        color = grey600()
                     )
                 }
 
                 //확인 버튼
                 UButton(
                     text = AppStrings.CONFIRM,
-                    backgroundColor = primary500(),
-                    textColor = neutral000(),
+                    backgroundColor = indigo500(),
+                    textColor = grey000(),
                     onClick = onConfirm,
                     modifier = Modifier
                         .padding(start = 8.dp)
@@ -157,7 +159,7 @@ fun CategoryItemRow(
         UText(
             text = item.name,
             style = UmcTypographyTokens.HeadlineBold,
-            color = neutral800(),
+            color = grey800(),
             modifier = Modifier
                 .weight(1f)
         )
@@ -167,9 +169,9 @@ fun CategoryItemRow(
             checked = item.isChecked,
             onCheckedChange = { onToggle(item) },
             colors = CheckboxDefaults.colors(
-                checkedColor = primary500(),
-                uncheckedColor = neutral300(),
-                checkmarkColor = neutral000()
+                checkedColor = indigo500(),
+                uncheckedColor = grey300(),
+                checkmarkColor = grey000()
             )
         )
     }

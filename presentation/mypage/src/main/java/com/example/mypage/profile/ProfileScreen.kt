@@ -51,15 +51,15 @@ import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral700
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo500
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.mypage.UserActiveItem
@@ -163,7 +163,7 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000())
+            .background(grey000())
     ) {
 
         //상단 바
@@ -222,8 +222,8 @@ fun ProfileScreen(
                         .padding(top = 8.dp)
                         .fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, neutral300()),
-                    colors = CardDefaults.cardColors(containerColor = neutral000())
+                    border = BorderStroke(1.dp, grey300()),
+                    colors = CardDefaults.cardColors(containerColor = grey000())
                 ) {
                     Column(
                         modifier = Modifier
@@ -279,7 +279,7 @@ fun ProfileTopbar(
             Icon(
                 painter = painterResource(id=R.drawable.ic_back),
                 contentDescription = null,
-                tint = neutral800(),
+                tint = grey800(),
                 modifier = Modifier
                     .clickable { onBackClick() }
                     .padding(end = 16.dp)
@@ -289,7 +289,7 @@ fun ProfileTopbar(
             UText(
                 text = AppStrings.MYPAGE_MODIFY_PROFILE,
                 style = UmcTypographyTokens.Title2Bold,
-                color = neutral800(),
+                color = grey800(),
                 modifier = Modifier.padding(start = 16.dp)
             )
         }
@@ -298,7 +298,7 @@ fun ProfileTopbar(
         UText(
             text = AppStrings.COMPLETE,
             style = UmcTypographyTokens.CalloutBold,
-            color = primary500(),
+            color = indigo500(),
             modifier = Modifier
                 .clickable { onCompleteClick() }
         )
@@ -331,7 +331,7 @@ fun ProfileImageSection(imageUri: Uri, defaultUrl: String, onImageClick: () -> U
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(CircleShape)
-                    .border(1.dp, neutral200(), CircleShape),
+                    .border(1.dp, grey200(), CircleShape),
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(id = R.drawable.ic_profile_default)
             )
@@ -341,15 +341,15 @@ fun ProfileImageSection(imageUri: Uri, defaultUrl: String, onImageClick: () -> U
                     .size(36.dp)
                     .align(Alignment.BottomEnd),
                 shape = CircleShape,
-                color = neutral000(),
-                border = BorderStroke(1.dp, neutral200())
+                color = grey000(),
+                border = BorderStroke(1.dp, grey200())
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_camera),
                     contentDescription = null,
                     modifier = Modifier
                         .padding(8.dp),
-                    tint = neutral800()
+                    tint = grey800()
                 )
             }
         }
@@ -365,15 +365,15 @@ fun ProfileInfoSection(title: String, content: String, platforms: List<LoginType
             modifier = Modifier
                 .padding(top = 8.dp)
                 .fillMaxWidth()
-                .background(neutral100(), RoundedCornerShape(8.dp))
-                .border(1.dp, neutral300(), RoundedCornerShape(8.dp))
+                .background(grey100(), RoundedCornerShape(8.dp))
+                .border(1.dp, grey300(), RoundedCornerShape(8.dp))
                 .padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 UText(
                     text = content, 
                     style = UmcTypographyTokens.Callout, 
-                    color = neutral600(), 
+                    color = grey600(), 
                     modifier = Modifier.weight(1f))
                 // 소셜 배지 표시 로직(SocialBadge = Mypage꺼 재사용)
                 platforms.forEach { platform ->
@@ -401,10 +401,10 @@ fun ActiveHistoryItem(
             onClick = {},
             modifier = Modifier
                 .height(24.dp),
-            backgroundColor = neutral000(),
-            borderColor = neutral200(),
+            backgroundColor = grey000(),
+            borderColor = grey200(),
             borderWidth = 1.dp,
-            textColor = neutral600(),
+            textColor = grey600(),
             textStyle = UmcTypographyTokens.FootnoteBold
         )
 
@@ -423,7 +423,7 @@ fun ActiveHistoryItem(
             UText(
                 text = history.partName, // "Android Part 챌린저" 등 합성된 문자열
                 style = UmcTypographyTokens.Subheadline,
-                color = neutral600(),
+                color = grey600(),
                 modifier = Modifier
                     .weight(1f)
             )
@@ -433,9 +433,9 @@ fun ActiveHistoryItem(
                 onClick = {},
                 modifier = Modifier
                     .height(24.dp),
-                backgroundColor = primary100(),
+                backgroundColor = indigo100(),
                 borderWidth = 0.dp,
-                textColor = primary500(),
+                textColor = indigo500(),
                 textStyle = UmcTypographyTokens.FootnoteBold
             )
         }

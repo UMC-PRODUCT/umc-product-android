@@ -35,9 +35,9 @@ import com.umc.component.component.UCommunityItemCard
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary500
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo500
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -97,7 +97,7 @@ fun MyContentScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral100())
+            .background(grey100())
             .padding(horizontal = 16.dp)
     ) {
         //상단 바
@@ -115,7 +115,7 @@ fun MyContentScreen(
                 UText(
                     text = "게시글이 존재하지 않습니다.",
                     style = UmcTypographyTokens.Footnote,
-                    color = neutral800()
+                    color = grey800()
                 )
             }
         } else {
@@ -144,7 +144,7 @@ fun MyContentScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(
-                                color = primary500(),
+                                color = indigo500(),
                                 strokeWidth = 2.dp
                             )
                         }
@@ -189,7 +189,7 @@ fun MyContentTopBar(
         Icon(
             painter = painterResource(id=R.drawable.ic_back),
             contentDescription = null,
-            tint = neutral800(),
+            tint = grey800(),
             modifier = Modifier
                 .clickable { onBackClick() }
                 .padding(end = 16.dp)
@@ -202,7 +202,7 @@ fun MyContentTopBar(
         UText(
             text = title,
             style = UmcTypographyTokens.Title2Bold,
-            color = neutral800()
+            color = grey800()
         )
 
     }

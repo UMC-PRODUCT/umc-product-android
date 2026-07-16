@@ -24,15 +24,15 @@ import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral700
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo500
 import com.umc.domain.model.home.SchedulePlanItem
 
 /**
@@ -68,7 +68,7 @@ fun ActiveScheduleItem(
             .padding(bottom = 12.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral000()),
+        colors = CardDefaults.cardColors(containerColor = grey000()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
@@ -81,7 +81,7 @@ fun ActiveScheduleItem(
                 modifier = Modifier
                     .size(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = primary100()
+                color = indigo100()
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -90,12 +90,12 @@ fun ActiveScheduleItem(
                     UText(
                         text = item.dayOfWeek,
                         style = UmcTypographyTokens.Caption2Bold,
-                        color = primary500()
+                        color = indigo500()
                     )
                     UText(
                         text = item.day,
                         style = UmcTypographyTokens.CalloutBold,
-                        color = primary500()
+                        color = indigo500()
                     )
                 }
             }
@@ -108,11 +108,11 @@ fun ActiveScheduleItem(
             ) {
                 UText(text = item.title,
                     style = UmcTypographyTokens.CalloutBold,
-                    color = neutral800()
+                    color = grey800()
                 )
                 UText(text = item.time,
                     style = UmcTypographyTokens.Footnote,
-                    color = neutral600()
+                    color = grey600()
                 )
             }
 
@@ -120,8 +120,8 @@ fun ActiveScheduleItem(
             if (item.dDay != null) {
                 UButton(
                     text = item.dDay!!,
-                    backgroundColor = neutral200(),
-                    textColor = neutral700(),
+                    backgroundColor = grey200(),
+                    textColor = grey700(),
                     textStyle = UmcTypographyTokens.Caption1Bold,
                     modifier = Modifier
                         .padding(end = 16.dp)
@@ -134,7 +134,7 @@ fun ActiveScheduleItem(
             androidx.compose.material3.Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_next),
                 contentDescription = null,
-                tint = neutral400()
+                tint = grey400()
             )
         }
     }
@@ -154,7 +154,7 @@ fun DefaultScheduleItem(
             .padding(bottom = 12.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral000()),
+        colors = CardDefaults.cardColors(containerColor = grey000()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
@@ -166,8 +166,8 @@ fun DefaultScheduleItem(
                 modifier = Modifier
                     .size(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = neutral000(),
-                border = BorderStroke(1.dp, neutral200())
+                color = grey000(),
+                border = BorderStroke(1.dp, grey200())
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -175,11 +175,11 @@ fun DefaultScheduleItem(
                 ) {
                     UText(text = item.dayOfWeek,
                         style = UmcTypographyTokens.Caption2Bold,
-                        color = neutral300()
+                        color = grey300()
                     )
                     UText(text = item.day,
                         style = UmcTypographyTokens.CalloutBold,
-                        color = neutral300()
+                        color = grey300()
                     )
                 }
             }
@@ -191,18 +191,18 @@ fun DefaultScheduleItem(
             ) {
                 UText(text = item.title,
                     style = UmcTypographyTokens.CalloutBold,
-                    color = neutral400()
+                    color = grey400()
                 )
                 UText(text = item.time,
                     style = UmcTypographyTokens.Footnote,
-                    color = neutral400()
+                    color = grey400()
                 )
             }
 
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_next),
                 contentDescription = null,
-                tint = neutral300()
+                tint = grey300()
             )
         }
     }

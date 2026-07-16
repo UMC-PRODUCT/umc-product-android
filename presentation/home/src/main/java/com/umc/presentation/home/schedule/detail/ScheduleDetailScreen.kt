@@ -41,13 +41,13 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.accent500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary600
+import com.umc.component.theme.yellow500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo600
 import com.umc.presentation.home.schedule.add.ScheduleAddEvent
 import kotlinx.coroutines.flow.collectLatest
 import java.net.URLEncoder
@@ -137,7 +137,7 @@ fun ScheduleDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral100())
+            .background(grey100())
             .padding(horizontal = 16.dp)
     ) {
 
@@ -157,8 +157,8 @@ fun ScheduleDetailScreen(
             //2. D-day 및 제목
             UButton(
                 text = uiState.dDay,
-                backgroundColor = primary100(),
-                textColor = primary600(),
+                backgroundColor = indigo100(),
+                textColor = indigo600(),
                 textStyle = UmcTypographyTokens.FootnoteBold,
                 onClick = {},
                 modifier = Modifier
@@ -170,7 +170,7 @@ fun ScheduleDetailScreen(
             )
             UText(text = uiState.title,
                 style = UmcTypographyTokens.Title2Bold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(modifier = Modifier
@@ -179,7 +179,7 @@ fun ScheduleDetailScreen(
 
             UText(text = uiState.startDate,
                 style = UmcTypographyTokens.Subheadline,
-                color = neutral600()
+                color = grey600()
             )
 
             Spacer(modifier = Modifier
@@ -201,7 +201,7 @@ fun ScheduleDetailScreen(
             //4. 상세 안내 영역
             UText(text = AppStrings.HOME_PLAN_DETAIL_PLAN_NOTICE,
                 style = UmcTypographyTokens.Title3Bold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(modifier = Modifier
@@ -211,7 +211,7 @@ fun ScheduleDetailScreen(
             UText(
                 text = uiState.detail,
                 style = UmcTypographyTokens.Body,
-                color = neutral600(),
+                color = grey600(),
                 modifier = Modifier
                     .weight(1f)
             )
@@ -220,8 +220,8 @@ fun ScheduleDetailScreen(
             if(uiState.isToday){
                 UButton(
                     text = AppStrings.HOME_PLAN_DETAIL_CHECK_CONFIRM,
-                    backgroundColor = accent500(),
-                    textColor = neutral000(),
+                    backgroundColor = yellow500(), // accent 팔레트 제거로 yellow(구 warning)로 대체
+                    textColor = grey000(),
                     textStyle = UmcTypographyTokens.HeadlineBold,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -278,14 +278,14 @@ fun ScheduleDetailTopBar(
                 contentDescription = null,
                 modifier = Modifier
                     .clickable { onBackClick() },
-                tint = neutral800()
+                tint = grey800()
             )
             Spacer(modifier = Modifier
                 .width(16.dp)
             )
             UText(text = AppStrings.HOME_PLAN_DETAIL_TITLE,
                 style = UmcTypographyTokens.Title2Bold,
-                color = neutral800()
+                color = grey800()
             )
         }
         //메뉴 버튼
@@ -294,7 +294,7 @@ fun ScheduleDetailTopBar(
             contentDescription = null,
             modifier = Modifier
                 .clickable { onMenuClick() },
-            tint = neutral800()
+            tint = grey800()
         )
 
     }

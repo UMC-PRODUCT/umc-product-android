@@ -27,10 +27,10 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral800
+import com.umc.component.theme.red500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey800
 
 /**케밥 메뉴 창
  *
@@ -54,7 +54,7 @@ fun ScheduleKebabMenu(
                 .width(180.dp),
             shape = RoundedCornerShape(16.dp),
             shadowElevation = 8.dp,
-            color = neutral000()
+            color = grey000()
         ) {
             Column(modifier = Modifier
                 .padding(8.dp)
@@ -62,17 +62,17 @@ fun ScheduleKebabMenu(
                 MenuItem(
                     icon = R.drawable.ic_edit,
                     text = AppStrings.NOTICE_WRITE_VOTE_EDIT,
-                    color = neutral800(),
+                    color = grey800(),
                     onClick = onEditClick)
 
                 HorizontalDivider(modifier = Modifier
                     .padding(vertical = 4.dp),
-                    color = neutral200())
+                    color = grey200())
 
                 MenuItem(
                     icon = R.drawable.ic_trash_can,
                     text = AppStrings.NOTICE_WRITE_VOTE_DELETE,
-                    color = danger500(),
+                    color = red500(),
                     onClick = onDeleteClick)
             }
         }

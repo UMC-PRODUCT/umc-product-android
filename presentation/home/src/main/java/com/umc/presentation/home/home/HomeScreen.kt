@@ -7,14 +7,18 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +28,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,13 +39,16 @@ import java.time.LocalDate
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
@@ -49,20 +58,22 @@ import com.umc.component.component.UText
 import com.umc.component.component.getGrowthText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.danger100
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral700
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.neutral900
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary500
-import com.umc.component.theme.primary600
-import com.umc.component.theme.success100
-import com.umc.component.theme.success500
+import com.umc.component.theme.red100
+import com.umc.component.theme.red500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
+import com.umc.component.theme.grey800
+import com.umc.component.theme.grey900
+import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo500
+import com.umc.component.theme.indigo600
+import com.umc.component.theme.green100
+import com.umc.component.theme.green500
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey50
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.home.SchedulePlanItem
@@ -129,7 +140,7 @@ fun HomeScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(neutral100())
+            .background(grey100())
     ) {
 
         //1. 상단 섹션(유저 정보)
@@ -137,7 +148,7 @@ fun HomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(neutral000())
+                    .background(grey000())
                     .padding(horizontal = 16.dp)
                     .padding(top = 16.dp)
                     .padding(bottom = 32.dp)
@@ -148,7 +159,8 @@ fun HomeScreen(
                     onNotificationClick = onNotificationClick
                 )
 
-                HomeProfileCard(uiState = uiState)
+                //HomeProfileCard(uiState = uiState)
+                HomeProfileCardsRow(uiState = uiState)
 
                 if (uiState.userType == UserType.ACTIVE) {
                     Spacer(modifier = Modifier
@@ -165,7 +177,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .padding(top = 32.dp)
+                    .padding(top = 16.dp)
             ) {
                 HomePlanHeader(
                     viewMode = uiState.viewMode,
@@ -186,7 +198,7 @@ fun HomeScreen(
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                color = neutral000(),
+                color = grey000(),
                 shadowElevation = 0.dp
             ) {
                 Column(modifier = Modifier
@@ -211,7 +223,7 @@ fun HomeScreen(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp)
                                     .height(1.dp)
-                                    .background(neutral200())
+                                    .background(grey200())
                             )
 
                             Spacer(modifier = Modifier
@@ -265,71 +277,358 @@ fun HomeScreen(
     }
 }
 
+
+/**
+ * 프로필 카드 V2
+ *
+ * **/
 @Composable
-fun HomeProfileCard(uiState: HomeUiState) {
+fun HomeProfileCardsRow(
+    uiState: HomeUiState
+) {
+
+    //Row에 2개의 카드를 표시
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+
+        //1. 좌측 누적 활동일 카드
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .height(108.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = grey000())
+        ){
+            Box(modifier = Modifier.fillMaxSize()) {
+
+                Image(
+                    painter = painterResource(id = R.drawable.ic_home_attend_day_background),
+                    contentDescription = "누적 활동일 배경",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .height(100.dp)
+                        .aspectRatio(724f / 432f) //Figma 이미지의 비율 반영
+                        .align(Alignment.BottomEnd)
+                )
+
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                ) {
+                    UText(
+                        text = AppStrings.HOME_ACTIVATE_DAY,
+                        style = UmcTypographyTokens.BodyBold,
+                        color = grey800()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(
+                                style = UmcTypographyTokens.Title3Bold.toSpanStyle().copy(
+                                    color = indigo500(),
+                                )
+                            ) {
+                                append("${uiState.growDay}")
+                                append(" ")
+                            }
+                            // 나머지 부분
+                            withStyle(
+                                style = UmcTypographyTokens.Footnote.toSpanStyle().copy(
+                                    color = grey700(),
+                                )
+                            ) {
+                                append("Days")
+                            }
+                        }
+                    )
+                }
+
+            }
+        }
+
+        //2. 우측 참여 기수 카드
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .height(108.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = grey000())
+        ){
+            Box(modifier = Modifier.fillMaxSize()) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_home_attend_gisu_background),
+                    contentDescription = "참여 기수 배경",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .height(100.dp)
+                        .aspectRatio(724f / 432f)
+                        .align(Alignment.BottomEnd)
+                )
+
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                ) {
+                    UText(
+                        text = AppStrings.HOME_ATTEND_GISU,
+                        style = UmcTypographyTokens.BodyBold,
+                        color = grey800()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    GisuGrid(gisuStrings = uiState.gisuTag)
 
 
+                }
+            }
+        }
+
+
+
+    }
+}
+
+/**HomeProfileCardRows에 쓰이는 grid (2*2) 형태
+ * GisuChip을 item으로 쓴다.
+ *
+ * **/
+@Composable
+fun GisuGrid(gisuStrings: List<String>){
+
+    val latestGisus = gisuStrings.reversed() //최신 꺼 가져오기 위함.
+
+    val displayCount = if (gisuStrings.size > 4) 3 else gisuStrings.size // 5개 부터 마지막 부분에 표시해야 하므로 -2.
+    val hasMore = gisuStrings.size > 4 //4개보다 많은지 ( + 표시 )
+    val remainingCount = gisuStrings.size - 3 // +3 등 String에 표시될 숫자
+
+    val addItems = mutableListOf<String>() //보여줄 item 리스트
+    if(hasMore){
+        addItems.add("MORE") //체크 용도(제일 마지막 출력을 위해 제일 먼저 넣는다)
+    }
+    addItems.addAll(latestGisus.take(displayCount))
+
+    val gridItems = addItems.reversed() //뒤집기
+
+    //2*2 격자 형태
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        //2행
+        gridItems.chunked(2).forEach { items ->
+            //2열
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                items.forEach { item ->
+                    //만약 More이면 남은 개수 표시 (+ N)
+                    if (item == "MORE") {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ){
+                            Icon(
+                                modifier = Modifier
+                                    .size(18.dp),
+                                painter = painterResource(id = R.drawable.ic_add_filled),
+                                contentDescription = "Add",
+                                tint = indigo500()
+                            )
+
+                            UText(
+                                text = "$remainingCount",
+                                style = UmcTypographyTokens.Caption1Bold,
+                                color = indigo500()
+                            )
+                        }
+
+
+                    } else {
+                        //일반 기수 칩
+                        GisuChip(item)
+                    }
+                }
+            }
+        }
+
+    }
+
+
+}
+
+/**HomeProfileCardRows 전용 기수 칩
+ * 기수 int 정보 In시 `10기` 형태로 제공
+ * **/
+@Composable
+fun GisuChip(gisuString: String) {
+    Box(
+        modifier = Modifier
+            .background(color = indigo100(), shape = RoundedCornerShape(4.dp))
+            .padding(horizontal = 4.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        UText(
+            text = gisuString,
+            style = UmcTypographyTokens.Caption1Bold,
+            color = indigo500()
+        )
+    }
+}
+
+
+
+/**
+ * ACTIVE 유저 전용 상점/벌점/총합 점수판 카드
+ */
+@Composable
+fun HomeActivityStatusCard(uiState: HomeUiState) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = primary100()),
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = grey000()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Box(modifier = Modifier
-            .padding(16.dp)
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
         ) {
-            Column {
-                // 기수 태그 (FlexboxLayout 대응)
-                FlowRow(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+
+            //X기 활동 상태
+            UText(
+                text = uiState.activeString,
+                style = UmcTypographyTokens.HeadlineBold,
+                color = grey800()
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .height(12.dp)
+            )
+
+            //상벌점 UI 표
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                //상벌점 2개판
+                Surface(
+                    modifier = Modifier.weight(2f),
+                    shape = RoundedCornerShape(8.dp),
+                    color = grey50(),
                 ) {
-                    uiState.gisuTag.forEach { tag ->
-                        UButton(
-                            text = tag,
-                            backgroundColor = neutral000(),
-                            textColor = primary600(),
-                            textStyle = UmcTypographyTokens.Caption1Bold,
-                            onClick = {},
+                    Row(
+                        modifier = Modifier
+                            .height(IntrinsicSize.Min)
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        //상점
+                        ScoreCard(
                             modifier = Modifier
-                                .padding(end = 4.dp)
-                                .height(24.dp),
+                                .weight(1f),
+                            label = AppStrings.REWARD,
+                            score = uiState.sangjum,
+                            color = green500(),
+                        )
+
+                    VerticalDivider()
+
+                        //벌점
+                        ScoreCard(
+                            modifier = Modifier
+                                .weight(1f),
+                            label = AppStrings.PUNISH,
+                            score = uiState.buljum,
+                            color = red500(),
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier
-                    .height(16.dp)
-                )
-
-                // 유저 이름 (닉네임 + 실명)
-                UText(
-                    text = "${uiState.userNickName}(${uiState.userName})",
-                    style = UmcTypographyTokens.Title3,
-                    color = neutral700()
-                )
-
-                //성장 일수 (Spannable 대신 하위 함수 호출)
-                HuggText(
-                    text = getGrowthText(uiState.growDay),
-                    style = UmcTypographyTokens.Title3Bold,
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                )
             }
+        }
+    }
+}
 
+/**라벨(상점/벌점)과 그 점수가 존재하는 1개의 영역**/
+@Composable
+private fun ScoreCard(
+    modifier: Modifier,
+    label: String,
+    score: Int,
+    color: Color
+) {
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = grey100()),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            //UButton 컴포저블을 활용하여 일관된 디자인 유지
             Image(
-                painter = painterResource(
-                    id = if (uiState.userType == UserType.ACTIVE) R.drawable.ic_home_active else R.drawable.ic_home_ob
-                ),
+                painter = if(label == AppStrings.REWARD) painterResource(id = R.drawable.ic_like_color) else painterResource(id = R.drawable.ic_dislike_color),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(90.dp)
-                    .align(Alignment.CenterEnd)
+                    .size(24.dp)
+            )
+            Spacer(
+                modifier = Modifier
+                    .width(8.dp)
+            )
+
+            UText(
+                text = label,
+                modifier = Modifier,
+                style = UmcTypographyTokens.HeadlineBold,
+                color = color
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+            )
+
+            Text(
+                text = buildAnnotatedString {
+                    //숫자 부분
+                    withStyle(
+                        style = UmcTypographyTokens.CalloutBold.toSpanStyle().copy(
+                            color = grey900(),
+                            fontSize = 16.sp
+                        )
+                    ) {
+                        append(score.toString())
+                        append(" ")
+                    }
+                    // point
+                    withStyle(
+                        style = UmcTypographyTokens.Caption1.toSpanStyle().copy(
+                            color = grey600(),
+                            fontSize = 12.sp
+                        )
+                    ) {
+                        append("point")
+                    }
+                }
             )
         }
+
     }
 }
 
@@ -351,28 +650,29 @@ fun HomePlanHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        UText(
-            text = AppStrings.HOME_PLAN_TITLE,
-            style = UmcTypographyTokens.Title3Bold,
-            color = neutral800()
-        )
 
         Row(verticalAlignment = Alignment.CenterVertically) {
+
+            UText(
+                text = AppStrings.HOME_PLAN_TITLE,
+                style = UmcTypographyTokens.Title3Bold,
+                color = grey800()
+            )
+
             IconButton(onClick = onAddClick) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_add_filled),
                     contentDescription = "Add",
-                    tint = primary500()
+                    tint = grey800()
                 )
             }
+        }
 
-            Spacer(modifier = Modifier
-                .width(8.dp)
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
 
             //뷰 전환 선택기
             Surface(
-                color = neutral000(),
+                color = grey000(),
                 shape = RoundedCornerShape(8.dp)
             ) {
 
@@ -380,156 +680,54 @@ fun HomePlanHeader(
                     .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     //달력 + 일정 버튼
-                    Icon(
-                        painter = painterResource(
-                            id = if (viewMode == HomeViewMode.CALENDAR) R.drawable.ic_home_grid_on else R.drawable.ic_home_grid_off
-                        ),
-                        contentDescription = "Calendar Mode",
+                    Box(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                color = if (viewMode == HomeViewMode.CALENDAR) grey800() else grey000()
+                            )
                             .clickable { onChangeViewMode(HomeViewMode.CALENDAR) },
-                        tint = Color.Unspecified
-                    )
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_home_grid_base),
+                            contentDescription = "Calendar Mode",
+                            modifier = Modifier.size(26.dp),
+                            tint = if (viewMode == HomeViewMode.CALENDAR) grey000() else grey400()
+                        )
+                    }
                     Spacer(modifier = Modifier
                         .width(8.dp)
                     )
 
                     //일정 리스트 버튼
-                    Icon(
-                        painter = painterResource(
-                            id = if (viewMode == HomeViewMode.LIST) R.drawable.ic_home_list_on else R.drawable.ic_home_list_off
-                        ),
-                        contentDescription = "List Mode",
+                    Box(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                color = if (viewMode == HomeViewMode.LIST) grey800() else grey000()
+                            )
                             .clickable { onChangeViewMode(HomeViewMode.LIST) },
-                        tint = Color.Unspecified
-                    )
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_home_list_base),
+                            contentDescription = "List Mode",
+                            modifier = Modifier.size(26.dp),
+                            tint = if (viewMode == HomeViewMode.LIST) grey000() else grey400()
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-/**
- * ACTIVE 유저 전용 상점/벌점/총합 점수판 카드
- */
-@Composable
-fun HomeActivityStatusCard(uiState: HomeUiState) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral200()),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Column(modifier = Modifier
-            .padding(16.dp)
-        ) {
 
-            //X기 활동 상태
-            UText(
-                text = uiState.activeString,
-                style = UmcTypographyTokens.HeadlineBold,
-                color = neutral800()
-            )
 
-            Spacer(modifier = Modifier
-                .height(12.dp)
-            )
 
-            //상벌점 판
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                color = neutral000()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    //상점
-                    ScoreCard(
-                        modifier = Modifier
-                            .weight(1f),
-                        label = AppStrings.REWARD,
-                        score = uiState.sangjum,
-                        color = success500(),
-                        bgColor = success100()
-                    )
-
-                    VerticalDivider()
-
-                    //벌점
-                    ScoreCard(
-                        modifier = Modifier
-                            .weight(1f),
-                        label = AppStrings.PUNISH,
-                        score = uiState.buljum,
-                        color = danger500(),
-                        bgColor = danger100()
-                    )
-
-                    VerticalDivider()
-
-                    //총합
-                    ScoreCard(
-                        modifier = Modifier
-                            .weight(1f),
-                        label = AppStrings.HAB,
-                        score = uiState.total,
-                        color = primary500(),
-                        bgColor = primary100()
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**라벨(상점/벌점)과 그 점수가 존재하는 1개의 영역**/
-@Composable
-private fun ScoreCard(
-    modifier: Modifier,
-    label: String,
-    score: Int,
-    color: Color,
-    bgColor: Color
-) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        //UButton 컴포저블을 활용하여 일관된 디자인 유지
-        UButton(
-            text = label,
-            backgroundColor = bgColor,
-            textColor = color,
-            textStyle = UmcTypographyTokens.Caption1Bold,
-            cornerRadius = 4.dp,
-            onClick = {},
-            modifier = Modifier
-                .height(24.dp),
-        )
-        UText(
-            text = score.toString(),
-            modifier = Modifier
-                .padding(top = 8.dp),
-            style = UmcTypographyTokens.HeadlineBold,
-            color = neutral900()
-        )
-    }
-}
-
-//카드 분할 Divider
-@Composable
-private fun VerticalDivider() {
-    Box(modifier = Modifier
-        .width(1.dp)
-        .height(54.dp)
-        .background(neutral200())
-    )
-}
 
 
 

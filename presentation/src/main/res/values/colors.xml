@@ -3,59 +3,62 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="primary100">#EBEFFF</color>
-    <color name="primary200">#CCD6FF</color>
-    <color name="primary300">#99ABFF</color>
-    <color name="primary400">#6683FF</color>
-    <color name="primary500">#4869F0</color>
-    <color name="primary600">#3A5AD9</color>
-    <color name="primary700">#324BB9</color>
-    <color name="primary800">#26398C</color>
-    <color name="primary900">#1D2C6C</color>
+    <color name="indigo100">#EBF2FF</color>
+    <color name="indigo200">#C7D7FE</color>
+    <color name="indigo300">#A4BCFD</color>
+    <color name="indigo400">#728EFD</color>
+    <color name="indigo500">#5468FC</color>
+    <color name="indigo600">#444CE7</color>
+    <color name="indigo700">#3538CD</color>
+    <color name="indigo800">#2C2FA0</color>
+    <color name="indigo900">#222663</color>
 
 
-    <color name="accent100">#FFF0E5</color>
-    <color name="accent200">#FFD0B2</color>
-    <color name="accent300">#FFB180</color>
-    <color name="accent400">#FF924D</color>
-    <color name="accent500">#FF731A</color>
-    <color name="accent600">#E55900</color>
-    <color name="accent700">#B24600</color>
-    <color name="accent800">#803200</color>
-    <color name="accent900">#4D1E00</color>
+    <color name="grey000">#FFFFFF</color>
+    <color name="grey50">#F7F8FA</color>
+    <color name="grey100">#F2F5F8</color>
+    <color name="grey200">#DDE1E9</color>
+    <color name="grey300">#C3CBD5</color>
+    <color name="grey400">#A6B2BF</color>
+    <color name="grey500">#8B97A7</color>
+    <color name="grey600">#657081</color>
+    <color name="grey700">#4A5464</color>
+    <color name="grey800">#202939</color>
+    <color name="grey900">#161C27</color>
+    <color name="grey950">#0D121C</color>
 
 
-    <color name="neutral000">#FFFFFF</color>
-    <color name="neutral100">#F4F5F7</color>
-    <color name="neutral200">#E7E8EA</color>
-    <color name="neutral300">#CDD1D5</color>
-    <color name="neutral400">#B2B8BF</color>
-    <color name="neutral500">#8A949E</color>
-    <color name="neutral600">#6D7882</color>
-    <color name="neutral700">#464C54</color>
-    <color name="neutral800">#34363E</color>
-    <color name="neutral900">#1F2124</color>
+    <color name="green100">#E4FCEC</color>
+    <color name="green200">#ABEFC6</color>
+    <color name="green300">#75E0A7</color>
+    <color name="green400">#47CD89</color>
+    <color name="green500">#17B26A</color>
+    <color name="green600">#079455</color>
+    <color name="green700">#067647</color>
+    <color name="green800">#085D3A</color>
+    <color name="green900">#053321</color>
 
 
-    <color name="success100">#E7F8F0</color>
-    <color name="success300">#99E0BF</color>
-    <color name="success500">#12B76A</color>
-    <color name="success700">#0D824B</color>
-    <color name="success900">#184E3C</color>
+    <color name="yellow100">#FFF7E0</color>
+    <color name="yellow200">#FEDF89</color>
+    <color name="yellow300">#FEC84B</color>
+    <color name="yellow400">#FDB022</color>
+    <color name="yellow500">#F79009</color>
+    <color name="yellow600">#DC6803</color>
+    <color name="yellow700">#B54708</color>
+    <color name="yellow800">#93370D</color>
+    <color name="yellow900">#4E1D09</color>
 
 
-    <color name="warning100">#FFFBE5</color>
-    <color name="warning300">#FFD180</color>
-    <color name="warning500">#FFA500</color>
-    <color name="warning700">#B27100</color>
-    <color name="warning900">#664100</color>
-
-
-    <color name="danger100">#FEECEB</color>
-    <color name="danger300">#F9AFA9</color>
-    <color name="danger500">#F14437</color>
-    <color name="danger700">#AB3027</color>
-    <color name="danger900">#6C1F19</color>
+    <color name="red100">#FEEDEB</color>
+    <color name="red200">#FECDCA</color>
+    <color name="red300">#FDA29B</color>
+    <color name="red400">#F97066</color>
+    <color name="red500">#F04438</color>
+    <color name="red600">#D92D20</color>
+    <color name="red700">#B42318</color>
+    <color name="red800">#912018</color>
+    <color name="red900">#55160C</color>
 
     <color name="kakaoColor">#FEE500</color>
 
