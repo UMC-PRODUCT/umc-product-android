@@ -19,7 +19,7 @@ import com.umc.component.theme.*
 fun StudyBestBadge(modifier: Modifier = Modifier) {
     Surface(
         shape = RoundedCornerShape(4.dp),
-        color = warning100(),
+        color = yellow100(),
         modifier = modifier,
     ) {
         Row(
@@ -30,13 +30,13 @@ fun StudyBestBadge(modifier: Modifier = Modifier) {
                 painter = painterResource(R.drawable.ic_best),
                 contentDescription = null,
                 modifier = Modifier.size(14.dp),
-                tint = warning500(),
+                tint = yellow500(),
             )
             Spacer(Modifier.width(2.dp))
             UText(
                 text = AppStrings.STUDY_BADGE_BEST,
                 style = UmcTypographyTokens.Caption1Bold,
-                color = warning500(),
+                color = yellow500(),
             )
         }
     }

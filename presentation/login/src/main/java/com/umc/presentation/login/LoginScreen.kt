@@ -45,8 +45,8 @@ import com.kakao.sdk.user.UserApiClient
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral600
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey600
 import com.umc.component.util.ULog
 import com.umc.domain.model.enums.LoginType
 import kotlinx.coroutines.CoroutineScope
@@ -105,7 +105,7 @@ fun LoginScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000()),
+            .background(grey000()),
     ) {
         // ic_logo + 22dp spacer + ic_logo_text 높이 추정값
         val logoBlockHeight = 100.dp
@@ -150,7 +150,7 @@ fun LoginScreen(
                 UText(
                     text = AppStrings.LOGIN_TITLE,
                     style = UmcTypographyTokens.Headline,
-                    color = neutral600(),
+                    color = grey600(),
                 )
 
                 Spacer(modifier = Modifier.height(145.dp))

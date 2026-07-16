@@ -22,20 +22,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.umc.component.R
-import com.umc.component.theme.danger100
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.success100
-import com.umc.component.theme.success500
+import com.umc.component.theme.red100
+import com.umc.component.theme.red500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.green100
+import com.umc.component.theme.green500
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
 
 /**
  * 경고 / 반려 / 성공 등을 나타내는 AlertDialog입니다.
@@ -71,13 +71,13 @@ fun UBasicDialog(
     val (iconRes, iconBgColor, iconTintColor, positiveColor) =
         when (type) {
         DialogType.WARNING -> {
-            listOf(R.drawable.ic_check_failed, danger100(), danger500(), danger500())
+            listOf(R.drawable.ic_check_failed, red100(), red500(), red500())
         }
         DialogType.CANCEL -> {
-            listOf(R.drawable.ic_check_failed, danger100(), danger500(), danger500())
+            listOf(R.drawable.ic_check_failed, red100(), red500(), red500())
         }
         DialogType.SUCCESS -> {
-            listOf(R.drawable.ic_check_success, success100(), success500(), success500())
+            listOf(R.drawable.ic_check_success, green100(), green500(), green500())
         }
     }
 
@@ -89,7 +89,7 @@ fun UBasicDialog(
         Surface(
             modifier = Modifier.fillMaxWidth(0.9f).wrapContentHeight(),
             shape = RoundedCornerShape(16.dp),
-            color = neutral000()
+            color = grey000()
         ) {
             Column(
                 modifier = Modifier.padding(
@@ -109,7 +109,7 @@ fun UBasicDialog(
                             .size(48.dp)
                             .clickable { onNegative() }
                             .padding(12.dp),
-                        tint = neutral800(),
+                        tint = grey800(),
                     )
                 }
 
@@ -136,14 +136,18 @@ fun UBasicDialog(
                 Text(
                     text = title,
                     style = UmcTypographyTokens.Title3Bold,
-                    color = neutral800())
+                    color = grey800())
 
-                if (content != null) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                content?.let { text ->
+                    Spacer(
+                        modifier = Modifier
+                        .height(16.dp)
+                    )
+
                     Text(
-                        text = content!!,
+                        text = text,
                         style = UmcTypographyTokens.Subheadline,
-                        color = neutral600()
+                        color = grey600()
                     )
                 }
 
@@ -160,10 +164,10 @@ fun UBasicDialog(
                         modifier = Modifier
                             .weight(1f)
                             .height(52.dp),
-                        backgroundColor = neutral000(),
-                        borderColor = neutral300(),
+                        backgroundColor = grey000(),
+                        borderColor = grey300(),
                         borderWidth = 1.dp,
-                        textColor = neutral800(),
+                        textColor = grey800(),
                         onClick = onNegative
                     )
 
@@ -171,7 +175,7 @@ fun UBasicDialog(
                     UButton(
                         text = positiveText,
                         modifier = Modifier.weight(1f).height(52.dp),
-                        backgroundColor = neutral000(),
+                        backgroundColor = grey000(),
                         borderColor = positiveColor as Color,
                         borderWidth = 1.dp,
                         textColor = positiveColor as Color,

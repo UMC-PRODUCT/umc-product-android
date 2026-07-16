@@ -40,8 +40,8 @@ fun StudyExpandedContent(
             StudyStatusBanner(
                 iconRes = R.drawable.ic_check_success,
                 text = AppStrings.STUDY_STATUS_PASS,
-                textColor = success700(),
-                backgroundColor = success100(),
+                textColor = green700(),
+                backgroundColor = green100(),
             )
         }
         // 실패 배너
@@ -49,8 +49,8 @@ fun StudyExpandedContent(
             StudyStatusBanner(
                 iconRes = R.drawable.ic_check_failed,
                 text = AppStrings.STUDY_STATUS_FAIL,
-                textColor = danger700(),
-                backgroundColor = danger100(),
+                textColor = red700(),
+                backgroundColor = red100(),
             )
         }
         // 대기중 배너
@@ -58,8 +58,8 @@ fun StudyExpandedContent(
             StudyStatusBanner(
                 iconRes = R.drawable.ic_act_hourglass,
                 text = AppStrings.STUDY_STATUS_WAITING,
-                textColor = warning700(),
-                backgroundColor = warning100(),
+                textColor = yellow700(),
+                backgroundColor = yellow100(),
             )
         }
         // 제출 확인 화면
@@ -89,7 +89,7 @@ private fun StudyLinkInputSection(
         UText(
             text = AppStrings.STUDY_SUBMIT_LINK_TITLE,
             style = UmcTypographyTokens.SubheadlineBold,
-            color = primary500(),
+            color = indigo500(),
         )
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
@@ -99,16 +99,16 @@ private fun StudyLinkInputSection(
                 UText(
                     text = AppStrings.STUDY_SUBMIT_LINK_PLACEHOLDER,
                     style = UmcTypographyTokens.Body,
-                    color = neutral400(),
+                    color = grey400(),
                 )
             },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = primary500(),
-                unfocusedBorderColor = neutral300(),
-                focusedContainerColor = neutral000(),
-                unfocusedContainerColor = neutral000(),
+                focusedBorderColor = indigo500(),
+                unfocusedBorderColor = grey300(),
+                focusedContainerColor = grey000(),
+                unfocusedContainerColor = grey000(),
             ),
             singleLine = true,
         )
@@ -119,9 +119,9 @@ private fun StudyLinkInputSection(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = primary500(),
-                disabledContainerColor = neutral200(),
-                disabledContentColor = neutral400(),
+                containerColor = indigo500(),
+                disabledContainerColor = grey200(),
+                disabledContentColor = grey400(),
             ),
             elevation = ButtonDefaults.buttonElevation(0.dp),
             contentPadding = PaddingValues(vertical = 13.dp),
@@ -130,13 +130,13 @@ private fun StudyLinkInputSection(
                 painter = painterResource(R.drawable.ic_blog_link),
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
-                tint = if (isEnabled) neutral000() else neutral400()
+                tint = if (isEnabled) grey000() else grey400()
             )
             Spacer(Modifier.width(6.dp))
             UText(
                 text = AppStrings.STUDY_SUBMIT_LINK_BUTTON,
                 style = UmcTypographyTokens.CalloutBold,
-                color = if (isEnabled) neutral000() else neutral400(),
+                color = if (isEnabled) grey000() else grey400(),
             )
         }
     }
@@ -151,7 +151,7 @@ private fun StudyConfirmSection(
     Column {
         Surface(
             shape = RoundedCornerShape(16.dp),
-            color = neutral100(),
+            color = grey100(),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
@@ -161,13 +161,13 @@ private fun StudyConfirmSection(
                 UText(
                     text = AppStrings.STUDY_CONFIRM_TITLE,
                     style = UmcTypographyTokens.SubheadlineBold,
-                    color = neutral600(),
+                    color = grey600(),
                 )
                 Spacer(Modifier.height(10.dp))
                 UText(
                     text = AppStrings.STUDY_CONFIRM_DESCRIPTION,
                     style = UmcTypographyTokens.Footnote,
-                    color = neutral500(),
+                    color = grey500(),
                 )
             }
         }
@@ -176,7 +176,7 @@ private fun StudyConfirmSection(
             onClick = { onConfirmClick(item.id) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = primary500()),
+            colors = ButtonDefaults.buttonColors(containerColor = indigo500()),
             elevation = ButtonDefaults.buttonElevation(0.dp),
             contentPadding = PaddingValues(vertical = 13.dp),
         ) {
@@ -184,13 +184,13 @@ private fun StudyConfirmSection(
                 painter = painterResource(R.drawable.ic_check_success),
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
-                tint = neutral000()
+                tint = grey000()
             )
             Spacer(Modifier.width(6.dp))
             UText(
                 text = AppStrings.STUDY_CONFIRM_BUTTON,
                 style = UmcTypographyTokens.CalloutBold,
-                color = neutral000(),
+                color = grey000(),
             )
         }
     }
