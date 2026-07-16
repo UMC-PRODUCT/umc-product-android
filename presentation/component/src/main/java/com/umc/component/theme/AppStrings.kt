@@ -10,9 +10,7 @@ object AppStrings {
     const val DIALOG_DATETIME_TIME = "시간"
     const val HOME_NOW_CARD_MAIN_TITLE = "내 활동 상태"
 
-    const val DIALOG_DATETIME_TITLE = "날짜와 시간을 선택해주세요"
-    const val DIALOG_DATETIME_DATE = "날짜"
-    const val DIALOG_DATETIME_TIME = "시간"
+
     const val HOME_PLAN_TITLE = "다가오는 일정"
     const val HOME_NOTIFICATION_TITLE = "알림 보관함"
     const val HOME_NOTICE_TITLE = "공지 상세"
