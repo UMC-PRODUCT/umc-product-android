@@ -3,7 +3,7 @@ package com.umc.presentation.study.admin.group.schedule.component
 import androidx.compose.runtime.Composable
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
-import com.umc.component.theme.neutral900
+import com.umc.component.theme.grey900
 
 @Composable
 fun GroupScheduleSectionTitle(
@@ -12,6 +12,6 @@ fun GroupScheduleSectionTitle(
     UText(
         text = text,
         style = HeadlineBold,
-        color = neutral900(),
+        color = grey900(),
     )
 }

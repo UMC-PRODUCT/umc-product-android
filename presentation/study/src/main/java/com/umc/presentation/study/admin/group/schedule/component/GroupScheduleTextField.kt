@@ -22,12 +22,12 @@ fun GroupScheduleTextField(
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        textStyle = Subheadline.copy(color = neutral800()),
+        textStyle = Subheadline.copy(color = grey800()),
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp)
-            .background(neutral000(), RoundedCornerShape(8.dp))
-            .border(1.dp, neutral300(), RoundedCornerShape(8.dp))
+            .background(grey000(), RoundedCornerShape(8.dp))
+            .border(1.dp, grey300(), RoundedCornerShape(8.dp))
             .padding(horizontal = 16.dp),
         decorationBox = { innerTextField ->
             Box(
@@ -38,7 +38,7 @@ fun GroupScheduleTextField(
                     UText(
                         text = placeholder,
                         style = Subheadline,
-                        color = neutral400(),
+                        color = grey400(),
                     )
                 }
                 innerTextField()

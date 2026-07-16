@@ -22,12 +22,12 @@ fun GroupScheduleMemoBox(
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        textStyle = Body.copy(color = neutral800()),
+        textStyle = Body.copy(color = grey800()),
         modifier = Modifier
             .fillMaxWidth()
             .height(140.dp)
-            .background(neutral000(), RoundedCornerShape(8.dp))
-            .border(1.dp, neutral300(), RoundedCornerShape(8.dp))
+            .background(grey000(), RoundedCornerShape(8.dp))
+            .border(1.dp,grey300(), RoundedCornerShape(8.dp))
             .padding(horizontal = 16.dp, vertical = 16.dp),
         decorationBox = { innerTextField ->
             Box(
@@ -38,7 +38,7 @@ fun GroupScheduleMemoBox(
                     UText(
                         text = placeholder,
                         style = Body,
-                        color = neutral400(),
+                        color = grey400(),
                     )
                 }
                 innerTextField()

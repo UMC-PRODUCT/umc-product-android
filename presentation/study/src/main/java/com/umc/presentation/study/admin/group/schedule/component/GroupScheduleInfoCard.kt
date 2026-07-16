@@ -25,14 +25,14 @@ fun GroupScheduleInfoCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .background(neutral100(), RoundedCornerShape(6.dp))
+            .background(grey100(), RoundedCornerShape(6.dp))
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_people),
             contentDescription = null,
-            tint = primary500(),
+            tint = indigo500(),
             modifier = Modifier.size(22.dp),
         )
 
@@ -41,21 +41,21 @@ fun GroupScheduleInfoCard(
         UText(
             text = groupTitle,
             style = HeadlineBold,
-            color = neutral900(),
+            color = grey900(),
         )
 
         Spacer(Modifier.width(10.dp))
 
         Box(
             modifier = Modifier
-                .background(primary100(), RoundedCornerShape(4.dp))
-                .border(1.dp, primary100(), RoundedCornerShape(4.dp))
+                .background(indigo100(), RoundedCornerShape(4.dp))
+                .border(1.dp, indigo100(), RoundedCornerShape(4.dp))
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         ) {
             UText(
                 text = groupPart,
                 style = Caption1Bold,
-                color = primary500(),
+                color = indigo500(),
             )
         }
     }

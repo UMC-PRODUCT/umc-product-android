@@ -47,13 +47,13 @@ fun AdminStudyGroupEditDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(neutral000(), RoundedCornerShape(16.dp))
+                .background(grey000(), RoundedCornerShape(16.dp))
                 .padding(horizontal = 20.dp, vertical = 20.dp)
         ) {
             UText(
                 text = "그룹 정보 수정",
                 style = SubheadlineBold,
-                color = neutral900(),
+                color = grey900(),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
@@ -62,7 +62,7 @@ fun AdminStudyGroupEditDialog(
             UText(
                 text = "스터디 그룹의 기본 정보를 변경합니다.",
                 style = Caption1,
-                color = neutral500(),
+                color = grey500(),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
@@ -71,7 +71,7 @@ fun AdminStudyGroupEditDialog(
             UText(
                 text = "그룹 이름",
                 style = Caption1Bold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(Modifier.height(8.dp))
@@ -79,12 +79,12 @@ fun AdminStudyGroupEditDialog(
             BasicTextField(
                 value = groupName,
                 onValueChange = onGroupNameChanged,
-                textStyle = Body.copy(color = neutral800()),
+                textStyle = Body.copy(color = grey800()),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .background(neutral000(), RoundedCornerShape(8.dp))
-                    .border(1.dp, neutral300(), RoundedCornerShape(8.dp))
+                    .background(grey000(), RoundedCornerShape(8.dp))
+                    .border(1.dp, grey300(), RoundedCornerShape(8.dp))
                     .padding(horizontal = 12.dp),
                 decorationBox = { innerTextField ->
                     Box(
@@ -95,7 +95,7 @@ fun AdminStudyGroupEditDialog(
                             UText(
                                 text = "예: React 실습 A팀",
                                 style = Body,
-                                color = neutral400()
+                                color = grey400()
                             )
                         }
                         innerTextField()
@@ -108,7 +108,7 @@ fun AdminStudyGroupEditDialog(
             UText(
                 text = "소속 파트",
                 style = Caption1Bold,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(Modifier.height(8.dp))
@@ -123,8 +123,8 @@ fun AdminStudyGroupEditDialog(
                                 coordinates.size.width.toDp()
                             }
                         }
-                        .background(neutral000(), RoundedCornerShape(8.dp))
-                        .border(1.dp, neutral300(), RoundedCornerShape(8.dp))
+                        .background(grey000(), RoundedCornerShape(8.dp))
+                        .border(1.dp, grey300(), RoundedCornerShape(8.dp))
                         .clickable { expanded = true }
                         .padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -132,14 +132,14 @@ fun AdminStudyGroupEditDialog(
                     UText(
                         text = selectedPart,
                         style = Body,
-                        color = neutral800(),
+                        color = grey800(),
                         modifier = Modifier.weight(1f)
                     )
 
                     Icon(
                         painter = painterResource(R.drawable.ic_dropdown_down),
                         contentDescription = null,
-                        tint = neutral500(),
+                        tint = grey500(),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -149,7 +149,7 @@ fun AdminStudyGroupEditDialog(
                     onDismissRequest = { expanded = false },
                     modifier = Modifier
                         .width(dropdownWidth)
-                        .background(neutral000())
+                        .background(grey000())
                 ) {
                     parts.forEach { part ->
                         DropdownMenuItem(
@@ -157,7 +157,7 @@ fun AdminStudyGroupEditDialog(
                                 UText(
                                     text = part,
                                     style = Body,
-                                    color = neutral800()
+                                    color = grey800()
                                 )
                             },
                             onClick = {
@@ -181,8 +181,8 @@ fun AdminStudyGroupEditDialog(
                     modifier = Modifier
                         .weight(1f)
                         .height(40.dp),
-                    backgroundColor = neutral100(),
-                    textColor = neutral700(),
+                    backgroundColor = grey100(),
+                    textColor = grey700(),
                     textStyle = SubheadlineBold,
                     borderWidth = 0.dp,
                     cornerRadius = 8.dp,
@@ -195,8 +195,8 @@ fun AdminStudyGroupEditDialog(
                         .weight(1f)
                         .height(40.dp),
                     enabled = canConfirm,
-                    backgroundColor = if (canConfirm) primary500() else neutral200(),
-                    textColor = if (canConfirm) neutral000() else neutral400(),
+                    backgroundColor = if (canConfirm) indigo500() else grey200(),
+                    textColor = if (canConfirm) grey000() else grey400(),
                     textStyle = SubheadlineBold,
                     cornerRadius = 8.dp,
                 )

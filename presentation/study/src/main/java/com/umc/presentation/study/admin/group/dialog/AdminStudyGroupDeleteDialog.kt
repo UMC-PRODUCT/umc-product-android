@@ -28,13 +28,13 @@ fun AdminStudyGroupDeleteDialog(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(neutral000(), RoundedCornerShape(16.dp))
+                .background(grey000(), RoundedCornerShape(16.dp))
                 .padding(20.dp)
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_delete),
                 contentDescription = null,
-                tint = neutral500(),
+                tint = grey500(),
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .size(24.dp)
@@ -50,13 +50,13 @@ fun AdminStudyGroupDeleteDialog(
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .background(danger100(), RoundedCornerShape(8.dp)),
+                        .background(red100(), RoundedCornerShape(8.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_error_filled),
                         contentDescription = null,
-                        tint = danger500(),
+                        tint = red500(),
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -66,7 +66,7 @@ fun AdminStudyGroupDeleteDialog(
                 UText(
                     text = "그룹을 삭제하시겠습니까?",
                     style = SubheadlineBold,
-                    color = neutral900()
+                    color = grey900()
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -74,7 +74,7 @@ fun AdminStudyGroupDeleteDialog(
                 UText(
                     text = "삭제된 스터디 그룹 정보는 복구할 수 없으며,\n연결된 모든 스터디 데이터가 삭제됩니다.",
                     style = Caption1,
-                    color = neutral600()
+                    color = grey600()
                 )
 
                 Spacer(Modifier.height(18.dp))
@@ -89,11 +89,11 @@ fun AdminStudyGroupDeleteDialog(
                         modifier = Modifier
                             .weight(1f)
                             .height(40.dp),
-                        backgroundColor = neutral000(),
-                        textColor = neutral700(),
+                        backgroundColor = grey000(),
+                        textColor = grey700(),
                         textStyle = SubheadlineBold,
                         borderWidth = 1.dp,
-                        borderColor = neutral200(),
+                        borderColor = grey200(),
                         cornerRadius = 8.dp,
                     )
 
@@ -103,8 +103,8 @@ fun AdminStudyGroupDeleteDialog(
                         modifier = Modifier
                             .weight(1f)
                             .height(40.dp),
-                        backgroundColor = danger100(),
-                        textColor = danger500(),
+                        backgroundColor = red100(),
+                        textColor = red500(),
                         textStyle = SubheadlineBold,
                         borderWidth = 0.dp,
                         cornerRadius = 8.dp,

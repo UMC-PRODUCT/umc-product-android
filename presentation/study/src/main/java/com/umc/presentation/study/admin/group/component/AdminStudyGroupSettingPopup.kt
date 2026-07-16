@@ -32,15 +32,15 @@ fun AdminStudyGroupSettingPopup(
                 shape = RoundedCornerShape(12.dp),
                 clip = false
             )
-            .background(neutral000(), RoundedCornerShape(12.dp))
-            .border(1.dp, neutral200(), RoundedCornerShape(12.dp))
+            .background(grey000(), RoundedCornerShape(12.dp))
+            .border(1.dp, grey200(), RoundedCornerShape(12.dp))
             .padding(vertical = 6.dp)
     ) {
         SettingPopupItem(
             text = "정보 수정",
             iconRes = R.drawable.ic_edit,
-            textColor = neutral800(),
-            iconTint = neutral700(),
+            textColor = grey800(),
+            iconTint = grey700(),
             onClick = {
                 onEditClick()
                 onDismiss()
@@ -51,14 +51,14 @@ fun AdminStudyGroupSettingPopup(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(1.dp)
-                .background(neutral100())
+                .background(grey100())
         )
 
         SettingPopupItem(
             text = "그룹 삭제",
             iconRes = R.drawable.ic_trash_can,
-            textColor = danger500(),
-            iconTint = danger500(),
+            textColor = red500(),
+            iconTint = red500(),
             onClick = {
                 onDeleteClick()
                 onDismiss()

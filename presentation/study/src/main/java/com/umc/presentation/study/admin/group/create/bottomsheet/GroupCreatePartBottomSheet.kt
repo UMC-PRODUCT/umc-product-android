@@ -36,8 +36,8 @@ fun GroupCreatePartBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = neutral000(),
-        dragHandle = { BottomSheetDefaults.DragHandle(color = neutral600()) },
+        containerColor = grey000(),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
         Column(
@@ -50,7 +50,7 @@ fun GroupCreatePartBottomSheet(
             UText(
                 text = "파트를 선택하세요",
                 style = UmcTypographyTokens.Title3Bold,
-                color = neutral800(),
+                color = grey800(),
                 modifier = Modifier.padding(top = 8.dp)
             )
 
@@ -61,7 +61,7 @@ fun GroupCreatePartBottomSheet(
                     UText(
                         text = part.label,
                         style = UmcTypographyTokens.SubheadlineBold,
-                        color = if (selectedPart?.id == part.id) primary500() else neutral800(),
+                        color = if (selectedPart?.id == part.id) indigo500() else grey800(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
@@ -71,7 +71,7 @@ fun GroupCreatePartBottomSheet(
                             .padding(vertical = 16.dp)
                     )
 
-                    HorizontalDivider(color = neutral200(), thickness = 0.5.dp)
+                    HorizontalDivider(color = grey200(), thickness = 0.5.dp)
                 }
             }
         }

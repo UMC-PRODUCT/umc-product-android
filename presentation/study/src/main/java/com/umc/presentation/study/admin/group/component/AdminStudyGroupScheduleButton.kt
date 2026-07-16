@@ -23,7 +23,7 @@ fun AdminStudyGroupScheduleButton(
         modifier = Modifier
             .fillMaxWidth()
             .height(36.dp)
-            .border(1.dp, primary500(), RoundedCornerShape(6.dp))
+            .border(1.dp, indigo500(), RoundedCornerShape(6.dp))
             .clickable { onClick() },
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
@@ -31,7 +31,7 @@ fun AdminStudyGroupScheduleButton(
         Icon(
             painter = painterResource(R.drawable.ic_calendar_color),
             contentDescription = null,
-            tint = primary500(),
+            tint = indigo500(),
             modifier = Modifier.size(15.dp)
         )
 
@@ -40,7 +40,7 @@ fun AdminStudyGroupScheduleButton(
         UText(
             text = "스터디 일정 등록하기",
             style = Caption1Bold,
-            color = neutral700()
+            color = grey700()
         )
     }
 }

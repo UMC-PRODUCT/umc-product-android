@@ -32,7 +32,7 @@ fun GroupCreateTopBar(
             Icon(
                 painter = painterResource(id = R.drawable.ic_back),
                 contentDescription = "뒤로가기",
-                tint = neutral800(),
+                tint = grey800(),
                 modifier = Modifier.size(22.dp)
             )
         }
@@ -42,14 +42,14 @@ fun GroupCreateTopBar(
         UText(
             text = "스터디 그룹 생성",
             style = UmcTypographyTokens.Title3Bold,
-            color = neutral800(),
+            color = grey800(),
             modifier = Modifier.weight(1f)
         )
 
         UText(
             text = "등록",
             style = UmcTypographyTokens.SubheadlineBold,
-            color = if (isRegisterEnabled) primary500() else neutral400(),
+            color = if (isRegisterEnabled) indigo500() else grey400(),
             modifier = Modifier
                 .padding(start = 12.dp)
                 .clickableIfEnabled(

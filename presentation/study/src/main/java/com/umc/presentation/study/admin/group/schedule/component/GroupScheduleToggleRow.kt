@@ -33,7 +33,7 @@ fun GroupScheduleToggleRow(
         UText(
             text = text,
             style = Body,
-            color = neutral800(),
+            color = grey800(),
         )
     }
 }

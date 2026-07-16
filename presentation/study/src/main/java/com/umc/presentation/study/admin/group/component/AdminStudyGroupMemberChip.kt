@@ -22,21 +22,21 @@ fun AdminStudyGroupMemberChip(
 ) {
     Row(
         modifier = Modifier
-            .background(neutral000(), CircleShape)
-            .border(1.dp, neutral200(), CircleShape)
+            .background(grey000(), CircleShape)
+            .border(1.dp, grey200(), CircleShape)
             .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .size(18.dp)
-                .background(neutral100(), CircleShape),
+                .background(grey100(), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_profile_default),
                 contentDescription = null,
-                tint = neutral400(),
+                tint = grey400(),
                 modifier = Modifier.size(14.dp)
             )
         }
@@ -46,7 +46,7 @@ fun AdminStudyGroupMemberChip(
         UText(
             text = member.name,
             style = Caption1Bold,
-            color = neutral800()
+            color = grey800()
         )
     }
 }

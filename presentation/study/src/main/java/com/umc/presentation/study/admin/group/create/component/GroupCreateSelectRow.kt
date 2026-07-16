@@ -26,7 +26,7 @@ fun GroupCreateSelectRow(
         UText(
             text = title,
             style = UmcTypographyTokens.SubheadlineBold,
-            color = neutral800()
+            color = grey800()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -37,8 +37,8 @@ fun GroupCreateSelectRow(
                 .height(50.dp)
                 .clickable { onClick() },
             shape = RoundedCornerShape(8.dp),
-            color = neutral000(),
-            border = BorderStroke(1.dp, neutral200())
+            color = grey000(),
+            border = BorderStroke(1.dp, grey200())
         ) {
             Row(
                 modifier = Modifier
@@ -49,14 +49,14 @@ fun GroupCreateSelectRow(
                 UText(
                     text = value.ifBlank { placeholder },
                     style = UmcTypographyTokens.Subheadline,
-                    color = if (value.isBlank()) neutral400() else neutral800(),
+                    color = if (value.isBlank()) grey400() else grey800(),
                     modifier = Modifier.weight(1f)
                 )
 
                 Icon(
                     painter = painterResource(id = R.drawable.ic_arrow_next),
                     contentDescription = null,
-                    tint = neutral500(),
+                    tint = grey500(),
                     modifier = Modifier.size(22.dp)
                 )
             }

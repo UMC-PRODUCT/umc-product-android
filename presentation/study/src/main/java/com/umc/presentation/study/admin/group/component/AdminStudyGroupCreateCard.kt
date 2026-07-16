@@ -25,8 +25,8 @@ fun AdminStudyGroupCreateCard(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .padding(top = 8.dp, bottom = 8.dp)
-            .background(neutral000(), RoundedCornerShape(8.dp))
-            .border(1.dp, neutral200(), RoundedCornerShape(8.dp))
+            .background(grey000(), RoundedCornerShape(8.dp))
+            .border(1.dp, grey200(), RoundedCornerShape(8.dp))
             .clickable { onClick() }
             .padding(horizontal = 14.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -34,7 +34,7 @@ fun AdminStudyGroupCreateCard(
         Icon(
             painter = painterResource(R.drawable.ic_book_filled),
             contentDescription = null,
-            tint = primary500(),
+            tint = indigo500(),
             modifier = Modifier.size(18.dp)
         )
 
@@ -43,14 +43,14 @@ fun AdminStudyGroupCreateCard(
         UText(
             text = "스터디 그룹 생성하기",
             style = Caption1Bold,
-            color = neutral800(),
+            color = grey800(),
             modifier = Modifier.weight(1f)
         )
 
         Icon(
             painter = painterResource(R.drawable.ic_arrow_next),
             contentDescription = null,
-            tint = neutral400(),
+            tint = grey400(),
             modifier = Modifier.size(18.dp)
         )
     }
