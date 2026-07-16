@@ -1,4 +1,4 @@
-package com.umc.presentation.study.component
+package com.umc.presentation.study.normal.component
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
