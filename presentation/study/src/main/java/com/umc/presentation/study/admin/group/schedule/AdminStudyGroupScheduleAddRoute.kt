@@ -9,6 +9,8 @@ import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupSchedule
 import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleLocationBottomSheet
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekBottomSheet
+import com.umc.component.component.UDatePickerDialog
+import com.umc.component.component.UDateTimePickerDialog
 
 @Composable
 fun AdminStudyGroupScheduleRoute(
@@ -85,24 +87,57 @@ fun AdminStudyGroupScheduleRoute(
     )
 
     if (showStartPicker) {
-        UDateTimePickerDialog(
-            onConfirm = {
-                viewModel.updateStartDateTime(it)
-                showStartPicker = false
-            },
-            onDismiss = { showStartPicker = false }
-        )
+        if (state.isAllDay) {
+            UDatePickerDialog(
+                initialDate = state.startDateTime,
+                onConfirm = {
+                    viewModel.updateStartDateTime(it)
+                    showStartPicker = false
+                },
+                onDismiss = {
+                    showStartPicker = false
+                }
+            )
+        } else {
+            UDateTimePickerDialog(
+                onConfirm = {
+                    viewModel.updateStartDateTime(it)
+                    showStartPicker = false
+                },
+                onDismiss = {
+                    showStartPicker = false
+                }
+            )
+        }
     }
 
     if (showEndPicker) {
-        UDateTimePickerDialog(
-            onConfirm = {
-                viewModel.updateEndDateTime(it)
-                showEndPicker = false
-            },
-            onDismiss = { showEndPicker = false }
-        )
+        if (state.isAllDay) {
+            UDatePickerDialog(
+                initialDate = state.endDateTime ?: state.startDateTime,
+                onConfirm = {
+                    viewModel.updateEndDateTime(it)
+                    showEndPicker = false
+                },
+                onDismiss = {
+                    showEndPicker = false
+                }
+            )
+        } else {
+            UDateTimePickerDialog(
+                onConfirm = {
+                    viewModel.updateEndDateTime(it)
+                    showEndPicker = false
+                },
+                onDismiss = {
+                    showEndPicker = false
+                }
+            )
+        }
     }
+
+
+
 
     if (showCheckInStartPicker) {
         UDateTimePickerDialog(

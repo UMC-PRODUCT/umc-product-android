@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.schedule
 
+import android.text.format.DateUtils.formatDateTime
 import android.util.Log
 import com.umc.component.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -79,14 +80,28 @@ class AdminStudyGroupScheduleViewModel @Inject constructor() :
     }
 
     fun updateStartDateTime(utcDateTime: String) {
-        updateDateTimeText(utcDateTime) { text ->
-            copy(startDateTimeText = text)
+        val text = formatDateTime(utcDateTime) ?: return
+
+        updateState {
+            copy(
+                startDateTime = utcDateTime,
+                startDateTimeText = text,
+
+                // 종료일이 아직 없을 때만 시작일과 동일하게 설정
+                endDateTime = endDateTime ?: utcDateTime,
+                endDateTimeText = endDateTimeText ?: text,
+            )
         }
     }
 
     fun updateEndDateTime(utcDateTime: String) {
-        updateDateTimeText(utcDateTime) { text ->
-            copy(endDateTimeText = text)
+        val text = formatDateTime(utcDateTime) ?: return
+
+        updateState {
+            copy(
+                endDateTime = utcDateTime,
+                endDateTimeText = text,
+            )
         }
     }
 
@@ -122,6 +137,26 @@ class AdminStudyGroupScheduleViewModel @Inject constructor() :
             updateState { reducer(text) }
         } catch (e: Exception) {
             Log.e("AdminGroupSchedule", "date parse error: ${e.message}")
+        }
+    }
+
+    private fun formatDateTime(utcDateTime: String): String? {
+        val sdf = SimpleDateFormat(
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            Locale.getDefault()
+        ).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+
+        return try {
+            val date = sdf.parse(utcDateTime) ?: return null
+            displaySdf.format(date)
+        } catch (e: Exception) {
+            Log.e(
+                "AdminGroupSchedule",
+                "date parse error: ${e.message}"
+            )
+            null
         }
     }
 }
