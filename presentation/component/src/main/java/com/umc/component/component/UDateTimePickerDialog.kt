@@ -27,8 +27,8 @@ import java.util.TimeZone
 /** UDateTimePickerDialog
  * 피그마에 제시된 날짜와 시간을 입력받아, UTC String으로 제공해주는 다이얼로그
  * onConfirm: (utcDateTime: String) -> {}: 확인을 누를 시 처리 함수
- * 
- * 
+ *
+ *
  * **/
 
 
