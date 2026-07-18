@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.*
+import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 
 @Composable
@@ -22,24 +23,31 @@ fun AdminStudyGroupScheduleButton(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(36.dp)
-            .border(1.dp, indigo500(), RoundedCornerShape(6.dp))
-            .clickable { onClick() },
+            .border(
+                width = 1.dp,
+                color = indigo400(),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(
+                horizontal = 12.dp,
+                vertical = 10.dp
+            ),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_calendar_color),
+            painter = painterResource(R.drawable.ic_study_caendar),
             contentDescription = null,
             tint = indigo500(),
-            modifier = Modifier.size(15.dp)
+            modifier = Modifier.size(20.dp)
         )
 
         Spacer(Modifier.width(4.dp))
 
         UText(
             text = "스터디 일정 등록하기",
-            style = Caption1Bold,
+            style = CalloutBold,
             color = grey700()
         )
     }

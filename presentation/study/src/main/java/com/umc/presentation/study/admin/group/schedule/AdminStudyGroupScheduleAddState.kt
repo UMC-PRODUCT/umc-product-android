@@ -10,6 +10,10 @@ data class AdminStudyGroupScheduleState(
     val studyName: String = "",
 
     val isAllDay: Boolean = false,
+
+    val startDateTime: String? = null,
+    val endDateTime: String? = null,
+
     val startDateTimeText: String? = null,
     val endDateTimeText: String? = null,
 
