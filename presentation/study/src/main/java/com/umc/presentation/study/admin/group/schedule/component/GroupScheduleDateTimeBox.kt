@@ -28,11 +28,27 @@ fun GroupScheduleDateTimeBox(
     onStartClick: () -> Unit,
     onEndClick: () -> Unit,
 ) {
+    val displayedStartText = if (isAllDay) {
+        startText?.substringBefore(" ")
+    } else {
+        startText
+    }
+
+    val displayedEndText = if (isAllDay) {
+        endText?.substringBefore(" ")
+    } else {
+        endText
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .border(1.dp, grey300(), RoundedCornerShape(12.dp))
+            .border(
+                width = 1.dp,
+                color = grey300(),
+                shape = RoundedCornerShape(12.dp)
+            )
             .background(grey000()),
     ) {
         Row(
@@ -59,7 +75,7 @@ fun GroupScheduleDateTimeBox(
 
         DateTimeRow(
             title = "시작",
-            value = startText,
+            value = displayedStartText,
             onClick = onStartClick,
         )
 
@@ -67,12 +83,11 @@ fun GroupScheduleDateTimeBox(
 
         DateTimeRow(
             title = "종료",
-            value = endText,
+            value = displayedEndText,
             onClick = onEndClick,
         )
     }
 }
-
 @Composable
 private fun DateTimeRow(
     title: String,
@@ -99,7 +114,7 @@ private fun DateTimeRow(
                 painter = painterResource(R.drawable.ic_arrow_next),
                 contentDescription = null,
                 tint = grey500(),
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(14.dp),
             )
         } else {
             Box(

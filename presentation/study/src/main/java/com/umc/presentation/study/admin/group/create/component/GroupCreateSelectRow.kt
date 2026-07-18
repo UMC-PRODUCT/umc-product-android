@@ -43,7 +43,7 @@ fun GroupCreateSelectRow(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 14.dp, end = 10.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 UText(
@@ -57,7 +57,7 @@ fun GroupCreateSelectRow(
                     painter = painterResource(id = R.drawable.ic_arrow_next),
                     contentDescription = null,
                     tint = grey500(),
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(14.dp)
                 )
             }
         }

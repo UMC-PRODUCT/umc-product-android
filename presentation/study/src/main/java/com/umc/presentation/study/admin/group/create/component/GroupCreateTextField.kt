@@ -18,7 +18,7 @@ fun GroupCreateTextField(
     Column(modifier = Modifier.fillMaxWidth()) {
         UText(
             text = title,
-            style = UmcTypographyTokens.SubheadlineBold,
+            style = UmcTypographyTokens.HeadlineBold,
             color = grey800()
         )
 

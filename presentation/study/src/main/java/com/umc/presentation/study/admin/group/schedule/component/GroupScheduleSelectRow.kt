@@ -30,8 +30,8 @@ fun GroupScheduleSelectRow(
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp)
-            .background(neutral000(), RoundedCornerShape(8.dp))
-            .border(1.dp, neutral300(), RoundedCornerShape(8.dp))
+            .background(grey000(), RoundedCornerShape(8.dp))
+            .border(1.dp, grey300(), RoundedCornerShape(8.dp))
             .clickable(enabled = enabled) { onClick() }
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -40,9 +40,9 @@ fun GroupScheduleSelectRow(
             text = displayText,
             style = Body,
             color = when {
-                !enabled -> neutral300()
-                isPlaceholder -> neutral400()
-                else -> neutral800()
+                !enabled -> grey300()
+                isPlaceholder -> grey400()
+                else -> grey800()
             },
             modifier = Modifier.weight(1f),
         )
@@ -50,8 +50,8 @@ fun GroupScheduleSelectRow(
         Icon(
             painter = painterResource(R.drawable.ic_arrow_next),
             contentDescription = null,
-            tint = if (enabled) neutral500() else neutral300(),
-            modifier = Modifier.size(22.dp),
+            tint = if (enabled) grey500() else grey300(),
+            modifier = Modifier.size(14.dp),
         )
     }
 }

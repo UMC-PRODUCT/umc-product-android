@@ -30,7 +30,7 @@ fun GroupScheduleInfoCard(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_people),
+            painter = painterResource(R.drawable.ic_notification),
             contentDescription = null,
             tint = indigo500(),
             modifier = Modifier.size(22.dp),

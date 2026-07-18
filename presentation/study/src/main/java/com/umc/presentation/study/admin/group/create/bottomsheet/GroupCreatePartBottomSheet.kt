@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -60,7 +59,7 @@ fun GroupCreatePartBottomSheet(
                 items(groupCreateParts, key = { it.id }) { part ->
                     UText(
                         text = part.label,
-                        style = UmcTypographyTokens.SubheadlineBold,
+                        style = UmcTypographyTokens.Body,
                         color = if (selectedPart?.id == part.id) indigo500() else grey800(),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -71,7 +70,6 @@ fun GroupCreatePartBottomSheet(
                             .padding(vertical = 16.dp)
                     )
 
-                    HorizontalDivider(color = grey200(), thickness = 0.5.dp)
                 }
             }
         }
