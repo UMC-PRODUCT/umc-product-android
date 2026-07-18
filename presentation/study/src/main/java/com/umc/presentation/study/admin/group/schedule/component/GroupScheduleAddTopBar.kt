@@ -46,7 +46,7 @@ fun GroupScheduleAddTopBar(
         )
 
         Icon(
-            painter = painterResource(R.drawable.ic_notification),
+            painter = painterResource(R.drawable.ic_alarm_filled),
             contentDescription = null,
             tint = grey700(),
             modifier = Modifier.size(22.dp),

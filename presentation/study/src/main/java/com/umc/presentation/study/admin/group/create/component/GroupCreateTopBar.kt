@@ -18,6 +18,7 @@ fun GroupCreateTopBar(
     isRegisterEnabled: Boolean,
     onBackClick: () -> Unit,
     onRegisterClick: () -> Unit,
+    onNotificationClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -33,7 +34,7 @@ fun GroupCreateTopBar(
                 painter = painterResource(id = R.drawable.ic_back),
                 contentDescription = "뒤로가기",
                 tint = grey800(),
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
 
@@ -45,6 +46,18 @@ fun GroupCreateTopBar(
             color = grey800(),
             modifier = Modifier.weight(1f)
         )
+
+        IconButton(
+            onClick = onNotificationClick,
+            modifier = Modifier.size(32.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_alarm_filled),
+                contentDescription = "알림",
+                tint = grey800(),
+                modifier = Modifier.size(20.dp)
+            )
+        }
 
         UText(
             text = "등록",

@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -36,17 +37,19 @@ fun GroupCreateMemberBottomSheet(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-
-    LaunchedEffect(Unit) {
-        viewModel.setSelected(preSelected)
+    fun dismissWithApply() {
+        onConfirm(state.selectedMembers)
         viewModel.resetAfterDismiss()
+        onDismissRequest()
+    }
+
+    LaunchedEffect(preSelected) {
+        viewModel.resetAfterDismiss()
+        viewModel.setSelected(preSelected)
     }
 
     ModalBottomSheet(
-        onDismissRequest = {
-            viewModel.resetAfterDismiss()
-            onDismissRequest()
-        },
+        onDismissRequest = ::dismissWithApply,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = grey000(),
         dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
@@ -68,7 +71,6 @@ fun GroupCreateMemberBottomSheet(
                 showConfirmButton = state.isSearching,
                 isConfirmEnabled = state.selectedMembers.isNotEmpty(),
                 onConfirmClick = {
-                    onConfirm(state.selectedMembers)
                     viewModel.clearSearchOnly()
                 }
             )
@@ -83,8 +85,13 @@ fun GroupCreateMemberBottomSheet(
                     .fillMaxWidth()
                     .height(48.dp),
                 prevIcon = painterResource(R.drawable.ic_search),
-                prevIconTint = grey800(),
-                prevIconSize = 18.dp
+                prevIconTint = grey500(),
+                prevIconSize = 24.dp,
+                backgroundColor = grey100(),
+                focusBackgroundColor = grey000(),
+                strokeColor = grey100(),
+                focusStrokeColor = grey900(),
+                cornerRadius = 8.dp,
             )
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -108,15 +115,55 @@ fun GroupCreateMemberBottomSheet(
                         }
                     }
                 } else {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(state.searchResults, key = { it.id }) { item ->
-                            val isChecked = state.selectedMembers.any { it.id == item.id }
+                    val groupedResults = state.searchResults
+                        .groupBy { member -> member.partLabel }
+                        .toList()
 
-                            GroupCreateMultiSearchRow(
-                                item = item,
-                                isChecked = isChecked,
-                                onToggleClick = { viewModel.toggleMember(item) }
-                            )
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        groupedResults.forEach { (partLabel, members) ->
+
+                            item(
+                                key = "part_header_$partLabel"
+                            ) {
+                                UText(
+                                    text = partLabel,
+                                    style = UmcTypographyTokens.BodyBold,
+                                    color = grey900(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(
+                                            top = 4.dp,
+                                            bottom = 8.dp
+                                        )
+                                )
+                            }
+
+                            items(
+                                items = members,
+                                key = { member -> member.id }
+                            ) { item ->
+                                val isChecked = state.selectedMembers.any {
+                                        selectedMember -> selectedMember.id == item.id
+                                }
+
+                                GroupCreateMultiSearchRow(
+                                    item = item,
+                                    isChecked = isChecked,
+                                    onToggleClick = {
+                                        viewModel.toggleMember(item)
+                                    }
+                                )
+                            }
+
+                            item(
+                                key = "part_spacing_$partLabel"
+                            ) {
+                                Spacer(
+                                    modifier = Modifier.height(16.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -178,7 +225,7 @@ fun GroupCreateAddedMemberRow(
         Column(modifier = Modifier.weight(1f)) {
             UText(
                 text = item.displayName,
-                style = UmcTypographyTokens.Caption1Bold,
+                style = UmcTypographyTokens.SubheadlineBold,
                 color = grey800()
             )
 
@@ -186,7 +233,7 @@ fun GroupCreateAddedMemberRow(
 
             UText(
                 text = item.school,
-                style = UmcTypographyTokens.Caption2,
+                style = UmcTypographyTokens.Footnote,
                 color = grey800()
             )
         }
@@ -195,11 +242,11 @@ fun GroupCreateAddedMemberRow(
             text = "삭제",
             onClick = onRemoveClick,
             modifier = Modifier
-                .width(44.dp)
-                .height(28.dp),
+                .width(50.dp)
+                .height(32.dp),
             backgroundColor = red500().copy(alpha = 0.12f),
             textColor = red500(),
-            textStyle = UmcTypographyTokens.Caption2Bold,
+            textStyle = UmcTypographyTokens.SubheadlineBold,
             cornerRadius = 6.dp
         )
     }
@@ -237,7 +284,7 @@ fun GroupCreatePickerHeader(
                     .height(32.dp),
                 backgroundColor = if (isConfirmEnabled) indigo500() else grey100(),
                 textColor = if (isConfirmEnabled) grey000() else grey400(),
-                textStyle = UmcTypographyTokens.Caption1Bold,
+                textStyle = UmcTypographyTokens.SubheadlineBold,
                 cornerRadius = 8.dp
             )
         }
@@ -253,7 +300,7 @@ fun GroupCreateMultiSearchRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onToggleClick() }
-            .padding(vertical = 7.dp),
+            .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         GroupCreateMemberProfile()
@@ -263,7 +310,7 @@ fun GroupCreateMultiSearchRow(
         Column(modifier = Modifier.weight(1f)) {
             UText(
                 text = item.displayName,
-                style = UmcTypographyTokens.Caption1Bold,
+                style = UmcTypographyTokens.SubheadlineBold,
                 color = grey800()
             )
 
@@ -271,40 +318,34 @@ fun GroupCreateMultiSearchRow(
 
             UText(
                 text = item.school,
-                style = UmcTypographyTokens.Caption2,
+                style = UmcTypographyTokens.Footnote,
                 color = grey800()
             )
         }
 
-        Checkbox(
-            checked = isChecked,
-            onCheckedChange = { onToggleClick() },
-            modifier = Modifier.size(22.dp),
-            colors = CheckboxDefaults.colors(
-                checkedColor = indigo500(),
-                uncheckedColor = grey400()
-            )
+        Icon(
+            painter = painterResource(
+                id = if (isChecked) {
+                    R.drawable.ic_check_box_primary
+                } else {
+                    R.drawable.ic_check_box_empty
+                }
+            ),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(24.dp)
         )
     }
 }
 
 @Composable
 fun GroupCreateMemberProfile() {
-    Box(
-        modifier = Modifier
-            .size(24.dp)
-            .clip(CircleShape)
-            .background(grey100())
-            .border(1.dp, grey200(), CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_profile_default),
             contentDescription = null,
-            tint = grey400(),
-            modifier = Modifier.size(16.dp)
+            tint = Color.Unspecified,
+            modifier = Modifier.size(32.dp)
         )
-    }
 }
 
 @Composable
@@ -327,7 +368,7 @@ fun GroupCreateSelectSearchRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 7.dp),
+            .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -340,7 +381,7 @@ fun GroupCreateSelectSearchRow(
         ) {
             UText(
                 text = item.displayName,
-                style = UmcTypographyTokens.Caption1Bold,
+                style = UmcTypographyTokens.SubheadlineBold,
                 color = grey800()
             )
 
@@ -348,7 +389,7 @@ fun GroupCreateSelectSearchRow(
 
             UText(
                 text = item.school,
-                style = UmcTypographyTokens.Caption2,
+                style = UmcTypographyTokens.SubheadlineBold,
                 color = grey800()
             )
         }
@@ -357,11 +398,11 @@ fun GroupCreateSelectSearchRow(
             text = "선택",
             onClick = onSelectClick,
             modifier = Modifier
-                .width(52.dp)
-                .height(30.dp),
+                .width(42.dp)
+                .height(32.dp),
             backgroundColor = grey100(),
             textColor = grey700(),
-            textStyle = UmcTypographyTokens.Caption2Bold,
+            textStyle = UmcTypographyTokens.SubheadlineBold,
             cornerRadius = 8.dp,
         )
     }
