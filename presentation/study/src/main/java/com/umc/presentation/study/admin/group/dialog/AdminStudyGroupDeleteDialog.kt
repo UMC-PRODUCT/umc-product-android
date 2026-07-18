@@ -18,6 +18,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Caption1
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun AdminStudyGroupDeleteDialog(
@@ -31,15 +32,6 @@ fun AdminStudyGroupDeleteDialog(
                 .background(grey000(), RoundedCornerShape(16.dp))
                 .padding(20.dp)
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_delete),
-                contentDescription = null,
-                tint = grey500(),
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(24.dp)
-                    .clickable { onDismiss() }
-            )
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -66,7 +58,9 @@ fun AdminStudyGroupDeleteDialog(
                 UText(
                     text = "그룹을 삭제하시겠습니까?",
                     style = SubheadlineBold,
-                    color = grey900()
+                    color = grey900(),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -74,7 +68,9 @@ fun AdminStudyGroupDeleteDialog(
                 UText(
                     text = "삭제된 스터디 그룹 정보는 복구할 수 없으며,\n연결된 모든 스터디 데이터가 삭제됩니다.",
                     style = Caption1,
-                    color = grey600()
+                    color = grey600(),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
                 )
 
                 Spacer(Modifier.height(18.dp))

@@ -8,6 +8,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
@@ -27,19 +28,14 @@ fun AdminStudyGroupMemberChip(
             .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(18.dp)
-                .background(grey100(), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_profile_default),
-                contentDescription = null,
-                tint = grey400(),
-                modifier = Modifier.size(14.dp)
-            )
-        }
+
+        Icon(
+            painter = painterResource(R.drawable.ic_profile_default),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(18.dp)
+        )
+
 
         Spacer(Modifier.width(4.dp))
 

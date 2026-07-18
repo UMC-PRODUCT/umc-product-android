@@ -17,12 +17,15 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.*
+import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Caption1
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.FootnoteBold
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
+import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.presentation.study.admin.group.AdminStudyGroupItemUiModel
+import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -44,54 +47,68 @@ fun AdminStudyGroupCard(
                 .padding(16.dp)
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                UText(
-                    text = item.title,
-                    style = SubheadlineBold,
-                    color = grey900()
-                )
-
-                Spacer(Modifier.width(6.dp))
-
-                Box(
-                    modifier = Modifier
-                        .background(indigo100(), RoundedCornerShape(4.dp))
-                        .border(1.dp, indigo200(), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                Column(
+                    modifier = Modifier.weight(1f)
                 ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        UText(
+                            text = item.title,
+                            style = Title3Bold,
+                            color = grey900()
+                        )
+
+                        Spacer(Modifier.width(6.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = indigo100(),
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                .padding(
+                                    horizontal = 6.dp,
+                                    vertical = 2.dp
+                                )
+                        ) {
+                            UText(
+                                text = item.partLabel,
+                                style = Caption1Bold,
+                                color = indigo600()
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(4.dp))
+
                     UText(
-                        text = item.partLabel,
-                        style = Caption1Bold,
-                        color = indigo600()
+                        text = "${item.createdAtText}  |  멤버 ${item.memberCount}명",
+                        style = Footnote,
+                        color = grey500()
                     )
                 }
 
-                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.width(12.dp))
 
                 Icon(
                     painter = painterResource(R.drawable.ic_setting_outline),
-                    contentDescription = null,
+                    contentDescription = "설정",
                     tint = grey500(),
                     modifier = Modifier
-                        .size(22.dp)
-                        .clickable { onSettingClick() }
+                        .size(24.dp)
+                        .clickable(onClick = onSettingClick)
                 )
             }
 
-            Spacer(Modifier.height(4.dp))
-
-            UText(
-                text = "${item.createdAtText}  |  멤버 ${item.memberCount}명",
-                style = Footnote,
-                color = grey500()
-            )
-
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(16.dp))
 
             UText(
                 text = "담당 파트장",
-                style = FootnoteBold,
+                style = CalloutBold,
                 color = grey800()
             )
 
@@ -101,29 +118,21 @@ fun AdminStudyGroupCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(grey100(), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(26.dp)
-                        .clip(CircleShape)
-                        .background(grey000()),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_profile_default),
-                        contentDescription = null,
-                        tint = grey400(),
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
+                Icon(
+                    painter = painterResource(R.drawable.ic_profile_default),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(26.dp)
+                )
 
                 Spacer(Modifier.width(8.dp))
 
                 UText(
                     text = item.leaderName,
-                    style = Caption1Bold,
+                    style = SubheadlineBold,
                     color = grey800()
                 )
 
@@ -131,7 +140,7 @@ fun AdminStudyGroupCard(
 
                 UText(
                     text = item.leaderUniv.ifBlank { "중앙대" },
-                    style = Caption1,
+                    style = Footnote,
                     color = grey500()
                 )
 
@@ -151,11 +160,11 @@ fun AdminStudyGroupCard(
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(16.dp))
 
             UText(
                 text = "스터디원",
-                style = FootnoteBold,
+                style = CalloutBold,
                 color = grey800()
             )
 
@@ -181,7 +190,7 @@ fun AdminStudyGroupCard(
                     contentDescription = null,
                     tint = indigo500(),
                     modifier = Modifier
-                        .size(20.dp)
+                        .size(24.dp)
                         .clickable { onAddMemberClick() }
                 )
             }

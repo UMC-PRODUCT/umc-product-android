@@ -38,6 +38,10 @@ fun AdminStudyGroupCreateScreen(
             },
             onRegisterClick = {
                 onAction(AdminStudyGroupCreateAction.OnRegisterClick)
+            },
+
+            onNotificationClick = {
+                // 알림 버튼 클릭 시 동작
             }
         )
 
