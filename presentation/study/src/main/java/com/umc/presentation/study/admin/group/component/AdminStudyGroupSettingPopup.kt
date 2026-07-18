@@ -16,6 +16,7 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
+import com.umc.component.theme.UmcTypographyTokens.Subheadline
 
 @Composable
 fun AdminStudyGroupSettingPopup(
@@ -26,7 +27,7 @@ fun AdminStudyGroupSettingPopup(
 ) {
     Column(
         modifier = modifier
-            .width(150.dp)
+            .width(208.dp)
             .shadow(
                 elevation = 12.dp,
                 shape = RoundedCornerShape(12.dp),
@@ -34,11 +35,11 @@ fun AdminStudyGroupSettingPopup(
             )
             .background(grey000(), RoundedCornerShape(12.dp))
             .border(1.dp, grey200(), RoundedCornerShape(12.dp))
-            .padding(vertical = 6.dp)
+            .padding(horizontal = 4.dp,  6.dp)
     ) {
         SettingPopupItem(
             text = "정보 수정",
-            iconRes = R.drawable.ic_edit,
+            iconRes = R.drawable.ic_study_edit,
             textColor = grey800(),
             iconTint = grey700(),
             onClick = {
@@ -56,7 +57,7 @@ fun AdminStudyGroupSettingPopup(
 
         SettingPopupItem(
             text = "그룹 삭제",
-            iconRes = R.drawable.ic_trash_can,
+            iconRes = R.drawable.ic_study_delete,
             textColor = red500(),
             iconTint = red500(),
             onClick = {
@@ -94,13 +95,13 @@ private fun SettingPopupItem(
 
         UText(
             text = text,
-            style = Caption1Bold,
+            style = Subheadline,
             color = textColor,
             modifier = Modifier.weight(1f)
         )
 
         Icon(
-            painter = painterResource(R.drawable.ic_arrow_next),
+            painter = painterResource(R.drawable.ic_study_arrow_right),
             contentDescription = null,
             tint = iconTint,
             modifier = Modifier.size(14.dp)
