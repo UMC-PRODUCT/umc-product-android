@@ -44,6 +44,9 @@ playInAppUpdate = "2.1.0"
 hiltNavigationCompose = "1.2.0"
 desugar_jdk_libs = "2.0.4"
 coil-compose = "2.6.0"
+naverMap = "3.21.0"
+naver-map-compose = "1.9.0"
+googleplay-services-location = "21.3.0"
 
 
 [libraries]
@@ -121,6 +124,12 @@ google-play-services-auth = { group = "com.google.android.gms", name = "play-ser
 # Play In-App Update
 play-update = { group = "com.google.android.play", name = "app-update", version.ref = "playInAppUpdate" }
 play-update-ktx = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "playInAppUpdate" }
+#Naver Maps
+naver-maps-sdk = { group = "com.naver.maps", name = "map-sdk", version.ref = "naverMap" }
+naver-maps-compose = { group = "io.github.fornewid", name = "naver-map-compose", version.ref = "naver-map-compose" }
+googleplay-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "googleplay-services-location" }
+
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

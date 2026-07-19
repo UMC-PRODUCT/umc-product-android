@@ -51,6 +51,7 @@ import com.umc.component.theme.indigo500
  * @param textColor 입력 텍스트 색상. 기본값 grey800
  * @param textStyle 입력 텍스트 스타일. 기본값 Callout
  * @param backgroundColor 배경색. 기본값 grey000 (흰색)
+ * @param focusBackgroundColor 포커스 상태의 배경색. 기본값은 backgroundColor와 동일
  * @param strokeColor 비포커스 상태의 테두리 색상. 기본값 grey300
  * @param focusStrokeColor 포커스 상태의 테두리 색상 및 커서 색상. 기본값 indigo500
  * @param cornerRadius 모서리 둥글기. 기본값 8dp
@@ -81,6 +82,7 @@ fun UTextField(
     focusStrokeColor: Color = indigo500(),
     cornerRadius: Dp = 8.dp,
     enabled: Boolean = true,
+    focusBackgroundColor: Color = backgroundColor,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     prevIcon: Painter? = null,
@@ -96,6 +98,13 @@ fun UTextField(
     val isFocused by interactionSource.collectIsFocusedAsState()
 
     val currentStrokeColor = if (isFocused && enabled) focusStrokeColor else strokeColor
+
+    val currentBackgroundColor = if (isFocused && enabled) {
+        focusBackgroundColor
+    } else {
+        backgroundColor
+    }
+
     val shape = RoundedCornerShape(cornerRadius)
 
     // OutlinedTextField 대신 BasicTextField를 사용해 커스텀 decoration box 적용.
@@ -115,7 +124,7 @@ fun UTextField(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(backgroundColor, shape)
+                    .background(currentBackgroundColor, shape)
                     .border(1.dp, currentStrokeColor, shape)
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
