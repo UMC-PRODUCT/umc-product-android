@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.painter.Painter
@@ -80,6 +81,7 @@ fun UTextField(
     prevIcon: Painter? = null,
     prevIconTint: Color? = null,
     prevIconSize: Dp = 24.dp,
+    onFocusChange: ((Boolean) -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -105,7 +107,7 @@ fun UTextField(
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         interactionSource = interactionSource,
-        modifier = modifier,
+        modifier = modifier.onFocusChanged { onFocusChange?.invoke(it.isFocused) },
         decorationBox = { innerTextField ->
             Row(
                 modifier = Modifier
