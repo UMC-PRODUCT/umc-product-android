@@ -26,6 +26,7 @@ import com.umc.presentation.login.findpassword.FindPasswordRoute
 import com.umc.presentation.notice.NoticeRoute
 import com.umc.presentation.notice.adminnotice.AdminNoticeRoute
 import com.umc.presentation.notice.search.NoticeSearchRoute
+import com.umc.presentation.notice.write.NoticeWriteRoute
 import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
@@ -202,11 +203,18 @@ fun MainNavHost(
                     navHostController.navigate(MainDestination.AdminNotice(gisuId))
                 },
                 navigateToWrite = {
-                    // TODO: 공지 작성 화면 완성 후 연결
+                    navHostController.navigate(MainDestination.NoticeWrite)
                 },
                 navigateToDetail = { noticeId ->
                     // TODO: 공지 상세 화면 완성 후 연결
                 },
+            )
+        }
+
+        //공지 작성 (권한별 카테고리/게시판 분류)
+        composable<MainDestination.NoticeWrite> {
+            NoticeWriteRoute(
+                navigateToBack = { navHostController.popBackStack() },
             )
         }
 
