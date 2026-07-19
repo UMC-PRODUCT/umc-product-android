@@ -61,8 +61,8 @@ fun HomeTopBar(
             /*
             UButton(
                 text = userType.name,
-                backgroundColor = if (userType == UserType.ACTIVE) primary100() else neutral200(),
-                textColor = if (userType == UserType.ACTIVE) primary600() else neutral700(),
+                backgroundColor = if (userType == UserType.ACTIVE) indigo100() else grey200(),
+                textColor = if (userType == UserType.ACTIVE) indigo600() else grey700(),
                 textStyle = UmcTypographyTokens.FootnoteBold,
                 onClick = {},
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)

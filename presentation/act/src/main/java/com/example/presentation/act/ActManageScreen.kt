@@ -39,11 +39,11 @@ import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title2Bold
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
 import kotlinx.coroutines.launch
 
 private data class ManageTab(
@@ -99,7 +99,7 @@ private fun ActManageScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000())
+            .background(grey000())
     ) {
         ActHeader(
             hasAdminAccess = uiState.hasAdminAccess,
@@ -112,13 +112,13 @@ private fun ActManageScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(55.dp),
-            containerColor = neutral000(),
-            contentColor = neutral800(),
+            containerColor = grey000(),
+            contentColor = grey800(),
             indicator = { tabPositions ->
                 TabRowDefaults.SecondaryIndicator(
                     modifier = Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
                     height = 2.dp,
-                    color = neutral800()
+                    color = grey800()
                 )
             },
             divider = {}
@@ -135,9 +135,9 @@ private fun ActManageScreen(
                         Text(
                             text = tab.title,
                             color = if (pagerState.currentPage == index) {
-                                neutral800()
+                                grey800()
                             } else {
-                                neutral400()
+                                grey400()
                             },
                             style = HeadlineBold
                         )
@@ -150,7 +150,7 @@ private fun ActManageScreen(
             state = pagerState,
             modifier = Modifier
                 .fillMaxSize()
-                .background(neutral100())
+                .background(grey100())
         ) { page ->
             tabs[page].content()
         }
@@ -166,7 +166,7 @@ private fun ComingSoonScreen() {
         Text(
             text = "준비 중인 화면입니다.",
             style = Subheadline,
-            color = neutral600()
+            color = grey600()
         )
     }
 }
@@ -186,7 +186,7 @@ private fun ActHeader(
         Text(
             text = AppStrings.ACTIVITY_MANAGEMENT_TITLE,
             modifier = Modifier.weight(1f),
-            color = neutral800(),
+            color = grey800(),
             style = Title2Bold
         )
 
@@ -194,7 +194,7 @@ private fun ActHeader(
             Text(
                 text = ADMIN_LABEL,
                 modifier = Modifier.padding(end = 8.dp),
-                color = neutral600(),
+                color = grey600(),
                 style = Subheadline
             )
 
