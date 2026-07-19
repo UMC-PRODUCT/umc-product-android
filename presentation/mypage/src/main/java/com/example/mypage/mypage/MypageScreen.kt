@@ -44,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.mypage.dialog.AddCodeDialog
+import com.example.mypage.nearby.NearbyViewModel
 import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
 import com.umc.component.component.UText
@@ -70,11 +71,14 @@ import com.umc.domain.model.enums.OutLinkType
 @Composable
 fun MypageRoute(
     viewModel: MypageViewModel = hiltViewModel(),
+
     onNavigateToEditProfile: () -> Unit, //프로필 페이지 이동
     onNavigateToMyContent: (String) -> Unit, //내가 쓴 글 이동
     onNavigateToLogin: () -> Unit, //로그인 이동(로그아웃 or 탈퇴)
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+
     val context = LocalContext.current
 
     var showAddCodeDialog by remember { mutableStateOf(false) }

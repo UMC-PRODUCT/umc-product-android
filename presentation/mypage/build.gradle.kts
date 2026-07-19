@@ -74,4 +74,8 @@ dependencies {
 
     //비동기 이미지
     implementation(libs.coil.compose)
+
+    //nearby
+    implementation(libs.google.play.services.nearby)
+    implementation(libs.google.code.gson)
 }
