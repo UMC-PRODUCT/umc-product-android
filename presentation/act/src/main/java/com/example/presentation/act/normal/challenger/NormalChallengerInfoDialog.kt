@@ -33,18 +33,18 @@ import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.danger100
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.neutral900
-import com.umc.component.theme.success100
-import com.umc.component.theme.success500
-import com.umc.component.theme.warning100
-import com.umc.component.theme.warning500
+import com.umc.component.theme.red100
+import com.umc.component.theme.red500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.grey900
+import com.umc.component.theme.green100
+import com.umc.component.theme.green500
+import com.umc.component.theme.yellow100
+import com.umc.component.theme.yellow500
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.domain.model.enums.CheckHistoryStatus
@@ -60,7 +60,7 @@ fun NormalChallengerInfoDialog(
             modifier = modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(neutral000())
+                .background(grey000())
                 .padding(16.dp)
         ) {
             Row(
@@ -72,14 +72,14 @@ fun NormalChallengerInfoDialog(
                     modifier = Modifier
                         .size(52.dp)
                         .clip(CircleShape)
-                        .border(1.dp, neutral200(), CircleShape)
-                        .background(neutral000()),
+                        .border(1.dp, grey200(), CircleShape)
+                        .background(grey000()),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_person),
                         contentDescription = null,
-                        tint = neutral400(),
+                        tint = grey400(),
                         modifier = Modifier.size(39.dp)
                     )
                 }
@@ -92,7 +92,7 @@ fun NormalChallengerInfoDialog(
                     Icon(
                         painter = painterResource(R.drawable.ic_close_big),
                         contentDescription = null,
-                        tint = neutral600(),
+                        tint = grey600(),
                         modifier = Modifier
                             .size(28.dp)
                             .clickable(onClick = onDismissRequest)
@@ -109,7 +109,7 @@ fun NormalChallengerInfoDialog(
                 UText(
                     text = model.name,
                     style = Title3Bold,
-                    color = neutral800()
+                    color = grey800()
                 )
 
                 UInfoChip(
@@ -150,13 +150,13 @@ fun NormalChallengerInfoDialog(
                 Icon(
                     painter = painterResource(R.drawable.ic_history),
                     contentDescription = null,
-                    tint = neutral600(),
+                    tint = grey600(),
                     modifier = Modifier.size(24.dp)
                 )
                 UText(
                     text = "상벌점 기록",
                     style = HeadlineBold,
-                    color = neutral900()
+                    color = grey900()
                 )
             }
 
@@ -166,8 +166,8 @@ fun NormalChallengerInfoDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .border(1.dp, neutral200(), RoundedCornerShape(12.dp))
-                    .background(neutral000())
+                    .border(1.dp, grey200(), RoundedCornerShape(12.dp))
+                    .background(grey000())
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -188,8 +188,8 @@ private fun InfoStatCard(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .border(1.dp, neutral200(), RoundedCornerShape(12.dp))
-            .background(neutral000())
+            .border(1.dp, grey200(), RoundedCornerShape(12.dp))
+            .background(grey000())
             .padding(vertical = 18.dp, horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -197,12 +197,12 @@ private fun InfoStatCard(
         UText(
             text = title,
             style = Callout,
-            color = neutral600()
+            color = grey600()
         )
         UText(
             text = value,
             style = HeadlineBold,
-            color = neutral800()
+            color = grey800()
         )
     }
 }
@@ -210,14 +210,14 @@ private fun InfoStatCard(
 @Composable
 private fun HistoryItemRow(history: ChallengerInfoHistory) {
     val bgColor = when (history.status) {
-        CheckHistoryStatus.PRESENT -> success100()
-        CheckHistoryStatus.LATE -> warning100()
-        CheckHistoryStatus.ABSENT -> danger100()
+        CheckHistoryStatus.PRESENT -> green100()
+        CheckHistoryStatus.LATE -> yellow100()
+        CheckHistoryStatus.ABSENT -> red100()
     }
     val textColor = when (history.status) {
-        CheckHistoryStatus.PRESENT -> success500()
-        CheckHistoryStatus.LATE -> warning500()
-        CheckHistoryStatus.ABSENT -> danger500()
+        CheckHistoryStatus.PRESENT -> green500()
+        CheckHistoryStatus.LATE -> yellow500()
+        CheckHistoryStatus.ABSENT -> red500()
     }
 
     Row(
@@ -243,7 +243,7 @@ private fun HistoryItemRow(history: ChallengerInfoHistory) {
         UText(
             text = history.title,
             style = Subheadline,
-            color = neutral800()
+            color = grey800()
         )
     }
 }

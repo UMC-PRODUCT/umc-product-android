@@ -38,17 +38,17 @@ import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.danger500
+import com.umc.component.theme.red500
 import com.umc.component.theme.indigo500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral500
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.neutral900
-import com.umc.component.theme.success500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey500
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.grey900
+import com.umc.component.theme.green500
 
 @Composable
 fun OtherPointsRoute(
@@ -89,7 +89,7 @@ fun OtherPointsScreen(
             .height(700.dp)
             .imePadding()
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .background(neutral000())
+            .background(grey000())
             .padding(horizontal = 16.dp)
     ) {
         DragHeader()
@@ -99,7 +99,7 @@ fun OtherPointsScreen(
         UText(
             text = AppStrings.REWARD_ETC_TITLE,
             style = Title3Bold,
-            color = neutral800()
+            color = grey800()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -107,7 +107,7 @@ fun OtherPointsScreen(
         UText(
             text = AppStrings.REWARD_ETC_CONTENT,
             style = Subheadline,
-            color = neutral600()
+            color = grey600()
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -115,7 +115,7 @@ fun OtherPointsScreen(
         ScoreStepper(
             label = AppStrings.REWARD,
             value = uiState.customRewardScore,
-            valueColor = success500(),
+            valueColor = green500(),
             onMinusClick = onRewardMinusClick,
             onPlusClick = onRewardPlusClick
         )
@@ -125,7 +125,7 @@ fun OtherPointsScreen(
         ScoreStepper(
             label = AppStrings.PUNISH,
             value = uiState.customPunishScore,
-            valueColor = danger500(),
+            valueColor = red500(),
             onMinusClick = onPunishMinusClick,
             onPlusClick = onPunishPlusClick
         )
@@ -135,7 +135,7 @@ fun OtherPointsScreen(
         UText(
             text = AppStrings.REWARD_ETC_REASON,
             style = CalloutBold,
-            color = neutral800()
+            color = grey800()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -152,8 +152,8 @@ fun OtherPointsScreen(
             text = AppStrings.REWARD_SUBMIT,
             enabled = isSubmitEnabled,
             textStyle = HeadlineBold,
-            textColor = if (isSubmitEnabled) neutral000() else neutral300(),
-            backgroundColor = if (isSubmitEnabled) indigo500() else neutral100(),
+            textColor = if (isSubmitEnabled) grey000() else grey300(),
+            backgroundColor = if (isSubmitEnabled) indigo500() else grey100(),
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
             cornerRadius = 8.dp,
             onClick = onSubmitClick
@@ -178,7 +178,7 @@ private fun DragHeader(
                 .width(36.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(100.dp))
-                .background(neutral600())
+                .background(grey600())
         )
     }
 }
@@ -191,19 +191,19 @@ private fun ScoreStepper(
     onMinusClick: () -> Unit,
     onPlusClick: () -> Unit
 ) {
-    val minusTint = if (value == 0) neutral300() else neutral500()
+    val minusTint = if (value == 0) grey300() else grey500()
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         UText(
             text = label,
             style = CalloutBold,
-            color = neutral800()
+            color = grey800()
         )
 
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(neutral100())
+                .background(grey100())
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -243,7 +243,7 @@ private fun ScoreStepper(
                 Icon(
                     painter = painterResource(R.drawable.ic_plus_circle),
                     contentDescription = null,
-                    tint = neutral500(),
+                    tint = grey500(),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -260,12 +260,12 @@ private fun ReasonInput(
         value = value,
         onValueChange = onValueChange,
         placeholder = AppStrings.REWARD_ETC_PLACEHOLDER,
-        placeholderColor = neutral400(),
-        textColor = neutral800(),
+        placeholderColor = grey400(),
+        textColor = grey800(),
         textStyle = Callout,
-        backgroundColor = neutral000(),
-        strokeColor = neutral300(),
-        focusStrokeColor = neutral900(),
+        backgroundColor = grey000(),
+        strokeColor = grey300(),
+        focusStrokeColor = grey900(),
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)

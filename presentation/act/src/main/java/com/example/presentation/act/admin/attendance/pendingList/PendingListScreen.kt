@@ -51,14 +51,14 @@ import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.indigo500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral700
-import com.umc.component.theme.neutral800
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
+import com.umc.component.theme.grey800
 import com.umc.domain.model.act.check.AdminPendingUser
 
 @Composable
@@ -101,7 +101,7 @@ fun PendingListScreen(
             .fillMaxWidth()
             .height(700.dp)
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .background(neutral000())
+            .background(grey000())
             .padding(horizontal = 16.dp)
     ) {
         DragHeader()
@@ -115,16 +115,16 @@ fun PendingListScreen(
             UText(
                 text = AppStrings.ADMIN_CHECK_STATS_PENDING_TITLE,
                 style = Title3Bold,
-                color = neutral800()
+                color = grey800()
             )
 
             if(isSelectApproveMode) {
                 UButton(
                     text = AppStrings.CONFIRM,
                     textStyle = SubheadlineBold,
-                    textColor = if(isConfirmEnabled) neutral000() else neutral300(),
+                    textColor = if(isConfirmEnabled) grey000() else grey300(),
                     enabled = isConfirmEnabled,
-                    backgroundColor = if (isConfirmEnabled) indigo500() else neutral100(),
+                    backgroundColor = if (isConfirmEnabled) indigo500() else grey100(),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                     cornerRadius = 8.dp,
                     onClick = {
@@ -136,12 +136,12 @@ fun PendingListScreen(
             } else {
                 UButton(
                     prevIcon = painterResource(id = R.drawable.ic_check_success),
-                    prevIconTint = neutral800(),
+                    prevIconTint = grey800(),
                     prevIconSize = DpSize(18.dp, 18.dp),
                     text = AppStrings.ADMIN_CHECK_STATS_CHOOSE_PENDING,
                     textStyle = SubheadlineBold,
-                    textColor = neutral700(),
-                    backgroundColor = neutral100(),
+                    textColor = grey700(),
+                    backgroundColor = grey100(),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                     cornerRadius = 8.dp,
                     onClick = {
@@ -162,7 +162,7 @@ fun PendingListScreen(
                 .heightIn(max = 520.dp),
         ) {
             items(items = users, key = { user -> user.id }) { user ->
-                HorizontalDivider(modifier = Modifier.fillMaxWidth().height(1.dp), color = neutral200())
+                HorizontalDivider(modifier = Modifier.fillMaxWidth().height(1.dp), color = grey200())
 
                 PendingUserRow(
                     user = user,
@@ -251,7 +251,7 @@ private fun DragHeader(
                 .width(32.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(100.dp))
-                .background(neutral600())
+                .background(grey600())
         )
     }
 }
@@ -281,8 +281,8 @@ private fun PendingUserRow(
                 onCheckedChange = onCheckedChange,
                 colors = CheckboxDefaults.colors(
                     checkedColor = indigo500(),
-                    uncheckedColor = neutral400(),
-                    checkmarkColor = neutral000()
+                    uncheckedColor = grey400(),
+                    checkmarkColor = grey000()
                 )
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -291,13 +291,13 @@ private fun PendingUserRow(
         Box(
             modifier = Modifier
                 .size(32.dp)
-                .border(width = 1.dp, color = neutral300(), shape = CircleShape),
+                .border(width = 1.dp, color = grey300(), shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_person),
                 contentDescription = null,
-                tint = neutral300(),
+                tint = grey300(),
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -308,13 +308,13 @@ private fun PendingUserRow(
             UText(
                 text = "${user.name}(${user.nickname})",
                 style = CalloutBold,
-                color = neutral800()
+                color = grey800()
             )
             Spacer(modifier = Modifier.height(4.dp))
             UText(
                 text = "${user.university}  ${user.requestTime} 요청",
                 style = Footnote,
-                color = neutral600()
+                color = grey600()
             )
         }
 

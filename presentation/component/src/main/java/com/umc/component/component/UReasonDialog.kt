@@ -24,16 +24,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.umc.component.R
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.danger100
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral050
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral700
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.success100
-import com.umc.component.theme.success500
+import com.umc.component.theme.red100
+import com.umc.component.theme.red500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
+import com.umc.component.theme.grey800
+import com.umc.component.theme.green100
+import com.umc.component.theme.green500
 
 /**
  * 출석 사유 확인용 단일 버튼 다이얼로그 컴포넌트.
@@ -64,7 +64,7 @@ fun UReasonDialog(
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .background(neutral000(), RoundedCornerShape(12.dp))
+                .background(grey000(), RoundedCornerShape(12.dp))
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -77,7 +77,7 @@ fun UReasonDialog(
                 UText(
                     text = title,
                     style = UmcTypographyTokens.Title3Bold,
-                    color = neutral800(),
+                    color = grey800(),
                 )
             }
 
@@ -86,7 +86,7 @@ fun UReasonDialog(
                 UText(
                     text = subtitle,
                     style = UmcTypographyTokens.Subheadline,
-                    color = neutral600(),
+                    color = grey600(),
                 )
             }
 
@@ -96,7 +96,7 @@ fun UReasonDialog(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(neutral050())
+                        .background(grey50())
                         .padding(vertical = 14.dp, horizontal = 16.dp)
                         .fillMaxWidth(),
                     contentAlignment = Alignment.CenterStart
@@ -104,7 +104,7 @@ fun UReasonDialog(
                     UText(
                         text = content,
                         style = UmcTypographyTokens.Subheadline,
-                        color = neutral800(),
+                        color = grey800(),
                     )
                 }
             }
@@ -115,8 +115,8 @@ fun UReasonDialog(
                 text = confirmText,
                 onClick = onConfirm,
                 modifier = Modifier.fillMaxWidth(),
-                backgroundColor = neutral800(),
-                textColor = neutral000(),
+                backgroundColor = grey800(),
+                textColor = grey000(),
                 textStyle = UmcTypographyTokens.SubheadlineBold,
                 cornerRadius = 8.dp,
                 contentPadding = PaddingValues(vertical = 14.dp),

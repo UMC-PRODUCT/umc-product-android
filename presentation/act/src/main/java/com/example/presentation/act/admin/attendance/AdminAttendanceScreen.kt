@@ -44,17 +44,17 @@ import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.black
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral050
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral700
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo500
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.enums.AdminSessionStatus
@@ -83,7 +83,7 @@ fun AttendanceScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(neutral100())
+            .background(grey100())
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -108,7 +108,7 @@ fun AdminSessionCard(
         modifier = modifier
             .width(380.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral000()),
+        colors = CardDefaults.cardColors(containerColor = grey000()),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -128,29 +128,29 @@ fun AdminSessionCard(
                         UText(
                             text = session.title,
                             style = Title3Bold,
-                            color = neutral800()
+                            color = grey800()
                         )
                         if (session.status == AdminSessionStatus.IN_PROGRESS) {
                             Surface(
-                                color = primary100(),
+                                color = indigo100(),
                                 shape = RoundedCornerShape(4.dp)
                             ) {
                                 UText(
                                     text = session.status.text,
                                     style = Caption1Bold,
-                                    color = primary500(),
+                                    color = indigo500(),
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
                             }
                         } else {
                             Surface(
-                                color = neutral050(),
+                                color = grey50(),
                                 shape = RoundedCornerShape(4.dp)
                             ) {
                                 UText(
                                     text = session.status.text,
                                     style = Caption1Bold,
-                                    color = neutral600(),
+                                    color = grey600(),
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
                             }
@@ -178,11 +178,11 @@ fun AdminSessionCard(
                 UButton(
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                     text = AppStrings.ADMIN_CHECK_CHANGE_LOCATION,
-                    textColor = neutral700(),
+                    textColor = grey700(),
                     prevIcon = painterResource(id = R.drawable.ic_location),
-                    prevIconTint = neutral700(),
+                    prevIconTint = grey700(),
                     prevIconMargin = 6.dp,
-                    backgroundColor = neutral100(),
+                    backgroundColor = grey100(),
                     onClick = onChangeLocationClick,
                     prevIconSize = DpSize(18.dp, 18.dp)
                 )
@@ -194,7 +194,7 @@ fun AdminSessionCard(
                     .height(90.dp)
                     .border(
                         width = 1.dp,
-                        color = neutral300(),
+                        color = grey300(),
                         shape = RoundedCornerShape(12.dp)
                     ),
                 verticalAlignment = Alignment.CenterVertically
@@ -246,7 +246,7 @@ private fun EmptyScreen() {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_people),
                     contentDescription = null,
-                    tint = neutral400(),
+                    tint = grey400(),
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -255,7 +255,7 @@ private fun EmptyScreen() {
             UText(
                 text = AppStrings.ATTENDANCE_EMPTY_ADMIN_SESSIONS,
                 style = Subheadline,
-                color = neutral600()
+                color = grey600()
             )
         }
     }
@@ -276,16 +276,16 @@ private fun CheckAttendanceListButton(
     UButton(
         modifier = Modifier.fillMaxWidth(),
         prevIcon = painterResource(id = R.drawable.ic_person),
-        prevIconTint = primary500(),
+        prevIconTint = indigo500(),
         text = AppStrings.ADMIN_CHECK_PENDING_LIST_TRIGGER,
         textColor = black(),
         textStyle = CalloutBold,
         endIcon = painterResource(id = R.drawable.ic_arrow_next),
-        endIconTint = primary500(),
+        endIconTint = indigo500(),
         endIconSize = DpSize(7.dp,12.dp),
-        backgroundColor = neutral000(),
-        pressedColor = neutral000(),
-        borderColor = primary500(),
+        backgroundColor = grey000(),
+        pressedColor = grey000(),
+        borderColor = indigo500(),
         borderWidth = 1.dp,
         onClick = onPendingListClick,
         contentPadding = PaddingValues(16.dp)
@@ -301,8 +301,8 @@ private fun SuccessCheckAllAttendanceButton() {
         enabled = false,
         textColor = black(),
         textStyle = CalloutBold,
-        backgroundColor = neutral000(),
-        borderColor = neutral200(),
+        backgroundColor = grey000(),
+        borderColor = grey200(),
         borderWidth = 1.dp,
         onClick = {},
         contentPadding = PaddingValues(16.dp)
@@ -321,13 +321,13 @@ private fun CardMetaItem(
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            tint = neutral600(),
+            tint = grey600(),
             modifier = Modifier.size(18.dp)
         )
         UText(
             text = text,
             style = Footnote,
-            color = neutral600()
+            color = grey600()
         )
     }
 }
@@ -347,18 +347,18 @@ private fun StatItem(
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            tint = neutral600(),
+            tint = grey600(),
             modifier = Modifier.size(24.dp)
         )
         UText(
             text = label,
             style = Subheadline,
-            color = neutral600()
+            color = grey600()
         )
         UText(
             text = value,
             style = SubheadlineBold,
-            color = neutral800()
+            color = grey800()
         )
     }
 }
@@ -370,7 +370,7 @@ private fun VerticalDivider() {
             .width(1.dp)
             .fillMaxHeight()
             .padding(vertical = 12.dp)
-            .background(neutral200())
+            .background(grey200())
     )
 }
 

@@ -41,17 +41,16 @@ import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.neutral900
-import com.umc.component.theme.warning100
-import com.umc.component.theme.warning300
-import com.umc.component.theme.warning500
-
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.grey900
+import com.umc.component.theme.yellow100
+import com.umc.component.theme.yellow300
+import com.umc.component.theme.yellow500
 
 @Composable
 fun NormalChallengerRoute(
@@ -83,14 +82,14 @@ private fun EmptyScreen() {
             Icon(
                 painter = painterResource(id = R.drawable.ic_search),
                 contentDescription = null,
-                tint = neutral600(),
+                tint = grey600(),
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
             UText(
                 text = AppStrings.EMPTY_SEARCH_RESULT,
                 style = Body,
-                color = neutral600()
+                color = grey600()
             )
         }
     }
@@ -106,7 +105,7 @@ fun NormalChallengerScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral100()),
+            .background(grey100()),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item {
@@ -142,7 +141,7 @@ private fun SearchBar(
 ) {
     Box(
         modifier = Modifier
-            .background(neutral000())
+            .background(grey000())
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .fillMaxWidth()
             .wrapContentHeight()
@@ -152,14 +151,14 @@ private fun SearchBar(
             onValueChange = onSearchKeywordChange,
             modifier = Modifier.fillMaxWidth(),
             placeholder = AppStrings.CHALLENGER_SEARCH_PLACEHOLDER,
-            placeholderColor = neutral400(),
-            textColor = neutral800(),
+            placeholderColor = grey400(),
+            textColor = grey800(),
             textStyle = Body,
-            backgroundColor = neutral100(),
-            strokeColor = neutral100(),
-            focusStrokeColor = neutral900(),
+            backgroundColor = grey100(),
+            strokeColor = grey100(),
+            focusStrokeColor = grey900(),
             prevIcon = painterResource(R.drawable.ic_search),
-            prevIconTint = neutral400()
+            prevIconTint = grey400()
         )
     }
 }
@@ -180,13 +179,13 @@ private fun ChallengerSection(
             UText(
                 text = section.partName,
                 style = HeadlineBold,
-                color = neutral800()
+                color = grey800()
             )
             Spacer(Modifier.width(6.dp))
             UText(
                 text = "(${section.members.size})",
                 style = Subheadline,
-                color = neutral800()
+                color = grey800()
             )
         }
 
@@ -196,7 +195,7 @@ private fun ChallengerSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(neutral000())
+                .background(grey000())
         ) {
             section.members.forEach { member ->
                 ChallengerMemberRow(
@@ -223,16 +222,16 @@ private fun ChallengerMemberRow(
         Box(
             modifier = Modifier
                 .size(32.dp)
-                .border(1.dp, neutral200(), CircleShape)
+                .border(1.dp, grey200(), CircleShape)
                 .padding(1.dp)
                 .clip(CircleShape)
-                .background(neutral000()),
+                .background(grey000()),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_person),
                 contentDescription = null,
-                tint = neutral400(),
+                tint = grey400(),
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -247,13 +246,13 @@ private fun ChallengerMemberRow(
             UText(
                 text = member.nicknameWithName,
                 style = BodyBold,
-                color = neutral800()
+                color = grey800()
             )
             Spacer(Modifier.width(8.dp))
             UText(
                 text = member.generation,
                 style = Footnote,
-                color = neutral600()
+                color = grey600()
             )
         }
 
@@ -263,15 +262,15 @@ private fun ChallengerMemberRow(
                     .width(37.dp)
                     .height(24.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(warning100())
-                    .border(1.dp, warning300(), RoundedCornerShape(4.dp))
+                    .background(yellow100())
+                    .border(1.dp, yellow300(), RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 UText(
                     text = role,
                     style = Caption1Bold,
-                    color = warning500()
+                    color = yellow500()
                 )
             }
             Spacer(Modifier.width(10.dp))
@@ -285,7 +284,7 @@ private fun ChallengerMemberRow(
             Icon(
                 painter = painterResource(R.drawable.ic_arrow_next),
                 contentDescription = null,
-                tint = neutral400(),
+                tint = grey400(),
                 modifier = Modifier.size(7.dp,14.dp)
             )
         }

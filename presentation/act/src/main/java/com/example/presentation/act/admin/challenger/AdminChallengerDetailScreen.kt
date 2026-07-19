@@ -45,17 +45,17 @@ import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Title2Bold
-import com.umc.component.theme.danger100
-import com.umc.component.theme.danger500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.neutral900
-import com.umc.component.theme.success100
-import com.umc.component.theme.success500
+import com.umc.component.theme.red100
+import com.umc.component.theme.red500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.grey900
+import com.umc.component.theme.green100
+import com.umc.component.theme.green500
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 
 
@@ -92,7 +92,7 @@ fun AdminChallengerDetailScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral100()),
+            .background(grey100()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -118,7 +118,7 @@ fun AdminChallengerDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(12.dp)
-                    .background(neutral200())
+                    .background(grey200())
             )
         }
 
@@ -175,7 +175,7 @@ private fun Header() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(neutral100())
+            .background(grey100())
             .padding(horizontal = 4.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -188,7 +188,7 @@ private fun Header() {
             Icon(
                 painter = painterResource(R.drawable.ic_back),
                 contentDescription = null,
-                tint = neutral800(),
+                tint = grey800(),
                 modifier = Modifier
                     .size(24.dp)
                     .padding(4.dp)
@@ -200,7 +200,7 @@ private fun Header() {
         UText(
             text = AppStrings.CHALLENGER_MANAGE_PROFILE_TITLE,
             style = Title2Bold,
-            color = neutral800()
+            color = grey800()
         )
     }
 }
@@ -217,13 +217,13 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
             modifier = Modifier
                 .size(58.dp)
                 .clip(CircleShape)
-                .background(neutral900()),
+                .background(grey900()),
             contentAlignment = Alignment.Center
         ) {
             UText(
                 text = "UMC",
                 style = BodyBold,
-                color = neutral000()
+                color = grey000()
             )
         }
 
@@ -235,13 +235,13 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
             UText(
                 text = ui.nicknameWithName,
                 style = HeadlineBold,
-                color = neutral800()
+                color = grey800()
             )
             Spacer(modifier = Modifier.width(8.dp))
             UText(
                 text = ui.generation,
                 style = Footnote,
-                color = neutral600()
+                color = grey600()
             )
             Spacer(modifier = Modifier.width(16.dp))
             UInfoChip(
@@ -259,13 +259,13 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(neutral200())
+                .background(grey200())
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             UText(
                 text = "${ui.nicknameWithName.split("(").first()}님의 총점수는 ${ui.totalScore}점입니다.",
                 style = Body,
-                color = neutral800()
+                color = grey800()
             )
         }
     }
@@ -280,8 +280,8 @@ private fun AddScore(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onAddClick)
-            .background(neutral000())
-            .border(1.dp, neutral200(), RoundedCornerShape(12.dp))
+            .background(grey000())
+            .border(1.dp, grey200(), RoundedCornerShape(12.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -289,13 +289,13 @@ private fun AddScore(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(success100()),
+                .background(green100()),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_add_filled),
                 contentDescription = null,
-                tint = success500(),
+                tint = green500(),
                 modifier = Modifier
                     .size(24.dp)
                     .padding(2.dp)
@@ -305,7 +305,7 @@ private fun AddScore(
         UText(
             text = AppStrings.REWARD_TITLE,
             style = HeadlineBold,
-            color = neutral800(),
+            color = grey800(),
         )
         Spacer(modifier = Modifier.weight(1f))
 
@@ -316,7 +316,7 @@ private fun AddScore(
             Icon(
                 painter = painterResource(R.drawable.ic_arrow_next),
                 contentDescription = null,
-                tint = neutral400(),
+                tint = grey400(),
                 modifier = Modifier.size(7.dp, 12.dp)
             )
         }
@@ -332,8 +332,8 @@ private fun MinusScore(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onMinusClick)
-            .background(neutral000())
-            .border(1.dp, neutral200(), RoundedCornerShape(12.dp))
+            .background(grey000())
+            .border(1.dp, grey200(), RoundedCornerShape(12.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -341,13 +341,13 @@ private fun MinusScore(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(danger100()),
+                .background(red100()),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_minus_fill),
                 contentDescription = null,
-                tint = danger500(),
+                tint = red500(),
                 modifier = Modifier
                     .size(24.dp)
                     .padding(2.dp)
@@ -357,7 +357,7 @@ private fun MinusScore(
         UText(
             text = AppStrings.PUNISH_TITLE,
             style = HeadlineBold,
-            color = neutral800(),
+            color = grey800(),
         )
         Spacer(modifier = Modifier.weight(1f))
         Box(
@@ -367,7 +367,7 @@ private fun MinusScore(
             Icon(
                 painter = painterResource(R.drawable.ic_arrow_next),
                 contentDescription = null,
-                tint = neutral400(),
+                tint = grey400(),
                 modifier = Modifier.size(7.dp, 12.dp)
             )
         }
@@ -383,8 +383,8 @@ private fun OtherScore(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onOtherClick)
-            .background(neutral000())
-            .border(1.dp, neutral200(), RoundedCornerShape(12.dp))
+            .background(grey000())
+            .border(1.dp, grey200(), RoundedCornerShape(12.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -392,13 +392,13 @@ private fun OtherScore(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(neutral100()),
+                .background(grey100()),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_error),
                 contentDescription = null,
-                tint = neutral400(),
+                tint = grey400(),
                 modifier = Modifier
                     .size(24.dp)
                     .padding(2.dp)
@@ -408,7 +408,7 @@ private fun OtherScore(
         UText(
             text = AppStrings.REWARD_ETC_TITLE,
             style = HeadlineBold,
-            color = neutral800(),
+            color = grey800(),
         )
         Spacer(modifier = Modifier.weight(1f))
         Box(
@@ -418,7 +418,7 @@ private fun OtherScore(
             Icon(
                 painter = painterResource(R.drawable.ic_arrow_next),
                 contentDescription = null,
-                tint = neutral400(),
+                tint = grey400(),
                 modifier = Modifier.size(7.dp, 12.dp)
             )
         }
@@ -446,24 +446,24 @@ private fun HistorySection(
             Icon(
                 painter = painterResource(R.drawable.ic_history),
                 contentDescription = null,
-                tint = neutral600(),
+                tint = grey600(),
                 modifier = Modifier.size(21.dp)
             )
             UText(
                 text = AppStrings.CHALLENGER_MANAGE_HISTORY_TITLE,
                 style = HeadlineBold,
-                color = neutral800()
+                color = grey800()
             )
 
             ScoreCountChip(
                 text = "${AppStrings.REWARD} $totalPlusCount",
-                bgColor = success100(),
-                textColor = success500()
+                bgColor = green100(),
+                textColor = green500()
             )
             ScoreCountChip(
                 text = "${AppStrings.PUNISH} $totalMinusCount",
-                bgColor = danger100(),
-                textColor = danger500()
+                bgColor = red100(),
+                textColor = red500()
             )
         }
 
@@ -471,8 +471,8 @@ private fun HistorySection(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(neutral000())
-                .border(1.dp, neutral200(), RoundedCornerShape(12.dp))
+                .background(grey000())
+                .border(1.dp, grey200(), RoundedCornerShape(12.dp))
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -499,7 +499,7 @@ private fun EditChip(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
                 .clickable(onClick = onEditClick)
-                .background(neutral200())
+                .background(grey200())
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -510,7 +510,7 @@ private fun EditChip(
                 Icon(
                     painter = painterResource(R.drawable.ic_slash),
                     contentDescription = null,
-                    tint = neutral600(),
+                    tint = grey600(),
                     modifier = Modifier
                         .padding(3.dp)
                         .size(10.dp)
@@ -521,7 +521,7 @@ private fun EditChip(
             UText(
                 text = AppStrings.CHALLENGER_MANAGE_ACTION_EDIT_HISTORY,
                 style = SubheadlineBold,
-                color = neutral600()
+                color = grey600()
             )
         }
     }
@@ -556,8 +556,8 @@ private fun HistoryRow(
     onDeleteClick: () -> Unit
 ) {
     val scoreText = if (item.score > 0) "+${item.score}" else item.score.toString()
-    val scoreBgColor = if (item.score > 0) success100() else danger100()
-    val scoreTextColor = if (item.score > 0) success500() else danger500()
+    val scoreBgColor = if (item.score > 0) green100() else red100()
+    val scoreTextColor = if (item.score > 0) green500() else red500()
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -570,13 +570,13 @@ private fun HistoryRow(
             UText(
                 text = item.date,
                 style = Subheadline,
-                color = neutral600()
+                color = grey600()
             )
             Spacer(Modifier.width(10.dp))
             UText(
                 text = item.content,
                 style = Subheadline,
-                color = neutral800()
+                color = grey800()
             )
         }
 
@@ -609,7 +609,7 @@ private fun HistoryRow(
                 Icon(
                     painter = painterResource(R.drawable.ic_check_failed),
                     contentDescription = null,
-                    tint = neutral400(),
+                    tint = grey400(),
                     modifier = Modifier
                         .padding(2.dp)
                         .size(20.dp)

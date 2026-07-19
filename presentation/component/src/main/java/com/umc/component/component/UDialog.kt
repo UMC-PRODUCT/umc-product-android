@@ -6,26 +6,36 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.umc.component.R
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.red500
+import com.umc.component.theme.green100
+import com.umc.component.theme.green500
 import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
-import androidx.compose.ui.graphics.Color
+import com.umc.component.theme.red100
+import com.umc.component.theme.red500
 
 /**
  * UMC 공용 다이얼로그 컴포넌트. UMypageDialog(XML)의 Compose 마이그레이션 버전.
@@ -57,6 +67,8 @@ fun UDialog(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     content: String = "",
+    isAccept: Boolean? = null,
+    subtitle: String? = null,
     isTwoButton: Boolean = false,
     confirmText: String = "확인",
     onConfirm: () -> Unit = onDismissRequest,
@@ -66,36 +78,84 @@ fun UDialog(
     onPositive: () -> Unit = {},
 
     // 이중 버튼 스타일 옵션
-    negativeBackgroundColor: Color = grey000(),
-    negativeTextColor: Color = grey800(),
-    negativeBorderColor: Color = grey300(),
-    positiveBackgroundColor: Color = grey000(),
-    positiveTextColor: Color = red500(),
-    positiveBorderColor: Color = red500(),
+    negativeBackgroundColor: Color = grey100(),
+    negativeTextColor: Color = grey700(),
+    negativeBorderColor: Color = Color.Transparent,
+    positiveBackgroundColor: Color = when (isAccept) {
+        true -> green100()
+        false -> red100()
+        null -> grey000()
+    },
+    positiveTextColor: Color = when (isAccept) {
+        true -> green500()
+        false -> red500()
+        null -> red500()
+    },
+    positiveBorderColor: Color = Color.Transparent,
 ) {
+    val description = subtitle ?: content
+
     Dialog(onDismissRequest = onDismissRequest) {
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .background(grey000(), RoundedCornerShape(16.dp))
-                .padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 16.dp)
+                .background(grey000(), RoundedCornerShape(12.dp))
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            if (isAccept != null) {
+                Box(
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(
+                            if (isAccept) {
+                                green100()
+                            } else {
+                                red100()
+                            }
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if (isAccept) {
+                                R.drawable.ic_check_success
+                            } else {
+                                R.drawable.ic_check_failed
+                            }
+                        ),
+                        modifier = Modifier.size(24.dp),
+                        tint = Color.Unspecified,
+                        contentDescription = null,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             UText(
                 text = title,
                 style = UmcTypographyTokens.Title3Bold,
                 color = grey800(),
             )
 
-            if (content.isNotEmpty()) {
+            if (description.isNotBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
+
                 UText(
-                    text = content,
+                    text = description,
                     style = UmcTypographyTokens.Subheadline,
                     color = grey600(),
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(
+                modifier = Modifier.height(
+                    if (isAccept != null) 32.dp else 24.dp
+                )
+            )
 
             if (isTwoButton) {
                 Row(modifier = Modifier.fillMaxWidth()) {
@@ -106,13 +166,23 @@ fun UDialog(
                         backgroundColor = negativeBackgroundColor,
                         textColor = negativeTextColor,
                         textStyle = UmcTypographyTokens.SubheadlineBold,
-                        borderWidth = 1.dp,
+                        borderWidth = if (
+                            negativeBorderColor == Color.Transparent
+                        ) {
+                            0.dp
+                        } else {
+                            1.dp
+                        },
                         borderColor = negativeBorderColor,
                         cornerRadius = 8.dp,
                         contentPadding = PaddingValues(vertical = 14.dp),
                     )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(
+                        modifier = Modifier.width(
+                            if (isAccept != null) 16.dp else 8.dp
+                        )
+                    )
 
                     UButton(
                         text = positiveText,
@@ -121,7 +191,13 @@ fun UDialog(
                         backgroundColor = positiveBackgroundColor,
                         textColor = positiveTextColor,
                         textStyle = UmcTypographyTokens.SubheadlineBold,
-                        borderWidth = 1.dp,
+                        borderWidth = if (
+                            positiveBorderColor == Color.Transparent
+                        ) {
+                            0.dp
+                        } else {
+                            1.dp
+                        },
                         borderColor = positiveBorderColor,
                         cornerRadius = 8.dp,
                         contentPadding = PaddingValues(vertical = 14.dp),
@@ -157,14 +233,21 @@ private fun UDialogSingleButtonPreview() {
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
                 .background(grey000(), RoundedCornerShape(16.dp))
-                .padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 16.dp)
+                .padding(
+                    top = 24.dp,
+                    start = 24.dp,
+                    end = 24.dp,
+                    bottom = 16.dp,
+                )
         ) {
             UText(
                 text = "회원가입에 실패했습니다.",
                 style = UmcTypographyTokens.Title3Bold,
                 color = grey800(),
             )
+
             Spacer(modifier = Modifier.height(24.dp))
+
             UButton(
                 text = "확인",
                 onClick = {},
@@ -193,20 +276,29 @@ private fun UDialogTwoButtonPreview() {
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
                 .background(grey000(), RoundedCornerShape(16.dp))
-                .padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 16.dp)
+                .padding(
+                    top = 24.dp,
+                    start = 24.dp,
+                    end = 24.dp,
+                    bottom = 16.dp,
+                )
         ) {
             UText(
                 text = "정말 탈퇴하시겠습니까?",
                 style = UmcTypographyTokens.Title3Bold,
                 color = grey800(),
             )
+
             Spacer(modifier = Modifier.height(8.dp))
+
             UText(
                 text = "탈퇴 시 모든 데이터가 삭제됩니다.",
                 style = UmcTypographyTokens.Subheadline,
                 color = grey600(),
             )
+
             Spacer(modifier = Modifier.height(24.dp))
+
             Row(modifier = Modifier.fillMaxWidth()) {
                 UButton(
                     text = "취소",
@@ -220,7 +312,9 @@ private fun UDialogTwoButtonPreview() {
                     cornerRadius = 8.dp,
                     contentPadding = PaddingValues(vertical = 14.dp),
                 )
+
                 Spacer(modifier = Modifier.width(8.dp))
+
                 UButton(
                     text = "탈퇴",
                     onClick = {},
