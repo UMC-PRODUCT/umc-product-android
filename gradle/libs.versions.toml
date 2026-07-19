@@ -47,7 +47,7 @@ coil-compose = "2.6.0"
 naverMap = "3.21.0"
 naver-map-compose = "1.9.0"
 googleplay-services-location = "21.3.0"
-
+nearby = "19.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -128,7 +128,7 @@ play-update-ktx = { group = "com.google.android.play", name = "app-update-ktx", 
 naver-maps-sdk = { group = "com.naver.maps", name = "map-sdk", version.ref = "naverMap" }
 naver-maps-compose = { group = "io.github.fornewid", name = "naver-map-compose", version.ref = "naver-map-compose" }
 googleplay-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "googleplay-services-location" }
-
+google-play-services-nearby = { group = "com.google.android.gms", name = "play-services-nearby", version.ref = "nearby" }
 
 
 [plugins]
