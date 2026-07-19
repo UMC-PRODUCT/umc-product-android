@@ -50,6 +50,13 @@ import com.umc.component.theme.grey800
  * @param onPositive: 확인 시 처리 로직
  * @param onNegative: 취소 시 처리 로직
  * @Param onDismissRequest: 닫기 시 처리 로직
+ * @param showCloseButton 우측 상단 닫기(X) 버튼 표시 여부 (기본값: true)
+ * @param negativeBackgroundColor 취소 버튼 배경색
+ * @param negativeBorderColor 취소 버튼 테두리 색상
+ * @param negativeTextColor 취소 버튼 텍스트 색상
+ * @param positiveBackgroundColor 확인 버튼 배경색
+ * @param positiveBorderColor 확인 버튼 테두리 색상
+ * @param positiveTextColor 확인 버튼 텍스트 색상
  *
  */
 
@@ -65,6 +72,15 @@ fun UBasicDialog(
     onPositive: () -> Unit,
     onNegative: () -> Unit,
     onDismissRequest: () -> Unit,
+    showCloseButton: Boolean = true,
+
+    negativeBackgroundColor: Color = grey000(),
+    negativeBorderColor: Color = grey300(),
+    negativeTextColor: Color = grey800(),
+
+    positiveBackgroundColor: Color? = null,
+    positiveBorderColor: Color? = null,
+    positiveTextColor: Color? = null,
 ) {
 
     //type에 따라 시각적 요소(색상, 아이콘)를 결정
@@ -80,6 +96,15 @@ fun UBasicDialog(
             listOf(R.drawable.ic_check_success, green100(), green500(), green500())
         }
     }
+
+    val resolvedPositiveBackgroundColor =
+        positiveBackgroundColor ?: grey000()
+
+    val resolvedPositiveBorderColor =
+        positiveBorderColor ?: positiveColor as Color
+
+    val resolvedPositiveTextColor =
+        positiveTextColor ?: positiveColor as Color
 
     //다이얼로그
     Dialog(
@@ -97,20 +122,22 @@ fun UBasicDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                //닫기(X) 버튼
-                Box(modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onDismissRequest()},
-                    contentAlignment = Alignment.CenterEnd) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_close_big),
-                        contentDescription = "Close",
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable { onNegative() }
-                            .padding(12.dp),
-                        tint = grey800(),
-                    )
+                if (showCloseButton) {
+                    //닫기(x) 버튼
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_close_big),
+                            contentDescription = "Close",
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clickable { onNegative() }
+                                .padding(12.dp),
+                            tint = grey800(),
+                        )
+                    }
                 }
 
                 //중앙 아이콘
@@ -138,10 +165,14 @@ fun UBasicDialog(
                     style = UmcTypographyTokens.Title3Bold,
                     color = grey800())
 
-                if (content != null) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                content?.let { text ->
+                    Spacer(
+                        modifier = Modifier
+                        .height(16.dp)
+                    )
+
                     Text(
-                        text = content!!,
+                        text = text,
                         style = UmcTypographyTokens.Subheadline,
                         color = grey600()
                     )
@@ -160,10 +191,10 @@ fun UBasicDialog(
                         modifier = Modifier
                             .weight(1f)
                             .height(52.dp),
-                        backgroundColor = grey000(),
-                        borderColor = grey300(),
+                        backgroundColor = negativeBackgroundColor,
+                        borderColor = negativeBorderColor,
+                        textColor = negativeTextColor,
                         borderWidth = 1.dp,
-                        textColor = grey800(),
                         onClick = onNegative
                     )
 
@@ -171,10 +202,10 @@ fun UBasicDialog(
                     UButton(
                         text = positiveText,
                         modifier = Modifier.weight(1f).height(52.dp),
-                        backgroundColor = grey000(),
-                        borderColor = positiveColor as Color,
+                        backgroundColor = resolvedPositiveBackgroundColor,
+                        borderColor = resolvedPositiveBorderColor,
+                        textColor = resolvedPositiveTextColor,
                         borderWidth = 1.dp,
-                        textColor = positiveColor as Color,
                         onClick = {
                             onPositive()
 
