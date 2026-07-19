@@ -363,7 +363,7 @@ fun NoticeWriteScreen(
             )
         }
 
-        HorizontalDivider(thickness = 1.dp, color = grey100())
+        HorizontalDivider(thickness = 1.dp, color = grey200())
 
         MarkdownToolbar()
     }
@@ -371,7 +371,7 @@ fun NoticeWriteScreen(
 
 /**
  * 마크다운 도구 툴바. 현재는 버튼 배치만 구현된 상태 (기능 미연결).
- * 아이콘 24dp, 아이콘 간 간격 없음, 아이콘 집합과 빈 공간의 여백은 상하좌우 16dp
+ * 아이콘 24dp, 상하좌우 16dp 여백을 제외한 영역에 아이콘을 균등 분배 (양끝 정렬)
  */
 @Composable
 private fun MarkdownToolbar(
@@ -389,6 +389,7 @@ private fun MarkdownToolbar(
             .fillMaxWidth()
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         // 텍스트 크기
         MarkdownToolbarIcon(iconRes = R.drawable.ic_text_size, onClick = onClickTextSize)
