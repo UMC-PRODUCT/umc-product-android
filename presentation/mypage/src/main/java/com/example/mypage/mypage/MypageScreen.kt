@@ -82,6 +82,7 @@ fun MypageRoute(
     onNavigateToEditProfile: () -> Unit, //프로필 페이지 이동
     onNavigateToMyContent: (String) -> Unit, //내가 쓴 글 이동
     onNavigateToLogin: () -> Unit, //로그인 이동(로그아웃 or 탈퇴)
+    onNavigateToQrCode: () -> Unit, /**qr 코드 이동**/
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     //nearby 기능
@@ -107,8 +108,7 @@ fun MypageRoute(
         if (permissions.values.all { it }) {
             when (pendingNearbyAction) {
                 "ADVERTISE" -> {
-                    val name = uiState.userInfo.nickname.ifEmpty { uiState.userInfo.name.ifEmpty { "사용자" } }
-                    nearbyViewModel.startAdvertising(name)
+                    nearbyViewModel.startAdvertising()
                 }
                 "DISCOVER" -> {
                     nearbyViewModel.startDiscovery()
@@ -147,19 +147,6 @@ fun MypageRoute(
 
 
     /**테스트 용도**/
-    /** 1. 연결 인증 다이얼로그 **/
-    nearbyState.pendingAuth?.let { auth ->
-        UDialog(
-            title = "연결 인증",
-            content = "인증 코드 [ ${auth.code} ] 가 일치하는지 확인하세요.",
-            isTwoButton = true,
-            positiveText = "승인",
-            negativeText = "취소",
-            onPositive = { nearbyViewModel.accept(auth.id) },
-            onDismissRequest = { /* 취소 로직 */ }
-        )
-    }
-
     /** 2. Nearby ViewModel 이벤트 (Toast) 수신 **/
     LaunchedEffect(nearbyViewModel) {
         nearbyViewModel.uiEvent.collectLatest { event ->
@@ -250,6 +237,8 @@ fun MypageRoute(
                     showAddCodeDialog = false
 
                 }
+                /**qr 코드 이동**/
+                is MypageEvent.NavigateToQrcode -> onNavigateToQrCode()
                 else -> {}
             }
         }
@@ -296,6 +285,9 @@ fun MypageRoute(
                 )
                 nearbyViewModel.send(id, myCard)
             }
+        },
+        onQrcodeClick = {
+            viewModel.navigateToQrcode()
         }
     )
 
@@ -473,7 +465,8 @@ fun MypageScreen(
     onStartAdvertise: () -> Unit,
     onStartDiscovery: () -> Unit,
     onDeviceClick: (String) -> Unit,
-    onSendCardClick: () -> Unit
+    onSendCardClick: () -> Unit,
+    onQrcodeClick: () -> Unit
 ){
     //중첩 스크롤 대비 LazyColumn 뼈대
     LazyColumn(
@@ -523,6 +516,12 @@ fun MypageScreen(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    
+                    MypageListItem(
+                        iconRes = R.drawable.ic_add,
+                        text = "QR 코드 만들기",
+                        onClick = onQrcodeClick
+                    )
                     // 1. [기기 A] 광고 시작
                     MypageListItem(
                         iconRes = R.drawable.ic_add,

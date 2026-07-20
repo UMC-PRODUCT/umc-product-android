@@ -321,6 +321,10 @@ class MypageViewModel @Inject constructor(
         nearbyViewModel.startDiscovery()
     }
 
+    fun navigateToQrcode(){
+        emitEvent(MypageEvent.NavigateToQrcode)
+    }
+
 }
 
 
@@ -388,6 +392,9 @@ sealed interface MypageEvent : UiEvent {
     //외부 채널 이동
     object NavigateToWebstieUmc : MypageEvent // UMC 웹사이트
     object NavigateToInstagramUmc : MypageEvent // UMC 인스타그램
+
+    /**qr코드 이동**/
+    object NavigateToQrcode : MypageEvent
 
 
 
