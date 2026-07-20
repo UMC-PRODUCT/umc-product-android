@@ -13,22 +13,37 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 
 /**
- * 작성 중인 마크다운 원문에 스타일을 입혀 보여주는 VisualTransformation.
- * 토큰 문자는 지우지 않고 흐린 색으로 남겨 offset 매핑을 항등으로 유지한다.
- * 제목 크기(# 28 / ## 22 / ### 17)는 iOS 렌더링 스펙과 동일
+ * 마크다운 원문에서 마커 문자를 숨기고 스타일만 입혀 보여주는 VisualTransformation.
+ * 화면에는 마커가 보이지 않지만 실제 TextFieldValue(서버 전송값)에는 그대로 남는다.
+ * 제목 크기(# 28 / ## 22 / ### 17)는 iOS 렌더링 스펙과 동일.
+ *
+ * 커서가 숨겨진 마커 경계에 놓이면 토큰 "안쪽"으로 매핑해서
+ * 제목 줄 맨 앞이나 굵게 단어 끝에서 이어서 타이핑해도 스타일이 유지되게 한다.
+ * 링크(`[라벨](url)`)는 url 편집이 가능하도록 숨기지 않고 흐리게 표시만 한다
  */
 class MarkdownVisualTransformation(
     private val markerColor: Color,
     private val linkColor: Color,
 ) : VisualTransformation {
 
-    private val markerStyle = SpanStyle(color = markerColor)
+    override fun filter(text: AnnotatedString): TransformedText {
+        val raw = text.text
+        val hidden = mutableListOf<HiddenRange>()
+        val spans = mutableListOf<SpanRange>()
 
-    override fun filter(text: AnnotatedString): TransformedText =
-        TransformedText(styleMarkdown(text.text), OffsetMapping.Identity)
+        parse(raw, hidden, spans)
+        hidden.sortBy { it.start }
 
-    private fun styleMarkdown(raw: String): AnnotatedString {
-        val builder = AnnotatedString.Builder(raw)
+        val mapping = MarkdownOffsetMapping(originalLength = raw.length, hidden = hidden)
+        return TransformedText(buildTransformed(raw, hidden, spans, mapping), mapping)
+    }
+
+    /** 줄 단위(제목) → 인라인 순서로 숨김 범위와 스타일 범위를 수집 */
+    private fun parse(
+        raw: String,
+        hidden: MutableList<HiddenRange>,
+        spans: MutableList<SpanRange>,
+    ) {
         var lineStart = 0
         raw.split('\n').forEach { line ->
             val lineEnd = lineStart + line.length
@@ -36,27 +51,27 @@ class MarkdownVisualTransformation(
             var contentStart = lineStart
 
             if (heading != null) {
-                builder.addStyle(
-                    SpanStyle(fontSize = heading.fontSize, fontWeight = FontWeight.Bold),
-                    lineStart, lineEnd,
-                )
-                builder.addStyle(markerStyle, lineStart, lineStart + heading.prefix.length)
                 contentStart = lineStart + heading.prefix.length
+                hidden += HiddenRange(lineStart, contentStart, mapAfter = true)
+                spans += SpanRange(
+                    SpanStyle(fontSize = heading.fontSize, fontWeight = FontWeight.Bold),
+                    contentStart, lineEnd,
+                )
             }
 
-            styleInline(builder, raw, contentStart, lineEnd, emptyList())
+            collectInline(raw, contentStart, lineEnd, emptyList(), hidden, spans)
             lineStart = lineEnd + 1
         }
-        return builder.toAnnotatedString()
     }
 
-    /** [regionStart, regionEnd) 구간의 인라인 토큰을 찾아 스타일 적용. 내부 토큰은 재귀 처리 */
-    private fun styleInline(
-        builder: AnnotatedString.Builder,
+    /** [regionStart, regionEnd) 구간의 인라인 토큰 수집. 내부 토큰은 재귀 처리 */
+    private fun collectInline(
         raw: String,
         regionStart: Int,
         regionEnd: Int,
         inheritedDecorations: List<TextDecoration>,
+        hidden: MutableList<HiddenRange>,
+        spans: MutableList<SpanRange>,
     ) {
         if (regionStart >= regionEnd) return
         val region = raw.substring(regionStart, regionEnd)
@@ -69,12 +84,20 @@ class MarkdownVisualTransformation(
             val innerEnd = regionStart + token.end - token.closeLength
             val closeEnd = regionStart + token.end
 
-            builder.addStyle(markerStyle, openStart, innerStart)
-            builder.addStyle(markerStyle, innerEnd, closeEnd)
+            if (token.kind == InlineTokenKind.LINK) {
+                // 링크는 마커를 숨기지 않고 흐리게 표시 (url 확인/편집 가능해야 함)
+                spans += SpanRange(SpanStyle(color = markerColor), openStart, innerStart)
+                spans += SpanRange(SpanStyle(color = markerColor), innerEnd, closeEnd)
+            } else {
+                hidden += HiddenRange(openStart, innerStart, mapAfter = true)
+                hidden += HiddenRange(innerEnd, closeEnd, mapAfter = false)
+            }
 
             val decorations = inheritedDecorations + token.kind.decorations
-            builder.addStyle(token.kind.spanStyle(linkColor, decorations), innerStart, innerEnd)
-            styleInline(builder, raw, innerStart, innerEnd, decorations)
+            token.kind.spanStyle(linkColor, decorations)?.let { style ->
+                spans += SpanRange(style, innerStart, innerEnd)
+            }
+            collectInline(raw, innerStart, innerEnd, decorations, hidden, spans)
 
             searchFrom = token.end
         }
@@ -90,18 +113,77 @@ class MarkdownVisualTransformation(
             if (current == null || match.range.first < current.start ||
                 (match.range.first == current.start && priority < bestPriority)
             ) {
-                val innerRange = match.groups[1]?.range ?: return@forEachIndexed
-                best = InlineToken(
-                    start = match.range.first,
-                    end = match.range.last + 1,
-                    openLength = innerRange.first - match.range.first,
-                    closeLength = match.range.last - innerRange.last,
-                    kind = kind,
-                )
+                val token = kind.toToken(match) ?: return@forEachIndexed
+                best = token
                 bestPriority = priority
             }
         }
         return best
+    }
+
+    /** 숨김 범위를 제외한 문자열을 만들고 스타일을 변환 좌표로 적용 */
+    private fun buildTransformed(
+        raw: String,
+        hidden: List<HiddenRange>,
+        spans: List<SpanRange>,
+        mapping: MarkdownOffsetMapping,
+    ): AnnotatedString {
+        val visible = StringBuilder(raw.length)
+        var pos = 0
+        hidden.forEach { range ->
+            visible.append(raw, pos, range.start)
+            pos = range.end
+        }
+        visible.append(raw, pos, raw.length)
+
+        val builder = AnnotatedString.Builder(visible.toString())
+        spans.forEach { span ->
+            builder.addStyle(
+                span.style,
+                mapping.originalToTransformed(span.start),
+                mapping.originalToTransformed(span.end),
+            )
+        }
+        return builder.toAnnotatedString()
+    }
+}
+
+/** 화면에서 제거되는 마커 범위. [mapAfter]는 경계 커서를 범위 뒤(토큰 안쪽)로 보낼지 여부 */
+private data class HiddenRange(val start: Int, val end: Int, val mapAfter: Boolean)
+
+private data class SpanRange(val style: SpanStyle, val start: Int, val end: Int)
+
+/**
+ * 숨김 범위 기준 원문 ↔ 표시 좌표 매핑.
+ * 표시 좌표가 마커 경계에 걸치면 여는 마커는 뒤로, 닫는 마커는 앞으로 보내
+ * 커서가 항상 토큰 안쪽에 놓이게 한다
+ */
+private class MarkdownOffsetMapping(
+    private val originalLength: Int,
+    private val hidden: List<HiddenRange>,
+) : OffsetMapping {
+
+    override fun originalToTransformed(offset: Int): Int {
+        var removed = 0
+        for (range in hidden) {
+            if (offset <= range.start) break
+            removed += minOf(offset, range.end) - range.start
+        }
+        return offset - removed
+    }
+
+    override fun transformedToOriginal(offset: Int): Int {
+        var remaining = offset
+        var original = 0
+        for (range in hidden) {
+            val keptBefore = range.start - original
+            if (remaining < keptBefore || (remaining == keptBefore && !range.mapAfter)) {
+                return original + remaining
+            }
+            remaining -= keptBefore
+            original = range.end
+        }
+        return (original + remaining).coerceAtMost(originalLength)
     }
 }
 
@@ -112,11 +194,17 @@ private enum class HeadingSpec(val prefix: String, val fontSize: TextUnit) {
     TITLE1("# ", 28.sp),
 }
 
-/** 인라인 토큰 종류. 선언 순서가 동일 위치에서의 우선순위 (iOS 파서와 동일) */
+/**
+ * 인라인 토큰 종류. 선언 순서가 동일 위치에서의 우선순위 (iOS 파서와 동일).
+ * EMPTY_*는 툴바로 삽입 직후의 빈 마커 쌍 — 내용 없이도 숨겨서 커서만 남긴다
+ */
 private enum class InlineTokenKind(
     val regex: Regex,
     val decorations: List<TextDecoration> = emptyList(),
 ) {
+    EMPTY_UNDERLINE(Regex("<u></u>")),
+    EMPTY_STRIKETHROUGH(Regex("~~~~")),
+    EMPTY_BOLD(Regex("\\*\\*\\*\\*")),
     LINK(Regex("\\[(.+?)]\\((.+?)\\)"), listOf(TextDecoration.Underline)),
     UNDERLINE(Regex("<u>(.+?)</u>"), listOf(TextDecoration.Underline)),
     STRIKETHROUGH(Regex("~~(.+?)~~"), listOf(TextDecoration.LineThrough)),
@@ -126,9 +214,34 @@ private enum class InlineTokenKind(
     ITALIC_ASTERISK(Regex("\\*(.+?)\\*")),
     ITALIC_UNDERSCORE(Regex("_(.+?)_"));
 
-    fun spanStyle(linkColor: Color, decorations: List<TextDecoration>): SpanStyle {
+    /** 매치 결과를 마커 길이가 계산된 토큰으로 변환 */
+    fun toToken(match: MatchResult): InlineToken? {
+        val start = match.range.first
+        val end = match.range.last + 1
+        return when (this) {
+            EMPTY_UNDERLINE -> InlineToken(start, end, openLength = 3, closeLength = 4, kind = this)
+            EMPTY_STRIKETHROUGH, EMPTY_BOLD -> {
+                val half = (end - start) / 2
+                InlineToken(start, end, openLength = half, closeLength = half, kind = this)
+            }
+
+            else -> {
+                val innerRange = match.groups[1]?.range ?: return null
+                InlineToken(
+                    start = start,
+                    end = end,
+                    openLength = innerRange.first - start,
+                    closeLength = match.range.last - innerRange.last,
+                    kind = this,
+                )
+            }
+        }
+    }
+
+    fun spanStyle(linkColor: Color, decorations: List<TextDecoration>): SpanStyle? {
         val decoration = decorations.takeIf { it.isNotEmpty() }?.let { TextDecoration.combine(it) }
         return when (this) {
+            EMPTY_UNDERLINE, EMPTY_STRIKETHROUGH, EMPTY_BOLD -> null
             LINK -> SpanStyle(color = linkColor, textDecoration = decoration)
             UNDERLINE, STRIKETHROUGH -> SpanStyle(textDecoration = decoration)
             BOLD -> SpanStyle(fontWeight = FontWeight.Bold)
