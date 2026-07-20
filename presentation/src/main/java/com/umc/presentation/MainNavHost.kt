@@ -12,6 +12,7 @@ import androidx.navigation.toRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
+import com.example.mypage.qrcode.QrCodeRoute
 import com.umc.failcode.SignUpFailRoute
 import com.umc.failcode.code.SignUpFailCodeRoute
 import com.umc.permission.PermissionRoute
@@ -158,7 +159,10 @@ fun MainNavHost(
                 onNavigateToMyContent = {type ->
                     navHostController.navigate(MainDestination.MyContent(showType = type))
                                         },
-                onNavigateToLogin = {}
+                onNavigateToLogin = {},
+                onNavigateToQrCode = {
+                    navHostController.navigate(MainDestination.Qrcode)
+                }
             )
 
         }
@@ -175,6 +179,13 @@ fun MainNavHost(
         //내 프로필
         composable<MainDestination.MyProfile> {
             ProfileRoute()
+        }
+
+        /**qr 코드**/
+        composable<MainDestination.Qrcode> {
+            QrCodeRoute(
+                onNavigateToBack = {}
+            )
         }
 
 

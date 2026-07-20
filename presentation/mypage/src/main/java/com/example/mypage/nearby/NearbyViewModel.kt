@@ -46,8 +46,8 @@ class NearbyViewModel @Inject constructor(
     }
 
     // 기기 광고 시작
-    fun startAdvertising(name: String) {
-        manager.startAdvertising(name)
+    fun startAdvertising() {
+        manager.startAdvertising()
     }
 
     // 1:N 유저 탐색
