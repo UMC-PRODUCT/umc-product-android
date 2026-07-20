@@ -27,6 +27,7 @@ import com.umc.presentation.login.findpassword.FindPasswordRoute
 import com.umc.presentation.notice.NoticeRoute
 import com.umc.presentation.notice.adminnotice.AdminNoticeRoute
 import com.umc.presentation.notice.search.NoticeSearchRoute
+import com.umc.presentation.notice.detail.NoticeDetailRoute
 import com.umc.presentation.notice.write.NoticeWriteRoute
 import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
@@ -204,18 +205,32 @@ fun MainNavHost(
                     navHostController.navigate(MainDestination.AdminNotice(gisuId))
                 },
                 navigateToWrite = {
-                    navHostController.navigate(MainDestination.NoticeWrite)
+                    navHostController.navigate(MainDestination.NoticeWrite())
                 },
                 navigateToDetail = { noticeId ->
-                    // TODO: 공지 상세 화면 완성 후 연결
+                    navHostController.navigate(MainDestination.NoticeDetail(noticeId))
                 },
             )
         }
 
-        //공지 작성 (권한별 카테고리/게시판 분류)
-        composable<MainDestination.NoticeWrite> {
+        //공지 작성 (권한별 카테고리/게시판 분류). noticeId가 있으면 수정 모드
+        composable<MainDestination.NoticeWrite> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.NoticeWrite>()
             NoticeWriteRoute(
+                editNoticeId = destination.noticeId,
                 navigateToBack = { navHostController.popBackStack() },
+            )
+        }
+
+        //공지 상세
+        composable<MainDestination.NoticeDetail> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.NoticeDetail>()
+            NoticeDetailRoute(
+                noticeId = destination.noticeId,
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToEdit = { noticeId ->
+                    navHostController.navigate(MainDestination.NoticeWrite(noticeId))
+                },
             )
         }
 
@@ -229,7 +244,7 @@ fun MainNavHost(
                     navHostController.navigate(MainDestination.NoticeSearch(gisuId))
                 },
                 navigateToDetail = { noticeId ->
-                    // TODO: 공지 상세 화면 완성 후 연결
+                    navHostController.navigate(MainDestination.NoticeDetail(noticeId))
                 },
             )
         }
@@ -241,7 +256,7 @@ fun MainNavHost(
                 gisuId = destination.gisuId,
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToDetail = { noticeId ->
-                    // TODO: 공지 상세 화면 완성 후 연결
+                    navHostController.navigate(MainDestination.NoticeDetail(noticeId))
                 },
             )
         }
