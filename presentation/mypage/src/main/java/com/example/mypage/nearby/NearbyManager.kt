@@ -18,18 +18,58 @@ import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
 import com.umc.domain.model.mypage.UserCard
 
+/** 통신 흐름 (QR코드 스캔 + nearbyconnection) / 그냥은 3번 이후부터
+ *
+ * [기기 A (QR 스캐너)]                                [기기 B (QR 노출자)]
+ *         │                                                    │
+ *   1. CameraX로 B의 QR 스캔                                   │
+ *      ('SM-T733' 획득)                                         │
+ *         │                                            startAdvertising()
+ *   startDiscovery()                                   (Name: 'SM-T733')
+ *         │                                                    │
+ *         ├──────────────── 2. EndpointFound ──────────────────┤
+ *         │                (ID: EX5J, Name: SM-T733)          │
+ *         │                                                    │
+ *   3. QrContent('SM-T733') == EndpointName('SM-T733') Match!  │
+ *         │                                                    │
+ *   requestConnection('EX5J') ──────────────┐                  │
+ *         │                                 ▼                  │
+ *   4. onConnectionInitiated 발생 ◄────────────────────────────┤
+ *      (acceptConnection 자동 승인)                             │
+ *         │                                                    │
+ *   5. ConnectionResult (Success) ─────────────────────────────┤
+ *         │                                                    │
+ *   sendUserCard() (UserCard JSON 전송) ────────────────────────►│
+ *         │                                              Payload 수신!
+ *         │                                              (UserCardReceived)
+ *         │                                                    │
+ *         │◄───────── 6. ACK_RECEIVED 페이로드 답장 ──────────────┤
+ *         │                                              disconnect('EX5J')
+ *   ACK 수신 확인!                                              │
+ *   disconnect('EX5J')                                         │
+ *   (안전하게 소켓 정리)                                         │
+ *
+ *
+ * **/
+
+/**
+ * Nearby Connections API를 총괄 관리하는 클래스
+ * @param context 애플리케이션 컨텍스트
+ * @param onEvent ViewModel로 통신 상태 및 데이터 이벤트를 전달하는 콜백
+ */
 class NearbyManager(
     context: Context,
     private val onEvent: (NearbyManagerEvent) -> Unit
 ) {
     private val client = Nearby.getConnectionsClient(context)
-    //다른 애플리케이션이랑 겹치지 않도록 패키지 이름 사용
+
+    //타 앱과의 신호 혼선을 막기위한 고유 ID(패키지 이름) -
     private val SERVICE_ID = "com.example.mypage.nearby"
 
-    //endpoint 이름 = 기기 모델명
+    //endpoint 이름 = 기기 모델명 (SM-G991N)
     private val localEndpointName = Build.MODEL
 
-    // 기기 광고 시작
+    //주변 기기에 내 기기를 광고 시작
     fun startAdvertising() {
 
         val advertisingName = "${localEndpointName}"
@@ -50,7 +90,7 @@ class NearbyManager(
             }
     }
 
-    // 1:N으로 유저탐색
+    //주변에서 광고중인 기기를 1:N으로 탐색
     fun startDiscovery() {
 
         Log.d("NearbyDebug", "2. Discovery 시작 시도...")
@@ -69,7 +109,10 @@ class NearbyManager(
             }
     }
 
-    // 연결 시도
+    /**
+     * 발견된 특정 endpointId 기기에 P2P 연결 요청
+     * @param endpointId 구글 Nearby API에서 발급한 상대 기기의 일회성 고유 식별자
+     */
     fun requestConnection(endpointId: String) {
         Log.d("NearbyDebug", "3. RequestConnection 호출 -> target ID: $endpointId")
 
@@ -89,7 +132,7 @@ class NearbyManager(
                 } else {
                     "알 수 없는 오류 발생"
                 }
-                // 에러 메시지를 UI에 전달 (이벤트를 새롭게 추가해야 합니다)
+                //에러 메시지를 UI에 전달 (이벤트를 새롭게 추가해야 합니다)
                 onEvent(NearbyManagerEvent.Error(message))
             }
             .addOnSuccessListener {
@@ -97,12 +140,16 @@ class NearbyManager(
             }
     }
 
-    // 인증 후 연결 승인
+    //상대방과의 연결을 승인
     fun acceptConnection(endpointId: String) {
         client.acceptConnection(endpointId, payloadCallback)
     }
 
-    // 데이터 전송
+    /**
+     * 상대방 기기로 내 UserCard 객체(JSON) 전송
+     * @param endpointId 대상 기기의 ID
+     * @param card 전송할 유저 명함 데이터
+     */
     fun sendUserCard(endpointId: String, card: UserCard) {
         client.sendPayload(endpointId, Payload.fromBytes(card.toJson().toByteArray()))
             .addOnSuccessListener {
@@ -119,7 +166,7 @@ class NearbyManager(
         client.disconnectFromEndpoint(endpointId)
     }
 
-    // 모든 통신 정리
+    //모든 통신 정리
     fun stopAll() {
         client.stopDiscovery()
         client.stopAdvertising()
@@ -133,22 +180,28 @@ class NearbyManager(
         client.stopAdvertising()
     }
 
+    /**
+     * 연결 수립 과정에서의 기기 간 핸드셰이킹 콜백
+     */
     private val lifecycleCallback = object : ConnectionLifecycleCallback() {
+        //상대방과의 연결 파이프라인 첫 수립시
         override fun onConnectionInitiated(id: String, info: ConnectionInfo) {
-            // 구글에서 자동 생성한 6자리 인증번호 이벤트 전달
+            //구글에서 자동 생성한 6자리 인증번호 이벤트 전달
             //onEvent(NearbyManagerEvent.AuthVerification(id, info.authenticationDigits))
 
             Log.d("NearbyDebug", "4. ConnectionInitiated 발생 -> ID: $id, AuthCode: ${info.authenticationDigits}")
             Log.d("NearbyDebug", "4-1. acceptConnection 자동 호출!")
-            //자동으로 accept 되게
+
+            //인증번호 검증 없이 자동으로 accept 되게
             acceptConnection(id)
         }
 
+        //연결 승인 결과 (성공/실패)
         override fun onConnectionResult(id: String, res: ConnectionResolution) {
             Log.d("NearbyDebug", "5. ConnectionResult 수신 -> Success: ${res.status.isSuccess}, Status: ${res.status.statusCode}")
             if (res.status.isSuccess) {
-                client.stopDiscovery() // 연결 성공 시 탐색 중지
-                client.stopAdvertising() // 연결 성공 시 광고 중지
+                client.stopDiscovery() //연결 성공 시 탐색 중지
+                client.stopAdvertising() //연결 성공 시 광고 중지
                 onEvent(NearbyManagerEvent.ConnectionSuccess(id))
             }
             else{
@@ -156,24 +209,29 @@ class NearbyManager(
             }
         }
 
+        //연결이 종료되었을 때
         override fun onDisconnected(id: String) {
             Log.d("NearbyDebug", "X. Disconnected 발생: $id")
             onEvent(NearbyManagerEvent.StatusUpdate("연결이 끊어졌습니다."))
         }
     }
 
+    /**
+     * 데이터 페이로드 송수신 처리 콜백
+     */
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(id: String, payload: Payload) {
             val bytes = payload.asBytes() ?: return
             val json = String(bytes)
 
-            //안전 종료를 위해 ACK
+            //경우1. 내가 보낸 데이터를 상대방이 잘 받았다는 ACK 전송시 안전 종료 과정
             if (json == "ACK_RECEIVED") {
                 Log.d("NearbyDebug", "상대방 데이터 수신 확인(ACK) -> 소켓 안전 해제")
-                disconnect(id) // 전송 완료 후 연결 안전 종료
+                disconnect(id) //전송 완료 후 연결 안전 종료
                 return
             }
 
+            //경우2. 상대방이 보낸 데이터를 받았을 때 ACK 보내고 연결 안전 종료 과정
             Log.d("NearbyDebug", "6. Payload 수신 완료! -> Data: $json")
             try {
                 val card = UserCard.fromJson(json)
@@ -183,7 +241,7 @@ class NearbyManager(
                 client.sendPayload(id, Payload.fromBytes("ACK_RECEIVED".toByteArray()))
                     .addOnCompleteListener {
                         Log.d("NearbyDebug", "ACK 전송 완료 후 내 쪽 소켓 정리")
-                        // 수신 측도 전송 완료 후 소켓 해제
+                        //수신 측도 전송 완료 후 소켓 해제
                         disconnect(id)
                     }
 
@@ -197,6 +255,9 @@ class NearbyManager(
         }
     }
 
+    /**
+     * 주변 기기 검색 콜백
+     */
     private val discoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(id: String, info: DiscoveredEndpointInfo) {
             Log.d("NearbyDebug", "2-3. 주변 기기 발견(EndpointFound)! ID: $id, Name: ${info.endpointName}")
@@ -209,6 +270,9 @@ class NearbyManager(
 
 
 
+/**
+ * NearbyManager 내부 이벤트를 ViewModel로 전달하는 봉인된 클래스
+ */
 sealed class NearbyManagerEvent {
     data class EndpointFound(val id: String, val name: String) : NearbyManagerEvent()
     data class AuthVerification(val id: String, val code: String) : NearbyManagerEvent()

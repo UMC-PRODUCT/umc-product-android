@@ -24,13 +24,18 @@ import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 
-/**QR 코드를 스캔할 수 있는 view**/
+/**
+ * CameraX 및 Google ML Kit를 결합한 QR 코드 실시간 스캐너
+ * @param onQrCodeScanned QR 인식이 성공했을 때 문자열을 전달하는 콜백
+ */
 @Composable
 fun QrCodeScannerView(
     onQrCodeScanned: (String) -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    //중복 스캔 방지용 플래그
     var isScanned by remember { mutableStateOf(false) }
 
     AndroidView(
