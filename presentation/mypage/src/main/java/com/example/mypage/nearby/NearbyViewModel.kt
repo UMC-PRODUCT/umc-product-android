@@ -27,19 +27,32 @@ class NearbyViewModel @Inject constructor(
                 updateState { copy(pendingAuth = event) }
             }
             is NearbyManagerEvent.ConnectionSuccess -> {
-                updateState { copy(connectedId = event.id, pendingAuth = null) }
+                updateState { copy(connectedId = event.id, pendingAuth = null, status = "연결 완료") }
+                emitEvent(NearbyEvent.ShowToast("연결에 성공했습니다."))
             }
             is NearbyManagerEvent.UserCardReceived -> {
                 updateState { copy(receivedCard = event.card) }
+                emitEvent(NearbyEvent.ShowToast("유저 카드를 수신했습니다."))
+            }
+            is NearbyManagerEvent.StatusUpdate -> {
+                updateState { copy(status = event.message) }
+                emitEvent(NearbyEvent.ShowToast(event.message))
+            }
+            is NearbyManagerEvent.Error -> {
+                updateState { copy(status = event.message) }
+                emitEvent(NearbyEvent.ShowToast(event.message))
             }
         }
     }
 
+    // 기기 광고 시작
+    fun startAdvertising(name: String) {
+        manager.startAdvertising(name)
+    }
+
     // 1:N 유저 탐색
     fun startDiscovery() {
-        startLoading() // BaseViewModel의 로딩 기능 사용
         manager.startDiscovery()
-        stopLoading()
     }
 
     // 연결 시도
@@ -74,5 +87,4 @@ data class NearbyUiState(
 
 sealed interface NearbyEvent : UiEvent {
     data class ShowToast(val message: String) : NearbyEvent
-    // 필요 시 추가
 }

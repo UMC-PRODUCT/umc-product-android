@@ -2,6 +2,7 @@ package com.example.mypage.mypage
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.example.mypage.nearby.NearbyViewModel
 import com.kakao.sdk.auth.TokenManagerProvider
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
@@ -181,6 +182,7 @@ class MypageViewModel @Inject constructor(
 
     }
 
+
     //개인정보처리 방침
     fun navigateToPersonalInformation(){
         viewModelScope.launch {
@@ -314,6 +316,10 @@ class MypageViewModel @Inject constructor(
 
 
 
+    /**테스트**/
+    fun startNearbyDiscovery(nearbyViewModel: NearbyViewModel) {
+        nearbyViewModel.startDiscovery()
+    }
 
 }
 

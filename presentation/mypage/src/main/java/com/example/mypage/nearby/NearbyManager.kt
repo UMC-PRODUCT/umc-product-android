@@ -3,6 +3,7 @@ package com.example.mypage.nearby
 import android.content.Context
 import android.os.Build
 import com.google.android.gms.nearby.Nearby
+import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
 import com.google.android.gms.nearby.connection.ConnectionResolution
@@ -27,12 +28,33 @@ class NearbyManager(
     //endpoint 이름 = 기기 모델명
     private val localEndpointName = Build.MODEL
 
+    // 기기 광고 시작
+    fun startAdvertising(name: String) {
+        val options = AdvertisingOptions.Builder()
+            .setStrategy(Strategy.P2P_CLUSTER)
+            .build()
+
+        client.startAdvertising("${localEndpointName}_${name}", SERVICE_ID, lifecycleCallback, options)
+            .addOnSuccessListener {
+                onEvent(NearbyManagerEvent.StatusUpdate("광고가 시작되었습니다. (탐색 가능)"))
+            }
+            .addOnFailureListener { e ->
+                onEvent(NearbyManagerEvent.Error("광고 시작 실패: ${e.localizedMessage}"))
+            }
+    }
+
     // 1:N으로 유저탐색
     fun startDiscovery() {
         val options = DiscoveryOptions.Builder()
             .setStrategy(Strategy.P2P_CLUSTER)
             .build()
         client.startDiscovery(SERVICE_ID, discoveryCallback, options)
+            .addOnSuccessListener {
+                onEvent(NearbyManagerEvent.StatusUpdate("주변 기기 탐색 중..."))
+            }
+            .addOnFailureListener { e ->
+                onEvent(NearbyManagerEvent.Error("탐색 시작 실패: ${e.localizedMessage}"))
+            }
     }
 
     // 연결 시도
@@ -63,6 +85,18 @@ class NearbyManager(
     // 데이터 전송
     fun sendUserCard(endpointId: String, card: UserCard) {
         client.sendPayload(endpointId, Payload.fromBytes(card.toJson().toByteArray()))
+            .addOnSuccessListener {
+                onEvent(NearbyManagerEvent.StatusUpdate("카드 전송이 완료되었습니다. 연결을 종료합니다."))
+                disconnect(endpointId)
+            }
+            .addOnFailureListener {
+                onEvent(NearbyManagerEvent.Error("카드 전송에 실패했습니다."))
+            }
+    }
+
+    //특정 기기와의 연결 해제 함수
+    fun disconnect(endpointId: String) {
+        client.disconnectFromEndpoint(endpointId)
     }
 
     // 모든 통신 정리
@@ -80,17 +114,29 @@ class NearbyManager(
         override fun onConnectionResult(id: String, res: ConnectionResolution) {
             if (res.status.isSuccess) {
                 client.stopDiscovery() // 연결 성공 시 탐색 중지
+                client.stopAdvertising() // 연결 성공 시 광고 중지
                 onEvent(NearbyManagerEvent.ConnectionSuccess(id))
+            }
+            else{
+                onEvent(NearbyManagerEvent.Error("연결이 거절되었거나 실패했습니다."))
             }
         }
 
-        override fun onDisconnected(id: String) {}
+        override fun onDisconnected(id: String) {
+            onEvent(NearbyManagerEvent.StatusUpdate("연결이 끊어졌습니다."))
+        }
     }
 
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(id: String, payload: Payload) {
-            val json = String(payload.asBytes()!!)
-            onEvent(NearbyManagerEvent.UserCardReceived(UserCard.fromJson(json)))
+            val bytes = payload.asBytes() ?: return
+            val json = String(bytes)
+            try {
+                val card = UserCard.fromJson(json)
+                onEvent(NearbyManagerEvent.UserCardReceived(card))
+            } catch (e: Exception) {
+                onEvent(NearbyManagerEvent.Error("유저카드 파싱에 실패했습니다."))
+            }
         }
 
         override fun onPayloadTransferUpdate(id: String, update: PayloadTransferUpdate) {}
@@ -112,5 +158,6 @@ sealed class NearbyManagerEvent {
     data class AuthVerification(val id: String, val code: String) : NearbyManagerEvent()
     data class ConnectionSuccess(val id: String) : NearbyManagerEvent()
     data class UserCardReceived(val card: UserCard) : NearbyManagerEvent()
+    data class StatusUpdate(val message: String) : NearbyManagerEvent()
     data class Error(val message: String) : NearbyManagerEvent()
 }
