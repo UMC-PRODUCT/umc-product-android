@@ -171,4 +171,39 @@ class MarkdownEditActionsTest {
         val mapping = transform("# 제목").offsetMapping
         assertEquals(2, mapping.transformedToOriginal(0))
     }
+
+    @Test
+    fun `오프셋 매핑은 항상 범위 안에서 단조 증가`() {
+        // TextField가 렌더링 중 검증하는 불변식: 범위 초과나 역행이 있으면 크래시
+        val samples = listOf(
+            "",
+            "# 세션 안내\n이번 세션은 **오프라인**으로 진행됩니다.",
+            "**굵게** *기울임* <u>밑줄</u> ~~취소~~",
+            "****~~~~<u></u>",
+            "# \n## 제목\n- 목록 **굵게**\n[라벨](https://umc.com) 끝",
+            "*미완성 **중첩*** _혼합_ ~~",
+        )
+
+        samples.forEach { source ->
+            val transformed = transform(source)
+            val mapping = transformed.offsetMapping
+            val transformedLength = transformed.text.length
+
+            var prev = 0
+            (0..source.length).forEach { offset ->
+                val mapped = mapping.originalToTransformed(offset)
+                check(mapped in 0..transformedLength) { "o2t($offset)=$mapped 범위 초과: \"$source\"" }
+                check(mapped >= prev) { "o2t($offset)=$mapped 역행: \"$source\"" }
+                prev = mapped
+            }
+
+            prev = 0
+            (0..transformedLength).forEach { offset ->
+                val mapped = mapping.transformedToOriginal(offset)
+                check(mapped in 0..source.length) { "t2o($offset)=$mapped 범위 초과: \"$source\"" }
+                check(mapped >= prev) { "t2o($offset)=$mapped 역행: \"$source\"" }
+                prev = mapped
+            }
+        }
+    }
 }
