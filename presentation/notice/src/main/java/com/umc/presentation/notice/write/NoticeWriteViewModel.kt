@@ -20,6 +20,7 @@ import com.umc.domain.model.notice.WriteCategory
 import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.request.notice.NoticeCreateRequest
 import com.umc.domain.model.request.notice.NoticeTargetRequest
+import com.umc.domain.model.request.notice.NoticeUpdateRequest
 import com.umc.domain.model.request.notice.NoticeVoteRequest
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
@@ -27,6 +28,8 @@ import com.umc.domain.usecase.notice.AddNoticeImagesUseCase
 import com.umc.domain.usecase.notice.AddNoticeLinksUseCase
 import com.umc.domain.usecase.notice.AddNoticeVoteUseCase
 import com.umc.domain.usecase.notice.CreateNoticeUseCase
+import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
+import com.umc.domain.usecase.notice.UpdateNoticeUseCase
 import com.umc.domain.usecase.organization.GetChapterListUseCase
 import com.umc.domain.usecase.school.GetAllSchoolUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
@@ -40,6 +43,8 @@ class NoticeWriteViewModel @Inject constructor(
     private val getChapterListUseCase: GetChapterListUseCase,
     private val getAllSchoolUseCase: GetAllSchoolUseCase,
     private val createNoticeUseCase: CreateNoticeUseCase,
+    private val updateNoticeUseCase: UpdateNoticeUseCase,
+    private val getNoticeDetailUseCase: GetNoticeDetailUseCase,
     private val uploadFileUseCase: UploadFileUseCase,
     private val addNoticeImagesUseCase: AddNoticeImagesUseCase,
     private val addNoticeLinksUseCase: AddNoticeLinksUseCase,
@@ -57,6 +62,35 @@ class NoticeWriteViewModel @Inject constructor(
         loadWriterRole()
         loadChapterList()
         loadSchoolList()
+    }
+
+    /** 수정 모드 진입. 기존 공지 내용(제목/본문/링크/이미지)을 채워 넣는다 */
+    fun initEditMode(noticeId: Long) = viewModelScope.launch {
+        if (noticeId <= 0L || uiState.value.editNoticeId == noticeId) return@launch
+        updateState { copy(isEditMode = true, editNoticeId = noticeId) }
+
+        resultResponse(
+            response = getNoticeDetailUseCase(noticeId),
+            successCallback = { detail ->
+                val linkText = detail.links
+                    .sortedBy { it.displayOrder }
+                    .joinToString(", ") { it.url }
+                updateState {
+                    copy(
+                        title = detail.title,
+                        content = TextFieldValue(detail.content),
+                        isLinkVisible = linkText.isNotBlank(),
+                        linkText = linkText,
+                        images = detail.images
+                            .sortedBy { it.displayOrder }
+                            .map { NoticeImageAttachment(uri = it.url, fileId = it.id.toString()) },
+                    )
+                }
+            },
+            errorCallback = {
+                emitEvent(NoticeWriteEvent.ShowError(it.message))
+            },
+        )
     }
 
     /** 작성자 권한을 계산하고 권한별 카테고리 목록 구성. 권한에 맞는 카테고리가 기본 선택됨 */
@@ -329,10 +363,29 @@ class NoticeWriteViewModel @Inject constructor(
     // 등록
     // ---------------------------------------------------------------
 
-    /** 공지 등록: 생성 → 이미지 연결 → 링크 연결 → 투표 연결 순서로 호출 */
+    /** 공지 등록/수정: 본문 저장 후 이미지 → 링크 → 투표 순서로 연결 */
     fun onClickRegister() = viewModelScope.launch {
         val state = uiState.value
         if (!state.enableRegister || state.isSubmitting) return@launch
+
+        if (state.isEditMode) {
+            updateState { copy(isSubmitting = true) }
+            resultResponse(
+                response = updateNoticeUseCase(
+                    state.editNoticeId,
+                    NoticeUpdateRequest(
+                        title = state.title.trim(),
+                        content = state.content.text,
+                    )
+                ),
+                successCallback = { attachExtras(state.editNoticeId) },
+                errorCallback = {
+                    updateState { copy(isSubmitting = false) }
+                    emitEvent(NoticeWriteEvent.ShowError(it.message))
+                }
+            )
+            return@launch
+        }
 
         val target = buildTargetRequest(state) ?: run {
             emitEvent(NoticeWriteEvent.ShowError(AppStrings.NOTICE_WRITE_CATEGORY_PLACEHOLDER))
@@ -514,15 +567,17 @@ data class NoticeWriteUiState(
     val activeGisuId: Int? = null,
     val writerSchoolId: Int? = null,
     val isSubmitting: Boolean = false,
+    val isEditMode: Boolean = false,
+    val editNoticeId: Long = 0L,
 ) : UiState {
     // 게시판 분류가 있는 카테고리에서 하나라도 선택됐는지
     val hasBoardSelection: Boolean
         get() = isAllSelected || isStaffSelected
                 || selectedChapter != null || selectedSchool != null || selectedPart != null
 
+    // 수정 모드에서는 수신 대상을 바꿀 수 없으므로 카테고리/분류 조건 제외
     val enableRegister: Boolean
-        get() = selectedCategory != null
-                && (boardChips.isEmpty() || hasBoardSelection)
+        get() = (isEditMode || (selectedCategory != null && (boardChips.isEmpty() || hasBoardSelection)))
                 && title.isNotBlank()
                 && content.text.isNotBlank()
                 && !isSubmitting

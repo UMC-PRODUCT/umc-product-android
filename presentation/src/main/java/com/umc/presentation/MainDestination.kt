@@ -53,9 +53,13 @@ sealed interface MainDestination {
     @Serializable
     data class AdminNotice(val gisuId: Long) : MainDestination
 
-    //공지 작성
+    //공지 작성. noticeId가 있으면 수정 모드
     @Serializable
-    data object NoticeWrite : MainDestination
+    data class NoticeWrite(val noticeId: Long = 0L) : MainDestination
+
+    //공지 상세
+    @Serializable
+    data class NoticeDetail(val noticeId: Long) : MainDestination
 
     /**홈 화면 섹션**/
     //홈 화면

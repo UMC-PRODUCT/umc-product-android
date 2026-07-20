@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -92,6 +93,7 @@ private enum class WriteSheetType { CATEGORY, CHAPTER, SCHOOL, PART, VOTE }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoticeWriteRoute(
+    editNoticeId: Long = 0L,
     viewModel: NoticeWriteViewModel = hiltViewModel(),
     navigateToBack: () -> Unit = {},
 ) {
@@ -108,11 +110,20 @@ fun NoticeWriteRoute(
         viewModel.onAddImages(uris)
     }
 
+    LaunchedEffect(editNoticeId) {
+        if (editNoticeId > 0L) viewModel.initEditMode(editNoticeId)
+    }
+
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
                 NoticeWriteEvent.SubmitSuccess -> {
-                    Toast.makeText(context, AppStrings.NOTICE_WRITE_SUCCESS, Toast.LENGTH_SHORT).show()
+                    val message = if (editNoticeId > 0L) {
+                        AppStrings.NOTICE_WRITE_EDIT_SUCCESS
+                    } else {
+                        AppStrings.NOTICE_WRITE_SUCCESS
+                    }
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                     navigateToBack()
                 }
 
@@ -318,100 +329,103 @@ fun NoticeWriteScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            UText(
-                text = AppStrings.NOTICE_WRITE_CATEGORY_TITLE,
-                style = UmcTypographyTokens.HeadlineBold,
-                color = grey950(),
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 공지 카테고리 셀렉터
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, grey200(), RoundedCornerShape(8.dp))
-                    .clickable { onClickCategory() }
-                    .padding(horizontal = 16.dp, vertical = 15.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            // 수정 모드에서는 수신 대상(카테고리/게시판 분류) 변경 불가
+            if (!uiState.isEditMode) {
                 UText(
-                    text = uiState.selectedCategory?.label
-                        ?: AppStrings.NOTICE_WRITE_CATEGORY_PLACEHOLDER,
-                    style = UmcTypographyTokens.Headline,
-                    color = if (uiState.selectedCategory == null) grey400() else grey800(),
-                    modifier = Modifier.weight(1f),
+                    text = AppStrings.NOTICE_WRITE_CATEGORY_TITLE,
+                    style = UmcTypographyTokens.HeadlineBold,
+                    color = grey950(),
                 )
-
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_arrow_next),
-                    contentDescription = null,
-                    tint = grey400(),
-                )
-            }
-
-            // 게시판 분류 (권한/카테고리에 따라 노출)
-            if (uiState.boardChips.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    UText(
-                        text = AppStrings.NOTICE_WRITE_CLASS_TITLE,
-                        style = UmcTypographyTokens.HeadlineBold,
-                        color = grey950(),
-                    )
-
-                    uiState.boardHint?.let { hint ->
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        UText(
-                            text = hint,
-                            style = UmcTypographyTokens.Footnote,
-                            color = grey600(),
-                        )
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                // 공지 카테고리 셀렉터
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, grey200(), RoundedCornerShape(8.dp))
+                        .clickable { onClickCategory() }
+                        .padding(horizontal = 16.dp, vertical = 15.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    uiState.boardChips.forEach { chipType ->
-                        when (chipType) {
-                            BoardChipType.ALL -> WriteBoardChip(
-                                text = AppStrings.ALL,
-                                isSelected = uiState.isAllSelected,
-                                onClick = onToggleAll,
-                            )
+                    UText(
+                        text = uiState.selectedCategory?.label
+                            ?: AppStrings.NOTICE_WRITE_CATEGORY_PLACEHOLDER,
+                        style = UmcTypographyTokens.Headline,
+                        color = if (uiState.selectedCategory == null) grey400() else grey800(),
+                        modifier = Modifier.weight(1f),
+                    )
 
-                            BoardChipType.STAFF -> WriteBoardChip(
-                                text = AppStrings.NOTICE_STAFF_CHIP,
-                                isSelected = uiState.isStaffSelected,
-                                onClick = onToggleStaff,
-                            )
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_arrow_next),
+                        contentDescription = null,
+                        tint = grey400(),
+                    )
+                }
 
-                            BoardChipType.PART -> WriteBoardChip(
-                                text = uiState.selectedPart?.label ?: AppStrings.PART,
-                                isSelected = uiState.selectedPart != null,
-                                hasDropdownIcon = true,
-                                onClick = onClickPartChip,
-                            )
+                // 게시판 분류 (권한/카테고리에 따라 노출)
+                if (uiState.boardChips.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(32.dp))
 
-                            BoardChipType.CHAPTER -> WriteBoardChip(
-                                text = uiState.selectedChapter?.name ?: AppStrings.BRANCH,
-                                isSelected = uiState.selectedChapter != null,
-                                hasDropdownIcon = true,
-                                onClick = onClickChapterChip,
-                            )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        UText(
+                            text = AppStrings.NOTICE_WRITE_CLASS_TITLE,
+                            style = UmcTypographyTokens.HeadlineBold,
+                            color = grey950(),
+                        )
 
-                            BoardChipType.SCHOOL -> WriteBoardChip(
-                                text = uiState.selectedSchool?.schoolName ?: AppStrings.SCHOOL,
-                                isSelected = uiState.selectedSchool != null,
-                                hasDropdownIcon = true,
-                                onClick = onClickSchoolChip,
+                        uiState.boardHint?.let { hint ->
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            UText(
+                                text = hint,
+                                style = UmcTypographyTokens.Footnote,
+                                color = grey600(),
                             )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        uiState.boardChips.forEach { chipType ->
+                            when (chipType) {
+                                BoardChipType.ALL -> WriteBoardChip(
+                                    text = AppStrings.ALL,
+                                    isSelected = uiState.isAllSelected,
+                                    onClick = onToggleAll,
+                                )
+
+                                BoardChipType.STAFF -> WriteBoardChip(
+                                    text = AppStrings.NOTICE_STAFF_CHIP,
+                                    isSelected = uiState.isStaffSelected,
+                                    onClick = onToggleStaff,
+                                )
+
+                                BoardChipType.PART -> WriteBoardChip(
+                                    text = uiState.selectedPart?.label ?: AppStrings.PART,
+                                    isSelected = uiState.selectedPart != null,
+                                    hasDropdownIcon = true,
+                                    onClick = onClickPartChip,
+                                )
+
+                                BoardChipType.CHAPTER -> WriteBoardChip(
+                                    text = uiState.selectedChapter?.name ?: AppStrings.BRANCH,
+                                    isSelected = uiState.selectedChapter != null,
+                                    hasDropdownIcon = true,
+                                    onClick = onClickChapterChip,
+                                )
+
+                                BoardChipType.SCHOOL -> WriteBoardChip(
+                                    text = uiState.selectedSchool?.schoolName ?: AppStrings.SCHOOL,
+                                    isSelected = uiState.selectedSchool != null,
+                                    hasDropdownIcon = true,
+                                    onClick = onClickSchoolChip,
+                                )
+                            }
                         }
                     }
                 }
@@ -670,15 +684,22 @@ private fun AttachedImageThumbnail(
     onRemove: () -> Unit = {},
 ) {
     Box(modifier = Modifier.size(96.dp)) {
-        AsyncImage(
-            model = image.uri,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(12.dp))
-                .border(1.dp, grey200(), RoundedCornerShape(12.dp)),
-        )
+        val thumbnailModifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(12.dp))
+            .border(1.dp, grey200(), RoundedCornerShape(12.dp))
+
+        // 프리뷰에서는 coil을 로드하지 않으므로 자리 표시자로 대체
+        if (LocalInspectionMode.current) {
+            Box(modifier = thumbnailModifier.background(grey100()))
+        } else {
+            AsyncImage(
+                model = image.uri,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = thumbnailModifier,
+            )
+        }
 
         Box(
             modifier = Modifier
