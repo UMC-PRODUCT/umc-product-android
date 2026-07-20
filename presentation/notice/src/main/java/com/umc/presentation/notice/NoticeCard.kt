@@ -125,9 +125,9 @@ fun NoticeCard(
     }
 }
 
-/** 공지 대상 정보에 따라 중앙/지부/학교/파트 태그 노출 */
+/** 공지 대상 정보에 따라 중앙/지부/학교/파트 태그 노출. 목록 카드·상세 화면 공용 */
 @Composable
-private fun NoticeTags(target: NoticeTarget) {
+fun NoticeTags(target: NoticeTarget) {
     val isCentral = target.targetGisuId != 0 ||
             (target.targetChapterId == null && target.targetSchoolId == null && target.targetParts.isEmpty())
 
