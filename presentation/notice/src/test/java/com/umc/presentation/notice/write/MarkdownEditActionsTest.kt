@@ -111,16 +111,64 @@ class MarkdownEditActionsTest {
         assertEquals("abc ~~def~~", result.text)
     }
 
-    // ---------------- VisualTransformation 스모크 ----------------
+    // ---------------- VisualTransformation ----------------
+
+    private fun transform(source: String) =
+        MarkdownVisualTransformation(Color.Gray, Color.Blue).filter(AnnotatedString(source))
 
     @Test
-    fun `마크다운 변환은 텍스트를 바꾸지 않고 스타일만 입힘`() {
-        val source = "# 제목\n**굵게** *기울임* <u>밑줄</u> ~~취소~~\n[라벨](https://umc.com)"
-        val transformed = MarkdownVisualTransformation(Color.Gray, Color.Blue)
-            .filter(AnnotatedString(source))
+    fun `마커 문자는 화면에서 숨겨짐`() {
+        assertEquals("제목", transform("# 제목").text.text)
+        assertEquals("굵게", transform("**굵게**").text.text)
+        assertEquals("밑줄", transform("<u>밑줄</u>").text.text)
+        assertEquals("취소", transform("~~취소~~").text.text)
+        assertEquals("중첩", transform("<u>**중첩**</u>").text.text)
+        assertEquals("제목\n본문 굵게", transform("# 제목\n본문 **굵게**").text.text)
+    }
 
-        assertEquals(source, transformed.text.text)
-        assertEquals(3, transformed.offsetMapping.originalToTransformed(3))
-        assertEquals(7, transformed.offsetMapping.transformedToOriginal(7))
+    @Test
+    fun `빈 마커 쌍도 숨겨짐`() {
+        assertEquals("", transform("****").text.text)
+        assertEquals("", transform("~~~~").text.text)
+        assertEquals("", transform("<u></u>").text.text)
+        assertEquals("ab", transform("a****b").text.text)
+    }
+
+    @Test
+    fun `링크는 숨기지 않고 그대로 표시`() {
+        val source = "[라벨](https://umc.com)"
+        assertEquals(source, transform(source).text.text)
+    }
+
+    @Test
+    fun `원문에서 표시 좌표로의 매핑`() {
+        // "**굵게**" → 화면 "굵게" : 원문 2..4(굵게)가 화면 0..2
+        val mapping = transform("**굵게**").offsetMapping
+        assertEquals(0, mapping.originalToTransformed(0))
+        assertEquals(0, mapping.originalToTransformed(2))
+        assertEquals(2, mapping.originalToTransformed(4))
+        assertEquals(2, mapping.originalToTransformed(6))
+    }
+
+    @Test
+    fun `표시 좌표 커서는 마커 경계에서 토큰 안쪽으로 매핑`() {
+        val mapping = transform("**굵게**").offsetMapping
+        // 화면 맨 앞(0) → 여는 마커 뒤(원문 2): 앞에 타이핑해도 굵게 유지
+        assertEquals(2, mapping.transformedToOriginal(0))
+        // 화면 맨 뒤(2) → 닫는 마커 앞(원문 4): 이어서 타이핑해도 굵게 유지
+        assertEquals(4, mapping.transformedToOriginal(2))
+    }
+
+    @Test
+    fun `빈 마커 쌍 사이로 커서가 들어감`() {
+        // "****" 화면 좌표 0 → 원문 2(마커 가운데): 굵게 누른 직후 타이핑하면 굵게 적용
+        val mapping = transform("****").offsetMapping
+        assertEquals(2, mapping.transformedToOriginal(0))
+    }
+
+    @Test
+    fun `제목 줄 맨 앞 커서는 prefix 뒤로 매핑`() {
+        val mapping = transform("# 제목").offsetMapping
+        assertEquals(2, mapping.transformedToOriginal(0))
     }
 }
