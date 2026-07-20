@@ -3,8 +3,11 @@ package com.example.mypage.mypage
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,6 +29,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,6 +48,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.mypage.dialog.AddCodeDialog
+import com.example.mypage.nearby.NearbyEvent
+import com.example.mypage.nearby.NearbyUiState
 import com.example.mypage.nearby.NearbyViewModel
 import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
@@ -67,18 +73,19 @@ import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.OutLinkType
+import com.umc.domain.model.mypage.UserCard
 
 @Composable
 fun MypageRoute(
     viewModel: MypageViewModel = hiltViewModel(),
-
+    nearbyViewModel: NearbyViewModel = hiltViewModel(),
     onNavigateToEditProfile: () -> Unit, //프로필 페이지 이동
     onNavigateToMyContent: (String) -> Unit, //내가 쓴 글 이동
     onNavigateToLogin: () -> Unit, //로그인 이동(로그아웃 or 탈퇴)
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-
+    //nearby 기능
+    val nearbyState by nearbyViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     var showAddCodeDialog by remember { mutableStateOf(false) }
@@ -89,6 +96,81 @@ fun MypageRoute(
     var selectedOutLinkType by remember { mutableStateOf<OutLinkType?>(null) }
     var showOutLinkDialog by remember { mutableStateOf(false) }
 
+
+    // 권한 요청 동작 구분 플래그
+    var pendingNearbyAction by remember { mutableStateOf<String?>(null) }
+
+    //권한 요청 추가
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions.values.all { it }) {
+            when (pendingNearbyAction) {
+                "ADVERTISE" -> {
+                    val name = uiState.userInfo.nickname.ifEmpty { uiState.userInfo.name.ifEmpty { "사용자" } }
+                    nearbyViewModel.startAdvertising(name)
+                }
+                "DISCOVER" -> {
+                    nearbyViewModel.startDiscovery()
+                }
+            }
+        } else {
+            Toast.makeText(context, "Nearby 기능을 위한 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+        }
+        pendingNearbyAction = null
+    }
+
+    // 권한 배열을 반환하는 헬퍼 함수
+    fun getRequiredPermissions(): Array<String> {
+        val permissions = mutableListOf(
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+
+        // Android 12 (API 31) 이상: Bluetooth 관련 권한
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.add(android.Manifest.permission.BLUETOOTH_SCAN)
+            permissions.add(android.Manifest.permission.BLUETOOTH_CONNECT)
+            permissions.add(android.Manifest.permission.BLUETOOTH_ADVERTISE)
+
+        }
+
+        // Android 13 (API 33) 이상: Nearby WiFi Devices 권한
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(android.Manifest.permission.NEARBY_WIFI_DEVICES)
+        }
+
+        return permissions.toTypedArray()
+    }
+
+
+
+
+    /**테스트 용도**/
+    /** 1. 연결 인증 다이얼로그 **/
+    nearbyState.pendingAuth?.let { auth ->
+        UDialog(
+            title = "연결 인증",
+            content = "인증 코드 [ ${auth.code} ] 가 일치하는지 확인하세요.",
+            isTwoButton = true,
+            positiveText = "승인",
+            negativeText = "취소",
+            onPositive = { nearbyViewModel.accept(auth.id) },
+            onDismissRequest = { /* 취소 로직 */ }
+        )
+    }
+
+    /** 2. Nearby ViewModel 이벤트 (Toast) 수신 **/
+    LaunchedEffect(nearbyViewModel) {
+        nearbyViewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is NearbyEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+                else -> {}
+            }
+        }
+    }
 
 
     LaunchedEffect(viewModel) {
@@ -175,6 +257,7 @@ fun MypageRoute(
 
     MypageScreen(
         uiState = uiState,
+        nearbyState = nearbyState,
         onProfileClick = viewModel::navigateToEditProfile, //프로필 화면
         onGithubClick = viewModel::navigateToGithub, //깃허브 이동
         onLinkedinClick = viewModel::navigateToLinkedin, //링크드인 이동
@@ -192,6 +275,28 @@ fun MypageRoute(
         onDeleteUserClick = viewModel::showDeleteUserDialog, //회원 탛퇴
         onWebsiteClick = viewModel::navigateToWebsiteUmc, //웹사이트 이동
         onInstagramClick = viewModel::navigateToInstagramUmc //인스타그램 이동
+        /**테스트**/
+        ,
+        onStartAdvertise = {
+            pendingNearbyAction = "ADVERTISE"
+            permissionLauncher.launch(getRequiredPermissions())
+        },
+        onStartDiscovery = {
+            pendingNearbyAction = "DISCOVER"
+            permissionLauncher.launch(getRequiredPermissions())
+        },
+        onDeviceClick = { deviceId ->
+            nearbyViewModel.requestConnection(deviceId)
+        },
+        onSendCardClick = {
+            nearbyState.connectedId?.let { id ->
+                val myCard = UserCard(
+                    name = uiState.userInfo.name.ifEmpty { "박유수" },
+                    nickname = uiState.userInfo.nickname.ifEmpty { "어헛차" }
+                )
+                nearbyViewModel.send(id, myCard)
+            }
+        }
     )
 
     //OutLink 다이얼로그 관련
@@ -346,6 +451,7 @@ fun openKakaoChannelIntent(context: Context, channelId: String){
 @Composable
 fun MypageScreen(
     uiState: MypageUiState,
+    nearbyState: NearbyUiState,
     onProfileClick: () -> Unit,
     onGithubClick: () -> Unit,
     onLinkedinClick: () -> Unit,
@@ -363,6 +469,11 @@ fun MypageScreen(
     onDeleteUserClick: () -> Unit,
     onWebsiteClick: () -> Unit,
     onInstagramClick: () -> Unit,
+    /**테스트**/
+    onStartAdvertise: () -> Unit,
+    onStartDiscovery: () -> Unit,
+    onDeviceClick: (String) -> Unit,
+    onSendCardClick: () -> Unit
 ){
     //중첩 스크롤 대비 LazyColumn 뼈대
     LazyColumn(
@@ -389,6 +500,102 @@ fun MypageScreen(
                 onClick = onProfileClick
             )
         }
+
+        /** ────────────────────────────────────────────── **/
+        /**              Nearby 교환 테스트 섹션             **/
+        /** ────────────────────────────────────────────── **/
+        item {
+            MypageSectionTitle(text = "Nearby 유저카드 교환 테스트")
+            MypageListCard {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    // 상태 정보 출력
+                    Text(
+                        text = "상태: ${nearbyState.status}",
+                        style = UmcTypographyTokens.Caption1Bold,
+                        color = grey600()
+                    )
+                    if (nearbyState.connectedId != null) {
+                        Text(
+                            text = "연결 완료! (ID: ${nearbyState.connectedId.take(6)}...)",
+                            style = UmcTypographyTokens.Caption1Bold,
+                            color = Color(0xFF2E7D32)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // 1. [기기 A] 광고 시작
+                    MypageListItem(
+                        iconRes = R.drawable.ic_add,
+                        text = "내 카드 노출하기",
+                        onClick = onStartAdvertise
+                    )
+
+                    // 2. [기기 B] 탐색 시작
+                    MypageListItem(
+                        iconRes = R.drawable.ic_add,
+                        text = "주변 카드 탐색하기",
+                        onClick = onStartDiscovery
+                    )
+
+                    // 3. 연결 수립 시 수동 데이터 전송 버튼
+                    if (nearbyState.connectedId != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        MypageListItem(
+                            iconRes = R.drawable.ic_add,
+                            text = "내 카드 전송하기",
+                            onClick = onSendCardClick
+                        )
+                    }
+                }
+            }
+        }
+
+        // 발견된 주변 기기 목록 (클릭 시 requestConnection 호출)
+        if (nearbyState.devices.isNotEmpty()) {
+            item {
+                MypageSectionTitle(text = "발견된 주변 기기 (클릭하여 연결 시도)")
+                MypageListCard {
+                    nearbyState.devices.forEach { device ->
+                        MypageListItem(
+                            iconRes = R.drawable.ic_location_primary,
+                            text = "${device.second} (${device.first.take(6)}...)",
+                            onClick = { onDeviceClick(device.first) }
+                        )
+                    }
+                }
+            }
+        }
+
+        // 수신된 카드 정보 노출
+        nearbyState.receivedCard?.let { card ->
+            item {
+                MypageSectionTitle(text = "수신된 유저 카드")
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = grey000()),
+                    elevation = CardDefaults.cardElevation(0.dp),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        UText(
+                            text = "이름: ${card.name}",
+                            style = UmcTypographyTokens.BodyBold,
+                            color = grey800()
+                        )
+                        UText(
+                            text = "닉네임: ${card.nickname}",
+                            style = UmcTypographyTokens.Body,
+                            color = grey700()
+                        )
+                    }
+                }
+            }
+        }
+        /** ────────────────────────────────────────────── **/
+
+
 
         item{
             //외부 링크 3종 섹션
