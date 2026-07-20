@@ -1,32 +1,44 @@
 package com.umc.presentation.notice.write
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,12 +48,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.umc.component.R
+import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
@@ -52,13 +73,21 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
+import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
+import com.umc.domain.model.enums.BoardChipType
+import com.umc.domain.model.enums.NoticeWriterRole
 import com.umc.domain.model.enums.UserPart
+import com.umc.domain.model.enums.WriteCategoryType
+import com.umc.domain.model.notice.NoticeImageAttachment
+import com.umc.domain.model.notice.WriteCategory
+import kotlinx.coroutines.flow.collectLatest
 
 /** 공지 작성 화면 바텀시트 종류 */
-private enum class WriteSheetType { CATEGORY, CHAPTER, SCHOOL, PART }
+private enum class WriteSheetType { CATEGORY, CHAPTER, SCHOOL, PART, VOTE }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,9 +96,32 @@ fun NoticeWriteRoute(
     navigateToBack: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     var sheetType by remember { mutableStateOf<WriteSheetType?>(null) }
+    var showVoteMaxDialog by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(NoticeWriteViewModel.MAX_IMAGE_COUNT)
+    ) { uris ->
+        viewModel.onAddImages(uris)
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                NoticeWriteEvent.SubmitSuccess -> {
+                    Toast.makeText(context, AppStrings.NOTICE_WRITE_SUCCESS, Toast.LENGTH_SHORT).show()
+                    navigateToBack()
+                }
+
+                is NoticeWriteEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     NoticeWriteScreen(
         uiState = uiState,
@@ -84,7 +136,38 @@ fun NoticeWriteRoute(
         onClickPartChip = { sheetType = WriteSheetType.PART },
         onTitleChanged = viewModel::onTitleChanged,
         onContentChanged = viewModel::onContentChanged,
+        onSelectHeading = viewModel::onSelectHeading,
+        onClickImage = {
+            imagePickerLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        },
+        // 투표는 최대 1개: 이미 있으면 안내 다이얼로그
+        onClickVote = {
+            if (uiState.vote == null) {
+                sheetType = WriteSheetType.VOTE
+            } else {
+                showVoteMaxDialog = true
+            }
+        },
+        onClickModifyVote = { sheetType = WriteSheetType.VOTE },
+        onClickLink = viewModel::onShowLinkPanel,
+        onClickBold = viewModel::onClickBold,
+        onClickItalic = viewModel::onClickItalic,
+        onClickUnderline = viewModel::onClickUnderline,
+        onClickStrikethrough = viewModel::onClickStrikethrough,
+        onRemoveImage = viewModel::onRemoveImage,
+        onLinkTextChanged = viewModel::onLinkTextChanged,
+        onCloseLinkPanel = viewModel::onHideLinkPanel,
     )
+
+    if (showVoteMaxDialog) {
+        VoteMaxDialog(onDismiss = { showVoteMaxDialog = false })
+    }
+
+    if (uiState.isUploadingImages) {
+        ImageUploadingDialog()
+    }
 
     sheetType?.let { type ->
         ModalBottomSheet(
@@ -131,6 +214,18 @@ fun NoticeWriteRoute(
                         },
                     )
                 }
+
+                WriteSheetType.VOTE -> NoticeVoteSheetContent(
+                    existingVote = uiState.vote,
+                    onComplete = { vote ->
+                        viewModel.onAttachVote(vote)
+                        sheetType = null
+                    },
+                    onDelete = {
+                        viewModel.onDeleteVote()
+                        sheetType = null
+                    },
+                )
             }
         }
     }
@@ -150,12 +245,25 @@ fun NoticeWriteScreen(
     onClickSchoolChip: () -> Unit = {},
     onClickPartChip: () -> Unit = {},
     onTitleChanged: (String) -> Unit = {},
-    onContentChanged: (String) -> Unit = {},
+    onContentChanged: (TextFieldValue) -> Unit = {},
+    onSelectHeading: (MarkdownHeading) -> Unit = {},
+    onClickImage: () -> Unit = {},
+    onClickVote: () -> Unit = {},
+    onClickModifyVote: () -> Unit = {},
+    onClickLink: () -> Unit = {},
+    onClickBold: () -> Unit = {},
+    onClickItalic: () -> Unit = {},
+    onClickUnderline: () -> Unit = {},
+    onClickStrikethrough: () -> Unit = {},
+    onRemoveImage: (NoticeImageAttachment) -> Unit = {},
+    onLinkTextChanged: (String) -> Unit = {},
+    onCloseLinkPanel: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey000())
+            .imePadding(),
     ) {
         Row(
             modifier = Modifier
@@ -339,18 +447,29 @@ fun NoticeWriteScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 내용 입력. 내용이 길어지면 화면 전체가 아래로 스크롤됨
+            // 내용 입력. 마크다운 원문을 그대로 편집하고 스타일만 입혀서 보여줌
+            val markerColor = grey400()
+            val linkColor = indigo500()
+            val markdownTransformation = remember(markerColor, linkColor) {
+                MarkdownVisualTransformation(markerColor = markerColor, linkColor = linkColor)
+            }
+
             BasicTextField(
                 value = uiState.content,
                 onValueChange = onContentChanged,
-                textStyle = UmcTypographyTokens.Subheadline.copy(color = grey950()),
+                // 제목 줄(28sp 등)이 본문 lineHeight(20sp)에 잘리지 않도록 줄 높이는 폰트 크기를 따르게 함
+                textStyle = UmcTypographyTokens.Subheadline.copy(
+                    color = grey950(),
+                    lineHeight = TextUnit.Unspecified,
+                ),
                 cursorBrush = SolidColor(grey950()),
+                visualTransformation = markdownTransformation,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 240.dp),
                 decorationBox = { innerTextField ->
                     Box {
-                        if (uiState.content.isEmpty()) {
+                        if (uiState.content.text.isEmpty()) {
                             UText(
                                 text = AppStrings.NOTICE_WRITE_CONTENT_PLACEHOLDER,
                                 style = UmcTypographyTokens.Subheadline,
@@ -361,21 +480,69 @@ fun NoticeWriteScreen(
                     }
                 },
             )
+
+            // 첨부 이미지 (정사각 썸네일 가로 나열)
+            if (uiState.images.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    uiState.images.forEach { image ->
+                        AttachedImageThumbnail(
+                            image = image,
+                            onRemove = { onRemoveImage(image) },
+                        )
+                    }
+                }
+            }
+
+            // 링크 첨부 패널
+            if (uiState.isLinkVisible) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                NoticeLinkPanel(
+                    linkText = uiState.linkText,
+                    onLinkTextChanged = onLinkTextChanged,
+                    onClose = onCloseLinkPanel,
+                )
+            }
+
+            // 첨부 투표 요약 행
+            uiState.vote?.let { vote ->
+                Spacer(modifier = Modifier.height(16.dp))
+
+                NoticeVoteRow(vote = vote, onClickModify = onClickModifyVote)
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
         HorizontalDivider(thickness = 1.dp, color = grey200())
 
-        MarkdownToolbar()
+        MarkdownToolbar(
+            onSelectHeading = onSelectHeading,
+            onClickImage = onClickImage,
+            onClickVote = onClickVote,
+            onClickLink = onClickLink,
+            onClickBold = onClickBold,
+            onClickItalic = onClickItalic,
+            onClickUnderline = onClickUnderline,
+            onClickStrikethrough = onClickStrikethrough,
+        )
     }
 }
 
 /**
- * 마크다운 도구 툴바. 현재는 버튼 배치만 구현된 상태 (기능 미연결).
+ * 마크다운 도구 툴바.
  * 아이콘 24dp, 상하좌우 16dp 여백을 제외한 영역에 아이콘을 균등 분배 (양끝 정렬)
  */
 @Composable
 private fun MarkdownToolbar(
-    onClickTextSize: () -> Unit = {},
+    onSelectHeading: (MarkdownHeading) -> Unit = {},
     onClickImage: () -> Unit = {},
     onClickVote: () -> Unit = {},
     onClickLink: () -> Unit = {},
@@ -384,6 +551,8 @@ private fun MarkdownToolbar(
     onClickUnderline: () -> Unit = {},
     onClickStrikethrough: () -> Unit = {},
 ) {
+    var showTextSizeMenu by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -391,8 +560,49 @@ private fun MarkdownToolbar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        // 텍스트 크기
-        MarkdownToolbarIcon(iconRes = R.drawable.ic_text_size, onClick = onClickTextSize)
+        // 텍스트 크기 (제목1/제목2/제목3/본문 메뉴)
+        Box {
+            MarkdownToolbarIcon(iconRes = R.drawable.ic_text_size, onClick = { showTextSizeMenu = true })
+
+            DropdownMenu(
+                expanded = showTextSizeMenu,
+                onDismissRequest = { showTextSizeMenu = false },
+                containerColor = grey000(),
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                TextSizeMenuItem(
+                    label = MarkdownHeading.TITLE1.label,
+                    style = UmcTypographyTokens.Title2Bold,
+                ) {
+                    onSelectHeading(MarkdownHeading.TITLE1)
+                    showTextSizeMenu = false
+                }
+
+                TextSizeMenuItem(
+                    label = MarkdownHeading.TITLE2.label,
+                    style = UmcTypographyTokens.Title3Bold,
+                ) {
+                    onSelectHeading(MarkdownHeading.TITLE2)
+                    showTextSizeMenu = false
+                }
+
+                TextSizeMenuItem(
+                    label = MarkdownHeading.TITLE3.label,
+                    style = UmcTypographyTokens.HeadlineBold,
+                ) {
+                    onSelectHeading(MarkdownHeading.TITLE3)
+                    showTextSizeMenu = false
+                }
+
+                TextSizeMenuItem(
+                    label = MarkdownHeading.BODY.label,
+                    style = UmcTypographyTokens.Subheadline,
+                ) {
+                    onSelectHeading(MarkdownHeading.BODY)
+                    showTextSizeMenu = false
+                }
+            }
+        }
 
         // 이미지 첨부
         MarkdownToolbarIcon(iconRes = R.drawable.ic_camera, onClick = onClickImage)
@@ -417,6 +627,27 @@ private fun MarkdownToolbar(
     }
 }
 
+/** 텍스트 크기 메뉴 항목. 각 항목은 적용될 크기감으로 표시 */
+@Composable
+private fun TextSizeMenuItem(
+    label: String,
+    style: TextStyle,
+    onClick: () -> Unit = {},
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+    ) {
+        UText(
+            text = label,
+            style = style,
+            color = grey950(),
+        )
+    }
+}
+
 @Composable
 private fun MarkdownToolbarIcon(
     iconRes: Int,
@@ -430,6 +661,180 @@ private fun MarkdownToolbarIcon(
             .size(24.dp)
             .clickable { onClick() },
     )
+}
+
+/** 본문 아래에 표시되는 첨부 이미지 정사각 썸네일. 우상단 버튼으로 삭제 */
+@Composable
+private fun AttachedImageThumbnail(
+    image: NoticeImageAttachment,
+    onRemove: () -> Unit = {},
+) {
+    Box(modifier = Modifier.size(96.dp)) {
+        AsyncImage(
+            model = image.uri,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(12.dp))
+                .border(1.dp, grey200(), RoundedCornerShape(12.dp)),
+        )
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+                .size(20.dp)
+                .clip(CircleShape)
+                .background(grey400())
+                .clickable { onRemove() },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_close_big),
+                contentDescription = null,
+                tint = grey000(),
+                modifier = Modifier.size(10.dp),
+            )
+        }
+    }
+}
+
+/** 본문 아래에 표시되는 링크 첨부 패널. 우상단 X로 닫음 */
+@Composable
+private fun NoticeLinkPanel(
+    linkText: String,
+    onLinkTextChanged: (String) -> Unit = {},
+    onClose: () -> Unit = {},
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(grey100())
+            .padding(16.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_blog_link),
+                contentDescription = null,
+                tint = indigo500(),
+                modifier = Modifier.size(24.dp),
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            UText(
+                text = AppStrings.NOTICE_WRITE_LINK_TITLE,
+                style = UmcTypographyTokens.HeadlineBold,
+                color = grey950(),
+                modifier = Modifier.weight(1f),
+            )
+
+            Icon(
+                painter = painterResource(id = R.drawable.ic_close_big),
+                contentDescription = null,
+                tint = grey500(),
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { onClose() },
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(grey000())
+                .border(1.dp, grey200(), RoundedCornerShape(10.dp))
+                .padding(horizontal = 16.dp, vertical = 15.dp),
+        ) {
+            BasicTextField(
+                value = linkText,
+                onValueChange = onLinkTextChanged,
+                textStyle = UmcTypographyTokens.Subheadline.copy(color = grey950()),
+                cursorBrush = SolidColor(grey950()),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                modifier = Modifier.fillMaxWidth(),
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (linkText.isEmpty()) {
+                            UText(
+                                text = AppStrings.NOTICE_WRITE_LINK_HINT,
+                                style = UmcTypographyTokens.Subheadline,
+                                color = grey400(),
+                            )
+                        }
+                        innerTextField()
+                    }
+                },
+            )
+        }
+    }
+}
+
+/** 투표는 공지당 최대 1개임을 안내하는 다이얼로그 */
+@Composable
+private fun VoteMaxDialog(
+    onDismiss: () -> Unit = {},
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = grey000(),
+        shape = RoundedCornerShape(20.dp),
+        text = {
+            UText(
+                text = AppStrings.NOTICE_WRITE_VOTE_MAX,
+                style = UmcTypographyTokens.Title3Bold,
+                color = grey950(),
+            )
+        },
+        confirmButton = {
+            UButton(
+                text = AppStrings.CONFIRM,
+                onClick = onDismiss,
+                backgroundColor = grey100(),
+                textColor = grey800(),
+                contentPadding = PaddingValues(vertical = 14.dp),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+    )
+}
+
+/** 이미지 업로드 진행 다이얼로그 */
+@Composable
+private fun ImageUploadingDialog() {
+    Dialog(onDismissRequest = { }) {
+        Column(
+            modifier = Modifier
+                .clip(RoundedCornerShape(20.dp))
+                .background(grey000())
+                .padding(horizontal = 48.dp, vertical = 40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            CircularProgressIndicator(
+                color = indigo500(),
+                trackColor = indigo100(),
+                strokeWidth = 5.dp,
+                modifier = Modifier.size(48.dp),
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            UText(
+                text = AppStrings.NOTICE_WRITE_IMAGE_UPLOADING,
+                style = UmcTypographyTokens.Subheadline,
+                color = grey700(),
+            )
+        }
+    }
 }
 
 /** 게시판 분류 칩. 드롭다운 칩은 선택 시 선택된 이름으로 라벨이 바뀜 */
