@@ -108,7 +108,7 @@ fun QrCodeRoute(
 
 
     //QR 생성 (Endpoint ID 기반 또는 기본 닉네임)
-    val qrContent = uiState.myEndpointId.ifEmpty { uiState.userInfo.nickname.ifEmpty { "사용자" } }
+    val qrContent = uiState.myEndpointId.ifEmpty { uiState.userInfo.nickname.ifEmpty { "phone" } }
     val qrBitmap = remember(qrContent) { QrCodeUtils.generateQrCode(qrContent, 600) }
 
     QrCodeScreen(

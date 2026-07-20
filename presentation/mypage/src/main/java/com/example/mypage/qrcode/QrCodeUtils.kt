@@ -14,7 +14,11 @@ import java.io.OutputStream
 
 object QrCodeUtils {
 
-    //QR 코드 생성하기 (imageBitmap)
+    /**
+     * 텍스트 문자열을 비트맵 이미지로 변환하여 QR 코드로 생성
+     * @param content QR 코드에 담을 텍스트 (기기 모델명 등)
+     * @param size QR 코드 정사각형 픽셀 크기
+     */
     fun generateQrCode(content: String, size: Int = 512): ImageBitmap? {
         return try {
             val writer = QRCodeWriter()
