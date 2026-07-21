@@ -9,8 +9,10 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import java.io.OutputStream
+import java.util.EnumMap
 
 object QrCodeUtils {
 
@@ -22,7 +24,14 @@ object QrCodeUtils {
     fun generateQrCode(content: String, size: Int = 512): ImageBitmap? {
         return try {
             val writer = QRCodeWriter()
-            val bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, size, size)
+
+            //한글 깨짐 방지
+            val hints = EnumMap<EncodeHintType, Any>(EncodeHintType::class.java).apply {
+                put(EncodeHintType.CHARACTER_SET, "UTF-8")
+                put(EncodeHintType.MARGIN, 1) //여백을 줄여 QR 인식률 향상 (선택)
+            }
+
+            val bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, size, size, hints)
             val width = bitMatrix.width
             val height = bitMatrix.height
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
