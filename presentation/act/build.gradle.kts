@@ -33,6 +33,9 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    buildFeatures {
+        compose = true
+    }
 }
 
 dependencies {
@@ -50,8 +53,6 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.messaging)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

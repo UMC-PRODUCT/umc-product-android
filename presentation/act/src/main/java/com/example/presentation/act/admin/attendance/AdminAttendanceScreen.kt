@@ -1,4 +1,4 @@
-﻿package com.example.presentation.act.attendance
+﻿package com.example.presentation.act.admin.attendance
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,19 +23,21 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
-import com.umc.component.theme.UmcTypographyTokens.Caption1
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
@@ -47,6 +49,7 @@ import com.umc.component.theme.neutral050
 import com.umc.component.theme.neutral100
 import com.umc.component.theme.neutral200
 import com.umc.component.theme.neutral300
+import com.umc.component.theme.neutral400
 import com.umc.component.theme.neutral600
 import com.umc.component.theme.neutral700
 import com.umc.component.theme.neutral800
@@ -57,17 +60,26 @@ import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.enums.AdminSessionStatus
 
 @Composable
-fun AttendanceRoute() {
+fun AttendanceRoute(
+    viewModel: AdminAttendanceViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     AttendanceScreen(
-        sessions = sampleSessions()
+        uiState = uiState
     )
 }
 
 @Composable
 fun AttendanceScreen(
-    sessions: List<AdminSessionCheck>,
+    uiState: AdminAttendanceUiState,
     modifier: Modifier = Modifier
 ) {
+    if (uiState.isEmpty) {
+        EmptyScreen()
+        return
+    }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -75,7 +87,7 @@ fun AttendanceScreen(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(items = sessions, key = { it.id }) { session ->
+        items(items = uiState.sessions, key = { it.id }) { session ->
             AdminSessionCard(
                 session = session,
                 onChangeLocationClick = {},
@@ -210,7 +222,7 @@ fun AdminSessionCard(
             }
 
             if(session.status == AdminSessionStatus.IN_PROGRESS) {
-                checkAttendanceListButton(onPendingListClick)
+                CheckAttendanceListButton(onPendingListClick)
             } else {
                 SuccessCheckAllAttendanceButton()
             }
@@ -219,19 +231,26 @@ fun AdminSessionCard(
 }
 
 @Composable
-private fun emptyScreen() {
+private fun EmptyScreen() {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.align(Alignment.Center),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_people),
-                contentDescription = null,
-                tint = neutral600(),
-                modifier = Modifier.size(32.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(48.dp),
+                contentAlignment = Alignment.Center
+            ){
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_people),
+                    contentDescription = null,
+                    tint = neutral400(),
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(4.dp))
             UText(
                 text = AppStrings.ATTENDANCE_EMPTY_ADMIN_SESSIONS,
@@ -244,14 +263,14 @@ private fun emptyScreen() {
 
 @Preview(showBackground = true)
 @Composable
-private fun emptyScreenPreview() {
+private fun EmptyScreenPreview() {
     UmcTheme(darkTheme = false) {
-        emptyScreen()
+        EmptyScreen()
     }
 }
 
 @Composable
-private fun checkAttendanceListButton(
+private fun CheckAttendanceListButton(
     onPendingListClick :() -> Unit
 ) {
     UButton(
@@ -391,7 +410,7 @@ private fun sampleSessions(): List<AdminSessionCheck> = listOf(
 private fun AttendanceScreenPreview() {
     UmcTheme(darkTheme = false) {
         AttendanceScreen(
-            sessions = sampleSessions()
+            uiState = AdminAttendanceUiState(sessions = sampleSessions())
         )
     }
 }
