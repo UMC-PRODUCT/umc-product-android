@@ -1,0 +1,44 @@
+# .gemini/config.yaml
+
+# 1. 리뷰 엔진 설정
+code_review:
+  # 모든 마이너한 개선 제안까지 포함 (LOW 설정)
+  comment_severity_threshold: LOW
+  
+  # 지시사항: 여기서 한국어 응답을 강제합니다.
+  system_instructions: |
+    당신은 UMC 안드로이드 팀의 시니어 개발자입니다. 
+    반드시 다음 지침을 지켜주세요:
+    - **모든 리뷰, 요약, 설명은 반드시 '한국어'로 작성하세요.**
+    - Kotlin Coroutines 사용 시 예외 처리가 누락되었는지 확인하세요.
+    - ViewBinding/DataBinding 메모리 누수(onDestroyView 처리 등)를 체크하세요.
+    - MVVM 패턴에 따라 비즈니스 로직이 ViewModel에 잘 분리되었는지 검토하세요.
+    - Jetpack Compose 사용 시 불필요한 Recomposition이 발생할 코드가 있는지 확인하세요.
+
+# 2. 분석 효율을 위한 제외 패턴 (안드로이드 최적화)
+ignore_patterns:
+  # 빌드 및 자동 생성 코드 (리뷰 불필요)
+  - "**/build/**"
+  - "**/generated/**"
+  - "**/.gradle/**"
+  - "**/gradle/wrapper/**"
+  
+  # 리소스 및 바이너리 파일
+  - "**/res/drawable*/**"
+  - "**/res/mipmap*/**"
+  - "**/res/raw/**"
+  - "**/*.png"
+  - "**/*.webp"
+  - "**/*.jpg"
+  
+  # IDE 및 로컬 설정
+  - ".idea/**"
+  - "**/*.iml"
+  - "local.properties"
+  - ".vscode/**"
+
+# 3. PR 생성 시 자동 동작 설정
+pull_request:
+  opened:
+    summary: true      # 한국어로 요약 생성
+    code_review: true  # 한국어로 자동 리뷰 진행

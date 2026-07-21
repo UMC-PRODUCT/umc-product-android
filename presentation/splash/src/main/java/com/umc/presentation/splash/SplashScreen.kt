@@ -15,7 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.umc.component.theme.neutral000
+import com.umc.component.theme.grey000
 import com.umc.component.R
 import kotlinx.coroutines.flow.collectLatest
 
@@ -23,13 +23,15 @@ import kotlinx.coroutines.flow.collectLatest
 fun SplashRoute(
     viewModel: SplashViewModel = hiltViewModel(),
     navigateToLogin: () -> Unit,
+    navigateToMain: () -> Unit = {},
+    navigateToInputCode: () -> Unit = {},
 ) {
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest {
             when(it) {
                 SplashEvent.MoveToLoginEvent -> navigateToLogin()
-                SplashEvent.MoveToMainEvent -> TODO()
-                SplashEvent.MoveToInputCodeEvent -> TODO()
+                SplashEvent.MoveToMainEvent -> navigateToMain()
+                SplashEvent.MoveToInputCodeEvent -> navigateToInputCode()
             }
         }
     }
@@ -43,7 +45,7 @@ fun SplashScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(neutral000()),
+            .background(grey000()),
         contentAlignment = Alignment.Center,
     ) {
         Column(
