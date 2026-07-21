@@ -2,8 +2,8 @@ package com.umc.data.response.curriculum
 
 import com.google.gson.annotations.SerializedName
 import com.umc.domain.model.enums.UserPart
-import com.umc.domain.model.study.StudyProgress
-import com.umc.domain.model.study.WorkbookProgress
+import com.umc.domain.model.act.study.StudyProgress
+import com.umc.domain.model.act.study.WorkbookProgress
 import com.umc.domain.model.enums.WorkbookMissionType
 import com.umc.domain.model.enums.WorkbookStatus
 import java.time.Instant

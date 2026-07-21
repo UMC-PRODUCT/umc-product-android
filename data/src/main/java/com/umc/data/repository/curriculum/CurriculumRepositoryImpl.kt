@@ -8,7 +8,7 @@ import com.umc.domain.model.base.map
 import com.umc.domain.model.curriculum.StudyGroup
 import com.umc.domain.model.curriculum.WorkbookSubmissionItem
 import com.umc.domain.model.enums.UserPart
-import com.umc.domain.model.study.StudyProgress
+import com.umc.domain.model.act.study.StudyProgress
 import com.umc.domain.repository.curriculum.CurriculumRepository
 import javax.inject.Inject
 

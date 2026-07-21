@@ -53,32 +53,48 @@ private data class ManageTab(
 
 @Composable
 fun ActManageRoute(
-    vm: ActViewModel = hiltViewModel()
+    studyContent: @Composable (isAdmin: Boolean) -> Unit,
+    vm: ActViewModel = hiltViewModel(),
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
+
     ActManageScreen(
         uiState = uiState,
-        onAdminCheckedChange = vm::setAdminMode
+        onAdminCheckedChange = vm::setAdminMode,
+        studyContent = studyContent,
     )
 }
 
 @Composable
 private fun ActManageScreen(
     uiState: ActUiState,
-    onAdminCheckedChange: (Boolean) -> Unit
+    onAdminCheckedChange: (Boolean) -> Unit,
+    studyContent: @Composable (isAdmin: Boolean) -> Unit,
 ) {
     val tabs = remember(uiState.isAdmin) {
         if (uiState.isAdmin) {
             listOf(
-                ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { AttendanceRoute() },
-                ManageTab(AppStrings.TAB_STUDY_ADMIN) { ComingSoonScreen() },
-                ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { AdminChallengerRoute() }
+                ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) {
+                    AttendanceRoute()
+                },
+                ManageTab(AppStrings.TAB_STUDY_ADMIN) {
+                    studyContent(true)
+                },
+                ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) {
+                    AdminChallengerRoute()
+                },
             )
         } else {
             listOf(
-                ManageTab(AppStrings.TAB_ATTENDANCE_USER) { NormalAttendanceRoute() },
-                ManageTab(AppStrings.TAB_STUDY_USER) { ComingSoonScreen() },
-                ManageTab(AppStrings.TAB_CHALLENGE_USER) { NormalChallengerRoute() }
+                ManageTab(AppStrings.TAB_ATTENDANCE_USER) {
+                    NormalAttendanceRoute()
+                },
+                ManageTab(AppStrings.TAB_STUDY_USER) {
+                    studyContent(false)
+                },
+                ManageTab(AppStrings.TAB_CHALLENGE_USER) {
+                    NormalChallengerRoute()
+                },
             )
         }
     }
@@ -226,9 +242,12 @@ private fun AdminActScreenPreview() {
         ActManageScreen(
             uiState = ActUiState(
                 isAdmin = true,
-                hasAdminAccess = true
+                hasAdminAccess = true,
             ),
-            onAdminCheckedChange = {}
+            onAdminCheckedChange = {},
+            studyContent = {
+                ComingSoonScreen()
+            },
         )
     }
 }
@@ -240,9 +259,12 @@ private fun NormalActScreenPreview() {
         ActManageScreen(
             uiState = ActUiState(
                 isAdmin = false,
-                hasAdminAccess = true
+                hasAdminAccess = true,
             ),
-            onAdminCheckedChange = {}
+            onAdminCheckedChange = {},
+            studyContent = {
+                ComingSoonScreen()
+            },
         )
     }
 }
