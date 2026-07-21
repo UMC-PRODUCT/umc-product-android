@@ -63,6 +63,7 @@ dependencies {
     implementation(project(":presentation:failCode"))
     implementation(project(":presentation:component"))
     implementation(project(":presentation:study"))
+    implementation(project(":presentation:act"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

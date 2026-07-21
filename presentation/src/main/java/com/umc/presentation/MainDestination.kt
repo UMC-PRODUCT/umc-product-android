@@ -56,5 +56,26 @@ sealed interface MainDestination {
     data object MyProfile : MainDestination
 
 
+    /** 활동 관리 섹션 **/
+
+    @Serializable
+    data object ActivityManagement : MainDestination
+
+
+    /** 스터디 관리자 섹션 **/
+
+    @Serializable
+    data object AdminStudyGroup : MainDestination
+
+    @Serializable
+    data object AdminStudyGroupCreate : MainDestination
+
+    @Serializable
+    data class AdminStudyGroupSchedule(
+        val groupId: Long,
+        val groupTitle: String,
+        val groupPart: String,
+    ) : MainDestination
+
 
 }

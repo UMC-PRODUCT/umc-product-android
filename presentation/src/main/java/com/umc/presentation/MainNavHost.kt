@@ -22,6 +22,11 @@ import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
 import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.signup.SignUpRoute
 import com.umc.presentation.splash.SplashRoute
+import com.umc.presentation.study.admin.group.AdminStudyGroupRoute
+import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateRoute
+import com.umc.presentation.study.admin.group.schedule.AdminStudyGroupScheduleRoute
+import com.example.presentation.act.ActManageRoute
+import com.umc.presentation.study.ActStudyRoute
 
 @Composable
 fun MainNavHost(
@@ -31,7 +36,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Home,
+        startDestination = MainDestination.ActivityManagement,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -177,6 +182,77 @@ fun MainNavHost(
             ProfileRoute()
         }
 
+
+
+        /** 스터디 관리자 관련 정의 **/
+
+        composable<MainDestination.AdminStudyGroup> {
+            AdminStudyGroupRoute(
+                onNavigateCreateGroup = {
+                    navHostController.navigate(
+                        MainDestination.AdminStudyGroupCreate
+                    )
+                },
+                onNavigateAddSchedule = { groupId, groupTitle, groupPart ->
+                    navHostController.navigate(
+                        MainDestination.AdminStudyGroupSchedule(
+                            groupId = groupId,
+                            groupTitle = groupTitle,
+                            groupPart = groupPart,
+                        )
+                    )
+                },
+                onOpenEditMembers = { item ->
+                    // TODO 멤버 수정 화면 연결
+                },
+            )
+        }
+
+        composable<MainDestination.AdminStudyGroupCreate> {
+            AdminStudyGroupCreateRoute(
+                navigateBack = {
+                    navHostController.popBackStack()
+                },
+            )
+        }
+
+        composable<MainDestination.AdminStudyGroupSchedule> { backStackEntry ->
+            val destination =
+                backStackEntry.toRoute<MainDestination.AdminStudyGroupSchedule>()
+
+            AdminStudyGroupScheduleRoute(
+                onNavigateBack = {
+                    navHostController.popBackStack()
+                },
+            )
+        }
+
+        composable<MainDestination.ActivityManagement> {
+            ActManageRoute(
+                studyContent = { isAdmin ->
+                    ActStudyRoute(
+                        isAdmin = isAdmin,
+                        onNavigateCreateGroup = {
+                            navHostController.navigate(
+                                MainDestination.AdminStudyGroupCreate
+                            )
+                        },
+                        onNavigateAddSchedule = { groupId, groupTitle, groupPart ->
+                            navHostController.navigate(
+                                MainDestination.AdminStudyGroupSchedule(
+                                    groupId = groupId,
+                                    groupTitle = groupTitle,
+                                    groupPart = groupPart,
+                                )
+                            )
+                        },
+                        onOpenEditMembers = { item ->
+                            // TODO 멤버 수정 화면 연결
+                        },
+                    )
+                },
+            )
+        }
 
     }
 }

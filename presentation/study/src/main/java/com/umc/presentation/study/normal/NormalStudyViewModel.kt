@@ -39,11 +39,8 @@ class UserStudyViewModel @Inject constructor(
 ) : BaseViewModel<UserStudyState, UserStudyEvent>(UserStudyState()) {
 
     companion object {
-        private const val USE_DUMMY = true
-
-        // 하드코딩 제거 후 로그인 유저 정보에서 가져오기
+        private const val USE_DUMMY = false
         private const val GISU_ID = 3L
-        private const val PART = "SPRINGBOOT"
     }
 
     init {
@@ -115,52 +112,74 @@ class UserStudyViewModel @Inject constructor(
     /** 커리큘럼 개요 로드 */
     private fun load() {
         startLoading()
+
         viewModelScope.launch {
-            when (val resultResponse = getMyStudyProgressUseCase(
-                // TODO: 하드코딩 제거 후 로그인 유저 정보에서 gisuId, part 가져오기..
-                gisuId = GISU_ID,
-                part = PART
-            )) {
+            when (
+                val result = getMyStudyProgressUseCase(
+                    gisuId = GISU_ID
+                )
+            ) {
                 is ApiState.Success -> {
-                    val data = resultResponse.data
+                    val data = result.data
+
                     val uiItems = data.workbooks
                         .sortedBy { it.weekNo }
-                        .map { wb ->
+                        .map { workbook ->
                             NormalStudyItemUiModel(
-                                id = wb.originalWorkbookId,
-                                platform = "Github",
-                                title = wb.title,
-                                status = when (wb.status) {
-                                    WorkbookStatus.PASS, WorkbookStatus.BEST -> StudyStatus.PASS
-                                    WorkbookStatus.FAIL -> StudyStatus.FAIL
-                                    WorkbookStatus.PENDING,
-                                    WorkbookStatus.IN_PROGRESS,
-                                    WorkbookStatus.SUBMITTED,
-                                    WorkbookStatus.UNKNOWN -> StudyStatus.IN_PROGRESS
+                                id = workbook.originalWorkbookId,
+                                platform = when (workbook.missionType) {
+                                    else -> "Github"
                                 },
-                                week = wb.weekNo,
+                                title = workbook.title,
+                                status = workbook.status.toStudyStatus(),
+                                week = workbook.weekNo,
                                 submitState = SubmitState.IDLE,
                                 isExpanded = false,
                                 link = "",
-                                description = "",
-                                isLocked = !wb.isReleased,
-                                isBest = false,
+                                input = "",
+                                description = workbook.description,
+                                isLocked = !workbook.isReleased,
+                                isBest = workbook.status == WorkbookStatus.BEST,
+                                missionType = workbook.missionType,
                             )
                         }
+
                     updateState {
                         copy(
                             title = data.curriculumTitle,
                             part = data.part,
-                            items = uiItems
+                            items = uiItems,
                         )
                     }
+
                     stopLoading()
                 }
+
                 is ApiState.Fail -> {
                     stopLoading()
-                    emitEvent(UserStudyEvent.ShowToast(resultResponse.failState.message))
+                    emitEvent(
+                        UserStudyEvent.ShowToast(
+                            result.failState.message
+                        )
+                    )
                 }
             }
+        }
+    }
+
+    /** 상태 변환 **/
+
+    private fun WorkbookStatus.toStudyStatus(): StudyStatus {
+        return when (this) {
+            WorkbookStatus.PASS,
+            WorkbookStatus.BEST -> StudyStatus.PASS
+
+            WorkbookStatus.FAIL -> StudyStatus.FAIL
+
+            WorkbookStatus.PENDING,
+            WorkbookStatus.IN_PROGRESS,
+            WorkbookStatus.SUBMITTED,
+            WorkbookStatus.UNKNOWN -> StudyStatus.IN_PROGRESS
         }
     }
 
