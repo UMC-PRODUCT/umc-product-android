@@ -76,6 +76,17 @@ object Endpoints {
 
         const val CREATE_STUDY_GROUP_SCHEDULE = "$SCHEDULE/study-group"
 
+        const val SCHEDULES_ME = "api/v2/schedules/me"
+        const val DETAIL_V2 = "api/v2/schedules/{scheduleId}"
+        const val CAPABILITIES = "api/v2/schedules/capabilities"
+        const val CREATE_V2 = "api/v2/schedules"
+
+        const val ATTENDANCE_REQUEST = "api/v2/schedules/{scheduleId}/attendances/request"
+        const val ATTENDANCE_DECIDE = "api/v2/schedules/{scheduleId}/attendances/decide"
+        const val ATTENDANCE_EXCUSE = "api/v2/schedules/{scheduleId}/attendances/excuse"
+        const val ATTENDANCE_HISTORY = "api/v2/schedules/attendance"
+        const val ATTENDANCE_DETAIL = "api/v2/schedules/{scheduleId}/attendance"
+
     }
 
     object Community{
@@ -149,8 +160,9 @@ object Endpoints {
     }
 
     object Curriculum {
-        const val CURRICULUM = "api/v1/curriculums"
-        const val CHALLENGER_ME_PROGRESS = "$CURRICULUM/challengers/me/progress"
+
+        const val CURRICULUM_OVERVIEW = "api/v2/curriculums/overview"
+        const val CHALLENGER_ME_PROGRESS = "api/v2/curriculums/progress/me"
         const val SUBMIT = "api/v1/workbooks/submission"
         const val WORKBOOK_SUBMISSIONS = "api/v1/curriculums/workbook-submissions"
         const val STUDY_GROUPS = "api/v1/curriculums/study-groups"

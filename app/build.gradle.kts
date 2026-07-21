@@ -77,6 +77,7 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":domain"))
 
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -127,6 +128,11 @@ dependencies {
     // Play In-App Update
     implementation(libs.play.update)
     implementation(libs.play.update.ktx)
+
+    //naver maps
+    implementation(libs.naver.maps.sdk)
+    implementation(libs.naver.maps.compose)
+    implementation(libs.googleplay.services.location)
 }
 
 fun getApiKey(propertyKey: String): String {
