@@ -32,9 +32,9 @@ class QrCodeViewModel @Inject constructor(
 ) : BaseViewModel<QrCodeUiState, QrCodeEvent>(QrCodeUiState()) {
 
     //nearbyConnection
-    private var nearbyManager: NearbyManager? = null
+    //private var nearbyManager: NearbyManager? = null
 
-    private var localEndpointName = Build.MODEL
+    //private var localEndpointName = Build.MODEL
 
     init {
         getUserProfile()
@@ -48,16 +48,35 @@ class QrCodeViewModel @Inject constructor(
                 response = getMyProfileUseCase(),
                 successCallback = { userInfo ->
                     updateState { copy(userInfo = userInfo) }
-                    initNearbyAdvertising()
+                    //initNearbyAdvertising()
+                    generateMyUserCardQr(userInfo)
                 },
                 errorCallback = {
                     emitEvent(QrCodeEvent.ShowToast("프로필 정보를 불러오지 못했습니다."))
-                    initNearbyAdvertising()
+                    //initNearbyAdvertising()
+                    generateMyUserCardQr(null)
                 }
             )
             stopLoading()
         }
     }
+
+    /**
+     * 내 프로필 정보를 바탕으로 UserCard 객체를 생성하고, 이를 JSON으로 직렬화하여 QR 데이터(myEndpointId)로 설정
+     */
+    private fun generateMyUserCardQr(userInfo: UserInfo?) {
+        val myCard = UserCard(
+            /**테스트 데이터**/
+            name = userInfo?.name?.ifEmpty { "박유수" } ?: "박유수",
+            nickname = userInfo?.nickname?.ifEmpty { "어헛차" } ?: "어헛차"
+        )
+        // QR 코드 인코딩용 JSON 데이터 생성
+        val qrJsonContent = myCard.toJson()
+        updateState { copy(myQrcodeData = qrJsonContent) }
+
+    }
+    
+
 
     //수신 상태 초기화 - 수신 다이얼로그 클릭 시 스캔한 데이터 초기화
     fun clearReceivedCard() {
@@ -69,9 +88,10 @@ class QrCodeViewModel @Inject constructor(
         }
 
         //다음 사람과의 교환을 위해 Advertising 상태 복구
-        nearbyManager?.startAdvertising()
+        //nearbyManager?.startAdvertising()
     }
 
+    /*
     //Nearby Advertising 시작 및 콜백 정의
     fun initNearbyAdvertising() {
 
@@ -115,13 +135,15 @@ class QrCodeViewModel @Inject constructor(
         nearbyManager?.startAdvertising()
     }
 
+     */
+
     /**
      * 스캐너 열기 (내 광고 중단 후 상대 탐색 시작)
      */
     fun startScanner() {
         if (uiState.value.isScannerOpen) return
-        nearbyManager?.stopAdvertising()
-        nearbyManager?.startDiscovery()
+        //nearbyManager?.stopAdvertising()
+        //nearbyManager?.startDiscovery()
 
         updateState { copy(isScannerOpen = true) }
     }
@@ -142,6 +164,22 @@ class QrCodeViewModel @Inject constructor(
                 isScannerOpen = false
             )
         }
+
+        //그냥 json을 읽은 다음 역직렬화
+        try {
+            //QR 데이터(JSON) -> UserCard 객체 직접 파싱
+            val card = UserCard.fromJson(scannedValue)
+
+            //파싱 성공 시 별도 네트워크/블루투스 연결 없이 즉시 UI State 반영 -> UDialog 팝업 뜸!
+            updateState { copy(receivedCard = card) }
+            emitEvent(QrCodeEvent.ShowToast("${card.name}님의 명함을 읽어왔습니다!"))
+        } catch (e: Exception) {
+            Log.e("QrScanDebug", "UserCard 파싱 실패: ${e.message}")
+            emitEvent(QrCodeEvent.ShowToast("유효하지 않은 명함 QR 코드입니다."))
+        }
+
+
+        /*
         val currentDevices = uiState.value.discoveredDevices
         Log.d("NearbyDebug", "0-1. 현재 발견되어 있는 기기 목록: $currentDevices")
 
@@ -152,8 +190,11 @@ class QrCodeViewModel @Inject constructor(
         if (targetDevice != null) {
             nearbyManager?.requestConnection(targetDevice.first)
         }
+
+         */
     }
 
+    /*
     private fun sendUserCard(endpointId: String) {
         val userCard = UserCard(
             name = uiState.value.userInfo.name.ifEmpty { "박유수" },
@@ -161,6 +202,8 @@ class QrCodeViewModel @Inject constructor(
         )
         nearbyManager?.sendUserCard(endpointId, userCard)
     }
+
+     */
 
     fun navigateBack() {
         emitEvent(QrCodeEvent.NavigateBack)
@@ -182,19 +225,20 @@ class QrCodeViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        nearbyManager?.stopAll()
+        //nearbyManager?.stopAll()
     }
 }
 
 data class QrCodeUiState(
     val userInfo: UserInfo = UserInfo(),
     val nickname: String = "",
-    val myEndpointId: String = "", //qrContent 값과 동일 = 기기 모델명 (필터링을 위한)
+    val myQrcodeData: String = "",
+    //val myEndpointId: String = "", //qrContent 값과 동일 = 기기 모델명 (필터링을 위한) -> UserCard 값
     val scannedTargetQr: String = "", //스캔한 qr코드의 값 = 기기 모델명 or ""
     val isScannerOpen: Boolean = false, //스캐너(카메라)가 열렸는지 확인
-    val discoveredDevices: List<Pair<String, String>> = emptyList(), //확인한 디바이스들로 (구글 API 연결 주소값, 기기명) 이 pair로 이루어짐
+    //val discoveredDevices: List<Pair<String, String>> = emptyList(), //확인한 디바이스들로 (구글 API 연결 주소값, 기기명) 이 pair로 이루어짐
     val receivedCard: UserCard? = null,
-    val connectedEndpointId: String? = null //현재 연결된 구글 통신 API 주소값
+    //val connectedEndpointId: String? = null //현재 연결된 구글 통신 API 주소값
 ) : UiState
 
 sealed interface QrCodeEvent : UiEvent {

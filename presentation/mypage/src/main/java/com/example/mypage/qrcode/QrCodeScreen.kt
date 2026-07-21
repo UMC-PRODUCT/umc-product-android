@@ -51,6 +51,7 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
+import com.umc.domain.model.mypage.UserCard
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -61,7 +62,7 @@ fun QrCodeRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    val localEndpointName = Build.MODEL
+    //val localEndpointName = Build.MODEL
 
     //권한 요청
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -72,6 +73,7 @@ fun QrCodeRoute(
         }
     }
 
+    //첫 권한 체크
     LaunchedEffect(Unit) {
         permissionLauncher.launch(getQrPermissions())
     }
@@ -97,7 +99,7 @@ fun QrCodeRoute(
 
     uiState.receivedCard?.let { card ->
         UDialog(
-            title = "🎉 명함 수신 완료!",
+            title = "명함 수신 완료!",
             content = "${card.name}(${card.nickname})님의 명함을 성공적으로 전달받았습니다.",
             isTwoButton = false,
             positiveText = "확인",
@@ -107,8 +109,8 @@ fun QrCodeRoute(
     }
 
 
-    //QR 생성 (Endpoint ID 기반 또는 기본 닉네임)
-    val qrContent = uiState.myEndpointId.ifEmpty { uiState.userInfo.nickname.ifEmpty { "phone" } }
+    //QR 생성 (UserCard Json 데이터 기반)
+    val qrContent = uiState.myQrcodeData.ifEmpty { UserCard("테스트 이름","테스트 닉네임").toJson() }
     val qrBitmap = remember(qrContent) { QrCodeUtils.generateQrCode(qrContent, 600) }
 
     QrCodeScreen(
