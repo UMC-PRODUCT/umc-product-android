@@ -24,7 +24,6 @@ data class CurriculumProgressResponse(
             curriculumId = curriculumId ?: 0L,
             curriculumTitle = title.orEmpty(),
 
-            // 새 API 응답에는 part가 없음
             part = UserPart.UNKNOWN,
 
             completedCount = weekList.count {
