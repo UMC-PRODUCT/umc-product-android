@@ -1,165 +1,126 @@
 package com.umc.presentation.study.normal
 
 import androidx.lifecycle.viewModelScope
+import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
-import com.umc.component.base.BaseViewModel
 import com.umc.component.theme.AppStrings
+import com.umc.domain.model.UserInfo
+import com.umc.domain.model.act.study.StudyProgress
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.StudyStatus
-import com.umc.domain.model.enums.SubmitState
 import com.umc.domain.model.enums.UserPart
+import com.umc.domain.model.enums.WorkbookMissionType
 import com.umc.domain.model.enums.WorkbookStatus
 import com.umc.domain.usecase.curriculum.GetMyCurriculumProgressUseCase
+import com.umc.domain.usecase.member.GetMyProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 
 data class UserStudyState(
     val title: String = "",
     val part: UserPart = UserPart.UNKNOWN,
     val items: List<NormalStudyItemUiModel> = emptyList(),
 ) : UiState {
-    val totalCount: Int get() = items.size
-    val passCount: Int get() = items.count { it.status == StudyStatus.PASS }
-    val progress: Int get() = if (totalCount == 0) 0 else (passCount * 100 / totalCount)
-    val percentText: String get() = "$progress%"
-    val subText: String get() = AppStrings.STUDY_COMPLETE_FORMAT.format(passCount, totalCount)
+
+    val totalCount: Int
+        get() = items.size
+
+    val passCount: Int
+        get() = items.count { it.status == StudyStatus.PASS }
+
+    val progress: Int
+        get() = if (totalCount == 0) {
+            0
+        } else {
+            passCount * 100 / totalCount
+        }
+
+    val percentText: String
+        get() = "$progress%"
+
+    val subText: String
+        get() = AppStrings.STUDY_COMPLETE_FORMAT.format(
+            passCount,
+            totalCount,
+        )
 }
 
-
 sealed interface UserStudyEvent : UiEvent {
-    data class ShowToast(val message: String) : UserStudyEvent
+
+    data class ShowToast(
+        val message: String,
+    ) : UserStudyEvent
 }
 
 @HiltViewModel
 class UserStudyViewModel @Inject constructor(
-    private val getMyStudyProgressUseCase: GetMyCurriculumProgressUseCase,
-) : BaseViewModel<UserStudyState, UserStudyEvent>(UserStudyState()) {
-
-    companion object {
-        private const val USE_DUMMY = false
-        private const val GISU_ID = 3L
-    }
+    private val getMyProfileUseCase: GetMyProfileUseCase,
+    private val getMyCurriculumProgressUseCase: GetMyCurriculumProgressUseCase,
+) : BaseViewModel<UserStudyState, UserStudyEvent>(
+    UserStudyState(),
+) {
 
     init {
-        if (USE_DUMMY) loadDummy() else load()
+        load()
     }
 
-    // TODO: 더미 데이터 제거 - 실제 API 연결 후 삭제
-    private fun loadDummy() {
-        updateState {
-            copy(
-                title = "10기 SpringBoot",
-                items = listOf(
-                    NormalStudyItemUiModel(
-                        id = 1L,
-                        week = 1,
-                        platform = "Github",
-                        title = "1주차 - Spring Boot 시작하기",
-                        description = "Spring Boot 기초 개념과 프로젝트 구조를 학습합니다.",
-                        status = StudyStatus.PASS,
-                        submitState = SubmitState.IDLE,
-                        isLocked = false,
-                        isBest = true,
-                    ),
-                    NormalStudyItemUiModel(
-                        id = 2L,
-                        week = 2,
-                        platform = "Github",
-                        title = "2주차 - JPA 기초",
-                        description = "JPA와 Hibernate를 이용한 데이터베이스 연동을 학습합니다.",
-                        status = StudyStatus.FAIL,
-                        submitState = SubmitState.IDLE,
-                        isLocked = false,
-                    ),
-                    NormalStudyItemUiModel(
-                        id = 3L,
-                        week = 3,
-                        platform = "Github",
-                        title = "3주차 - Spring Security",
-                        description = "Spring Security를 이용한 인증/인가를 학습합니다.",
-                        status = StudyStatus.IN_PROGRESS,
-                        submitState = SubmitState.READY,
-                        isLocked = false,
-                    ),
-                    NormalStudyItemUiModel(
-                        id = 4L,
-                        week = 4,
-                        platform = "Github",
-                        title = "4주차 - REST API 설계",
-                        description = "REST API 설계 원칙과 구현 방법을 학습합니다.",
-                        status = StudyStatus.IN_PROGRESS,
-                        submitState = SubmitState.IDLE,
-                        isLocked = true,
-                    ),
-                    NormalStudyItemUiModel(
-                        id = 5L,
-                        week = 5,
-                        platform = "Github",
-                        title = "5주차 - 테스트 코드",
-                        description = "JUnit과 Mockito를 이용한 테스트 코드 작성을 학습합니다.",
-                        status = StudyStatus.IN_PROGRESS,
-                        submitState = SubmitState.IDLE,
-                        isLocked = true,
-                    ),
-                )
-            )
-        }
-    }
-
-    /** 커리큘럼 개요 로드 */
     private fun load() {
         startLoading()
 
         viewModelScope.launch {
-            when (
-                val result = getMyStudyProgressUseCase(
-                    gisuId = GISU_ID
-                )
-            ) {
-                is ApiState.Success -> {
-                    val data = result.data
+            when (val profileResult = getMyProfileUseCase()) {
+                is ApiState.Success<*> -> {
+                    val userInfo = profileResult.data as? UserInfo
 
-                    val uiItems = data.workbooks
-                        .sortedBy { it.weekNo }
-                        .map { workbook ->
-                            NormalStudyItemUiModel(
-                                id = workbook.originalWorkbookId,
-                                platform = when (workbook.missionType) {
-                                    else -> "Github"
-                                },
-                                title = workbook.title,
-                                status = workbook.status.toStudyStatus(),
-                                week = workbook.weekNo,
-                                submitState = SubmitState.IDLE,
-                                isExpanded = false,
-                                link = "",
-                                input = "",
-                                description = workbook.description,
-                                isLocked = !workbook.isReleased,
-                                isBest = workbook.status == WorkbookStatus.BEST,
-                                missionType = workbook.missionType,
+                    if (userInfo == null) {
+                        stopLoading()
+
+                        emitEvent(
+                            UserStudyEvent.ShowToast(
+                                message = "사용자 정보 형식이 올바르지 않아요.",
                             )
-                        }
-
-                    updateState {
-                        copy(
-                            title = data.curriculumTitle,
-                            part = data.part,
-                            items = uiItems,
                         )
+                        return@launch
                     }
 
-                    stopLoading()
+                    val currentRecord = userInfo.challengerRecords
+                        .filter { record ->
+                            record.challengerStatus == "ACTIVE"
+                        }
+                        .maxByOrNull { record ->
+                            record.gisu
+                        }
+                        ?: userInfo.challengerRecords.maxByOrNull { record ->
+                            record.gisu
+                        }
+
+                    if (currentRecord == null) {
+                        stopLoading()
+
+                        emitEvent(
+                            UserStudyEvent.ShowToast(
+                                message = "챌린저 기수 정보를 찾을 수 없어요.",
+                            )
+                        )
+                        return@launch
+                    }
+
+                    val part = UserPart.from(currentRecord.part)
+
+                    loadStudyProgress(
+                        gisuId = currentRecord.gisuId,
+                        part = part,
+                    )
                 }
 
                 is ApiState.Fail -> {
                     stopLoading()
+
                     emitEvent(
                         UserStudyEvent.ShowToast(
-                            result.failState.message
+                            message = profileResult.failState.message,
                         )
                     )
                 }
@@ -167,103 +128,115 @@ class UserStudyViewModel @Inject constructor(
         }
     }
 
-    /** 상태 변환 **/
+    private suspend fun loadStudyProgress(
+        gisuId: Long,
+        part: UserPart,
+    ) {
+        when (
+            val result = getMyCurriculumProgressUseCase(
+                gisuId = gisuId,
+            )
+        ) {
+            is ApiState.Success<*> -> {
+                val data = result.data as? StudyProgress
+
+                if (data == null) {
+                    stopLoading()
+
+                    emitEvent(
+                        UserStudyEvent.ShowToast(
+                            message = "커리큘럼 데이터 형식이 올바르지 않아요.",
+                        )
+                    )
+                    return
+                }
+
+                val items = data.workbooks
+                    .sortedBy { workbook ->
+                        workbook.weekNo
+                    }
+                    .map { workbook ->
+                        NormalStudyItemUiModel(
+                            id = workbook.originalWorkbookId,
+                            title = workbook.title,
+                            status = workbook.status.toStudyStatus(),
+                            week = workbook.weekNo,
+                            description = workbook.description,
+                            platform = workbook.missionType.toPlatformLabel(),
+                            isLocked = !workbook.isReleased,
+                            isBest = workbook.status == WorkbookStatus.BEST,
+                        )
+                    }
+
+                updateState {
+                    copy(
+                        title = data.curriculumTitle,
+                        part = part,
+                        items = items,
+                    )
+                }
+
+                stopLoading()
+            }
+
+            is ApiState.Fail -> {
+                stopLoading()
+
+                emitEvent(
+                    UserStudyEvent.ShowToast(
+                        message = result.failState.message,
+                    )
+                )
+            }
+        }
+    }
+
+    fun toggleExpand(index: Int) {
+        updateState {
+            val target = items.getOrNull(index)
+                ?: return@updateState this
+
+            if (target.isLocked) {
+                return@updateState this
+            }
+
+            copy(
+                items = items.mapIndexed { itemIndex, item ->
+                    if (itemIndex == index) {
+                        item.copy(
+                            isExpanded = !item.isExpanded,
+                        )
+                    } else {
+                        item
+                    }
+                }
+            )
+        }
+    }
 
     private fun WorkbookStatus.toStudyStatus(): StudyStatus {
         return when (this) {
             WorkbookStatus.PASS,
-            WorkbookStatus.BEST -> StudyStatus.PASS
+            WorkbookStatus.BEST,
+                -> StudyStatus.PASS
 
-            WorkbookStatus.FAIL -> StudyStatus.FAIL
+            WorkbookStatus.FAIL ->
+                StudyStatus.FAIL
 
             WorkbookStatus.PENDING,
             WorkbookStatus.IN_PROGRESS,
             WorkbookStatus.SUBMITTED,
-            WorkbookStatus.UNKNOWN -> StudyStatus.IN_PROGRESS
+            WorkbookStatus.UNKNOWN,
+                -> StudyStatus.IN_PROGRESS
         }
     }
 
-    /** 카드 펼치기/접기 토글 */
-    fun toggleExpand(index: Int) {
-        updateState {
-            val target = items.getOrNull(index) ?: return@updateState this
-            if (target.isLocked) return@updateState this
-            val updated = items.mapIndexed { i, item ->
-                if (i == index) item.copy(isExpanded = !item.isExpanded) else item
-            }
-            copy(items = updated)
+    private fun WorkbookMissionType.toPlatformLabel(): String {
+        return when (this) {
+            WorkbookMissionType.LINK -> "Github"
+            WorkbookMissionType.FILE -> "File"
+            WorkbookMissionType.TEXT -> "Text"
+            WorkbookMissionType.UNKNOWN -> "-"
         }
     }
-
-    /**
-     * 링크 제출 버튼 클릭
-     * - 링크 입력 후 CONFIRMING 상태로 전환
-     * TODO: 실제 API 연결 후 submitChallengerWorkbookUseCase 호출로 교체
-     */
-    fun onSubmitClick(itemId: Long, link: String) {
-        val trimmed = link.trim()
-        if (trimmed.isBlank()) {
-            emitEvent(UserStudyEvent.ShowToast("링크를 입력해주세요."))
-            return
-        }
-        updateItem(itemId) { item ->
-            if (item.isLocked) return@updateItem item
-            if (item.status != StudyStatus.IN_PROGRESS) return@updateItem item
-            when (item.submitState) {
-                SubmitState.READY, SubmitState.IDLE ->
-                    item.copy(link = trimmed, submitState = SubmitState.CONFIRMING)
-                SubmitState.CONFIRMING ->
-                    item.copy(link = trimmed)
-                else -> item
-            }
-        }
-    }
-
-    /**
-     * 학습 완료 인증 버튼 클릭
-     * - CONFIRMING → REQUESTED 로 전환
-     * TODO: 실제 API 연결 후 서버에 제출 요청으로 교체
-     */
-    fun onConfirmClick(itemId: Long) {
-        val item = uiState.value.items.firstOrNull { it.id == itemId } ?: return
-        if (item.submitState != SubmitState.CONFIRMING) return
-
-        // TODO: 실제 API 연결 시 로직으로 교체
-        // viewModelScope.launch { submitWorkbook(item.id, item.link) }
-
-        // 임시: 바로 REQUESTED 상태로 변경
-        updateItem(itemId) {
-            it.copy(submitState = SubmitState.REQUESTED, isExpanded = true)
-        }
-        emitEvent(UserStudyEvent.ShowToast("제출 완료!"))
-    }
-
-    private fun updateItem(
-        itemId: Long,
-        transform: (NormalStudyItemUiModel) -> NormalStudyItemUiModel
-    ) {
-        updateState {
-            val updated = items.map { if (it.id == itemId) transform(it) else it }
-            copy(items = updated)
-        }
-    }
-
-    // TODO: 실제 API 연결 시 활성화
-    /*
-    private suspend fun submitWorkbook(originalWorkbookId: Long, link: String) {
-        startLoading()
-        when (val res = submitChallengerWorkbookUseCase(originalWorkbookId, link)) {
-            is ApiState.Success -> {
-                stopLoading()
-                load()
-                emitEvent(UserStudyEvent.ShowToast("제출 완료!"))
-            }
-            is ApiState.Fail -> {
-                stopLoading()
-                updateItem(originalWorkbookId) { it.copy(submitState = SubmitState.CONFIRMING) }
-                emitEvent(UserStudyEvent.ShowToast(res.failState.message))
-            }
-        }
-    }
-    */
 }
