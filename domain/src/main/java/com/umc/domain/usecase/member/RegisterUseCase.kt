@@ -10,6 +10,6 @@ class RegisterUseCase @Inject constructor(
     private val memberRepository: MemberRepository,
 ) {
     suspend operator fun invoke(request: RegisterRequest): ApiState<JwtToken> {
-        return memberRepository.register(request)
+        return memberRepository.registerOAuth(request)
     }
 }

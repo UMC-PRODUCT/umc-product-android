@@ -13,8 +13,10 @@ data class RegisterRequest(
     val termsAgreements: List<TermsAgreement> = listOf(
         TermsAgreement(termsId = 19, isAgreed = true),
         TermsAgreement(termsId = 18, isAgreed = true)
-    )
-
+    ),
+    // Apple 로그인 전용 필드. Android 에서는 빈 값으로 전달
+    val appleRefreshToken: String = "",
+    val appleClientId: String = "",
 )
 
 @Serializable
