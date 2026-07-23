@@ -151,9 +151,11 @@ fun UTextField(
                         modifier = Modifier
                             .size(nextIconSize)
                             .then(
+                                // interactionSource = null 이면 필요 시에만 내부에서 생성됨.
+                                // 조건 분기 안에서 remember 를 호출하지 않기 위해 null 을 그대로 전달
                                 if (onClickNextIcon != null) {
                                     Modifier.clickable(
-                                        interactionSource = remember { MutableInteractionSource() },
+                                        interactionSource = null,
                                         indication = null,
                                     ) { onClickNextIcon() }
                                 } else {
