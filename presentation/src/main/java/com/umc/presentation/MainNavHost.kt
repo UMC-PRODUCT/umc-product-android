@@ -16,6 +16,7 @@ import com.umc.failcode.SignUpFailRoute
 import com.umc.failcode.code.SignUpFailCodeRoute
 import com.umc.permission.PermissionRoute
 import com.umc.presentation.home.home.HomeRoute
+import com.umc.presentation.home.notification.NotificationRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
 import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
 import com.umc.domain.model.enums.SignUpType
@@ -35,7 +36,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Splash,
+        startDestination = MainDestination.Home,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -202,9 +203,17 @@ fun MainNavHost(
                     //여기서 인자를 던지면, savedStateHandle에서 받아채서 ViewModel에서 처리
                     navHostController.navigate(MainDestination.ScheduleDetail(scheduleId = it.id, plusDay = it.plusDay))
                 },
-                onNavigateToNotification = {}
+                onNavigateToNotification = {
+                    navHostController.navigate(MainDestination.Notification)
+                }
             )
         }
+        //공지 화면
+        composable<MainDestination.Notification>{
+            NotificationRoute()
+        }
+
+
         //일정 생성
         composable<MainDestination.ScheduleAdd> {
             ScheduleAddRoute(
