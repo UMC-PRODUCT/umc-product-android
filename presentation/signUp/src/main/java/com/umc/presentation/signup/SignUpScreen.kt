@@ -128,7 +128,6 @@ fun SignUpRoute(
                 confirmText = AppStrings.CONFIRM,
                 onConfirm = {
                     errorDialogMessage = null
-                    navigateToBack()
                 },
             )
         }
