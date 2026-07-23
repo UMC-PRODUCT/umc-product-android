@@ -7,6 +7,8 @@ import com.umc.component.R
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.component.UToast
+import com.umc.component.component.UToastState
 import com.umc.component.util.UTimeFormat
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.CategoryType
@@ -19,13 +21,16 @@ import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.challenger.SearchChallengerScheduleUseCase
 import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.schedule.CreateScheduleUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailHomeUseCase
 import com.umc.domain.usecase.schedule.UpdateScheduleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -33,6 +38,8 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
+import kotlin.plus
+import kotlin.text.isEmpty
 
 @HiltViewModel
 class ScheduleAddViewModel @Inject
@@ -43,6 +50,7 @@ constructor(
     private val createScheduleUseCase: CreateScheduleUseCase, //일정 생성하기
     private val updateScheduleUseCase: UpdateScheduleUseCase, //일정 수정하기
     private val getMemberProfileUseCase: GetMemberProfileUseCase, //유저 정보 가져오기
+    private val searchChallengerScheduleUseCase: SearchChallengerScheduleUseCase, //유저 검색
 ): BaseViewModel<ScheduleAddUiState, ScheduleAddEvent>(
     ScheduleAddUiState()
 ) {
@@ -52,7 +60,13 @@ constructor(
     private val parseDateSdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
     private val parseTimeSdf = SimpleDateFormat("HH:mm", Locale.KOREAN)
 
+    private val dateTimeDisplaySdf = SimpleDateFormat("yyyy.MM.dd • a h:mm", Locale.KOREAN)
+
     private val checkScheduleId: Long = savedStateHandle.get<Long>("scheduleId") ?: -1L
+
+    //검색 작업용 코루틴
+    private var searchJob: Job? = null
+
 
     init {
         loadInitialData()
@@ -280,18 +294,26 @@ constructor(
 
         viewModelScope.launch {
             if (isEditMode) {
+                
+                //[수정] 출석부 내용 추가
+                val attendancePolicy = if (isAttendance) UpdateSchedule.AttendancePolicy(
+                    checkInStartAt = getIsoDateTime(state.checkInStartDate, state.checkInStartTime),
+                    onTimeEndAt = getIsoDateTime(state.onTimeEndDate, state.onTimeEndTime),
+                    lateEndAt = getIsoDateTime(state.lateEndDate, state.lateEndTime)
+                ) else null
+                
                 // [기존 일정 수정]
                 val request = UpdateSchedule(
                     name = state.planTitle,
-                    startsAt = startsAt,
-                    endsAt = endsAt,
-                    isAllDay = state.isAllDay,
-                    locationName = state.planLocation,
-                    latitude = state.latitude,
-                    longitude = state.longitude,
                     description = state.planDetail,
                     tags = selectedTags,
-                    participantMemberIds = participantIds,
+                    startsAt = startsAt,
+                    endsAt = endsAt,
+                    location = if (state.isOnlineChecked) null else UpdateSchedule.Location(state.latitude, state.longitude, state.planLocation),
+                    isOnline = state.isOnlineChecked, // true: 비대면 전환
+                    isAttendanceRequired = isAttendance,
+                    attendancePolicy = attendancePolicy,
+                    participantMemberIds = participantIds
                 )
 
                 resultResponse(
@@ -302,20 +324,23 @@ constructor(
                     errorCallback = { /* 에러 처리 */ }
                 )
             } else {
-                // [새 일정 생성]
+                //[새 일정 생성]
+                //[수정]출석부 처리
+                val attendancePolicy = if (isAttendance) CreateSchedule.AttendancePolicy(
+                    checkInStartAt = getIsoDateTime(state.checkInStartDate, state.checkInStartTime),
+                    onTimeEndAt = getIsoDateTime(state.onTimeEndDate, state.onTimeEndTime),
+                    lateEndAt = getIsoDateTime(state.lateEndDate, state.lateEndTime)
+                ) else null
+
                 val request = CreateSchedule(
                     name = state.planTitle,
-                    startsAt = startsAt,
-                    endsAt = endsAt,
-                    isAllDay = state.isAllDay,
-                    locationName = state.planLocation,
-                    latitude = state.latitude,
-                    longitude = state.longitude,
                     description = state.planDetail,
                     tags = selectedTags,
-                    participantMemberIds = participantIds,
-                    gisuId = state.nowGisuId,
-                    requiresApproval = isAttendance
+                    startsAt = startsAt,
+                    endsAt = endsAt,
+                    location = if (state.isOnlineChecked) null else CreateSchedule.Location(state.latitude, state.longitude, state.planLocation),
+                    attendancePolicy = attendancePolicy,
+                    participantMemberIds = participantIds
                 )
 
                 resultResponse(
@@ -330,17 +355,34 @@ constructor(
 
 
     }
+    
+    // 비대면 체크 상태 토글하는 함수
+    fun toggleOnlineCheck(isOnline: Boolean) {
+        updateState {
+            copy(
+                isOnlineChecked = isOnline,
+                //비대면 진행 시 기존 기입된 장소 정보는 초기화
+                planLocation = if (isOnline) "" else planLocation,
+                latitude = if (isOnline) 0.0 else latitude,
+                longitude = if (isOnline) 0.0 else longitude
+            )
+        }
+    }
+
+    //출석부 생성 여부 토글하는 함수
+    fun toggleAttendanceCheck(isAttendance: Boolean) {
+        updateState { copy(isAttendanceChecked = isAttendance) }
+    }
 
 
-    /**viewModel 값 업데이트**/
+
     // 다이얼로그에서 가져온 참여자 정보를 업데이트 하는 함수
     fun updateParticipants(participants: List<ParticipantItem>, participantsString: String) {
         updateState {
             copy(
                 selectedParticipants = participants,
                 selectedParticipantsString = participantsString
-            )
-        }
+            ) }
     }
 
     // 일정 이름 변경
@@ -408,6 +450,116 @@ constructor(
             )
         }
     }
+
+    // 일정 시작 날짜/시간 통합 변경
+    fun updateStartDateTime(utcDateTime: String) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        try {
+            val date = sdf.parse(utcDateTime) ?: return
+            val newCal = Calendar.getInstance().apply { time = date }
+            updateState {
+                copy(
+                    startDate = newCal,
+                    startTime = newCal,
+                    startDateText = dateDisplaySdf.format(newCal.time),
+                    startTimeText = timeDisplaySdf.format(newCal.time)
+                )
+            }
+        } catch (e: Exception) {
+
+            Log.e("log_home", "Parsing Error: ${e.message}")
+        }
+    }
+
+    // 일정 종료 날짜/시간 통합 변경
+    fun updateEndDateTime(utcDateTime: String) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        try {
+            val date = sdf.parse(utcDateTime) ?: return
+            val newCal = Calendar.getInstance().apply { time = date }
+            updateState {
+                copy(
+                    endDate = newCal,
+                    endTime = newCal,
+                    endDateText = dateDisplaySdf.format(newCal.time),
+                    endTimeText = timeDisplaySdf.format(newCal.time)
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("log_home", "Parsing Error: ${e.message}")
+        }
+    }
+
+    //출석부 관련 시간 업데이트
+    //체크인 시간
+    fun updateCheckInStartDateTime(utcDateTime: String) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        try {
+            val date = sdf.parse(utcDateTime) ?: return
+            val newCal = Calendar.getInstance().apply { time = date }
+            updateState {
+                copy(
+                    checkInStartDate = newCal,
+                    checkInStartTime = newCal,
+                    checkInStartDateText = dateDisplaySdf.format(newCal.time),
+                    checkInStartTimeText = timeDisplaySdf.format(newCal.time)
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("log_home", "Parsing Error: ${e.message}")
+        }
+    }
+
+    //정시 종료 시간
+    fun updateOnTimeEndDateTime(utcDateTime: String) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        try {
+            val date = sdf.parse(utcDateTime) ?: return
+            val newCal = Calendar.getInstance().apply { time = date }
+            updateState {
+                copy(
+                    onTimeEndDate = newCal,
+                    onTimeEndTime = newCal,
+                    onTimeEndDateText = dateDisplaySdf.format(newCal.time),
+                    onTimeEndTimeText = timeDisplaySdf.format(newCal.time)
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("log_home", "Parsing Error: ${e.message}")
+        }
+    }
+
+    //지각 종료 시간
+    fun updateLateEndDateTime(utcDateTime: String) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        try {
+            val date = sdf.parse(utcDateTime) ?: return
+            val newCal = Calendar.getInstance().apply { time = date }
+            updateState {
+                copy(
+                    lateEndDate = newCal,
+                    lateEndTime = newCal,
+                    lateEndDateText = dateDisplaySdf.format(newCal.time),
+                    lateEndTimeText = timeDisplaySdf.format(newCal.time)
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("log_home", "Parsing Error: ${e.message}")
+        }
+    }
+    
+
+
 
     // 카테고리를 선택하면 진행하는 함수
     fun selectCategory(category: CategoryItem) {
@@ -488,16 +640,33 @@ data class ScheduleAddUiState(
     val endDate: Calendar = Calendar.getInstance(),
     val endTime: Calendar = Calendar.getInstance(),
     //(필수)
-    val startDateText: String = "시작 날짜",
-    val startTimeText: String = "시작 시간",
-    val endDateText : String = "종료 날짜",
-    val endTimeText : String = "종료 시간",
+    val startDateText: String = "",
+    val startTimeText: String = "",
+    val endDateText : String = "",
+    val endTimeText : String = "",
+    // 출석 정책 (운영진 전용)
+    val checkInStartDate: Calendar = Calendar.getInstance(),
+    val checkInStartTime: Calendar = Calendar.getInstance(),
+    val onTimeEndDate: Calendar = Calendar.getInstance(),
+    val onTimeEndTime: Calendar = Calendar.getInstance(),
+    val lateEndDate: Calendar = Calendar.getInstance(),
+    val lateEndTime: Calendar = Calendar.getInstance(),
+    val checkInStartDateText: String = "",
+    val checkInStartTimeText: String = "",
+    val onTimeEndDateText: String = "",
+    val onTimeEndTimeText: String = "",
+    val lateEndDateText: String = "",
+    val lateEndTimeText: String = "",
 
 
-    //인원 검색 관련
-    /**TODO 일단은 이름만 받는다고 가정**/
+
+
     val selectedParticipants: List<ParticipantItem> = emptyList(), //선택된 참여자 결과(recyclerview에 쓰임)
     val selectedParticipantsString : String = "", //cdv에 보여줄 string
+
+    val isOnlineChecked: Boolean = false,
+    val isAttendanceChecked: Boolean = false,
+
 
     //카테고리 리스트
     val categories: List<CategoryItem> = listOf(
@@ -531,24 +700,7 @@ data class ScheduleAddUiState(
 
 
     //최종 여부를 판단하는 실시간 계산
-    val isRegisterOk: Boolean
-        get() {
-            //1. 텍스트 3종 세트가 비어있지 않음
-            val isTextValid = planTitle.isNotBlank()
-
-            /** 필수 내용 수정
-            //2. 날짜/시간이 초기값이 아님
-            val isDateTimeValid = (isAllDay && (startDateText != "시작 날짜" && endDateText != "종료 날짜"))
-            || (!isAllDay && (startDateText != "시작 날짜" && startTimeText != "시작 시간" &&
-            endDateText != "종료 날짜" && endTimeText != "종료 시간"))
-
-            //3. 참여자가 1명 이상임
-            val isParticipantValid = isSelectedParticipant
-             **/
-
-
-            return isTextValid && isSelectedCategory && planLocation != ""
-        }
+    val isRegisterOk: Boolean get() = planTitle.isNotBlank() && isSelectedCategory && (isOnlineChecked || planLocation.isNotEmpty())
 }
 
 sealed interface ScheduleAddEvent : UiEvent {
