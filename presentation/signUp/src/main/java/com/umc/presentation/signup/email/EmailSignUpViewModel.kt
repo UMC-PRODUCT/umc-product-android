@@ -63,7 +63,8 @@ class EmailSignUpViewModel @Inject constructor(
                 successCallback = {
                     updateState {
                         copy(
-                            emailVerificationId = it.toInt(),
+                            // 서버가 숫자가 아닌 값을 내려줘도 크래시하지 않도록 방어 (기본값 -1)
+                            emailVerificationId = it.toIntOrNull() ?: -1,
                             verifyType = EmailVerifyType.REQUEST
                         )
                     }
