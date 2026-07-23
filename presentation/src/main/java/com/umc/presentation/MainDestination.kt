@@ -10,7 +10,26 @@ sealed interface MainDestination {
     data object Login : MainDestination
 
     @Serializable
-    data class SignUp(val oAuthVerificationToken: String) : MainDestination
+    data object EmailLogin : MainDestination
+
+    // 비밀번호 찾기 (이메일 인증 후 새 비밀번호 설정)
+    @Serializable
+    data object FindPassword : MainDestination
+
+    // 개인정보 입력 단계. signUpType(SOCIAL/EMAIL)에 따라 회원가입 API가 분기됨
+    @Serializable
+    data class SignUp(
+        val signUpType: String,
+        val oAuthVerificationToken: String = "",
+        val emailVerificationToken: String = "",
+        val rawPassword: String = "",
+    ) : MainDestination
+
+    @Serializable
+    data class SocialSignUp(val oAuthVerificationToken: String) : MainDestination
+
+    @Serializable
+    data object EmailSignUp : MainDestination
 
     @Serializable
     data object Permission : MainDestination
