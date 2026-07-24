@@ -58,6 +58,17 @@ object AppStrings {
     const val HOME_PLAN_ADD_DIALOG_ADD_ATTENDANCE_CONTENT = "출석부와 함께 일정을 생성하시겠습니까?"
     const val HOME_PLAN_ADD_DIALOG_ADD_ATTENDANCE_YES = "네, 출석부도 같이 생성할게요"
     const val HOME_PLAN_ADD_DIALOG_ADD_ATTENDANCE_NO = "아니요, 일정만 생성할게요"
+
+    const val MYCARD_INTRODUCE = "Business card"
+    const val MYCARD_EXCHANGE_CARD = "명함 교환"
+    const val MYCARD_QRCODE = "QR 코드"
+    const val MYCARD_CARD_TITLE = "명함 관리"
+    const val MYCARD_CARD_CONTENT_RECEIVED = "받은 명함"
+    const val MYCARD_CARD_EDIT = "명함 편집"
+    const val MYCARD_ACTVITY_TITLE = "나의 활동"
+    const val MYCARD_ACTVITY_MYSTUDY = "나의 스터디"
+    const val MYCARD_ACTVITY_MYACTIVTY_PROJECT = "나의 활동·프로젝트"
+
     const val MYPAGE_TITLE = "마이페이지"
     const val MYPAGE_MODIFY_PROFILE = "프로필 수정"
     const val MYPAGE_LOGOUT = "로그아웃"

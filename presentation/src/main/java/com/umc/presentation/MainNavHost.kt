@@ -9,6 +9,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.mypage.mycard.MycardRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
@@ -37,7 +38,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Mypage,
+        startDestination = MainDestination.Mycard,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -236,6 +237,20 @@ fun MainNavHost(
         }
 
         /**마이페이지 관련 정의**/
+
+        //신 마이페이지
+        composable<MainDestination.Mycard> {
+            MycardRoute(
+                onNavigateToMypage = {
+                    navHostController.navigate(MainDestination.Mypage)
+                },
+                onNavigateToMyqrCode = {
+                    navHostController.navigate(MainDestination.Qrcode)
+                }
+            )
+        }
+
+        //구 마이페이지 -> 신 설정
         composable<MainDestination.Mypage>{
             MypageRoute(
                 onNavigateToEditProfile = {
@@ -251,6 +266,7 @@ fun MainNavHost(
             )
 
         }
+
 
         //내 활동
         composable<MainDestination.MyContent> {
