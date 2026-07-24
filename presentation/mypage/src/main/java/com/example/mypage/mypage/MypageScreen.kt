@@ -726,7 +726,9 @@ fun MypageScreen(
                 //회원 탈퇴
                 UButton(
                     text = AppStrings.DELETE_USER,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(54.dp),
                     backgroundColor = grey000(),
                     textColor = red500(),
                     textStyle = UmcTypographyTokens.Body,
@@ -736,7 +738,9 @@ fun MypageScreen(
                 //로그아웃
                 UButton(
                     text = AppStrings.LOGOUT,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(54.dp),
                     backgroundColor = grey000(),
                     textColor = grey800(),
                     textStyle = UmcTypographyTokens.Body,

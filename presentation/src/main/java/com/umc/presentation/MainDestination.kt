@@ -63,6 +63,12 @@ sealed interface MainDestination {
 
 
     /**마이 페이지 섹션**/
+
+    //신 마이페이지
+    @Serializable
+    data object Mycard : MainDestination
+
+    //(구 마이페이지) -> (신 설정)
     @Serializable
     data object Mypage : MainDestination
 
