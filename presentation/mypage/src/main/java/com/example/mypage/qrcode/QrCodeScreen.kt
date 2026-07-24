@@ -45,12 +45,14 @@ import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
+import com.umc.component.theme.grey950
 import com.umc.domain.model.mypage.UserCard
 import kotlinx.coroutines.flow.collectLatest
 
@@ -308,6 +310,52 @@ fun QrCodeScreen(
         }
     }
 }
+
+/**설정(내 카드) Top bar**/
+@Composable
+fun QrCodeScreenTopBar(
+    onBackClick: () -> Unit //뒤로 가기
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(grey000()),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+
+        //뒤로 가기 버튼
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(color = Color.Transparent, shape = CircleShape)
+                .clip(CircleShape)
+                .clickable(
+                    onClick = onBackClick
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(
+                    id = R.drawable.ic_back
+                ),
+                contentDescription = null,
+                tint = grey950(),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        UText(
+            text = AppStrings.SETTING,
+            style = UmcTypographyTokens.Title2Bold,
+            modifier = Modifier
+                .padding(horizontal = 6.dp)
+
+        )
+
+
+    }
+}
+
 
 private fun getQrPermissions(): Array<String> {
     val list = mutableListOf(

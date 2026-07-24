@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -58,6 +59,7 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
+import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
 import com.umc.domain.model.enums.LoginType
@@ -68,6 +70,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun ProfileRoute(
     viewModel: ProfileViewModel = hiltViewModel(),
+    onNavigateToBack: () -> Unit
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -122,7 +125,7 @@ fun ProfileRoute(
                     viewModel.saveUserOutLink(githubText, linkedinText, blogText)
                 }
                 is ProfileEvent.ClickBackPressed -> {
-                    /**TODO: 차후 로직 처리*/
+                    onNavigateToBack()
                 }
                 is ProfileEvent.MakeToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
@@ -163,7 +166,7 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(grey100())
     ) {
 
         //상단 바
@@ -268,29 +271,38 @@ fun ProfileTopbar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 18.dp)
-            .padding(horizontal = 16.dp),
+            .background(grey000()),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ){
-            Icon(
-                painter = painterResource(id=R.drawable.ic_back),
-                contentDescription = null,
-                tint = grey800(),
+            Box(
                 modifier = Modifier
-                    .clickable { onBackClick() }
-                    .padding(end = 16.dp)
+                    .size(48.dp)
+                    .background(color = Color.Transparent, shape = CircleShape)
                     .clip(CircleShape)
-            )
+                    .clickable(
+                        onClick = onBackClick
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(
+                        id = R.drawable.ic_back
+                    ),
+                    contentDescription = null,
+                    tint = grey950(),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
             UText(
                 text = AppStrings.MYPAGE_MODIFY_PROFILE,
                 style = UmcTypographyTokens.Title2Bold,
-                color = grey800(),
-                modifier = Modifier.padding(start = 16.dp)
+                color = grey950(),
+                modifier = Modifier.padding(start = 8.dp)
             )
         }
 
@@ -301,6 +313,7 @@ fun ProfileTopbar(
             color = indigo500(),
             modifier = Modifier
                 .clickable { onCompleteClick() }
+                .padding(end = 16.dp)
         )
 
     }

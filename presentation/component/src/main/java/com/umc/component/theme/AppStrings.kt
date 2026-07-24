@@ -69,8 +69,12 @@ object AppStrings {
     const val MYCARD_ACTVITY_MYSTUDY = "나의 스터디"
     const val MYCARD_ACTVITY_MYACTIVTY_PROJECT = "나의 활동·프로젝트"
 
+    const val QRCODE_TITLE = "명함 공유하기"
+    const val QRCODE_CONTENT = "QR을 스캔하면 내 명함이 저장돼요"
+    const val QRCODE_SHARE = "공유하기"
+    const val QRCODE_SAVE = "이미지 저장"
     const val MYPAGE_TITLE = "마이페이지"
-    const val MYPAGE_MODIFY_PROFILE = "프로필 수정"
+    const val MYPAGE_MODIFY_PROFILE = "프로필"
     const val MYPAGE_LOGOUT = "로그아웃"
     const val MYPAGE_SUGGEST = "중앙 건의함"
     const val MYPAGE_SUGGEST_COTNET = "익명으로 자유롭게 의견을 남길 수 있어요."
