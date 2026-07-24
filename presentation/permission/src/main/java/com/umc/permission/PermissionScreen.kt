@@ -44,10 +44,12 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
+import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.indigo600
 import com.umc.component.theme.indigo700
+import com.umc.component.theme.white
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -154,7 +156,7 @@ fun PermissionScreen(
                 modifier = Modifier.padding(horizontal = 24.dp),
                 text = AppStrings.PERMISSION_TITLE,
                 style = UmcTypographyTokens.Title1Bold,
-                color = grey800(),
+                color = grey950(),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -167,6 +169,44 @@ fun PermissionScreen(
             )
 
             Spacer(modifier = Modifier.height(48.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(grey000())
+                    .border(
+                        width = 1.dp,
+                        color = if (isAllChecked) indigo500() else grey300(),
+                        shape = RoundedCornerShape(8.dp),
+                    )
+                    .clickable(onClick = onClickAllCheck)
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Spacer(modifier = Modifier.size(16.dp))
+
+                UText(
+                    text = AppStrings.PERMISSION_ACCEPT_ALL,
+                    style = UmcTypographyTokens.BodyBold,
+                    color = if (isAllChecked) indigo500() else grey950(),
+                    modifier = Modifier.weight(1f),
+                )
+
+                Icon(
+                    painter = painterResource(R.drawable.ic_check_box),
+                    contentDescription = null,
+                    tint = if (isAllChecked) indigo500() else grey300(),
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .size(24.dp),
+                )
+
+                Spacer(modifier = Modifier.size(4.dp))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             PermissionItem(
                 icon = painterResource(R.drawable.ic_alarm_filled),
@@ -197,48 +237,15 @@ fun PermissionScreen(
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(grey000())
-                    .border(
-                        width = 1.dp,
-                        color = if (isAllChecked) indigo500() else grey300(),
-                        shape = RoundedCornerShape(8.dp),
-                    )
-                    .clickable(onClick = onClickAllCheck)
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Spacer(modifier = Modifier.size(16.dp))
-                UText(
-                    text = AppStrings.PERMISSION_ACCEPT_ALL,
-                    style = UmcTypographyTokens.SubheadlineBold,
-                    color = grey800(),
-                    modifier = Modifier.weight(1f),
-                )
-                Icon(
-                    painter = painterResource(R.drawable.ic_check_box),
-                    contentDescription = null,
-                    tint = if (isAllChecked) indigo500() else grey300(),
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .size(24.dp),
-                )
-                Spacer(modifier = Modifier.size(4.dp))
-            }
         }
 
         UButton(
             text = AppStrings.SIGN_UP_COMPLETE,
             onClick = onClickSignUp,
             enabled = uiState.isAlarmCheck,
-            backgroundColor = if (uiState.isAlarmCheck) indigo500() else grey300(),
+            backgroundColor = if (uiState.isAlarmCheck) indigo500() else grey100(),
             pressedColor = indigo700(),
-            textColor = grey000(),
+            textColor = if (uiState.isAlarmCheck) grey000() else grey300(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             modifier = Modifier
                 .fillMaxWidth()
@@ -273,7 +280,7 @@ private fun PermissionItem(
         Icon(
             painter = icon,
             contentDescription = null,
-            tint = if (isChecked) indigo600() else grey400(),
+            tint = grey950(),
             modifier = Modifier.size(24.dp),
         )
 
@@ -286,7 +293,7 @@ private fun PermissionItem(
             UText(
                 text = title,
                 style = UmcTypographyTokens.HeadlineBold,
-                color = grey800(),
+                color = grey950(),
             )
 
             Spacer(modifier = Modifier.size(4.dp))

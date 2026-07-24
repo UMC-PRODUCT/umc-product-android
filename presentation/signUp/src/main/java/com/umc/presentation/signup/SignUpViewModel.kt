@@ -7,16 +7,14 @@ import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.component.util.ULog
 import com.umc.domain.model.JwtToken
-import com.umc.domain.model.enums.EmailVerifyType
+import com.umc.domain.model.enums.SignUpType
 import com.umc.domain.model.enums.TermsType
-import com.umc.domain.model.request.EmailVerificationCompleteRequest
-import com.umc.domain.model.request.EmailVerificationRequest
+import com.umc.domain.model.request.member.RegisterEmailRequest
 import com.umc.domain.model.request.member.RegisterRequest
 import com.umc.domain.model.request.member.TermsAgreement
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.usecase.appDataStore.SaveTokenUseCase
-import com.umc.domain.usecase.auth.PostEmailVerificationCompleteUseCase
-import com.umc.domain.usecase.auth.PostEmailVerificationUseCase
+import com.umc.domain.usecase.member.RegisterEmailUseCase
 import com.umc.domain.usecase.member.RegisterUseCase
 import com.umc.domain.usecase.notification.RegisterFcmTokenUseCase
 import com.umc.domain.usecase.school.GetAllSchoolUseCase
@@ -29,9 +27,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val getAllSchoolUseCase: GetAllSchoolUseCase,
-    private val postEmailVerificationUseCase: PostEmailVerificationUseCase,
-    private val postEmailVerificationCompleteUseCase: PostEmailVerificationCompleteUseCase,
     private val registerUseCase: RegisterUseCase,
+    private val registerEmailUseCase: RegisterEmailUseCase,
     private val saveTokenUseCase: SaveTokenUseCase,
     private val getTermsByTypeUseCase: GetTermsByTypeUseCase,
     private val registerFcmTokenUseCase: RegisterFcmTokenUseCase,
@@ -53,31 +50,29 @@ class SignUpViewModel @Inject constructor(
         )
     }
 
-    fun onClickBack() {
-        emitEvent(SignUpEvent.MoveToBack)
+    /**
+     * 회원가입 진입 경로별 인자 주입. SignUpRoute 진입 시 nav argument로 전달받음.
+     * - SOCIAL: oAuthVerificationToken + emailVerificationToken
+     * - EMAIL: emailVerificationToken + rawPassword
+     */
+    fun setArguments(
+        signUpType: SignUpType,
+        oAuthVerificationToken: String,
+        emailVerificationToken: String,
+        rawPassword: String,
+    ) {
+        updateState {
+            copy(
+                signUpType = signUpType,
+                oAuthVerificationToken = oAuthVerificationToken,
+                emailVerificationToken = emailVerificationToken,
+                rawPassword = rawPassword,
+            )
+        }
     }
 
-    /** 인증 코드 확인 요청. 성공 시 verifyType이 VERIFY로 전환되어 이메일 입력·코드 입력 필드가 잠김 */
-    fun onClickConfirm() = viewModelScope.launch {
-        val request = EmailVerificationCompleteRequest(
-            emailVerificationId = uiState.value.emailVerificationId,
-            verificationCode = uiState.value.code
-        )
-        resultResponse(
-            response = postEmailVerificationCompleteUseCase(request),
-            successCallback = {
-                updateState {
-                    copy(
-                        emailVerificationToken = it,
-                        verifyType = EmailVerifyType.VERIFY
-                    )
-                }
-                emitEvent(SignUpEvent.ShowVerifyCompleteToast)
-            },
-            errorCallback = {
-                emitEvent(SignUpEvent.ShowVerifyErrorToast)
-            }
-        )
+    fun onClickBack() {
+        emitEvent(SignUpEvent.MoveToBack)
     }
 
     fun onNameChanged(name: String) {
@@ -88,62 +83,8 @@ class SignUpViewModel @Inject constructor(
         updateState { copy(nickname = nickname) }
     }
 
-    /**
-     * 이메일 변경 시 verifyType을 NONE으로 초기화.
-     * 이미 인증 요청(REQUEST)·완료(VERIFY) 상태였더라도 이메일을 수정하면 인증이 초기화됨
-     */
-    fun onEmailChanged(email: String) {
-        updateState { copy(email = email, verifyType = EmailVerifyType.NONE) }
-    }
-
-    fun onCodeChanged(code: String) {
-        updateState { copy(code = code) }
-    }
-
-    /**
-     * 이메일 인증 코드 발송 요청.
-     * 이메일 형식이 유효하지 않거나 서버 오류 시 verifyType이 ERROR로 전환되어 에러 UI가 표시됨.
-     * 성공 시 반환된 emailVerificationId를 저장하고 코드 입력 필드로 포커스 이동 이벤트를 발행
-     */
-    fun onClickVerify() = viewModelScope.launch {
-        if (isValidEmail()) {
-            val request = EmailVerificationRequest(email = uiState.value.email)
-            startLoading()
-            resultResponse(
-                response = postEmailVerificationUseCase(request),
-                successCallback = {
-                    updateState {
-                        copy(
-                            emailVerificationId = it.toInt(),
-                            verifyType = EmailVerifyType.REQUEST
-                        )
-                    }
-                    emitEvent(SignUpEvent.ShowVerifyToast)
-                    emitEvent(SignUpEvent.FocusVerifyCodeField)
-                },
-                errorCallback = {
-                    errorEmailVerify()
-                }
-            )
-        } else {
-            errorEmailVerify()
-        }
-    }
-
-    private fun errorEmailVerify() {
-        updateState { copy(verifyType = EmailVerifyType.ERROR) }
-    }
-
     fun onClickSchool() {
         emitEvent(SignUpEvent.ShowSchoolBottomSheet)
-    }
-
-    fun isValidEmail(): Boolean {
-        val regex = Regex(
-            pattern = "[a-zA-Z0-9+._%\\-]{1,256}@[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}(\\.[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25})+",
-            option = RegexOption.IGNORE_CASE
-        )
-        return uiState.value.email.isNotBlank() && uiState.value.email.matches(regex)
     }
 
     /** 학교 바텀시트에서 선택된 학교를 상태에 반영 */
@@ -186,24 +127,43 @@ class SignUpViewModel @Inject constructor(
         }
     }
 
+    /** 진입 경로(signUpType)에 따라 소셜/이메일 회원가입 API를 분기 호출 */
     private fun executeRegister(privacyTermsId: Int, serviceTermsId: Int) {
         viewModelScope.launch {
-            val request = RegisterRequest(
-                oAuthVerificationToken = uiState.value.oAuthVerificationToken,
-                name = uiState.value.name,
-                nickname = uiState.value.nickname,
-                emailVerificationToken = uiState.value.emailVerificationToken,
-                schoolId = uiState.value.school.schoolId,
-                profileImageId = null,
-                termsAgreements = listOf(
-                    TermsAgreement(termsId = privacyTermsId, isAgreed = true),
-                    TermsAgreement(termsId = serviceTermsId, isAgreed = true)
-                )
+            val termsAgreements = listOf(
+                TermsAgreement(termsId = privacyTermsId, isAgreed = true),
+                TermsAgreement(termsId = serviceTermsId, isAgreed = true)
             )
 
             startLoading()
+
+            val response = when (uiState.value.signUpType) {
+                SignUpType.SOCIAL -> registerUseCase(
+                    RegisterRequest(
+                        oAuthVerificationToken = uiState.value.oAuthVerificationToken,
+                        name = uiState.value.name,
+                        nickname = uiState.value.nickname,
+                        emailVerificationToken = uiState.value.emailVerificationToken,
+                        schoolId = uiState.value.school.schoolId,
+                        profileImageId = null,
+                        termsAgreements = termsAgreements,
+                    )
+                )
+
+                SignUpType.EMAIL -> registerEmailUseCase(
+                    RegisterEmailRequest(
+                        rawPassword = uiState.value.rawPassword,
+                        name = uiState.value.name,
+                        nickname = uiState.value.nickname,
+                        emailVerificationToken = uiState.value.emailVerificationToken,
+                        schoolId = uiState.value.school.schoolId,
+                        termsAgreements = termsAgreements,
+                    )
+                )
+            }
+
             resultResponse(
-                response = registerUseCase(request),
+                response = response,
                 successCallback = { updateToken(it) },
                 errorCallback = { failState ->
                     emitEvent(SignUpEvent.ShowRegisterErrorDialog(failState.message))
@@ -236,37 +196,25 @@ class SignUpViewModel @Inject constructor(
             emitEvent(SignUpEvent.MoveToPermissionEvent)
         }
     }
-
-    /** oAuthVerificationToken 은 SignUpRoute 진입 시 nav argument로 전달받아 주입 */
-    fun setOAuthVerificationToken(token: String) {
-        updateState { copy(oAuthVerificationToken = token) }
-    }
 }
 
 data class SignUpState(
+    val signUpType: SignUpType = SignUpType.SOCIAL,
+    val oAuthVerificationToken: String = "",
+    val emailVerificationToken: String = "",
+    val rawPassword: String = "",
     val name: String = "",
     val nickname: String = "",
-    val email: String = "",
-    val oAuthVerificationToken: String = "",
-    val emailVerificationId: Int = -1,
-    val emailVerificationToken: String = "",
-    val code: String = "",
-    val verifyType: EmailVerifyType = EmailVerifyType.NONE,
     val school: SchoolInfo = SchoolInfo(),
     val schoolList: List<SchoolInfo> = emptyList()
 ) : UiState {
     val enableNextButton: Boolean
-        get() = name.isNotEmpty() && nickname.isNotEmpty() && email.isNotEmpty()
-                && school.schoolId != -1 && verifyType == EmailVerifyType.VERIFY
+        get() = name.isNotEmpty() && nickname.isNotEmpty() && school.schoolId != -1
 }
 
 sealed interface SignUpEvent : UiEvent {
     object MoveToPermissionEvent : SignUpEvent
     object MoveToBack : SignUpEvent
     object ShowSchoolBottomSheet : SignUpEvent
-    object ShowVerifyToast : SignUpEvent
-    object ShowVerifyCompleteToast : SignUpEvent
-    object ShowVerifyErrorToast : SignUpEvent
-    object FocusVerifyCodeField : SignUpEvent
     data class ShowRegisterErrorDialog(val message: String) : SignUpEvent
 }
