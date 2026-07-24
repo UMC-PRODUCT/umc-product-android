@@ -246,6 +246,9 @@ fun MainNavHost(
                 },
                 onNavigateToMyqrCode = {
                     navHostController.navigate(MainDestination.Qrcode)
+                },
+                onNavigateToEditCard = {
+                    navHostController.navigate(MainDestination.MyProfile)
                 }
             )
         }
@@ -282,7 +285,11 @@ fun MainNavHost(
 
         //내 프로필
         composable<MainDestination.MyProfile> {
-            ProfileRoute()
+            ProfileRoute(
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
         }
 
         /**qr 코드**/

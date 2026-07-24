@@ -75,6 +75,7 @@ fun MycardRoute(
     viewModel: MycardViewModel = hiltViewModel(),
     onNavigateToMypage: () -> Unit, //설정으로 이동
     onNavigateToMyqrCode:() -> Unit, // QR 코드 화면으로 이동
+    onNavigateToEditCard: () -> Unit, //명함 편집
 
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -97,7 +98,7 @@ fun MycardRoute(
         onNavigateToMypage = onNavigateToMypage,
         onNavigateToMyqrCode = onNavigateToMyqrCode,
         onNavigateToReceivedCard = {},
-        onNavigateToEditCard = {},
+        onNavigateToEditCard = onNavigateToEditCard,
         onNavigateToMyStudy = {},
         onNavigateToMyActivity = {}
     )
