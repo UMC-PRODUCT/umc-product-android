@@ -2,6 +2,7 @@ package com.umc.component.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
@@ -49,6 +51,7 @@ import com.umc.component.theme.indigo500
  * @param textColor 입력 텍스트 색상. 기본값 grey800
  * @param textStyle 입력 텍스트 스타일. 기본값 Callout
  * @param backgroundColor 배경색. 기본값 grey000 (흰색)
+ * @param focusBackgroundColor 포커스 상태의 배경색. 기본값은 backgroundColor와 동일
  * @param strokeColor 비포커스 상태의 테두리 색상. 기본값 grey300
  * @param focusStrokeColor 포커스 상태의 테두리 색상 및 커서 색상. 기본값 indigo500
  * @param cornerRadius 모서리 둥글기. 기본값 8dp
@@ -58,6 +61,12 @@ import com.umc.component.theme.indigo500
  * @param prevIcon 입력창 왼쪽에 표시할 아이콘 (선택)
  * @param prevIconTint prevIcon 틴트 색상. null 이면 원본 색상 유지
  * @param prevIconSize prevIcon 크기. 기본값 24dp
+ * @param nextIcon 입력창 오른쪽에 표시할 아이콘 (선택)
+ * @param nextIconTint nextIcon 틴트 색상. null 이면 원본 색상 유지
+ * @param nextIconSize nextIcon 크기. 기본값 24dp
+ * @param onClickNextIcon nextIcon 클릭 콜백 (입력값 지우기·비밀번호 표시 전환 등). null 이면 클릭 불가
+ * @param visualTransformation 입력 텍스트 표시 변환 (비밀번호 마스킹 등)
+ * @param interactionSource 포커스 상태를 호출부에서 관찰해야 할 때 외부에서 주입
  */
 @Composable
 fun UTextField(
@@ -73,16 +82,29 @@ fun UTextField(
     focusStrokeColor: Color = indigo500(),
     cornerRadius: Dp = 8.dp,
     enabled: Boolean = true,
+    focusBackgroundColor: Color = backgroundColor,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     prevIcon: Painter? = null,
     prevIconTint: Color? = null,
     prevIconSize: Dp = 24.dp,
+    nextIcon: Painter? = null,
+    nextIconTint: Color? = null,
+    nextIconSize: Dp = 24.dp,
+    onClickNextIcon: (() -> Unit)? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
 
     val currentStrokeColor = if (isFocused && enabled) focusStrokeColor else strokeColor
+
+    val currentBackgroundColor = if (isFocused && enabled) {
+        focusBackgroundColor
+    } else {
+        backgroundColor
+    }
+
     val shape = RoundedCornerShape(cornerRadius)
 
     // OutlinedTextField 대신 BasicTextField를 사용해 커스텀 decoration box 적용.
@@ -93,6 +115,7 @@ fun UTextField(
         enabled = enabled,
         textStyle = textStyle.copy(color = textColor),
         cursorBrush = SolidColor(focusStrokeColor),
+        visualTransformation = visualTransformation,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         interactionSource = interactionSource,
@@ -101,7 +124,7 @@ fun UTextField(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(backgroundColor, shape)
+                    .background(currentBackgroundColor, shape)
                     .border(1.dp, currentStrokeColor, shape)
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -126,6 +149,29 @@ fun UTextField(
                         )
                     }
                     innerTextField()
+                }
+
+                if (nextIcon != null) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        painter = nextIcon,
+                        contentDescription = null,
+                        tint = nextIconTint ?: Color.Unspecified,
+                        modifier = Modifier
+                            .size(nextIconSize)
+                            .then(
+                                // interactionSource = null 이면 필요 시에만 내부에서 생성됨.
+                                // 조건 분기 안에서 remember 를 호출하지 않기 위해 null 을 그대로 전달
+                                if (onClickNextIcon != null) {
+                                    Modifier.clickable(
+                                        interactionSource = null,
+                                        indication = null,
+                                    ) { onClickNextIcon() }
+                                } else {
+                                    Modifier
+                                }
+                            ),
+                    )
                 }
             }
         },
