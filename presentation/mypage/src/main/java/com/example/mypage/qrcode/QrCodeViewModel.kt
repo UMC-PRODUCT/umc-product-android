@@ -12,6 +12,9 @@ import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.enums.UserChallengerRole
+import com.umc.domain.model.enums.UserPart
+import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,6 +53,7 @@ class QrCodeViewModel @Inject constructor(
                     updateState { copy(userInfo = userInfo) }
                     //initNearbyAdvertising()
                     generateMyUserCardQr(userInfo)
+                    settingUserInfoToUI(userInfo)
                 },
                 errorCallback = {
                     emitEvent(QrCodeEvent.ShowToast("프로필 정보를 불러오지 못했습니다."))
@@ -59,6 +63,41 @@ class QrCodeViewModel @Inject constructor(
             )
             stopLoading()
         }
+    }
+
+    //UserInfo를 받아았을 때 이를 파싱해서 UI 요소로 분할하는 함수
+    fun settingUserInfoToUI(userInfo: UserInfo){
+        // 기수별 정보가 담긴 것.
+        val gisuSummaryList = userInfo.getGisuSummaryList()
+
+        // 최신기수를 가져오기
+        val latestGisu = gisuSummaryList.maxByOrNull { it.gisu }
+
+        latestGisu?.let { summary ->
+            //권위 or 챌린저에서 1개 선택
+            val representativeItem = summary.fromRoles.firstOrNull() ?: summary.fromRecords.firstOrNull()
+
+            val positionString = representativeItem?.let { item ->
+                //파트명 변환 (UserPart Enum 활용, 없으면 빈 문자열)
+                val partLabel = runCatching { UserPart.valueOf(item.responsiblePart ?: "").label }
+                    .getOrNull()?.let { "$it " } ?: ""
+
+                //직함명 변환 (displayName이 null이면 원본 role 사용)
+                val roleEnum = UserChallengerRole.from(item.role)
+                val roleLabel = roleEnum.displayName ?: item.role
+
+                //최종 포맷: "N기 Part Role"
+                "$partLabel$roleLabel·${summary.gisu}기"
+            } ?: "챌린저·${summary.gisu}기" // 예외 상황 대비 기본값
+
+            updateState {
+                copy(
+                    myRecentInfoString = positionString
+                )
+            }
+
+        }
+
     }
 
     /**
@@ -232,6 +271,8 @@ class QrCodeViewModel @Inject constructor(
 data class QrCodeUiState(
     val userInfo: UserInfo = UserInfo(),
     val nickname: String = "",
+    val myRecentInfoString: String = "",
+
     val myQrcodeData: String = "",
     //val myEndpointId: String = "", //qrContent 값과 동일 = 기기 모델명 (필터링을 위한) -> UserCard 값
     val scannedTargetQr: String = "", //스캔한 qr코드의 값 = 기기 모델명 or ""
