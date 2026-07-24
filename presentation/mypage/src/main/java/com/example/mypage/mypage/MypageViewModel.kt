@@ -225,6 +225,10 @@ class MypageViewModel @Inject constructor(
         emitEvent(MypageEvent.MoveToOnBoardPage)
     }
 
+    fun navigateToBack(){
+        emitEvent(MypageEvent.NavigateToBack)
+    }
+
 
 
     //유저 삭제 다이얼로그 호출
@@ -396,7 +400,8 @@ sealed interface MypageEvent : UiEvent {
     /**qr코드 이동**/
     object NavigateToQrcode : MypageEvent
 
-
+    //뒤로 가기
+    object NavigateToBack : MypageEvent
 
     //로그아웃
     object Logout : MypageEvent
@@ -406,6 +411,8 @@ sealed interface MypageEvent : UiEvent {
 
     //처음으로 이동
     object MoveToOnBoardPage : MypageEvent
+
+
 
     //챌린저 코드 다이얼로그 전용
     object ConfirmAddCode : MypageEvent

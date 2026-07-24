@@ -468,7 +468,7 @@ private fun CardBackContent(
                         .padding(6.dp)
                 )
             }
-            
+
         }
 
         Spacer(
