@@ -262,6 +262,9 @@ fun MainNavHost(
                 onNavigateToLogin = {},
                 onNavigateToQrCode = {
                     navHostController.navigate(MainDestination.Qrcode)
+                },
+                onNavigateToBack = {
+                    navHostController.popBackStack()
                 }
             )
 
