@@ -1,11 +1,7 @@
 package com.umc.data.repository.attendance
 
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSource
-import com.umc.data.response.attendance.AdminPendingUserResponse.Companion.toAdminPendingUser
-import com.umc.data.response.attendance.AttendanceAvailableResponse.Companion.toUserCheckAvailable
-import com.umc.data.response.attendance.ChallengerAttendanceHistoryResponse.Companion.toChallengerInfoHistory
 import com.umc.domain.model.act.challenger.ChallengerInfoHistory
-import com.umc.data.response.attendance.UserCheckHistoryResponse.Companion.toUserCheckHistory
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.act.check.UserCheckHistory
@@ -22,7 +18,9 @@ class AttendanceRepositoryImpl @Inject constructor(
 
     override suspend fun getAttendanceAvailable(): ApiState<List<UserCheckAvailable>> {
         return attendanceRemoteDataSource.getAttendanceAvailable().map { responseList ->
-            responseList.map { it.toUserCheckAvailable() }
+            responseList
+                .filter { !it.isAttendanceChecked }
+                .map { it.toAvailable() }
         }
     }
 
@@ -32,15 +30,15 @@ class AttendanceRepositoryImpl @Inject constructor(
 
     override suspend fun getPendingUsers(scheduleId: Long): ApiState<List<AdminPendingUser>> {
         return attendanceRemoteDataSource.getPendingUsers(scheduleId).map { responseList ->
-            responseList.map { it.toAdminPendingUser() }
+            responseList.pendingUsers()
         }
     }
 
-    override suspend fun approveAttendance(recordId: Long): ApiState<Unit> =
-        attendanceRemoteDataSource.approveAttendance(recordId)
-
-    override suspend fun rejectAttendance(recordId: Long): ApiState<Unit> =
-        attendanceRemoteDataSource.rejectAttendance(recordId)
+    override suspend fun decideAttendance(
+        scheduleId: Long,
+        memberIds: List<Long>,
+        approved: Boolean
+    ): ApiState<Unit> = attendanceRemoteDataSource.decideAttendance(scheduleId, memberIds, approved)
 
     override suspend fun postAttendanceReason(request: AttendanceReasonRequest): ApiState<String> {
         return attendanceRemoteDataSource.postAttendanceReason(request)
@@ -48,13 +46,14 @@ class AttendanceRepositoryImpl @Inject constructor(
 
     override suspend fun getAttendanceHistory(): ApiState<List<UserCheckHistory>> {
         return attendanceRemoteDataSource.getAttendanceHistory().map { responseList ->
-            responseList.map { it.toUserCheckHistory() }
+            responseList
+                .filter { it.isAttendanceChecked || it.attendanceStatus != null }
+                .mapIndexed { index, response -> response.toHistory(index) }
         }
     }
 
     override suspend fun getChallengerAttendanceHistory(challengerId: Long): ApiState<List<ChallengerInfoHistory>> {
-        return attendanceRemoteDataSource.getChallengerAttendanceHistory(challengerId).map { responseList ->
-            responseList.map { it.toChallengerInfoHistory() }
-        }
+        // v2에는 타 챌린저의 출석 이력 조회 API가 제공되지 않는다.
+        return ApiState.Success(emptyList())
     }
 }
