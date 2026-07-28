@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,10 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -32,11 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -46,22 +39,21 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
-import com.umc.component.component.UToastData
-import com.umc.component.component.UToastHost
-import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.red100
-import com.umc.component.theme.red500
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
+import com.umc.component.theme.grey900
+import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.indigo700
-import com.umc.component.theme.green500
-import com.umc.domain.model.enums.EmailVerifyType
+import com.umc.component.theme.red500
+import com.umc.domain.model.enums.SignUpType
 import com.umc.domain.model.school.SchoolInfo
 import kotlinx.coroutines.flow.collectLatest
 
@@ -69,7 +61,10 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun SignUpRoute(
     viewModel: SignUpViewModel = hiltViewModel(),
-    oAuthVerificationToken: String,
+    signUpType: SignUpType = SignUpType.SOCIAL,
+    oAuthVerificationToken: String = "",
+    emailVerificationToken: String = "",
+    rawPassword: String = "",
     navigateToBack: () -> Unit = {},
     navigateToPermission: () -> Unit = {},
 ) {
@@ -77,12 +72,15 @@ fun SignUpRoute(
 
     var showSchoolBottomSheet by remember { mutableStateOf(false) }
     var errorDialogMessage by remember { mutableStateOf<String?>(null) }
-    var toastData by remember { mutableStateOf<UToastData?>(null) }
-    var focusCodeField by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(Unit) {
-        viewModel.setOAuthVerificationToken(oAuthVerificationToken)
+        viewModel.setArguments(
+            signUpType = signUpType,
+            oAuthVerificationToken = oAuthVerificationToken,
+            emailVerificationToken = emailVerificationToken,
+            rawPassword = rawPassword,
+        )
     }
 
     LaunchedEffect(viewModel) {
@@ -91,13 +89,6 @@ fun SignUpRoute(
                 is SignUpEvent.MoveToBack -> navigateToBack()
                 is SignUpEvent.MoveToPermissionEvent -> navigateToPermission()
                 is SignUpEvent.ShowSchoolBottomSheet -> showSchoolBottomSheet = true
-                is SignUpEvent.ShowVerifyToast ->
-                    toastData = UToastData(AppStrings.SIGN_UP_EMAIL_VERIFY_SENT, UToastState.CHECK)
-                is SignUpEvent.ShowVerifyCompleteToast ->
-                    toastData = UToastData(AppStrings.SIGN_UP_EMAIL_VERIFY_COMPLETE, UToastState.CHECK)
-                is SignUpEvent.ShowVerifyErrorToast ->
-                    toastData = UToastData(AppStrings.SIGN_UP_EMAIL_VERIFY_ERROR, UToastState.ERROR)
-                is SignUpEvent.FocusVerifyCodeField -> focusCodeField = true
                 is SignUpEvent.ShowRegisterErrorDialog -> errorDialogMessage = event.message
             }
         }
@@ -110,13 +101,7 @@ fun SignUpRoute(
             onNameChanged = viewModel::onNameChanged,
             onNicknameChanged = viewModel::onNicknameChanged,
             onClickSchool = viewModel::onClickSchool,
-            onEmailChanged = viewModel::onEmailChanged,
-            onClickVerify = viewModel::onClickVerify,
-            onCodeChanged = viewModel::onCodeChanged,
-            onClickConfirm = viewModel::onClickConfirm,
             onClickNext = viewModel::register,
-            focusCodeField = focusCodeField,
-            onCodeFieldFocused = { focusCodeField = false },
         )
 
         if (showSchoolBottomSheet) {
@@ -143,18 +128,9 @@ fun SignUpRoute(
                 confirmText = AppStrings.CONFIRM,
                 onConfirm = {
                     errorDialogMessage = null
-                    navigateToBack()
                 },
             )
         }
-
-        UToastHost(
-            data = toastData,
-            onDismiss = { toastData = null },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 56.dp),
-        )
     }
 }
 
@@ -243,94 +219,79 @@ fun SignUpScreen(
     onNameChanged: (String) -> Unit = {},
     onNicknameChanged: (String) -> Unit = {},
     onClickSchool: () -> Unit = {},
-    onEmailChanged: (String) -> Unit = {},
-    onClickVerify: () -> Unit = {},
-    onCodeChanged: (String) -> Unit = {},
-    onClickConfirm: () -> Unit = {},
     onClickNext: () -> Unit = {},
-    focusCodeField: Boolean = false,
-    onCodeFieldFocused: () -> Unit = {},
 ) {
-    val scrollState = rememberScrollState()
-    val codeFieldFocusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(focusCodeField) {
-        if (focusCodeField) {
-            codeFieldFocusRequester.requestFocus()
-            onCodeFieldFocused()
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(grey000()),
     ) {
+        Icon(
+            modifier = Modifier
+                .padding(start = 4.dp, top = 8.dp)
+                .padding(12.dp)
+                .clickable { onClickBack() },
+            painter = painterResource(id = R.drawable.ic_back),
+            contentDescription = null,
+            tint = Color.Unspecified,
+        )
+
+        UText(
+            text = AppStrings.SIGN_UP,
+            style = UmcTypographyTokens.Title1Bold,
+            color = grey950(),
+            modifier = Modifier.padding(start = 24.dp, top = 16.dp),
+        )
+
+        UText(
+            text = AppStrings.SIGN_UP_SUB_TITLE,
+            style = UmcTypographyTokens.Headline,
+            color = grey600(),
+            modifier = Modifier.padding(start = 24.dp, top = 16.dp),
+        )
+
         Column(
             modifier = Modifier
                 .weight(1f)
-                .verticalScroll(scrollState)
-                .padding(bottom = 16.dp)
+                .padding(horizontal = 24.dp),
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
-            Icon(
-                modifier = Modifier
-                    .padding(start = 4.dp)
-                    .padding(12.dp)
-                    .clickable { onClickBack() },
-                painter = painterResource(id = R.drawable.ic_back),
-                contentDescription = null,
-                tint = Color.Unspecified
-            )
-
-            UText(
-                text = AppStrings.SIGN_UP,
-                style = UmcTypographyTokens.Title1Bold,
-                color = grey800(),
-                modifier = Modifier.padding(start = 24.dp, top = 16.dp)
-            )
-
-            UText(
-                text = AppStrings.SIGN_UP_SUB_TITLE,
-                style = UmcTypographyTokens.Body,
-                color = grey600(),
-                modifier = Modifier.padding(start = 24.dp, top = 16.dp)
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 24.dp, top = 48.dp, end = 24.dp),
-            ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 6.dp)
-                ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.weight(1f)) {
                     FieldLabel(text = AppStrings.NAME)
+
                     Spacer(modifier = Modifier.height(8.dp))
+
                     UTextField(
                         value = uiState.name,
                         onValueChange = onNameChanged,
                         placeholder = AppStrings.SIGN_UP_NAME_PLACEHOLDER,
-                        textStyle = UmcTypographyTokens.Subheadline,
+                        textStyle = UmcTypographyTokens.Headline,
+                        textColor = grey950(),
+                        strokeColor = grey200(),
+                        focusStrokeColor = grey900(),
+                        cornerRadius = 10.dp,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
 
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 6.dp)
-                ) {
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
                     FieldLabel(text = AppStrings.NICKNAME)
+
                     Spacer(modifier = Modifier.height(8.dp))
+
                     UTextField(
                         value = uiState.nickname,
                         onValueChange = onNicknameChanged,
                         placeholder = AppStrings.SIGN_UP_NICKNAME_PLACEHOLDER,
-                        textStyle = UmcTypographyTokens.Subheadline,
+                        textStyle = UmcTypographyTokens.Headline,
+                        textColor = grey950(),
+                        strokeColor = grey200(),
+                        focusStrokeColor = grey900(),
+                        cornerRadius = 10.dp,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -338,143 +299,50 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            FieldLabel(
-                text = AppStrings.SCHOOL,
-                modifier = Modifier.padding(start = 24.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .border(1.dp, grey300(), RoundedCornerShape(8.dp))
-                    .clickable { onClickSchool() }
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
-            ) {
-                UText(
-                    text = uiState.school.schoolName.ifEmpty { AppStrings.SIGN_UP_SELECT_SCHOOL_PLACEHOLDER },
-                    style = UmcTypographyTokens.Subheadline,
-                    color = if (uiState.school.schoolName.isEmpty()) grey300() else grey800(),
-                )
-            }
+            FieldLabel(text = AppStrings.SCHOOL)
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            FieldLabel(
-                text = AppStrings.EMAIL,
-                modifier = Modifier.padding(start = 24.dp)
-            )
             Spacer(modifier = Modifier.height(8.dp))
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .border(1.dp, grey200(), RoundedCornerShape(10.dp))
+                    .clickable { onClickSchool() }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                val isEmailError = uiState.verifyType == EmailVerifyType.ERROR
-
-                UTextField(
-                    value = uiState.email,
-                    onValueChange = onEmailChanged,
-                    placeholder = AppStrings.SIGN_UP_EMAIL_PLACEHOLDER,
-                    textStyle = UmcTypographyTokens.Subheadline,
-                    textColor = if (isEmailError) red500() else grey800(),
-                    backgroundColor = if (isEmailError) red100() else grey000(),
-                    strokeColor = if (isEmailError) red500() else grey300(),
-                    focusStrokeColor = if (isEmailError) red500() else indigo500(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                UText(
+                    text = uiState.school.schoolName.ifEmpty { AppStrings.SIGN_UP_SELECT_SCHOOL_PLACEHOLDER },
+                    style = UmcTypographyTokens.Headline,
+                    color = if (uiState.school.schoolName.isEmpty()) grey400() else grey950(),
                     modifier = Modifier.weight(1f),
                 )
 
-                Spacer(modifier = Modifier.width(16.dp))
-
-                val verifyBgColor = if (
-                    uiState.email.isEmpty()
-                    || uiState.verifyType == EmailVerifyType.ERROR
-                    || uiState.verifyType == EmailVerifyType.REQUEST
-                    || uiState.verifyType == EmailVerifyType.VERIFY
-                ) grey300() else indigo500()
-                val isVerifyButtonEnabled = (uiState.email.isNotEmpty()
-                        && uiState.verifyType != EmailVerifyType.ERROR)
-                        || uiState.verifyType == EmailVerifyType.REQUEST
-                        || uiState.verifyType == EmailVerifyType.VERIFY
-
-                UButton(
-                    text = AppStrings.SIGN_UP_VERIFY_REQUEST,
-                    onClick = onClickVerify,
-                    enabled = isVerifyButtonEnabled,
-                    backgroundColor = verifyBgColor,
-                    pressedColor = indigo700(),
-                    textColor = grey000(),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
-                    textStyle = UmcTypographyTokens.Footnote,
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_arrow_next),
+                    contentDescription = null,
+                    tint = grey400(),
                 )
             }
 
-            if (uiState.verifyType == EmailVerifyType.ERROR) {
-                UText(
-                    text = AppStrings.SIGN_UP_ERROR_EMAIL,
-                    style = UmcTypographyTokens.Footnote,
-                    color = red500(),
-                    modifier = Modifier.padding(start = 24.dp, top = 4.dp)
-                )
-            }
+            Spacer(modifier = Modifier.weight(1f))
 
-            if (uiState.verifyType == EmailVerifyType.REQUEST || uiState.verifyType == EmailVerifyType.VERIFY) {
-                val isVerified = uiState.verifyType == EmailVerifyType.VERIFY
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    UTextField(
-                        value = uiState.code,
-                        onValueChange = onCodeChanged,
-                        enabled = !isVerified,
-                        placeholder = AppStrings.SIGN_UP_VERIFY_CODE_PLACEHOLDER,
-                        textStyle = UmcTypographyTokens.Subheadline,
-                        textColor = if (isVerified) grey600() else grey800(),
-                        backgroundColor = if (isVerified) grey100() else grey000(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier
-                            .weight(1f)
-                            .focusRequester(codeFieldFocusRequester),
-                    )
+            UButton(
+                text = AppStrings.NEXT,
+                onClick = onClickNext,
+                enabled = uiState.enableNextButton,
+                backgroundColor = if (uiState.enableNextButton) indigo500() else grey100(),
+                pressedColor = indigo700(),
+                textColor = if (uiState.enableNextButton) grey000() else grey300(),
+                textStyle = UmcTypographyTokens.HeadlineBold,
+                cornerRadius = 10.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+            )
 
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    UButton(
-                        text = AppStrings.SIGN_UP_VERIFY_CONFIRM,
-                        onClick = onClickConfirm,
-                        enabled = !isVerified,
-                        backgroundColor = if (isVerified) grey100() else grey000(),
-                        textColor = if (isVerified) grey300() else green500(),
-                        textStyle = UmcTypographyTokens.Footnote,
-                        borderWidth = 1.dp,
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
-                        borderColor = if (isVerified) grey300() else green500(),
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.height(32.dp))
         }
-
-        UButton(
-            text = AppStrings.NEXT,
-            onClick = onClickNext,
-            enabled = uiState.enableNextButton,
-            backgroundColor = if (uiState.enableNextButton) indigo500() else grey300(),
-            pressedColor = indigo700(),
-            textColor = grey000(),
-            textStyle = UmcTypographyTokens.HeadlineBold,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .padding(horizontal = 24.dp),
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
@@ -491,7 +359,7 @@ private fun FieldLabel(
         UText(
             text = text,
             style = UmcTypographyTokens.HeadlineBold,
-            color = grey800(),
+            color = grey950(),
         )
         UText(
             text = " *",
@@ -509,25 +377,12 @@ private fun SignUpScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun SignUpScreenVerifyRequestPreview() {
-    SignUpScreen(
-        uiState = SignUpState(
-            email = "test@univ.ac.kr",
-            verifyType = EmailVerifyType.REQUEST
-        )
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun SignUpScreenVerifyCompletePreview() {
+private fun SignUpScreenCompletePreview() {
     SignUpScreen(
         uiState = SignUpState(
             name = "홍길동",
             nickname = "길동이",
-            email = "test@univ.ac.kr",
-            verifyType = EmailVerifyType.VERIFY,
-            school = SchoolInfo(schoolId = 1, schoolName = "서울대학교"),
+            school = SchoolInfo(schoolId = 1, schoolName = "가나다대학교"),
         )
     )
 }

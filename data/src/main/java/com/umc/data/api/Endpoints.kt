@@ -8,8 +8,10 @@ object Endpoints {
         const val REISSUE = "$AUTH/token/renew"
         const val LOGIN_KAKAO = "$AUTH/login/kakao"
         const val LOGIN_GOOGLE = "$AUTH/login/google"
+        const val LOGIN_EMAIL = "$AUTH/login/email"
         const val EMAIL_VERIFICATION = "$AUTH/email-verification"
         const val EMAIL_VERIFICATION_COMPLETE = "$EMAIL_VERIFICATION/code"
+        const val PASSWORD_RESET = "$AUTH/password/reset"
 
         //Authorization
         const val AUTHORIZATION = "api/v1/authorization"
@@ -53,7 +55,8 @@ object Endpoints {
         const val MEMBER = "api/v1/member"
         const val MYPROFILE = "$MEMBER/me"
         const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
-        const val MEMBER_REGISTER = "$MEMBER/register"
+        const val MEMBER_REGISTER_OAUTH = "$MEMBER/register/oauth"
+        const val MEMBER_REGISTER_EMAIL = "$MEMBER/register/email"
         const val MEMBER_PROFILE_LINK = "$MEMBER/profile/links"
     }
 
