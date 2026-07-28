@@ -54,6 +54,7 @@ android {
 
 dependencies {
     implementation(project(":domain"))
+    implementation(project(":presentation:act"))
     implementation(project(":presentation:splash"))
     implementation(project(":presentation:login"))
     implementation(project(":presentation:home"))
