@@ -8,6 +8,8 @@ import com.umc.data.response.schedule.ScheduleDetailResponse
 import com.umc.data.response.schedule.ScheduleListResponse
 import com.umc.data.response.schedule.ScheduleMonthResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
+import com.umc.data.response.schedule.AdminScheduleV2Response
+import com.umc.data.response.schedule.UpdateScheduleLocationV2Request
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import retrofit2.http.Body
@@ -21,11 +23,11 @@ import retrofit2.http.Query
 interface ScheduleApi {
 
     //일정 목록 가져오기
-    @GET(Endpoints.Schedule.SCHEDULE)
-    suspend fun getScheduleList(): ApiResponse<List<ScheduleListResponse>>
+    @GET(Endpoints.Schedule.ATTENDANCE_HISTORY)
+    suspend fun getScheduleList(): ApiResponse<List<AdminScheduleV2Response>>
 
     //세부 일정 가져오기
-    @GET(Endpoints.Schedule.DETAIL)
+    @GET(Endpoints.Schedule.DETAIL_V2)
     suspend fun getScheduleDetail(
         @Path("scheduleId") scheduleId: Long
     ): ApiResponse<ScheduleDetailResponse>
@@ -38,7 +40,7 @@ interface ScheduleApi {
     ): ApiResponse<List<ScheduleMonthResponse>>
 
     //일정 출석부 통합 삭제하기
-    @DELETE(Endpoints.Schedule.DELETE)
+    @DELETE(Endpoints.Schedule.DETAIL_V2)
     suspend fun deleteScheduleWithAttendance(
         @Path("scheduleId") scheduleId: Long
     ): ApiResponse<Unit>
@@ -58,11 +60,11 @@ interface ScheduleApi {
     ) : ApiResponse<Unit>
 
     // 일정 위치 변경하기
-    @PATCH(Endpoints.Schedule.LOCATION)
+    @PATCH(Endpoints.Schedule.DETAIL_V2)
     suspend fun updateScheduleLocation(
         @Path("scheduleId") scheduleId: Long,
-        @Body request: UpdateLocationRequest
-    ): ApiResponse<UpdateLocationResponse>
+        @Body request: UpdateScheduleLocationV2Request
+    ): ApiResponse<Unit>
 
 
     // 스터디 그룹 일정 생성

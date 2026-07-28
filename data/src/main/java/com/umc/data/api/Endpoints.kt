@@ -25,15 +25,13 @@ object Endpoints {
     }
 
     object Attendance {
-        const val ATTENDANCE = "api/v1/attendances"
-        const val AVAILABLE = "$ATTENDANCE/available"
-        const val CHECK = "$ATTENDANCE/check"
-        const val REASON = "$ATTENDANCE/reason"
-        const val PENDING = "$ATTENDANCE/pending/{scheduleId}"
-        const val APPROVE = "$ATTENDANCE/{recordId}/approve"
-        const val REJECT = "$ATTENDANCE/{recordId}/reject"
-        const val HISTORY = "$ATTENDANCE/history"
-        const val CHALLENGER_HISTORY = "$ATTENDANCE/challenger/{challengerId}/history"
+        const val SCHEDULES = "api/v2/schedules"
+        const val AVAILABLE = "$SCHEDULES/me"
+        const val CHECK = "$SCHEDULES/{scheduleId}/attendances/request"
+        const val REASON = "$SCHEDULES/{scheduleId}/attendances/excuse"
+        const val PENDING = "$SCHEDULES/{scheduleId}/attendance"
+        const val DECIDE = "$SCHEDULES/{scheduleId}/attendances/decide"
+        const val HISTORY = "$SCHEDULES/me"
     }
 
     object Challenger {
@@ -42,7 +40,7 @@ object Endpoints {
         const val POINT = "$CHALLENGER/{challengerId}/points"
         const val DELETE_POINT = "$CHALLENGER/points/{challengerPointId}"
 
-        const val SEARCH_CURSOR = "$CHALLENGER/search/cursor"
+        const val SEARCH = "api/v2/challenger/search"
 
         const val CHALLENGER_RECORD = "api/v1/challenger-record"
         const val CHALLENGER_RECORD_MEMBER = "api/v1/challenger-record/member"

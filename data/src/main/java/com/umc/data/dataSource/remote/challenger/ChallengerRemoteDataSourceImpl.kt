@@ -7,6 +7,7 @@ import com.umc.data.response.challenger.ChallengerResponse
 import com.umc.data.response.challenger.ChallengerCursorResponse
 import com.umc.data.response.member.MemberResponse
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.base.map
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
 import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
 import javax.inject.Inject
@@ -34,8 +35,16 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
         keyword: String?
     ): ApiState<ChallengerCursorResponse> {
         return apiCall {
-            challengerApi.getChallengers(cursor, size, part, name, nickname, keyword, schoolId, null, gisuId)
-        }
+            challengerApi.getChallengers(
+                page = cursor?.toInt() ?: 0,
+                size = size,
+                part = part,
+                keyword = keyword,
+                schoolId = schoolId,
+                chapterId = null,
+                gisuId = gisuId
+            )
+        }.map { it.toCursorResponse() }
     }
 
     override suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit> {
