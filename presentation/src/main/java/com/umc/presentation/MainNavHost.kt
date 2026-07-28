@@ -9,6 +9,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.umc.presentation.act.ActManageRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
@@ -36,7 +37,11 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Home,
+        startDestination = if (BuildConfig.DEBUG) {
+            MainDestination.Login
+        } else {
+            MainDestination.Home
+        },
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -56,17 +61,17 @@ fun MainNavHost(
 
         composable<MainDestination.Login> {
             LoginRoute(
+                navigateToMain = {
+                    navHostController.navigate(MainDestination.Act) {
+                        popUpTo(MainDestination.Login) { inclusive = true }
+                    }
+                },
                 navigateToSignUp = { oAuthToken ->
                     // 소셜 로그인 후 미가입 회원 -> 이메일 인증 단계부터 진행
                     navHostController.navigate(MainDestination.SocialSignUp(oAuthToken))
                 },
                 navigateToEmailLogin = {
                     navHostController.navigate(MainDestination.EmailLogin)
-                },
-                navigateToMain = {
-                    navHostController.navigate(MainDestination.Home) {
-                        popUpTo(0) { inclusive = true }
-                    }
                 },
                 navigateToInputCode = {
                     // 챌린저 ID가 없는 회원 -> 코드 입력 화면으로 이동
@@ -79,7 +84,7 @@ fun MainNavHost(
             EmailLoginRoute(
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToMain = {
-                    navHostController.navigate(MainDestination.Home) {
+                    navHostController.navigate(MainDestination.Act) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
@@ -190,6 +195,10 @@ fun MainNavHost(
         }
 
         /**홈 화면 탭에 대한 내용입니다.**/
+        composable<MainDestination.Act> {
+            ActManageRoute()
+        }
+
         //홈 화면
         composable<MainDestination.Home> {
             HomeRoute(

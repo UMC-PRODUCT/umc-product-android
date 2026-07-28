@@ -41,6 +41,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -66,6 +68,7 @@ import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey50
+import com.umc.component.theme.grey600
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.home.SchedulePlanItem
