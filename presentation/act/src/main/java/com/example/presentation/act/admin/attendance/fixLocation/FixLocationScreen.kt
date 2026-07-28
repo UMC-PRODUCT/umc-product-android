@@ -42,12 +42,12 @@ import com.umc.component.theme.UmcTypographyTokens.Body
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.neutral900
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.grey900
 
 @Composable
 fun FixLocationRoute(
@@ -89,7 +89,7 @@ fun FixLocationScreen(
             .height(700.dp)
             .imePadding()
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .background(neutral000())
+            .background(grey000())
             .padding(horizontal = 16.dp)
     ) {
         DragHeader()
@@ -104,13 +104,13 @@ fun FixLocationScreen(
             UText(
                 text = AppStrings.ACT_LOCATION_TITLE,
                 style = Title3Bold,
-                color = neutral800()
+                color = grey800()
             )
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(neutral100()),
+                    .background(grey100()),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -127,7 +127,7 @@ fun FixLocationScreen(
         UText(
             text = AppStrings.ACT_LOCATION_UPDATE,
             style = Subheadline,
-            color = neutral600(),
+            color = grey600(),
         )
 
         Spacer(Modifier.height(24.dp))
@@ -139,14 +139,14 @@ fun FixLocationScreen(
                 .fillMaxWidth()
                 .heightIn(52.dp),
             placeholder = AppStrings.ACT_LOCATION_SEARCH_PLACEHOLDER,
-            placeholderColor = neutral400(),
-            textColor = neutral800(),
+            placeholderColor = grey400(),
+            textColor = grey800(),
             textStyle = Body,
-            backgroundColor = neutral100(),
-            strokeColor = neutral100(),
-            focusStrokeColor = neutral900(),
+            backgroundColor = grey100(),
+            strokeColor = grey100(),
+            focusStrokeColor = grey900(),
             prevIcon = painterResource(R.drawable.ic_search),
-            prevIconTint = neutral400()
+            prevIconTint = grey400()
         )
 
         Spacer(Modifier.height(40.dp))
@@ -154,7 +154,7 @@ fun FixLocationScreen(
         UText(
             text = AppStrings.COMMUNITY_SEARCH_RECENT,
             style = HeadlineBold,
-            color = neutral800()
+            color = grey800()
         )
 
         Spacer(Modifier.height(16.dp))
@@ -168,7 +168,7 @@ fun FixLocationScreen(
                     UText(
                         text = location.address.ifBlank { location.title },
                         style = Body,
-                        color = neutral600(),
+                        color = grey600(),
                         modifier = Modifier.clickable { onLocationClick(location) }
                     )
                     Spacer(Modifier.height(16.dp))
@@ -178,7 +178,7 @@ fun FixLocationScreen(
                     UText(
                         text = address,
                         style = Body,
-                        color = neutral600(),
+                        color = grey600(),
                     )
                     Spacer(Modifier.height(16.dp))
                 }
@@ -204,7 +204,7 @@ private fun DragHeader(
                 .width(32.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(100.dp))
-                .background(neutral600())
+                .background(grey600())
         )
     }
 }

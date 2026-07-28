@@ -51,7 +51,7 @@ class PendingListViewModel @Inject constructor(
         viewModelScope.launch {
             startLoading()
             resultResponse(
-                response = postAttendanceApprovalUseCase(recordIds),
+                response = postAttendanceApprovalUseCase(uiState.value.scheduleId, recordIds),
                 successCallback = {
                     updateState {
                         copy(users = users.filterNot { user -> user.id in recordIds })
@@ -70,7 +70,7 @@ class PendingListViewModel @Inject constructor(
         viewModelScope.launch {
             startLoading()
             resultResponse(
-                response = postAttendanceRejectionUseCase(listOf(user.id)),
+                response = postAttendanceRejectionUseCase(uiState.value.scheduleId, listOf(user.id)),
                 successCallback = {
                     updateState {
                         copy(users = users.filterNot { pendingUser -> pendingUser.id == user.id })

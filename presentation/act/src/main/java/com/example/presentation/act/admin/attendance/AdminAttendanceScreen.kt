@@ -1,4 +1,4 @@
-﻿package com.example.presentation.act.admin.attendance
+package com.example.presentation.act.admin.attendance
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,22 +39,25 @@ import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
+import com.umc.component.theme.UmcTypographyTokens.Caption2Bold
 import com.umc.component.theme.UmcTypographyTokens.Footnote
+import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
-import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.black
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral050
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral700
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey50
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo500
+import com.umc.component.theme.red100
+import com.umc.component.theme.red500
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.enums.AdminSessionStatus
@@ -83,15 +86,16 @@ fun AttendanceScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(neutral100())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .background(grey100())
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(items = uiState.sessions, key = { it.id }) { session ->
             AdminSessionCard(
                 session = session,
                 onChangeLocationClick = {},
-                onPendingListClick = {}
+                onPendingListClick = {},
+                onDeleteClick = {},
             )
         }
     }
@@ -102,126 +106,147 @@ fun AdminSessionCard(
     session: AdminSessionCheck,
     onChangeLocationClick: () -> Unit = {},
     onPendingListClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier
-            .width(380.dp),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = neutral000()),
+        colors = CardDefaults.cardColors(containerColor = grey000()),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    UText(
+                        text = session.title,
+                        style = HeadlineBold,
+                        color = grey800()
+                    )
+                    Surface(
+                        color = if (session.status == AdminSessionStatus.IN_PROGRESS) {
+                            indigo100()
+                        } else {
+                            grey50()
+                        },
+                        shape = RoundedCornerShape(4.dp)
                     ) {
                         UText(
-                            text = session.title,
-                            style = Title3Bold,
-                            color = neutral800()
-                        )
-                        if (session.status == AdminSessionStatus.IN_PROGRESS) {
-                            Surface(
-                                color = primary100(),
-                                shape = RoundedCornerShape(4.dp)
-                            ) {
-                                UText(
-                                    text = session.status.text,
-                                    style = Caption1Bold,
-                                    color = primary500(),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        } else {
-                            Surface(
-                                color = neutral050(),
-                                shape = RoundedCornerShape(4.dp)
-                            ) {
-                                UText(
-                                    text = session.status.text,
-                                    style = Caption1Bold,
-                                    color = neutral600(),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CardMetaItem(
-                            iconRes = R.drawable.ic_calendar,
-                            text = session.date
-                        )
-                        CardMetaItem(
-                            iconRes = R.drawable.ic_clock,
-                            text = "${session.startTime} - ${session.endTime}"
+                            text = session.status.text,
+                            style = Caption2Bold,
+                            color = if (session.status == AdminSessionStatus.IN_PROGRESS) {
+                                indigo500()
+                            } else {
+                                grey600()
+                            },
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                         )
                     }
                 }
 
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    UButton(
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        text = AppStrings.ADMIN_CHECK_CHANGE_LOCATION,
+                        textStyle = Caption1Bold,
+                        textColor = grey700(),
+                        prevIcon = painterResource(id = R.drawable.ic_location),
+                        prevIconTint = grey700(),
+                        prevIconMargin = 6.dp,
+                        backgroundColor = grey100(),
+                        onClick = onChangeLocationClick,
+                        prevIconSize = DpSize(16.dp, 16.dp)
+                    )
 
-                UButton(
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    text = AppStrings.ADMIN_CHECK_CHANGE_LOCATION,
-                    textColor = neutral700(),
-                    prevIcon = painterResource(id = R.drawable.ic_location),
-                    prevIconTint = neutral700(),
-                    prevIconMargin = 6.dp,
-                    backgroundColor = neutral100(),
-                    onClick = onChangeLocationClick,
-                    prevIconSize = DpSize(18.dp, 18.dp)
+                    Surface(
+                        onClick = onDeleteClick,
+                        modifier = Modifier.size(32.dp),
+                        color = red100(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_trash_can),
+                                contentDescription =
+                                    AppStrings.ADMIN_CHECK_DELETE_SESSION_CONTENT_DESCRIPTION,
+                                tint = red500(),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CardMetaItem(
+                    iconRes = R.drawable.ic_calendar,
+                    text = session.date
+                )
+                CardMetaItem(
+                    iconRes = R.drawable.ic_clock,
+                    text = AppStrings.ADMIN_CHECK_TIME_RANGE_FORMAT.format(
+                        session.startTime,
+                        session.endTime
+                    )
                 )
             }
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(90.dp)
+                    .height(74.dp)
                     .border(
                         width = 1.dp,
-                        color = neutral300(),
+                        color = grey200(),
                         shape = RoundedCornerShape(12.dp)
                     ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StatItem(
                     modifier = Modifier.weight(1f),
-                    iconRes = R.drawable.ic_checklist,
-                    label = "출석률",
-                    value = "${session.attendanceRate}(%)"
+                    iconRes = R.drawable.ic_checkbox_outline,
+                    label = AppStrings.ADMIN_CHECK_STATS_ATTENDANCE_RATE,
+                    highlightedValue = session.attendanceRate.toString(),
+                    trailingValue = AppStrings.ADMIN_CHECK_STATS_RATE_UNIT
                 )
                 VerticalDivider()
                 StatItem(
                     modifier = Modifier.weight(1f),
                     iconRes = R.drawable.ic_person_outline,
-                    label = "출석 인원",
-                    value = "${session.attendedChallengers}/${session.totalChallengers}(명)"
+                    label = AppStrings.ADMIN_CHECK_STATS_ATTENDANCE_COUNT,
+                    highlightedValue = session.attendedChallengers.toString(),
+                    trailingValue = AppStrings.ADMIN_CHECK_STATS_TOTAL_COUNT_FORMAT.format(
+                        session.totalChallengers
+                    )
                 )
                 VerticalDivider()
                 StatItem(
                     modifier = Modifier.weight(1f),
                     iconRes = R.drawable.ic_hourglass,
-                    label = "승인 대기",
-                    value = "${session.pendingCount}(명)"
+                    label = AppStrings.ADMIN_CHECK_STATS_PENDING_COUNT,
+                    highlightedValue = session.pendingCount.toString(),
+                    trailingValue = AppStrings.ADMIN_CHECK_STATS_COUNT_UNIT
                 )
             }
 
-            if(session.status == AdminSessionStatus.IN_PROGRESS) {
+            if (session.status == AdminSessionStatus.IN_PROGRESS) {
                 CheckAttendanceListButton(onPendingListClick)
             } else {
                 SuccessCheckAllAttendanceButton()
@@ -246,7 +271,7 @@ private fun EmptyScreen() {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_people),
                     contentDescription = null,
-                    tint = neutral400(),
+                    tint = grey400(),
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -255,7 +280,7 @@ private fun EmptyScreen() {
             UText(
                 text = AppStrings.ATTENDANCE_EMPTY_ADMIN_SESSIONS,
                 style = Subheadline,
-                color = neutral600()
+                color = grey600()
             )
         }
     }
@@ -276,19 +301,19 @@ private fun CheckAttendanceListButton(
     UButton(
         modifier = Modifier.fillMaxWidth(),
         prevIcon = painterResource(id = R.drawable.ic_person),
-        prevIconTint = primary500(),
+        prevIconTint = indigo500(),
         text = AppStrings.ADMIN_CHECK_PENDING_LIST_TRIGGER,
         textColor = black(),
         textStyle = CalloutBold,
         endIcon = painterResource(id = R.drawable.ic_arrow_next),
-        endIconTint = primary500(),
-        endIconSize = DpSize(7.dp,12.dp),
-        backgroundColor = neutral000(),
-        pressedColor = neutral000(),
-        borderColor = primary500(),
-        borderWidth = 1.dp,
+        endIconTint = grey400(),
+        endIconSize = DpSize(7.dp, 12.dp),
+        prevIconSize = DpSize(20.dp, 20.dp),
+        prevIconMargin = 8.dp,
+        backgroundColor = grey50(),
+        pressedColor = grey100(),
         onClick = onPendingListClick,
-        contentPadding = PaddingValues(16.dp)
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
     )
 }
 
@@ -299,13 +324,15 @@ private fun SuccessCheckAllAttendanceButton() {
         prevIcon = painterResource(id = R.drawable.ic_check_success),
         text = AppStrings.ADMIN_CHECK_COMPLETED_MESSAGE,
         enabled = false,
-        textColor = black(),
-        textStyle = CalloutBold,
-        backgroundColor = neutral000(),
-        borderColor = neutral200(),
+        prevIconSize = DpSize(18.dp, 18.dp),
+        prevIconMargin = 8.dp,
+        textColor = grey600(),
+        textStyle = SubheadlineBold,
+        backgroundColor = grey000(),
+        borderColor = grey200(),
         borderWidth = 1.dp,
         onClick = {},
-        contentPadding = PaddingValues(16.dp)
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
     )
 }
 
@@ -321,13 +348,13 @@ private fun CardMetaItem(
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            tint = neutral600(),
-            modifier = Modifier.size(18.dp)
+            tint = grey600(),
+            modifier = Modifier.size(14.dp)
         )
         UText(
             text = text,
             style = Footnote,
-            color = neutral600()
+            color = grey600()
         )
     }
 }
@@ -337,29 +364,37 @@ private fun StatItem(
     modifier: Modifier = Modifier,
     iconRes: Int,
     label: String,
-    value: String
+    highlightedValue: String,
+    trailingValue: String
 ) {
     Column(
-        modifier = modifier.padding(vertical = 12.dp),
+        modifier = modifier.padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            tint = neutral600(),
-            modifier = Modifier.size(24.dp)
+            tint = grey600(),
+            modifier = Modifier.size(20.dp)
         )
         UText(
             text = label,
             style = Subheadline,
-            color = neutral600()
+            color = grey600()
         )
-        UText(
-            text = value,
-            style = SubheadlineBold,
-            color = neutral800()
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            UText(
+                text = highlightedValue,
+                style = SubheadlineBold,
+                color = indigo500()
+            )
+            UText(
+                text = trailingValue,
+                style = SubheadlineBold,
+                color = grey800()
+            )
+        }
     }
 }
 
@@ -370,17 +405,17 @@ private fun VerticalDivider() {
             .width(1.dp)
             .fillMaxHeight()
             .padding(vertical = 12.dp)
-            .background(neutral200())
+            .background(grey200())
     )
 }
 
 private fun sampleSessions(): List<AdminSessionCheck> = listOf(
     AdminSessionCheck(
         id = 1L,
-        title = "4주차 정기세션",
-        date = "2026.04.30 (목)",
-        startTime = "14:00",
-        endTime = "18:00",
+        title = AppStrings.ADMIN_CHECK_PREVIEW_SESSION_TITLE,
+        date = AppStrings.ADMIN_CHECK_PREVIEW_SESSION_DATE,
+        startTime = AppStrings.ADMIN_CHECK_PREVIEW_START_TIME,
+        endTime = AppStrings.ADMIN_CHECK_PREVIEW_END_TIME,
         status = AdminSessionStatus.IN_PROGRESS,
         attendanceRate = 85,
         totalChallengers = 40,
@@ -391,21 +426,21 @@ private fun sampleSessions(): List<AdminSessionCheck> = listOf(
     ),
     AdminSessionCheck(
         id = 2L,
-        title = "3주차 정기세션",
-        date = "2026.04.23 (목)",
-        startTime = "14:00",
-        endTime = "18:00",
+        title = AppStrings.ADMIN_CHECK_PREVIEW_SESSION_TITLE,
+        date = AppStrings.ADMIN_CHECK_PREVIEW_SESSION_DATE,
+        startTime = AppStrings.ADMIN_CHECK_PREVIEW_START_TIME,
+        endTime = AppStrings.ADMIN_CHECK_PREVIEW_END_TIME,
         status = AdminSessionStatus.COMPLETED,
-        attendanceRate = 92,
+        attendanceRate = 85,
         totalChallengers = 40,
-        attendedChallengers = 37,
-        pendingCount = 0,
+        attendedChallengers = 34,
+        pendingCount = 3,
         pendingUsers = emptyList<AdminPendingUser>(),
         sheetId = null
     )
 )
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 324, heightDp = 477)
 @Composable
 private fun AttendanceScreenPreview() {
     UmcTheme(darkTheme = false) {
