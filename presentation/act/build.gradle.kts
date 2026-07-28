@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.act"
+    namespace = "com.umc.presentation.act"
     compileSdk = 36
 
     defaultConfig {
