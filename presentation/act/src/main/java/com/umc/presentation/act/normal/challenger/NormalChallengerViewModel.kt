@@ -30,16 +30,16 @@ class NormalChallengerViewModel @Inject constructor(
 ) {
     private var challengerListJob: Job? = null
 
-    init {
-        getChallengers()
-    }
-
     fun onSearchKeywordChanged(keyword: String) {
         updateState { copy(searchKeyword = keyword) }
         getChallengers(
             keyword = keyword.trim().takeIf { it.isNotEmpty() },
             debounce = true
         )
+    }
+
+    fun refresh() {
+        getChallengers()
     }
 
     private fun getChallengers(

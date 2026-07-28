@@ -21,9 +21,18 @@ class PendingListViewModel @Inject constructor(
     PendingListUiState()
 ) {
     //세션별 승인 대기 유저 목록 조회
-    fun getPendingUsers(scheduleId: Long) {
-        updateState { copy(scheduleId = scheduleId) }
+    fun getPendingUsers(
+        scheduleId: Long,
+        initialUsers: List<AdminPendingUser> = emptyList(),
+    ) {
+        updateState {
+            copy(
+                scheduleId = scheduleId,
+                users = initialUsers,
+            )
+        }
         if (scheduleId <= 0L) return
+        if (initialUsers.isNotEmpty()) return
 
         viewModelScope.launch {
             startLoading()

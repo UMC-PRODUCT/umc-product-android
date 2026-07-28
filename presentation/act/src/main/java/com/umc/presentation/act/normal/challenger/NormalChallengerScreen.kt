@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,9 +56,14 @@ import com.umc.component.theme.yellow500
 
 @Composable
 fun NormalChallengerRoute(
+    isActive: Boolean = true,
     viewModel: NormalChallengerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(isActive) {
+        if (isActive) viewModel.refresh()
+    }
 
     NormalChallengerScreen(
         uiState = uiState,

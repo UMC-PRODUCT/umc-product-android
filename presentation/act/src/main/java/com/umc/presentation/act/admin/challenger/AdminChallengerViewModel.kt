@@ -39,10 +39,6 @@ class AdminChallengerViewModel @Inject constructor(
     private var challengerListJob: Job? = null
 
     //초기 챌린저 목록 조회
-    init {
-        getChallengers()
-    }
-
     //검색어 변경 시 첫 페이지부터 다시 조회
     fun onSearchKeywordChanged(keyword: String) {
         updateState { copy(searchKeyword = keyword) }
@@ -50,6 +46,10 @@ class AdminChallengerViewModel @Inject constructor(
             keyword = keyword.trim().takeIf { it.isNotEmpty() },
             debounce = true
         )
+    }
+
+    fun refresh() {
+        getChallengers()
     }
 
     //관리자용 챌린저 목록 조회

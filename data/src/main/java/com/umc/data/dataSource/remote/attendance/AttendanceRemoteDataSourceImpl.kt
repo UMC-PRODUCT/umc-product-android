@@ -56,7 +56,7 @@ class AttendanceRemoteDataSourceImpl @Inject constructor(
                 scheduleId,
                 memberIds.map { AttendanceDecisionV2Request(it, approved) }
             )
-        }
+        }.map { Unit }
     }
 
     override suspend fun postAttendanceReason(request: AttendanceReasonRequest): ApiState<String> {

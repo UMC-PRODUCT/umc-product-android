@@ -1,6 +1,7 @@
 package com.umc.data.response.schedule
 
 import com.google.gson.annotations.SerializedName
+import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.enums.AdminSessionStatus
 import com.umc.domain.model.home.schedule.ScheduleListModel
@@ -19,7 +20,8 @@ data class ScheduleListResponse (
     @SerializedName("totalCount") val totalCount: Int,
     @SerializedName("presentCount") val presentCount: Int,
     @SerializedName("pendingCount") val pendingCount: Int,
-    @SerializedName("attendanceRate") val attendanceRate: Double
+    @SerializedName("attendanceRate") val attendanceRate: Double,
+    val pendingUsers: List<AdminPendingUser> = emptyList(),
 ) {
     companion object {
         fun ScheduleListResponse.toDomain(): ScheduleListModel {
@@ -62,7 +64,7 @@ data class ScheduleListResponse (
                 totalChallengers = totalCount,
                 attendedChallengers = presentCount,
                 pendingCount = pendingCount,
-                pendingUsers = emptyList(),
+                pendingUsers = pendingUsers,
                 sheetId = sheetId
             )
         }

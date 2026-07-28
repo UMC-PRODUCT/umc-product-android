@@ -7,9 +7,9 @@ enum class AdminSessionStatus(val text: String) {
     companion object {
         fun fromServerValue(value: String): AdminSessionStatus {
             return when (value) {
-                "진행중", "예정" -> IN_PROGRESS
-                "종료됨" -> COMPLETED
-                else -> COMPLETED // 예외 상황 대비 기본값
+                "IN_PROGRESS" -> IN_PROGRESS
+                "COMPLETED" -> COMPLETED
+                else -> COMPLETED
             }
         }
     }
