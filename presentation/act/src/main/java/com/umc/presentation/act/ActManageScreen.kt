@@ -48,7 +48,7 @@ import kotlinx.coroutines.launch
 
 private data class ManageTab(
     val title: String,
-    val content: @Composable () -> Unit
+    val content: @Composable (isActive: Boolean) -> Unit
 )
 
 @Composable
@@ -56,6 +56,11 @@ fun ActManageRoute(
     vm: ActViewModel = hiltViewModel()
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(vm) {
+        vm.getUserInfo()
+    }
+
     ActManageScreen(
         uiState = uiState,
         onAdminCheckedChange = vm::setAdminMode
@@ -70,15 +75,23 @@ private fun ActManageScreen(
     val tabs = remember(uiState.isAdmin) {
         if (uiState.isAdmin) {
             listOf(
-                ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { AttendanceRoute() },
+                ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { isActive ->
+                    AttendanceRoute(isActive = isActive)
+                },
                 ManageTab(AppStrings.TAB_STUDY_ADMIN) { ComingSoonScreen() },
-                ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { AdminChallengerRoute() }
+                ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { isActive ->
+                    AdminChallengerRoute(isActive = isActive)
+                }
             )
         } else {
             listOf(
-                ManageTab(AppStrings.TAB_ATTENDANCE_USER) { NormalAttendanceRoute() },
+                ManageTab(AppStrings.TAB_ATTENDANCE_USER) { isActive ->
+                    NormalAttendanceRoute(isActive = isActive)
+                },
                 ManageTab(AppStrings.TAB_STUDY_USER) { ComingSoonScreen() },
-                ManageTab(AppStrings.TAB_CHALLENGE_USER) { NormalChallengerRoute() }
+                ManageTab(AppStrings.TAB_CHALLENGE_USER) { isActive ->
+                    NormalChallengerRoute(isActive = isActive)
+                }
             )
         }
     }
@@ -152,7 +165,7 @@ private fun ActManageScreen(
                 .fillMaxSize()
                 .background(grey100())
         ) { page ->
-            tabs[page].content()
+            tabs[page].content(page == pagerState.currentPage)
         }
     }
 }

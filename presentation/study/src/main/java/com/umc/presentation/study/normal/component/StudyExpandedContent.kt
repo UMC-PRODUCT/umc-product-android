@@ -56,7 +56,7 @@ fun StudyExpandedContent(
         // 대기중 배너
         item.submitState == SubmitState.REQUESTED -> {
             StudyStatusBanner(
-                iconRes = R.drawable.ic_act_hourglass,
+                iconRes = R.drawable.ic_hourglass,
                 text = AppStrings.STUDY_STATUS_WAITING,
                 textColor = yellow700(),
                 backgroundColor = yellow100(),

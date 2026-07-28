@@ -18,10 +18,6 @@ class ActViewModel @Inject constructor(
     ActUiState()
 ) {
     //초기 유저 정보 조회
-    init {
-        getUserInfo()
-    }
-
     //내 정보와 관리자 권한 여부 조회
     fun getUserInfo() {
         viewModelScope.launch {

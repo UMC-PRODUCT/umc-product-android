@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,6 +55,7 @@ import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.red500
+import com.umc.component.theme.red100
 import com.umc.component.theme.indigo600
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey50
@@ -77,9 +79,14 @@ import com.umc.domain.model.enums.CheckHistoryStatus
 
 @Composable
 fun NormalAttendanceRoute(
+    isActive: Boolean = true,
     viewModel: NormalAttendanceViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(isActive) {
+        if (isActive) viewModel.refresh()
+    }
 
     NormalAttendanceScreen(
         uiState = uiState,
@@ -259,11 +266,13 @@ private fun AvailableSessionCard(
                     CheckAvailableStatus.BEFORE -> grey50()
                     CheckAvailableStatus.PENDING -> yellow100()
                     CheckAvailableStatus.COMPLETED -> green100()
+                    CheckAvailableStatus.REJECTED -> red100()
                 },
                 textColor = when (session.status) {
                     CheckAvailableStatus.BEFORE -> grey600()
                     CheckAvailableStatus.PENDING -> yellow500()
                     CheckAvailableStatus.COMPLETED -> green500()
+                    CheckAvailableStatus.REJECTED -> red500()
                 }
             )
 
@@ -301,6 +310,8 @@ private fun AvailableSessionExpandedContent(
     onAttendanceClick: () -> Unit,
     onReasonClick: () -> Unit,
 ) {
+    val canRequestAttendance = session.isOnline || session.isLocationCertified
+
     Column() {
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -336,7 +347,9 @@ private fun AvailableSessionExpandedContent(
                     .align(Alignment.BottomCenter)
 
             ) {
-                if(session.isLocationCertified) {
+                if (session.isOnline) {
+                    OnlineSessionLocation()
+                } else if(session.isLocationCertified) {
                     CanCheckLocation(session)
                 } else {
                     CantCheckLocation(session)
@@ -351,15 +364,15 @@ private fun AvailableSessionExpandedContent(
                 UButton(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    enabled = session.isLocationCertified,
+                    enabled = canRequestAttendance,
                     cornerRadius = 8.dp,
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
-                    backgroundColor = if(session.isLocationCertified) indigo500() else grey100(),
+                    backgroundColor = if(canRequestAttendance) indigo500() else grey100(),
                     text = AppStrings.ATTENDANCE_REQUEST_BUTTON,
                     textStyle = CalloutBold,
-                    textColor = if(session.isLocationCertified) grey000() else grey300(),
+                    textColor = if(canRequestAttendance) grey000() else grey300(),
                     prevIcon = painterResource(R.drawable.ic_location_white),
-                    prevIconTint = if(session.isLocationCertified) grey000() else grey300(),
+                    prevIconTint = if(canRequestAttendance) grey000() else grey300(),
                     prevIconSize = DpSize(20.dp, 20.dp),
                     onClick = onAttendanceClick
                 )
@@ -398,7 +411,7 @@ private fun AvailableSessionExpandedContent(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 50.dp, vertical = 16.dp),
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -406,7 +419,7 @@ private fun AvailableSessionExpandedContent(
                             modifier = Modifier.size(32.dp),
                             painter = painterResource(R.drawable.ic_hourglass),
                             contentDescription = null,
-                            tint = Color.Unspecified
+                            tint = yellow500()
                         )
                         UText(
                             text = AppStrings.ATTENDANCE_STATUS_PENDING_TITLE,
@@ -433,7 +446,7 @@ private fun AvailableSessionExpandedContent(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 50.dp, vertical = 16.dp),
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -451,7 +464,65 @@ private fun AvailableSessionExpandedContent(
                     }
                 }
             }
+
+            CheckAvailableStatus.REJECTED -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(red100()),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(32.dp),
+                            painter = painterResource(R.drawable.ic_check_failed),
+                            contentDescription = null,
+                            tint = Color.Unspecified
+                        )
+                        UText(
+                            text = session.status.text,
+                            style = HeadlineBold,
+                            color = red500()
+                        )
+                        UText(
+                            text = AppStrings.ATTENDANCE_STATUS_REJECTED_DESCRIPTION,
+                            style = FootnoteBold,
+                            color = red500()
+                        )
+                    }
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun OnlineSessionLocation() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_location),
+            contentDescription = null,
+            tint = indigo500(),
+            modifier = Modifier.size(15.dp),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        UText(
+            text = AppStrings.ATTENDANCE_ONLINE_SESSION,
+            style = Caption1Bold,
+            color = indigo500(),
+        )
     }
 }
 

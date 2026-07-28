@@ -1,5 +1,6 @@
 package com.umc.presentation.act.admin.attendance.pendinglist
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -37,6 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
@@ -60,16 +62,30 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.domain.model.act.check.AdminPendingUser
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun PendingListRoute(
     scheduleId: Long = 0L,
+    initialUsers: List<AdminPendingUser> = emptyList(),
     viewModel: PendingListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    LaunchedEffect(scheduleId) {
-        viewModel.getPendingUsers(scheduleId)
+    LaunchedEffect(scheduleId, initialUsers) {
+        viewModel.getPendingUsers(scheduleId, initialUsers)
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.uiEvent.collectLatest { event ->
+            val message = when (event) {
+                PendingListEvent.ApproveSuccess -> AppStrings.ADMIN_APPROVE_SUCCESS
+                PendingListEvent.RejectSuccess -> AppStrings.ADMIN_REJECT_SUCCESS
+                is PendingListEvent.ShowToast -> event.message
+            }
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
     }
 
     PendingListScreen(

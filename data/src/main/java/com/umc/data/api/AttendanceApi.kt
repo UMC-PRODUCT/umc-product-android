@@ -5,6 +5,7 @@ import com.umc.data.response.attendance.AttendanceDecisionV2Request
 import com.umc.data.response.attendance.AttendanceCheckV2Request
 import com.umc.data.response.attendance.AttendanceExcuseV2Request
 import com.umc.data.response.attendance.ScheduleAttendanceV2Response
+import com.umc.data.response.attendance.ScheduleParticipantAttendanceV2Response
 import com.umc.domain.model.base.ApiResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -35,7 +36,7 @@ interface AttendanceApi {
     suspend fun decideAttendance(
         @Path("scheduleId") scheduleId: Long,
         @Body requests: List<AttendanceDecisionV2Request>
-    ): ApiResponse<Unit>
+    ): ApiResponse<List<ScheduleParticipantAttendanceV2Response>>
 
     @POST(Endpoints.Attendance.REASON)
     suspend fun postAttendanceReason(

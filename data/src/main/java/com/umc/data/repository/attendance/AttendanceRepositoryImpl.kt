@@ -18,9 +18,7 @@ class AttendanceRepositoryImpl @Inject constructor(
 
     override suspend fun getAttendanceAvailable(): ApiState<List<UserCheckAvailable>> {
         return attendanceRemoteDataSource.getAttendanceAvailable().map { responseList ->
-            responseList
-                .filter { !it.isAttendanceChecked }
-                .map { it.toAvailable() }
+            responseList.map { it.toAvailable() }
         }
     }
 
@@ -47,7 +45,7 @@ class AttendanceRepositoryImpl @Inject constructor(
     override suspend fun getAttendanceHistory(): ApiState<List<UserCheckHistory>> {
         return attendanceRemoteDataSource.getAttendanceHistory().map { responseList ->
             responseList
-                .filter { it.isAttendanceChecked || it.attendanceStatus != null }
+                .filter { it.attendanceStatus in completedAttendanceStatuses }
                 .mapIndexed { index, response -> response.toHistory(index) }
         }
     }
@@ -55,5 +53,9 @@ class AttendanceRepositoryImpl @Inject constructor(
     override suspend fun getChallengerAttendanceHistory(challengerId: Long): ApiState<List<ChallengerInfoHistory>> {
         // v2에는 타 챌린저의 출석 이력 조회 API가 제공되지 않는다.
         return ApiState.Success(emptyList())
+    }
+
+    private companion object {
+        val completedAttendanceStatuses = setOf("PRESENT", "LATE", "EXCUSED", "ABSENT")
     }
 }

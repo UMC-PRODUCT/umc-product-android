@@ -1,5 +1,6 @@
 package com.umc.presentation.act.admin.attendance
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -20,13 +21,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -34,7 +42,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UText
+import com.umc.component.component.DialogType
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
@@ -61,21 +71,77 @@ import com.umc.component.theme.red500
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.enums.AdminSessionStatus
+import com.umc.presentation.act.admin.attendance.pendinglist.PendingListRoute
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlinx.coroutines.flow.collectLatest
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AttendanceRoute(
+    isActive: Boolean = true,
     viewModel: AdminAttendanceViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(isActive) {
+        if (isActive) viewModel.getSessions()
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.uiEvent.collectLatest { event ->
+            val message = when (event) {
+                AdminAttendanceEvent.DeleteSuccess ->
+                    AppStrings.ADMIN_CHECK_DELETE_SESSION_SUCCESS
+                is AdminAttendanceEvent.ShowToast -> event.message
+            }
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     AttendanceScreen(
-        uiState = uiState
+        uiState = uiState,
+        onDeleteClick = viewModel::requestDeleteSession,
+        onPendingListClick = viewModel::openPendingList,
     )
+
+    uiState.pendingListScheduleId?.let { scheduleId ->
+        ModalBottomSheet(
+            onDismissRequest = viewModel::dismissPendingList,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = Color.Transparent,
+            dragHandle = null,
+        ) {
+            PendingListRoute(
+                scheduleId = scheduleId,
+                initialUsers = uiState.sessions
+                    .firstOrNull { session -> session.id == scheduleId }
+                    ?.pendingUsers
+                    .orEmpty(),
+            )
+        }
+    }
+
+    if (uiState.deleteTargetId != null) {
+        UBasicDialog(
+            title = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_TITLE,
+            content = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONTENT,
+            positiveText = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONFIRM,
+            type = DialogType.WARNING,
+            onPositive = viewModel::deleteSelectedSession,
+            onNegative = viewModel::dismissDeleteSession,
+            onDismissRequest = viewModel::dismissDeleteSession
+        )
+    }
 }
 
 @Composable
 fun AttendanceScreen(
     uiState: AdminAttendanceUiState,
+    onDeleteClick: (Long) -> Unit = {},
+    onPendingListClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     if (uiState.isEmpty) {
@@ -94,8 +160,8 @@ fun AttendanceScreen(
             AdminSessionCard(
                 session = session,
                 onChangeLocationClick = {},
-                onPendingListClick = {},
-                onDeleteClick = {},
+                onPendingListClick = { onPendingListClick(session.id) },
+                onDeleteClick = { onDeleteClick(session.id) },
             )
         }
     }
@@ -125,14 +191,19 @@ fun AdminSessionCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     UText(
                         text = session.title,
                         style = HeadlineBold,
-                        color = grey800()
+                        color = grey800(),
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Surface(
                         color = if (session.status == AdminSessionStatus.IN_PROGRESS) {
@@ -150,7 +221,9 @@ fun AdminSessionCard(
                             } else {
                                 grey600()
                             },
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 }
@@ -166,7 +239,7 @@ fun AdminSessionCard(
                         textColor = grey700(),
                         prevIcon = painterResource(id = R.drawable.ic_location),
                         prevIconTint = grey700(),
-                        prevIconMargin = 6.dp,
+                        prevIconMargin = 0.dp,
                         backgroundColor = grey100(),
                         onClick = onChangeLocationClick,
                         prevIconSize = DpSize(16.dp, 16.dp)
@@ -197,7 +270,7 @@ fun AdminSessionCard(
             ) {
                 CardMetaItem(
                     iconRes = R.drawable.ic_calendar,
-                    text = session.date
+                    text = session.date.toAttendanceDisplayDate()
                 )
                 CardMetaItem(
                     iconRes = R.drawable.ic_clock,
@@ -253,6 +326,19 @@ fun AdminSessionCard(
             }
         }
     }
+}
+
+private fun String.toAttendanceDisplayDate(): String {
+    val date = substringBefore(" ")
+    val localDate = runCatching {
+        LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE)
+    }.recoverCatching {
+        LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+    }.getOrNull() ?: return this
+
+    return localDate.format(
+        DateTimeFormatter.ofPattern("yyyy.MM.dd (E)", Locale.KOREAN)
+    )
 }
 
 @Composable

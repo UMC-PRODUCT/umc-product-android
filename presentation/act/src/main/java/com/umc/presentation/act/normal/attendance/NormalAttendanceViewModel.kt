@@ -27,10 +27,6 @@ class NormalAttendanceViewModel @Inject constructor(
     NormalAttendanceUiState()
 ) {
     //초기 출석 정보 조회
-    init {
-        refresh()
-    }
-
     //출석 가능 세션과 내 출석 기록 새로고침
     fun refresh() {
         getAvailableSessions()
@@ -159,6 +155,7 @@ data class NormalAvailableSessionUi(
     val address: String,
     val latitude: Double?,
     val longitude: Double?,
+    val isOnline: Boolean = false,
 )
 
 data class NormalHistorySessionUi(
@@ -184,7 +181,8 @@ private fun UserCheckAvailable.toUi(): NormalAvailableSessionUi {
         isLocationCertified = isLocationCertified == true,
         address = address.ifBlank { "-" },
         latitude = latitude,
-        longitude = longitude
+        longitude = longitude,
+        isOnline = isOnline,
     )
 }
 
