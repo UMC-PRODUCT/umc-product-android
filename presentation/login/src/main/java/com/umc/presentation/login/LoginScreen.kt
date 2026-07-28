@@ -8,11 +8,16 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,8 +28,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
@@ -33,7 +43,6 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.android.datatransport.runtime.BuildConfig
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.Scopes
@@ -43,10 +52,18 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.kakao.sdk.user.UserApiClient
 import com.umc.component.component.UText
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
-import com.umc.component.theme.grey600
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey500
+import com.umc.component.theme.grey900
+import com.umc.component.theme.indigo600
+import com.umc.component.theme.mint100
+import com.umc.component.theme.teal600
 import com.umc.component.util.ULog
 import com.umc.domain.model.enums.LoginType
 import kotlinx.coroutines.CoroutineScope
@@ -57,44 +74,62 @@ import com.umc.component.R
 
 @Composable
 fun LoginRoute(
-    navigateToStudy: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel(),
     navigateToSignUp: (String) -> Unit = {},
+    navigateToEmailLogin: () -> Unit = {},
+    navigateToMain: () -> Unit = {},
+    navigateToInputCode: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    var toastData by remember { mutableStateOf<UToastData?>(null) }
 
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
                 is LoginEvent.MoveToSignUpEvent -> navigateToSignUp(event.oAuthToken)
-                // TODO: handle remaining events
-                else -> Unit
+                is LoginEvent.MoveToMainEvent -> navigateToMain()
+                is LoginEvent.MoveToInputCodeEvent -> navigateToInputCode()
+                is LoginEvent.ShowErrorToast ->
+                    toastData = UToastData(event.message, UToastState.ERROR)
             }
         }
     }
 
-    LoginScreen(
-        onClickKakaoLogin = {
-            signInKakao(
-                context = context,
-                onLoginSuccess = { token -> viewModel.login(token, LoginType.KAKAO) }
-            )
-        },
-        onClickGoogleLogin = {
-            signInGoogle(
-                scope = scope,
-                context = context,
-                onLoginSuccess = { token -> viewModel.login(token, LoginType.GOOGLE) }
-            )
-        }
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        LoginScreen(
+            onClickKakaoLogin = {
+                signInKakao(
+                    context = context,
+                    onLoginSuccess = { token -> viewModel.login(token, LoginType.KAKAO) }
+                )
+            },
+            onClickGoogleLogin = {
+                signInGoogle(
+                    scope = scope,
+                    context = context,
+                    onLoginSuccess = { token -> viewModel.login(token, LoginType.GOOGLE) }
+                )
+            },
+            onClickEmailLogin = navigateToEmailLogin,
+        )
+
+        UToastHost(
+            data = toastData,
+            onDismiss = { toastData = null },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 56.dp),
+        )
+    }
 }
 
 @Composable
 fun LoginScreen(
     onClickKakaoLogin: () -> Unit = {},
     onClickGoogleLogin: () -> Unit = {},
+    onClickEmailLogin: () -> Unit = {},
 ) {
     var animationStarted by remember { mutableStateOf(false) }
 
@@ -107,12 +142,12 @@ fun LoginScreen(
             .fillMaxSize()
             .background(grey000()),
     ) {
-        // ic_logo + 22dp spacer + ic_logo_text 높이 추정값
-        val logoBlockHeight = 100.dp
+        // ic_logo + 22dp spacer + 타이틀/서브타이틀 높이 추정값
+        val logoBlockHeight = 120.dp
         val centerOffset = (maxHeight - logoBlockHeight) / 2
 
         val logoTopOffset by animateDpAsState(
-            targetValue = if (animationStarted) 248.dp else centerOffset,
+            targetValue = if (animationStarted) 210.dp else centerOffset,
             animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing),
             label = "logoTopOffset",
         )
@@ -134,29 +169,30 @@ fun LoginScreen(
                 contentDescription = null,
             )
 
-            Spacer(modifier = Modifier.height(22.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Image(
-                painter = painterResource(id = R.drawable.ic_logo_text),
-                contentDescription = null,
+            UText(
+                text = AppStrings.LOGIN_TITLE,
+                style = UmcTypographyTokens.HeadlineBold,
+                color = grey900(),
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            UText(
+                text = AppStrings.LOGIN_SUBTITLE,
+                style = UmcTypographyTokens.Callout,
+                color = grey500(),
             )
 
             Column(
                 modifier = Modifier.alpha(contentAlpha),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(modifier = Modifier.height(10.dp))
-
-                UText(
-                    text = AppStrings.LOGIN_TITLE,
-                    style = UmcTypographyTokens.Headline,
-                    color = grey600(),
-                )
-
-                Spacer(modifier = Modifier.height(145.dp))
+                Spacer(modifier = Modifier.height(104.dp))
 
                 Image(
-                    painter = painterResource(id = com.umc.component.R.drawable.ic_kakao_login),
+                    painter = painterResource(id = R.drawable.ic_kakao_login),
                     contentDescription = null,
                     modifier = Modifier.clickable {
                         onClickKakaoLogin()
@@ -166,11 +202,74 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Image(
-                    painter = painterResource(id = com.umc.component.R.drawable.ic_google_login),
+                    painter = painterResource(id = R.drawable.ic_google_login),
                     contentDescription = null,
                     modifier = Modifier.clickable {
                         onClickGoogleLogin()
                     },
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                HorizontalDivider(
+                    modifier = Modifier.width(350.dp),
+                    thickness = 1.dp,
+                    color = grey200(),
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Box(
+                    modifier = Modifier
+                        .width(350.dp)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(mint100())
+                        .clickable {
+                            onClickEmailLogin()
+                        },
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_email),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 56.dp),
+                    )
+
+                    UText(
+                        text = AppStrings.LOGIN_UMC_ACCOUNT,
+                        style = UmcTypographyTokens.HeadlineBold,
+                        color = teal600(),
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                UText(
+                    text = AppStrings.LOGIN_HELP_QUESTION,
+                    style = UmcTypographyTokens.Footnote,
+                    color = grey500(),
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                UText(
+                    text = buildAnnotatedString {
+                        withStyle(
+                            SpanStyle(
+                                color = indigo600(),
+                                textDecoration = TextDecoration.Underline,
+                            )
+                        ) {
+                            append(AppStrings.LOGIN_HELP_CENTER)
+                        }
+                        withStyle(SpanStyle(color = grey500())) {
+                            append(AppStrings.LOGIN_HELP_SUFFIX)
+                        }
+                    },
+                    style = UmcTypographyTokens.Footnote,
                 )
             }
         }
@@ -219,10 +318,7 @@ private fun signInGoogle(
     onLoginSuccess : (String) -> Unit
 ) {
     scope.launch {
-        /**인식 X**/
-/*
         try {
-
             val googleSignInOption = GetSignInWithGoogleOption.Builder(
                 BuildConfig.GOOGLE_LOGIN_KEY
             ).build()
@@ -241,10 +337,7 @@ private fun signInGoogle(
         } catch (e: GetCredentialException) {
             ULog.d("Google 로그인 실패: ${e.message}")
         }
-
-*/
     }
-
 }
 
 private fun handleSignIn(

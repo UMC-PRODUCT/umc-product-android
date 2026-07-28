@@ -5,6 +5,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.util.ULog
 import com.umc.domain.model.JwtToken
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LoginType
@@ -100,6 +101,8 @@ class LoginViewModel @Inject constructor(
                 }
             )
         } catch (e: Exception) {
+            // FCM 등록 실패가 메인 진입을 막지는 않지만, 원인 파악을 위해 로그는 남김
+            ULog.d("FCM 토큰 획득 또는 등록 실패: ${e.message}")
             emitEvent(LoginEvent.MoveToMainEvent)
         }
     }

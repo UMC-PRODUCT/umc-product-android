@@ -19,8 +19,13 @@ import com.umc.presentation.home.home.HomeRoute
 import com.umc.presentation.home.notification.NotificationRoute
 import com.umc.presentation.home.schedule.add.ScheduleAddRoute
 import com.umc.presentation.home.schedule.detail.ScheduleDetailRoute
+import com.umc.domain.model.enums.SignUpType
 import com.umc.presentation.login.LoginRoute
+import com.umc.presentation.login.emaillogin.EmailLoginRoute
 import com.umc.presentation.signup.SignUpRoute
+import com.umc.presentation.login.findpassword.FindPasswordRoute
+import com.umc.presentation.signup.email.EmailSignUpRoute
+import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
 
 @Composable
@@ -41,10 +46,10 @@ fun MainNavHost(
             SplashRoute(
                 navigateToLogin = { navHostController.navigate(MainDestination.Login) },
                 navigateToMain = {
-                    // TODO: 메인 화면 완성 후 연결
+                    navHostController.navigate(MainDestination.Home)
                 },
                 navigateToInputCode = {
-                    // TODO: 코드 입력 화면 완성 후 연결
+                    navHostController.navigate(MainDestination.SignUpFailCode)
                 }
             )
         }
@@ -52,17 +57,97 @@ fun MainNavHost(
         composable<MainDestination.Login> {
             LoginRoute(
                 navigateToSignUp = { oAuthToken ->
-                    navHostController.navigate(MainDestination.SignUp(oAuthToken))
-                }
+                    // 소셜 로그인 후 미가입 회원 -> 이메일 인증 단계부터 진행
+                    navHostController.navigate(MainDestination.SocialSignUp(oAuthToken))
+                },
+                navigateToEmailLogin = {
+                    navHostController.navigate(MainDestination.EmailLogin)
+                },
+                navigateToMain = {
+                    navHostController.navigate(MainDestination.Home) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                navigateToInputCode = {
+                    // 챌린저 ID가 없는 회원 -> 코드 입력 화면으로 이동
+                    navHostController.navigate(MainDestination.SignUpFailCode)
+                },
             )
         }
 
+        composable<MainDestination.EmailLogin> {
+            EmailLoginRoute(
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToMain = {
+                    navHostController.navigate(MainDestination.Home) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                navigateToFindPassword = {
+                    navHostController.navigate(MainDestination.FindPassword)
+                },
+                navigateToInputCode = {
+                    // 챌린저 ID가 없는 회원 -> 코드 입력 화면으로 이동
+                    navHostController.navigate(MainDestination.SignUpFailCode)
+                },
+                navigateToSignUp = {
+                    navHostController.navigate(MainDestination.EmailSignUp)
+                },
+            )
+        }
+
+        // 비밀번호 찾기 (이메일 인증 후 새 비밀번호 설정)
+        composable<MainDestination.FindPassword> {
+            FindPasswordRoute(
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToLogin = { navHostController.popBackStack() },
+            )
+        }
+
+        // 개인정보 입력 단계 (signUpType에 따라 소셜/이메일 회원가입 API 분기)
         composable<MainDestination.SignUp> { backStackEntry ->
             val destination = backStackEntry.toRoute<MainDestination.SignUp>()
             SignUpRoute(
+                signUpType = SignUpType.valueOf(destination.signUpType),
                 oAuthVerificationToken = destination.oAuthVerificationToken,
+                emailVerificationToken = destination.emailVerificationToken,
+                rawPassword = destination.rawPassword,
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToPermission = { navHostController.navigate(MainDestination.Permission) },
+            )
+        }
+
+        // 소셜 회원가입 (이메일 인증)
+        composable<MainDestination.SocialSignUp> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.SocialSignUp>()
+            SocialSignUpRoute(
+                oAuthVerificationToken = destination.oAuthVerificationToken,
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToNext = { oAuthToken, emailToken ->
+                    navHostController.navigate(
+                        MainDestination.SignUp(
+                            signUpType = SignUpType.SOCIAL.name,
+                            oAuthVerificationToken = oAuthToken,
+                            emailVerificationToken = emailToken,
+                        )
+                    )
+                },
+            )
+        }
+
+        // 이메일 회원가입 (이메일 인증 + 비밀번호 설정)
+        composable<MainDestination.EmailSignUp> {
+            EmailSignUpRoute(
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToNext = { emailToken, rawPassword ->
+                    navHostController.navigate(
+                        MainDestination.SignUp(
+                            signUpType = SignUpType.EMAIL.name,
+                            emailVerificationToken = emailToken,
+                            rawPassword = rawPassword,
+                        )
+                    )
+                },
             )
         }
 

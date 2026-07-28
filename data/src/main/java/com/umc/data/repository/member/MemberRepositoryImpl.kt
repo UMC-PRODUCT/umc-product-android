@@ -11,6 +11,7 @@ import com.umc.domain.model.JwtToken
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
+import com.umc.domain.model.request.member.RegisterEmailRequest
 import com.umc.domain.model.request.member.RegisterRequest
 import com.umc.domain.model.request.member.UpdateLinkRequest
 import com.umc.domain.repository.member.MemberRepository
@@ -42,8 +43,12 @@ class MemberRepositoryImpl @Inject constructor(
         return memberRemoteDataSource.getMemberProfile(id).map { it.toDomain() }
     }
 
-    override suspend fun register(request: RegisterRequest): ApiState<JwtToken> {
-        return memberRemoteDataSource.register(request).map { it.toModel() }
+    override suspend fun registerOAuth(request: RegisterRequest): ApiState<JwtToken> {
+        return memberRemoteDataSource.registerOAuth(request).map { it.toModel() }
+    }
+
+    override suspend fun registerEmail(request: RegisterEmailRequest): ApiState<JwtToken> {
+        return memberRemoteDataSource.registerEmail(request).map { it.toModel() }
     }
 
     override suspend fun updateMyProfile(profileImageId: String): ApiState<UserInfo> {
