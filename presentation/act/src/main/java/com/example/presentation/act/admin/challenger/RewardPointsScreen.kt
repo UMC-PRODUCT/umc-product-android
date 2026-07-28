@@ -40,16 +40,16 @@ import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.indigo500
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.neutral900
-import com.umc.component.theme.success100
-import com.umc.component.theme.success500
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.grey900
+import com.umc.component.theme.green100
+import com.umc.component.theme.green500
 import com.umc.domain.model.enums.RewardType
 
 @Composable
@@ -85,7 +85,7 @@ fun RewardPointsScreen(
             .height(700.dp)
             .imePadding()
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .background(neutral000())
+            .background(grey000())
             .padding(horizontal = 16.dp)
     ) {
         DragHeader()
@@ -95,7 +95,7 @@ fun RewardPointsScreen(
         UText(
             text = AppStrings.REWARD_TITLE,
             style = Title3Bold,
-            color = neutral800()
+            color = grey800()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -103,7 +103,7 @@ fun RewardPointsScreen(
         UText(
             text = AppStrings.REWARD_CONTENT,
             style = Subheadline,
-            color = neutral600()
+            color = grey600()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -119,7 +119,7 @@ fun RewardPointsScreen(
         UText(
             text = AppStrings.MEMO,
             style = CalloutBold,
-            color = neutral800()
+            color = grey800()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -136,8 +136,8 @@ fun RewardPointsScreen(
             text = AppStrings.REWARD_SUBMIT,
             enabled = isSubmitEnabled,
             textStyle = HeadlineBold,
-            textColor = if (isSubmitEnabled) neutral000() else neutral300(),
-            backgroundColor = if (isSubmitEnabled) indigo500() else neutral100(),
+            textColor = if (isSubmitEnabled) grey000() else grey300(),
+            backgroundColor = if (isSubmitEnabled) indigo500() else grey100(),
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
             cornerRadius = 8.dp,
             onClick = onSubmitClick
@@ -162,7 +162,7 @@ private fun DragHeader(
                 .width(36.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(100.dp))
-                .background(neutral600())
+                .background(grey600())
         )
     }
 }
@@ -176,7 +176,7 @@ private fun RewardListCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(neutral000())
+            .background(grey000())
     ) {
         rewards.forEachIndexed { index, item ->
             RewardRow(
@@ -189,7 +189,7 @@ private fun RewardListCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                color = neutral200()
+                color = grey200()
             )
         }
     }
@@ -215,7 +215,7 @@ private fun RewardRow(
             UText(
                 text = item.title,
                 style = Body,
-                color = neutral800()
+                color = grey800()
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -225,14 +225,14 @@ private fun RewardRow(
                     .wrapContentWidth()
                     .height(24.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(success100())
+                    .background(green100())
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 UText(
                     text = "+${item.score}",
                     style = Caption1Bold,
-                    color = success500(),
+                    color = green500(),
                 )
             }
         }
@@ -242,7 +242,7 @@ private fun RewardRow(
                 if (selected) R.drawable.ic_radio_button_checked else R.drawable.ic_radio_button_unchecked
             ),
             contentDescription = null,
-            tint = if (selected) indigo500() else neutral400()
+            tint = if (selected) indigo500() else grey400()
         )
     }
 }
@@ -256,12 +256,12 @@ private fun MemoInput(
         value = value,
         onValueChange = onValueChange,
         placeholder = AppStrings.MEMO_PLACEHOLDER,
-        placeholderColor = neutral400(),
-        textColor = neutral800(),
+        placeholderColor = grey400(),
+        textColor = grey800(),
         textStyle = Callout,
-        backgroundColor = neutral000(),
-        strokeColor = neutral300(),
-        focusStrokeColor = neutral900(),
+        backgroundColor = grey000(),
+        strokeColor = grey300(),
+        focusStrokeColor = grey900(),
         modifier = Modifier
             .fillMaxWidth()
             .height(92.dp)

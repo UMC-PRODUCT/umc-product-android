@@ -33,13 +33,13 @@ import com.umc.component.theme.UmcTypographyTokens.BodyBold
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral700
-import com.umc.component.theme.neutral800
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
+import com.umc.component.theme.grey800
 
 @Composable
 fun AttendanceReasonDialog(
@@ -75,7 +75,7 @@ private fun AttendanceReasonDialogContent(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(neutral000())
+            .background(grey000())
             .padding(16.dp),
     ) {
         Box(
@@ -87,7 +87,7 @@ private fun AttendanceReasonDialogContent(
             UText(
                 text = AppStrings.ATTENDANCE_REASON_DIALOG_TITLE,
                 style = Title3Bold,
-                color = neutral800()
+                color = grey800()
             )
         }
 
@@ -98,7 +98,7 @@ private fun AttendanceReasonDialogContent(
             UText(
                 text = AppStrings.ATTENDANCE_REASON_GUIDE,
                 style = Subheadline,
-                color = neutral600(),
+                color = grey600(),
                 textAlign = TextAlign.Center
             )
         }
@@ -108,7 +108,7 @@ private fun AttendanceReasonDialogContent(
         UText(
             text = AppStrings.ATTENDANCE_WRITE_REASON,
             style = BodyBold,
-            color = neutral800(),
+            color = grey800(),
             textAlign = TextAlign.Start
         )
 
@@ -119,12 +119,12 @@ private fun AttendanceReasonDialogContent(
             onValueChange = onReasonChange,
             modifier = Modifier.fillMaxWidth(),
             placeholder = AppStrings.ATTENDANCE_WRITE_REASON_DESCRIPTION,
-            placeholderColor = neutral400(),
-            textColor = neutral800(),
+            placeholderColor = grey400(),
+            textColor = grey800(),
             textStyle = Body,
-            backgroundColor = neutral000(),
-            strokeColor = neutral300(),
-            focusStrokeColor = neutral300(),
+            backgroundColor = grey000(),
+            strokeColor = grey300(),
+            focusStrokeColor = grey300(),
             onFocusChange = onReasonFocusChange
         )
 
@@ -139,8 +139,8 @@ private fun AttendanceReasonDialogContent(
                 onClick = onDismissRequest,
                 modifier = Modifier
                     .weight(1f),
-                backgroundColor = neutral100(),
-                textColor = neutral700(),
+                backgroundColor = grey100(),
+                textColor = grey700(),
                 textStyle = CalloutBold,
                 cornerRadius = 8.dp,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 14.dp)
@@ -151,8 +151,8 @@ private fun AttendanceReasonDialogContent(
                 onClick = { onSubmit(reason) },
                 modifier = Modifier
                     .weight(1f),
-                backgroundColor = neutral800(),
-                textColor = neutral000(),
+                backgroundColor = grey800(),
+                textColor = grey000(),
                 textStyle = CalloutBold,
                 cornerRadius = 8.dp,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 13.dp)

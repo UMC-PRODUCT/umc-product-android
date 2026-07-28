@@ -53,25 +53,25 @@ import com.umc.component.theme.UmcTypographyTokens.FootnoteBold
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.danger500
+import com.umc.component.theme.red500
 import com.umc.component.theme.indigo600
-import com.umc.component.theme.neutral000
-import com.umc.component.theme.neutral050
-import com.umc.component.theme.neutral100
-import com.umc.component.theme.neutral200
-import com.umc.component.theme.neutral300
-import com.umc.component.theme.neutral400
-import com.umc.component.theme.neutral500
-import com.umc.component.theme.neutral600
-import com.umc.component.theme.neutral800
-import com.umc.component.theme.primary100
-import com.umc.component.theme.primary500
-import com.umc.component.theme.success100
-import com.umc.component.theme.success500
-import com.umc.component.theme.warning100
-import com.umc.component.theme.warning500
-import com.umc.component.theme.warning700
-import com.umc.component.theme.warning900
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
+import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey500
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo500
+import com.umc.component.theme.green100
+import com.umc.component.theme.green500
+import com.umc.component.theme.yellow100
+import com.umc.component.theme.yellow500
+import com.umc.component.theme.yellow700
+import com.umc.component.theme.yellow900
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
 
@@ -106,7 +106,7 @@ fun NormalAttendanceScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(neutral100())
+            .background(grey100())
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(28.dp)
     ) {
@@ -151,7 +151,7 @@ private fun AvailableSession(
     Column {
         Text(
             text = AppStrings.ATTENDANCE_HEADER_AVAILABLE,
-            color = neutral800(),
+            color = grey800(),
             style = Title3Bold
         )
 
@@ -186,7 +186,7 @@ private fun MyAttendance(
     Column {
         Text(
             text = AppStrings.ATTENDANCE_HEADER_HISTORY,
-            color = neutral800(),
+            color = grey800(),
             style = Title3Bold
         )
 
@@ -201,7 +201,7 @@ private fun MyAttendance(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(neutral000(), RoundedCornerShape(12.dp))
+                    .background(grey000(), RoundedCornerShape(12.dp))
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Column {
@@ -212,7 +212,7 @@ private fun MyAttendance(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(1.dp)
-                                    .background(neutral200())
+                                    .background(grey200())
                             )
                         }
                     }
@@ -233,7 +233,7 @@ private fun AvailableSessionCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(neutral000(), RoundedCornerShape(12.dp))
+            .background(grey000(), RoundedCornerShape(12.dp))
             .padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -244,7 +244,7 @@ private fun AvailableSessionCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = session.title,
-                    color = neutral800(),
+                    color = grey800(),
                     style = Subheadline
                 )
 
@@ -256,14 +256,14 @@ private fun AvailableSessionCard(
             StatusChip(
                 text = session.status.text,
                 background = when (session.status) {
-                    CheckAvailableStatus.BEFORE -> neutral050()
-                    CheckAvailableStatus.PENDING -> warning100()
-                    CheckAvailableStatus.COMPLETED -> success100()
+                    CheckAvailableStatus.BEFORE -> grey50()
+                    CheckAvailableStatus.PENDING -> yellow100()
+                    CheckAvailableStatus.COMPLETED -> green100()
                 },
                 textColor = when (session.status) {
-                    CheckAvailableStatus.BEFORE -> neutral600()
-                    CheckAvailableStatus.PENDING -> warning500()
-                    CheckAvailableStatus.COMPLETED -> success500()
+                    CheckAvailableStatus.BEFORE -> grey600()
+                    CheckAvailableStatus.PENDING -> yellow500()
+                    CheckAvailableStatus.COMPLETED -> green500()
                 }
             )
 
@@ -274,7 +274,7 @@ private fun AvailableSessionCard(
                     id = if (isExpanded) R.drawable.ic_dropdown_up else R.drawable.ic_dropdown_down
                 ),
                 contentDescription = null,
-                tint = neutral400(),
+                tint = grey400(),
                 modifier = Modifier
                     .size(18.dp)
                     .clickable(onClick = onExpandToggle)
@@ -309,7 +309,7 @@ private fun AvailableSessionExpandedContent(
                 .fillMaxWidth()
                 .height(150.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(neutral200())
+                .background(grey200())
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_location_marker),
@@ -332,7 +332,7 @@ private fun AvailableSessionExpandedContent(
                         clip = false
                     )
                     .clip(RoundedCornerShape(4.dp))
-                    .background(neutral000())
+                    .background(grey000())
                     .align(Alignment.BottomCenter)
 
             ) {
@@ -354,12 +354,12 @@ private fun AvailableSessionExpandedContent(
                     enabled = session.isLocationCertified,
                     cornerRadius = 8.dp,
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
-                    backgroundColor = if(session.isLocationCertified) primary500() else neutral100(),
+                    backgroundColor = if(session.isLocationCertified) indigo500() else grey100(),
                     text = AppStrings.ATTENDANCE_REQUEST_BUTTON,
                     textStyle = CalloutBold,
-                    textColor = if(session.isLocationCertified) neutral000() else neutral300(),
+                    textColor = if(session.isLocationCertified) grey000() else grey300(),
                     prevIcon = painterResource(R.drawable.ic_location_white),
-                    prevIconTint = if(session.isLocationCertified) neutral000() else neutral300(),
+                    prevIconTint = if(session.isLocationCertified) grey000() else grey300(),
                     prevIconSize = DpSize(20.dp, 20.dp),
                     onClick = onAttendanceClick
                 )
@@ -372,7 +372,7 @@ private fun AvailableSessionExpandedContent(
                 ) {
                     UText(
                         text = AppStrings.ATTENDANCE_FAIL_REASON_QUESTION,
-                        color = neutral600(),
+                        color = grey600(),
                         style = Footnote
                     )
                     Spacer(modifier = Modifier.width(3.dp))
@@ -392,7 +392,7 @@ private fun AvailableSessionExpandedContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(warning100()),
+                        .background(yellow100()),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
@@ -404,19 +404,19 @@ private fun AvailableSessionExpandedContent(
                     ) {
                         Icon(
                             modifier = Modifier.size(32.dp),
-                            painter = painterResource(R.drawable.ic_act_hourglass),
+                            painter = painterResource(R.drawable.ic_hourglass),
                             contentDescription = null,
                             tint = Color.Unspecified
                         )
                         UText(
                             text = AppStrings.ATTENDANCE_STATUS_PENDING_TITLE,
                             style = HeadlineBold,
-                            color = warning900()
+                            color = yellow900()
                         )
                         UText(
                             text = AppStrings.ATTENDANCE_STATUS_PENDING_DESCRIPTION,
                             style = Footnote,
-                            color = warning700()
+                            color = yellow700()
                         )
                     }
                 }
@@ -427,7 +427,7 @@ private fun AvailableSessionExpandedContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(success100()),
+                        .background(green100()),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
@@ -446,7 +446,7 @@ private fun AvailableSessionExpandedContent(
                         UText(
                             text = AppStrings.ATTENDANCE_STATUS_COMPLETED_DESCRIPTION,
                             style = FootnoteBold,
-                            color = success500()
+                            color = green500()
                         )
                     }
                 }
@@ -475,7 +475,7 @@ private fun CanCheckLocation(
         UText(
             text = AppStrings.LOCATION_CERTIFIED,
             style = Caption1Bold,
-            color = success500()
+            color = green500()
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -483,7 +483,7 @@ private fun CanCheckLocation(
         UText(
             text = session.address,
             style = Caption1,
-            color = neutral600()
+            color = grey600()
         )
     }
 }
@@ -508,7 +508,7 @@ private fun CantCheckLocation(
         UText(
             text = AppStrings.LOCATION_CERTIFICATION_FAILED,
             style = Caption1Bold,
-            color = danger500()
+            color = red500()
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -516,7 +516,7 @@ private fun CantCheckLocation(
         UText(
             text = session.address,
             style = Caption1,
-            color = neutral600()
+            color = grey600()
         )
     }
 }
@@ -536,7 +536,7 @@ private fun HistorySessionRow(session: NormalHistorySessionUi) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = session.title,
-                color = neutral800(),
+                color = grey800(),
                 style = BodyBold
             )
 
@@ -548,11 +548,11 @@ private fun HistorySessionRow(session: NormalHistorySessionUi) {
         StatusChip(
             text = session.status.text,
             background = when (session.status) {
-                CheckHistoryStatus.PRESENT -> success500()
-                CheckHistoryStatus.LATE -> warning500()
-                CheckHistoryStatus.ABSENT -> danger500()
+                CheckHistoryStatus.PRESENT -> green500()
+                CheckHistoryStatus.LATE -> yellow500()
+                CheckHistoryStatus.ABSENT -> red500()
             },
-            textColor = neutral000()
+            textColor = grey000()
         )
     }
 }
@@ -562,13 +562,13 @@ private fun SessionIcon() {
     Box(
         modifier = Modifier
             .size(40.dp)
-            .background(primary100(), RoundedCornerShape(8.dp)),
+            .background(indigo100(), RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_people_color),
             contentDescription = null,
-            tint = primary500(),
+            tint = indigo500(),
             modifier = Modifier.size(22.dp)
         )
     }
@@ -580,7 +580,7 @@ private fun SessionTimeText(timeRange: String) {
         Icon(
             painter = painterResource(id = R.drawable.ic_clock),
             contentDescription = null,
-            tint = neutral500(),
+            tint = grey500(),
             modifier = Modifier.size(14.dp)
         )
 
@@ -588,7 +588,7 @@ private fun SessionTimeText(timeRange: String) {
 
         Text(
             text = timeRange,
-            color = neutral500(),
+            color = grey500(),
             style = Footnote
         )
     }
@@ -622,7 +622,7 @@ fun EmptyComponent(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(color = neutral000())
+            .background(color = grey000())
             .fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
@@ -639,14 +639,14 @@ fun EmptyComponent(
                 Icon(
                     painter = painter,
                     contentDescription = null,
-                    tint = neutral400(),
+                    tint = grey400(),
                     modifier = Modifier.size(32.dp)
                 )
             }
 
             Text(
                 text = text,
-                color = neutral600(),
+                color = grey600(),
                 style = Callout
             )
         }
@@ -739,7 +739,7 @@ private fun AvailableSessionCardCanCheckPreview() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(neutral100())
+                .background(grey100())
                 .padding(16.dp)
         ) {
             AvailableSessionCard(
@@ -760,7 +760,7 @@ private fun AvailableSessionCardCantCheckPreview() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(neutral100())
+                .background(grey100())
                 .padding(16.dp)
         ) {
             AvailableSessionCard(
