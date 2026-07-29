@@ -129,7 +129,7 @@ fun QrCodeRoute(
 
 
     //QR 생성 (UserCard Json 데이터 기반)
-    val qrContent = uiState.myQrcodeData.ifEmpty { UserCard("테스트 이름","테스트 닉네임").toJson() }
+    val qrContent = uiState.myQrcodeData.ifEmpty { UserCard(name = "테스트 이름", nickname = "테스트 닉네임").toJson() }
     val qrBitmap = remember(qrContent) { QrCodeUtils.generateQrCode(qrContent, 600) }
 
     QrCodeScreen(

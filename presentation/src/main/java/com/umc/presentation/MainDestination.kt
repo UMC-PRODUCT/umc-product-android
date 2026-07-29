@@ -84,6 +84,10 @@ sealed interface MainDestination {
     @Serializable
     data object Qrcode : MainDestination
 
+    //받은 명함 페이지
+    @Serializable
+    data object ReceivedCard : MainDestination
+
 
 
 }
