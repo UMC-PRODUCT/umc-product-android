@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.umc.presentation.act.ActManageRoute
+import com.umc.presentation.act.admin.challenger.AdminChallengerDetailRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
@@ -196,7 +197,22 @@ fun MainNavHost(
 
         /**홈 화면 탭에 대한 내용입니다.**/
         composable<MainDestination.Act> {
-            ActManageRoute()
+            ActManageRoute(
+                onNavigateToChallengerDetail = { challengerId ->
+                    navHostController.navigate(
+                        MainDestination.AdminChallengerDetail(challengerId)
+                    )
+                }
+            )
+        }
+
+        composable<MainDestination.AdminChallengerDetail> { backStackEntry ->
+            val destination =
+                backStackEntry.toRoute<MainDestination.AdminChallengerDetail>()
+            AdminChallengerDetailRoute(
+                challengerId = destination.challengerId,
+                onNavigateToBack = { navHostController.popBackStack() },
+            )
         }
 
         //홈 화면

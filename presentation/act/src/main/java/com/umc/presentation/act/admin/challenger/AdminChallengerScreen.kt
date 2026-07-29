@@ -21,7 +21,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,6 +48,7 @@ import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
+import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
@@ -51,13 +56,25 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
+import com.umc.component.theme.indigo500
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow500
+import com.umc.domain.model.enums.UserPart
 
+private val challengerPartFilters = listOf(
+    UserPart.PLAN,
+    UserPart.DESIGN,
+    UserPart.WEB,
+    UserPart.ANDROID,
+    UserPart.IOS,
+    UserPart.NODEJS,
+    UserPart.SPRINGBOOT,
+)
 
 @Composable
 fun AdminChallengerRoute(
     isActive: Boolean = true,
+    onNavigateToDetail: (Long) -> Unit = {},
     viewModel: AdminChallengerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -69,8 +86,17 @@ fun AdminChallengerRoute(
     AdminChallengerScreen(
         uiState = uiState,
         onSearchKeywordChange = viewModel::onSearchKeywordChanged,
-        onMemberClick = viewModel::getChallengerDetail
+        onPartFilterClick = viewModel::openPartFilter,
+        onMemberClick = onNavigateToDetail,
     )
+
+    if (uiState.isPartFilterVisible) {
+        AdminChallengerPartBottomSheet(
+            selectedPart = uiState.selectedPart,
+            onDismissRequest = viewModel::dismissPartFilter,
+            onPartSelected = viewModel::selectPartFilter,
+        )
+    }
 }
 
 
@@ -106,6 +132,7 @@ private fun EmptyScreen() {
 fun AdminChallengerScreen(
     uiState: AdminChallengerUiState = AdminChallengerUiState(),
     onSearchKeywordChange: (String) -> Unit = {},
+    onPartFilterClick: () -> Unit = {},
     onMemberClick: (Long) -> Unit = {},
 ) {
     LazyColumn(
@@ -117,7 +144,9 @@ fun AdminChallengerScreen(
         item {
             SearchBar(
                 searchKeyword = uiState.searchKeyword,
-                onSearchKeywordChange = onSearchKeywordChange
+                selectedPart = uiState.selectedPart,
+                onSearchKeywordChange = onSearchKeywordChange,
+                onPartFilterClick = onPartFilterClick,
             )
         }
         if (uiState.sections.isEmpty()) {
@@ -137,9 +166,11 @@ fun AdminChallengerScreen(
 @Composable
 private fun SearchBar(
     searchKeyword: String,
+    selectedPart: UserPart?,
     onSearchKeywordChange: (String) -> Unit,
+    onPartFilterClick: () -> Unit,
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .background(grey000())
             .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -160,8 +191,87 @@ private fun SearchBar(
             prevIcon = painterResource(R.drawable.ic_search),
             prevIconTint = grey400()
         )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(14.dp))
+                .background(if (selectedPart == null) grey100() else grey800())
+                .clickable(onClick = onPartFilterClick)
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            UText(
+                text = selectedPart?.filterLabel ?: "파트",
+                style = Footnote,
+                color = if (selectedPart == null) grey600() else grey000(),
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+                painter = painterResource(R.drawable.ic_dropdown_down),
+                contentDescription = "파트 선택",
+                tint = if (selectedPart == null) grey600() else grey000(),
+                modifier = Modifier.size(12.dp),
+            )
+        }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AdminChallengerPartBottomSheet(
+    selectedPart: UserPart?,
+    onDismissRequest: () -> Unit,
+    onPartSelected: (UserPart) -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = grey000(),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(420.dp)
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 24.dp),
+        ) {
+            UText(
+                text = "파트를 선택하세요",
+                style = Title3Bold,
+                color = grey800(),
+                modifier = Modifier.padding(top = 8.dp),
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(challengerPartFilters, key = UserPart::name) { part ->
+                    UText(
+                        text = part.filterLabel,
+                        style = Body,
+                        color = if (selectedPart == part) indigo500() else grey800(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onPartSelected(part) }
+                            .padding(vertical = 14.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+private val UserPart.filterLabel: String
+    get() = when (this) {
+        UserPart.PLAN -> "PM"
+        UserPart.IOS -> "iOS"
+        UserPart.SPRINGBOOT -> "Spring Boot"
+        else -> label
+    }
 
 @Composable
 private fun ChallengerSection(

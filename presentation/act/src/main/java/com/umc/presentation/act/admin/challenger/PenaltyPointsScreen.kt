@@ -2,6 +2,8 @@ package com.umc.presentation.act.admin.challenger
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -100,67 +102,73 @@ fun PenaltyPointsScreen(
     ) {
         DragHeader()
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
 
-        UText(
-            text = AppStrings.PUNISH_TITLE,
-            style = Title3Bold,
-            color = grey800()
-        )
+            UText(
+                text = AppStrings.PUNISH_TITLE,
+                style = Title3Bold,
+                color = grey800()
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        UText(
-            text = AppStrings.PUNISH_CONTENT,
-            style = Subheadline,
-            color = grey600()
-        )
+            UText(
+                text = AppStrings.PUNISH_CONTENT,
+                style = Subheadline,
+                color = grey600()
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        FilterTabs(
-            selectedFilter = uiState.selectedPenaltyFilter,
-            onFilterSelected = onFilterSelected
-        )
+            FilterTabs(
+                selectedFilter = uiState.selectedPenaltyFilter,
+                onFilterSelected = onFilterSelected
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        PenaltyList(
-            penalties = filteredPenalties,
-            selectedPenaltyType = uiState.selectedPenaltyType,
-            onSelectPenalty = onSelectPenalty
-        )
+            PenaltyList(
+                penalties = filteredPenalties,
+                selectedPenaltyType = uiState.selectedPenaltyType,
+                onSelectPenalty = onSelectPenalty
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        UText(
-            text = AppStrings.MEMO,
-            style = SubheadlineBold,
-            color = grey800()
-        )
+            UText(
+                text = AppStrings.MEMO,
+                style = SubheadlineBold,
+                color = grey800()
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        MemoInput(
-            value = uiState.pointMemo,
-            onValueChange = onMemoChange
-        )
+            MemoInput(
+                value = uiState.pointMemo,
+                onValueChange = onMemoChange
+            )
 
-        Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        UButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = AppStrings.REWARD_SUBMIT,
-            enabled = isSubmitEnabled,
-            textStyle = HeadlineBold,
-            textColor = if (isSubmitEnabled) grey000() else grey300(),
-            backgroundColor = if (isSubmitEnabled) indigo500() else grey100(),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
-            cornerRadius = 8.dp,
-            onClick = onSubmitClick
-        )
+            UButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = AppStrings.REWARD_SUBMIT,
+                enabled = isSubmitEnabled,
+                textStyle = HeadlineBold,
+                textColor = if (isSubmitEnabled) grey000() else grey300(),
+                backgroundColor = if (isSubmitEnabled) indigo500() else grey100(),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
+                cornerRadius = 8.dp,
+                onClick = onSubmitClick
+            )
 
-        Spacer(modifier = Modifier.height(72.dp))
+            Spacer(modifier = Modifier.height(72.dp))
+        }
     }
 }
 

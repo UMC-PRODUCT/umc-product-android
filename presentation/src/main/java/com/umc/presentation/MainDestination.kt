@@ -45,6 +45,12 @@ sealed interface MainDestination {
     @Serializable
     data object Home : MainDestination
 
+    @Serializable
+    data object Act : MainDestination
+
+    @Serializable
+    data class AdminChallengerDetail(val challengerId: Long) : MainDestination
+
     //공지 화면
     @Serializable
     data object Notification : MainDestination

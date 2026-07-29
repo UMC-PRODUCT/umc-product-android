@@ -52,10 +52,29 @@ class AdminChallengerViewModel @Inject constructor(
         getChallengers()
     }
 
+    fun openPartFilter() {
+        updateState { copy(isPartFilterVisible = true) }
+    }
+
+    fun dismissPartFilter() {
+        updateState { copy(isPartFilterVisible = false) }
+    }
+
+    fun selectPartFilter(part: UserPart) {
+        updateState {
+            copy(
+                selectedPart = part,
+                isPartFilterVisible = false
+            )
+        }
+        getChallengers(selectedPart = part)
+    }
+
     //관리자용 챌린저 목록 조회
     private fun getChallengers(
         keyword: String? = uiState.value.searchKeyword.trim().takeIf { it.isNotEmpty() },
         debounce: Boolean = false,
+        selectedPart: UserPart? = uiState.value.selectedPart,
     ) {
         challengerListJob?.cancel()
         challengerListJob = viewModelScope.launch {
@@ -63,8 +82,8 @@ class AdminChallengerViewModel @Inject constructor(
             startLoading()
 
             val responses = coroutineScope {
-                UserPart.entries
-                    .filterNot { it == UserPart.UNKNOWN }
+                (selectedPart?.let(::listOf)
+                    ?: UserPart.entries.filterNot { it == UserPart.UNKNOWN })
                     .map { part ->
                         async {
                             getAdminChallengerListUseCase(
@@ -174,6 +193,20 @@ class AdminChallengerViewModel @Inject constructor(
         updateState { copy(customReason = reason) }
     }
 
+    fun resetPointGrantForm() {
+        updateState {
+            copy(
+                selectedRewardType = null,
+                selectedPenaltyFilter = PunishCategory.ALL,
+                selectedPenaltyType = null,
+                pointMemo = "",
+                customRewardScore = 0,
+                customPunishScore = 0,
+                customReason = "",
+            )
+        }
+    }
+
     fun increaseRewardScore() {
         updateState { copy(customRewardScore = customRewardScore + 1) }
     }
@@ -240,6 +273,8 @@ class AdminChallengerViewModel @Inject constructor(
 data class AdminChallengerUiState(
     //검색어
     val searchKeyword: String = "",
+    val selectedPart: UserPart? = null,
+    val isPartFilterVisible: Boolean = false,
     //파트별 챌린저 목록
     val sections: List<AdminChallengerSectionUi> = emptyList(),
     //선택한 챌린저 상세 정보
