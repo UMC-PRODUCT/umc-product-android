@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -104,19 +103,25 @@ fun NormalAttendanceRoute(
     var pendingAttendanceSession by remember {
         mutableStateOf<NormalAvailableSessionUi?>(null)
     }
+    var pendingLocationVerificationSessionId by remember {
+        mutableStateOf<Long?>(null)
+    }
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         val pendingSession = pendingAttendanceSession
+        val pendingVerificationSessionId = pendingLocationVerificationSessionId
         pendingAttendanceSession = null
+        pendingLocationVerificationSessionId = null
 
-        if (granted && pendingSession != null) {
-            viewModel.requestAttendance(pendingSession)
-        } else if (!granted) {
+        if (granted) {
+            pendingSession?.let(viewModel::requestAttendance)
+            pendingVerificationSessionId?.let(viewModel::verifySessionLocation)
+        } else if (pendingSession != null || pendingVerificationSessionId != null) {
             Toast.makeText(
                 context,
-                "출석 인증을 위해 정확한 위치 권한이 필요합니다.",
+                "출석 위치 확인을 위해 정확한 위치 권한이 필요합니다.",
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -138,7 +143,31 @@ fun NormalAttendanceRoute(
 
     NormalAttendanceScreen(
         uiState = uiState,
-        onExpandToggle = viewModel::toggleSessionExpanded,
+        onExpandToggle = { sessionId ->
+            val session = uiState.availableSessions.firstOrNull { it.id == sessionId }
+            val willExpand = uiState.expandedSessionId != sessionId
+            viewModel.toggleSessionExpanded(sessionId)
+
+            if (willExpand && session != null && !session.isOnline) {
+                val hasLocationPermission =
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                if (hasLocationPermission) {
+                    viewModel.verifySessionLocation(sessionId)
+                } else {
+                    pendingLocationVerificationSessionId = sessionId
+                    locationPermissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
+                    )
+                }
+            }
+        },
         onAttendanceClick = { session ->
             val hasLocationPermission =
                 ContextCompat.checkSelfPermission(
@@ -376,34 +405,44 @@ private fun AvailableSessionExpandedContent(
     onAttendanceClick: () -> Unit,
     onReasonClick: () -> Unit,
 ) {
-    val hasAttendanceLocation =
-        session.latitude != null &&
-            session.longitude != null &&
-            !(session.latitude == 0.0 && session.longitude == 0.0)
-    val canRequestAttendance = session.isOnline || hasAttendanceLocation
+    val canRequestAttendance =
+        session.isOnline || session.isLocationCertified == true
 
     Column() {
         Spacer(modifier = Modifier.height(16.dp))
 
-        AttendanceLocationMap(session)
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(top = 6.dp)
-                .shadow(
-                    elevation = 6.dp,
-                    shape = RoundedCornerShape(4.dp),
-                    clip = false
-                )
-                .clip(RoundedCornerShape(4.dp))
-                .background(grey000())
+                .height(150.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(grey200())
         ) {
-            if (session.isOnline) {
-                OnlineSessionLocation()
-            } else {
-                AttendanceLocationInfo(session)
+            AttendanceLocationMap(
+                session = session,
+                modifier = Modifier.fillMaxSize(),
+            )
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 8.dp)
+                    .shadow(
+                        elevation = 1.dp,
+                        shape = RoundedCornerShape(4.dp),
+                        clip = false
+                    )
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(grey000())
+            ) {
+                if (session.isOnline) {
+                    OnlineSessionLocation()
+                } else if (session.isLocationCertified == true) {
+                    CanCheckLocation(session)
+                } else {
+                    CantCheckLocation(session)
+                }
             }
         }
 
@@ -555,7 +594,10 @@ private fun AvailableSessionExpandedContent(
 
 @OptIn(ExperimentalNaverMapApi::class)
 @Composable
-private fun AttendanceLocationMap(session: NormalAvailableSessionUi) {
+private fun AttendanceLocationMap(
+    session: NormalAvailableSessionUi,
+    modifier: Modifier = Modifier,
+) {
     val latitude = session.latitude
     val longitude = session.longitude
     val hasLocation =
@@ -565,10 +607,8 @@ private fun AttendanceLocationMap(session: NormalAvailableSessionUi) {
             !(latitude == 0.0 && longitude == 0.0)
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .height(150.dp)
-            .clip(RoundedCornerShape(8.dp))
             .background(grey200()),
         contentAlignment = Alignment.Center
     ) {
@@ -608,34 +648,6 @@ private fun AttendanceLocationMap(session: NormalAvailableSessionUi) {
     }
 }
 
-@Composable
-private fun AttendanceLocationInfo(session: NormalAvailableSessionUi) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_location),
-            contentDescription = null,
-            tint = indigo500(),
-            modifier = Modifier.size(15.dp),
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        UText(
-            text = "출석 위치 반경 50m 이내에서 인증",
-            style = Caption1Bold,
-            color = indigo500(),
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        UText(
-            text = session.address,
-            style = Caption1,
-            color = grey600(),
-        )
-    }
-}
 
 @Composable
 private fun OnlineSessionLocation() {
@@ -753,11 +765,15 @@ private fun HistorySessionRow(session: NormalHistorySessionUi) {
         StatusChip(
             text = session.status.text,
             background = when (session.status) {
+                CheckHistoryStatus.PRESENT -> green100()
+                CheckHistoryStatus.LATE -> yellow100()
+                CheckHistoryStatus.ABSENT -> red100()
+            },
+            textColor = when (session.status) {
                 CheckHistoryStatus.PRESENT -> green500()
                 CheckHistoryStatus.LATE -> yellow500()
                 CheckHistoryStatus.ABSENT -> red500()
             },
-            textColor = grey000()
         )
     }
 }

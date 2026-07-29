@@ -45,6 +45,12 @@ interface ScheduleApi {
         @Path("scheduleId") scheduleId: Long
     ): ApiResponse<Unit>
 
+    // 출석 기록이 있는 일정 강제 삭제하기 (SUPER_ADMIN 전용)
+    @DELETE(Endpoints.Schedule.FORCE_DELETE)
+    suspend fun forceDeleteSchedule(
+        @Path("scheduleId") scheduleId: Long
+    ): ApiResponse<Unit>
+
 
     //일정 생성하기 (v2)
     @POST(Endpoints.Schedule.CREATE_V2)
@@ -57,14 +63,14 @@ interface ScheduleApi {
     suspend fun updateSchedule(
         @Path("scheduleId") scheduleId: Long,
         @Body request: UpdateScheduleRequest
-    ) : ApiResponse<Unit>
+    ) : ApiResponse<String>
 
     // 일정 위치 변경하기
     @PATCH(Endpoints.Schedule.DETAIL_V2)
     suspend fun updateScheduleLocation(
         @Path("scheduleId") scheduleId: Long,
         @Body request: UpdateScheduleLocationV2Request
-    ): ApiResponse<Unit>
+    ): ApiResponse<String>
 
 
     // 스터디 그룹 일정 생성

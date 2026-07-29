@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -117,6 +118,7 @@ fun AttendanceRoute(
 
     fixLocationScheduleId?.let { scheduleId ->
         ModalBottomSheet(
+            modifier = Modifier.imePadding(),
             onDismissRequest = { fixLocationScheduleId = null },
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             containerColor = Color.Transparent,
@@ -151,6 +153,7 @@ fun AttendanceRoute(
 
     if (uiState.deleteTargetId != null) {
         UBasicDialog(
+            showCloseButton = false,
             title = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_TITLE,
             content = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONTENT,
             positiveText = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_CONFIRM,
@@ -158,6 +161,19 @@ fun AttendanceRoute(
             onPositive = viewModel::deleteSelectedSession,
             onNegative = viewModel::dismissDeleteSession,
             onDismissRequest = viewModel::dismissDeleteSession
+        )
+    }
+
+    if (uiState.forceDeleteTargetId != null) {
+        UBasicDialog(
+            showCloseButton = false,
+            title = AppStrings.ADMIN_CHECK_FORCE_DELETE_TITLE,
+            content = AppStrings.ADMIN_CHECK_FORCE_DELETE_CONTENT,
+            positiveText = AppStrings.NOTICE_WRITE_VOTE_DELETE,
+            type = DialogType.ERROR,
+            onPositive = viewModel::forceDeleteSelectedSession,
+            onNegative = viewModel::dismissForceDeleteSession,
+            onDismissRequest = viewModel::dismissForceDeleteSession
         )
     }
 }
@@ -216,46 +232,51 @@ fun AdminSessionCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    UText(
-                        text = session.title,
-                        style = HeadlineBold,
-                        color = grey800(),
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Surface(
-                        color = if (session.status == AdminSessionStatus.IN_PROGRESS) {
-                            indigo100()
-                        } else {
-                            grey50()
-                        },
-                        shape = RoundedCornerShape(4.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         UText(
-                            text = session.status.text,
-                            style = Caption2Bold,
-                            color = if (session.status == AdminSessionStatus.IN_PROGRESS) {
-                                indigo500()
-                            } else {
-                                grey600()
-                            },
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                            text = session.title,
+                            style = HeadlineBold,
+                            color = grey800(),
+                            modifier = Modifier.weight(1f),
                             maxLines = 1,
-                            softWrap = false
+                            overflow = TextOverflow.Ellipsis
                         )
+                        Surface(
+                            color = if (session.status == AdminSessionStatus.IN_PROGRESS) {
+                                indigo100()
+                            } else {
+                                grey50()
+                            },
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            UText(
+                                text = session.status.text,
+                                style = Caption2Bold,
+                                color = if (session.status == AdminSessionStatus.IN_PROGRESS) {
+                                    indigo500()
+                                } else {
+                                    grey600()
+                                },
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
                     }
                 }
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     UButton(
@@ -352,19 +373,6 @@ fun AdminSessionCard(
             }
         }
     }
-}
-
-private fun String.toAttendanceDisplayDate(): String {
-    val date = substringBefore(" ")
-    val localDate = runCatching {
-        LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE)
-    }.recoverCatching {
-        LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy.MM.dd"))
-    }.getOrNull() ?: return this
-
-    return localDate.format(
-        DateTimeFormatter.ofPattern("yyyy.MM.dd (E)", Locale.KOREAN)
-    )
 }
 
 @Composable
@@ -468,6 +476,7 @@ private fun CardMetaItem(
             style = Footnote,
             color = grey600()
         )
+
     }
 }
 

@@ -1,5 +1,6 @@
 package com.umc.data.response.attendance
 
+import com.umc.domain.model.UDomainFormat.parseDateTime
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.act.check.UserCheckHistory
@@ -13,37 +14,46 @@ data class ScheduleAttendanceV2Response(
     val tags: List<String> = emptyList(),
     val startsAt: String,
     val endsAt: String,
+    val isOnline: Boolean = false,
     val location: ScheduleLocationV2Response? = null,
     val attendanceStatus: String? = null,
     val isAttendanceChecked: Boolean = false
 ) {
-    fun toAvailable() = UserCheckAvailable(
-        id = scheduleId,
-        sheetId = scheduleId,
-        title = name,
-        tags = tags.mapNotNull { runCatching { CategoryType.valueOf(it) }.getOrNull() },
-        startTime = startsAt,
-        endTime = endsAt,
-        status = CheckAvailableStatus.fromServerValue(attendanceStatus),
-        latitude = location?.latitude ?: 0.0,
-        longitude = location?.longitude ?: 0.0,
-        address = location?.locationName.orEmpty(),
-        isLocationCertified = null,
-        isOnline = location == null
-    )
+    fun toAvailable(): UserCheckAvailable {
+        val (_, startTime) = startsAt.parseDateTime()
+        val (_, endTime) = endsAt.parseDateTime()
+        return UserCheckAvailable(
+            id = scheduleId,
+            sheetId = scheduleId,
+            title = name,
+            tags = tags.mapNotNull { runCatching { CategoryType.valueOf(it) }.getOrNull() },
+            startTime = startTime,
+            endTime = endTime,
+            status = CheckAvailableStatus.fromServerValue(attendanceStatus),
+            latitude = location?.latitude ?: 0.0,
+            longitude = location?.longitude ?: 0.0,
+            address = location?.locationName.orEmpty(),
+            isLocationCertified = null,
+            isOnline = isOnline,
+        )
+    }
 
-    fun toHistory(index: Int) = UserCheckHistory(
-        id = scheduleId.toInt(),
-        title = name,
-        startTime = startsAt,
-        endTime = endsAt,
-        status = when (attendanceStatus) {
-            "PRESENT", "EXCUSED" -> CheckHistoryStatus.PRESENT
-            "LATE" -> CheckHistoryStatus.LATE
-            else -> CheckHistoryStatus.ABSENT
-        },
-        tags = tags.mapNotNull { runCatching { CategoryType.valueOf(it) }.getOrNull() }
-    )
+    fun toHistory(index: Int): UserCheckHistory {
+        val (_, startTime) = startsAt.parseDateTime()
+        val (_, endTime) = endsAt.parseDateTime()
+        return UserCheckHistory(
+            id = scheduleId.toInt(),
+            title = name,
+            startTime = startTime,
+            endTime = endTime,
+            status = when (attendanceStatus) {
+                "PRESENT", "EXCUSED" -> CheckHistoryStatus.PRESENT
+                "LATE" -> CheckHistoryStatus.LATE
+                else -> CheckHistoryStatus.ABSENT
+            },
+            tags = tags.mapNotNull { runCatching { CategoryType.valueOf(it) }.getOrNull() }
+        )
+    }
 }
 
 data class ScheduleLocationV2Response(
@@ -86,6 +96,17 @@ data class AttendanceDecisionV2Request(
     val participantMemberId: Long,
     val isApproved: Boolean,
     val reason: String? = null
+)
+
+data class ScheduleParticipantAttendanceV2Response(
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val status: String? = null,
+    val excuseReason: String? = null,
+    val isPendingDecision: Boolean = false,
+    val hasDecisionMakerMember: Boolean = false,
+    val decidedAt: String? = null,
+    val decisionReason: String? = null,
 )
 
 data class AttendanceCheckV2Request(
