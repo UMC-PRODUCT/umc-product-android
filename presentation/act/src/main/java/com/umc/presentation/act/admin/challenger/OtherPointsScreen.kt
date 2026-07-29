@@ -220,7 +220,7 @@ private fun ScoreStepper(
                     painter = painterResource(R.drawable.ic_minus_circle),
                     contentDescription = null,
                     tint = minusTint,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
 
@@ -266,9 +266,10 @@ private fun ReasonInput(
         backgroundColor = grey000(),
         strokeColor = grey300(),
         focusStrokeColor = grey900(),
+        verticalAlignment = Alignment.Top,
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .height(100.dp),
     )
 }
 

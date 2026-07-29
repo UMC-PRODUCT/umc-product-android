@@ -67,6 +67,7 @@ import com.umc.component.theme.indigo500
  * @param onClickNextIcon nextIcon 클릭 콜백 (입력값 지우기·비밀번호 표시 전환 등). null 이면 클릭 불가
  * @param visualTransformation 입력 텍스트 표시 변환 (비밀번호 마스킹 등)
  * @param interactionSource 포커스 상태를 호출부에서 관찰해야 할 때 외부에서 주입
+ * @param verticalAlignment 입력 내용의 세로 정렬. 기본값은 중앙 정렬
  */
 @Composable
 fun UTextField(
@@ -94,6 +95,7 @@ fun UTextField(
     onClickNextIcon: (() -> Unit)? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
 ) {
     val isFocused by interactionSource.collectIsFocusedAsState()
 
@@ -127,7 +129,7 @@ fun UTextField(
                     .background(currentBackgroundColor, shape)
                     .border(1.dp, currentStrokeColor, shape)
                     .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = verticalAlignment,
             ) {
                 if (prevIcon != null) {
                     Icon(

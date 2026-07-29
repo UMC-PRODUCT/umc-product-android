@@ -53,7 +53,8 @@ private data class ManageTab(
 
 @Composable
 fun ActManageRoute(
-    vm: ActViewModel = hiltViewModel()
+    vm: ActViewModel = hiltViewModel(),
+    onNavigateToChallengerDetail: (Long) -> Unit = {},
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
 
@@ -63,16 +64,18 @@ fun ActManageRoute(
 
     ActManageScreen(
         uiState = uiState,
-        onAdminCheckedChange = vm::setAdminMode
+        onAdminCheckedChange = vm::setAdminMode,
+        onNavigateToChallengerDetail = onNavigateToChallengerDetail,
     )
 }
 
 @Composable
 private fun ActManageScreen(
     uiState: ActUiState,
-    onAdminCheckedChange: (Boolean) -> Unit
+    onAdminCheckedChange: (Boolean) -> Unit,
+    onNavigateToChallengerDetail: (Long) -> Unit = {},
 ) {
-    val tabs = remember(uiState.isAdmin) {
+    val tabs = remember(uiState.isAdmin, onNavigateToChallengerDetail) {
         if (uiState.isAdmin) {
             listOf(
                 ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { isActive ->
@@ -80,7 +83,10 @@ private fun ActManageScreen(
                 },
                 ManageTab(AppStrings.TAB_STUDY_ADMIN) { ComingSoonScreen() },
                 ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { isActive ->
-                    AdminChallengerRoute(isActive = isActive)
+                    AdminChallengerRoute(
+                        isActive = isActive,
+                        onNavigateToDetail = onNavigateToChallengerDetail,
+                    )
                 }
             )
         } else {
