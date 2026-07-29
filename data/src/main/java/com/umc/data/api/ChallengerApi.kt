@@ -3,6 +3,7 @@ package com.umc.data.api
 import com.umc.data.request.challenger.AddChallengerPointRequest
 import com.umc.data.response.challenger.ChallengerCursorResponse
 import com.umc.data.response.challenger.ChallengerResponse
+import com.umc.data.response.challenger.ChallengerSearchV2Response
 import com.umc.data.response.member.MemberResponse
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
@@ -27,18 +28,16 @@ interface ChallengerApi {
     ): ApiResponse<ChallengerResponse>
     
     //커서를 통한 유저 검색
-    @GET(Endpoints.Challenger.SEARCH_CURSOR)
+    @GET(Endpoints.Challenger.SEARCH)
     suspend fun getChallengers(
-        @Query("cursor") cursor: Long?,
+        @Query("page") page: Int,
         @Query("size") size: Int,
         @Query("part") part: String?,
-        @Query("name") name: String?,
-        @Query("nickname") nickname: String?,
         @Query("keyword") keyword: String?,
         @Query("schoolId") schoolId: Long?,
         @Query("chapterId") chapterId: Long?,
         @Query("gisuId") gisuId: Long?
-    ): ApiResponse<ChallengerCursorResponse>
+    ): ApiResponse<ChallengerSearchV2Response>
 
     @DELETE(Endpoints.Challenger.DELETE_POINT)
     suspend fun deleteChallengerPoint(

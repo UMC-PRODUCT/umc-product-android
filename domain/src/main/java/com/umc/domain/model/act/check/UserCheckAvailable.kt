@@ -17,5 +17,6 @@ data class UserCheckAvailable(
     val latitude: Double,
     val longitude: Double,
     val address: String,
-    val isLocationCertified: Boolean? = null
+    val isLocationCertified: Boolean? = null,
+    val isOnline: Boolean = false,
 )

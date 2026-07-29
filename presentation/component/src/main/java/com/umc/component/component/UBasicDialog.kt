@@ -60,7 +60,7 @@ import com.umc.component.theme.grey800
  *
  */
 
-enum class DialogType { WARNING, CANCEL, SUCCESS }
+enum class DialogType { WARNING, CANCEL, ERROR, SUCCESS }
 
 @Composable
 fun UBasicDialog(
@@ -88,6 +88,9 @@ fun UBasicDialog(
         when (type) {
         DialogType.WARNING -> {
             listOf(R.drawable.ic_check_failed, red100(), red500(), red500())
+        }
+        DialogType.ERROR -> {
+            listOf(R.drawable.ic_error_filled, red100(), red500(), red500())
         }
         DialogType.CANCEL -> {
             listOf(R.drawable.ic_check_failed, red100(), red500(), red500())

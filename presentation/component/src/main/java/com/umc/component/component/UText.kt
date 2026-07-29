@@ -21,6 +21,24 @@ import androidx.compose.ui.unit.Density
 import com.umc.component.theme.grey800
 import com.umc.component.theme.indigo600
 
+/**
+ * 시스템 글자 크기 설정과 관계없이 디자인 스펙의 글자 크기를 유지하는 공용 텍스트입니다.
+ *
+ * 활동 화면의 목록, 상태 카드, 다이얼로그에서 Compose [Text] 대신 사용합니다.
+ * 색상을 지정하지 않으면 전달된 [style]의 색상을 그대로 사용합니다.
+ *
+ * @param text 표시할 문자열
+ * @param modifier 크기와 배치를 지정하는 Modifier
+ * @param color 텍스트 색상
+ * @param textDecoration 텍스트 장식
+ * @param textAlign 텍스트 정렬
+ * @param overflow 영역을 벗어난 텍스트 처리 방식
+ * @param softWrap 자동 줄바꿈 여부
+ * @param maxLines 최대 줄 수
+ * @param minLines 최소 줄 수
+ * @param onTextLayout 텍스트 레이아웃 완료 콜백
+ * @param style 텍스트 스타일
+ */
 @Composable
 fun UText(
     text: String,
@@ -94,17 +112,15 @@ fun UText(
 }
 
 /**
- * 문장에서 특정 부분을 강조할 때 사용하는 텍스트 포맷
- * -> Home 화면의 프로필 카드에서 'X일째 성장하고 있어요' 텍스트 전용
- * 
- * **/
+ * 홈 프로필 카드에서 활동 일수를 강조한 문장을 생성합니다.
+ *
+ * @param day 누적 활동 일수
+ */
 @Composable
 fun getGrowthText(day: Int): AnnotatedString = buildAnnotatedString {
-    // 강조할 부분 (색상 적용)
     withStyle(style = SpanStyle(color = indigo600())) {
         append("${day}일째")
     }
-    // 나머지 부분
     withStyle(style = SpanStyle(color = grey800())) {
         append(" 성장하고 있어요")
     }

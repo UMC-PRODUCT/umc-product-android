@@ -35,6 +35,9 @@ interface ScheduleRepository {
     //일정 삭제하기
     suspend fun deleteSchedule(scheduleId: Long) : ApiState<Unit>
 
+    //출석 기록이 있는 일정 강제 삭제하기
+    suspend fun forceDeleteSchedule(scheduleId: Long): ApiState<Unit>
+
     // 위치 변경하기
     suspend fun updateScheduleLocation(
         scheduleId: Long,
