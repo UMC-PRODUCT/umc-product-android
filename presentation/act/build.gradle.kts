@@ -53,6 +53,9 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
+    implementation(libs.naver.maps.sdk)
+    implementation(libs.naver.maps.compose)
+    implementation(libs.googleplay.services.location)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

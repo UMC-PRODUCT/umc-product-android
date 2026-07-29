@@ -1,5 +1,10 @@
 package com.umc.presentation.act.normal.attendance
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -27,18 +32,29 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.content.ContextCompat
+import com.naver.maps.geometry.LatLng
+import com.naver.maps.map.CameraPosition
+import com.naver.maps.map.compose.ExperimentalNaverMapApi
+import com.naver.maps.map.compose.MapUiSettings
+import com.naver.maps.map.compose.NaverMap
+import com.naver.maps.map.compose.rememberCameraPositionState
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
@@ -76,6 +92,7 @@ import com.umc.component.theme.yellow700
 import com.umc.component.theme.yellow900
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun NormalAttendanceRoute(
@@ -83,15 +100,64 @@ fun NormalAttendanceRoute(
     viewModel: NormalAttendanceViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var pendingAttendanceSession by remember {
+        mutableStateOf<NormalAvailableSessionUi?>(null)
+    }
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        val pendingSession = pendingAttendanceSession
+        pendingAttendanceSession = null
+
+        if (granted && pendingSession != null) {
+            viewModel.requestAttendance(pendingSession)
+        } else if (!granted) {
+            Toast.makeText(
+                context,
+                "출석 인증을 위해 정확한 위치 권한이 필요합니다.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
 
     LaunchedEffect(isActive) {
         if (isActive) viewModel.refresh()
     }
 
+    LaunchedEffect(viewModel) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is NormalAttendanceEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     NormalAttendanceScreen(
         uiState = uiState,
         onExpandToggle = viewModel::toggleSessionExpanded,
-        onAttendanceClick = viewModel::requestAttendance,
+        onAttendanceClick = { session ->
+            val hasLocationPermission =
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+
+            if (session.isOnline || hasLocationPermission) {
+                viewModel.requestAttendance(session)
+            } else {
+                pendingAttendanceSession = session
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+        },
         onReasonClick = viewModel::openReasonDialog,
         onReasonChange = viewModel::onReasonChanged,
         onDismissReason = viewModel::dismissReasonDialog,
@@ -310,50 +376,34 @@ private fun AvailableSessionExpandedContent(
     onAttendanceClick: () -> Unit,
     onReasonClick: () -> Unit,
 ) {
-    val canRequestAttendance = session.isOnline || session.isLocationCertified
+    val hasAttendanceLocation =
+        session.latitude != null &&
+            session.longitude != null &&
+            !(session.latitude == 0.0 && session.longitude == 0.0)
+    val canRequestAttendance = session.isOnline || hasAttendanceLocation
 
     Column() {
         Spacer(modifier = Modifier.height(16.dp))
 
+        AttendanceLocationMap(session)
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(grey200())
+                .wrapContentHeight()
+                .padding(top = 6.dp)
+                .shadow(
+                    elevation = 6.dp,
+                    shape = RoundedCornerShape(4.dp),
+                    clip = false
+                )
+                .clip(RoundedCornerShape(4.dp))
+                .background(grey000())
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_location_marker),
-                contentDescription = null,
-                tint = Color.Unspecified,
-                modifier = Modifier
-                    .size(32.dp)
-                    .align(Alignment.Center)
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(horizontal = 6.dp)
-                    .padding(bottom = 6.dp)
-                    .shadow(
-                        elevation = 6.dp,
-                        shape = RoundedCornerShape(4.dp),
-                        clip = false
-                    )
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(grey000())
-                    .align(Alignment.BottomCenter)
-
-            ) {
-                if (session.isOnline) {
-                    OnlineSessionLocation()
-                } else if(session.isLocationCertified) {
-                    CanCheckLocation(session)
-                } else {
-                    CantCheckLocation(session)
-                }
+            if (session.isOnline) {
+                OnlineSessionLocation()
+            } else {
+                AttendanceLocationInfo(session)
             }
         }
 
@@ -401,39 +451,39 @@ private fun AvailableSessionExpandedContent(
             }
 
             CheckAvailableStatus.PENDING -> {
-                Box(
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(yellow100()),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(yellow100()),
-                    contentAlignment = Alignment.Center
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            modifier = Modifier.size(32.dp),
-                            painter = painterResource(R.drawable.ic_hourglass),
-                            contentDescription = null,
-                            tint = yellow500()
-                        )
-                        UText(
-                            text = AppStrings.ATTENDANCE_STATUS_PENDING_TITLE,
-                            style = HeadlineBold,
-                            color = yellow900()
-                        )
-                        UText(
-                            text = AppStrings.ATTENDANCE_STATUS_PENDING_DESCRIPTION,
-                            style = Footnote,
-                            color = yellow700()
-                        )
-                    }
+                    Icon(
+                        modifier = Modifier.size(32.dp),
+                        painter = painterResource(R.drawable.ic_hourglass),
+                        contentDescription = null,
+                        tint = yellow500()
+                    )
+                    UText(
+                        text = AppStrings.ATTENDANCE_STATUS_PENDING_TITLE,
+                        style = HeadlineBold,
+                        color = yellow900()
+                    )
+                    UText(
+                        text = AppStrings.ATTENDANCE_STATUS_PENDING_DESCRIPTION,
+                        style = Footnote,
+                        color = yellow700()
+                    )
                 }
             }
+        }
 
             CheckAvailableStatus.COMPLETED -> {
                 Box(
@@ -500,6 +550,90 @@ private fun AvailableSessionExpandedContent(
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalNaverMapApi::class)
+@Composable
+private fun AttendanceLocationMap(session: NormalAvailableSessionUi) {
+    val latitude = session.latitude
+    val longitude = session.longitude
+    val hasLocation =
+        !session.isOnline &&
+            latitude != null &&
+            longitude != null &&
+            !(latitude == 0.0 && longitude == 0.0)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(grey200()),
+        contentAlignment = Alignment.Center
+    ) {
+        if (hasLocation) {
+            val attendancePosition = LatLng(latitude!!, longitude!!)
+            val cameraPositionState = rememberCameraPositionState {
+                position = CameraPosition(attendancePosition, 16.0)
+            }
+
+            LaunchedEffect(latitude, longitude) {
+                cameraPositionState.position = CameraPosition(attendancePosition, 16.0)
+            }
+
+            NaverMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                uiSettings = MapUiSettings(
+                    isLocationButtonEnabled = false,
+                    isZoomControlEnabled = false
+                )
+            )
+
+            Icon(
+                painter = painterResource(id = R.drawable.ic_location_marker),
+                contentDescription = "출석 인증 위치",
+                tint = Color.Unspecified,
+                modifier = Modifier.size(32.dp)
+            )
+        } else {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_location_marker),
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AttendanceLocationInfo(session: NormalAvailableSessionUi) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_location),
+            contentDescription = null,
+            tint = indigo500(),
+            modifier = Modifier.size(15.dp),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        UText(
+            text = "출석 위치 반경 50m 이내에서 인증",
+            style = Caption1Bold,
+            color = indigo500(),
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        UText(
+            text = session.address,
+            style = Caption1,
+            color = grey600(),
+        )
     }
 }
 

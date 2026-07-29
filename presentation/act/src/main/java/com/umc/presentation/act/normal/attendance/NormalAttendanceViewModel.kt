@@ -1,6 +1,14 @@
 package com.umc.presentation.act.normal.attendance
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Location
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
@@ -14,11 +22,13 @@ import com.umc.domain.usecase.attendance.GetAttendanceHistoryUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceReasonUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NormalAttendanceViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val getAttendanceAvailableUseCase: GetAttendanceAvailableUseCase, //출석 가능한 세션 조회
     private val getAttendanceHistoryUseCase: GetAttendanceHistoryUseCase, //내 출석 기록 조회
     private val postAttendanceCheckUseCase: PostAttendanceCheckUseCase, //출석 요청
@@ -26,6 +36,8 @@ class NormalAttendanceViewModel @Inject constructor(
 ) : BaseViewModel<NormalAttendanceUiState, NormalAttendanceEvent>(
     NormalAttendanceUiState()
 ) {
+    private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
     //초기 출석 정보 조회
     //출석 가능 세션과 내 출석 기록 새로고침
     fun refresh() {
@@ -40,17 +52,98 @@ class NormalAttendanceViewModel @Inject constructor(
         }
     }
 
-    //위치 인증된 세션 출석 요청
+    //현재 위치를 조회해 세션 위치 반경 50m 이내인지 인증한 뒤 출석 요청
     fun requestAttendance(session: NormalAvailableSessionUi) {
+        if (session.isOnline) {
+            submitAttendance(
+                session = session,
+                latitude = null,
+                longitude = null,
+                locationVerified = true
+            )
+            return
+        }
+
+        if (!hasLocationPermission()) {
+            emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
+            return
+        }
+
+        val targetLatitude = session.latitude
+        val targetLongitude = session.longitude
+        if (
+            targetLatitude == null ||
+            targetLongitude == null ||
+            (targetLatitude == 0.0 && targetLongitude == 0.0)
+        ) {
+            emitEvent(NormalAttendanceEvent.ShowToast("출석 위치 정보가 없습니다."))
+            return
+        }
+
+        startLoading()
+        try {
+            fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                CancellationTokenSource().token
+            ).addOnSuccessListener { currentLocation ->
+                if (currentLocation == null) {
+                    stopLoading()
+                    emitEvent(NormalAttendanceEvent.ShowToast("현재 위치를 확인할 수 없습니다."))
+                    return@addOnSuccessListener
+                }
+
+                val distanceResult = FloatArray(1)
+                Location.distanceBetween(
+                    currentLocation.latitude,
+                    currentLocation.longitude,
+                    targetLatitude,
+                    targetLongitude,
+                    distanceResult
+                )
+
+                if (distanceResult[0] > ATTENDANCE_RADIUS_METERS) {
+                    stopLoading()
+                    emitEvent(
+                        NormalAttendanceEvent.ShowToast(
+                            "출석 위치에서 ${distanceResult[0].toInt()}m 떨어져 있습니다."
+                        )
+                    )
+                    return@addOnSuccessListener
+                }
+
+                submitAttendance(
+                    session = session,
+                    latitude = currentLocation.latitude,
+                    longitude = currentLocation.longitude,
+                    locationVerified = true,
+                    loadingAlreadyStarted = true
+                )
+            }.addOnFailureListener {
+                stopLoading()
+                emitEvent(NormalAttendanceEvent.ShowToast("현재 위치 확인에 실패했습니다."))
+            }
+        } catch (_: SecurityException) {
+            stopLoading()
+            emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
+        }
+    }
+
+    private fun submitAttendance(
+        session: NormalAvailableSessionUi,
+        latitude: Double?,
+        longitude: Double?,
+        locationVerified: Boolean,
+        loadingAlreadyStarted: Boolean = false
+    ) {
         viewModelScope.launch {
-            startLoading()
+            if (!loadingAlreadyStarted) startLoading()
             resultResponse(
                 response = postAttendanceCheckUseCase(
                     AttendanceCheckRequest(
                         attendanceSheetId = session.sheetId,
-                        latitude = session.latitude,
-                        longitude = session.longitude,
-                        locationVerified = session.isLocationCertified
+                        latitude = latitude,
+                        longitude = longitude,
+                        locationVerified = locationVerified
                     )
                 ),
                 successCallback = {
@@ -60,6 +153,13 @@ class NormalAttendanceViewModel @Inject constructor(
                 errorCallback = { emitEvent(NormalAttendanceEvent.ShowToast(it.message)) }
             )
         }
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     //출석 실패 사유 다이얼로그 열기
@@ -195,3 +295,5 @@ private fun UserCheckHistory.toUi(): NormalHistorySessionUi {
         status = status
     )
 }
+
+private const val ATTENDANCE_RADIUS_METERS = 50f
