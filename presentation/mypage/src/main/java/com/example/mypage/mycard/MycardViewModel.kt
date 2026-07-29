@@ -1,8 +1,10 @@
 package com.example.mypage.mycard
 
 import androidx.lifecycle.viewModelScope
+import com.example.mypage.dialog.ExchangeStep
 import com.example.mypage.mypage.MypageEvent
 import com.example.mypage.mypage.MypageUiState
+import com.example.mypage.nearby.NearbyManager
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
@@ -11,6 +13,7 @@ import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
+import com.umc.domain.model.mypage.NearbyUserInfo
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
 import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
@@ -28,6 +31,7 @@ class MycardViewModel @Inject constructor(
 
 ) : BaseViewModel<MycardUiState, MycardEvent>(
     MycardUiState()){
+
 
 
     //초기 상태
@@ -110,6 +114,7 @@ class MycardViewModel @Inject constructor(
         updateState { copy(myQrcodeData = qrJsonContent) }
 
     }
+
 
 
 }

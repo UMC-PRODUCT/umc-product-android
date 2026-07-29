@@ -1,5 +1,6 @@
 package com.example.mypage.mycard
 
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -25,7 +26,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,12 +47,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.example.mypage.dialog.CardExchangeBottomSheet
 import com.example.mypage.mypage.MypageUiState
 import com.example.mypage.mypage.SocialBadge
+import com.example.mypage.nearby.NearbyEvent
+import com.example.mypage.nearby.NearbyViewModel
 import com.example.mypage.qrcode.QrCodeUtils
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.component.UToast
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
@@ -67,20 +75,49 @@ import com.umc.component.theme.indigo500
 import com.umc.component.theme.white
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UserType
+import com.umc.domain.model.mypage.NearbyUserInfo
 import kotlinx.coroutines.flow.collectLatest
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MycardRoute(
     viewModel: MycardViewModel = hiltViewModel(),
+    nearbyViewModel: NearbyViewModel = hiltViewModel(), //nearbyConnection 전용 관리 viewModel
     onNavigateToMypage: () -> Unit, //설정으로 이동
     onNavigateToMyqrCode:() -> Unit, // QR 코드 화면으로 이동
     onNavigateToEditCard: () -> Unit, //명함 편집
 
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val nearbyUiState by nearbyViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+
+    //내 프로필 정보가 업데이트 될 때 NearbyViewModel에도 이를 반영
+    LaunchedEffect(uiState.userInfo) {
+        if (uiState.userInfo.name.isNotEmpty()) {
+            val nearbyInfo = NearbyUserInfo(
+                name = uiState.userInfo.name,
+                info = "${uiState.userInfo.schoolName} · ${uiState.myRecentInfoString.ifEmpty { "10기" }}",
+                profileImageLink = uiState.userInfo.profileImageLink
+            )
+            nearbyViewModel.setMyUserInfo(nearbyInfo)
+        }
+    }
+
+    //Nearby 이벤트 처리 (Toast 메시지 오픈)
+    LaunchedEffect(nearbyViewModel) {
+        nearbyViewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is NearbyEvent.ShowToast -> {
+                    //UToast(event.message, UToastState.NONE)
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
@@ -100,8 +137,37 @@ fun MycardRoute(
         onNavigateToReceivedCard = {},
         onNavigateToEditCard = onNavigateToEditCard,
         onNavigateToMyStudy = {},
-        onNavigateToMyActivity = {}
+        onNavigateToMyActivity = {},
+        onOpenExchangeBottomSheet = { nearbyViewModel.openBottomSheet() }
     )
+
+    //유저 명함 교환 다이얼로그
+    if(nearbyUiState.isBottomSheetOpen){
+        CardExchangeBottomSheet(
+            sheetState = sheetState,
+            currentStep = nearbyUiState.exchangeStep,
+            discoveredDevices = nearbyUiState.devices,
+            selectedTargetUser = nearbyUiState.selectedTargetUser,
+            onDismissRequest = { nearbyViewModel.closeBottomSheet() },
+            onWifiAwareClick = { nearbyViewModel.startAdvertisingAndDiscovery() },
+            onQrCodeClick = {
+                nearbyViewModel.closeBottomSheet()
+                onNavigateToMyqrCode()
+            },
+            onUserSelect = { target -> nearbyViewModel.selectTargetUser(target) },
+            onConfirmConnect = { nearbyViewModel.confirmAndConnect() },
+            onCancelDialog = { nearbyViewModel.selectTargetUser(null) }
+        )
+    }
+
+    //유저 명함 성공 오버레이
+    if (nearbyUiState.isSuccessOverlayOpen) {
+        CardExchangeSuccessOverlay(
+            receivedCard = nearbyUiState.receivedCard,
+            onContinueExchange = { nearbyViewModel.continueExchange() },
+            onConfirm = { nearbyViewModel.dismissSuccessOverlay() }
+        )
+    }
 
 
 }
@@ -114,8 +180,8 @@ fun MycardScreen(
     onNavigateToReceivedCard: ()-> Unit, //받은 명함 이동
     onNavigateToEditCard: () -> Unit, //명함 편집 이동,
     onNavigateToMyStudy: () -> Unit, //나의 스터디 이동,
-    onNavigateToMyActivity: () -> Unit, //나의 활동 이동
-
+    onNavigateToMyActivity: () -> Unit, //나의 활동 이동,
+    onOpenExchangeBottomSheet: () -> Unit, //명함 교환 BottomSheet 열기
 ){
 
     LazyColumn(
@@ -134,7 +200,7 @@ fun MycardScreen(
         item {
             MycardProfileCard(
                 uiState = uiState,
-                onExchangeCardClick = onNavigateToReceivedCard,
+                onExchangeCardClick = onOpenExchangeBottomSheet,
                 onMyQrcodeClick = onNavigateToMyqrCode
             )
         }

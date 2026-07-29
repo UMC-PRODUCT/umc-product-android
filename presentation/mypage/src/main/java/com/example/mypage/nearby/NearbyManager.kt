@@ -16,6 +16,7 @@ import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
+import com.umc.domain.model.mypage.NearbyUserInfo
 import com.umc.domain.model.mypage.UserCard
 
 /** 통신 흐름 (QR코드 스캔 + nearbyconnection) / 그냥은 3번 이후부터
@@ -69,17 +70,21 @@ class NearbyManager(
     //endpoint 이름 = 기기 모델명 (SM-G991N)
     private val localEndpointName = Build.MODEL
 
-    //주변 기기에 내 기기를 광고 시작
-    fun startAdvertising() {
+    private var myEndpointId: String = ""
 
-        val advertisingName = "${localEndpointName}"
+    //주변 기기에 내 기기를 광고 시작
+    fun startAdvertising(userInfo: NearbyUserInfo) {
+
+        //기존 기기 이름 -> 유저 정보 json
+        //val advertisingName = "${localEndpointName}"
+        val advertisingName = userInfo.toJson()
         Log.d("NearbyDebug", "1. Advertising 시작 시도: $advertisingName")
 
         val options = AdvertisingOptions.Builder()
             .setStrategy(Strategy.P2P_CLUSTER)
             .build()
 
-        client.startAdvertising("${localEndpointName}", SERVICE_ID, lifecycleCallback, options)
+        client.startAdvertising(advertisingName, SERVICE_ID, lifecycleCallback, options)
             .addOnSuccessListener {
                 onEvent(NearbyManagerEvent.StatusUpdate("광고가 시작되었습니다. (탐색 가능)"))
                 Log.d("NearbyDebug", "1-1. Advertising 성공 (광고 중...)")
@@ -107,6 +112,12 @@ class NearbyManager(
                 onEvent(NearbyManagerEvent.Error("탐색 시작 실패: ${e.localizedMessage}"))
                 Log.e("NearbyDebug", "2-2. Discovery 실패: ${e.message}")
             }
+    }
+
+    //광고와 동시에 탐색 시작
+    fun startAdvertisingAndDiscovery(userInfo: NearbyUserInfo) {
+        startAdvertising(userInfo)
+        startDiscovery()
     }
 
     /**
@@ -261,7 +272,13 @@ class NearbyManager(
     private val discoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(id: String, info: DiscoveredEndpointInfo) {
             Log.d("NearbyDebug", "2-3. 주변 기기 발견(EndpointFound)! ID: $id, Name: ${info.endpointName}")
-            onEvent(NearbyManagerEvent.EndpointFound(id, info.endpointName))
+
+            //endpointName(JSON)을 파싱하여 NearbyUserInfo로 복원
+            val parsedUserInfo = NearbyUserInfo.fromJson(info.endpointName)
+                ?: NearbyUserInfo(name = info.endpointName, info = "기본 테스트 정보")
+
+            //UI 이벤트 전달
+            onEvent(NearbyManagerEvent.EndpointFound(id, parsedUserInfo))
         }
 
         override fun onEndpointLost(id: String) {}
@@ -274,7 +291,7 @@ class NearbyManager(
  * NearbyManager 내부 이벤트를 ViewModel로 전달하는 봉인된 클래스
  */
 sealed class NearbyManagerEvent {
-    data class EndpointFound(val id: String, val name: String) : NearbyManagerEvent()
+    data class EndpointFound(val id: String, val userInfo: NearbyUserInfo) : NearbyManagerEvent()
     data class AuthVerification(val id: String, val code: String) : NearbyManagerEvent()
     data class ConnectionSuccess(val id: String) : NearbyManagerEvent()
     data class UserCardReceived(val card: UserCard) : NearbyManagerEvent()

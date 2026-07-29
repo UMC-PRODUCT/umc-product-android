@@ -111,7 +111,7 @@ fun MypageRoute(
         if (permissions.values.all { it }) {
             when (pendingNearbyAction) {
                 "ADVERTISE" -> {
-                    nearbyViewModel.startAdvertising()
+                    //nearbyViewModel.startAdvertising()
                 }
                 "DISCOVER" -> {
                     nearbyViewModel.startDiscovery()
@@ -243,8 +243,6 @@ fun MypageRoute(
                 //뒤로 가기
                 is MypageEvent.NavigateToBack -> onNavigateToBack()
 
-                /**qr 코드 이동**/
-                is MypageEvent.NavigateToQrcode -> onNavigateToQrCode()
                 else -> {}
             }
         }
@@ -271,31 +269,7 @@ fun MypageRoute(
         onDeleteUserClick = viewModel::showDeleteUserDialog, //회원 탛퇴
         onWebsiteClick = viewModel::navigateToWebsiteUmc, //웹사이트 이동
         onInstagramClick = viewModel::navigateToInstagramUmc //인스타그램 이동
-        /**테스트**/
-        ,
-        onStartAdvertise = {
-            pendingNearbyAction = "ADVERTISE"
-            permissionLauncher.launch(getRequiredPermissions())
-        },
-        onStartDiscovery = {
-            pendingNearbyAction = "DISCOVER"
-            permissionLauncher.launch(getRequiredPermissions())
-        },
-        onDeviceClick = { deviceId ->
-            nearbyViewModel.requestConnection(deviceId)
-        },
-        onSendCardClick = {
-            nearbyState.connectedId?.let { id ->
-                val myCard = UserCard(
-                    name = uiState.userInfo.name.ifEmpty { "박유수" },
-                    nickname = uiState.userInfo.nickname.ifEmpty { "어헛차" }
-                )
-                nearbyViewModel.send(id, myCard)
-            }
-        },
-        onQrcodeClick = {
-            viewModel.navigateToQrcode()
-        }
+
     )
 
     //OutLink 다이얼로그 관련
@@ -469,12 +443,6 @@ fun MypageScreen(
     onDeleteUserClick: () -> Unit,
     onWebsiteClick: () -> Unit,
     onInstagramClick: () -> Unit,
-    /**테스트**/
-    onStartAdvertise: () -> Unit,
-    onStartDiscovery: () -> Unit,
-    onDeviceClick: (String) -> Unit,
-    onSendCardClick: () -> Unit,
-    onQrcodeClick: () -> Unit
 ){
 
     Column(
@@ -525,6 +493,7 @@ fun MypageScreen(
             /** ────────────────────────────────────────────── **/
             /**              Nearby 교환 테스트 섹션             **/
             /** ────────────────────────────────────────────── **/
+            /*
             item {
                 MypageSectionTitle(text = "Nearby 유저카드 교환 테스트")
                 MypageListCard {
@@ -621,6 +590,8 @@ fun MypageScreen(
                 }
             }
             /** ────────────────────────────────────────────── **/
+
+             */
 
 
             item {
