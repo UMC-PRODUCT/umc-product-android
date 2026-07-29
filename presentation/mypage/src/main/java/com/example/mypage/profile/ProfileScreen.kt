@@ -335,8 +335,6 @@ fun ProfileImageSection(imageUri: Uri, defaultUrl: String, onImageClick: () -> U
                 .clickable { onImageClick() }
         ) {
             AsyncImage(
-
-
                 model = if (imageUri != Uri.EMPTY) imageUri
                         else if(defaultUrl != "") defaultUrl
                         else R.drawable.ic_profile_default,
