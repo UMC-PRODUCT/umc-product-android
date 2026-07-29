@@ -81,6 +81,9 @@ object AppStrings {
     const val EXCHANGE_CARD_WIFI_USER_SEARCH_PAUSE = "탐색 중단하기"
     const val EXCHANGE_CARD_SEND_TITLE = "명함을 전송하시겠습니까?"
     const val EXCHANGE_CARD_SUCCESS_TITLE = "명함을 주고받았어요!"
+    
+    const val RECEIVED_CARD_TITLE = "받은 명함"
+    const val RECEIVED_CARD_TEXTHOLDER = "이름, 파트 검색"
 
     const val QRCODE_TITLE = "명함 공유하기"
     const val QRCODE_CONTENT = "QR을 스캔하면 내 명함이 저장돼요"

@@ -87,6 +87,7 @@ fun MycardRoute(
     onNavigateToMypage: () -> Unit, //설정으로 이동
     onNavigateToMyqrCode:() -> Unit, // QR 코드 화면으로 이동
     onNavigateToEditCard: () -> Unit, //명함 편집
+    onNavigateToReceivedCard: () -> Unit, //받은 명함 이동
 
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -134,11 +135,11 @@ fun MycardRoute(
         uiState = uiState,
         onNavigateToMypage = onNavigateToMypage,
         onNavigateToMyqrCode = onNavigateToMyqrCode,
-        onNavigateToReceivedCard = {},
+        onNavigateToReceivedCard = onNavigateToReceivedCard,
         onNavigateToEditCard = onNavigateToEditCard,
         onNavigateToMyStudy = {},
         onNavigateToMyActivity = {},
-        onOpenExchangeBottomSheet = { nearbyViewModel.openBottomSheet() }
+        onOpenExchangeBottomSheet = { nearbyViewModel.openBottomSheet() },
     )
 
     //유저 명함 교환 다이얼로그
@@ -181,7 +182,7 @@ fun MycardScreen(
     onNavigateToEditCard: () -> Unit, //명함 편집 이동,
     onNavigateToMyStudy: () -> Unit, //나의 스터디 이동,
     onNavigateToMyActivity: () -> Unit, //나의 활동 이동,
-    onOpenExchangeBottomSheet: () -> Unit, //명함 교환 BottomSheet 열기
+    onOpenExchangeBottomSheet: () -> Unit, //명함 교환 BottomSheet 열기,
 ){
 
     LazyColumn(

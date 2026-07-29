@@ -14,6 +14,7 @@ import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
 import com.example.mypage.qrcode.QrCodeRoute
+import com.example.mypage.receivedcard.ReceivedCardRoute
 import com.umc.failcode.SignUpFailRoute
 import com.umc.failcode.code.SignUpFailCodeRoute
 import com.umc.permission.PermissionRoute
@@ -249,6 +250,9 @@ fun MainNavHost(
                 },
                 onNavigateToEditCard = {
                     navHostController.navigate(MainDestination.MyProfile)
+                },
+                onNavigateToReceivedCard = {
+                    navHostController.navigate(MainDestination.ReceivedCard)
                 }
             )
         }
@@ -296,6 +300,15 @@ fun MainNavHost(
         composable<MainDestination.Qrcode> {
             QrCodeRoute(
                 onNavigateToBack = {}
+            )
+        }
+
+        //받은 명함
+        composable<MainDestination.ReceivedCard> {
+            ReceivedCardRoute (
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
             )
         }
 
