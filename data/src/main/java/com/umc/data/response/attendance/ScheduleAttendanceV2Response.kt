@@ -28,7 +28,8 @@ data class ScheduleAttendanceV2Response(
         latitude = location?.latitude ?: 0.0,
         longitude = location?.longitude ?: 0.0,
         address = location?.locationName.orEmpty(),
-        isLocationCertified = null
+        isLocationCertified = null,
+        isOnline = location == null
     )
 
     fun toHistory(index: Int) = UserCheckHistory(

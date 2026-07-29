@@ -29,6 +29,9 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -71,6 +74,7 @@ import com.umc.component.theme.red500
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.enums.AdminSessionStatus
+import com.umc.presentation.act.admin.attendance.fixlocation.FixLocationRoute
 import com.umc.presentation.act.admin.attendance.pendinglist.PendingListRoute
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -85,6 +89,7 @@ fun AttendanceRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var fixLocationScheduleId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(isActive) {
         if (isActive) viewModel.getSessions()
@@ -105,7 +110,27 @@ fun AttendanceRoute(
         uiState = uiState,
         onDeleteClick = viewModel::requestDeleteSession,
         onPendingListClick = viewModel::openPendingList,
+        onChangeLocationClick = { scheduleId ->
+            fixLocationScheduleId = scheduleId
+        },
     )
+
+    fixLocationScheduleId?.let { scheduleId ->
+        ModalBottomSheet(
+            onDismissRequest = { fixLocationScheduleId = null },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = Color.Transparent,
+            dragHandle = null,
+        ) {
+            FixLocationRoute(
+                scheduleId = scheduleId,
+                onUpdateSuccess = {
+                    fixLocationScheduleId = null
+                    viewModel.getSessions()
+                }
+            )
+        }
+    }
 
     uiState.pendingListScheduleId?.let { scheduleId ->
         ModalBottomSheet(
@@ -142,6 +167,7 @@ fun AttendanceScreen(
     uiState: AdminAttendanceUiState,
     onDeleteClick: (Long) -> Unit = {},
     onPendingListClick: (Long) -> Unit = {},
+    onChangeLocationClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     if (uiState.isEmpty) {
@@ -159,7 +185,7 @@ fun AttendanceScreen(
         items(items = uiState.sessions, key = { it.id }) { session ->
             AdminSessionCard(
                 session = session,
-                onChangeLocationClick = {},
+                onChangeLocationClick = { onChangeLocationClick(session.id) },
                 onPendingListClick = { onPendingListClick(session.id) },
                 onDeleteClick = { onDeleteClick(session.id) },
             )
