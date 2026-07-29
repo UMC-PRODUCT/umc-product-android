@@ -45,6 +45,10 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
         return apiCall {scheduleApi.deleteScheduleWithAttendance(scheduleId)}
     }
 
+    override suspend fun forceDeleteSchedule(scheduleId: Long): ApiState<Unit> {
+        return apiCall { scheduleApi.forceDeleteSchedule(scheduleId) }
+    }
+
     //일정 생성하기
     override suspend fun createSchedule(request: CreateScheduleRequest): ApiState<Long> {
         return apiCall {scheduleApi.createSchedule(request)}
@@ -55,7 +59,7 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
         scheduleId: Long,
         request: UpdateScheduleRequest
     ): ApiState<Unit> {
-        return apiCall {scheduleApi.updateSchedule(scheduleId, request)}
+        return apiCall { scheduleApi.updateSchedule(scheduleId, request) }.map { Unit }
     }
 
     // 위치 변경하기

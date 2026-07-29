@@ -52,6 +52,55 @@ class NormalAttendanceViewModel @Inject constructor(
         }
     }
 
+    fun verifySessionLocation(sessionId: Long) {
+        val session = uiState.value.availableSessions.firstOrNull { it.id == sessionId } ?: return
+        if (session.isOnline) return
+
+        if (!hasLocationPermission()) {
+            emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
+            return
+        }
+
+        val targetLatitude = session.latitude
+        val targetLongitude = session.longitude
+        if (
+            targetLatitude == null ||
+            targetLongitude == null ||
+            (targetLatitude == 0.0 && targetLongitude == 0.0)
+        ) {
+            emitEvent(NormalAttendanceEvent.ShowToast("출석 위치 정보가 없습니다."))
+            return
+        }
+
+        try {
+            fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                CancellationTokenSource().token
+            ).addOnSuccessListener { currentLocation ->
+                if (currentLocation == null) {
+                    emitEvent(NormalAttendanceEvent.ShowToast("현재 위치를 확인할 수 없습니다."))
+                    return@addOnSuccessListener
+                }
+
+                val distanceMeters = calculateDistanceMeters(
+                    currentLatitude = currentLocation.latitude,
+                    currentLongitude = currentLocation.longitude,
+                    targetLatitude = targetLatitude,
+                    targetLongitude = targetLongitude,
+                )
+                updateLocationVerification(
+                    sessionId = sessionId,
+                    isCertified = distanceMeters <= ATTENDANCE_RADIUS_METERS,
+                    distanceMeters = distanceMeters.toInt(),
+                )
+            }.addOnFailureListener {
+                emitEvent(NormalAttendanceEvent.ShowToast("현재 위치 확인에 실패했습니다."))
+            }
+        } catch (_: SecurityException) {
+            emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
+        }
+    }
+
     //현재 위치를 조회해 세션 위치 반경 50m 이내인지 인증한 뒤 출석 요청
     fun requestAttendance(session: NormalAvailableSessionUi) {
         if (session.isOnline) {
@@ -92,25 +141,33 @@ class NormalAttendanceViewModel @Inject constructor(
                     return@addOnSuccessListener
                 }
 
-                val distanceResult = FloatArray(1)
-                Location.distanceBetween(
-                    currentLocation.latitude,
-                    currentLocation.longitude,
-                    targetLatitude,
-                    targetLongitude,
-                    distanceResult
+                val distanceMeters = calculateDistanceMeters(
+                    currentLatitude = currentLocation.latitude,
+                    currentLongitude = currentLocation.longitude,
+                    targetLatitude = targetLatitude,
+                    targetLongitude = targetLongitude,
                 )
 
-                if (distanceResult[0] > ATTENDANCE_RADIUS_METERS) {
+                if (distanceMeters > ATTENDANCE_RADIUS_METERS) {
                     stopLoading()
+                    updateLocationVerification(
+                        sessionId = session.id,
+                        isCertified = false,
+                        distanceMeters = distanceMeters.toInt(),
+                    )
                     emitEvent(
                         NormalAttendanceEvent.ShowToast(
-                            "출석 위치에서 ${distanceResult[0].toInt()}m 떨어져 있습니다."
+                            "출석 위치에서 ${distanceMeters.toInt()}m 떨어져 있습니다."
                         )
                     )
                     return@addOnSuccessListener
                 }
 
+                updateLocationVerification(
+                    sessionId = session.id,
+                    isCertified = true,
+                    distanceMeters = distanceMeters.toInt(),
+                )
                 submitAttendance(
                     session = session,
                     latitude = currentLocation.latitude,
@@ -160,6 +217,44 @@ class NormalAttendanceViewModel @Inject constructor(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun calculateDistanceMeters(
+        currentLatitude: Double,
+        currentLongitude: Double,
+        targetLatitude: Double,
+        targetLongitude: Double,
+    ): Float {
+        val result = FloatArray(1)
+        Location.distanceBetween(
+            currentLatitude,
+            currentLongitude,
+            targetLatitude,
+            targetLongitude,
+            result,
+        )
+        return result[0]
+    }
+
+    private fun updateLocationVerification(
+        sessionId: Long,
+        isCertified: Boolean,
+        distanceMeters: Int,
+    ) {
+        updateState {
+            copy(
+                availableSessions = availableSessions.map { session ->
+                    if (session.id == sessionId) {
+                        session.copy(
+                            isLocationCertified = isCertified,
+                            locationDistanceMeters = distanceMeters,
+                        )
+                    } else {
+                        session
+                    }
+                }
+            )
+        }
     }
 
     //출석 실패 사유 다이얼로그 열기
@@ -251,11 +346,12 @@ data class NormalAvailableSessionUi(
     val title: String,
     val timeRange: String,
     val status: CheckAvailableStatus,
-    val isLocationCertified: Boolean,
+    val isLocationCertified: Boolean?,
     val address: String,
     val latitude: Double?,
     val longitude: Double?,
     val isOnline: Boolean = false,
+    val locationDistanceMeters: Int? = null,
 )
 
 data class NormalHistorySessionUi(
@@ -278,8 +374,10 @@ private fun UserCheckAvailable.toUi(): NormalAvailableSessionUi {
         title = title,
         timeRange = "$startTime - $endTime",
         status = status,
-        isLocationCertified = isLocationCertified == true,
-        address = address.ifBlank { "-" },
+        isLocationCertified = isLocationCertified,
+        address = address
+            .toShortAttendanceAddress()
+            .ifBlank { "-" },
         latitude = latitude,
         longitude = longitude,
         isOnline = isOnline,
@@ -297,3 +395,37 @@ private fun UserCheckHistory.toUi(): NormalHistorySessionUi {
 }
 
 private const val ATTENDANCE_RADIUS_METERS = 50f
+
+private val shortAdministrativeAreas = linkedMapOf(
+    "서울특별시" to "서울",
+    "부산광역시" to "부산",
+    "대구광역시" to "대구",
+    "인천광역시" to "인천",
+    "광주광역시" to "광주",
+    "대전광역시" to "대전",
+    "울산광역시" to "울산",
+    "세종특별자치시" to "세종",
+    "경기도" to "경기",
+    "강원특별자치도" to "강원",
+    "강원도" to "강원",
+    "충청북도" to "충북",
+    "충청남도" to "충남",
+    "전북특별자치도" to "전북",
+    "전라북도" to "전북",
+    "전라남도" to "전남",
+    "경상북도" to "경북",
+    "경상남도" to "경남",
+    "제주특별자치도" to "제주",
+)
+
+internal fun String.toShortAttendanceAddress(): String {
+    val normalized = trim()
+        .replace(Regex("""\s*[\(（][^\)）]*[\)）]\s*$"""), "")
+        .replace(Regex("\\s+"), " ")
+    val (fullName, shortName) = shortAdministrativeAreas.entries
+        .firstOrNull { (fullName, _) -> normalized.startsWith(fullName) }
+        ?.let { it.key to it.value }
+        ?: return normalized
+
+    return shortName + normalized.removePrefix(fullName)
+}
