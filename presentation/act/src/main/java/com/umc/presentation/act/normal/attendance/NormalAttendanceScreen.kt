@@ -555,37 +555,57 @@ private fun AvailableSessionExpandedContent(
             }
 
             CheckAvailableStatus.REJECTED -> {
-                Box(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(red100()),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(red100()),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            modifier = Modifier.size(32.dp),
-                            painter = painterResource(R.drawable.ic_check_failed),
-                            contentDescription = null,
-                            tint = Color.Unspecified
-                        )
-                        UText(
-                            text = session.status.text,
-                            style = HeadlineBold,
-                            color = red500()
-                        )
-                        UText(
-                            text = AppStrings.ATTENDANCE_STATUS_REJECTED_DESCRIPTION,
-                            style = FootnoteBold,
-                            color = red500()
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                modifier = Modifier.size(32.dp),
+                                painter = painterResource(R.drawable.ic_error_filled),
+                                contentDescription = null,
+                                tint = Color.Unspecified
+                            )
+                            UText(
+                                text = session.status.text,
+                                style = HeadlineBold,
+                                color = red500()
+                            )
+                            UText(
+                                text = AppStrings.ATTENDANCE_STATUS_REJECTED_DESCRIPTION,
+                                style = FootnoteBold,
+                                color = red500()
+                            )
+                        }
                     }
+                    UButton(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        enabled = canRequestAttendance,
+                        cornerRadius = 8.dp,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
+                        backgroundColor = if(canRequestAttendance) indigo500() else grey100(),
+                        text = AppStrings.ATTENDANCE_REQUEST_AGAIN_BUTTON,
+                        textStyle = CalloutBold,
+                        textColor = if(canRequestAttendance) grey000() else grey300(),
+                        prevIcon = painterResource(R.drawable.ic_location_white),
+                        prevIconTint = if(canRequestAttendance) grey000() else grey300(),
+                        prevIconSize = DpSize(20.dp, 20.dp),
+                        onClick = onAttendanceClick
+                    )
                 }
             }
         }

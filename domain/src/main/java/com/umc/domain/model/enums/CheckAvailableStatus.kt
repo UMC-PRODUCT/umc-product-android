@@ -4,7 +4,7 @@ enum class CheckAvailableStatus(val text: String) {
     BEFORE("출석 전"),
     PENDING("승인 대기"),
     COMPLETED("출석 완료"),
-    REJECTED("반려됨");
+    REJECTED("승인 거절");
 
     companion object {
         fun fromServerValue(value: String?): CheckAvailableStatus {
