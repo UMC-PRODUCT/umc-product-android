@@ -186,7 +186,12 @@ fun NoticeWriteRoute(
     }
 
     if (uiState.isAiProcessing) {
-        ProcessingDialog(message = AppStrings.AI_PROCESSING)
+        // 모델 다운로드 중에는 진행률을, 추론 중에는 처리 문구를 보여줌
+        ProcessingDialog(
+            message = uiState.aiDownloadPercent
+                ?.let { AppStrings.AI_MODEL_DOWNLOADING.format(it) }
+                ?: AppStrings.AI_PROCESSING,
+        )
     }
 
     sheetType?.let { type ->

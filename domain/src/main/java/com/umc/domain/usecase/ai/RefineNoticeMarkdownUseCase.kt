@@ -11,8 +11,11 @@ import javax.inject.Inject
 class RefineNoticeMarkdownUseCase @Inject constructor(
     private val aiTextRepository: AiTextRepository,
 ) {
-    suspend operator fun invoke(content: String): ApiState<String> {
-        return aiTextRepository.generate(buildPrompt(content))
+    suspend operator fun invoke(
+        content: String,
+        onDownloadProgress: (percent: Int) -> Unit = {},
+    ): ApiState<String> {
+        return aiTextRepository.generate(buildPrompt(content), onDownloadProgress)
     }
 
     private fun buildPrompt(content: String): String {
