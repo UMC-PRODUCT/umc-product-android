@@ -10,6 +10,7 @@ import com.umc.domain.model.curriculum.CurriculumOverview
 import com.umc.domain.model.curriculum.StudyGroup
 import com.umc.domain.model.curriculum.WorkbookSubmissionItem
 import com.umc.domain.repository.curriculum.CurriculumRepository
+import com.umc.domain.model.curriculum.ChallengerWorkbook
 import javax.inject.Inject
 
 class CurriculumRepositoryImpl @Inject constructor(
@@ -90,5 +91,75 @@ class CurriculumRepositoryImpl @Inject constructor(
 
     override suspend fun getAvailableWeeks(): ApiState<List<Int>> {
         return remote.getAvailableWeeks()
+    }
+
+    override suspend fun getChallengerWorkbookDetail(
+        challengerWorkbookId: Long,
+    ): ApiState<ChallengerWorkbook> {
+        return when (
+            val result = remote.getChallengerWorkbookDetail(
+                challengerWorkbookId = challengerWorkbookId,
+            )
+        ) {
+            is ApiState.Success -> {
+                ApiState.Success(result.data.toDomain())
+            }
+
+            is ApiState.Fail -> result
+        }
+    }
+
+    override suspend fun createWeeklyBestWorkbook(
+        bestMemberId: Long,
+        weeklyCurriculumId: Long,
+        studyGroupId: Long,
+        reason: String,
+    ): ApiState<Unit> {
+        return remote.createWeeklyBestWorkbook(
+            bestMemberId = bestMemberId,
+            weeklyCurriculumId = weeklyCurriculumId,
+            studyGroupId = studyGroupId,
+            reason = reason,
+        )
+    }
+
+    override suspend fun updateWeeklyBestWorkbook(
+        weeklyBestWorkbookId: Long,
+        reason: String,
+    ): ApiState<Unit> {
+        return remote.updateWeeklyBestWorkbook(
+            weeklyBestWorkbookId = weeklyBestWorkbookId,
+            reason = reason,
+        )
+    }
+
+    override suspend fun deleteWeeklyBestWorkbook(
+        weeklyBestWorkbookId: Long,
+    ): ApiState<Unit> {
+        return remote.deleteWeeklyBestWorkbook(
+            weeklyBestWorkbookId = weeklyBestWorkbookId,
+        )
+    }
+
+    override suspend fun createMissionFeedback(
+        missionSubmissionId: Long,
+        content: String,
+        result: String,
+    ): ApiState<Unit> {
+        return remote.createMissionFeedback(
+            missionSubmissionId = missionSubmissionId,
+            content = content,
+            result = result,
+        )
+    }
+
+    override suspend fun updateMissionFeedback(
+        missionFeedbackId: Long,
+        content: String,
+    ): ApiState<Unit> {
+        return remote.updateMissionFeedback(
+            missionFeedbackId = missionFeedbackId,
+            content = content,
+        )
     }
 }

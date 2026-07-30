@@ -168,16 +168,3 @@ data class SubmissionResponse(
     val feedbacks: List<MissionFeedbackResponse>?,
 )
 
-data class MissionFeedbackResponse(
-    @SerializedName("missionFeedbackId")
-    val missionFeedbackId: Long?,
-
-    @SerializedName("reviewerMemberId")
-    val reviewerMemberId: Long?,
-
-    @SerializedName("content")
-    val content: String?,
-
-    @SerializedName("feedbackResult")
-    val feedbackResult: String?,
-)
