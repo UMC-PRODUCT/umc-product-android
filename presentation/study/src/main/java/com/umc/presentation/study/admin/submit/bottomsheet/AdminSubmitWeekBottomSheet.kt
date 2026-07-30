@@ -14,45 +14,63 @@ import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Body
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 
+
+data class AdminSubmitWeekUiModel(
+    val week: Int,
+    val weeklyCurriculumId: Long,
+)
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminSubmitWeekBottomSheet(
-    weeks: List<Int>,
-    onSelect: (Int) -> Unit,
+    weeks: List<AdminSubmitWeekUiModel>,
+    onSelect: (AdminSubmitWeekUiModel) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = grey000(),
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        shape = RoundedCornerShape(
+            topStart = 28.dp,
+            topEnd = 28.dp,
+        ),
+        sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+        ),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(400.dp)
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp)
+                .padding(bottom = 24.dp),
         ) {
             UText(
                 text = "확인할 주차를 선택하세요",
                 style = Title3Bold,
                 color = grey800(),
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 16.dp),
             )
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(weeks) { week ->
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                items(weeks) { weekItem ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                onSelect(week)
+                                onSelect(weekItem)
                                 onDismiss()
                             }
-                            .padding(vertical = 16.dp)
+                            .padding(vertical = 16.dp),
                     ) {
-                        UText(text = "${week}주차", style = Body, color = grey800())
+                        UText(
+                            text = "${weekItem.week}주차",
+                            style = Body,
+                            color = grey800(),
+                        )
                     }
                 }
             }

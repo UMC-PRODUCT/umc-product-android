@@ -10,12 +10,19 @@ data class AdminSubmitState(
         listOf("전체 그룹", "React A팀", "React B팀"),
     val items: List<AdminSubmitItemUiModel> = emptyList(),
 
+    val isLoading: Boolean = false,
+
     // 바텀시트
     val bottomSheetItem: AdminSubmitItemUiModel? = null,
     val feedback: String = "",
     val bestCommentDraft: String = "",
     val reviewTabIndex: Int = 0,
     val pendingStatus: String? = null,
+
+    // 상세 조회로 받아오는 서버 ID
+    val missionSubmissionId: Long? = null,
+    val missionFeedbackId: Long? = null,
+    val existingFeedbackResult: String? = null,
 
     // 다이얼로그 상태
     val showApproveDialog: Boolean = false,
@@ -41,7 +48,8 @@ data class AdminSubmitState(
         get() = bestCommentDraft.isNotBlank()
 
     val isReviewed: Boolean
-        get() = bottomSheetItem?.markStatus != null
+        get() = existingFeedbackResult != null ||
+                bottomSheetItem?.markStatus != null
 
     val isBestRegistered: Boolean
         get() = bottomSheetItem?.isBestRegistered ?: false

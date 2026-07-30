@@ -23,6 +23,7 @@ import com.umc.component.theme.UmcTypographyTokens.FootnoteBold
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitBottomSheet
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitGroupBottomSheet
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekBottomSheet
+import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekUiModel
 import com.umc.presentation.study.admin.submit.component.AdminSubmitFilterBar
 import com.umc.presentation.study.admin.submit.component.AdminSubmitItem
 import kotlinx.coroutines.flow.collectLatest
@@ -154,9 +155,20 @@ fun AdminSubmitScreen(
     // 주차 바텀시트
     if (state.showWeekBottomSheet) {
         AdminSubmitWeekBottomSheet(
-            weeks = state.availableWeeks,
-            onSelect = { onAction(AdminSubmitAction.SelectWeek(it)) },
-            onDismiss = { onAction(AdminSubmitAction.CloseWeekBottomSheet) }
+            weeks = state.availableWeeks.map { week ->
+                AdminSubmitWeekUiModel(
+                    week = week,
+                    weeklyCurriculumId = 0L,
+                )
+            },
+            onSelect = { weekItem ->
+                onAction(
+                    AdminSubmitAction.SelectWeek(weekItem.week)
+                )
+            },
+            onDismiss = {
+                onAction(AdminSubmitAction.CloseWeekBottomSheet)
+            },
         )
     }
 

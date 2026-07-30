@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.domain.usecase.challenger.SearchChallengerScheduleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -11,10 +12,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class GroupScheduleChallengerViewModel @Inject constructor() :
-    BaseViewModel<GroupScheduleChallengerState, GroupScheduleChallengerEvent>(
-        GroupScheduleChallengerState()
-    ) {
+class GroupScheduleChallengerViewModel @Inject constructor(
+    private val searchChallengerScheduleUseCase: SearchChallengerScheduleUseCase,
+) : BaseViewModel<GroupScheduleChallengerState, GroupScheduleChallengerEvent>(
+    GroupScheduleChallengerState()
+) {
 
     private var searchJob: Job? = null
 
@@ -42,26 +44,15 @@ class GroupScheduleChallengerViewModel @Inject constructor() :
                 isSearching = true,
                 isLoading = true,
                 searchResults = emptyList(),
-                hasConfirmButton = true
+                nextCursor = null,
+                hasNext = true,
+                hasConfirmButton = true,
             )
         }
 
         searchJob = viewModelScope.launch {
             delay(300)
-
-            val filteredList = uiState.value.allChallengers.filter {
-                it.name.contains(query, ignoreCase = true) ||
-                        it.displayName.contains(query, ignoreCase = true) ||
-                        it.partLabel.contains(query, ignoreCase = true) ||
-                        it.school.contains(query, ignoreCase = true)
-            }
-
-            updateState {
-                copy(
-                    searchResults = filteredList,
-                    isLoading = false
-                )
-            }
+            fetchChallengers(isNextPage = false)
         }
     }
 
@@ -90,7 +81,9 @@ class GroupScheduleChallengerViewModel @Inject constructor() :
                 query = "",
                 isSearching = false,
                 isLoading = false,
-                searchResults = emptyList()
+                searchResults = emptyList(),
+                nextCursor = null,
+                hasNext = true,
             )
         }
     }
@@ -104,7 +97,9 @@ class GroupScheduleChallengerViewModel @Inject constructor() :
                 isSearching = false,
                 isLoading = false,
                 searchResults = emptyList(),
-                hasConfirmButton = selectedChallengers.isNotEmpty()
+                nextCursor = null,
+                hasNext = true,
+                hasConfirmButton = selectedChallengers.isNotEmpty(),
             )
         }
     }
@@ -114,11 +109,15 @@ class GroupScheduleChallengerViewModel @Inject constructor() :
 
         updateState {
             copy(
+                selectedChallengers = emptyList(),
+                selectedSummaryText = "",
                 query = "",
                 isSearching = false,
                 isLoading = false,
                 searchResults = emptyList(),
-                hasConfirmButton = false
+                nextCursor = null,
+                hasNext = true,
+                hasConfirmButton = false,
             )
         }
     }
@@ -130,6 +129,96 @@ class GroupScheduleChallengerViewModel @Inject constructor() :
             else -> "${list[0].name} 외 ${list.size - 1}명"
         }
     }
+
+    private fun fetchChallengers(
+        isNextPage: Boolean,
+    ) {
+        val currentState = uiState.value
+
+        if (currentState.isLoading && isNextPage) return
+
+        updateState {
+            copy(isLoading = true)
+        }
+
+        viewModelScope.launch {
+            val cursor = if (isNextPage) {
+                currentState.nextCursor
+            } else {
+                null
+            }
+
+            resultResponse(
+                response = searchChallengerScheduleUseCase(
+                    cursor = cursor,
+                    size = 50,
+                    name = currentState.query.ifBlank { null },
+                ),
+                successCallback = { response ->
+                    val mappedResults = response.content.map { participant ->
+                        GroupScheduleChallengerUiModel(
+                            id = participant.id,
+                            name = participant.name,
+                            displayName = buildString {
+                                append(participant.name)
+
+                                if (participant.nickname.isNotBlank()) {
+                                    append("/")
+                                    append(participant.nickname)
+                                }
+
+                                if (participant.gisu > 0) {
+                                    append("(")
+                                    append(participant.gisu)
+                                    append("기)")
+                                }
+                            },
+                            partLabel = participant.userPart.name,
+                            school = participant.school,
+                        )
+                    }
+
+                    updateState {
+                        copy(
+                            searchResults = if (isNextPage) {
+                                (searchResults + mappedResults)
+                                    .distinctBy { challenger -> challenger.id }
+                            } else {
+                                mappedResults.distinctBy { challenger ->
+                                    challenger.id
+                                }
+                            },
+                            nextCursor = response.nextCursor,
+                            hasNext = response.hasNext,
+                            isLoading = false,
+                        )
+                    }
+                },
+                errorCallback = {
+                    updateState {
+                        copy(
+                            isLoading = false,
+                            hasNext = false,
+                        )
+                    }
+                },
+            )
+        }
+    }
+
+    fun loadMoreChallengers() {
+        val currentState = uiState.value
+
+        if (
+            currentState.isLoading ||
+            !currentState.hasNext ||
+            !currentState.isSearching
+        ) {
+            return
+        }
+
+        fetchChallengers(isNextPage = true)
+    }
 }
 
 data class GroupScheduleChallengerState(
@@ -140,14 +229,8 @@ data class GroupScheduleChallengerState(
     val isLoading: Boolean = false,
     val hasConfirmButton: Boolean = false,
     val searchResults: List<GroupScheduleChallengerUiModel> = emptyList(),
-    val allChallengers: List<GroupScheduleChallengerUiModel> = listOf(
-        GroupScheduleChallengerUiModel(1L, "홍길동", "홍길동/홍종종(11th)", "PM", "학교"),
-        GroupScheduleChallengerUiModel(2L, "홍길의", "홍길의/홍철영(10th)", "PM", "학교"),
-        GroupScheduleChallengerUiModel(3L, "홍길동", "홍길동/나네임(가수)", "Server", "학교"),
-        GroupScheduleChallengerUiModel(4L, "홍길동", "홍길동/나네임(가수)", "Designer", "학교"),
-        GroupScheduleChallengerUiModel(5L, "홍길동", "홍길동/나네임(가수)", "iOS", "학교"),
-        GroupScheduleChallengerUiModel(6L, "홍길동", "홍길동/나네임(가수)", "Android", "학교")
-    )
+    val nextCursor: Long? = null,
+    val hasNext: Boolean = true,
 ) : UiState
 
 data class GroupScheduleChallengerUiModel(
