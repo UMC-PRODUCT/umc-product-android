@@ -12,8 +12,11 @@ interface AttendanceRepository {
     suspend fun getAttendanceAvailable(): ApiState<List<UserCheckAvailable>>
     suspend fun postAttendanceCheck(request: AttendanceCheckRequest): ApiState<String>
     suspend fun getPendingUsers(scheduleId: Long): ApiState<List<AdminPendingUser>>
-    suspend fun approveAttendance(recordId: Long): ApiState<Unit>
-    suspend fun rejectAttendance(recordId: Long): ApiState<Unit>
+    suspend fun decideAttendance(
+        scheduleId: Long,
+        memberIds: List<Long>,
+        approved: Boolean
+    ): ApiState<Unit>
     suspend fun postAttendanceReason(request: AttendanceReasonRequest): ApiState<String>
     suspend fun getAttendanceHistory(): ApiState<List<UserCheckHistory>>
     suspend fun getChallengerAttendanceHistory(challengerId: Long): ApiState<List<ChallengerInfoHistory>>

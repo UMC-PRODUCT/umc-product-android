@@ -15,6 +15,8 @@ data class ScheduleDetailResponse(
     @SerializedName("startsAt") val startsAt: String,
     @SerializedName("endsAt") val endsAt: String,
     @SerializedName("isAllDay") val isAllDay: Boolean,
+    @SerializedName("isOnline") val isOnline: Boolean = false,
+    @SerializedName("location") val location: ScheduleDetailLocationResponse? = null,
     @SerializedName("locationName") val locationName: String?,
     @SerializedName("latitude") val latitude: Double?,
     @SerializedName("longitude") val longitude: Double?,
@@ -25,6 +27,10 @@ data class ScheduleDetailResponse(
 ) {
     companion object {
         fun ScheduleDetailResponse.toModel(): UserCheckAvailable {
+            val resolvedLocationName = location?.locationName ?: locationName.orEmpty()
+            val resolvedLatitude = location?.latitude ?: latitude ?: 0.0
+            val resolvedLongitude = location?.longitude ?: longitude ?: 0.0
+
             return UserCheckAvailable(
                 /**TODO: 후에 Long 마이그레이션 시 해당 부분 교체 요망**/
                 id = scheduleId,
@@ -34,10 +40,11 @@ data class ScheduleDetailResponse(
                 startTime = startsAt,
                 endTime = endsAt,
                 status = CheckAvailableStatus.BEFORE,
-                latitude = latitude ?: 0.0,
-                longitude = longitude ?: 0.0,
-                address = locationName ?: "",
+                latitude = resolvedLatitude,
+                longitude = resolvedLongitude,
+                address = resolvedLocationName,
                 isLocationCertified = null,
+                isOnline = isOnline,
             )
         }
 
@@ -45,6 +52,10 @@ data class ScheduleDetailResponse(
             // "T"를 기준으로 날짜와 시간을 분리
             val (startDay, startTime) = startsAt.parseDateTime()
             val (endDay, endTime) = endsAt.parseDateTime()
+
+            val resolvedLocationName = location?.locationName ?: locationName.orEmpty()
+            val resolvedLatitude = location?.latitude ?: latitude ?: 0.0
+            val resolvedLongitude = location?.longitude ?: longitude ?: 0.0
 
             return PlanDetailItem(
                 scheduleId = scheduleId,
@@ -56,9 +67,9 @@ data class ScheduleDetailResponse(
                 endDay = endDay,
                 endTime = endTime,
                 isAllDay = isAllDay,
-                locationName = locationName ?: "",
-                latitude = latitude?: 0.0,
-                longitude = longitude?: 0.0,
+                locationName = resolvedLocationName,
+                latitude = resolvedLatitude,
+                longitude = resolvedLongitude,
                 status = status ?: "",
                 dDay = dDay ?: -1,
                 requiresAttendanceApproval = requiresAttendanceApproval ?: false,
@@ -67,3 +78,9 @@ data class ScheduleDetailResponse(
         }
     }
 }
+
+data class ScheduleDetailLocationResponse(
+    @SerializedName("latitude") val latitude: Double,
+    @SerializedName("longitude") val longitude: Double,
+    @SerializedName("locationName") val locationName: String,
+)

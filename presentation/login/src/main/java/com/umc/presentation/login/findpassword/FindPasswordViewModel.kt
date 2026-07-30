@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.util.isValidEmail
 import com.umc.domain.model.enums.EmailVerifyPurpose
 import com.umc.domain.model.enums.EmailVerifyType
 import com.umc.domain.model.request.EmailVerificationCompleteRequest
@@ -53,7 +54,7 @@ class FindPasswordViewModel @Inject constructor(
      * 이메일 형식이 유효하지 않거나 서버 오류 시 verifyType이 ERROR로 전환되어 에러 UI가 표시됨
      */
     fun onClickVerify() = viewModelScope.launch {
-        if (isValidEmail()) {
+        if (uiState.value.email.isValidEmail()) {
             val request = EmailVerificationRequest(
                 email = uiState.value.email,
                 purpose = EmailVerifyPurpose.PASSWORD_RESET
@@ -64,7 +65,8 @@ class FindPasswordViewModel @Inject constructor(
                 successCallback = {
                     updateState {
                         copy(
-                            emailVerificationId = it.toInt(),
+                            // 서버가 숫자가 아닌 값을 내려줘도 크래시하지 않도록 방어 (기본값 -1)
+                            emailVerificationId = it.toIntOrNull() ?: -1,
                             verifyType = EmailVerifyType.REQUEST
                         )
                     }
@@ -124,14 +126,6 @@ class FindPasswordViewModel @Inject constructor(
 
     private fun errorEmailVerify() {
         updateState { copy(verifyType = EmailVerifyType.ERROR) }
-    }
-
-    private fun isValidEmail(): Boolean {
-        val regex = Regex(
-            pattern = "[a-zA-Z0-9+._%\\-]{1,256}@[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}(\\.[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25})+",
-            option = RegexOption.IGNORE_CASE
-        )
-        return uiState.value.email.isNotBlank() && uiState.value.email.matches(regex)
     }
 }
 

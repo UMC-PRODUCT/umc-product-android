@@ -116,6 +116,10 @@ class ScheduleRepositoryImpl @Inject constructor(
         return scheduleRemoteDataSource.deleteScheduleWithAttendance(scheduleId)
     }
 
+    override suspend fun forceDeleteSchedule(scheduleId: Long): ApiState<Unit> {
+        return scheduleRemoteDataSource.forceDeleteSchedule(scheduleId)
+    }
+
     override suspend fun updateScheduleLocation(
         scheduleId: Long,
         locationName: String,
