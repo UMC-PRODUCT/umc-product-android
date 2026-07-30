@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -270,7 +271,7 @@ private fun ReceivedCardItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1.29f) //명함 카드 비율 지정
+            .heightIn(min = 160.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(partTheme.backgroundBrush)
             .padding(16.dp)
@@ -290,7 +291,7 @@ private fun ReceivedCardItem(
                     model = card.profileImage,
                     contentDescription = null,
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(38.dp)
                         .clip(CircleShape)
                         .border(1.dp, grey200(), CircleShape),
                     placeholder = painterResource(R.drawable.ic_profile_default),
@@ -307,7 +308,7 @@ private fun ReceivedCardItem(
                         textColor = white(),
                         textStyle = UmcTypographyTokens.Caption1,
                         cornerRadius = 4.dp,
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                         onClick = {}
                     )
 

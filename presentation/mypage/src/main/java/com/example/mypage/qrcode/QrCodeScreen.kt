@@ -49,6 +49,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.example.mypage.mycard.CardExchangeSuccessOverlay
 import com.example.mypage.mycard.MycardUiState
 import com.example.mypage.qrcode.QrCodeUtils
 import com.umc.component.R
@@ -116,6 +117,7 @@ fun QrCodeRoute(
     }
 
 
+    /*
     uiState.receivedCard?.let { card ->
         UDialog(
             title = "명함 수신 완료!",
@@ -126,6 +128,8 @@ fun QrCodeRoute(
             onDismissRequest = { viewModel.clearReceivedCard() }
         )
     }
+
+     */
 
 
     //QR 생성 (UserCard Json 데이터 기반)
@@ -157,6 +161,15 @@ fun QrCodeRoute(
                 }
             }
         }
+    }
+
+    //유저 명함 성공 오버레이
+    if (uiState.isSuccessOverlayOpen) {
+        CardExchangeSuccessOverlay(
+            receivedCard = uiState.receivedCard,
+            onContinueExchange = { viewModel.dismissSuccessOverlay() },
+            onConfirm = { viewModel.dismissSuccessOverlay() }
+        )
     }
 
 }
@@ -332,15 +345,26 @@ fun QrCodeScreenTopBar(
 
         )
 
-        Icon(
-            painter = painterResource(id = R.drawable.ic_add), // 카메라/스캔 아이콘으로 대체하세요
-            contentDescription = "Scan QR",
-            tint = grey800(),
+        Box(
             modifier = Modifier
-                .size(28.dp)
-                .clickable { onOpenScannerClick() }
-                .padding(horizontal = 12.dp)
-        )
+                .size(48.dp)
+                .background(color = Color.Transparent, shape = CircleShape)
+                .clip(CircleShape)
+                .clickable(
+                    onClick = {onOpenScannerClick()}
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(
+                    id =  R.drawable.ic_add
+                ),
+                contentDescription = null,
+                tint = grey950(),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
 
 
     }

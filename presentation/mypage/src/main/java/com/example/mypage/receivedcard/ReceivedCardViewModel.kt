@@ -34,13 +34,15 @@ class ReceivedCardViewModel @Inject constructor(
         // 더미 데이터 초기화 (실제로는 Repository 연결)
         val mockCards = listOf(
             UserCard("1", "박유수", "어헛차", "00대학교", UserCardPartType.ADMIN),
-            UserCard("2", "김도연", "도리", "00대학교", UserCardPartType.PM),
-            UserCard("3", "양지애", "나루", "00대학교", UserCardPartType.DESIGN),
-            UserCard("4", "조경석", "조나단", "00대학교", UserCardPartType.WEB),
-            UserCard("5", "홍길동", "안드로이드", "00대학교", UserCardPartType.ANDROID),
+            UserCard("2", "김도연", "도리", "00대학교", UserCardPartType.ANDROID),
+            UserCard("3", "박박박", "박박박박", "00대학교", UserCardPartType.PM),
+            UserCard("4", "조경석", "조나단", "00대학교", UserCardPartType.ANDROID),
+            UserCard("5", "홍길동", "안안", "00대학교", UserCardPartType.ANDROID),
             UserCard("6", "김스프링", "서버", "00대학교", UserCardPartType.SPRING),
-            UserCard("7", "이노드", "백엔드", "00대학교", UserCardPartType.NODEJS),
-            UserCard("8", "박아이폰", "앱개발", "00대학교", UserCardPartType.IOS)
+            UserCard("7", "이노드", "이이이", "00대학교", UserCardPartType.NODEJS),
+            UserCard("8", "박아이폰", "앱개발", "00대학교", UserCardPartType.IOS),
+            UserCard("9", "홍길동1", "홍박사", "00대학교", UserCardPartType.PM),
+            UserCard("10", "홍길동2", "홍박사2", "00대학교", UserCardPartType.WEB),
         )
 
         updateState {

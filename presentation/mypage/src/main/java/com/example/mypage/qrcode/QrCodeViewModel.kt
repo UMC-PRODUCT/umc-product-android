@@ -114,67 +114,18 @@ class QrCodeViewModel @Inject constructor(
         updateState { copy(myQrcodeData = qrJsonContent) }
 
     }
-    
 
 
-    //수신 상태 초기화 - 수신 다이얼로그 클릭 시 스캔한 데이터 초기화
-    fun clearReceivedCard() {
+    //확인 버튼 클릭 -> 성공 오버레이 감추고 QR 화면으로 돌아감
+    fun dismissSuccessOverlay() {
         updateState {
             copy(
+                isSuccessOverlayOpen = false,
                 receivedCard = null,
-                scannedTargetQr = "" // 다음 스캔을 위해 초기화
+                scannedTargetQr = ""
             )
         }
-
-        //다음 사람과의 교환을 위해 Advertising 상태 복구
-        //nearbyManager?.startAdvertising()
     }
-
-    /*
-    //Nearby Advertising 시작 및 콜백 정의
-    fun initNearbyAdvertising() {
-
-        //QR 코드 안에 들어갈 내용 = 기기 모델명 (인코딩 깨짐 방지)
-        val qrContent = "${localEndpointName}"
-        updateState { copy(myEndpointId = qrContent) }
-
-        if (nearbyManager == null) {
-            nearbyManager = NearbyManager(application) { event ->
-                when (event) {
-                    is NearbyManagerEvent.EndpointFound -> {
-                        //발견된 기기 목록 업데이트
-                        updateState { copy(discoveredDevices = discoveredDevices.distinctBy { it.first } + (event.id to event.name)) }
-
-                        //만약 내가 스캔한 QR의 식별자가 이 기기의 이름과 일치하면 즉시 자동 연결 시도!
-                        val targetQr = uiState.value.scannedTargetQr
-                        if (targetQr.isNotEmpty() && event.name.contains(targetQr)) {
-                            nearbyManager?.requestConnection(event.id)
-                        }
-                    }
-                    is NearbyManagerEvent.ConnectionSuccess -> {
-                        //연결 성공 시 내 명함 카드 자동 전송 (양방향)
-                        emitEvent(QrCodeEvent.ShowToast("기기 연결 성공! 내 명함을 전송합니다."))
-                        updateState { copy(connectedEndpointId = event.id) }
-                        sendUserCard(event.id)
-                    }
-                    is NearbyManagerEvent.UserCardReceived -> {
-                        //명함 수신 시 UI State에 저정하여 다이얼로그 팝업 노출
-                        updateState { copy(receivedCard = event.card) }
-                        emitEvent(QrCodeEvent.ShowToast("🎉 ${event.card.name}님의 명함을 수신했습니다!"))
-                    }
-                    is NearbyManagerEvent.Error -> {
-                        emitEvent(QrCodeEvent.ShowToast(event.message))
-                    }
-                    else -> {}
-                }
-            }
-        }
-
-        // 광고 시작
-        nearbyManager?.startAdvertising()
-    }
-
-     */
 
     /**
      * 스캐너 열기 (내 광고 중단 후 상대 탐색 시작)
@@ -200,7 +151,7 @@ class QrCodeViewModel @Inject constructor(
         updateState {
             copy(
                 scannedTargetQr = scannedValue,
-                isScannerOpen = false
+                isScannerOpen = false,
             )
         }
 
@@ -210,8 +161,13 @@ class QrCodeViewModel @Inject constructor(
             val card = UserCard.fromJson(scannedValue)
 
             //파싱 성공 시 별도 네트워크/블루투스 연결 없이 즉시 UI State 반영 -> UDialog 팝업 뜸!
-            updateState { copy(receivedCard = card) }
-            emitEvent(QrCodeEvent.ShowToast("${card.name}님의 명함을 읽어왔습니다!"))
+            updateState { 
+                copy(
+                    receivedCard = card,
+                    isSuccessOverlayOpen = true
+                ) 
+            }
+            //emitEvent(QrCodeEvent.ShowToast("${card.name}님의 명함을 읽어왔습니다!"))
         } catch (e: Exception) {
             Log.e("QrScanDebug", "UserCard 파싱 실패: ${e.message}")
             emitEvent(QrCodeEvent.ShowToast("유효하지 않은 명함 QR 코드입니다."))
@@ -233,16 +189,8 @@ class QrCodeViewModel @Inject constructor(
          */
     }
 
-    /*
-    private fun sendUserCard(endpointId: String) {
-        val userCard = UserCard(
-            name = uiState.value.userInfo.name.ifEmpty { "박유수" },
-            nickname = uiState.value.userInfo.nickname.ifEmpty { "어헛차" }
-        )
-        nearbyManager?.sendUserCard(endpointId, userCard)
-    }
 
-     */
+    
 
     fun navigateBack() {
         emitEvent(QrCodeEvent.NavigateBack)
@@ -266,6 +214,9 @@ class QrCodeViewModel @Inject constructor(
         super.onCleared()
         //nearbyManager?.stopAll()
     }
+    
+    
+    
 }
 
 data class QrCodeUiState(
@@ -274,12 +225,10 @@ data class QrCodeUiState(
     val myRecentInfoString: String = "",
 
     val myQrcodeData: String = "",
-    //val myEndpointId: String = "", //qrContent 값과 동일 = 기기 모델명 (필터링을 위한) -> UserCard 값
     val scannedTargetQr: String = "", //스캔한 qr코드의 값 = 기기 모델명 or ""
     val isScannerOpen: Boolean = false, //스캐너(카메라)가 열렸는지 확인
-    //val discoveredDevices: List<Pair<String, String>> = emptyList(), //확인한 디바이스들로 (구글 API 연결 주소값, 기기명) 이 pair로 이루어짐
     val receivedCard: UserCard? = null,
-    //val connectedEndpointId: String? = null //현재 연결된 구글 통신 API 주소값
+    val isSuccessOverlayOpen: Boolean = false, //스캔 완료 오버레이 창 띄우기
 ) : UiState
 
 sealed interface QrCodeEvent : UiEvent {
