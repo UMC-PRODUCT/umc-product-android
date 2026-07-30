@@ -2,10 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!--
-        ML Kit GenAI(Gemini Nano)는 minSdk 26을 요구하지만 앱 minSdk는 24다.
-        API 26 미만에서는 AiTextRepositoryImpl이 호출 전에 UNAVAILABLE로 차단하므로 강제 병합한다
-    -->
+    <!-- 계측 테스트 APK도 ML Kit GenAI의 minSdk 26 요구를 동일하게 우회 -->
     <uses-sdk tools:overrideLibrary="com.google.mlkit.genai.summarization,com.google.mlkit.genai.prompt,com.google.mlkit.genai.common" />
 
 </manifest>
