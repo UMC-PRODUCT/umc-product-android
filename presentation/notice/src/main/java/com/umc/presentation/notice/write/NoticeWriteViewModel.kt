@@ -1,12 +1,14 @@
 package com.umc.presentation.notice.write
 
 import android.net.Uri
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.component.theme.AppStrings
+import com.umc.domain.model.enums.AiTextFeature
 import com.umc.domain.model.enums.BoardChipType
 import com.umc.domain.model.enums.NoticeTab
 import com.umc.domain.model.enums.NoticeWriterRole
@@ -23,6 +25,9 @@ import com.umc.domain.model.request.notice.NoticeTargetRequest
 import com.umc.domain.model.request.notice.NoticeUpdateRequest
 import com.umc.domain.model.request.notice.NoticeVoteRequest
 import com.umc.domain.model.school.SchoolInfo
+import com.umc.domain.usecase.ai.CheckAiFeatureStatusUseCase
+import com.umc.domain.usecase.ai.RefineNoticeMarkdownUseCase
+import com.umc.domain.usecase.ai.SummarizeTextUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.AddNoticeImagesUseCase
 import com.umc.domain.usecase.notice.AddNoticeLinksUseCase
@@ -49,6 +54,9 @@ class NoticeWriteViewModel @Inject constructor(
     private val addNoticeImagesUseCase: AddNoticeImagesUseCase,
     private val addNoticeLinksUseCase: AddNoticeLinksUseCase,
     private val addNoticeVoteUseCase: AddNoticeVoteUseCase,
+    private val checkAiFeatureStatusUseCase: CheckAiFeatureStatusUseCase,
+    private val refineNoticeMarkdownUseCase: RefineNoticeMarkdownUseCase,
+    private val summarizeTextUseCase: SummarizeTextUseCase,
 ) : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
     NoticeWriteUiState(),
 ) {
@@ -62,6 +70,14 @@ class NoticeWriteViewModel @Inject constructor(
         loadWriterRole()
         loadChapterList()
         loadSchoolList()
+        checkAiAvailability()
+    }
+
+    /** 온디바이스 AI 지원 기기에서만 본문 롱클릭 AI 메뉴를 노출 */
+    private fun checkAiAvailability() = viewModelScope.launch {
+        val generation = checkAiFeatureStatusUseCase(AiTextFeature.GENERATION)
+        val summarization = checkAiFeatureStatusUseCase(AiTextFeature.SUMMARIZATION)
+        updateState { copy(isAiMenuEnabled = generation.isUsable || summarization.isUsable) }
     }
 
     /** 수정 모드 진입. 기존 공지 내용(제목/본문/링크/이미지)을 채워 넣는다 */
@@ -271,6 +287,71 @@ class NoticeWriteViewModel @Inject constructor(
     /** 알림 발송 여부 토글 (종 아이콘) */
     fun onToggleNotification() {
         updateState { copy(sendNotification = !uiState.value.sendNotification) }
+    }
+
+    // ---------------------------------------------------------------
+    // 온디바이스 AI (본문 롱클릭 메뉴)
+    // ---------------------------------------------------------------
+
+    /** 본문 다듬기: 작성 중인 본문을 앱 마크다운 형식으로 재작성 */
+    fun onClickAiRefine() = viewModelScope.launch {
+        val state = uiState.value
+        if (state.isAiProcessing) return@launch
+        if (state.content.text.isBlank()) {
+            emitEvent(NoticeWriteEvent.ShowError(AppStrings.AI_EMPTY_CONTENT))
+            return@launch
+        }
+
+        updateState { copy(isAiProcessing = true) }
+
+        resultResponse(
+            response = refineNoticeMarkdownUseCase(state.content.text),
+            successCallback = { refined ->
+                updateState {
+                    copy(
+                        isAiProcessing = false,
+                        content = TextFieldValue(refined, TextRange(refined.length)),
+                    )
+                }
+            },
+            errorCallback = {
+                updateState { copy(isAiProcessing = false) }
+                emitEvent(NoticeWriteEvent.ShowError(it.message))
+            },
+        )
+    }
+
+    /** 붙여넣고 요약: 클립보드 텍스트를 요약해 커서 위치에 삽입 */
+    fun onClickAiPasteSummary(clipboardText: String?) = viewModelScope.launch {
+        val state = uiState.value
+        if (state.isAiProcessing) return@launch
+
+        val source = clipboardText?.trim().orEmpty()
+        if (source.isEmpty()) {
+            emitEvent(NoticeWriteEvent.ShowError(AppStrings.AI_CLIPBOARD_EMPTY))
+            return@launch
+        }
+
+        updateState { copy(isAiProcessing = true) }
+
+        resultResponse(
+            response = summarizeTextUseCase(source),
+            successCallback = { summary ->
+                updateState {
+                    val start = content.selection.min
+                    val end = content.selection.max
+                    val newText = content.text.replaceRange(start, end, summary)
+                    copy(
+                        isAiProcessing = false,
+                        content = TextFieldValue(newText, TextRange(start + summary.length)),
+                    )
+                }
+            },
+            errorCallback = {
+                updateState { copy(isAiProcessing = false) }
+                emitEvent(NoticeWriteEvent.ShowError(it.message))
+            },
+        )
     }
 
     // ---------------------------------------------------------------
@@ -567,6 +648,8 @@ data class NoticeWriteUiState(
     val activeGisuId: Int? = null,
     val writerSchoolId: Int? = null,
     val isSubmitting: Boolean = false,
+    val isAiMenuEnabled: Boolean = false,
+    val isAiProcessing: Boolean = false,
     val isEditMode: Boolean = false,
     val editNoticeId: Long = 0L,
 ) : UiState {
