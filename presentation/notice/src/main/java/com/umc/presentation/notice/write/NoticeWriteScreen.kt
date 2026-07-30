@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
@@ -53,6 +54,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -480,9 +482,13 @@ fun NoticeWriteScreen(
             // 내용 입력. 마크다운 원문을 그대로 편집하고 스타일만 입혀서 보여줌
             val markerColor = grey400()
             val linkColor = indigo500()
-            val markdownTransformation = remember(markerColor, linkColor) {
-                MarkdownVisualTransformation(markerColor = markerColor, linkColor = linkColor)
+            val quoteBarColor = grey300()
+            // 편집기와 인용구 세로선이 같은 파싱 결과를 공유하도록 렌더러를 하나만 둔다
+            val markdownRenderer = remember(markerColor, linkColor) {
+                MarkdownRenderer(markerColor = markerColor, linkColor = linkColor)
             }
+            val rendered = markdownRenderer.render(uiState.content.text)
+            var contentTextLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
             // 본문 롱클릭 시 AI 액션 메뉴 (지원 기기에서만, 미지원 시 기본 툴바)
             val clipboardManager = LocalClipboardManager.current
@@ -511,12 +517,21 @@ fun NoticeWriteScreen(
                         lineHeight = TextUnit.Unspecified,
                     ),
                     cursorBrush = SolidColor(grey950()),
-                    visualTransformation = markdownTransformation,
+                    visualTransformation = markdownRenderer.visualTransformation,
+                    onTextLayout = { contentTextLayout = it },
+                    // 내부 스크롤이 생기면 세로선 좌표가 어긋나므로 높이를 고정하지 않는다
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 240.dp),
                     decorationBox = { innerTextField ->
-                        Box {
+                        // 세로선은 좌측 여백(음수 x)에 그려 본문 위치를 그대로 둔다
+                        Box(
+                            modifier = Modifier.drawBehind {
+                                contentTextLayout?.let { layout ->
+                                    drawMarkdownQuoteBars(layout, rendered.quoteBlocks, quoteBarColor)
+                                }
+                            }
+                        ) {
                             if (uiState.content.text.isEmpty()) {
                                 UText(
                                     text = AppStrings.NOTICE_WRITE_CONTENT_PLACEHOLDER,

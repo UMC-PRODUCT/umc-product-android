@@ -36,13 +36,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
@@ -59,6 +60,7 @@ import com.umc.component.theme.green500
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
+import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
@@ -75,7 +77,8 @@ import com.umc.domain.model.notice.NoticeVote
 import com.umc.domain.model.notice.NoticeVoteOption
 import com.umc.presentation.notice.NoticeTags
 import com.umc.presentation.notice.formatNoticeDate
-import com.umc.presentation.notice.write.MarkdownVisualTransformation
+import com.umc.presentation.notice.write.MarkdownRenderer
+import com.umc.presentation.notice.write.drawMarkdownQuoteBars
 import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -276,14 +279,24 @@ fun NoticeDetailScreen(
             // 본문 (작성 화면과 동일한 마크다운 렌더링)
             val markerColor = grey400()
             val linkColor = indigo500()
-            val markdownContent = remember(detail.content, markerColor, linkColor) {
-                MarkdownVisualTransformation(markerColor = markerColor, linkColor = linkColor)
-                    .filter(AnnotatedString(detail.content))
-                    .text
+            val quoteBarColor = grey300()
+            val markdownRenderer = remember(markerColor, linkColor) {
+                MarkdownRenderer(markerColor = markerColor, linkColor = linkColor)
             }
+            val rendered = remember(detail.content, markdownRenderer) {
+                markdownRenderer.render(detail.content)
+            }
+            var bodyTextLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
             Text(
-                text = markdownContent,
+                text = rendered.transformed.text,
+                onTextLayout = { bodyTextLayout = it },
+                // 인용구 세로선은 좌측 여백(음수 x)에 그려 본문 위치를 그대로 둔다
+                modifier = Modifier.drawBehind {
+                    bodyTextLayout?.let { layout ->
+                        drawMarkdownQuoteBars(layout, rendered.quoteBlocks, quoteBarColor)
+                    }
+                },
                 style = UmcTypographyTokens.Subheadline.copy(
                     color = grey950(),
                     lineHeight = TextUnit.Unspecified,

@@ -124,6 +124,48 @@ class MarkdownEditActionsTest {
         assertEquals("취소", transform("~~취소~~").text.text)
         assertEquals("중첩", transform("<u>**중첩**</u>").text.text)
         assertEquals("제목\n본문 굵게", transform("# 제목\n본문 **굵게**").text.text)
+        assertEquals("인용", transform("> 인용").text.text)
+        assertEquals("코드", transform("`코드`").text.text)
+        assertEquals("형광", transform("<mark color=\"1,1,0,0.4\">형광</mark>").text.text)
+        assertEquals("형광", transform("<mark>형광</mark>").text.text)
+    }
+
+    @Test
+    fun `불릿은 숨기지 않고 같은 길이의 글머리표로 치환`() {
+        // 길이가 보존돼야 OffsetMapping이 항등으로 유지된다
+        assertEquals("• 목록", transform("- 목록").text.text)
+        assertEquals("- 목록".length, transform("- 목록").text.length)
+        // 대시(EN DASH)와 번호 목록은 iOS도 마커를 평문으로 남긴다
+        assertEquals("– 대시", transform("– 대시").text.text)
+        assertEquals("1. 번호", transform("1. 번호").text.text)
+    }
+
+    @Test
+    fun `코드 스팬 내부는 리터럴로 유지`() {
+        assertEquals("**x**", transform("`**x**`").text.text)
+    }
+
+    @Test
+    fun `형광펜은 색상 코드가 아니라 본문을 남긴다`() {
+        val transformed = transform("<mark color=\"0.686,0.322,0.871,0.350\">형광</mark>")
+        assertEquals("형광", transformed.text.text)
+    }
+
+    @Test
+    fun `형광펜 색상이 없거나 잘못되면 기본 노랑으로 폴백`() {
+        val fallback = Color(1f, 1f, 0f, 0.4f)
+        listOf("<mark>x</mark>", "<mark color=\"oops\">x</mark>").forEach { source ->
+            val backgrounds = transform(source).text.spanStyles.map { it.item.background }
+            assert(backgrounds.contains(fallback)) { "폴백 색이 적용되지 않음: ${'$'}source" }
+        }
+    }
+
+    @Test
+    fun `연속된 인용 줄은 하나의 블록으로 병합`() {
+        val blocks = MarkdownVisualTransformation(Color.Gray, Color.Blue)
+            .parse("> a\n> b\n일반\n> c")
+            .quoteBlocks
+        assertEquals(2, blocks.size)
     }
 
     @Test
@@ -182,6 +224,11 @@ class MarkdownEditActionsTest {
             "****~~~~<u></u>",
             "# \n## 제목\n- 목록 **굵게**\n[라벨](https://umc.com) 끝",
             "*미완성 **중첩*** _혼합_ ~~",
+            "> 인용\n> 둘째\n일반",
+            "- 목록\n– 대시\n1. 번호",
+            "`코드` 뒤",
+            "<mark color=\"1,0,0,0.4\">형광</mark>과 <mark>기본</mark>",
+            "> ",
         )
 
         samples.forEach { source ->
