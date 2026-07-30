@@ -15,6 +15,7 @@
             <option value="$PROJECT_DIR$/domain" />
             <option value="$PROJECT_DIR$/presentation" />
             <option value="$PROJECT_DIR$/presentation/act" />
+            <option value="$PROJECT_DIR$/presentation/community" />
             <option value="$PROJECT_DIR$/presentation/component" />
             <option value="$PROJECT_DIR$/presentation/failCode" />
             <option value="$PROJECT_DIR$/presentation/home" />
