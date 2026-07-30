@@ -483,13 +483,19 @@ fun NoticeWriteScreen(
             val clipboardManager = LocalClipboardManager.current
 
             UTextActionMenuHost(
-                enabled = uiState.isAiMenuEnabled,
-                actions = listOf(
-                    UTextActionItem(AppStrings.AI_MENU_REFINE, onClickAiRefine),
-                    UTextActionItem(AppStrings.AI_MENU_PASTE_SUMMARY) {
-                        onClickAiPasteSummary(clipboardManager.getText()?.text)
-                    },
-                ),
+                // 기능별 지원 기기가 달라 각각 판단 (미지원 항목은 메뉴에서 제외)
+                actions = buildList {
+                    if (uiState.isAiRefineEnabled) {
+                        add(UTextActionItem(AppStrings.AI_MENU_REFINE, onClickAiRefine))
+                    }
+                    if (uiState.isAiSummaryEnabled) {
+                        add(
+                            UTextActionItem(AppStrings.AI_MENU_PASTE_SUMMARY) {
+                                onClickAiPasteSummary(clipboardManager.getText()?.text)
+                            }
+                        )
+                    }
+                },
             ) {
                 BasicTextField(
                     value = uiState.content,

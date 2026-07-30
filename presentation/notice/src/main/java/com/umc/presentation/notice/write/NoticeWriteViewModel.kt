@@ -73,11 +73,20 @@ class NoticeWriteViewModel @Inject constructor(
         checkAiAvailability()
     }
 
-    /** 온디바이스 AI 지원 기기에서만 본문 롱클릭 AI 메뉴를 노출 */
+    /**
+     * 온디바이스 AI 지원 기기에서만 본문 롱클릭 AI 메뉴를 노출.
+     * 요약(Summarization)과 생성(Prompt)의 지원 기기 목록이 서로 달라
+     * (예: Galaxy S25는 요약만 지원) 메뉴 항목을 각각 따로 판단한다
+     */
     private fun checkAiAvailability() = viewModelScope.launch {
         val generation = checkAiFeatureStatusUseCase(AiTextFeature.GENERATION)
         val summarization = checkAiFeatureStatusUseCase(AiTextFeature.SUMMARIZATION)
-        updateState { copy(isAiMenuEnabled = generation.isUsable || summarization.isUsable) }
+        updateState {
+            copy(
+                isAiRefineEnabled = generation.isUsable,
+                isAiSummaryEnabled = summarization.isUsable,
+            )
+        }
     }
 
     /** 수정 모드 진입. 기존 공지 내용(제목/본문/링크/이미지)을 채워 넣는다 */
@@ -648,7 +657,8 @@ data class NoticeWriteUiState(
     val activeGisuId: Int? = null,
     val writerSchoolId: Int? = null,
     val isSubmitting: Boolean = false,
-    val isAiMenuEnabled: Boolean = false,
+    val isAiRefineEnabled: Boolean = false,
+    val isAiSummaryEnabled: Boolean = false,
     val isAiProcessing: Boolean = false,
     val isEditMode: Boolean = false,
     val editNoticeId: Long = 0L,
