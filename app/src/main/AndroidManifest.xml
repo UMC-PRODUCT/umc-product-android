@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- ML Kit GenAI는 minSdk 26 요구. API 26 미만은 런타임에서 UNAVAILABLE 처리하므로 강제 병합 -->
+    <uses-sdk tools:overrideLibrary="com.google.mlkit.genai.summarization,com.google.mlkit.genai.prompt,com.google.mlkit.genai.common" />
+
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
