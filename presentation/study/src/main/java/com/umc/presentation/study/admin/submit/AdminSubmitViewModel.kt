@@ -1,12 +1,26 @@
 package com.umc.presentation.study.admin.submit
 
+import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.usecase.curriculum.CreateMissionFeedbackUseCase
+import com.umc.domain.usecase.curriculum.GetChallengerWorkbookDetailUseCase
+import com.umc.domain.usecase.curriculum.UpdateMissionFeedbackUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AdminSubmitViewModel @Inject constructor() :
-    BaseViewModel<AdminSubmitState, AdminSubmitEvent>(AdminSubmitState()) {
+class AdminSubmitViewModel @Inject constructor(
+    private val getChallengerWorkbookDetailUseCase:
+    GetChallengerWorkbookDetailUseCase,
+    private val createMissionFeedbackUseCase:
+    CreateMissionFeedbackUseCase,
+    private val updateMissionFeedbackUseCase:
+    UpdateMissionFeedbackUseCase,
+) : BaseViewModel<AdminSubmitState, AdminSubmitEvent>(
+    AdminSubmitState()
+) {
 
     init {
         loadDummy()
@@ -74,120 +88,121 @@ class AdminSubmitViewModel @Inject constructor() :
     fun onAction(action: AdminSubmitAction) {
         when (action) {
 
-            // 바텀시트 열기/닫기
-            is AdminSubmitAction.OpenBottomSheet ->
+            is AdminSubmitAction.OpenBottomSheet -> {
+                openBottomSheet(action.item)
+            }
+
+            is AdminSubmitAction.CloseBottomSheet -> {
+                closeBottomSheet()
+            }
+
+            is AdminSubmitAction.OnFeedbackChanged -> {
                 updateState {
-                    copy(
-                        bottomSheetItem = action.item,
-                        feedback = "",
-                        bestCommentDraft = action.item.bestComment,
-                        pendingStatus = null,
-                        isEditingBest = false
-                    )
+                    copy(feedback = action.feedback)
                 }
-            is AdminSubmitAction.CloseBottomSheet ->
+            }
+
+            is AdminSubmitAction.OnReviewTabChanged -> {
                 updateState {
-                    copy(
-                        bottomSheetItem = null,
-                        feedback = "",
-                        bestCommentDraft = "",
-                        pendingStatus = null,
-                        isEditingBest = false
-                    )
+                    copy(reviewTabIndex = action.index)
                 }
+            }
 
-            // 피드백 입력
-            is AdminSubmitAction.OnFeedbackChanged ->
-                updateState { copy(feedback = action.feedback) }
+            is AdminSubmitAction.ChangeStatus -> {
+                updateState {
+                    copy(pendingStatus = action.status)
+                }
+            }
 
-            // 탭 전환
-            is AdminSubmitAction.OnReviewTabChanged ->
-                updateState { copy(reviewTabIndex = action.index) }
-
-
-            // 현황 변경 (Pass/Fail 선택)
-            is AdminSubmitAction.ChangeStatus ->
-                updateState { copy(pendingStatus = action.status) }
-
-            // 완료하기
             is AdminSubmitAction.CompleteChange -> {
                 val status = uiState.value.pendingStatus ?: return
-                updateState {
-                    copy(
-                        items = items.map {
-                            if (it.id == bottomSheetItem?.id) it.copy(status = status) else it
-                        },
-                        bottomSheetItem = null,
-                        feedback = "",
-                        pendingStatus = null
-                    )
-                }
-                emitEvent(AdminSubmitEvent.ShowToast("변경 완료!"))
+                submitFeedback(result = status)
             }
 
             is AdminSubmitAction.ConfirmApprove -> {
-                updateState {
-                    copy(
-                        items = items.map {
-                            if (it.id == bottomSheetItem?.id) it.copy(status = "PASS") else it
-                        },
-                        bottomSheetItem = null,
-                        feedback = "",
-                        showApproveDialog = false
-                    )
-                }
-                emitEvent(AdminSubmitEvent.ShowToast("통과 처리됐어요."))
+                submitFeedback(result = "PASS")
             }
+
             is AdminSubmitAction.ConfirmReject -> {
+                submitFeedback(result = "FAIL")
+            }
+
+            is AdminSubmitAction.DismissDialog -> {
                 updateState {
                     copy(
-                        items = items.map {
-                            if (it.id == bottomSheetItem?.id) it.copy(status = "FAIL") else it
-                        },
-                        bottomSheetItem = null,
-                        feedback = "",
-                        showRejectDialog = false
+                        showApproveDialog = false,
+                        showRejectDialog = false,
                     )
                 }
-                emitEvent(AdminSubmitEvent.ShowToast("반려 처리됐어요."))
             }
 
-            //바텀시트
-            is AdminSubmitAction.DismissDialog -> {
-                updateState { copy(showApproveDialog = false, showRejectDialog = false) }
-            }
             is AdminSubmitAction.SubmitReview -> {
-                if (action.pass) updateState { copy(showApproveDialog = true) }
-                else updateState { copy(showRejectDialog = true) }
+                updateState {
+                    if (action.pass) {
+                        copy(showApproveDialog = true)
+                    } else {
+                        copy(showRejectDialog = true)
+                    }
+                }
             }
 
-            is AdminSubmitAction.OpenWeekBottomSheet ->
-                updateState { copy(showWeekBottomSheet = true) }
+            is AdminSubmitAction.OpenWeekBottomSheet -> {
+                updateState {
+                    copy(showWeekBottomSheet = true)
+                }
+            }
 
-            is AdminSubmitAction.CloseWeekBottomSheet ->
-                updateState { copy(showWeekBottomSheet = false) }
+            is AdminSubmitAction.CloseWeekBottomSheet -> {
+                updateState {
+                    copy(showWeekBottomSheet = false)
+                }
+            }
 
-            is AdminSubmitAction.OpenGroupBottomSheet ->
-                updateState { copy(showGroupBottomSheet = true) }
+            is AdminSubmitAction.OpenGroupBottomSheet -> {
+                updateState {
+                    copy(showGroupBottomSheet = true)
+                }
+            }
 
-            is AdminSubmitAction.CloseGroupBottomSheet ->
-                updateState { copy(showGroupBottomSheet = false) }
+            is AdminSubmitAction.CloseGroupBottomSheet -> {
+                updateState {
+                    copy(showGroupBottomSheet = false)
+                }
+            }
 
             is AdminSubmitAction.SelectWeek -> {
-                updateState { copy(selectedWeek = action.week, showWeekBottomSheet = false) }
-            }
-            is AdminSubmitAction.SelectGroup -> {
-                updateState { copy(selectedGroupName = action.name, showGroupBottomSheet = false) }
+                updateState {
+                    copy(
+                        selectedWeek = action.week,
+                        showWeekBottomSheet = false,
+                    )
+                }
             }
 
-            is AdminSubmitAction.OnBestCommentChanged ->
+            is AdminSubmitAction.SelectGroup -> {
+                updateState {
+                    copy(
+                        selectedGroupName = action.name,
+                        showGroupBottomSheet = false,
+                    )
+                }
+            }
+
+            is AdminSubmitAction.OnBestCommentChanged -> {
                 updateState {
                     copy(bestCommentDraft = action.comment)
                 }
+            }
 
+            /*
+             * 베스트 관련 API는 필요한 ID가 부족하므로
+             * 현재 로컬 UI 동작을 유지한다.
+             */
             is AdminSubmitAction.ConfirmBest -> {
-                val targetId = uiState.value.bottomSheetItem?.id ?: return
-                val comment = uiState.value.bestCommentDraft.trim()
+                val targetId =
+                    uiState.value.bottomSheetItem?.id ?: return
+                val comment =
+                    uiState.value.bestCommentDraft.trim()
 
                 updateState {
                     copy(
@@ -195,60 +210,305 @@ class AdminSubmitViewModel @Inject constructor() :
                             if (item.id == targetId) {
                                 item.copy(
                                     bestComment = comment,
-                                    isBestRegistered = true
+                                    isBestRegistered = true,
                                 )
                             } else {
                                 item
                             }
                         },
-                        bottomSheetItem = bottomSheetItem?.copy(
-                            bestComment = comment,
-                            isBestRegistered = true
-                        ),
+                        bottomSheetItem =
+                            bottomSheetItem?.copy(
+                                bestComment = comment,
+                                isBestRegistered = true,
+                            ),
                         bestCommentDraft = comment,
                         isEditingBest = false,
-                        showBestConfirmDialog = false
+                        showBestConfirmDialog = false,
                     )
                 }
             }
 
-            is AdminSubmitAction.CancelBest ->
-                updateState { copy(showBestCancelDialog = true) }
+            is AdminSubmitAction.CancelBest -> {
+                updateState {
+                    copy(showBestCancelDialog = true)
+                }
+            }
 
-            is AdminSubmitAction.RegisterBest ->
-                updateState { copy(showBestConfirmDialog = true) }
+            is AdminSubmitAction.RegisterBest -> {
+                updateState {
+                    copy(showBestConfirmDialog = true)
+                }
+            }
 
-            is AdminSubmitAction.ConfirmCancelBest ->
+            is AdminSubmitAction.ConfirmCancelBest -> {
                 updateState {
                     copy(
-                        items = items.map {
-                            if (it.id == bottomSheetItem?.id) {
-                                it.copy(
+                        items = items.map { item ->
+                            if (item.id == bottomSheetItem?.id) {
+                                item.copy(
                                     isBestRegistered = false,
-                                    bestComment = ""
+                                    bestComment = "",
                                 )
                             } else {
-                                it
+                                item
                             }
                         },
-                        bottomSheetItem = bottomSheetItem?.copy(
-                            isBestRegistered = false,
-                            bestComment = ""
-                        ),
+                        bottomSheetItem =
+                            bottomSheetItem?.copy(
+                                isBestRegistered = false,
+                                bestComment = "",
+                            ),
                         bestCommentDraft = "",
                         isEditingBest = false,
-                        showBestCancelDialog = false
+                        showBestCancelDialog = false,
+                    )
+                }
+            }
+
+            is AdminSubmitAction.EditBest -> {
+                updateState {
+                    copy(isEditingBest = true)
+                }
+            }
+
+            is AdminSubmitAction.CompleteBest -> {
+                updateState {
+                    copy(showBestConfirmDialog = true)
+                }
+            }
+
+            is AdminSubmitAction.DismissBestDialog -> {
+                updateState {
+                    copy(
+                        showBestConfirmDialog = false,
+                        showBestCancelDialog = false,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun openBottomSheet(
+        item: AdminSubmitItemUiModel,
+    ) {
+        updateState {
+            copy(
+                bottomSheetItem = item,
+                feedback = "",
+                bestCommentDraft = item.bestComment,
+                pendingStatus = null,
+                missionSubmissionId = null,
+                missionFeedbackId = null,
+                existingFeedbackResult = null,
+                isEditingBest = false,
+            )
+        }
+
+        loadChallengerWorkbookDetail(
+            challengerWorkbookId = item.id,
+        )
+    }
+
+    private fun closeBottomSheet() {
+        updateState {
+            copy(
+                bottomSheetItem = null,
+                feedback = "",
+                bestCommentDraft = "",
+                pendingStatus = null,
+                missionSubmissionId = null,
+                missionFeedbackId = null,
+                existingFeedbackResult = null,
+                isEditingBest = false,
+                showApproveDialog = false,
+                showRejectDialog = false,
+            )
+        }
+    }
+
+    private fun loadChallengerWorkbookDetail(
+        challengerWorkbookId: Long,
+    ) {
+        viewModelScope.launch {
+            updateState {
+                copy(isLoading = true)
+            }
+
+            when (
+                val result =
+                    getChallengerWorkbookDetailUseCase(
+                        challengerWorkbookId =
+                            challengerWorkbookId,
+                    )
+            ) {
+                is ApiState.Success -> {
+                    val workbook = result.data
+                    val submission = workbook.submission
+                    val latestFeedback =
+                        submission?.feedbacks?.lastOrNull()
+
+                    updateState {
+                        copy(
+                            isLoading = false,
+                            missionSubmissionId =
+                                submission?.missionSubmissionId,
+                            missionFeedbackId =
+                                latestFeedback?.missionFeedbackId,
+                            existingFeedbackResult =
+                                latestFeedback?.feedbackResult,
+                            feedback =
+                                latestFeedback?.content.orEmpty(),
+                            bottomSheetItem =
+                                bottomSheetItem?.copy(
+                                    status =
+                                        latestFeedback
+                                            ?.feedbackResult
+                                            ?: bottomSheetItem.status,
+                                    isBestRegistered =
+                                        workbook.isBestWorkbook,
+                                    submitUrl =
+                                        submission
+                                            ?.submittedContent
+                                            .orEmpty(),
+                                ),
+                        )
+                    }
+                }
+
+                is ApiState.Fail -> {
+                    updateState {
+                        copy(isLoading = false)
+                    }
+
+                    emitEvent(
+                        AdminSubmitEvent.ShowToast(
+                            "제출 상세 정보를 불러오지 못했어요."
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun submitFeedback(
+        result: String,
+    ) {
+        val state = uiState.value
+
+        val targetItem =
+            state.bottomSheetItem ?: return
+
+        val missionSubmissionId =
+            state.missionSubmissionId
+
+        if (missionSubmissionId == null) {
+            emitEvent(
+                AdminSubmitEvent.ShowToast(
+                    "제출 정보를 찾을 수 없어요."
+                )
+            )
+            return
+        }
+
+        val content = state.feedback.trim()
+
+        if (content.isBlank()) {
+            emitEvent(
+                AdminSubmitEvent.ShowToast(
+                    "피드백을 입력해주세요."
+                )
+            )
+            return
+        }
+
+        /*
+         * 피드백 수정 API는 내용만 수정 가능
+         * 이미 등록된 결과와 다른 PASS/FAIL은 api상 변경이 불가능..
+         */
+        if (
+            state.missionFeedbackId != null &&
+            state.existingFeedbackResult != null &&
+            state.existingFeedbackResult != result
+        ) {
+
+
+        }
+
+        viewModelScope.launch {
+            updateState {
+                copy(isLoading = true)
+            }
+
+            val apiResult =
+                if (state.missionFeedbackId == null) {
+                    createMissionFeedbackUseCase(
+                        missionSubmissionId =
+                            missionSubmissionId,
+                        content = content,
+                        result = result,
+                    )
+                } else {
+                    updateMissionFeedbackUseCase(
+                        missionFeedbackId =
+                            state.missionFeedbackId,
+                        content = content,
                     )
                 }
 
-            is AdminSubmitAction.EditBest ->
-                updateState { copy(isEditingBest = true) }
+            when (apiResult) {
+                is ApiState.Success -> {
+                    updateState {
+                        copy(
+                            isLoading = false,
+                            items = items.map { item ->
+                                if (item.id == targetItem.id) {
+                                    item.copy(status = result)
+                                } else {
+                                    item
+                                }
+                            },
+                            bottomSheetItem = null,
+                            feedback = "",
+                            pendingStatus = null,
+                            missionSubmissionId = null,
+                            missionFeedbackId = null,
+                            existingFeedbackResult = null,
+                            showApproveDialog = false,
+                            showRejectDialog = false,
+                        )
+                    }
 
-            is AdminSubmitAction.CompleteBest ->
-                updateState { copy(showBestConfirmDialog = true) }
+                    emitEvent(
+                        AdminSubmitEvent.ShowToast(
+                            if (state.missionFeedbackId == null) {
+                                if (result == "PASS") {
+                                    "통과 처리됐어요."
+                                } else {
+                                    "반려 처리됐어요."
+                                }
+                            } else {
+                                "피드백이 수정됐어요."
+                            }
+                        )
+                    )
+                }
 
-            is AdminSubmitAction.DismissBestDialog ->
-                updateState { copy(showBestConfirmDialog = false, showBestCancelDialog = false) }
+                is ApiState.Fail -> {
+                    updateState {
+                        copy(
+                            isLoading = false,
+                            showApproveDialog = false,
+                            showRejectDialog = false,
+                        )
+                    }
+
+                    emitEvent(
+                        AdminSubmitEvent.ShowToast(
+                            "피드백 저장에 실패했어요."
+                        )
+                    )
+                }
+            }
         }
     }
 }
