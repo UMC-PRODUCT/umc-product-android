@@ -54,6 +54,7 @@ android {
 
 dependencies {
     implementation(project(":domain"))
+    implementation(project(":presentation:act"))
     implementation(project(":presentation:splash"))
     implementation(project(":presentation:login"))
     implementation(project(":presentation:home"))
@@ -64,6 +65,7 @@ dependencies {
     implementation(project(":presentation:notice"))
     implementation(project(":presentation:component"))
     implementation(project(":presentation:study"))
+    implementation(project(":presentation:community"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

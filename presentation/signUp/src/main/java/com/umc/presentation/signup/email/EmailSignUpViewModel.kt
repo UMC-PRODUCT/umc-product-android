@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.util.isValidEmail
 import com.umc.domain.model.enums.EmailVerifyPurpose
 import com.umc.domain.model.enums.EmailVerifyType
 import com.umc.domain.model.request.EmailVerificationCompleteRequest
@@ -51,7 +52,7 @@ class EmailSignUpViewModel @Inject constructor(
      * 성공 시 반환된 emailVerificationId를 저장하고 인증번호 입력 필드가 노출됨
      */
     fun onClickVerify() = viewModelScope.launch {
-        if (isValidEmail()) {
+        if (uiState.value.email.isValidEmail()) {
             // 회원가입 흐름이므로 purpose 는 REGISTER 로 고정 (기본값과 동일하지만 명시)
             val request = EmailVerificationRequest(
                 email = uiState.value.email,
@@ -63,7 +64,8 @@ class EmailSignUpViewModel @Inject constructor(
                 successCallback = {
                     updateState {
                         copy(
-                            emailVerificationId = it.toInt(),
+                            // 서버가 숫자가 아닌 값을 내려줘도 크래시하지 않도록 방어 (기본값 -1)
+                            emailVerificationId = it.toIntOrNull() ?: -1,
                             verifyType = EmailVerifyType.REQUEST
                         )
                     }
@@ -115,14 +117,6 @@ class EmailSignUpViewModel @Inject constructor(
 
     private fun errorEmailVerify() {
         updateState { copy(verifyType = EmailVerifyType.ERROR) }
-    }
-
-    private fun isValidEmail(): Boolean {
-        val regex = Regex(
-            pattern = "[a-zA-Z0-9+._%\\-]{1,256}@[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}(\\.[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25})+",
-            option = RegexOption.IGNORE_CASE
-        )
-        return uiState.value.email.isNotBlank() && uiState.value.email.matches(regex)
     }
 }
 
