@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
@@ -65,6 +66,8 @@ import coil.compose.AsyncImage
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.component.UTextActionItem
+import com.umc.component.component.UTextActionMenuHost
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
@@ -170,6 +173,8 @@ fun NoticeWriteRoute(
         onRemoveImage = viewModel::onRemoveImage,
         onLinkTextChanged = viewModel::onLinkTextChanged,
         onCloseLinkPanel = viewModel::onHideLinkPanel,
+        onClickAiRefine = viewModel::onClickAiRefine,
+        onClickAiPasteSummary = viewModel::onClickAiPasteSummary,
     )
 
     if (showVoteMaxDialog) {
@@ -177,7 +182,11 @@ fun NoticeWriteRoute(
     }
 
     if (uiState.isUploadingImages) {
-        ImageUploadingDialog()
+        ProcessingDialog(message = AppStrings.NOTICE_WRITE_IMAGE_UPLOADING)
+    }
+
+    if (uiState.isAiProcessing) {
+        ProcessingDialog(message = AppStrings.AI_PROCESSING)
     }
 
     sheetType?.let { type ->
@@ -269,6 +278,8 @@ fun NoticeWriteScreen(
     onRemoveImage: (NoticeImageAttachment) -> Unit = {},
     onLinkTextChanged: (String) -> Unit = {},
     onCloseLinkPanel: () -> Unit = {},
+    onClickAiRefine: () -> Unit = {},
+    onClickAiPasteSummary: (String?) -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -468,32 +479,45 @@ fun NoticeWriteScreen(
                 MarkdownVisualTransformation(markerColor = markerColor, linkColor = linkColor)
             }
 
-            BasicTextField(
-                value = uiState.content,
-                onValueChange = onContentChanged,
-                // 제목 줄(28sp 등)이 본문 lineHeight(20sp)에 잘리지 않도록 줄 높이는 폰트 크기를 따르게 함
-                textStyle = UmcTypographyTokens.Subheadline.copy(
-                    color = grey950(),
-                    lineHeight = TextUnit.Unspecified,
+            // 본문 롱클릭 시 AI 액션 메뉴 (지원 기기에서만, 미지원 시 기본 툴바)
+            val clipboardManager = LocalClipboardManager.current
+
+            UTextActionMenuHost(
+                enabled = uiState.isAiMenuEnabled,
+                actions = listOf(
+                    UTextActionItem(AppStrings.AI_MENU_REFINE, onClickAiRefine),
+                    UTextActionItem(AppStrings.AI_MENU_PASTE_SUMMARY) {
+                        onClickAiPasteSummary(clipboardManager.getText()?.text)
+                    },
                 ),
-                cursorBrush = SolidColor(grey950()),
-                visualTransformation = markdownTransformation,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 240.dp),
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (uiState.content.text.isEmpty()) {
-                            UText(
-                                text = AppStrings.NOTICE_WRITE_CONTENT_PLACEHOLDER,
-                                style = UmcTypographyTokens.Subheadline,
-                                color = grey400(),
-                            )
+            ) {
+                BasicTextField(
+                    value = uiState.content,
+                    onValueChange = onContentChanged,
+                    // 제목 줄(28sp 등)이 본문 lineHeight(20sp)에 잘리지 않도록 줄 높이는 폰트 크기를 따르게 함
+                    textStyle = UmcTypographyTokens.Subheadline.copy(
+                        color = grey950(),
+                        lineHeight = TextUnit.Unspecified,
+                    ),
+                    cursorBrush = SolidColor(grey950()),
+                    visualTransformation = markdownTransformation,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 240.dp),
+                    decorationBox = { innerTextField ->
+                        Box {
+                            if (uiState.content.text.isEmpty()) {
+                                UText(
+                                    text = AppStrings.NOTICE_WRITE_CONTENT_PLACEHOLDER,
+                                    style = UmcTypographyTokens.Subheadline,
+                                    color = grey400(),
+                                )
+                            }
+                            innerTextField()
                         }
-                        innerTextField()
-                    }
-                },
-            )
+                    },
+                )
+            }
 
             // 첨부 이미지 (정사각 썸네일 가로 나열)
             if (uiState.images.isNotEmpty()) {
@@ -829,9 +853,9 @@ private fun VoteMaxDialog(
     )
 }
 
-/** 이미지 업로드 진행 다이얼로그 */
+/** 진행 다이얼로그 (이미지 업로드 / AI 처리 공용) */
 @Composable
-private fun ImageUploadingDialog() {
+private fun ProcessingDialog(message: String) {
     Dialog(onDismissRequest = { }) {
         Column(
             modifier = Modifier
@@ -850,7 +874,7 @@ private fun ImageUploadingDialog() {
             Spacer(modifier = Modifier.height(24.dp))
 
             UText(
-                text = AppStrings.NOTICE_WRITE_IMAGE_UPLOADING,
+                text = message,
                 style = UmcTypographyTokens.Subheadline,
                 color = grey700(),
             )
