@@ -311,20 +311,23 @@ class NoticeWriteViewModel @Inject constructor(
             return@launch
         }
 
-        updateState { copy(isAiProcessing = true) }
+        updateState { copy(isAiProcessing = true, aiDownloadPercent = null) }
 
         resultResponse(
-            response = refineNoticeMarkdownUseCase(state.content.text),
+            response = refineNoticeMarkdownUseCase(state.content.text) { percent ->
+                updateState { copy(aiDownloadPercent = percent) }
+            },
             successCallback = { refined ->
                 updateState {
                     copy(
                         isAiProcessing = false,
+                        aiDownloadPercent = null,
                         content = TextFieldValue(refined, TextRange(refined.length)),
                     )
                 }
             },
             errorCallback = {
-                updateState { copy(isAiProcessing = false) }
+                updateState { copy(isAiProcessing = false, aiDownloadPercent = null) }
                 emitEvent(NoticeWriteEvent.ShowError(it.message))
             },
         )
@@ -341,10 +344,12 @@ class NoticeWriteViewModel @Inject constructor(
             return@launch
         }
 
-        updateState { copy(isAiProcessing = true) }
+        updateState { copy(isAiProcessing = true, aiDownloadPercent = null) }
 
         resultResponse(
-            response = summarizeTextUseCase(source),
+            response = summarizeTextUseCase(source) { percent ->
+                updateState { copy(aiDownloadPercent = percent) }
+            },
             successCallback = { summary ->
                 updateState {
                     val start = content.selection.min
@@ -352,12 +357,13 @@ class NoticeWriteViewModel @Inject constructor(
                     val newText = content.text.replaceRange(start, end, summary)
                     copy(
                         isAiProcessing = false,
+                        aiDownloadPercent = null,
                         content = TextFieldValue(newText, TextRange(start + summary.length)),
                     )
                 }
             },
             errorCallback = {
-                updateState { copy(isAiProcessing = false) }
+                updateState { copy(isAiProcessing = false, aiDownloadPercent = null) }
                 emitEvent(NoticeWriteEvent.ShowError(it.message))
             },
         )
@@ -660,6 +666,8 @@ data class NoticeWriteUiState(
     val isAiRefineEnabled: Boolean = false,
     val isAiSummaryEnabled: Boolean = false,
     val isAiProcessing: Boolean = false,
+    // 모델 다운로드가 진행 중일 때만 0~100, 추론 단계에서는 null
+    val aiDownloadPercent: Int? = null,
     val isEditMode: Boolean = false,
     val editNoticeId: Long = 0L,
 ) : UiState {
