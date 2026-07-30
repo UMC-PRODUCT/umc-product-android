@@ -27,6 +27,16 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
     override suspend fun getMyStudyGroup(cursor: Long?, size: Int): ApiState<StudyGroupListResponse> =
         apiCall { organizationApi.getMyStudyGroup(cursor, size) }
 
+    override suspend fun getManagedStudyGroups(
+        cursor: Long?,
+        size: Int,
+    ): ApiState<ManagedStudyGroupListResponse> =
+        apiCall {
+            organizationApi.getManagedStudyGroups(
+                cursor = cursor,
+                size = size,
+            )
+        }
 
     override suspend fun getSchoolByKeyword(
         keyword: String,
@@ -99,9 +109,78 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
         return apiCall { organizationApi.assignSchool(schoolId, request) }
     }
 
-    override suspend fun createStudyGroup(request: CreateStudyGroupRequest): ApiState<Unit> {
-        return apiCall { organizationApi.createStudyGroup(request) }
-    }
+    override suspend fun createStudyGroup(
+        request: CreateStudyGroupRequest,
+    ): ApiState<Unit> =
+        apiCall {
+            organizationApi.createStudyGroup(
+                request = request,
+            )
+        }
+
+    override suspend fun createStudyGroupSchedule(
+        request: CreateStudyGroupScheduleRequest,
+    ): ApiState<Unit> =
+        apiCall {
+            organizationApi.createStudyGroupSchedule(
+                request = request,
+            )
+        }
+
+    override suspend fun updateStudyGroup(
+        studyGroupId: Long,
+        request: UpdateStudyGroupRequest,
+    ): ApiState<Unit> =
+        apiCall {
+            organizationApi.updateStudyGroup(
+                studyGroupId = studyGroupId,
+                request = request,
+            )
+        }
+
+    override suspend fun addStudyGroupMentor(
+        studyGroupId: Long,
+        mentorId: Long,
+    ): ApiState<Unit> =
+        apiCall {
+            organizationApi.addStudyGroupMentor(
+                studyGroupId = studyGroupId,
+                mentorId = mentorId,
+            )
+        }
+
+    override suspend fun deleteStudyGroupMentor(
+        studyGroupId: Long,
+        mentorId: Long,
+    ): ApiState<Unit> =
+        apiCall {
+            organizationApi.deleteStudyGroupMentor(
+                studyGroupId = studyGroupId,
+                mentorId = mentorId,
+            )
+        }
+
+    override suspend fun addStudyGroupMember(
+        studyGroupId: Long,
+        memberId: Long,
+    ): ApiState<Unit> =
+        apiCall {
+            organizationApi.addStudyGroupMember(
+                studyGroupId = studyGroupId,
+                memberId = memberId,
+            )
+        }
+
+    override suspend fun deleteStudyGroupMember(
+        studyGroupId: Long,
+        memberId: Long,
+    ): ApiState<Unit> =
+        apiCall {
+            organizationApi.deleteStudyGroupMember(
+                studyGroupId = studyGroupId,
+                memberId = memberId,
+            )
+        }
 
     override suspend fun createSchool(request: SchoolRegistrationRequest): ApiState<Unit> {
         return apiCall { organizationApi.createSchool(request) }

@@ -64,11 +64,10 @@ interface ScheduleApi {
         @Body request: UpdateLocationRequest
     ): ApiResponse<UpdateLocationResponse>
 
-
-    // 스터디 그룹 일정 생성
-    @POST(Endpoints.Schedule.CREATE_STUDY_GROUP_SCHEDULE)
+    @POST("/api/v1/study-groups/schedules")
     suspend fun createStudyGroupSchedule(
-        @Body request: CreateStudyGroupScheduleRequest
+        @Body request: CreateStudyGroupScheduleRequest,
     ): ApiResponse<Long>
+
 }
 

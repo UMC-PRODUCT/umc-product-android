@@ -19,8 +19,3 @@ data class StudyGroup(
     val name: String
 )
 
-data class ChallengerWorkbookSubmission(
-    val challengerWorkbookId: Long?,
-    val submission: String?
-
-)

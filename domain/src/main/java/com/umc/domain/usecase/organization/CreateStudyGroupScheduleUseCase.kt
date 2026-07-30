@@ -1,0 +1,18 @@
+package com.umc.domain.usecase.organization
+
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.request.organization.CreateStudyGroupScheduleRequest
+import com.umc.domain.repository.OrganizationRepository
+import javax.inject.Inject
+
+class CreateStudyGroupScheduleUseCase @Inject constructor(
+    private val organizationRepository: OrganizationRepository,
+) {
+    suspend operator fun invoke(
+        request: CreateStudyGroupScheduleRequest,
+    ): ApiState<Unit> {
+        return organizationRepository.createStudyGroupSchedule(
+            request = request,
+        )
+    }
+}

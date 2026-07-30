@@ -3,6 +3,7 @@ package com.umc.domain.repository.curriculum
 import com.umc.domain.model.act.study.StudyProgress
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.CursorPage
+import com.umc.domain.model.curriculum.ChallengerWorkbook
 import com.umc.domain.model.curriculum.CurriculumOverview
 import com.umc.domain.model.curriculum.StudyGroup
 import com.umc.domain.model.curriculum.WorkbookSubmissionItem
@@ -14,7 +15,7 @@ interface CurriculumRepository {
     ): ApiState<StudyProgress>
 
     suspend fun submitChallengerWorkbook(
-        challengerWorkbookId: Long,
+        originalWorkbookId: Long,
         submission: String,
     ): ApiState<Unit>
 
@@ -36,4 +37,35 @@ interface CurriculumRepository {
     ): ApiState<List<StudyGroup>>
 
     suspend fun getAvailableWeeks(): ApiState<List<Int>>
+
+    suspend fun getChallengerWorkbookDetail(
+        challengerWorkbookId: Long,
+    ): ApiState<ChallengerWorkbook>
+
+    suspend fun createWeeklyBestWorkbook(
+        bestMemberId: Long,
+        weeklyCurriculumId: Long,
+        studyGroupId: Long,
+        reason: String,
+    ): ApiState<Unit>
+
+    suspend fun updateWeeklyBestWorkbook(
+        weeklyBestWorkbookId: Long,
+        reason: String,
+    ): ApiState<Unit>
+
+    suspend fun deleteWeeklyBestWorkbook(
+        weeklyBestWorkbookId: Long,
+    ): ApiState<Unit>
+
+    suspend fun createMissionFeedback(
+        missionSubmissionId: Long,
+        content: String,
+        result: String,
+    ): ApiState<Unit>
+
+    suspend fun updateMissionFeedback(
+        missionFeedbackId: Long,
+        content: String,
+    ): ApiState<Unit>
 }
