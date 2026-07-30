@@ -221,9 +221,12 @@ fun MainNavHost(
                 backStackEntry.toRoute<MainDestination.AdminStudyGroupSchedule>()
 
             AdminStudyGroupScheduleRoute(
+                groupId = destination.groupId,
+                groupTitle = destination.groupTitle,
+                groupPart = destination.groupPart,
                 onNavigateBack = {
                     navHostController.popBackStack()
-                },
+                }
             )
         }
 
