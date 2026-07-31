@@ -50,7 +50,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
@@ -176,7 +175,6 @@ fun NoticeWriteRoute(
         onLinkTextChanged = viewModel::onLinkTextChanged,
         onCloseLinkPanel = viewModel::onHideLinkPanel,
         onClickAiRefine = viewModel::onClickAiRefine,
-        onClickAiPasteSummary = viewModel::onClickAiPasteSummary,
     )
 
     if (showVoteMaxDialog) {
@@ -286,7 +284,6 @@ fun NoticeWriteScreen(
     onLinkTextChanged: (String) -> Unit = {},
     onCloseLinkPanel: () -> Unit = {},
     onClickAiRefine: () -> Unit = {},
-    onClickAiPasteSummary: (String?) -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -490,22 +487,12 @@ fun NoticeWriteScreen(
             val rendered = markdownRenderer.render(uiState.content.text)
             var contentTextLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
-            // 본문 롱클릭 시 AI 액션 메뉴 (지원 기기에서만, 미지원 시 기본 툴바)
-            val clipboardManager = LocalClipboardManager.current
-
             UTextActionMenuHost(
-                // 기능별 지원 기기가 달라 각각 판단 (미지원 항목은 메뉴에서 제외)
-                actions = buildList {
-                    if (uiState.isAiRefineEnabled) {
-                        add(UTextActionItem(AppStrings.AI_MENU_REFINE, onClickAiRefine))
-                    }
-                    if (uiState.isAiSummaryEnabled) {
-                        add(
-                            UTextActionItem(AppStrings.AI_MENU_PASTE_SUMMARY) {
-                                onClickAiPasteSummary(clipboardManager.getText()?.text)
-                            }
-                        )
-                    }
+                // 지원 기기에서만 AI 항목을 메뉴에 추가
+                actions = if (uiState.isAiRefineEnabled) {
+                    listOf(UTextActionItem(AppStrings.AI_MENU_REFINE, onClickAiRefine))
+                } else {
+                    emptyList()
                 },
             ) {
                 BasicTextField(

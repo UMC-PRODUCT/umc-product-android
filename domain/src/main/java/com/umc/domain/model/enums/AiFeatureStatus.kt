@@ -1,11 +1,5 @@
 package com.umc.domain.model.enums
 
-/** 온디바이스 AI 텍스트 기능 종류 */
-enum class AiTextFeature {
-    SUMMARIZATION,  // 요약 (ML Kit GenAI Summarization)
-    GENERATION,     // 자유 프롬프트 생성 (ML Kit GenAI Prompt)
-}
-
 /** 온디바이스 AI 기능 가용 상태 */
 enum class AiFeatureStatus {
     AVAILABLE,      // 바로 사용 가능

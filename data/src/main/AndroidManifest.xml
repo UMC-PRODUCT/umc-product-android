@@ -6,6 +6,6 @@
         ML Kit GenAI(Gemini Nano)는 minSdk 26을 요구하지만 앱 minSdk는 24다.
         API 26 미만에서는 AiTextRepositoryImpl이 호출 전에 UNAVAILABLE로 차단하므로 강제 병합한다
     -->
-    <uses-sdk tools:overrideLibrary="com.google.mlkit.genai.summarization,com.google.mlkit.genai.prompt,com.google.mlkit.genai.common" />
+    <uses-sdk tools:overrideLibrary="com.google.mlkit.genai.prompt,com.google.mlkit.genai.common" />
 
 </manifest>

@@ -1,7 +1,6 @@
 package com.umc.domain.usecase.ai
 
 import com.umc.domain.model.enums.AiFeatureStatus
-import com.umc.domain.model.enums.AiTextFeature
 import com.umc.domain.repository.ai.AiTextRepository
 import javax.inject.Inject
 
@@ -9,7 +8,7 @@ import javax.inject.Inject
 class CheckAiFeatureStatusUseCase @Inject constructor(
     private val aiTextRepository: AiTextRepository,
 ) {
-    suspend operator fun invoke(feature: AiTextFeature): AiFeatureStatus {
-        return aiTextRepository.checkStatus(feature)
+    suspend operator fun invoke(): AiFeatureStatus {
+        return aiTextRepository.checkStatus()
     }
 }
