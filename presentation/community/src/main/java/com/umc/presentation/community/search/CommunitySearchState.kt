@@ -8,6 +8,7 @@ data class CommunitySearchState(
     val searchResults: List<CommunityThreadUiModel> = emptyList(),
     val hasSearched: Boolean = false,
     val isLoading: Boolean = false,
+
 ) {
     val isInitial: Boolean
         get() = !hasSearched

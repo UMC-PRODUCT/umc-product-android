@@ -179,6 +179,7 @@ private fun CommunitySearchResultList(
                 onClick = {
                     onThreadClick(thread.id)
                 },
+                onLongClick = {},
                 modifier = Modifier.padding(bottom = 8.dp),
             )
         }

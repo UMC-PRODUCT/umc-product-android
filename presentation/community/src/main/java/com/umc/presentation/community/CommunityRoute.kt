@@ -14,6 +14,7 @@ fun CommunityRoute(
     onNavigateToSearch: () -> Unit,
     onNavigateToCreateThread: () -> Unit,
     viewModel: CommunityViewModel = viewModel(),
+    onNavigateToEditThread: (Long) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -28,6 +29,10 @@ fun CommunityRoute(
 
                 CommunityEvent.NavigateToSearch -> {
                     onNavigateToSearch()
+                }
+
+                is CommunityEvent.NavigateToEditThread -> {
+                    onNavigateToEditThread(event.threadId)
                 }
 
                 CommunityEvent.NavigateToCreateThread -> {
