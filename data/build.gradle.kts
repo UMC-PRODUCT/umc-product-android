@@ -42,8 +42,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.hilt.android)
 
-    // 온디바이스 AI (ML Kit GenAI / Gemini Nano)
-    implementation(libs.mlkit.genai.summarization)
+    // 온디바이스 AI (ML Kit GenAI Prompt API / Gemini Nano)
     implementation(libs.mlkit.genai.prompt)
     implementation(libs.kotlinx.coroutines.guava)
     testImplementation(libs.junit)

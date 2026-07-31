@@ -8,7 +8,6 @@ import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.component.theme.AppStrings
-import com.umc.domain.model.enums.AiTextFeature
 import com.umc.domain.model.enums.BoardChipType
 import com.umc.domain.model.enums.NoticeTab
 import com.umc.domain.model.enums.NoticeWriterRole
@@ -27,7 +26,6 @@ import com.umc.domain.model.request.notice.NoticeVoteRequest
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.usecase.ai.CheckAiFeatureStatusUseCase
 import com.umc.domain.usecase.ai.RefineNoticeMarkdownUseCase
-import com.umc.domain.usecase.ai.SummarizeTextUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.AddNoticeImagesUseCase
 import com.umc.domain.usecase.notice.AddNoticeLinksUseCase
@@ -56,7 +54,6 @@ class NoticeWriteViewModel @Inject constructor(
     private val addNoticeVoteUseCase: AddNoticeVoteUseCase,
     private val checkAiFeatureStatusUseCase: CheckAiFeatureStatusUseCase,
     private val refineNoticeMarkdownUseCase: RefineNoticeMarkdownUseCase,
-    private val summarizeTextUseCase: SummarizeTextUseCase,
 ) : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
     NoticeWriteUiState(),
 ) {
@@ -73,20 +70,10 @@ class NoticeWriteViewModel @Inject constructor(
         checkAiAvailability()
     }
 
-    /**
-     * 온디바이스 AI 지원 기기에서만 본문 롱클릭 AI 메뉴를 노출.
-     * 요약(Summarization)과 생성(Prompt)의 지원 기기 목록이 서로 달라
-     * (예: Galaxy S25는 요약만 지원) 메뉴 항목을 각각 따로 판단한다
-     */
+    /** 온디바이스 AI(Prompt API) 지원 기기에서만 본문 롱클릭 AI 메뉴를 노출 */
     private fun checkAiAvailability() = viewModelScope.launch {
-        val generation = checkAiFeatureStatusUseCase(AiTextFeature.GENERATION)
-        val summarization = checkAiFeatureStatusUseCase(AiTextFeature.SUMMARIZATION)
-        updateState {
-            copy(
-                isAiRefineEnabled = generation.isUsable,
-                isAiSummaryEnabled = summarization.isUsable,
-            )
-        }
+        val status = checkAiFeatureStatusUseCase()
+        updateState { copy(isAiRefineEnabled = status.isUsable) }
     }
 
     /** 수정 모드 진입. 기존 공지 내용(제목/본문/링크/이미지)을 채워 넣는다 */
@@ -323,42 +310,6 @@ class NoticeWriteViewModel @Inject constructor(
                         isAiProcessing = false,
                         aiDownloadPercent = null,
                         content = TextFieldValue(refined, TextRange(refined.length)),
-                    )
-                }
-            },
-            errorCallback = {
-                updateState { copy(isAiProcessing = false, aiDownloadPercent = null) }
-                emitEvent(NoticeWriteEvent.ShowError(it.message))
-            },
-        )
-    }
-
-    /** 붙여넣고 요약: 클립보드 텍스트를 요약해 커서 위치에 삽입 */
-    fun onClickAiPasteSummary(clipboardText: String?) = viewModelScope.launch {
-        val state = uiState.value
-        if (state.isAiProcessing) return@launch
-
-        val source = clipboardText?.trim().orEmpty()
-        if (source.isEmpty()) {
-            emitEvent(NoticeWriteEvent.ShowError(AppStrings.AI_CLIPBOARD_EMPTY))
-            return@launch
-        }
-
-        updateState { copy(isAiProcessing = true, aiDownloadPercent = null) }
-
-        resultResponse(
-            response = summarizeTextUseCase(source) { percent ->
-                updateState { copy(aiDownloadPercent = percent) }
-            },
-            successCallback = { summary ->
-                updateState {
-                    val start = content.selection.min
-                    val end = content.selection.max
-                    val newText = content.text.replaceRange(start, end, summary)
-                    copy(
-                        isAiProcessing = false,
-                        aiDownloadPercent = null,
-                        content = TextFieldValue(newText, TextRange(start + summary.length)),
                     )
                 }
             },
@@ -664,7 +615,6 @@ data class NoticeWriteUiState(
     val writerSchoolId: Int? = null,
     val isSubmitting: Boolean = false,
     val isAiRefineEnabled: Boolean = false,
-    val isAiSummaryEnabled: Boolean = false,
     val isAiProcessing: Boolean = false,
     // 모델 다운로드가 진행 중일 때만 0~100, 추론 단계에서는 null
     val aiDownloadPercent: Int? = null,
