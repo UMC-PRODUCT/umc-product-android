@@ -82,4 +82,12 @@ sealed interface MainDestination {
 
 
 
+    /**커뮤니티 섹션**/
+    @Serializable
+    data object Community : MainDestination
+
+
+    @Serializable
+    data object CommunitySearch : MainDestination
+
 }
