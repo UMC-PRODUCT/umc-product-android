@@ -29,6 +29,8 @@ import com.umc.presentation.login.findpassword.FindPasswordRoute
 import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
+import com.umc.presentation.community.CommunityRoute
+import com.umc.presentation.community.search.CommunitySearchRoute
 
 @Composable
 fun MainNavHost(
@@ -38,11 +40,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = if (BuildConfig.DEBUG) {
-            MainDestination.Login
-        } else {
-            MainDestination.Home
-        },
+        startDestination = MainDestination.Community,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -287,6 +285,35 @@ fun MainNavHost(
             ProfileRoute()
         }
 
+
+        /** 커뮤니티 화면 **/
+        composable<MainDestination.Community> {
+            CommunityRoute(
+                onNavigateToThreadDetail = { threadId ->
+                    // TODO: 스레드 상세 화면 생성 후 연결
+                },
+                onNavigateToSearch = {
+                    navHostController.navigate(
+                        MainDestination.CommunitySearch
+                    )
+                },
+                onNavigateToCreateThread = {
+                    // TODO: 새 스레드 작성 화면 생성 후 연결
+                },
+            )
+        }
+
+        /** 커뮤니티 검색 화면 **/
+        composable<MainDestination.CommunitySearch> {
+            CommunitySearchRoute(
+                onNavigateBack = {
+                    navHostController.popBackStack()
+                },
+                onNavigateToThreadDetail = { threadId ->
+                    // TODO: 스레드 상세 화면 생성 후 연결
+                },
+            )
+        }
 
     }
 }

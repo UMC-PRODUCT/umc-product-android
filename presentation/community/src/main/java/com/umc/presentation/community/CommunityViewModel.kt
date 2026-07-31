@@ -124,7 +124,7 @@ class CommunityViewModel : ViewModel() {
     }
 
     companion object {
-        private val PREVIEW_STATE = PreviewState.LOADING
+        private val PREVIEW_STATE = PreviewState.SUCCESS
     }
 
     private val dummyThreads = listOf(
