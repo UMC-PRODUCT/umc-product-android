@@ -8,5 +8,7 @@ data class CommunityThreadUiModel(
     val dayText: String,
     val commentCount: Int,
     val isPinned: Boolean = false,
+    val isNotificationEnabled: Boolean = true,
+    val isMine: Boolean = false,
     val isRead: Boolean = false,
 )
