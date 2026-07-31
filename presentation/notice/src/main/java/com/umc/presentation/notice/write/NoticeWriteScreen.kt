@@ -68,7 +68,7 @@ import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextActionItem
-import com.umc.component.component.UTextActionMenuHost
+import com.umc.component.component.uTextActionMenu
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
@@ -487,15 +487,14 @@ fun NoticeWriteScreen(
             val rendered = markdownRenderer.render(uiState.content.text)
             var contentTextLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
-            UTextActionMenuHost(
-                // 지원 기기에서만 AI 항목을 메뉴에 추가
-                actions = if (uiState.isAiRefineEnabled) {
-                    listOf(UTextActionItem(AppStrings.AI_MENU_REFINE, onClickAiRefine))
-                } else {
-                    emptyList()
-                },
-            ) {
-                BasicTextField(
+            // 지원 기기에서만 AI 항목을 메뉴에 추가
+            val aiActions = if (uiState.isAiRefineEnabled) {
+                listOf(UTextActionItem(AppStrings.AI_MENU_REFINE, onClickAiRefine))
+            } else {
+                emptyList()
+            }
+
+            BasicTextField(
                     value = uiState.content,
                     onValueChange = onContentChanged,
                     // 제목 줄(28sp 등)이 본문 lineHeight(20sp)에 잘리지 않도록 줄 높이는 폰트 크기를 따르게 함
@@ -509,7 +508,8 @@ fun NoticeWriteScreen(
                     // 내부 스크롤이 생기면 세로선 좌표가 어긋나므로 높이를 고정하지 않는다
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 240.dp),
+                        .heightIn(min = 240.dp)
+                        .uTextActionMenu(aiActions),
                     decorationBox = { innerTextField ->
                         // 세로선은 좌측 여백(음수 x)에 그려 본문 위치를 그대로 둔다
                         Box(
@@ -530,7 +530,6 @@ fun NoticeWriteScreen(
                         }
                     },
                 )
-            }
 
             // 첨부 이미지 (정사각 썸네일 가로 나열)
             if (uiState.images.isNotEmpty()) {
