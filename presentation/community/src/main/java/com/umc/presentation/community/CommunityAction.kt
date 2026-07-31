@@ -19,4 +19,15 @@ sealed interface CommunityAction {
     data object OnCreateThreadClick : CommunityAction
 
     data object OnRetryClick : CommunityAction
+
+
+    data class OnThreadLongClick(val threadId: Long) : CommunityAction
+    data object OnDismissThreadMenu : CommunityAction
+    data object OnTogglePinClick : CommunityAction
+    data object OnToggleNotificationClick : CommunityAction
+    data object OnEditThreadClick : CommunityAction
+    data object OnLeaveThreadClick : CommunityAction
+    data object OnDismissLeaveDialog : CommunityAction
+    data object OnConfirmLeaveClick : CommunityAction
+
 }

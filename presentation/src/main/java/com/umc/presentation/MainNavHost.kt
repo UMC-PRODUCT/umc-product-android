@@ -290,7 +290,7 @@ fun MainNavHost(
         composable<MainDestination.Community> {
             CommunityRoute(
                 onNavigateToThreadDetail = { threadId ->
-                    // TODO: 스레드 상세 화면 생성 후 연결
+                    // TODO
                 },
                 onNavigateToSearch = {
                     navHostController.navigate(
@@ -298,7 +298,11 @@ fun MainNavHost(
                     )
                 },
                 onNavigateToCreateThread = {
-                    // TODO: 새 스레드 작성 화면 생성 후 연결
+                    // TODO
+                },
+                onNavigateToEditThread = { threadId ->
+                    // TODO: 편집 화면 생성 후 연결
+                    // navHostController.navigate(...)
                 },
             )
         }

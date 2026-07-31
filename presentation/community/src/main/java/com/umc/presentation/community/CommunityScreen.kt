@@ -21,15 +21,15 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
-import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.presentation.community.component.CommunityEmptyContent
 import com.umc.presentation.community.component.CommunityErrorContent
-import com.umc.presentation.community.component.CommunityFilterMenu
 import com.umc.presentation.community.component.CommunityFloatingButton
 import com.umc.presentation.community.component.CommunityLoadingContent
 import com.umc.presentation.community.component.CommunityThreadItem
 import com.umc.presentation.community.component.CommunityTopBar
+import com.umc.presentation.community.component.dialog.CommunityLeaveDialog
+import com.umc.presentation.community.component.dialog.CommunityThreadMenuDialog
 
 @Composable
 fun CommunityScreen(
@@ -100,6 +100,11 @@ fun CommunityScreen(
                                     CommunityAction.OnThreadClick(threadId)
                                 )
                             },
+                            onThreadLongClick = { threadId ->
+                                onAction(
+                                    CommunityAction.OnThreadLongClick(threadId)
+                                )
+                            },
                         )
                     }
                 }
@@ -116,6 +121,43 @@ fun CommunityScreen(
                     .padding(bottom = 20.dp),
             )
         }
+
+        if (
+            state.showThreadMenuDialog &&
+            state.selectedThread != null
+        ) {
+            CommunityThreadMenuDialog(
+                thread = state.selectedThread,
+                onDismissRequest = {
+                    onAction(CommunityAction.OnDismissThreadMenu)
+                },
+                onTogglePinClick = {
+                    onAction(CommunityAction.OnTogglePinClick)
+                },
+                onToggleNotificationClick = {
+                    onAction(
+                        CommunityAction.OnToggleNotificationClick
+                    )
+                },
+                onEditClick = {
+                    onAction(CommunityAction.OnEditThreadClick)
+                },
+                onLeaveClick = {
+                    onAction(CommunityAction.OnLeaveThreadClick)
+                },
+            )
+        }
+
+        if (state.showLeaveDialog) {
+            CommunityLeaveDialog(
+                onDismissRequest = {
+                    onAction(CommunityAction.OnDismissLeaveDialog)
+                },
+                onConfirmClick = {
+                    onAction(CommunityAction.OnConfirmLeaveClick)
+                },
+            )
+        }
     }
 }
 
@@ -123,6 +165,7 @@ fun CommunityScreen(
 private fun CommunityThreadList(
     state: CommunityState,
     onThreadClick: (Long) -> Unit,
+    onThreadLongClick: (Long) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -153,6 +196,9 @@ private fun CommunityThreadList(
                     onClick = {
                         onThreadClick(thread.id)
                     },
+                    onLongClick = {
+                        onThreadLongClick(thread.id)
+                    },
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
             }
@@ -182,6 +228,9 @@ private fun CommunityThreadList(
                 thread = thread,
                 onClick = {
                     onThreadClick(thread.id)
+                },
+                onLongClick = {
+                    onThreadLongClick(thread.id)
                 },
                 modifier = Modifier.padding(bottom = 8.dp),
             )

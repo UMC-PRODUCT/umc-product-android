@@ -2,6 +2,7 @@ package com.umc.presentation.community.component
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,6 +40,7 @@ import com.umc.presentation.community.model.CommunityThreadUiModel
 fun CommunityThreadItem(
     thread: CommunityThreadUiModel,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -47,10 +49,11 @@ fun CommunityThreadItem(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(
+            .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
+                onLongClick = onLongClick,
             ),
         shape = RoundedCornerShape(10.dp),
         color = grey000(),

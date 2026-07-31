@@ -10,6 +10,10 @@ sealed interface CommunityEvent {
 
     data object NavigateToCreateThread : CommunityEvent
 
+    data class NavigateToEditThread(
+        val threadId: Long,
+    ) : CommunityEvent
+
     data class ShowToast(
         val message: String,
     ) : CommunityEvent
