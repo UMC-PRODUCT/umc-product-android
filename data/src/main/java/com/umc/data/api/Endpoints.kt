@@ -115,6 +115,9 @@ object Endpoints {
 
         const val TROPHY = "api/v1/trophies"
 
+        const val THREADS = "api/v1/community/threads"
+        const val THREAD_DETAIL = "$THREADS/{threadId}"
+
 
     }
 

@@ -156,7 +156,7 @@ fun CommunitySearchScreen(
 @Composable
 private fun CommunitySearchResultList(
     state: CommunitySearchState,
-    onThreadClick: (Long) -> Unit,
+    onThreadClick: (String) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),

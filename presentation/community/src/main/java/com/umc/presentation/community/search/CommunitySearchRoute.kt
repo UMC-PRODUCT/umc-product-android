@@ -9,7 +9,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
 fun CommunitySearchRoute(
     onNavigateBack: () -> Unit,
-    onNavigateToThreadDetail: (Long) -> Unit,
+    onNavigateToThreadDetail: (String) -> Unit,
     viewModel: CommunitySearchViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()

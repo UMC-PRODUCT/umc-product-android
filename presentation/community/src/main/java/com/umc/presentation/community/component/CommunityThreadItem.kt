@@ -151,20 +151,22 @@ fun CommunityThreadItem(
                     color = grey600(),
                 )
 
-                Surface(
-                    modifier = Modifier.size(24.dp),
-                    shape = RoundedCornerShape(4.dp),
-                    color = grey800(),
-                    shadowElevation = 0.dp,
-                ) {
-                    androidx.compose.foundation.layout.Box(
-                        contentAlignment = Alignment.Center,
+                if (thread.unreadCount > 0) {
+                    Surface(
+                        modifier = Modifier.size(24.dp),
+                        shape = RoundedCornerShape(4.dp),
+                        color = grey800(),
+                        shadowElevation = 0.dp,
                     ) {
-                        UText(
-                            text = thread.commentCount.toString(),
-                            style = UmcTypographyTokens.Caption2Bold,
-                            color = grey000(),
-                        )
+                        androidx.compose.foundation.layout.Box(
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            UText(
+                                text = thread.unreadCount.toString(),
+                                style = UmcTypographyTokens.Caption2Bold,
+                                color = grey000(),
+                            )
+                        }
                     }
                 }
             }
