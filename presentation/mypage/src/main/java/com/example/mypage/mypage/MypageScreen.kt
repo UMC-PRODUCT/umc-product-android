@@ -493,7 +493,7 @@ fun MypageScreen(
             )
             MypageListCard {
                 MypageListItem(
-                    R.drawable.ic_hand_question,
+                    R.drawable.ic_hand_QNA,
                     AppStrings.MYPAGE_PERSONAL_INFORMATION,
                     onClick = onPrivacyClick
                 )

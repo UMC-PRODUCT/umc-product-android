@@ -10,7 +10,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun CommunityEditRoute(
-    threadId: Long,
+    threadId: String,
     onNavigateBack: () -> Unit,
     onNavigateToEmojiPicker: () -> Unit,
     viewModel: CommunityEditViewModel = viewModel(),

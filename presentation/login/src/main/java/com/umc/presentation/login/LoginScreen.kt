@@ -248,7 +248,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 UText(
-                    text = AppStrings.LOGIN_HELP_QUESTION,
+                    text = AppStrings.LOGIN_HELP_QNA,
                     style = UmcTypographyTokens.Footnote,
                     color = grey500(),
                 )

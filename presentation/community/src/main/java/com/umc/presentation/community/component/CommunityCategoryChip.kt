@@ -50,13 +50,13 @@ fun CommunityCategoryChip(
             textColor = indigo500()
         }
 
-        CommunityCategory.PART_NOTICE -> {
+        CommunityCategory.PROJECT -> {
             backgroundColor = yellow100()
             borderColor = yellow200()
             textColor = yellow500()
         }
 
-        CommunityCategory.QUESTION -> {
+        CommunityCategory.QNA -> {
             backgroundColor = grey100()
             borderColor = grey200()
             textColor = grey500()

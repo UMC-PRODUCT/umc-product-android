@@ -473,7 +473,7 @@ private fun AvailableSessionExpandedContent(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     UText(
-                        text = AppStrings.ATTENDANCE_FAIL_REASON_QUESTION,
+                        text = AppStrings.ATTENDANCE_FAIL_REASON_QNA,
                         color = grey600(),
                         style = Footnote
                     )
