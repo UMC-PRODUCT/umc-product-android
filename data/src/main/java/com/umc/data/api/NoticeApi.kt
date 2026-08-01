@@ -26,7 +26,6 @@ interface NoticeApi {
 
     companion object {
         const val PATH_NOTICE_ID = "noticeId"
-        const val PATH_VOTE_ID = "voteId"
         const val QUERY_GISU_ID = "gisuId"
         const val QUERY_CHAPTER_ID = "chapterId"
         const val QUERY_SCHOOL_ID = "schoolId"
@@ -160,17 +159,17 @@ interface NoticeApi {
         @Body request: NoticeLinkRequest,
     ): ApiResponse<Unit>
 
-    // 투표 응답 제출
+    // 투표 응답 제출 (공지당 투표는 1개이므로 noticeId로 식별)
     @POST(Endpoints.Notice.VOTE_RESPONSES)
     suspend fun submitVoteResponse(
-        @Path(PATH_VOTE_ID) voteId: Long,
+        @Path(PATH_NOTICE_ID) noticeId: Long,
         @Body request: VoteResponseRequest
     ): ApiResponse<Unit>
 
     // 투표 응답 수정
     @PUT(Endpoints.Notice.VOTE_RESPONSES)
     suspend fun updateVoteResponse(
-        @Path(PATH_VOTE_ID) voteId: Long,
+        @Path(PATH_NOTICE_ID) noticeId: Long,
         @Body request: VoteResponseRequest
     ): ApiResponse<Unit>
 

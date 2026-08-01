@@ -110,9 +110,9 @@ class NoticeRepositoryImpl @Inject constructor(
     override suspend fun markNoticeAsRead(noticeId: Long): ApiState<Unit> =
         noticeRemoteDataSource.markNoticeAsRead(noticeId)
 
-    override suspend fun submitVoteResponse(voteId: Long, request: VoteResponseRequest): ApiState<Unit> =
-        noticeRemoteDataSource.submitVoteResponse(voteId, request)
+    override suspend fun submitVoteResponse(noticeId: Long, request: VoteResponseRequest): ApiState<Unit> =
+        noticeRemoteDataSource.submitVoteResponse(noticeId, request)
 
-    override suspend fun updateVoteResponse(voteId: Long, request: VoteResponseRequest): ApiState<Unit> =
-        noticeRemoteDataSource.updateVoteResponse(voteId, request)
+    override suspend fun updateVoteResponse(noticeId: Long, request: VoteResponseRequest): ApiState<Unit> =
+        noticeRemoteDataSource.updateVoteResponse(noticeId, request)
 }
