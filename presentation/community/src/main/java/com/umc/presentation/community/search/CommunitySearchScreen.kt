@@ -18,14 +18,12 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.umc.component.theme.grey000
 import com.umc.presentation.community.component.CommunityThreadItem
-import com.umc.presentation.community.search.component.CommunityRecentSearchContent
-import com.umc.presentation.community.search.component.CommunitySearchBar
-import com.umc.presentation.community.search.component.CommunitySearchEmptyContent
+import com.umc.presentation.community.component.search.CommunityRecentSearchContent
+import com.umc.presentation.community.component.search.CommunitySearchBar
+import com.umc.presentation.community.component.search.CommunitySearchEmptyContent
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalFocusManager
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun CommunitySearchScreen(

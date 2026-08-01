@@ -1,4 +1,4 @@
-package com.umc.presentation.community.search.component
+package com.umc.presentation.community.component.search
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
