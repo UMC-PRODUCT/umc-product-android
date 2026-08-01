@@ -114,10 +114,10 @@ fun CommunityFilterMenu(
             Spacer(modifier = Modifier.height(4.dp))
 
             CommunityFilterMenuItem(
-                text = CommunityCategory.PART_NOTICE.label,
-                isSelected = selectedCategory == CommunityCategory.PART_NOTICE,
+                text = CommunityCategory.PROJECT.label,
+                isSelected = selectedCategory == CommunityCategory.PROJECT,
                 onClick = {
-                    onCategorySelected(CommunityCategory.PART_NOTICE)
+                    onCategorySelected(CommunityCategory.PROJECT)
                     onDismissRequest()
                 },
             )
@@ -132,10 +132,10 @@ fun CommunityFilterMenu(
             )
 
             CommunityFilterMenuItem(
-                text = CommunityCategory.QUESTION.label,
-                isSelected = selectedCategory == CommunityCategory.QUESTION,
+                text = CommunityCategory.QNA.label,
+                isSelected = selectedCategory == CommunityCategory.QNA,
                 onClick = {
-                    onCategorySelected(CommunityCategory.QUESTION)
+                    onCategorySelected(CommunityCategory.QNA)
                     onDismissRequest()
                 },
             )

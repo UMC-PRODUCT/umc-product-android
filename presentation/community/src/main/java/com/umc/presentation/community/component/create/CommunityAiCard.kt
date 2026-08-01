@@ -461,9 +461,9 @@ private fun categoryLabel(
     return when (category) {
         CommunityCategory.ALL -> "전체"
         CommunityCategory.UNREAD -> "안읽음"
-        CommunityCategory.PART_NOTICE -> "파트공지"
+        CommunityCategory.PROJECT -> "파트공지"
         CommunityCategory.STUDY -> "스터디"
-        CommunityCategory.QUESTION -> "질문"
+        CommunityCategory.QNA -> "질문"
         CommunityCategory.FREE -> "자유"
     }
 }
@@ -476,11 +476,11 @@ private fun categoryResultDescription(
             "\"과제 인증 및 코드 피드백\" 성격으로 분류했어요"
         }
 
-        CommunityCategory.PART_NOTICE -> {
+        CommunityCategory.PROJECT -> {
             "\"공지 및 일정 안내\" 성격으로 분류했어요"
         }
 
-        CommunityCategory.QUESTION -> {
+        CommunityCategory.QNA -> {
             "\"질문과 답변\" 성격으로 분류했어요"
         }
 
@@ -504,11 +504,11 @@ private fun categoryIconRes(
             R.drawable.ic_book_filled
         }
 
-        CommunityCategory.PART_NOTICE -> {
+        CommunityCategory.PROJECT -> {
             R.drawable.ic_community_part_notice
         }
 
-        CommunityCategory.QUESTION -> {
+        CommunityCategory.QNA -> {
             R.drawable.ic_community_question
         }
 

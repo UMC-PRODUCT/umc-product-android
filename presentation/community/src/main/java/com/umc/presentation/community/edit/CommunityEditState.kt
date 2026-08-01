@@ -5,7 +5,7 @@ import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 
 data class CommunityEditState(
-    val threadId: Long = 0L,
+    val threadId: String = 0L,
 
     val title: String = "",
     val description: String = "",

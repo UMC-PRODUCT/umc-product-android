@@ -59,9 +59,9 @@ data class CommunityState(
         get() = when (selectedCategory) {
             CommunityCategory.ALL -> "전체"
             CommunityCategory.UNREAD -> "안읽음"
-            CommunityCategory.PART_NOTICE -> "파트공지"
+            CommunityCategory.PROJECT -> "파트공지"
             CommunityCategory.STUDY -> "스터디"
-            CommunityCategory.QUESTION -> "질문"
+            CommunityCategory.QNA -> "질문"
             CommunityCategory.FREE -> "자유"
         }
 }

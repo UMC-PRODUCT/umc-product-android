@@ -3,7 +3,7 @@ package com.umc.presentation.community
 sealed interface CommunityEvent {
 
     data class NavigateToThreadDetail(
-        val threadId: Long,
+        val threadId: String,
     ) : CommunityEvent
 
     data object NavigateToSearch : CommunityEvent
@@ -11,7 +11,7 @@ sealed interface CommunityEvent {
     data object NavigateToCreateThread : CommunityEvent
 
     data class NavigateToEditThread(
-        val threadId: Long,
+        val threadId: String,
     ) : CommunityEvent
 
     data class ShowToast(
