@@ -57,6 +57,6 @@ interface NoticeRemoteDataSource {
     suspend fun markNoticeAsRead(noticeId: Long): ApiState<Unit>
     suspend fun addNoticeLinks(noticeId: Long, request: NoticeLinkRequest): ApiState<Unit>
     suspend fun updateNotice(noticeId: Long, request: NoticeUpdateRequest): ApiState<Unit>
-    suspend fun submitVoteResponse(voteId: Long, request: VoteResponseRequest): ApiState<Unit>
-    suspend fun updateVoteResponse(voteId: Long, request: VoteResponseRequest): ApiState<Unit>
+    suspend fun submitVoteResponse(noticeId: Long, request: VoteResponseRequest): ApiState<Unit>
+    suspend fun updateVoteResponse(noticeId: Long, request: VoteResponseRequest): ApiState<Unit>
 }
