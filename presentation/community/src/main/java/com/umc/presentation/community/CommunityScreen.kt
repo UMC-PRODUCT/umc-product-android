@@ -28,8 +28,8 @@ import com.umc.presentation.community.component.CommunityFloatingButton
 import com.umc.presentation.community.component.CommunityLoadingContent
 import com.umc.presentation.community.component.CommunityThreadItem
 import com.umc.presentation.community.component.CommunityTopBar
-import com.umc.presentation.community.component.dialog.CommunityLeaveDialog
-import com.umc.presentation.community.component.dialog.CommunityThreadMenuDialog
+import com.umc.presentation.community.dialog.CommunityLeaveDialog
+import com.umc.presentation.community.dialog.CommunityThreadMenuDialog
 
 @Composable
 fun CommunityScreen(

@@ -1,4 +1,4 @@
-package com.umc.presentation.community.component.dialog
+package com.umc.presentation.community.dialog
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -19,7 +20,6 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.red500
 import com.umc.presentation.community.model.CommunityThreadUiModel
 
 @Composable
@@ -111,7 +111,7 @@ fun CommunityThreadMenuDialog(
 private fun CommunityThreadMenuItem(
     text: String,
     onClick: () -> Unit,
-    textColor: androidx.compose.ui.graphics.Color = grey800(),
+    textColor: Color = grey800(),
 ) {
     UText(
         text = text,

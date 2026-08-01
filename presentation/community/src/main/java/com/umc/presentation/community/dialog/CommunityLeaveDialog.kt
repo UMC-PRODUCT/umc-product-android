@@ -1,4 +1,4 @@
-package com.umc.presentation.community.component.dialog
+package com.umc.presentation.community.dialog
 
 import androidx.compose.runtime.Composable
 import com.umc.component.component.DialogType
