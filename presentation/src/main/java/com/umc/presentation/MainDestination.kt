@@ -82,12 +82,19 @@ sealed interface MainDestination {
 
 
 
-    /**커뮤니티 섹션**/
+    /** 커뮤니티 섹션 **/
     @Serializable
     data object Community : MainDestination
 
-
     @Serializable
     data object CommunitySearch : MainDestination
+
+    @Serializable
+    data object CommunityCreate : MainDestination
+
+    @Serializable
+    data class CommunityEdit(
+        val threadId: Long,
+    ) : MainDestination
 
 }
