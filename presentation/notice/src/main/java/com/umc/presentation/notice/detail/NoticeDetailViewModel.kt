@@ -168,9 +168,9 @@ class NoticeDetailViewModel @Inject constructor(
 
         resultResponse(
             response = if (isRevote) {
-                updateVoteResponseUseCase(vote.voteId, optionIds)
+                updateVoteResponseUseCase(noticeId, optionIds)
             } else {
-                submitVoteResponseUseCase(vote.voteId, optionIds)
+                submitVoteResponseUseCase(noticeId, optionIds)
             },
             successCallback = {
                 emitEvent(
@@ -237,9 +237,17 @@ class NoticeDetailViewModel @Inject constructor(
         )
     }
 
+    /**
+     * 확인/미확인 목록을 각각 로드한다.
+     * 두 탭은 서로 다른 요청이므로 로딩 플래그를 분리해야 한다
+     * (공용 플래그를 쓰면 진입 시 연달아 호출되는 두 번째 요청이 가드에 걸린다)
+     */
     fun loadReadStatus(isRead: Boolean, cursorId: Long? = null) = viewModelScope.launch {
-        if (uiState.value.isLoadingReadStatus) return@launch
-        updateState { copy(isLoadingReadStatus = true) }
+        val state = uiState.value
+        if (if (isRead) state.isLoadingReadList else state.isLoadingUnreadList) return@launch
+        updateState {
+            if (isRead) copy(isLoadingReadList = true) else copy(isLoadingUnreadList = true)
+        }
 
         resultResponse(
             response = getNoticeReadStatusUseCase(
@@ -254,29 +262,34 @@ class NoticeDetailViewModel @Inject constructor(
                             readList = if (cursorId == null) readStatus.content else readList + readStatus.content,
                             readNextCursor = readStatus.nextCursor,
                             readHasNext = readStatus.hasNext,
-                            isLoadingReadStatus = false,
+                            isLoadingReadList = false,
                         )
                     } else {
                         copy(
                             unreadList = if (cursorId == null) readStatus.content else unreadList + readStatus.content,
                             unreadNextCursor = readStatus.nextCursor,
                             unreadHasNext = readStatus.hasNext,
-                            isLoadingReadStatus = false,
+                            isLoadingUnreadList = false,
                         )
                     }
                 }
             },
             errorCallback = {
-                updateState { copy(isLoadingReadStatus = false) }
+                updateState {
+                    if (isRead) copy(isLoadingReadList = false) else copy(isLoadingUnreadList = false)
+                }
             },
         )
     }
 
     fun loadMoreReadStatus(isRead: Boolean) {
         val state = uiState.value
-        if (state.isLoadingReadStatus) return
-        if (isRead && state.readHasNext) loadReadStatus(true, state.readNextCursor)
-        if (!isRead && state.unreadHasNext) loadReadStatus(false, state.unreadNextCursor)
+        if (isRead && state.readHasNext && !state.isLoadingReadList) {
+            loadReadStatus(true, state.readNextCursor)
+        }
+        if (!isRead && state.unreadHasNext && !state.isLoadingUnreadList) {
+            loadReadStatus(false, state.unreadNextCursor)
+        }
     }
 
     /** 미확인 인원에게 재알림 발송 */
@@ -343,7 +356,8 @@ data class NoticeDetailUiState(
     val unreadList: List<ChallengerReadInfo> = emptyList(),
     val unreadNextCursor: Long? = null,
     val unreadHasNext: Boolean = false,
-    val isLoadingReadStatus: Boolean = false,
+    val isLoadingReadList: Boolean = false,
+    val isLoadingUnreadList: Boolean = false,
     val isSendingReminder: Boolean = false,
     val isReminderSent: Boolean = false,
 ) : UiState {
