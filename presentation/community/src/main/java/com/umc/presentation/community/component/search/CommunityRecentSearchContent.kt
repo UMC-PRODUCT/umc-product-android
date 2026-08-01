@@ -1,4 +1,4 @@
-package com.umc.presentation.community.search.component
+package com.umc.presentation.community.component.search
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,9 +19,7 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
-import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
-import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 
 @Composable

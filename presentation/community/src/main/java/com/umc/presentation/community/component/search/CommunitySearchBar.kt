@@ -1,13 +1,15 @@
-package com.umc.presentation.community.search.component
+package com.umc.presentation.community.component.search
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -71,7 +73,7 @@ fun CommunitySearchBar(
                 width = 1.dp,
                 color = grey200(),
             ),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
+            shape = RoundedCornerShape(6.dp),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -96,7 +98,7 @@ fun CommunitySearchBar(
                         .weight(1f)
                         .focusRequester(focusRequester),
                     decorationBox = { innerTextField ->
-                        androidx.compose.foundation.layout.Box(
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(
