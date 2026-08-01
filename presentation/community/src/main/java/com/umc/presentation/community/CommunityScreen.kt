@@ -164,8 +164,8 @@ fun CommunityScreen(
 @Composable
 private fun CommunityThreadList(
     state: CommunityState,
-    onThreadClick: (Long) -> Unit,
-    onThreadLongClick: (Long) -> Unit,
+    onThreadClick: (String) -> Unit,
+    onThreadLongClick: (String) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
