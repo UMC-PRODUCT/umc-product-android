@@ -256,7 +256,7 @@ class CommunityCreateViewModel : ViewModel() {
                     targetText.contains("안내") -> {
                 ClassificationResult(
                     aiState = CommunityAiState.SUCCESS,
-                    category = CommunityCategory.PART_NOTICE,
+                    category = CommunityCategory.PROJECT,
                 )
             }
 
@@ -264,7 +264,7 @@ class CommunityCreateViewModel : ViewModel() {
                     targetText.contains("궁금") -> {
                 ClassificationResult(
                     aiState = CommunityAiState.SUCCESS,
-                    category = CommunityCategory.QUESTION,
+                    category = CommunityCategory.QNA,
                 )
             }
 

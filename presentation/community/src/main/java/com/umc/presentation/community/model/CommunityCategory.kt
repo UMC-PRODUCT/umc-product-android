@@ -5,9 +5,9 @@ enum class CommunityCategory(
 ) {
     ALL("전체"),
     UNREAD("안읽음"),
-    PART_NOTICE("파트공지"),
+
     STUDY("스터디"),
-    QUESTION("질문"),
+    QNA("질문"),
+    PROJECT("프로젝트"),
     FREE("자유"),
 }
-

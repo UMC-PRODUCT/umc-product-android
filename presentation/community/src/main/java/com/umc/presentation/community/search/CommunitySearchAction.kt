@@ -25,7 +25,7 @@ sealed interface CommunitySearchAction {
     ) : CommunitySearchAction
 
     data class OnThreadClick(
-        val threadId: Long,
+        val threadId: String,
     ) : CommunitySearchAction
 
 

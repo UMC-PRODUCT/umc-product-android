@@ -95,7 +95,7 @@ class CommunityViewModel : ViewModel() {
         }
     }
 
-    private fun openThreadMenu(threadId: Long) {
+    private fun openThreadMenu(threadId: String) {
         val selectedThread = _state.value.threads.find { thread ->
             thread.id == threadId
         } ?: return
@@ -296,7 +296,7 @@ class CommunityViewModel : ViewModel() {
             title = "정기 모임 일정 안내",
             contentPreview =
                 "다른 과제 인증 완료했나요? 오늘 자정까지...",
-            category = CommunityCategory.PART_NOTICE,
+            category = CommunityCategory.PROJECT,
             dayText = "화요일",
             commentCount = 3,
             isPinned = true,
@@ -309,7 +309,7 @@ class CommunityViewModel : ViewModel() {
             title = "OT 장소 변경 안내",
             contentPreview =
                 "다른 과제 인증 완료했나요? 오늘 자정까지...",
-            category = CommunityCategory.PART_NOTICE,
+            category = CommunityCategory.PROJECT,
             dayText = "화요일",
             commentCount = 3,
             isPinned = false,
@@ -322,7 +322,7 @@ class CommunityViewModel : ViewModel() {
             title = "리액트 상태관리 질문 있어요",
             contentPreview =
                 "다른 과제 인증 완료했나요? 오늘 자정까지...",
-            category = CommunityCategory.QUESTION,
+            category = CommunityCategory.QNA,
             dayText = "화요일",
             commentCount = 3,
             isPinned = false,

@@ -94,7 +94,7 @@ sealed interface MainDestination {
 
     @Serializable
     data class CommunityEdit(
-        val threadId: Long,
+        val threadId: String,
     ) : MainDestination
 
 }

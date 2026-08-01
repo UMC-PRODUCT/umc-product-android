@@ -9,7 +9,7 @@ sealed interface CommunityAction {
     ) : CommunityAction
 
     data class OnThreadClick(
-        val threadId: Long,
+        val threadId: String,
     ) : CommunityAction
 
     data object OnFilterClick : CommunityAction
@@ -21,7 +21,7 @@ sealed interface CommunityAction {
     data object OnRetryClick : CommunityAction
 
 
-    data class OnThreadLongClick(val threadId: Long) : CommunityAction
+    data class OnThreadLongClick(val threadId: String) : CommunityAction
     data object OnDismissThreadMenu : CommunityAction
     data object OnTogglePinClick : CommunityAction
     data object OnToggleNotificationClick : CommunityAction
