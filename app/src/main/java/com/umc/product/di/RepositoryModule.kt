@@ -3,6 +3,7 @@ package com.umc.product.di
 import com.umc.data.repository.AppDataStoreRepositoryImpl
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.data.repository.AuthRepositoryImpl
+import com.umc.data.repository.CommunityThreadRepositoryImpl
 import com.umc.data.repository.NoticeRepositoryImpl
 import com.umc.data.repository.NotificationRepositoryImpl
 import com.umc.data.repository.OrganizationRepositoryImpl
@@ -33,6 +34,7 @@ import com.umc.domain.repository.curriculum.CurriculumRepository
 import com.umc.domain.repository.schedule.ScheduleRepository
 import com.umc.domain.repository.storage.StorageRepository
 import com.umc.domain.repository.terms.TermsRepository
+import com.umc.domain.repository.CommunityThreadRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -129,4 +131,11 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindsAuthenticationRepository(repositoryImpl: AuthenticationRepositoryImpl): AuthenticationRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindsCommunityThreadRepository(
+        repositoryImpl: CommunityThreadRepositoryImpl,
+    ): CommunityThreadRepository
+
 }

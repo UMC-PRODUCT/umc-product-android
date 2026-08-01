@@ -19,23 +19,7 @@ data class CommunityState(
     val showLeaveDialog: Boolean = false,
 ) {
     val filteredThreads: List<CommunityThreadUiModel>
-        get() = when (selectedCategory) {
-            CommunityCategory.ALL -> {
-                threads
-            }
-
-            CommunityCategory.UNREAD -> {
-                threads.filter { thread ->
-                    !thread.isRead
-                }
-            }
-
-            else -> {
-                threads.filter { thread ->
-                    thread.category == selectedCategory
-                }
-            }
-        }
+        get() = threads
 
     val pinnedThreads: List<CommunityThreadUiModel>
         get() = filteredThreads.filter { thread ->

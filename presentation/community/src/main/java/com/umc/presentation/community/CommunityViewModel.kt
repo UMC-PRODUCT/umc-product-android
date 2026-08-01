@@ -2,10 +2,17 @@ package com.umc.presentation.community
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.community.CommunityThread
+import com.umc.domain.model.community.CommunityThreadCategory
+import com.umc.domain.model.community.CommunityThreadRole
+import com.umc.domain.usecase.community.GetCommunityThreadsUseCase
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityThreadUiModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,7 +20,10 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class CommunityViewModel : ViewModel() {
+@HiltViewModel
+class CommunityViewModel @Inject constructor(
+    private val getCommunityThreadsUseCase: GetCommunityThreadsUseCase,
+) : ViewModel() {
 
     private val _state = MutableStateFlow(CommunityState())
     val state: StateFlow<CommunityState> = _state.asStateFlow()
@@ -87,15 +97,79 @@ class CommunityViewModel : ViewModel() {
         }
     }
 
-    private fun selectCategory(category: CommunityCategory) {
+    private fun selectCategory(
+        category: CommunityCategory,
+    ) {
         _state.update {
             it.copy(
                 selectedCategory = category,
             )
         }
+
+        loadThreads()
     }
 
-    private fun openThreadMenu(threadId: String) {
+    private fun loadThreads() {
+        viewModelScope.launch {
+            val selectedCategory = _state.value.selectedCategory
+
+            _state.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    selectedThread = null,
+                    showThreadMenuDialog = false,
+                    showLeaveDialog = false,
+                )
+            }
+
+            getCommunityThreadsUseCase(
+                filter = selectedCategory.toApiFilter(),
+                query = null,
+                offset = 0,
+                limit = 20,
+            ).onSuccess { page ->
+                val uiThreads = buildList {
+                    addAll(
+                        page.pinnedThreads.map { thread ->
+                            thread.toUiModel(
+                                forcePinned = true,
+                            )
+                        }
+                    )
+
+                    addAll(
+                        page.threads.map { thread ->
+                            thread.toUiModel(
+                                forcePinned = false,
+                            )
+                        }
+                    )
+                }
+
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        threads = uiThreads,
+                        errorMessage = null,
+                    )
+                }
+            }.onFailure {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        threads = emptyList(),
+                        errorMessage =
+                            "네트워크 연결을 확인하고 다시 시도해주세요.",
+                    )
+                }
+            }
+        }
+    }
+
+    private fun openThreadMenu(
+        threadId: String,
+    ) {
         val selectedThread = _state.value.threads.find { thread ->
             thread.id == threadId
         } ?: return
@@ -117,25 +191,33 @@ class CommunityViewModel : ViewModel() {
         }
     }
 
+    /*
+     * 현재는 API 명세가 아직 없으므로 UI에서만 임시 변경한다.
+     * 고정 변경 API가 추가되면 해당 API 호출로 교체해야 한다.
+     */
     private fun toggleSelectedThreadPin() {
         val selectedThread = _state.value.selectedThread ?: return
 
-        val updatedThread = selectedThread.copy(
-            isPinned = !selectedThread.isPinned,
+        updateSelectedThread(
+            updatedThread = selectedThread.copy(
+                isPinned = !selectedThread.isPinned,
+            )
         )
-
-        updateSelectedThread(updatedThread)
     }
 
+    /*
+     * 현재는 API 명세가 아직 없으므로 UI에서만 임시 변경한다.
+     * 알림 변경 API가 추가되면 해당 API 호출로 교체해야 한다.
+     */
     private fun toggleSelectedThreadNotification() {
         val selectedThread = _state.value.selectedThread ?: return
 
-        val updatedThread = selectedThread.copy(
-            isNotificationEnabled =
-                !selectedThread.isNotificationEnabled,
+        updateSelectedThread(
+            updatedThread = selectedThread.copy(
+                isNotificationEnabled =
+                    !selectedThread.isNotificationEnabled,
+            )
         )
-
-        updateSelectedThread(updatedThread)
     }
 
     private fun updateSelectedThread(
@@ -159,7 +241,6 @@ class CommunityViewModel : ViewModel() {
     private fun navigateToEditSelectedThread() {
         val selectedThread = _state.value.selectedThread ?: return
 
-        // 내 스레드가 아닌 경우 편집 화면으로 이동하지 않음
         if (!selectedThread.isMine) return
 
         _state.update {
@@ -192,6 +273,9 @@ class CommunityViewModel : ViewModel() {
         }
     }
 
+    /*
+     * 현재는 나가기 API 명세가 없으므로 목록에서만 임시 삭제한다.
+     */
     private fun leaveSelectedThread() {
         val selectedThread = _state.value.selectedThread ?: return
 
@@ -207,141 +291,78 @@ class CommunityViewModel : ViewModel() {
         }
     }
 
-    private fun loadThreads() {
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    isLoading = true,
-                    errorMessage = null,
-                    selectedThread = null,
-                    showThreadMenuDialog = false,
-                    showLeaveDialog = false,
-                )
-            }
-
-            delay(1200L)
-
-            when (PREVIEW_STATE) {
-                PreviewState.SUCCESS -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            threads = dummyThreads,
-                            errorMessage = null,
-                        )
-                    }
-                }
-
-                PreviewState.EMPTY -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            threads = emptyList(),
-                            errorMessage = null,
-                        )
-                    }
-                }
-
-                PreviewState.ERROR -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            threads = emptyList(),
-                            errorMessage =
-                                "네트워크 연결을 확인하고 다시 시도해주세요.",
-                        )
-                    }
-                }
-
-                PreviewState.LOADING -> {
-                    // 스켈레톤 화면을 계속 유지
-                }
-            }
-        }
-    }
-
-    private fun sendEvent(event: CommunityEvent) {
+    private fun sendEvent(
+        event: CommunityEvent,
+    ) {
         viewModelScope.launch {
             _event.send(event)
         }
     }
+}
 
-    private enum class PreviewState {
-        SUCCESS,
-        EMPTY,
-        ERROR,
-        LOADING,
+private fun CommunityCategory.toApiFilter(): String {
+    return when (this) {
+        CommunityCategory.ALL -> "all"
+        CommunityCategory.UNREAD -> "unread"
+        CommunityCategory.STUDY -> "STUDY"
+        CommunityCategory.QNA -> "QNA"
+        CommunityCategory.PROJECT -> "PROJECT"
+        CommunityCategory.FREE -> "FREE"
     }
+}
 
-    companion object {
-        private val PREVIEW_STATE = PreviewState.SUCCESS
-    }
-
-    private val dummyThreads = listOf(
-        CommunityThreadUiModel(
-            id = 1L,
-            title = "iOS 3주차 과제 인증방",
-            contentPreview =
-                "다른 과제 인증 완료했나요? 오늘 자정까지...",
-            category = CommunityCategory.STUDY,
-            dayText = "화요일",
-            commentCount = 3,
-            isPinned = true,
-            isNotificationEnabled = false,
-            isMine = true,
-            isRead = false,
-        ),
-        CommunityThreadUiModel(
-            id = 2L,
-            title = "정기 모임 일정 안내",
-            contentPreview =
-                "다른 과제 인증 완료했나요? 오늘 자정까지...",
-            category = CommunityCategory.PROJECT,
-            dayText = "화요일",
-            commentCount = 3,
-            isPinned = true,
-            isNotificationEnabled = true,
-            isMine = false,
-            isRead = false,
-        ),
-        CommunityThreadUiModel(
-            id = 3L,
-            title = "OT 장소 변경 안내",
-            contentPreview =
-                "다른 과제 인증 완료했나요? 오늘 자정까지...",
-            category = CommunityCategory.PROJECT,
-            dayText = "화요일",
-            commentCount = 3,
-            isPinned = false,
-            isNotificationEnabled = true,
-            isMine = true,
-            isRead = true,
-        ),
-        CommunityThreadUiModel(
-            id = 4L,
-            title = "리액트 상태관리 질문 있어요",
-            contentPreview =
-                "다른 과제 인증 완료했나요? 오늘 자정까지...",
-            category = CommunityCategory.QNA,
-            dayText = "화요일",
-            commentCount = 3,
-            isPinned = false,
-            isNotificationEnabled = false,
-            isMine = false,
-            isRead = false,
-        ),
-        CommunityThreadUiModel(
-            id = 5L,
-            title = "이번 주 회식 어때요?",
-            contentPreview =
-                "다른 과제 인증 완료했나요? 오늘 자정까지...",
-            category = CommunityCategory.FREE,
-            dayText = "화요일",
-            commentCount = 3,
-            isPinned = false,
-            isNotificationEnabled = true,
-            isMine = true,
-            isRead = false,
-        ),
+private fun CommunityThread.toUiModel(
+    forcePinned: Boolean,
+): CommunityThreadUiModel {
+    return CommunityThreadUiModel(
+        id = threadId,
+        title = title,
+        contentPreview = lastMessage?.preview
+            ?.takeIf { preview ->
+                preview.isNotBlank()
+            }
+            ?: description,
+        category = category.toUiCategory(),
+        icon = icon,
+        dayText = lastMessage?.createdAt
+            ?.toDayText()
+            ?: updatedAt.toDayText(),
+        memberCount = memberCount,
+        unreadCount = unreadCount,
+        maxMembers = maxMembers,
+        isPinned = forcePinned || isPinned,
+        isNotificationEnabled = !isMuted,
+        isMine = myRole == CommunityThreadRole.OWNER,
     )
+}
+
+private fun CommunityThreadCategory.toUiCategory(): CommunityCategory {
+    return when (this) {
+        CommunityThreadCategory.STUDY -> {
+            CommunityCategory.STUDY
+        }
+
+        CommunityThreadCategory.QNA -> {
+            CommunityCategory.QNA
+        }
+
+        CommunityThreadCategory.PROJECT -> {
+            CommunityCategory.PROJECT
+        }
+
+        CommunityThreadCategory.FREE,
+        CommunityThreadCategory.UNKNOWN,
+            -> {
+            CommunityCategory.FREE
+        }
+    }
+}
+
+private fun String.toDayText(): String {
+    return runCatching {
+        val dateTime = OffsetDateTime.parse(this)
+        dateTime.format(
+            DateTimeFormatter.ofPattern("MM.dd")
+        )
+    }.getOrDefault("")
 }
