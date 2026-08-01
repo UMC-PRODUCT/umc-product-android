@@ -5,6 +5,6 @@ sealed interface CommunitySearchEvent {
     data object NavigateBack : CommunitySearchEvent
 
     data class NavigateToThreadDetail(
-        val threadId: Long,
+        val threadId: String,
     ) : CommunitySearchEvent
 }
