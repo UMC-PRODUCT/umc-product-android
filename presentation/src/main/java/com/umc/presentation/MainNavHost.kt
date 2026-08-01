@@ -31,6 +31,8 @@ import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
 import com.umc.presentation.community.CommunityRoute
 import com.umc.presentation.community.search.CommunitySearchRoute
+import com.umc.presentation.community.create.CommunityCreateRoute
+import com.umc.presentation.community.edit.CommunityEditRoute
 
 @Composable
 fun MainNavHost(
@@ -290,7 +292,7 @@ fun MainNavHost(
         composable<MainDestination.Community> {
             CommunityRoute(
                 onNavigateToThreadDetail = { threadId ->
-                    // TODO
+                    // TODO: 상세 화면 생성 후 연결
                 },
                 onNavigateToSearch = {
                     navHostController.navigate(
@@ -298,11 +300,44 @@ fun MainNavHost(
                     )
                 },
                 onNavigateToCreateThread = {
-                    // TODO
+                    navHostController.navigate(
+                        MainDestination.CommunityCreate
+                    )
                 },
                 onNavigateToEditThread = { threadId ->
-                    // TODO: 편집 화면 생성 후 연결
-                    // navHostController.navigate(...)
+                    navHostController.navigate(
+                        MainDestination.CommunityEdit(
+                            threadId = threadId,
+                        )
+                    )
+                },
+            )
+        }
+
+        /** 커뮤니티 스레드 만들기 화면 **/
+        composable<MainDestination.CommunityCreate> {
+            CommunityCreateRoute(
+                onNavigateBack = {
+                    navHostController.popBackStack()
+                },
+                onNavigateToEmojiPicker = {
+                    // TODO: 이모지 선택 화면 또는 다이얼로그 연결
+                },
+            )
+        }
+
+        /** 커뮤니티 스레드 수정 화면 **/
+        composable<MainDestination.CommunityEdit> { backStackEntry ->
+            val destination =
+                backStackEntry.toRoute<MainDestination.CommunityEdit>()
+
+            CommunityEditRoute(
+                threadId = destination.threadId,
+                onNavigateBack = {
+                    navHostController.popBackStack()
+                },
+                onNavigateToEmojiPicker = {
+                    // TODO: 이모지 선택 화면 또는 다이얼로그 연결
                 },
             )
         }
