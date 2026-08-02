@@ -117,8 +117,23 @@ fun CommunityThreadItem(
                         Spacer(modifier = Modifier.width(6.dp))
 
                         Icon(
-                            painter = painterResource(R.drawable.ic_pin),
+                            painter = painterResource(
+                                id = R.drawable.ic_pin,
+                            ),
                             contentDescription = "고정 스레드",
+                            tint = grey400(),
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+
+                    if (!thread.isNotificationEnabled) {
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        Icon(
+                            painter = painterResource(
+                                id = R.drawable.ic_notification_off,
+                            ),
+                            contentDescription = "알림 꺼짐",
                             tint = grey400(),
                             modifier = Modifier.size(18.dp),
                         )
