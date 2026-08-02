@@ -1,7 +1,8 @@
 package com.umc.domain.usecase.community
 
 import com.umc.domain.model.community.CommunityThreadPage
-import com.umc.domain.repository.CommunityThreadRepository
+import com.umc.domain.repository.community.CommunityThreadRepository
+
 import javax.inject.Inject
 
 class GetCommunityThreadsUseCase @Inject constructor(

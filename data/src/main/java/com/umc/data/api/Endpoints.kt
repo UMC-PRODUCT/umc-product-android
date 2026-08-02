@@ -118,6 +118,15 @@ object Endpoints {
         const val THREADS = "api/v1/community/threads"
         const val THREAD_DETAIL = "$THREADS/{threadId}"
 
+        // 초대 가능한 회원 조회
+        const val THREAD_INVITABLE =
+            "$THREAD_DETAIL/invitable"
+
+        // 스레드 회원 초대
+        const val THREAD_INVITE =
+            "$THREAD_DETAIL/invite"
+
+
 
     }
 

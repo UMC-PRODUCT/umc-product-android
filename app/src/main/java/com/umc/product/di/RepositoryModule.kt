@@ -3,7 +3,7 @@ package com.umc.product.di
 import com.umc.data.repository.AppDataStoreRepositoryImpl
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.data.repository.AuthRepositoryImpl
-import com.umc.data.repository.CommunityThreadRepositoryImpl
+
 import com.umc.data.repository.NoticeRepositoryImpl
 import com.umc.data.repository.NotificationRepositoryImpl
 import com.umc.data.repository.OrganizationRepositoryImpl
@@ -17,6 +17,7 @@ import com.umc.domain.repository.kakao.KakaoSearchRepository
 import com.umc.domain.repository.member.MemberRepository
 import com.umc.data.repository.challenger.ChallengerRepositoryImpl
 import com.umc.data.repository.community.CommunityRepositoryImpl
+import com.umc.data.repository.community.CommunityThreadRepositoryImpl
 import com.umc.data.repository.curriculum.CurriculumRepositoryImpl
 import com.umc.data.repository.schedule.ScheduleRepositoryImpl
 import com.umc.data.repository.storage.StorageRepositoryImpl
@@ -30,11 +31,12 @@ import com.umc.domain.repository.attendance.AttendanceRepository
 import com.umc.domain.repository.authentication.AuthenticationRepository
 import com.umc.domain.repository.authorize.AuthorizeRepository
 import com.umc.domain.repository.community.CommunityRepository
+import com.umc.domain.repository.community.CommunityThreadRepository
 import com.umc.domain.repository.curriculum.CurriculumRepository
 import com.umc.domain.repository.schedule.ScheduleRepository
 import com.umc.domain.repository.storage.StorageRepository
 import com.umc.domain.repository.terms.TermsRepository
-import com.umc.domain.repository.CommunityThreadRepository
+
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
