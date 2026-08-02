@@ -3,6 +3,7 @@ package com.umc.domain.repository.community
 import com.umc.domain.model.community.CommunityInvitableMemberPage
 import com.umc.domain.model.community.CommunityThreadDetail
 import com.umc.domain.model.community.CommunityThreadInvitation
+import com.umc.domain.model.community.CommunityThreadMemberPage
 import com.umc.domain.model.community.CommunityThreadPage
 
 interface CommunityThreadRepository {
