@@ -1,7 +1,18 @@
 package com.umc.presentation.community.model
 
 data class CommunityChallengerUiModel(
-    val id: Long,
+    val memberId: Long,
     val name: String,
-    val profileImageUrl: String? = null,
-)
+    val nickname: String,
+    val school: String,
+    val generation: Long,
+    val partLabel: String,
+    val profileImage: String = "",
+) {
+    val displayName: String
+        get() = if (nickname.isBlank()) {
+            name
+        } else {
+            "$name/$nickname"
+        }
+}
