@@ -4,6 +4,7 @@ import com.umc.data.api.CommunityThreadApi
 import com.umc.data.mapper.community.toDomain
 import com.umc.data.request.community.CreateCommunityThreadRequest
 import com.umc.data.request.community.InviteCommunityThreadMembersRequest
+import com.umc.data.request.community.UpdateCommunityThreadRequest
 import com.umc.domain.model.community.CommunityInvitableMemberPage
 import com.umc.domain.model.community.CommunityThreadDetail
 import com.umc.domain.model.community.CommunityThreadInvitation
@@ -120,6 +121,119 @@ class CommunityThreadRepositoryImpl @Inject constructor(
                     "스레드 생성 응답 데이터가 없어요."
                 }
             }.toDomain()
+        }
+    }
+
+    override suspend fun updateCommunityThread(
+        threadId: String,
+        title: String,
+        description: String,
+        category: String,
+        icon: String,
+    ): Result<CommunityThreadDetail> {
+        return runCatching {
+
+            val response =
+                communityThreadApi.updateCommunityThread(
+                    threadId = threadId,
+                    request = UpdateCommunityThreadRequest(
+                        title = title,
+                        description = description,
+                        category = category,
+                        icon = icon,
+                    )
+                )
+
+            requireNotNull(response.result).toDomain()
+        }
+    }
+
+    override suspend fun leaveCommunityThread(
+        threadId: String,
+    ): Result<Unit> {
+        return runCatching {
+
+            val response =
+                communityThreadApi.leaveCommunityThread(
+                    threadId = threadId
+                )
+
+            requireNotNull(response.result)
+
+            Unit
+        }
+    }
+
+    override suspend fun deleteCommunityThread(
+        threadId: String,
+    ): Result<CommunityThreadDetail> {
+        return runCatching {
+            val response = communityThreadApi.deleteCommunityThread(
+                threadId = threadId,
+            )
+
+            requireNotNull(response.result) {
+                response.message?.takeIf { it.isNotBlank() }
+                    ?: "스레드 삭제 응답 데이터가 없어요."
+            }.toDomain()
+        }
+    }
+
+    override suspend fun muteCommunityThread(
+        threadId: String,
+    ): Result<CommunityThreadDetail> {
+        return runCatching {
+
+            val response =
+                communityThreadApi.muteCommunityThread(
+                    threadId = threadId
+                )
+
+            requireNotNull(response.result).toDomain()
+        }
+    }
+
+
+    override suspend fun unmuteCommunityThread(
+        threadId: String,
+    ): Result<CommunityThreadDetail> {
+        return runCatching {
+
+            val response =
+                communityThreadApi.unmuteCommunityThread(
+                    threadId = threadId
+                )
+
+            requireNotNull(response.result).toDomain()
+        }
+    }
+
+
+    override suspend fun pinCommunityThread(
+        threadId: String,
+    ): Result<CommunityThreadDetail> {
+        return runCatching {
+
+            val response =
+                communityThreadApi.pinCommunityThread(
+                    threadId = threadId
+                )
+
+            requireNotNull(response.result).toDomain()
+        }
+    }
+
+    override suspend fun unpinCommunityThread(
+        threadId: String,
+    ): Result<CommunityThreadDetail> {
+        return runCatching {
+
+            val response =
+                communityThreadApi.unpinCommunityThread(
+                    threadId = threadId
+                )
+
+            requireNotNull(response.result).toDomain()
         }
     }
 }
