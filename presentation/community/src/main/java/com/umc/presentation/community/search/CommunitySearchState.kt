@@ -8,11 +8,14 @@ data class CommunitySearchState(
     val searchResults: List<CommunityThreadUiModel> = emptyList(),
     val hasSearched: Boolean = false,
     val isLoading: Boolean = false,
-
+    val errorMessage: String? = null,
 ) {
     val isInitial: Boolean
         get() = !hasSearched
 
     val isResultEmpty: Boolean
-        get() = hasSearched && searchResults.isEmpty()
+        get() = hasSearched &&
+                !isLoading &&
+                errorMessage == null &&
+                searchResults.isEmpty()
 }

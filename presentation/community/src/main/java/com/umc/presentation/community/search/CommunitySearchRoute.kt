@@ -3,14 +3,15 @@ package com.umc.presentation.community.search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun CommunitySearchRoute(
     onNavigateBack: () -> Unit,
     onNavigateToThreadDetail: (String) -> Unit,
-    viewModel: CommunitySearchViewModel = viewModel(),
+    viewModel: CommunitySearchViewModel =
+        hiltViewModel<CommunitySearchViewModel>(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -22,7 +23,9 @@ fun CommunitySearchRoute(
                 }
 
                 is CommunitySearchEvent.NavigateToThreadDetail -> {
-                    onNavigateToThreadDetail(event.threadId)
+                    onNavigateToThreadDetail(
+                        event.threadId,
+                    )
                 }
             }
         }
