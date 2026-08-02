@@ -69,4 +69,19 @@ interface CommunityThreadRepository {
     suspend fun unpinCommunityThread(
         threadId: String,
     ): Result<CommunityThreadDetail>
+
+    suspend fun kickCommunityThreadMember(
+        threadId: String,
+        memberId: String,
+    ): Result<Unit>
+
+    suspend fun getCommunityThreadMembers(
+        threadId: String,
+        query: String? = null,
+        role: String? = null,
+        part: String? = null,
+        generation: Long? = null,
+        offset: Int = 0,
+        limit: Int = 20,
+    ): Result<CommunityThreadMemberPage>
 }
