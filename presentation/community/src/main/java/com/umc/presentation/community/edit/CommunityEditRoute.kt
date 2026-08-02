@@ -13,10 +13,12 @@ fun CommunityEditRoute(
     threadId: String,
     onNavigateBack: () -> Unit,
     onNavigateToEmojiPicker: () -> Unit,
+    onEditSuccess: () -> Unit,
     viewModel: CommunityEditViewModel =
         hiltViewModel<CommunityEditViewModel>(),
 ) {
     val context = LocalContext.current
+
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(threadId) {
@@ -39,7 +41,7 @@ fun CommunityEditRoute(
                         Toast.LENGTH_SHORT,
                     ).show()
 
-                    onNavigateBack()
+                    onEditSuccess()
                 }
 
                 CommunityEditEvent.DeleteSuccess -> {
@@ -49,7 +51,7 @@ fun CommunityEditRoute(
                         Toast.LENGTH_SHORT,
                     ).show()
 
-                    onNavigateBack()
+                    onEditSuccess()
                 }
 
                 CommunityEditEvent.NavigateToEmojiPicker -> {
