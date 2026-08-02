@@ -8,6 +8,7 @@ import com.umc.data.response.community.CommunityThreadInvitationResponse
 import com.umc.data.response.community.CommunityThreadInvitablePageResponse
 import com.umc.data.response.community.CommunityThreadListResponse
 import com.umc.data.response.community.CommunityThreadMemberMutationResponse
+import com.umc.data.response.community.CommunityThreadMemberPageResponse
 import com.umc.domain.model.base.ApiResponse
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -123,4 +124,36 @@ interface CommunityThreadApi {
         @Body
         request: InviteCommunityThreadMembersRequest,
     ): ApiResponse<CommunityThreadInvitationResponse>
+
+    @DELETE(Endpoints.Community.THREAD_MEMBER)
+    suspend fun kickCommunityThreadMember(
+        @Path("threadId")
+        threadId: String,
+        @Path("memberId")
+        memberId: String,
+    ): ApiResponse<CommunityThreadMemberMutationResponse>
+
+    @GET(Endpoints.Community.THREAD_MEMBERS)
+    suspend fun getCommunityThreadMembers(
+        @Path("threadId")
+        threadId: String,
+
+        @Query("q")
+        query: String? = null,
+
+        @Query("role")
+        role: String? = null,
+
+        @Query("part")
+        part: String? = null,
+
+        @Query("generation")
+        generation: Long? = null,
+
+        @Query("offset")
+        offset: Int = 0,
+
+        @Query("limit")
+        limit: Int = 20,
+    ): ApiResponse<CommunityThreadMemberPageResponse>
 }
