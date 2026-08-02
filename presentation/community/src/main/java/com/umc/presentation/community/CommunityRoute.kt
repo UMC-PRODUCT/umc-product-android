@@ -5,20 +5,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun CommunityRoute(
     onNavigateToThreadDetail: (String) -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToCreateThread: () -> Unit,
-    viewModel: CommunityViewModel = hiltViewModel(),
     onNavigateToEditThread: (String) -> Unit,
+    shouldRefresh: Boolean,
+    onRefreshHandled: () -> Unit,
+    viewModel: CommunityViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
 
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(shouldRefresh) {
+        if (shouldRefresh) {
+            viewModel.loadThreads()
+            onRefreshHandled()
+        }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
