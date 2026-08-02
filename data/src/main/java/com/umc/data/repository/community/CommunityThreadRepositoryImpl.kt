@@ -236,4 +236,54 @@ class CommunityThreadRepositoryImpl @Inject constructor(
             requireNotNull(response.result).toDomain()
         }
     }
+
+    override suspend fun kickCommunityThreadMember(
+        threadId: String,
+        memberId: String,
+    ): Result<Unit> {
+        return runCatching {
+            val response =
+                communityThreadApi.kickCommunityThreadMember(
+                    threadId = threadId,
+                    memberId = memberId,
+                )
+
+            requireNotNull(response.result) {
+                response.message.ifBlank {
+                    "멤버 삭제 응답 데이터가 없어요."
+                }
+            }
+
+            Unit
+        }
+    }
+
+    override suspend fun getCommunityThreadMembers(
+        threadId: String,
+        query: String?,
+        role: String?,
+        part: String?,
+        generation: Long?,
+        offset: Int,
+        limit: Int,
+    ): Result<CommunityThreadMemberPage> {
+        return runCatching {
+            val response =
+                communityThreadApi.getCommunityThreadMembers(
+                    threadId = threadId,
+                    query = query,
+                    role = role,
+                    part = part,
+                    generation = generation,
+                    offset = offset,
+                    limit = limit,
+                )
+
+            requireNotNull(response.result) {
+                response.message.ifBlank {
+                    "스레드 멤버 응답 데이터가 없어요."
+                }
+            }.toDomain()
+        }
+    }
 }

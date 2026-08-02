@@ -130,6 +130,12 @@ object Endpoints {
         const val THREAD_MUTE = "$THREAD_DETAIL/mute"
         const val THREAD_PIN = "$THREAD_DETAIL/pin"
 
+        const val THREAD_MEMBER =
+            "$THREAD_DETAIL/members/{memberId}"
+
+        const val THREAD_MEMBERS =
+            "$THREAD_DETAIL/members"
+
     }
 
     object Storage{
