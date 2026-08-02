@@ -156,6 +156,9 @@ fun CommunityCreateScreen(
                     )
                 )
             },
+            onCsvUploadClick = {
+                // TODO CSV 파일 선택 기능 연결
+            },
         )
     }
 }
