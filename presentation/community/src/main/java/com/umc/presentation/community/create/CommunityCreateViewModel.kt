@@ -2,9 +2,14 @@ package com.umc.presentation.community.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.usecase.community.CreateCommunityThreadUseCase
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
+import com.umc.presentation.community.model.CommunityChallengerUiModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,21 +17,31 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Job
 
-class CommunityCreateViewModel : ViewModel() {
+@HiltViewModel
+class CommunityCreateViewModel @Inject constructor(
+    private val createCommunityThreadUseCase: CreateCommunityThreadUseCase,
+) : ViewModel() {
 
-    private val _state = MutableStateFlow(CommunityCreateState())
-    val state: StateFlow<CommunityCreateState> = _state.asStateFlow()
-    private var classificationJob: Job? = null
+    private val _state = MutableStateFlow(
+        CommunityCreateState()
+    )
+    val state: StateFlow<CommunityCreateState> =
+        _state.asStateFlow()
 
     private val _event = Channel<CommunityCreateEvent>()
     val event = _event.receiveAsFlow()
 
-    fun onAction(action: CommunityCreateAction) {
+    private var classificationJob: Job? = null
+
+    fun onAction(
+        action: CommunityCreateAction,
+    ) {
         when (action) {
             CommunityCreateAction.OnBackClick -> {
-                sendEvent(CommunityCreateEvent.NavigateBack)
+                sendEvent(
+                    CommunityCreateEvent.NavigateBack
+                )
             }
 
             CommunityCreateAction.OnCompleteClick -> {
@@ -42,15 +57,21 @@ class CommunityCreateViewModel : ViewModel() {
             }
 
             is CommunityCreateAction.OnTitleChanged -> {
-                updateTitle(action.title)
+                updateTitle(
+                    title = action.title,
+                )
             }
 
             is CommunityCreateAction.OnDescriptionChanged -> {
-                updateDescription(action.description)
+                updateDescription(
+                    description = action.description,
+                )
             }
 
             is CommunityCreateAction.OnChallengersSelected -> {
-                updateSelectedChallengers(action.challengers)
+                updateSelectedChallengers(
+                    challengers = action.challengers,
+                )
             }
 
             CommunityCreateAction.OnRequestClassificationClick -> {
@@ -69,7 +90,9 @@ class CommunityCreateViewModel : ViewModel() {
         }
     }
 
-    private fun updateTitle(title: String) {
+    private fun updateTitle(
+        title: String,
+    ) {
         val previousState = _state.value
 
         classificationJob?.cancel()
@@ -80,7 +103,7 @@ class CommunityCreateViewModel : ViewModel() {
             )
         }
 
-        // 한 번도 분류하지 않은 최초 입력 상태에서만 자동 분석
+        // 최초 분류 전이고 제목과 특징이 모두 입력된 경우에만 자동 분류
         if (
             previousState.classifiedCategory == null &&
             title.isNotBlank() &&
@@ -90,7 +113,9 @@ class CommunityCreateViewModel : ViewModel() {
         }
     }
 
-    private fun updateDescription(description: String) {
+    private fun updateDescription(
+        description: String,
+    ) {
         val previousState = _state.value
 
         classificationJob?.cancel()
@@ -114,7 +139,7 @@ class CommunityCreateViewModel : ViewModel() {
             )
         }
 
-        // 한 번도 분류하지 않은 최초 입력 상태에서만 자동 분석
+        // 최초 분류 전이고 제목과 특징이 모두 입력된 경우에만 자동 분류
         if (
             previousState.classifiedCategory == null &&
             _state.value.title.isNotBlank() &&
@@ -142,8 +167,8 @@ class CommunityCreateViewModel : ViewModel() {
         }
 
         classificationJob = viewModelScope.launch {
-            // 입력하는 도중 매 글자마다 분석되지 않도록 대기
-            delay(600L)
+            // 입력 도중 매 글자마다 분석되지 않도록 대기
+            delay(AUTO_CLASSIFICATION_DEBOUNCE)
 
             _state.update {
                 it.copy(
@@ -151,12 +176,14 @@ class CommunityCreateViewModel : ViewModel() {
                 )
             }
 
-            // 테스트용 AI 분석 시간
-            delay(6000L)
+            // 현재는 테스트용 AI 분석 시간
+            delay(AUTO_CLASSIFICATION_DELAY)
+
+            val latestState = _state.value
 
             val result = classifyCategory(
-                title = _state.value.title,
-                description = _state.value.description,
+                title = latestState.title,
+                description = latestState.description,
             )
 
             _state.update {
@@ -167,7 +194,6 @@ class CommunityCreateViewModel : ViewModel() {
             }
         }
     }
-
 
     private fun openChallengerBottomSheet() {
         _state.update {
@@ -186,12 +212,14 @@ class CommunityCreateViewModel : ViewModel() {
     }
 
     private fun updateSelectedChallengers(
-        challengers: List<com.umc.presentation.community.model.CommunityChallengerUiModel>,
+        challengers: List<CommunityChallengerUiModel>,
     ) {
         _state.update { currentState ->
             currentState.copy(
                 selectedChallengers = challengers
-                    .distinctBy { challenger -> challenger.id }
+                    .distinctBy { challenger ->
+                        challenger.memberId
+                    }
                     .take(currentState.maxChallengerCount),
                 showChallengerBottomSheet = false,
             )
@@ -219,11 +247,13 @@ class CommunityCreateViewModel : ViewModel() {
                 )
             }
 
-            delay(1800L)
+            delay(MANUAL_CLASSIFICATION_DELAY)
+
+            val latestState = _state.value
 
             val result = classifyCategory(
-                title = _state.value.title,
-                description = _state.value.description,
+                title = latestState.title,
+                description = latestState.description,
             )
 
             _state.update {
@@ -280,6 +310,10 @@ class CommunityCreateViewModel : ViewModel() {
     private fun createThread() {
         val currentState = _state.value
 
+        if (currentState.isSubmitting) {
+            return
+        }
+
         if (!currentState.isCompleteEnabled) {
             sendEvent(
                 CommunityCreateEvent.ShowToast(
@@ -289,6 +323,27 @@ class CommunityCreateViewModel : ViewModel() {
             return
         }
 
+        val category = currentState.classifiedCategory
+
+        if (category == null) {
+            sendEvent(
+                CommunityCreateEvent.ShowToast(
+                    message = "카테고리 분류를 완료해주세요.",
+                )
+            )
+            return
+        }
+
+        /*
+         * CommunityChallengerUiModel.id가 Long이므로
+         * 생성 요청의 memberIds에 바로 사용
+         */
+        val memberIds = currentState.selectedChallengers
+            .map { challenger ->
+                challenger.memberId
+            }
+            .distinct()
+
         viewModelScope.launch {
             _state.update {
                 it.copy(
@@ -296,19 +351,46 @@ class CommunityCreateViewModel : ViewModel() {
                 )
             }
 
-            delay(SUBMIT_DELAY)
+            createCommunityThreadUseCase(
+                title = currentState.title.trim(),
+                description = currentState.description.trim(),
+                category = category.toApiCategory(),
+                icon = currentState.selectedIcon.ifBlank {
+                    DEFAULT_ICON
+                },
+                memberIds = memberIds,
+            ).onSuccess { createdThread ->
+                _state.update {
+                    it.copy(
+                        isSubmitting = false,
+                    )
+                }
 
-            _state.update {
-                it.copy(
-                    isSubmitting = false,
+                sendEvent(
+                    CommunityCreateEvent.CreateSuccess(
+                        threadId = createdThread.threadId,
+                    )
+                )
+            }.onFailure { throwable ->
+                _state.update {
+                    it.copy(
+                        isSubmitting = false,
+                    )
+                }
+
+                sendEvent(
+                    CommunityCreateEvent.ShowToast(
+                        message = throwable.message
+                            ?: "스레드를 만들지 못했어요.",
+                    )
                 )
             }
-
-            sendEvent(CommunityCreateEvent.CreateSuccess)
         }
     }
 
-    private fun sendEvent(event: CommunityCreateEvent) {
+    private fun sendEvent(
+        event: CommunityCreateEvent,
+    ) {
         viewModelScope.launch {
             _event.send(event)
         }
@@ -320,7 +402,23 @@ class CommunityCreateViewModel : ViewModel() {
     )
 
     companion object {
-        private const val CLASSIFICATION_DELAY = 1500L
-        private const val SUBMIT_DELAY = 700L
+        private const val AUTO_CLASSIFICATION_DEBOUNCE = 600L
+        private const val AUTO_CLASSIFICATION_DELAY = 6000L
+        private const val MANUAL_CLASSIFICATION_DELAY = 1800L
+
+        private const val DEFAULT_ICON = "📚"
+    }
+}
+
+private fun CommunityCategory.toApiCategory(): String {
+    return when (this) {
+        CommunityCategory.STUDY -> "STUDY"
+        CommunityCategory.QNA -> "QNA"
+        CommunityCategory.PROJECT -> "PROJECT"
+        CommunityCategory.FREE -> "FREE"
+
+        CommunityCategory.ALL,
+        CommunityCategory.UNREAD,
+            -> error("스레드 생성에 사용할 수 없는 카테고리입니다: $this")
     }
 }

@@ -4,7 +4,9 @@ sealed interface CommunityCreateEvent {
 
     data object NavigateBack : CommunityCreateEvent
 
-    data object CreateSuccess : CommunityCreateEvent
+    data class CreateSuccess(
+        val threadId: String,
+    ) : CommunityCreateEvent
 
     data object NavigateToEmojiPicker : CommunityCreateEvent
 

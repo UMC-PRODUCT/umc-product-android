@@ -21,6 +21,7 @@ import com.umc.presentation.community.component.create.CommunityAiCard
 import com.umc.presentation.community.component.create.CommunityChallengerCard
 import com.umc.presentation.community.component.create.CommunityCreateTopBar
 import com.umc.presentation.community.component.create.CommunityThreadForm
+import com.umc.presentation.community.create.bottomsheet.CommunityCreateMemberBottomSheet
 import com.umc.presentation.community.model.CommunityAiState
 
 @Composable
@@ -137,5 +138,24 @@ fun CommunityCreateScreen(
                     ),
             )
         }
+    }
+
+    if (state.showChallengerBottomSheet) {
+        CommunityCreateMemberBottomSheet(
+            preSelected = state.selectedChallengers,
+            maxCount = state.maxChallengerCount,
+            onDismissRequest = {
+                onAction(
+                    CommunityCreateAction.OnDismissChallengerBottomSheet
+                )
+            },
+            onConfirm = { challengers ->
+                onAction(
+                    CommunityCreateAction.OnChallengersSelected(
+                        challengers = challengers,
+                    )
+                )
+            },
+        )
     }
 }
