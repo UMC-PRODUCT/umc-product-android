@@ -2,8 +2,16 @@ package com.umc.presentation.community.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.community.CommunityThread
+import com.umc.domain.model.community.CommunityThreadCategory
+import com.umc.domain.model.community.CommunityThreadRole
+import com.umc.domain.usecase.community.GetCommunityThreadsUseCase
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityThreadUiModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,25 +20,30 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class CommunitySearchViewModel : ViewModel() {
+@HiltViewModel
+class CommunitySearchViewModel @Inject constructor(
+    private val getCommunityThreadsUseCase: GetCommunityThreadsUseCase,
+) : ViewModel() {
 
     private val _state = MutableStateFlow(
-        CommunitySearchState(
-            recentSearches = listOf(
-                "중앙",
-                "과제",
-            ),
-        )
+        CommunitySearchState()
     )
-    val state: StateFlow<CommunitySearchState> = _state.asStateFlow()
+
+
+    val state: StateFlow<CommunitySearchState> =
+        _state.asStateFlow()
 
     private val _event = Channel<CommunitySearchEvent>()
     val event = _event.receiveAsFlow()
 
-    fun onAction(action: CommunitySearchAction) {
+    fun onAction(
+        action: CommunitySearchAction,
+    ) {
         when (action) {
             is CommunitySearchAction.OnQueryChanged -> {
-                updateQuery(action.query)
+                updateQuery(
+                    query = action.query,
+                )
             }
 
             CommunitySearchAction.OnSearchClick -> {
@@ -41,20 +54,24 @@ class CommunitySearchViewModel : ViewModel() {
                 clearQuery()
             }
 
-            CommunitySearchAction.OnCancelClick -> {
-                sendEvent(CommunitySearchEvent.NavigateBack)
-            }
-
-            CommunitySearchAction.OnBackClick -> {
-                sendEvent(CommunitySearchEvent.NavigateBack)
+            CommunitySearchAction.OnCancelClick,
+            CommunitySearchAction.OnBackClick,
+                -> {
+                sendEvent(
+                    CommunitySearchEvent.NavigateBack
+                )
             }
 
             is CommunitySearchAction.OnRecentSearchClick -> {
-                searchRecentKeyword(action.query)
+                searchRecentKeyword(
+                    query = action.query,
+                )
             }
 
             is CommunitySearchAction.OnDeleteRecentSearchClick -> {
-                deleteRecentSearch(action.query)
+                deleteRecentSearch(
+                    query = action.query,
+                )
             }
 
             CommunitySearchAction.OnClearAllRecentSearchesClick -> {
@@ -71,12 +88,15 @@ class CommunitySearchViewModel : ViewModel() {
         }
     }
 
-    private fun updateQuery(query: String) {
+    private fun updateQuery(
+        query: String,
+    ) {
         _state.update {
             it.copy(
                 query = query,
                 hasSearched = false,
                 searchResults = emptyList(),
+                errorMessage = null,
             )
         }
     }
@@ -88,52 +108,100 @@ class CommunitySearchViewModel : ViewModel() {
             return
         }
 
-        val searchResults = dummyThreads.filter { thread ->
-            thread.title.contains(
-                other = query,
-                ignoreCase = true,
-            ) || thread.contentPreview.contains(
-                other = query,
-                ignoreCase = true,
-            )
-        }
-
-        _state.update { currentState ->
-            currentState.copy(
-                query = query,
-                searchResults = searchResults,
-                recentSearches = addRecentSearch(
-                    recentSearches = currentState.recentSearches,
-                    query = query,
-                ),
-                hasSearched = true,
-                isLoading = false,
-            )
-        }
+        requestSearch(
+            query = query,
+        )
     }
 
-    private fun searchRecentKeyword(query: String) {
-        val searchResults = dummyThreads.filter { thread ->
-            thread.title.contains(
-                other = query,
-                ignoreCase = true,
-            ) || thread.contentPreview.contains(
-                other = query,
-                ignoreCase = true,
+    private fun searchRecentKeyword(
+        query: String,
+    ) {
+        val trimmedQuery = query.trim()
+
+        if (trimmedQuery.isBlank()) {
+            return
+        }
+
+        _state.update {
+            it.copy(
+                query = trimmedQuery,
             )
         }
 
-        _state.update { currentState ->
-            currentState.copy(
-                query = query,
-                searchResults = searchResults,
-                recentSearches = addRecentSearch(
-                    recentSearches = currentState.recentSearches,
+        requestSearch(
+            query = trimmedQuery,
+        )
+    }
+
+    private fun requestSearch(
+        query: String,
+    ) {
+        if (_state.value.isLoading) {
+            return
+        }
+
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
                     query = query,
-                ),
-                hasSearched = true,
-                isLoading = false,
-            )
+                    isLoading = true,
+                    hasSearched = true,
+                    searchResults = emptyList(),
+                    errorMessage = null,
+                )
+            }
+
+            getCommunityThreadsUseCase(
+                filter = "all",
+                query = query,
+                offset = 0,
+                limit = SEARCH_PAGE_SIZE,
+            ).onSuccess { page ->
+                val searchResults = buildList {
+                    addAll(
+                        page.pinnedThreads.map { thread ->
+                            thread.toSearchUiModel(
+                                forcePinned = true,
+                            )
+                        }
+                    )
+
+                    addAll(
+                        page.threads.map { thread ->
+                            thread.toSearchUiModel(
+                                forcePinned = false,
+                            )
+                        }
+                    )
+                }.distinctBy { thread ->
+                    thread.id
+                }
+
+                _state.update { currentState ->
+                    currentState.copy(
+                        query = query,
+                        searchResults = searchResults,
+                        recentSearches = addRecentSearch(
+                            recentSearches =
+                                currentState.recentSearches,
+                            query = query,
+                        ),
+                        hasSearched = true,
+                        isLoading = false,
+                        errorMessage = null,
+                    )
+                }
+            }.onFailure { throwable ->
+                _state.update {
+                    it.copy(
+                        searchResults = emptyList(),
+                        hasSearched = true,
+                        isLoading = false,
+                        errorMessage = throwable.message
+                            ?: "검색 결과를 불러오지 못했어요.",
+                    )
+                }
+            }
         }
     }
 
@@ -144,16 +212,20 @@ class CommunitySearchViewModel : ViewModel() {
                 searchResults = emptyList(),
                 hasSearched = false,
                 isLoading = false,
+                errorMessage = null,
             )
         }
     }
 
-    private fun deleteRecentSearch(query: String) {
+    private fun deleteRecentSearch(
+        query: String,
+    ) {
         _state.update { currentState ->
             currentState.copy(
-                recentSearches = currentState.recentSearches.filterNot {
-                    it == query
-                },
+                recentSearches =
+                    currentState.recentSearches.filterNot {
+                        it == query
+                    },
             )
         }
     }
@@ -181,7 +253,9 @@ class CommunitySearchViewModel : ViewModel() {
         }.take(MAX_RECENT_SEARCH_COUNT)
     }
 
-    private fun sendEvent(event: CommunitySearchEvent) {
+    private fun sendEvent(
+        event: CommunitySearchEvent,
+    ) {
         viewModelScope.launch {
             _event.send(event)
         }
@@ -189,65 +263,68 @@ class CommunitySearchViewModel : ViewModel() {
 
     companion object {
         private const val MAX_RECENT_SEARCH_COUNT = 10
+        private const val SEARCH_PAGE_SIZE = 20
     }
+}
 
-    private val dummyThreads = listOf(
-        CommunityThreadUiModel(
-            id = "1",
-            title = "iOS 3주차 과제 인증방",
-            contentPreview = "다들 과제 인증 완료했나요? 오늘 자정까지...",
-            category = CommunityCategory.STUDY,
-            icon = "",
-            dayText = "화요일",
-            memberCount = 5,
-            unreadCount = 4,
-            maxMembers = 8,
-            isPinned = true,
-        ),
-        CommunityThreadUiModel(
-            id = "2",
-            title = "정기 모임 일정 안내",
-            contentPreview = "이번 주 중앙 정기 모임 일정을 안내합니다.",
-            category = CommunityCategory.PROJECT,
-            icon = "",
-            dayText = "화요일",
-            memberCount = 8,
-            unreadCount = 3,
-            maxMembers = 10,
-            isPinned = true,
-        ),
-        CommunityThreadUiModel(
-            id = "3",
-            title = "OT 장소 변경 안내",
-            contentPreview = "OT 장소가 변경되어 안내드립니다.",
-            category = CommunityCategory.PROJECT,
-            icon = "",
-            dayText = "화요일",
-            memberCount = 6,
-            unreadCount = 0,
-            maxMembers = 10,
-        ),
-        CommunityThreadUiModel(
-            id = "4",
-            title = "리액트 상태관리 질문 있어요",
-            contentPreview = "상태관리 과제를 하다가 궁금한 점이 생겼어요.",
-            category = CommunityCategory.QNA,
-            icon = "",
-            dayText = "화요일",
-            memberCount = 4,
-            unreadCount = 3,
-            maxMembers = 8,
-        ),
-        CommunityThreadUiModel(
-            id = "5",
-            title = "이번 주 회식 어때요?",
-            contentPreview = "이번 주 과제 끝나고 다 같이 회식해요.",
-            category = CommunityCategory.FREE,
-            icon = "",
-            dayText = "화요일",
-            memberCount = 7,
-            unreadCount = 3,
-            maxMembers = 10,
-        ),
+private fun CommunityThread.toSearchUiModel(
+    forcePinned: Boolean,
+): CommunityThreadUiModel {
+    return CommunityThreadUiModel(
+        id = threadId,
+        title = title,
+
+        // 스레드 특징이 아니라 마지막 메시지만 표시
+        contentPreview = lastMessage?.preview
+            ?.takeIf { preview ->
+                preview.isNotBlank()
+            }
+            .orEmpty(),
+
+        category = category.toSearchUiCategory(),
+        icon = icon,
+
+        // 마지막 메시지가 있으면 해당 메시지 시간 사용
+        dayText = lastMessage?.createdAt
+            ?.toSearchDayText()
+            ?: updatedAt.toSearchDayText(),
+
+        memberCount = memberCount,
+        unreadCount = unreadCount,
+        maxMembers = maxMembers,
+        isPinned = forcePinned || isPinned,
+        isNotificationEnabled = !isMuted,
+        isMine = myRole == CommunityThreadRole.OWNER,
     )
+}
+
+private fun CommunityThreadCategory.toSearchUiCategory():
+        CommunityCategory {
+    return when (this) {
+        CommunityThreadCategory.STUDY -> {
+            CommunityCategory.STUDY
+        }
+
+        CommunityThreadCategory.QNA -> {
+            CommunityCategory.QNA
+        }
+
+        CommunityThreadCategory.PROJECT -> {
+            CommunityCategory.PROJECT
+        }
+
+        CommunityThreadCategory.FREE,
+        CommunityThreadCategory.UNKNOWN,
+            -> {
+            CommunityCategory.FREE
+        }
+    }
+}
+
+private fun String.toSearchDayText(): String {
+    return runCatching {
+        OffsetDateTime.parse(this).format(
+            DateTimeFormatter.ofPattern("MM.dd")
+        )
+    }.getOrDefault("")
 }
