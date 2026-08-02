@@ -126,7 +126,9 @@ object Endpoints {
         const val THREAD_INVITE =
             "$THREAD_DETAIL/invite"
 
-
+        const val THREAD_LEAVE = "$THREAD_DETAIL/leave"
+        const val THREAD_MUTE = "$THREAD_DETAIL/mute"
+        const val THREAD_PIN = "$THREAD_DETAIL/pin"
 
     }
 
