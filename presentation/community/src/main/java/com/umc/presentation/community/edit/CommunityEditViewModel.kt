@@ -2,9 +2,13 @@ package com.umc.presentation.community.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.community.CommunityThreadCategory
+import com.umc.domain.usecase.community.GetCommunityThreadDetailUseCase
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,18 +18,29 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class CommunityEditViewModel : ViewModel() {
+@HiltViewModel
+class CommunityEditViewModel @Inject constructor(
+    private val getCommunityThreadDetailUseCase:
+    GetCommunityThreadDetailUseCase,
+) : ViewModel() {
 
-    private val _state = MutableStateFlow(CommunityEditState())
-    val state: StateFlow<CommunityEditState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(
+        CommunityEditState()
+    )
+    val state: StateFlow<CommunityEditState> =
+        _state.asStateFlow()
 
     private val _event = Channel<CommunityEditEvent>()
     val event = _event.receiveAsFlow()
 
-    fun onAction(action: CommunityEditAction) {
+    fun onAction(
+        action: CommunityEditAction,
+    ) {
         when (action) {
             CommunityEditAction.OnBackClick -> {
-                sendEvent(CommunityEditEvent.NavigateBack)
+                sendEvent(
+                    CommunityEditEvent.NavigateBack
+                )
             }
 
             CommunityEditAction.OnSaveClick -> {
@@ -41,16 +56,30 @@ class CommunityEditViewModel : ViewModel() {
             }
 
             is CommunityEditAction.OnTitleChanged -> {
-                updateTitle(action.title)
+                updateTitle(
+                    title = action.title,
+                )
             }
 
             is CommunityEditAction.OnDescriptionChanged -> {
-                updateDescription(action.description)
+                updateDescription(
+                    description = action.description,
+                )
             }
 
-            is CommunityEditAction.OnChallengersSelected -> {
-                updateSelectedChallengers(action.challengers)
+            CommunityEditAction.OnMemberInviteSuccess -> {
+                _state.update {
+                    it.copy(
+                        showChallengerBottomSheet = false,
+                    )
+                }
+
+                sendEvent(
+                    CommunityEditEvent.MemberInviteSuccess
+                )
             }
+
+
 
             CommunityEditAction.OnRetryClassificationClick -> {
                 requestClassification()
@@ -76,23 +105,70 @@ class CommunityEditViewModel : ViewModel() {
         }
     }
 
-    fun loadThread(threadId: String) {
-        _state.update {
-            it.copy(
-                threadId = threadId,
-                title = "iOS 3주차 과제 인증방",
-                description = "iOS 스터디원들끼리 3주차 과제를 인증하고 서로 코드 피드백을 주고받는 방이에요.",
-                selectedChallengers = dummyChallengers,
-                aiState = CommunityAiState.SUCCESS,
-                classifiedCategory = CommunityCategory.STUDY,
+    /**
+     * 수정 화면 진입 시 실제 스레드 상세 조회 API를 호출한다.
+     */
+    fun loadThread(
+        threadId: String,
+    ) {
+        if (threadId.isBlank()) {
+            sendEvent(
+                CommunityEditEvent.ShowToast(
+                    message = "스레드 정보를 확인할 수 없어요.",
+                )
             )
+            return
+        }
+
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    threadId = threadId,
+                    isLoading = true,
+                    errorMessage = null,
+                )
+            }
+
+            getCommunityThreadDetailUseCase(
+                threadId = threadId,
+            ).onSuccess { thread ->
+                _state.update {
+                    it.copy(
+                        threadId = thread.threadId,
+                        title = thread.title,
+                        description = thread.description,
+                        selectedChallengers = emptyList(),
+                        aiState = CommunityAiState.SUCCESS,
+                        classifiedCategory = thread.category.toUiCategory(),
+                        selectedIcon = thread.icon,
+                        isLoading = false,
+                        errorMessage = null,
+                    )
+                }
+            }.onFailure { throwable ->
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = throwable.message
+                            ?: "스레드 정보를 불러오지 못했어요.",
+                    )
+                }
+
+                sendEvent(
+                    CommunityEditEvent.ShowToast(
+                        message = "스레드 정보를 불러오지 못했어요.",
+                    )
+                )
+            }
         }
     }
 
     /**
-     * 제목 수정은 AI 분류 상태에 영향을 주지 않는다.
+     * 제목 수정은 AI 재분류 상태에 영향을 주지 않는다.
      */
-    private fun updateTitle(title: String) {
+    private fun updateTitle(
+        title: String,
+    ) {
         _state.update {
             it.copy(
                 title = title,
@@ -101,18 +177,20 @@ class CommunityEditViewModel : ViewModel() {
     }
 
     /**
-     * 스레드 특징이 수정된 경우에만 재분류 필요 상태로 변경한다.
+     * 스레드 특징을 수정했을 때만 재분류 필요 상태로 바꾼다.
      */
-    private fun updateDescription(description: String) {
-        _state.update { currentState ->
-            currentState.copy(
+    private fun updateDescription(
+        description: String,
+    ) {
+        _state.update {
+            it.copy(
                 description = description,
                 aiState = when {
                     description.isBlank() -> {
                         CommunityAiState.GUIDE
                     }
 
-                    currentState.classifiedCategory != null -> {
+                    it.classifiedCategory != null -> {
                         CommunityAiState.NEEDS_RECLASSIFICATION
                     }
 
@@ -140,20 +218,7 @@ class CommunityEditViewModel : ViewModel() {
         }
     }
 
-    private fun updateSelectedChallengers(
-        challengers: List<CommunityChallengerUiModel>,
-    ) {
-        _state.update { currentState ->
-            currentState.copy(
-                selectedChallengers = challengers
-                    .distinctBy { challenger ->
-                        challenger.id
-                    }
-                    .take(currentState.maxChallengerCount),
-                showChallengerBottomSheet = false,
-            )
-        }
-    }
+
 
     private fun requestClassification() {
         val currentState = _state.value
@@ -176,9 +241,11 @@ class CommunityEditViewModel : ViewModel() {
 
             delay(CLASSIFICATION_DELAY)
 
+            val latestState = _state.value
+
             val result = classifyCategory(
-                title = _state.value.title,
-                description = _state.value.description,
+                title = latestState.title,
+                description = latestState.description,
             )
 
             _state.update {
@@ -194,7 +261,8 @@ class CommunityEditViewModel : ViewModel() {
         title: String,
         description: String,
     ): ClassificationResult {
-        val targetText = "$title $description".lowercase()
+        val targetText =
+            "$title $description".lowercase()
 
         return when {
             targetText.contains("과제") ||
@@ -232,13 +300,29 @@ class CommunityEditViewModel : ViewModel() {
         }
     }
 
+    /**
+     * 아직 수정 API가 연결되지 않아 임시 처리 중.
+     */
     private fun saveThread() {
         val currentState = _state.value
+
+        if (currentState.isSaving) {
+            return
+        }
 
         if (!currentState.isSaveEnabled) {
             sendEvent(
                 CommunityEditEvent.ShowToast(
                     message = "제목과 스레드 특징을 모두 입력해주세요.",
+                )
+            )
+            return
+        }
+
+        if (currentState.classifiedCategory == null) {
+            sendEvent(
+                CommunityEditEvent.ShowToast(
+                    message = "카테고리 분류를 완료해주세요.",
                 )
             )
             return
@@ -281,15 +365,36 @@ class CommunityEditViewModel : ViewModel() {
         }
     }
 
+    /**
+     * 아직 삭제 API가 연결되지 않아 임시 처리 중.
+     */
     private fun deleteThread() {
+        val currentState = _state.value
+
+        if (currentState.threadId.isBlank()) {
+            sendEvent(
+                CommunityEditEvent.ShowToast(
+                    message = "스레드 정보를 확인할 수 없어요.",
+                )
+            )
+            return
+        }
+
         viewModelScope.launch {
             _state.update {
                 it.copy(
                     showDeleteDialog = false,
+                    isDeleting = true,
                 )
             }
 
             delay(DELETE_DELAY)
+
+            _state.update {
+                it.copy(
+                    isDeleting = false,
+                )
+            }
 
             sendEvent(
                 CommunityEditEvent.DeleteSuccess
@@ -315,19 +420,31 @@ class CommunityEditViewModel : ViewModel() {
         private const val SAVE_DELAY = 700L
         private const val DELETE_DELAY = 500L
     }
+}
 
-    private val dummyChallengers = listOf(
-        CommunityChallengerUiModel(
-            id = 1L,
-            name = "김도연",
-        ),
-        CommunityChallengerUiModel(
-            id = 2L,
-            name = "홍길동",
-        ),
-        CommunityChallengerUiModel(
-            id = 3L,
-            name = "김영희",
-        ),
-    )
+/**
+ * 상세 API의 카테고리 타입이 String일 때 사용한다.
+ */
+private fun CommunityThreadCategory.toUiCategory(): CommunityCategory {
+    return when (this) {
+        CommunityThreadCategory.STUDY -> {
+            CommunityCategory.STUDY
+        }
+
+        CommunityThreadCategory.QNA -> {
+            CommunityCategory.QNA
+        }
+
+        CommunityThreadCategory.PROJECT -> {
+            CommunityCategory.PROJECT
+        }
+
+        CommunityThreadCategory.FREE -> {
+            CommunityCategory.FREE
+        }
+
+        CommunityThreadCategory.UNKNOWN -> {
+            CommunityCategory.FREE
+        }
+    }
 }
