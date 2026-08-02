@@ -8,6 +8,7 @@ import com.umc.data.request.community.UpdateCommunityThreadRequest
 import com.umc.domain.model.community.CommunityInvitableMemberPage
 import com.umc.domain.model.community.CommunityThreadDetail
 import com.umc.domain.model.community.CommunityThreadInvitation
+import com.umc.domain.model.community.CommunityThreadMemberPage
 import com.umc.domain.model.community.CommunityThreadPage
 import com.umc.domain.repository.community.CommunityThreadRepository
 import javax.inject.Inject
