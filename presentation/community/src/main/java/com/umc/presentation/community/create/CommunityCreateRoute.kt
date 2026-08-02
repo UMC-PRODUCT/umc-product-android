@@ -5,33 +5,36 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun CommunityCreateRoute(
     onNavigateBack: () -> Unit,
     onNavigateToEmojiPicker: () -> Unit,
-    viewModel: CommunityCreateViewModel = viewModel(),
+    onCreateSuccess: (String) -> Unit,
+    viewModel: CommunityCreateViewModel =
+        hiltViewModel<CommunityCreateViewModel>(),
 ) {
     val context = LocalContext.current
+
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel) {
-        viewModel.event.collect { event ->
+        viewModel.event.collect { event: CommunityCreateEvent ->
             when (event) {
                 CommunityCreateEvent.NavigateBack -> {
                     onNavigateBack()
                 }
 
-                CommunityCreateEvent.CreateSuccess -> {
+                is CommunityCreateEvent.CreateSuccess -> {
                     Toast.makeText(
                         context,
                         "스레드가 생성되었습니다.",
                         Toast.LENGTH_SHORT,
                     ).show()
 
-                    onNavigateBack()
+                    onCreateSuccess(event.threadId)
                 }
 
                 CommunityCreateEvent.NavigateToEmojiPicker -> {

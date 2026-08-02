@@ -22,6 +22,7 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
+import com.umc.presentation.community.bottomsheet.CommunityMemberBottomSheet
 import com.umc.presentation.community.component.create.CommunityAiCard
 import com.umc.presentation.community.component.create.CommunityChallengerCard
 import com.umc.presentation.community.component.create.CommunityCreateTopBar
@@ -47,10 +48,14 @@ fun CommunityEditScreen(
             actionText = "완료",
             isActionEnabled = state.isSaveEnabled,
             onBackClick = {
-                onAction(CommunityEditAction.OnBackClick)
+                onAction(
+                    CommunityEditAction.OnBackClick
+                )
             },
             onActionClick = {
-                onAction(CommunityEditAction.OnSaveClick)
+                onAction(
+                    CommunityEditAction.OnSaveClick
+                )
             },
             modifier = Modifier.padding(
                 horizontal = 16.dp,
@@ -71,7 +76,7 @@ fun CommunityEditScreen(
                         start = 24.dp,
                         end = 24.dp,
                         top = 8.dp,
-                        bottom = 64.dp,
+                        bottom = 240.dp,
                     ),
             ) {
                 CommunityChallengerCard(
@@ -84,7 +89,9 @@ fun CommunityEditScreen(
                     },
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(
+                    modifier = Modifier.height(32.dp),
+                )
 
                 CommunityThreadForm(
                     title = state.title,
@@ -105,6 +112,9 @@ fun CommunityEditScreen(
                     },
                 )
 
+                Spacer(
+                    modifier = Modifier.height(32.dp),
+                )
             }
 
             Column(
@@ -118,15 +128,18 @@ fun CommunityEditScreen(
                 CommunityAiCard(
                     aiState = state.aiState,
                     classifiedCategory = state.classifiedCategory,
-                    canRequestClassification = state.canRequestClassification,
+                    canRequestClassification =
+                        state.canRequestClassification,
                     onRequestClassificationClick = {
                         onAction(
-                            CommunityEditAction.OnRetryClassificationClick
+                            CommunityEditAction
+                                .OnRetryClassificationClick
                         )
                     },
                     onRetryClassificationClick = {
                         onAction(
-                            CommunityEditAction.OnRetryClassificationClick
+                            CommunityEditAction
+                                .OnRetryClassificationClick
                         )
                     },
                     onChangeEmojiClick = {
@@ -136,7 +149,9 @@ fun CommunityEditScreen(
                     },
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(
+                    modifier = Modifier.height(16.dp),
+                )
 
                 CommunityDeleteButton(
                     onClick = {
@@ -176,6 +191,25 @@ fun CommunityEditScreen(
             onDismissRequest = {
                 onAction(
                     CommunityEditAction.OnDismissDeleteDialog
+                )
+            },
+        )
+    }
+
+    if (
+        state.showChallengerBottomSheet &&
+        state.threadId.isNotBlank()
+    ) {
+        CommunityMemberBottomSheet(
+            threadId = state.threadId,
+            onDismissRequest = {
+                onAction(
+                    CommunityEditAction.OnDismissChallengerBottomSheet
+                )
+            },
+            onInviteSuccess = {
+                onAction(
+                    CommunityEditAction.OnMemberInviteSuccess
                 )
             },
         )

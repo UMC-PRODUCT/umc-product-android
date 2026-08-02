@@ -16,7 +16,15 @@ data class CommunityEditState(
     val aiState: CommunityAiState = CommunityAiState.SUCCESS,
     val classifiedCategory: CommunityCategory? = CommunityCategory.STUDY,
 
+    // 추가
+    val selectedIcon: String = "BOOK",
+
+    val isLoading: Boolean = false,
     val isSaving: Boolean = false,
+    val isDeleting: Boolean = false,
+
+    val errorMessage: String? = null,
+
     val showChallengerBottomSheet: Boolean = false,
     val showDeleteDialog: Boolean = false,
 ) {
@@ -26,6 +34,7 @@ data class CommunityEditState(
     val isSaveEnabled: Boolean
         get() = title.isNotBlank() &&
                 description.isNotBlank() &&
+                classifiedCategory != null &&
                 !isSaving
 
     val canRequestClassification: Boolean

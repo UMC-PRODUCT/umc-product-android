@@ -1,5 +1,6 @@
 package com.umc.presentation.community
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.community.CommunityThread
@@ -129,6 +130,28 @@ class CommunityViewModel @Inject constructor(
                 offset = 0,
                 limit = 20,
             ).onSuccess { page ->
+
+                Log.d(
+                    "COMMUNITY_LIST",
+                    "pinned=${page.pinnedThreads.size}, " +
+                            "threads=${page.threads.size}, " +
+                            "total=${page.total}"
+                )
+
+                page.pinnedThreads.forEach { thread ->
+                    Log.d(
+                        "COMMUNITY_LIST",
+                        "pinned threadId=${thread.threadId}, title=${thread.title}"
+                    )
+                }
+
+                page.threads.forEach { thread ->
+                    Log.d(
+                        "COMMUNITY_LIST",
+                        "threadId=${thread.threadId}, title=${thread.title}"
+                    )
+                }
+
                 val uiThreads = buildList {
                     addAll(
                         page.pinnedThreads.map { thread ->
@@ -147,6 +170,11 @@ class CommunityViewModel @Inject constructor(
                     )
                 }
 
+                Log.d(
+                    "COMMUNITY_LIST",
+                    "uiThreads=${uiThreads.size}"
+                )
+
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -154,7 +182,19 @@ class CommunityViewModel @Inject constructor(
                         errorMessage = null,
                     )
                 }
-            }.onFailure {
+
+                Log.d(
+                    "COMMUNITY_LIST",
+                    "stateThreads=${_state.value.threads.size}, " +
+                            "filteredThreads=${_state.value.filteredThreads.size}"
+                )
+            }.onFailure { throwable ->
+                Log.e(
+                    "COMMUNITY_LIST",
+                    "목록 조회 실패",
+                    throwable,
+                )
+
                 _state.update {
                     it.copy(
                         isLoading = false,
