@@ -9,26 +9,56 @@ data class CommunityState(
     val threads: List<CommunityThreadUiModel> = emptyList(),
     val errorMessage: String? = null,
 
-    // 롱프레스한 스레드
     val selectedThread: CommunityThreadUiModel? = null,
-
-    // 스레드 메뉴 다이얼로그 표시 여부
     val showThreadMenuDialog: Boolean = false,
-
-    // 나가기 확인 다이얼로그 표시 여부
     val showLeaveDialog: Boolean = false,
 ) {
-    val filteredThreads: List<CommunityThreadUiModel>
-        get() = threads
-
     val pinnedThreads: List<CommunityThreadUiModel>
-        get() = filteredThreads.filter { thread ->
+        get() = threads.filter { thread ->
             thread.isPinned
         }
 
     val normalThreads: List<CommunityThreadUiModel>
-        get() = filteredThreads.filterNot { thread ->
-            thread.isPinned
+        get() {
+            val unpinnedThreads = threads.filterNot { thread ->
+                thread.isPinned
+            }
+
+            return when (selectedCategory) {
+                CommunityCategory.ALL -> {
+                    unpinnedThreads
+                }
+
+                CommunityCategory.UNREAD -> {
+                    unpinnedThreads.filter { thread ->
+                        thread.unreadCount > 0
+                    }
+                }
+
+                CommunityCategory.PROJECT -> {
+                    unpinnedThreads.filter { thread ->
+                        thread.category == CommunityCategory.PROJECT
+                    }
+                }
+
+                CommunityCategory.STUDY -> {
+                    unpinnedThreads.filter { thread ->
+                        thread.category == CommunityCategory.STUDY
+                    }
+                }
+
+                CommunityCategory.QNA -> {
+                    unpinnedThreads.filter { thread ->
+                        thread.category == CommunityCategory.QNA
+                    }
+                }
+
+                CommunityCategory.FREE -> {
+                    unpinnedThreads.filter { thread ->
+                        thread.category == CommunityCategory.FREE
+                    }
+                }
+            }
         }
 
     val isError: Boolean
@@ -37,7 +67,8 @@ data class CommunityState(
     val isEmpty: Boolean
         get() = !isLoading &&
                 !isError &&
-                filteredThreads.isEmpty()
+                pinnedThreads.isEmpty() &&
+                normalThreads.isEmpty()
 
     val selectedSectionTitle: String
         get() = when (selectedCategory) {

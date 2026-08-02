@@ -9,6 +9,12 @@ import com.umc.domain.model.community.CommunityThreadRole
 import com.umc.domain.usecase.community.GetCommunityThreadsUseCase
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityThreadUiModel
+import com.umc.domain.usecase.community.LeaveCommunityThreadUseCase
+import com.umc.domain.usecase.community.MuteCommunityThreadUseCase
+import com.umc.domain.usecase.community.PinCommunityThreadUseCase
+import com.umc.domain.usecase.community.UnmuteCommunityThreadUseCase
+import com.umc.domain.usecase.community.UnpinCommunityThreadUseCase
+import com.umc.domain.model.community.CommunityThreadDetail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -24,6 +30,11 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
     private val getCommunityThreadsUseCase: GetCommunityThreadsUseCase,
+    private val pinCommunityThreadUseCase: PinCommunityThreadUseCase,
+    private val unpinCommunityThreadUseCase: UnpinCommunityThreadUseCase,
+    private val muteCommunityThreadUseCase: MuteCommunityThreadUseCase,
+    private val unmuteCommunityThreadUseCase: UnmuteCommunityThreadUseCase,
+    private val leaveCommunityThreadUseCase: LeaveCommunityThreadUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CommunityState())
@@ -106,14 +117,10 @@ class CommunityViewModel @Inject constructor(
                 selectedCategory = category,
             )
         }
-
-        loadThreads()
     }
 
-    private fun loadThreads() {
+    fun loadThreads() {
         viewModelScope.launch {
-            val selectedCategory = _state.value.selectedCategory
-
             _state.update {
                 it.copy(
                     isLoading = true,
@@ -125,33 +132,11 @@ class CommunityViewModel @Inject constructor(
             }
 
             getCommunityThreadsUseCase(
-                filter = selectedCategory.toApiFilter(),
+                filter = "all",
                 query = null,
                 offset = 0,
                 limit = 20,
             ).onSuccess { page ->
-
-                Log.d(
-                    "COMMUNITY_LIST",
-                    "pinned=${page.pinnedThreads.size}, " +
-                            "threads=${page.threads.size}, " +
-                            "total=${page.total}"
-                )
-
-                page.pinnedThreads.forEach { thread ->
-                    Log.d(
-                        "COMMUNITY_LIST",
-                        "pinned threadId=${thread.threadId}, title=${thread.title}"
-                    )
-                }
-
-                page.threads.forEach { thread ->
-                    Log.d(
-                        "COMMUNITY_LIST",
-                        "threadId=${thread.threadId}, title=${thread.title}"
-                    )
-                }
-
                 val uiThreads = buildList {
                     addAll(
                         page.pinnedThreads.map { thread ->
@@ -170,11 +155,6 @@ class CommunityViewModel @Inject constructor(
                     )
                 }
 
-                Log.d(
-                    "COMMUNITY_LIST",
-                    "uiThreads=${uiThreads.size}"
-                )
-
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -182,12 +162,6 @@ class CommunityViewModel @Inject constructor(
                         errorMessage = null,
                     )
                 }
-
-                Log.d(
-                    "COMMUNITY_LIST",
-                    "stateThreads=${_state.value.threads.size}, " +
-                            "filteredThreads=${_state.value.filteredThreads.size}"
-                )
             }.onFailure { throwable ->
                 Log.e(
                     "COMMUNITY_LIST",
@@ -231,33 +205,85 @@ class CommunityViewModel @Inject constructor(
         }
     }
 
-    /*
-     * 현재는 API 명세가 아직 없으므로 UI에서만 임시 변경한다.
-     * 고정 변경 API가 추가되면 해당 API 호출로 교체해야 한다.
-     */
     private fun toggleSelectedThreadPin() {
         val selectedThread = _state.value.selectedThread ?: return
 
-        updateSelectedThread(
-            updatedThread = selectedThread.copy(
-                isPinned = !selectedThread.isPinned,
-            )
-        )
+        viewModelScope.launch {
+            val result = if (selectedThread.isPinned) {
+                unpinCommunityThreadUseCase(
+                    threadId = selectedThread.id,
+                )
+            } else {
+                pinCommunityThreadUseCase(
+                    threadId = selectedThread.id,
+                )
+            }
+
+            result.onSuccess { updatedThread ->
+                val updatedUiModel = updatedThread.toUiModel()
+
+                _state.update { currentState ->
+                    currentState.copy(
+                        threads = currentState.threads.map { thread ->
+                            if (thread.id == updatedUiModel.id) {
+                                updatedUiModel
+                            } else {
+                                thread
+                            }
+                        },
+                        selectedThread = null,
+                        showThreadMenuDialog = false,
+                    )
+                }
+
+                // 고정 영역과 일반 영역 순서를 서버 기준으로 다시 맞춤
+                loadThreads()
+            }.onFailure { throwable ->
+                dismissThreadMenu()
+
+                sendEvent(
+                    CommunityEvent.ShowToast(
+                        message = throwable.message
+                            ?: "스레드 고정 상태를 변경하지 못했어요.",
+                    )
+                )
+            }
+        }
     }
 
-    /*
-     * 현재는 API 명세가 아직 없으므로 UI에서만 임시 변경한다.
-     * 알림 변경 API가 추가되면 해당 API 호출로 교체해야 한다.
-     */
     private fun toggleSelectedThreadNotification() {
         val selectedThread = _state.value.selectedThread ?: return
 
-        updateSelectedThread(
-            updatedThread = selectedThread.copy(
-                isNotificationEnabled =
-                    !selectedThread.isNotificationEnabled,
-            )
-        )
+        viewModelScope.launch {
+            val result = if (selectedThread.isNotificationEnabled) {
+                // 현재 알림이 켜져 있으면 mute 호출
+                muteCommunityThreadUseCase(
+                    threadId = selectedThread.id,
+                )
+            } else {
+                // 현재 알림이 꺼져 있으면 unmute 호출
+                unmuteCommunityThreadUseCase(
+                    threadId = selectedThread.id,
+                )
+            }
+
+            result.onSuccess { updatedThread ->
+                val updatedUiModel = updatedThread.toUiModel()
+
+                updateSelectedThread(
+                    updatedThread = updatedUiModel,
+                )
+            }.onFailure { throwable ->
+                dismissThreadMenu()
+
+                sendEvent(
+                    CommunityEvent.ShowToast(
+                        message = throwable.message
+                            ?: "알림 설정을 변경하지 못했어요.",
+                    )
+                )
+            }
+        }
     }
 
     private fun updateSelectedThread(
@@ -313,21 +339,43 @@ class CommunityViewModel @Inject constructor(
         }
     }
 
-    /*
-     * 현재는 나가기 API 명세가 없으므로 목록에서만 임시 삭제한다.
-     */
     private fun leaveSelectedThread() {
         val selectedThread = _state.value.selectedThread ?: return
 
-        _state.update { currentState ->
-            currentState.copy(
-                threads = currentState.threads.filterNot { thread ->
-                    thread.id == selectedThread.id
-                },
-                selectedThread = null,
-                showThreadMenuDialog = false,
-                showLeaveDialog = false,
-            )
+        viewModelScope.launch {
+            leaveCommunityThreadUseCase(
+                threadId = selectedThread.id,
+            ).onSuccess {
+                _state.update { currentState ->
+                    currentState.copy(
+                        threads = currentState.threads.filterNot { thread ->
+                            thread.id == selectedThread.id
+                        },
+                        selectedThread = null,
+                        showThreadMenuDialog = false,
+                        showLeaveDialog = false,
+                    )
+                }
+
+                sendEvent(
+                    CommunityEvent.ShowToast(
+                        message = "스레드에서 나갔어요.",
+                    )
+                )
+            }.onFailure { throwable ->
+                _state.update {
+                    it.copy(
+                        showLeaveDialog = false,
+                    )
+                }
+
+                sendEvent(
+                    CommunityEvent.ShowToast(
+                        message = throwable.message
+                            ?: "스레드에서 나가지 못했어요.",
+                    )
+                )
+            }
         }
     }
 
@@ -361,7 +409,7 @@ private fun CommunityThread.toUiModel(
             ?.takeIf { preview ->
                 preview.isNotBlank()
             }
-            ?: description,
+            .orEmpty(),
         category = category.toUiCategory(),
         icon = icon,
         dayText = lastMessage?.createdAt
@@ -405,4 +453,27 @@ private fun String.toDayText(): String {
             DateTimeFormatter.ofPattern("MM.dd")
         )
     }.getOrDefault("")
+}
+
+private fun CommunityThreadDetail.toUiModel(): CommunityThreadUiModel {
+    return CommunityThreadUiModel(
+        id = threadId,
+        title = title,
+        contentPreview = lastMessage?.preview
+            ?.takeIf { preview ->
+                preview.isNotBlank()
+            }
+            .orEmpty(),
+        category = category.toUiCategory(),
+        icon = icon,
+        dayText = lastMessage?.createdAt
+            ?.toDayText()
+            ?: updatedAt.toDayText(),
+        memberCount = memberCount,
+        unreadCount = unreadCount,
+        maxMembers = maxMembers,
+        isPinned = isPinned,
+        isNotificationEnabled = !isMuted,
+        isMine = myRole == CommunityThreadRole.OWNER,
+    )
 }
