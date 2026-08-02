@@ -37,4 +37,36 @@ interface CommunityThreadRepository {
         icon: String,
         memberIds: List<Long>,
     ): Result<CommunityThreadDetail>
+
+    suspend fun updateCommunityThread(
+        threadId: String,
+        title: String,
+        description: String,
+        category: String,
+        icon: String,
+    ): Result<CommunityThreadDetail>
+
+    suspend fun leaveCommunityThread(
+        threadId: String,
+    ): Result<Unit>
+
+    suspend fun deleteCommunityThread(
+        threadId: String,
+    ): Result<CommunityThreadDetail>
+
+    suspend fun muteCommunityThread(
+        threadId: String,
+    ): Result<CommunityThreadDetail>
+
+    suspend fun unmuteCommunityThread(
+        threadId: String,
+    ): Result<CommunityThreadDetail>
+
+    suspend fun pinCommunityThread(
+        threadId: String,
+    ): Result<CommunityThreadDetail>
+
+    suspend fun unpinCommunityThread(
+        threadId: String,
+    ): Result<CommunityThreadDetail>
 }
