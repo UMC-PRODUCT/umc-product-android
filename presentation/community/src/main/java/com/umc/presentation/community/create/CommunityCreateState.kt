@@ -14,8 +14,10 @@ data class CommunityCreateState(
     val aiState: CommunityAiState = CommunityAiState.GUIDE,
     val classifiedCategory: CommunityCategory? = null,
 
-    val isSubmitting: Boolean = false,
     val showChallengerBottomSheet: Boolean = false,
+
+    val selectedIcon: String = "📚",
+    val isSubmitting: Boolean = false,
 ) {
     val selectedChallengerCountText: String
         get() = "${selectedChallengers.size} / $maxChallengerCount"
@@ -29,7 +31,10 @@ data class CommunityCreateState(
     val isCompleteEnabled: Boolean
         get() = isTitleValid &&
                 isDescriptionValid &&
+                selectedChallengers.isNotEmpty() &&
+                classifiedCategory != null &&
                 !isSubmitting
+
 
     val canRequestClassification: Boolean
         get() = title.isNotBlank() &&

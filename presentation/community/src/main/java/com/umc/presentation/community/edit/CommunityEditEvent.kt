@@ -13,4 +13,6 @@ sealed interface CommunityEditEvent {
     data class ShowToast(
         val message: String,
     ) : CommunityEditEvent
+
+    data object MemberInviteSuccess : CommunityEditEvent
 }

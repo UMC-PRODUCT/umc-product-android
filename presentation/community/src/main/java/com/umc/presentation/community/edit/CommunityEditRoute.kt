@@ -5,25 +5,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun CommunityEditRoute(
     threadId: String,
     onNavigateBack: () -> Unit,
     onNavigateToEmojiPicker: () -> Unit,
-    viewModel: CommunityEditViewModel = viewModel(),
+    viewModel: CommunityEditViewModel =
+        hiltViewModel<CommunityEditViewModel>(),
 ) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(threadId) {
-        viewModel.loadThread(threadId)
+        viewModel.loadThread(
+            threadId = threadId,
+        )
     }
 
     LaunchedEffect(viewModel) {
-        viewModel.event.collect { event ->
+        viewModel.event.collect { event: CommunityEditEvent ->
             when (event) {
                 CommunityEditEvent.NavigateBack -> {
                     onNavigateBack()
@@ -51,6 +54,14 @@ fun CommunityEditRoute(
 
                 CommunityEditEvent.NavigateToEmojiPicker -> {
                     onNavigateToEmojiPicker()
+                }
+
+                CommunityEditEvent.MemberInviteSuccess -> {
+                    Toast.makeText(
+                        context,
+                        "챌린저를 추가했습니다.",
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }
 
                 is CommunityEditEvent.ShowToast -> {
