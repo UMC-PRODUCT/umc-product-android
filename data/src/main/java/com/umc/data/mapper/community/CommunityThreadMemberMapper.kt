@@ -16,15 +16,3 @@ fun CommunityThreadMemberPageResponse.toDomain():
     )
 }
 
-fun CommunityThreadMemberResponse.toDomain():
-        CommunityThreadMember {
-    return CommunityThreadMember(
-        memberId = memberId,
-        name = name,
-        part = part,
-        generation = generation,
-        role = role,
-        joinedAt = joinedAt,
-        state = state,
-    )
-}

@@ -7,7 +7,9 @@ import com.umc.domain.usecase.community.GetCommunityThreadDetailUseCase
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
+import com.umc.domain.usecase.community.UpdateCommunityThreadUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.umc.domain.usecase.community.DeleteCommunityThreadUseCase
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -22,6 +24,10 @@ import kotlinx.coroutines.launch
 class CommunityEditViewModel @Inject constructor(
     private val getCommunityThreadDetailUseCase:
     GetCommunityThreadDetailUseCase,
+    private val updateCommunityThreadUseCase:
+    UpdateCommunityThreadUseCase,
+    private val deleteCommunityThreadUseCase:
+    DeleteCommunityThreadUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -105,9 +111,7 @@ class CommunityEditViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 수정 화면 진입 시 실제 스레드 상세 조회 API를 호출한다.
-     */
+
     fun loadThread(
         threadId: String,
     ) {
@@ -164,7 +168,7 @@ class CommunityEditViewModel @Inject constructor(
     }
 
     /**
-     * 제목 수정은 AI 재분류 상태에 영향을 주지 않는다.
+     * 제목 수정은 AI 재분류 상태에 영향 X
      */
     private fun updateTitle(
         title: String,
@@ -177,7 +181,7 @@ class CommunityEditViewModel @Inject constructor(
     }
 
     /**
-     * 스레드 특징을 수정했을 때만 재분류 필요 상태로 바꾼다.
+     * 스레드 특징을 수정했을 때만 재분류 필요 상태로 바꿈
      */
     private fun updateDescription(
         description: String,
@@ -300,15 +304,8 @@ class CommunityEditViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 아직 수정 API가 연결되지 않아 임시 처리 중.
-     */
     private fun saveThread() {
         val currentState = _state.value
-
-        if (currentState.isSaving) {
-            return
-        }
 
         if (!currentState.isSaveEnabled) {
             sendEvent(
@@ -319,33 +316,56 @@ class CommunityEditViewModel @Inject constructor(
             return
         }
 
-        if (currentState.classifiedCategory == null) {
-            sendEvent(
-                CommunityEditEvent.ShowToast(
-                    message = "카테고리 분류를 완료해주세요.",
+        val category =
+            currentState.classifiedCategory ?: run {
+                sendEvent(
+                    CommunityEditEvent.ShowToast(
+                        message = "카테고리를 선택해주세요.",
+                    )
                 )
-            )
-            return
-        }
+                return
+            }
 
         viewModelScope.launch {
+
             _state.update {
                 it.copy(
                     isSaving = true,
                 )
             }
 
-            delay(SAVE_DELAY)
+            updateCommunityThreadUseCase(
+                threadId = currentState.threadId,
+                title = currentState.title,
+                description = currentState.description,
+                category = category.name,
+                icon = currentState.selectedIcon,
+            ).onSuccess {
 
-            _state.update {
-                it.copy(
-                    isSaving = false,
+                _state.update {
+                    it.copy(
+                        isSaving = false,
+                    )
+                }
+
+                sendEvent(
+                    CommunityEditEvent.SaveSuccess
+                )
+            }.onFailure { throwable ->
+
+                _state.update {
+                    it.copy(
+                        isSaving = false,
+                    )
+                }
+
+                sendEvent(
+                    CommunityEditEvent.ShowToast(
+                        message = throwable.message
+                            ?: "스레드를 수정하지 못했어요.",
+                    )
                 )
             }
-
-            sendEvent(
-                CommunityEditEvent.SaveSuccess
-            )
         }
     }
 
@@ -365,9 +385,6 @@ class CommunityEditViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 아직 삭제 API가 연결되지 않아 임시 처리 중.
-     */
     private fun deleteThread() {
         val currentState = _state.value
 
@@ -380,6 +397,10 @@ class CommunityEditViewModel @Inject constructor(
             return
         }
 
+        if (currentState.isDeleting) {
+            return
+        }
+
         viewModelScope.launch {
             _state.update {
                 it.copy(
@@ -388,17 +409,32 @@ class CommunityEditViewModel @Inject constructor(
                 )
             }
 
-            delay(DELETE_DELAY)
+            deleteCommunityThreadUseCase(
+                threadId = currentState.threadId,
+            ).onSuccess {
+                _state.update {
+                    it.copy(
+                        isDeleting = false,
+                    )
+                }
 
-            _state.update {
-                it.copy(
-                    isDeleting = false,
+                sendEvent(
+                    CommunityEditEvent.DeleteSuccess
+                )
+            }.onFailure { throwable ->
+                _state.update {
+                    it.copy(
+                        isDeleting = false,
+                    )
+                }
+
+                sendEvent(
+                    CommunityEditEvent.ShowToast(
+                        message = throwable.message
+                            ?: "스레드를 삭제하지 못했어요.",
+                    )
                 )
             }
-
-            sendEvent(
-                CommunityEditEvent.DeleteSuccess
-            )
         }
     }
 
@@ -417,13 +453,11 @@ class CommunityEditViewModel @Inject constructor(
 
     companion object {
         private const val CLASSIFICATION_DELAY = 1500L
-        private const val SAVE_DELAY = 700L
-        private const val DELETE_DELAY = 500L
     }
 }
 
 /**
- * 상세 API의 카테고리 타입이 String일 때 사용한다.
+ * 상세 API의 카테고리 타입이 String일 때 사용
  */
 private fun CommunityThreadCategory.toUiCategory(): CommunityCategory {
     return when (this) {

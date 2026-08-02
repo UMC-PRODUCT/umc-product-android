@@ -48,8 +48,9 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.indigo500
+import com.umc.component.theme.red100
 import com.umc.component.theme.red500
-import com.umc.presentation.community.model.CommunityInvitableMemberUiModel
+import com.umc.presentation.community.model.CommunityChallengerUiModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,16 +77,44 @@ fun CommunityMemberBottomSheet(
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collect { event ->
             when (event) {
-                is CommunityMemberBottomSheetEvent.InviteSuccess -> {
+                is CommunityMemberBottomSheetEvent.MemberUpdateSuccess -> {
+                    val message = when {
+                        event.addedMemberCount > 0 &&
+                                event.removedMemberCount > 0 -> {
+                            "${event.addedMemberCount}명을 추가하고 " +
+                                    "${event.removedMemberCount}명을 삭제했어요."
+                        }
+
+                        event.addedMemberCount > 0 -> {
+                            "${event.addedMemberCount}명을 추가했어요."
+                        }
+
+                        event.removedMemberCount > 0 -> {
+                            "${event.removedMemberCount}명을 삭제했어요."
+                        }
+
+                        else -> {
+                            "멤버 구성이 변경되었어요."
+                        }
+                    }
+
                     Toast.makeText(
                         context,
-                        "${event.invitedMemberCount}명을 초대했어요.",
+                        message,
                         Toast.LENGTH_SHORT,
                     ).show()
 
-                    viewModel.resetAfterDismiss()
                     onInviteSuccess()
-                    onDismissRequest()
+                }
+
+                is CommunityMemberBottomSheetEvent.MemberKickSuccess -> {
+                    Toast.makeText(
+                        context,
+                        "멤버를 삭제했어요.",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+
+                    onInviteSuccess()
                 }
 
                 is CommunityMemberBottomSheetEvent.ShowToast -> {
@@ -125,15 +154,15 @@ fun CommunityMemberBottomSheet(
         ) {
             CommunityMemberBottomSheetHeader(
                 title = if (state.isSearching) {
-                    "챌린저를 검색하세요"
+                    "초대할 챌린저를 검색하세요"
                 } else {
-                    "챌린저를 추가하세요"
+                    "초대할 챌린저를 추가하세요"
                 },
-                selectedCountText = state.selectedCountText,
+                showConfirmButton = state.isSearching,
                 isConfirmEnabled = state.isConfirmEnabled,
-                isInviting = state.isInviting,
+                isUpdatingMembers = state.isUpdatingMembers,
                 onConfirmClick = {
-                    viewModel.inviteSelectedMembers()
+                    viewModel.updateMembers()
                 },
             )
 
@@ -173,7 +202,7 @@ fun CommunityMemberBottomSheet(
                     state.isLoading -> {
                         CircularProgressIndicator(
                             modifier = Modifier.align(
-                                Alignment.Center
+                                Alignment.Center,
                             ),
                             color = indigo500(),
                         )
@@ -191,12 +220,12 @@ fun CommunityMemberBottomSheet(
                             text = if (state.isSearching) {
                                 "검색 결과가 없어요"
                             } else {
-                                "초대 가능한 챌린저가 없어요"
+                                "현재 참여 중인 챌린저가 없어요"
                             },
                         )
                     }
 
-                    else -> {
+                    state.isSearching -> {
                         CommunityMemberSearchContent(
                             members = state.displayedMembers,
                             selectedMembers = state.selectedMembers,
@@ -213,6 +242,18 @@ fun CommunityMemberBottomSheet(
                             },
                         )
                     }
+
+                    else -> {
+                        CommunityCurrentMemberContent(
+                            members = state.currentMembers,
+                            deletingMemberId = state.deletingMemberId,
+                            onDeleteClick = { member ->
+                                viewModel.kickMember(
+                                    member = member,
+                                )
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -222,9 +263,9 @@ fun CommunityMemberBottomSheet(
 @Composable
 private fun CommunityMemberBottomSheetHeader(
     title: String,
-    selectedCountText: String,
+    showConfirmButton: Boolean,
     isConfirmEnabled: Boolean,
-    isInviting: Boolean,
+    isUpdatingMembers: Boolean,
     onConfirmClick: () -> Unit,
 ) {
     Row(
@@ -233,72 +274,157 @@ private fun CommunityMemberBottomSheetHeader(
             .padding(top = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        UText(
+            text = title,
+            style = UmcTypographyTokens.Title3Bold,
+            color = grey800(),
+            modifier = Modifier.weight(1f),
+        )
+
+        if (showConfirmButton) {
+            UButton(
+                text = if (isUpdatingMembers) {
+                    "처리 중"
+                } else {
+                    "확인"
+                },
+                onClick = onConfirmClick,
+                enabled = isConfirmEnabled,
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(36.dp),
+                backgroundColor = if (isConfirmEnabled) {
+                    indigo500()
+                } else {
+                    grey100()
+                },
+                textColor = if (isConfirmEnabled) {
+                    grey000()
+                } else {
+                    grey400()
+                },
+                textStyle = UmcTypographyTokens.SubheadlineBold,
+                cornerRadius = 8.dp,
+            )
+        }
+    }
+}
+
+@Composable
+private fun CommunityCurrentMemberContent(
+    members: List<CommunityChallengerUiModel>,
+    deletingMemberId: Long?,
+    onDeleteClick: (CommunityChallengerUiModel) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        items(
+            items = members,
+            key = { member ->
+                member.memberId
+            },
+        ) { member ->
+            CommunityCurrentMemberRow(
+                member = member,
+                isDeleting = deletingMemberId == member.memberId,
+                onDeleteClick = {
+                    onDeleteClick(member)
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun CommunityCurrentMemberRow(
+    member: CommunityChallengerUiModel,
+    isDeleting: Boolean,
+    onDeleteClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CommunityMemberProfile()
+
+        Spacer(
+            modifier = Modifier.width(8.dp),
+        )
+
         Column(
             modifier = Modifier.weight(1f),
         ) {
             UText(
-                text = title,
-                style = UmcTypographyTokens.Title3Bold,
+                text = buildMemberTitle(
+                    member = member,
+                ),
+                style = UmcTypographyTokens.SubheadlineBold,
                 color = grey800(),
+                maxLines = 1,
             )
 
             Spacer(
-                modifier = Modifier.height(4.dp),
+                modifier = Modifier.height(2.dp),
             )
 
             UText(
-                text = selectedCountText,
+                text = member.school,
                 style = UmcTypographyTokens.Footnote,
-                color = indigo500(),
+                color = grey600(),
+                maxLines = 1,
             )
         }
 
         UButton(
-            text = if (isInviting) {
-                "초대 중"
+            text = if (isDeleting) {
+                "삭제 중"
             } else {
-                "확인"
+                "삭제"
             },
-            onClick = onConfirmClick,
-            enabled = isConfirmEnabled,
+            onClick = onDeleteClick,
+            enabled = !isDeleting,
             modifier = Modifier
-                .width(64.dp)
-                .height(36.dp),
-            backgroundColor = if (isConfirmEnabled) {
-                indigo500()
-            } else {
-                grey100()
-            },
-            textColor = if (isConfirmEnabled) {
-                grey000()
-            } else {
-                grey400()
-            },
+                .width(58.dp)
+                .height(32.dp),
+            backgroundColor = red100(),
+            textColor = red500(),
             textStyle = UmcTypographyTokens.SubheadlineBold,
-            cornerRadius = 8.dp,
+            cornerRadius = 6.dp,
         )
     }
 }
 
 @Composable
 private fun CommunityMemberSearchContent(
-    members: List<CommunityInvitableMemberUiModel>,
-    selectedMembers: List<CommunityInvitableMemberUiModel>,
+    members: List<CommunityChallengerUiModel>,
+    selectedMembers: List<CommunityChallengerUiModel>,
     maxCount: Int,
     isLoadingMore: Boolean,
     hasNext: Boolean,
-    onToggleClick: (CommunityInvitableMemberUiModel) -> Unit,
+    onToggleClick: (CommunityChallengerUiModel) -> Unit,
     onLoadMore: () -> Unit,
 ) {
     val listState = rememberLazyListState()
 
+    val groupedMembers = members
+        .groupBy { member ->
+            member.partLabel
+        }
+        .toList()
+
     val shouldLoadMore by remember {
         derivedStateOf {
             val lastVisibleItemIndex =
-                listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                listState.layoutInfo.visibleItemsInfo
+                    .lastOrNull()
+                    ?.index
 
             lastVisibleItemIndex != null &&
-                    lastVisibleItemIndex >= members.lastIndex - 2 &&
+                    lastVisibleItemIndex >=
+                    listState.layoutInfo.totalItemsCount - 3 &&
                     hasNext &&
                     !isLoadingMore
         }
@@ -314,29 +440,57 @@ private fun CommunityMemberSearchContent(
         modifier = Modifier.fillMaxSize(),
         state = listState,
     ) {
-        items(
-            items = members,
-            key = { member ->
-                member.memberId
-            },
-        ) { member ->
-            val isChecked = selectedMembers.any { selectedMember ->
-                selectedMember.memberId == member.memberId
+        groupedMembers.forEach { (partLabel, partMembers) ->
+            item(
+                key = "part_header_$partLabel",
+            ) {
+                UText(
+                    text = partLabel,
+                    style = UmcTypographyTokens.BodyBold,
+                    color = grey900(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            top = 4.dp,
+                            bottom = 8.dp,
+                        ),
+                )
             }
 
-            val isEnabled =
-                isChecked || selectedMembers.size < maxCount
-
-            CommunityMemberSearchRow(
-                member = member,
-                isChecked = isChecked,
-                isEnabled = isEnabled,
-                onToggleClick = {
-                    if (isEnabled) {
-                        onToggleClick(member)
-                    }
+            items(
+                items = partMembers,
+                key = { member ->
+                    member.memberId
                 },
-            )
+            ) { member ->
+                val isChecked =
+                    selectedMembers.any { selectedMember ->
+                        selectedMember.memberId == member.memberId
+                    }
+
+                val isEnabled =
+                    isChecked ||
+                            selectedMembers.size < maxCount
+
+                CommunityMemberSearchRow(
+                    member = member,
+                    isChecked = isChecked,
+                    isEnabled = isEnabled,
+                    onToggleClick = {
+                        if (isEnabled) {
+                            onToggleClick(member)
+                        }
+                    },
+                )
+            }
+
+            item(
+                key = "part_spacing_$partLabel",
+            ) {
+                Spacer(
+                    modifier = Modifier.height(16.dp),
+                )
+            }
         }
 
         if (isLoadingMore) {
@@ -357,6 +511,80 @@ private fun CommunityMemberSearchContent(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CommunityMemberSearchRow(
+    member: CommunityChallengerUiModel,
+    isChecked: Boolean,
+    isEnabled: Boolean,
+    onToggleClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                enabled = isEnabled,
+                onClick = onToggleClick,
+            )
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CommunityMemberProfile()
+
+        Spacer(
+            modifier = Modifier.width(8.dp),
+        )
+
+        Column(
+            modifier = Modifier.weight(1f),
+        ) {
+            UText(
+                text = buildMemberTitle(
+                    member = member,
+                ),
+                style = UmcTypographyTokens.SubheadlineBold,
+                color = if (isEnabled) {
+                    grey800()
+                } else {
+                    grey400()
+                },
+                maxLines = 1,
+            )
+
+            Spacer(
+                modifier = Modifier.height(2.dp),
+            )
+
+            UText(
+                text = member.school,
+                style = UmcTypographyTokens.Footnote,
+                color = if (isEnabled) {
+                    grey600()
+                } else {
+                    grey400()
+                },
+                maxLines = 1,
+            )
+        }
+
+        Icon(
+            painter = painterResource(
+                id = if (isChecked) {
+                    R.drawable.ic_check_box_primary
+                } else {
+                    R.drawable.ic_check_box_empty
+                },
+            ),
+            contentDescription = if (isChecked) {
+                "선택됨"
+            } else {
+                "선택되지 않음"
+            },
+            tint = Color.Unspecified,
+            modifier = Modifier.size(24.dp),
+        )
     }
 }
 
@@ -392,84 +620,6 @@ private fun CommunityMemberEmptyContent(
 }
 
 @Composable
-private fun CommunityMemberSearchRow(
-    member: CommunityInvitableMemberUiModel,
-    isChecked: Boolean,
-    isEnabled: Boolean,
-    onToggleClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = isEnabled,
-                onClick = onToggleClick,
-            )
-            .padding(vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CommunityMemberProfile()
-
-        Spacer(
-            modifier = Modifier.width(8.dp),
-        )
-
-        Column(
-            modifier = Modifier.weight(1f),
-        ) {
-            UText(
-                text = member.name,
-                style = UmcTypographyTokens.SubheadlineBold,
-                color = if (isEnabled) {
-                    grey800()
-                } else {
-                    grey400()
-                },
-            )
-
-            Spacer(
-                modifier = Modifier.height(2.dp),
-            )
-
-            UText(
-                text = buildString {
-                    append(member.partLabel)
-
-                    if (member.generation.isNotBlank()) {
-                        append(" · ")
-                        append(member.generation)
-                        append("기")
-                    }
-                },
-                style = UmcTypographyTokens.Footnote,
-                color = if (isEnabled) {
-                    grey600()
-                } else {
-                    grey400()
-                },
-            )
-        }
-
-        Icon(
-            painter = painterResource(
-                id = if (isChecked) {
-                    R.drawable.ic_check_box_primary
-                } else {
-                    R.drawable.ic_check_box_empty
-                },
-            ),
-            contentDescription = if (isChecked) {
-                "선택됨"
-            } else {
-                "선택되지 않음"
-            },
-            tint = Color.Unspecified,
-            modifier = Modifier.size(24.dp),
-        )
-    }
-}
-
-@Composable
 private fun CommunityMemberProfile() {
     Icon(
         painter = painterResource(
@@ -479,4 +629,18 @@ private fun CommunityMemberProfile() {
         tint = Color.Unspecified,
         modifier = Modifier.size(32.dp),
     )
+}
+
+private fun buildMemberTitle(
+    member: CommunityChallengerUiModel,
+): String {
+    return buildString {
+        append(member.displayName)
+
+        if (member.generation > 0) {
+            append("(")
+            append(member.generation)
+            append("기)")
+        }
+    }
 }
