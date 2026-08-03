@@ -345,6 +345,14 @@ class NoticeWriteViewModel @Inject constructor(
         updateState { copy(content = MarkdownEditActions.toggleStrikethrough(content)) }
     }
 
+    fun onClickBullet() {
+        updateState { copy(content = MarkdownEditActions.toggleBullet(content)) }
+    }
+
+    fun onClickQuote() {
+        updateState { copy(content = MarkdownEditActions.toggleQuote(content)) }
+    }
+
     // ---------------------------------------------------------------
     // 이미지 / 링크 / 투표 첨부
     // ---------------------------------------------------------------

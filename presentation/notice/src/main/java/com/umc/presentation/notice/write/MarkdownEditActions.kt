@@ -59,6 +59,70 @@ object MarkdownEditActions {
     fun toggleStrikethrough(value: TextFieldValue): TextFieldValue =
         toggleWrap(value, open = "~~", close = "~~")
 
+    /** 글머리 기호(`- `) 토글 */
+    fun toggleBullet(value: TextFieldValue): TextFieldValue =
+        toggleLinePrefix(value, prefix = "- ")
+
+    /** 인용구(`> `) 토글 */
+    fun toggleQuote(value: TextFieldValue): TextFieldValue =
+        toggleLinePrefix(value, prefix = "> ")
+
+    /**
+     * 선택 영역에 걸친 모든 줄의 [prefix]를 토글한다.
+     * 한 줄이라도 prefix가 없으면 전체에 추가하고, 모두 있으면 전체에서 제거한다.
+     * 제목 prefix와는 공존할 수 없으므로 제목이 있으면 먼저 걷어낸다
+     */
+    private fun toggleLinePrefix(value: TextFieldValue, prefix: String): TextFieldValue {
+        val text = value.text
+        val blockStart = text.lastIndexOf('\n', value.selection.min - 1) + 1
+        val blockEnd = text.indexOf('\n', value.selection.max)
+            .let { if (it == -1) text.length else it }
+
+        val lines = text.substring(blockStart, blockEnd).split('\n')
+        val bodies = lines.map { line ->
+            line.removePrefix(headingPrefixes.firstOrNull { line.startsWith(it) } ?: "")
+        }
+        val isActive = bodies.all { it.startsWith(prefix) }
+
+        val newLines = bodies.map { body ->
+            if (isActive) body.removePrefix(prefix) else prefix + body
+        }
+        val newText = text.replaceRange(blockStart, blockEnd, newLines.joinToString("\n"))
+
+        return value.copy(
+            text = newText,
+            selection = TextRange(
+                mapOffset(lines, newLines, blockStart, value.selection.min),
+                mapOffset(lines, newLines, blockStart, value.selection.max),
+            ),
+        )
+    }
+
+    /**
+     * prefix 변화를 반영해 [offset]을 새 텍스트 기준으로 옮긴다.
+     * prefix 안쪽에 있던 커서가 앞줄로 넘어가지 않도록 각 줄 범위로 가둔다
+     */
+    private fun mapOffset(
+        lines: List<String>,
+        newLines: List<String>,
+        blockStart: Int,
+        offset: Int,
+    ): Int {
+        var lineStart = blockStart
+        var newLineStart = blockStart
+        lines.forEachIndexed { index, line ->
+            val lineEnd = lineStart + line.length
+            if (offset <= lineEnd) {
+                val delta = newLines[index].length - line.length
+                return (newLineStart + (offset - lineStart) + delta)
+                    .coerceIn(newLineStart, newLineStart + newLines[index].length)
+            }
+            lineStart = lineEnd + 1
+            newLineStart += newLines[index].length + 1
+        }
+        return newLineStart
+    }
+
     /**
      * 별표 마커 토글. 굵게/기울임은 같은 문자를 공유하므로 양끝 별표 개수로 상태를 판단:
      * 1개=기울임, 2개=굵게, 3개=굵게+기울임

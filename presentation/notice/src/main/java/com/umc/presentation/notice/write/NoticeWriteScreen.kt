@@ -171,6 +171,8 @@ fun NoticeWriteRoute(
         onClickItalic = viewModel::onClickItalic,
         onClickUnderline = viewModel::onClickUnderline,
         onClickStrikethrough = viewModel::onClickStrikethrough,
+        onClickBullet = viewModel::onClickBullet,
+        onClickQuote = viewModel::onClickQuote,
         onRemoveImage = viewModel::onRemoveImage,
         onLinkTextChanged = viewModel::onLinkTextChanged,
         onCloseLinkPanel = viewModel::onHideLinkPanel,
@@ -280,6 +282,8 @@ fun NoticeWriteScreen(
     onClickItalic: () -> Unit = {},
     onClickUnderline: () -> Unit = {},
     onClickStrikethrough: () -> Unit = {},
+    onClickBullet: () -> Unit = {},
+    onClickQuote: () -> Unit = {},
     onRemoveImage: (NoticeImageAttachment) -> Unit = {},
     onLinkTextChanged: (String) -> Unit = {},
     onCloseLinkPanel: () -> Unit = {},
@@ -582,13 +586,15 @@ fun NoticeWriteScreen(
             onClickItalic = onClickItalic,
             onClickUnderline = onClickUnderline,
             onClickStrikethrough = onClickStrikethrough,
+            onClickBullet = onClickBullet,
+            onClickQuote = onClickQuote,
         )
     }
 }
 
 /**
  * 마크다운 도구 툴바.
- * 아이콘 24dp, 상하좌우 16dp 여백을 제외한 영역에 아이콘을 균등 분배 (양끝 정렬)
+ * 아이콘 24dp, 상하좌우 16dp 여백. 아이콘 수가 화면 폭을 넘으므로 가로 스크롤한다
  */
 @Composable
 private fun MarkdownToolbar(
@@ -600,16 +606,24 @@ private fun MarkdownToolbar(
     onClickItalic: () -> Unit = {},
     onClickUnderline: () -> Unit = {},
     onClickStrikethrough: () -> Unit = {},
+    onClickHighlight: () -> Unit = {},
+    onClickBullet: () -> Unit = {},
+    onClickQuote: () -> Unit = {},
+    onClickAi: () -> Unit = {},
 ) {
     var showTextSizeMenu by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(MARKDOWN_TOOLBAR_ICON_GAP),
     ) {
+        // AI (본문 다듬기 등)
+        MarkdownToolbarIcon(iconRes = R.drawable.ic_ai, onClick = onClickAi)
+
         // 텍스트 크기 (제목1/제목2/제목3/본문 메뉴)
         Box {
             MarkdownToolbarIcon(iconRes = R.drawable.ic_text_size, onClick = { showTextSizeMenu = true })
@@ -674,8 +688,20 @@ private fun MarkdownToolbar(
 
         // 취소선
         MarkdownToolbarIcon(iconRes = R.drawable.ic_strikethrough, onClick = onClickStrikethrough)
+
+        // 형광펜
+        MarkdownToolbarIcon(iconRes = R.drawable.ic_highlighter, onClick = onClickHighlight)
+
+        // 글머리 기호
+        MarkdownToolbarIcon(iconRes = R.drawable.ic_bullet_list, onClick = onClickBullet)
+
+        // 인용구
+        MarkdownToolbarIcon(iconRes = R.drawable.ic_quote, onClick = onClickQuote)
     }
 }
+
+/** 툴바 아이콘 간격. 기존 균등 분배(SpaceBetween) 때의 간격을 유지 */
+private val MARKDOWN_TOOLBAR_ICON_GAP = 20.dp
 
 /** 텍스트 크기 메뉴 항목. 각 항목은 적용될 크기감으로 표시 */
 @Composable
