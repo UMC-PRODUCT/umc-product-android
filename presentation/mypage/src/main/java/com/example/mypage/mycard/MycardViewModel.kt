@@ -104,14 +104,15 @@ class MycardViewModel @Inject constructor(
 
     //QR코드 생성하기
     private fun generateMyUserCardQr(userInfo: UserInfo?) {
-        val myCard = UserCard(
-            /**테스트 데이터**/
-            name = userInfo?.name?.ifEmpty { "박유수" } ?: "박유수",
-            nickname = userInfo?.nickname?.ifEmpty { "어헛차" } ?: "어헛차"
-        )
-        // QR 코드 인코딩용 JSON 데이터 생성
-        val qrJsonContent = myCard.toJson()
-        updateState { copy(myQrcodeData = qrJsonContent) }
+        val memberId = userInfo?.id ?: 23
+        val packageName = "com.umc.product"
+
+        val qrDeepLinkUrl = "intent://card?memberId=$memberId#Intent;" +
+                "scheme=umc;" +
+                "package=$packageName;" +
+                "S.browser_fallback_url=https://play.google.com/store/apps/details?id=$packageName;" +
+                "end"
+        updateState { copy(myQrcodeData = qrDeepLinkUrl) }
 
     }
 

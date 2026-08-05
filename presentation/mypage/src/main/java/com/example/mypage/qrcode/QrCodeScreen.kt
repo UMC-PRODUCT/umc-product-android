@@ -133,7 +133,7 @@ fun QrCodeRoute(
 
 
     //QR 생성 (UserCard Json 데이터 기반)
-    val qrContent = uiState.myQrcodeData.ifEmpty { UserCard(name = "테스트 이름", nickname = "테스트 닉네임").toJson() }
+    val qrContent = uiState.myQrcodeData.ifEmpty { UserCard(id = "0", name = "테스트 이름", nickname = "테스트 닉네임").toJson() }
     val qrBitmap = remember(qrContent) { QrCodeUtils.generateQrCode(qrContent, 600) }
 
     QrCodeScreen(
@@ -226,7 +226,7 @@ fun QrCodeScreen(
                     Card(
                         modifier = Modifier.size(280.dp),
                         shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = white())
+                        colors = CardDefaults.cardColors(containerColor = grey000())
                         ,
                         elevation = CardDefaults.cardElevation(1.dp),
                         border = BorderStroke(1.dp, grey300())
@@ -279,7 +279,7 @@ fun QrCodeScreen(
                             .weight(1f)
                             .height(52.dp),
                         backgroundColor = indigo500(),
-                        textColor = Color.White,
+                        textColor = grey000(),
                         textStyle = UmcTypographyTokens.HeadlineBold,
                         cornerRadius = 8.dp,
                         onClick = onShareClick
@@ -425,7 +425,7 @@ fun MycardProfileCard(
                         UText(
                             text = "${uiState.userInfo.name}/${uiState.userInfo.nickname}",
                             style = UmcTypographyTokens.Title3Bold,
-                            color = white()
+                            color = grey000()
                         )
 
                         Spacer(

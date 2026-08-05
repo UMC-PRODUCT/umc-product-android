@@ -30,6 +30,7 @@ import com.umc.presentation.login.findpassword.FindPasswordRoute
 import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
+import androidx.navigation.navDeepLink
 
 @Composable
 fun MainNavHost(
@@ -39,7 +40,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Mycard,
+        startDestination = MainDestination.Mycard(),
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -240,8 +241,21 @@ fun MainNavHost(
         /**마이페이지 관련 정의**/
 
         //신 마이페이지
-        composable<MainDestination.Mycard> {
+        composable<MainDestination.Mycard>(
+            deepLinks = listOf(
+                navDeepLink {
+                    // 스토어 URL 기반 딥링크 패턴 매핑
+                    uriPattern = "umc://card?memberId={targetMemberId}"
+                }
+            )
+        ) { backStackEntry ->
+            // Type-Safe Navigation 파라미터 추출 (딥링크 포함)
+            val mycardDestination = backStackEntry.toRoute<MainDestination.Mycard>()
+            val targetMemberId = mycardDestination.targetMemberId
+
+
             MycardRoute(
+                targetMemberId = targetMemberId,
                 onNavigateToMypage = {
                     navHostController.navigate(MainDestination.Mypage)
                 },

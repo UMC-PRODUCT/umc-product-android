@@ -62,7 +62,7 @@ class ReceivedCardViewModel @Inject constructor(
                     card.name.contains(query, ignoreCase = true) ||
                             card.nickname.contains(query, ignoreCase = true) ||
                             card.part.label.contains(query, ignoreCase = true) ||
-                            card.schoolName.contains(query, ignoreCase = true)
+                            card.university.contains(query, ignoreCase = true)
                 }
             }
             copy(searchQuery = query, filteredCards = filtered)

@@ -66,7 +66,9 @@ sealed interface MainDestination {
 
     //신 마이페이지
     @Serializable
-    data object Mycard : MainDestination
+    data class Mycard(
+        val targetMemberId: String? = null
+    ) : MainDestination
 
     //(구 마이페이지) -> (신 설정)
     @Serializable
