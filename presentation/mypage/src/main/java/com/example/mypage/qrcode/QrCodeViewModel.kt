@@ -101,17 +101,23 @@ class QrCodeViewModel @Inject constructor(
     }
 
     /**
-     * 내 프로필 정보를 바탕으로 UserCard 객체를 생성하고, 이를 JSON으로 직렬화하여 QR 데이터(myEndpointId)로 설정
+     * 내 유저 ID가 담긴 딥링크를 생성한다.
      */
     private fun generateMyUserCardQr(userInfo: UserInfo?) {
-        val myCard = UserCard(
-            /**테스트 데이터**/
-            name = userInfo?.name?.ifEmpty { "박유수" } ?: "박유수",
-            nickname = userInfo?.nickname?.ifEmpty { "어헛차" } ?: "어헛차"
-        )
+        val memberId = userInfo?.id ?: 23
+        val packageName = "com.umc.product"
+
         // QR 코드 인코딩용 JSON 데이터 생성
-        val qrJsonContent = myCard.toJson()
-        updateState { copy(myQrcodeData = qrJsonContent) }
+        // Android Intent URI 표준 규격
+        val qrDeepLinkUrl = "intent://card?memberId=$memberId#Intent;" +
+                "scheme=umc;" +
+                "package=$packageName;" +
+                "S.browser_fallback_url=https://play.google.com/store/apps/details?id=$packageName;" +
+                "end"
+
+        val qrDeepLinkUrlDebug = "umc://card?memberId=$memberId"
+
+        updateState { copy(myQrcodeData = qrDeepLinkUrlDebug) }
 
     }
 

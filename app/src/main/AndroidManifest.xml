@@ -68,6 +68,31 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+
+            <!-- Custom Deep Link Scheme (umc://card?memberNo=123) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="umc"
+                    android:host="card" />
+            </intent-filter>
+
+            <!-- 플레이스토어 딥링크 수신용 Intent Filter -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="https"
+                    android:host="play.google.com"
+                    android:path="/store/apps/details" />
+            </intent-filter>
+
         </activity>
 
         <activity

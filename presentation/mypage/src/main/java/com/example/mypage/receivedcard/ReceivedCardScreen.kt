@@ -305,7 +305,7 @@ private fun ReceivedCardItem(
                         text = card.part.label,
                         enabled = false,
                         backgroundColor = partTheme.badgeColor,
-                        textColor = white(),
+                        textColor = grey000(),
                         textStyle = UmcTypographyTokens.Caption1,
                         cornerRadius = 4.dp,
                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
@@ -314,10 +314,10 @@ private fun ReceivedCardItem(
 
                     // 기수 뱃지
                     UButton(
-                        text = "${card.gisu}기",
+                        text = "${card.generation}기",
                         enabled = false,
                         backgroundColor = partTheme.badgeColor,
-                        textColor = white(),
+                        textColor = grey000(),
                         textStyle = UmcTypographyTokens.Caption1,
                         cornerRadius = 4.dp,
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
@@ -340,7 +340,7 @@ private fun ReceivedCardItem(
                 )
 
                 UText(
-                    text = card.schoolName,
+                    text = card.university,
                     style = UmcTypographyTokens.Footnote,
                     color = grey500()
                 )

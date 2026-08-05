@@ -49,6 +49,7 @@ class NearbyViewModel @Inject constructor(
                  * **/
                 /**차후 UserCard 데이터 변경 시 적용**/
                 val myCard = UserCard(
+                    id = "23",
                     name = uiState.value.myUserInfo?.name?.ifEmpty { "박유수" } ?: "박유수",
                     nickname = "어헛차"
                 )

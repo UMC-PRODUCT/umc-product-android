@@ -3,15 +3,22 @@ import com.google.gson.Gson
 import java.awt.Color
 
 data class UserCard(
-    val id: String = "",
+    val id: String,
     val name: String,
     val nickname: String,
-    val schoolName: String = "",
+    val university: String = "",
     val part: UserCardPartType = UserCardPartType.ADMIN,
-    val gisu: Int = 10,
-    val profileImage: String? = null
+    val generation: Int = 10,
+    val profileImage: String? = null,
 
     /**차후 추가 예정**/
+
+    val email: String? = null,
+    val github: String? = null,
+    val blog: String? = null,
+    val memberNo: String? = null,
+    val qrPayload: String? = null,
+
 ){
     /**class <-> Json**/
     fun toJson(): String = Gson().toJson(this)

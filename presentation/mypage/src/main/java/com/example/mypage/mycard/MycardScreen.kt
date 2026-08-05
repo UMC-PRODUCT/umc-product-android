@@ -1,5 +1,6 @@
 package com.example.mypage.mycard
 
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateFloatAsState
@@ -82,6 +83,7 @@ import kotlinx.coroutines.flow.collectLatest
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MycardRoute(
+    targetMemberId: String? = null, //유저 qr 딥링크로 받았을 때
     viewModel: MycardViewModel = hiltViewModel(),
     nearbyViewModel: NearbyViewModel = hiltViewModel(), //nearbyConnection 전용 관리 viewModel
     onNavigateToMypage: () -> Unit, //설정으로 이동
@@ -95,6 +97,14 @@ fun MycardRoute(
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+
+    /**TODO. 딥링크 전달 시 API 호출 및 저장**/
+    LaunchedEffect(targetMemberId) {
+        if (!targetMemberId.isNullOrEmpty()) {
+            //viewModel.handleDeepLinkUserCard(targetMemberId)
+            Log.d("log_mypage", "test 성공: $targetMemberId")
+        }
+    }
 
     //내 프로필 정보가 업데이트 될 때 NearbyViewModel에도 이를 반영
     LaunchedEffect(uiState.userInfo) {
@@ -389,7 +399,7 @@ private fun CardFrontContent(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_logo_umc),
                         contentDescription = "UMC Logo",
-                        tint = white()
+                        tint = grey000()
                     )
 
                     Spacer(
@@ -398,7 +408,7 @@ private fun CardFrontContent(
                     UText(
                         text = AppStrings.MYCARD_INTRODUCE,
                         style = UmcTypographyTokens.Caption2,
-                        color = white()
+                        color = grey000()
                     )
                 }
 
@@ -414,7 +424,7 @@ private fun CardFrontContent(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_flip),
                         contentDescription = "flip",
-                        tint = white(),
+                        tint = grey000(),
                         modifier = Modifier
                             .padding(6.dp)
                     )
@@ -446,7 +456,7 @@ private fun CardFrontContent(
                     UText(
                         text = "${uiState.userInfo.name}/${uiState.userInfo.nickname}",
                         style = UmcTypographyTokens.Title3Bold,
-                        color = white()
+                        color = grey000()
                     )
 
                     Spacer(
@@ -507,7 +517,7 @@ private fun CardBackContent(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_logo_umc),
                     contentDescription = "UMC Logo",
-                    tint = white()
+                    tint = grey000()
                 )
 
                 Spacer(
@@ -516,7 +526,7 @@ private fun CardBackContent(
                 UText(
                     text = AppStrings.MYCARD_INTRODUCE,
                     style = UmcTypographyTokens.Caption2,
-                    color = white()
+                    color = grey000()
                 )
             }
 
@@ -531,7 +541,7 @@ private fun CardBackContent(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_flip),
                     contentDescription = "flip",
-                    tint = white(),
+                    tint = grey000(),
                     modifier = Modifier
                         .padding(6.dp)
                 )
@@ -551,7 +561,7 @@ private fun CardBackContent(
                 modifier = Modifier
                     .size(70.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(white())
+                    .background(grey000())
                     .padding(7.dp), // QR 코드 테두리 여백
                 contentAlignment = Alignment.Center
             ) {
@@ -607,7 +617,7 @@ private fun CardBottomButtons(
             modifier = Modifier
                 .weight(1f)
                 .height(42.dp),
-            backgroundColor = white(),
+            backgroundColor = grey000(),
             textColor = indigo500(),
             textStyle = UmcTypographyTokens.CalloutBold,
             cornerRadius = 8.dp,
@@ -622,7 +632,7 @@ private fun CardBottomButtons(
             modifier = Modifier
                 .weight(1f)
                 .height(42.dp),
-            backgroundColor = white(),
+            backgroundColor = grey000(),
             textColor = indigo500(),
             textStyle = UmcTypographyTokens.CalloutBold,
             cornerRadius = 8.dp,
@@ -645,7 +655,7 @@ private fun SocialLinkItem(
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            tint = white(),
+            tint = grey000(),
             modifier = Modifier.size(16.dp)
         )
 
@@ -656,7 +666,7 @@ private fun SocialLinkItem(
         UText(
             text = text.ifEmpty { "링크 없음" },
             style = UmcTypographyTokens.Footnote,
-            color = white()
+            color = grey000()
         )
     }
 }
