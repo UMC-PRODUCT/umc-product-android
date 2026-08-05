@@ -3,7 +3,8 @@ package com.umc.domain.model.enums
 enum class CheckAvailableStatus(val text: String) {
     BEFORE("출석 전"),
     PENDING("승인 대기"),
-    COMPLETED("출석 완료");
+    COMPLETED("출석 완료"),
+    REJECTED("승인 거절");
 
     companion object {
         fun fromServerValue(value: String?): CheckAvailableStatus {
@@ -12,10 +13,15 @@ enum class CheckAvailableStatus(val text: String) {
                 "PENDING" -> BEFORE
 
                 // 2. 승인 대기
-                "PRESENT_PENDING", "LATE_PENDING", "EXCUSED_PENDING" -> PENDING
+                "PRESENT_PENDING",
+                "LATE_PENDING",
+                "EXCUSED_PENDING",
+                "ABSENT_EXCUSE_PENDING",
+                "LATE_EXCUSE_PENDING" -> PENDING
 
                 // 3. 출석 완료 (결석 포함 처리)
-                "PRESENT", "LATE", "EXCUSED", "ABSENT" -> COMPLETED
+                "PRESENT", "LATE", "EXCUSED" -> COMPLETED
+                "ABSENT" -> REJECTED
 
                 else -> BEFORE // 기본값
             }
