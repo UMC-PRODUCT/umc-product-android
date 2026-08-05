@@ -17,6 +17,7 @@ import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.mypage.NearbyUserInfo
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
+import com.umc.domain.usecase.appDataStore.usercard.GetUserCardUseCase
 import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
 import com.umc.domain.usecase.challenger.AddChallengerRecordMemberUseCase
 import com.umc.domain.usecase.member.DeleteUserUseCase
@@ -29,6 +30,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MycardViewModel @Inject constructor(
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
+    private val getUserCardUseCase: GetUserCardUseCase, //유저 명함 가져오기
 
 ) : BaseViewModel<MycardUiState, MycardEvent>(
     MycardUiState()){
@@ -40,6 +42,16 @@ class MycardViewModel @Inject constructor(
         viewModelScope.launch {
             //유저 정보 가져오기
             getUserInfo()
+        }
+
+        viewModelScope.launch {
+            getUserCardUseCase().collect { cards ->
+                updateState {
+                    copy(
+                        cardCount = cards.size
+                    )
+                }
+            }
         }
     }
 
@@ -95,7 +107,10 @@ class MycardViewModel @Inject constructor(
 
             updateState {
                 copy(
-                    myRecentInfoString = positionString
+                    myRecentInfoString = positionString,
+                    githubLink = userInfo.profile.github,
+                    linkedinLink = userInfo.profile.linkedIn,
+                    blogLink = userInfo.profile.blog
                 )
             }
 
@@ -133,6 +148,8 @@ data class MycardUiState(
     val githubLink: String = "",
     val linkedinLink: String = "",
     val blogLink: String = "",
+
+    val cardCount: Int = 0,
 
     ) : UiState
 

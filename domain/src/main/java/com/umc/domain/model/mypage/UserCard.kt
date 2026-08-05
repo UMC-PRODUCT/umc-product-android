@@ -3,16 +3,15 @@ import com.google.gson.Gson
 import java.awt.Color
 
 data class UserCard(
-    val id: String,
-    val name: String,
-    val nickname: String,
+    val name: String = "",
+    val nickname: String = "",
     val university: String = "",
-    val part: UserCardPartType = UserCardPartType.ADMIN,
-    val generation: Int = 10,
-    val profileImage: String? = null,
+    val part: String = "",
+    val generation: String = "0",
+
 
     /**차후 추가 예정**/
-
+    val avatarURL: String? = null,
     val email: String? = null,
     val github: String? = null,
     val blog: String? = null,
@@ -22,6 +21,13 @@ data class UserCard(
 ){
     /**class <-> Json**/
     fun toJson(): String = Gson().toJson(this)
+
+    val cardId: String
+        get() = "${name.trim()}_${nickname.trim()}"
+
+    val partType: UserCardPartType
+        get() = UserCardPartType.from(part)
+
     companion object {
         fun fromJson(json: String): UserCard = Gson().fromJson(json, UserCard::class.java)
     }
@@ -40,5 +46,23 @@ enum class UserCardPartType(
     ANDROID("Android", 0xFF00C0E8),
     SPRING("Spring", 0xFF34C759),
     NODEJS("Node.js", 0xFFFFCC00),
-    IOS("iOS", 0xFFFF8D28)
+    IOS("iOS", 0xFFFF8D28);
+
+    companion object {
+        // iOS/서버 문맥의 파트 문자열을 대응되는 Enum으로 매핑
+        fun from(partStr: String): UserCardPartType {
+            val upperPart = partStr.uppercase()
+            return when {
+                upperPart.contains("ANDROID") -> ANDROID
+                upperPart.contains("IOS") -> IOS
+                upperPart.contains("SPRING") -> SPRING
+                upperPart.contains("NODE") -> NODEJS
+                upperPart.contains("WEB") -> WEB
+                upperPart.contains("DESIGN") -> DESIGN
+                upperPart.contains("PLAN") || upperPart.contains("PM") -> PM
+                else -> ADMIN
+            }
+        }
+    }
+
 }

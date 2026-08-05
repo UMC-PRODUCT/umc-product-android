@@ -133,7 +133,7 @@ fun QrCodeRoute(
 
 
     //QR 생성 (UserCard Json 데이터 기반)
-    val qrContent = uiState.myQrcodeData.ifEmpty { UserCard(id = "0", name = "테스트 이름", nickname = "테스트 닉네임").toJson() }
+    val qrContent = uiState.myQrcodeData.ifEmpty { "umc://card?memberId=${uiState.userInfo.id}" }
     val qrBitmap = remember(qrContent) { QrCodeUtils.generateQrCode(qrContent, 600) }
 
     QrCodeScreen(
@@ -351,7 +351,7 @@ fun QrCodeScreenTopBar(
                 .background(color = Color.Transparent, shape = CircleShape)
                 .clip(CircleShape)
                 .clickable(
-                    onClick = {onOpenScannerClick()}
+                    onClick = { onOpenScannerClick() }
                 ),
             contentAlignment = Alignment.Center
         ) {

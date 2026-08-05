@@ -207,7 +207,7 @@ fun ReceivedCardScreen(
         ) {
             items(
                 items = uiState.filteredCards,
-                key = { it.id }
+                key = { it.cardId }
             ) { card ->
                 ReceivedCardItem(
                     card = card,
@@ -266,7 +266,7 @@ fun ReceivedCardScreenTopBar(
 private fun ReceivedCardItem(
     card: UserCard,
 ) {
-    val partTheme = getPartTheme(card.part)
+    val partTheme = getPartTheme(card.partType)
 
     Box(
         modifier = Modifier
@@ -288,7 +288,7 @@ private fun ReceivedCardItem(
             ) {
                 //프로필 로고
                 AsyncImage(
-                    model = card.profileImage,
+                    model = card.avatarURL,
                     contentDescription = null,
                     modifier = Modifier
                         .size(38.dp)
@@ -302,7 +302,7 @@ private fun ReceivedCardItem(
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     // 파트 뱃지
                     UButton(
-                        text = card.part.label,
+                        text = card.part,
                         enabled = false,
                         backgroundColor = partTheme.badgeColor,
                         textColor = grey000(),

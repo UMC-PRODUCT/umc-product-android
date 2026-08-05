@@ -2,19 +2,24 @@ package com.example.mypage.nearby
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.mypage.dialog.ExchangeStep
 import com.example.mypage.nearby.NearbyManagerEvent
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.mypage.NearbyUserInfo
 import com.umc.domain.model.mypage.UserCard
+import com.umc.domain.usecase.appDataStore.usercard.SaveUserCardUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NearbyViewModel @Inject constructor(
-    application: Application
+    application: Application,
+    private val SaveUserCardUseCase: SaveUserCardUseCase, //명함 저장
 ) : BaseViewModel<NearbyUiState, NearbyEvent>(NearbyUiState()) {
 
     //manager 초기화
@@ -48,12 +53,8 @@ class NearbyViewModel @Inject constructor(
                  * 
                  * **/
                 /**차후 UserCard 데이터 변경 시 적용**/
-                val myCard = UserCard(
-                    id = "23",
-                    name = uiState.value.myUserInfo?.name?.ifEmpty { "박유수" } ?: "박유수",
-                    nickname = "어헛차"
-                )
-                send(event.id, myCard)
+
+                send(event.id, uiState.value.myUserCard ?: UserCard())
 
 
             }
@@ -66,8 +67,12 @@ class NearbyViewModel @Inject constructor(
                         isSuccessOverlayOpen = true // 오버레이 띄우기
                     )
                 }
-                /**TODO. 카드 받은 후 그 이후 처리 로직은 **/
-                //emitEvent(NearbyEvent.ShowToast("유저 카드를 수신했습니다. : ${event.card.nickname}"))
+
+                // AppDataStore에 카드 저장
+                viewModelScope.launch {
+                    SaveUserCardUseCase(event.card)
+                }
+
                 stopExchange() // 통신 완료 후 연결 및 스캔 종료
             }
             //현재 상태 업데이트
@@ -84,10 +89,15 @@ class NearbyViewModel @Inject constructor(
     }
 
     
-    
+
     // 내 기본 정보 세팅 (화면 진입 시 호출)
-    fun setMyUserInfo(userInfo: NearbyUserInfo) {
+    fun setMyUserInfo(userInfo: NearbyUserInfo, ) {
         updateState { copy(myUserInfo = userInfo) }
+    }
+
+    // 내 유저 카드 받아오기 (화면 진입 시 호출)
+    fun setMyUserCard(card: UserCard) {
+        updateState { copy(myUserCard = card) }
     }
 
     // 바텀시트 열기/닫기 제어
@@ -109,7 +119,7 @@ class NearbyViewModel @Inject constructor(
 
     //기기 광고 및 탐색 동시 시작
     fun startAdvertisingAndDiscovery() {
-        val myInfo = uiState.value.myUserInfo ?: NearbyUserInfo(name = "박유수", info = "android 10기")
+        val myInfo = uiState.value.myUserInfo ?: NearbyUserInfo(name = "실패", info = "Connect 실패")
 
         updateState { copy(exchangeStep = ExchangeStep.DISCOVER_USERS, devices = emptyList()) }
         manager.startAdvertisingAndDiscovery(myInfo)
@@ -204,7 +214,8 @@ class NearbyViewModel @Inject constructor(
 }
 
 data class NearbyUiState(
-    val myUserInfo: NearbyUserInfo? = null, // 내 정보
+    val myUserCard : UserCard? = null, //내 Usercard
+    val myUserInfo: NearbyUserInfo? = null, // 보여주기 용 내 정보
     val isBottomSheetOpen: Boolean = false, // botoomsheet 열림 여부
     val isSuccessOverlayOpen: Boolean = false,
     val exchangeStep: ExchangeStep = ExchangeStep.SELECT_METHOD, //현재 단계
