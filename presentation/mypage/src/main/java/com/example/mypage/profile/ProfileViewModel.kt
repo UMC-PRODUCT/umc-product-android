@@ -19,6 +19,7 @@ import com.umc.domain.model.request.member.LinkItem
 import com.umc.domain.model.request.member.UpdateLinkRequest
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
+import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.member.UpdateMyLinkUseCase
 import com.umc.domain.usecase.member.UpdateMyProfileUseCase
 import com.umc.domain.usecase.organization.GetChapterDetailUseCase
@@ -33,7 +34,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val getUserInfoUseCase: GetUserInfoUseCase, //dataStore에서 유저 정보 불러오기
+    private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val uploadFileUseCase: UploadFileUseCase, //파일 업로드 하기(이미지 업로드)
     private val updateMyProfileUseCase: UpdateMyProfileUseCase, //프로필 정보 업데이트
     private val updateMyLinkUseCase: UpdateMyLinkUseCase, //링크 정보 업데이트
@@ -45,26 +46,34 @@ class ProfileViewModel @Inject constructor(
 
     //초기화 작업
     init {
-        observeUserInfo()
+        getUserInfo()
 
         getUserOAuth()
 
     }
 
     //AppDataStore에 저장된 유저 정보 로드
-    private fun observeUserInfo() {
+    private fun getUserInfo() {
         viewModelScope.launch {
-            getUserInfoUseCase().collect { userInfo ->
-                updateState {
-                    copy(
-                        userInfo = userInfo,
-                        githubLink = userInfo.profile.github,
-                        linkedinLink = userInfo.profile.linkedIn,
-                        blogLink = userInfo.profile.blog
-                    )
+            resultResponse(
+                response = getMyProfileUseCase(),
+                successCallback = { userInfo ->
+                    updateState {
+                        copy(
+                            userInfo = userInfo,
+                            githubLink = userInfo.profile.github,
+                            linkedinLink = userInfo.profile.linkedIn,
+                            blogLink = userInfo.profile.blog
+                        )
+                    }
+
+
+                },
+                errorCallback = {
+                    /**TODO. 에러 토스트 메시지 등을 전송**/
+
                 }
-                processActiveHistory(userInfo)
-            }
+            )
         }
     }
     
@@ -235,7 +244,7 @@ class ProfileViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            // DataStore에 저장하고 끝내기
+            // 서버에 저장하기
             resultResponse(
                 response = updateMyLinkUseCase(request),
                 successCallback = {},
@@ -280,6 +289,22 @@ class ProfileViewModel @Inject constructor(
 
     }
 
+
+    fun updateGithubLink(github: String){
+        updateState {
+            copy(githubLink = github)
+        }
+    }
+    fun updateLinkedinLink(linkedin: String){
+        updateState {
+            copy(linkedinLink = linkedin)
+        }
+    }
+    fun updateBlogLink(blog: String){
+        updateState {
+            copy(blogLink = blog)
+        }
+    }
 
     //그냥 뒤로 가기
     fun onClickBackPressed(){

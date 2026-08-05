@@ -331,7 +331,7 @@ private fun ReceivedCardItem(
                 UText(
                     text = "${card.name}/${card.nickname}",
                     style = UmcTypographyTokens.Title3Bold,
-                    color = black()
+                    color = grey950()
                 )
 
                 Spacer(
