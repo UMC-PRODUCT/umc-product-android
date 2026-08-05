@@ -66,6 +66,7 @@ class ProfileViewModel @Inject constructor(
                             blogLink = userInfo.profile.blog
                         )
                     }
+                    processActiveHistory(userInfo)
 
 
                 },
