@@ -1,6 +1,7 @@
 package com.umc.domain.model
 
 import com.umc.domain.model.act.challenger.ChallengerPoint
+import com.umc.domain.model.mypage.UserCard
 
 
 //유저 정보 가져오는 API의 내용을 AppDataStore에 저장하기 위한 Data Class입니다.
@@ -93,15 +94,32 @@ data class ProfileInfo(
     }
 }
 
-/** ChallengerManagerDialogModel.kt꺼 사용
- * 
- * data class ChallengerPoint(
- *     val id: Long,
- *     val date: String = "",
- *     val title: String,
- *     val pointType: PointType,
- *     val value: Double
- * )
- *
- * **/
+
+// UserCard 만들기
+fun UserInfo.toUserCard(): UserCard {
+    // 1. 최신 파트 및 기수 정보 추출
+    val currentChallenger = currentGisuMemberInfo?.challenger
+    val latestRecord = challengerRecords.maxByOrNull { it.gisu }
+
+    val rawPart = currentChallenger?.part
+        ?: latestRecord?.part
+        ?: "ADMIN"
+
+    val rawGeneration = currentGisuMemberInfo?.generation?.toString()
+        ?: latestRecord?.gisu?.toString()
+        ?: "0"
+
+    return UserCard(
+        name = name,
+        nickname = nickname,
+        university = schoolName,
+        part = rawPart,                   // String
+        generation = rawGeneration,       // String
+        avatarURL = profileImageLink,     // profileImageLink -> avatarURL
+        email = email,
+        github = profile.github,
+        blog = profile.blog,
+        qrPayload = ""
+    )
+}
 

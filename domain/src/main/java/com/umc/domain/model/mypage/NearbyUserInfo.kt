@@ -8,7 +8,23 @@ data class NearbyUserInfo(
     val info: String,
     val profileImageLink: String = "",
 ) {
-    fun toJson(): String = Gson().toJson(this)
+    /*TODO nearbyConnection의 경우, advertise name이 120바이트 이내여야 한다.
+    *
+    * 즉, 프로필 이미지 때문에 짤리면 이름이랑 정보만 가지고 다시 재생성(이미지는null)
+    * **/
+    fun toJson(): String {
+        val gson = Gson()
+        val fullJson = gson.toJson(this)
+
+        // UTF-8 기준 바이트 크기 체크 (안전 범위 120바이트 이하)
+        if (fullJson.toByteArray(Charsets.UTF_8).size <= 120) {
+            return fullJson
+        }
+
+        // 바이트 초과 시 프로필 이미지를 제외(null)하고 이름과 정보만 포함하여 재생성
+        val fallbackUser = this.copy(profileImageLink = "")
+        return gson.toJson(fallbackUser)
+    }
 
     companion object {
         fun fromJson(json: String): NearbyUserInfo? {

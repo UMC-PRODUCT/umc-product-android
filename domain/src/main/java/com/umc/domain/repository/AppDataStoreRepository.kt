@@ -2,6 +2,7 @@ package com.umc.domain.repository
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.home.NotificationItem
+import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.model.mypage.UserOutLink
 import kotlinx.coroutines.flow.Flow
 
@@ -50,4 +51,11 @@ interface AppDataStoreRepository {
     fun getReadNoticeIds(): Flow<Set<Long>>
     suspend fun addReadNoticeId(noticeId: Long)
     suspend fun clearReadNoticeIds()
+
+    // 마이페이지 -> 명함 관리
+    fun getUserCards(): Flow<List<UserCard>>
+    suspend fun saveUserCard(card: UserCard)
+    suspend fun removeUserCard(cardId: String)
+    suspend fun clearUserCards()
+
 }

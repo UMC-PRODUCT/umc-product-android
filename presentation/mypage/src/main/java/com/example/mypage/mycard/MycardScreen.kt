@@ -81,6 +81,8 @@ import com.umc.component.theme.white
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.mypage.NearbyUserInfo
+import com.umc.domain.model.mypage.UserCard
+import com.umc.domain.model.toUserCard
 import kotlinx.coroutines.flow.collectLatest
 
 
@@ -132,10 +134,13 @@ fun MycardRoute(
         if (uiState.userInfo.name.isNotEmpty()) {
             val nearbyInfo = NearbyUserInfo(
                 name = uiState.userInfo.name,
-                info = "${uiState.userInfo.schoolName} · ${uiState.myRecentInfoString.ifEmpty { "10기" }}",
+                info = "${uiState.userInfo.schoolName} · ${uiState.myRecentInfoString.ifEmpty { "0기" }}",
                 profileImageLink = uiState.userInfo.profileImageLink
             )
+            //내 카드 업데이트
+            val myCard = uiState.userInfo.toUserCard()
             nearbyViewModel.setMyUserInfo(nearbyInfo)
+            nearbyViewModel.setMyUserCard(myCard)
         }
     }
 
@@ -244,7 +249,7 @@ fun MycardScreen(
                 MycardListItem(
                     iconRes = R.drawable.ic_received_card,
                     text = AppStrings.MYCARD_CARD_CONTENT_RECEIVED,
-                    cardCount = 0,
+                    cardCount = uiState.cardCount,
                     onClick = onNavigateToReceivedCard
                 )
                 MycardListItem(
