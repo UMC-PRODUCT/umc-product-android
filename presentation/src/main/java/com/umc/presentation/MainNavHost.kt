@@ -313,7 +313,9 @@ fun MainNavHost(
         /**qr 코드**/
         composable<MainDestination.Qrcode> {
             QrCodeRoute(
-                onNavigateToBack = {}
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
             )
         }
 
