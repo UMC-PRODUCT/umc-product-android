@@ -13,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -75,10 +76,13 @@ fun ProfileRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    /*
     //텍스트 상태 추적
     var githubText by remember(uiState.githubLink) { mutableStateOf(uiState.githubLink) }
     var linkedinText by remember(uiState.linkedinLink) { mutableStateOf(uiState.linkedinLink) }
     var blogText by remember(uiState.blogLink) { mutableStateOf(uiState.blogLink) }
+
+     */
 
     //이미지 picker 세팅
     val pickMedia = rememberLauncherForActivityResult(
@@ -122,7 +126,7 @@ fun ProfileRoute(
                     pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 }
                 is ProfileEvent.ClickComplete -> {
-                    viewModel.saveUserOutLink(githubText, linkedinText, blogText)
+                    viewModel.saveUserOutLink(uiState.githubLink, uiState.linkedinLink, uiState.blogLink)
                 }
                 is ProfileEvent.ClickBackPressed -> {
                     onNavigateToBack()
@@ -134,12 +138,12 @@ fun ProfileRoute(
 
     ProfileScreen(
         uiState = uiState,
-        githubText = githubText,
-        onGithubChange = { githubText = it },
-        linkedinText = linkedinText,
-        onLinkedinChange = { linkedinText = it },
-        blogText = blogText,
-        onBlogChange = { blogText = it },
+        githubText = uiState.githubLink,
+        onGithubChange = { viewModel.updateGithubLink(it) },
+        linkedinText = uiState.linkedinLink,
+        onLinkedinChange = { viewModel.updateLinkedinLink(it) },
+        blogText = uiState.blogLink,
+        onBlogChange = { viewModel.updateBlogLink(it) },
         onBackPressed = viewModel::onClickBackPressed,
         onCompleteClick = viewModel::onClickComplete,
         onProfileImageClick = viewModel::onClickProfileImage
@@ -416,7 +420,8 @@ fun ActiveHistoryItem(
             borderColor = grey200(),
             borderWidth = 1.dp,
             textColor = grey600(),
-            textStyle = UmcTypographyTokens.FootnoteBold
+            textStyle = UmcTypographyTokens.FootnoteBold,
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
         )
 
 
@@ -447,7 +452,8 @@ fun ActiveHistoryItem(
                 backgroundColor = indigo100(),
                 borderWidth = 0.dp,
                 textColor = indigo500(),
-                textStyle = UmcTypographyTokens.FootnoteBold
+                textStyle = UmcTypographyTokens.FootnoteBold,
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
             )
         }
 
