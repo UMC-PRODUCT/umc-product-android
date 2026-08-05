@@ -421,7 +421,7 @@ fun ActiveHistoryItem(
             borderWidth = 1.dp,
             textColor = grey600(),
             textStyle = UmcTypographyTokens.FootnoteBold,
-            //contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
         )
 
 
@@ -453,7 +453,7 @@ fun ActiveHistoryItem(
                 borderWidth = 0.dp,
                 textColor = indigo500(),
                 textStyle = UmcTypographyTokens.FootnoteBold,
-                //contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
             )
         }
 

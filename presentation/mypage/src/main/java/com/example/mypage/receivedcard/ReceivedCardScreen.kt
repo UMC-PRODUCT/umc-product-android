@@ -298,33 +298,12 @@ private fun ReceivedCardItem(
                     error = painterResource(R.drawable.ic_profile_default)
                 )
 
-                // 뱃지 영역 (파트 + 기수)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    // 파트 뱃지
-                    UButton(
-                        text = card.part,
-                        enabled = false,
-                        backgroundColor = partTheme.badgeColor,
-                        textColor = grey000(),
-                        textStyle = UmcTypographyTokens.Caption1,
-                        cornerRadius = 4.dp,
-                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
-                        onClick = {}
-                    )
-
-                    // 기수 뱃지
-                    UButton(
-                        text = "${card.generation}기",
-                        enabled = false,
-                        backgroundColor = partTheme.badgeColor,
-                        textColor = grey000(),
-                        textStyle = UmcTypographyTokens.Caption1,
-                        cornerRadius = 4.dp,
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                        onClick = {}
-                    )
-                }
             }
+
+            Spacer(
+                modifier = Modifier
+                    .height(8.dp)
+            )
 
             //[하단] 이름/닉네임 + 학교
             Column {
@@ -345,6 +324,39 @@ private fun ReceivedCardItem(
                     color = grey500()
                 )
             }
+
+            Spacer(
+                modifier = Modifier
+                    .height(8.dp)
+            )
+
+            // 뱃지 영역 (파트 + 기수)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                // 파트 뱃지
+                UButton(
+                    text = card.part,
+                    enabled = false,
+                    backgroundColor = partTheme.badgeColor,
+                    textColor = grey000(),
+                    textStyle = UmcTypographyTokens.Caption1,
+                    cornerRadius = 4.dp,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                    onClick = {}
+                )
+
+                // 기수 뱃지
+                UButton(
+                    text = "${card.generation}기",
+                    enabled = false,
+                    backgroundColor = partTheme.badgeColor,
+                    textColor = grey000(),
+                    textStyle = UmcTypographyTokens.Caption1,
+                    cornerRadius = 4.dp,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                    onClick = {}
+                )
+            }
+
         }
     }
 }
