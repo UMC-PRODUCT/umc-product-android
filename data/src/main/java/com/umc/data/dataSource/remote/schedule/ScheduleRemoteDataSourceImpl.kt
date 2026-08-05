@@ -9,7 +9,10 @@ import com.umc.data.response.schedule.ScheduleDetailResponse
 import com.umc.data.response.schedule.ScheduleListResponse
 import com.umc.data.response.schedule.ScheduleMonthResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
+import com.umc.data.response.schedule.ScheduleLocationV2Response
+import com.umc.data.response.schedule.UpdateScheduleLocationV2Request
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.base.map
 import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import javax.inject.Inject
 
@@ -19,7 +22,9 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
 
     //일정 리스트 조회
     override suspend fun getScheduleList(): ApiState<List<ScheduleListResponse>> {
-        return apiCall {scheduleApi.getScheduleList()}
+        return apiCall { scheduleApi.getScheduleList() }.map { schedules ->
+            schedules.map { it.toLegacy() }
+        }
     }
 
     //일정 상세 조회
@@ -40,6 +45,10 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
         return apiCall {scheduleApi.deleteScheduleWithAttendance(scheduleId)}
     }
 
+    override suspend fun forceDeleteSchedule(scheduleId: Long): ApiState<Unit> {
+        return apiCall { scheduleApi.forceDeleteSchedule(scheduleId) }
+    }
+
     //일정 생성하기
     override suspend fun createSchedule(request: CreateScheduleRequest): ApiState<Long> {
         return apiCall {scheduleApi.createSchedule(request)}
@@ -50,7 +59,7 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
         scheduleId: Long,
         request: UpdateScheduleRequest
     ): ApiState<Unit> {
-        return apiCall {scheduleApi.updateSchedule(scheduleId, request)}
+        return apiCall { scheduleApi.updateSchedule(scheduleId, request) }.map { Unit }
     }
 
     // 위치 변경하기
@@ -58,7 +67,20 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
         scheduleId: Long,
         request: UpdateLocationRequest
     ): ApiState<UpdateLocationResponse> {
-        return apiCall { scheduleApi.updateScheduleLocation(scheduleId, request) }
+        return apiCall {
+            scheduleApi.updateScheduleLocation(
+                scheduleId,
+                UpdateScheduleLocationV2Request(
+                    location = ScheduleLocationV2Response(
+                        latitude = request.latitude,
+                        longitude = request.longitude,
+                        locationName = request.locationName
+                    )
+                )
+            )
+        }.map {
+            UpdateLocationResponse(scheduleId, request.locationName, request.latitude, request.longitude)
+        }
     }
 
 

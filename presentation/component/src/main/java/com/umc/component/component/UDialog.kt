@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.umc.component.theme.UmcTypographyTokens
+import com.umc.component.theme.green500
 import com.umc.component.theme.red500
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey200
@@ -28,35 +29,38 @@ import com.umc.component.theme.grey800
 import androidx.compose.ui.graphics.Color
 
 /**
- * UMC 공용 다이얼로그 컴포넌트. UMypageDialog(XML)의 Compose 마이그레이션 버전.
+ * 활동 화면의 확인 및 승인/거절 흐름에 사용하는 공용 다이얼로그입니다.
  *
- * 단일 버튼(isTwoButton=false)과 이중 버튼(isTwoButton=true) 두 가지 모드를 지원.
+ * [isTwoButton]이 false이면 확인 버튼 하나를, true이면 취소/확인 버튼 두 개를 표시합니다.
  *
- * @param title 다이얼로그 제목 (필수)
- * @param onDismissRequest 배경 터치 등으로 다이얼로그가 닫힐 때 호출
- * @param modifier 외부 Column에 적용할 Modifier
- * @param content 부제목/설명 텍스트. 비어있으면 표시하지 않음
- * @param isTwoButton true이면 부정+긍정 2버튼 모드, false이면 단일 확인 버튼 모드
- * @param confirmText 단일 버튼 모드의 버튼 텍스트. 기본값 "확인"
- * @param onConfirm 단일 버튼 클릭 시 호출. 기본값은 onDismissRequest
- * @param negativeText 이중 버튼 모드의 취소 버튼 텍스트. 기본값 "취소"
- * @param positiveText 이중 버튼 모드의 긍정 버튼 텍스트
- * @param onNegative 취소 버튼 클릭 시 호출. 기본값은 onDismissRequest
- * @param onPositive 긍정 버튼 클릭 시 호출
- * @param negativeBackgroundColor 이중 버튼 모드의 취소 버튼 배경색
- * @param negativeBorderColor 이중 버튼 모드의 취소 버튼 테두리 색상
- * @param negativeTextColor 이중 버튼 모드의 취소 버튼 텍스트 색상
- * @param positiveBackgroundColor 이중 버튼 모드의 확인 버튼 배경색
- * @param positiveBorderColor 이중 버튼 모드의 확인 버튼 테두리 색상
- * @param positiveTextColor 이중 버튼 모드의 확인 버튼 텍스트 색상
+ * @param title 다이얼로그 제목
+ * @param onDismissRequest 바깥 영역 터치 또는 뒤로 가기 콜백
+ * @param modifier 다이얼로그 컨테이너 Modifier
+ * @param content 기존 호출부에서 사용하는 설명
+ * @param subtitle 활동 화면에서 사용하는 설명. 비어 있으면 [content]를 표시합니다.
+ * @param isAccept 승인 다이얼로그 여부. true이면 승인 색상, false이면 거절/삭제 색상을 사용합니다.
+ * @param isTwoButton 두 개 버튼 사용 여부
+ * @param confirmText 단일 버튼 문구
+ * @param onConfirm 단일 버튼 클릭 콜백
+ * @param negativeText 왼쪽 버튼 문구
+ * @param positiveText 오른쪽 버튼 문구
+ * @param onNegative 왼쪽 버튼 클릭 콜백
+ * @param onPositive 오른쪽 버튼 클릭 콜백
+ * @param negativeBackgroundColor 왼쪽 버튼 배경색
+ * @param negativeTextColor 왼쪽 버튼 텍스트 색상
+ * @param negativeBorderColor 왼쪽 버튼 테두리 색상
+ * @param positiveBackgroundColor 오른쪽 버튼 배경색
+ * @param positiveTextColor 오른쪽 버튼 텍스트 색상
+ * @param positiveBorderColor 오른쪽 버튼 테두리 색상
  */
-
 @Composable
 fun UDialog(
     title: String,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     content: String = "",
+    subtitle: String = "",
+    isAccept: Boolean = false,
     isTwoButton: Boolean = false,
     confirmText: String = "확인",
     onConfirm: () -> Unit = onDismissRequest,
@@ -69,10 +73,16 @@ fun UDialog(
     negativeBackgroundColor: Color = grey000(),
     negativeTextColor: Color = grey800(),
     negativeBorderColor: Color = grey300(),
-    positiveBackgroundColor: Color = grey000(),
-    positiveTextColor: Color = red500(),
-    positiveBorderColor: Color = red500(),
+    positiveBackgroundColor: Color? = null,
+    positiveTextColor: Color? = null,
+    positiveBorderColor: Color? = null,
 ) {
+    val description = subtitle.ifBlank { content }
+    val actionColor = if (isAccept) green500() else red500()
+    val resolvedPositiveBackgroundColor = positiveBackgroundColor ?: grey000()
+    val resolvedPositiveTextColor = positiveTextColor ?: actionColor
+    val resolvedPositiveBorderColor = positiveBorderColor ?: actionColor
+
     Dialog(onDismissRequest = onDismissRequest) {
         Column(
             modifier = modifier
@@ -86,10 +96,10 @@ fun UDialog(
                 color = grey800(),
             )
 
-            if (content.isNotEmpty()) {
+            if (description.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 UText(
-                    text = content,
+                    text = description,
                     style = UmcTypographyTokens.Subheadline,
                     color = grey600(),
                 )
@@ -118,11 +128,11 @@ fun UDialog(
                         text = positiveText,
                         onClick = onPositive,
                         modifier = Modifier.weight(1f),
-                        backgroundColor = positiveBackgroundColor,
-                        textColor = positiveTextColor,
+                        backgroundColor = resolvedPositiveBackgroundColor,
+                        textColor = resolvedPositiveTextColor,
                         textStyle = UmcTypographyTokens.SubheadlineBold,
                         borderWidth = 1.dp,
-                        borderColor = positiveBorderColor,
+                        borderColor = resolvedPositiveBorderColor,
                         cornerRadius = 8.dp,
                         contentPadding = PaddingValues(vertical = 14.dp),
                     )

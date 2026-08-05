@@ -21,21 +21,25 @@ import com.umc.component.theme.indigo500
 import com.umc.component.R
 
 /**
- * UChip: 기존 XML 기반 UChip 커스텀 뷰의 속성을 계승한 컴포저블
+ * 선택 상태나 분류 정보를 표시하는 공용 칩 컴포넌트입니다.
  *
- * @param text 칩에 표시할 텍스트 (XML: text)
- * @param modifier 레이아웃 수정을 위한 Modifier
- * @param backgroundColor 칩 배경색 (XML: backgroundColor) - 기본 indigo500()
- * @param textColor 텍스트 및 닫기 아이콘 색상 (XML: textColor) - 기본 grey000()
- * @param textStyle 텍스트 스타일 (XML: textAppearance) - 기본 UmcTypographyTokens.SubheadlineBold
- * @param borderWidth 외곽선 두께 (XML: borderWidth) - 기본 0.dp
- * @param borderColor 외곽선 색상 (XML: borderColor) - 기본 Color.Transparent
- * @param showCloseIcon 닫기(X) 버튼 표시 여부 (XML: showCloseIcon) - 기본 false
- * @param nextIcon 후위 아이콘 리소스 ID (XML: nextIcon) - 기본 false
- * @param onClick 칩 자체 클릭 리스너
- * @param onCloseClick 닫기 버튼 클릭 리스너 (XML: onCloseClickListener)
+ * [onClick]이 null이면 표시 전용으로 동작하며, [showCloseIcon]을 사용하면 닫기 액션을 제공합니다.
+ *
+ * @param text 칩에 표시할 텍스트
+ * @param modifier 크기와 배치를 지정하는 Modifier
+ * @param backgroundColor 칩 배경색
+ * @param textColor 텍스트와 아이콘 색상
+ * @param textStyle 텍스트 스타일
+ * @param cornerRadius 모서리 반경
+ * @param contentPadding 칩 내부 여백
+ * @param minHeight 칩의 최소 높이
+ * @param borderWidth 테두리 두께
+ * @param borderColor 테두리 색상
+ * @param showCloseIcon 닫기 아이콘 표시 여부
+ * @param nextIcon 텍스트 뒤에 표시할 drawable 리소스
+ * @param onClick 칩 클릭 콜백
+ * @param onCloseClick 닫기 아이콘 클릭 콜백
  */
-
 @Composable
 fun UChip(
     text: String,
@@ -43,6 +47,9 @@ fun UChip(
     backgroundColor: Color = indigo500(),
     textColor: Color = grey000(),
     textStyle: TextStyle = UmcTypographyTokens.SubheadlineBold,
+    cornerRadius: Dp = 100.dp,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 7.dp),
+    minHeight: Dp? = null,
     borderWidth: Dp = 0.dp,
     borderColor: Color = Color.Transparent,
     showCloseIcon: Boolean = false,
@@ -56,7 +63,7 @@ fun UChip(
     if (isVisible) {
         Surface(
             modifier = modifier,
-            shape = RoundedCornerShape(100.dp),
+            shape = RoundedCornerShape(cornerRadius),
             color = backgroundColor,
             contentColor = textColor,
             border = if (borderWidth > 0.dp) BorderStroke(borderWidth, borderColor) else null,
@@ -65,7 +72,8 @@ fun UChip(
         ) {
             Row(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 7.dp),
+                    .then(if (minHeight != null) Modifier.heightIn(min = minHeight) else Modifier)
+                    .padding(contentPadding),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -95,7 +103,7 @@ fun UChip(
                     )
                 }
 
-                //후위 버튼 (image_next) - 닫기 버튼과 배타적으로 사용하거나 순서대로 배치
+                // 후행 아이콘은 닫기 버튼과 함께 사용할 수 있습니다.
                 if (!showCloseIcon && nextIcon != null) {
                     Icon(
                         painter = painterResource(id = nextIcon),
