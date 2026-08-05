@@ -16,7 +16,30 @@ data class UserInfo(
     val status: String = "ACTIVE",
     val roles: List<UserRole> = emptyList(),
     val challengerRecords: List<ChallengerRecord> = emptyList(),
-    val profile: ProfileInfo = ProfileInfo(0, "", "", "", "", "")
+    val profile: ProfileInfo = ProfileInfo(0, "", "", "", "", ""),
+
+    val hasLocalCredential: Boolean = false,
+    val totalActivityDays: Long = 0L,
+    val currentGisuMemberInfo: CurrentGisuMemberInfo? = null
+)
+
+
+//v2 신규: 현재 활성 기수 정보
+data class CurrentGisuMemberInfo(
+    val gisuId: Long,
+    val generation: Long,
+    val challenger: CurrentChallengerInfo?,
+    val isAdmin: Boolean,
+    val roleTypes: List<String>
+)
+
+//v2 신규: 현재 활성 기수의 챌린저 상세 정보
+data class CurrentChallengerInfo(
+    val challengerId: Long,
+    val part: String,
+    val challengerStatus: String,
+    val points: List<ChallengerPoint> = emptyList(),
+    val totalPoints: Double = 0.0
 )
 
 //사용자의 권한 및 파트 정보를 담는 도메인 모델

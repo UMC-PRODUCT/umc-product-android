@@ -109,6 +109,7 @@ class QrCodeViewModel @Inject constructor(
 
         // QR 코드 인코딩용 JSON 데이터 생성
         // Android Intent URI 표준 규격
+        /**TODO. 중요! 현재 디버그 단에서는 보안 문제로 테스트 불가 -> 일단 앱 내 딥링크로 수정**/
         val qrDeepLinkUrl = "intent://card?memberId=$memberId#Intent;" +
                 "scheme=umc;" +
                 "package=$packageName;" +

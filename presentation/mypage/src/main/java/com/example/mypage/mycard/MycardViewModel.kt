@@ -1,6 +1,7 @@
 package com.example.mypage.mycard
 
 import androidx.lifecycle.viewModelScope
+import android.util.Log
 import com.example.mypage.dialog.ExchangeStep
 import com.example.mypage.mypage.MypageEvent
 import com.example.mypage.mypage.MypageUiState
@@ -68,6 +69,7 @@ class MycardViewModel @Inject constructor(
 
     //UserInfo를 받아았을 때 이를 파싱해서 UI 요소로 분할하는 함수
     fun settingUserInfoToUI(userInfo: UserInfo){
+        Log.d("log_mypage", "settingUserInfoToUI: $userInfo")
         // 기수별 정보가 담긴 것.
         val gisuSummaryList = userInfo.getGisuSummaryList()
 
