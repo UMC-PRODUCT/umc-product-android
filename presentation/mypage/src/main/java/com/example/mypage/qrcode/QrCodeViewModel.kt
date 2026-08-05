@@ -104,7 +104,7 @@ class QrCodeViewModel @Inject constructor(
      * 내 유저 ID가 담긴 딥링크를 생성한다.
      */
     private fun generateMyUserCardQr(userInfo: UserInfo?) {
-        val memberId = userInfo?.id ?: 23
+        val memberId = userInfo?.id ?: 21
         val packageName = "com.umc.product"
 
         // QR 코드 인코딩용 JSON 데이터 생성
@@ -118,12 +118,19 @@ class QrCodeViewModel @Inject constructor(
 
         val qrDeepLinkUrlDebug = "umc://card?memberId=$memberId"
 
-        updateState { copy(myQrcodeData = qrDeepLinkUrlDebug) }
+        val bitmap = QrCodeUtils.generateQrCode(qrDeepLinkUrl, 600)
+        val bitmapDebug = QrCodeUtils.generateQrCode(qrDeepLinkUrlDebug, 600)
+
+        updateState { copy(
+            myQrcodeData = qrDeepLinkUrlDebug,
+            qrImageBitmap = bitmapDebug
+        ) }
 
     }
 
 
     //확인 버튼 클릭 -> 성공 오버레이 감추고 QR 화면으로 돌아감
+    /*
     fun dismissSuccessOverlay() {
         updateState {
             copy(
@@ -134,25 +141,32 @@ class QrCodeViewModel @Inject constructor(
         }
     }
 
+     */
+
     /**
      * 스캐너 열기 (내 광고 중단 후 상대 탐색 시작)
      */
+    /*
     fun startScanner() {
-        if (uiState.value.isScannerOpen) return
+        //if (uiState.value.isScannerOpen) return
         //nearbyManager?.stopAdvertising()
         //nearbyManager?.startDiscovery()
 
-        updateState { copy(isScannerOpen = true) }
+        //updateState { copy(isScannerOpen = true) }
     }
 
     fun closeScanner() {
         updateState { copy(isScannerOpen = false) }
     }
 
+     */
+
     /**
      * CameraX로 상대방 QR 스캔 완료 시 실행되는 메서드
      * @param scannedValue 스캔된 문자열 (상대 기기의 Build.MODEL)
      */
+
+    /*
     fun onQrScanned(scannedValue: String) {
         Log.d("NearbyDebug", "0. QR 스캔 완료! 읽은 텍스트: '$scannedValue'")
         updateState {
@@ -196,6 +210,8 @@ class QrCodeViewModel @Inject constructor(
          */
     }
 
+     */
+
 
     
 
@@ -217,10 +233,13 @@ class QrCodeViewModel @Inject constructor(
         emitEvent(QrCodeEvent.ShareQrCode)
     }
 
+    /*
     override fun onCleared() {
         super.onCleared()
         //nearbyManager?.stopAll()
     }
+
+     */
     
     
     
@@ -232,10 +251,12 @@ data class QrCodeUiState(
     val myRecentInfoString: String = "",
 
     val myQrcodeData: String = "",
-    val scannedTargetQr: String = "", //스캔한 qr코드의 값 = 기기 모델명 or ""
-    val isScannerOpen: Boolean = false, //스캐너(카메라)가 열렸는지 확인
-    val receivedCard: UserCard? = null,
-    val isSuccessOverlayOpen: Boolean = false, //스캔 완료 오버레이 창 띄우기
+    val qrImageBitmap: ImageBitmap? = null
+
+    //val scannedTargetQr: String = "", //스캔한 qr코드의 값 = 기기 모델명 or ""
+    //val isScannerOpen: Boolean = false, //스캐너(카메라)가 열렸는지 확인
+    //val receivedCard: UserCard? = null,
+    //val isSuccessOverlayOpen: Boolean = false, //스캔 완료 오버레이 창 띄우기
 ) : UiState
 
 sealed interface QrCodeEvent : UiEvent {

@@ -196,12 +196,21 @@ fun MycardRoute(
         )
     }
 
-    //유저 명함 성공 오버레이
+    //유저 명함 성공 오버레이 (nearbyconnection)
     if (nearbyUiState.isSuccessOverlayOpen) {
         CardExchangeSuccessOverlay(
             receivedCard = nearbyUiState.receivedCard,
             onContinueExchange = { nearbyViewModel.continueExchange() },
             onConfirm = { nearbyViewModel.dismissSuccessOverlay() }
+        )
+    }
+
+    //유저 명함 성공 오버레이 (qr 코드)
+    if(uiState.isSuccessOverlayOpen){
+        CardExchangeSuccessOverlay(
+            receivedCard = uiState.receivedUserCard,
+            onContinueExchange = {viewModel.dismissSuccessOverlay()},
+            onConfirm = {viewModel.dismissSuccessOverlay()}
         )
     }
 
