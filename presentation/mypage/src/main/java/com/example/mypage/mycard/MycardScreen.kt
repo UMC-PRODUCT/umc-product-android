@@ -122,8 +122,7 @@ fun MycardRoute(
     /**TODO. 딥링크 전달 시 API 호출 및 저장**/
     LaunchedEffect(targetMemberId) {
         if (!targetMemberId.isNullOrEmpty()) {
-            //viewModel.handleDeepLinkUserCard(targetMemberId)
-            Log.d("log_mypage", "test 성공: $targetMemberId")
+            viewModel.searchUser(targetMemberId.toLong())
         }
     }
     
