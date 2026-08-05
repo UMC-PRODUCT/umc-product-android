@@ -31,6 +31,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +47,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.mypage.dialog.CardExchangeBottomSheet
@@ -97,6 +101,21 @@ fun MycardRoute(
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    //화면이 resume에서 복귀할떄마다 재호출
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.getUserInfo()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    
 
     /**TODO. 딥링크 전달 시 API 호출 및 저장**/
     LaunchedEffect(targetMemberId) {
@@ -105,6 +124,8 @@ fun MycardRoute(
             Log.d("log_mypage", "test 성공: $targetMemberId")
         }
     }
+    
+    
 
     //내 프로필 정보가 업데이트 될 때 NearbyViewModel에도 이를 반영
     LaunchedEffect(uiState.userInfo) {
