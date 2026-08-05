@@ -3,14 +3,18 @@ package com.example.mypage.qrcode
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.content.FileProvider
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import java.io.File
+import java.io.FileOutputStream
 import java.io.OutputStream
 import java.util.EnumMap
 
@@ -83,4 +87,29 @@ object QrCodeUtils {
             outputStream?.close()
         }
     }
+
+    //QR 이미지를 임시 캐시 파일로 저장하고 공유용 FileProvider uri 반환
+    fun getShareableImageUri(context: Context, imageBitmap: ImageBitmap): Uri? {
+        return try {
+            val bitmap = imageBitmap.asAndroidBitmap()
+            val cachePath = File(context.cacheDir, "images")
+            cachePath.mkdirs() // 폴더 생성
+
+            val file = File(cachePath, "shared_qr_code.png")
+            val fileOutputStream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
+            fileOutputStream.close()
+
+            // FileProvider를 통해 외부 공유 가능한 Content Uri 생성
+            FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
 }

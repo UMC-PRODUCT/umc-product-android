@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -106,11 +107,28 @@ fun QrCodeRoute(
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
                 is QrCodeEvent.ShareQrCode -> {
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, "내 UMC 명함을 확인해 보세요: ${uiState.userInfo.nickname}")
+                    // 1. UI State 또는 스냅샷에서 보유 중인 ImageBitmap 가져오기
+                    val qrBitmap: ImageBitmap? = uiState.qrImageBitmap
+
+                    if (qrBitmap != null) {
+                        // 2. QrCodeUtils를 통해 공유용 Uri 추출
+                        val imageUri = QrCodeUtils.getShareableImageUri(context, qrBitmap)
+
+                        if (imageUri != null) {
+                            // 3. 이미지 전송 Intent 생성
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "image/png"
+                                putExtra(Intent.EXTRA_STREAM, imageUri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) // 읽기 권한 부여
+                            }
+
+                            context.startActivity(Intent.createChooser(shareIntent, "명함 QR 코드 공유하기"))
+                        } else {
+                            Toast.makeText(context, "공유용 이미지를 생성하지 못했습니다.", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(context, "공유할 QR 이미지 정보가 없습니다.", Toast.LENGTH_SHORT).show()
                     }
-                    context.startActivity(Intent.createChooser(shareIntent, "명함 공유하기"))
                 }
             }
         }
@@ -133,7 +151,9 @@ fun QrCodeRoute(
 
 
     //QR 생성 (UserCard Json 데이터 기반)
-    val qrContent = uiState.myQrcodeData.ifEmpty { "umc://card?memberId=${uiState.userInfo.id}" }
+    val qrContent = uiState.myQrcodeData.ifEmpty { "umc://card?memberId=21" }
+    
+    //해당 bitmap 변수가 qr 이미지를 생성
     val qrBitmap = remember(qrContent) { QrCodeUtils.generateQrCode(qrContent, 600) }
 
     QrCodeScreen(
@@ -142,9 +162,10 @@ fun QrCodeRoute(
         onBackClick = viewModel::navigateBack,
         onShareClick = viewModel::shareQrCode,
         onSaveImageClick = { viewModel.saveQrImage(qrBitmap) },
-        onOpenScannerClick = viewModel::startScanner
+        //onOpenScannerClick = viewModel::startScanner
     )
 
+    /*
     // 카메라 스캐너 팝업 다이얼로그
     if (uiState.isScannerOpen) {
         Dialog(onDismissRequest = viewModel::closeScanner) {
@@ -163,7 +184,10 @@ fun QrCodeRoute(
         }
     }
 
+     */
+
     //유저 명함 성공 오버레이
+    /*
     if (uiState.isSuccessOverlayOpen) {
         CardExchangeSuccessOverlay(
             receivedCard = uiState.receivedCard,
@@ -171,6 +195,8 @@ fun QrCodeRoute(
             onConfirm = { viewModel.dismissSuccessOverlay() }
         )
     }
+
+     */
 
 }
 
@@ -181,7 +207,7 @@ fun QrCodeScreen(
     onBackClick: () -> Unit,
     onShareClick: () -> Unit,
     onSaveImageClick: () -> Unit,
-    onOpenScannerClick: () -> Unit
+    //onOpenScannerClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -195,7 +221,7 @@ fun QrCodeScreen(
         // 1. 상단 바 (뒤로가기 + 타이틀)
         QrCodeScreenTopBar(
             onBackClick = onBackClick,
-            onOpenScannerClick = onOpenScannerClick
+            //onOpenScannerClick = onOpenScannerClick
         )
 
         LazyColumn(
@@ -307,7 +333,7 @@ fun QrCodeScreen(
 @Composable
 fun QrCodeScreenTopBar(
     onBackClick: () -> Unit, //뒤로 가기
-    onOpenScannerClick: () -> Unit //스캐너 열기
+    //onOpenScannerClick: () -> Unit //스캐너 열기
 ) {
     Row(
         modifier = Modifier
@@ -345,6 +371,8 @@ fun QrCodeScreenTopBar(
 
         )
 
+
+        /*
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -364,6 +392,8 @@ fun QrCodeScreenTopBar(
                 modifier = Modifier.size(24.dp)
             )
         }
+
+         */
 
 
 

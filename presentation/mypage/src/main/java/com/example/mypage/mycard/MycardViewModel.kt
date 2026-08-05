@@ -126,7 +126,7 @@ class MycardViewModel @Inject constructor(
 
     //QR코드 생성하기
     private fun generateMyUserCardQr(userInfo: UserInfo?) {
-        val memberId = userInfo?.id ?: 23
+        val memberId = userInfo?.id ?: 21
         val packageName = "com.umc.product"
 
         val qrDeepLinkUrl = "intent://card?memberId=$memberId#Intent;" +
@@ -140,6 +140,18 @@ class MycardViewModel @Inject constructor(
 
     //qr코드에 있는 유저 정보를 바탕으로 검색
     fun searchUser(memberId: Long) {
+
+        //이미 처리한 거 중복 처리 방지
+        if(uiState.value.processedTargetMemberId == memberId){
+            return
+        }
+
+        updateState {
+            copy(
+                processedTargetMemberId = memberId
+            )
+        }
+
         viewModelScope.launch {
             resultResponse(
                 response = getMemberProfileUseCase(memberId),
@@ -158,6 +170,23 @@ class MycardViewModel @Inject constructor(
         Log.d("log_mypage", "saveUserCard: $userCard")
         viewModelScope.launch {
             SaveUserCardUseCase(userCard)
+
+            updateState {
+                copy(
+                    isSuccessOverlayOpen = true,
+                    receivedUserCard = userCard
+                )
+            }
+
+        }
+    }
+
+    fun dismissSuccessOverlay() {
+        updateState {
+            copy(
+                isSuccessOverlayOpen = false,
+                receivedUserCard = null
+            )
         }
     }
 
@@ -178,6 +207,13 @@ data class MycardUiState(
     val blogLink: String = "",
 
     val cardCount: Int = 0,
+
+    //qr로 받을 때 유저 id 정보
+    val processedTargetMemberId: Long? = null,
+
+    //명함 성공 관련
+    val isSuccessOverlayOpen: Boolean = false,
+    val receivedUserCard: UserCard? = null,
 
     ) : UiState
 
