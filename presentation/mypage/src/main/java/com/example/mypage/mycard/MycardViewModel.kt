@@ -16,11 +16,14 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.mypage.NearbyUserInfo
 import com.umc.domain.model.mypage.UserCard
+import com.umc.domain.model.toUserCard
 import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
 import com.umc.domain.usecase.appDataStore.usercard.GetUserCardUseCase
+import com.umc.domain.usecase.appDataStore.usercard.SaveUserCardUseCase
 import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
 import com.umc.domain.usecase.challenger.AddChallengerRecordMemberUseCase
 import com.umc.domain.usecase.member.DeleteUserUseCase
+import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,6 +34,8 @@ import javax.inject.Inject
 class MycardViewModel @Inject constructor(
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val getUserCardUseCase: GetUserCardUseCase, //유저 명함 가져오기
+    private val getMemberProfileUseCase: GetMemberProfileUseCase, //유저 검색하기
+    private val SaveUserCardUseCase: SaveUserCardUseCase, //명함 저장
 
 ) : BaseViewModel<MycardUiState, MycardEvent>(
     MycardUiState()){
@@ -131,6 +136,29 @@ class MycardViewModel @Inject constructor(
                 "end"
         updateState { copy(myQrcodeData = qrDeepLinkUrl) }
 
+    }
+
+    //qr코드에 있는 유저 정보를 바탕으로 검색
+    fun searchUser(memberId: Long) {
+        viewModelScope.launch {
+            resultResponse(
+                response = getMemberProfileUseCase(memberId),
+                successCallback = { userInfo ->
+                    val targetCard = userInfo.toUserCard()
+                    saveUserCard(targetCard)
+
+                },
+                errorCallback = {}
+            )
+        }
+    }
+
+    //검색한 정보를 바탕으로 유저 카드 저장
+    fun saveUserCard(userCard: UserCard) {
+        Log.d("log_mypage", "saveUserCard: $userCard")
+        viewModelScope.launch {
+            SaveUserCardUseCase(userCard)
+        }
     }
 
 
