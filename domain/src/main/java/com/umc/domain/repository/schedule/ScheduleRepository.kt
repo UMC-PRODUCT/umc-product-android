@@ -17,9 +17,15 @@ interface ScheduleRepository {
     //일정 상세 정보 가져오기 (홈 화면 -> 일정 상세)
     suspend fun getScheduleDetailHome(scheduleId: Long): ApiState<PlanDetailItem>
 
+    /*
     //월별 일정 가져오기
     suspend fun getMonthSchedule(year: Int, month: Int): ApiState<List<ScheduleMonthModel>>
 
+
+     */
+
+    //내 일정 가져오기(월별)
+    suspend fun getMySchedule(from:String, to:String, isAttendanceRequired: Boolean = false): ApiState<List<ScheduleMonthModel>>
   
     suspend fun getScheduleDetail(scheduleId: Long): ApiState<UserCheckAvailable>
 

@@ -150,7 +150,6 @@ fun HomeScreen(
             ) {
                 HomeTopBar(
                     alarmExist = uiState.alarmExist,
-                    userType = uiState.userType,
                     onNotificationClick = onNotificationClick
                 )
 

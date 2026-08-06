@@ -4,6 +4,7 @@ import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
+import com.umc.data.response.schedule.MyScheduleItemResponse.Companion.toDomain
 import com.umc.data.response.schedule.ScheduleListResponse.Companion.toDomain
 import com.umc.data.response.schedule.ScheduleMonthResponse.Companion.toDomain
 import com.umc.domain.model.base.ApiState
@@ -46,6 +47,7 @@ class ScheduleRepositoryImpl @Inject constructor(
         }
     }
 
+    /*
     //월별 일정 조회
     override suspend fun getMonthSchedule(
         year: Int,
@@ -55,6 +57,20 @@ class ScheduleRepositoryImpl @Inject constructor(
             responseList.map { it.toDomain() }
         }
     }
+
+     */
+
+    //내 일정 조회
+    override suspend fun getMySchedule(
+        from: String,
+        to: String,
+        isAttendanceRequired: Boolean
+    ): ApiState<List<ScheduleMonthModel>> {
+        return scheduleRemoteDataSource.getMySchedule(from, to, isAttendanceRequired).map { responseList ->
+            responseList.map { it.toDomain() }
+            }
+        }
+
 
     //관리자 일정 리스트 가져오기
     override suspend fun getAdminScheduleList(): ApiState<List<AdminSessionCheck>> {

@@ -5,6 +5,7 @@ import com.umc.data.dataSource.base.apiCall
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
+import com.umc.data.response.schedule.MyScheduleItemResponse
 import com.umc.data.response.schedule.ScheduleDetailResponse
 import com.umc.data.response.schedule.ScheduleListResponse
 import com.umc.data.response.schedule.ScheduleMonthResponse
@@ -33,11 +34,23 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
     }
 
     //워별 일정 조회
+    /*
     override suspend fun getMonthSchedule(
         year: Int,
         month: Int
     ): ApiState<List<ScheduleMonthResponse>> {
         return apiCall {scheduleApi.getMonthSchedule(year, month)}
+    }
+
+     */
+
+    //내 일정 조회
+    override suspend fun getMySchedule(
+        from: String,
+        to: String,
+        isAttendanceRequired: Boolean
+    ): ApiState<List<MyScheduleItemResponse>> {
+        return apiCall { scheduleApi.getMySchedules(from, to, isAttendanceRequired) }
     }
 
     //일정 삭제하기
