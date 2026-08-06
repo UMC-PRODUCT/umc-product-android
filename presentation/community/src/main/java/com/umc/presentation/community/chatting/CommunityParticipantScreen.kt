@@ -44,6 +44,7 @@ import com.umc.component.R
 import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UDialog
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey700
@@ -93,12 +94,12 @@ internal fun CommunityParticipantScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             painter = painterResource(R.drawable.ic_back),
-                            contentDescription = "뒤로가기",
+                            contentDescription = AppStrings.CHAT_CD_BACK,
                             tint = grey950(),
                         )
                     }
                     Text(
-                        text = "참여자 관리",
+                        text = AppStrings.CHAT_PARTICIPANT_MANAGEMENT,
                         modifier = Modifier.padding(start = 2.dp),
                         color = grey950(),
                         fontSize = 19.sp,
@@ -114,7 +115,9 @@ internal fun CommunityParticipantScreen(
         ) {
             item {
                 Text(
-                    text = "총 ${memberCount.ifBlank { members.size.toString() }}명",
+                    text = AppStrings.CHAT_PARTICIPANT_COUNT_FORMAT.format(
+                        memberCount.ifBlank { members.size.toString() },
+                    ),
                     color = grey950(),
                     fontSize = 14.sp,
                     modifier = Modifier.padding(bottom = 10.dp),
@@ -147,7 +150,7 @@ internal fun CommunityParticipantScreen(
                             colorFilter = ColorFilter.tint(grey400())
                         )
                         Text(
-                            text = "개설자만 참여자를 내보낼 수 있어요",
+                            text = AppStrings.CHAT_OWNER_ONLY_KICK_GUIDE,
                             color = grey700(),
                             fontSize = 12.sp,
                         )
@@ -159,10 +162,12 @@ internal fun CommunityParticipantScreen(
 
     pendingKickMember?.let { member ->
         UBasicDialog(
-            title = "${member.name.ifBlank { "해당 참여자" }}님을 내보낼까요?",
-            content = "이 스레드에서 나가지며,\n다시 초대해야 참여할 수 있어요",
-            negativeText = "취소",
-            positiveText = "내보내기",
+            title = AppStrings.CHAT_KICK_TITLE_FORMAT.format(
+                member.name.ifBlank { AppStrings.CHAT_PARTICIPANT_DEFAULT },
+            ),
+            content = AppStrings.CHAT_KICK_DESCRIPTION,
+            negativeText = AppStrings.CHAT_CANCEL,
+            positiveText = AppStrings.CHAT_KICK,
             type = DialogType.WARNING,
             showCloseButton = false,
             negativeBackgroundColor = grey100(),
@@ -181,11 +186,11 @@ internal fun CommunityParticipantScreen(
 
     pendingOwnershipMember?.let { member ->
         UDialog(
-            title = "방장 변경",
-            subtitle = "선택한 참여자를 방장으로 변경하시겠습니까?",
+            title = AppStrings.CHAT_TRANSFER_OWNER,
+            subtitle = AppStrings.CHAT_TRANSFER_OWNER_DESCRIPTION,
             isTwoButton = true,
-            negativeText = "취소",
-            positiveText = "변경하기",
+            negativeText = AppStrings.CHAT_CANCEL,
+            positiveText = AppStrings.CHAT_TRANSFER_ACTION,
             negativeBackgroundColor = grey100(),
             negativeBorderColor = grey100(),
             negativeTextColor = grey800(),
@@ -225,20 +230,22 @@ private fun ParticipantRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
-                    text = member.name.ifBlank { "알 수 없음" },
+                    text = member.name.ifBlank { AppStrings.CHAT_UNKNOWN_USER },
                     color = grey950(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
                 if (member.role == CommunityThreadRole.OWNER) {
-                    ParticipantBadge("개설자", grey800(), white())
+                    ParticipantBadge(AppStrings.CHAT_OWNER_BADGE, grey800(), white())
                 }
-                if (isMe) ParticipantBadge("나", indigo100(), indigo500())
+                if (isMe) ParticipantBadge(AppStrings.CHAT_ME, indigo100(), indigo500())
             }
             val part = member.part?.let { partTag(it).first }.orEmpty()
             val detail = listOfNotNull(
                 part.takeIf(String::isNotBlank),
-                member.generation?.takeIf(String::isNotBlank)?.let { "${it}기" },
+                member.generation?.takeIf(String::isNotBlank)?.let {
+                    AppStrings.CHAT_GENERATION_FORMAT.format(it)
+                },
             ).joinToString(" · ")
             if (detail.isNotBlank()) Text(detail, color = grey400(), fontSize = 11.sp)
         }
@@ -246,7 +253,7 @@ private fun ParticipantRow(
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_menu_kebab),
-                        contentDescription = "참여자 관리 메뉴",
+                        contentDescription = AppStrings.CHAT_CD_PARTICIPANT_MENU,
                         tint = grey400(),
                     )
                 }
@@ -258,15 +265,15 @@ private fun ParticipantRow(
                     containerColor = white(),
                     shadowElevation = 8.dp,
                 ) {
-                    ParticipantMenuItem("프로필 보기", R.drawable.ic_person) {
+                    ParticipantMenuItem(AppStrings.CHAT_PROFILE_VIEW, R.drawable.ic_person) {
                         menuExpanded = false
                     }
                     if (showManagement && !isMe && member.role != CommunityThreadRole.OWNER) {
-                        ParticipantMenuItem("방장 변경", R.drawable.ic_swap_horizontal) {
+                        ParticipantMenuItem(AppStrings.CHAT_TRANSFER_OWNER, R.drawable.ic_swap_horizontal) {
                             menuExpanded = false
                             onTransferOwnership()
                         }
-                        ParticipantMenuItem("내보내기", R.drawable.ic_block, red400()) {
+                        ParticipantMenuItem(AppStrings.CHAT_KICK, R.drawable.ic_block, red400()) {
                             menuExpanded = false
                             onKick()
                         }

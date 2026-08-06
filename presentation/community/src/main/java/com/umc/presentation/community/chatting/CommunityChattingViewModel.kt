@@ -3,6 +3,7 @@ package com.umc.presentation.community.chatting
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.community.chatting.CommunityChatConnectionState
 import com.umc.domain.model.community.chatting.CommunityChatEvent
@@ -127,7 +128,7 @@ class CommunityChattingViewModel @Inject constructor(
             }
             val message = (detail as? ApiState.Fail)?.failState?.message
                 ?: (messages as? ApiState.Fail)?.failState?.message
-                ?: "채팅을 불러오지 못했습니다."
+                ?: AppStrings.CHAT_LOAD_FAILED
             updateState { copy(isLoading = false, errorMessage = message) }
             emitEvent(CommunityChattingEvent.ShowError(message))
         }
@@ -193,7 +194,7 @@ class CommunityChattingViewModel @Inject constructor(
                                 commandId = "",
                                 content = trimmed,
                                 type = CommunityMessageType.TEXT,
-                                error = throwable.message.orEmpty().ifBlank { "메시지를 전송하지 못했습니다." },
+                                error = throwable.message.orEmpty().ifBlank { AppStrings.CHAT_SEND_MESSAGE_FAILED },
                                 mentionedMemberIds = mentionedMemberIds.distinct(),
                                 replyToId = replyToId,
                             )
@@ -272,7 +273,7 @@ class CommunityChattingViewModel @Inject constructor(
         copy(
             pendingMessages = pendingMessages + (
                 clientMessageId to pending.copy(
-                    error = message.orEmpty().ifBlank { "이미지를 전송하지 못했습니다." },
+                    error = message.orEmpty().ifBlank { AppStrings.CHAT_SEND_IMAGE_FAILED },
                 )
             )
         )
@@ -326,7 +327,7 @@ class CommunityChattingViewModel @Inject constructor(
                     copy(
                         pendingMessages = pendingMessages + (
                             clientMessageId to pending.copy(
-                                error = "연결되지 않아 재전송하지 못했습니다.",
+                                error = AppStrings.CHAT_RETRY_DISCONNECTED,
                             )
                         )
                     )

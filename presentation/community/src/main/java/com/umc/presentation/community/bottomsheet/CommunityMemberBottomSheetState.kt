@@ -16,6 +16,9 @@ data class CommunityMemberBottomSheetState(
     // 서버에 실제로 참여 중인 멤버
     val currentMembers: List<CommunityChallengerUiModel> = emptyList(),
 
+    // 초대/내보내기 대상에서 제외할 스레드 방장
+    val ownerMemberIds: Set<Long> = emptySet(),
+
     // 검색 가능한 전체 챌린저
     val invitableMembers: List<CommunityChallengerUiModel> = emptyList(),
 

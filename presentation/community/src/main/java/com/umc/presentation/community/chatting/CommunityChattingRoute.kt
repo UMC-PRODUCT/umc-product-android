@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.presentation.community.bottomsheet.CommunityMemberBottomSheet
+import com.umc.component.theme.AppStrings
 
 @Composable
 fun CommunityChattingRoute(
@@ -52,7 +53,7 @@ fun CommunityChattingRoute(
                 }
                 CommunityChattingEvent.OpenEditThread -> onEditThread()
                 CommunityChattingEvent.MessageReported -> snackbarHostState.showSnackbar(
-                    message = "신고가 정상적으로 접수되었습니다.",
+                    message = AppStrings.CHAT_REPORT_SUCCESS,
                     duration = SnackbarDuration.Short,
                 )
                 is CommunityChattingEvent.ShowError -> snackbarHostState.showSnackbar(

@@ -65,6 +65,7 @@ import com.umc.component.R
 import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UDialog
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -153,6 +154,7 @@ fun CommunityChattingScreen(
     val scope = rememberCoroutineScope()
     val displayedMessages = remember(state.messages) { state.messages.asReversed() }
     var knownMessageIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var knownPendingMessageIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var newMessageCount by remember { mutableIntStateOf(0) }
     var followsLatestMessage by remember { mutableStateOf(true) }
     var wasUserScrolling by remember { mutableStateOf(false) }
@@ -176,9 +178,9 @@ fun CommunityChattingScreen(
 
     if (state.showOwnershipTransferRequiredDialog) {
         UDialog(
-            title = "스레드를 나갈 수 없어요",
-            subtitle = "현재 방장인 경우 스레드를 나갈 수 없습니다.\n다른 참여자에게 권한을 넘긴 후 다시 시도해주세요.",
-            confirmText = "확인",
+            title = AppStrings.CHAT_OWNERSHIP_REQUIRED_TITLE,
+            subtitle = AppStrings.CHAT_OWNERSHIP_REQUIRED_DESCRIPTION,
+            confirmText = AppStrings.CHAT_CONFIRM,
             confirmBackgroundColor = grey100(),
             confirmTextColor = grey700(),
             onConfirm = {
@@ -192,10 +194,10 @@ fun CommunityChattingScreen(
 
     if (state.showDeleteDialog) {
         UBasicDialog(
-            title = "스레드를 삭제하시겠습니까?",
-            content = "삭제한 스레드는 복구할 수 없습니다.",
-            negativeText = "취소",
-            positiveText = "삭제하기",
+            title = AppStrings.CHAT_DELETE_THREAD_TITLE,
+            content = AppStrings.CHAT_DELETE_THREAD_DESCRIPTION,
+            negativeText = AppStrings.CHAT_CANCEL,
+            positiveText = AppStrings.CHAT_DELETE_ACTION,
             type = DialogType.ERROR,
             showCloseButton = false,
             negativeBackgroundColor = grey100(),
@@ -260,6 +262,18 @@ fun CommunityChattingScreen(
         }
     }
 
+    LaunchedEffect(state.pendingMessages.keys) {
+        val currentIds = state.pendingMessages.keys.toSet()
+        val hasNewPendingMessage = currentIds.any { it !in knownPendingMessageIds }
+        knownPendingMessageIds = currentIds
+        if (!hasNewPendingMessage) return@LaunchedEffect
+
+        newMessageCount = 0
+        followsLatestMessage = true
+        val lastItemIndex = displayedMessages.size + currentIds.size + if (state.hasMore) 1 else 0
+        listState.animateScrollToItem(lastItemIndex)
+    }
+
     Scaffold(
         containerColor = grey100(),
         snackbarHost = {
@@ -271,7 +285,7 @@ fun CommunityChattingScreen(
         },
         topBar = {
             ChatTopBar(
-                title = state.thread?.title.orEmpty().ifBlank { "채팅방" },
+                title = state.thread?.title.orEmpty().ifBlank { AppStrings.CHAT_ROOM_DEFAULT },
                 onBack = onBack,
                 isMuted = state.thread?.isMuted == true,
                 isPinned = state.thread?.isPinned == true,
@@ -293,7 +307,7 @@ fun CommunityChattingScreen(
                                     type = "text/plain"
                                     putExtra(Intent.EXTRA_TEXT, deepLink)
                                 },
-                                "스레드 링크 공유",
+                                AppStrings.CHAT_SHARE_CHOOSER_TITLE,
                             )
                         )
                     }
@@ -305,70 +319,59 @@ fun CommunityChattingScreen(
         },
         bottomBar = {
             if (!state.isLoading && state.errorMessage == null) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (newMessageCount > 0) {
-                        NewMessageButton(
-                            count = newMessageCount,
-                            onClick = {
-                                newMessageCount = 0
-                                followsLatestMessage = true
-                                scope.launch {
-                                    listState.animateScrollToItem(
-                                        displayedMessages.size + state.pendingMessages.size
-                                    )
-                                }
-                            },
+                ChatInputBar(
+                    value = state.draft,
+                    enabled = true,
+                    replyingMessage = replyingMessage,
+                    onValueChange = onDraftChange,
+                    onCamera = {
+                        onCamera()
+                        imagePicker.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
-                        Spacer(Modifier.height(8.dp))
-                    }
-                    ChatInputBar(
-                        value = state.draft,
-                        enabled = true,
-                        replyingMessage = replyingMessage,
-                        onValueChange = onDraftChange,
-                        onCamera = {
-                            onCamera()
-                            imagePicker.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            )
-                        },
-                        onSend = {
-                            onSend(replyingMessage?.messageId?.toLongOrNull())
-                            replyingMessage = null
-                        },
-                    )
-                }
+                    },
+                    onSend = {
+                        onSend(replyingMessage?.messageId?.toLongOrNull())
+                        replyingMessage = null
+                    },
+                )
             }
         },
     ) { padding ->
-        if (state.isLoading) {
-            ChatLoadingSkeleton(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-            )
-        } else if (state.errorMessage != null) {
-            ChatLoadError(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                onRetry = onRetryLoad,
-            )
-        } else if (state.messages.isEmpty() && state.pendingMessages.isEmpty()) {
-            EmptyChatMessages(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-            )
-        } else {
-            LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 20.dp, bottom = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (state.isLoading) {
+                ChatLoadingSkeleton(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                )
+            } else if (state.errorMessage != null) {
+                ChatLoadError(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    onRetry = onRetryLoad,
+                )
+            } else if (state.messages.isEmpty() && state.pendingMessages.isEmpty()) {
+                EmptyChatMessages(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                )
+            } else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentPadding = PaddingValues(
+                        start = 18.dp,
+                        end = 18.dp,
+                        top = 20.dp,
+                        bottom = 18.dp,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
             item {
                 val unread = state.thread?.unreadCount?.toIntOrNull() ?: 0
                 if (unread > 0) {
@@ -383,7 +386,13 @@ fun CommunityChattingScreen(
                         onClick = onLoadPrevious,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text(if (state.isLoadingMore) "불러오는 중..." else "이전 메시지 보기")
+                        Text(
+                            if (state.isLoadingMore) {
+                                AppStrings.CHAT_LOADING_MORE
+                            } else {
+                                AppStrings.CHAT_LOAD_MORE
+                            },
+                        )
                     }
                 }
             }
@@ -449,7 +458,38 @@ fun CommunityChattingScreen(
                     onRetry = { onRetryPending(pending.clientMessageId) },
                     onDismiss = { pendingDeleteConfirmationId = pending.clientMessageId },
                 )
+                }
             }
+            }
+
+            if (newMessageCount > 0 && !state.isLoading && state.errorMessage == null) {
+                UnreadSummaryCard(
+                    unreadCount = newMessageCount,
+                    onClick = onUnreadSummary,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(
+                            start = 18.dp,
+                            top = padding.calculateTopPadding() + 20.dp,
+                            end = 18.dp,
+                        ),
+                )
+                NewMessageButton(
+                    count = newMessageCount,
+                    onClick = {
+                        newMessageCount = 0
+                        followsLatestMessage = true
+                        scope.launch {
+                            val lastItemIndex = displayedMessages.size +
+                                state.pendingMessages.size +
+                                if (state.hasMore) 1 else 0
+                            listState.animateScrollToItem(lastItemIndex)
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = padding.calculateBottomPadding() + 12.dp),
+                )
             }
         }
     }
@@ -466,9 +506,9 @@ fun CommunityChattingScreen(
 
     pendingDeleteConfirmationId?.let { clientMessageId ->
         UBasicDialog(
-            title = "메시지를 삭제하시겠습니까?",
-            negativeText = "취소",
-            positiveText = "삭제하기",
+            title = AppStrings.CHAT_DELETE_MESSAGE_TITLE,
+            negativeText = AppStrings.CHAT_CANCEL,
+            positiveText = AppStrings.CHAT_DELETE_ACTION,
             type = DialogType.ERROR,
             showCloseButton = false,
             negativeBackgroundColor = grey100(),
@@ -487,10 +527,10 @@ fun CommunityChattingScreen(
 
     if (showLeaveDialog) {
         UBasicDialog(
-            title = "스레드에서 나가시겠습니까?",
-            content = "대화 목록에서 사라지고 알림도 꺼져요.",
-            negativeText = "취소",
-            positiveText = "나가기",
+            title = AppStrings.CHAT_LEAVE_THREAD_TITLE,
+            content = AppStrings.CHAT_LEAVE_THREAD_DESCRIPTION,
+            negativeText = AppStrings.CHAT_CANCEL,
+            positiveText = AppStrings.CHAT_LEAVE,
             type = DialogType.WARNING,
             showCloseButton = false,
             negativeBackgroundColor = grey100(),
@@ -519,11 +559,11 @@ fun CommunityChattingScreen(
 
     pendingReportConfirmation?.let { (messageId, reason) ->
         UDialog(
-            title = "신고하시겠습니까?",
-            subtitle = "신고하신 내용은 관리자가 검토 후\n운영 정책에 따라 처리됩니다.",
+            title = AppStrings.CHAT_REPORT_CONFIRM_TITLE,
+            subtitle = AppStrings.CHAT_REPORT_CONFIRM_DESCRIPTION,
             isTwoButton = true,
-            negativeText = "취소",
-            positiveText = "신고하기",
+            negativeText = AppStrings.CHAT_CANCEL,
+            positiveText = AppStrings.CHAT_REPORT_ACTION,
             negativeBackgroundColor = grey100(),
             negativeBorderColor = grey100(),
             positiveBackgroundColor = red100(),
@@ -554,7 +594,7 @@ private fun EmptyChatMessages(modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(14.dp))
         Text(
-            text = "아직 메시지가 없어요",
+            text = AppStrings.CHAT_NO_MESSAGES_TITLE,
             color = grey800(),
             fontSize = 14.sp,
             lineHeight = 20.sp,
@@ -562,7 +602,7 @@ private fun EmptyChatMessages(modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(3.dp))
         Text(
-            text = "첫 메시지를 남겨 대화를 시작해보세요.",
+            text = AppStrings.CHAT_NO_MESSAGES_DESCRIPTION,
             color = grey400(),
             fontSize = 12.sp,
             lineHeight = 17.sp,
@@ -617,12 +657,12 @@ private fun ThreadUnavailableScreen(onBack: () -> Unit) {
                     IconButton(onClick = onBack) {
                         Icon(
                             painter = painterResource(R.drawable.ic_back),
-                            contentDescription = "뒤로가기",
+                            contentDescription = AppStrings.CHAT_CD_BACK,
                             tint = grey950(),
                         )
                     }
                     Text(
-                        text = "참여 종료",
+                        text = AppStrings.CHAT_UNAVAILABLE_TOP_BAR,
                         modifier = Modifier.padding(start = 4.dp),
                         color = grey950(),
                         fontSize = 20.sp,
@@ -648,7 +688,7 @@ private fun ThreadUnavailableScreen(onBack: () -> Unit) {
             )
             Spacer(Modifier.height(14.dp))
             Text(
-                text = "더 이상 참여할 수 없는 스레드예요",
+                text = AppStrings.CHAT_UNAVAILABLE_TITLE,
                 color = grey800(),
                 fontSize = 15.sp,
                 lineHeight = 21.sp,
@@ -656,7 +696,7 @@ private fun ThreadUnavailableScreen(onBack: () -> Unit) {
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "운영진에 의해 참여가 종료되었어요.",
+                text = AppStrings.CHAT_UNAVAILABLE_DESCRIPTION,
                 color = grey400(),
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
@@ -674,7 +714,7 @@ private fun ThreadUnavailableScreen(onBack: () -> Unit) {
                 ),
             ) {
                 Text(
-                    text = "커뮤니티로 돌아가기",
+                    text = AppStrings.CHAT_BACK_TO_COMMUNITY,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -791,7 +831,7 @@ private fun ChatLoadError(
         )
         Spacer(Modifier.height(24.dp))
         Text(
-            text = "메시지를 불러오지 못했어요",
+            text = AppStrings.CHAT_LOAD_ERROR_TITLE,
             color = grey800(),
             fontSize = 22.sp,
             lineHeight = 28.sp,
@@ -799,7 +839,7 @@ private fun ChatLoadError(
         )
         Spacer(Modifier.height(10.dp))
         Text(
-            text = "네트워크 연결을 확인하고 다시 시도해주세요.",
+            text = AppStrings.CHAT_LOAD_ERROR_DESCRIPTION,
             color = grey400(),
             fontSize = 16.sp,
             lineHeight = 22.sp,
@@ -817,7 +857,7 @@ private fun ChatLoadError(
             ),
         ) {
             Text(
-                text = "다시 시도하기",
+                text = AppStrings.CHAT_RETRY,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -854,7 +894,11 @@ private fun ChatTopBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack) {
-                Icon(painterResource(R.drawable.ic_back), contentDescription = "뒤로가기", tint = grey950())
+                Icon(
+                    painterResource(R.drawable.ic_back),
+                    contentDescription = AppStrings.CHAT_CD_BACK,
+                    tint = grey950(),
+                )
             }
             Text(
                 text = title,
@@ -870,7 +914,11 @@ private fun ChatTopBar(
             )
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
-                    Icon(painterResource(R.drawable.ic_menu_kebab), contentDescription = "더보기", tint = grey950())
+                    Icon(
+                        painterResource(R.drawable.ic_menu_kebab),
+                        contentDescription = AppStrings.CHAT_CD_MORE,
+                        tint = grey950(),
+                    )
                 }
                 DropdownMenu(
                     expanded = menuExpanded,
@@ -881,48 +929,53 @@ private fun ChatTopBar(
                     containerColor = white(),
                     shadowElevation = 8.dp,
                 ) {
-                    ThreadMenuSectionTitle("요약 및 설정")
-                    ThreadMenuItem("대화 요약") {
+                    ThreadMenuSectionTitle(AppStrings.CHAT_MENU_SUMMARY_SETTINGS)
+                    ThreadMenuItem(AppStrings.CHAT_MENU_SUMMARY) {
                         menuExpanded = false
                         onSummary()
                     }
-                    ThreadMenuItem(if (isMuted) "알림 켜기" else "알림 끄기") {
+                    ThreadMenuItem(
+                        if (isMuted) AppStrings.CHAT_MENU_NOTIFICATION_ON
+                        else AppStrings.CHAT_MENU_NOTIFICATION_OFF,
+                    ) {
                         menuExpanded = false
                         onToggleMuted()
                     }
-                    ThreadMenuItem(if (isPinned) "고정 해제" else "고정") {
+                    ThreadMenuItem(
+                        if (isPinned) AppStrings.CHAT_MENU_UNPIN else AppStrings.CHAT_MENU_PIN,
+                    ) {
                         menuExpanded = false
                         onTogglePinned()
                     }
                     ThreadMenuDivider()
-                    ThreadMenuSectionTitle("참여자")
-                    ThreadMenuItem("참여자 보기") {
+                    ThreadMenuSectionTitle(AppStrings.CHAT_MENU_PARTICIPANTS)
+                    ThreadMenuItem(AppStrings.CHAT_MENU_VIEW_PARTICIPANTS) {
                         menuExpanded = false
                         onParticipants()
                     }
                     if (isOwner) {
-                        ThreadMenuItem("참여자 초대") {
+                        ThreadMenuItem(AppStrings.CHAT_MENU_INVITE_PARTICIPANTS) {
                             menuExpanded = false
                             onInviteParticipants()
                         }
                     }
-                    ThreadMenuItem("링크 공유") {
+                    ThreadMenuItem(AppStrings.CHAT_MENU_SHARE_LINK) {
                         menuExpanded = false
                         onShareLink()
                     }
                     ThreadMenuDivider()
                     if (isOwner) {
-                        ThreadMenuSectionTitle("스레드")
-                        ThreadMenuItem("스레드 편집") {
+                        ThreadMenuSectionTitle(AppStrings.CHAT_MENU_THREAD)
+                        ThreadMenuItem(AppStrings.CHAT_MENU_EDIT_THREAD) {
                             menuExpanded = false
                             onEditThread()
                         }
-                        ThreadMenuItem("스레드 삭제", color = red400()) {
+                        ThreadMenuItem(AppStrings.CHAT_MENU_DELETE_THREAD, color = red400()) {
                             menuExpanded = false
                             onDeleteThread()
                         }
                     }
-                    ThreadMenuItem("나가기", color = red400()) {
+                    ThreadMenuItem(AppStrings.CHAT_LEAVE, color = red400()) {
                         menuExpanded = false
                         onLeave()
                     }
@@ -974,9 +1027,10 @@ private fun ThreadMenuDivider() {
 private fun UnreadSummaryCard(
     unreadCount: Int,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(indigo100())
@@ -993,13 +1047,13 @@ private fun UnreadSummaryCard(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                "읽지 않은 메시지 ${unreadCount}개",
+                AppStrings.CHAT_UNREAD_COUNT_FORMAT.format(unreadCount),
                 color = grey950(),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                "Galaxy AI로 핵심만 요약해 드려요",
+                AppStrings.CHAT_UNREAD_SUMMARY_DESCRIPTION,
                 color = grey800(),
                 fontSize = 12.sp,
             )
@@ -1032,9 +1086,10 @@ internal fun buildCommunityThreadDeepLink(shareUrl: String): String {
 private fun NewMessageButton(
     count: Int,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = Modifier.clickable(onClick = onClick),
+        modifier = modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(22.dp),
         color = indigo500(),
         contentColor = white(),
@@ -1051,7 +1106,7 @@ private fun NewMessageButton(
                 modifier = Modifier.size(18.dp),
             )
             Text(
-                text = "새 메시지 ${count}개",
+                text = AppStrings.CHAT_NEW_MESSAGE_COUNT_FORMAT.format(count),
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -1182,7 +1237,7 @@ private fun OtherMessage(
                 horizontalArrangement = Arrangement.spacedBy(7.dp),
             ) {
                 Text(
-                    message.senderName.orEmpty().ifBlank { "알 수 없음" },
+                    message.senderName.orEmpty().ifBlank { AppStrings.CHAT_UNKNOWN_USER },
                     color = grey950(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -1269,7 +1324,7 @@ private fun MessageBubbleContent(
         if (models.size == 1) {
             AsyncImage(
                 model = models.first(),
-                contentDescription = "채팅 이미지",
+                contentDescription = AppStrings.CHAT_CD_IMAGE,
                 modifier = modifier
                     .size(width = 220.dp, height = 180.dp)
                     .clip(RoundedCornerShape(16.dp)),
@@ -1290,7 +1345,7 @@ private fun MessageBubbleContent(
                         modifier = Modifier.size(32.dp),
                     )
                     Text(
-                        text = "이미지",
+                        text = AppStrings.CHAT_IMAGE,
                         modifier = Modifier.padding(top = 6.dp),
                         color = secondary,
                         fontSize = 13.sp,
@@ -1314,7 +1369,9 @@ private fun MessageBubbleContent(
 
     Column(modifier = modifier) {
         Text(
-            text = "${reply.senderName.ifBlank { "알 수 없음" }}님에게 답장",
+            text = AppStrings.CHAT_REPLY_TO_FORMAT.format(
+                reply.senderName.ifBlank { AppStrings.CHAT_UNKNOWN_USER },
+            ),
             color = foreground,
             fontSize = 14.sp,
             lineHeight = 20.sp,
@@ -1323,7 +1380,7 @@ private fun MessageBubbleContent(
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            text = reply.snippet.ifBlank { "메시지 내용" },
+            text = reply.snippet.ifBlank { AppStrings.CHAT_MESSAGE_CONTENT },
             modifier = Modifier.padding(top = 3.dp),
             color = secondary,
             fontSize = 13.sp,
@@ -1399,7 +1456,7 @@ private fun ChatImageGrid(
 private fun ChatGridImage(model: String, modifier: Modifier) {
     AsyncImage(
         model = model,
-        contentDescription = "채팅 이미지",
+        contentDescription = AppStrings.CHAT_CD_IMAGE,
         modifier = modifier,
         contentScale = ContentScale.Crop,
     )
@@ -1433,11 +1490,11 @@ private fun MessageActionPopup(
                 shadowElevation = 7.dp,
             ) {
                 Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                    MessageActionItem("답장", R.drawable.ic_forward_circle, onClick = onReply)
-                    MessageActionItem("복사", R.drawable.ic_document, onClick = onCopy)
-                    MessageActionItem("신고", R.drawable.ic_warning, onClick = onReport)
+                    MessageActionItem(AppStrings.CHAT_ACTION_REPLY, R.drawable.ic_forward_circle, onClick = onReply)
+                    MessageActionItem(AppStrings.CHAT_ACTION_COPY, R.drawable.ic_document, onClick = onCopy)
+                    MessageActionItem(AppStrings.CHAT_ACTION_REPORT, R.drawable.ic_warning, onClick = onReport)
                     MessageActionItem(
-                        text = "삭제",
+                        text = AppStrings.CHAT_DELETE,
                         iconRes = R.drawable.ic_delete,
                         color = red400(),
                         onClick = onDelete,
@@ -1469,7 +1526,11 @@ private fun MessageActionPopup(
                         onClick = onShowMoreEmojis,
                         modifier = Modifier.size(30.dp),
                     ) {
-                        Icon(painterResource(R.drawable.ic_add), contentDescription = "다른 이모지", modifier = Modifier.size(17.dp))
+                        Icon(
+                            painterResource(R.drawable.ic_add),
+                            contentDescription = AppStrings.CHAT_CD_OTHER_EMOJI,
+                            modifier = Modifier.size(17.dp),
+                        )
                     }
                 }
             }
@@ -1487,11 +1548,11 @@ private val AdditionalReactionEmojis = listOf(
 )
 
 private val MessageReportReasons = listOf(
-    CommunityMessageReportReason.SPAM to "스팸 · 광고",
-    CommunityMessageReportReason.ABUSE to "욕설 · 비방 · 혐오 표현",
-    CommunityMessageReportReason.INAPPROPRIATE to "부적절하거나 불쾌한 내용",
-    CommunityMessageReportReason.PRIVACY to "개인정보 노출",
-    CommunityMessageReportReason.ETC to "기타",
+    CommunityMessageReportReason.SPAM to AppStrings.CHAT_REPORT_REASON_SPAM,
+    CommunityMessageReportReason.ABUSE to AppStrings.CHAT_REPORT_REASON_ABUSE,
+    CommunityMessageReportReason.INAPPROPRIATE to AppStrings.CHAT_REPORT_REASON_INAPPROPRIATE,
+    CommunityMessageReportReason.PRIVACY to AppStrings.CHAT_REPORT_REASON_PRIVACY,
+    CommunityMessageReportReason.ETC to AppStrings.CHAT_REPORT_REASON_ETC,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1518,7 +1579,7 @@ private fun MessageReportSheet(
                 .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
         ) {
             Text(
-                text = "신고 사유",
+                text = AppStrings.CHAT_REPORT_REASON_TITLE,
                 color = grey950(),
                 fontSize = 20.sp,
                 lineHeight = 26.sp,
@@ -1526,7 +1587,7 @@ private fun MessageReportSheet(
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "신고 내용은 운영진만 확인하며, 익명으로 처리돼요.",
+                text = AppStrings.CHAT_REPORT_GUIDE,
                 color = grey400(),
                 fontSize = 12.sp,
                 lineHeight = 17.sp,
@@ -1575,7 +1636,7 @@ private fun MessageReportSheet(
                         contentColor = grey800(),
                     ),
                 ) {
-                    Text("취소하기", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text(AppStrings.CHAT_REPORT_CANCEL, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
                 Button(
                     onClick = { selectedReason?.let(onReport) },
@@ -1591,7 +1652,7 @@ private fun MessageReportSheet(
                         disabledContentColor = red500().copy(alpha = 0.45f),
                     ),
                 ) {
-                    Text("신고하기", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text(AppStrings.CHAT_REPORT_ACTION, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -1610,7 +1671,7 @@ private fun AdditionalEmojiSheet(
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
     ) {
         Text(
-            text = "이모지 선택",
+            text = AppStrings.CHAT_EMOJI_SELECT,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
             color = grey950(),
             fontSize = 18.sp,
@@ -1683,7 +1744,7 @@ private fun PendingMessageRow(
             verticalAlignment = Alignment.Bottom,
         ) {
             Text(
-                if (failed) "전송 실패" else "전송 중",
+                if (failed) AppStrings.CHAT_SEND_FAILED else AppStrings.CHAT_SENDING,
                 modifier = Modifier.padding(end = 8.dp, bottom = 2.dp),
                 color = if (failed) red400() else grey400(),
                 fontSize = if (failed) 13.sp else 11.sp,
@@ -1704,7 +1765,7 @@ private fun PendingMessageRow(
                 if (message.type == CommunityMessageType.IMAGE && message.localUris.size == 1) {
                     AsyncImage(
                         model = message.localUris.first(),
-                        contentDescription = "전송할 이미지",
+                        contentDescription = AppStrings.CHAT_CD_SEND_IMAGE,
                         modifier = Modifier
                             .size(width = 220.dp, height = 180.dp)
                             .clip(RoundedCornerShape(16.dp)),
@@ -1736,7 +1797,7 @@ private fun PendingMessageRow(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_refresh),
-                        contentDescription = "메시지 재전송",
+                        contentDescription = AppStrings.CHAT_CD_RETRY_MESSAGE,
                         tint = grey950(),
                         modifier = Modifier.size(26.dp),
                     )
@@ -1747,7 +1808,7 @@ private fun PendingMessageRow(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_close_big),
-                        contentDescription = "실패 메시지 삭제",
+                        contentDescription = AppStrings.CHAT_CD_DELETE_FAILED_MESSAGE,
                         tint = red400(),
                         modifier = Modifier.size(28.dp),
                     )
@@ -1776,7 +1837,7 @@ internal fun ProfileImage(imageUrl: String?) {
         if (!imageUrl.isNullOrBlank()) {
             AsyncImage(
                 model = imageUrl,
-                contentDescription = "사용자 프로필 이미지",
+                contentDescription = AppStrings.CHAT_CD_PROFILE_IMAGE,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
@@ -1837,14 +1898,18 @@ internal fun formatCommunityDate(
     createdAt: String,
     today: LocalDate = LocalDate.now(KoreaZoneId),
 ): String {
-    val date = communityCreatedAtDate(createdAt) ?: return "날짜 정보 없음"
+    val date = communityCreatedAtDate(createdAt) ?: return AppStrings.CHAT_DATE_UNKNOWN
     return when (date) {
-        today -> "오늘"
-        today.minusDays(1) -> "어제"
+        today -> AppStrings.CHAT_DATE_TODAY
+        today.minusDays(1) -> AppStrings.CHAT_DATE_YESTERDAY
         else -> if (date.year == today.year) {
-            "${date.monthValue}월 ${date.dayOfMonth}일"
+            AppStrings.CHAT_DATE_MONTH_DAY_FORMAT.format(date.monthValue, date.dayOfMonth)
         } else {
-            "${date.year}년 ${date.monthValue}월 ${date.dayOfMonth}일"
+            AppStrings.CHAT_DATE_YEAR_MONTH_DAY_FORMAT.format(
+                date.year,
+                date.monthValue,
+                date.dayOfMonth,
+            )
         }
     }
 }
@@ -1895,13 +1960,17 @@ private fun ChatInputBar(
                             verticalArrangement = Arrangement.spacedBy(5.dp),
                         ) {
                             Text(
-                                text = "${replyingMessage.senderName.orEmpty().ifBlank { "나" }}님에게 답장",
+                                text = AppStrings.CHAT_REPLY_TO_FORMAT.format(
+                                    replyingMessage.senderName.orEmpty().ifBlank { AppStrings.CHAT_ME },
+                                ),
                                 color = grey950(),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
-                                text = replyingMessage.content.orEmpty().ifBlank { "메시지 내용" },
+                                text = replyingMessage.content.orEmpty().ifBlank {
+                                    AppStrings.CHAT_MESSAGE_CONTENT
+                                },
                                     color = grey400(),
                                 fontSize = 14.sp,
                                 maxLines = 1,
@@ -1914,7 +1983,7 @@ private fun ChatInputBar(
                             ) {
                                 if (value.isEmpty()) {
                                     Text(
-                                        "답장 메시지를 입력해주세요",
+                                        AppStrings.CHAT_REPLY_PLACEHOLDER,
                                         color = grey400(),
                                         fontSize = 17.sp,
                                     )
@@ -1941,7 +2010,7 @@ private fun ChatInputBar(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_send),
-                                contentDescription = "답장 전송",
+                                contentDescription = AppStrings.CHAT_CD_REPLY_SEND,
                                 modifier = Modifier.size(34.dp),
                             tint = if (enabled && value.isNotBlank()) indigo500() else grey400(),
                             )
@@ -1959,14 +2028,18 @@ private fun ChatInputBar(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(onClick = onCamera) {
-                        Icon(painterResource(R.drawable.ic_photo), contentDescription = "사진 첨부", tint = black())
+                        Icon(
+                            painterResource(R.drawable.ic_photo),
+                            contentDescription = AppStrings.CHAT_CD_ATTACH_PHOTO,
+                            tint = black(),
+                        )
                     }
                     Box(
                         modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.CenterStart,
                     ) {
                         if (value.isEmpty()) {
-                            Text("메시지를 입력해주세요", color = grey400(), fontSize = 14.sp)
+                            Text(AppStrings.CHAT_MESSAGE_PLACEHOLDER, color = grey400(), fontSize = 14.sp)
                         }
                         BasicTextField(
                             value = value,
@@ -1987,7 +2060,7 @@ private fun ChatInputBar(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_send),
-                            contentDescription = "전송",
+                            contentDescription = AppStrings.CHAT_CD_SEND,
                             tint = if (enabled && value.isNotBlank()) indigo500() else grey300(),
                         )
                     }
