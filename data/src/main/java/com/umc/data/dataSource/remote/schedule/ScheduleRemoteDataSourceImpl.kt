@@ -6,6 +6,7 @@ import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
 import com.umc.data.response.schedule.MyScheduleItemResponse
+import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
 import com.umc.data.response.schedule.ScheduleDetailResponse
 import com.umc.data.response.schedule.ScheduleListResponse
 import com.umc.data.response.schedule.ScheduleMonthResponse
@@ -52,6 +53,12 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
     ): ApiState<List<MyScheduleItemResponse>> {
         return apiCall { scheduleApi.getMySchedules(from, to, isAttendanceRequired) }
     }
+
+    //일정 권한 조회하기
+    override suspend fun getScheduleCapabilities(): ApiState<ScheduleCapabilitiesResponse> {
+        return apiCall { scheduleApi.getScheduleCapabilities() }
+    }
+
 
     //일정 삭제하기
     override suspend fun deleteScheduleWithAttendance(scheduleId: Long): ApiState<Unit> {

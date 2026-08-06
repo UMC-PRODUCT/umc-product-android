@@ -8,6 +8,7 @@ import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
+import com.umc.domain.model.home.schedule.ScheduleCapabilities
 
 interface ScheduleRepository {
 
@@ -26,7 +27,10 @@ interface ScheduleRepository {
 
     //내 일정 가져오기(월별)
     suspend fun getMySchedule(from:String, to:String, isAttendanceRequired: Boolean = false): ApiState<List<ScheduleMonthModel>>
-  
+
+    //일정 권한 가져오기
+    suspend fun getScheduleCapabilities(): ApiState<ScheduleCapabilities>
+
     suspend fun getScheduleDetail(scheduleId: Long): ApiState<UserCheckAvailable>
 
     //운영진 일정 리스트 가져오기
