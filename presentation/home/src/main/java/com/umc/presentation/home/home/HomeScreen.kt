@@ -143,7 +143,7 @@ fun HomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(grey000())
+                    .background(grey100())
                     .padding(horizontal = 16.dp)
                     .padding(top = 16.dp)
                     .padding(bottom = 32.dp)
@@ -518,13 +518,14 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                 Surface(
                     modifier = Modifier.weight(2f),
                     shape = RoundedCornerShape(8.dp),
-                    color = grey50(),
+
                 ) {
                     Row(
                         modifier = Modifier
                             .height(IntrinsicSize.Min)
                             .padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         //상점
                         ScoreCard(
@@ -535,7 +536,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                             color = green500(),
                         )
 
-                    VerticalDivider()
+
 
                         //벌점
                         ScoreCard(
@@ -565,7 +566,7 @@ private fun ScoreCard(
         modifier = modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = grey100()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
