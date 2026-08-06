@@ -1,0 +1,23 @@
+package com.umc.domain.repository.ai
+
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.enums.AiFeatureStatus
+
+/**
+ * 온디바이스 AI 텍스트 생성 저장소.
+ * 다른 파트에서도 AI 텍스트 생성이 필요하면 이 인터페이스 위에 UseCase만 추가해서 확장한다.
+ *
+ * 추론 호출은 필요 시 모델 다운로드까지 내부에서 처리하며, 다운로드가 진행되는 동안
+ * [onDownloadProgress]로 진행률(0~100)을 알린다. 모델이 이미 준비된 경우에는 호출되지 않는다
+ */
+interface AiTextRepository {
+
+    /** 기능 가용 상태 확인 (메뉴 노출 게이트용) */
+    suspend fun checkStatus(): AiFeatureStatus
+
+    /** 자유 프롬프트로 텍스트 생성 */
+    suspend fun generate(
+        prompt: String,
+        onDownloadProgress: (percent: Int) -> Unit = {},
+    ): ApiState<String>
+}

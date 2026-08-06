@@ -37,6 +37,7 @@ kotlinxCoroutines = "1.7.3"
 datastore = "1.0.0"
 gson = "2.10.1"
 coil = "2.6.0"
+mlkitGenaiPrompt = "1.0.0-beta2"
 credentials = "1.2.1"
 googleId = "1.1.0"
 googlePlayServicesAuth = "21.2.0"
@@ -111,6 +112,10 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 #dataStore & Gson
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 google-code-gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
+#ML Kit GenAI (Gemini Nano 온디바이스)
+mlkit-genai-prompt = { group = "com.google.mlkit", name = "genai-prompt", version.ref = "mlkitGenaiPrompt" }
+kotlinx-coroutines-guava = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-guava", version.ref = "coroutines" }
 
 #coli
 coil = { group = "io.coil-kt", name = "coil", version.ref = "coil" }

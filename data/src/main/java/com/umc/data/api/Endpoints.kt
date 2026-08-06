@@ -197,6 +197,7 @@ object Endpoints {
         const val NOTICE_READ_STATICS = "$NOTICE_DETAIL/read-statics"
         const val NOTICE_LINKS = "$NOTICE_DETAIL/links"
         const val NOTICE_IMAGES = "$NOTICE_DETAIL/images"
+        const val VOTE_RESPONSES = "$NOTICE_DETAIL/votes/responses"
     }
 
     object Survey {

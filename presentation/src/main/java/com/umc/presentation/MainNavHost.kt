@@ -29,6 +29,11 @@ import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.login.emaillogin.EmailLoginRoute
 import com.umc.presentation.signup.SignUpRoute
 import com.umc.presentation.login.findpassword.FindPasswordRoute
+import com.umc.presentation.notice.NoticeRoute
+import com.umc.presentation.notice.adminnotice.AdminNoticeRoute
+import com.umc.presentation.notice.search.NoticeSearchRoute
+import com.umc.presentation.notice.detail.NoticeDetailRoute
+import com.umc.presentation.notice.write.NoticeWriteRoute
 import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
@@ -203,6 +208,73 @@ fun MainNavHost(
             )
         }
 
+        /**공지 탭에 대한 내용입니다.**/
+        //공지 목록
+        composable<MainDestination.Notice> {
+            NoticeRoute(
+                navigateToSearch = { gisuId ->
+                    navHostController.navigate(MainDestination.NoticeSearch(gisuId))
+                },
+                navigateToAdminNotice = { gisuId ->
+                    navHostController.navigate(MainDestination.AdminNotice(gisuId))
+                },
+                navigateToWrite = {
+                    navHostController.navigate(MainDestination.NoticeWrite())
+                },
+                navigateToDetail = { noticeId ->
+                    navHostController.navigate(MainDestination.NoticeDetail(noticeId))
+                },
+            )
+        }
+
+        //공지 작성 (권한별 카테고리/게시판 분류). noticeId가 있으면 수정 모드
+        composable<MainDestination.NoticeWrite> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.NoticeWrite>()
+            NoticeWriteRoute(
+                editNoticeId = destination.noticeId,
+                navigateToBack = { navHostController.popBackStack() },
+            )
+        }
+
+        //공지 상세
+        composable<MainDestination.NoticeDetail> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.NoticeDetail>()
+            NoticeDetailRoute(
+                noticeId = destination.noticeId,
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToEdit = { noticeId ->
+                    navHostController.navigate(MainDestination.NoticeWrite(noticeId))
+                },
+            )
+        }
+
+        //운영진 공지 (권한별 탭 노출)
+        composable<MainDestination.AdminNotice> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.AdminNotice>()
+            AdminNoticeRoute(
+                gisuId = destination.gisuId,
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToSearch = { gisuId ->
+                    navHostController.navigate(MainDestination.NoticeSearch(gisuId))
+                },
+                navigateToDetail = { noticeId ->
+                    navHostController.navigate(MainDestination.NoticeDetail(noticeId))
+                },
+            )
+        }
+
+        //공지 검색
+        composable<MainDestination.NoticeSearch> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.NoticeSearch>()
+            NoticeSearchRoute(
+                gisuId = destination.gisuId,
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToDetail = { noticeId ->
+                    navHostController.navigate(MainDestination.NoticeDetail(noticeId))
+                },
+            )
+        }
+
         /**홈 화면 탭에 대한 내용입니다.**/
 
         composable<MainDestination.Act> {
@@ -230,8 +302,8 @@ fun MainNavHost(
         composable<MainDestination.Home> {
             HomeRoute(
                 onNavigateToNotice = {
-                    //navHostController.navigate(MainDestination.Notice)
-                     },
+                    navHostController.navigate(MainDestination.Notice)
+                },
                 onNavigateToScheduleAdd = {
                     navHostController.navigate(MainDestination.ScheduleAdd)
                 },

@@ -40,6 +40,27 @@ sealed interface MainDestination {
     @Serializable
     data object SignUpFailCode : MainDestination
 
+    /**공지 섹션**/
+    //공지 목록
+    @Serializable
+    data object Notice : MainDestination
+
+    //공지 검색
+    @Serializable
+    data class NoticeSearch(val gisuId: Long) : MainDestination
+
+    //운영진 공지
+    @Serializable
+    data class AdminNotice(val gisuId: Long) : MainDestination
+
+    //공지 작성. noticeId가 있으면 수정 모드
+    @Serializable
+    data class NoticeWrite(val noticeId: Long = 0L) : MainDestination
+
+    //공지 상세
+    @Serializable
+    data class NoticeDetail(val noticeId: Long) : MainDestination
+
     /**홈 화면 섹션**/
     //홈 화면
     @Serializable
