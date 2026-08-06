@@ -1,13 +1,17 @@
-package com.example.presentation.community.chatting
+package com.umc.presentation.community.chatting
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
-import com.umc.component.base.UiEvent
-import com.umc.component.base.UiState
 import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.community.chatting.*
-import com.umc.domain.model.community.thread.*
+import com.umc.domain.model.community.chatting.CommunityChatConnectionState
+import com.umc.domain.model.community.chatting.CommunityChatEvent
+import com.umc.domain.model.community.chatting.CreateCommunityMessageCommand
+import com.umc.domain.model.community.thread.CommunityMessageReportReason
+import com.umc.domain.model.community.thread.CommunityMessageType
+import com.umc.domain.model.community.thread.CommunityThreadMember
+import com.umc.domain.model.community.thread.CommunityThreadMessage
+import com.umc.domain.model.community.thread.CommunityThreadRole
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.repository.community.CommunityChatRepository
 import com.umc.domain.repository.community.CommunityThreadRepository
@@ -36,9 +40,12 @@ class CommunityChattingViewModel @Inject constructor(
     private val appDataStoreRepository: AppDataStoreRepository,
     private val memberRepository: MemberRepository,
     private val uploadFileUseCase: UploadFileUseCase,
-) : BaseViewModel<CommunityChattingUiState, CommunityChattingEvent>(
-    CommunityChattingUiState(threadId = checkNotNull(savedStateHandle["threadId"]))
+) : BaseViewModel<CommunityChattingState, CommunityChattingEvent>(
+    CommunityChattingState(threadId = checkNotNull(savedStateHandle["threadId"]))
 ) {
+    val state = uiState
+    val event = uiEvent
+
     private val processedEventIds = LinkedHashSet<String>()
     private var lastReadMessageIdSent: String? = null
     private var reconnectJob: Job? = null
@@ -48,6 +55,45 @@ class CommunityChattingViewModel @Inject constructor(
         observeRealtime()
         observeCurrentMember()
         bootstrap()
+    }
+
+    fun onAction(action: CommunityChattingAction) {
+        when (action) {
+            CommunityChattingAction.OnBackClick -> emitEvent(CommunityChattingEvent.NavigateBack)
+            CommunityChattingAction.OnMoreClick -> emitEvent(CommunityChattingEvent.OpenMore)
+            CommunityChattingAction.OnUnreadSummaryClick -> emitEvent(CommunityChattingEvent.OpenUnreadSummary)
+            CommunityChattingAction.OnCameraClick -> emitEvent(CommunityChattingEvent.OpenCamera)
+            is CommunityChattingAction.OnSendImages -> sendImages(action.uris)
+            is CommunityChattingAction.OnDraftChanged -> updateDraft(action.value)
+            is CommunityChattingAction.OnSendClick -> sendText(
+                content = state.value.draft,
+                replyToId = action.replyToId,
+            )
+            CommunityChattingAction.OnLoadPrevious -> loadPreviousMessages()
+            is CommunityChattingAction.OnDeleteMessage -> deleteMessage(action.messageId)
+            is CommunityChattingAction.OnReact -> toggleReaction(action.message, action.emoji)
+            is CommunityChattingAction.OnReportMessage -> reportMessage(
+                messageId = action.messageId,
+                reason = action.reason,
+            )
+            CommunityChattingAction.OnToggleMuted -> toggleMuted()
+            CommunityChattingAction.OnTogglePinned -> togglePinned()
+            CommunityChattingAction.OnLeave -> leaveThread()
+            CommunityChattingAction.OnDismissOwnershipTransferRequired ->
+                updateState { copy(showOwnershipTransferRequiredDialog = false) }
+            is CommunityChattingAction.OnRetryPending -> retryPendingMessage(action.clientMessageId)
+            is CommunityChattingAction.OnDismissPending -> dismissPendingMessage(action.clientMessageId)
+            CommunityChattingAction.OnRetryLoad -> bootstrap()
+            CommunityChattingAction.OnInviteParticipants -> emitEvent(
+                CommunityChattingEvent.OpenInviteParticipants
+            )
+            CommunityChattingAction.OnEditThread -> emitEvent(CommunityChattingEvent.OpenEditThread)
+            CommunityChattingAction.OnDeleteThread -> openDeleteThreadDialog()
+            CommunityChattingAction.OnDismissDeleteThread -> dismissDeleteThreadDialog()
+            CommunityChattingAction.OnConfirmDeleteThread -> deleteThread()
+            is CommunityChattingAction.OnKickMember -> kickMember(action.memberId)
+            is CommunityChattingAction.OnTransferOwnership -> transferOwnership(action.memberId)
+        }
     }
 
     fun bootstrap() = viewModelScope.launch {
@@ -163,8 +209,12 @@ class CommunityChattingViewModel @Inject constructor(
     fun deleteMessage(messageId: String) =
         runCommand { chatRepository.deleteMessage(uiState.value.threadId, messageId) }
 
-    fun sendImage(uriString: String) = viewModelScope.launch {
-        if (uriString.isBlank()) return@launch
+    fun sendImages(uriStrings: List<String>) = viewModelScope.launch {
+        val uploadUris = uriStrings
+            .filter(String::isNotBlank)
+            .distinct()
+            .take(MAX_IMAGE_COUNT)
+        if (uploadUris.isEmpty()) return@launch
         val clientMessageId = UUID.randomUUID().toString()
         updateState {
             copy(
@@ -174,41 +224,47 @@ class CommunityChattingViewModel @Inject constructor(
                         commandId = "",
                         content = "",
                         type = CommunityMessageType.IMAGE,
-                        localUri = uriString,
+                        localUris = uploadUris,
                     )
                 )
             )
         }
 
-        when (val upload = uploadFileUseCase(uriString, UploadFileCategory.ETC)) {
-            is ApiState.Success -> {
-                val fileIds = listOf(upload.data.fileId)
-                val command = CreateCommunityMessageCommand(
-                    clientMessageId = clientMessageId,
-                    type = CommunityMessageType.IMAGE.name,
-                    content = null,
-                    fileMetadataIds = fileIds,
-                )
-                runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
-                    .onSuccess { commandId ->
-                        updateState {
-                            val pending = pendingMessages[clientMessageId]
-                                ?: return@updateState this
-                            copy(
-                                pendingMessages = pendingMessages + (
-                                    clientMessageId to pending.copy(
-                                        commandId = commandId,
-                                        fileMetadataIds = fileIds,
-                                        error = null,
-                                    )
-                                )
-                            )
-                        }
-                    }
-                    .onFailure { throwable -> markImagePendingFailed(clientMessageId, throwable.message) }
-            }
-            is ApiState.Fail -> markImagePendingFailed(clientMessageId, upload.failState.message)
+        val uploads = coroutineScope {
+            uploadUris.map { uri ->
+                async { uploadFileUseCase(uri, UploadFileCategory.ETC) }
+            }.awaitAll()
         }
+        val uploadFailure = uploads.filterIsInstance<ApiState.Fail>().firstOrNull()
+        if (uploadFailure != null) {
+            markImagePendingFailed(clientMessageId, uploadFailure.failState.message)
+            return@launch
+        }
+
+        val fileIds = uploads.map { (it as ApiState.Success).data.fileId }
+        val command = CreateCommunityMessageCommand(
+            clientMessageId = clientMessageId,
+            type = CommunityMessageType.IMAGE.name,
+            content = null,
+            fileMetadataIds = fileIds,
+        )
+        runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
+            .onSuccess { commandId ->
+                updateState {
+                    val pending = pendingMessages[clientMessageId]
+                        ?: return@updateState this
+                    copy(
+                        pendingMessages = pendingMessages + (
+                            clientMessageId to pending.copy(
+                                commandId = commandId,
+                                fileMetadataIds = fileIds,
+                                error = null,
+                            )
+                        )
+                    )
+                }
+            }
+            .onFailure { throwable -> markImagePendingFailed(clientMessageId, throwable.message) }
     }
 
     private fun markImagePendingFailed(clientMessageId: String, message: String?) = updateState {
@@ -283,7 +339,7 @@ class CommunityChattingViewModel @Inject constructor(
         updateState { copy(pendingMessages = pendingMessages - clientMessageId) }
         if (pending.type == CommunityMessageType.IMAGE) {
             if (pending.fileMetadataIds.isEmpty()) {
-                sendImage(pending.localUri.orEmpty())
+                sendImages(pending.localUris)
             } else {
                 val newClientMessageId = UUID.randomUUID().toString()
                 val command = CreateCommunityMessageCommand(
@@ -340,8 +396,15 @@ class CommunityChattingViewModel @Inject constructor(
 
     fun leaveThread() = viewModelScope.launch {
         when (val result = threadRepository.leaveThread(uiState.value.threadId)) {
-            is ApiState.Success -> emitEvent(CommunityChattingEvent.ThreadUnavailable)
-            is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+            is ApiState.Success -> emitEvent(CommunityChattingEvent.ThreadDeleted)
+            is ApiState.Fail -> {
+                if (result.failState.code == OWNERSHIP_TRANSFER_REQUIRED_CODE) {
+                    emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+                    updateState { copy(showOwnershipTransferRequiredDialog = true) }
+                } else {
+                    emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+                }
+            }
         }
     }
 
@@ -357,6 +420,57 @@ class CommunityChattingViewModel @Inject constructor(
                 )
             }
             is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+        }
+    }
+
+    fun transferOwnership(memberId: String) = viewModelScope.launch {
+        val state = uiState.value
+        if (state.thread?.myRole != CommunityThreadRole.OWNER || memberId == state.myMemberId) return@launch
+
+        when (
+            val result = threadRepository.changeMemberRole(
+                threadId = state.threadId,
+                memberId = memberId,
+                role = CommunityThreadRole.OWNER,
+            )
+        ) {
+            is ApiState.Success -> updateState {
+                copy(
+                    members = members.mapValues { (id, member) ->
+                        when (id) {
+                            memberId -> member.copy(role = CommunityThreadRole.OWNER)
+                            myMemberId -> member.copy(role = CommunityThreadRole.MEMBER)
+                            else -> member
+                        }
+                    },
+                    thread = thread?.copy(myRole = CommunityThreadRole.MEMBER),
+                )
+            }
+            is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+        }
+    }
+
+    private fun openDeleteThreadDialog() {
+        if (uiState.value.thread?.myRole != CommunityThreadRole.OWNER) return
+        updateState { copy(showDeleteDialog = true) }
+    }
+
+    private fun dismissDeleteThreadDialog() {
+        if (uiState.value.isDeleting) return
+        updateState { copy(showDeleteDialog = false) }
+    }
+
+    private fun deleteThread() = viewModelScope.launch {
+        val state = uiState.value
+        if (state.thread?.myRole != CommunityThreadRole.OWNER || state.isDeleting) return@launch
+
+        updateState { copy(showDeleteDialog = false, isDeleting = true) }
+        when (val result = threadRepository.deleteThread(state.threadId)) {
+            is ApiState.Success -> emitEvent(CommunityChattingEvent.ThreadUnavailable)
+            is ApiState.Fail -> {
+                updateState { copy(isDeleting = false) }
+                emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+            }
         }
     }
 
@@ -492,15 +606,20 @@ class CommunityChattingViewModel @Inject constructor(
                 val receivedMessage = if (
                     event.message.type == CommunityMessageType.IMAGE &&
                     event.message.content.isNullOrBlank() &&
-                    pending?.localUri != null
+                    pending?.localUris?.isNotEmpty() == true
                 ) {
-                    event.message.copy(content = pending.localUri)
+                    event.message.copy(content = pending.localUris.first())
                 } else {
                     event.message
                 }
                 val withoutOld = messages.filterNot { it.messageId == receivedMessage.messageId }
                 copy(
                     messages = listOf(receivedMessage) + withoutOld,
+                    localImageUrisByMessageId = if (pending?.localUris?.isNotEmpty() == true) {
+                        localImageUrisByMessageId + (receivedMessage.messageId to pending.localUris)
+                    } else {
+                        localImageUrisByMessageId
+                    },
                     pendingMessages = event.clientMessageId?.let { pendingMessages - it } ?: pendingMessages,
                 )
             }.also { markRead(event.message.messageId) }
@@ -516,10 +635,27 @@ class CommunityChattingViewModel @Inject constructor(
                 )
             }
             is CommunityChatEvent.ThreadStateChanged -> when (event.type) {
-                CommunityChatEvent.ThreadStateChanged.Type.DELETED,
-                CommunityChatEvent.ThreadStateChanged.Type.MEMBER_KICKED,
-                CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT ->
+                CommunityChatEvent.ThreadStateChanged.Type.DELETED ->
                     emitEvent(CommunityChattingEvent.ThreadUnavailable)
+                CommunityChatEvent.ThreadStateChanged.Type.MEMBER_KICKED,
+                CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT -> {
+                    if (event.memberId == uiState.value.myMemberId) {
+                        emitEvent(CommunityChattingEvent.ThreadUnavailable)
+                    } else {
+                        event.memberId?.let { memberId ->
+                            updateState {
+                                copy(
+                                    members = members - memberId,
+                                    thread = event.memberCount?.let { count ->
+                                        thread?.copy(memberCount = count)
+                                    } ?: thread,
+                                )
+                            }
+                        }
+                        refreshDetail()
+                        loadMembers()
+                    }
+                }
                 CommunityChatEvent.ThreadStateChanged.Type.UPDATED -> refreshDetail()
             }
             is CommunityChatEvent.ThreadInvited -> Unit
@@ -531,6 +667,11 @@ class CommunityChattingViewModel @Inject constructor(
             is ApiState.Success -> updateState { copy(thread = result.data) }
             is ApiState.Fail -> Unit
         }
+    }
+
+    fun refreshThread() {
+        refreshDetail()
+        loadMembers()
     }
 
     private suspend fun reconcileLatestMessages() {
@@ -559,25 +700,12 @@ class CommunityChattingViewModel @Inject constructor(
         chatRepository.disconnect()
         super.onCleared()
     }
-}
 
-data class CommunityChattingUiState(
-    val threadId: String,
-    val thread: CommunityThreadDetail? = null,
-    val myMemberId: String = "",
-    val members: Map<String, CommunityThreadMember> = emptyMap(),
-    val messages: List<CommunityThreadMessage> = emptyList(),
-    val pendingMessages: Map<String, PendingCommunityMessage> = emptyMap(),
-    val readWatermarks: Map<String, String> = emptyMap(),
-    val connectionState: CommunityChatConnectionState = CommunityChatConnectionState.DISCONNECTED,
-    val draft: String = "",
-    val hasMore: Boolean = false,
-    val nextBefore: String? = null,
-    val isLoading: Boolean = false,
-    val isLoadingMore: Boolean = false,
-    val errorMessage: String? = null,
-    val isThreadUnavailable: Boolean = false,
-) : UiState
+    private companion object {
+        const val MAX_IMAGE_COUNT = 4
+        const val OWNERSHIP_TRANSFER_REQUIRED_CODE = "COMMUNITY-0041"
+    }
+}
 
 private fun com.umc.domain.model.base.FailState.isThreadUnavailable(): Boolean {
     val normalizedMessage = message.lowercase()
@@ -585,23 +713,4 @@ private fun com.umc.domain.model.base.FailState.isThreadUnavailable(): Boolean {
         normalizedMessage.contains("not found") ||
         normalizedMessage.contains("존재하지") ||
         normalizedMessage.contains("찾을 수 없")
-}
-
-data class PendingCommunityMessage(
-    val clientMessageId: String,
-    val commandId: String,
-    val content: String,
-    val type: CommunityMessageType = CommunityMessageType.TEXT,
-    val localUri: String? = null,
-    val fileMetadataIds: List<String> = emptyList(),
-    val error: String? = null,
-    val acknowledged: Boolean = false,
-    val mentionedMemberIds: List<Long> = emptyList(),
-    val replyToId: Long? = null,
-)
-
-sealed interface CommunityChattingEvent : UiEvent {
-    data class ShowError(val message: String) : CommunityChattingEvent
-    data object MessageReported : CommunityChattingEvent
-    data object ThreadUnavailable : CommunityChattingEvent
 }

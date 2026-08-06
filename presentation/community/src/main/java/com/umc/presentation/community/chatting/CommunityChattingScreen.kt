@@ -1,4 +1,4 @@
-package com.example.presentation.community.chatting
+package com.umc.presentation.community.chatting
 
 import android.content.Intent
 import androidx.activity.compose.BackHandler
@@ -27,22 +27,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.ChatBubble
-import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
@@ -68,8 +59,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.umc.component.theme.black
 import com.umc.component.R
@@ -95,13 +84,20 @@ import com.umc.component.theme.green700
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
 import com.umc.component.theme.grey900
 import com.umc.component.theme.indigo600
 import com.umc.component.theme.red600
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow500
 import com.umc.component.theme.yellow600
-import com.umc.domain.model.community.thread.*
+import com.umc.domain.model.community.thread.CommunityMessageReportReason
+import com.umc.domain.model.community.thread.CommunityMessageType
+import com.umc.domain.model.community.thread.CommunityReaction
+import com.umc.domain.model.community.thread.CommunityThreadDetail
+import com.umc.domain.model.community.thread.CommunityThreadMember
+import com.umc.domain.model.community.thread.CommunityThreadMessage
+import com.umc.domain.model.community.thread.CommunityThreadRole
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -109,89 +105,57 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-
-@Composable
-fun CommunityChattingRoute(
-    onBack: () -> Unit,
-    onMore: () -> Unit = {},
-    onUnreadSummary: () -> Unit = {},
-    onCamera: () -> Unit = {},
-    viewModel: CommunityChattingViewModel = hiltViewModel(),
-) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collect { event ->
-            when (event) {
-                CommunityChattingEvent.ThreadUnavailable -> onBack()
-                CommunityChattingEvent.MessageReported -> snackbarHostState.showSnackbar(
-                    message = "신고가 정상적으로 접수되었습니다.",
-                    duration = SnackbarDuration.Short,
-                )
-                is CommunityChattingEvent.ShowError -> Unit
-            }
-        }
-    }
-
-    CommunityChattingScreen(
-        state = state,
-        snackbarHostState = snackbarHostState,
-        onBack = onBack,
-        onMore = onMore,
-        onUnreadSummary = onUnreadSummary,
-        onCamera = onCamera,
-        onSendImage = viewModel::sendImage,
-        onDraftChange = viewModel::updateDraft,
-        onSend = { replyToId -> viewModel.sendText(state.draft, replyToId = replyToId) },
-        onLoadPrevious = viewModel::loadPreviousMessages,
-        onDeleteMessage = viewModel::deleteMessage,
-        onReact = viewModel::toggleReaction,
-        onToggleMuted = viewModel::toggleMuted,
-        onTogglePinned = viewModel::togglePinned,
-        onLeave = viewModel::leaveThread,
-        onRetryPending = viewModel::retryPendingMessage,
-        onDismissPending = viewModel::dismissPendingMessage,
-        onRetryLoad = viewModel::bootstrap,
-        onKickMember = viewModel::kickMember,
-        onReportMessage = viewModel::reportMessage,
-    )
-}
+import java.net.URI
+import kotlinx.coroutines.launch
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun CommunityChattingScreen(
-    state: CommunityChattingUiState,
+    state: CommunityChattingState,
     snackbarHostState: SnackbarHostState? = null,
-    onBack: () -> Unit,
-    onMore: () -> Unit,
-    onUnreadSummary: () -> Unit,
-    onCamera: () -> Unit,
-    onSendImage: (String) -> Unit = {},
-    onDraftChange: (String) -> Unit,
-    onSend: (Long?) -> Unit,
-    onLoadPrevious: () -> Unit,
-    onDeleteMessage: (String) -> Unit = {},
-    onReact: (CommunityThreadMessage, String) -> Unit = { _, _ -> },
-    onReportMessage: (String, CommunityMessageReportReason) -> Unit = { _, _ -> },
-    onToggleMuted: () -> Unit = {},
-    onTogglePinned: () -> Unit = {},
-    onLeave: () -> Unit = {},
-    onRetryPending: (String) -> Unit = {},
-    onDismissPending: (String) -> Unit = {},
-    onRetryLoad: () -> Unit = {},
-    onInviteParticipants: () -> Unit = {},
-    onEditThread: () -> Unit = {},
-    onDeleteThread: () -> Unit = {},
-    onKickMember: (String) -> Unit = {},
+    onAction: (CommunityChattingAction) -> Unit,
 ) {
+    val onBack = { onAction(CommunityChattingAction.OnBackClick) }
+    val onMore = { onAction(CommunityChattingAction.OnMoreClick) }
+    val onUnreadSummary = { onAction(CommunityChattingAction.OnUnreadSummaryClick) }
+    val onCamera = { onAction(CommunityChattingAction.OnCameraClick) }
+    val onSendImages: (List<String>) -> Unit = { onAction(CommunityChattingAction.OnSendImages(it)) }
+    val onDraftChange: (String) -> Unit = { onAction(CommunityChattingAction.OnDraftChanged(it)) }
+    val onSend: (Long?) -> Unit = { onAction(CommunityChattingAction.OnSendClick(it)) }
+    val onLoadPrevious = { onAction(CommunityChattingAction.OnLoadPrevious) }
+    val onDeleteMessage: (String) -> Unit = { onAction(CommunityChattingAction.OnDeleteMessage(it)) }
+    val onReact: (CommunityThreadMessage, String) -> Unit = { message, emoji ->
+        onAction(CommunityChattingAction.OnReact(message, emoji))
+    }
+    val onReportMessage: (String, CommunityMessageReportReason) -> Unit = { messageId, reason ->
+        onAction(CommunityChattingAction.OnReportMessage(messageId, reason))
+    }
+    val onToggleMuted = { onAction(CommunityChattingAction.OnToggleMuted) }
+    val onTogglePinned = { onAction(CommunityChattingAction.OnTogglePinned) }
+    val onLeave = { onAction(CommunityChattingAction.OnLeave) }
+    val onRetryPending: (String) -> Unit = { onAction(CommunityChattingAction.OnRetryPending(it)) }
+    val onDismissPending: (String) -> Unit = { onAction(CommunityChattingAction.OnDismissPending(it)) }
+    val onRetryLoad = { onAction(CommunityChattingAction.OnRetryLoad) }
+    val onInviteParticipants = { onAction(CommunityChattingAction.OnInviteParticipants) }
+    val onEditThread = { onAction(CommunityChattingAction.OnEditThread) }
+    val onDeleteThread = { onAction(CommunityChattingAction.OnDeleteThread) }
+    val onKickMember: (String) -> Unit = { onAction(CommunityChattingAction.OnKickMember(it)) }
+    val onTransferOwnership: (String) -> Unit = {
+        onAction(CommunityChattingAction.OnTransferOwnership(it))
+    }
+
     if (state.isThreadUnavailable) {
         ThreadUnavailableScreen(onBack = onBack)
         return
     }
 
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     val displayedMessages = remember(state.messages) { state.messages.asReversed() }
+    var knownMessageIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var newMessageCount by remember { mutableIntStateOf(0) }
+    var followsLatestMessage by remember { mutableStateOf(true) }
+    var wasUserScrolling by remember { mutableStateOf(false) }
     var selectedMessage by remember { mutableStateOf<CommunityThreadMessage?>(null) }
     var replyingMessage by remember { mutableStateOf<CommunityThreadMessage?>(null) }
     var emojiPickerMessage by remember { mutableStateOf<CommunityThreadMessage?>(null) }
@@ -205,26 +169,95 @@ fun CommunityChattingScreen(
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
     val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-    ) { uri ->
-        uri?.let { onSendImage(it.toString()) }
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 4),
+    ) { uris ->
+        onSendImages(uris.take(4).map { it.toString() })
+    }
+
+    if (state.showOwnershipTransferRequiredDialog) {
+        UDialog(
+            title = "스레드를 나갈 수 없어요",
+            subtitle = "현재 방장인 경우 스레드를 나갈 수 없습니다.\n다른 참여자에게 권한을 넘긴 후 다시 시도해주세요.",
+            confirmText = "확인",
+            confirmBackgroundColor = grey100(),
+            confirmTextColor = grey700(),
+            onConfirm = {
+                onAction(CommunityChattingAction.OnDismissOwnershipTransferRequired)
+            },
+            onDismissRequest = {
+                onAction(CommunityChattingAction.OnDismissOwnershipTransferRequired)
+            },
+        )
+    }
+
+    if (state.showDeleteDialog) {
+        UBasicDialog(
+            title = "스레드를 삭제하시겠습니까?",
+            content = "삭제한 스레드는 복구할 수 없습니다.",
+            negativeText = "취소",
+            positiveText = "삭제하기",
+            type = DialogType.ERROR,
+            showCloseButton = false,
+            negativeBackgroundColor = grey100(),
+            negativeBorderColor = grey100(),
+            negativeTextColor = grey600(),
+            positiveBackgroundColor = red100(),
+            positiveBorderColor = red100(),
+            positiveTextColor = red500(),
+            onNegative = { onAction(CommunityChattingAction.OnDismissDeleteThread) },
+            onPositive = { onAction(CommunityChattingAction.OnConfirmDeleteThread) },
+            onDismissRequest = { onAction(CommunityChattingAction.OnDismissDeleteThread) },
+        )
     }
 
     if (showParticipants) {
-        ParticipantManagementScreen(
+        CommunityParticipantScreen(
             members = state.members.values.toList(),
             memberCount = state.thread?.memberCount.orEmpty(),
             myMemberId = state.myMemberId,
             isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
             onBack = { showParticipants = false },
             onKickMember = onKickMember,
+            onTransferOwnership = onTransferOwnership,
         )
         return
     }
 
-    LaunchedEffect(displayedMessages.size, state.pendingMessages.size) {
-        val count = displayedMessages.size + state.pendingMessages.size + 1
-        if (count > 1) listState.animateScrollToItem(count - 1)
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress to listState.canScrollForward }
+            .collect { (isScrolling, canScrollForward) ->
+                if (isScrolling) {
+                    wasUserScrolling = true
+                    followsLatestMessage = !canScrollForward
+                } else if (wasUserScrolling) {
+                    wasUserScrolling = false
+                    followsLatestMessage = !canScrollForward
+                    if (followsLatestMessage) newMessageCount = 0
+                }
+            }
+    }
+
+    LaunchedEffect(state.messages) {
+        val currentIds = state.messages.mapTo(linkedSetOf()) { it.messageId }
+        if (knownMessageIds.isEmpty()) {
+            knownMessageIds = currentIds
+            if (displayedMessages.isNotEmpty()) {
+                listState.scrollToItem(displayedMessages.lastIndex + 1)
+            }
+            return@LaunchedEffect
+        }
+
+        val newMessages = state.messages.filter { it.messageId !in knownMessageIds }
+        knownMessageIds = currentIds
+        if (newMessages.isEmpty()) return@LaunchedEffect
+
+        val containsMyMessage = newMessages.any { it.senderId == state.myMemberId }
+        if (followsLatestMessage || containsMyMessage) {
+            newMessageCount = 0
+            listState.animateScrollToItem(displayedMessages.size + state.pendingMessages.size)
+        } else {
+            newMessageCount += newMessages.count { it.senderId != state.myMemberId }
+        }
     }
 
     Scaffold(
@@ -253,11 +286,12 @@ fun CommunityChattingScreen(
                 onInviteParticipants = onInviteParticipants,
                 onShareLink = {
                     state.thread?.shareUrl?.takeIf(String::isNotBlank)?.let { shareUrl ->
+                        val deepLink = buildCommunityThreadDeepLink(shareUrl)
                         context.startActivity(
                             Intent.createChooser(
                                 Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, shareUrl)
+                                    putExtra(Intent.EXTRA_TEXT, deepLink)
                                 },
                                 "스레드 링크 공유",
                             )
@@ -271,22 +305,39 @@ fun CommunityChattingScreen(
         },
         bottomBar = {
             if (!state.isLoading && state.errorMessage == null) {
-                ChatInputBar(
-                    value = state.draft,
-                    enabled = true,
-                    replyingMessage = replyingMessage,
-                    onValueChange = onDraftChange,
-                    onCamera = {
-                        onCamera()
-                        imagePicker.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (newMessageCount > 0) {
+                        NewMessageButton(
+                            count = newMessageCount,
+                            onClick = {
+                                newMessageCount = 0
+                                followsLatestMessage = true
+                                scope.launch {
+                                    listState.animateScrollToItem(
+                                        displayedMessages.size + state.pendingMessages.size
+                                    )
+                                }
+                            },
                         )
-                    },
-                    onSend = {
-                        onSend(replyingMessage?.messageId?.toLongOrNull())
-                        replyingMessage = null
-                    },
-                )
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    ChatInputBar(
+                        value = state.draft,
+                        enabled = true,
+                        replyingMessage = replyingMessage,
+                        onValueChange = onDraftChange,
+                        onCamera = {
+                            onCamera()
+                            imagePicker.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        onSend = {
+                            onSend(replyingMessage?.messageId?.toLongOrNull())
+                            replyingMessage = null
+                        },
+                    )
+                }
             }
         },
     ) { padding ->
@@ -355,6 +406,7 @@ fun CommunityChattingScreen(
                     }
                     ChatMessageRow(
                         message = message,
+                        imageUris = state.localImageUrisByMessageId[message.messageId].orEmpty(),
                         member = message.senderId?.let(state.members::get),
                         isMine = isMine,
                         menuExpanded = selectedMessage?.messageId == message.messageId,
@@ -516,252 +568,6 @@ private fun EmptyChatMessages(modifier: Modifier = Modifier) {
             lineHeight = 17.sp,
         )
     }
-}
-
-@Composable
-private fun ParticipantManagementScreen(
-    members: List<CommunityThreadMember>,
-    memberCount: String,
-    myMemberId: String,
-    isOwner: Boolean,
-    onBack: () -> Unit,
-    onKickMember: (String) -> Unit,
-) {
-    BackHandler(onBack = onBack)
-    var pendingKickMember by remember { mutableStateOf<CommunityThreadMember?>(null) }
-    val sortedMembers = remember(members) {
-        members.sortedWith(
-            compareBy<CommunityThreadMember> { it.role != CommunityThreadRole.OWNER }
-                .thenBy { it.name },
-        )
-    }
-
-    Scaffold(
-        containerColor = white(),
-        topBar = {
-            Surface(color = white()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .height(64.dp)
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_back),
-                            contentDescription = "뒤로가기",
-                            tint = grey950(),
-                        )
-                    }
-                    Text(
-                        text = "참여자 관리",
-                        modifier = Modifier.padding(start = 2.dp),
-                        color = grey950(),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
-        },
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        ) {
-            item {
-                Text(
-                    text = "총 ${memberCount.ifBlank { members.size.toString() }}명",
-                    color = grey950(),
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(bottom = 10.dp),
-                )
-            }
-            items(sortedMembers, key = { it.memberId }) { member ->
-                ParticipantRow(
-                    member = member,
-                    isMe = member.memberId == myMemberId,
-                    showManagement = isOwner,
-                    onKick = { pendingKickMember = member },
-                )
-            }
-            if (isOwner) {
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(yellow100())
-                            .padding(horizontal = 14.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        Text("!", color = yellow500(), fontWeight = FontWeight.Bold)
-                        Text(
-                            text = "개설자만 참여자를 내보낼 수 있어요",
-                            color = yellow600(),
-                            fontSize = 12.sp,
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    pendingKickMember?.let { member ->
-        UBasicDialog(
-            title = "${member.name.ifBlank { "해당 참여자" }}님을 내보낼까요?",
-            content = "이 스레드에서 나가지며,\n다시 초대해야 참여할 수 있어요",
-            negativeText = "취소",
-            positiveText = "내보내기",
-            type = DialogType.WARNING,
-            showCloseButton = false,
-            negativeBackgroundColor = grey100(),
-            negativeBorderColor = grey100(),
-            positiveBackgroundColor = red100(),
-            positiveBorderColor = red100(),
-            positiveTextColor = red500(),
-            onPositive = {
-                onKickMember(member.memberId)
-                pendingKickMember = null
-            },
-            onNegative = { pendingKickMember = null },
-            onDismissRequest = { pendingKickMember = null },
-        )
-    }
-}
-
-@Composable
-private fun ParticipantRow(
-    member: CommunityThreadMember,
-    isMe: Boolean,
-    showManagement: Boolean,
-    onKick: () -> Unit,
-) {
-    var menuExpanded by remember { mutableStateOf(false) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 62.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ProfileImage(member?.profileImageUrl)
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(3.dp),
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(
-                    text = member.name.ifBlank { "알 수 없음" },
-                    color = grey950(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                if (member.role == CommunityThreadRole.OWNER) {
-                    ParticipantBadge("개설자", grey800(), white())
-                }
-                if (isMe) {
-                    ParticipantBadge("나", indigo100(), indigo500())
-                }
-            }
-            val part = member.part?.let { partTag(it).first }.orEmpty()
-            val detail = listOfNotNull(
-                part.takeIf(String::isNotBlank),
-                member.generation?.takeIf { it.isNotBlank() }?.let { "${it}기" },
-            ).joinToString(" · ")
-            if (detail.isNotBlank()) {
-                Text(detail, color = grey400(), fontSize = 11.sp)
-            }
-        }
-        if (showManagement) {
-            Box {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_menu_kebab),
-                        contentDescription = "참여자 관리 메뉴",
-                        tint = grey400(),
-                    )
-                }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false },
-                    modifier = Modifier.width(160.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    containerColor = white(),
-                    shadowElevation = 8.dp,
-                ) {
-                    ParticipantMenuItem(
-                        text = "프로필 보기",
-                        iconRes = R.drawable.ic_person,
-                        onClick = { menuExpanded = false },
-                    )
-                    if (!isMe && member.role != CommunityThreadRole.OWNER) {
-                        ParticipantMenuItem(
-                            text = "내보내기",
-                            iconRes = R.drawable.ic_block,
-                            color = red400(),
-                            onClick = {
-                                menuExpanded = false
-                                onKick()
-                            },
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ParticipantMenuItem(
-    text: String,
-    @androidx.annotation.DrawableRes iconRes: Int,
-    color: Color = grey950(),
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 13.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(text = text, color = color, fontSize = 14.sp)
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(21.dp),
-        )
-    }
-}
-
-@Composable
-private fun ParticipantBadge(
-    text: String,
-    background: Color,
-    foreground: Color,
-) {
-    Text(
-        text = text,
-        modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(background)
-            .padding(horizontal = 6.dp, vertical = 3.dp),
-        color = foreground,
-        fontSize = 10.sp,
-        fontWeight = FontWeight.SemiBold,
-    )
 }
 
 @Composable
@@ -1202,6 +1008,58 @@ private fun UnreadSummaryCard(
     }
 }
 
+private const val COMMUNITY_DEEP_LINK_HOST = "https://api.university.neordinary.com"
+private const val COMMUNITY_DEEP_LINK_PATH = "/community/threads"
+
+internal fun buildCommunityThreadDeepLink(shareUrl: String): String {
+    val rawUrl = shareUrl.trim()
+    val parsed = runCatching { URI(rawUrl) }.getOrNull()
+    val path = parsed?.rawPath
+        ?.takeIf(String::isNotBlank)
+        ?: rawUrl.substringBefore('?').substringBefore('#')
+    val queryThreadId = parsed?.rawQuery
+        ?.split('&')
+        ?.firstOrNull { it.substringBefore('=') == "threadId" }
+        ?.substringAfter('=', missingDelimiterValue = "")
+    val threadId = queryThreadId
+        ?.takeIf(String::isNotBlank)
+        ?: path.trimEnd('/').substringAfterLast('/')
+
+    return "$COMMUNITY_DEEP_LINK_HOST$COMMUNITY_DEEP_LINK_PATH?threadId=$threadId"
+}
+
+@Composable
+private fun NewMessageButton(
+    count: Int,
+    onClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.clickable(onClick = onClick),
+        shape = RoundedCornerShape(22.dp),
+        color = indigo500(),
+        contentColor = white(),
+        shadowElevation = 4.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = "새 메시지 ${count}개",
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+    }
+}
+
 @Composable
 private fun DateDivider(label: String) {
     Row(
@@ -1218,6 +1076,7 @@ private fun DateDivider(label: String) {
 @Composable
 private fun ChatMessageRow(
     message: CommunityThreadMessage,
+    imageUris: List<String>,
     member: CommunityThreadMember?,
     isMine: Boolean,
     menuExpanded: Boolean,
@@ -1233,9 +1092,9 @@ private fun ChatMessageRow(
     Box(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth()) {
             if (isMine) {
-                MineMessage(message, onLongClick)
+                MineMessage(message, imageUris, onLongClick)
             } else {
-                OtherMessage(message, member, onLongClick)
+                OtherMessage(message, imageUris, member, onLongClick)
             }
             if (message.reactions.isNotEmpty()) {
                 MessageReactions(
@@ -1304,6 +1163,7 @@ private fun MessageReactions(
 @Composable
 private fun OtherMessage(
     message: CommunityThreadMessage,
+    imageUris: List<String>,
     member: CommunityThreadMember?,
     onLongClick: () -> Unit,
 ) {
@@ -1340,6 +1200,7 @@ private fun OtherMessage(
                 ) {
                     MessageBubbleContent(
                         message = message,
+                        imageUris = imageUris,
                         isMine = false,
                         modifier = Modifier
                             .widthIn(max = 270.dp)
@@ -1360,6 +1221,7 @@ private fun OtherMessage(
 @Composable
 private fun MineMessage(
     message: CommunityThreadMessage,
+    imageUris: List<String>,
     onLongClick: () -> Unit,
 ) {
     Row(
@@ -1374,6 +1236,7 @@ private fun MineMessage(
         ) {
             MessageBubbleContent(
                 message = message,
+                imageUris = imageUris,
                 isMine = true,
                 modifier = Modifier
                     .widthIn(max = 285.dp)
@@ -1390,6 +1253,7 @@ private fun MineMessage(
 @Composable
 private fun MessageBubbleContent(
     message: CommunityThreadMessage,
+    imageUris: List<String> = emptyList(),
     isMine: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -1399,15 +1263,20 @@ private fun MessageBubbleContent(
     val reply = message.replyTo
 
     if (message.type == CommunityMessageType.IMAGE) {
-        if (!message.content.isNullOrBlank()) {
+        val models = imageUris.ifEmpty {
+            listOfNotNull(message.content?.takeIf(String::isNotBlank))
+        }.take(4)
+        if (models.size == 1) {
             AsyncImage(
-                model = message.content,
+                model = models.first(),
                 contentDescription = "채팅 이미지",
                 modifier = modifier
                     .size(width = 220.dp, height = 180.dp)
                     .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop,
             )
+        } else if (models.isNotEmpty()) {
+            ChatImageGrid(models = models, modifier = modifier)
         } else {
             Box(
                 modifier = modifier.size(width = 220.dp, height = 160.dp),
@@ -1415,7 +1284,7 @@ private fun MessageBubbleContent(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_image),
+                        painter = painterResource(R.drawable.ic_photo),
                         contentDescription = null,
                         tint = secondary,
                         modifier = Modifier.size(32.dp),
@@ -1473,6 +1342,67 @@ private fun MessageBubbleContent(
             lineHeight = 20.sp,
         )
     }
+}
+
+@Composable
+private fun ChatImageGrid(
+    models: List<String>,
+    modifier: Modifier = Modifier,
+) {
+    val images = models.take(4)
+    val containerModifier = modifier.width(220.dp).clip(RoundedCornerShape(16.dp))
+
+    when (images.size) {
+        0 -> Unit
+        1 -> ChatGridImage(images.first(), containerModifier.height(180.dp))
+        2 -> Row(
+            modifier = containerModifier.height(160.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            images.forEach { model ->
+                ChatGridImage(model, Modifier.weight(1f).fillMaxHeight())
+            }
+        }
+        3 -> Row(
+            modifier = containerModifier.height(220.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            ChatGridImage(images.first(), Modifier.weight(1f).fillMaxHeight())
+            Column(
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                images.drop(1).forEach { model ->
+                    ChatGridImage(model, Modifier.weight(1f).fillMaxWidth())
+                }
+            }
+        }
+        else -> Column(
+            modifier = containerModifier,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            images.chunked(2).forEach { rowModels ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    rowModels.forEach { model ->
+                        ChatGridImage(model, Modifier.weight(1f).aspectRatio(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChatGridImage(model: String, modifier: Modifier) {
+    AsyncImage(
+        model = model,
+        contentDescription = "채팅 이미지",
+        modifier = modifier,
+        contentScale = ContentScale.Crop,
+    )
 }
 
 @Composable
@@ -1571,15 +1501,20 @@ private fun MessageReportSheet(
     onReport: (CommunityMessageReportReason) -> Unit,
 ) {
     var selectedReason by remember { mutableStateOf<CommunityMessageReportReason?>(null) }
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+    )
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         containerColor = white(),
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(537.dp)
                 .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
         ) {
             Text(
@@ -1624,7 +1559,7 @@ private fun MessageReportSheet(
                 }
                 HorizontalDivider(color = grey200())
             }
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.weight(1f))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -1737,7 +1672,7 @@ private fun PendingMessageRow(
     onDismiss: () -> Unit,
 ) {
     val failed = message.error != null
-    val isImage = message.type == CommunityMessageType.IMAGE && message.localUri != null
+    val isImage = message.type == CommunityMessageType.IMAGE && message.localUris.isNotEmpty()
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1766,15 +1701,17 @@ private fun PendingMessageRow(
                     null
                 },
             ) {
-                if (message.type == CommunityMessageType.IMAGE && message.localUri != null) {
+                if (message.type == CommunityMessageType.IMAGE && message.localUris.size == 1) {
                     AsyncImage(
-                        model = message.localUri,
+                        model = message.localUris.first(),
                         contentDescription = "전송할 이미지",
                         modifier = Modifier
                             .size(width = 220.dp, height = 180.dp)
                             .clip(RoundedCornerShape(16.dp)),
                         contentScale = ContentScale.Crop,
                     )
+                } else if (message.type == CommunityMessageType.IMAGE) {
+                    ChatImageGrid(models = message.localUris)
                 } else {
                     Text(
                         message.content,
@@ -1821,7 +1758,7 @@ private fun PendingMessageRow(
 }
 
 @Composable
-private fun ProfileImage(imageUrl: String?) {
+internal fun ProfileImage(imageUrl: String?) {
     Box(
         modifier = Modifier
             .size(34.dp)
@@ -1863,7 +1800,7 @@ private fun MemberTag(text: String, background: Color, foreground: Color) {
 }
 
 @Composable
-private fun partTag(part: String): Triple<String, Color, Color> = when (part) {
+internal fun partTag(part: String): Triple<String, Color, Color> = when (part) {
     "IOS" -> Triple("iOS", yellow100(), yellow500())
     "ANDROID" -> Triple("Android", green100(), green700())
     "PLAN" -> Triple("PM", indigo100(), indigo600())
@@ -2022,7 +1959,7 @@ private fun ChatInputBar(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(onClick = onCamera) {
-                        Icon(painterResource(R.drawable.ic_image), contentDescription = "사진 첨부", tint = black())
+                        Icon(painterResource(R.drawable.ic_photo), contentDescription = "사진 첨부", tint = black())
                     }
                     Box(
                         modifier = Modifier.weight(1f),
@@ -2064,7 +2001,7 @@ private fun ChatInputBar(
 @Composable
 private fun CommunityChattingScreenPreview() {
     CommunityChattingScreen(
-        state = CommunityChattingUiState(
+        state = CommunityChattingState(
             threadId = "1",
             thread = CommunityThreadDetail(
                 threadId = "1",
@@ -2109,12 +2046,6 @@ private fun CommunityChattingScreenPreview() {
                 ),
             ),
         ),
-        onBack = {},
-        onMore = {},
-        onUnreadSummary = {},
-        onCamera = {},
-        onDraftChange = {},
-        onSend = {},
-        onLoadPrevious = {},
+        onAction = {},
     )
 }

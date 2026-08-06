@@ -509,7 +509,7 @@ private fun categoryIconRes(
         }
 
         CommunityCategory.QNA -> {
-            R.drawable.ic_community_question
+            R.drawable.ic_hand_question
         }
 
         CommunityCategory.FREE -> {

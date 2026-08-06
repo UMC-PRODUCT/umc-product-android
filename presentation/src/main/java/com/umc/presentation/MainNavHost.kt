@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.navDeepLink
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
@@ -32,11 +33,14 @@ import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
 import com.umc.presentation.community.CommunityRoute
+import com.umc.presentation.community.chatting.CommunityChattingRoute
 import com.umc.presentation.community.search.CommunitySearchRoute
 import com.umc.presentation.community.create.CommunityCreateRoute
 import com.umc.presentation.community.edit.CommunityEditRoute
 
 private const val COMMUNITY_REFRESH_KEY = "community_refresh"
+private const val COMMUNITY_THREAD_DEEP_LINK_BASE =
+    "https://api.university.neordinary.com/community/threads"
 
 
 @Composable
@@ -47,7 +51,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
-        startDestination = MainDestination.Community,
+        startDestination = MainDestination.Splash,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -55,9 +59,15 @@ fun MainNavHost(
     ) {
         composable<MainDestination.Splash> {
             SplashRoute(
-                navigateToLogin = { navHostController.navigate(MainDestination.Login) },
+                navigateToLogin = {
+                    navHostController.navigate(MainDestination.Login) {
+                        popUpTo(MainDestination.Splash) { inclusive = true }
+                    }
+                },
                 navigateToMain = {
-                    navHostController.navigate(MainDestination.Home)
+                    navHostController.navigate(MainDestination.Community) {
+                        popUpTo(MainDestination.Splash) { inclusive = true }
+                    }
                 },
                 navigateToInputCode = {
                     navHostController.navigate(MainDestination.SignUpFailCode)
@@ -68,7 +78,7 @@ fun MainNavHost(
         composable<MainDestination.Login> {
             LoginRoute(
                 navigateToMain = {
-                    navHostController.navigate(MainDestination.Act) {
+                    navHostController.navigate(MainDestination.Community) {
                         popUpTo(MainDestination.Login) { inclusive = true }
                     }
                 },
@@ -90,7 +100,7 @@ fun MainNavHost(
             EmailLoginRoute(
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToMain = {
-                    navHostController.navigate(MainDestination.Act) {
+                    navHostController.navigate(MainDestination.Community) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
@@ -309,7 +319,11 @@ fun MainNavHost(
 
             CommunityRoute(
                 onNavigateToThreadDetail = { threadId ->
-                    // TODO: 상세 화면 생성 후 연결
+                    navHostController.navigate(
+                        MainDestination.CommunityChatting(
+                            threadId = threadId,
+                        )
+                    )
                 },
                 onNavigateToSearch = {
                     navHostController.navigate(
@@ -392,7 +406,46 @@ fun MainNavHost(
                     navHostController.popBackStack()
                 },
                 onNavigateToThreadDetail = { threadId ->
-                    // TODO: 스레드 상세 화면 생성 후 연결
+                    navHostController.navigate(
+                        MainDestination.CommunityChatting(
+                            threadId = threadId,
+                        )
+                    )
+                },
+            )
+        }
+
+        composable<MainDestination.CommunityChatting>(
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "$COMMUNITY_THREAD_DEEP_LINK_BASE?threadId={threadId}"
+                }
+            ),
+        ) { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.CommunityChatting>()
+            val shouldRefresh by backStackEntry
+                .savedStateHandle
+                .getStateFlow(COMMUNITY_REFRESH_KEY, false)
+                .collectAsStateWithLifecycle()
+
+            CommunityChattingRoute(
+                onBack = {
+                    navHostController.popBackStack()
+                },
+                onEditThread = {
+                    navHostController.navigate(
+                        MainDestination.CommunityEdit(destination.threadId)
+                    )
+                },
+                shouldRefresh = shouldRefresh,
+                onRefreshHandled = {
+                    backStackEntry.savedStateHandle[COMMUNITY_REFRESH_KEY] = false
+                },
+                onThreadDeleted = {
+                    navHostController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(COMMUNITY_REFRESH_KEY, true)
+                    navHostController.popBackStack()
                 },
             )
         }

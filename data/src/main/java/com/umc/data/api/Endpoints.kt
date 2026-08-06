@@ -136,6 +136,11 @@ object Endpoints {
         const val THREAD_MEMBERS =
             "$THREAD_DETAIL/members"
 
+        const val THREAD_MESSAGES = "$THREAD_DETAIL/messages"
+        const val THREAD_MEMBER_ROLE = "$THREAD_MEMBER/role"
+        const val MESSAGE_REPORT =
+            "api/v1/community/messages/{messageId}/report"
+
     }
 
     object Storage{

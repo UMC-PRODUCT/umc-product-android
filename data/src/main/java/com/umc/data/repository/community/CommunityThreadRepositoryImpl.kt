@@ -2,9 +2,9 @@ package com.umc.data.repository.community
 
 import com.umc.data.api.ChangeMemberRoleRequest
 import com.umc.data.api.CommunityThreadApi
-import com.umc.data.api.InviteMembersRequest
 import com.umc.data.api.ReportMessageRequest
 import com.umc.data.dataSource.base.apiCall
+import com.umc.data.mapper.community.toChatDomain
 import com.umc.data.mapper.community.toDomain
 import com.umc.data.request.community.CreateCommunityThreadRequest
 import com.umc.data.request.community.InviteCommunityThreadMembersRequest
@@ -18,6 +18,7 @@ import com.umc.domain.model.community.thread.CommunityMessageReportReason
 import com.umc.domain.model.community.thread.CommunityThreadRole
 import com.umc.domain.model.community.thread.CreateCommunityThread
 import com.umc.domain.model.community.thread.UpdateCommunityThread
+import com.umc.domain.model.base.map
 import com.umc.domain.repository.community.CommunityThreadRepository
 import javax.inject.Inject
 
@@ -297,26 +298,64 @@ class CommunityThreadRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getThreads(filter: String, query: String?, offset: Int, limit: Int) =
-        apiCall { communityThreadApi.getThreads(filter, query, offset, limit) }
+        apiCall {
+            communityThreadApi.getCommunityThreads(filter, query, offset, limit)
+        }.map { it.toChatDomain() }
 
-    override suspend fun getThread(threadId: String) = apiCall { communityThreadApi.getThread(threadId) }
+    override suspend fun getThread(threadId: String) =
+        apiCall { communityThreadApi.getCommunityThreadDetail(threadId) }
+            .map { it.toChatDomain() }
 
     override suspend fun getMessages(threadId: String, before: String?, limit: Int) =
         apiCall { communityThreadApi.getMessages(threadId, before, limit) }
 
     override suspend fun createThread(request: CreateCommunityThread) =
-        apiCall { communityThreadApi.createThread(request) }
+        apiCall {
+            communityThreadApi.createCommunityThread(
+                CreateCommunityThreadRequest(
+                    title = request.title,
+                    description = request.description,
+                    category = request.category.name,
+                    icon = request.icon,
+                    memberIds = request.memberIds,
+                )
+            )
+        }.map { it.toChatDomain() }
 
     override suspend fun updateThread(threadId: String, request: UpdateCommunityThread) =
-        apiCall { communityThreadApi.updateThread(threadId, request) }
+        apiCall {
+            communityThreadApi.updateCommunityThread(
+                threadId = threadId,
+                request = UpdateCommunityThreadRequest(
+                    title = request.title,
+                    description = request.description,
+                    category = request.category?.name,
+                    icon = request.icon,
+                ),
+            )
+        }.map { it.toChatDomain() }
 
-    override suspend fun deleteThread(threadId: String) = apiCall { api.deleteThread(threadId) }
+    override suspend fun deleteThread(threadId: String) =
+        apiCall { communityThreadApi.deleteCommunityThread(threadId) }
+            .map { it.toChatDomain() }
 
     override suspend fun setPinned(threadId: String, pinned: Boolean) =
-        apiCall { if (pinned) communityThreadApi.pin(threadId) else api.unpin(threadId) }
+        apiCall {
+            if (pinned) {
+                communityThreadApi.pinCommunityThread(threadId)
+            } else {
+                communityThreadApi.unpinCommunityThread(threadId)
+            }
+        }.map { it.toChatDomain() }
 
     override suspend fun setMuted(threadId: String, muted: Boolean) =
-        apiCall { if (muted) communityThreadApi.mute(threadId) else api.unmute(threadId) }
+        apiCall {
+            if (muted) {
+                communityThreadApi.muteCommunityThread(threadId)
+            } else {
+                communityThreadApi.unmuteCommunityThread(threadId)
+            }
+        }.map { it.toChatDomain() }
 
     override suspend fun getMembers(
         threadId: String,
@@ -326,18 +365,43 @@ class CommunityThreadRepositoryImpl @Inject constructor(
         generation: Long?,
         offset: Int,
         limit: Int,
-    ) = apiCall { communityThreadApi.getMembers(threadId, query, role, part, generation, offset, limit) }
+    ) = apiCall {
+        communityThreadApi.getCommunityThreadMembers(
+            threadId = threadId,
+            query = query,
+            role = role?.name,
+            part = part,
+            generation = generation,
+            offset = offset,
+            limit = limit,
+        )
+    }.map { it.toChatDomain() }
 
     override suspend fun getInvitableMembers(threadId: String, query: String?, offset: Int, limit: Int) =
-        apiCall { communityThreadApi.getInvitableMembers(threadId, query, offset, limit) }
+        apiCall {
+            communityThreadApi.getInvitableCommunityThreadMembers(
+                threadId = threadId,
+                query = query,
+                offset = offset,
+                limit = limit,
+            )
+        }.map { it.toChatDomain() }
 
     override suspend fun inviteMembers(threadId: String, memberIds: List<Long>) =
-        apiCall { communityThreadApi.inviteMembers(threadId, InviteMembersRequest(memberIds.distinct())) }
+        apiCall {
+            communityThreadApi.inviteCommunityThreadMembers(
+                threadId = threadId,
+                request = InviteCommunityThreadMembersRequest(memberIds.distinct()),
+            )
+        }.map { it.toChatDomain() }
 
     override suspend fun kickMember(threadId: String, memberId: String) =
-        apiCall { communityThreadApi.kickMember(threadId, memberId) }
+        apiCall { communityThreadApi.kickCommunityThreadMember(threadId, memberId) }
+            .map { it.toChatDomain() }
 
-    override suspend fun leaveThread(threadId: String) = apiCall { api.leaveThread(threadId) }
+    override suspend fun leaveThread(threadId: String) =
+        apiCall { communityThreadApi.leaveCommunityThread(threadId) }
+            .map { it.toChatDomain() }
 
     override suspend fun changeMemberRole(threadId: String, memberId: String, role: CommunityThreadRole) =
         apiCall { communityThreadApi.changeMemberRole(threadId, memberId, ChangeMemberRoleRequest(role)) }
