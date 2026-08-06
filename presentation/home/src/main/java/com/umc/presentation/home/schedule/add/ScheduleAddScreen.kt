@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.collectLatest
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.component.UChip
 import com.umc.component.component.UDateTimePickerDialog
@@ -488,15 +489,25 @@ fun ScheduleAddTopBar(onBackClick: () -> Unit){
     ) {
 
 
-          Icon(
-              painter = painterResource(id=R.drawable.ic_back),
-              contentDescription = null,
-              tint = grey800(),
-              modifier = Modifier
-                  .clickable { onBackClick() }
-                  .padding(end = 16.dp)
-                  .clip(CircleShape)
-          )
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(color = Color.Transparent, shape = CircleShape)
+                .clip(CircleShape)
+                .clickable(
+                    onClick = onBackClick
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(
+                    id = R.drawable.ic_back
+                ),
+                contentDescription = null,
+                tint = grey950(),
+                modifier = Modifier.size(24.dp)
+            )
+        }
 
         Spacer(modifier = Modifier
             .width(16.dp)
