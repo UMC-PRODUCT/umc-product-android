@@ -39,7 +39,6 @@ import com.umc.component.theme.indigo600
 @Composable
 fun HomeTopBar(
     alarmExist: Boolean, //안 읽은 알람 표시 확인유무
-    userType: UserType,  //OB / ACTIVE 유무
     onNotificationClick: () -> Unit //알람 터치 시 이동
 ) {
     Row(
