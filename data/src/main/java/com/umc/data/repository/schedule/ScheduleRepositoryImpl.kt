@@ -5,6 +5,7 @@ import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
 import com.umc.data.response.schedule.MyScheduleItemResponse.Companion.toDomain
+import com.umc.data.response.schedule.ScheduleCapabilitiesResponse.Companion.toModel
 import com.umc.data.response.schedule.ScheduleListResponse.Companion.toDomain
 import com.umc.data.response.schedule.ScheduleMonthResponse.Companion.toDomain
 import com.umc.domain.model.base.ApiState
@@ -19,6 +20,7 @@ import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
+import com.umc.domain.model.home.schedule.ScheduleCapabilities
 import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import com.umc.domain.repository.schedule.ScheduleRepository
@@ -71,6 +73,12 @@ class ScheduleRepositoryImpl @Inject constructor(
             }
         }
 
+    //스케줄 권한 가져오기
+    override suspend fun getScheduleCapabilities(): ApiState<ScheduleCapabilities> {
+        return scheduleRemoteDataSource.getScheduleCapabilities().map { response ->
+            response.toModel()
+        }
+    }
 
     //관리자 일정 리스트 가져오기
     override suspend fun getAdminScheduleList(): ApiState<List<AdminSessionCheck>> {

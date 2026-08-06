@@ -10,6 +10,7 @@ import com.umc.data.response.schedule.ScheduleMonthResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.data.response.schedule.AdminScheduleV2Response
 import com.umc.data.response.schedule.MyScheduleItemResponse
+import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
 import com.umc.data.response.schedule.UpdateScheduleLocationV2Request
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.schedule.UpdateLocationRequest
@@ -52,7 +53,9 @@ interface ScheduleApi {
     ): ApiResponse<List<MyScheduleItemResponse>>
 
 
-
+    //일정 생성/수정 권한 관련 조회
+    @GET(Endpoints.Schedule.CAPABILITIES)
+    suspend fun getScheduleCapabilities(): ApiResponse<ScheduleCapabilitiesResponse>
 
 
     //일정 출석부 통합 삭제하기
