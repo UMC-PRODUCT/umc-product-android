@@ -11,6 +11,7 @@ import com.umc.domain.model.enums.ResourceType
 import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.usecase.GetAuthAccessUseCase
 import com.umc.domain.usecase.schedule.DeleteScheduleUseCase
+import com.umc.domain.usecase.schedule.GetScheduleCapabilities
 import com.umc.domain.usecase.schedule.GetScheduleDetailHomeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -27,6 +28,7 @@ constructor(
     private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase, //일정 상세 정보 가져오기
     private val deleteScheduleUseCase: DeleteScheduleUseCase, //일정 삭제하기
     private val getAuthAccessUseCase: GetAuthAccessUseCase, //리소스 권한 조회
+    private val getScheduleCapabilities: GetScheduleCapabilities, //일정 권한 조회
 ) : BaseViewModel<ScheduleDetailUiState, ScheduleDetailEvent>(
     ScheduleDetailUiState()){
 
@@ -38,7 +40,14 @@ constructor(
         if(checkScheduleId != -1L && checkPlusDay != -1) {
             getScheduleDetail(checkScheduleId, checkPlusDay)
         }
+
+        checkScheduleCapabilities()
+
+
     }
+
+
+
 
 
     //서버에서 게시글 상세 정보 가져오기
@@ -52,7 +61,7 @@ constructor(
                         content = it,
                         plusDay = plusDay)
                     }
-                    settingScheduleAuthAccess(it.scheduleId)
+                    //settingScheduleAuthAccess(it.scheduleId)
 
                     convertPlanDetailItemToUiState(it, plusDay)
                 },
@@ -64,6 +73,7 @@ constructor(
     }
 
     //일정 게시글 접근 권한 조회 및 UI 설정 함수
+    /*
     fun settingScheduleAuthAccess(scheduleId : Long){
         viewModelScope.launch {
             resultResponse(
@@ -85,6 +95,28 @@ constructor(
 
         }
     }
+
+     */
+
+    //일정 권한 조회하기(메뉴 팝업)
+    fun checkScheduleCapabilities(){
+        viewModelScope.launch {
+            resultResponse(
+                response = getScheduleCapabilities(),
+                successCallback = {
+                    updateState {
+                        copy(
+                            isAuthor = it.canCreateSchedule
+                        )
+                    }
+                },
+                errorCallback = {
+
+                }
+            )
+        }
+    }
+
 
     //PlanDetailItem에서 UI에 맞게 데이터를 조절하는 함수
     fun convertPlanDetailItemToUiState(item: PlanDetailItem, plusDay: Int) {

@@ -71,6 +71,8 @@ constructor(
     init {
         loadInitialData()
 
+        Log.d("log_home", "checkScheduleId: $checkScheduleId")
+
         if(checkScheduleId != -1L){
             settingUpdateSchedule(checkScheduleId)
         }
