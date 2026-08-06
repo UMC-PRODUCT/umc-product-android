@@ -23,6 +23,10 @@ object MarkdownEditActions {
 
     private val headingPrefixes = listOf("### ", "## ", "# ")
 
+    /** 색상 인자가 없는 `<mark>`도 렌더러가 받아주므로 동일하게 인식한다 */
+    private val MARK_OPEN = Regex("""<mark(?:\s+color="[^"]*")?>""")
+    private const val MARK_CLOSE = "</mark>"
+
     /** 커서(선택 시작)가 위치한 줄의 제목 prefix를 교체. BODY는 prefix 제거 */
     fun applyHeading(value: TextFieldValue, heading: MarkdownHeading): TextFieldValue {
         val text = value.text
@@ -58,6 +62,60 @@ object MarkdownEditActions {
     /** 취소선(`~~`) 토글 */
     fun toggleStrikethrough(value: TextFieldValue): TextFieldValue =
         toggleWrap(value, open = "~~", close = "~~")
+
+    /**
+     * 형광펜(`<mark color="...">`) 토글.
+     * 같은 색이 이미 걸려 있으면 해제하고, 다른 색이면 색만 교체한다
+     */
+    fun toggleHighlight(value: TextFieldValue, color: MarkdownHighlightColor): TextFieldValue {
+        val open = """<mark color="${color.markColorCode}">"""
+        val (start, end) = value.trimmedSelection() ?: return insertEmptyMarker(value, open, MARK_CLOSE)
+        val text = value.text
+        val selected = text.substring(start, end)
+
+        // 선택 영역이 마커째 선택된 경우
+        val innerOpen = MARK_OPEN.matchAt(selected, 0)
+        if (innerOpen != null && selected.endsWith(MARK_CLOSE) &&
+            selected.length > innerOpen.value.length + MARK_CLOSE.length
+        ) {
+            val body = selected.substring(innerOpen.value.length, selected.length - MARK_CLOSE.length)
+            val replacement = if (innerOpen.value == open) body else open + body + MARK_CLOSE
+            return value.copy(
+                text = text.replaceRange(start, end, replacement),
+                selection = TextRange(start, start + replacement.length),
+            )
+        }
+
+        // 선택 영역 바로 바깥에 마커가 있는 경우
+        val outerOpen = MARK_OPEN.findAll(text.substring(0, start))
+            .lastOrNull()
+            ?.takeIf { it.range.last == start - 1 && text.startsWith(MARK_CLOSE, end) }
+        if (outerOpen != null) {
+            return if (outerOpen.value == open) {
+                val newText = text.replaceRange(end, end + MARK_CLOSE.length, "")
+                    .replaceRange(outerOpen.range.first, start, "")
+                value.copy(
+                    text = newText,
+                    selection = TextRange(outerOpen.range.first, end - outerOpen.value.length),
+                )
+            } else {
+                val delta = open.length - outerOpen.value.length
+                value.copy(
+                    text = text.replaceRange(outerOpen.range.first, start, open),
+                    selection = TextRange(start + delta, end + delta),
+                )
+            }
+        }
+
+        return wrapRange(value, start, end, open, MARK_CLOSE)
+    }
+
+    /** 커서 위치(선택 영역이 있으면 그 자리)에 [text]를 넣고 커서를 끝으로 옮긴다 */
+    fun insertText(value: TextFieldValue, text: String): TextFieldValue {
+        val start = value.selection.min
+        val newText = value.text.replaceRange(start, value.selection.max, text)
+        return value.copy(text = newText, selection = TextRange(start + text.length))
+    }
 
     /** 글머리 기호(`- `) 토글 */
     fun toggleBullet(value: TextFieldValue): TextFieldValue =

@@ -1,5 +1,7 @@
 package com.umc.presentation.notice.write
 
+import android.content.ClipboardManager
+import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -11,6 +13,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,11 +35,11 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextLayoutResult
@@ -58,9 +63,16 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.window.PopupProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -171,12 +183,14 @@ fun NoticeWriteRoute(
         onClickItalic = viewModel::onClickItalic,
         onClickUnderline = viewModel::onClickUnderline,
         onClickStrikethrough = viewModel::onClickStrikethrough,
+        onSelectHighlight = viewModel::onSelectHighlight,
         onClickBullet = viewModel::onClickBullet,
         onClickQuote = viewModel::onClickQuote,
         onRemoveImage = viewModel::onRemoveImage,
         onLinkTextChanged = viewModel::onLinkTextChanged,
         onCloseLinkPanel = viewModel::onHideLinkPanel,
         onClickAiRefine = viewModel::onClickAiRefine,
+        onClickAiSummarize = { viewModel.onClickAiSummarize(readClipboardText(context)) },
     )
 
     if (showVoteMaxDialog) {
@@ -282,8 +296,10 @@ fun NoticeWriteScreen(
     onClickItalic: () -> Unit = {},
     onClickUnderline: () -> Unit = {},
     onClickStrikethrough: () -> Unit = {},
+    onSelectHighlight: (MarkdownHighlightColor) -> Unit = {},
     onClickBullet: () -> Unit = {},
     onClickQuote: () -> Unit = {},
+    onClickAiSummarize: () -> Unit = {},
     onRemoveImage: (NoticeImageAttachment) -> Unit = {},
     onLinkTextChanged: (String) -> Unit = {},
     onCloseLinkPanel: () -> Unit = {},
@@ -586,8 +602,13 @@ fun NoticeWriteScreen(
             onClickItalic = onClickItalic,
             onClickUnderline = onClickUnderline,
             onClickStrikethrough = onClickStrikethrough,
+            onSelectHighlight = onSelectHighlight,
+            highlightColor = uiState.highlightColor,
             onClickBullet = onClickBullet,
             onClickQuote = onClickQuote,
+            isAiEnabled = uiState.isAiRefineEnabled,
+            onClickAiRefine = onClickAiRefine,
+            onClickAiSummarize = onClickAiSummarize,
         )
     }
 }
@@ -606,12 +627,17 @@ private fun MarkdownToolbar(
     onClickItalic: () -> Unit = {},
     onClickUnderline: () -> Unit = {},
     onClickStrikethrough: () -> Unit = {},
-    onClickHighlight: () -> Unit = {},
+    onSelectHighlight: (MarkdownHighlightColor) -> Unit = {},
+    highlightColor: MarkdownHighlightColor = MarkdownHighlightColor.PURPLE,
     onClickBullet: () -> Unit = {},
     onClickQuote: () -> Unit = {},
-    onClickAi: () -> Unit = {},
+    isAiEnabled: Boolean = false,
+    onClickAiRefine: () -> Unit = {},
+    onClickAiSummarize: () -> Unit = {},
 ) {
     var showTextSizeMenu by remember { mutableStateOf(false) }
+    var showHighlightMenu by remember { mutableStateOf(false) }
+    var showAiMenu by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -621,18 +647,31 @@ private fun MarkdownToolbar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MARKDOWN_TOOLBAR_ICON_GAP),
     ) {
-        // AI (본문 다듬기 등)
-        MarkdownToolbarIcon(iconRes = R.drawable.ic_ai, onClick = onClickAi)
+        // AI (미지원 기기에서는 노출하지 않는다)
+        if (isAiEnabled) {
+            Box {
+                MarkdownToolbarIcon(iconRes = R.drawable.ic_ai, onClick = { showAiMenu = true })
+
+                MarkdownMenu(expanded = showAiMenu, onDismissRequest = { showAiMenu = false }) {
+                    MarkdownMenuItem(label = AppStrings.AI_MENU_REFINE) {
+                        showAiMenu = false
+                        onClickAiRefine()
+                    }
+                    MarkdownMenuItem(label = AppStrings.AI_MENU_SUMMARIZE) {
+                        showAiMenu = false
+                        onClickAiSummarize()
+                    }
+                }
+            }
+        }
 
         // 텍스트 크기 (제목1/제목2/제목3/본문 메뉴)
         Box {
             MarkdownToolbarIcon(iconRes = R.drawable.ic_text_size, onClick = { showTextSizeMenu = true })
 
-            DropdownMenu(
+            MarkdownMenu(
                 expanded = showTextSizeMenu,
                 onDismissRequest = { showTextSizeMenu = false },
-                containerColor = grey000(),
-                shape = RoundedCornerShape(12.dp),
             ) {
                 TextSizeMenuItem(
                     label = MarkdownHeading.TITLE1.label,
@@ -689,8 +728,30 @@ private fun MarkdownToolbar(
         // 취소선
         MarkdownToolbarIcon(iconRes = R.drawable.ic_strikethrough, onClick = onClickStrikethrough)
 
-        // 형광펜
-        MarkdownToolbarIcon(iconRes = R.drawable.ic_highlighter, onClick = onClickHighlight)
+        // 형광펜 (색상 선택 메뉴)
+        Box {
+            MarkdownToolbarIcon(
+                iconRes = R.drawable.ic_highlighter,
+                onClick = { showHighlightMenu = true },
+            )
+
+            MarkdownMenu(
+                expanded = showHighlightMenu,
+                onDismissRequest = { showHighlightMenu = false },
+                modifier = Modifier.heightIn(max = HIGHLIGHT_MENU_MAX_HEIGHT),
+            ) {
+                MarkdownHighlightColor.entries.forEach { color ->
+                    MarkdownMenuItem(
+                        label = color.label,
+                        swatch = color.swatch,
+                        isSelected = color == highlightColor,
+                    ) {
+                        showHighlightMenu = false
+                        onSelectHighlight(color)
+                    }
+                }
+            }
+        }
 
         // 글머리 기호
         MarkdownToolbarIcon(iconRes = R.drawable.ic_bullet_list, onClick = onClickBullet)
@@ -702,6 +763,124 @@ private fun MarkdownToolbar(
 
 /** 툴바 아이콘 간격. 기존 균등 분배(SpaceBetween) 때의 간격을 유지 */
 private val MARKDOWN_TOOLBAR_ICON_GAP = 20.dp
+
+/** 형광펜 메뉴는 4행까지만 보이고 나머지는 스크롤 (디자인 기준 192dp) */
+private val HIGHLIGHT_MENU_MAX_HEIGHT = 192.dp
+
+/**
+ * 아이콘 위쪽으로 메뉴를 띄울 거리.
+ * 아이콘 위에는 툴바 여백 16dp가 있으므로, 그 위로 8dp 더 올려 툴바에 바로 붙인다
+ */
+private val MARKDOWN_MENU_LIFT = 24.dp
+
+/** 메뉴가 화면 밖으로 나가지 않도록 두는 좌우 여백 */
+private val MARKDOWN_MENU_SCREEN_MARGIN = 16.dp
+
+/**
+ * 툴바 아이콘에서 펼쳐지는 메뉴 카드.
+ *
+ * Material3 DropdownMenu는 시스템 바 높이만큼 위로 밀려 툴바와 멀어지므로
+ * 위치를 직접 계산한다. 가로는 누른 아이콘에 맞추고, 세로는 툴바 바로 위에 붙인다
+ */
+@Composable
+private fun MarkdownMenu(
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    if (!expanded) return
+
+    val density = LocalDensity.current
+    val positionProvider = remember(density) {
+        object : PopupPositionProvider {
+            override fun calculatePosition(
+                anchorBounds: IntRect,
+                windowSize: IntSize,
+                layoutDirection: LayoutDirection,
+                popupContentSize: IntSize,
+            ): IntOffset {
+                val margin = with(density) { MARKDOWN_MENU_SCREEN_MARGIN.roundToPx() }
+                val lift = with(density) { MARKDOWN_MENU_LIFT.roundToPx() }
+                val maxX = (windowSize.width - popupContentSize.width - margin)
+                    .coerceAtLeast(margin)
+                return IntOffset(
+                    x = anchorBounds.left.coerceIn(margin, maxX),
+                    y = (anchorBounds.top - popupContentSize.height - lift).coerceAtLeast(margin),
+                )
+            }
+        }
+    }
+
+    Popup(
+        popupPositionProvider = positionProvider,
+        onDismissRequest = onDismissRequest,
+        properties = PopupProperties(focusable = true),
+    ) {
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = grey000(),
+            shadowElevation = 8.dp,
+        ) {
+            // Popup 안에서는 최대 폭이 화면 전체라 항목의 fillMaxWidth가 화면을 다 채운다.
+            // 가장 넓은 항목 기준으로 카드 폭을 잡는다
+            Column(
+                modifier = modifier
+                    .width(IntrinsicSize.Max)
+                    .verticalScroll(rememberScrollState()),
+                content = content,
+            )
+        }
+    }
+}
+
+/**
+ * 메뉴 항목. [swatch]를 주면 앞에 색상 원이 붙고,
+ * 선택된 항목은 원 안에 체크가 들어간다 (형광펜 메뉴)
+ */
+@Composable
+private fun MarkdownMenuItem(
+    label: String,
+    swatch: Color? = null,
+    isSelected: Boolean = false,
+    onClick: () -> Unit = {},
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp)
+            .height(48.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (swatch != null) {
+            Box(
+                modifier = Modifier
+                    .size(16.dp)
+                    .clip(CircleShape)
+                    .background(swatch),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (isSelected) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_check),
+                        contentDescription = null,
+                        tint = grey000(),
+                        modifier = Modifier.size(11.dp),
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+        }
+
+        UText(
+            text = label,
+            style = UmcTypographyTokens.Subheadline,
+            color = grey950(),
+        )
+    }
+}
 
 /** 텍스트 크기 메뉴 항목. 각 항목은 적용될 크기감으로 표시 */
 @Composable
@@ -1019,4 +1198,18 @@ private fun NoticeWriteScreenSuperAdminPreview() {
             writerRole = NoticeWriterRole.SUPER_ADMIN,
         ),
     )
+}
+
+/**
+ * 클립보드의 텍스트를 읽는다. 여러 항목이면 줄바꿈으로 잇는다.
+ * Android 10부터 포커스가 있는 앱만 읽을 수 있는데, 메뉴를 눌러 호출되므로 문제없다
+ */
+private fun readClipboardText(context: Context): String {
+    val manager = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+        ?: return ""
+    val clip = manager.primaryClip ?: return ""
+    return (0 until clip.itemCount)
+        .mapNotNull { clip.getItemAt(it)?.coerceToText(context)?.toString() }
+        .joinToString("\n")
+        .trim()
 }
