@@ -1,5 +1,6 @@
 package com.umc.presentation.home.schedule.detail
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
@@ -46,6 +47,7 @@ constructor(
             resultResponse(
                 response = getScheduleDetailHomeUseCase(scheduleId),
                 successCallback = {
+                    Log.d("log_home", "일정 상세: $it")
                     updateState { copy(
                         content = it,
                         plusDay = plusDay)

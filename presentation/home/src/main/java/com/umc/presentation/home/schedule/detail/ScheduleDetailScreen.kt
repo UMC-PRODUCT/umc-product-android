@@ -10,13 +10,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -28,6 +31,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,7 +51,9 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
+import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo500
 import com.umc.component.theme.indigo600
 import com.umc.presentation.home.schedule.add.ScheduleAddEvent
 import kotlinx.coroutines.flow.collectLatest
@@ -55,14 +62,14 @@ import java.net.URLEncoder
 
 @Composable
 fun ScheduleDetailRoute(
-    viewModel : ScheduleDetailViewModel = hiltViewModel()
+    viewModel : ScheduleDetailViewModel = hiltViewModel(),
+    onBackClick: () -> Unit,
+    onNavigateToAttendSchedule: () -> Unit,
+    onNavigateToEditSchedule: (Long) -> Unit,
+
 ){
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    //뒤로 가기 디스패처
-    /**TODO. 삭제 - MainActivity에서 적용할 예정**/
-    val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     //지도 가져오기 위한 context
     val context = LocalContext.current
@@ -74,13 +81,14 @@ fun ScheduleDetailRoute(
     LaunchedEffect(viewModel){
         viewModel.uiEvent.collectLatest { event ->
             when (event){
-                is ScheduleDetailEvent.MoveBackPressedEvent -> onBackPressedDispatcher?.onBackPressed()
+                is ScheduleDetailEvent.MoveBackPressedEvent -> onBackClick
 
                 //일정 수정
-                is ScheduleDetailEvent.EditPlan -> {}
+                is ScheduleDetailEvent.EditPlan -> onNavigateToEditSchedule(uiState.content.scheduleId)
 
                 is ScheduleDetailEvent.CheckDeletePlan -> { showDeleteDialog = true }
 
+                is ScheduleDetailEvent.TouchConfirmAttention -> {onNavigateToAttendSchedule}
                 else -> {}
             }
         }
@@ -88,7 +96,7 @@ fun ScheduleDetailRoute(
 
     ScheduleDetailScreen(
         uiState = uiState,
-        onBackClick = { onBackPressedDispatcher?.onBackPressed() },
+        onBackClick = onBackClick,
         onMenuClick = viewModel::toggleKebabMenu,
         onEditClick = viewModel::editPlan,
         onDeleteClick = viewModel::checkDeletePlan,
@@ -137,7 +145,7 @@ fun ScheduleDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey100())
+            .background(grey000())
             .padding(horizontal = 16.dp)
     ) {
 
@@ -158,11 +166,12 @@ fun ScheduleDetailScreen(
             UButton(
                 text = uiState.dDay,
                 backgroundColor = indigo100(),
-                textColor = indigo600(),
+                textColor = indigo500(),
                 textStyle = UmcTypographyTokens.FootnoteBold,
                 onClick = {},
                 modifier = Modifier
                     .height(24.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
             )
 
             Spacer(modifier = Modifier
@@ -220,7 +229,7 @@ fun ScheduleDetailScreen(
             if(uiState.isToday){
                 UButton(
                     text = AppStrings.HOME_PLAN_DETAIL_CHECK_CONFIRM,
-                    backgroundColor = yellow500(), // accent 팔레트 제거로 yellow(구 warning)로 대체
+                    backgroundColor = grey950(), // accent 팔레트 제거로 yellow(구 warning)로 대체
                     textColor = grey000(),
                     textStyle = UmcTypographyTokens.HeadlineBold,
                     modifier = Modifier
@@ -273,13 +282,28 @@ fun ScheduleDetailTopBar(
 
         //이름과 뒤로가기
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_back),
-                contentDescription = null,
+
+            Box(
                 modifier = Modifier
-                    .clickable { onBackClick() },
-                tint = grey800()
-            )
+                    .size(48.dp)
+                    .background(color = Color.Transparent, shape = CircleShape)
+                    .clip(CircleShape)
+                    .clickable(
+                        onClick = onBackClick
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(
+                        id = R.drawable.ic_back
+                    ),
+                    contentDescription = null,
+                    tint = grey950(),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+
             Spacer(modifier = Modifier
                 .width(16.dp)
             )

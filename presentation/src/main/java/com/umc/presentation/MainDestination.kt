@@ -61,11 +61,11 @@ sealed interface MainDestination {
 
     //일정 수정
     @Serializable
-    data class ScheduleEdit(val scheduleId: Long) : MainDestination
+    data class ScheduleEdit(val scheduleId: Long = -1L) : MainDestination
 
     //일정 상세
     @Serializable
-    data class ScheduleDetail(val scheduleId: Long, val plusDay: Int) : MainDestination
+    data class ScheduleDetail(val scheduleId: Long = -1L, val plusDay: Int) : MainDestination
 
 
     /**마이 페이지 섹션**/

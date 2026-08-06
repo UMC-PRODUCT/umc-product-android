@@ -259,12 +259,18 @@ fun MainNavHost(
         //일정 생성
         composable<MainDestination.ScheduleAdd> {
             ScheduleAddRoute(
+                scheduleId = -1,
+                onNavigateToBack = {navHostController.popBackStack()},
                 onShowAttendanceDialog = { _, _ -> }
             )
         }
         //일정 수정
-        composable<MainDestination.ScheduleEdit> {
+        composable<MainDestination.ScheduleEdit> {backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.ScheduleEdit>()
+
             ScheduleAddRoute(
+                scheduleId = destination.scheduleId, // 실제 수정할 scheduleId
+                onNavigateToBack = { navHostController.popBackStack() },
                 onShowAttendanceDialog = { _, _ -> }
             )
         }
@@ -272,7 +278,14 @@ fun MainNavHost(
         composable<MainDestination.ScheduleDetail>{ data ->
 
             ScheduleDetailRoute(
+                onBackClick = {navHostController.popBackStack()},
+                onNavigateToAttendSchedule = {
+                    /**TODO. 일정 출석 페이지로 이동하기**/
+                },
+                onNavigateToEditSchedule = { scheduleId ->
+                    navHostController.navigate(MainDestination.ScheduleEdit(scheduleId = scheduleId))
 
+                }
             )
         }
 

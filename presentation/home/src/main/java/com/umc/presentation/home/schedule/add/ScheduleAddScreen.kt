@@ -46,6 +46,8 @@ import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddDialogView
 
 @Composable
 fun ScheduleAddRoute(
+    scheduleId : Long,
+    onNavigateToBack: () -> Unit,
     viewModel: ScheduleAddViewModel = hiltViewModel(),
     participantViewModel: ScheduleChallengerAddDialogViewModel = hiltViewModel(),
     onShowAttendanceDialog: (onConfirm: () -> Unit, onReject: () -> Unit) -> Unit
