@@ -26,6 +26,7 @@ import com.umc.domain.model.request.notice.NoticeVoteRequest
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.usecase.ai.CheckAiFeatureStatusUseCase
 import com.umc.domain.usecase.ai.RefineNoticeMarkdownUseCase
+import com.umc.domain.usecase.ai.SummarizeNoticeMarkdownUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.AddNoticeImagesUseCase
 import com.umc.domain.usecase.notice.AddNoticeLinksUseCase
@@ -54,6 +55,7 @@ class NoticeWriteViewModel @Inject constructor(
     private val addNoticeVoteUseCase: AddNoticeVoteUseCase,
     private val checkAiFeatureStatusUseCase: CheckAiFeatureStatusUseCase,
     private val refineNoticeMarkdownUseCase: RefineNoticeMarkdownUseCase,
+    private val summarizeNoticeMarkdownUseCase: SummarizeNoticeMarkdownUseCase,
 ) : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
     NoticeWriteUiState(),
 ) {
@@ -320,6 +322,39 @@ class NoticeWriteViewModel @Inject constructor(
         )
     }
 
+    /**
+     * 붙여넣고 요약: 복사해 온 공지 전문을 요약해 커서 위치에 붙여넣는다.
+     * 클립보드 읽기는 화면(Composable)에서 하고 여기로 넘긴다
+     */
+    fun onClickAiSummarize(clipboardText: String) = viewModelScope.launch {
+        if (uiState.value.isAiProcessing) return@launch
+        if (clipboardText.isBlank()) {
+            emitEvent(NoticeWriteEvent.ShowError(AppStrings.AI_EMPTY_CLIPBOARD))
+            return@launch
+        }
+
+        updateState { copy(isAiProcessing = true, aiDownloadPercent = null) }
+
+        resultResponse(
+            response = summarizeNoticeMarkdownUseCase(clipboardText) { percent ->
+                updateState { copy(aiDownloadPercent = percent) }
+            },
+            successCallback = { summary ->
+                updateState {
+                    copy(
+                        isAiProcessing = false,
+                        aiDownloadPercent = null,
+                        content = MarkdownEditActions.insertText(content, summary),
+                    )
+                }
+            },
+            errorCallback = {
+                updateState { copy(isAiProcessing = false, aiDownloadPercent = null) }
+                emitEvent(NoticeWriteEvent.ShowError(it.message))
+            },
+        )
+    }
+
     // ---------------------------------------------------------------
     // 마크다운 툴바
     // ---------------------------------------------------------------
@@ -351,6 +386,16 @@ class NoticeWriteViewModel @Inject constructor(
 
     fun onClickQuote() {
         updateState { copy(content = MarkdownEditActions.toggleQuote(content)) }
+    }
+
+    /** 형광펜 색상 선택. 고른 색을 적용하고 다음 선택의 기본값으로 기억한다 */
+    fun onSelectHighlight(color: MarkdownHighlightColor) {
+        updateState {
+            copy(
+                highlightColor = color,
+                content = MarkdownEditActions.toggleHighlight(content, color),
+            )
+        }
     }
 
     // ---------------------------------------------------------------
@@ -626,6 +671,7 @@ data class NoticeWriteUiState(
     val isAiProcessing: Boolean = false,
     // 모델 다운로드가 진행 중일 때만 0~100, 추론 단계에서는 null
     val aiDownloadPercent: Int? = null,
+    val highlightColor: MarkdownHighlightColor = MarkdownHighlightColor.PURPLE,
     val isEditMode: Boolean = false,
     val editNoticeId: Long = 0L,
 ) : UiState {
