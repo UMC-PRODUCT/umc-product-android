@@ -9,11 +9,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.mypage.mycard.MycardRoute
 import com.umc.presentation.act.ActManageRoute
 import com.umc.presentation.act.admin.challenger.AdminChallengerDetailRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
+import com.example.mypage.qrcode.QrCodeRoute
+import com.example.mypage.receivedcard.ReceivedCardRoute
 import com.umc.failcode.SignUpFailRoute
 import com.umc.failcode.code.SignUpFailCodeRoute
 import com.umc.permission.PermissionRoute
@@ -29,6 +32,7 @@ import com.umc.presentation.login.findpassword.FindPasswordRoute
 import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
+import androidx.navigation.navDeepLink
 
 @Composable
 fun MainNavHost(
@@ -38,11 +42,15 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
+
         startDestination = if (BuildConfig.DEBUG) {
             MainDestination.Login
         } else {
             MainDestination.Home
         },
+
+
+        //startDestination = MainDestination.Mycard(),
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -196,6 +204,7 @@ fun MainNavHost(
         }
 
         /**홈 화면 탭에 대한 내용입니다.**/
+
         composable<MainDestination.Act> {
             ActManageRoute(
                 onNavigateToChallengerDetail = { challengerId ->
@@ -214,6 +223,8 @@ fun MainNavHost(
                 onNavigateToBack = { navHostController.popBackStack() },
             )
         }
+
+
 
         //홈 화면
         composable<MainDestination.Home> {
@@ -260,6 +271,39 @@ fun MainNavHost(
         }
 
         /**마이페이지 관련 정의**/
+
+        //신 마이페이지
+        composable<MainDestination.Mycard>(
+            deepLinks = listOf(
+                navDeepLink {
+                    // 스토어 URL 기반 딥링크 패턴 매핑
+                    uriPattern = "umc://card?memberId={targetMemberId}"
+                }
+            )
+        ) { backStackEntry ->
+            // Type-Safe Navigation 파라미터 추출 (딥링크 포함)
+            val mycardDestination = backStackEntry.toRoute<MainDestination.Mycard>()
+            val targetMemberId = mycardDestination.targetMemberId
+
+
+            MycardRoute(
+                targetMemberId = targetMemberId,
+                onNavigateToMypage = {
+                    navHostController.navigate(MainDestination.Mypage)
+                },
+                onNavigateToMyqrCode = {
+                    navHostController.navigate(MainDestination.Qrcode)
+                },
+                onNavigateToEditCard = {
+                    navHostController.navigate(MainDestination.MyProfile)
+                },
+                onNavigateToReceivedCard = {
+                    navHostController.navigate(MainDestination.ReceivedCard)
+                }
+            )
+        }
+
+        //구 마이페이지 -> 신 설정
         composable<MainDestination.Mypage>{
             MypageRoute(
                 onNavigateToEditProfile = {
@@ -268,10 +312,17 @@ fun MainNavHost(
                 onNavigateToMyContent = {type ->
                     navHostController.navigate(MainDestination.MyContent(showType = type))
                                         },
-                onNavigateToLogin = {}
+                onNavigateToLogin = {},
+                onNavigateToQrCode = {
+                    navHostController.navigate(MainDestination.Qrcode)
+                },
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
             )
 
         }
+
 
         //내 활동
         composable<MainDestination.MyContent> {
@@ -284,7 +335,29 @@ fun MainNavHost(
 
         //내 프로필
         composable<MainDestination.MyProfile> {
-            ProfileRoute()
+            ProfileRoute(
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
+        }
+
+        /**qr 코드**/
+        composable<MainDestination.Qrcode> {
+            QrCodeRoute(
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
+        }
+
+        //받은 명함
+        composable<MainDestination.ReceivedCard> {
+            ReceivedCardRoute (
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
         }
 
 

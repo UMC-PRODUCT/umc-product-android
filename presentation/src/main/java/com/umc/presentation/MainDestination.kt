@@ -69,6 +69,14 @@ sealed interface MainDestination {
 
 
     /**마이 페이지 섹션**/
+
+    //신 마이페이지
+    @Serializable
+    data class Mycard(
+        val targetMemberId: String? = null
+    ) : MainDestination
+
+    //(구 마이페이지) -> (신 설정)
     @Serializable
     data object Mypage : MainDestination
 
@@ -79,6 +87,14 @@ sealed interface MainDestination {
     //프로필 페이지
     @Serializable
     data object MyProfile : MainDestination
+
+    /**내 qr코드 페이지**/
+    @Serializable
+    data object Qrcode : MainDestination
+
+    //받은 명함 페이지
+    @Serializable
+    data object ReceivedCard : MainDestination
 
 
 

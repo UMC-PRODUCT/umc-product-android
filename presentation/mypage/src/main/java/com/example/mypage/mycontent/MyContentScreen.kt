@@ -40,6 +40,14 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.indigo500
 import kotlinx.coroutines.flow.collectLatest
 
+
+
+/**
+ *
+ * 커뮤니티 개편으로 제거됩니다.
+ *
+ * **/
+
 @Composable
 fun MyContentRoute(
     viewModel: MyContentViewModel = hiltViewModel(),

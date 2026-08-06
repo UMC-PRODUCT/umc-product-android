@@ -13,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -58,6 +60,7 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
+import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
 import com.umc.domain.model.enums.LoginType
@@ -68,14 +71,18 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun ProfileRoute(
     viewModel: ProfileViewModel = hiltViewModel(),
+    onNavigateToBack: () -> Unit
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    /*
     //텍스트 상태 추적
     var githubText by remember(uiState.githubLink) { mutableStateOf(uiState.githubLink) }
     var linkedinText by remember(uiState.linkedinLink) { mutableStateOf(uiState.linkedinLink) }
     var blogText by remember(uiState.blogLink) { mutableStateOf(uiState.blogLink) }
+
+     */
 
     //이미지 picker 세팅
     val pickMedia = rememberLauncherForActivityResult(
@@ -119,10 +126,10 @@ fun ProfileRoute(
                     pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 }
                 is ProfileEvent.ClickComplete -> {
-                    viewModel.saveUserOutLink(githubText, linkedinText, blogText)
+                    viewModel.saveUserOutLink(uiState.githubLink, uiState.linkedinLink, uiState.blogLink)
                 }
                 is ProfileEvent.ClickBackPressed -> {
-                    /**TODO: 차후 로직 처리*/
+                    onNavigateToBack()
                 }
                 is ProfileEvent.MakeToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
@@ -131,12 +138,12 @@ fun ProfileRoute(
 
     ProfileScreen(
         uiState = uiState,
-        githubText = githubText,
-        onGithubChange = { githubText = it },
-        linkedinText = linkedinText,
-        onLinkedinChange = { linkedinText = it },
-        blogText = blogText,
-        onBlogChange = { blogText = it },
+        githubText = uiState.githubLink,
+        onGithubChange = { viewModel.updateGithubLink(it) },
+        linkedinText = uiState.linkedinLink,
+        onLinkedinChange = { viewModel.updateLinkedinLink(it) },
+        blogText = uiState.blogLink,
+        onBlogChange = { viewModel.updateBlogLink(it) },
         onBackPressed = viewModel::onClickBackPressed,
         onCompleteClick = viewModel::onClickComplete,
         onProfileImageClick = viewModel::onClickProfileImage
@@ -163,7 +170,7 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(grey100())
     ) {
 
         //상단 바
@@ -268,29 +275,38 @@ fun ProfileTopbar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 18.dp)
-            .padding(horizontal = 16.dp),
+            .background(grey000()),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ){
-            Icon(
-                painter = painterResource(id=R.drawable.ic_back),
-                contentDescription = null,
-                tint = grey800(),
+            Box(
                 modifier = Modifier
-                    .clickable { onBackClick() }
-                    .padding(end = 16.dp)
+                    .size(48.dp)
+                    .background(color = Color.Transparent, shape = CircleShape)
                     .clip(CircleShape)
-            )
+                    .clickable(
+                        onClick = onBackClick
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(
+                        id = R.drawable.ic_back
+                    ),
+                    contentDescription = null,
+                    tint = grey950(),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
             UText(
                 text = AppStrings.MYPAGE_MODIFY_PROFILE,
                 style = UmcTypographyTokens.Title2Bold,
-                color = grey800(),
-                modifier = Modifier.padding(start = 16.dp)
+                color = grey950(),
+                modifier = Modifier.padding(start = 8.dp)
             )
         }
 
@@ -301,6 +317,7 @@ fun ProfileTopbar(
             color = indigo500(),
             modifier = Modifier
                 .clickable { onCompleteClick() }
+                .padding(end = 16.dp)
         )
 
     }
@@ -322,8 +339,6 @@ fun ProfileImageSection(imageUri: Uri, defaultUrl: String, onImageClick: () -> U
                 .clickable { onImageClick() }
         ) {
             AsyncImage(
-
-
                 model = if (imageUri != Uri.EMPTY) imageUri
                         else if(defaultUrl != "") defaultUrl
                         else R.drawable.ic_profile_default,
@@ -405,7 +420,8 @@ fun ActiveHistoryItem(
             borderColor = grey200(),
             borderWidth = 1.dp,
             textColor = grey600(),
-            textStyle = UmcTypographyTokens.FootnoteBold
+            textStyle = UmcTypographyTokens.FootnoteBold,
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
         )
 
 
@@ -436,7 +452,8 @@ fun ActiveHistoryItem(
                 backgroundColor = indigo100(),
                 borderWidth = 0.dp,
                 textColor = indigo500(),
-                textStyle = UmcTypographyTokens.FootnoteBold
+                textStyle = UmcTypographyTokens.FootnoteBold,
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
             )
         }
 
