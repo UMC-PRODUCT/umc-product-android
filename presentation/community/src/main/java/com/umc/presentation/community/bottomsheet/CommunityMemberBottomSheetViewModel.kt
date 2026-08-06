@@ -88,15 +88,22 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 return@launch
             }
 
-            val currentMembers = memberPage.items.map { threadMember ->
-                findChallengerDetail(
-                    threadMember = threadMember,
-                )
-            }
+            val ownerMemberIds = memberPage.items
+                .filter { member -> member.role.equals(OWNER_ROLE, ignoreCase = true) }
+                .mapNotNull { member -> member.memberId.toLongOrNull() }
+                .toSet()
+            val currentMembers = memberPage.items
+                .filterNot { member -> member.role.equals(OWNER_ROLE, ignoreCase = true) }
+                .map { threadMember ->
+                    findChallengerDetail(
+                        threadMember = threadMember,
+                    )
+                }
 
             updateState {
                 copy(
                     currentMembers = currentMembers,
+                    ownerMemberIds = ownerMemberIds,
                     selectedMembers = currentMembers,
                     isLoading = false,
                     errorMessage = null,
@@ -245,9 +252,13 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 is ApiState.Success -> {
                     val page = response.data
 
-                    val searchedMembers = page.content.map { participant ->
-                        participant.toCommunityChallengerUiModel()
-                    }
+                    val searchedMembers = page.content
+                        .filterNot { participant ->
+                            participant.id in uiState.value.ownerMemberIds
+                        }
+                        .map { participant ->
+                            participant.toCommunityChallengerUiModel()
+                        }
 
                     updateState {
                         val mergedMembers = if (append) {
@@ -524,6 +535,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         private const val CURRENT_MEMBER_PAGE_SIZE = 100
         private const val FIRST_OFFSET = 0
         private const val SEARCH_DELAY = 300L
+        private const val OWNER_ROLE = "OWNER"
     }
 }
 
