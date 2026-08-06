@@ -5,11 +5,13 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
 import com.umc.domain.model.ChallengerRecord
+import com.umc.domain.model.CurrentGisuMemberInfo
 import com.umc.domain.model.ProfileInfo
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.home.NotificationItem
 
 import com.umc.domain.model.UserRole
+import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.model.mypage.UserOutLink
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -61,6 +63,11 @@ class AppDataStore @Inject constructor(
             ProfileInfo(0, "", "", "", "", "")
         }
 
+        val currentGisuJson = prefs[KEY_CURRENT_GISU_INFO] ?: ""
+        val currentGisuData = if (currentGisuJson.isNotEmpty()) {
+            runCatching { gson.fromJson(currentGisuJson, CurrentGisuMemberInfo::class.java) }.getOrNull()
+        } else null
+
         UserInfo(
             id = prefs[KEY_ID] ?: 0L,
             name = prefs[KEY_NAME] ?: "",
@@ -72,7 +79,11 @@ class AppDataStore @Inject constructor(
             status = prefs[KEY_STATUS] ?: "ACTIVE",
             roles = rolesList,
             challengerRecords = recordsList,
-            profile = profileData
+            profile = profileData,
+
+            hasLocalCredential = prefs[KEY_HAS_LOCAL_CREDENTIAL] ?: false,
+            totalActivityDays = prefs[KEY_TOTAL_ACTIVITY_DAYS] ?: 0L,
+            currentGisuMemberInfo = currentGisuData
         )
     }
 
@@ -90,8 +101,60 @@ class AppDataStore @Inject constructor(
             prefs[KEY_ROLES] = gson.toJson(userInfo.roles)
             prefs[KEY_RECORDS] = gson.toJson(userInfo.challengerRecords)
             prefs[KEY_PROFILE] = gson.toJson(userInfo.profile)
+            prefs[KEY_HAS_LOCAL_CREDENTIAL] = userInfo.hasLocalCredential
+            prefs[KEY_TOTAL_ACTIVITY_DAYS] = userInfo.totalActivityDays
+            if (userInfo.currentGisuMemberInfo != null) {
+                prefs[KEY_CURRENT_GISU_INFO] = gson.toJson(userInfo.currentGisuMemberInfo)
+            } else {
+                prefs.remove(KEY_CURRENT_GISU_INFO)
+            }
         }
     }
+
+    // 명함 생성 : 명함 목록 Flow
+    val userCardFlow: Flow<List<UserCard>> = context.dataStore.data.map { prefs ->
+        val json = prefs[KEY_USER_CARDS] ?: "[]"
+        runCatching {
+            gson.fromJson(json, Array<UserCard>::class.java).toList()
+        }.getOrDefault(emptyList())
+    }
+
+    // 명함 생성 : 명함 저장 (추가 및 업데이트 : ID 기준 중복 제거 후 최신 명함을 맨 앞으로)
+    suspend fun saveUserCard(card: UserCard) {
+        context.dataStore.edit { prefs ->
+            val currentJson = prefs[KEY_USER_CARDS] ?: "[]"
+            val currentList = runCatching {
+                gson.fromJson(currentJson, Array<UserCard>::class.java).toMutableList()
+            }.getOrDefault(mutableListOf())
+
+            // 동일한 ID를 가진 기존 명함이 있다면 삭제 (수정/재추가 대응)
+            currentList.removeAll { it.cardId == card.cardId }
+            currentList.add(0, card) // 맨 앞에 추가
+
+            prefs[KEY_USER_CARDS] = gson.toJson(currentList)
+        }
+    }
+
+    // 명함 삭제 : 명함의 cardId를 통한 개별 삭제
+    suspend fun removeUserCard(cardId: String) {
+        context.dataStore.edit { prefs ->
+            val currentJson = prefs[KEY_USER_CARDS] ?: "[]"
+            val currentList = runCatching {
+                gson.fromJson(currentJson, Array<UserCard>::class.java).toMutableList()
+            }.getOrDefault(mutableListOf())
+
+            currentList.removeAll { it.cardId == cardId }
+            prefs[KEY_USER_CARDS] = gson.toJson(currentList)
+        }
+    }
+
+    // 명함 삭제 : 전체 명함 삭제
+    suspend fun clearUserCards() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_USER_CARDS)
+        }
+    }
+
 
     // 일정 생성 : 최근 장소 검색어 Flow
     val recentSearchesPlaceFlow: Flow<List<String>> = context.dataStore.data.map { prefs ->
@@ -285,6 +348,13 @@ class AppDataStore @Inject constructor(
         val KEY_ROLES = stringPreferencesKey("roles")
         val KEY_RECORDS = stringPreferencesKey("challenger_records")
         val KEY_PROFILE = stringPreferencesKey("profile_info")
+        val KEY_HAS_LOCAL_CREDENTIAL = booleanPreferencesKey("has_local_credential")
+        val KEY_TOTAL_ACTIVITY_DAYS = longPreferencesKey("total_activity_days")
+        val KEY_CURRENT_GISU_INFO = stringPreferencesKey("current_gisu_info")
+
+
+        //유저 명하 목록 KEY
+        val KEY_USER_CARDS = stringPreferencesKey("user_cards")
 
         //일정 추가에서 장소 기록 KEY
         val KEY_RECENT_SEARCHES_PLACE = stringPreferencesKey("recent_searches_place")
