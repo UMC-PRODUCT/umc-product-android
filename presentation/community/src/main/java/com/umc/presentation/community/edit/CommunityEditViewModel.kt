@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.usecase.community.GetCommunityThreadDetailUseCase
+import com.umc.domain.usecase.community.GetCommunityThreadMembersUseCase
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -24,6 +25,8 @@ import kotlinx.coroutines.launch
 class CommunityEditViewModel @Inject constructor(
     private val getCommunityThreadDetailUseCase:
     GetCommunityThreadDetailUseCase,
+    private val getCommunityThreadMembersUseCase:
+    GetCommunityThreadMembersUseCase,
     private val updateCommunityThreadUseCase:
     UpdateCommunityThreadUseCase,
     private val deleteCommunityThreadUseCase:
@@ -136,12 +139,32 @@ class CommunityEditViewModel @Inject constructor(
             getCommunityThreadDetailUseCase(
                 threadId = threadId,
             ).onSuccess { thread ->
+                val selectedChallengers = getCommunityThreadMembersUseCase(
+                    threadId = threadId,
+                    limit = thread.maxMembers.coerceAtLeast(20),
+                ).getOrNull()
+                    ?.items
+                    .orEmpty()
+                    .mapNotNull { member ->
+                        member.memberId.toLongOrNull()?.let { memberId ->
+                            CommunityChallengerUiModel(
+                                memberId = memberId,
+                                name = member.name,
+                                nickname = "",
+                                school = "",
+                                generation = member.generation.toLongOrNull() ?: 0L,
+                                partLabel = member.part,
+                            )
+                        }
+                    }
+
                 _state.update {
                     it.copy(
                         threadId = thread.threadId,
                         title = thread.title,
                         description = thread.description,
-                        selectedChallengers = emptyList(),
+                        selectedChallengers = selectedChallengers,
+                        maxChallengerCount = thread.maxMembers,
                         aiState = CommunityAiState.SUCCESS,
                         classifiedCategory = thread.category.toUiCategory(),
                         selectedIcon = thread.icon,

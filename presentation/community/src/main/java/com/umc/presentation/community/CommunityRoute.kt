@@ -7,6 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 
 @Composable
 fun CommunityRoute(
@@ -22,9 +24,12 @@ fun CommunityRoute(
 
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.loadThreads()
+    }
+
     LaunchedEffect(shouldRefresh) {
         if (shouldRefresh) {
-            viewModel.loadThreads()
             onRefreshHandled()
         }
     }
