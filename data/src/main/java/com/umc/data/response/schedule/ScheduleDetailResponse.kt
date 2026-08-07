@@ -59,6 +59,9 @@ data class ScheduleDetailResponse(
             // "T"를 기준으로 날짜와 시간을 분리
             val (startDay, startTime) = startsAt.parseDateTime()
             val (endDay, endTime) = endsAt.parseDateTime()
+            val (checkInStartDay, checkInStartTime) = attendancePolicy?.checkInStartAt.orEmpty().parseDateTime()
+            val (onTimeEndDay, onTimeEndTime) = attendancePolicy?.onTimeEndAt.orEmpty().parseDateTime()
+            val (lateEndDay, lateEndTime) = attendancePolicy?.lateEndAt.orEmpty().parseDateTime()
 
             val resolvedLocationName = location?.locationName ?: locationName.orEmpty()
             val resolvedLatitude = location?.latitude ?: latitude ?: 0.0
@@ -97,10 +100,13 @@ data class ScheduleDetailResponse(
                 isParticipant = isParticipant ?: false,
                 isAttendanceChecked = isAttendanceChecked ?: false,
 
-                // 출석 정책 매핑
-                checkInStartAt = attendancePolicy?.checkInStartAt.orEmpty(),
-                onTimeEndAt = attendancePolicy?.onTimeEndAt.orEmpty(),
-                lateEndAt = attendancePolicy?.lateEndAt.orEmpty(),
+                // 출석 정책 시간 매핑
+                checkInStartDay = checkInStartDay,
+                checkInStartTime = checkInStartTime,
+                onTimeEndDay = onTimeEndDay,
+                onTimeEndTime = onTimeEndTime,
+                lateEndDay = lateEndDay,
+                lateEndTime = lateEndTime
             )
         }
     }
