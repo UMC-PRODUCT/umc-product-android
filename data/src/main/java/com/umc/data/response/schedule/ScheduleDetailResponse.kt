@@ -5,6 +5,7 @@ import com.umc.domain.model.UDomainFormat.parseDateTime
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CheckAvailableStatus
+import com.umc.domain.model.home.ParticipantMember
 import com.umc.domain.model.home.PlanDetailItem
 
 data class ScheduleDetailResponse(
@@ -27,7 +28,7 @@ data class ScheduleDetailResponse(
     @SerializedName("isParticipant") val isParticipant: Boolean? = null,
     @SerializedName("dDay") val dDay: Int?,
     @SerializedName("requiresAttendanceApproval") val requiresAttendanceApproval: Boolean?,
-    @SerializedName("participantMemberIds") val participantMemberIds: List<Long>?,
+    //@SerializedName("participantMemberIds") val participantMemberIds: List<Long>?,
     @SerializedName("attendancePolicy") val attendancePolicy: AttendancePolicyResponse? = null,
     @SerializedName("participants") val participants: List<ParticipantResponse>? = null,
 ) {
@@ -79,7 +80,18 @@ data class ScheduleDetailResponse(
                 status = status ?: "",
                 dDay = dDay ?: -1,
                 requiresAttendanceApproval = requiresAttendanceApproval ?: false,
-                participantMemberIds = participantMemberIds ?: emptyList(),
+                //participantMemberIds = participantMemberIds ?: emptyList(),
+                //출석 인원 추가
+                participantMembers = participants?.map { participant ->
+                    ParticipantMember(
+                        memberId = participant.memberId,
+                        name = participant.name,
+                        nickname = participant.nickname,
+                        schoolId = participant.schoolId,
+                        schoolName = participant.schoolName,
+                        profileImageUrl = participant.profileImageUrl
+                    )
+                } ?: emptyList(),
                 // 출석 관련 추가
                 authorMemberId = authorMemberId ?: -1L,
                 isParticipant = isParticipant ?: false,
