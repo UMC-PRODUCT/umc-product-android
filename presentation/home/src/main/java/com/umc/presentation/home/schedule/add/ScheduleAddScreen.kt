@@ -1,5 +1,6 @@
 package com.umc.presentation.home.schedule.add
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 
@@ -26,12 +27,14 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.component.UChip
 import com.umc.component.component.UDateTimePickerDialog
 import com.umc.component.component.USwitch
 import com.umc.component.component.UText
 import com.umc.component.component.UTimePickerDialog
+import com.umc.component.component.UToast
 import com.umc.presentation.home.home.CalendarDatePickerDialog
 import com.umc.presentation.home.schedule.dialog.LocationSearchBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
@@ -55,6 +58,8 @@ fun ScheduleAddRoute(
 ){
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val context = LocalContext.current
 
     val participantUiState by participantViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -81,6 +86,9 @@ fun ScheduleAddRoute(
         viewModel.uiEvent.collectLatest { event ->
             when (event){
                 is ScheduleAddEvent.MoveBackPressedEvent -> onBackPressedDispatcher?.onBackPressed()
+                is ScheduleAddEvent.ShowErrorToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
                 else -> {}
             }
         }
