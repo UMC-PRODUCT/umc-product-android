@@ -120,8 +120,16 @@ constructor(
                 response = getScheduleDetailHomeUseCase(scheduleId),
                 successCallback = { detail ->
 
+                    val users = detail.participantMembers
+                    val usersIdList = users.map { it ->
+                        it.memberId
+                    }
+                    Log.d("log_home", "일정 상세 정보: $detail")
+                    Log.d("log_home", "일정 상세 정보/users: $users")
+                    Log.d("log_home", "일정 상세 정보/usersIdList: $usersIdList")
+
                     //1. 참석자들 프로필 정보 로드
-                    loadParticipantsProfiles(detail.participantMemberIds) { participants ->
+                    loadParticipantsProfiles(usersIdList) { participants ->
                         //2. 받아온 데이터를 UI 상태에 맞게 가공 및 반영
                         applyScheduleDetail(detail, participants)
                     }
