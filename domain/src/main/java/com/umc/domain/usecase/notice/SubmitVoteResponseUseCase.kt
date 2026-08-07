@@ -8,8 +8,8 @@ import javax.inject.Inject
 class SubmitVoteResponseUseCase @Inject constructor(
     private val noticeRepository: NoticeRepository
 ) {
-    suspend operator fun invoke(voteId: Long, optionIds: List<Long>): ApiState<Unit> {
+    suspend operator fun invoke(noticeId: Long, optionIds: List<Long>): ApiState<Unit> {
         val request = VoteResponseRequest(optionIds = optionIds)
-        return noticeRepository.submitVoteResponse(voteId, request)
+        return noticeRepository.submitVoteResponse(noticeId, request)
     }
 }

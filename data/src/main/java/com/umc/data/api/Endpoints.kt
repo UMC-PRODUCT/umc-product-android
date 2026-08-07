@@ -53,7 +53,10 @@ object Endpoints {
 
     object Member {
         const val MEMBER = "api/v1/member"
+        const val MEMBER_V2 = "api/v2/member"
         const val MYPROFILE = "$MEMBER/me"
+
+        const val MYPROFILE_V2 = "$MEMBER_V2/me"
         const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
         const val MEMBER_REGISTER_OAUTH = "$MEMBER/register/oauth"
         const val MEMBER_REGISTER_EMAIL = "$MEMBER/register/email"
@@ -219,6 +222,7 @@ object Endpoints {
         const val NOTICE_READ_STATICS = "$NOTICE_DETAIL/read-statics"
         const val NOTICE_LINKS = "$NOTICE_DETAIL/links"
         const val NOTICE_IMAGES = "$NOTICE_DETAIL/images"
+        const val VOTE_RESPONSES = "$NOTICE_DETAIL/votes/responses"
     }
 
     object Survey {

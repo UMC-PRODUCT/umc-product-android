@@ -123,7 +123,6 @@ fun SignUpFailCodeScreen(
             onValueChange = { if (it.length <= 6) onCodeChanged(it) },
             placeholder = AppStrings.SIGN_UP_FAIL_CODE_PLACEHOLDER,
             textStyle = UmcTypographyTokens.Body,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
