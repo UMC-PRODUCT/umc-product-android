@@ -40,6 +40,27 @@ sealed interface MainDestination {
     @Serializable
     data object SignUpFailCode : MainDestination
 
+    /**공지 섹션**/
+    //공지 목록
+    @Serializable
+    data object Notice : MainDestination
+
+    //공지 검색
+    @Serializable
+    data class NoticeSearch(val gisuId: Long) : MainDestination
+
+    //운영진 공지
+    @Serializable
+    data class AdminNotice(val gisuId: Long) : MainDestination
+
+    //공지 작성. noticeId가 있으면 수정 모드
+    @Serializable
+    data class NoticeWrite(val noticeId: Long = 0L) : MainDestination
+
+    //공지 상세
+    @Serializable
+    data class NoticeDetail(val noticeId: Long) : MainDestination
+
     /**홈 화면 섹션**/
     //홈 화면
     @Serializable
@@ -69,6 +90,14 @@ sealed interface MainDestination {
 
 
     /**마이 페이지 섹션**/
+
+    //신 마이페이지
+    @Serializable
+    data class Mycard(
+        val targetMemberId: String? = null
+    ) : MainDestination
+
+    //(구 마이페이지) -> (신 설정)
     @Serializable
     data object Mypage : MainDestination
 
@@ -79,6 +108,14 @@ sealed interface MainDestination {
     //프로필 페이지
     @Serializable
     data object MyProfile : MainDestination
+
+    /**내 qr코드 페이지**/
+    @Serializable
+    data object Qrcode : MainDestination
+
+    //받은 명함 페이지
+    @Serializable
+    data object ReceivedCard : MainDestination
 
 
 

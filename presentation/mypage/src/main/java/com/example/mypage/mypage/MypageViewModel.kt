@@ -2,6 +2,7 @@ package com.example.mypage.mypage
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.example.mypage.nearby.NearbyViewModel
 import com.kakao.sdk.auth.TokenManagerProvider
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
@@ -181,6 +182,7 @@ class MypageViewModel @Inject constructor(
 
     }
 
+
     //개인정보처리 방침
     fun navigateToPersonalInformation(){
         viewModelScope.launch {
@@ -221,6 +223,10 @@ class MypageViewModel @Inject constructor(
 
     fun navigateToOnBoardPage(){
         emitEvent(MypageEvent.MoveToOnBoardPage)
+    }
+
+    fun navigateToBack(){
+        emitEvent(MypageEvent.NavigateToBack)
     }
 
 
@@ -313,8 +319,6 @@ class MypageViewModel @Inject constructor(
     }
 
 
-
-
 }
 
 
@@ -383,7 +387,8 @@ sealed interface MypageEvent : UiEvent {
     object NavigateToWebstieUmc : MypageEvent // UMC 웹사이트
     object NavigateToInstagramUmc : MypageEvent // UMC 인스타그램
 
-
+    //뒤로 가기
+    object NavigateToBack : MypageEvent
 
     //로그아웃
     object Logout : MypageEvent
@@ -393,6 +398,8 @@ sealed interface MypageEvent : UiEvent {
 
     //처음으로 이동
     object MoveToOnBoardPage : MypageEvent
+
+
 
     //챌린저 코드 다이얼로그 전용
     object ConfirmAddCode : MypageEvent
