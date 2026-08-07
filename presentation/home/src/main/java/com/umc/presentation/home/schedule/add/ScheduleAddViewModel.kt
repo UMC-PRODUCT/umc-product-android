@@ -282,9 +282,28 @@ constructor(
         val state = uiState.value
         val isEditMode = state.updateScheduleId != -1L
 
+        //하루 종일(isAllDay) 여부에 따른 Calendar 시/분/초 세팅
+        val startCal = (state.startDate.clone() as Calendar).apply {
+            if (state.isAllDay) {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+        }
+
+        val endCal = (state.endDate.clone() as Calendar).apply {
+            if (state.isAllDay) {
+                set(Calendar.HOUR_OF_DAY, 23)
+                set(Calendar.MINUTE, 59)
+                set(Calendar.SECOND, 59)
+                set(Calendar.MILLISECOND, 999)
+            }
+        }
+
         //날짜 데이터 ISO 8601 포맷으로 변환
-        val startsAt = getIsoDateTime(state.startDate, state.startTime)
-        val endsAt = getIsoDateTime(state.endDate, state.endTime)
+        val startsAt = getIsoDateTime(startCal, if (state.isAllDay) startCal else state.startTime)
+        val endsAt = getIsoDateTime(endCal, if (state.isAllDay) endCal else state.endTime)
 
         Log.d("log_home", "startsAt: $startsAt, endsAt: $endsAt")
 
