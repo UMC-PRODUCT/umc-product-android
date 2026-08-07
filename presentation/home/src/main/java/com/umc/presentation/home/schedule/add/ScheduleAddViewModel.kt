@@ -186,7 +186,25 @@ constructor(
             val startTimeTextFormatted = UTimeFormat.formatToAmPm(detail.startTime)
             val endTimeTextFormatted = UTimeFormat.formatToAmPm(detail.endTime)
 
-            //3. 카테고리 매칭
+            //3. 출석부 데이터 유효성 판단 (체크인 시작 날짜 및 시간이 비어있지 않은지)
+            val hasAttendancePolicy = detail.checkInStartDay.isNotBlank() && detail.checkInStartTime.isNotBlank()
+
+            //4. 출석부 시간 파싱 (데이터가 있는 경우에만 Calendar 변환, 없으면 기본 Calendar)
+            val checkInStartCal = if (hasAttendancePolicy) stringToCalendar(detail.checkInStartDay, detail.checkInStartTime) else Calendar.getInstance()
+            val onTimeEndCal = if (hasAttendancePolicy) stringToCalendar(detail.onTimeEndDay, detail.onTimeEndTime) else Calendar.getInstance()
+            val lateEndCal = if (hasAttendancePolicy) stringToCalendar(detail.lateEndDay, detail.lateEndTime) else Calendar.getInstance()
+
+            //5. 출석부 UI 표시용 텍스트 가공 ("yyyy.MM.dd" 및 "오전/오후" 포맷)
+            val checkInStartDateTextFormatted = if (hasAttendancePolicy) detail.checkInStartDay else ""
+            val checkInStartTimeTextFormatted = if (hasAttendancePolicy) UTimeFormat.formatToAmPm(detail.checkInStartTime) else ""
+
+            val onTimeEndDateTextFormatted = if (hasAttendancePolicy) detail.onTimeEndDay else ""
+            val onTimeEndTimeTextFormatted = if (hasAttendancePolicy) UTimeFormat.formatToAmPm(detail.onTimeEndTime) else ""
+
+            val lateEndDateTextFormatted = if (hasAttendancePolicy) detail.lateEndDay else ""
+            val lateEndTimeTextFormatted = if (hasAttendancePolicy) UTimeFormat.formatToAmPm(detail.lateEndTime) else ""
+
+            //6. 카테고리 매칭
             val updatedCategories = categories.map { item ->
                 item.copy(isChecked = detail.tags.any { it.label == item.name })
             }
@@ -197,14 +215,14 @@ constructor(
                 else -> "${selectedOnes.take(3).joinToString(", ") { it.name }} 외 ${selectedOnes.size - 3}개"
             }
 
-            //4. 참석자 매칭
+            //7. 참석자 매칭
             val participantSummaryText = when {
                 participants.isEmpty() -> ""
                 participants.size == 1 -> participants[0].name
                 else -> "${participants[0].name} 외 ${participants.size - 1}명"
             }
 
-            //5. 갱신 저장
+            //8. 갱신 저장
             copy(
                 planTitle = detail.name,
                 planLocation = detail.locationName,
@@ -223,7 +241,23 @@ constructor(
                 endTimeText = endTimeTextFormatted,
                 selectedCategoriesString = summaryText,
                 selectedParticipants = participants,
-                selectedParticipantsString = participantSummaryText
+                selectedParticipantsString = participantSummaryText,
+                //출석부 관련
+                isAttendanceChecked = hasAttendancePolicy, // 출석 정보가 존재하면 스위치 켜짐(true)
+
+                checkInStartDate = checkInStartCal,
+                checkInStartTime = checkInStartCal,
+                onTimeEndDate = onTimeEndCal,
+                onTimeEndTime = onTimeEndCal,
+                lateEndDate = lateEndCal,
+                lateEndTime = lateEndCal,
+
+                checkInStartDateText = checkInStartDateTextFormatted,
+                checkInStartTimeText = checkInStartTimeTextFormatted,
+                onTimeEndDateText = onTimeEndDateTextFormatted,
+                onTimeEndTimeText = onTimeEndTimeTextFormatted,
+                lateEndDateText = lateEndDateTextFormatted,
+                lateEndTimeText = lateEndTimeTextFormatted
             )
         }
     }

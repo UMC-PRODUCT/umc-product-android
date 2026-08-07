@@ -28,9 +28,12 @@ data class PlanDetailItem (
     val isAttendanceChecked: Boolean = false,
 
     //출석 정책 (Attendance Policy) 추가
-    val checkInStartAt: String = "", // 출석 시작 가능 시간 (ISO UTC 문자열)
-    val onTimeEndAt: String = "",    // 지각 처리 전 출석 마감 시간
-    val lateEndAt: String = ""       // 결석 처리 전 최종 마감 시간
+    val checkInStartDay: String = "", // 출석 시작 가능 시간 (ISO UTC 문자열)
+    val checkInStartTime: String = "",
+    val onTimeEndDay: String = "",    // 지각 처리 전 출석 마감 시간
+    val onTimeEndTime: String = "",
+    val lateEndDay: String = "",       // 결석 처리 전 최종 마감 시간
+    val lateEndTime: String = ""
 )
 
 data class ParticipantMember(
