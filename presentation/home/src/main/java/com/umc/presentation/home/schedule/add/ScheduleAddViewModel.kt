@@ -1,6 +1,7 @@
 package com.umc.presentation.home.schedule.add
 
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.umc.component.R
@@ -384,7 +385,9 @@ constructor(
                     successCallback = {
                         emitEvent(ScheduleAddEvent.MoveBackPressedEvent)
                     },
-                    errorCallback = { /* 에러 처리 */ }
+                    errorCallback = { error ->
+                        emitEvent(ScheduleAddEvent.ShowErrorToast(error.message))
+                    /* 에러 처리 */ }
                 )
             } else {
                 //[새 일정 생성]
@@ -411,7 +414,8 @@ constructor(
                     successCallback = {
                         emitEvent(ScheduleAddEvent.MoveBackPressedEvent)
                     },
-                    errorCallback = { /* 에러 처리 */ }
+                    errorCallback = { error ->
+                        emitEvent(ScheduleAddEvent.ShowErrorToast(error.message))}
                 )
             }
         }
