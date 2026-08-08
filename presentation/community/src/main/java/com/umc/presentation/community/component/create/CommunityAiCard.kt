@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
@@ -44,6 +45,7 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
@@ -335,30 +337,17 @@ private fun CommunityAiResultContent(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        Row(
+        CommunityAiResultButton(
+            text = if (canRetry) {
+                "다시 분류하기"
+            } else {
+                "재분류 불가"
+            },
+            enabled = canRetry,
+            isPrimary = true,
+            onClick = onRetryClassificationClick,
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            CommunityAiResultButton(
-                text = if (canRetry) {
-                    "다시 분류하기"
-                } else {
-                    "재분류 불가"
-                },
-                enabled = canRetry,
-                isPrimary = true,
-                onClick = onRetryClassificationClick,
-                modifier = Modifier.weight(1f),
-            )
-
-            CommunityAiResultButton(
-                text = "이모지 변경하기",
-                enabled = true,
-                isPrimary = false,
-                onClick = onChangeEmojiClick,
-                modifier = Modifier.weight(1f),
-            )
-        }
+        )
 
         if (warningMessage != null) {
             Spacer(modifier = Modifier.height(14.dp))
@@ -367,7 +356,7 @@ private fun CommunityAiResultContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        color = yellow100(),
+                        color = grey100(),
                         shape = RoundedCornerShape(8.dp),
                     )
                     .padding(
@@ -381,7 +370,7 @@ private fun CommunityAiResultContent(
                         id = R.drawable.ic_error_filled,
                     ),
                     contentDescription = null,
-                    tint = yellow500(),
+                    tint = grey500(),
                     modifier = Modifier.size(16.dp),
                 )
 
@@ -390,7 +379,7 @@ private fun CommunityAiResultContent(
                 UText(
                     text = warningMessage,
                     style = UmcTypographyTokens.Subheadline,
-                    color = yellow700(),
+                    color = grey700(),
                 )
             }
         }
@@ -522,4 +511,17 @@ private fun categoryIconRes(
             R.drawable.ic_community_part_notice
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CommunityAiFailedPreview() {
+    CommunityAiCard(
+        aiState = CommunityAiState.FAILED,
+        classifiedCategory = CommunityCategory.FREE,
+        canRequestClassification = false,
+        onRequestClassificationClick = {},
+        onRetryClassificationClick = {},
+        onChangeEmojiClick = {},
+    )
 }
