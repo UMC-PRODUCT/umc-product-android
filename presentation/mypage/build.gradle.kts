@@ -74,4 +74,20 @@ dependencies {
 
     //비동기 이미지
     implementation(libs.coil.compose)
+
+    //nearby Connection
+    implementation(libs.google.play.services.nearby)
+    implementation(libs.google.code.gson)
+
+    // ZXing (QR 생성)
+    implementation(libs.zxing.core)
+
+    // ML Kit (QR 스캔)
+    implementation(libs.mlkit.barcode.scanning)
+
+    // CameraX (카메라 바인딩)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
 }

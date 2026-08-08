@@ -5,6 +5,7 @@ import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
 import com.umc.domain.model.home.NotificationItem
+import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.model.mypage.UserOutLink
 import com.umc.domain.repository.AppDataStoreRepository
 import kotlinx.coroutines.flow.Flow
@@ -118,4 +119,21 @@ class AppDataStoreRepositoryImpl @Inject constructor(
     override suspend fun clearReadNoticeIds() {
         appDataStore.clearReadNoticeIds()
     }
+
+    // 마이페이지 -> 명함 관리
+    override fun getUserCards(): Flow<List<UserCard>> = appDataStore.userCardFlow
+
+    override suspend fun saveUserCard(card: UserCard) {
+        appDataStore.saveUserCard(card)
+    }
+
+    override suspend fun removeUserCard(cardId: String) {
+        appDataStore.removeUserCard(cardId)
+    }
+
+    override suspend fun clearUserCards() {
+        appDataStore.clearUserCards()
+    }
+
+
 }

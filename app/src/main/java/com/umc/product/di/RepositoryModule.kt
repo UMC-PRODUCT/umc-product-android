@@ -1,6 +1,8 @@
 package com.umc.product.di
 
 import com.umc.data.repository.AppDataStoreRepositoryImpl
+import com.umc.data.repository.ai.AiTextRepositoryImpl
+import com.umc.domain.repository.ai.AiTextRepository
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.data.repository.AuthRepositoryImpl
 
@@ -133,6 +135,12 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindsAuthenticationRepository(repositoryImpl: AuthenticationRepositoryImpl): AuthenticationRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAiTextRepository(
+        aiTextRepositoryImpl: AiTextRepositoryImpl
+    ): AiTextRepository
 
     @Singleton
     @Binds
