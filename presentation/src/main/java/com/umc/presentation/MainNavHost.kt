@@ -11,11 +11,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.mypage.mycard.MycardRoute
 import com.umc.presentation.act.ActManageRoute
 import com.umc.presentation.act.admin.challenger.AdminChallengerDetailRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
+import com.example.mypage.qrcode.QrCodeRoute
+import com.example.mypage.receivedcard.ReceivedCardRoute
 import com.umc.failcode.SignUpFailRoute
 import com.umc.failcode.code.SignUpFailCodeRoute
 import com.umc.permission.PermissionRoute
@@ -28,9 +31,15 @@ import com.umc.presentation.login.LoginRoute
 import com.umc.presentation.login.emaillogin.EmailLoginRoute
 import com.umc.presentation.signup.SignUpRoute
 import com.umc.presentation.login.findpassword.FindPasswordRoute
+import com.umc.presentation.notice.NoticeRoute
+import com.umc.presentation.notice.adminnotice.AdminNoticeRoute
+import com.umc.presentation.notice.search.NoticeSearchRoute
+import com.umc.presentation.notice.detail.NoticeDetailRoute
+import com.umc.presentation.notice.write.NoticeWriteRoute
 import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
+import androidx.navigation.navDeepLink
 import com.umc.presentation.community.CommunityRoute
 import com.umc.presentation.community.search.CommunitySearchRoute
 import com.umc.presentation.community.create.CommunityCreateRoute
@@ -47,6 +56,15 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
+
+        startDestination = if (BuildConfig.DEBUG) {
+            MainDestination.Login
+        } else {
+            MainDestination.Home
+        },
+
+
+        //startDestination = MainDestination.Mycard(),
         startDestination = MainDestination.Community,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
@@ -200,7 +218,75 @@ fun MainNavHost(
             )
         }
 
+        /**공지 탭에 대한 내용입니다.**/
+        //공지 목록
+        composable<MainDestination.Notice> {
+            NoticeRoute(
+                navigateToSearch = { gisuId ->
+                    navHostController.navigate(MainDestination.NoticeSearch(gisuId))
+                },
+                navigateToAdminNotice = { gisuId ->
+                    navHostController.navigate(MainDestination.AdminNotice(gisuId))
+                },
+                navigateToWrite = {
+                    navHostController.navigate(MainDestination.NoticeWrite())
+                },
+                navigateToDetail = { noticeId ->
+                    navHostController.navigate(MainDestination.NoticeDetail(noticeId))
+                },
+            )
+        }
+
+        //공지 작성 (권한별 카테고리/게시판 분류). noticeId가 있으면 수정 모드
+        composable<MainDestination.NoticeWrite> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.NoticeWrite>()
+            NoticeWriteRoute(
+                editNoticeId = destination.noticeId,
+                navigateToBack = { navHostController.popBackStack() },
+            )
+        }
+
+        //공지 상세
+        composable<MainDestination.NoticeDetail> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.NoticeDetail>()
+            NoticeDetailRoute(
+                noticeId = destination.noticeId,
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToEdit = { noticeId ->
+                    navHostController.navigate(MainDestination.NoticeWrite(noticeId))
+                },
+            )
+        }
+
+        //운영진 공지 (권한별 탭 노출)
+        composable<MainDestination.AdminNotice> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.AdminNotice>()
+            AdminNoticeRoute(
+                gisuId = destination.gisuId,
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToSearch = { gisuId ->
+                    navHostController.navigate(MainDestination.NoticeSearch(gisuId))
+                },
+                navigateToDetail = { noticeId ->
+                    navHostController.navigate(MainDestination.NoticeDetail(noticeId))
+                },
+            )
+        }
+
+        //공지 검색
+        composable<MainDestination.NoticeSearch> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.NoticeSearch>()
+            NoticeSearchRoute(
+                gisuId = destination.gisuId,
+                navigateToBack = { navHostController.popBackStack() },
+                navigateToDetail = { noticeId ->
+                    navHostController.navigate(MainDestination.NoticeDetail(noticeId))
+                },
+            )
+        }
+
         /**홈 화면 탭에 대한 내용입니다.**/
+
         composable<MainDestination.Act> {
             ActManageRoute(
                 onNavigateToChallengerDetail = { challengerId ->
@@ -220,12 +306,14 @@ fun MainNavHost(
             )
         }
 
+
+
         //홈 화면
         composable<MainDestination.Home> {
             HomeRoute(
                 onNavigateToNotice = {
-                    //navHostController.navigate(MainDestination.Notice)
-                     },
+                    navHostController.navigate(MainDestination.Notice)
+                },
                 onNavigateToScheduleAdd = {
                     navHostController.navigate(MainDestination.ScheduleAdd)
                 },
@@ -265,6 +353,39 @@ fun MainNavHost(
         }
 
         /**마이페이지 관련 정의**/
+
+        //신 마이페이지
+        composable<MainDestination.Mycard>(
+            deepLinks = listOf(
+                navDeepLink {
+                    // 스토어 URL 기반 딥링크 패턴 매핑
+                    uriPattern = "umc://card?memberId={targetMemberId}"
+                }
+            )
+        ) { backStackEntry ->
+            // Type-Safe Navigation 파라미터 추출 (딥링크 포함)
+            val mycardDestination = backStackEntry.toRoute<MainDestination.Mycard>()
+            val targetMemberId = mycardDestination.targetMemberId
+
+
+            MycardRoute(
+                targetMemberId = targetMemberId,
+                onNavigateToMypage = {
+                    navHostController.navigate(MainDestination.Mypage)
+                },
+                onNavigateToMyqrCode = {
+                    navHostController.navigate(MainDestination.Qrcode)
+                },
+                onNavigateToEditCard = {
+                    navHostController.navigate(MainDestination.MyProfile)
+                },
+                onNavigateToReceivedCard = {
+                    navHostController.navigate(MainDestination.ReceivedCard)
+                }
+            )
+        }
+
+        //구 마이페이지 -> 신 설정
         composable<MainDestination.Mypage>{
             MypageRoute(
                 onNavigateToEditProfile = {
@@ -273,10 +394,17 @@ fun MainNavHost(
                 onNavigateToMyContent = {type ->
                     navHostController.navigate(MainDestination.MyContent(showType = type))
                                         },
-                onNavigateToLogin = {}
+                onNavigateToLogin = {},
+                onNavigateToQrCode = {
+                    navHostController.navigate(MainDestination.Qrcode)
+                },
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
             )
 
         }
+
 
         //내 활동
         composable<MainDestination.MyContent> {
@@ -289,7 +417,29 @@ fun MainNavHost(
 
         //내 프로필
         composable<MainDestination.MyProfile> {
-            ProfileRoute()
+            ProfileRoute(
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
+        }
+
+        /**qr 코드**/
+        composable<MainDestination.Qrcode> {
+            QrCodeRoute(
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
+        }
+
+        //받은 명함
+        composable<MainDestination.ReceivedCard> {
+            ReceivedCardRoute (
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
         }
 
 
