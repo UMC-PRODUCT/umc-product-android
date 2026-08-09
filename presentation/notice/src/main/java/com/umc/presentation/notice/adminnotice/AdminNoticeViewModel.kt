@@ -21,8 +21,12 @@ import javax.inject.Inject
  *
  * 서버 스펙상 noticeTab은 CHALLENGER(일반 공지) 외 CENTRAL_MEMBER / SCHOOL_CORE /
  * SCHOOL_PART_LEADER 세 가지이며, 자기 role보다 상위 tab 요청 시 403이 발생함.
- * 지부장(CHAPTER_PRESIDENT)은 전용 tab이 없어 중앙 레벨로 취급.
- * TODO: 디자인의 "지부장 공지" 탭은 서버에 대응 tab이 추가되면 반영
+ *
+ * 디자인의 "지부장 공지" 탭은 서버 noticeTab에 지부 등급이 없어 보류 상태다.
+ * 지부장(CHAPTER_PRESIDENT)은 읽기만 중앙 레벨로 묶어 처리하고, 발행 권한은 막아둠
+ * (NoticeWriterRole.CHAPTER_PRESIDENT 주석 참고).
+ * 서버에 지부 등급 tab이 추가되면 CENTRAL과 SCHOOL_CORE 사이에 항목을 넣고
+ * CENTRAL.accessRoles에서 CHAPTER_PRESIDENT를 옮기면 된다
  */
 enum class AdminNoticeTab(
     val label: String,
