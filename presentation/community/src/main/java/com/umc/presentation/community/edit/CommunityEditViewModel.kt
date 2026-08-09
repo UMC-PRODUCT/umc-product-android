@@ -136,31 +136,11 @@ class CommunityEditViewModel @Inject constructor(
             getCommunityThreadDetailUseCase(
                 threadId = threadId,
             ).onSuccess { thread ->
-                val selectedChallengers = getCommunityThreadMembersUseCase(
-                    threadId = threadId,
-                    limit = thread.maxMembers.coerceAtLeast(20),
-                ).getOrNull()
-                    ?.items
-                    .orEmpty()
-                    .mapNotNull { member ->
-                        member.memberId.toLongOrNull()?.let { memberId ->
-                            CommunityChallengerUiModel(
-                                memberId = memberId,
-                                name = member.name,
-                                nickname = "",
-                                school = "",
-                                generation = member.generation.toLongOrNull() ?: 0L,
-                                partLabel = member.part,
-                            )
-                        }
-                    }
-
                 _state.update {
                     it.copy(
                         threadId = thread.threadId,
                         title = thread.title,
                         description = thread.description,
-                        selectedChallengers = selectedChallengers,
                         maxChallengerCount = thread.maxMembers,
                         aiState = CommunityAiState.SUCCESS,
                         classifiedCategory = thread.category.toUiCategory(),

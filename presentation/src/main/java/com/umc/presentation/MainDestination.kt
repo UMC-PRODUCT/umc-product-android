@@ -138,20 +138,4 @@ sealed interface MainDestination {
     data class CommunityChatting(
         val threadId: String,
     ) : MainDestination
-
-    /** 커뮤니티 섹션 **/
-    @Serializable
-    data object Community : MainDestination
-
-    @Serializable
-    data object CommunitySearch : MainDestination
-
-    @Serializable
-    data object CommunityCreate : MainDestination
-
-    @Serializable
-    data class CommunityEdit(
-        val threadId: String,
-    ) : MainDestination
-
 }

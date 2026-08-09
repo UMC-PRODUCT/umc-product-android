@@ -21,7 +21,6 @@ import com.umc.data.repository.challenger.ChallengerRepositoryImpl
 import com.umc.data.repository.community.CommunityRepositoryImpl
 import com.umc.data.repository.community.CommunityThreadRepositoryImpl
 import com.umc.data.repository.community.CommunityChatRepositoryImpl
-import com.umc.data.repository.community.CommunityThreadRepositoryImpl
 import com.umc.data.repository.curriculum.CurriculumRepositoryImpl
 import com.umc.data.repository.schedule.ScheduleRepositoryImpl
 import com.umc.data.repository.storage.StorageRepositoryImpl
@@ -37,7 +36,6 @@ import com.umc.domain.repository.authorize.AuthorizeRepository
 import com.umc.domain.repository.community.CommunityRepository
 import com.umc.domain.repository.community.CommunityThreadRepository
 import com.umc.domain.repository.community.CommunityChatRepository
-import com.umc.domain.repository.community.CommunityThreadRepository
 import com.umc.domain.repository.curriculum.CurriculumRepository
 import com.umc.domain.repository.schedule.ScheduleRepository
 import com.umc.domain.repository.storage.StorageRepository
@@ -157,12 +155,5 @@ abstract class RepositoryModule {
     abstract fun bindsCommunityChatRepository(
         repositoryImpl: CommunityChatRepositoryImpl,
     ): CommunityChatRepository
-
-
-    @Singleton
-    @Binds
-    abstract fun bindsCommunityThreadRepository(
-        repositoryImpl: CommunityThreadRepositoryImpl,
-    ): CommunityThreadRepository
 
 }
