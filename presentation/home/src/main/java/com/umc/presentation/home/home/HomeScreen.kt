@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -179,7 +180,7 @@ fun HomeScreen(
                     onChangeViewMode = onChangeViewMode
                 )
                 Spacer(modifier = Modifier
-                    .height(32.dp)
+                    .height(16.dp)
                 )
             }
         }
@@ -192,7 +193,7 @@ fun HomeScreen(
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                color = grey000(),
+                color = if (uiState.viewMode == HomeViewMode.CALENDAR) grey000() else grey100(),
                 shadowElevation = 0.dp
             ) {
                 Column(modifier = Modifier
@@ -212,6 +213,7 @@ fun HomeScreen(
                         // 일정 리스트가 있을 때만 구분선과 리스트 표시
                         if (uiState.dailyPlans.isNotEmpty()) {
                             //구분선
+                            /*
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -224,16 +226,34 @@ fun HomeScreen(
                                 .height(16.dp)
                             )
 
+                             */
+
                             //달력 아래 일일 일정들
                             uiState.dailyPlans.forEach { plan ->
-                                Box(modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                ) {
-                                    ScheduleItemCard(
-                                        item = plan,
-                                        onItemClick = onScheduleDetailClick
-                                    )
-                                }
+
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp)
+
+                                    ) {
+                                        HorizontalDivider(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 8.dp), // 카드 사이 구분선의 위아래 여백
+                                            thickness = 1.dp,
+                                            color = grey200()
+                                        )
+
+                                        ScheduleItemCard(
+                                            item = plan,
+                                            onItemClick = onScheduleDetailClick
+                                        )
+                                    }
+
+
+
+
                             }
                             Spacer(modifier = Modifier
                                 .height(16.dp)
@@ -243,18 +263,15 @@ fun HomeScreen(
 
                     else {
                         //리스트 모드
-                        Spacer(modifier = Modifier
-                            .height(16.dp)
-                        )
                         uiState.allPlans.forEach { plan ->
-                            Box(modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                            ) {
+
                                 ScheduleItemCard(
                                     item = plan,
                                     onItemClick = onScheduleDetailClick
                                 )
-                            }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
                         }
                         Spacer(modifier = Modifier
                             .height(16.dp)
