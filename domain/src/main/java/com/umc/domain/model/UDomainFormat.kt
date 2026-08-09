@@ -15,6 +15,7 @@ object UDomainFormat {
      * 처럼 날짜와 시간 String으로 분리하는 확장 함수
      *
      * TODO: 02-24 추가 : UTC 판별을 해서 시간까지 쫘악 바꿔주는 로직 추가
+
      */
     fun String.parseDateTime(): Pair<String, String> {
         if (this.isBlank()) return Pair("", "")

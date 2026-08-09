@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -101,7 +102,8 @@ fun ScheduleCategoryBottomSheet(
                     textColor = grey000(),
                     onClick = onConfirm,
                     modifier = Modifier
-                        .padding(start = 8.dp)
+                        .padding(start = 8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
 
                 )
             }
