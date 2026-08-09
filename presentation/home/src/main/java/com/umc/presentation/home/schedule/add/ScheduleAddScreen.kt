@@ -261,12 +261,9 @@ fun ScheduleAddScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
                 .verticalScroll(scrollState)
         ) {
-            Spacer(modifier = Modifier
-                .height(16.dp)
-            )
 
             //3. 일정 제목
             ScheduleInputSection(
