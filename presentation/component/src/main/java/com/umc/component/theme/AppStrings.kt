@@ -228,7 +228,8 @@ object AppStrings {
     const val NOTICE_SEARCH_RECENT = "최근 검색어"
     const val NOTICE_SEARCH_DELETE_ALL = "전체 삭제"
     const val ADMIN_NOTICE_CENTRAL = "중앙운영사무국 공지"
-    const val ADMIN_NOTICE_CHAPTER = "지부장 공지"
+    // 지부장 공지: 서버 noticeTab에 지부 등급이 없어 보류
+    // const val ADMIN_NOTICE_CHAPTER = "지부장 공지"
     const val ADMIN_NOTICE_SCHOOL_CORE = "교내 회장단 공지"
     const val ADMIN_NOTICE_PART_LEADER = "파트장 공지"
     const val NOTICE_WRITE_CATEGORY_PLACEHOLDER = "카테고리를 선택하세요"
@@ -236,7 +237,7 @@ object AppStrings {
     const val NOTICE_WRITE_CONTENT_PLACEHOLDER = "내용을 입력하세요."
     const val NOTICE_WRITE_ALL_GISU = "전체 기수"
     const val NOTICE_WRITE_CATEGORY_CENTRAL = "중앙운영진"
-    const val NOTICE_WRITE_CATEGORY_CHAPTER = "지부장"
+    // const val NOTICE_WRITE_CATEGORY_CHAPTER = "지부장"  // 위와 동일 사유로 보류
     const val NOTICE_WRITE_CATEGORY_SCHOOL_CORE = "학교 회장단"
     const val NOTICE_WRITE_CATEGORY_PART_LEADER = "학교 파트장"
     const val NOTICE_WRITE_GISU_CLASS_HINT = "지부와 학교는 동시에 선택할 수 없습니다."
