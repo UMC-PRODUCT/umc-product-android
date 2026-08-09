@@ -7,6 +7,7 @@ import com.umc.data.request.member.UpdateMyProfileRequest
 import com.umc.data.response.JwtLoginResponse
 import com.umc.data.response.member.MemberResponse
 import com.umc.domain.model.base.ApiResponse
+import com.umc.domain.model.request.member.RegisterEmailRequest
 import com.umc.domain.model.request.member.RegisterRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -19,7 +20,7 @@ import retrofit2.http.PATCH
 interface MemberApi {
 
     //내 프로필 조회
-    @GET(Endpoints.Member.MYPROFILE)
+    @GET(Endpoints.Member.MYPROFILE_V2)
     suspend fun getMyProfile(): ApiResponse<MemberResponse>
 
 
@@ -41,9 +42,16 @@ interface MemberApi {
         @Path("memberId") memberId: Long
     ): ApiResponse<MemberResponse>
 
-    @POST(Endpoints.Member.MEMBER_REGISTER)
-    suspend fun register(
+    //소셜 회원가입
+    @POST(Endpoints.Member.MEMBER_REGISTER_OAUTH)
+    suspend fun registerOAuth(
         @Body request: RegisterRequest
+    ): ApiResponse<JwtLoginResponse>
+
+    //이메일 회원가입
+    @POST(Endpoints.Member.MEMBER_REGISTER_EMAIL)
+    suspend fun registerEmail(
+        @Body request: RegisterEmailRequest
     ): ApiResponse<JwtLoginResponse>
 
     @DELETE(Endpoints.Member.MEMBER)

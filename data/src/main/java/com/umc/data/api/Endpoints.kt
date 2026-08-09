@@ -8,8 +8,10 @@ object Endpoints {
         const val REISSUE = "$AUTH/token/renew"
         const val LOGIN_KAKAO = "$AUTH/login/kakao"
         const val LOGIN_GOOGLE = "$AUTH/login/google"
+        const val LOGIN_EMAIL = "$AUTH/login/email"
         const val EMAIL_VERIFICATION = "$AUTH/email-verification"
         const val EMAIL_VERIFICATION_COMPLETE = "$EMAIL_VERIFICATION/code"
+        const val PASSWORD_RESET = "$AUTH/password/reset"
 
         //Authorization
         const val AUTHORIZATION = "api/v1/authorization"
@@ -25,15 +27,13 @@ object Endpoints {
     }
 
     object Attendance {
-        const val ATTENDANCE = "api/v1/attendances"
-        const val AVAILABLE = "$ATTENDANCE/available"
-        const val CHECK = "$ATTENDANCE/check"
-        const val REASON = "$ATTENDANCE/reason"
-        const val PENDING = "$ATTENDANCE/pending/{scheduleId}"
-        const val APPROVE = "$ATTENDANCE/{recordId}/approve"
-        const val REJECT = "$ATTENDANCE/{recordId}/reject"
-        const val HISTORY = "$ATTENDANCE/history"
-        const val CHALLENGER_HISTORY = "$ATTENDANCE/challenger/{challengerId}/history"
+        const val SCHEDULES = "api/v2/schedules"
+        const val AVAILABLE = "$SCHEDULES/me"
+        const val CHECK = "$SCHEDULES/{scheduleId}/attendances/request"
+        const val REASON = "$SCHEDULES/{scheduleId}/attendances/excuse"
+        const val PENDING = "$SCHEDULES/{scheduleId}/attendance"
+        const val DECIDE = "$SCHEDULES/{scheduleId}/attendances/decide"
+        const val HISTORY = "$SCHEDULES/me"
     }
 
     object Challenger {
@@ -42,7 +42,7 @@ object Endpoints {
         const val POINT = "$CHALLENGER/{challengerId}/points"
         const val DELETE_POINT = "$CHALLENGER/points/{challengerPointId}"
 
-        const val SEARCH_CURSOR = "$CHALLENGER/search/cursor"
+        const val SEARCH = "api/v2/challenger/search"
 
         const val CHALLENGER_RECORD = "api/v1/challenger-record"
         const val CHALLENGER_RECORD_MEMBER = "api/v1/challenger-record/member"
@@ -53,9 +53,13 @@ object Endpoints {
 
     object Member {
         const val MEMBER = "api/v1/member"
+        const val MEMBER_V2 = "api/v2/member"
         const val MYPROFILE = "$MEMBER/me"
+
+        const val MYPROFILE_V2 = "$MEMBER_V2/me"
         const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
-        const val MEMBER_REGISTER = "$MEMBER/register"
+        const val MEMBER_REGISTER_OAUTH = "$MEMBER/register/oauth"
+        const val MEMBER_REGISTER_EMAIL = "$MEMBER/register/email"
         const val MEMBER_PROFILE_LINK = "$MEMBER/profile/links"
     }
 
@@ -78,8 +82,10 @@ object Endpoints {
 
         const val SCHEDULES_ME = "api/v2/schedules/me"
         const val DETAIL_V2 = "api/v2/schedules/{scheduleId}"
+        const val FORCE_DELETE = "$DETAIL_V2/force"
         const val CAPABILITIES = "api/v2/schedules/capabilities"
         const val CREATE_V2 = "api/v2/schedules"
+
 
         const val ATTENDANCE_REQUEST = "api/v2/schedules/{scheduleId}/attendances/request"
         const val ATTENDANCE_DECIDE = "api/v2/schedules/{scheduleId}/attendances/decide"
@@ -113,6 +119,26 @@ object Endpoints {
 
         const val TROPHY = "api/v1/trophies"
 
+        const val THREADS = "api/v1/community/threads"
+        const val THREAD_DETAIL = "$THREADS/{threadId}"
+
+        // 초대 가능한 회원 조회
+        const val THREAD_INVITABLE =
+            "$THREAD_DETAIL/invitable"
+
+        // 스레드 회원 초대
+        const val THREAD_INVITE =
+            "$THREAD_DETAIL/invite"
+
+        const val THREAD_LEAVE = "$THREAD_DETAIL/leave"
+        const val THREAD_MUTE = "$THREAD_DETAIL/mute"
+        const val THREAD_PIN = "$THREAD_DETAIL/pin"
+
+        const val THREAD_MEMBER =
+            "$THREAD_DETAIL/members/{memberId}"
+
+        const val THREAD_MEMBERS =
+            "$THREAD_DETAIL/members"
 
     }
 
@@ -244,6 +270,7 @@ object Endpoints {
         const val NOTICE_READ_STATICS = "$NOTICE_DETAIL/read-statics"
         const val NOTICE_LINKS = "$NOTICE_DETAIL/links"
         const val NOTICE_IMAGES = "$NOTICE_DETAIL/images"
+        const val VOTE_RESPONSES = "$NOTICE_DETAIL/votes/responses"
     }
 
     object Survey {

@@ -9,13 +9,12 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
 import com.umc.component.theme.indigo500
 
-/**색상 변화 통일을 위해 사용하는 Switch입니다.**/
 /**
- * USwitch: 기존 Switch에서 색깔을 변경한 USwitch
+ * 활동 화면에서 일반/운영진 모드를 전환할 때 사용하는 공용 스위치입니다.
  *
- * @param checked 스위치의 체크 상태
- * @param onCheckedChange 체크 상태 변경 시 호출되는 콜백
- * @param modifier 레이아웃 수정을 위한 Modifier
+ * @param checked 현재 선택 상태
+ * @param onCheckedChange 선택 상태 변경 콜백
+ * @param modifier 크기와 배치를 지정하는 Modifier
  */
 @Composable
 fun USwitch(
