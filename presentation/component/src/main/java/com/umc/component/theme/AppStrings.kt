@@ -582,6 +582,7 @@ object AppStrings {
     const val CHAT_AI_UNAVAILABLE = "이 기기에서는 온디바이스 AI 요약을 사용할 수 없어요."
     const val CHAT_AI_EMPTY_MESSAGES = "요약할 메시지가 없어요."
     const val CHAT_NEW_MESSAGE_COUNT_FORMAT = "새 메시지 %d개"
+    const val CHAT_NEW_MESSAGE_DIVIDER = "새 메시지"
     const val CHAT_IMAGE = "이미지"
     const val CHAT_MESSAGE_CONTENT = "메시지 내용"
     const val CHAT_REPLY_TO_FORMAT = "%s님에게 답장"

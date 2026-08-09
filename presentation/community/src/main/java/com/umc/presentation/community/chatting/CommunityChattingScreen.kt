@@ -19,9 +19,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -46,13 +43,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.layout.ContentScale
@@ -60,15 +56,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.emoji2.emojipicker.EmojiPickerView
 import coil.compose.AsyncImage
 import com.umc.component.theme.black
 import com.umc.component.R
 import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
+import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -77,19 +79,18 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo200
+import com.umc.component.theme.indigo300
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.red400
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.component.theme.white
 import com.umc.component.theme.green100
-import com.umc.component.theme.green300
 import com.umc.component.theme.green700
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
-import com.umc.component.theme.grey900
 import com.umc.component.theme.indigo600
 import com.umc.component.theme.red600
 import com.umc.component.theme.yellow100
@@ -119,7 +120,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun CommunityChattingScreen(
     state: CommunityChattingState,
-    snackbarHostState: SnackbarHostState? = null,
+    toastData: UToastData? = null,
+    onToastDismiss: () -> Unit = {},
     onAction: (CommunityChattingAction) -> Unit,
 ) {
     val onBack = { onAction(CommunityChattingAction.OnBackClick) }
@@ -167,6 +169,7 @@ fun CommunityChattingScreen(
     var knownMessageIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var knownPendingMessageIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var newMessageCount by remember { mutableIntStateOf(0) }
+    var unreadDividerMessageId by remember { mutableStateOf<String?>(null) }
     var followsLatestMessage by remember { mutableStateOf(true) }
     var wasUserScrolling by remember { mutableStateOf(false) }
     var selectedMessage by remember { mutableStateOf<CommunityThreadMessage?>(null) }
@@ -257,7 +260,10 @@ fun CommunityChattingScreen(
                 } else if (wasUserScrolling) {
                     wasUserScrolling = false
                     followsLatestMessage = !canScrollForward
-                    if (followsLatestMessage) newMessageCount = 0
+                    if (followsLatestMessage) {
+                        newMessageCount = 0
+                        unreadDividerMessageId = null
+                    }
                 }
             }
     }
@@ -270,9 +276,11 @@ fun CommunityChattingScreen(
                 val entryUnreadCount = state.unreadCountAtEntry
                 val loadedUnreadCount = entryUnreadCount.coerceAtMost(displayedMessages.size)
                 val messageIndex = if (loadedUnreadCount > 0) {
+                    val firstUnreadMessageIndex = displayedMessages.size - loadedUnreadCount
                     newMessageCount = entryUnreadCount
+                    unreadDividerMessageId = displayedMessages[firstUnreadMessageIndex].messageId
                     followsLatestMessage = false
-                    (displayedMessages.size - loadedUnreadCount - 1).coerceAtLeast(0)
+                    (firstUnreadMessageIndex - 1).coerceAtLeast(0)
                 } else {
                     displayedMessages.lastIndex
                 }
@@ -292,6 +300,7 @@ fun CommunityChattingScreen(
         val containsMyMessage = newMessages.any { it.senderId == state.myMemberId }
         if (followsLatestMessage || containsMyMessage) {
             newMessageCount = 0
+            unreadDividerMessageId = null
             listState.animateScrollToItem(
                 latestListItemIndex(
                     messageCount = displayedMessages.size,
@@ -300,6 +309,11 @@ fun CommunityChattingScreen(
                 ),
             )
         } else {
+            if (newMessageCount == 0) {
+                unreadDividerMessageId = newMessages
+                    .lastOrNull { it.senderId != state.myMemberId }
+                    ?.messageId
+            }
             newMessageCount += newMessages.count { it.senderId != state.myMemberId }
         }
     }
@@ -311,6 +325,7 @@ fun CommunityChattingScreen(
         if (!hasNewPendingMessage) return@LaunchedEffect
 
         newMessageCount = 0
+        unreadDividerMessageId = null
         followsLatestMessage = true
         val lastItemIndex = latestListItemIndex(
             messageCount = displayedMessages.size,
@@ -323,11 +338,11 @@ fun CommunityChattingScreen(
     Scaffold(
         containerColor = grey100(),
         snackbarHost = {
-            snackbarHostState?.let { hostState ->
-                SnackbarHost(hostState = hostState) { data ->
-                    ChatSuccessSnackbar(message = data.visuals.message)
-                }
-            }
+            UToastHost(
+                data = toastData,
+                onDismiss = onToastDismiss,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
         },
         topBar = {
             ChatTopBar(
@@ -451,6 +466,10 @@ fun CommunityChattingScreen(
                         DateDivider(formatCommunityDate(message.createdAt))
                         Spacer(Modifier.height(14.dp))
                     }
+                    if (message.messageId == unreadDividerMessageId) {
+                        NewMessagesDivider()
+                        Spacer(Modifier.height(14.dp))
+                    }
                     ChatMessageRow(
                         message = message,
                         imageUris = state.localImageUrisByMessageId[message.messageId].orEmpty(),
@@ -518,6 +537,7 @@ fun CommunityChattingScreen(
                     count = newMessageCount,
                     onClick = {
                         newMessageCount = 0
+                        unreadDividerMessageId = null
                         followsLatestMessage = true
                         scope.launch {
                             val lastItemIndex = latestListItemIndex(
@@ -638,47 +658,14 @@ private fun EmptyChatMessages(modifier: Modifier = Modifier) {
         Text(
             text = AppStrings.CHAT_NO_MESSAGES_TITLE,
             color = grey800(),
-            fontSize = 14.sp,
-            lineHeight = 20.sp,
-            fontWeight = FontWeight.Bold,
+            style = UmcTypographyTokens.HeadlineBold
         )
         Spacer(Modifier.height(3.dp))
         Text(
             text = AppStrings.CHAT_NO_MESSAGES_DESCRIPTION,
             color = grey400(),
-            fontSize = 12.sp,
-            lineHeight = 17.sp,
+            style = UmcTypographyTokens.Subheadline
         )
-    }
-}
-
-@Composable
-private fun ChatSuccessSnackbar(message: String) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(7.dp),
-        color = grey900(),
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 15.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_check_success),
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = green300(),
-            )
-            Text(
-                text = message,
-                color = white(),
-                fontSize = 13.sp,
-                lineHeight = 18.sp,
-            )
-        }
     }
 }
 
@@ -707,8 +694,7 @@ private fun ThreadUnavailableScreen(onBack: () -> Unit) {
                         text = AppStrings.CHAT_UNAVAILABLE_TOP_BAR,
                         modifier = Modifier.padding(start = 4.dp),
                         color = grey950(),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = UmcTypographyTokens.Title2Bold
                     )
                 }
             }
@@ -732,35 +718,27 @@ private fun ThreadUnavailableScreen(onBack: () -> Unit) {
             Text(
                 text = AppStrings.CHAT_UNAVAILABLE_TITLE,
                 color = grey800(),
-                fontSize = 15.sp,
-                lineHeight = 21.sp,
-                fontWeight = FontWeight.Bold,
+                style = UmcTypographyTokens.HeadlineBold
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = AppStrings.CHAT_UNAVAILABLE_DESCRIPTION,
                 color = grey400(),
-                fontSize = 13.sp,
-                lineHeight = 18.sp,
+                style = UmcTypographyTokens.Subheadline
             )
             Spacer(Modifier.height(34.dp))
-            Button(
+            UButton(
+                text = AppStrings.CHAT_BACK_TO_COMMUNITY,
                 onClick = onBack,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = indigo500(),
-                    contentColor = white(),
-                ),
-            ) {
-                Text(
-                    text = AppStrings.CHAT_BACK_TO_COMMUNITY,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
+                backgroundColor = indigo500(),
+                pressedColor = indigo600(),
+                textColor = white(),
+                textStyle = UmcTypographyTokens.HeadlineBold,
+                cornerRadius = 8.dp,
+            )
             Spacer(Modifier.height(100.dp))
         }
     }
@@ -866,7 +844,7 @@ private fun ChatLoadError(
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_error_large),
+            painter = painterResource(R.drawable.ic_community_error),
             contentDescription = null,
             modifier = Modifier.size(46.dp),
             tint = grey400(),
@@ -875,35 +853,27 @@ private fun ChatLoadError(
         Text(
             text = AppStrings.CHAT_LOAD_ERROR_TITLE,
             color = grey800(),
-            fontSize = 22.sp,
-            lineHeight = 28.sp,
-            fontWeight = FontWeight.Bold,
+            style = UmcTypographyTokens.HeadlineBold
         )
         Spacer(Modifier.height(10.dp))
         Text(
             text = AppStrings.CHAT_LOAD_ERROR_DESCRIPTION,
             color = grey400(),
-            fontSize = 16.sp,
-            lineHeight = 22.sp,
+            style = UmcTypographyTokens.Subheadline
         )
         Spacer(Modifier.height(72.dp))
-        Button(
+        UButton(
+            text = AppStrings.CHAT_RETRY,
             onClick = onRetry,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(58.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = indigo500(),
-                contentColor = white(),
-            ),
-        ) {
-            Text(
-                text = AppStrings.CHAT_RETRY,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
+            backgroundColor = indigo500(),
+            pressedColor = indigo600(),
+            textColor = white(),
+            textStyle = UmcTypographyTokens.HeadlineBold,
+            cornerRadius = 12.dp,
+        )
     }
 }
 
@@ -948,9 +918,7 @@ private fun ChatTopBar(
                     .weight(1f)
                     .padding(start = 8.dp),
                 color = grey950(),
-                fontSize = 21.sp,
-                lineHeight = 26.sp,
-                fontWeight = FontWeight.Bold,
+                style = UmcTypographyTokens.Title2Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -1032,10 +1000,8 @@ private fun ThreadMenuSectionTitle(text: String) {
     Text(
         text = text,
         modifier = Modifier.padding(start = 22.dp, end = 22.dp, top = 10.dp, bottom = 5.dp),
-        color = grey400(),
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
-        fontWeight = FontWeight.SemiBold,
+        color = grey500(),
+        style = UmcTypographyTokens.FootnoteBold
     )
 }
 
@@ -1052,8 +1018,7 @@ private fun ThreadMenuItem(
             .clickable(onClick = onClick)
             .padding(horizontal = 22.dp, vertical = 14.dp),
         color = color,
-        fontSize = 16.sp,
-        lineHeight = 22.sp,
+        style = UmcTypographyTokens.Subheadline
     )
 }
 
@@ -1081,7 +1046,12 @@ private fun UnreadSummaryCard(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("✨", fontSize = 24.sp)
+        Icon(
+            painter = painterResource(R.drawable.ic_ai),
+            contentDescription = null,
+            tint = indigo500(),
+            modifier = Modifier.size(32.dp),
+        )
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -1091,13 +1061,12 @@ private fun UnreadSummaryCard(
             Text(
                 AppStrings.CHAT_UNREAD_COUNT_FORMAT.format(unreadCount),
                 color = grey950(),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = UmcTypographyTokens.SubheadlineBold
             )
             Text(
                 AppStrings.CHAT_UNREAD_SUMMARY_DESCRIPTION,
                 color = grey800(),
-                fontSize = 12.sp,
+                style = UmcTypographyTokens.Footnote
             )
         }
         Icon(painterResource(R.drawable.ic_next_small), contentDescription = null, tint = grey400())
@@ -1147,8 +1116,7 @@ private fun ConversationSummarySheet(
                         .weight(1f)
                         .padding(start = 8.dp),
                     color = grey950(),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = UmcTypographyTokens.Title3Bold
                 )
                 IconButton(onClick = onRetry, enabled = !state.isSummarizingUnread) {
                     Icon(
@@ -1182,7 +1150,7 @@ private fun SummaryLoadingContent(downloadPercent: Int?) {
             ?.let { AppStrings.AI_MODEL_DOWNLOADING.format(it) }
             ?: AppStrings.CHAT_AI_SUMMARIZING_DESCRIPTION,
         color = grey500(),
-        fontSize = 12.sp,
+        style = UmcTypographyTokens.Subheadline
     )
     Spacer(Modifier.height(18.dp))
     listOf(0.68f, 1f, 0.9f, 0.9f).forEach { fraction ->
@@ -1219,15 +1187,13 @@ private fun SummaryErrorContent(message: String) {
         Text(
             text = AppStrings.CHAT_AI_SUMMARY_FAILED,
             color = grey600(),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = UmcTypographyTokens.HeadlineBold
         )
         Spacer(Modifier.height(6.dp))
         Text(
             text = message.ifBlank { AppStrings.CHAT_AI_SUMMARY_RETRY_DESCRIPTION },
             color = grey400(),
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center,
+            style = UmcTypographyTokens.Subheadline
         )
     }
 }
@@ -1237,7 +1203,7 @@ private fun SummarySuccessContent(summary: String, messageCount: Int) {
     Text(
         text = AppStrings.CHAT_AI_SUMMARY_COUNT_FORMAT.format(messageCount),
         color = grey500(),
-        fontSize = 12.sp,
+        style = UmcTypographyTokens.Subheadline
     )
     Spacer(Modifier.height(14.dp))
     summary
@@ -1249,13 +1215,17 @@ private fun SummarySuccessContent(summary: String, messageCount: Int) {
                 modifier = Modifier.padding(vertical = 5.dp),
                 verticalAlignment = Alignment.Top,
             ) {
-                Text("✓", color = indigo500(), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Image(
+                    painter = painterResource(R.drawable.ic_check),
+                    contentDescription = null,
+                    modifier = Modifier.size(10.dp),
+                    colorFilter = ColorFilter.tint(indigo500())
+                )
                 Text(
                     text = line,
-                    modifier = Modifier.padding(start = 10.dp),
+                    modifier = Modifier.padding(start = 8.dp),
                     color = grey800(),
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
+                    style = UmcTypographyTokens.Body
                 )
             }
         }
@@ -1301,16 +1271,14 @@ private fun NewMessageButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowDown,
+            Image(
+                painter = painterResource(R.drawable.ic_dropdown),
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
             )
             Text(
                 text = AppStrings.CHAT_NEW_MESSAGE_COUNT_FORMAT.format(count),
-                fontSize = 13.sp,
-                lineHeight = 18.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = UmcTypographyTokens.HeadlineBold
             )
         }
     }
@@ -1324,8 +1292,25 @@ private fun DateDivider(label: String) {
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         HorizontalDivider(Modifier.weight(1f), color = grey300())
-        Text(label, color = grey300(), fontSize = 12.sp, fontWeight = FontWeight.Medium)
+        Text(label, color = grey300(), style = UmcTypographyTokens.Footnote)
         HorizontalDivider(Modifier.weight(1f), color = grey300())
+    }
+}
+
+@Composable
+private fun NewMessagesDivider() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        HorizontalDivider(Modifier.weight(1f), color = indigo300())
+        Text(
+            text = AppStrings.CHAT_NEW_MESSAGE_DIVIDER,
+            color = indigo500(),
+            style = UmcTypographyTokens.FootnoteBold,
+        )
+        HorizontalDivider(Modifier.weight(1f), color = indigo300())
     }
 }
 
@@ -1408,7 +1393,7 @@ private fun MessageReactions(
                     text = "${reaction.emoji} ${reaction.count}",
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     color = grey950(),
-                    fontSize = 12.sp,
+                    style = UmcTypographyTokens.Footnote
                 )
             }
         }
@@ -1440,8 +1425,7 @@ private fun OtherMessage(
                 Text(
                     message.senderName.orEmpty().ifBlank { AppStrings.CHAT_UNKNOWN_USER },
                     color = grey950(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = UmcTypographyTokens.SubheadlineBold
                 )
                 member?.part?.let { part ->
                     val tag = partTag(part)
@@ -1546,12 +1530,6 @@ private fun MessageBubbleContent(
                         tint = secondary,
                         modifier = Modifier.size(32.dp),
                     )
-                    Text(
-                        text = AppStrings.CHAT_IMAGE,
-                        modifier = Modifier.padding(top = 6.dp),
-                        color = secondary,
-                        fontSize = 13.sp,
-                    )
                 }
             }
         }
@@ -1563,8 +1541,7 @@ private fun MessageBubbleContent(
             text = message.content.orEmpty(),
             modifier = modifier,
             color = foreground,
-            fontSize = 14.sp,
-            lineHeight = 20.sp,
+            style = UmcTypographyTokens.Subheadline
         )
         return
     }
@@ -1575,9 +1552,7 @@ private fun MessageBubbleContent(
                 reply.senderName.ifBlank { AppStrings.CHAT_UNKNOWN_USER },
             ),
             color = foreground,
-            fontSize = 14.sp,
-            lineHeight = 20.sp,
-            fontWeight = FontWeight.Bold,
+            style = UmcTypographyTokens.SubheadlineBold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -1585,8 +1560,7 @@ private fun MessageBubbleContent(
             text = reply.snippet.ifBlank { AppStrings.CHAT_MESSAGE_CONTENT },
             modifier = Modifier.padding(top = 3.dp),
             color = secondary,
-            fontSize = 13.sp,
-            lineHeight = 19.sp,
+            style = UmcTypographyTokens.Footnote,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
@@ -1597,8 +1571,7 @@ private fun MessageBubbleContent(
         Text(
             text = message.content.orEmpty(),
             color = foreground,
-            fontSize = 14.sp,
-            lineHeight = 20.sp,
+            style = UmcTypographyTokens.Subheadline
         )
     }
 }
@@ -1697,7 +1670,7 @@ private fun MessageActionPopup(
                     MessageActionItem(AppStrings.CHAT_ACTION_REPORT, R.drawable.ic_warning, onClick = onReport)
                     MessageActionItem(
                         text = AppStrings.CHAT_DELETE,
-                        iconRes = R.drawable.ic_delete,
+                        iconRes = R.drawable.ic_trash_can,
                         color = red400(),
                         onClick = onDelete,
                     )
@@ -1740,15 +1713,6 @@ private fun MessageActionPopup(
     }
 }
 
-private val AdditionalReactionEmojis = listOf(
-    "😀", "😃", "😄", "😁", "😂", "🤣", "😊", "😍",
-    "🥰", "😘", "😎", "🤩", "🥳", "🙂", "🥹", "😢",
-    "😭", "😤", "😡", "🤔", "🫡", "🤗", "🤭", "😴",
-    "👍", "👎", "👏", "🙌", "🙏", "💪", "👌", "✌️",
-    "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍",
-    "🔥", "✨", "🎉", "💯", "✅", "❌", "👀", "🚀",
-)
-
 private val MessageReportReasons = listOf(
     CommunityMessageReportReason.SPAM to AppStrings.CHAT_REPORT_REASON_SPAM,
     CommunityMessageReportReason.ABUSE to AppStrings.CHAT_REPORT_REASON_ABUSE,
@@ -1783,16 +1747,13 @@ private fun MessageReportSheet(
             Text(
                 text = AppStrings.CHAT_REPORT_REASON_TITLE,
                 color = grey950(),
-                fontSize = 20.sp,
-                lineHeight = 26.sp,
-                fontWeight = FontWeight.Bold,
+                style = UmcTypographyTokens.Title3Bold
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = AppStrings.CHAT_REPORT_GUIDE,
-                color = grey400(),
-                fontSize = 12.sp,
-                lineHeight = 17.sp,
+                color = grey600(),
+                style = UmcTypographyTokens.Subheadline
             )
             Spacer(Modifier.height(12.dp))
             MessageReportReasons.forEach { (reason, label) ->
@@ -1807,7 +1768,7 @@ private fun MessageReportSheet(
                         text = label,
                         modifier = Modifier.weight(1f),
                         color = grey950(),
-                        fontSize = 14.sp,
+                        style = UmcTypographyTokens.Body
                     )
                     Checkbox(
                         checked = selectedReason == reason,
@@ -1838,7 +1799,7 @@ private fun MessageReportSheet(
                         contentColor = grey800(),
                     ),
                 ) {
-                    Text(AppStrings.CHAT_REPORT_CANCEL, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text(AppStrings.CHAT_REPORT_CANCEL, style = UmcTypographyTokens.HeadlineBold)
                 }
                 Button(
                     onClick = { selectedReason?.let(onReport) },
@@ -1854,7 +1815,7 @@ private fun MessageReportSheet(
                         disabledContentColor = red500().copy(alpha = 0.45f),
                     ),
                 ) {
-                    Text(AppStrings.CHAT_REPORT_ACTION, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text(AppStrings.CHAT_REPORT_ACTION, style = UmcTypographyTokens.HeadlineBold)
                 }
             }
         }
@@ -1867,38 +1828,26 @@ private fun AdditionalEmojiSheet(
     onDismiss: () -> Unit,
     onEmojiSelected: (String) -> Unit,
 ) {
+    val currentOnEmojiSelected by rememberUpdatedState(onEmojiSelected)
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = white(),
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
     ) {
-        Text(
-            text = AppStrings.CHAT_EMOJI_SELECT,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-            color = grey950(),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-        )
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(8),
+        AndroidView(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 320.dp)
-                .padding(horizontal = 12.dp),
-            contentPadding = PaddingValues(vertical = 12.dp),
-        ) {
-            gridItems(AdditionalReactionEmojis) { emoji ->
-                Box(
-                    modifier = Modifier
-                        .aspectRatio(1f)
-                        .clip(CircleShape)
-                        .clickable { onEmojiSelected(emoji) },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(text = emoji, fontSize = 24.sp)
+                .height(360.dp),
+            factory = { context ->
+                EmojiPickerView(context).apply {
+                    emojiGridColumns = 8
+                    setOnEmojiPickedListener { pickedEmoji ->
+                        currentOnEmojiSelected(pickedEmoji.emoji)
+                    }
                 }
-            }
-        }
+            },
+        )
         Spacer(Modifier.navigationBarsPadding())
     }
 }
@@ -1918,12 +1867,12 @@ private fun MessageActionItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text, color = color, fontSize = 12.sp)
+        Text(text, color = color, style = UmcTypographyTokens.Subheadline)
         Icon(
             painter = painterResource(iconRes),
             contentDescription = null,
             tint = color,
-            modifier = Modifier.size(17.dp),
+            modifier = Modifier.size(20.dp),
         )
     }
 }
@@ -2057,8 +2006,7 @@ private fun MemberTag(text: String, background: Color, foreground: Color) {
             .padding(horizontal = 7.dp, vertical = 4.dp),
         color = foreground,
         fontSize = 10.sp,
-        lineHeight = 12.sp,
-        fontWeight = FontWeight.SemiBold,
+        style = UmcTypographyTokens.Caption1Bold
     )
 }
 
@@ -2176,15 +2124,14 @@ private fun ChatInputBar(
                                     replyingMessage.senderName.orEmpty().ifBlank { AppStrings.CHAT_ME },
                                 ),
                                 color = grey950(),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
+                                style = UmcTypographyTokens.SubheadlineBold
                             )
                             Text(
                                 text = replyingMessage.content.orEmpty().ifBlank {
                                     AppStrings.CHAT_MESSAGE_CONTENT
                                 },
-                                    color = grey400(),
-                                fontSize = 14.sp,
+                                color = grey400(),
+                                style = UmcTypographyTokens.Footnote,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )

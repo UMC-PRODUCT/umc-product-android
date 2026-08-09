@@ -37,9 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.umc.component.R
 import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
@@ -58,6 +56,7 @@ import com.umc.component.theme.red500
 import com.umc.component.theme.white
 import com.umc.domain.model.community.thread.CommunityThreadMember
 import com.umc.domain.model.community.thread.CommunityThreadRole
+import com.umc.component.theme.UmcTypographyTokens
 
 @Composable
 internal fun CommunityParticipantScreen(
@@ -102,8 +101,7 @@ internal fun CommunityParticipantScreen(
                         text = AppStrings.CHAT_PARTICIPANT_MANAGEMENT,
                         modifier = Modifier.padding(start = 2.dp),
                         color = grey950(),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = UmcTypographyTokens.Title2Bold,
                     )
                 }
             }
@@ -119,8 +117,8 @@ internal fun CommunityParticipantScreen(
                         memberCount.ifBlank { members.size.toString() },
                     ),
                     color = grey950(),
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(bottom = 10.dp),
+                    style = UmcTypographyTokens.Body,
+                    modifier = Modifier.padding(bottom = 8.dp),
                 )
             }
             items(sortedMembers, key = { it.memberId }) { member ->
@@ -152,7 +150,7 @@ internal fun CommunityParticipantScreen(
                         Text(
                             text = AppStrings.CHAT_OWNER_ONLY_KICK_GUIDE,
                             color = grey700(),
-                            fontSize = 12.sp,
+                            style = UmcTypographyTokens.Subheadline
                         )
                     }
                 }
@@ -222,7 +220,7 @@ private fun ParticipantRow(
     ) {
         ProfileImage(member.profileImageUrl)
         Column(
-            modifier = Modifier.weight(1f).padding(start = 10.dp),
+            modifier = Modifier.weight(1f).padding(start = 8.dp),
             verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             Row(
@@ -232,8 +230,7 @@ private fun ParticipantRow(
                 Text(
                     text = member.name.ifBlank { AppStrings.CHAT_UNKNOWN_USER },
                     color = grey950(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = UmcTypographyTokens.CalloutBold
                 )
                 if (member.role == CommunityThreadRole.OWNER) {
                     ParticipantBadge(AppStrings.CHAT_OWNER_BADGE, grey800(), white())
@@ -241,13 +238,14 @@ private fun ParticipantRow(
                 if (isMe) ParticipantBadge(AppStrings.CHAT_ME, indigo100(), indigo500())
             }
             val part = member.part?.let { partTag(it).first }.orEmpty()
-            val detail = listOfNotNull(
-                part.takeIf(String::isNotBlank),
-                member.generation?.takeIf(String::isNotBlank)?.let {
-                    AppStrings.CHAT_GENERATION_FORMAT.format(it)
-                },
-            ).joinToString(" · ")
-            if (detail.isNotBlank()) Text(detail, color = grey400(), fontSize = 11.sp)
+//            val detail = listOfNotNull(
+//                part.takeIf(String::isNotBlank),
+//                member.?.takeIf(String::isNotBlank)?.let {
+//                    AppStrings.CHAT_GENERATION_FORMAT.format(it)
+//                },
+//            ).joinToString(" · ")
+//            if (detail.isNotBlank()) Text(detail, color = grey400(), style = )
+            if(part.isNotBlank()) Text(part, color = grey400(), style = UmcTypographyTokens.Footnote)
         }
         Box {
                 IconButton(onClick = { menuExpanded = true }) {
@@ -296,7 +294,7 @@ private fun ParticipantMenuItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text = text, color = color, fontSize = 14.sp)
+        Text(text = text, color = color, style = UmcTypographyTokens.Subheadline)
         Icon(
             painter = painterResource(iconRes),
             contentDescription = null,
@@ -313,7 +311,6 @@ private fun ParticipantBadge(text: String, background: Color, foreground: Color)
         modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(background)
             .padding(horizontal = 6.dp, vertical = 3.dp),
         color = foreground,
-        fontSize = 10.sp,
-        fontWeight = FontWeight.SemiBold,
+        style = UmcTypographyTokens.Caption1Bold
     )
 }

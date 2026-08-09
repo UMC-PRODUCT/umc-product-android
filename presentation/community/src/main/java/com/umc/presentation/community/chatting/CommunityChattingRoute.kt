@@ -1,7 +1,5 @@
 package com.umc.presentation.community.chatting
 
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -10,6 +8,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastState
 import com.umc.presentation.community.bottomsheet.CommunityMemberBottomSheet
 import com.umc.component.theme.AppStrings
 
@@ -27,7 +27,7 @@ fun CommunityChattingRoute(
     viewModel: CommunityChattingViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
+    var toastData by remember { mutableStateOf<UToastData?>(null) }
     var showInviteMemberSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(shouldRefresh) {
@@ -52,13 +52,13 @@ fun CommunityChattingRoute(
                     onInviteParticipants()
                 }
                 CommunityChattingEvent.OpenEditThread -> onEditThread()
-                CommunityChattingEvent.MessageReported -> snackbarHostState.showSnackbar(
+                CommunityChattingEvent.MessageReported -> toastData = UToastData(
                     message = AppStrings.CHAT_REPORT_SUCCESS,
-                    duration = SnackbarDuration.Short,
+                    state = UToastState.CHECK,
                 )
-                is CommunityChattingEvent.ShowError -> snackbarHostState.showSnackbar(
+                is CommunityChattingEvent.ShowError -> toastData = UToastData(
                     message = event.message,
-                    duration = SnackbarDuration.Short,
+                    state = UToastState.ERROR,
                 )
             }
         }
@@ -66,7 +66,8 @@ fun CommunityChattingRoute(
 
     CommunityChattingScreen(
         state = state,
-        snackbarHostState = snackbarHostState,
+        toastData = toastData,
+        onToastDismiss = { toastData = null },
         onAction = viewModel::onAction,
     )
 
