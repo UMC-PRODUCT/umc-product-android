@@ -222,6 +222,14 @@ object Endpoints {
         const val AVAILABLE_WEEKS =
             "api/v1/curriculums/available-weeks"
 
+        // 운영진 - 스터디원 제출 현황 조회
+        const val WORKBOOK_SUBMISSIONS_V2 =
+            "api/v2/curriculums/workbook-submissions"
+
+        // 운영진 - 제출 현황 조회 가능 주차 목록
+        const val WORKBOOK_SUBMISSION_WEEKS =
+            "api/v2/curriculums/workbook-submissions/weeks"
+
 
         // 챌린저 워크북 상세 조회
         const val CHALLENGER_WORKBOOK_DETAIL =

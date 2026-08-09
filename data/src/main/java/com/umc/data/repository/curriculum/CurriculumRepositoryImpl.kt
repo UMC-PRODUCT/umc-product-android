@@ -11,6 +11,7 @@ import com.umc.domain.model.curriculum.StudyGroup
 import com.umc.domain.model.curriculum.WorkbookSubmissionItem
 import com.umc.domain.repository.curriculum.CurriculumRepository
 import com.umc.domain.model.curriculum.ChallengerWorkbook
+import com.umc.domain.model.curriculum.StudyMemberSubmissionPage
 import javax.inject.Inject
 
 class CurriculumRepositoryImpl @Inject constructor(
@@ -77,6 +78,32 @@ class CurriculumRepositoryImpl @Inject constructor(
         ).map { response ->
             response.toDomain()
         }
+    }
+
+    // 운영진 - 스터디원 제출 현황 조회
+    override suspend fun getWorkbookSubmissionsV2(
+        studyGroupId: Long?,
+        weekNos: List<Long>?,
+        cursor: Long?,
+        size: Int,
+    ): ApiState<StudyMemberSubmissionPage> {
+        return remote.getWorkbookSubmissionsV2(
+            studyGroupId = studyGroupId,
+            weekNos = weekNos,
+            cursor = cursor,
+            size = size,
+        ).map { response ->
+            response.toDomain()
+        }
+    }
+
+    // 운영진 - 제출 현황 조회 가능 주차 목록
+    override suspend fun getWorkbookSubmissionWeeks(
+        studyGroupId: Long?,
+    ): ApiState<List<Long>> {
+        return remote.getWorkbookSubmissionWeeks(
+            studyGroupId = studyGroupId,
+        )
     }
 
     override suspend fun getStudyGroups(

@@ -5,6 +5,8 @@ import com.umc.component.base.BaseViewModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.usecase.curriculum.CreateMissionFeedbackUseCase
 import com.umc.domain.usecase.curriculum.GetChallengerWorkbookDetailUseCase
+import com.umc.domain.usecase.curriculum.GetWorkbookSubmissionWeeksUseCase
+import com.umc.domain.usecase.curriculum.GetWorkbookSubmissionsV2UseCase
 import com.umc.domain.usecase.curriculum.UpdateMissionFeedbackUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -18,72 +20,19 @@ class AdminSubmitViewModel @Inject constructor(
     CreateMissionFeedbackUseCase,
     private val updateMissionFeedbackUseCase:
     UpdateMissionFeedbackUseCase,
+    private val getWorkbookSubmissionsV2UseCase:
+    GetWorkbookSubmissionsV2UseCase,
+    private val getWorkbookSubmissionWeeksUseCase:
+    GetWorkbookSubmissionWeeksUseCase,
 ) : BaseViewModel<AdminSubmitState, AdminSubmitEvent>(
     AdminSubmitState()
 ) {
 
     init {
-        loadDummy()
+        loadWeeks()
+        loadSubmissions()
     }
 
-    private fun loadDummy() {
-        updateState {
-            copy(
-                items = listOf(
-                    AdminSubmitItemUiModel(
-                        id = 1L,
-                        name = "홍길동",
-                        nickname = "닉네임",
-                        partLabel = "iOS",
-                        weekText = "1주차",
-                        studyTitle = "SwiftUI 클론 코딩",
-                        schoolName = "중앙대",
-                        status = "BEST",
-                    ),
-                    AdminSubmitItemUiModel(
-                        id = 2L,
-                        name = "홍길동",
-                        nickname = "닉네임",
-                        partLabel = "iOS",
-                        weekText = "1주차",
-                        studyTitle = "SwiftUI 클론 코딩",
-                        schoolName = "중앙대",
-                        status = "FAIL",
-                    ),
-                    AdminSubmitItemUiModel(
-                        id = 3L,
-                        name = "홍길동",
-                        nickname = "닉네임",
-                        partLabel = "iOS",
-                        weekText = "1주차",
-                        studyTitle = "SwiftUI 클론 코딩",
-                        schoolName = "중앙대",
-                        status = "PASS",
-                    ),
-                    AdminSubmitItemUiModel(
-                        id = 4L,
-                        name = "홍길동",
-                        nickname = "닉네임",
-                        partLabel = "iOS",
-                        weekText = "1주차",
-                        studyTitle = "SwiftUI 클론 코딩",
-                        schoolName = "중앙대",
-                        status = "SUBMITTED",
-                    ),
-                    AdminSubmitItemUiModel(
-                        id = 5L,
-                        name = "홍길동",
-                        nickname = "닉네임",
-                        partLabel = "iOS",
-                        weekText = "1주차",
-                        studyTitle = "SwiftUI 클론 코딩",
-                        schoolName = "중앙대",
-                        status = "SUBMITTED",
-                    ),
-                )
-            )
-        }
-    }
 
     fun onAction(action: AdminSubmitAction) {
         when (action) {
@@ -177,15 +126,31 @@ class AdminSubmitViewModel @Inject constructor(
                         showWeekBottomSheet = false,
                     )
                 }
+
+                loadSubmissions(
+                    studyGroupId = uiState.value.selectedGroupId,
+                    weekNos = listOf(action.week.toLong()),
+                )
             }
 
             is AdminSubmitAction.SelectGroup -> {
                 updateState {
                     copy(
-                        selectedGroupName = action.name,
+                        selectedGroup = action.group,
                         showGroupBottomSheet = false,
                     )
                 }
+
+                loadSubmissions(
+                    studyGroupId = action.group.id,
+                    weekNos = listOf(
+                        uiState.value.selectedWeek.toLong()
+                    ),
+                )
+
+                loadWeeks(
+                    studyGroupId = action.group.id,
+                )
             }
 
             is AdminSubmitAction.OnBestCommentChanged -> {
@@ -196,7 +161,7 @@ class AdminSubmitViewModel @Inject constructor(
 
             /*
              * 베스트 관련 API는 필요한 ID가 부족하므로
-             * 현재 로컬 UI 동작을 유지한다.
+             * 현재 로컬 UI 동작을 유지
              */
             is AdminSubmitAction.ConfirmBest -> {
                 val targetId =
@@ -285,6 +250,26 @@ class AdminSubmitViewModel @Inject constructor(
                     )
                 }
             }
+
+            is AdminSubmitAction.LoadMore -> {
+                val state = uiState.value
+                val nextCursor = state.nextCursor ?: return
+
+                if (
+                    state.isLoading ||
+                    state.isLoadingMore ||
+                    !state.hasNext
+                ) {
+                    return
+                }
+
+                loadSubmissions(
+                    studyGroupId = state.selectedGroupId,
+                    weekNos = listOf(state.selectedWeek.toLong()),
+                    cursor = nextCursor,
+                    append = true,
+                )
+            }
         }
     }
 
@@ -304,8 +289,19 @@ class AdminSubmitViewModel @Inject constructor(
             )
         }
 
+        val challengerWorkbookId = item.challengerWorkbookId
+
+        if (challengerWorkbookId == null) {
+            emitEvent(
+                AdminSubmitEvent.ShowToast(
+                    "아직 제출된 워크북이 없어요."
+                )
+            )
+            return
+        }
+
         loadChallengerWorkbookDetail(
-            challengerWorkbookId = item.id,
+            challengerWorkbookId = challengerWorkbookId,
         )
     }
 
@@ -383,6 +379,162 @@ class AdminSubmitViewModel @Inject constructor(
                     emitEvent(
                         AdminSubmitEvent.ShowToast(
                             "제출 상세 정보를 불러오지 못했어요."
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+
+    private fun loadWeeks(
+        studyGroupId: Long? = null,
+    ) {
+        viewModelScope.launch {
+            when (
+                val result = getWorkbookSubmissionWeeksUseCase(
+                    studyGroupId = studyGroupId,
+                )
+            ) {
+                is ApiState.Success -> {
+                    val weeks = result.data
+                        .map { it.toInt() }
+                        .distinct()
+                        .sorted()
+
+                    updateState {
+                        copy(
+                            availableWeeks = weeks,
+                            selectedWeek = when {
+                                weeks.isEmpty() -> 1
+                                selectedWeek in weeks -> selectedWeek
+                                else -> weeks.first()
+                            },
+                        )
+                    }
+                }
+
+                is ApiState.Fail -> {
+                    emitEvent(
+                        AdminSubmitEvent.ShowToast(
+                            "조회 가능한 주차를 불러오지 못했어요."
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun loadSubmissions(
+        studyGroupId: Long? = null,
+        weekNos: List<Long>? = null,
+        cursor: Long? = null,
+        append: Boolean = false,
+    ) {
+        viewModelScope.launch {
+            updateState {
+                if (append) {
+                    copy(
+                        isLoadingMore = true,
+                    )
+                } else {
+                    copy(
+                        isLoading = true,
+                        nextCursor = null,
+                        hasNext = false,
+                    )
+                }
+            }
+
+            when (
+                val result = getWorkbookSubmissionsV2UseCase(
+                    studyGroupId = studyGroupId,
+                    weekNos = weekNos,
+                    cursor = cursor,
+                    size = PAGE_SIZE,
+                )
+            ) {
+                is ApiState.Success -> {
+                    val page = result.data
+
+                    val newItems = page.content.flatMap { member ->
+                        member.weeks.map { week ->
+                            AdminSubmitItemUiModel(
+                                id = member.studyGroupMemberId,
+                                challengerWorkbookId = week.challengerWorkbookId,
+                                name = member.memberName,
+                                nickname = member.nickname,
+                                partLabel = member.part,
+                                weekText = "${week.weekNo}주차",
+                                studyTitle = member.studyGroupName,
+                                schoolName = member.schoolName,
+                                status = if (week.isBest) {
+                                    "BEST"
+                                } else {
+                                    week.status
+                                },
+                            )
+                        }
+                    }
+
+                    val groups = page.content
+                        .map { member ->
+                            AdminSubmitGroupUiModel(
+                                id = member.studyGroupId,
+                                name = member.studyGroupName,
+                            )
+                        }
+                        .distinctBy { group ->
+                            group.id
+                        }
+
+                    updateState {
+                        val updatedGroups = if (studyGroupId == null) {
+                            (
+                                    listOf(
+                                        AdminSubmitGroupUiModel(
+                                            id = null,
+                                            name = "전체 그룹",
+                                        )
+                                    ) +
+                                            availableGroups.filter { group ->
+                                                group.id != null
+                                            } +
+                                            groups
+                                    )
+                                .distinctBy { group ->
+                                    group.id
+                                }
+                        } else {
+                            availableGroups
+                        }
+
+                        copy(
+                            items = if (append) {
+                                items + newItems
+                            } else {
+                                newItems
+                            },
+                            availableGroups = updatedGroups,
+                            isLoading = false,
+                            isLoadingMore = false,
+                            nextCursor = page.nextCursor,
+                            hasNext = page.hasNext,
+                        )
+                    }
+                }
+
+                is ApiState.Fail -> {
+                    updateState {
+                        copy(
+                            isLoading = false,
+                            isLoadingMore = false,
+                        )
+                    }
+
+                    emitEvent(
+                        AdminSubmitEvent.ShowToast(
+                            "제출 현황을 불러오지 못했어요."
                         )
                     )
                 }
@@ -511,4 +663,9 @@ class AdminSubmitViewModel @Inject constructor(
             }
         }
     }
+
+    companion object {
+        private const val PAGE_SIZE = 20
+    }
 }
+

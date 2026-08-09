@@ -7,6 +7,7 @@ import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
 import com.umc.data.response.curriculum.CurriculumOverviewResponse
 import com.umc.domain.model.curriculum.StudyGroup
 import com.umc.data.response.curriculum.ChallengerWorkbookResponse
+import com.umc.data.response.curriculum.WorkbookSubmissionsV2Response
 
 interface CurriculumRemoteDataSource {
 
@@ -31,6 +32,19 @@ interface CurriculumRemoteDataSource {
         cursor: Long?,
         size: Int,
     ): ApiState<WorkbookSubmissionsResponse>
+
+    // 운영진 - 스터디원 제출 현황 조회
+    suspend fun getWorkbookSubmissionsV2(
+        studyGroupId: Long?,
+        weekNos: List<Long>?,
+        cursor: Long?,
+        size: Int,
+    ): ApiState<WorkbookSubmissionsV2Response>
+
+    // 운영진 - 제출 현황 조회 가능 주차 목록
+    suspend fun getWorkbookSubmissionWeeks(
+        studyGroupId: Long?,
+    ): ApiState<List<Long>>
 
 
     suspend fun getStudyGroups(

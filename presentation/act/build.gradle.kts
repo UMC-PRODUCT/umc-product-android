@@ -41,6 +41,7 @@ android {
 dependencies {
     implementation(project(":domain"))
     implementation(project(":presentation:component"))
+    implementation(project(":presentation:study"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
