@@ -9,6 +9,8 @@ import com.umc.data.response.schedule.ScheduleListResponse
 import com.umc.data.response.schedule.ScheduleMonthResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
 import com.umc.data.response.schedule.AdminScheduleV2Response
+import com.umc.data.response.schedule.MyScheduleItemResponse
+import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
 import com.umc.data.response.schedule.UpdateScheduleLocationV2Request
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.schedule.UpdateLocationRequest
@@ -32,12 +34,29 @@ interface ScheduleApi {
         @Path("scheduleId") scheduleId: Long
     ): ApiResponse<ScheduleDetailResponse>
 
-    //월별 일정 조회하기
+    //월별 일정 조회하기(나가리)
+    /*
     @GET(Endpoints.Schedule.MONTH)
     suspend fun getMonthSchedule(
         @Query("year") year: Int,
         @Query("month") month: Int
     ): ApiResponse<List<ScheduleMonthResponse>>
+
+     */
+
+    //내 일정 조회하기(월별 일정 대신 사용) v2
+    @GET(Endpoints.Schedule.SCHEDULES_ME)
+    suspend fun getMySchedules(
+        @Query("from") from: String, // "2026-06-01T00:00:00Z"
+        @Query("to") to: String,     // "2026-06-30T23:59:59Z"
+        @Query("isAttendanceRequired") isAttendanceRequired: Boolean = false
+    ): ApiResponse<List<MyScheduleItemResponse>>
+
+
+    //일정 생성/수정 권한 관련 조회
+    @GET(Endpoints.Schedule.CAPABILITIES)
+    suspend fun getScheduleCapabilities(): ApiResponse<ScheduleCapabilitiesResponse>
+
 
     //일정 출석부 통합 삭제하기
     @DELETE(Endpoints.Schedule.DETAIL_V2)

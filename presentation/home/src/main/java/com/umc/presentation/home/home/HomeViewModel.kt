@@ -110,13 +110,17 @@ class HomeViewModel @Inject constructor(
         val latestGisu = gisuSummaryList.maxByOrNull { it.gisu } //최신 기수
         val startGisu = gisuSummaryList.minByOrNull { it.gisu } //시작 기수
 
+        Log.d("log_home", "userInfo: $userInfo")
+        Log.d("log_home", "gisuSummaryList: $gisuSummaryList")
+
         //기본 정보 즉시 업데이트
         updateState {
             copy(
                 userName = userInfo.name,
                 userNickName = userInfo.nickname,
                 gisuTag = gisuTags,
-                activeString = "${latestGisu?.gisu ?: 0}기 활동 상태"
+                activeString = "${latestGisu?.gisu ?: 0}기 활동 상태",
+                growDay = userInfo.totalActivityDays.toInt()
             )
         }
 
@@ -157,7 +161,6 @@ class HomeViewModel @Inject constructor(
                         updateState {
                             copy(
                                 userType = userStatus,
-                                growDay = passedDay.toInt()
                             )
                         }
                     })
@@ -168,6 +171,7 @@ class HomeViewModel @Inject constructor(
 
 
     //최신 기수 날짜 정보를 통해, OB인지 ACTIVE인지 판단하고, 몇일 지났는지 표현
+    //날짜 정보는 얻을 수 있지만 OB/YB 여부를 위해 잔존시킴.
     fun getPassedDaysStatus(latestStartDateStr: String, latestEndDateStr: String,
                             oldStartDateStr: String, oldEndDateStr: String): Pair<Long, UserType> {
         val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
@@ -225,6 +229,7 @@ class HomeViewModel @Inject constructor(
             resultResponse(
                 response = getScheduleMonthUseCase(year, month),
                 successCallback = { scheduleMonth ->
+                    Log.d("log_home", "월별 일정 조회 성공: $scheduleMonth")
                     val planItems = convertToPlanItems(scheduleMonth)
                     val todayString = formatDate(uiState.value.selectedDate)
 
@@ -236,6 +241,9 @@ class HomeViewModel @Inject constructor(
                     }
                     // 점 찍기 데이터 갱신
                     extractEventDates(planItems)
+                },
+                errorCallback = { message ->
+                    Log.d("log_home", "월별 일정 조회 실패: $message")
                 }
             )
         }
