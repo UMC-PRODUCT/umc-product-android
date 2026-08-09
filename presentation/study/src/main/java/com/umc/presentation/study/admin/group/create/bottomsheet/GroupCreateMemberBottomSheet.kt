@@ -32,28 +32,53 @@ import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMember
 fun GroupCreateMemberBottomSheet(
     viewModel: GroupCreateMemberPickerViewModel = hiltViewModel(),
     preSelected: List<AdminStudyGroupCreateMemberUiModel>,
+    resolvePreSelectedFromApi: Boolean = false,
     onDismissRequest: () -> Unit,
     onConfirm: (List<AdminStudyGroupCreateMemberUiModel>) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
+    /**
+     * 바텀시트를 완전히 닫을 때 현재 확정된 스터디원 목록을 외부로 전달한다.
+     *
+     * 검색 화면에서 확인하지 않은 pendingMembers는 반영되지 않는다.
+     */
     fun dismissWithApply() {
         onConfirm(state.selectedMembers)
         viewModel.resetAfterDismiss()
         onDismissRequest()
     }
 
-    LaunchedEffect(preSelected) {
-        viewModel.resetAfterDismiss()
-        viewModel.setSelected(preSelected)
+    LaunchedEffect(
+        preSelected,
+        resolvePreSelectedFromApi,
+    ) {
+        if (resolvePreSelectedFromApi) {
+            viewModel.loadSelectedMembers(
+                memberIds = preSelected.map { member ->
+                    member.id
+                }
+            )
+        } else {
+            viewModel.setSelected(preSelected)
+        }
     }
 
     ModalBottomSheet(
         onDismissRequest = ::dismissWithApply,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true
+        ),
         containerColor = grey000(),
-        dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        dragHandle = {
+            BottomSheetDefaults.DragHandle(
+                color = grey600()
+            )
+        },
+        shape = RoundedCornerShape(
+            topStart = 28.dp,
+            topEnd = 28.dp
+        ),
     ) {
         Column(
             modifier = Modifier
@@ -69,9 +94,9 @@ fun GroupCreateMemberBottomSheet(
                     "스터디원을 추가하세요"
                 },
                 showConfirmButton = state.isSearching,
-                isConfirmEnabled = state.selectedMembers.isNotEmpty(),
+                isConfirmEnabled = state.isConfirmEnabled,
                 onConfirmClick = {
-                    viewModel.clearSearchOnly()
+                    viewModel.confirmPendingMembers()
                 }
             )
 
@@ -101,71 +126,17 @@ fun GroupCreateMemberBottomSheet(
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                if (!state.isSearching) {
-                    if (state.selectedMembers.isEmpty()) {
-                        GroupCreateEmptyContent(text = "아직 추가한 스터디원이 없어요")
-                    } else {
-                        LazyColumn(modifier = Modifier.fillMaxSize()) {
-                            items(state.selectedMembers, key = { it.id }) { item ->
-                                GroupCreateAddedMemberRow(
-                                    item = item,
-                                    onRemoveClick = { viewModel.toggleMember(item) }
-                                )
-                            }
-                        }
-                    }
+                if (state.isSearching) {
+                    MemberSearchResultContent(
+                        state = state,
+                        onToggleMember = viewModel::togglePendingMember,
+                        onLoadMore = viewModel::loadMoreMembers,
+                    )
                 } else {
-                    val groupedResults = state.searchResults
-                        .groupBy { member -> member.partLabel }
-                        .toList()
-
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        groupedResults.forEach { (partLabel, members) ->
-
-                            item(
-                                key = "part_header_$partLabel"
-                            ) {
-                                UText(
-                                    text = partLabel,
-                                    style = UmcTypographyTokens.BodyBold,
-                                    color = grey900(),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(
-                                            top = 4.dp,
-                                            bottom = 8.dp
-                                        )
-                                )
-                            }
-
-                            items(
-                                items = members,
-                                key = { member -> member.id }
-                            ) { item ->
-                                val isChecked = state.selectedMembers.any {
-                                        selectedMember -> selectedMember.id == item.id
-                                }
-
-                                GroupCreateMultiSearchRow(
-                                    item = item,
-                                    isChecked = isChecked,
-                                    onToggleClick = {
-                                        viewModel.toggleMember(item)
-                                    }
-                                )
-                            }
-
-                            item(
-                                key = "part_spacing_$partLabel"
-                            ) {
-                                Spacer(
-                                    modifier = Modifier.height(16.dp)
-                                )
-                            }
-                        }
-                    }
+                    CurrentMemberContent(
+                        members = state.selectedMembers,
+                        onRemoveMember = viewModel::removeMember,
+                    )
                 }
 
                 if (state.isLoading) {
@@ -290,53 +261,7 @@ fun GroupCreatePickerHeader(
         }
     }
 }
-@Composable
-fun GroupCreateMultiSearchRow(
-    item: AdminStudyGroupCreateMemberUiModel,
-    isChecked: Boolean,
-    onToggleClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onToggleClick() }
-            .padding(vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        GroupCreateMemberProfile()
 
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            UText(
-                text = item.displayName,
-                style = UmcTypographyTokens.SubheadlineBold,
-                color = grey800()
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            UText(
-                text = item.school,
-                style = UmcTypographyTokens.Footnote,
-                color = grey800()
-            )
-        }
-
-        Icon(
-            painter = painterResource(
-                id = if (isChecked) {
-                    R.drawable.ic_check_box_primary
-                } else {
-                    R.drawable.ic_check_box_empty
-                }
-            ),
-            contentDescription = null,
-            tint = Color.Unspecified,
-            modifier = Modifier.size(24.dp)
-        )
-    }
-}
 
 @Composable
 fun GroupCreateMemberProfile() {
@@ -361,17 +286,128 @@ fun GroupCreatePickerTitle(
 }
 
 @Composable
-fun GroupCreateSelectSearchRow(
+private fun CurrentMemberContent(
+    members: List<AdminStudyGroupCreateMemberUiModel>,
+    onRemoveMember: (AdminStudyGroupCreateMemberUiModel) -> Unit,
+) {
+    if (members.isEmpty()) {
+        GroupCreateEmptyContent(
+            text = "아직 추가한 스터디원이 없어요"
+        )
+        return
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        items(
+            items = members,
+            key = { member -> member.id }
+        ) { member ->
+            GroupCreateAddedMemberRow(
+                item = member,
+                onRemoveClick = {
+                    onRemoveMember(member)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun MemberSearchResultContent(
+    state: GroupCreateMemberPickerState,
+    onToggleMember: (AdminStudyGroupCreateMemberUiModel) -> Unit,
+    onLoadMore: () -> Unit,
+) {
+    val groupedResults = state.searchResults
+        .groupBy { member -> member.partLabel }
+        .toList()
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        groupedResults.forEach { (partLabel, members) ->
+            if (partLabel.isNotBlank()) {
+                item(
+                    key = "part_header_$partLabel"
+                ) {
+                    UText(
+                        text = partLabel,
+                        style = UmcTypographyTokens.BodyBold,
+                        color = grey900(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                top = 4.dp,
+                                bottom = 8.dp
+                            )
+                    )
+                }
+            }
+
+            items(
+                items = members,
+                key = { member -> member.id }
+            ) { member ->
+                val isAlreadyMember = state.selectedMembers.any {
+                        currentMember -> currentMember.id == member.id
+                }
+
+                val isPending = state.pendingMembers.any {
+                        pendingMember -> pendingMember.id == member.id
+                }
+
+                GroupCreateMultiSearchRow(
+                    item = member,
+                    isChecked = isAlreadyMember || isPending,
+                    enabled = !isAlreadyMember,
+                    onToggleClick = {
+                        onToggleMember(member)
+                    }
+                )
+            }
+
+            item(
+                key = "part_spacing_$partLabel"
+            ) {
+                Spacer(
+                    modifier = Modifier.height(16.dp)
+                )
+            }
+        }
+
+        if (
+            state.hasNext &&
+            state.searchResults.isNotEmpty() &&
+            !state.isLoading
+        ) {
+            item(key = "load_more") {
+                LaunchedEffect(Unit) {
+                    onLoadMore()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun GroupCreateMultiSearchRow(
     item: AdminStudyGroupCreateMemberUiModel,
-    onSelectClick: () -> Unit,
+    isChecked: Boolean,
+    enabled: Boolean = true,
+    onToggleClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(
+                enabled = enabled,
+                onClick = onToggleClick
+            )
             .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         GroupCreateMemberProfile()
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -382,28 +418,37 @@ fun GroupCreateSelectSearchRow(
             UText(
                 text = item.displayName,
                 style = UmcTypographyTokens.SubheadlineBold,
-                color = grey800()
+                color = if (enabled) {
+                    grey800()
+                } else {
+                    grey500()
+                }
             )
 
             Spacer(modifier = Modifier.height(2.dp))
 
             UText(
                 text = item.school,
-                style = UmcTypographyTokens.SubheadlineBold,
-                color = grey800()
+                style = UmcTypographyTokens.Footnote,
+                color = if (enabled) {
+                    grey800()
+                } else {
+                    grey500()
+                }
             )
         }
 
-        UButton(
-            text = "선택",
-            onClick = onSelectClick,
-            modifier = Modifier
-                .width(42.dp)
-                .height(32.dp),
-            backgroundColor = grey100(),
-            textColor = grey700(),
-            textStyle = UmcTypographyTokens.SubheadlineBold,
-            cornerRadius = 8.dp,
+        Icon(
+            painter = painterResource(
+                id = if (isChecked) {
+                    R.drawable.ic_check_box_primary
+                } else {
+                    R.drawable.ic_check_box_empty
+                }
+            ),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(24.dp)
         )
     }
 }

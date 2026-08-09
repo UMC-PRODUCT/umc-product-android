@@ -59,7 +59,7 @@ data class ScheduleListResponse (
                 date = date,
                 startTime = startTime,
                 endTime = endTime,
-                status = AdminSessionStatus.fromServerValue(status),
+                status = AdminSessionStatus.IN_PROGRESS, //임시
                 attendanceRate = attendanceRate.toInt(),
                 totalChallengers = totalCount,
                 attendedChallengers = presentCount,

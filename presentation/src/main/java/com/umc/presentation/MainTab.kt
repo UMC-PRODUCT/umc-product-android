@@ -15,17 +15,17 @@ sealed class MainTab (
         com.umc.component.R.drawable.ic_bottom_nav_home,
         com.umc.component.R.drawable.ic_bottom_nav_home_fill)
     object Notice : MainTab(
-        MainDestination.Home,
+        MainDestination.Notice,
         "공지",
         com.umc.component.R.drawable.ic_bottom_nav_notice,
         com.umc.component.R.drawable.ic_bottom_nav_notice_fill)
     object Activity : MainTab(
-        MainDestination.Home,
+        MainDestination.Act,
         "활동",
         com.umc.component.R.drawable.ic_bottom_nav_calendar,
         com.umc.component.R.drawable.ic_bottom_nav_calendar_fill)
     object Community : MainTab(
-        MainDestination.Home,
+        MainDestination.Community,
         "커뮤니티",
         com.umc.component.R.drawable.ic_bottom_nav_community,
         com.umc.component.R.drawable.ic_bottom_nav_community_fill)
