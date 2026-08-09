@@ -9,7 +9,7 @@ data class CommunityCreateState(
     val description: String = "",
 
     val selectedChallengers: List<CommunityChallengerUiModel> = emptyList(),
-    val maxChallengerCount: Int = 0,
+    val maxChallengerCount: Int = 8,
 
     val aiState: CommunityAiState = CommunityAiState.GUIDE,
     val classifiedCategory: CommunityCategory? = null,
