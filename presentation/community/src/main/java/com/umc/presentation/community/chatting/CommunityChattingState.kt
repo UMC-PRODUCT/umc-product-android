@@ -6,6 +6,7 @@ import com.umc.domain.model.community.thread.CommunityMessageType
 import com.umc.domain.model.community.thread.CommunityThreadDetail
 import com.umc.domain.model.community.thread.CommunityThreadMember
 import com.umc.domain.model.community.thread.CommunityThreadMessage
+import com.umc.domain.model.enums.AiFeatureStatus
 
 data class CommunityChattingState(
     val threadId: String,
@@ -13,6 +14,8 @@ data class CommunityChattingState(
     val myMemberId: String = "",
     val members: Map<String, CommunityThreadMember> = emptyMap(),
     val messages: List<CommunityThreadMessage> = emptyList(),
+    val unreadMessagesAtEntry: List<CommunityThreadMessage> = emptyList(),
+    val unreadCountAtEntry: Int = 0,
     val localImageUrisByMessageId: Map<String, List<String>> = emptyMap(),
     val pendingMessages: Map<String, PendingCommunityMessage> = emptyMap(),
     val readWatermarks: Map<String, String> = emptyMap(),
@@ -25,6 +28,12 @@ data class CommunityChattingState(
     val showDeleteDialog: Boolean = false,
     val showOwnershipTransferRequiredDialog: Boolean = false,
     val isDeleting: Boolean = false,
+    val aiFeatureStatus: AiFeatureStatus? = null,
+    val isSummarizingUnread: Boolean = false,
+    val aiDownloadPercent: Int? = null,
+    val unreadSummary: String? = null,
+    val unreadSummaryError: String? = null,
+    val summarizedMessageCount: Int = 0,
     val errorMessage: String? = null,
     val isThreadUnavailable: Boolean = false,
 ) : UiState
