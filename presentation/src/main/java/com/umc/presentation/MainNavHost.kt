@@ -4,7 +4,9 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -38,6 +40,13 @@ import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
 import androidx.navigation.navDeepLink
+import com.umc.presentation.community.CommunityRoute
+import com.umc.presentation.community.search.CommunitySearchRoute
+import com.umc.presentation.community.create.CommunityCreateRoute
+import com.umc.presentation.community.edit.CommunityEditRoute
+
+private const val COMMUNITY_REFRESH_KEY = "community_refresh"
+
 
 @Composable
 fun MainNavHost(
@@ -56,9 +65,8 @@ fun MainNavHost(
         },
 
 
+        //startDestination = MainDestination.Mycard(),
 
-
-        //startDestination = MainDestination.Home,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -454,6 +462,110 @@ fun MainNavHost(
             )
         }
 
+
+
+
+
+
+        /** 커뮤니티 화면 **/
+        composable<MainDestination.Community> { backStackEntry ->
+            val shouldRefresh by backStackEntry
+                .savedStateHandle
+                .getStateFlow(
+                    key = COMMUNITY_REFRESH_KEY,
+                    initialValue = false,
+                )
+                .collectAsStateWithLifecycle()
+
+            CommunityRoute(
+                onNavigateToThreadDetail = { threadId ->
+                    // TODO: 상세 화면 생성 후 연결
+                },
+                onNavigateToSearch = {
+                    navHostController.navigate(
+                        MainDestination.CommunitySearch
+                    )
+                },
+                onNavigateToCreateThread = {
+                    navHostController.navigate(
+                        MainDestination.CommunityCreate
+                    )
+                },
+                onNavigateToEditThread = { threadId ->
+                    navHostController.navigate(
+                        MainDestination.CommunityEdit(
+                            threadId = threadId,
+                        )
+                    )
+                },
+                shouldRefresh = shouldRefresh,
+                onRefreshHandled = {
+                    backStackEntry.savedStateHandle[
+                        COMMUNITY_REFRESH_KEY
+                    ] = false
+                },
+            )
+        }
+
+        /** 커뮤니티 스레드 만들기 화면 **/
+        composable<MainDestination.CommunityCreate> {
+            CommunityCreateRoute(
+                onNavigateBack = {
+                    navHostController.popBackStack()
+                },
+                onNavigateToEmojiPicker = {
+                    // TODO: 이모지 선택 화면 또는 다이얼로그 연결
+                },
+                onCreateSuccess = {
+                    navHostController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(
+                            COMMUNITY_REFRESH_KEY,
+                            true,
+                        )
+
+                    navHostController.popBackStack()
+                },
+            )
+        }
+
+        /** 커뮤니티 스레드 수정 화면 **/
+        composable<MainDestination.CommunityEdit> { backStackEntry ->
+            val destination =
+                backStackEntry.toRoute<MainDestination.CommunityEdit>()
+
+            CommunityEditRoute(
+                threadId = destination.threadId,
+                onNavigateBack = {
+                    navHostController.popBackStack()
+                },
+                onNavigateToEmojiPicker = {
+                    // TODO: 이모지 선택 화면 또는 다이얼로그 연결
+                },
+                onEditSuccess = {
+                    navHostController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(
+                            COMMUNITY_REFRESH_KEY,
+                            true,
+                        )
+
+                    navHostController.popBackStack()
+                },
+            )
+        }
+
+        /** 커뮤니티 검색 화면 **/
+        composable<MainDestination.CommunitySearch> {
+            CommunitySearchRoute(
+                onNavigateBack = {
+                    navHostController.popBackStack()
+                },
+                onNavigateToThreadDetail = { threadId ->
+                    // TODO: 스레드 상세 화면 생성 후 연결
+                },
+            )
+        }
 
     }
 }
