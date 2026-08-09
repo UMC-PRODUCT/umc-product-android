@@ -6,9 +6,20 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -18,15 +29,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
-import com.umc.component.theme.*
+import com.umc.component.theme.AppStrings
+import com.umc.component.theme.UmcTypographyTokens
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey200
+import com.umc.component.theme.grey500
+import com.umc.component.theme.grey800
 import com.umc.presentation.study.normal.NormalStudyItemUiModel
 
 @Composable
 fun StudyItemRow(
     item: NormalStudyItemUiModel,
     onToggle: () -> Unit,
-    onSubmitClick: (Long, String) -> Unit,
-    onConfirmClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val alpha = if (item.isLocked) 0.35f else 1f
@@ -37,50 +51,53 @@ fun StudyItemRow(
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
             .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.Top
+        verticalAlignment = Alignment.Top,
     ) {
-        // 왼쪽 타임라인
         Column(
             modifier = Modifier
                 .padding(start = 16.dp)
                 .width(32.dp)
                 .fillMaxHeight(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
             StudyTimelineColumn(
                 week = item.week,
                 status = item.status,
                 isLocked = item.isLocked,
-                modifier = Modifier.alpha(alpha)
+                modifier = Modifier.alpha(alpha),
             )
-            Spacer(Modifier.height(4.dp))
+
+            Spacer(modifier = Modifier.height(4.dp))
+
             Box(
                 modifier = Modifier
                     .width(2.dp)
                     .weight(1f)
-                    .background(grey200())
+                    .background(grey200()),
             )
         }
 
-        Spacer(Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(12.dp))
 
-        // 오른쪽 카드
         Surface(
             modifier = Modifier
                 .weight(1f)
                 .padding(end = 16.dp)
                 .clickable(
+                    enabled = !item.isLocked,
                     interactionSource = interactionSource,
                     indication = null,
-                ) { if (!item.isLocked) onToggle() }
+                    onClick = onToggle,
+                )
                 .animateContentSize(
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessMediumLow
+                        stiffness = Spring.StiffnessMediumLow,
                     )
                 ),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(8.dp),
             color = grey000(),
             tonalElevation = 0.dp,
             shadowElevation = 0.dp,
@@ -88,20 +105,31 @@ fun StudyItemRow(
             Column(
                 modifier = Modifier
                     .alpha(alpha)
-                    .padding(16.dp)
+                    .padding(16.dp),
             ) {
-                // 태그 + 뱃지 + 드롭다운
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            StudyTagChip(text = AppStrings.STUDY_WEEK_FORMAT.format(item.week))
-                            Spacer(Modifier.width(6.dp))
-                            StudyTagChip(text = item.platform)
+                    Column(
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            StudyTagChip(
+                                text = AppStrings.STUDY_WEEK_FORMAT.format(item.week),
+                            )
+
+                            Spacer(modifier = Modifier.width(6.dp))
+
+                            StudyTagChip(
+                                text = item.platform,
+                            )
                         }
-                        Spacer(Modifier.height(10.dp))
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
                         UText(
                             text = item.title,
                             style = UmcTypographyTokens.HeadlineBold,
@@ -110,45 +138,56 @@ fun StudyItemRow(
                         )
                     }
 
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         if (item.isBest) {
                             StudyBestBadge()
-                            Spacer(Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                         }
+
                         if (!item.isLocked) {
                             StudyStatusBadge(item = item)
-                            Spacer(Modifier.width(8.dp))
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
                             Icon(
                                 painter = painterResource(
-                                    if (item.isExpanded) R.drawable.ic_dropdown_up
-                                    else R.drawable.ic_dropdown_down
+                                    if (item.isExpanded) {
+                                        R.drawable.ic_dropdown_up
+                                    } else {
+                                        R.drawable.ic_dropdown_down
+                                    }
                                 ),
                                 contentDescription = null,
-                                modifier = Modifier.size(24.dp),
-                                tint = grey500()
+                                modifier = Modifier.size(20.dp),
+                                tint = grey500(),
                             )
                         }
                     }
                 }
 
-                // 펼쳐지는 영역
                 if (item.isExpanded && !item.isLocked) {
-                    Column {
-                        Spacer(Modifier.height(12.dp))
-                        if (item.description.isNotBlank()) {
-                            UText(
-                                text = item.description,
-                                style = UmcTypographyTokens.Footnote,
-                                color = grey500(),
-                            )
-                        }
-                        Spacer(Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (item.description.isNotBlank()) {
+                        UText(
+                            text = item.description,
+                            style = UmcTypographyTokens.Footnote,
+                            color = grey500(),
+                        )
+                    }
+
+                    if (
+                        item.status == com.umc.domain.model.enums.StudyStatus.PASS ||
+                        item.status == com.umc.domain.model.enums.StudyStatus.FAIL
+                    ) {
+                        Spacer(modifier = Modifier.height(12.dp))
+
                         StudyExpandedContent(
                             item = item,
-                            onSubmitClick = onSubmitClick,
-                            onConfirmClick = onConfirmClick,
                         )
                     }
                 }

@@ -123,8 +123,12 @@ fun GroupCreatePartLeaderBottomSheet(
                     state.isSearching -> {
                         GroupCreatePartLeaderSearchResults(
                             searchResults = state.searchResults,
+                            selectedMembers = state.selectedMembers,
                             onSelectClick = { member ->
-                                viewModel.addMember(member)
+                                viewModel.setSelected(
+                                    (state.selectedMembers + member)
+                                        .distinctBy { it.id }
+                                )
                                 viewModel.clearSearchOnly()
                             }
                         )
@@ -147,7 +151,7 @@ fun GroupCreatePartLeaderBottomSheet(
                                 GroupCreateAddedMemberRow(
                                     item = item,
                                     onRemoveClick = {
-                                        viewModel.toggleMember(item)
+                                        viewModel.removeMember(item)
                                     }
                                 )
                             }
@@ -169,6 +173,7 @@ fun GroupCreatePartLeaderBottomSheet(
 @Composable
 private fun GroupCreatePartLeaderSearchResults(
     searchResults: List<AdminStudyGroupCreateMemberUiModel>,
+    selectedMembers: List<AdminStudyGroupCreateMemberUiModel>,
     onSelectClick: (AdminStudyGroupCreateMemberUiModel) -> Unit,
 ) {
     val groupedResults = searchResults
@@ -180,29 +185,38 @@ private fun GroupCreatePartLeaderSearchResults(
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
         groupedResults.forEach { (partLabel, members) ->
-            item(
-                key = "part_header_$partLabel"
-            ) {
-                UText(
-                    text = partLabel,
-                    style = UmcTypographyTokens.BodyBold,
-                    color = grey900(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            top = 4.dp,
-                            bottom = 8.dp
-                        )
-                )
+            if (partLabel.isNotBlank()) {
+                item(
+                    key = "part_header_$partLabel"
+                ) {
+                    UText(
+                        text = partLabel,
+                        style = UmcTypographyTokens.BodyBold,
+                        color = grey900(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                top = 4.dp,
+                                bottom = 8.dp
+                            )
+                    )
+                }
             }
 
             items(
                 items = members,
                 key = { member -> member.id }
             ) { member ->
-                GroupCreateSelectSearchRow(
+                val isAlreadySelected = selectedMembers.any {
+                        selectedMember ->
+                    selectedMember.id == member.id
+                }
+
+                GroupCreateMultiSearchRow(
                     item = member,
-                    onSelectClick = {
+                    isChecked = isAlreadySelected,
+                    enabled = !isAlreadySelected,
+                    onToggleClick = {
                         onSelectClick(member)
                     }
                 )
@@ -211,7 +225,9 @@ private fun GroupCreatePartLeaderSearchResults(
             item(
                 key = "part_spacing_$partLabel"
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(
+                    modifier = Modifier.height(16.dp)
+                )
             }
         }
     }

@@ -24,6 +24,9 @@ import com.umc.domain.model.request.organization.EditStudyGroupRequest
 import com.umc.domain.model.request.organization.SchoolIdRequest
 import com.umc.domain.model.request.organization.SchoolRegistrationRequest
 import com.umc.domain.model.request.organization.UnAssignSchoolRequest
+import com.umc.data.response.organization.ManagedStudyGroupListResponse
+import com.umc.domain.model.request.organization.UpdateStudyGroupRequest
+import com.umc.domain.model.request.organization.CreateStudyGroupScheduleRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -123,6 +126,12 @@ interface OrganizationApi {
         @Query(PATH_GISU_ID) gisuId: Int,
     ): ApiResponse<ChapterBySchoolListResponse>
 
+    @GET(Endpoints.Organization.MANAGED_STUDY_GROUPS)
+    suspend fun getManagedStudyGroups(
+        @Query(QUERY_CURSOR) cursor: Long?,
+        @Query(QUERY_SIZE) size: Int,
+    ): ApiResponse<ManagedStudyGroupListResponse>
+
     @PATCH(Endpoints.Organization.STUDY_GROUD_ID)
     suspend fun editGroup(
         @Path(PATH_GROUP_ID) groupId: Long,
@@ -149,7 +158,12 @@ interface OrganizationApi {
 
     @POST(Endpoints.Organization.STUDY_GROUP)
     suspend fun createStudyGroup(
-        @Body request: CreateStudyGroupRequest
+        @Body request: CreateStudyGroupRequest,
+    ): ApiResponse<Unit>
+
+    @POST(Endpoints.Organization.CREATE_STUDY_GROUP_SCHEDULE)
+    suspend fun createStudyGroupSchedule(
+        @Body request: CreateStudyGroupScheduleRequest,
     ): ApiResponse<Unit>
 
     @POST(Endpoints.Organization.SCHOOL)
@@ -184,5 +198,33 @@ interface OrganizationApi {
         @Path("gisuId") gisuId: Long,
     ): ApiResponse<GisuInfoResponse>
 
+    @PATCH("/api/v1/study-groups/{studyGroupId}")
+    suspend fun updateStudyGroup(
+        @Path("studyGroupId") studyGroupId: Long,
+        @Body request: UpdateStudyGroupRequest,
+    ): ApiResponse<Unit>
 
+    @PATCH("/api/v1/study-groups/{studyGroupId}/mentors/{mentorId}")
+    suspend fun addStudyGroupMentor(
+        @Path("studyGroupId") studyGroupId: Long,
+        @Path("mentorId") mentorId: Long,
+    ): ApiResponse<Unit>
+
+    @DELETE("/api/v1/study-groups/{studyGroupId}/mentors/{mentorId}")
+    suspend fun deleteStudyGroupMentor(
+        @Path("studyGroupId") studyGroupId: Long,
+        @Path("mentorId") mentorId: Long,
+    ): ApiResponse<Unit>
+
+    @PATCH("/api/v1/study-groups/{studyGroupId}/members/{memberId}")
+    suspend fun addStudyGroupMember(
+        @Path("studyGroupId") studyGroupId: Long,
+        @Path("memberId") memberId: Long,
+    ): ApiResponse<Unit>
+
+    @DELETE("/api/v1/study-groups/{studyGroupId}/members/{memberId}")
+    suspend fun deleteStudyGroupMember(
+        @Path("studyGroupId") studyGroupId: Long,
+        @Path("memberId") memberId: Long,
+    ): ApiResponse<Unit>
 }

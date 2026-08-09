@@ -2,6 +2,7 @@ package com.umc.presentation.study.admin.submit
 
 data class AdminSubmitItemUiModel(
     val id: Long,
+    val challengerWorkbookId: Long? = null,
     val name: String,
     val nickname: String,
     val partLabel: String,
@@ -13,11 +14,14 @@ data class AdminSubmitItemUiModel(
     val bestComment: String = "",
     val isBestRegistered: Boolean = false,
 ) {
-    val isBest: Boolean get() = status == "BEST"
-    val markStatus: String? get() = when (status) {
-        "PASS" -> "PASS"
-        "FAIL" -> "FAIL"
-        "BEST" -> "PASS"
-        else -> null
-    }
+    val isBest: Boolean
+        get() = status == "BEST"
+
+    val markStatus: String?
+        get() = when (status) {
+            "PASS" -> "PASS"
+            "FAIL" -> "FAIL"
+            "BEST" -> "PASS"
+            else -> null
+        }
 }
