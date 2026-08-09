@@ -154,8 +154,9 @@ class NoticeWriteViewModel @Inject constructor(
             NoticeWriterRole.CENTRAL_STAFF ->
                 listOf(WriteCategory(WriteCategoryType.CENTRAL_STAFF, AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL))
 
-            NoticeWriterRole.CHAPTER_PRESIDENT ->
-                listOf(WriteCategory(WriteCategoryType.CHAPTER_PRESIDENT, AppStrings.NOTICE_WRITE_CATEGORY_CHAPTER))
+            // 지부장 보류 (NoticeWriterRole.CHAPTER_PRESIDENT 주석 참고)
+            // NoticeWriterRole.CHAPTER_PRESIDENT ->
+            //     listOf(WriteCategory(WriteCategoryType.CHAPTER_PRESIDENT, AppStrings.NOTICE_WRITE_CATEGORY_CHAPTER))
 
             NoticeWriterRole.SCHOOL_CORE ->
                 listOf(WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE))
@@ -190,9 +191,10 @@ class NoticeWriteViewModel @Inject constructor(
                     BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART, BoardChipType.CHAPTER
                 ) to AppStrings.NOTICE_WRITE_CLASS_HINT
 
-                NoticeWriterRole.CHAPTER_PRESIDENT -> listOf(
-                    BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART, BoardChipType.SCHOOL
-                ) to AppStrings.NOTICE_WRITE_CLASS_HINT
+                // 지부장 보류 (NoticeWriterRole.CHAPTER_PRESIDENT 주석 참고)
+                // NoticeWriterRole.CHAPTER_PRESIDENT -> listOf(
+                //     BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART, BoardChipType.SCHOOL
+                // ) to AppStrings.NOTICE_WRITE_CLASS_HINT
 
                 NoticeWriterRole.SCHOOL_CORE -> listOf(
                     BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART
