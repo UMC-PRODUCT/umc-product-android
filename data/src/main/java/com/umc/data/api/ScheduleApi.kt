@@ -8,6 +8,10 @@ import com.umc.data.response.schedule.ScheduleDetailResponse
 import com.umc.data.response.schedule.ScheduleListResponse
 import com.umc.data.response.schedule.ScheduleMonthResponse
 import com.umc.data.response.schedule.UpdateLocationResponse
+import com.umc.data.response.schedule.AdminScheduleV2Response
+import com.umc.data.response.schedule.MyScheduleItemResponse
+import com.umc.data.response.schedule.ScheduleCapabilitiesResponse
+import com.umc.data.response.schedule.UpdateScheduleLocationV2Request
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import retrofit2.http.Body
@@ -21,25 +25,48 @@ import retrofit2.http.Query
 interface ScheduleApi {
 
     //일정 목록 가져오기
-    @GET(Endpoints.Schedule.SCHEDULE)
-    suspend fun getScheduleList(): ApiResponse<List<ScheduleListResponse>>
+    @GET(Endpoints.Schedule.ATTENDANCE_HISTORY)
+    suspend fun getScheduleList(): ApiResponse<List<AdminScheduleV2Response>>
 
     //세부 일정 가져오기
-    @GET(Endpoints.Schedule.DETAIL)
+    @GET(Endpoints.Schedule.DETAIL_V2)
     suspend fun getScheduleDetail(
         @Path("scheduleId") scheduleId: Long
     ): ApiResponse<ScheduleDetailResponse>
 
-    //월별 일정 조회하기
+    //월별 일정 조회하기(나가리)
+    /*
     @GET(Endpoints.Schedule.MONTH)
     suspend fun getMonthSchedule(
         @Query("year") year: Int,
         @Query("month") month: Int
     ): ApiResponse<List<ScheduleMonthResponse>>
 
+     */
+
+    //내 일정 조회하기(월별 일정 대신 사용) v2
+    @GET(Endpoints.Schedule.SCHEDULES_ME)
+    suspend fun getMySchedules(
+        @Query("from") from: String, // "2026-06-01T00:00:00Z"
+        @Query("to") to: String,     // "2026-06-30T23:59:59Z"
+        @Query("isAttendanceRequired") isAttendanceRequired: Boolean = false
+    ): ApiResponse<List<MyScheduleItemResponse>>
+
+
+    //일정 생성/수정 권한 관련 조회
+    @GET(Endpoints.Schedule.CAPABILITIES)
+    suspend fun getScheduleCapabilities(): ApiResponse<ScheduleCapabilitiesResponse>
+
+
     //일정 출석부 통합 삭제하기
-    @DELETE(Endpoints.Schedule.DELETE)
+    @DELETE(Endpoints.Schedule.DETAIL_V2)
     suspend fun deleteScheduleWithAttendance(
+        @Path("scheduleId") scheduleId: Long
+    ): ApiResponse<Unit>
+
+    // 출석 기록이 있는 일정 강제 삭제하기 (SUPER_ADMIN 전용)
+    @DELETE(Endpoints.Schedule.FORCE_DELETE)
+    suspend fun forceDeleteSchedule(
         @Path("scheduleId") scheduleId: Long
     ): ApiResponse<Unit>
 
@@ -55,14 +82,14 @@ interface ScheduleApi {
     suspend fun updateSchedule(
         @Path("scheduleId") scheduleId: Long,
         @Body request: UpdateScheduleRequest
-    ) : ApiResponse<Unit>
+    ) : ApiResponse<String>
 
     // 일정 위치 변경하기
-    @PATCH(Endpoints.Schedule.LOCATION)
+    @PATCH(Endpoints.Schedule.DETAIL_V2)
     suspend fun updateScheduleLocation(
         @Path("scheduleId") scheduleId: Long,
-        @Body request: UpdateLocationRequest
-    ): ApiResponse<UpdateLocationResponse>
+        @Body request: UpdateScheduleLocationV2Request
+    ): ApiResponse<String>
 
     @POST("/api/v1/study-groups/schedules")
     suspend fun createStudyGroupSchedule(

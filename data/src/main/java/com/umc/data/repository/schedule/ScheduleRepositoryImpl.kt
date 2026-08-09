@@ -4,6 +4,8 @@ import com.umc.data.dataSource.remote.schedule.ScheduleRemoteDataSource
 import com.umc.data.request.schedule.CreateScheduleRequest
 import com.umc.data.request.schedule.CreateStudyGroupScheduleRequest
 import com.umc.data.request.schedule.UpdateScheduleRequest
+import com.umc.data.response.schedule.MyScheduleItemResponse.Companion.toDomain
+import com.umc.data.response.schedule.ScheduleCapabilitiesResponse.Companion.toModel
 import com.umc.data.response.schedule.ScheduleListResponse.Companion.toDomain
 import com.umc.data.response.schedule.ScheduleMonthResponse.Companion.toDomain
 import com.umc.domain.model.base.ApiState
@@ -18,6 +20,7 @@ import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
+import com.umc.domain.model.home.schedule.ScheduleCapabilities
 import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.domain.model.request.schedule.UpdateLocationRequest
 import com.umc.domain.repository.schedule.ScheduleRepository
@@ -46,6 +49,7 @@ class ScheduleRepositoryImpl @Inject constructor(
         }
     }
 
+    /*
     //월별 일정 조회
     override suspend fun getMonthSchedule(
         year: Int,
@@ -53,6 +57,26 @@ class ScheduleRepositoryImpl @Inject constructor(
     ): ApiState<List<ScheduleMonthModel>> {
         return scheduleRemoteDataSource.getMonthSchedule(year, month).map { responseList ->
             responseList.map { it.toDomain() }
+        }
+    }
+
+     */
+
+    //내 일정 조회
+    override suspend fun getMySchedule(
+        from: String,
+        to: String,
+        isAttendanceRequired: Boolean
+    ): ApiState<List<ScheduleMonthModel>> {
+        return scheduleRemoteDataSource.getMySchedule(from, to, isAttendanceRequired).map { responseList ->
+            responseList.map { it.toDomain() }
+            }
+        }
+
+    //스케줄 권한 가져오기
+    override suspend fun getScheduleCapabilities(): ApiState<ScheduleCapabilities> {
+        return scheduleRemoteDataSource.getScheduleCapabilities().map { response ->
+            response.toModel()
         }
     }
 
@@ -114,6 +138,10 @@ class ScheduleRepositoryImpl @Inject constructor(
     //일정 삭제하기
     override suspend fun deleteSchedule(scheduleId: Long): ApiState<Unit> {
         return scheduleRemoteDataSource.deleteScheduleWithAttendance(scheduleId)
+    }
+
+    override suspend fun forceDeleteSchedule(scheduleId: Long): ApiState<Unit> {
+        return scheduleRemoteDataSource.forceDeleteSchedule(scheduleId)
     }
 
     override suspend fun updateScheduleLocation(

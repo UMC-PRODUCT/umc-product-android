@@ -8,6 +8,7 @@ import com.umc.data.request.member.UpdateMyProfileRequest
 import com.umc.data.response.JwtLoginResponse
 import com.umc.data.response.member.MemberResponse
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.request.member.RegisterEmailRequest
 import com.umc.domain.model.request.member.RegisterRequest
 import javax.inject.Inject
 
@@ -22,8 +23,12 @@ class MemberRemoteDataSourceImpl @Inject constructor(
         return apiCall { memberApi.getMemberProfile(id) }
     }
 
-    override suspend fun register(request: RegisterRequest): ApiState<JwtLoginResponse> {
-        return apiCall { memberApi.register(request) }
+    override suspend fun registerOAuth(request: RegisterRequest): ApiState<JwtLoginResponse> {
+        return apiCall { memberApi.registerOAuth(request) }
+    }
+
+    override suspend fun registerEmail(request: RegisterEmailRequest): ApiState<JwtLoginResponse> {
+        return apiCall { memberApi.registerEmail(request) }
     }
 
     override suspend fun updateMyProfile(request: UpdateMyProfileRequest): ApiState<MemberResponse> {

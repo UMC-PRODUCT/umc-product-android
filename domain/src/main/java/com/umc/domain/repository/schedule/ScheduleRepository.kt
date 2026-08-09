@@ -8,6 +8,7 @@ import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.domain.model.home.schedule.CreateStudyGroupSchedule
+import com.umc.domain.model.home.schedule.ScheduleCapabilities
 
 interface ScheduleRepository {
 
@@ -17,10 +18,19 @@ interface ScheduleRepository {
     //일정 상세 정보 가져오기 (홈 화면 -> 일정 상세)
     suspend fun getScheduleDetailHome(scheduleId: Long): ApiState<PlanDetailItem>
 
+    /*
     //월별 일정 가져오기
     suspend fun getMonthSchedule(year: Int, month: Int): ApiState<List<ScheduleMonthModel>>
 
-  
+
+     */
+
+    //내 일정 가져오기(월별)
+    suspend fun getMySchedule(from:String, to:String, isAttendanceRequired: Boolean = false): ApiState<List<ScheduleMonthModel>>
+
+    //일정 권한 가져오기
+    suspend fun getScheduleCapabilities(): ApiState<ScheduleCapabilities>
+
     suspend fun getScheduleDetail(scheduleId: Long): ApiState<UserCheckAvailable>
 
     //운영진 일정 리스트 가져오기
@@ -34,6 +44,9 @@ interface ScheduleRepository {
 
     //일정 삭제하기
     suspend fun deleteSchedule(scheduleId: Long) : ApiState<Unit>
+
+    //출석 기록이 있는 일정 강제 삭제하기
+    suspend fun forceDeleteSchedule(scheduleId: Long): ApiState<Unit>
 
     // 위치 변경하기
     suspend fun updateScheduleLocation(

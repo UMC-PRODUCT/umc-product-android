@@ -10,6 +10,7 @@ class GetNoticeListUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(
         gisuId: Long,
+        noticeTab: String = "CHALLENGER",
         chapterId: Long? = null,
         schoolId: Long? = null,
         part: String? = null,
@@ -17,7 +18,7 @@ class GetNoticeListUseCase @Inject constructor(
         size: Int = 20
     ): ApiState<NoticeSearch> {
         return noticeRepository.getNotices(
-            gisuId, chapterId, schoolId, part, page, size
+            gisuId, noticeTab, chapterId, schoolId, part, page, size
         )
     }
 }

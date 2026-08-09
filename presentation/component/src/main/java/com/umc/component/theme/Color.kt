@@ -56,6 +56,8 @@ internal val lightRed700 = Color(0xFFB42318)
 internal val lightRed800 = Color(0xFF912018)
 internal val lightRed900 = Color(0xFF55160C)
 internal val lightKakaoColor = Color(0xFFFEE500)
+internal val lightMint100 = Color(0xFFE5F5F2)
+internal val lightTeal600 = Color(0xFF0E8179)
 internal val lightGeofenceFill = Color(0x0D51A2FF)
 internal val lightGeofenceStroke = Color(0x4D51A2FF)
 
@@ -111,6 +113,8 @@ internal val darkRed700 = Color(0xFFFDA29B)
 internal val darkRed800 = Color(0xFFFECDCA)
 internal val darkRed900 = Color(0xFFFEE5E2)
 internal val darkKakaoColor = Color(0xFFFEE500)
+internal val darkMint100 = Color(0xFFE5F5F2)
+internal val darkTeal600 = Color(0xFF0E8179)
 
 @Composable
 fun black(): Color = if (isSystemInDarkTheme()) darkBlack else lightBlack
@@ -264,6 +268,12 @@ fun red900(): Color = if (isSystemInDarkTheme()) darkRed900 else lightRed900
 
 @Composable
 fun kakaoColor(): Color = if (isSystemInDarkTheme()) darkKakaoColor else lightKakaoColor
+
+@Composable
+fun mint100(): Color = if (isSystemInDarkTheme()) darkMint100 else lightMint100
+
+@Composable
+fun teal600(): Color = if (isSystemInDarkTheme()) darkTeal600 else lightTeal600
 
 @Composable
 fun geofence_fill(): Color = lightGeofenceFill
