@@ -286,6 +286,11 @@ fun MycardScreen(
             }
         }
 
+        // 바닥 여백
+        item { Spacer(modifier = Modifier
+            .height(64.dp)
+        ) }
+
 
     }
 
@@ -299,7 +304,8 @@ fun MycardTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000()),
+            .background(grey000())
+        .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
