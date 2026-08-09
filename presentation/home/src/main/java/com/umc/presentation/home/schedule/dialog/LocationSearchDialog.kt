@@ -67,8 +67,8 @@ fun LocationSearchBottomSheet(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        confirmValueChange = { it != SheetValue.Hidden },
+        skipPartiallyExpanded = false,
+        //confirmValueChange = { it != SheetValue.Hidden },
     )
 
     /** 지도 검색 기능 철회로 주석 처리
