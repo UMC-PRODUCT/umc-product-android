@@ -65,7 +65,7 @@ fun MainNavHost(
 
 
         //startDestination = MainDestination.Mycard(),
-        startDestination = MainDestination.Community,
+
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
