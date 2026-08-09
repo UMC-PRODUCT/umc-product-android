@@ -5,10 +5,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,6 +27,7 @@ import com.umc.component.theme.UmcTypographyTokens.FootnoteBold
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitBottomSheet
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitGroupBottomSheet
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekBottomSheet
+import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekUiModel
 import com.umc.presentation.study.admin.submit.component.AdminSubmitFilterBar
 import com.umc.presentation.study.admin.submit.component.AdminSubmitItem
 import kotlinx.coroutines.flow.collectLatest
@@ -58,6 +63,30 @@ fun AdminSubmitScreen(
     state: AdminSubmitState,
     onAction: (AdminSubmitAction) -> Unit = {},
 ) {
+
+    val listState = rememberLazyListState()
+
+    val shouldLoadMore by remember {
+        derivedStateOf {
+            val lastVisibleItemIndex =
+                listState.layoutInfo.visibleItemsInfo
+                    .lastOrNull()
+                    ?.index
+
+            lastVisibleItemIndex != null &&
+                    lastVisibleItemIndex >=
+                    listState.layoutInfo.totalItemsCount - 3 &&
+                    state.hasNext &&
+                    !state.isLoadingMore
+        }
+    }
+
+    LaunchedEffect(shouldLoadMore) {
+        if (shouldLoadMore) {
+            onAction(AdminSubmitAction.LoadMore)
+        }
+    }
+
     // 승인 다이얼로그
     if (state.showApproveDialog) {
         UBasicDialog(
@@ -125,19 +154,51 @@ fun AdminSubmitScreen(
             }
         } else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .fillMaxSize()
                     .background(grey100()),
                 contentPadding = PaddingValues(
-                    start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 8.dp,
+                    bottom = 16.dp,
                 ),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                items(state.items, key = { it.id }) { item ->
+                items(
+                    items = state.items,
+                    key = { item ->
+                        "${item.id}_${item.weekText}"
+                    },
+                ) { item ->
                     AdminSubmitItem(
                         item = item,
-                        onClick = { onAction(AdminSubmitAction.OpenBottomSheet(item)) }
+                        onClick = {
+                            onAction(
+                                AdminSubmitAction.OpenBottomSheet(item)
+                            )
+                        },
                     )
+                }
+
+                if (state.isLoadingMore) {
+                    item(
+                        key = "loading_more"
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = indigo500(),
+                                strokeWidth = 2.dp,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -154,9 +215,20 @@ fun AdminSubmitScreen(
     // 주차 바텀시트
     if (state.showWeekBottomSheet) {
         AdminSubmitWeekBottomSheet(
-            weeks = state.availableWeeks,
-            onSelect = { onAction(AdminSubmitAction.SelectWeek(it)) },
-            onDismiss = { onAction(AdminSubmitAction.CloseWeekBottomSheet) }
+            weeks = state.availableWeeks.map { week ->
+                AdminSubmitWeekUiModel(
+                    week = week,
+                    weeklyCurriculumId = 0L,
+                )
+            },
+            onSelect = { weekItem ->
+                onAction(
+                    AdminSubmitAction.SelectWeek(weekItem.week)
+                )
+            },
+            onDismiss = {
+                onAction(AdminSubmitAction.CloseWeekBottomSheet)
+            },
         )
     }
 

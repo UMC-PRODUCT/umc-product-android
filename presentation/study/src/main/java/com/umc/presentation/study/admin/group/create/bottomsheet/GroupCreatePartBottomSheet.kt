@@ -1,7 +1,12 @@
 package com.umc.presentation.study.admin.group.create.bottomsheet
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,16 +18,46 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
-import com.umc.component.theme.*
+import com.umc.component.theme.UmcTypographyTokens
+import com.umc.component.theme.grey000
+import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo500
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreatePartUiModel
 
 private val groupCreateParts = listOf(
-    AdminStudyGroupCreatePartUiModel(1L, "PM"),
-    AdminStudyGroupCreatePartUiModel(2L, "Design"),
-    AdminStudyGroupCreatePartUiModel(3L, "Android"),
-    AdminStudyGroupCreatePartUiModel(4L, "iOS"),
-    AdminStudyGroupCreatePartUiModel(5L, "Web"),
-    AdminStudyGroupCreatePartUiModel(6L, "Server")
+    AdminStudyGroupCreatePartUiModel(
+        label = "Plan",
+        value = "PLAN",
+    ),
+    AdminStudyGroupCreatePartUiModel(
+        label = "Design",
+        value = "DESIGN",
+    ),
+    AdminStudyGroupCreatePartUiModel(
+        label = "Web",
+        value = "WEB",
+    ),
+    AdminStudyGroupCreatePartUiModel(
+        label = "Android",
+        value = "ANDROID",
+    ),
+    AdminStudyGroupCreatePartUiModel(
+        label = "iOS",
+        value = "IOS",
+    ),
+    AdminStudyGroupCreatePartUiModel(
+        label = "Node.js",
+        value = "NODEJS",
+    ),
+    AdminStudyGroupCreatePartUiModel(
+        label = "Spring Boot",
+        value = "SPRINGBOOT",
+    ),
+    AdminStudyGroupCreatePartUiModel(
+        label = "Admin",
+        value = "ADMIN",
+    ),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,42 +69,60 @@ fun GroupCreatePartBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+        ),
         containerColor = grey000(),
-        dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        dragHandle = {
+            BottomSheetDefaults.DragHandle(
+                color = grey600(),
+            )
+        },
+        shape = RoundedCornerShape(
+            topStart = 28.dp,
+            topEnd = 28.dp,
+        ),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(420.dp)
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp)
+                .padding(bottom = 24.dp),
         ) {
             UText(
                 text = "파트를 선택하세요",
                 style = UmcTypographyTokens.Title3Bold,
                 color = grey800(),
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp),
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(
+                modifier = Modifier.height(20.dp),
+            )
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(groupCreateParts, key = { it.id }) { part ->
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                items(
+                    items = groupCreateParts,
+                    key = { part -> part.value },
+                ) { part ->
                     UText(
                         text = part.label,
                         style = UmcTypographyTokens.Body,
-                        color = if (selectedPart?.id == part.id) indigo500() else grey800(),
+                        color = if (selectedPart?.value == part.value) {
+                            indigo500()
+                        } else {
+                            grey800()
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
                                 onPartSelected(part)
-                                onDismissRequest()
                             }
-                            .padding(vertical = 16.dp)
+                            .padding(vertical = 16.dp),
                     )
-
                 }
             }
         }

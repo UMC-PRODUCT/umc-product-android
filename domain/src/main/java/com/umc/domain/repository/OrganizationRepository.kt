@@ -5,6 +5,7 @@ import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.organization.ChapterWithSchool
 import com.umc.domain.model.organization.GisuList
 import com.umc.domain.model.home.GisuInfo
+import com.umc.domain.model.organization.GisuItem
 import com.umc.domain.model.request.organization.AssignSchoolRequest
 import com.umc.domain.model.request.organization.ChallengerListRequest
 import com.umc.domain.model.request.organization.CreateChapterRequest
@@ -18,6 +19,9 @@ import com.umc.domain.model.request.organization.UnAssignSchoolRequest
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.model.organization.StudyGroupDetail
 import com.umc.domain.model.organization.StudyGroupPage
+import com.umc.domain.model.organization.ManagedStudyGroupPage
+import com.umc.domain.model.request.organization.UpdateStudyGroupRequest
+import com.umc.domain.model.request.organization.CreateStudyGroupScheduleRequest
 
 interface OrganizationRepository {
 
@@ -27,6 +31,16 @@ interface OrganizationRepository {
     suspend fun deleteStudyGroup(groupId: Long): ApiState<Unit>
     
     suspend fun deleteGisu(gisuId: Int): ApiState<Unit>
+
+    suspend fun deleteStudyGroupMentor(
+        studyGroupId: Long,
+        mentorId: Long,
+    ): ApiState<Unit>
+
+    suspend fun deleteStudyGroupMember(
+        studyGroupId: Long,
+        memberId: Long,
+    ): ApiState<Unit>
 
     // GET
     suspend fun getMyStudyGroup(cursor: Long?, size: Int): ApiState<StudyGroupPage>
@@ -44,6 +58,12 @@ interface OrganizationRepository {
     suspend fun getChapterDetail(chapterId: Long): ApiState<Chapter>
 
 
+    suspend fun getManagedStudyGroups(
+        cursor: Long? = null,
+        size: Int = 20,
+    ): ApiState<ManagedStudyGroupPage>
+
+
     suspend fun getStudyGroupDetail(groupId: Long): ApiState<StudyGroupDetail>
 
     suspend fun getSchoolDetail(schoolId: Long): ApiState<SchoolInfo> //SchoolDetailResponse -> 기존에 작성한 SchoolInfo 사용
@@ -58,7 +78,7 @@ interface OrganizationRepository {
 
     suspend fun getAllGisu(): ApiState<GisuList>
 
-    suspend fun getActiveGisu(): ApiState<Unit> //GisuItemResponse
+    suspend fun getActiveGisu(): ApiState<GisuItem> //GisuItemResponse
 
     suspend fun getChapterWithSchool(gisuId: Int): ApiState<ChapterWithSchool>
 
@@ -73,8 +93,23 @@ interface OrganizationRepository {
 
     suspend fun assignSchool(schoolId: Int, request: AssignSchoolRequest): ApiState<Unit>
 
+    suspend fun addStudyGroupMentor(
+        studyGroupId: Long,
+        mentorId: Long,
+    ): ApiState<Unit>
+
+    suspend fun addStudyGroupMember(
+        studyGroupId: Long,
+        memberId: Long,
+    ): ApiState<Unit>
+
+
     // POST
     suspend fun createStudyGroup(request: CreateStudyGroupRequest): ApiState<Unit>
+
+    suspend fun createStudyGroupSchedule(
+        request: CreateStudyGroupScheduleRequest,
+    ): ApiState<Unit>
 
     suspend fun createSchool(request: SchoolRegistrationRequest): ApiState<Unit>
 
@@ -83,6 +118,11 @@ interface OrganizationRepository {
     suspend fun createChapter(request: CreateChapterRequest): ApiState<Unit>
 
     suspend fun changeActiveGisu(gisuId: Int): ApiState<Unit>
+
+    suspend fun updateStudyGroup(
+        studyGroupId: Long,
+        request: UpdateStudyGroupRequest,
+    ): ApiState<Unit>
 
     // PUT
     suspend fun changeGroupMember(groupId: Long, request: ChallengerListRequest): ApiState<Unit>

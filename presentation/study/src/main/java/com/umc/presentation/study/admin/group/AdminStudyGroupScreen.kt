@@ -25,7 +25,7 @@ import com.umc.presentation.study.admin.group.component.AdminStudyGroupCreateCar
 
 import com.umc.presentation.study.admin.group.dialog.AdminStudyGroupDeleteDialog
 import com.umc.presentation.study.admin.group.dialog.AdminStudyGroupEditDialog
-
+import com.umc.presentation.study.admin.group.create.bottomsheet.GroupCreateMemberBottomSheet
 @Composable
 fun AdminStudyGroupScreen(
     state: AdminStudyGroupState,
@@ -58,6 +58,25 @@ fun AdminStudyGroupScreen(
             },
             onDismiss = {
                 onAction(AdminStudyGroupAction.CloseDeleteDialog)
+            },
+        )
+    }
+
+    if (state.isMemberBottomSheetOpen) {
+        GroupCreateMemberBottomSheet(
+            preSelected = state.editingMembers,
+            resolvePreSelectedFromApi = true,
+            onDismissRequest = {
+                onAction(
+                    AdminStudyGroupAction.CloseMemberBottomSheet
+                )
+            },
+            onConfirm = { members ->
+                onAction(
+                    AdminStudyGroupAction.ConfirmMemberChanges(
+                        members = members
+                    )
+                )
             },
         )
     }
@@ -122,7 +141,11 @@ fun AdminStudyGroupScreen(
                             onAction(AdminStudyGroupAction.ClickAddSchedule(item))
                         },
                         onAddMemberClick = {
-                            onAction(AdminStudyGroupAction.ClickEditMembers(item))
+                            onAction(
+                                AdminStudyGroupAction.OpenMemberBottomSheet(
+                                    item = item
+                                )
+                            )
                         },
                     )
                 }

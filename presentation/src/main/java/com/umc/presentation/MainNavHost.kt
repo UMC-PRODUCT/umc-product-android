@@ -12,8 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.mypage.mycard.MycardRoute
-//import com.umc.presentation.act.ActManageRoute
-//import com.umc.presentation.act.admin.challenger.AdminChallengerDetailRoute
+import com.umc.presentation.act.ActManageRoute
+import com.umc.presentation.act.admin.challenger.AdminChallengerDetailRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
