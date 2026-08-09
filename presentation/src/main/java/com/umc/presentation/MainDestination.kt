@@ -82,11 +82,11 @@ sealed interface MainDestination {
 
     //일정 수정
     @Serializable
-    data class ScheduleEdit(val scheduleId: Long) : MainDestination
+    data class ScheduleEdit(val scheduleId: Long = -1L) : MainDestination
 
     //일정 상세
     @Serializable
-    data class ScheduleDetail(val scheduleId: Long, val plusDay: Int) : MainDestination
+    data class ScheduleDetail(val scheduleId: Long = -1L, val plusDay: Int) : MainDestination
 
 
     /**마이 페이지 섹션**/
@@ -94,7 +94,7 @@ sealed interface MainDestination {
     //신 마이페이지
     @Serializable
     data class Mycard(
-        val targetMemberId: String? = null
+        val memberId: String? = null
     ) : MainDestination
 
     //(구 마이페이지) -> (신 설정)
@@ -136,6 +136,21 @@ sealed interface MainDestination {
 
     @Serializable
     data class CommunityChatting(
+        val threadId: String,
+    ) : MainDestination
+
+    /** 커뮤니티 섹션 **/
+    @Serializable
+    data object Community : MainDestination
+
+    @Serializable
+    data object CommunitySearch : MainDestination
+
+    @Serializable
+    data object CommunityCreate : MainDestination
+
+    @Serializable
+    data class CommunityEdit(
         val threadId: String,
     ) : MainDestination
 

@@ -88,6 +88,11 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 return@launch
             }
 
+            val currentMembers = memberPage.items.map { threadMember ->
+                findChallengerDetail(
+                    threadMember = threadMember,
+                )
+            }
             val ownerMemberIds = memberPage.items
                 .filter { member -> member.role.equals(OWNER_ROLE, ignoreCase = true) }
                 .mapNotNull { member -> member.memberId.toLongOrNull() }

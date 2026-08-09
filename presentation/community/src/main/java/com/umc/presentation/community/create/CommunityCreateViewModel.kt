@@ -2,10 +2,12 @@ package com.umc.presentation.community.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.usecase.ai.ClassifyCommunityThreadUseCase
 import com.umc.domain.usecase.community.CreateCommunityThreadUseCase
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
+import com.umc.domain.model.base.ApiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
@@ -21,6 +23,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class CommunityCreateViewModel @Inject constructor(
     private val createCommunityThreadUseCase: CreateCommunityThreadUseCase,
+    private val classifyCommunityThreadUseCase: ClassifyCommunityThreadUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -265,42 +268,40 @@ class CommunityCreateViewModel @Inject constructor(
         }
     }
 
-    private fun classifyCategory(
+    private suspend fun classifyCategory(
         title: String,
         description: String,
     ): ClassificationResult {
-        val targetText = "$title $description".lowercase()
 
-        return when {
-            targetText.contains("과제") ||
-                    targetText.contains("스터디") ||
-                    targetText.contains("코드") -> {
+        return when (
+            val result = classifyCommunityThreadUseCase(
+                title = title,
+                description = description,
+            )
+        ) {
+            is ApiState.Success<*> -> {
+                val category = (result.data as? String)
+                    ?.trim()
+                    ?.uppercase()
+                    ?.toCommunityCategory()
+                    ?: CommunityCategory.FREE
+
                 ClassificationResult(
                     aiState = CommunityAiState.SUCCESS,
-                    category = CommunityCategory.STUDY,
+                    category = category,
                 )
             }
 
-            targetText.contains("공지") ||
-                    targetText.contains("일정") ||
-                    targetText.contains("안내") -> {
+            is ApiState.Fail -> {
                 ClassificationResult(
-                    aiState = CommunityAiState.SUCCESS,
-                    category = CommunityCategory.PROJECT,
-                )
-            }
-
-            targetText.contains("질문") ||
-                    targetText.contains("궁금") -> {
-                ClassificationResult(
-                    aiState = CommunityAiState.SUCCESS,
-                    category = CommunityCategory.QNA,
+                    aiState = CommunityAiState.FAILED,
+                    category = CommunityCategory.FREE,
                 )
             }
 
             else -> {
                 ClassificationResult(
-                    aiState = CommunityAiState.SUCCESS,
+                    aiState = CommunityAiState.FAILED,
                     category = CommunityCategory.FREE,
                 )
             }
@@ -420,5 +421,15 @@ private fun CommunityCategory.toApiCategory(): String {
         CommunityCategory.ALL,
         CommunityCategory.UNREAD,
             -> error("스레드 생성에 사용할 수 없는 카테고리입니다: $this")
+    }
+}
+
+private fun String.toCommunityCategory(): CommunityCategory {
+    return when (this) {
+        "STUDY" -> CommunityCategory.STUDY
+        "PROJECT" -> CommunityCategory.PROJECT
+        "QNA" -> CommunityCategory.QNA
+        "FREE" -> CommunityCategory.FREE
+        else -> CommunityCategory.FREE
     }
 }

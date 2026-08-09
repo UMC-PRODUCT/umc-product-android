@@ -107,6 +107,19 @@
                     android:host="card" />
             </intent-filter>
 
+            <!-- umc 전용 -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="https"
+                    android:host="api.university.neordinary.com"
+                    android:pathPrefix="/community/threads/card" />
+            </intent-filter>
+
+
             <!-- 플레이스토어 딥링크 수신용 Intent Filter -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />

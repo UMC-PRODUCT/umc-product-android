@@ -27,6 +27,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalView
 import com.umc.component.R
@@ -69,6 +70,8 @@ fun LocationSearchBottomSheet(
     )
     
 
+    
+    /** 지도 검색 기능 철회로 주석 처리
     // 공식 SDK 가이드 기준 카메라 상태 초기화
     val cameraPositionState = rememberCameraPositionState()
 
@@ -81,6 +84,7 @@ fun LocationSearchBottomSheet(
             )
         }
     }
+    **/
 
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
@@ -88,7 +92,12 @@ fun LocationSearchBottomSheet(
                 is LocationSearchEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
+                
+                else -> {
+                    
+                }
 
+/** 지도 검색 기능 철회로 주석 처리
                 //위도 경도로 지도를 이동
                 is LocationSearchEvent.MoveCameraTo -> {
                     cameraPositionState.animate(
@@ -101,10 +110,13 @@ fun LocationSearchBottomSheet(
                     onLocationSelected(event.placeInfo)
                     onDismissRequest()
                 }
+**/
             }
         }
     }
 
+
+    /** 지도 검색 기능 철회로 주석 처리
     //제스처 이동 완료 시 지점 좌표 기반 주소 데이터 파싱
     /**사용자가 지도를 움직일 떄만 title이 변경되도로**/
     LaunchedEffect(cameraPositionState.isMoving) {
@@ -116,6 +128,7 @@ fun LocationSearchBottomSheet(
             }
         }
     }
+    **/
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -139,17 +152,20 @@ fun LocationSearchBottomSheet(
 
             //1. 타이틀 헤더 및 검색창
             LocationHeaderAndSearchBar(
+                uiState,
                 searchQuery = uiState.searchQuery,
                 onQueryChanged = viewModel::onQueryChanged,
                 onSearchClick = {
                     //검색 클릭 시 카카오 API를 통한 장소 검색
                     viewModel.searchLocation(uiState.searchQuery)
                     focusManager.clearFocus()
-                }
+                },
+                onClearSearch = {viewModel.onQueryChanged("")}
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
+/** 지도 검색 기능 철회로 주석 처리
             //2. 네이버 지도 뷰
             LocationNaverMapContent(
                 modifier = Modifier
@@ -168,6 +184,8 @@ fun LocationSearchBottomSheet(
 
 
             Spacer(modifier = Modifier.height(32.dp))
+
+**/
 
             //4. 분기 영역 : 검색어 입력 유무에 따른 하단 리스트 스위칭
             Box(
@@ -190,9 +208,8 @@ fun LocationSearchBottomSheet(
                     SearchResultList(
                         searchResultList = uiState.searchResultList,
                         onItemClick = { clickedItem ->
-                            //검색한 결과를 그대로 띄우기
-                            viewModel.selectSearchResult(clickedItem)
-                            focusManager.clearFocus()
+                            onLocationSelected(clickedItem)
+                            onDismissRequest()
                         }
                     )
                 }
@@ -207,10 +224,14 @@ fun LocationSearchBottomSheet(
 //1. 상단 제목 부분 및 검색 파트
 @Composable
 fun LocationHeaderAndSearchBar(
+    uiState: LocationSearchUiState,
     searchQuery: String,
     onQueryChanged: (String) -> Unit,
+    onClearSearch: () -> Unit,
     onSearchClick: () -> Unit
 ) {
+
+
     Column(modifier = Modifier.fillMaxWidth()) {
         UText(
             text = "장소를 선택하세요",
@@ -229,28 +250,29 @@ fun LocationHeaderAndSearchBar(
             UTextField(
                 value = searchQuery,
                 onValueChange = onQueryChanged,
-                placeholder = "장소 또는 주소를 입력하세요",
+                placeholder = "위치를 입력하세요",
                 modifier = Modifier
                     .weight(1f),
+                backgroundColor = grey100(),
+                strokeColor = Color.Transparent,
+                focusStrokeColor = grey900(),
+                prevIcon = painterResource(id = R.drawable.ic_search),
+                prevIconTint = grey500(),
+                prevIconSize = 24.dp,
+                nextIcon = if (uiState.searchQuery.isNotEmpty()) painterResource(id = R.drawable.ic_delete) else null,
+                nextIconTint = grey500(),
+                nextIconSize = 24.dp,
+                onClickNextIcon = onClearSearch,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { onSearchClick() })
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            UButton(
-                text = "검색",
-                onClick = onSearchClick,
-                backgroundColor = indigo500(),
-                textColor = grey000(),
-                textStyle = UmcTypographyTokens.Caption1Bold,
-                cornerRadius = 8.dp
-            )
             
         }
     }
 }
 
+/**지도 기능 철회로 X**/
 //지도 컴포저블
 @OptIn(ExperimentalNaverMapApi::class, androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
@@ -398,11 +420,35 @@ fun SearchResultList(
                     .clickable { onItemClick(placeItem) }
                     .padding(vertical = 12.dp, horizontal = 4.dp)
             ) {
-                UText(text = placeItem.title, style = UmcTypographyTokens.BodyBold, color = grey800())
-                Spacer(modifier = Modifier.height(2.dp))
-                UText(text = placeItem.address, style = UmcTypographyTokens.Footnote, color = grey600())
-                Spacer(modifier = Modifier.padding(top = 6.dp))
-                HorizontalDivider(color = grey200(), thickness = 0.5.dp)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        UText(text = placeItem.title, style = UmcTypographyTokens.BodyBold, color = grey950())
+                        Spacer(modifier = Modifier.height(2.dp))
+                        UText(text = placeItem.address, style = UmcTypographyTokens.Footnote, color = grey600())
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    UButton(
+                        text = "선택",
+                        onClick = { onItemClick(placeItem) },
+                        backgroundColor = grey100(),
+                        textColor = grey700(),
+                        textStyle = UmcTypographyTokens.SubheadlineBold,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                    )
+
+                }
+
+
             }
         }
     }

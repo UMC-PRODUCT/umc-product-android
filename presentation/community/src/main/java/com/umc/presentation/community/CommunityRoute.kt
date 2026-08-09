@@ -30,6 +30,7 @@ fun CommunityRoute(
 
     LaunchedEffect(shouldRefresh) {
         if (shouldRefresh) {
+            viewModel.loadThreads()
             onRefreshHandled()
         }
     }
