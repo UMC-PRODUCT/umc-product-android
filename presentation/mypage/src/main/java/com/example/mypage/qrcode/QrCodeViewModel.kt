@@ -116,6 +116,7 @@ class QrCodeViewModel @Inject constructor(
                 "S.browser_fallback_url=https://play.google.com/store/apps/details?id=$packageName;" +
                 "end"
 
+        //val qrDeepLinkUrlDebug = "https://api.university.neordinary.com/community/threads/card?memberId=$memberId"
         val qrDeepLinkUrlDebug = "umc://card?memberId=$memberId"
 
         val bitmap = QrCodeUtils.generateQrCode(qrDeepLinkUrl, 600)

@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.usecase.community.GetCommunityThreadDetailUseCase
-import com.umc.domain.usecase.community.GetCommunityThreadMembersUseCase
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -25,8 +24,6 @@ import kotlinx.coroutines.launch
 class CommunityEditViewModel @Inject constructor(
     private val getCommunityThreadDetailUseCase:
     GetCommunityThreadDetailUseCase,
-    private val getCommunityThreadMembersUseCase:
-    GetCommunityThreadMembersUseCase,
     private val updateCommunityThreadUseCase:
     UpdateCommunityThreadUseCase,
     private val deleteCommunityThreadUseCase:

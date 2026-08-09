@@ -21,13 +21,13 @@ class AuthenticationInterceptor @Inject constructor(
             // S3 직접 업로드 요청이므로 토큰을 추가하지 않고 그대로 진행
             return chain.proceed(originalRequest)
         }
-        val tempToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyMSIsImF1dGgiOltdLCJpYXQiOjE3ODU2MDEwODksImV4cCI6MTc4NTYwNDY4OSwiY2xpZW50VHlwZSI6IkFORFJPSUQifQ.N_tzM1NH6lvpdFIFEBBFzv7rVvUqbh1AOnVf8xANAiMVKtqYYvm0iLuzdTjm98riDPMC18Ganant37rw6eLxYA"
 
         val accessToken = runBlocking { appDataStoreRepository.getAccessToken() }
 
+
         val request =
             chain.request().newBuilder()
-                .addHeader("Authorization", "Bearer $tempToken").build()
+                .addHeader("Authorization", "Bearer ${accessToken}").build()
 
         Log.d(
             "RETROFIT",

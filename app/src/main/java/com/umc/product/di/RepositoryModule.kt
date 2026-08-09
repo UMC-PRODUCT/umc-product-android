@@ -5,6 +5,7 @@ import com.umc.data.repository.ai.AiTextRepositoryImpl
 import com.umc.domain.repository.ai.AiTextRepository
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.data.repository.AuthRepositoryImpl
+
 import com.umc.data.repository.NoticeRepositoryImpl
 import com.umc.data.repository.NotificationRepositoryImpl
 import com.umc.data.repository.OrganizationRepositoryImpl
@@ -18,6 +19,7 @@ import com.umc.domain.repository.kakao.KakaoSearchRepository
 import com.umc.domain.repository.member.MemberRepository
 import com.umc.data.repository.challenger.ChallengerRepositoryImpl
 import com.umc.data.repository.community.CommunityRepositoryImpl
+import com.umc.data.repository.community.CommunityThreadRepositoryImpl
 import com.umc.data.repository.community.CommunityChatRepositoryImpl
 import com.umc.data.repository.community.CommunityThreadRepositoryImpl
 import com.umc.data.repository.curriculum.CurriculumRepositoryImpl
@@ -33,6 +35,7 @@ import com.umc.domain.repository.attendance.AttendanceRepository
 import com.umc.domain.repository.authentication.AuthenticationRepository
 import com.umc.domain.repository.authorize.AuthorizeRepository
 import com.umc.domain.repository.community.CommunityRepository
+import com.umc.domain.repository.community.CommunityThreadRepository
 import com.umc.domain.repository.community.CommunityChatRepository
 import com.umc.domain.repository.community.CommunityThreadRepository
 import com.umc.domain.repository.curriculum.CurriculumRepository
@@ -154,5 +157,12 @@ abstract class RepositoryModule {
     abstract fun bindsCommunityChatRepository(
         repositoryImpl: CommunityChatRepositoryImpl,
     ): CommunityChatRepository
+
+
+    @Singleton
+    @Binds
+    abstract fun bindsCommunityThreadRepository(
+        repositoryImpl: CommunityThreadRepositoryImpl,
+    ): CommunityThreadRepository
 
 }
