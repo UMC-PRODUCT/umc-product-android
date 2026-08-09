@@ -1,6 +1,7 @@
 package com.umc.data.repository.ai
 
 import android.os.Build
+import android.util.Log
 import com.google.mlkit.genai.common.DownloadStatus
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.Generation
@@ -27,8 +28,14 @@ class AiTextRepositoryImpl @Inject constructor() : AiTextRepository {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return AiFeatureStatus.UNAVAILABLE
 
         return runCatching {
-            useGenerator { it.checkStatus() }.toFeatureStatus()
-        }.getOrDefault(AiFeatureStatus.UNAVAILABLE)
+            val rawStatus = useGenerator { it.checkStatus() }
+            val featureStatus = rawStatus.toFeatureStatus()
+            Log.d(TAG, "checkStatus raw=$rawStatus mapped=$featureStatus")
+            featureStatus
+        }.getOrElse { error ->
+            Log.e(TAG, "checkStatus failed", error)
+            AiFeatureStatus.UNAVAILABLE
+        }
     }
 
     override suspend fun generate(
@@ -42,7 +49,12 @@ class AiTextRepositoryImpl @Inject constructor() : AiTextRepository {
                 ensureGeneratorReady(generator, onDownloadProgress)
 
                 val response = generator.generateContent(prompt)
-                ApiState.Success(response.candidates.firstOrNull()?.text.orEmpty())
+                val generatedText = response.candidates.firstOrNull()?.text.orEmpty().trim()
+                if (generatedText.isBlank()) {
+                    ApiState.Fail(FailState(code = AI_ERROR_CODE, message = EMPTY_RESPONSE_MESSAGE))
+                } else {
+                    ApiState.Success(generatedText)
+                }
             }
         }.getOrElse { error -> fail(error) }
     }
@@ -62,7 +74,10 @@ class AiTextRepositoryImpl @Inject constructor() : AiTextRepository {
         generator: GenerativeModel,
         onDownloadProgress: (percent: Int) -> Unit,
     ) {
-        when (generator.checkStatus()) {
+        val rawStatus = generator.checkStatus()
+        Log.d(TAG, "ensureGeneratorReady raw=$rawStatus mapped=${rawStatus.toFeatureStatus()}")
+
+        when (rawStatus) {
             FeatureStatus.AVAILABLE -> return
 
             FeatureStatus.DOWNLOADABLE, FeatureStatus.DOWNLOADING -> {
@@ -111,8 +126,10 @@ class AiTextRepositoryImpl @Inject constructor() : AiTextRepository {
         ApiState.Fail(FailState(code = AI_ERROR_CODE, message = error.message ?: FAIL_MESSAGE))
 
     private companion object {
+        const val TAG = "AiTextRepository"
         const val AI_ERROR_CODE = "ON_DEVICE_AI"
         const val UNAVAILABLE_MESSAGE = "이 기기에서는 AI 기능을 사용할 수 없어요"
         const val FAIL_MESSAGE = "AI 처리에 실패했어요"
+        const val EMPTY_RESPONSE_MESSAGE = "AI가 요약 결과를 만들지 못했어요"
     }
 }

@@ -19,6 +19,8 @@ import com.umc.domain.repository.community.CommunityThreadRepository
 import com.umc.domain.repository.member.MemberRepository
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.usecase.storage.UploadFileUseCase
+import com.umc.domain.usecase.ai.CheckAiFeatureStatusUseCase
+import com.umc.domain.usecase.ai.SummarizeUnreadChatUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -41,6 +43,8 @@ class CommunityChattingViewModel @Inject constructor(
     private val appDataStoreRepository: AppDataStoreRepository,
     private val memberRepository: MemberRepository,
     private val uploadFileUseCase: UploadFileUseCase,
+    private val checkAiFeatureStatusUseCase: CheckAiFeatureStatusUseCase,
+    private val summarizeUnreadChatUseCase: SummarizeUnreadChatUseCase,
 ) : BaseViewModel<CommunityChattingState, CommunityChattingEvent>(
     CommunityChattingState(threadId = checkNotNull(savedStateHandle["threadId"]))
 ) {
@@ -51,10 +55,12 @@ class CommunityChattingViewModel @Inject constructor(
     private var lastReadMessageIdSent: String? = null
     private var reconnectJob: Job? = null
     private var manualReconnectInProgress = false
+    private var lastSummaryMessages: List<CommunityThreadMessage> = emptyList()
 
     init {
         observeRealtime()
         observeCurrentMember()
+        checkAiAvailability()
         bootstrap()
     }
 
@@ -62,7 +68,20 @@ class CommunityChattingViewModel @Inject constructor(
         when (action) {
             CommunityChattingAction.OnBackClick -> emitEvent(CommunityChattingEvent.NavigateBack)
             CommunityChattingAction.OnMoreClick -> emitEvent(CommunityChattingEvent.OpenMore)
-            CommunityChattingAction.OnUnreadSummaryClick -> emitEvent(CommunityChattingEvent.OpenUnreadSummary)
+            is CommunityChattingAction.OnUnreadSummaryClick -> summarizeUnreadMessages(action.messages)
+            CommunityChattingAction.OnRetryUnreadSummary -> {
+                updateState { copy(aiFeatureStatus = null) }
+                summarizeUnreadMessages(lastSummaryMessages)
+            }
+            CommunityChattingAction.OnDismissUnreadSummary ->
+                updateState {
+                    copy(
+                        unreadSummary = null,
+                        unreadSummaryError = null,
+                        isSummarizingUnread = false,
+                        aiDownloadPercent = null,
+                    )
+                }
             CommunityChattingAction.OnCameraClick -> emitEvent(CommunityChattingEvent.OpenCamera)
             is CommunityChattingAction.OnSendImages -> sendImages(action.uris)
             is CommunityChattingAction.OnDraftChanged -> updateDraft(action.value)
@@ -103,10 +122,16 @@ class CommunityChattingViewModel @Inject constructor(
         val detail = threadRepository.getThread(threadId)
         val messages = threadRepository.getMessages(threadId)
         if (detail is ApiState.Success && messages is ApiState.Success) {
+            val loadedMessages = messages.data.messages
+                .distinctBy(CommunityThreadMessage::messageId)
+            val unreadCount = detail.data.unreadCount.toIntOrNull()?.coerceAtLeast(0) ?: 0
             updateState {
                 copy(
                     thread = detail.data,
-                    messages = messages.data.messages.distinctBy(CommunityThreadMessage::messageId),
+                    messages = loadedMessages,
+                    unreadMessagesAtEntry = loadedMessages
+                        .take(unreadCount.coerceAtMost(MAX_SUMMARY_MESSAGE_COUNT)),
+                    unreadCountAtEntry = unreadCount,
                     hasMore = messages.data.hasMore,
                     nextBefore = messages.data.nextBefore,
                     isLoading = false,
@@ -133,6 +158,89 @@ class CommunityChattingViewModel @Inject constructor(
             emitEvent(CommunityChattingEvent.ShowError(message))
         }
     }
+
+    private fun checkAiAvailability() = viewModelScope.launch {
+        val status = checkAiFeatureStatusUseCase()
+        updateState { copy(aiFeatureStatus = status) }
+    }
+
+    private fun summarizeUnreadMessages(requestedMessages: List<CommunityThreadMessage>) =
+        viewModelScope.launch {
+            val current = uiState.value
+            if (current.isSummarizingUnread) return@launch
+
+            val targetMessages = (requestedMessages.ifEmpty {
+                current.unreadMessagesAtEntry.ifEmpty {
+                    current.messages.take(MAX_SUMMARY_MESSAGE_COUNT)
+                }
+            })
+                .take(MAX_SUMMARY_MESSAGE_COUNT)
+                .asReversed()
+
+            if (targetMessages.isEmpty()) {
+                updateState {
+                    copy(
+                        isSummarizingUnread = false,
+                        unreadSummary = null,
+                        unreadSummaryError = AppStrings.CHAT_AI_EMPTY_MESSAGES,
+                        summarizedMessageCount = 0,
+                    )
+                }
+                return@launch
+            }
+
+            lastSummaryMessages = targetMessages.asReversed()
+
+            updateState {
+                copy(
+                    isSummarizingUnread = true,
+                    aiDownloadPercent = null,
+                    unreadSummary = null,
+                    unreadSummaryError = null,
+                    summarizedMessageCount = targetMessages.size,
+                )
+            }
+
+            // 초기 상태 확인과 클릭이 경합해도 요청을 버리지 않고 시트 안에서 확인한다.
+            val aiStatus = uiState.value.aiFeatureStatus ?: checkAiFeatureStatusUseCase().also { status ->
+                updateState { copy(aiFeatureStatus = status) }
+            }
+            if (!aiStatus.isUsable) {
+                updateState {
+                    copy(
+                        isSummarizingUnread = false,
+                        aiDownloadPercent = null,
+                        unreadSummaryError = AppStrings.CHAT_AI_UNAVAILABLE,
+                    )
+                }
+                return@launch
+            }
+
+            when (
+                val result = summarizeUnreadChatUseCase(targetMessages) { percent ->
+                    updateState { copy(aiDownloadPercent = percent) }
+                }
+            ) {
+                is ApiState.Success -> updateState {
+                    copy(
+                        isSummarizingUnread = false,
+                        aiDownloadPercent = null,
+                        unreadSummary = result.data,
+                        unreadSummaryError = null,
+                    )
+                }
+
+                is ApiState.Fail -> {
+                    updateState {
+                        copy(
+                            isSummarizingUnread = false,
+                            aiDownloadPercent = null,
+                            unreadSummaryError = result.failState.message,
+                        )
+                    }
+                }
+            }
+        }
 
     fun loadPreviousMessages() = viewModelScope.launch {
         val state = uiState.value
@@ -704,6 +812,7 @@ class CommunityChattingViewModel @Inject constructor(
 
     private companion object {
         const val MAX_IMAGE_COUNT = 4
+        const val MAX_SUMMARY_MESSAGE_COUNT = 50
         const val OWNERSHIP_TRANSFER_REQUIRED_CODE = "COMMUNITY-0041"
     }
 }

@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
@@ -48,8 +49,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.layout.ContentScale
@@ -109,7 +112,10 @@ import java.time.format.DateTimeFormatter
 import java.net.URI
 import kotlinx.coroutines.launch
 
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@OptIn(
+    androidx.compose.foundation.ExperimentalFoundationApi::class,
+    ExperimentalMaterial3Api::class,
+)
 @Composable
 fun CommunityChattingScreen(
     state: CommunityChattingState,
@@ -118,7 +124,9 @@ fun CommunityChattingScreen(
 ) {
     val onBack = { onAction(CommunityChattingAction.OnBackClick) }
     val onMore = { onAction(CommunityChattingAction.OnMoreClick) }
-    val onUnreadSummary = { onAction(CommunityChattingAction.OnUnreadSummaryClick) }
+    val onUnreadSummary: (List<CommunityThreadMessage>) -> Unit = {
+        onAction(CommunityChattingAction.OnUnreadSummaryClick(it))
+    }
     val onCamera = { onAction(CommunityChattingAction.OnCameraClick) }
     val onSendImages: (List<String>) -> Unit = { onAction(CommunityChattingAction.OnSendImages(it)) }
     val onDraftChange: (String) -> Unit = { onAction(CommunityChattingAction.OnDraftChanged(it)) }
@@ -152,6 +160,9 @@ fun CommunityChattingScreen(
 
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val initialUnreadScrollOffset = with(LocalDensity.current) {
+        INITIAL_UNREAD_SCROLL_OFFSET.roundToPx()
+    }
     val displayedMessages = remember(state.messages) { state.messages.asReversed() }
     var knownMessageIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var knownPendingMessageIds by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -212,6 +223,18 @@ fun CommunityChattingScreen(
         )
     }
 
+    if (
+        state.isSummarizingUnread ||
+        state.unreadSummary != null ||
+        state.unreadSummaryError != null
+    ) {
+        ConversationSummarySheet(
+            state = state,
+            onRetry = { onAction(CommunityChattingAction.OnRetryUnreadSummary) },
+            onDismiss = { onAction(CommunityChattingAction.OnDismissUnreadSummary) },
+        )
+    }
+
     if (showParticipants) {
         CommunityParticipantScreen(
             members = state.members.values.toList(),
@@ -244,7 +267,20 @@ fun CommunityChattingScreen(
         if (knownMessageIds.isEmpty()) {
             knownMessageIds = currentIds
             if (displayedMessages.isNotEmpty()) {
-                listState.scrollToItem(displayedMessages.lastIndex + 1)
+                val entryUnreadCount = state.unreadCountAtEntry
+                val loadedUnreadCount = entryUnreadCount.coerceAtMost(displayedMessages.size)
+                val messageIndex = if (loadedUnreadCount > 0) {
+                    newMessageCount = entryUnreadCount
+                    followsLatestMessage = false
+                    (displayedMessages.size - loadedUnreadCount - 1).coerceAtLeast(0)
+                } else {
+                    displayedMessages.lastIndex
+                }
+                val loadPreviousItemOffset = if (state.hasMore) 1 else 0
+                listState.scrollToItem(
+                    index = messageIndex + loadPreviousItemOffset,
+                    scrollOffset = if (loadedUnreadCount > 0) -initialUnreadScrollOffset else 0,
+                )
             }
             return@LaunchedEffect
         }
@@ -256,7 +292,13 @@ fun CommunityChattingScreen(
         val containsMyMessage = newMessages.any { it.senderId == state.myMemberId }
         if (followsLatestMessage || containsMyMessage) {
             newMessageCount = 0
-            listState.animateScrollToItem(displayedMessages.size + state.pendingMessages.size)
+            listState.animateScrollToItem(
+                latestListItemIndex(
+                    messageCount = displayedMessages.size,
+                    pendingMessageCount = state.pendingMessages.size,
+                    hasMore = state.hasMore,
+                ),
+            )
         } else {
             newMessageCount += newMessages.count { it.senderId != state.myMemberId }
         }
@@ -270,7 +312,11 @@ fun CommunityChattingScreen(
 
         newMessageCount = 0
         followsLatestMessage = true
-        val lastItemIndex = displayedMessages.size + currentIds.size + if (state.hasMore) 1 else 0
+        val lastItemIndex = latestListItemIndex(
+            messageCount = displayedMessages.size,
+            pendingMessageCount = currentIds.size,
+            hasMore = state.hasMore,
+        )
         listState.animateScrollToItem(lastItemIndex)
     }
 
@@ -290,7 +336,7 @@ fun CommunityChattingScreen(
                 isMuted = state.thread?.isMuted == true,
                 isPinned = state.thread?.isPinned == true,
                 isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
-                onSummary = onUnreadSummary,
+                onSummary = { onUnreadSummary(emptyList()) },
                 onToggleMuted = onToggleMuted,
                 onTogglePinned = onTogglePinned,
                 onParticipants = {
@@ -372,14 +418,6 @@ fun CommunityChattingScreen(
                     ),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-            item {
-                val unread = state.thread?.unreadCount?.toIntOrNull() ?: 0
-                if (unread > 0) {
-                    UnreadSummaryCard(unreadCount = unread, onClick = onUnreadSummary)
-                    Spacer(Modifier.height(20.dp))
-                }
-            }
-
             if (state.hasMore) {
                 item {
                     TextButton(
@@ -465,7 +503,9 @@ fun CommunityChattingScreen(
             if (newMessageCount > 0 && !state.isLoading && state.errorMessage == null) {
                 UnreadSummaryCard(
                     unreadCount = newMessageCount,
-                    onClick = onUnreadSummary,
+                    onClick = {
+                        onUnreadSummary(state.messages.take(newMessageCount))
+                    },
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .padding(
@@ -480,9 +520,11 @@ fun CommunityChattingScreen(
                         newMessageCount = 0
                         followsLatestMessage = true
                         scope.launch {
-                            val lastItemIndex = displayedMessages.size +
-                                state.pendingMessages.size +
-                                if (state.hasMore) 1 else 0
+                            val lastItemIndex = latestListItemIndex(
+                                messageCount = displayedMessages.size,
+                                pendingMessageCount = state.pendingMessages.size,
+                                hasMore = state.hasMore,
+                            )
                             listState.animateScrollToItem(lastItemIndex)
                         }
                     },
@@ -1062,8 +1104,167 @@ private fun UnreadSummaryCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ConversationSummarySheet(
+    state: CommunityChattingState,
+    onRetry: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = white(),
+        dragHandle = {
+            Box(
+                Modifier
+                    .padding(top = 10.dp, bottom = 18.dp)
+                    .size(width = 36.dp, height = 4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(grey400()),
+            )
+        },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 300.dp)
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 40.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_ai),
+                    contentDescription = null,
+                    tint = indigo500(),
+                    modifier = Modifier.size(22.dp),
+                )
+                Text(
+                    text = AppStrings.CHAT_AI_SHEET_TITLE,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp),
+                    color = grey950(),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                IconButton(onClick = onRetry, enabled = !state.isSummarizingUnread) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = AppStrings.CHAT_RETRY,
+                        tint = grey500(),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            when {
+                state.isSummarizingUnread -> SummaryLoadingContent(state.aiDownloadPercent)
+                state.unreadSummaryError != null -> SummaryErrorContent(
+                    message = state.unreadSummaryError,
+                )
+                else -> SummarySuccessContent(
+                    summary = state.unreadSummary.orEmpty(),
+                    messageCount = state.summarizedMessageCount,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryLoadingContent(downloadPercent: Int?) {
+    Text(
+        text = downloadPercent
+            ?.let { AppStrings.AI_MODEL_DOWNLOADING.format(it) }
+            ?: AppStrings.CHAT_AI_SUMMARIZING_DESCRIPTION,
+        color = grey500(),
+        fontSize = 12.sp,
+    )
+    Spacer(Modifier.height(18.dp))
+    listOf(0.68f, 1f, 0.9f, 0.9f).forEach { fraction ->
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(fraction)
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color(0xFF5B9CF5), Color(0xFF28C7A5)),
+                    ),
+                ),
+        )
+        Spacer(Modifier.height(10.dp))
+    }
+}
+
+@Composable
+private fun SummaryErrorContent(message: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Info,
+            contentDescription = null,
+            tint = grey400(),
+            modifier = Modifier.size(32.dp),
+        )
+        Spacer(Modifier.height(14.dp))
+        Text(
+            text = AppStrings.CHAT_AI_SUMMARY_FAILED,
+            color = grey600(),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = message.ifBlank { AppStrings.CHAT_AI_SUMMARY_RETRY_DESCRIPTION },
+            color = grey400(),
+            fontSize = 12.sp,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun SummarySuccessContent(summary: String, messageCount: Int) {
+    Text(
+        text = AppStrings.CHAT_AI_SUMMARY_COUNT_FORMAT.format(messageCount),
+        color = grey500(),
+        fontSize = 12.sp,
+    )
+    Spacer(Modifier.height(14.dp))
+    summary
+        .lineSequence()
+        .map { it.trim().removePrefix("-").removePrefix("•").trim() }
+        .filter(String::isNotBlank)
+        .forEach { line ->
+            Row(
+                modifier = Modifier.padding(vertical = 5.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Text("✓", color = indigo500(), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = line,
+                    modifier = Modifier.padding(start = 10.dp),
+                    color = grey800(),
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                )
+            }
+        }
+}
+
 private const val COMMUNITY_DEEP_LINK_HOST = "https://api.university.neordinary.com"
 private const val COMMUNITY_DEEP_LINK_PATH = "/community/threads"
+private val INITIAL_UNREAD_SCROLL_OFFSET = 96.dp
+private val MESSAGE_TIME_MIN_WIDTH = 32.dp
 
 internal fun buildCommunityThreadDeepLink(shareUrl: String): String {
     val rawUrl = shareUrl.trim()
@@ -1250,6 +1451,7 @@ private fun OtherMessage(
             Spacer(Modifier.height(7.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 Surface(
+                    modifier = Modifier.weight(1f, fill = false),
                     color = if (message.type == CommunityMessageType.IMAGE) Color.Transparent else white(),
                     shape = RoundedCornerShape(16.dp, 16.dp, 16.dp, 5.dp),
                 ) {
@@ -1876,11 +2078,21 @@ internal fun partTag(part: String): Triple<String, Color, Color> = when (part) {
 private fun MessageTime(createdAt: String, modifier: Modifier = Modifier) {
     Text(
         formatCommunityCreatedAt(createdAt),
-        modifier = modifier,
+        modifier = modifier.widthIn(min = MESSAGE_TIME_MIN_WIDTH),
         color = grey400(),
         fontSize = 11.sp,
+        maxLines = 1,
+        softWrap = false,
     )
 }
+
+private fun latestListItemIndex(
+    messageCount: Int,
+    pendingMessageCount: Int,
+    hasMore: Boolean,
+): Int = (
+    messageCount + pendingMessageCount + if (hasMore) 1 else 0 - 1
+).coerceAtLeast(0)
 
 private val KoreaZoneId = ZoneId.of("Asia/Seoul")
 private val CommunityTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
