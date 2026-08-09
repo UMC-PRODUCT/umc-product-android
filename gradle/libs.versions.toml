@@ -52,6 +52,7 @@ nearby = "19.0.0"
 camerax = "1.6.1"
 mlkit-barcode = "17.3.0"
 androidxGraphicsPath = "1.1.0"
+emoji2 = "1.6.0"
 zxing = "3.5.3"
 
 [libraries]
@@ -147,6 +148,7 @@ zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" 
 #ML Kit QR Scanner(QR 코드 스캔용)
 mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkit-barcode" }
 androidx-graphics-path = { group = "androidx.graphics", name = "graphics-path", version.ref = "androidxGraphicsPath" }
+androidx-emoji2-emojipicker = { group = "androidx.emoji2", name = "emoji2-emojipicker", version.ref = "emoji2" }
 
 #CameraX
 androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
