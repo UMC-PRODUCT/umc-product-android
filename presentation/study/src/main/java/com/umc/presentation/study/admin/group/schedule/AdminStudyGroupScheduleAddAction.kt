@@ -22,8 +22,16 @@ sealed interface AdminStudyGroupScheduleAction {
     data object ClickLateEnd : AdminStudyGroupScheduleAction
     data object ClickWeek : AdminStudyGroupScheduleAction
 
-    data class SelectWeek(val week: Int) : AdminStudyGroupScheduleAction
-    data class SelectPlace(val place: String) : AdminStudyGroupScheduleAction
+    data class SelectWeek(
+        val week: Int,
+        val weeklyCurriculumId: Long,
+    ) : AdminStudyGroupScheduleAction
+
+    data class SelectPlace(
+        val place: String,
+        val latitude: Double,
+        val longitude: Double,
+    ) : AdminStudyGroupScheduleAction
 
     data class SelectChallengers(
         val challengers: List<GroupScheduleChallengerUiModel>,

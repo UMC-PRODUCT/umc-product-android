@@ -147,7 +147,10 @@ fun GroupScheduleChallengerBottomSheet(
                     GroupScheduleSearchChallengerList(
                         searchResults = state.searchResults,
                         selectedChallengers = state.selectedChallengers,
-                        onToggleClick = viewModel::toggleChallenger
+                        isLoading = state.isLoading,
+                        hasNext = state.hasNext,
+                        onToggleClick = viewModel::toggleChallenger,
+                        onLoadMore = viewModel::loadMoreChallengers,
                     )
                 }
 
@@ -244,7 +247,9 @@ fun GroupScheduleSelectedChallengerList(
     ) {
         items(
             items = challengers,
-            key = { challenger -> challenger.id }
+            key = { challenger ->
+                challenger.id
+            }
         ) { item ->
             GroupScheduleAddedChallengerRow(
                 item = item,
@@ -252,64 +257,6 @@ fun GroupScheduleSelectedChallengerList(
                     onRemoveClick(item)
                 }
             )
-        }
-    }
-}
-
-@Composable
-fun GroupScheduleSearchChallengerList(
-    searchResults: List<GroupScheduleChallengerUiModel>,
-    selectedChallengers: List<GroupScheduleChallengerUiModel>,
-    onToggleClick: (GroupScheduleChallengerUiModel) -> Unit,
-) {
-    val groupedResults = searchResults
-        .groupBy { challenger -> challenger.partLabel }
-        .toList()
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        groupedResults.forEach { (partLabel, challengers) ->
-            item(
-                key = "part_header_$partLabel"
-            ) {
-                UText(
-                    text = partLabel,
-                    style = UmcTypographyTokens.BodyBold,
-                    color = grey900(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            top = 4.dp,
-                            bottom = 8.dp
-                        )
-                )
-            }
-
-            items(
-                items = challengers,
-                key = { challenger -> challenger.id }
-            ) { item ->
-                val isChecked = selectedChallengers.any { selected ->
-                    selected.id == item.id
-                }
-
-                GroupScheduleSearchChallengerRow(
-                    item = item,
-                    isChecked = isChecked,
-                    onToggleClick = {
-                        onToggleClick(item)
-                    }
-                )
-            }
-
-            item(
-                key = "part_spacing_$partLabel"
-            ) {
-                Spacer(
-                    modifier = Modifier.height(16.dp)
-                )
-            }
         }
     }
 }
@@ -353,15 +300,98 @@ fun GroupScheduleAddedChallengerRow(
             modifier = Modifier
                 .width(50.dp)
                 .height(32.dp),
-            backgroundColor = red500().copy(
-                alpha = 0.12f
-            ),
+            backgroundColor = red500().copy(alpha = 0.12f),
             textColor = red500(),
             textStyle = UmcTypographyTokens.SubheadlineBold,
             cornerRadius = 6.dp
         )
     }
 }
+
+@Composable
+fun GroupScheduleSearchChallengerList(
+    searchResults: List<GroupScheduleChallengerUiModel>,
+    selectedChallengers: List<GroupScheduleChallengerUiModel>,
+    isLoading: Boolean,
+    hasNext: Boolean,
+    onToggleClick: (GroupScheduleChallengerUiModel) -> Unit,
+    onLoadMore: () -> Unit,
+) {
+    val groupedResults = searchResults
+        .groupBy { challenger ->
+            challenger.partLabel
+        }
+        .toList()
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        groupedResults.forEach { (partLabel, challengers) ->
+            if (partLabel.isNotBlank()) {
+                item(
+                    key = "part_header_$partLabel"
+                ) {
+                    UText(
+                        text = partLabel,
+                        style = UmcTypographyTokens.BodyBold,
+                        color = grey900(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                top = 4.dp,
+                                bottom = 8.dp,
+                            )
+                    )
+                }
+            }
+
+            items(
+                items = challengers,
+                key = { challenger ->
+                    challenger.id
+                }
+            ) { item ->
+                val isChecked = selectedChallengers.any { selected ->
+                    selected.id == item.id
+                }
+
+                GroupScheduleSearchChallengerRow(
+                    item = item,
+                    isChecked = isChecked,
+                    onToggleClick = {
+                        onToggleClick(item)
+                    },
+                )
+            }
+
+            item(
+                key = "part_spacing_$partLabel"
+            ) {
+                Spacer(
+                    modifier = Modifier.height(16.dp)
+                )
+            }
+        }
+
+        if (
+            hasNext &&
+            searchResults.isNotEmpty() &&
+            !isLoading
+        ) {
+            item(key = "load_more") {
+                LaunchedEffect(
+                    searchResults.size,
+                    hasNext,
+                ) {
+                    onLoadMore()
+                }
+            }
+        }
+    }
+}
+
+
+
 
 @Composable
 fun GroupScheduleSearchChallengerRow(

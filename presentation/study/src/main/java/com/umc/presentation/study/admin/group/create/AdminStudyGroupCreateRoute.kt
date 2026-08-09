@@ -13,11 +13,25 @@ fun AdminStudyGroupCreateRoute(
 ) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
+    LaunchedEffect(Unit) {
+        viewModel.setGisuId(5L)
+    }
+
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { event ->
             when (event) {
-                AdminStudyGroupCreateEvent.NavigateBack -> navigateBack()
-                AdminStudyGroupCreateEvent.RegisterSuccess -> navigateBack()
+                AdminStudyGroupCreateEvent.NavigateBack -> {
+                    navigateBack()
+                }
+
+                AdminStudyGroupCreateEvent.RegisterSuccess -> {
+                    navigateBack()
+                }
+
+                is AdminStudyGroupCreateEvent.RegisterFailure -> {
+                    // 추후 실패 메시지 표시
+                }
             }
         }
     }

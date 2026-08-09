@@ -15,27 +15,63 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
+import com.umc.presentation.study.admin.group.AdminStudyGroupItemUiModel
+import com.umc.presentation.study.admin.group.AdminStudyGroupRoute
 import com.umc.presentation.study.admin.submit.AdminSubmitRoute
 import com.umc.presentation.study.normal.UserStudyRoute
 import kotlinx.coroutines.launch
+
 @Composable
-fun ActStudyRoute() {
-    ActStudyScreen()
+fun ActStudyRoute(
+    isAdmin: Boolean,
+    onNavigateCreateGroup: () -> Unit = {},
+    onNavigateAddSchedule: (
+        groupId: Long,
+        groupTitle: String,
+        groupPart: String,
+    ) -> Unit = { _, _, _ -> },
+    onOpenEditMembers: (AdminStudyGroupItemUiModel) -> Unit = {},
+) {
+    ActStudyScreen(
+        isAdmin = isAdmin,
+        onNavigateCreateGroup = onNavigateCreateGroup,
+        onNavigateAddSchedule = onNavigateAddSchedule,
+        onOpenEditMembers = onOpenEditMembers,
+    )
 }
 
 @Composable
-fun ActStudyScreen() {
-    val isAdmin = true
-
+fun ActStudyScreen(
+    isAdmin: Boolean,
+    onNavigateCreateGroup: () -> Unit = {},
+    onNavigateAddSchedule: (
+        groupId: Long,
+        groupTitle: String,
+        groupPart: String,
+    ) -> Unit = { _, _, _ -> },
+    onOpenEditMembers: (AdminStudyGroupItemUiModel) -> Unit = {},
+) {
     if (isAdmin) {
-        AdminStudyScreen()
+        AdminStudyScreen(
+            onNavigateCreateGroup = onNavigateCreateGroup,
+            onNavigateAddSchedule = onNavigateAddSchedule,
+            onOpenEditMembers = onOpenEditMembers,
+        )
     } else {
         UserStudyRoute()
     }
 }
 
 @Composable
-private fun AdminStudyScreen() {
+private fun AdminStudyScreen(
+    onNavigateCreateGroup: () -> Unit,
+    onNavigateAddSchedule: (
+        groupId: Long,
+        groupTitle: String,
+        groupPart: String,
+    ) -> Unit,
+    onOpenEditMembers: (AdminStudyGroupItemUiModel) -> Unit,
+) {
     val tabs = listOf("제출 현황", "스터디 그룹")
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
@@ -54,16 +90,17 @@ private fun AdminStudyScreen() {
         ) {
             tabs.forEachIndexed { index, title ->
                 val isSelected = pagerState.currentPage == index
+
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .shadow(
                             elevation = if (isSelected) 2.dp else 0.dp,
-                            shape = RoundedCornerShape(1000.dp)
+                            shape = RoundedCornerShape(1000.dp),
                         )
                         .background(
                             color = if (isSelected) grey000() else grey100(),
-                            shape = RoundedCornerShape(1000.dp)
+                            shape = RoundedCornerShape(1000.dp),
                         )
                         .clickable {
                             coroutineScope.launch {
@@ -71,12 +108,12 @@ private fun AdminStudyScreen() {
                             }
                         }
                         .padding(vertical = 8.dp),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = title,
                         style = HeadlineBold,
-                        color = if (isSelected) grey800() else grey400()
+                        color = if (isSelected) grey800() else grey400(),
                     )
                 }
             }
@@ -84,11 +121,20 @@ private fun AdminStudyScreen() {
 
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) { page ->
             when (page) {
-                0 -> AdminSubmitRoute()
-                1 -> { /* 스터디 그룹 */ }
+                0 -> {
+                    AdminSubmitRoute()
+                }
+
+                1 -> {
+                    AdminStudyGroupRoute(
+                        onNavigateCreateGroup = onNavigateCreateGroup,
+                        onNavigateAddSchedule = onNavigateAddSchedule,
+                        onOpenEditMembers = onOpenEditMembers,
+                    )
+                }
             }
         }
     }

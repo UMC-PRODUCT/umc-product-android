@@ -4,42 +4,57 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.umc.component.R
 import com.umc.component.theme.UmcTypographyTokens
+import com.umc.component.theme.red100
+import com.umc.component.theme.red500
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey50
+import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
+import com.umc.component.theme.green100
+import com.umc.component.theme.green500
 
 /**
- * 출석 승인 대기 목록에서 제출 사유를 확인하는 공용 다이얼로그입니다.
+ * 출석 사유 확인용 단일 버튼 다이얼로그 컴포넌트.
  *
- * 제목 아래에 선택적인 설명과 사유 본문을 표시하고 확인 버튼으로 닫습니다.
+ * 제목을 중심으로 선택적으로 부제목과 사유 본문(content)을 표시하며,
+ * 하단의 확인 버튼 1개로 닫힘/확인 동작을 처리한다.
  *
- * @param title 다이얼로그 제목
- * @param subtitle 작성자 또는 보조 설명
- * @param content 제출된 사유 본문
- * @param onDismissRequest 다이얼로그 닫기 콜백
- * @param modifier 다이얼로그 컨테이너 Modifier
- * @param confirmText 확인 버튼 문구
- * @param onConfirm 확인 버튼 클릭 콜백
+ * @param title 다이얼로그 제목 (필수)
+ * @param subtitle 부제목/설명 텍스트. null 또는 blank면 표시하지 않음
+ * @param content 사유 본문 텍스트. null 또는 blank면 표시하지 않음
+ * @param onDismissRequest 배경 터치 등으로 다이얼로그가 닫힐 때 호출
+ * @param modifier 외부 Column에 적용할 Modifier
+ * @param confirmText 확인 버튼 텍스트. 기본값 "확인"
+ * @param onConfirm 확인 버튼 클릭 시 호출. 기본값은 onDismissRequest
  */
+
 @Composable
 fun UReasonDialog(
     title: String,
-    subtitle: String? = null,
-    content: String? = null,
+    subtitle: String?= null,
+    content : String?= null,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     confirmText: String = "확인",
@@ -66,7 +81,7 @@ fun UReasonDialog(
                 )
             }
 
-            if (!subtitle.isNullOrBlank()) {
+            if(!subtitle.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 UText(
                     text = subtitle,
@@ -76,7 +91,7 @@ fun UReasonDialog(
             }
 
 
-            if (!content.isNullOrBlank()) {
+            if(!content.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(32.dp))
                 Box(
                     modifier = Modifier
