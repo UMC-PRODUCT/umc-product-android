@@ -82,7 +82,7 @@ fun ScheduleChallengerAddBottomSheet(
 
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
+        skipPartiallyExpanded = false
     )
 
     //리스트 추적
