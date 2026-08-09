@@ -275,7 +275,7 @@ fun ScheduleDetailTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 18.dp),
+            .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -283,30 +283,15 @@ fun ScheduleDetailTopBar(
         //이름과 뒤로가기
         Row(verticalAlignment = Alignment.CenterVertically) {
 
-            Box(
+            Icon(
                 modifier = Modifier
-                    .size(48.dp)
-                    .background(color = Color.Transparent, shape = CircleShape)
-                    .clip(CircleShape)
-                    .clickable(
-                        onClick = onBackClick
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(
-                        id = R.drawable.ic_back
-                    ),
-                    contentDescription = null,
-                    tint = grey950(),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-
-            Spacer(modifier = Modifier
-                .width(16.dp)
+                    .padding(12.dp)
+                    .clickable { onBackClick() },
+                painter = painterResource(id = R.drawable.ic_back),
+                contentDescription = null,
+                tint = Color.Unspecified,
             )
+
             UText(text = AppStrings.HOME_PLAN_DETAIL_TITLE,
                 style = UmcTypographyTokens.Title2Bold,
                 color = grey800()
