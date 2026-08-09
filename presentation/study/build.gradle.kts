@@ -58,6 +58,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     coreLibraryDesugaring(libs.android.desugarJdkLibs)
 
-    implementation("io.github.fornewid:naver-map-compose:1.8.0")
-    implementation("com.naver.maps:map-sdk:3.19.0")
+    implementation(libs.naver.maps.compose)
+    implementation(libs.naver.maps.sdk)
 }

@@ -104,8 +104,8 @@ dependencies {
     implementation(libs.google.flexbox)
 
     // NAVER MAPS & LOCATION
-    implementation("com.naver.maps:map-sdk:3.23.0")
-    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation(libs.naver.maps.sdk)
+    implementation(libs.googleplay.services.location)
 
     //firebase meesage
     implementation(platform(libs.firebase.bom))
