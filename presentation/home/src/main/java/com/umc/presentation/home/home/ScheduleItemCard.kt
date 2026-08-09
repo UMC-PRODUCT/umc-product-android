@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,6 +26,7 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
@@ -120,13 +122,14 @@ fun ActiveScheduleItem(
             if (item.dDay != null) {
                 UButton(
                     text = item.dDay!!,
-                    backgroundColor = grey200(),
+                    backgroundColor = grey100(),
                     textColor = grey700(),
                     textStyle = UmcTypographyTokens.Caption1Bold,
                     modifier = Modifier
                         .padding(end = 16.dp)
                         .height(24.dp),
-                    onClick = {}
+                    onClick = {},
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                 )
             }
 

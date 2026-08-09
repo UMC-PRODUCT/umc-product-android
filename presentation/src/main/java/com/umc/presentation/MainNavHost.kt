@@ -12,8 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.mypage.mycard.MycardRoute
-import com.umc.presentation.act.ActManageRoute
-import com.umc.presentation.act.admin.challenger.AdminChallengerDetailRoute
+//import com.umc.presentation.act.ActManageRoute
+//import com.umc.presentation.act.admin.challenger.AdminChallengerDetailRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
@@ -56,6 +56,7 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
+
 
         startDestination = if (BuildConfig.DEBUG) {
             MainDestination.Login
@@ -287,6 +288,7 @@ fun MainNavHost(
 
         /**홈 화면 탭에 대한 내용입니다.**/
 
+
         composable<MainDestination.Act> {
             ActManageRoute(
                 onNavigateToChallengerDetail = { challengerId ->
@@ -305,6 +307,8 @@ fun MainNavHost(
                 onNavigateToBack = { navHostController.popBackStack() },
             )
         }
+
+
 
 
 
@@ -335,12 +339,18 @@ fun MainNavHost(
         //일정 생성
         composable<MainDestination.ScheduleAdd> {
             ScheduleAddRoute(
+                scheduleId = -1,
+                onNavigateToBack = {navHostController.popBackStack()},
                 onShowAttendanceDialog = { _, _ -> }
             )
         }
         //일정 수정
-        composable<MainDestination.ScheduleEdit> {
+        composable<MainDestination.ScheduleEdit> {backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.ScheduleEdit>()
+
             ScheduleAddRoute(
+                scheduleId = destination.scheduleId, // 실제 수정할 scheduleId
+                onNavigateToBack = { navHostController.popBackStack() },
                 onShowAttendanceDialog = { _, _ -> }
             )
         }
@@ -348,7 +358,14 @@ fun MainNavHost(
         composable<MainDestination.ScheduleDetail>{ data ->
 
             ScheduleDetailRoute(
+                onBackClick = {navHostController.popBackStack()},
+                onNavigateToAttendSchedule = {
+                    /**TODO. 일정 출석 페이지로 이동하기**/
+                },
+                onNavigateToEditSchedule = { scheduleId ->
+                    navHostController.navigate(MainDestination.ScheduleEdit(scheduleId = scheduleId))
 
+                }
             )
         }
 
@@ -359,13 +376,16 @@ fun MainNavHost(
             deepLinks = listOf(
                 navDeepLink {
                     // 스토어 URL 기반 딥링크 패턴 매핑
-                    uriPattern = "umc://card?memberId={targetMemberId}"
+                    uriPattern = "umc://card?memberId={memberId}"
+                },
+                navDeepLink {
+                    uriPattern = "https://api.university.neordinary.com/community/threads/card?memberId={memberId}"
                 }
             )
         ) { backStackEntry ->
             // Type-Safe Navigation 파라미터 추출 (딥링크 포함)
             val mycardDestination = backStackEntry.toRoute<MainDestination.Mycard>()
-            val targetMemberId = mycardDestination.targetMemberId
+            val targetMemberId = mycardDestination.memberId
 
 
             MycardRoute(

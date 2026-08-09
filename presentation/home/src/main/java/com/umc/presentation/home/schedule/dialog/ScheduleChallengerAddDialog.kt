@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -51,7 +52,9 @@ import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
+import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
+import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.domain.model.home.SearchResultItem
 
@@ -221,6 +224,9 @@ fun ChallengerHeader(
             text = AppStrings.CONFIRM,
             backgroundColor = indigo500(),
             textColor = grey000(),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+            textStyle = UmcTypographyTokens.Caption1Bold,
+            cornerRadius = 4.dp,
             onClick = {
                 onConfirm(selectedParticipants, selectedParticipantsString)
                 onDismissRequest()
@@ -376,12 +382,11 @@ fun AddedParticipantRow(
         UButton(
             text = AppStrings.DELETE,
             onClick = onRemoveClick,
-            backgroundColor = grey000(),
+            backgroundColor = red100(),
             textColor = red500(),
             textStyle = UmcTypographyTokens.SubheadlineBold,
-            borderColor = red500(),
-            borderWidth = 1.dp,
-            cornerRadius = 8.dp,
+            cornerRadius = 4.dp,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
 
         )
     }

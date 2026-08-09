@@ -86,6 +86,7 @@ object Endpoints {
         const val CAPABILITIES = "api/v2/schedules/capabilities"
         const val CREATE_V2 = "api/v2/schedules"
 
+
         const val ATTENDANCE_REQUEST = "api/v2/schedules/{scheduleId}/attendances/request"
         const val ATTENDANCE_DECIDE = "api/v2/schedules/{scheduleId}/attendances/decide"
         const val ATTENDANCE_EXCUSE = "api/v2/schedules/{scheduleId}/attendances/excuse"
