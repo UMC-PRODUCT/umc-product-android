@@ -134,7 +134,10 @@ class MycardViewModel @Inject constructor(
                 "package=$packageName;" +
                 "S.browser_fallback_url=https://play.google.com/store/apps/details?id=$packageName;" +
                 "end"
-        updateState { copy(myQrcodeData = qrDeepLinkUrl) }
+
+        val qrDeepLinkUrlDebug = "https://api.university.neordinary.com/community/threads/card?memberId=\$memberId"
+
+        updateState { copy(myQrcodeData = qrDeepLinkUrlDebug) }
 
     }
 

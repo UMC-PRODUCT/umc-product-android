@@ -5,6 +5,7 @@ import com.umc.domain.model.UDomainFormat.parseDateTime
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CheckAvailableStatus
+import com.umc.domain.model.home.ParticipantMember
 import com.umc.domain.model.home.PlanDetailItem
 
 data class ScheduleDetailResponse(
@@ -13,6 +14,7 @@ data class ScheduleDetailResponse(
     @SerializedName("description") val description: String?,
     @SerializedName("tags") val tags: List<CategoryType>?,
     @SerializedName("startsAt") val startsAt: String,
+    @SerializedName("authorMemberId") val authorMemberId: Long? = null,
     @SerializedName("endsAt") val endsAt: String,
     @SerializedName("isAllDay") val isAllDay: Boolean,
     @SerializedName("isOnline") val isOnline: Boolean = false,
@@ -21,9 +23,14 @@ data class ScheduleDetailResponse(
     @SerializedName("latitude") val latitude: Double?,
     @SerializedName("longitude") val longitude: Double?,
     @SerializedName("status") val status: String?,
+    @SerializedName("attendanceStatus") val attendanceStatus: String? = null,
+    @SerializedName("isAttendanceChecked") val isAttendanceChecked: Boolean? = null,
+    @SerializedName("isParticipant") val isParticipant: Boolean? = null,
     @SerializedName("dDay") val dDay: Int?,
     @SerializedName("requiresAttendanceApproval") val requiresAttendanceApproval: Boolean?,
-    @SerializedName("participantMemberIds") val participantMemberIds: List<Long>?
+    //@SerializedName("participantMemberIds") val participantMemberIds: List<Long>?,
+    @SerializedName("attendancePolicy") val attendancePolicy: AttendancePolicyResponse? = null,
+    @SerializedName("participants") val participants: List<ParticipantResponse>? = null,
 ) {
     companion object {
         fun ScheduleDetailResponse.toModel(): UserCheckAvailable {
@@ -52,6 +59,9 @@ data class ScheduleDetailResponse(
             // "T"를 기준으로 날짜와 시간을 분리
             val (startDay, startTime) = startsAt.parseDateTime()
             val (endDay, endTime) = endsAt.parseDateTime()
+            val (checkInStartDay, checkInStartTime) = attendancePolicy?.checkInStartAt.orEmpty().parseDateTime()
+            val (onTimeEndDay, onTimeEndTime) = attendancePolicy?.onTimeEndAt.orEmpty().parseDateTime()
+            val (lateEndDay, lateEndTime) = attendancePolicy?.lateEndAt.orEmpty().parseDateTime()
 
             val resolvedLocationName = location?.locationName ?: locationName.orEmpty()
             val resolvedLatitude = location?.latitude ?: latitude ?: 0.0
@@ -73,7 +83,30 @@ data class ScheduleDetailResponse(
                 status = status ?: "",
                 dDay = dDay ?: -1,
                 requiresAttendanceApproval = requiresAttendanceApproval ?: false,
-                participantMemberIds = participantMemberIds ?: emptyList()
+                //participantMemberIds = participantMemberIds ?: emptyList(),
+                //출석 인원 추가
+                participantMembers = participants?.map { participant ->
+                    ParticipantMember(
+                        memberId = participant.memberId,
+                        name = participant.name,
+                        nickname = participant.nickname,
+                        schoolId = participant.schoolId,
+                        schoolName = participant.schoolName,
+                        profileImageUrl = participant.profileImageUrl
+                    )
+                } ?: emptyList(),
+                // 출석 관련 추가
+                authorMemberId = authorMemberId ?: -1L,
+                isParticipant = isParticipant ?: false,
+                isAttendanceChecked = isAttendanceChecked ?: false,
+
+                // 출석 정책 시간 매핑
+                checkInStartDay = checkInStartDay,
+                checkInStartTime = checkInStartTime,
+                onTimeEndDay = onTimeEndDay,
+                onTimeEndTime = onTimeEndTime,
+                lateEndDay = lateEndDay,
+                lateEndTime = lateEndTime
             )
         }
     }
@@ -83,4 +116,20 @@ data class ScheduleDetailLocationResponse(
     @SerializedName("latitude") val latitude: Double,
     @SerializedName("longitude") val longitude: Double,
     @SerializedName("locationName") val locationName: String,
+)
+
+//출석 정책 Response DTO
+data class AttendancePolicyResponse(
+    @SerializedName("checkInStartAt") val checkInStartAt: String?,
+    @SerializedName("onTimeEndAt") val onTimeEndAt: String?,
+    @SerializedName("lateEndAt") val lateEndAt: String?
+)
+
+data class ParticipantResponse(
+    @SerializedName("memberId") val memberId: Long,
+    @SerializedName("name") val name: String?,
+    @SerializedName("nickname") val nickname: String?,
+    @SerializedName("schoolId") val schoolId: Long?,
+    @SerializedName("schoolName") val schoolName: String?,
+    @SerializedName("profileImageUrl") val profileImageUrl: String?
 )
