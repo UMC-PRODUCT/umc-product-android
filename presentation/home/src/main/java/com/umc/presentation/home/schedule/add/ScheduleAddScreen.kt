@@ -357,8 +357,10 @@ fun ScheduleAddScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     USwitch(
-                        checked = uiState.isOnlineChecked,
-                        onCheckedChange = onOnlineChanged,
+                        checked = !uiState.isOnlineChecked,
+                        onCheckedChange = { isOffline ->
+                            onOnlineChanged(!isOffline)
+                        },
                     )
                     Spacer(modifier = Modifier.
                     width(8.dp)
@@ -367,18 +369,21 @@ fun ScheduleAddScreen(
 
                 }
 
-                Spacer(modifier = Modifier
-                    .height(8.dp)
-                )
 
+                if(!uiState.isOnlineChecked) {
+                    Spacer(
+                        modifier = Modifier
+                            .height(8.dp)
+                    )
 
-                //content()
-                SelectableField(
-                    text = if (uiState.planLocation.isEmpty()) AppStrings.HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER else uiState.planLocation,
-                    isPlaceholder = uiState.planLocation.isEmpty(),
-                    onClick = onLocationClick,
-                    isDisabled = uiState.isOnlineChecked
-                )
+                    //content()
+                    SelectableField(
+                        text = if (uiState.planLocation.isEmpty()) AppStrings.HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER else uiState.planLocation,
+                        isPlaceholder = uiState.planLocation.isEmpty(),
+                        onClick = onLocationClick,
+                        isDisabled = uiState.isOnlineChecked
+                    )
+                }
             }
 
 
@@ -462,7 +467,7 @@ fun ScheduleAddScreen(
 
             Spacer(
                 modifier = Modifier
-                    .height(48.dp)
+                    .height(64.dp)
             )
 
             //10. 하단 버튼들
@@ -687,7 +692,10 @@ fun AttendanceTimeRow(
                     borderColor = grey200(),
                     borderWidth = 0.dp,
                     textColor = indigo500(),
-                    textStyle = UmcTypographyTokens.SubheadlineBold)
+                    textStyle = UmcTypographyTokens.SubheadlineBold,
+                    onClick = {onDateTimeClick()}
+
+                )
             }
         }
 
