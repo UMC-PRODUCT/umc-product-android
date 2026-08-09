@@ -63,8 +63,8 @@ private fun UmcApp() {
         val currentTab = when {
             currentDestination?.hasRoute<MainDestination.Home>() == true -> MainTab.Home
             // TODO: 공지/활동/커뮤니티 Destination이 분리되면 해당 Destination 타입으로 교체
-            //currentDestination?.hasRoute<MainDestination.>() == true -> MainTab.Activity
-            //currentDestination?.hasRoute<MainDestination.>() == true -> MainTab.Community
+            currentDestination?.hasRoute<MainDestination.Act>() == true -> MainTab.Activity
+            currentDestination?.hasRoute<MainDestination.Community>() == true -> MainTab.Community
             currentDestination?.hasRoute<MainDestination.Notification>() == true -> MainTab.Notice
             currentDestination?.hasRoute<MainDestination.Mycard>() == true -> MainTab.My
             else -> null
