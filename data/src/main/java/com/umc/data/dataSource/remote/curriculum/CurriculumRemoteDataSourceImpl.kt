@@ -12,6 +12,7 @@ import com.umc.domain.model.base.FailState
 import com.umc.data.request.curriculum.CreateBestWorkbookRequest
 import com.umc.data.request.curriculum.CreateMissionFeedbackRequest
 import com.umc.data.response.curriculum.ChallengerWorkbookResponse
+import com.umc.data.response.curriculum.WorkbookSubmissionsV2Response
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.curriculum.StudyGroup
 
@@ -64,6 +65,34 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
                 studyGroupId = studyGroupId,
                 cursor = cursor,
                 size = size
+            )
+        }
+    }
+
+    // 운영진 - 스터디원 제출 현황 조회
+    override suspend fun getWorkbookSubmissionsV2(
+        studyGroupId: Long?,
+        weekNos: List<Long>?,
+        cursor: Long?,
+        size: Int,
+    ): ApiState<WorkbookSubmissionsV2Response> {
+        return fetch {
+            curriculumApi.getWorkbookSubmissionsV2(
+                studyGroupId = studyGroupId,
+                weekNos = weekNos,
+                cursor = cursor,
+                size = size,
+            )
+        }
+    }
+
+    // 운영진 - 제출 현황 조회 가능 주차 목록
+    override suspend fun getWorkbookSubmissionWeeks(
+        studyGroupId: Long?,
+    ): ApiState<List<Long>> {
+        return fetch {
+            curriculumApi.getWorkbookSubmissionWeeks(
+                studyGroupId = studyGroupId,
             )
         }
     }

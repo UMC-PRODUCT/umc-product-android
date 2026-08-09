@@ -10,6 +10,7 @@ import com.umc.data.response.curriculum.OriginalWorkbookResponse
 import com.umc.data.response.curriculum.StudyGroupResponse
 import com.umc.data.request.curriculum.CreateBestWorkbookRequest
 import com.umc.data.request.curriculum.CreateMissionFeedbackRequest
+import com.umc.data.response.curriculum.WorkbookSubmissionsV2Response
 import com.umc.domain.model.base.ApiResponse
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -55,7 +56,29 @@ interface CurriculumApi {
     @GET(Endpoints.Curriculum.AVAILABLE_WEEKS)
     suspend fun getAvailableWeeks(): ApiResponse<AvailableWeeksResponse>
 
+    // 운영진 - 스터디원 제출 현황 조회
+    @GET(Endpoints.Curriculum.WORKBOOK_SUBMISSIONS_V2)
+    suspend fun getWorkbookSubmissionsV2(
+        @Query("studyGroupId")
+        studyGroupId: Long? = null,
 
+        @Query("weekNos")
+        weekNos: List<Long>? = null,
+
+        @Query("cursor")
+        cursor: Long? = null,
+
+        @Query("size")
+        size: Int = 20,
+    ): ApiResponse<WorkbookSubmissionsV2Response>
+
+
+    // 운영진 - 제출 현황 조회 가능 주차 목록
+    @GET(Endpoints.Curriculum.WORKBOOK_SUBMISSION_WEEKS)
+    suspend fun getWorkbookSubmissionWeeks(
+        @Query("studyGroupId")
+        studyGroupId: Long? = null,
+    ): ApiResponse<List<Long>>
 
     @POST(Endpoints.Curriculum.CREATE_WEEKLY_BEST_WORKBOOK)
     suspend fun createWeeklyBestWorkbook(

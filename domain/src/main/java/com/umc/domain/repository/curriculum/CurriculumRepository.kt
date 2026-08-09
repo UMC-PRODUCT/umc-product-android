@@ -6,6 +6,7 @@ import com.umc.domain.model.base.CursorPage
 import com.umc.domain.model.curriculum.ChallengerWorkbook
 import com.umc.domain.model.curriculum.CurriculumOverview
 import com.umc.domain.model.curriculum.StudyGroup
+import com.umc.domain.model.curriculum.StudyMemberSubmissionPage
 import com.umc.domain.model.curriculum.WorkbookSubmissionItem
 
 interface CurriculumRepository {
@@ -68,4 +69,18 @@ interface CurriculumRepository {
         missionFeedbackId: Long,
         content: String,
     ): ApiState<Unit>
+
+
+    // 운영진 - 스터디원 제출 현황 조회
+    suspend fun getWorkbookSubmissionsV2(
+        studyGroupId: Long? = null,
+        weekNos: List<Long>? = null,
+        cursor: Long? = null,
+        size: Int = 20,
+    ): ApiState<StudyMemberSubmissionPage>
+
+    // 운영진 - 제출 현황 조회 가능 주차 목록
+    suspend fun getWorkbookSubmissionWeeks(
+        studyGroupId: Long? = null,
+    ): ApiState<List<Long>>
 }
