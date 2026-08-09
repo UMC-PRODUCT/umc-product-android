@@ -43,17 +43,17 @@ fun MainNavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
 
-        /*
+
         startDestination = if (BuildConfig.DEBUG) {
             MainDestination.Login
         } else {
             MainDestination.Home
         },
 
-         */
 
 
-        startDestination = MainDestination.Home,
+
+        //startDestination = MainDestination.Home,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -207,7 +207,7 @@ fun MainNavHost(
         }
 
         /**홈 화면 탭에 대한 내용입니다.**/
-        /*
+
 
         composable<MainDestination.Act> {
             ActManageRoute(
@@ -228,7 +228,7 @@ fun MainNavHost(
             )
         }
 
-         */
+
 
 
 
