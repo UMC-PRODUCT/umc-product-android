@@ -251,9 +251,9 @@ private fun CommunityCreateMemberHeader(
             modifier = Modifier.weight(1f),
         )
 
-        CommunityCsvUploadButton(
-            onClick = onCsvUploadClick,
-        )
+//        CommunityCsvUploadButton(
+//            onClick = onCsvUploadClick,
+//        )
 
         if (showConfirmButton) {
             Spacer(
@@ -284,47 +284,47 @@ private fun CommunityCreateMemberHeader(
     }
 }
 
-@Composable
-private fun CommunityCsvUploadButton(
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .height(32.dp)
-            .clip(
-                RoundedCornerShape(6.dp)
-            )
-            .background(
-                grey900()
-            )
-            .clickable(
-                onClick = onClick,
-            )
-            .padding(
-                horizontal = 10.dp,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            painter = painterResource(
-                id = R.drawable.ic_upload,
-            ),
-            contentDescription = "CSV 업로드",
-            tint = grey000(),
-            modifier = Modifier.size(16.dp),
-        )
-
-        Spacer(
-            modifier = Modifier.width(4.dp),
-        )
-
-        UText(
-            text = "CSV 업로드",
-            style = UmcTypographyTokens.Caption1Bold,
-            color = grey000(),
-        )
-    }
-}
+//@Composable
+//private fun CommunityCsvUploadButton(
+//    onClick: () -> Unit,
+//) {
+//    Row(
+//        modifier = Modifier
+//            .height(32.dp)
+//            .clip(
+//                RoundedCornerShape(6.dp)
+//            )
+//            .background(
+//                grey900()
+//            )
+//            .clickable(
+//                onClick = onClick,
+//            )
+//            .padding(
+//                horizontal = 10.dp,
+//            ),
+//        verticalAlignment = Alignment.CenterVertically,
+//    ) {
+//        Icon(
+//            painter = painterResource(
+//                id = R.drawable.ic_upload,
+//            ),
+//            contentDescription = "CSV 업로드",
+//            tint = grey000(),
+//            modifier = Modifier.size(16.dp),
+//        )
+//
+//        Spacer(
+//            modifier = Modifier.width(4.dp),
+//        )
+//
+//        UText(
+//            text = "CSV 업로드",
+//            style = UmcTypographyTokens.Caption1Bold,
+//            color = grey000(),
+//        )
+//    }
+//}
 
 @Composable
 private fun CommunityCreateMemberSearchContent(
