@@ -11,7 +11,9 @@ enum class NoticeWriterRole(val accessRoles: Set<UserChallengerRole>) {
             UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER,
         )
     ),
-    CHAPTER_PRESIDENT(setOf(UserChallengerRole.CHAPTER_PRESIDENT)),
+    // 지부장: 서버 noticeTab에 지부 등급이 없어 발행 시 지부가 유실되므로 보류.
+    // 서버에 지부 등급 tab이 추가되면 주석 해제 (WriteCategoryType.CHAPTER_PRESIDENT도 함께)
+    // CHAPTER_PRESIDENT(setOf(UserChallengerRole.CHAPTER_PRESIDENT)),
     SCHOOL_CORE(
         setOf(
             UserChallengerRole.SCHOOL_PRESIDENT,
