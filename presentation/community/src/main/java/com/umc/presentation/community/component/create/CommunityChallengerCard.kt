@@ -36,6 +36,7 @@ fun CommunityChallengerCard(
     maxCount: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    currentCount: Int = challengers.size,
 ) {
     val interactionSource = remember {
         MutableInteractionSource()
@@ -88,7 +89,7 @@ fun CommunityChallengerCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 UText(
-                    text = "${challengers.size} / $maxCount",
+                    text = "$currentCount / $maxCount",
                     style = UmcTypographyTokens.Footnote,
                     color = indigo500(),
                 )

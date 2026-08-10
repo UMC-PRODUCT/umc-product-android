@@ -66,6 +66,7 @@ internal fun CommunityParticipantScreen(
     myMemberId: String,
     isOwner: Boolean,
     onBack: () -> Unit,
+    onViewProfile: (String) -> Unit,
     onKickMember: (String) -> Unit,
     onTransferOwnership: (String) -> Unit,
 ) {
@@ -127,6 +128,7 @@ internal fun CommunityParticipantScreen(
                     member = member,
                     isMe = member.memberId == myMemberId,
                     showManagement = isOwner,
+                    onViewProfile = { onViewProfile(member.memberId) },
                     onKick = { pendingKickMember = member },
                     onTransferOwnership = { pendingOwnershipMember = member },
                 )
@@ -211,6 +213,7 @@ private fun ParticipantRow(
     member: CommunityThreadMember,
     isMe: Boolean,
     showManagement: Boolean,
+    onViewProfile: () -> Unit,
     onKick: () -> Unit,
     onTransferOwnership: () -> Unit,
 ) {
@@ -252,7 +255,7 @@ private fun ParticipantRow(
                 )
             }
         }
-        if (showManagement && !isMe && member.role != CommunityThreadRole.OWNER) {
+        if (!isMe) {
             Box(modifier = Modifier.size(48.dp)) {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(
@@ -269,13 +272,19 @@ private fun ParticipantRow(
                     containerColor = white(),
                     shadowElevation = 8.dp,
                 ) {
-                    ParticipantMenuItem(AppStrings.CHAT_TRANSFER_OWNER, R.drawable.ic_swap_horizontal) {
+                    ParticipantMenuItem(AppStrings.CHAT_PROFILE_VIEW, R.drawable.ic_person_outline) {
                         menuExpanded = false
-                        onTransferOwnership()
+                        onViewProfile()
                     }
-                    ParticipantMenuItem(AppStrings.CHAT_KICK, R.drawable.ic_block, red400()) {
-                        menuExpanded = false
-                        onKick()
+                    if (showManagement && member.role != CommunityThreadRole.OWNER) {
+                        ParticipantMenuItem(AppStrings.CHAT_TRANSFER_OWNER, R.drawable.ic_swap_horizontal) {
+                            menuExpanded = false
+                            onTransferOwnership()
+                        }
+                        ParticipantMenuItem(AppStrings.CHAT_KICK, R.drawable.ic_block, red400()) {
+                            menuExpanded = false
+                            onKick()
+                        }
                     }
                 }
             }

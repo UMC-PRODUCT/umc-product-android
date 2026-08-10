@@ -82,6 +82,7 @@ fun CommunityEditScreen(
                 CommunityChallengerCard(
                     challengers = state.selectedChallengers,
                     maxCount = state.maxChallengerCount,
+                    currentCount = state.currentChallengerCount,
                     onClick = {
                         onAction(
                             CommunityEditAction.OnChallengerCardClick

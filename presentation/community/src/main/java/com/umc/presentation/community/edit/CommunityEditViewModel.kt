@@ -80,6 +80,8 @@ class CommunityEditViewModel @Inject constructor(
                     )
                 }
 
+                refreshMemberCount()
+
                 sendEvent(
                     CommunityEditEvent.MemberInviteSuccess
                 )
@@ -141,6 +143,7 @@ class CommunityEditViewModel @Inject constructor(
                         threadId = thread.threadId,
                         title = thread.title,
                         description = thread.description,
+                        currentChallengerCount = thread.memberCount,
                         maxChallengerCount = thread.maxMembers,
                         aiState = CommunityAiState.SUCCESS,
                         classifiedCategory = thread.category.toUiCategory(),
@@ -163,6 +166,27 @@ class CommunityEditViewModel @Inject constructor(
                         message = "스레드 정보를 불러오지 못했어요.",
                     )
                 )
+            }
+        }
+    }
+
+    private fun refreshMemberCount() {
+        val threadId = _state.value.threadId
+
+        if (threadId.isBlank()) {
+            return
+        }
+
+        viewModelScope.launch {
+            getCommunityThreadDetailUseCase(
+                threadId = threadId,
+            ).onSuccess { thread ->
+                _state.update {
+                    it.copy(
+                        currentChallengerCount = thread.memberCount,
+                        maxChallengerCount = thread.maxMembers,
+                    )
+                }
             }
         }
     }

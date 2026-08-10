@@ -575,6 +575,7 @@ fun MainNavHost(
                         MainDestination.CommunityEdit(destination.threadId)
                     )
                 },
+                onViewParticipantProfile = {},
                 shouldRefresh = shouldRefresh,
                 onRefreshHandled = {
                     backStackEntry.savedStateHandle[COMMUNITY_REFRESH_KEY] = false

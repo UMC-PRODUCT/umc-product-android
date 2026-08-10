@@ -21,6 +21,7 @@ fun CommunityChattingRoute(
     onUnreadSummary: () -> Unit = {},
     onCamera: () -> Unit = {},
     onEditThread: () -> Unit = {},
+    onViewParticipantProfile: (String) -> Unit = {},
     shouldRefresh: Boolean = false,
     onRefreshHandled: () -> Unit = {},
     viewModel: CommunityChattingViewModel = hiltViewModel(),
@@ -66,6 +67,7 @@ fun CommunityChattingRoute(
         state = state,
         toastData = toastData,
         onToastDismiss = { toastData = null },
+        onViewParticipantProfile = onViewParticipantProfile,
         onAction = viewModel::onAction,
     )
 

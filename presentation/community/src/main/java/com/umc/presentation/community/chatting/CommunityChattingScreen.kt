@@ -139,6 +139,7 @@ fun CommunityChattingScreen(
     state: CommunityChattingState,
     toastData: UToastData? = null,
     onToastDismiss: () -> Unit = {},
+    onViewParticipantProfile: (String) -> Unit = {},
     onAction: (CommunityChattingAction) -> Unit,
 ) {
     val onBack = { onAction(CommunityChattingAction.OnBackClick) }
@@ -698,6 +699,7 @@ fun CommunityChattingScreen(
             myMemberId = state.myMemberId,
             isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
             onBack = { showParticipants = false },
+            onViewProfile = onViewParticipantProfile,
             onKickMember = onKickMember,
             onTransferOwnership = onTransferOwnership,
         )

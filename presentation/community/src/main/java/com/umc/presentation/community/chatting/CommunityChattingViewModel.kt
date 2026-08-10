@@ -54,6 +54,7 @@ class CommunityChattingViewModel @Inject constructor(
     private val processedEventIds = LinkedHashSet<String>()
     private var lastReadMessageIdSent: String? = null
     private var reconnectJob: Job? = null
+    private var realtimeObserverJob: Job? = null
     private var manualReconnectInProgress = false
     private var lastSummaryMessages: List<CommunityThreadMessage> = emptyList()
 
@@ -61,8 +62,9 @@ class CommunityChattingViewModel @Inject constructor(
         observeCurrentMember()
         checkAiAvailability()
         if (state.value.threadId.isNotBlank()) {
-            observeRealtime()
             bootstrap()
+        } else {
+            stopRealtime()
         }
     }
 
@@ -123,6 +125,7 @@ class CommunityChattingViewModel @Inject constructor(
         updateState { copy(isLoading = true, errorMessage = null, isThreadUnavailable = false) }
         val threadId = uiState.value.threadId
         if (threadId.isBlank()) {
+            stopRealtime()
             updateState { copy(isLoading = false, isThreadUnavailable = true) }
             return@launch
         }
@@ -148,10 +151,12 @@ class CommunityChattingViewModel @Inject constructor(
                 )
             }
             loadMembers()
+            observeRealtime()
             chatRepository.connect()
         } else {
             val detailFailure = (detail as? ApiState.Fail)?.failState
             if (detailFailure != null && detailFailure.hasThreadUnavailableCode()) {
+                stopRealtime()
                 updateState {
                     copy(
                         isLoading = false,
@@ -616,49 +621,63 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun observeRealtime() {
-        viewModelScope.launch {
-            chatRepository.connectionState.collectLatest { connection ->
-                updateState { copy(connectionState = connection) }
-                if (connection == CommunityChatConnectionState.CONNECTED) {
-                    reconnectJob?.cancel()
-                    reconnectJob = null
-                    reconcileLatestMessages()
-                    markLatestMessageRead()
-                } else if (
-                    connection == CommunityChatConnectionState.DISCONNECTED &&
-                    !manualReconnectInProgress
-                ) {
-                    ensureReconnectLoop()
-                }
-            }
-        }
-        viewModelScope.launch {
-            chatRepository.events.collect { event ->
-                if (event.threadId != uiState.value.threadId || !rememberEvent(event.eventId)) return@collect
-                reduce(event)
-            }
-        }
-        viewModelScope.launch {
-            chatRepository.errors.collect { error ->
-                val clientId = error.clientMessageId
-                if (clientId != null) {
-                    updateState {
-                        copy(
-                            pendingMessages = pendingMessages + (
-                                clientId to (pendingMessages[clientId]?.copy(error = error.message)
-                                    ?: PendingCommunityMessage(
-                                        clientMessageId = clientId,
-                                        commandId = error.commandId.orEmpty(),
-                                        content = "",
-                                        error = error.message,
-                                    ))
-                            )
-                        )
+        if (realtimeObserverJob?.isActive == true) return
+        realtimeObserverJob = viewModelScope.launch {
+            coroutineScope {
+                launch {
+                    chatRepository.connectionState.collectLatest { connection ->
+                        updateState { copy(connectionState = connection) }
+                        if (connection == CommunityChatConnectionState.CONNECTED) {
+                            reconnectJob?.cancel()
+                            reconnectJob = null
+                            reconcileLatestMessages()
+                            markLatestMessageRead()
+                        } else if (
+                            connection == CommunityChatConnectionState.DISCONNECTED &&
+                            !manualReconnectInProgress
+                        ) {
+                            ensureReconnectLoop()
+                        }
                     }
                 }
-                emitEvent(CommunityChattingEvent.ShowError(error.message))
+                launch {
+                    chatRepository.events.collect { event ->
+                        if (event.threadId != uiState.value.threadId || !rememberEvent(event.eventId)) return@collect
+                        reduce(event)
+                    }
+                }
+                launch {
+                    chatRepository.errors.collect { error ->
+                        val clientId = error.clientMessageId
+                        if (clientId != null) {
+                            updateState {
+                                copy(
+                                    pendingMessages = pendingMessages + (
+                                        clientId to (pendingMessages[clientId]?.copy(error = error.message)
+                                            ?: PendingCommunityMessage(
+                                                clientMessageId = clientId,
+                                                commandId = error.commandId.orEmpty(),
+                                                content = "",
+                                                error = error.message,
+                                            ))
+                                        )
+                                )
+                            }
+                        }
+                        emitEvent(CommunityChattingEvent.ShowError(error.message))
+                    }
+                }
             }
         }
+    }
+
+    private fun stopRealtime() {
+        reconnectJob?.cancel()
+        reconnectJob = null
+        realtimeObserverJob?.cancel()
+        realtimeObserverJob = null
+        manualReconnectInProgress = false
+        chatRepository.disconnect()
     }
 
     private fun observeCurrentMember() {
@@ -833,8 +852,7 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        reconnectJob?.cancel()
-        chatRepository.disconnect()
+        stopRealtime()
         super.onCleared()
     }
 
@@ -846,7 +864,7 @@ class CommunityChattingViewModel @Inject constructor(
 }
 
 private fun com.umc.domain.model.base.FailState.hasThreadUnavailableCode(): Boolean =
-    code == "404"
+    code == "404" || code.endsWith("-404")
 
 private fun createInitialChattingState(savedStateHandle: SavedStateHandle): CommunityChattingState {
     val threadId = savedStateHandle.get<String>("threadId").orEmpty()
