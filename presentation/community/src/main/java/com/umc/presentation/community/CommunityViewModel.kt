@@ -43,10 +43,6 @@ class CommunityViewModel @Inject constructor(
     private val _event = Channel<CommunityEvent>()
     val event = _event.receiveAsFlow()
 
-    init {
-        loadThreads()
-    }
-
     fun onAction(action: CommunityAction) {
         when (action) {
             CommunityAction.OnFilterClick -> Unit

@@ -134,4 +134,8 @@ sealed interface MainDestination {
         val threadId: String,
     ) : MainDestination
 
+    @Serializable
+    data class CommunityChatting(
+        val threadId: String,
+    ) : MainDestination
 }

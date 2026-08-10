@@ -106,9 +106,6 @@ dependencies {
     // flexboxLayout
     implementation(libs.google.flexbox)
 
-    // NAVER
-    implementation("com.naver.maps:map-sdk:3.23.0")
-    
     //opencsv
     implementation(libs.opencsv)
 
@@ -133,6 +130,9 @@ dependencies {
     implementation(libs.naver.maps.sdk)
     implementation(libs.naver.maps.compose)
     implementation(libs.googleplay.services.location)
+
+    // Android 16 16KB page-size compatible native path implementation
+    implementation(libs.androidx.graphics.path)
 }
 
 fun getApiKey(propertyKey: String): String {

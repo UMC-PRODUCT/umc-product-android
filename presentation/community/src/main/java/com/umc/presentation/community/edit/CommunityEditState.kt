@@ -11,6 +11,7 @@ data class CommunityEditState(
     val description: String = "",
 
     val selectedChallengers: List<CommunityChallengerUiModel> = emptyList(),
+    val currentChallengerCount: Int = 0,
     val maxChallengerCount: Int = 8,
 
     val aiState: CommunityAiState = CommunityAiState.SUCCESS,
@@ -29,7 +30,7 @@ data class CommunityEditState(
     val showDeleteDialog: Boolean = false,
 ) {
     val selectedChallengerCountText: String
-        get() = "${selectedChallengers.size} / $maxChallengerCount"
+        get() = "$currentChallengerCount / $maxChallengerCount"
 
     val isSaveEnabled: Boolean
         get() = title.isNotBlank() &&

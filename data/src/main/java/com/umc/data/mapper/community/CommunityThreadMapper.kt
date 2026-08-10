@@ -28,7 +28,7 @@ fun CommunityThreadSummaryResponse.toDomain(): CommunityThread {
     return CommunityThread(
         threadId = threadId,
         title = title,
-        description = description ?: "",
+        description = description.orEmpty(),
         category = category.toThreadCategory(),
         icon = icon,
         memberCount = memberCount.toIntOrNull() ?: 0,
@@ -48,7 +48,7 @@ fun CommunityThreadDetailResponse.toDomain(): CommunityThreadDetail {
     return CommunityThreadDetail(
         threadId = threadId,
         title = title,
-        description = description,
+        description = description.orEmpty(),
         category = category.toThreadCategory(),
         icon = icon,
         memberCount = memberCount.toIntOrNull() ?: 0,

@@ -1,5 +1,7 @@
 package com.umc.presentation.community.bottomsheet
 
+import com.umc.presentation.community.DEFAULT_COMMUNITY_MAX_MEMBER_COUNT
+
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -16,6 +18,9 @@ data class CommunityMemberBottomSheetState(
     // 서버에 실제로 참여 중인 멤버
     val currentMembers: List<CommunityChallengerUiModel> = emptyList(),
 
+    // 초대/내보내기 대상에서 제외할 스레드 방장
+    val ownerMemberIds: Set<Long> = emptySet(),
+
     // 검색 가능한 전체 챌린저
     val invitableMembers: List<CommunityChallengerUiModel> = emptyList(),
 
@@ -31,7 +36,7 @@ data class CommunityMemberBottomSheetState(
     val hasNext: Boolean = false,
 
 
-    val maxMemberCount: Int = 8,
+    val maxMemberCount: Int = DEFAULT_COMMUNITY_MAX_MEMBER_COUNT,
     val errorMessage: String? = null,
 ) : UiState {
 
