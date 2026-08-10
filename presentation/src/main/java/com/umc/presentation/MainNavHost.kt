@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.navDeepLink
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
@@ -39,13 +40,15 @@ import com.umc.presentation.notice.write.NoticeWriteRoute
 import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
-import androidx.navigation.navDeepLink
 import com.umc.presentation.community.CommunityRoute
+import com.umc.presentation.community.chatting.CommunityChattingRoute
 import com.umc.presentation.community.search.CommunitySearchRoute
 import com.umc.presentation.community.create.CommunityCreateRoute
 import com.umc.presentation.community.edit.CommunityEditRoute
 
 private const val COMMUNITY_REFRESH_KEY = "community_refresh"
+private const val COMMUNITY_THREAD_DEEP_LINK_BASE =
+    "https://api.university.neordinary.com/community/threads"
 
 
 @Composable
@@ -87,7 +90,7 @@ fun MainNavHost(
         composable<MainDestination.Login> {
             LoginRoute(
                 navigateToMain = {
-                    navHostController.navigate(MainDestination.Act) {
+                    navHostController.navigate(MainDestination.Home) {
                         popUpTo(MainDestination.Login) { inclusive = true }
                     }
                 },
@@ -109,7 +112,7 @@ fun MainNavHost(
             EmailLoginRoute(
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToMain = {
-                    navHostController.navigate(MainDestination.Act) {
+                    navHostController.navigate(MainDestination.Home) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
@@ -287,8 +290,6 @@ fun MainNavHost(
         }
 
         /**홈 화면 탭에 대한 내용입니다.**/
-
-
         composable<MainDestination.Act> {
             ActManageRoute(
                 onNavigateToChallengerDetail = { challengerId ->
@@ -307,8 +308,6 @@ fun MainNavHost(
                 onNavigateToBack = { navHostController.popBackStack() },
             )
         }
-
-
 
 
 
@@ -364,7 +363,6 @@ fun MainNavHost(
                 },
                 onNavigateToEditSchedule = { scheduleId ->
                     navHostController.navigate(MainDestination.ScheduleEdit(scheduleId = scheduleId))
-
                 }
             )
         }
@@ -425,7 +423,6 @@ fun MainNavHost(
 
         }
 
-
         //내 활동
         composable<MainDestination.MyContent> {
             MyContentRoute(
@@ -462,24 +459,15 @@ fun MainNavHost(
             )
         }
 
-
-
-
-
-
         /** 커뮤니티 화면 **/
-        composable<MainDestination.Community> { backStackEntry ->
-            val shouldRefresh by backStackEntry
-                .savedStateHandle
-                .getStateFlow(
-                    key = COMMUNITY_REFRESH_KEY,
-                    initialValue = false,
-                )
-                .collectAsStateWithLifecycle()
-
+        composable<MainDestination.Community> {
             CommunityRoute(
                 onNavigateToThreadDetail = { threadId ->
-                    // TODO: 상세 화면 생성 후 연결
+                    navHostController.navigate(
+                        MainDestination.CommunityChatting(
+                            threadId = threadId,
+                        )
+                    )
                 },
                 onNavigateToSearch = {
                     navHostController.navigate(
@@ -497,12 +485,6 @@ fun MainNavHost(
                             threadId = threadId,
                         )
                     )
-                },
-                shouldRefresh = shouldRefresh,
-                onRefreshHandled = {
-                    backStackEntry.savedStateHandle[
-                        COMMUNITY_REFRESH_KEY
-                    ] = false
                 },
             )
         }
@@ -562,10 +544,52 @@ fun MainNavHost(
                     navHostController.popBackStack()
                 },
                 onNavigateToThreadDetail = { threadId ->
-                    // TODO: 스레드 상세 화면 생성 후 연결
+                    navHostController.navigate(
+                        MainDestination.CommunityChatting(
+                            threadId = threadId,
+                        )
+                    )
                 },
             )
         }
 
+        composable<MainDestination.CommunityChatting>(
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "$COMMUNITY_THREAD_DEEP_LINK_BASE?threadId={threadId}"
+                }
+            ),
+        ) { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.CommunityChatting>()
+            val shouldRefresh by backStackEntry
+                .savedStateHandle
+                .getStateFlow(COMMUNITY_REFRESH_KEY, false)
+                .collectAsStateWithLifecycle()
+
+            CommunityChattingRoute(
+                onBack = {
+                    navHostController.popBackStack()
+                },
+                onEditThread = {
+                    navHostController.navigate(
+                        MainDestination.CommunityEdit(destination.threadId)
+                    )
+                },
+                onViewParticipantProfile = {},
+                shouldRefresh = shouldRefresh,
+                onRefreshHandled = {
+                    backStackEntry.savedStateHandle[COMMUNITY_REFRESH_KEY] = false
+                    navHostController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(COMMUNITY_REFRESH_KEY, true)
+                },
+                onThreadDeleted = {
+                    navHostController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(COMMUNITY_REFRESH_KEY, true)
+                    navHostController.popBackStack()
+                },
+            )
+        }
     }
 }

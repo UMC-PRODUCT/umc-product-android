@@ -1,7 +1,6 @@
 package com.umc.product.di
 
 import android.util.Log
-import com.umc.data.dataSource.local.AppDataStore
 import com.umc.domain.repository.AppDataStoreRepository
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor

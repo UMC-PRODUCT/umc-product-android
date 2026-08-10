@@ -1,10 +1,23 @@
 package com.umc.domain.repository.community
 
+import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.community.CommunityInvitableMemberPage
 import com.umc.domain.model.community.CommunityThreadDetail
 import com.umc.domain.model.community.CommunityThreadInvitation
 import com.umc.domain.model.community.CommunityThreadMemberPage
 import com.umc.domain.model.community.CommunityThreadPage
+import com.umc.domain.model.community.thread.CommunityMessageReportReason
+import com.umc.domain.model.community.thread.CommunityMessageReportReceipt
+import com.umc.domain.model.community.thread.CommunityThreadDetail as ThreadCommunityThreadDetail
+import com.umc.domain.model.community.thread.CommunityThreadInvitablePage
+import com.umc.domain.model.community.thread.CommunityThreadInvitation as ThreadCommunityThreadInvitation
+import com.umc.domain.model.community.thread.CommunityThreadList
+import com.umc.domain.model.community.thread.CommunityThreadMemberMutation
+import com.umc.domain.model.community.thread.CommunityThreadMemberPage as ThreadCommunityThreadMemberPage
+import com.umc.domain.model.community.thread.CommunityThreadMessagePage
+import com.umc.domain.model.community.thread.CommunityThreadRole
+import com.umc.domain.model.community.thread.CreateCommunityThread
+import com.umc.domain.model.community.thread.UpdateCommunityThread
 
 interface CommunityThreadRepository {
 
@@ -85,4 +98,20 @@ interface CommunityThreadRepository {
         offset: Int = 0,
         limit: Int = 20,
     ): Result<CommunityThreadMemberPage>
+
+    suspend fun getThreads(filter: String = "all", query: String? = null, offset: Int = 0, limit: Int = 20): ApiState<CommunityThreadList>
+    suspend fun getThread(threadId: String): ApiState<ThreadCommunityThreadDetail>
+    suspend fun getMessages(threadId: String, before: String? = null, limit: Int = 30): ApiState<CommunityThreadMessagePage>
+    suspend fun createThread(request: CreateCommunityThread): ApiState<ThreadCommunityThreadDetail>
+    suspend fun updateThread(threadId: String, request: UpdateCommunityThread): ApiState<ThreadCommunityThreadDetail>
+    suspend fun deleteThread(threadId: String): ApiState<ThreadCommunityThreadDetail>
+    suspend fun setPinned(threadId: String, pinned: Boolean): ApiState<ThreadCommunityThreadDetail>
+    suspend fun setMuted(threadId: String, muted: Boolean): ApiState<ThreadCommunityThreadDetail>
+    suspend fun getMembers(threadId: String, query: String? = null, role: CommunityThreadRole? = null, part: String? = null, generation: Long? = null, offset: Int = 0, limit: Int = 20): ApiState<ThreadCommunityThreadMemberPage>
+    suspend fun getInvitableMembers(threadId: String, query: String? = null, offset: Int = 0, limit: Int = 20): ApiState<CommunityThreadInvitablePage>
+    suspend fun inviteMembers(threadId: String, memberIds: List<Long>): ApiState<ThreadCommunityThreadInvitation>
+    suspend fun kickMember(threadId: String, memberId: String): ApiState<CommunityThreadMemberMutation>
+    suspend fun leaveThread(threadId: String): ApiState<CommunityThreadMemberMutation>
+    suspend fun changeMemberRole(threadId: String, memberId: String, role: CommunityThreadRole): ApiState<CommunityThreadMemberMutation>
+    suspend fun reportMessage(messageId: String, reason: CommunityMessageReportReason): ApiState<CommunityMessageReportReceipt>
 }

@@ -86,7 +86,6 @@ object Endpoints {
         const val CAPABILITIES = "api/v2/schedules/capabilities"
         const val CREATE_V2 = "api/v2/schedules"
 
-
         const val ATTENDANCE_REQUEST = "api/v2/schedules/{scheduleId}/attendances/request"
         const val ATTENDANCE_DECIDE = "api/v2/schedules/{scheduleId}/attendances/decide"
         const val ATTENDANCE_EXCUSE = "api/v2/schedules/{scheduleId}/attendances/excuse"
@@ -118,7 +117,6 @@ object Endpoints {
         const val REPORT_COMMENT = "api/v1/comments/{commentId}/reports"
 
         const val TROPHY = "api/v1/trophies"
-
         const val THREADS = "api/v1/community/threads"
         const val THREAD_DETAIL = "$THREADS/{threadId}"
 
@@ -139,6 +137,11 @@ object Endpoints {
 
         const val THREAD_MEMBERS =
             "$THREAD_DETAIL/members"
+
+        const val THREAD_MESSAGES = "$THREAD_DETAIL/messages"
+        const val THREAD_MEMBER_ROLE = "$THREAD_MEMBER/role"
+        const val MESSAGE_REPORT =
+            "api/v1/community/messages/{messageId}/report"
 
     }
 

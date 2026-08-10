@@ -10,6 +10,11 @@ import com.umc.data.response.community.CommunityThreadListResponse
 import com.umc.data.response.community.CommunityThreadMemberMutationResponse
 import com.umc.data.response.community.CommunityThreadMemberPageResponse
 import com.umc.domain.model.base.ApiResponse
+import com.umc.domain.model.community.thread.CommunityMessageReportReason
+import com.umc.domain.model.community.thread.CommunityMessageReportReceipt
+import com.umc.domain.model.community.thread.CommunityThreadMemberMutation
+import com.umc.domain.model.community.thread.CommunityThreadMessagePage
+import com.umc.domain.model.community.thread.CommunityThreadRole
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -156,4 +161,27 @@ interface CommunityThreadApi {
         @Query("limit")
         limit: Int = 20,
     ): ApiResponse<CommunityThreadMemberPageResponse>
+
+    @GET(Endpoints.Community.THREAD_MESSAGES)
+    suspend fun getMessages(
+        @Path("threadId") threadId: String,
+        @Query("before") before: String?,
+        @Query("limit") limit: Int,
+    ): ApiResponse<CommunityThreadMessagePage>
+
+    @PATCH(Endpoints.Community.THREAD_MEMBER_ROLE)
+    suspend fun changeMemberRole(
+        @Path("threadId") threadId: String,
+        @Path("memberId") memberId: String,
+        @Body request: ChangeMemberRoleRequest,
+    ): ApiResponse<CommunityThreadMemberMutation>
+
+    @POST(Endpoints.Community.MESSAGE_REPORT)
+    suspend fun reportMessage(
+        @Path("messageId") messageId: String,
+        @Body request: ReportMessageRequest,
+    ): ApiResponse<CommunityMessageReportReceipt>
 }
+
+data class ChangeMemberRoleRequest(val role: CommunityThreadRole)
+data class ReportMessageRequest(val reason: CommunityMessageReportReason)
