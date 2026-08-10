@@ -1,6 +1,7 @@
 package com.umc.presentation.community.chatting
 
 import android.app.Activity
+import android.content.ClipData
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
@@ -25,6 +26,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -53,11 +56,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,6 +71,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.emoji2.emojipicker.EmojiPickerView
 import coil.compose.AsyncImage
 import com.umc.component.theme.black
@@ -112,12 +117,12 @@ import com.umc.domain.model.community.thread.CommunityThreadDetail
 import com.umc.domain.model.community.thread.CommunityThreadMember
 import com.umc.domain.model.community.thread.CommunityThreadMessage
 import com.umc.domain.model.community.thread.CommunityThreadRole
+import com.umc.domain.model.enums.UserPart
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.net.URI
 import kotlinx.coroutines.delay
@@ -138,13 +143,13 @@ fun CommunityChattingScreen(
 ) {
     val onBack = { onAction(CommunityChattingAction.OnBackClick) }
     val onMore = { onAction(CommunityChattingAction.OnMoreClick) }
-    val onUnreadSummary: (List<CommunityThreadMessage>) -> Unit = {
+    val onUnreadSummary: (Int?) -> Unit = {
         onAction(CommunityChattingAction.OnUnreadSummaryClick(it))
     }
     val onCamera = { onAction(CommunityChattingAction.OnCameraClick) }
     val onSendImages: (List<String>) -> Unit = { onAction(CommunityChattingAction.OnSendImages(it)) }
     val onDraftChange: (String) -> Unit = { onAction(CommunityChattingAction.OnDraftChanged(it)) }
-    val onSend: (Long?) -> Unit = { onAction(CommunityChattingAction.OnSendClick(it)) }
+    val onSend: (String?) -> Unit = { onAction(CommunityChattingAction.OnSendClick(it)) }
     val onLoadPrevious = { onAction(CommunityChattingAction.OnLoadPrevious) }
     val onDeleteMessage: (String) -> Unit = { onAction(CommunityChattingAction.OnDeleteMessage(it)) }
     val onReact: (CommunityThreadMessage, String) -> Unit = { message, emoji ->
@@ -196,7 +201,7 @@ fun CommunityChattingScreen(
     var pendingReportConfirmation by remember {
         mutableStateOf<Pair<String, CommunityMessageReportReason>?>(null)
     }
-    val clipboardManager = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
     val context = LocalContext.current
     DisposableEffect(context) {
         val window = context.findActivity()?.window
@@ -210,9 +215,11 @@ fun CommunityChattingScreen(
         }
     }
     val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 4),
+        contract = ActivityResultContracts.PickMultipleVisualMedia(
+            maxItems = COMMUNITY_CHAT_MAX_IMAGE_COUNT,
+        ),
     ) { uris ->
-        onSendImages(uris.take(4).map { it.toString() })
+        onSendImages(uris.take(COMMUNITY_CHAT_MAX_IMAGE_COUNT).map { it.toString() })
     }
 
     if (state.showOwnershipTransferRequiredDialog) {
@@ -261,19 +268,6 @@ fun CommunityChattingScreen(
             onRetry = { onAction(CommunityChattingAction.OnRetryUnreadSummary) },
             onDismiss = { onAction(CommunityChattingAction.OnDismissUnreadSummary) },
         )
-    }
-
-    if (showParticipants) {
-        CommunityParticipantScreen(
-            members = state.members.values.toList(),
-            memberCount = state.thread?.memberCount.orEmpty(),
-            myMemberId = state.myMemberId,
-            isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
-            onBack = { showParticipants = false },
-            onKickMember = onKickMember,
-            onTransferOwnership = onTransferOwnership,
-        )
-        return
     }
 
     LaunchedEffect(listState) {
@@ -399,7 +393,7 @@ fun CommunityChattingScreen(
                 isMuted = state.thread?.isMuted == true,
                 isPinned = state.thread?.isPinned == true,
                 isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
-                onSummary = { onUnreadSummary(emptyList()) },
+                onSummary = { onUnreadSummary(null) },
                 onToggleMuted = onToggleMuted,
                 onTogglePinned = onTogglePinned,
                 onParticipants = {
@@ -440,7 +434,7 @@ fun CommunityChattingScreen(
                         )
                     },
                     onSend = {
-                        onSend(replyingMessage?.messageId?.toLongOrNull())
+                        onSend(replyingMessage?.messageId)
                         replyingMessage = null
                     },
                 )
@@ -531,7 +525,16 @@ fun CommunityChattingScreen(
                             selectedMessage = null
                         },
                         onCopy = {
-                            clipboardManager.setText(AnnotatedString(message.content.orEmpty()))
+                            scope.launch {
+                                clipboard.setClipEntry(
+                                    ClipEntry(
+                                        ClipData.newPlainText(
+                                            AppStrings.CHAT_ACTION_COPY,
+                                            message.content.orEmpty(),
+                                        )
+                                    )
+                                )
+                            }
                             selectedMessage = null
                         },
                         onReport = {
@@ -571,7 +574,7 @@ fun CommunityChattingScreen(
                 UnreadSummaryCard(
                     unreadCount = newMessageCount,
                     onClick = {
-                        onUnreadSummary(state.messages.take(newMessageCount))
+                        onUnreadSummary(newMessageCount)
                     },
                     modifier = Modifier
                         .align(Alignment.TopCenter)
@@ -685,6 +688,18 @@ fun CommunityChattingScreen(
                 pendingReportConfirmation = null
             },
             onDismissRequest = { pendingReportConfirmation = null },
+        )
+    }
+
+    if (showParticipants) {
+        CommunityParticipantScreen(
+            members = state.members.values.toList(),
+            memberCount = state.thread?.memberCount.orEmpty(),
+            myMemberId = state.myMemberId,
+            isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
+            onBack = { showParticipants = false },
+            onKickMember = onKickMember,
+            onTransferOwnership = onTransferOwnership,
         )
     }
 }
@@ -1298,6 +1313,8 @@ internal fun buildCommunityThreadDeepLink(shareUrl: String): String {
         ?.takeIf(String::isNotBlank)
         ?: path.trimEnd('/').substringAfterLast('/')
 
+    if (threadId.isBlank()) return rawUrl
+
     return "$COMMUNITY_DEEP_LINK_HOST$COMMUNITY_DEEP_LINK_PATH?threadId=$threadId"
 }
 
@@ -1419,7 +1436,7 @@ private fun MessageReactions(
             .fillMaxWidth()
             .padding(
                 start = if (isMine) 0.dp else 46.dp,
-                end = if (isMine) 0.dp else 0.dp,
+                end = 0.dp,
                 top = 5.dp,
             ),
         horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start,
@@ -1475,7 +1492,13 @@ private fun OtherMessage(
                     color = grey950(),
                     style = UmcTypographyTokens.SubheadlineBold
                 )
-                member?.part?.let { part ->
+                if (
+                    member?.role == CommunityThreadRole.ADMIN ||
+                    member?.part == UserPart.ADMIN
+                ) {
+                    MemberTag(AppStrings.CHAT_ADMIN_BADGE, grey950(), white())
+                }
+                member?.part?.takeUnless { it == UserPart.ADMIN }?.let { part ->
                     val tag = partTag(part)
                     MemberTag(tag.first, tag.second, tag.third)
                 }
@@ -1546,6 +1569,7 @@ private fun MessageBubbleContent(
     isMine: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    var imageViewerIndex by remember(message.messageId) { mutableStateOf<Int?>(null) }
     val foreground = if (isMine) white() else grey950()
     val secondary = if (isMine) indigo100() else grey400()
     val divider = if (isMine) white().copy(alpha = 0.22f) else grey200()
@@ -1553,19 +1577,36 @@ private fun MessageBubbleContent(
 
     if (message.type == CommunityMessageType.IMAGE) {
         val models = imageUris.ifEmpty {
-            listOfNotNull(message.content?.takeIf(String::isNotBlank))
-        }.take(4)
+            message.files
+                .map { it.fileUrl }
+                .filter(String::isNotBlank)
+                .ifEmpty {
+                    listOfNotNull(message.content?.takeIf(String::isNotBlank))
+                }
+        }.take(COMMUNITY_CHAT_MAX_IMAGE_COUNT)
+        imageViewerIndex?.let { initialIndex ->
+            ChatImageViewer(
+                models = models,
+                initialIndex = initialIndex,
+                onDismiss = { imageViewerIndex = null },
+            )
+        }
         if (models.size == 1) {
             AsyncImage(
                 model = models.first(),
                 contentDescription = AppStrings.CHAT_CD_IMAGE,
                 modifier = modifier
                     .size(width = 220.dp, height = 180.dp)
-                    .clip(RoundedCornerShape(16.dp)),
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { imageViewerIndex = 0 },
                 contentScale = ContentScale.Crop,
             )
         } else if (models.isNotEmpty()) {
-            ChatImageGrid(models = models, modifier = modifier)
+            ChatImageGrid(
+                models = models,
+                modifier = modifier,
+                onImageClick = { imageViewerIndex = it },
+            )
         } else {
             Box(
                 modifier = modifier.size(width = 220.dp, height = 160.dp),
@@ -1628,32 +1669,33 @@ private fun MessageBubbleContent(
 private fun ChatImageGrid(
     models: List<String>,
     modifier: Modifier = Modifier,
+    onImageClick: (Int) -> Unit = {},
 ) {
-    val images = models.take(4)
+    val images = models.take(COMMUNITY_CHAT_MAX_IMAGE_COUNT)
     val containerModifier = modifier.width(220.dp).clip(RoundedCornerShape(16.dp))
 
     when (images.size) {
         0 -> Unit
-        1 -> ChatGridImage(images.first(), containerModifier.height(180.dp))
+        1 -> ChatGridImage(images.first(), containerModifier.height(180.dp)) { onImageClick(0) }
         2 -> Row(
             modifier = containerModifier.height(160.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            images.forEach { model ->
-                ChatGridImage(model, Modifier.weight(1f).fillMaxHeight())
+            images.forEachIndexed { index, model ->
+                ChatGridImage(model, Modifier.weight(1f).fillMaxHeight()) { onImageClick(index) }
             }
         }
         3 -> Row(
             modifier = containerModifier.height(220.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            ChatGridImage(images.first(), Modifier.weight(1f).fillMaxHeight())
+            ChatGridImage(images.first(), Modifier.weight(1f).fillMaxHeight()) { onImageClick(0) }
             Column(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                images.drop(1).forEach { model ->
-                    ChatGridImage(model, Modifier.weight(1f).fillMaxWidth())
+                images.drop(1).forEachIndexed { index, model ->
+                    ChatGridImage(model, Modifier.weight(1f).fillMaxWidth()) { onImageClick(index + 1) }
                 }
             }
         }
@@ -1661,13 +1703,16 @@ private fun ChatImageGrid(
             modifier = containerModifier,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            images.chunked(2).forEach { rowModels ->
+            images.chunked(2).forEachIndexed { rowIndex, rowModels ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    rowModels.forEach { model ->
-                        ChatGridImage(model, Modifier.weight(1f).aspectRatio(1f))
+                    rowModels.forEachIndexed { columnIndex, model ->
+                        val imageIndex = rowIndex * 2 + columnIndex
+                        ChatGridImage(model, Modifier.weight(1f).aspectRatio(1f)) {
+                            onImageClick(imageIndex)
+                        }
                     }
                 }
             }
@@ -1676,13 +1721,76 @@ private fun ChatImageGrid(
 }
 
 @Composable
-private fun ChatGridImage(model: String, modifier: Modifier) {
+private fun ChatGridImage(model: String, modifier: Modifier, onClick: () -> Unit = {}) {
     AsyncImage(
         model = model,
         contentDescription = AppStrings.CHAT_CD_IMAGE,
-        modifier = modifier,
+        modifier = modifier.clickable(onClick = onClick),
         contentScale = ContentScale.Crop,
     )
+}
+
+@Composable
+private fun ChatImageViewer(
+    models: List<String>,
+    initialIndex: Int,
+    onDismiss: () -> Unit,
+) {
+    if (models.isEmpty()) return
+    val pagerState = rememberPagerState(
+        initialPage = initialIndex.coerceIn(models.indices),
+        pageCount = models::size,
+    )
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black),
+        ) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) { page ->
+                AsyncImage(
+                    model = models[page],
+                    contentDescription = AppStrings.CHAT_CD_IMAGE,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit,
+                )
+            }
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(12.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = AppStrings.CHAT_CD_BACK,
+                    tint = white(),
+                )
+            }
+            if (models.size > 1) {
+                Text(
+                    text = "${pagerState.currentPage + 1} / ${models.size}",
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 32.dp),
+                    color = white(),
+                    style = UmcTypographyTokens.SubheadlineBold,
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -2095,15 +2203,16 @@ private fun MemberTag(text: String, background: Color, foreground: Color) {
 }
 
 @Composable
-internal fun partTag(part: String): Triple<String, Color, Color> = when (part) {
-    "IOS" -> Triple("iOS", yellow100(), yellow500())
-    "ANDROID" -> Triple("Android", green100(), green700())
-    "PLAN" -> Triple("PM", indigo100(), indigo600())
-    "DESIGN" -> Triple("Design", red100(), red600())
-    "WEB" -> Triple("Web", indigo100(), indigo600())
-    "NODEJS" -> Triple("Node.js", green100(), green700())
-    "SPRINGBOOT" -> Triple("Spring", green100(), green700())
-    else -> Triple(part, grey100(), grey600())
+internal fun partTag(part: UserPart): Triple<String, Color, Color> = when (part) {
+    UserPart.IOS -> Triple("iOS", yellow100(), yellow500())
+    UserPart.ANDROID -> Triple("Android", green100(), green700())
+    UserPart.PLAN -> Triple("PM", indigo100(), indigo600())
+    UserPart.DESIGN -> Triple("Design", red100(), red600())
+    UserPart.WEB -> Triple("Web", indigo100(), indigo600())
+    UserPart.NODEJS -> Triple("Node.js", green100(), green700())
+    UserPart.SPRINGBOOT -> Triple("Spring", green100(), green700())
+    UserPart.ADMIN,
+    UserPart.UNKNOWN -> Triple(part.label, grey100(), grey600())
 }
 
 @Composable
@@ -2118,12 +2227,12 @@ private fun MessageTime(createdAt: String, modifier: Modifier = Modifier) {
     )
 }
 
-private fun latestListItemIndex(
+internal fun latestListItemIndex(
     messageCount: Int,
     pendingMessageCount: Int,
     hasMore: Boolean,
 ): Int = (
-    messageCount + pendingMessageCount + if (hasMore) 1 else 0 - 1
+    messageCount + pendingMessageCount + (if (hasMore) 1 else 0) - 1
 ).coerceAtLeast(0)
 
 private val KoreaZoneId = ZoneId.of("Asia/Seoul")
@@ -2163,7 +2272,7 @@ private fun parseCommunityCreatedAt(createdAt: String): Instant? {
     return runCatching { Instant.parse(createdAt) }.getOrNull()
         ?: runCatching { OffsetDateTime.parse(createdAt).toInstant() }.getOrNull()
         ?: runCatching {
-            LocalDateTime.parse(createdAt).toInstant(ZoneOffset.UTC)
+            LocalDateTime.parse(createdAt).atZone(KoreaZoneId).toInstant()
         }.getOrNull()
 }
 
@@ -2335,7 +2444,7 @@ private fun CommunityChattingScreenPreview() {
                 "20" to CommunityThreadMember(
                     memberId = "20",
                     name = "홍길동(닉네임)",
-                    part = "IOS",
+                    part = UserPart.IOS,
                     role = CommunityThreadRole.ADMIN,
                 )
             ),

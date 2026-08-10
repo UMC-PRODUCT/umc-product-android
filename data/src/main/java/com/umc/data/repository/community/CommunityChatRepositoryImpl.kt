@@ -8,7 +8,14 @@ import com.umc.domain.model.community.thread.CommunityThreadMessage
 import com.umc.domain.model.community.thread.CommunityThreadSummary
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.repository.community.CommunityChatRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import okhttp3.*
 import java.util.UUID
 import javax.inject.Inject
@@ -22,6 +29,7 @@ class CommunityChatRepositoryImpl @Inject constructor(
     @param:Named("CommunityWebSocketUrl") private val webSocketUrl: String,
 ) : CommunityChatRepository {
     private val gson = Gson()
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _connectionState = MutableStateFlow(CommunityChatConnectionState.DISCONNECTED)
     override val connectionState: StateFlow<CommunityChatConnectionState> = _connectionState.asStateFlow()
 
@@ -32,6 +40,7 @@ class CommunityChatRepositoryImpl @Inject constructor(
     override val errors: Flow<CommunityChatError> = _errors.asSharedFlow()
 
     private var webSocket: WebSocket? = null
+    private var heartbeatJob: Job? = null
     private var accessToken: String = ""
 
     override suspend fun connect() {
@@ -45,6 +54,7 @@ class CommunityChatRepositoryImpl @Inject constructor(
     }
 
     override fun disconnect() {
+        stopHeartbeat()
         webSocket?.send(stompFrame("DISCONNECT"))
         webSocket?.close(1000, "Client disconnect")
         webSocket = null
@@ -73,8 +83,9 @@ class CommunityChatRepositoryImpl @Inject constructor(
         check(_connectionState.value == CommunityChatConnectionState.CONNECTED) {
             "Community chat is not connected"
         }
+        val socket = checkNotNull(webSocket) { "Community chat socket is unavailable" }
         val commandId = UUID.randomUUID().toString()
-        webSocket?.send(
+        val enqueued = socket.send(
             stompFrame(
                 command = "SEND",
                 headers = mapOf(
@@ -85,6 +96,7 @@ class CommunityChatRepositoryImpl @Inject constructor(
                 body = gson.toJson(body),
             )
         )
+        check(enqueued) { "Community chat command could not be queued" }
         return commandId
     }
 
@@ -108,12 +120,15 @@ class CommunityChatRepositoryImpl @Inject constructor(
                 val frame = parseFrame(rawFrame) ?: return@forEach
                 when (frame.command) {
                     "CONNECTED" -> {
+                        if (this@CommunityChatRepositoryImpl.webSocket !== webSocket) return@forEach
                         subscribe(webSocket, "community-events", "/user/queue/community/threads/events")
                         subscribe(webSocket, "community-errors", "/user/queue/errors")
+                        startHeartbeat(webSocket, frame.headers["heart-beat"])
                         _connectionState.value = CommunityChatConnectionState.CONNECTED
                     }
                     "MESSAGE" -> handleMessage(frame)
                     "ERROR" -> {
+                        stopHeartbeat()
                         emitError(frame.body)
                         _connectionState.value = CommunityChatConnectionState.DISCONNECTED
                     }
@@ -122,13 +137,41 @@ class CommunityChatRepositoryImpl @Inject constructor(
         }
 
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+            if (this@CommunityChatRepositoryImpl.webSocket !== webSocket) return
+            stopHeartbeat()
             _connectionState.value = CommunityChatConnectionState.DISCONNECTED
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+            if (this@CommunityChatRepositoryImpl.webSocket !== webSocket) return
+            stopHeartbeat()
             _errors.tryEmit(CommunityChatError(code = "WS-CONNECTION", message = t.message.orEmpty(), retryable = true))
             _connectionState.value = CommunityChatConnectionState.DISCONNECTED
         }
+    }
+
+    private fun startHeartbeat(webSocket: WebSocket, serverHeartbeat: String?) {
+        stopHeartbeat()
+        val serverIncomingMillis = serverHeartbeat
+            ?.substringAfter(',', missingDelimiterValue = "")
+            ?.toLongOrNull()
+            ?: HEARTBEAT_INTERVAL_MILLIS
+        val intervalMillis = maxOf(HEARTBEAT_INTERVAL_MILLIS, serverIncomingMillis)
+
+        heartbeatJob = repositoryScope.launch {
+            while (isActive && this@CommunityChatRepositoryImpl.webSocket === webSocket) {
+                delay(intervalMillis)
+                if (!webSocket.send("\n")) {
+                    webSocket.cancel()
+                    return@launch
+                }
+            }
+        }
+    }
+
+    private fun stopHeartbeat() {
+        heartbeatJob?.cancel()
+        heartbeatJob = null
     }
 
     private fun subscribe(webSocket: WebSocket, id: String, destination: String) {
@@ -138,6 +181,10 @@ class CommunityChatRepositoryImpl @Inject constructor(
                 headers = mapOf("id" to id, "destination" to destination, "ack" to "auto"),
             )
         )
+    }
+
+    private companion object {
+        const val HEARTBEAT_INTERVAL_MILLIS = 10_000L
     }
 
     private fun handleMessage(frame: StompFrame) {

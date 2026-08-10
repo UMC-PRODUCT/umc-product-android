@@ -46,7 +46,7 @@ class CommunityChattingViewModel @Inject constructor(
     private val checkAiFeatureStatusUseCase: CheckAiFeatureStatusUseCase,
     private val summarizeUnreadChatUseCase: SummarizeUnreadChatUseCase,
 ) : BaseViewModel<CommunityChattingState, CommunityChattingEvent>(
-    CommunityChattingState(threadId = checkNotNull(savedStateHandle["threadId"]))
+    createInitialChattingState(savedStateHandle)
 ) {
     val state = uiState
     val event = uiEvent
@@ -58,20 +58,23 @@ class CommunityChattingViewModel @Inject constructor(
     private var lastSummaryMessages: List<CommunityThreadMessage> = emptyList()
 
     init {
-        observeRealtime()
         observeCurrentMember()
         checkAiAvailability()
-        bootstrap()
+        if (state.value.threadId.isNotBlank()) {
+            observeRealtime()
+            bootstrap()
+        }
     }
 
     fun onAction(action: CommunityChattingAction) {
         when (action) {
             CommunityChattingAction.OnBackClick -> emitEvent(CommunityChattingEvent.NavigateBack)
             CommunityChattingAction.OnMoreClick -> emitEvent(CommunityChattingEvent.OpenMore)
-            is CommunityChattingAction.OnUnreadSummaryClick -> summarizeUnreadMessages(action.messages)
+            is CommunityChattingAction.OnUnreadSummaryClick ->
+                summarizeUnreadMessages(unreadCount = action.unreadCount)
             CommunityChattingAction.OnRetryUnreadSummary -> {
                 updateState { copy(aiFeatureStatus = null) }
-                summarizeUnreadMessages(lastSummaryMessages)
+                summarizeUnreadMessages(requestedMessages = lastSummaryMessages)
             }
             CommunityChattingAction.OnDismissUnreadSummary ->
                 updateState {
@@ -119,8 +122,15 @@ class CommunityChattingViewModel @Inject constructor(
     fun bootstrap() = viewModelScope.launch {
         updateState { copy(isLoading = true, errorMessage = null, isThreadUnavailable = false) }
         val threadId = uiState.value.threadId
-        val detail = threadRepository.getThread(threadId)
-        val messages = threadRepository.getMessages(threadId)
+        if (threadId.isBlank()) {
+            updateState { copy(isLoading = false, isThreadUnavailable = true) }
+            return@launch
+        }
+        val (detail, messages) = coroutineScope {
+            val detailDeferred = async { threadRepository.getThread(threadId) }
+            val messagesDeferred = async { threadRepository.getMessages(threadId) }
+            detailDeferred.await() to messagesDeferred.await()
+        }
         if (detail is ApiState.Success && messages is ApiState.Success) {
             val loadedMessages = messages.data.messages
                 .distinctBy(CommunityThreadMessage::messageId)
@@ -141,7 +151,7 @@ class CommunityChattingViewModel @Inject constructor(
             chatRepository.connect()
         } else {
             val detailFailure = (detail as? ApiState.Fail)?.failState
-            if (detailFailure != null && detailFailure.isThreadUnavailable()) {
+            if (detailFailure != null && detailFailure.hasThreadUnavailableCode()) {
                 updateState {
                     copy(
                         isLoading = false,
@@ -164,16 +174,22 @@ class CommunityChattingViewModel @Inject constructor(
         updateState { copy(aiFeatureStatus = status) }
     }
 
-    private fun summarizeUnreadMessages(requestedMessages: List<CommunityThreadMessage>) =
+    private fun summarizeUnreadMessages(
+        requestedMessages: List<CommunityThreadMessage>? = null,
+        unreadCount: Int? = null,
+    ) =
         viewModelScope.launch {
             val current = uiState.value
             if (current.isSummarizingUnread) return@launch
 
-            val targetMessages = (requestedMessages.ifEmpty {
-                current.unreadMessagesAtEntry.ifEmpty {
-                    current.messages.take(MAX_SUMMARY_MESSAGE_COUNT)
-                }
-            })
+            val boundedMessages = when {
+                requestedMessages != null -> requestedMessages
+                unreadCount != null -> current.messages.take(
+                    unreadCount.coerceIn(0, MAX_SUMMARY_MESSAGE_COUNT)
+                )
+                else -> current.unreadMessagesAtEntry
+            }
+            val targetMessages = boundedMessages
                 .take(MAX_SUMMARY_MESSAGE_COUNT)
                 .asReversed()
 
@@ -263,9 +279,17 @@ class CommunityChattingViewModel @Inject constructor(
         }
     }
 
-    fun sendText(content: String, mentionedMemberIds: List<Long> = emptyList(), replyToId: Long? = null) {
+    fun sendText(
+        content: String,
+        mentionedMemberIds: List<Long> = emptyList(),
+        replyToId: String? = null,
+    ) {
         val trimmed = content.trim()
-        if (trimmed.isEmpty() || trimmed.codePointCount(0, trimmed.length) > 2_000) return
+        if (trimmed.isEmpty()) return
+        if (trimmed.codePointCount(0, trimmed.length) > COMMUNITY_CHAT_MAX_MESSAGE_LENGTH) {
+            emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_MESSAGE_TOO_LONG))
+            return
+        }
         val clientMessageId = UUID.randomUUID().toString()
         val command = CreateCommunityMessageCommand(
             clientMessageId = clientMessageId,
@@ -322,7 +346,7 @@ class CommunityChattingViewModel @Inject constructor(
         val uploadUris = uriStrings
             .filter(String::isNotBlank)
             .distinct()
-            .take(MAX_IMAGE_COUNT)
+            .take(COMMUNITY_CHAT_MAX_IMAGE_COUNT)
         if (uploadUris.isEmpty()) return@launch
         val clientMessageId = UUID.randomUUID().toString()
         updateState {
@@ -681,7 +705,10 @@ class CommunityChattingViewModel @Inject constructor(
         if (reconnectJob?.isActive == true) return
         reconnectJob = viewModelScope.launch {
             var retryDelayMillis = 1_000L
-            while (isActive && chatRepository.connectionState.value != CommunityChatConnectionState.CONNECTED) {
+            repeat(MAX_RECONNECT_ATTEMPTS) { attempt ->
+                if (!isActive || chatRepository.connectionState.value == CommunityChatConnectionState.CONNECTED) {
+                    return@launch
+                }
                 chatRepository.disconnect()
                 runCatching { chatRepository.connect() }
 
@@ -691,11 +718,12 @@ class CommunityChattingViewModel @Inject constructor(
                     }
                 }
                 val connected = result == CommunityChatConnectionState.CONNECTED
-                if (connected) break
+                if (connected) return@launch
 
-                delay(retryDelayMillis)
+                if (attempt < MAX_RECONNECT_ATTEMPTS - 1) delay(retryDelayMillis)
                 retryDelayMillis = (retryDelayMillis * 2).coerceAtMost(15_000L)
             }
+            emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_RETRY_DISCONNECTED))
         }
     }
 
@@ -811,16 +839,19 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private companion object {
-        const val MAX_IMAGE_COUNT = 4
         const val MAX_SUMMARY_MESSAGE_COUNT = 50
+        const val MAX_RECONNECT_ATTEMPTS = 5
         const val OWNERSHIP_TRANSFER_REQUIRED_CODE = "COMMUNITY-0041"
     }
 }
 
-private fun com.umc.domain.model.base.FailState.isThreadUnavailable(): Boolean {
-    val normalizedMessage = message.lowercase()
-    return code == "404" ||
-        normalizedMessage.contains("not found") ||
-        normalizedMessage.contains("존재하지") ||
-        normalizedMessage.contains("찾을 수 없")
+private fun com.umc.domain.model.base.FailState.hasThreadUnavailableCode(): Boolean =
+    code == "404"
+
+private fun createInitialChattingState(savedStateHandle: SavedStateHandle): CommunityChattingState {
+    val threadId = savedStateHandle.get<String>("threadId").orEmpty()
+    return CommunityChattingState(
+        threadId = threadId,
+        isThreadUnavailable = threadId.isBlank(),
+    )
 }

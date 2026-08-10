@@ -20,7 +20,6 @@ fun CommunityChattingRoute(
     onMore: () -> Unit = {},
     onUnreadSummary: () -> Unit = {},
     onCamera: () -> Unit = {},
-    onInviteParticipants: () -> Unit = {},
     onEditThread: () -> Unit = {},
     shouldRefresh: Boolean = false,
     onRefreshHandled: () -> Unit = {},
@@ -49,7 +48,6 @@ fun CommunityChattingRoute(
                 CommunityChattingEvent.OpenCamera -> onCamera()
                 CommunityChattingEvent.OpenInviteParticipants -> {
                     showInviteMemberSheet = true
-                    onInviteParticipants()
                 }
                 CommunityChattingEvent.OpenEditThread -> onEditThread()
                 CommunityChattingEvent.MessageReported -> toastData = UToastData(

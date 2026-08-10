@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.DialogType
@@ -229,8 +230,11 @@ private fun ParticipantRow(
             ) {
                 Text(
                     text = member.name.ifBlank { AppStrings.CHAT_UNKNOWN_USER },
+                    modifier = Modifier.weight(1f, fill = false),
                     color = grey950(),
-                    style = UmcTypographyTokens.CalloutBold
+                    style = UmcTypographyTokens.CalloutBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 if (member.role == CommunityThreadRole.OWNER) {
                     ParticipantBadge(AppStrings.CHAT_OWNER_BADGE, grey800(), white())
@@ -238,16 +242,18 @@ private fun ParticipantRow(
                 if (isMe) ParticipantBadge(AppStrings.CHAT_ME, indigo100(), indigo500())
             }
             val part = member.part?.let { partTag(it).first }.orEmpty()
-//            val detail = listOfNotNull(
-//                part.takeIf(String::isNotBlank),
-//                member.?.takeIf(String::isNotBlank)?.let {
-//                    AppStrings.CHAT_GENERATION_FORMAT.format(it)
-//                },
-//            ).joinToString(" · ")
-//            if (detail.isNotBlank()) Text(detail, color = grey400(), style = )
-            if(part.isNotBlank()) Text(part, color = grey400(), style = UmcTypographyTokens.Footnote)
+            if (part.isNotBlank()) {
+                Text(
+                    text = part,
+                    color = grey400(),
+                    style = UmcTypographyTokens.Footnote,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
-        Box {
+        if (showManagement && !isMe && member.role != CommunityThreadRole.OWNER) {
+            Box(modifier = Modifier.size(48.dp)) {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_menu_kebab),
@@ -263,20 +269,16 @@ private fun ParticipantRow(
                     containerColor = white(),
                     shadowElevation = 8.dp,
                 ) {
-                    ParticipantMenuItem(AppStrings.CHAT_PROFILE_VIEW, R.drawable.ic_person) {
+                    ParticipantMenuItem(AppStrings.CHAT_TRANSFER_OWNER, R.drawable.ic_swap_horizontal) {
                         menuExpanded = false
+                        onTransferOwnership()
                     }
-                    if (showManagement && !isMe && member.role != CommunityThreadRole.OWNER) {
-                        ParticipantMenuItem(AppStrings.CHAT_TRANSFER_OWNER, R.drawable.ic_swap_horizontal) {
-                            menuExpanded = false
-                            onTransferOwnership()
-                        }
-                        ParticipantMenuItem(AppStrings.CHAT_KICK, R.drawable.ic_block, red400()) {
-                            menuExpanded = false
-                            onKick()
-                        }
+                    ParticipantMenuItem(AppStrings.CHAT_KICK, R.drawable.ic_block, red400()) {
+                        menuExpanded = false
+                        onKick()
                     }
                 }
+            }
         }
     }
 }

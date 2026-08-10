@@ -16,8 +16,6 @@ fun CommunityRoute(
     onNavigateToSearch: () -> Unit,
     onNavigateToCreateThread: () -> Unit,
     onNavigateToEditThread: (String) -> Unit,
-    shouldRefresh: Boolean,
-    onRefreshHandled: () -> Unit,
     viewModel: CommunityViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -26,13 +24,6 @@ fun CommunityRoute(
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.loadThreads()
-    }
-
-    LaunchedEffect(shouldRefresh) {
-        if (shouldRefresh) {
-            viewModel.loadThreads()
-            onRefreshHandled()
-        }
     }
 
     LaunchedEffect(viewModel) {

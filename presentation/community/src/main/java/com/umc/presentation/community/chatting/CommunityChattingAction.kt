@@ -6,15 +6,13 @@ import com.umc.domain.model.community.thread.CommunityThreadMessage
 sealed interface CommunityChattingAction {
     data object OnBackClick : CommunityChattingAction
     data object OnMoreClick : CommunityChattingAction
-    data class OnUnreadSummaryClick(
-        val messages: List<CommunityThreadMessage> = emptyList(),
-    ) : CommunityChattingAction
+    data class OnUnreadSummaryClick(val unreadCount: Int? = null) : CommunityChattingAction
     data object OnRetryUnreadSummary : CommunityChattingAction
     data object OnDismissUnreadSummary : CommunityChattingAction
     data object OnCameraClick : CommunityChattingAction
     data class OnSendImages(val uris: List<String>) : CommunityChattingAction
     data class OnDraftChanged(val value: String) : CommunityChattingAction
-    data class OnSendClick(val replyToId: Long?) : CommunityChattingAction
+    data class OnSendClick(val replyToId: String?) : CommunityChattingAction
     data object OnLoadPrevious : CommunityChattingAction
     data class OnDeleteMessage(val messageId: String) : CommunityChattingAction
     data class OnReact(

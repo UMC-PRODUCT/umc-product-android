@@ -23,6 +23,7 @@ import com.umc.domain.model.community.thread.CommunityThreadMemberState
 import com.umc.domain.model.community.thread.CommunityThreadRole
 import com.umc.domain.model.community.thread.CommunityThreadSummary
 import com.umc.domain.model.community.thread.CommunityThreadCategory
+import com.umc.domain.model.enums.UserPart
 
 fun CommunityThreadListResponse.toChatDomain() = CommunityThreadList(
     pinned = pinned.map(CommunityThreadSummaryResponse::toChatDomain),
@@ -97,7 +98,7 @@ fun CommunityThreadMemberMutationResponse.toChatDomain() = CommunityThreadMember
 private fun CommunityThreadMemberResponse.toChatDomain() = CommunityThreadMember(
     memberId = memberId,
     name = name,
-    part = part,
+    part = UserPart.from(part).takeUnless { it == UserPart.UNKNOWN },
     generation = generation,
     role = role.toChatRole(),
     joinedAt = joinedAt,
@@ -120,12 +121,12 @@ private fun CommunityThreadLastMessageResponse.toChatDomain() = CommunityThreadL
 
 private fun String.toChatCategory() =
     CommunityThreadCategory.entries.firstOrNull { it.name == uppercase() }
-        ?: CommunityThreadCategory.FREE
+        ?: CommunityThreadCategory.UNKNOWN
 
 private fun String?.toChatRole() =
     CommunityThreadRole.entries.firstOrNull { it.name == this?.uppercase() }
-        ?: CommunityThreadRole.MEMBER
+        ?: CommunityThreadRole.UNKNOWN
 
 private fun String.toChatMemberState() =
     CommunityThreadMemberState.entries.firstOrNull { it.name == uppercase() }
-        ?: CommunityThreadMemberState.ACTIVE
+        ?: CommunityThreadMemberState.UNKNOWN
