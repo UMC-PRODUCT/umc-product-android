@@ -460,15 +460,7 @@ fun MainNavHost(
         }
 
         /** 커뮤니티 화면 **/
-        composable<MainDestination.Community> { backStackEntry ->
-            val shouldRefresh by backStackEntry
-                .savedStateHandle
-                .getStateFlow(
-                    key = COMMUNITY_REFRESH_KEY,
-                    initialValue = false,
-                )
-                .collectAsStateWithLifecycle()
-
+        composable<MainDestination.Community> {
             CommunityRoute(
                 onNavigateToThreadDetail = { threadId ->
                     navHostController.navigate(
@@ -493,12 +485,6 @@ fun MainNavHost(
                             threadId = threadId,
                         )
                     )
-                },
-                shouldRefresh = shouldRefresh,
-                onRefreshHandled = {
-                    backStackEntry.savedStateHandle[
-                        COMMUNITY_REFRESH_KEY
-                    ] = false
                 },
             )
         }
@@ -592,6 +578,9 @@ fun MainNavHost(
                 shouldRefresh = shouldRefresh,
                 onRefreshHandled = {
                     backStackEntry.savedStateHandle[COMMUNITY_REFRESH_KEY] = false
+                    navHostController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(COMMUNITY_REFRESH_KEY, true)
                 },
                 onThreadDeleted = {
                     navHostController.previousBackStackEntry

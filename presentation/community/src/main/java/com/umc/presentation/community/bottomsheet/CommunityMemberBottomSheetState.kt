@@ -1,5 +1,7 @@
 package com.umc.presentation.community.bottomsheet
 
+import com.umc.presentation.community.DEFAULT_COMMUNITY_MAX_MEMBER_COUNT
+
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -34,7 +36,7 @@ data class CommunityMemberBottomSheetState(
     val hasNext: Boolean = false,
 
 
-    val maxMemberCount: Int = 8,
+    val maxMemberCount: Int = DEFAULT_COMMUNITY_MAX_MEMBER_COUNT,
     val errorMessage: String? = null,
 ) : UiState {
 

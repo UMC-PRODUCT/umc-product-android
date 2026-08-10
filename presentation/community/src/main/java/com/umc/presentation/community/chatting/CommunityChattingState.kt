@@ -48,5 +48,5 @@ data class PendingCommunityMessage(
     val error: String? = null,
     val acknowledged: Boolean = false,
     val mentionedMemberIds: List<Long> = emptyList(),
-    val replyToId: Long? = null,
+    val replyToId: String? = null,
 )

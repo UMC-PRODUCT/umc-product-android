@@ -1,5 +1,7 @@
 package com.umc.domain.model.community.thread
 
+import com.umc.domain.model.enums.UserPart
+
 data class CommunityThreadList(
     val pinned: List<CommunityThreadSummary> = emptyList(),
     val threads: List<CommunityThreadSummary> = emptyList(),
@@ -66,6 +68,7 @@ data class CommunityThreadMessage(
     val type: CommunityMessageType = CommunityMessageType.TEXT,
     val status: String = "SENT",
     val fileMetadataIds: List<String> = emptyList(),
+    val files: List<CommunityMessageFile> = emptyList(),
     val mentions: List<CommunityMention> = emptyList(),
     val replyTo: CommunityReplyTo? = null,
     val reactions: List<CommunityReaction> = emptyList(),
@@ -73,6 +76,13 @@ data class CommunityThreadMessage(
     val createdAt: String = "",
     val editedAt: String? = null,
     val deletedAt: String? = null,
+)
+
+data class CommunityMessageFile(
+    val fileId: String = "",
+    val fileName: String = "",
+    val fileSize: String = "",
+    val fileUrl: String = "",
 )
 
 data class CommunityMention(val memberId: String = "", val name: String = "")
@@ -97,7 +107,7 @@ data class CommunityThreadMember(
     val memberId: String = "",
     val name: String = "",
     val profileImageUrl: String = "",
-    val part: String? = null,
+    val part: UserPart? = null,
     val generation: String? = null,
     val role: CommunityThreadRole = CommunityThreadRole.MEMBER,
     val joinedAt: String = "",
@@ -153,8 +163,8 @@ data class UpdateCommunityThread(
     val icon: String? = null,
 )
 
-enum class CommunityThreadCategory { STUDY, QNA, PROJECT, FREE }
-enum class CommunityThreadRole { OWNER, ADMIN, MEMBER }
-enum class CommunityThreadMemberState { ACTIVE, LEFT, KICKED }
+enum class CommunityThreadCategory { STUDY, QNA, PROJECT, FREE, UNKNOWN }
+enum class CommunityThreadRole { OWNER, ADMIN, MEMBER, UNKNOWN }
+enum class CommunityThreadMemberState { ACTIVE, LEFT, KICKED, UNKNOWN }
 enum class CommunityMessageType { TEXT, IMAGE, SYSTEM }
 enum class CommunityMessageReportReason { SPAM, ABUSE, INAPPROPRIATE, PRIVACY, ETC }

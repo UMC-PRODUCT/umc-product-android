@@ -83,5 +83,5 @@ data class CreateCommunityMessageCommand(
     val content: String?,
     val fileMetadataIds: List<String> = emptyList(),
     val mentionedMemberIds: List<Long> = emptyList(),
-    val replyToId: Long? = null,
+    val replyToId: String? = null,
 )
