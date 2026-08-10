@@ -70,6 +70,7 @@ import com.umc.component.theme.green500
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
+import com.umc.component.theme.grey950
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.home.SchedulePlanItem
@@ -147,11 +148,15 @@ fun HomeScreen(
                     .background(grey100())
                     .padding(horizontal = 16.dp)
                     .padding(top = 16.dp)
-                    .padding(bottom = 32.dp)
+                    .padding(bottom = 16.dp)
             ) {
                 HomeTopBar(
                     alarmExist = uiState.alarmExist,
                     onNotificationClick = onNotificationClick
+                )
+
+                Spacer(modifier = Modifier
+                    .height(16.dp)
                 )
 
                 //HomeProfileCard(uiState = uiState)
@@ -172,7 +177,6 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp)
             ) {
                 HomePlanHeader(
                     viewMode = uiState.viewMode,
@@ -180,7 +184,7 @@ fun HomeScreen(
                     onChangeViewMode = onChangeViewMode
                 )
                 Spacer(modifier = Modifier
-                    .height(16.dp)
+                   .height(16.dp)
                 )
             }
         }
@@ -332,11 +336,11 @@ fun HomeProfileCardsRow(
                 ) {
                     UText(
                         text = AppStrings.HOME_ACTIVATE_DAY,
-                        style = UmcTypographyTokens.BodyBold,
-                        color = grey800()
+                        style = UmcTypographyTokens.CalloutBold,
+                        color = grey950()
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
                         text = buildAnnotatedString {
@@ -389,11 +393,11 @@ fun HomeProfileCardsRow(
                 ) {
                     UText(
                         text = AppStrings.HOME_ATTEND_GISU,
-                        style = UmcTypographyTokens.BodyBold,
-                        color = grey800()
+                        style = UmcTypographyTokens.CalloutBold,
+                        color = grey950()
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     GisuGrid(gisuStrings = uiState.gisuTag)
 
@@ -509,19 +513,19 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
     ) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
 
             //X기 활동 상태
             UText(
                 text = uiState.activeString,
                 style = UmcTypographyTokens.HeadlineBold,
-                color = grey800()
+                color = grey950()
             )
 
             Spacer(
                 modifier = Modifier
-                    .height(12.dp)
+                    .height(16.dp)
             )
 
             //상벌점 UI 표
@@ -540,7 +544,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                     Row(
                         modifier = Modifier
                             .height(IntrinsicSize.Min)
-                            .padding(vertical = 12.dp),
+                        ,
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
@@ -668,16 +672,20 @@ fun HomePlanHeader(
             UText(
                 text = AppStrings.HOME_PLAN_TITLE,
                 style = UmcTypographyTokens.Title3Bold,
-                color = grey800()
+                color = grey950()
             )
 
-            IconButton(onClick = onAddClick) {
-                Icon(
+            Spacer(modifier = Modifier
+                .width(4.dp))
+
+            Icon(
                     painter = painterResource(id = R.drawable.ic_add_filled),
                     contentDescription = "Add",
-                    tint = grey800()
+                    tint = grey950(),
+                    modifier = Modifier
+                        .clickable { onAddClick() }
                 )
-            }
+
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -685,7 +693,7 @@ fun HomePlanHeader(
             //뷰 전환 선택기
             Surface(
                 color = grey000(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(4.dp)
             ) {
 
                 Row(modifier = Modifier
@@ -695,7 +703,7 @@ fun HomePlanHeader(
                     Box(
                         modifier = Modifier
                             .size(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(4.dp))
                             .background(
                                 color = if (viewMode == HomeViewMode.CALENDAR) grey800() else grey000()
                             )
@@ -717,7 +725,7 @@ fun HomePlanHeader(
                     Box(
                         modifier = Modifier
                             .size(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(4.dp))
                             .background(
                                 color = if (viewMode == HomeViewMode.LIST) grey800() else grey000()
                             )
