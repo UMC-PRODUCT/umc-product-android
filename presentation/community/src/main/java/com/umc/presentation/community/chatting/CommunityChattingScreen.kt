@@ -1,6 +1,10 @@
 package com.umc.presentation.community.chatting
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
+import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -45,6 +49,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -58,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import androidx.emoji2.emojipicker.EmojiPickerView
 import coil.compose.AsyncImage
@@ -111,10 +120,13 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.net.URI
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @OptIn(
     androidx.compose.foundation.ExperimentalFoundationApi::class,
+    ExperimentalLayoutApi::class,
     ExperimentalMaterial3Api::class,
 )
 @Composable
@@ -162,7 +174,9 @@ fun CommunityChattingScreen(
 
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    val initialUnreadScrollOffset = with(LocalDensity.current) {
+    val density = LocalDensity.current
+    val imeInsets = WindowInsets.ime
+    val initialUnreadScrollOffset = with(density) {
         INITIAL_UNREAD_SCROLL_OFFSET.roundToPx()
     }
     val displayedMessages = remember(state.messages) { state.messages.asReversed() }
@@ -184,6 +198,17 @@ fun CommunityChattingScreen(
     }
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
+    DisposableEffect(context) {
+        val window = context.findActivity()?.window
+        val originalSoftInputMode = window?.attributes?.softInputMode
+        window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+
+        onDispose {
+            if (window != null && originalSoftInputMode != null) {
+                window.setSoftInputMode(originalSoftInputMode)
+            }
+        }
+    }
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 4),
     ) { uris ->
@@ -333,6 +358,29 @@ fun CommunityChattingScreen(
             hasMore = state.hasMore,
         )
         listState.animateScrollToItem(lastItemIndex)
+    }
+
+    LaunchedEffect(
+        listState,
+        displayedMessages.size,
+        state.pendingMessages.size,
+        state.hasMore,
+    ) {
+        snapshotFlow { imeInsets.getBottom(density) }
+            .collectLatest { imeBottom ->
+                if (imeBottom <= 0 || displayedMessages.isEmpty()) return@collectLatest
+
+                // Wait until the IME animation and Scaffold bottom-bar remeasurement settle.
+                delay(120)
+                followsLatestMessage = true
+                listState.animateScrollToItem(
+                    latestListItemIndex(
+                        messageCount = displayedMessages.size,
+                        pendingMessageCount = state.pendingMessages.size,
+                        hasMore = state.hasMore,
+                    ),
+                )
+            }
     }
 
     Scaffold(
@@ -1648,8 +1696,44 @@ private fun MessageActionPopup(
     onReact: (String) -> Unit,
     onShowMoreEmojis: () -> Unit,
 ) {
+    val density = LocalDensity.current
+    val popupPositionProvider = remember(isMine, density) {
+        val gap = with(density) { 8.dp.roundToPx() }
+        val screenMargin = with(density) { 12.dp.roundToPx() }
+
+        object : PopupPositionProvider {
+            override fun calculatePosition(
+                anchorBounds: IntRect,
+                windowSize: IntSize,
+                layoutDirection: LayoutDirection,
+                popupContentSize: IntSize,
+            ): IntOffset {
+                val desiredX = if (isMine) {
+                    anchorBounds.right - popupContentSize.width
+                } else {
+                    anchorBounds.left
+                }
+                val maxX = (windowSize.width - popupContentSize.width - screenMargin)
+                    .coerceAtLeast(screenMargin)
+                val x = desiredX.coerceIn(screenMargin, maxX)
+
+                val maxY = (windowSize.height - popupContentSize.height - screenMargin)
+                    .coerceAtLeast(screenMargin)
+                val belowY = anchorBounds.bottom + gap
+                val aboveY = anchorBounds.top - gap - popupContentSize.height
+                val y = if (belowY <= maxY) {
+                    belowY
+                } else {
+                    aboveY.coerceIn(screenMargin, maxY)
+                }
+
+                return IntOffset(x, y)
+            }
+        }
+    }
+
     Popup(
-        alignment = if (isMine) Alignment.TopEnd else Alignment.TopStart,
+        popupPositionProvider = popupPositionProvider,
         onDismissRequest = onDismiss,
         properties = PopupProperties(focusable = true),
     ) {
@@ -2081,6 +2165,12 @@ private fun parseCommunityCreatedAt(createdAt: String): Instant? {
         ?: runCatching {
             LocalDateTime.parse(createdAt).toInstant(ZoneOffset.UTC)
         }.getOrNull()
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
 
 @Composable
