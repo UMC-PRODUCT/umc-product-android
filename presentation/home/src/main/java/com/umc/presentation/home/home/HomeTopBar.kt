@@ -30,6 +30,7 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey700
+import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo600
 
@@ -89,8 +90,10 @@ fun HomeTopBar(
                         id = if (alarmExist) R.drawable.ic_alarm_with_dot else R.drawable.ic_alarm
                     ),
                     contentDescription = "Notification",
-                    tint = grey500(),
-                    modifier = Modifier.size(24.dp)
+                    tint = grey950(),
+                    modifier = Modifier
+                        .size(24.dp)
+
                 )
             }
         }

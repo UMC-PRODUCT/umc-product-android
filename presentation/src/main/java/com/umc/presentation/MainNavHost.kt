@@ -59,7 +59,7 @@ fun MainNavHost(
 
 
         startDestination = if (BuildConfig.DEBUG) {
-            MainDestination.Home
+            MainDestination.Login
         } else {
             MainDestination.Home
         },

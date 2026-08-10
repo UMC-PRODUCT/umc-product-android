@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -126,7 +127,8 @@ private fun UmcBottomNavigationBar(
 ) {
     NavigationBar(
         containerColor = grey000(), // 피그마 하단바 배경색
-        tonalElevation = 4.dp
+        modifier = Modifier.background(grey000()),
+        tonalElevation = 0.dp
     ) {
         MainTab.tabs.filterNotNull().forEach { tab ->
             val isSelected = currentTab == tab
