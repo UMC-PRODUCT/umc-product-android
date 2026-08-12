@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.view.WindowManager
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,18 +29,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,8 +39,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -75,7 +62,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.emoji2.emojipicker.EmojiPickerView
 import coil.compose.AsyncImage
-import com.umc.component.theme.black
 import com.umc.component.R
 import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
@@ -99,17 +85,16 @@ import com.umc.component.theme.red400
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.component.theme.white
-import com.umc.component.theme.green100
-import com.umc.component.theme.green700
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.indigo600
-import com.umc.component.theme.red600
-import com.umc.component.theme.yellow100
-import com.umc.component.theme.yellow500
-import com.umc.component.theme.yellow600
+import com.umc.presentation.community.bottomsheet.ConversationSummaryBottomSheet
+import com.umc.presentation.community.component.chatting.CommunityChatMemberTag
+import com.umc.presentation.community.component.chatting.CommunityChatProfileImage
+import com.umc.presentation.community.component.chatting.CommunityChatInputBar
+import com.umc.presentation.community.component.chatting.communityChatPartTag
 import com.umc.domain.model.community.thread.CommunityMessageReportReason
 import com.umc.domain.model.community.thread.CommunityMessageType
 import com.umc.domain.model.community.thread.CommunityReaction
@@ -262,7 +247,7 @@ fun CommunityChattingScreen(
         state.unreadSummary != null ||
         state.unreadSummaryError != null
     ) {
-        ConversationSummarySheet(
+        ConversationSummaryBottomSheet(
             state = state,
             onRetry = { onAction(CommunityChattingAction.OnRetryUnreadSummary) },
             onDismiss = { onAction(CommunityChattingAction.OnDismissUnreadSummary) },
@@ -425,7 +410,7 @@ fun CommunityChattingScreen(
                 state.errorMessage == null &&
                 state.thread?.myRole != CommunityThreadRole.UNKNOWN
             ) {
-                ChatInputBar(
+                CommunityChatInputBar(
                     value = state.draft,
                     enabled = true,
                     replyingMessage = replyingMessage,
@@ -1138,164 +1123,6 @@ private fun UnreadSummaryCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ConversationSummarySheet(
-    state: CommunityChattingState,
-    onRetry: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = white(),
-        dragHandle = {
-            Box(
-                Modifier
-                    .padding(top = 10.dp, bottom = 18.dp)
-                    .size(width = 36.dp, height = 4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(grey400()),
-            )
-        },
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 300.dp)
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 40.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_ai),
-                    contentDescription = null,
-                    tint = indigo500(),
-                    modifier = Modifier.size(22.dp),
-                )
-                Text(
-                    text = AppStrings.CHAT_AI_SHEET_TITLE,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 8.dp),
-                    color = grey950(),
-                    style = UmcTypographyTokens.Title3Bold
-                )
-                IconButton(onClick = onRetry, enabled = !state.isSummarizingUnread) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = AppStrings.CHAT_RETRY,
-                        tint = grey500(),
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            when {
-                state.isSummarizingUnread -> SummaryLoadingContent(state.aiDownloadPercent)
-                state.unreadSummaryError != null -> SummaryErrorContent(
-                    message = state.unreadSummaryError,
-                )
-                else -> SummarySuccessContent(
-                    summary = state.unreadSummary.orEmpty(),
-                    messageCount = state.summarizedMessageCount,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SummaryLoadingContent(downloadPercent: Int?) {
-    Text(
-        text = downloadPercent
-            ?.let { AppStrings.AI_MODEL_DOWNLOADING.format(it) }
-            ?: AppStrings.CHAT_AI_SUMMARIZING_DESCRIPTION,
-        color = grey500(),
-        style = UmcTypographyTokens.Subheadline
-    )
-    Spacer(Modifier.height(18.dp))
-    listOf(0.68f, 1f, 0.9f, 0.9f).forEach { fraction ->
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(fraction)
-                .height(8.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(Color(0xFF5B9CF5), Color(0xFF28C7A5)),
-                    ),
-                ),
-        )
-        Spacer(Modifier.height(10.dp))
-    }
-}
-
-@Composable
-private fun SummaryErrorContent(message: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Icon(
-            imageVector = Icons.Default.Info,
-            contentDescription = null,
-            tint = grey400(),
-            modifier = Modifier.size(32.dp),
-        )
-        Spacer(Modifier.height(14.dp))
-        Text(
-            text = AppStrings.CHAT_AI_SUMMARY_FAILED,
-            color = grey600(),
-            style = UmcTypographyTokens.HeadlineBold
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = message.ifBlank { AppStrings.CHAT_AI_SUMMARY_RETRY_DESCRIPTION },
-            color = grey400(),
-            style = UmcTypographyTokens.Subheadline
-        )
-    }
-}
-
-@Composable
-private fun SummarySuccessContent(summary: String, messageCount: Int) {
-    Text(
-        text = AppStrings.CHAT_AI_SUMMARY_COUNT_FORMAT.format(messageCount),
-        color = grey500(),
-        style = UmcTypographyTokens.Subheadline
-    )
-    Spacer(Modifier.height(14.dp))
-    summary
-        .lineSequence()
-        .map { it.trim().removePrefix("-").removePrefix("•").trim() }
-        .filter(String::isNotBlank)
-        .forEach { line ->
-            Row(
-                modifier = Modifier.padding(vertical = 5.dp),
-                verticalAlignment = Alignment.Top,
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_check),
-                    contentDescription = null,
-                    modifier = Modifier.size(10.dp),
-                    colorFilter = ColorFilter.tint(indigo500())
-                )
-                Text(
-                    text = line,
-                    modifier = Modifier.padding(start = 8.dp),
-                    color = grey800(),
-                    style = UmcTypographyTokens.Body
-                )
-            }
-        }
-}
-
 private const val COMMUNITY_DEEP_LINK_HOST = "https://api.university.neordinary.com"
 private const val COMMUNITY_DEEP_LINK_PATH = "/community/threads"
 private val INITIAL_UNREAD_SCROLL_OFFSET = 96.dp
@@ -1479,7 +1306,7 @@ private fun OtherMessage(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top,
     ) {
-        ProfileImage(member?.profileImageUrl)
+        CommunityChatProfileImage(member?.profileImageUrl)
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -1498,11 +1325,11 @@ private fun OtherMessage(
                     member?.role == CommunityThreadRole.ADMIN ||
                     member?.part == UserPart.ADMIN
                 ) {
-                    MemberTag(AppStrings.CHAT_ADMIN_BADGE, grey950(), white())
+                    CommunityChatMemberTag(AppStrings.CHAT_ADMIN_BADGE, grey950(), white())
                 }
                 member?.part?.takeUnless { it == UserPart.ADMIN }?.let { part ->
-                    val tag = partTag(part)
-                    MemberTag(tag.first, tag.second, tag.third)
+                    val tag = communityChatPartTag(part)
+                    CommunityChatMemberTag(tag.first, tag.second, tag.third)
                 }
             }
             Spacer(Modifier.height(7.dp))
@@ -2164,60 +1991,6 @@ private fun PendingMessageRow(
 }
 
 @Composable
-internal fun ProfileImage(imageUrl: String?) {
-    Box(
-        modifier = Modifier
-            .size(34.dp)
-            .clip(CircleShape)
-            .background(white(), CircleShape)
-            .border(1.dp, grey200(), CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Image(
-            modifier = Modifier.fillMaxWidth(),
-            painter = painterResource(R.drawable.ic_person),
-            contentDescription = null,
-            contentScale = ContentScale.Fit,
-        )
-        if (!imageUrl.isNullOrBlank()) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = AppStrings.CHAT_CD_PROFILE_IMAGE,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-        }
-    }
-}
-
-@Composable
-private fun MemberTag(text: String, background: Color, foreground: Color) {
-    Text(
-        text = text,
-        modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(background)
-            .padding(horizontal = 7.dp, vertical = 4.dp),
-        color = foreground,
-        fontSize = 10.sp,
-        style = UmcTypographyTokens.Caption1Bold
-    )
-}
-
-@Composable
-internal fun partTag(part: UserPart): Triple<String, Color, Color> = when (part) {
-    UserPart.IOS -> Triple("iOS", yellow100(), yellow500())
-    UserPart.ANDROID -> Triple("Android", green100(), green700())
-    UserPart.PLAN -> Triple("PM", indigo100(), indigo600())
-    UserPart.DESIGN -> Triple("Design", red100(), red600())
-    UserPart.WEB -> Triple("Web", indigo100(), indigo600())
-    UserPart.NODEJS -> Triple("Node.js", green100(), green700())
-    UserPart.SPRINGBOOT -> Triple("Spring", green100(), green700())
-    UserPart.ADMIN,
-    UserPart.UNKNOWN -> Triple(part.label, grey100(), grey600())
-}
-
-@Composable
 private fun MessageTime(createdAt: String, modifier: Modifier = Modifier) {
     Text(
         formatCommunityCreatedAt(createdAt),
@@ -2282,152 +2055,6 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
-}
-
-@Composable
-private fun ChatInputBar(
-    value: String,
-    enabled: Boolean,
-    replyingMessage: CommunityThreadMessage?,
-    onValueChange: (String) -> Unit,
-    onCamera: () -> Unit,
-    onSend: () -> Unit,
-) {
-    Surface(color = grey100()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .imePadding()
-                .padding(10.dp),
-        ) {
-            if (replyingMessage != null) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    color = white(),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, grey200()),
-                    shadowElevation = 7.dp,
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 132.dp)
-                            .padding(start = 20.dp, end = 12.dp, top = 16.dp, bottom = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(5.dp),
-                        ) {
-                            Text(
-                                text = AppStrings.CHAT_REPLY_TO_FORMAT.format(
-                                    replyingMessage.senderName.orEmpty().ifBlank { AppStrings.CHAT_ME },
-                                ),
-                                color = grey950(),
-                                style = UmcTypographyTokens.SubheadlineBold
-                            )
-                            Text(
-                                text = replyingMessage.content.orEmpty().ifBlank {
-                                    AppStrings.CHAT_MESSAGE_CONTENT
-                                },
-                                color = grey400(),
-                                style = UmcTypographyTokens.Footnote,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Spacer(Modifier.height(7.dp))
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.CenterStart,
-                            ) {
-                                if (value.isEmpty()) {
-                                    Text(
-                                        AppStrings.CHAT_REPLY_PLACEHOLDER,
-                                        color = grey400(),
-                                        fontSize = 17.sp,
-                                    )
-                                }
-                                BasicTextField(
-                                    value = value,
-                                    onValueChange = onValueChange,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    enabled = enabled,
-                                    textStyle = LocalTextStyle.current.copy(
-                                        color = black(),
-                                        fontSize = 17.sp,
-                                        lineHeight = 23.sp,
-                                    ),
-                                    cursorBrush = SolidColor(indigo500()),
-                                    maxLines = 3,
-                                )
-                            }
-                        }
-                        IconButton(
-                            onClick = onSend,
-                            enabled = enabled && value.isNotBlank(),
-                            modifier = Modifier.align(Alignment.Top),
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_send),
-                                contentDescription = AppStrings.CHAT_CD_REPLY_SEND,
-                                modifier = Modifier.size(34.dp),
-                            tint = if (enabled && value.isNotBlank()) indigo500() else grey400(),
-                            )
-                        }
-                    }
-                }
-            } else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 54.dp)
-                        .clip(RoundedCornerShape(1000.dp))
-                        .background(white())
-                        .border(1.dp, grey200(), RoundedCornerShape(1000.dp)),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    IconButton(onClick = onCamera) {
-                        Icon(
-                            painterResource(R.drawable.ic_photo),
-                            contentDescription = AppStrings.CHAT_CD_ATTACH_PHOTO,
-                            tint = black(),
-                        )
-                    }
-                    Box(
-                        modifier = Modifier.weight(1f),
-                        contentAlignment = Alignment.CenterStart,
-                    ) {
-                        if (value.isEmpty()) {
-                            Text(AppStrings.CHAT_MESSAGE_PLACEHOLDER, color = grey400(), fontSize = 14.sp)
-                        }
-                        BasicTextField(
-                            value = value,
-                            onValueChange = onValueChange,
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = enabled,
-                            textStyle = LocalTextStyle.current.copy(
-                                color = black(),
-                                fontSize = 14.sp,
-                            ),
-                            cursorBrush = SolidColor(black()),
-                            maxLines = 4,
-                        )
-                    }
-                    IconButton(
-                        onClick = onSend,
-                        enabled = enabled && value.isNotBlank(),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_send),
-                            contentDescription = AppStrings.CHAT_CD_SEND,
-                            tint = if (enabled && value.isNotBlank()) indigo500() else grey300(),
-                        )
-                    }
-                }
-            }
-        }
-    }
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
