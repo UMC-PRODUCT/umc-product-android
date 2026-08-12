@@ -1,6 +1,7 @@
 package com.umc.presentation.home.home
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
@@ -30,6 +31,7 @@ import java.util.Locale
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val getScheduleMonthUseCase: GetScheduleMonthUseCase, //월별 일정 가져오기
     private val getGisuInfoUseCase: GetGisuInfoUseCase, //기수 정보 가져오기
@@ -37,6 +39,12 @@ class HomeViewModel @Inject constructor(
 ) : BaseViewModel<HomeUiState, HomeEvent>(
     HomeUiState())
 {
+
+    //사용자가 이번 세션에서 배너를 닫았는지 저장하는 플래그 (화면 전환 후에도 저장을 위해 savedStateHandle 사용)
+    private var isBannerDismissed: Boolean
+        get() = savedStateHandle.get<Boolean>("IS_BANNER_DISMISSED") ?: false
+        set(value) { savedStateHandle["IS_BANNER_DISMISSED"] = value }
+
     init {
         val today = UTimeFormat.getToday()
 
@@ -44,10 +52,12 @@ class HomeViewModel @Inject constructor(
         getUserInfo()
 
         //금일(월) 데이터 가져오기 (LocalDate 사용)
-        getScheduleMonth(today.year, today.monthValue)
+        getScheduleMonth(today.year, today.monthValue, true)
 
         //전체 기수 리스트 캐시
         loadGisuList()
+
+        
     }
 
     //날짜 문자열 변환 유틸 함수 (LocalDate 포맷터 활용)
@@ -118,6 +128,7 @@ class HomeViewModel @Inject constructor(
             copy(
                 userName = userInfo.name,
                 userNickName = userInfo.nickname,
+                userMemberId = userInfo.id,
                 gisuTag = gisuTags,
                 activeString = "${latestGisu?.gisu ?: 0}기 활동 상태",
                 growDay = userInfo.totalActivityDays.toInt()
@@ -224,7 +235,7 @@ class HomeViewModel @Inject constructor(
     }
 
     //월별 정보 받아오기
-    fun getScheduleMonth(year: Int, month: Int) {
+    fun getScheduleMonth(year: Int, month: Int, todayCheck: Boolean = false) {
         viewModelScope.launch {
             resultResponse(
                 response = getScheduleMonthUseCase(year, month),
@@ -233,12 +244,20 @@ class HomeViewModel @Inject constructor(
                     val planItems = convertToPlanItems(scheduleMonth)
                     val todayString = formatDate(uiState.value.selectedDate)
 
+                    val hasTodayPlan = planItems.any { it.date == todayString }
+                    val shouldShowBanner = hasTodayPlan && !isBannerDismissed
+
+
                     updateState {
                         copy(
                             allPlans = planItems,
-                            dailyPlans = planItems.filter { it.date == todayString }
+                            dailyPlans = planItems.filter { it.date == todayString },
+                            isBannerVisible = shouldShowBanner
                         )
                     }
+
+                    //updatePlansAndBanner(planItems, todayString)
+
                     // 점 찍기 데이터 갱신
                     extractEventDates(planItems)
                 },
@@ -288,6 +307,25 @@ class HomeViewModel @Inject constructor(
         return result
     }
 
+
+    /*
+    //getScheduleMonth 성공 콜백 내부 (오늘 일정이 있으면 명함 교환 보여주기)
+    private fun updatePlansAndBanner(planItems: List<SchedulePlanItem>, todayString: String) {
+        val hasTodayPlan = planItems.any { it.date == todayString }
+
+        updateState {
+            copy(
+                allPlans = planItems,
+                dailyPlans = planItems.filter { it.date == todayString },
+                //오늘 일정이 있고 + 사용자가 수동으로 닫지(클릭) 않은 경우에만 배너 유지
+                isBannerVisible = hasTodayPlan && !isBannerDismissed
+            )
+        }
+    }
+*/
+
+
+
     // 뷰모드 전환
     fun onChangeViewMode(mode: HomeViewMode) {
         updateState { copy(viewMode = mode) }
@@ -298,6 +336,14 @@ class HomeViewModel @Inject constructor(
     fun onClickNotification() = emitEvent(HomeEvent.MoveNotificationEvent)
     fun onClickScheduleAdd() = emitEvent(HomeEvent.MoveScheduleAddEvent)
     fun onClickScheduleDetail(plan: SchedulePlanItem) = emitEvent(HomeEvent.MoveScheduleDetailEvent(plan))
+    fun onClickCardShare() {
+        isBannerDismissed = true // 사용자가 클릭하여 닫았음을 기억!
+
+        updateState {
+            copy(isBannerVisible = false)
+        }
+        emitEvent(HomeEvent.MoveShareCardEvent)
+    }
 }
 
 
@@ -311,6 +357,7 @@ data class HomeUiState(
 
     //유저 정보 영역
     val userName: String = "",
+    val userMemberId : Long = 0L,
     val userNickName: String = "",
     val growDay: Int = 0,
     val gisuTag: List<String> = emptyList(),
@@ -335,6 +382,9 @@ data class HomeUiState(
     ), //월별 모든 일정
     val plusDays : Int = 0, //연속 날짜 처리 용도
 
+    //홈 카드 보여주기
+    val isBannerVisible : Boolean = true
+
 ) : UiState
 
 
@@ -345,6 +395,7 @@ sealed interface HomeEvent : UiEvent {
     object MoveScheduleAddEvent : HomeEvent //일정 추가 이동
 
     object OpenDatePickerEvent : HomeEvent //날짜 선택 다이얼로그 열기
+    object MoveShareCardEvent : HomeEvent //카드 공유 이동
 
 }
 
