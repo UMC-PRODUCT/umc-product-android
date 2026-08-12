@@ -90,6 +90,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun MycardRoute(
     targetMemberId: String? = null, //유저 qr 딥링크로 받았을 때
+    openExchangeDialog: Boolean = false, //홈에서 명함 교환 받을 시
     viewModel: MycardViewModel = hiltViewModel(),
     nearbyViewModel: NearbyViewModel = hiltViewModel(), //nearbyConnection 전용 관리 viewModel
     onNavigateToMypage: () -> Unit, //설정으로 이동
@@ -123,6 +124,13 @@ fun MycardRoute(
     LaunchedEffect(targetMemberId) {
         if (!targetMemberId.isNullOrEmpty()) {
             viewModel.searchUser(targetMemberId.toLong())
+        }
+    }
+
+    //처음 홈 실행 시 체크
+    LaunchedEffect(openExchangeDialog) {
+        if(openExchangeDialog == true){
+            nearbyViewModel.openBottomSheet()
         }
     }
     
