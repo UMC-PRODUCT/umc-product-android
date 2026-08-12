@@ -377,6 +377,7 @@ fun CommunityChattingScreen(
                 isMuted = state.thread?.isMuted == true,
                 isPinned = state.thread?.isPinned == true,
                 isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
+                showMoreMenu = state.thread?.myRole != CommunityThreadRole.UNKNOWN,
                 onSummary = onUnreadSummary,
                 onToggleMuted = onToggleMuted,
                 onTogglePinned = onTogglePinned,
@@ -934,6 +935,7 @@ private fun ChatTopBar(
     isMuted: Boolean,
     isPinned: Boolean,
     isOwner: Boolean,
+    showMoreMenu: Boolean,
     onSummary: () -> Unit,
     onToggleMuted: () -> Unit,
     onTogglePinned: () -> Unit,
@@ -972,15 +974,16 @@ private fun ChatTopBar(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Box {
-                IconButton(onClick = { menuExpanded = true }) {
+            if (showMoreMenu) {
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
                     Icon(
                         painterResource(R.drawable.ic_menu_kebab),
                         contentDescription = AppStrings.CHAT_CD_MORE,
                         tint = grey950(),
                     )
                 }
-                DropdownMenu(
+                    DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false },
                     modifier = Modifier.width(206.dp),
@@ -988,7 +991,7 @@ private fun ChatTopBar(
                     shape = RoundedCornerShape(18.dp),
                     containerColor = white(),
                     shadowElevation = 8.dp,
-                ) {
+                    ) {
                     ThreadMenuSectionTitle(AppStrings.CHAT_MENU_SUMMARY_SETTINGS)
                     ThreadMenuItem(AppStrings.CHAT_MENU_SUMMARY) {
                         menuExpanded = false
@@ -1038,6 +1041,7 @@ private fun ChatTopBar(
                     ThreadMenuItem(AppStrings.CHAT_LEAVE, color = red400()) {
                         menuExpanded = false
                         onLeave()
+                    }
                     }
                 }
             }
