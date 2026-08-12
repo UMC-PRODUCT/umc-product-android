@@ -1,5 +1,6 @@
 package com.umc.presentation.community.chatting
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
@@ -56,6 +57,7 @@ class CommunityChattingViewModel @Inject constructor(
     private var reconnectJob: Job? = null
     private var realtimeObserverJob: Job? = null
     private var manualReconnectInProgress = false
+    private var hasCapturedEntryUnreadMessages = false
     private var lastSummaryMessages: List<CommunityThreadMessage> = emptyList()
 
     init {
@@ -72,8 +74,8 @@ class CommunityChattingViewModel @Inject constructor(
         when (action) {
             CommunityChattingAction.OnBackClick -> emitEvent(CommunityChattingEvent.NavigateBack)
             CommunityChattingAction.OnMoreClick -> emitEvent(CommunityChattingEvent.OpenMore)
-            is CommunityChattingAction.OnUnreadSummaryClick ->
-                summarizeUnreadMessages(unreadCount = action.unreadCount)
+            CommunityChattingAction.OnUnreadSummaryClick ->
+                summarizeUnreadMessages()
             CommunityChattingAction.OnRetryUnreadSummary -> {
                 updateState { copy(aiFeatureStatus = null) }
                 summarizeUnreadMessages(requestedMessages = lastSummaryMessages)
@@ -138,21 +140,47 @@ class CommunityChattingViewModel @Inject constructor(
             val loadedMessages = messages.data.messages
                 .distinctBy(CommunityThreadMessage::messageId)
             val unreadCount = detail.data.unreadCount.toIntOrNull()?.coerceAtLeast(0) ?: 0
+            val entryUnreadMessages = loadedMessages
+                .take(unreadCount.coerceAtMost(MAX_SUMMARY_MESSAGE_COUNT))
+            val isInitialSummaryCandidateCapture = !hasCapturedEntryUnreadMessages
             updateState {
                 copy(
                     thread = detail.data,
                     messages = loadedMessages,
-                    unreadMessagesAtEntry = loadedMessages
-                        .take(unreadCount.coerceAtMost(MAX_SUMMARY_MESSAGE_COUNT)),
-                    unreadCountAtEntry = unreadCount,
+                    unreadMessagesAtEntry = if (hasCapturedEntryUnreadMessages) {
+                        unreadMessagesAtEntry
+                    } else {
+                        entryUnreadMessages
+                    },
+                    unreadCountAtEntry = if (hasCapturedEntryUnreadMessages) {
+                        unreadCountAtEntry
+                    } else {
+                        unreadCount
+                    },
+                    summaryCandidateMessages = if (hasCapturedEntryUnreadMessages) {
+                        summaryCandidateMessages
+                    } else {
+                        entryUnreadMessages
+                    },
                     hasMore = messages.data.hasMore,
                     nextBefore = messages.data.nextBefore,
                     isLoading = false,
                 )
             }
-            loadMembers()
-            observeRealtime()
-            chatRepository.connect()
+            hasCapturedEntryUnreadMessages = true
+            if (isInitialSummaryCandidateCapture) {
+                logSummaryCandidates(
+                    reason = "CREATED",
+                    messages = uiState.value.summaryCandidateMessages,
+                )
+            }
+            if (detail.data.myRole != CommunityThreadRole.UNKNOWN) {
+                loadMembers()
+                observeRealtime()
+                chatRepository.connect()
+            } else {
+                stopRealtime()
+            }
         } else {
             val detailFailure = (detail as? ApiState.Fail)?.failState
             if (detailFailure != null && detailFailure.hasThreadUnavailableCode()) {
@@ -181,7 +209,6 @@ class CommunityChattingViewModel @Inject constructor(
 
     private fun summarizeUnreadMessages(
         requestedMessages: List<CommunityThreadMessage>? = null,
-        unreadCount: Int? = null,
     ) =
         viewModelScope.launch {
             val current = uiState.value
@@ -189,10 +216,7 @@ class CommunityChattingViewModel @Inject constructor(
 
             val boundedMessages = when {
                 requestedMessages != null -> requestedMessages
-                unreadCount != null -> current.messages.take(
-                    unreadCount.coerceIn(0, MAX_SUMMARY_MESSAGE_COUNT)
-                )
-                else -> current.unreadMessagesAtEntry
+                else -> current.summaryCandidateMessages
             }
             val targetMessages = boundedMessages
                 .take(MAX_SUMMARY_MESSAGE_COUNT)
@@ -351,7 +375,7 @@ class CommunityChattingViewModel @Inject constructor(
         val uploadUris = uriStrings
             .filter(String::isNotBlank)
             .distinct()
-            .take(COMMUNITY_CHAT_MAX_IMAGE_COUNT)
+            .take(8)
         if (uploadUris.isEmpty()) return@launch
         val clientMessageId = UUID.randomUUID().toString()
         updateState {
@@ -769,8 +793,31 @@ class CommunityChattingViewModel @Inject constructor(
                     event.message
                 }
                 val withoutOld = messages.filterNot { it.messageId == receivedMessage.messageId }
+                val isOwnMessage = receivedMessage.senderId == myMemberId || pending != null
+                val updatedSummaryCandidates = when (event.type) {
+                    CommunityChatEvent.MessageChanged.Type.CREATED -> {
+                        if (isOwnMessage) {
+                            summaryCandidateMessages
+                        } else {
+                            (listOf(receivedMessage) + summaryCandidateMessages)
+                                .distinctBy(CommunityThreadMessage::messageId)
+                                .take(MAX_SUMMARY_MESSAGE_COUNT)
+                        }
+                    }
+                    CommunityChatEvent.MessageChanged.Type.UPDATED -> {
+                        summaryCandidateMessages.map { message ->
+                            if (message.messageId == receivedMessage.messageId) receivedMessage else message
+                        }
+                    }
+                    CommunityChatEvent.MessageChanged.Type.DELETED -> {
+                        summaryCandidateMessages.filterNot { message ->
+                            message.messageId == receivedMessage.messageId
+                        }
+                    }
+                }
                 copy(
                     messages = listOf(receivedMessage) + withoutOld,
+                    summaryCandidateMessages = updatedSummaryCandidates,
                     localImageUrisByMessageId = if (pending?.localUris?.isNotEmpty() == true) {
                         localImageUrisByMessageId + (receivedMessage.messageId to pending.localUris)
                     } else {
@@ -778,7 +825,13 @@ class CommunityChattingViewModel @Inject constructor(
                     },
                     pendingMessages = event.clientMessageId?.let { pendingMessages - it } ?: pendingMessages,
                 )
-            }.also { markRead(event.message.messageId) }
+            }.also {
+                logSummaryCandidates(
+                    reason = "MESSAGE_${event.type.name}",
+                    messages = uiState.value.summaryCandidateMessages,
+                )
+                markRead(event.message.messageId)
+            }
             is CommunityChatEvent.ReactionChanged -> updateState {
                 copy(messages = messages.map {
                     if (it.messageId == event.messageId) it.copy(reactions = event.reactions) else it
@@ -834,13 +887,26 @@ class CommunityChattingViewModel @Inject constructor(
         when (val result = threadRepository.getMessages(uiState.value.threadId)) {
             is ApiState.Success -> {
                 updateState {
+                    val existingMessageIds = messages.mapTo(hashSetOf()) { it.messageId }
+                    val newlyReceivedMessages = result.data.messages.filter { message ->
+                        message.messageId !in existingMessageIds && message.senderId != myMemberId
+                    }
                     copy(
                         messages = (result.data.messages + messages)
                             .distinctBy(CommunityThreadMessage::messageId),
+                        summaryCandidateMessages = (
+                            newlyReceivedMessages + summaryCandidateMessages
+                        )
+                            .distinctBy(CommunityThreadMessage::messageId)
+                            .take(MAX_SUMMARY_MESSAGE_COUNT),
                         hasMore = result.data.hasMore,
                         nextBefore = result.data.nextBefore,
                     )
                 }
+                logSummaryCandidates(
+                    reason = "RECONNECT_RECONCILED",
+                    messages = uiState.value.summaryCandidateMessages,
+                )
                 markLatestMessageRead()
             }
             is ApiState.Fail -> Unit
@@ -849,6 +915,29 @@ class CommunityChattingViewModel @Inject constructor(
 
     private fun markLatestMessageRead() {
         uiState.value.messages.firstOrNull()?.messageId?.let(::markRead)
+    }
+
+    private fun logSummaryCandidates(
+        reason: String,
+        messages: List<CommunityThreadMessage>,
+    ) {
+        val messageLog = messages.joinToString(
+            separator = ", ",
+            prefix = "[",
+            postfix = "]",
+        ) { message ->
+            val preview = message.content
+                .orEmpty()
+                .replace('\n', ' ')
+                .take(LOG_CONTENT_PREVIEW_LENGTH)
+            "{id=${message.messageId}, sender=${message.senderId}, content=$preview}"
+        }
+        Log.d(
+            SUMMARY_LOG_TAG,
+            "reason=$reason, threadId=${uiState.value.threadId}, " +
+                "entryUnreadCount=${uiState.value.unreadCountAtEntry}, " +
+                "candidateCount=${messages.size}, messages=$messageLog",
+        )
     }
 
     override fun onCleared() {
@@ -860,6 +949,8 @@ class CommunityChattingViewModel @Inject constructor(
         const val MAX_SUMMARY_MESSAGE_COUNT = 50
         const val MAX_RECONNECT_ATTEMPTS = 5
         const val OWNERSHIP_TRANSFER_REQUIRED_CODE = "COMMUNITY-0041"
+        const val SUMMARY_LOG_TAG = "CHAT_SUMMARY_CANDIDATES"
+        const val LOG_CONTENT_PREVIEW_LENGTH = 40
     }
 }
 

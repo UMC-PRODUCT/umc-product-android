@@ -144,9 +144,7 @@ fun CommunityChattingScreen(
 ) {
     val onBack = { onAction(CommunityChattingAction.OnBackClick) }
     val onMore = { onAction(CommunityChattingAction.OnMoreClick) }
-    val onUnreadSummary: (Int?) -> Unit = {
-        onAction(CommunityChattingAction.OnUnreadSummaryClick(it))
-    }
+    val onUnreadSummary = { onAction(CommunityChattingAction.OnUnreadSummaryClick) }
     val onCamera = { onAction(CommunityChattingAction.OnCameraClick) }
     val onSendImages: (List<String>) -> Unit = { onAction(CommunityChattingAction.OnSendImages(it)) }
     val onDraftChange: (String) -> Unit = { onAction(CommunityChattingAction.OnDraftChanged(it)) }
@@ -394,7 +392,7 @@ fun CommunityChattingScreen(
                 isMuted = state.thread?.isMuted == true,
                 isPinned = state.thread?.isPinned == true,
                 isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
-                onSummary = { onUnreadSummary(null) },
+                onSummary = onUnreadSummary,
                 onToggleMuted = onToggleMuted,
                 onTogglePinned = onTogglePinned,
                 onParticipants = {
@@ -422,7 +420,11 @@ fun CommunityChattingScreen(
             )
         },
         bottomBar = {
-            if (!state.isLoading && state.errorMessage == null) {
+            if (
+                !state.isLoading &&
+                state.errorMessage == null &&
+                state.thread?.myRole != CommunityThreadRole.UNKNOWN
+            ) {
                 ChatInputBar(
                     value = state.draft,
                     enabled = true,
@@ -574,9 +576,7 @@ fun CommunityChattingScreen(
             if (newMessageCount > 0 && !state.isLoading && state.errorMessage == null) {
                 UnreadSummaryCard(
                     unreadCount = newMessageCount,
-                    onClick = {
-                        onUnreadSummary(newMessageCount)
-                    },
+                    onClick = onUnreadSummary,
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .padding(
