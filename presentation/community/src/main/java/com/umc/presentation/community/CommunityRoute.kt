@@ -2,6 +2,7 @@ package com.umc.presentation.community
 
 import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
@@ -23,7 +24,15 @@ fun CommunityRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        viewModel.loadThreads()
+        viewModel.startThreadPolling()
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
+        viewModel.stopThreadPolling()
+    }
+
+    DisposableEffect(viewModel) {
+        onDispose(viewModel::stopThreadPolling)
     }
 
     LaunchedEffect(viewModel) {
