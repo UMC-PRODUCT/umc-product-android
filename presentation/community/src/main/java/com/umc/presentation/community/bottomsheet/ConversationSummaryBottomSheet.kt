@@ -1,5 +1,10 @@
 package com.umc.presentation.community.bottomsheet
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -11,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -37,6 +43,7 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
+import com.umc.component.theme.green500
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.white
 import com.umc.presentation.community.chatting.CommunityChattingState
@@ -115,23 +122,103 @@ private fun SummaryLoadingContent(downloadPercent: Int?) {
         text = downloadPercent
             ?.let { AppStrings.AI_MODEL_DOWNLOADING.format(it) }
             ?: AppStrings.CHAT_AI_SUMMARIZING_DESCRIPTION,
-        color = grey500(),
-        style = UmcTypographyTokens.Subheadline,
+        color = grey600(),
+        style = UmcTypographyTokens.Footnote,
     )
+
     Spacer(Modifier.height(18.dp))
-    listOf(0.68f, 1f, 0.9f, 0.9f).forEach { fraction ->
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_community_ai),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(32.dp),
+        )
+
+        Spacer(Modifier.width(10.dp))
+
+        SummaryProgressBar(
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun SummaryProgressBar(
+    modifier: Modifier = Modifier,
+) {
+    val transition = rememberInfiniteTransition(
+        label = "community_chat_summary_loading",
+    )
+    val firstProgress = transition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.75f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 900),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "first_progress",
+    )
+    val secondProgress = transition.animateFloat(
+        initialValue = 0.55f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1_100),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "second_progress",
+    )
+    val thirdProgress = transition.animateFloat(
+        initialValue = 0.45f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1_000),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "third_progress",
+    )
+    val fourthProgress = transition.animateFloat(
+        initialValue = 0.6f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1_200),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "fourth_progress",
+    )
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+    ) {
+        SummaryProgressLine(firstProgress.value)
+        SummaryProgressLine(secondProgress.value)
+        SummaryProgressLine(thirdProgress.value)
+        SummaryProgressLine(fourthProgress.value)
+    }
+}
+
+@Composable
+private fun SummaryProgressLine(progress: Float) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(12.dp),
+    ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(fraction)
-                .height(8.dp)
-                .clip(RoundedCornerShape(4.dp))
+                .fillMaxWidth(progress)
+                .height(12.dp)
                 .background(
-                    Brush.horizontalGradient(
-                        listOf(Color(0xFF5B9CF5), Color(0xFF28C7A5)),
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(indigo500(), green500()),
                     ),
+                    shape = RoundedCornerShape(100.dp),
                 ),
         )
-        Spacer(Modifier.height(10.dp))
     }
 }
 
@@ -179,7 +266,7 @@ private fun SummarySuccessContent(summary: String, messageCount: Int) {
         .forEach { line ->
             Row(
                 modifier = Modifier.padding(vertical = 5.dp),
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Image(
                     painter = painterResource(R.drawable.ic_check),
