@@ -6,19 +6,31 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -26,12 +38,14 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
+import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
-import com.umc.component.theme.grey800
+import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -60,14 +74,15 @@ private fun UmcApp() {
         /**백스택마다 감지**/
         val currentDestination = navBackStackEntry?.destination
 
-        // 💡 현재 화면이 5개 메인 탭 화면 중 하나인지 확인 (Type-Safe 체크)
+        // 💡 현재 화면이 5개 메인 탭(1뎁스) 화면 중 하나인지 확인 (Type-Safe 체크)
         val currentTab = when {
             currentDestination?.hasRoute<MainDestination.Home>() == true -> MainTab.Home
-            // TODO: 공지/활동/커뮤니티 Destination이 분리되면 해당 Destination 타입으로 교체
-            //currentDestination?.hasRoute<MainDestination.>() == true -> MainTab.Activity
-            //currentDestination?.hasRoute<MainDestination.>() == true -> MainTab.Community
-            currentDestination?.hasRoute<MainDestination.Notification>() == true -> MainTab.Notice
-            currentDestination?.hasRoute<MainDestination.Mycard>() == true -> MainTab.My
+            currentDestination?.hasRoute<MainDestination.Notice>() == true -> MainTab.Notice
+            currentDestination?.hasRoute<MainDestination.Act>() == true -> MainTab.Activity
+            currentDestination?.hasRoute<MainDestination.Community>() == true -> MainTab.Community
+            // 내 명함일 때만 MY 탭으로 취급 (memberId가 있으면 딥링크로 열린 타인 명함 = 2뎁스)
+            currentDestination?.hasRoute<MainDestination.Mycard>() == true ->
+                if (navBackStackEntry?.toRoute<MainDestination.Mycard>()?.memberId == null) MainTab.My else null
             else -> null
         }
         val showBottomBar = currentTab != null
@@ -121,41 +136,57 @@ private fun UmcApp() {
 }
 
 
+/**
+ * 피그마 커스텀 하단바 (전체 72dp = 상단 구분선 1dp + 콘텐츠 71dp)
+ * 선택: 아이콘 grey900 + 라벨 grey950 / 비선택: grey400
+ */
 @Composable
 private fun UmcBottomNavigationBar(
     currentTab: MainTab?,
     onTabSelected: (MainTab) -> Unit
 ) {
-    NavigationBar(
-        containerColor = grey000(), // 피그마 하단바 배경색
-        tonalElevation = 4.dp
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(grey000())
+            .navigationBarsPadding()
     ) {
-        MainTab.tabs.filterNotNull().forEach { tab ->
-            val isSelected = currentTab == tab
+        HorizontalDivider(thickness = 1.dp, color = grey200())
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(71.dp)
+        ) {
+            MainTab.tabs.forEach { tab ->
+                val isSelected = currentTab == tab
 
-            NavigationBarItem(
-                selected = isSelected,
-                onClick = { onTabSelected(tab) },
-                icon = {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null // 리플 없이 플랫하게
+                        ) { onTabSelected(tab) },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
                     Icon(
                         painter = painterResource(
                             id = if (isSelected) tab.selectedIcon else tab.unselectedIcon
                         ),
                         contentDescription = tab.title,
-                        tint = if (isSelected) grey950() else grey400()
+                        modifier = Modifier.size(24.dp),
+                        tint = if (isSelected) grey900() else grey400()
                     )
-                },
-                label = {
+                    Spacer(modifier = Modifier.height(4.dp))
                     UText(
                         text = tab.title,
                         style = UmcTypographyTokens.Footnote,
                         color = if (isSelected) grey950() else grey400()
                     )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = androidx.compose.ui.graphics.Color.Transparent // 아이콘 뒤 선택 영역 하이라이트(원형) 제거
-                )
-            )
+                }
+            }
         }
     }
 }
