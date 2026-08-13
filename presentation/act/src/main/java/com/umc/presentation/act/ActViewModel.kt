@@ -57,7 +57,7 @@ data class ActUiState(
     //현재 관리자 모드 여부
     val isAdmin: Boolean = false,
     //관리자 권한 보유 여부
-    val hasAdminAccess: Boolean = false,
+    val hasAdminAccess: Boolean = true,
 ) : UiState
 
 sealed interface ActEvent : UiEvent {

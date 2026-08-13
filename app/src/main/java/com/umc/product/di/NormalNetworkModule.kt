@@ -17,10 +17,19 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import javax.inject.Named
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NormalNetworkModule {
+    @Provides
+    @Singleton
+    @Named("CommunityWebSocketUrl")
+    fun provideCommunityWebSocketUrl(): String =
+        BASE_URL
+            .replaceFirst("https://", "wss://")
+            .replaceFirst("http://", "ws://") + "ws/websocket"
+
     @Provides
     @Singleton
     fun provideHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {

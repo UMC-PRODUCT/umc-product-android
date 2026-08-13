@@ -138,7 +138,8 @@ fun DateTimeRow(
                     borderColor = grey200(),
                     borderWidth = 0.dp,
                     textColor = indigo500(),
-                    textStyle = UmcTypographyTokens.SubheadlineBold
+                    textStyle = UmcTypographyTokens.SubheadlineBold,
+                    onClick =  { onDateTimeClick()}
                 )
             }
         }

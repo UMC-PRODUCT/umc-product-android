@@ -23,4 +23,5 @@ kotlin {
 dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.hilt.core)
+    implementation(libs.google.code.gson)
 }

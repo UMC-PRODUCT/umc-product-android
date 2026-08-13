@@ -20,7 +20,7 @@ import retrofit2.http.PATCH
 interface MemberApi {
 
     //내 프로필 조회
-    @GET(Endpoints.Member.MYPROFILE)
+    @GET(Endpoints.Member.MYPROFILE_V2)
     suspend fun getMyProfile(): ApiResponse<MemberResponse>
 
 

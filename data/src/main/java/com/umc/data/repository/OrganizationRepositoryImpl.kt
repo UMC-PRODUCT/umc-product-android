@@ -6,17 +6,22 @@ import com.umc.data.response.organization.GisuListResponse.Companion.toModel
 import com.umc.data.response.organization.GisuInfoResponse.Companion.toModel
 import com.umc.data.response.organization.SchoolDetailResponse.Companion.toModel
 import com.umc.data.response.organization.SchoolNameResponse.Companion.toModel
+import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.organization.ChapterWithSchool
 import com.umc.domain.model.organization.GisuList
 import com.umc.domain.model.home.GisuInfo
+import com.umc.domain.model.organization.GisuItem
 import com.umc.domain.model.organization.StudyGroupDetail
 import com.umc.domain.model.organization.StudyGroupPage
 import com.umc.domain.model.request.organization.*
 import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.repository.OrganizationRepository
+import com.umc.domain.model.organization.ManagedStudyGroupPage
+import com.umc.data.response.organization.GisuItemResponse.Companion.toModel
+
 import javax.inject.Inject
 
 class OrganizationRepositoryImpl @Inject constructor(
@@ -33,10 +38,41 @@ class OrganizationRepositoryImpl @Inject constructor(
     override suspend fun deleteGisu(gisuId: Int): ApiState<Unit> =
         organizationDataSource.deleteGisu(gisuId)
 
+    override suspend fun deleteStudyGroupMentor(
+        studyGroupId: Long,
+        mentorId: Long,
+    ): ApiState<Unit> =
+        organizationDataSource.deleteStudyGroupMentor(
+            studyGroupId = studyGroupId,
+            mentorId = mentorId,
+        )
+
+
+    override suspend fun deleteStudyGroupMember(
+        studyGroupId: Long,
+        memberId: Long,
+    ): ApiState<Unit> =
+        organizationDataSource.deleteStudyGroupMember(
+            studyGroupId = studyGroupId,
+            memberId = memberId,
+        )
+
+
     // GET
     override suspend fun getMyStudyGroup(cursor: Long?, size: Int): ApiState<StudyGroupPage> =
         organizationDataSource.getMyStudyGroup(cursor, size).map { dto ->
             (dto ?: StudyGroupListResponse()).toModel()
+        }
+
+    override suspend fun getManagedStudyGroups(
+        cursor: Long?,
+        size: Int,
+    ): ApiState<ManagedStudyGroupPage> =
+        organizationDataSource.getManagedStudyGroups(
+            cursor = cursor,
+            size = size,
+        ).map { dto ->
+            dto.toModel()
         }
 
 
@@ -99,8 +135,10 @@ class OrganizationRepositoryImpl @Inject constructor(
     override suspend fun getAllGisu(): ApiState<GisuList> =
         organizationDataSource.getAllGisu().map { it.toModel() }
 
-    override suspend fun getActiveGisu(): ApiState<Unit> =
-        organizationDataSource.getActiveGisu().map { Unit } //임시
+    override suspend fun getActiveGisu(): ApiState<GisuItem> =
+        organizationDataSource.getActiveGisu().map { response ->
+            response.toModel()
+        }
 
     override suspend fun getChapterWithSchool(gisuId: Int): ApiState<ChapterWithSchool> =
         organizationDataSource.getChapterWithSchool(gisuId).map { response ->
@@ -131,9 +169,35 @@ class OrganizationRepositoryImpl @Inject constructor(
     override suspend fun assignSchool(schoolId: Int, request: AssignSchoolRequest): ApiState<Unit> =
         organizationDataSource.assignSchool(schoolId, request)
 
+    override suspend fun addStudyGroupMember(
+        studyGroupId: Long,
+        memberId: Long,
+    ): ApiState<Unit> =
+        organizationDataSource.addStudyGroupMember(
+            studyGroupId = studyGroupId,
+            memberId = memberId,
+        )
+
+    override suspend fun addStudyGroupMentor(
+        studyGroupId: Long,
+        mentorId: Long,
+    ): ApiState<Unit> =
+        organizationDataSource.addStudyGroupMentor(
+            studyGroupId = studyGroupId,
+            mentorId = mentorId,
+        )
+
+
     // POST
     override suspend fun createStudyGroup(request: CreateStudyGroupRequest): ApiState<Unit> =
         organizationDataSource.createStudyGroup(request)
+
+    override suspend fun createStudyGroupSchedule(
+        request: CreateStudyGroupScheduleRequest,
+    ): ApiState<Unit> =
+        organizationDataSource.createStudyGroupSchedule(
+            request = request,
+        )
 
     override suspend fun createSchool(request: SchoolRegistrationRequest): ApiState<Unit> =
         organizationDataSource.createSchool(request)
@@ -146,6 +210,16 @@ class OrganizationRepositoryImpl @Inject constructor(
 
     override suspend fun changeActiveGisu(gisuId: Int): ApiState<Unit> =
         organizationDataSource.changeActiveGisu(gisuId)
+
+    override suspend fun updateStudyGroup(
+        studyGroupId: Long,
+        request: UpdateStudyGroupRequest,
+    ): ApiState<Unit> =
+        organizationDataSource.updateStudyGroup(
+            studyGroupId = studyGroupId,
+            request = request,
+        )
+
 
     // PUT
     override suspend fun changeGroupMember(

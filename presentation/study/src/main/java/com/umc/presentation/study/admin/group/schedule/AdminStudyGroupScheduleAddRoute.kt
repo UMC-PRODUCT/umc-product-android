@@ -10,15 +10,30 @@ import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupSchedule
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekBottomSheet
 import com.umc.component.component.UDatePickerDialog
-import com.umc.component.component.UDateTimePickerDialog
+import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekUiModel
 
 @Composable
 fun AdminStudyGroupScheduleRoute(
+    groupId: Long,
+    groupTitle: String,
+    groupPart: String,
     viewModel: AdminStudyGroupScheduleViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    LaunchedEffect(
+        groupId,
+        groupTitle,
+        groupPart,
+    ) {
+        viewModel.initializeGroup(
+            groupId = groupId,
+            groupTitle = groupTitle,
+            groupPart = groupPart,
+        )
+    }
 
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker by remember { mutableStateOf(false) }
@@ -176,7 +191,11 @@ fun AdminStudyGroupScheduleRoute(
             },
             onLocationSelected = { location ->
                 viewModel.onAction(
-                    AdminStudyGroupScheduleAction.SelectPlace(location.title)
+                    AdminStudyGroupScheduleAction.SelectPlace(
+                        place = location.title,
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                    )
                 )
                 showLocationBottomSheet = false
             }
@@ -203,14 +222,19 @@ fun AdminStudyGroupScheduleRoute(
 
     if (showWeekBottomSheet) {
         AdminSubmitWeekBottomSheet(
-            weeks = (1..10).toList(),
-            onSelect = { week ->
-                viewModel.onAction(AdminStudyGroupScheduleAction.SelectWeek(week))
+            weeks = state.weeks,
+            onSelect = { weekItem ->
+                viewModel.onAction(
+                    AdminStudyGroupScheduleAction.SelectWeek(
+                        week = weekItem.week,
+                        weeklyCurriculumId = weekItem.weeklyCurriculumId,
+                    )
+                )
                 showWeekBottomSheet = false
             },
             onDismiss = {
                 showWeekBottomSheet = false
-            }
+            },
         )
     }
 }

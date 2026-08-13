@@ -53,7 +53,10 @@ object Endpoints {
 
     object Member {
         const val MEMBER = "api/v1/member"
+        const val MEMBER_V2 = "api/v2/member"
         const val MYPROFILE = "$MEMBER/me"
+
+        const val MYPROFILE_V2 = "$MEMBER_V2/me"
         const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
         const val MEMBER_REGISTER_OAUTH = "$MEMBER/register/oauth"
         const val MEMBER_REGISTER_EMAIL = "$MEMBER/register/email"
@@ -75,7 +78,7 @@ object Endpoints {
 
         const val LOCATION = "$SCHEDULE/{scheduleId}/location"
 
-        const val CREATE_STUDY_GROUP_SCHEDULE = "$SCHEDULE/study-group"
+
 
         const val SCHEDULES_ME = "api/v2/schedules/me"
         const val DETAIL_V2 = "api/v2/schedules/{scheduleId}"
@@ -114,7 +117,31 @@ object Endpoints {
         const val REPORT_COMMENT = "api/v1/comments/{commentId}/reports"
 
         const val TROPHY = "api/v1/trophies"
+        const val THREADS = "api/v1/community/threads"
+        const val THREAD_DETAIL = "$THREADS/{threadId}"
 
+        // 초대 가능한 회원 조회
+        const val THREAD_INVITABLE =
+            "$THREAD_DETAIL/invitable"
+
+        // 스레드 회원 초대
+        const val THREAD_INVITE =
+            "$THREAD_DETAIL/invite"
+
+        const val THREAD_LEAVE = "$THREAD_DETAIL/leave"
+        const val THREAD_MUTE = "$THREAD_DETAIL/mute"
+        const val THREAD_PIN = "$THREAD_DETAIL/pin"
+
+        const val THREAD_MEMBER =
+            "$THREAD_DETAIL/members/{memberId}"
+
+        const val THREAD_MEMBERS =
+            "$THREAD_DETAIL/members"
+
+        const val THREAD_MESSAGES = "$THREAD_DETAIL/messages"
+        const val THREAD_MEMBER_ROLE = "$THREAD_MEMBER/role"
+        const val MESSAGE_REPORT =
+            "api/v1/community/messages/{messageId}/report"
 
     }
 
@@ -139,6 +166,23 @@ object Endpoints {
         const val SCHOOL_ALL = "$SCHOOL/all"
 
         const val STUDY_GROUP = "api/v1/study-groups"
+
+        const val MANAGED_STUDY_GROUPS = "$STUDY_GROUP/managed"
+
+
+        const val CREATE_STUDY_GROUP_SCHEDULE =
+            "api/v1/study-groups/schedules"
+
+
+        const val STUDY_GROUP_DETAIL =
+            "$STUDY_GROUP/{studyGroupId}"
+
+        const val STUDY_GROUP_MENTOR =
+            "$STUDY_GROUP/{studyGroupId}/mentors/{mentorId}"
+
+        const val STUDY_GROUP_MEMBER =
+            "$STUDY_GROUP/{studyGroupId}/members/{memberId}"
+
         const val STUDY_GROUD_ID = "$STUDY_GROUP/{groupId}"
         const val STUDY_GROUD_NAME = "$STUDY_GROUP/names"
         const val STUDY_MEMBER = "$STUDY_GROUD_ID/members"
@@ -163,13 +207,56 @@ object Endpoints {
 
     object Curriculum {
 
-        const val CURRICULUM_OVERVIEW = "api/v2/curriculums/overview"
-        const val CHALLENGER_ME_PROGRESS = "api/v2/curriculums/progress/me"
-        const val SUBMIT = "api/v1/workbooks/submission"
-        const val WORKBOOK_SUBMISSIONS = "api/v1/curriculums/workbook-submissions"
-        const val STUDY_GROUPS = "api/v1/curriculums/study-groups"
-        const val AVAILABLE_WEEKS = "api/v1/curriculums/available-weeks"
+        const val CURRICULUM_OVERVIEW =
+            "api/v2/curriculums/overview"
 
+        const val CHALLENGER_ME_PROGRESS =
+            "api/v2/curriculums/progress/me"
+
+        const val SUBMIT =
+            "api/v2/curriculums/challenger-workbooks/submissions"
+
+        const val WORKBOOK_SUBMISSIONS =
+            "api/v1/curriculums/workbook-submissions"
+
+        const val STUDY_GROUPS =
+            "api/v1/curriculums/study-groups"
+
+        const val AVAILABLE_WEEKS =
+            "api/v1/curriculums/available-weeks"
+
+        // 운영진 - 스터디원 제출 현황 조회
+        const val WORKBOOK_SUBMISSIONS_V2 =
+            "api/v2/curriculums/workbook-submissions"
+
+        // 운영진 - 제출 현황 조회 가능 주차 목록
+        const val WORKBOOK_SUBMISSION_WEEKS =
+            "api/v2/curriculums/workbook-submissions/weeks"
+
+
+        // 챌린저 워크북 상세 조회
+        const val CHALLENGER_WORKBOOK_DETAIL =
+            "api/v2/curriculums/challenger-workbooks/{challengerWorkbookId}"
+
+        // 베스트 워크북 선정
+        const val CREATE_WEEKLY_BEST_WORKBOOK =
+            "api/v2/curriculums/challenger-workbooks/weekly-best"
+
+        // 베스트 워크북 선정 사유 수정
+        const val UPDATE_WEEKLY_BEST_WORKBOOK =
+            "api/v2/curriculums/challenger-workbooks/weekly-best/{weeklyBestWorkbookId}"
+
+        // 베스트 워크북 선정 철회
+        const val DELETE_WEEKLY_BEST_WORKBOOK =
+            "api/v2/curriculums/challenger-workbooks/weekly-best/{weeklyBestWorkbookId}"
+
+        // 미션 피드백 작성
+        const val CREATE_MISSION_FEEDBACK =
+            "api/v2/curriculums/challenger-workbooks/missions/feedback"
+
+        // 미션 피드백 수정
+        const val UPDATE_MISSION_FEEDBACK =
+            "api/v2/curriculums/challenger-workbooks/missions/feedback/{missionFeedbackId}"
     }
 
     object Workbook {

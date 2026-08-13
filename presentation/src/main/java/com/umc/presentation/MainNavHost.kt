@@ -4,16 +4,22 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.navDeepLink
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.mypage.mycard.MycardRoute
 import com.umc.presentation.act.ActManageRoute
 import com.umc.presentation.act.admin.challenger.AdminChallengerDetailRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
 import com.example.mypage.profile.ProfileRoute
+import com.example.mypage.qrcode.QrCodeRoute
+import com.example.mypage.receivedcard.ReceivedCardRoute
 import com.umc.failcode.SignUpFailRoute
 import com.umc.failcode.code.SignUpFailCodeRoute
 import com.umc.permission.PermissionRoute
@@ -34,6 +40,16 @@ import com.umc.presentation.notice.write.NoticeWriteRoute
 import com.umc.presentation.signup.email.EmailSignUpRoute
 import com.umc.presentation.signup.social.SocialSignUpRoute
 import com.umc.presentation.splash.SplashRoute
+import com.umc.presentation.community.CommunityRoute
+import com.umc.presentation.community.chatting.CommunityChattingRoute
+import com.umc.presentation.community.search.CommunitySearchRoute
+import com.umc.presentation.community.create.CommunityCreateRoute
+import com.umc.presentation.community.edit.CommunityEditRoute
+
+private const val COMMUNITY_REFRESH_KEY = "community_refresh"
+private const val COMMUNITY_THREAD_DEEP_LINK_BASE =
+    "https://api.university.neordinary.com/community/threads"
+
 
 @Composable
 fun MainNavHost(
@@ -43,11 +59,17 @@ fun MainNavHost(
     NavHost(
         modifier = modifier.fillMaxSize(),
         navController = navHostController,
+
+
         startDestination = if (BuildConfig.DEBUG) {
             MainDestination.Login
         } else {
             MainDestination.Home
         },
+
+
+        //startDestination = MainDestination.Mycard(),
+
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -68,7 +90,7 @@ fun MainNavHost(
         composable<MainDestination.Login> {
             LoginRoute(
                 navigateToMain = {
-                    navHostController.navigate(MainDestination.Act) {
+                    navHostController.navigate(MainDestination.Home) {
                         popUpTo(MainDestination.Login) { inclusive = true }
                     }
                 },
@@ -90,7 +112,7 @@ fun MainNavHost(
             EmailLoginRoute(
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToMain = {
-                    navHostController.navigate(MainDestination.Act) {
+                    navHostController.navigate(MainDestination.Home) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
@@ -287,6 +309,8 @@ fun MainNavHost(
             )
         }
 
+
+
         //홈 화면
         composable<MainDestination.Home> {
             HomeRoute(
@@ -314,12 +338,18 @@ fun MainNavHost(
         //일정 생성
         composable<MainDestination.ScheduleAdd> {
             ScheduleAddRoute(
+                scheduleId = -1,
+                onNavigateToBack = {navHostController.popBackStack()},
                 onShowAttendanceDialog = { _, _ -> }
             )
         }
         //일정 수정
-        composable<MainDestination.ScheduleEdit> {
+        composable<MainDestination.ScheduleEdit> {backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.ScheduleEdit>()
+
             ScheduleAddRoute(
+                scheduleId = destination.scheduleId, // 실제 수정할 scheduleId
+                onNavigateToBack = { navHostController.popBackStack() },
                 onShowAttendanceDialog = { _, _ -> }
             )
         }
@@ -327,11 +357,53 @@ fun MainNavHost(
         composable<MainDestination.ScheduleDetail>{ data ->
 
             ScheduleDetailRoute(
-
+                onBackClick = {navHostController.popBackStack()},
+                onNavigateToAttendSchedule = {
+                    /**TODO. 일정 출석 페이지로 이동하기**/
+                },
+                onNavigateToEditSchedule = { scheduleId ->
+                    navHostController.navigate(MainDestination.ScheduleEdit(scheduleId = scheduleId))
+                }
             )
         }
 
         /**마이페이지 관련 정의**/
+
+        //신 마이페이지
+        composable<MainDestination.Mycard>(
+            deepLinks = listOf(
+                navDeepLink {
+                    // 스토어 URL 기반 딥링크 패턴 매핑
+                    uriPattern = "umc://card?memberId={memberId}"
+                },
+                navDeepLink {
+                    uriPattern = "https://api.university.neordinary.com/community/threads/card?memberId={memberId}"
+                }
+            )
+        ) { backStackEntry ->
+            // Type-Safe Navigation 파라미터 추출 (딥링크 포함)
+            val mycardDestination = backStackEntry.toRoute<MainDestination.Mycard>()
+            val targetMemberId = mycardDestination.memberId
+
+
+            MycardRoute(
+                targetMemberId = targetMemberId,
+                onNavigateToMypage = {
+                    navHostController.navigate(MainDestination.Mypage)
+                },
+                onNavigateToMyqrCode = {
+                    navHostController.navigate(MainDestination.Qrcode)
+                },
+                onNavigateToEditCard = {
+                    navHostController.navigate(MainDestination.MyProfile)
+                },
+                onNavigateToReceivedCard = {
+                    navHostController.navigate(MainDestination.ReceivedCard)
+                }
+            )
+        }
+
+        //구 마이페이지 -> 신 설정
         composable<MainDestination.Mypage>{
             MypageRoute(
                 onNavigateToEditProfile = {
@@ -340,7 +412,13 @@ fun MainNavHost(
                 onNavigateToMyContent = {type ->
                     navHostController.navigate(MainDestination.MyContent(showType = type))
                                         },
-                onNavigateToLogin = {}
+                onNavigateToLogin = {},
+                onNavigateToQrCode = {
+                    navHostController.navigate(MainDestination.Qrcode)
+                },
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
             )
 
         }
@@ -356,9 +434,162 @@ fun MainNavHost(
 
         //내 프로필
         composable<MainDestination.MyProfile> {
-            ProfileRoute()
+            ProfileRoute(
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
         }
 
+        /**qr 코드**/
+        composable<MainDestination.Qrcode> {
+            QrCodeRoute(
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
+        }
 
+        //받은 명함
+        composable<MainDestination.ReceivedCard> {
+            ReceivedCardRoute (
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
+        }
+
+        /** 커뮤니티 화면 **/
+        composable<MainDestination.Community> {
+            CommunityRoute(
+                onNavigateToThreadDetail = { threadId ->
+                    navHostController.navigate(
+                        MainDestination.CommunityChatting(
+                            threadId = threadId,
+                        )
+                    )
+                },
+                onNavigateToSearch = {
+                    navHostController.navigate(
+                        MainDestination.CommunitySearch
+                    )
+                },
+                onNavigateToCreateThread = {
+                    navHostController.navigate(
+                        MainDestination.CommunityCreate
+                    )
+                },
+                onNavigateToEditThread = { threadId ->
+                    navHostController.navigate(
+                        MainDestination.CommunityEdit(
+                            threadId = threadId,
+                        )
+                    )
+                },
+            )
+        }
+
+        /** 커뮤니티 스레드 만들기 화면 **/
+        composable<MainDestination.CommunityCreate> {
+            CommunityCreateRoute(
+                onNavigateBack = {
+                    navHostController.popBackStack()
+                },
+                onNavigateToEmojiPicker = {
+                    // TODO: 이모지 선택 화면 또는 다이얼로그 연결
+                },
+                onCreateSuccess = {
+                    navHostController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(
+                            COMMUNITY_REFRESH_KEY,
+                            true,
+                        )
+
+                    navHostController.popBackStack()
+                },
+            )
+        }
+
+        /** 커뮤니티 스레드 수정 화면 **/
+        composable<MainDestination.CommunityEdit> { backStackEntry ->
+            val destination =
+                backStackEntry.toRoute<MainDestination.CommunityEdit>()
+
+            CommunityEditRoute(
+                threadId = destination.threadId,
+                onNavigateBack = {
+                    navHostController.popBackStack()
+                },
+                onNavigateToEmojiPicker = {
+                    // TODO: 이모지 선택 화면 또는 다이얼로그 연결
+                },
+                onEditSuccess = {
+                    navHostController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(
+                            COMMUNITY_REFRESH_KEY,
+                            true,
+                        )
+
+                    navHostController.popBackStack()
+                },
+            )
+        }
+
+        /** 커뮤니티 검색 화면 **/
+        composable<MainDestination.CommunitySearch> {
+            CommunitySearchRoute(
+                onNavigateBack = {
+                    navHostController.popBackStack()
+                },
+                onNavigateToThreadDetail = { threadId ->
+                    navHostController.navigate(
+                        MainDestination.CommunityChatting(
+                            threadId = threadId,
+                        )
+                    )
+                },
+            )
+        }
+
+        composable<MainDestination.CommunityChatting>(
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "$COMMUNITY_THREAD_DEEP_LINK_BASE?threadId={threadId}"
+                }
+            ),
+        ) { backStackEntry ->
+            val destination = backStackEntry.toRoute<MainDestination.CommunityChatting>()
+            val shouldRefresh by backStackEntry
+                .savedStateHandle
+                .getStateFlow(COMMUNITY_REFRESH_KEY, false)
+                .collectAsStateWithLifecycle()
+
+            CommunityChattingRoute(
+                onBack = {
+                    navHostController.popBackStack()
+                },
+                onEditThread = {
+                    navHostController.navigate(
+                        MainDestination.CommunityEdit(destination.threadId)
+                    )
+                },
+                onViewParticipantProfile = {},
+                shouldRefresh = shouldRefresh,
+                onRefreshHandled = {
+                    backStackEntry.savedStateHandle[COMMUNITY_REFRESH_KEY] = false
+                    navHostController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(COMMUNITY_REFRESH_KEY, true)
+                },
+                onThreadDeleted = {
+                    navHostController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(COMMUNITY_REFRESH_KEY, true)
+                    navHostController.popBackStack()
+                },
+            )
+        }
     }
 }

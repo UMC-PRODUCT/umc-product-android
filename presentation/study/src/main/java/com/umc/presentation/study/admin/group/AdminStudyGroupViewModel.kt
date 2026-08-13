@@ -1,21 +1,41 @@
 package com.umc.presentation.study.admin.group
 
+import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.request.organization.UpdateStudyGroupRequest
+import com.umc.domain.usecase.organization.GetManagedStudyGroupsUseCase
+import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMemberUiModel
+import com.umc.domain.usecase.organization.UpdateStudyGroupUseCase
+import com.umc.domain.usecase.organization.DeleteStudyGroupUseCase
+import com.umc.domain.usecase.organization.AddStudyGroupMemberUseCase
+import com.umc.domain.usecase.organization.DeleteStudyGroupMemberUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AdminStudyGroupViewModel @Inject constructor() :
-    BaseViewModel<AdminStudyGroupState, AdminStudyGroupEvent>(AdminStudyGroupState()) {
+class AdminStudyGroupViewModel @Inject constructor(
+    private val getManagedStudyGroupsUseCase: GetManagedStudyGroupsUseCase,
+    private val updateStudyGroupUseCase: UpdateStudyGroupUseCase,
+    private val deleteStudyGroupUseCase: DeleteStudyGroupUseCase,
+    private val addStudyGroupMemberUseCase: AddStudyGroupMemberUseCase,
+    private val deleteStudyGroupMemberUseCase: DeleteStudyGroupMemberUseCase,
+) : BaseViewModel<AdminStudyGroupState, AdminStudyGroupEvent>(
+    AdminStudyGroupState()
+) {
+
 
     init {
-        loadDummy()
+        loadManagedStudyGroups()
     }
+
+
 
     fun onAction(action: AdminStudyGroupAction) {
         when (action) {
             is AdminStudyGroupAction.LoadGroups -> {
-                loadDummy()
+                loadManagedStudyGroups()
             }
 
             is AdminStudyGroupAction.ClickCreateGroup -> {
@@ -45,7 +65,9 @@ class AdminStudyGroupViewModel @Inject constructor() :
             }
 
             is AdminStudyGroupAction.ClickEditMembers -> {
-                emitEvent(AdminStudyGroupEvent.OpenEditMembers(action.item))
+                emitEvent(
+                    AdminStudyGroupEvent.OpenEditMembers(action.item)
+                )
             }
 
             is AdminStudyGroupAction.OpenEditDialog -> {
@@ -54,7 +76,8 @@ class AdminStudyGroupViewModel @Inject constructor() :
                         selectedSettingItem = null,
                         editTargetItem = action.item,
                         editGroupName = action.item.title,
-                        editPartLabel = action.item.partLabel.ifBlank { "Web" },
+                        editPartLabel = action.item.partLabel
+                            .ifBlank { "Web" },
                     )
                 }
             }
@@ -84,29 +107,45 @@ class AdminStudyGroupViewModel @Inject constructor() :
             is AdminStudyGroupAction.ConfirmEditGroup -> {
                 val target = uiState.value.editTargetItem ?: return
                 val newName = uiState.value.editGroupName.trim()
-                val newPart = uiState.value.editPartLabel
 
                 if (newName.isBlank()) return
 
-                updateState {
-                    copy(
-                        groups = groups.map {
-                            if (it.groupId == target.groupId) {
-                                it.copy(
-                                    title = newName,
-                                    partLabel = newPart,
-                                )
-                            } else {
-                                it
-                            }
-                        },
-                        editTargetItem = null,
-                        editGroupName = "",
-                        editPartLabel = "Web",
-                    )
-                }
+                viewModelScope.launch {
+                    when (
+                        val result = updateStudyGroupUseCase(
+                            studyGroupId = target.groupId,
+                            request = UpdateStudyGroupRequest(
+                                name = newName,
+                            ),
+                        )
+                    ) {
+                        is ApiState.Success -> {
+                            loadManagedStudyGroups()
 
-                emitEvent(AdminStudyGroupEvent.ShowToast("그룹 정보가 수정됐어요."))
+                            updateState {
+                                copy(
+                                    editTargetItem = null,
+                                    editGroupName = "",
+                                    editPartLabel = "Web",
+                                )
+                            }
+
+                            emitEvent(
+                                AdminStudyGroupEvent.ShowToast(
+                                    "그룹 정보가 수정됐어요."
+                                )
+                            )
+                        }
+
+                        is ApiState.Fail -> {
+                            emitEvent(
+                                AdminStudyGroupEvent.ShowToast(
+                                    "수정에 실패했어요."
+                                )
+                            )
+                        }
+                    }
+                }
             }
 
             is AdminStudyGroupAction.OpenDeleteDialog -> {
@@ -125,78 +164,189 @@ class AdminStudyGroupViewModel @Inject constructor() :
             }
 
             is AdminStudyGroupAction.ConfirmDeleteGroup -> {
-                val target = uiState.value.deleteTargetItem ?: return
+                val target =
+                    uiState.value.deleteTargetItem ?: return
 
-                updateState {
-                    copy(
-                        groups = groups.filterNot { it.groupId == target.groupId },
-                        deleteTargetItem = null,
+                viewModelScope.launch {
+                    when (
+                        val result = deleteStudyGroupUseCase(
+                            target.groupId
+                        )
+                    ) {
+                        is ApiState.Success -> {
+                            updateState {
+                                copy(deleteTargetItem = null)
+                            }
+
+                            loadManagedStudyGroups()
+
+                            emitEvent(
+                                AdminStudyGroupEvent.ShowToast(
+                                    "그룹이 삭제됐어요."
+                                )
+                            )
+                        }
+
+                        is ApiState.Fail -> {
+                            emitEvent(
+                                AdminStudyGroupEvent.ShowToast(
+                                    "삭제에 실패했어요."
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
+            is AdminStudyGroupAction.OpenMemberBottomSheet -> {
+                val targetGroup = action.item
+
+                val currentMembers = targetGroup.members.map { member ->
+                    AdminStudyGroupCreateMemberUiModel(
+                        id = member.challengerId,
+                        name = member.name,
+                        displayName = member.name,
+                        partLabel = targetGroup.partLabel,
+                        school = "",
                     )
                 }
 
-                emitEvent(AdminStudyGroupEvent.ShowToast("그룹이 삭제됐어요."))
+                updateState {
+                    copy(
+                        memberEditTargetItem = targetGroup,
+                        editingMembers = currentMembers,
+                    )
+                }
+            }
+
+            AdminStudyGroupAction.CloseMemberBottomSheet -> {
+                updateState {
+                    copy(
+                        memberEditTargetItem = null,
+                        editingMembers = emptyList(),
+                    )
+                }
+            }
+
+            is AdminStudyGroupAction.ConfirmMemberChanges -> {
+                val targetGroup =
+                    uiState.value.memberEditTargetItem ?: return
+
+                val updatedMembers = action.members
+
+                val oldMemberIds = targetGroup.members
+                    .map { member -> member.challengerId }
+                    .toSet()
+
+                val newMemberIds = updatedMembers
+                    .map { member -> member.id }
+                    .toSet()
+
+                val memberIdsToAdd = newMemberIds - oldMemberIds
+                val memberIdsToDelete = oldMemberIds - newMemberIds
+
+                viewModelScope.launch {
+                    var hasFailed = false
+
+                    memberIdsToDelete.forEach { memberId ->
+                        when (
+                            deleteStudyGroupMemberUseCase(
+                                studyGroupId = targetGroup.groupId,
+                                memberId = memberId,
+                            )
+                        ) {
+                            is ApiState.Success -> Unit
+                            is ApiState.Fail -> hasFailed = true
+                        }
+                    }
+
+                    memberIdsToAdd.forEach { memberId ->
+                        when (
+                            addStudyGroupMemberUseCase(
+                                studyGroupId = targetGroup.groupId,
+                                memberId = memberId,
+                            )
+                        ) {
+                            is ApiState.Success -> Unit
+                            is ApiState.Fail -> hasFailed = true
+                        }
+                    }
+
+                    if (hasFailed) {
+                        emitEvent(
+                            AdminStudyGroupEvent.ShowToast(
+                                "스터디원 수정에 실패했어요."
+                            )
+                        )
+                        return@launch
+                    }
+
+                    updateState {
+                        copy(
+                            memberEditTargetItem = null,
+                            editingMembers = emptyList(),
+                        )
+                    }
+
+                    loadManagedStudyGroups()
+
+                    emitEvent(
+                        AdminStudyGroupEvent.ShowToast(
+                            "스터디원이 수정됐어요."
+                        )
+                    )
+                }
             }
         }
     }
 
-    private fun loadDummy() {
-        updateState {
-            copy(
-                groups = listOf(
-                    AdminStudyGroupItemUiModel(
-                        groupId = 1L,
-                        title = "React A팀",
-                        partLabel = "Web",
-                        leaderName = "홍길동",
-                        leaderChallengerId = 1001L,
-                        leaderProfileImageUrl = null,
-                        members = listOf(
-                            AdminStudyGroupMemberUiModel(
-                                challengerId = 2001L,
-                                name = "홍길동",
-                            ),
-                            AdminStudyGroupMemberUiModel(
-                                challengerId = 2002L,
-                                name = "홍길동",
-                            ),
-                            AdminStudyGroupMemberUiModel(
-                                challengerId = 2003L,
-                                name = "홍길동",
-                            ),
-                        ),
-                        memberChallengerIds = listOf(2001L, 2002L, 2003L),
-                        createdAtRaw = "2024-03-01T00:00:00",
-                        memberCount = 3,
-                        leaderUniv = "중앙대",
-                    ),
-                    AdminStudyGroupItemUiModel(
-                        groupId = 2L,
-                        title = "React A팀",
-                        partLabel = "Web",
-                        leaderName = "홍길동",
-                        leaderChallengerId = 1002L,
-                        leaderProfileImageUrl = null,
-                        members = listOf(
-                            AdminStudyGroupMemberUiModel(
-                                challengerId = 3001L,
-                                name = "홍길동",
-                            ),
-                            AdminStudyGroupMemberUiModel(
-                                challengerId = 3002L,
-                                name = "홍길동",
-                            ),
-                            AdminStudyGroupMemberUiModel(
-                                challengerId = 3003L,
-                                name = "홍길동",
-                            ),
-                        ),
-                        memberChallengerIds = listOf(3001L, 3002L, 3003L),
-                        createdAtRaw = "2024-03-01T00:00:00",
-                        memberCount = 3,
-                        leaderUniv = "중앙대",
-                    ),
+    private fun loadManagedStudyGroups() {
+        if (uiState.value.isLoading) return
+
+        viewModelScope.launch {
+            updateState {
+                copy(isLoading = true)
+            }
+
+            when (
+                val result = getManagedStudyGroupsUseCase(
+                    cursor = null,
+                    size = PAGE_SIZE,
                 )
-            )
+            ) {
+                is ApiState.Success -> {
+                    val page = result.data
+
+                    updateState {
+                        copy(
+                            groups = page.content.map { group ->
+                                group.toUiModel()
+                            },
+                            nextCursor = page.nextCursor,
+                            hasNext = page.hasNext,
+                            isLoading = false,
+                        )
+                    }
+                }
+
+                is ApiState.Fail -> {
+                    updateState {
+                        copy(isLoading = false)
+                    }
+
+                    emitEvent(
+                        AdminStudyGroupEvent.ShowToast(
+                            "스터디 그룹 목록을 불러오지 못했어요."
+                        )
+                    )
+                }
+            }
         }
+    }
+
+
+
+    companion object {
+        private const val PAGE_SIZE = 20
     }
 }
