@@ -35,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
@@ -110,10 +109,11 @@ private fun UmcApp() {
                             // Type-Safe 객체로 navigate 실행
                             navController.navigate(tab.destination) {
                                 /**
-                                 * 스택이 계속 쌓이는 것을 방지하기 위해 루트 화면까지
+                                 * 스택이 계속 쌓이는 것을 방지하기 위해 홈(메인 영역 루트)까지
                                  * 기존 스택을 정리하고 saveState = true로 이전 화면 상태(스크롤 위치 등)를 보존
+                                 * (그래프 시작점은 스플래시라 findStartDestination은 사용 불가)
                                  * **/
-                                popUpTo(navController.graph.findStartDestination().id) {
+                                popUpTo(MainDestination.Home) {
                                     saveState = true
                                 }
                                 launchSingleTop = true
