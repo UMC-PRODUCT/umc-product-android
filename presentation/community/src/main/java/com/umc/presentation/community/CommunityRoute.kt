@@ -7,9 +7,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun CommunityRoute(
@@ -23,17 +24,11 @@ fun CommunityRoute(
 
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        viewModel.startThreadPolling()
-    }
-
-    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
-        viewModel.stopThreadPolling()
-    }
-
-    DisposableEffect(viewModel) {
-        onDispose(viewModel::stopThreadPolling)
-    }
+    ThreadPollingLifecycleEffect(
+        pollingKey = viewModel,
+        onStartPolling = viewModel::startThreadPolling,
+        onStopPolling = viewModel::stopThreadPolling,
+    )
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -69,4 +64,31 @@ fun CommunityRoute(
         state = state,
         onAction = viewModel::onAction,
     )
+}
+
+@Composable
+internal fun ThreadPollingLifecycleEffect(
+    pollingKey: Any,
+    onStartPolling: () -> Unit,
+    onStopPolling: () -> Unit,
+) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(pollingKey, lifecycleOwner) {
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            onStartPolling()
+        }
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
+        onStopPolling()
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        onStartPolling()
+    }
+
+    DisposableEffect(pollingKey) {
+        onDispose(onStopPolling)
+    }
 }
