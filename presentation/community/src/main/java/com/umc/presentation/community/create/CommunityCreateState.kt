@@ -1,6 +1,6 @@
 package com.umc.presentation.community.create
 
-
+import com.umc.presentation.community.DEFAULT_COMMUNITY_MAX_MEMBER_COUNT
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -10,7 +10,7 @@ data class CommunityCreateState(
     val description: String = "",
 
     val selectedChallengers: List<CommunityChallengerUiModel> = emptyList(),
-    val maxChallengerCount: Int = 8,
+    val maxChallengerCount: Int = DEFAULT_COMMUNITY_MAX_MEMBER_COUNT,
 
     val aiState: CommunityAiState = CommunityAiState.GUIDE,
     val classifiedCategory: CommunityCategory? = null,

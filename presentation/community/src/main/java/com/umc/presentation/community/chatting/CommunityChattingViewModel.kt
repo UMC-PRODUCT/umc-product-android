@@ -375,7 +375,7 @@ class CommunityChattingViewModel @Inject constructor(
         val uploadUris = uriStrings
             .filter(String::isNotBlank)
             .distinct()
-            .take(8)
+            .take(COMMUNITY_CHAT_MAX_IMAGE_COUNT)
         if (uploadUris.isEmpty()) return@launch
         val clientMessageId = UUID.randomUUID().toString()
         updateState {
@@ -921,22 +921,9 @@ class CommunityChattingViewModel @Inject constructor(
         reason: String,
         messages: List<CommunityThreadMessage>,
     ) {
-        val messageLog = messages.joinToString(
-            separator = ", ",
-            prefix = "[",
-            postfix = "]",
-        ) { message ->
-            val preview = message.content
-                .orEmpty()
-                .replace('\n', ' ')
-                .take(LOG_CONTENT_PREVIEW_LENGTH)
-            "{id=${message.messageId}, sender=${message.senderId}, content=$preview}"
-        }
         Log.d(
             SUMMARY_LOG_TAG,
-            "reason=$reason, threadId=${uiState.value.threadId}, " +
-                "entryUnreadCount=${uiState.value.unreadCountAtEntry}, " +
-                "candidateCount=${messages.size}, messages=$messageLog",
+            "reason=$reason, candidateCount=${messages.size}",
         )
     }
 
@@ -950,7 +937,6 @@ class CommunityChattingViewModel @Inject constructor(
         const val MAX_RECONNECT_ATTEMPTS = 5
         const val OWNERSHIP_TRANSFER_REQUIRED_CODE = "COMMUNITY-0041"
         const val SUMMARY_LOG_TAG = "CHAT_SUMMARY_CANDIDATES"
-        const val LOG_CONTENT_PREVIEW_LENGTH = 40
     }
 }
 
