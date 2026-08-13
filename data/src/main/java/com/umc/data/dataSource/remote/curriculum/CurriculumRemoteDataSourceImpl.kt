@@ -9,7 +9,10 @@ import com.umc.data.mapper.toFailState
 import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
 import com.umc.data.response.curriculum.CurriculumOverviewResponse
 import com.umc.domain.model.base.FailState
-
+import com.umc.data.request.curriculum.CreateBestWorkbookRequest
+import com.umc.data.request.curriculum.CreateMissionFeedbackRequest
+import com.umc.data.response.curriculum.ChallengerWorkbookResponse
+import com.umc.data.response.curriculum.WorkbookSubmissionsV2Response
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.curriculum.StudyGroup
 
@@ -66,6 +69,34 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
         }
     }
 
+    // 운영진 - 스터디원 제출 현황 조회
+    override suspend fun getWorkbookSubmissionsV2(
+        studyGroupId: Long?,
+        weekNos: List<Long>?,
+        cursor: Long?,
+        size: Int,
+    ): ApiState<WorkbookSubmissionsV2Response> {
+        return fetch {
+            curriculumApi.getWorkbookSubmissionsV2(
+                studyGroupId = studyGroupId,
+                weekNos = weekNos,
+                cursor = cursor,
+                size = size,
+            )
+        }
+    }
+
+    // 운영진 - 제출 현황 조회 가능 주차 목록
+    override suspend fun getWorkbookSubmissionWeeks(
+        studyGroupId: Long?,
+    ): ApiState<List<Long>> {
+        return fetch {
+            curriculumApi.getWorkbookSubmissionWeeks(
+                studyGroupId = studyGroupId,
+            )
+        }
+    }
+
 
     override suspend fun getStudyGroups(
         schoolId: Long,
@@ -88,6 +119,84 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
         }
     }
 
+    override suspend fun getChallengerWorkbookDetail(
+        challengerWorkbookId: Long,
+    ): ApiState<ChallengerWorkbookResponse> {
+        return fetch {
+            curriculumApi.getChallengerWorkbookDetail(
+                challengerWorkbookId = challengerWorkbookId,
+            )
+        }
+    }
+
+    override suspend fun createWeeklyBestWorkbook(
+        bestMemberId: Long,
+        weeklyCurriculumId: Long,
+        studyGroupId: Long,
+        reason: String,
+    ): ApiState<Unit> {
+        return fetchUnit {
+            curriculumApi.createWeeklyBestWorkbook(
+                body = CreateBestWorkbookRequest(
+                    bestMemberId = bestMemberId,
+                    weeklyCurriculumId = weeklyCurriculumId,
+                    studyGroupId = studyGroupId,
+                    reason = reason,
+                ),
+            )
+        }
+    }
+
+    override suspend fun updateWeeklyBestWorkbook(
+        weeklyBestWorkbookId: Long,
+        reason: String,
+    ): ApiState<Unit> {
+        return fetchUnit {
+            curriculumApi.updateWeeklyBestWorkbook(
+                weeklyBestWorkbookId = weeklyBestWorkbookId,
+                reason = reason,
+            )
+        }
+    }
+
+    override suspend fun deleteWeeklyBestWorkbook(
+        weeklyBestWorkbookId: Long,
+    ): ApiState<Unit> {
+        return fetchUnit {
+            curriculumApi.deleteWeeklyBestWorkbook(
+                weeklyBestWorkbookId = weeklyBestWorkbookId,
+            )
+        }
+    }
+
+    override suspend fun createMissionFeedback(
+        missionSubmissionId: Long,
+        content: String,
+        result: String,
+    ): ApiState<Unit> {
+        return fetchUnit {
+            curriculumApi.createMissionFeedback(
+                body = CreateMissionFeedbackRequest(
+                    missionSubmissionId = missionSubmissionId,
+                    content = content,
+                    result = result,
+                ),
+            )
+        }
+    }
+
+    override suspend fun updateMissionFeedback(
+        missionFeedbackId: Long,
+        content: String,
+    ): ApiState<Unit> {
+        return fetchUnit {
+            curriculumApi.updateMissionFeedback(
+                missionFeedbackId = missionFeedbackId,
+                content = content,
+            )
+        }
+    }
+
     private suspend fun <T> fetch(call: suspend () -> ApiResponse<T>): ApiState<T> {
         return try {
             val response = call()
@@ -98,6 +207,34 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
             }
         } catch (e: Exception) {
             ApiState.Fail(FailState(false, "UNKNOWN", e.message ?: "알 수 없는 오류"))
+        }
+    }
+
+    private suspend fun fetchUnit(
+        call: suspend () -> ApiResponse<Unit>,
+    ): ApiState<Unit> {
+        return try {
+            val response = call()
+
+            if (response.success) {
+                ApiState.Success(Unit)
+            } else {
+                ApiState.Fail(
+                    FailState(
+                        false,
+                        response.code,
+                        response.message,
+                    ),
+                )
+            }
+        } catch (e: Exception) {
+            ApiState.Fail(
+                FailState(
+                    false,
+                    "UNKNOWN",
+                    e.message ?: "알 수 없는 오류",
+                ),
+            )
         }
     }
 }

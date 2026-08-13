@@ -44,6 +44,9 @@ dependencies {
     implementation(project(":presentation:component"))
 
     implementation(libs.androidx.core.ktx)
+
+
+
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -53,6 +56,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.emoji2.emojipicker)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     implementation(libs.hilt.android)

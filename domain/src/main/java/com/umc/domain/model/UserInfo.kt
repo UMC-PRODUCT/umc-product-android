@@ -1,6 +1,7 @@
 package com.umc.domain.model
 
 import com.umc.domain.model.act.challenger.ChallengerPoint
+import com.umc.domain.model.mypage.UserCard
 
 
 //유저 정보 가져오는 API의 내용을 AppDataStore에 저장하기 위한 Data Class입니다.
@@ -16,7 +17,30 @@ data class UserInfo(
     val status: String = "ACTIVE",
     val roles: List<UserRole> = emptyList(),
     val challengerRecords: List<ChallengerRecord> = emptyList(),
-    val profile: ProfileInfo = ProfileInfo(0, "", "", "", "", "")
+    val profile: ProfileInfo = ProfileInfo(0, "", "", "", "", ""),
+
+    val hasLocalCredential: Boolean = false,
+    val totalActivityDays: Long = 0L,
+    val currentGisuMemberInfo: CurrentGisuMemberInfo? = null
+)
+
+
+//v2 신규: 현재 활성 기수 정보
+data class CurrentGisuMemberInfo(
+    val gisuId: Long,
+    val generation: Long,
+    val challenger: CurrentChallengerInfo?,
+    val isAdmin: Boolean,
+    val roleTypes: List<String>
+)
+
+//v2 신규: 현재 활성 기수의 챌린저 상세 정보
+data class CurrentChallengerInfo(
+    val challengerId: Long,
+    val part: String,
+    val challengerStatus: String,
+    val points: List<ChallengerPoint> = emptyList(),
+    val totalPoints: Double = 0.0
 )
 
 //사용자의 권한 및 파트 정보를 담는 도메인 모델
@@ -70,15 +94,32 @@ data class ProfileInfo(
     }
 }
 
-/** ChallengerManagerDialogModel.kt꺼 사용
- * 
- * data class ChallengerPoint(
- *     val id: Long,
- *     val date: String = "",
- *     val title: String,
- *     val pointType: PointType,
- *     val value: Double
- * )
- *
- * **/
+
+// UserCard 만들기
+fun UserInfo.toUserCard(): UserCard {
+    // 1. 최신 파트 및 기수 정보 추출
+    val currentChallenger = currentGisuMemberInfo?.challenger
+    val latestRecord = challengerRecords.maxByOrNull { it.gisu }
+
+    val rawPart = currentChallenger?.part
+        ?: latestRecord?.part
+        ?: "ADMIN"
+
+    val rawGeneration = currentGisuMemberInfo?.generation?.toString()
+        ?: latestRecord?.gisu?.toString()
+        ?: "0"
+
+    return UserCard(
+        name = name,
+        nickname = nickname,
+        university = schoolName,
+        part = rawPart,                   // String
+        generation = rawGeneration,       // String
+        avatarURL = profileImageLink,     // profileImageLink -> avatarURL
+        email = email,
+        github = profile.github,
+        blog = profile.blog,
+        qrPayload = ""
+    )
+}
 

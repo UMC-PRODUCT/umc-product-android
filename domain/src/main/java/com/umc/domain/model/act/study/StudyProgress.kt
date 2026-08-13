@@ -1,4 +1,4 @@
-package com.umc.domain.model.study
+package com.umc.domain.model.act.study
 
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.enums.WorkbookMissionType

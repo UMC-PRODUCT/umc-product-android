@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
@@ -22,10 +23,11 @@ import com.umc.presentation.study.normal.component.StudyCurriculumCard
 import com.umc.presentation.study.normal.component.StudyEmptyCard
 import com.umc.presentation.study.normal.component.StudyItemRow
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.domain.model.enums.StudyStatus
 
 @Composable
 fun UserStudyRoute(
-    viewModel: UserStudyViewModel = hiltViewModel()
+    viewModel: UserStudyViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -34,7 +36,11 @@ fun UserStudyRoute(
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
                 is UserStudyEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        event.message,
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }
             }
         }
@@ -42,9 +48,7 @@ fun UserStudyRoute(
 
     UserStudyScreen(
         state = state,
-        onToggle = { index -> viewModel.toggleExpand(index) },
-        onSubmitClick = { id, link -> viewModel.onSubmitClick(id, link) },
-        onConfirmClick = { id -> viewModel.onConfirmClick(id) },
+        onToggle = viewModel::toggleExpand,
     )
 }
 
@@ -52,20 +56,26 @@ fun UserStudyRoute(
 fun UserStudyScreen(
     state: UserStudyState,
     onToggle: (Int) -> Unit,
-    onSubmitClick: (Long, String) -> Unit,
-    onConfirmClick: (Long) -> Unit,
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(grey100())
+            .padding(
+                horizontal = 16.dp,
+                vertical = 12.dp,
+            )
     ) {
         if (state.items.isEmpty()) {
-            StudyEmptyCard()
+            StudyEmptyCard(
+                modifier = Modifier.fillMaxSize(),
+            )
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp)
+                contentPadding = PaddingValues(
+                    bottom = 16.dp,
+                ),
             ) {
                 item {
                     StudyCurriculumCard(
@@ -76,21 +86,23 @@ fun UserStudyScreen(
                         subText = state.subText,
                     )
                 }
+
                 itemsIndexed(
                     items = state.items,
-                    key = { _, item -> item.id }
+                    key = { _, item -> item.id },
                 ) { index, item ->
                     StudyItemRow(
                         item = item,
-                        onToggle = { onToggle(index) },
-                        onSubmitClick = onSubmitClick,
-                        onConfirmClick = onConfirmClick,
+                        onToggle = {
+                            onToggle(index)
+                        }
                     )
                 }
             }
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 private fun UserStudyScreenPreview() {
@@ -98,10 +110,44 @@ private fun UserStudyScreenPreview() {
         state = UserStudyState(
             title = "웹 프론트엔드 기초",
             part = UserPart.WEB,
-            items = emptyList()
+            items = listOf(
+                NormalStudyItemUiModel(
+                    id = 1,
+                    week = 1,
+                    title = "HTML/CSS 기초",
+                    description = "HTML/CSS 기초를 학습합니다.",
+                    platform = "Github",
+                    status = StudyStatus.PASS,
+                    isBest = false,
+                ),
+                NormalStudyItemUiModel(
+                    id = 2,
+                    week = 2,
+                    title = "HTML/CSS 심화",
+                    description = "Flex와 Grid를 학습합니다.",
+                    platform = "Github",
+                    status = StudyStatus.FAIL,
+                    isExpanded = true,
+                ),
+                NormalStudyItemUiModel(
+                    id = 3,
+                    week = 3,
+                    title = "Javascript 기초",
+                    description = "Javascript 문법을 학습합니다.",
+                    platform = "Github",
+                    status = StudyStatus.IN_PROGRESS,
+                ),
+                NormalStudyItemUiModel(
+                    id = 4,
+                    week = 4,
+                    title = "React 기초",
+                    description = "React를 학습합니다.",
+                    platform = "Github",
+                    status = StudyStatus.IN_PROGRESS,
+                    isLocked = true,
+                ),
+            ),
         ),
         onToggle = {},
-        onSubmitClick = { _, _ -> },
-        onConfirmClick = {},
     )
 }

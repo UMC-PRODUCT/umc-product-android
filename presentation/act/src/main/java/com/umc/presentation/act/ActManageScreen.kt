@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.presentation.act.admin.attendance.AttendanceRoute
+import com.umc.presentation.study.normal.UserStudyRoute
 import com.umc.presentation.act.admin.challenger.AdminChallengerRoute
 import com.umc.presentation.act.normal.attendance.NormalAttendanceRoute
 import com.umc.presentation.act.normal.challenger.NormalChallengerRoute
@@ -44,6 +45,8 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
+import com.umc.presentation.study.ActStudyRoute
+import com.umc.presentation.study.admin.submit.AdminSubmitRoute
 import kotlinx.coroutines.launch
 
 private data class ManageTab(
@@ -81,7 +84,9 @@ private fun ActManageScreen(
                 ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { isActive ->
                     AttendanceRoute(isActive = isActive)
                 },
-                ManageTab(AppStrings.TAB_STUDY_ADMIN) { ComingSoonScreen() },
+                ManageTab(AppStrings.TAB_STUDY_ADMIN) { ActStudyRoute(
+                    isAdmin = true,
+                ) },
                 ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { isActive ->
                     AdminChallengerRoute(
                         isActive = isActive,
@@ -94,7 +99,7 @@ private fun ActManageScreen(
                 ManageTab(AppStrings.TAB_ATTENDANCE_USER) { isActive ->
                     NormalAttendanceRoute(isActive = isActive)
                 },
-                ManageTab(AppStrings.TAB_STUDY_USER) { ComingSoonScreen() },
+                ManageTab(AppStrings.TAB_STUDY_USER) { UserStudyRoute() },
                 ManageTab(AppStrings.TAB_CHALLENGE_USER) { isActive ->
                     NormalChallengerRoute(isActive = isActive)
                 }

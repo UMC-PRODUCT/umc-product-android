@@ -15,6 +15,7 @@ import com.umc.data.api.NotificationApi
 import com.umc.data.api.StorageApi
 import com.umc.data.api.TermsApi
 import com.umc.data.api.WorkbookApi
+import com.umc.data.api.CommunityThreadApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -70,6 +71,15 @@ object ApiModule {
     fun provideCommunityApi(@AuthRetrofit retrofit: Retrofit): CommunityApi {
         return retrofit.create(CommunityApi::class.java)
     }
+
+    @Singleton
+    @Provides
+    fun provideCommunityThreadApi(
+        @AuthRetrofit retrofit: Retrofit,
+    ): CommunityThreadApi {
+        return retrofit.create(CommunityThreadApi::class.java)
+    }
+
 
     @Singleton
     @Provides

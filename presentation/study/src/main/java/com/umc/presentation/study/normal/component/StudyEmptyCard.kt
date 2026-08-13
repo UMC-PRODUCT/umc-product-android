@@ -1,9 +1,12 @@
 package com.umc.presentation.study.normal.component
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -11,35 +14,35 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
-import com.umc.component.theme.*
+import com.umc.component.theme.AppStrings
+import com.umc.component.theme.UmcTypographyTokens
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey500
 
-/**
- * 스터디/활동 목록이 비어있을 때 표시되는 카드
- */
 @Composable
-fun StudyEmptyCard(modifier: Modifier = Modifier) {
-    Box(
+fun StudyEmptyCard(
+    modifier: Modifier = Modifier,
+) {
+    Column(
         modifier = modifier
             .fillMaxSize()
-            .background(grey000()),
-        contentAlignment = Alignment.Center
+            .offset(y = (-28).dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_book),
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = grey400()
-            )
-            Spacer(Modifier.height(12.dp))
-            UText(
-                text = AppStrings.STUDY_EMPTY,
-                style = UmcTypographyTokens.FootnoteBold,
-                color = grey500(),
-            )
-        }
+        Icon(
+            painter = painterResource(R.drawable.ic_book_filled),
+            contentDescription = null,
+            modifier = Modifier.size(48.dp),
+            tint = grey400(),
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        UText(
+            text = AppStrings.STUDY_EMPTY,
+            style = UmcTypographyTokens.FootnoteBold,
+            color = grey500(),
+        )
     }
 }
