@@ -359,7 +359,7 @@ private fun ChallengerMemberRow(
         ) {
             UText(
                 text = member.nicknameWithName,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f, fill = false),
                 style = BodyBold,
                 color = grey800(),
                 maxLines = 1,
