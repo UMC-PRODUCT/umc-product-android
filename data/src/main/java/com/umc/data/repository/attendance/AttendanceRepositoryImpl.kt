@@ -1,7 +1,6 @@
 package com.umc.data.repository.attendance
 
 import com.umc.data.dataSource.remote.attendance.AttendanceRemoteDataSource
-import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.domain.model.act.check.AdminPendingUser
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.act.check.UserCheckHistory
@@ -48,11 +47,6 @@ class AttendanceRepositoryImpl @Inject constructor(
                 .filter { it.attendanceStatus in completedAttendanceStatuses }
                 .mapIndexed { index, response -> response.toHistory(index) }
         }
-    }
-
-    override suspend fun getChallengerAttendanceHistory(challengerId: Long): ApiState<List<ChallengerInfoHistory>> {
-        // v2에는 타 챌린저의 출석 이력 조회 API가 제공되지 않는다.
-        return ApiState.Success(emptyList())
     }
 
     private companion object {
