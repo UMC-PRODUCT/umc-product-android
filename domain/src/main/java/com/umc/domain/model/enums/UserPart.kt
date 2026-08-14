@@ -1,7 +1,7 @@
 package com.umc.domain.model.enums
 
 enum class UserPart(val label: String) {
-    PLAN("Plan"),
+    PLAN("PM"),
     DESIGN("Design"),
     WEB("Web"),
     IOS("IOS"),
