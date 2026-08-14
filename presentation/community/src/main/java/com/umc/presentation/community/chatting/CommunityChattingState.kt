@@ -16,6 +16,7 @@ data class CommunityChattingState(
     val messages: List<CommunityThreadMessage> = emptyList(),
     val unreadMessagesAtEntry: List<CommunityThreadMessage> = emptyList(),
     val unreadCountAtEntry: Int = 0,
+    val summaryCandidateMessages: List<CommunityThreadMessage> = emptyList(),
     val localImageUrisByMessageId: Map<String, List<String>> = emptyMap(),
     val pendingMessages: Map<String, PendingCommunityMessage> = emptyMap(),
     val readWatermarks: Map<String, String> = emptyMap(),

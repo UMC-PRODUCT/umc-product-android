@@ -1,6 +1,7 @@
 package com.umc.presentation.community.chatting
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -58,6 +59,8 @@ import com.umc.component.theme.white
 import com.umc.domain.model.community.thread.CommunityThreadMember
 import com.umc.domain.model.community.thread.CommunityThreadRole
 import com.umc.component.theme.UmcTypographyTokens
+import com.umc.presentation.community.component.chatting.CommunityChatProfileImage
+import com.umc.presentation.community.component.chatting.communityChatPartTag
 
 @Composable
 internal fun CommunityParticipantScreen(
@@ -222,7 +225,7 @@ private fun ParticipantRow(
         modifier = Modifier.fillMaxWidth().heightIn(min = 62.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ProfileImage(member.profileImageUrl)
+        CommunityChatProfileImage(member.profileImageUrl)
         Column(
             modifier = Modifier.weight(1f).padding(start = 8.dp),
             verticalArrangement = Arrangement.spacedBy(3.dp),
@@ -244,7 +247,7 @@ private fun ParticipantRow(
                 }
                 if (isMe) ParticipantBadge(AppStrings.CHAT_ME, indigo100(), indigo500())
             }
-            val part = member.part?.let { partTag(it).first }.orEmpty()
+            val part = member.part?.let { communityChatPartTag(it).first }.orEmpty()
             if (part.isNotBlank()) {
                 Text(
                     text = part,
@@ -295,7 +298,7 @@ private fun ParticipantRow(
 @Composable
 private fun ParticipantMenuItem(
     text: String,
-    @androidx.annotation.DrawableRes iconRes: Int,
+    @DrawableRes iconRes: Int,
     color: Color = grey950(),
     onClick: () -> Unit,
 ) {
