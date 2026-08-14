@@ -19,7 +19,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,6 +39,7 @@ class CommunityViewModel @Inject constructor(
     private val leaveCommunityThreadUseCase: LeaveCommunityThreadUseCase,
 ) : ViewModel() {
 
+    private var threadPollingJob: Job? = null
     private val _state = MutableStateFlow(CommunityState())
     val state: StateFlow<CommunityState> = _state.asStateFlow()
 
@@ -117,6 +120,30 @@ class CommunityViewModel @Inject constructor(
 
     fun loadThreads() {
         viewModelScope.launch {
+            fetchThreads(showLoading = true)
+        }
+    }
+
+    fun startThreadPolling() {
+        if (threadPollingJob?.isActive == true) return
+
+        threadPollingJob = viewModelScope.launch {
+            fetchThreads(showLoading = _state.value.threads.isEmpty())
+
+            while (true) {
+                delay(THREAD_POLLING_INTERVAL_MS)
+                fetchThreads(showLoading = false)
+            }
+        }
+    }
+
+    fun stopThreadPolling() {
+        threadPollingJob?.cancel()
+        threadPollingJob = null
+    }
+
+    private suspend fun fetchThreads(showLoading: Boolean) {
+        if (showLoading) {
             _state.update {
                 it.copy(
                     isLoading = true,
@@ -126,45 +153,43 @@ class CommunityViewModel @Inject constructor(
                     showLeaveDialog = false,
                 )
             }
+        }
 
-            getCommunityThreadsUseCase(
-                filter = "all",
-                query = null,
-                offset = 0,
-                limit = 20,
-            ).onSuccess { page ->
-                val uiThreads = buildList {
-                    addAll(
-                        page.pinnedThreads.map { thread ->
-                            thread.toUiModel(
-                                forcePinned = true,
-                            )
-                        }
-                    )
-
-                    addAll(
-                        page.threads.map { thread ->
-                            thread.toUiModel(
-                                forcePinned = false,
-                            )
-                        }
-                    )
-                }
-
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        threads = uiThreads,
-                        errorMessage = null,
-                    )
-                }
-            }.onFailure { throwable ->
-                Log.e(
-                    "COMMUNITY_LIST",
-                    "목록 조회 실패",
-                    throwable,
+        getCommunityThreadsUseCase(
+            filter = "all",
+            query = null,
+            offset = 0,
+            limit = 20,
+        ).onSuccess { page ->
+            val uiThreads = buildList {
+                addAll(
+                    page.pinnedThreads.map { thread ->
+                        thread.toUiModel(forcePinned = true)
+                    }
                 )
+                addAll(
+                    page.threads.map { thread ->
+                        thread.toUiModel(forcePinned = false)
+                    }
+                )
+            }
 
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    threads = uiThreads,
+                    errorMessage = null,
+                )
+            }
+        }.onFailure { throwable ->
+            Log.e(
+                "COMMUNITY_LIST",
+                "목록 조회 실패",
+                throwable,
+            )
+
+            // Keep the last successful list visible when a background refresh fails.
+            if (showLoading) {
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -473,3 +498,5 @@ private fun CommunityThreadDetail.toUiModel(): CommunityThreadUiModel {
         isMine = myRole == CommunityThreadRole.OWNER,
     )
 }
+
+private const val THREAD_POLLING_INTERVAL_MS = 3_000L
