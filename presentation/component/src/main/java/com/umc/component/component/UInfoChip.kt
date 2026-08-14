@@ -11,15 +11,16 @@ import com.umc.component.theme.green600
 import com.umc.component.theme.green700
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo600
 import com.umc.component.theme.indigo700
 import com.umc.component.theme.red100
 import com.umc.component.theme.red600
-import com.umc.component.theme.red700
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow600
 import com.umc.component.theme.yellow700
+import com.umc.component.theme.white
 import com.umc.domain.model.enums.UserPart
 
 enum class UInfoChipType {
@@ -48,7 +49,7 @@ fun UInfoChip(
         UInfoChipType.PART -> text.toPartLabel()
     }
     val style = when (type) {
-        UInfoChipType.SCHOOL -> schoolChipStyle(chipText)
+        UInfoChipType.SCHOOL -> schoolChipStyle()
         UInfoChipType.PART -> partChipStyle(UserPart.from(chipText))
     }
 
@@ -118,12 +119,7 @@ private data class UInfoChipStyle(
 )
 
 @Composable
-private fun schoolChipStyle(schoolName: String): UInfoChipStyle {
-    val normalizedName = schoolName.normalizedKey()
-    val palette = schoolPalette()
-    val index = (normalizedName.hashCode() and Int.MAX_VALUE) % palette.size
-    return palette[index]
-}
+private fun schoolChipStyle() = UInfoChipStyle(grey800(), white())
 
 @Composable
 private fun partChipStyle(part: UserPart): UInfoChipStyle {
@@ -139,22 +135,3 @@ private fun partChipStyle(part: UserPart): UInfoChipStyle {
         UserPart.UNKNOWN -> UInfoChipStyle(grey100(), grey600())
     }
 }
-
-private fun String.normalizedKey(): String {
-    return trim()
-        .lowercase()
-        .replace(" ", "")
-}
-
-@Composable
-private fun schoolPalette() = listOf(
-    UInfoChipStyle(red100(), red600()),
-    UInfoChipStyle(yellow100(), yellow600()),
-    UInfoChipStyle(green100(), green600()),
-    UInfoChipStyle(indigo100(), indigo600()),
-    UInfoChipStyle(red100(), red700()),
-    UInfoChipStyle(yellow100(), yellow700()),
-    UInfoChipStyle(green100(), green700()),
-    UInfoChipStyle(indigo100(), indigo700()),
-    UInfoChipStyle(grey100(), grey600()),
-)
