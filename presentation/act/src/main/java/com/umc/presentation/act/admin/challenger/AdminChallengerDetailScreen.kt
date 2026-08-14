@@ -316,7 +316,7 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
         ) {
             UText(
                 text = ui.nicknameWithName,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f, fill = false),
                 style = HeadlineBold,
                 color = grey800(),
                 maxLines = 1,
@@ -371,7 +371,7 @@ private fun AddScore(
                 painter = painterResource(R.drawable.ic_add_filled),
                 contentDescription = null,
                 tint = green500(),
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(32.dp)
             )
         }
         Spacer(Modifier.width(14.dp))
