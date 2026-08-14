@@ -1,5 +1,7 @@
 package com.umc.presentation.act.normal.attendance
 
+import com.umc.presentation.act.normal.attendance.dialog.AttendanceReasonDialog
+
 import android.Manifest
 import android.content.pm.PackageManager
 import android.widget.Toast
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -843,6 +846,8 @@ private fun StatusChip(
 ) {
     Box(
         modifier = Modifier
+            .wrapContentWidth()
+            .height(24.dp)
             .background(background, RoundedCornerShape(4.dp))
             .padding(horizontal = 8.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center

@@ -636,6 +636,7 @@ object AppStrings {
     const val CHAT_CD_DELETE_FAILED_MESSAGE = "실패 메시지 삭제"
     const val CHAT_CD_PROFILE_IMAGE = "사용자 프로필 이미지"
     const val CHAT_CD_REPLY_SEND = "답장 전송"
+    const val CHAT_CD_CANCEL_REPLY = "답장 취소"
     const val CHAT_CD_ATTACH_PHOTO = "사진 첨부"
     const val CHAT_CD_SEND = "전송"
 }
