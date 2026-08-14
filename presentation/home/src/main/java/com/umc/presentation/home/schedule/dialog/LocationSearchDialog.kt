@@ -61,16 +61,16 @@ fun LocationSearchBottomSheet(
     onLocationSelected: (LocationItem) -> Unit
 ){
 
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState
+
+    .collectAsStateWithLifecycle()
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        confirmValueChange = { it != SheetValue.Hidden },
+        skipPartiallyExpanded = false,
+        //confirmValueChange = { it != SheetValue.Hidden },
     )
-    
 
-    
     /** 지도 검색 기능 철회로 주석 처리
     // 공식 SDK 가이드 기준 카메라 상태 초기화
     val cameraPositionState = rememberCameraPositionState()

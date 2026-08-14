@@ -326,6 +326,9 @@ fun MainNavHost(
                 },
                 onNavigateToNotification = {
                     navHostController.navigate(MainDestination.Notification)
+                },
+                onNavigateToCardShare = {
+                    navHostController.navigate(MainDestination.Mycard(openExchangeDialog = true))
                 }
             )
         }
@@ -384,10 +387,12 @@ fun MainNavHost(
             // Type-Safe Navigation 파라미터 추출 (딥링크 포함)
             val mycardDestination = backStackEntry.toRoute<MainDestination.Mycard>()
             val targetMemberId = mycardDestination.memberId
+            val openExchangeDialog = mycardDestination.openExchangeDialog
 
 
             MycardRoute(
                 targetMemberId = targetMemberId,
+                openExchangeDialog = openExchangeDialog,
                 onNavigateToMypage = {
                     navHostController.navigate(MainDestination.Mypage)
                 },
