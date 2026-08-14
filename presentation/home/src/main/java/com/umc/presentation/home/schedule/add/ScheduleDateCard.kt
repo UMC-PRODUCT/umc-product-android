@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -58,8 +59,9 @@ fun ScheduleDateCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(48.dp)
                     .padding(horizontal = 16.dp)
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -67,6 +69,9 @@ fun ScheduleDateCard(
                 USwitch(
                     checked = uiState.isAllDay,
                     onCheckedChange = onAlldayChanged,
+                    modifier = Modifier
+                        .height(24.dp)
+
                 )
             }
 
@@ -107,6 +112,7 @@ fun DateTimeRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(48.dp)
             .clickable { onDateTimeClick()}
             .padding(horizontal = 16.dp)
             .padding(vertical = 8.dp),

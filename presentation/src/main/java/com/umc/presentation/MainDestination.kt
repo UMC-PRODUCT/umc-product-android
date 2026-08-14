@@ -94,7 +94,8 @@ sealed interface MainDestination {
     //신 마이페이지
     @Serializable
     data class Mycard(
-        val memberId: String? = null
+        val memberId: String? = null,
+        val openExchangeDialog: Boolean = false
     ) : MainDestination
 
     //(구 마이페이지) -> (신 설정)

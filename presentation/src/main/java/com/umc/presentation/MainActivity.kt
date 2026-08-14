@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -64,8 +65,8 @@ private fun UmcApp() {
         val currentTab = when {
             currentDestination?.hasRoute<MainDestination.Home>() == true -> MainTab.Home
             // TODO: 공지/활동/커뮤니티 Destination이 분리되면 해당 Destination 타입으로 교체
-            //currentDestination?.hasRoute<MainDestination.>() == true -> MainTab.Activity
-            //currentDestination?.hasRoute<MainDestination.>() == true -> MainTab.Community
+            currentDestination?.hasRoute<MainDestination.Act>() == true -> MainTab.Activity
+            currentDestination?.hasRoute<MainDestination.Community>() == true -> MainTab.Community
             currentDestination?.hasRoute<MainDestination.Notification>() == true -> MainTab.Notice
             currentDestination?.hasRoute<MainDestination.Mycard>() == true -> MainTab.My
             else -> null
@@ -128,7 +129,8 @@ private fun UmcBottomNavigationBar(
 ) {
     NavigationBar(
         containerColor = grey000(), // 피그마 하단바 배경색
-        tonalElevation = 4.dp
+        modifier = Modifier.background(grey000()),
+        tonalElevation = 0.dp
     ) {
         MainTab.tabs.filterNotNull().forEach { tab ->
             val isSelected = currentTab == tab
