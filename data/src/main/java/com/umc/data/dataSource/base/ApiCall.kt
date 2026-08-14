@@ -17,7 +17,7 @@ suspend inline fun <reified T> apiCall(
             ApiState.Success(response.result)
         } else {
             ApiState.Fail(
-                FailState(success = false, code = response.code, message = "null")
+                FailState(success = false, code = response.code, message = response.message)
             )
         }
 
