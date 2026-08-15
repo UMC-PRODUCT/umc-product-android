@@ -606,6 +606,10 @@ fun NoticeWriteScreen(
             highlightColor = uiState.highlightColor,
             onClickBullet = onClickBullet,
             onClickQuote = onClickQuote,
+            // 커서 위치에서 켜져 있는 마크다운을 툴바에 표시하기 위해 매 입력마다 다시 계산한다
+            activeStyles = remember(uiState.content) {
+                MarkdownScanner.activeStyles(uiState.content)
+            },
             isAiEnabled = uiState.isAiRefineEnabled,
             onClickAiRefine = onClickAiRefine,
             onClickAiSummarize = onClickAiSummarize,
