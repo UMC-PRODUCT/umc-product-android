@@ -2,6 +2,8 @@ package com.umc.presentation.act.admin.challenger.bottomsheet
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -88,66 +89,71 @@ fun OtherPointsScreen(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .height(700.dp)
-            .imePadding()
+            .height(600.dp)
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(grey000())
             .padding(horizontal = 16.dp)
     ) {
         DragHeader()
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
 
-        UText(
-            text = AppStrings.REWARD_ETC_TITLE,
-            style = Title3Bold,
-            color = grey800()
-        )
+            UText(
+                text = AppStrings.REWARD_ETC_TITLE,
+                style = Title3Bold,
+                color = grey800()
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        UText(
-            text = AppStrings.REWARD_ETC_CONTENT,
-            style = Subheadline,
-            color = grey600()
-        )
+            UText(
+                text = AppStrings.REWARD_ETC_CONTENT,
+                style = Subheadline,
+                color = grey600()
+            )
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        ScoreStepper(
-            label = AppStrings.REWARD,
-            value = uiState.customRewardScore,
-            valueColor = green500(),
-            onMinusClick = onRewardMinusClick,
-            onPlusClick = onRewardPlusClick
-        )
+            ScoreStepper(
+                label = AppStrings.REWARD,
+                value = uiState.customRewardScore,
+                valueColor = green500(),
+                onMinusClick = onRewardMinusClick,
+                onPlusClick = onRewardPlusClick
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        ScoreStepper(
-            label = AppStrings.PUNISH,
-            value = uiState.customPunishScore,
-            valueColor = red500(),
-            onMinusClick = onPunishMinusClick,
-            onPlusClick = onPunishPlusClick
-        )
+            ScoreStepper(
+                label = AppStrings.PUNISH,
+                value = uiState.customPunishScore,
+                valueColor = red500(),
+                onMinusClick = onPunishMinusClick,
+                onPlusClick = onPunishPlusClick
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        UText(
-            text = AppStrings.REWARD_ETC_REASON,
-            style = CalloutBold,
-            color = grey800()
-        )
+            UText(
+                text = AppStrings.REWARD_ETC_REASON,
+                style = CalloutBold,
+                color = grey800()
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        ReasonInput(
-            value = uiState.customReason,
-            onValueChange = onReasonChange
-        )
+            ReasonInput(
+                value = uiState.customReason,
+                onValueChange = onReasonChange
+            )
 
-        Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         UButton(
             modifier = Modifier.fillMaxWidth(),
