@@ -174,4 +174,39 @@ class MarkdownScannerTest {
         assertEquals("가나****", result.text)
         assertEquals(4, result.selection.min)
     }
+
+    // ---------------------------------------------------------------
+    // 마커 쌍 가운데 커서 (툴바로 막 삽입한 직후)
+    // ---------------------------------------------------------------
+
+    @Test
+    fun `빈 굵게 쌍 가운데에서는 기울임이 활성이 아니다`() {
+        // `**|**` — 커서 뒤의 마커까지 삼켜 `***`(굵게+기울임)로 읽으면 안 된다
+        val styles = MarkdownScanner.activeStyles(valueAt("****", cursor = 2))
+
+        assertTrue(MarkdownStyle.BOLD in styles)
+        assertFalse(MarkdownStyle.ITALIC in styles)
+    }
+
+    @Test
+    fun `빈 굵게 쌍 가운데에서 굵게를 다시 누르면 마커 밖으로 나간다`() {
+        val value = valueAt("****", cursor = 2)
+
+        val result = MarkdownEditActions.toggleBold(value)
+
+        // 마커가 늘어나지 않고 커서만 닫는 마커 뒤로 이동해야 한다
+        assertEquals("****", result.text)
+        assertEquals(4, result.selection.min)
+    }
+
+    @Test
+    fun `형광펜 빈 쌍 가운데에서 형광펜을 다시 누르면 마커 밖으로 나간다`() {
+        val text = "$mark</mark>"
+        val value = valueAt(text, cursor = mark.length)
+
+        val result = MarkdownEditActions.toggleHighlight(value, MarkdownHighlightColor.entries.first())
+
+        assertEquals(text, result.text)
+        assertEquals(text.length, result.selection.min)
+    }
 }
