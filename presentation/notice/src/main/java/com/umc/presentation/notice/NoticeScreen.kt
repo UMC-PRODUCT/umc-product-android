@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -89,10 +90,10 @@ fun NoticeRoute(
             onClickGisu = viewModel::onClickGisu,
             onClickSearch = viewModel::onClickSearch,
             onClickAdminNotice = viewModel::onClickAdminNotice,
-            onClickChip = { chip ->
-                // 파트 칩은 바텀시트에서 파트를 고른 뒤에야 필터가 적용된다
-                if (chip.hanBottomSheet) showPartBottomSheet = true else viewModel.onClickChip(chip)
-            },
+            onClickOrgChip = viewModel::onClickOrgChip,
+            onClickSubChipAll = viewModel::onClickSubChipAll,
+            onClickSubChipStaff = viewModel::onClickSubChipStaff,
+            onClickPartChip = { showPartBottomSheet = true },
             onClickNotice = viewModel::onClickNotice,
             onLoadNextPage = viewModel::loadNextPage,
             onClickWriteNotice = viewModel::onClickWriteNotice,
@@ -122,7 +123,10 @@ fun NoticeScreen(
     onClickGisu: (GisuItem) -> Unit = {},
     onClickSearch: () -> Unit = {},
     onClickAdminNotice: () -> Unit = {},
-    onClickChip: (NoticeChipState) -> Unit = {},
+    onClickOrgChip: (NoticeChipState) -> Unit = {},
+    onClickSubChipAll: () -> Unit = {},
+    onClickSubChipStaff: () -> Unit = {},
+    onClickPartChip: () -> Unit = {},
     onClickNotice: (Long) -> Unit = {},
     onLoadNextPage: () -> Unit = {},
     onClickWriteNotice: () -> Unit = {},
@@ -143,21 +147,58 @@ fun NoticeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 필터 칩 (전체 / 운영진 공지 / 지부 / 학교 / 파트). 항상 하나만 선택된다
+            // 1차 필터 (소속)
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(
-                    items = uiState.chipList,
+                    items = uiState.orgChipList,
                     key = { it.text },
                 ) { chip ->
                     NoticeFilterChip(
                         text = chip.text,
                         isSelected = chip.isClicked,
                         selectedColor = indigo500(),
-                        hasDropdownIcon = chip.hanBottomSheet,
-                        onClick = { onClickChip(chip) },
+                        onClick = { onClickOrgChip(chip) },
+                    )
+                }
+            }
+
+            // 2차 필터 (전체 / 운영진 공지 / 파트)
+            if (uiState.isSubChipVisible) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                HorizontalDivider(thickness = 1.dp, color = grey100())
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    NoticeFilterChip(
+                        text = AppStrings.ALL,
+                        isSelected = uiState.selectedSubChip == NoticeSubChip.ALL,
+                        selectedColor = grey950(),
+                        onClick = onClickSubChipAll,
+                    )
+
+                    if (uiState.canWriteNotice) {
+                        NoticeFilterChip(
+                            text = AppStrings.NOTICE_STAFF_CHIP,
+                            isSelected = uiState.selectedSubChip == NoticeSubChip.STAFF,
+                            selectedColor = grey950(),
+                            onClick = onClickSubChipStaff,
+                        )
+                    }
+
+                    NoticeFilterChip(
+                        text = uiState.selectedPart?.label ?: AppStrings.PART,
+                        isSelected = uiState.selectedSubChip == NoticeSubChip.PART,
+                        selectedColor = grey950(),
+                        hasDropdownIcon = true,
+                        onClick = onClickPartChip,
                     )
                 }
             }
@@ -384,12 +425,11 @@ private fun NoticeScreenPreview() {
     NoticeScreen(
         uiState = NoticeUiState(
             nowTitle = "12기 공지사항",
-            chipList = listOf(
+            orgChipList = listOf(
                 NoticeChipState(text = "전체", isClicked = true),
-                NoticeChipState(text = "운영진 공지", isStaffNoticeChip = true),
+                NoticeChipState(text = "중앙운영사무국"),
                 NoticeChipState(text = "Ain 지부"),
                 NoticeChipState(text = "중앙대학교"),
-                NoticeChipState(text = "파트", hanBottomSheet = true),
             ),
             canWriteNotice = true,
         ),
@@ -398,21 +438,16 @@ private fun NoticeScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeScreenPartSelectedPreview() {
+private fun NoticeScreenSubChipPreview() {
     NoticeScreen(
         uiState = NoticeUiState(
             nowTitle = "12기 공지사항",
-            chipList = listOf(
+            orgChipList = listOf(
                 NoticeChipState(text = "전체"),
-                NoticeChipState(text = "운영진 공지", isStaffNoticeChip = true),
-                NoticeChipState(
-                    text = UserPart.PLAN.label,
-                    part = UserPart.PLAN.name,
-                    hanBottomSheet = true,
-                    isClicked = true,
-                ),
+                NoticeChipState(text = "중앙운영사무국", isClicked = true),
             ),
-            selectedChipText = UserPart.PLAN.label,
+            selectedOrgChipText = "중앙운영사무국",
+            selectedSubChip = NoticeSubChip.PART,
             selectedPart = UserPart.PLAN,
             canWriteNotice = true,
         ),
