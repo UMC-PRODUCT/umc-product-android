@@ -11,6 +11,9 @@ enum class MarkdownStyle {
  * 커서 위치에서 켜져 있는 마크다운 상태.
  * 인라인 스타일은 마커 스캔으로, 줄 단위 스타일은 줄 prefix로 판단한다
  */
+/** 열려 있는 마커의 여닫는 문자열 */
+data class MarkdownMarker(val open: String, val close: String)
+
 data class MarkdownActiveStyles(
     val inline: Set<MarkdownStyle> = emptySet(),
     val isBullet: Boolean = false,
@@ -82,13 +85,13 @@ object MarkdownScanner {
         return openMarkers(text, lineStart, at).reversed().joinToString("") { it.close }
     }
 
-    /** [style]이 켜져 있고 커서 바로 뒤에 닫는 마커가 붙어 있으면 그 마커의 길이 */
-    fun closingMarkerLengthAt(value: TextFieldValue, style: MarkdownStyle): Int? {
+    /** 커서 위치에서 [style]로 열려 있는 마커. 없으면 null */
+    fun activeMarkerAt(value: TextFieldValue, style: MarkdownStyle): MarkdownMarker? {
         val text = value.text
         val at = value.selection.min.coerceIn(0, text.length)
         val lineStart = text.lastIndexOf('\n', at - 1) + 1
         val open = openMarkers(text, lineStart, at).lastOrNull { style in it.styles } ?: return null
-        return open.close.takeIf { text.startsWith(it, at) }?.length
+        return MarkdownMarker(open = open.marker, close = open.close)
     }
 
     /**
