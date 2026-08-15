@@ -23,6 +23,31 @@ object MarkdownEditActions {
 
     private val headingPrefixes = listOf("### ", "## ", "# ")
 
+    /**
+     * 개행이 입력되면 그 줄에서 열려 있던 인라인 마커를 개행 앞에서 모두 닫는다.
+     *
+     * 파서가 줄 단위로만 인라인 토큰을 찾으므로 토큰이 개행을 넘기면 마커가 화면에
+     * 그대로 드러난다. 또한 사용자 기대상 `<mark>가나다` 뒤에서 엔터를 치면
+     * 형광펜은 "가나다"까지만 적용되어야 한다
+     */
+    fun closeMarkersOnNewline(previous: TextFieldValue, current: TextFieldValue): TextFieldValue {
+        val cursor = current.selection.min
+        val isSingleNewlineInput = current.text.length == previous.text.length + 1 &&
+                current.selection.collapsed &&
+                cursor in 1..current.text.length &&
+                current.text[cursor - 1] == '\n'
+        if (!isSingleNewlineInput) return current
+
+        val closers = MarkdownScanner.closersAt(current.text, cursor - 1)
+        if (closers.isEmpty()) return current
+
+        val newlineAt = cursor - 1
+        return current.copy(
+            text = current.text.replaceRange(newlineAt, newlineAt, closers),
+            selection = TextRange(cursor + closers.length),
+        )
+    }
+
     /** 색상 인자가 없는 `<mark>`도 렌더러가 받아주므로 동일하게 인식한다 */
     private val MARK_OPEN = Regex("""<mark(?:\s+color="[^"]*")?>""")
     private const val MARK_CLOSE = "</mark>"
@@ -50,18 +75,20 @@ object MarkdownEditActions {
     }
 
     /** 굵게(`**`) 토글. 기울임과 조합되면 `***...***` 형태가 됨 */
-    fun toggleBold(value: TextFieldValue): TextFieldValue = toggleAsterisk(value, count = 2)
+    fun toggleBold(value: TextFieldValue): TextFieldValue =
+        toggleAsterisk(value, count = 2, style = MarkdownStyle.BOLD)
 
     /** 기울임(`*`) 토글 */
-    fun toggleItalic(value: TextFieldValue): TextFieldValue = toggleAsterisk(value, count = 1)
+    fun toggleItalic(value: TextFieldValue): TextFieldValue =
+        toggleAsterisk(value, count = 1, style = MarkdownStyle.ITALIC)
 
     /** 밑줄(`<u></u>`) 토글 */
     fun toggleUnderline(value: TextFieldValue): TextFieldValue =
-        toggleWrap(value, open = "<u>", close = "</u>")
+        toggleWrap(value, open = "<u>", close = "</u>", style = MarkdownStyle.UNDERLINE)
 
     /** 취소선(`~~`) 토글 */
     fun toggleStrikethrough(value: TextFieldValue): TextFieldValue =
-        toggleWrap(value, open = "~~", close = "~~")
+        toggleWrap(value, open = "~~", close = "~~", style = MarkdownStyle.STRIKETHROUGH)
 
     /**
      * 형광펜(`<mark color="...">`) 토글.
@@ -69,7 +96,8 @@ object MarkdownEditActions {
      */
     fun toggleHighlight(value: TextFieldValue, color: MarkdownHighlightColor): TextFieldValue {
         val open = """<mark color="${color.markColorCode}">"""
-        val (start, end) = value.trimmedSelection() ?: return insertEmptyMarker(value, open, MARK_CLOSE)
+        val (start, end) = value.trimmedSelection()
+            ?: return deactivateOrInsert(value, open, MARK_CLOSE, MarkdownStyle.HIGHLIGHT)
         val text = value.text
         val selected = text.substring(start, end)
 
@@ -185,9 +213,14 @@ object MarkdownEditActions {
      * 별표 마커 토글. 굵게/기울임은 같은 문자를 공유하므로 양끝 별표 개수로 상태를 판단:
      * 1개=기울임, 2개=굵게, 3개=굵게+기울임
      */
-    private fun toggleAsterisk(value: TextFieldValue, count: Int): TextFieldValue {
+    private fun toggleAsterisk(
+        value: TextFieldValue,
+        count: Int,
+        style: MarkdownStyle,
+    ): TextFieldValue {
         val marker = "*".repeat(count)
-        val (start, end) = value.trimmedSelection() ?: return insertEmptyMarker(value, marker, marker)
+        val (start, end) = value.trimmedSelection()
+            ?: return deactivateOrInsert(value, marker, marker, style)
 
         val selected = value.text.substring(start, end)
         val edgeMarks = minOf(
@@ -207,8 +240,14 @@ object MarkdownEditActions {
     }
 
     /** 열림/닫힘 마커가 다른 스타일(밑줄, 취소선) 토글 */
-    private fun toggleWrap(value: TextFieldValue, open: String, close: String): TextFieldValue {
-        val (start, end) = value.trimmedSelection() ?: return insertEmptyMarker(value, open, close)
+    private fun toggleWrap(
+        value: TextFieldValue,
+        open: String,
+        close: String,
+        style: MarkdownStyle,
+    ): TextFieldValue {
+        val (start, end) = value.trimmedSelection()
+            ?: return deactivateOrInsert(value, open, close, style)
         val text = value.text
         val selected = text.substring(start, end)
 
@@ -244,6 +283,25 @@ object MarkdownEditActions {
         while (start < end && text[start].isWhitespace()) start++
         while (end > start && text[end - 1].isWhitespace()) end--
         return if (start == end) null else start to end
+    }
+
+    /**
+     * 선택 없이 툴바를 눌렀을 때의 동작.
+     * 해당 스타일이 이미 켜져 있고 커서 바로 뒤가 닫는 마커라면 그 마커 뒤로 커서를 옮겨
+     * 스타일을 끝낸다(= 비활성화). 그 외에는 빈 마커 쌍을 넣어 새로 시작한다
+     */
+    private fun deactivateOrInsert(
+        value: TextFieldValue,
+        open: String,
+        close: String,
+        style: MarkdownStyle,
+    ): TextFieldValue {
+        val closingLength = MarkdownScanner.closingMarkerLengthAt(value, style)
+        return if (closingLength != null) {
+            value.copy(selection = TextRange(value.selection.min + closingLength))
+        } else {
+            insertEmptyMarker(value, open, close)
+        }
     }
 
     /** 선택이 없을 때 커서 위치에 빈 마커 쌍을 삽입하고 커서를 그 사이로 이동 */

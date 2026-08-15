@@ -292,8 +292,10 @@ class NoticeWriteViewModel @Inject constructor(
         updateState { copy(title = title) }
     }
 
+    /** 개행이 들어오면 그 줄에서 열린 마크다운은 닫아서 다음 줄로 넘기지 않는다 */
     fun onContentChanged(content: TextFieldValue) {
-        updateState { copy(content = content) }
+        val adjusted = MarkdownEditActions.closeMarkersOnNewline(uiState.value.content, content)
+        updateState { copy(content = adjusted) }
     }
 
     /** 알림 발송 여부 토글 (종 아이콘) */
