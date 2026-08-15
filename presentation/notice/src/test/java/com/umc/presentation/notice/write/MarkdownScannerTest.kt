@@ -143,19 +143,22 @@ class MarkdownScannerTest {
     // ---------------------------------------------------------------
 
     @Test
-    fun `커서 뒤에 닫는 마커가 있으면 그 길이를 돌려준다`() {
+    fun `커서 위치에서 열려 있는 마커를 돌려준다`() {
         val value = valueAt("**가나**", cursor = 4)
-        assertEquals(2, MarkdownScanner.closingMarkerLengthAt(value, MarkdownStyle.BOLD))
+        assertEquals(
+            MarkdownMarker("**", "**"),
+            MarkdownScanner.activeMarkerAt(value, MarkdownStyle.BOLD),
+        )
     }
 
     @Test
-    fun `스타일이 꺼져 있으면 닫는 마커 길이는 없다`() {
+    fun `스타일이 꺼져 있으면 열린 마커가 없다`() {
         val value = valueAt("가나", cursor = 2)
-        assertEquals(null, MarkdownScanner.closingMarkerLengthAt(value, MarkdownStyle.BOLD))
+        assertEquals(null, MarkdownScanner.activeMarkerAt(value, MarkdownStyle.BOLD))
     }
 
     @Test
-    fun `굵게 토글은 활성 상태에서 닫는 마커 뒤로 커서를 옮긴다`() {
+    fun `내용이 있으면 굵게 토글은 닫는 마커 뒤로 커서를 옮긴다`() {
         // `**가나|**` 에서 툴바 굵게를 다시 누른 상황
         val value = valueAt("**가나**", cursor = 4)
 
@@ -189,24 +192,88 @@ class MarkdownScannerTest {
     }
 
     @Test
-    fun `빈 굵게 쌍 가운데에서 굵게를 다시 누르면 마커 밖으로 나간다`() {
+    fun `빈 굵게 쌍 가운데에서 굵게를 다시 누르면 마커가 지워진다`() {
         val value = valueAt("****", cursor = 2)
 
         val result = MarkdownEditActions.toggleBold(value)
 
-        // 마커가 늘어나지 않고 커서만 닫는 마커 뒤로 이동해야 한다
-        assertEquals("****", result.text)
-        assertEquals(4, result.selection.min)
+        assertEquals("", result.text)
+        assertEquals(0, result.selection.min)
     }
 
     @Test
-    fun `형광펜 빈 쌍 가운데에서 형광펜을 다시 누르면 마커 밖으로 나간다`() {
-        val text = "$mark</mark>"
-        val value = valueAt(text, cursor = mark.length)
+    fun `형광펜 빈 쌍 가운데에서 형광펜을 다시 누르면 마커가 지워진다`() {
+        val value = valueAt("$mark</mark>", cursor = mark.length)
 
         val result = MarkdownEditActions.toggleHighlight(value, MarkdownHighlightColor.entries.first())
 
-        assertEquals(text, result.text)
-        assertEquals(text.length, result.selection.min)
+        assertEquals("", result.text)
+        assertEquals(0, result.selection.min)
+    }
+
+    // ---------------------------------------------------------------
+    // 툴바 연타 — 항상 누른 스타일 하나만 켜지고 꺼져야 한다
+    // ---------------------------------------------------------------
+
+    @Test
+    fun `굵게를 연타해도 기울임은 켜지지 않는다`() {
+        var value = valueAt("", cursor = 0)
+
+        value = MarkdownEditActions.toggleBold(value)
+        MarkdownScanner.activeStyles(value).let {
+            assertTrue("1회: 굵게 켜짐", MarkdownStyle.BOLD in it)
+            assertFalse("1회: 기울임은 꺼짐", MarkdownStyle.ITALIC in it)
+        }
+
+        value = MarkdownEditActions.toggleBold(value)
+        MarkdownScanner.activeStyles(value).let {
+            assertFalse("2회: 굵게 꺼짐", MarkdownStyle.BOLD in it)
+            assertFalse("2회: 기울임도 꺼진 채", MarkdownStyle.ITALIC in it)
+        }
+
+        value = MarkdownEditActions.toggleBold(value)
+        MarkdownScanner.activeStyles(value).let {
+            assertTrue("3회: 굵게 다시 켜짐", MarkdownStyle.BOLD in it)
+            assertFalse("3회: 기울임은 여전히 꺼짐", MarkdownStyle.ITALIC in it)
+        }
+    }
+
+    @Test
+    fun `굵게 켠 상태에서 기울임을 눌러도 굵게는 유지된다`() {
+        var value = MarkdownEditActions.toggleBold(valueAt("", cursor = 0))
+
+        value = MarkdownEditActions.toggleItalic(value)
+        MarkdownScanner.activeStyles(value).let {
+            assertTrue(MarkdownStyle.BOLD in it)
+            assertTrue(MarkdownStyle.ITALIC in it)
+        }
+
+        // 기울임만 끄면 굵게는 그대로 남아야 한다
+        value = MarkdownEditActions.toggleItalic(value)
+        MarkdownScanner.activeStyles(value).let {
+            assertTrue(MarkdownStyle.BOLD in it)
+            assertFalse(MarkdownStyle.ITALIC in it)
+        }
+    }
+
+    @Test
+    fun `밑줄과 취소선도 연타 시 서로 간섭하지 않는다`() {
+        var value = valueAt("", cursor = 0)
+
+        value = MarkdownEditActions.toggleUnderline(value)
+        assertTrue(MarkdownStyle.UNDERLINE in MarkdownScanner.activeStyles(value))
+
+        value = MarkdownEditActions.toggleUnderline(value)
+        MarkdownScanner.activeStyles(value).let {
+            assertFalse(MarkdownStyle.UNDERLINE in it)
+            assertFalse(MarkdownStyle.STRIKETHROUGH in it)
+        }
+        assertEquals("", value.text)
+
+        value = MarkdownEditActions.toggleStrikethrough(value)
+        MarkdownScanner.activeStyles(value).let {
+            assertTrue(MarkdownStyle.STRIKETHROUGH in it)
+            assertFalse(MarkdownStyle.UNDERLINE in it)
+        }
     }
 }

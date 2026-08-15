@@ -78,9 +78,15 @@ object MarkdownEditActions {
     fun toggleBold(value: TextFieldValue): TextFieldValue =
         toggleAsterisk(value, count = 2, style = MarkdownStyle.BOLD)
 
-    /** 기울임(`*`) 토글 */
+    /**
+     * 기울임 토글.
+     *
+     * 이미 있는 `*...*`도 그대로 해제하지만, 새로 넣을 때는 `_`를 쓴다.
+     * 굵게 안에 별표 기울임을 넣으면 `**` + `*`가 `***`(굵게+기울임)와 구분되지 않아
+     * 기울임을 끌 때 굵게까지 함께 사라진다. `_`는 별표와 섞이지 않는다
+     */
     fun toggleItalic(value: TextFieldValue): TextFieldValue =
-        toggleAsterisk(value, count = 1, style = MarkdownStyle.ITALIC)
+        toggleAsterisk(value, count = 1, style = MarkdownStyle.ITALIC, insertMarker = "_")
 
     /** 밑줄(`<u></u>`) 토글 */
     fun toggleUnderline(value: TextFieldValue): TextFieldValue =
@@ -217,10 +223,12 @@ object MarkdownEditActions {
         value: TextFieldValue,
         count: Int,
         style: MarkdownStyle,
+        /** 선택 없이 새로 넣을 때 쓸 마커. 기본은 별표와 동일 */
+        insertMarker: String = "*".repeat(count),
     ): TextFieldValue {
         val marker = "*".repeat(count)
         val (start, end) = value.trimmedSelection()
-            ?: return deactivateOrInsert(value, marker, marker, style)
+            ?: return deactivateOrInsert(value, insertMarker, insertMarker, style)
 
         val selected = value.text.substring(start, end)
         val edgeMarks = minOf(
@@ -286,9 +294,13 @@ object MarkdownEditActions {
     }
 
     /**
-     * 선택 없이 툴바를 눌렀을 때의 동작.
-     * 해당 스타일이 이미 켜져 있고 커서 바로 뒤가 닫는 마커라면 그 마커 뒤로 커서를 옮겨
-     * 스타일을 끝낸다(= 비활성화). 그 외에는 빈 마커 쌍을 넣어 새로 시작한다
+     * 선택 없이 툴바를 눌렀을 때의 동작. 누를 때마다 그 스타일 하나만 켜지고 꺼져야 한다.
+     *
+     * 켜져 있는 상태에서 다시 누르면:
+     * - 아직 아무것도 입력하지 않은 빈 마커 쌍이면 마커째 지운다.
+     *   커서만 밖으로 옮기면 `****` 같은 별표 뭉치가 남고, 거기서 한 번 더 누르면
+     *   `***`(굵게+기울임)로 읽혀 누르지도 않은 기울임까지 켜진다
+     * - 이미 입력한 내용이 있으면 닫는 마커 뒤로 커서를 옮겨 스타일을 끝낸다
      */
     private fun deactivateOrInsert(
         value: TextFieldValue,
@@ -296,11 +308,22 @@ object MarkdownEditActions {
         close: String,
         style: MarkdownStyle,
     ): TextFieldValue {
-        val closingLength = MarkdownScanner.closingMarkerLengthAt(value, style)
-        return if (closingLength != null) {
-            value.copy(selection = TextRange(value.selection.min + closingLength))
+        val marker = MarkdownScanner.activeMarkerAt(value, style)
+            ?: return insertEmptyMarker(value, open, close)
+
+        val text = value.text
+        val at = value.selection.min
+        if (!text.startsWith(marker.close, at)) return insertEmptyMarker(value, open, close)
+
+        val isEmptyPair = at >= marker.open.length && text.startsWith(marker.open, at - marker.open.length)
+
+        return if (isEmptyPair) {
+            val newText = text
+                .removeRange(at, at + marker.close.length)
+                .removeRange(at - marker.open.length, at)
+            value.copy(text = newText, selection = TextRange(at - marker.open.length))
         } else {
-            insertEmptyMarker(value, open, close)
+            value.copy(selection = TextRange(at + marker.close.length))
         }
     }
 
