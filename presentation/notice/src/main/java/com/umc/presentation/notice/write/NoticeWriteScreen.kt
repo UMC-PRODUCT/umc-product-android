@@ -631,6 +631,7 @@ private fun MarkdownToolbar(
     highlightColor: MarkdownHighlightColor = MarkdownHighlightColor.PURPLE,
     onClickBullet: () -> Unit = {},
     onClickQuote: () -> Unit = {},
+    activeStyles: MarkdownActiveStyles = MarkdownActiveStyles(),
     isAiEnabled: Boolean = false,
     onClickAiRefine: () -> Unit = {},
     onClickAiSummarize: () -> Unit = {},
@@ -667,7 +668,11 @@ private fun MarkdownToolbar(
 
         // 텍스트 크기 (제목1/제목2/제목3/본문 메뉴)
         Box {
-            MarkdownToolbarIcon(iconRes = R.drawable.ic_text_size, onClick = { showTextSizeMenu = true })
+            MarkdownToolbarIcon(
+                iconRes = R.drawable.ic_text_size,
+                isActive = activeStyles.heading != MarkdownHeading.BODY,
+                onClick = { showTextSizeMenu = true },
+            )
 
             MarkdownMenu(
                 expanded = showTextSizeMenu,
@@ -717,21 +722,38 @@ private fun MarkdownToolbar(
         MarkdownToolbarIcon(iconRes = R.drawable.ic_blog_link, onClick = onClickLink)
 
         // 굵게
-        MarkdownToolbarIcon(iconRes = R.drawable.ic_border, onClick = onClickBold)
+        MarkdownToolbarIcon(
+            iconRes = R.drawable.ic_border,
+            isActive = MarkdownStyle.BOLD in activeStyles,
+            onClick = onClickBold,
+        )
 
         // 기울임
-        MarkdownToolbarIcon(iconRes = R.drawable.ic_italic, onClick = onClickItalic)
+        MarkdownToolbarIcon(
+            iconRes = R.drawable.ic_italic,
+            isActive = MarkdownStyle.ITALIC in activeStyles,
+            onClick = onClickItalic,
+        )
 
         // 밑줄
-        MarkdownToolbarIcon(iconRes = R.drawable.ic_underline, onClick = onClickUnderline)
+        MarkdownToolbarIcon(
+            iconRes = R.drawable.ic_underline,
+            isActive = MarkdownStyle.UNDERLINE in activeStyles,
+            onClick = onClickUnderline,
+        )
 
         // 취소선
-        MarkdownToolbarIcon(iconRes = R.drawable.ic_strikethrough, onClick = onClickStrikethrough)
+        MarkdownToolbarIcon(
+            iconRes = R.drawable.ic_strikethrough,
+            isActive = MarkdownStyle.STRIKETHROUGH in activeStyles,
+            onClick = onClickStrikethrough,
+        )
 
         // 형광펜 (색상 선택 메뉴)
         Box {
             MarkdownToolbarIcon(
                 iconRes = R.drawable.ic_highlighter,
+                isActive = MarkdownStyle.HIGHLIGHT in activeStyles,
                 onClick = { showHighlightMenu = true },
             )
 
@@ -754,10 +776,18 @@ private fun MarkdownToolbar(
         }
 
         // 글머리 기호
-        MarkdownToolbarIcon(iconRes = R.drawable.ic_bullet_list, onClick = onClickBullet)
+        MarkdownToolbarIcon(
+            iconRes = R.drawable.ic_bullet_list,
+            isActive = activeStyles.isBullet,
+            onClick = onClickBullet,
+        )
 
         // 인용구
-        MarkdownToolbarIcon(iconRes = R.drawable.ic_quote, onClick = onClickQuote)
+        MarkdownToolbarIcon(
+            iconRes = R.drawable.ic_quote,
+            isActive = activeStyles.isQuote,
+            onClick = onClickQuote,
+        )
     }
 }
 
@@ -906,12 +936,13 @@ private fun TextSizeMenuItem(
 @Composable
 private fun MarkdownToolbarIcon(
     iconRes: Int,
+    isActive: Boolean = false,
     onClick: () -> Unit = {},
 ) {
     Icon(
         painter = painterResource(id = iconRes),
         contentDescription = null,
-        tint = grey600(),
+        tint = if (isActive) indigo500() else grey600(),
         modifier = Modifier
             .size(24.dp)
             .clickable { onClick() },
