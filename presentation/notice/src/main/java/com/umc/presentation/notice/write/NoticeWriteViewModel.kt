@@ -242,12 +242,22 @@ class NoticeWriteViewModel @Inject constructor(
         }
     }
 
+    /** 전체는 나머지 분류와 배타적이다. 켜는 순간 다른 선택을 모두 해제한다 */
     fun onToggleAll() {
-        updateState { copy(isAllSelected = !isAllSelected) }
+        updateState {
+            val turningOn = !isAllSelected
+            copy(
+                isAllSelected = turningOn,
+                isStaffSelected = if (turningOn) false else isStaffSelected,
+                selectedChapter = if (turningOn) null else selectedChapter,
+                selectedSchool = if (turningOn) null else selectedSchool,
+                selectedPart = if (turningOn) null else selectedPart,
+            )
+        }
     }
 
     fun onToggleStaff() {
-        updateState { copy(isStaffSelected = !isStaffSelected) }
+        updateState { copy(isStaffSelected = !isStaffSelected, isAllSelected = false) }
     }
 
     /** 지부 선택. 기수 카테고리에서는 학교와 동시 선택 불가 */
@@ -257,6 +267,7 @@ class NoticeWriteViewModel @Inject constructor(
             copy(
                 selectedChapter = chapter,
                 selectedSchool = if (isExclusive) null else selectedSchool,
+                isAllSelected = false,
             )
         }
     }
@@ -268,12 +279,13 @@ class NoticeWriteViewModel @Inject constructor(
             copy(
                 selectedSchool = school,
                 selectedChapter = if (isExclusive) null else selectedChapter,
+                isAllSelected = false,
             )
         }
     }
 
     fun onSelectPart(part: UserPart) {
-        updateState { copy(selectedPart = part) }
+        updateState { copy(selectedPart = part, isAllSelected = false) }
     }
 
     fun onTitleChanged(title: String) {
