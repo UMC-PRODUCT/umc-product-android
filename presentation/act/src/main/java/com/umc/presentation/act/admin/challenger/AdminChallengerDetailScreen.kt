@@ -76,6 +76,7 @@ import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.act.admin.challenger.bottomsheet.OtherPointsScreen
 import com.umc.presentation.act.admin.challenger.bottomsheet.PenaltyPointsScreen
+import com.umc.presentation.act.admin.challenger.bottomsheet.RewardPointsScreen
 import kotlinx.coroutines.flow.collectLatest
 
 private enum class PointGrantSheet {
@@ -149,7 +150,14 @@ fun AdminChallengerDetailRoute(
                     onSubmitClick = { viewModel.grantPenalty(challengerId) },
                 )
 
-                PointGrantSheet.REWARD, PointGrantSheet.OTHER -> OtherPointsScreen(
+                PointGrantSheet.REWARD -> RewardPointsScreen(
+                    uiState = uiState,
+                    onSelectReward = viewModel::selectReward,
+                    onMemoChange = viewModel::onMemoChanged,
+                    onSubmitClick = { viewModel.grantReward(challengerId) },
+                )
+
+                PointGrantSheet.OTHER -> OtherPointsScreen(
                     uiState = uiState,
                     onRewardMinusClick = viewModel::decreaseRewardScore,
                     onRewardPlusClick = viewModel::increaseRewardScore,
