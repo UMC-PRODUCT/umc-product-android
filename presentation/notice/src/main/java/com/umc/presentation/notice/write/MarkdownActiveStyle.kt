@@ -93,38 +93,44 @@ object MarkdownScanner {
 
     /**
      * [start]부터 [end]까지 훑어 아직 닫히지 않은 마커를 바깥→안쪽 순서로 반환한다.
-     * 같은 마커가 다시 나오면 닫힌 것으로 보고 목록에서 제거한다
+     * 같은 마커가 다시 나오면 닫힌 것으로 보고 목록에서 제거한다.
+     *
+     * 마커는 [end] 안에 온전히 들어올 때만 인정한다. 커서가 `**|**` 처럼 마커 쌍
+     * 가운데 있을 때 뒤쪽 마커까지 삼켜 `***`(굵게+기울임)로 잘못 읽는 것을 막는다
      */
     private fun openMarkers(text: String, start: Int, end: Int): List<OpenMarker> {
         val open = mutableListOf<OpenMarker>()
         var i = start
 
+        /** [i]에서 시작하는 [marker]가 [end]를 넘지 않는지 */
+        fun fits(marker: String) = text.startsWith(marker, i) && i + marker.length <= end
+
         while (i < end) {
-            val markOpen = MARK_OPEN.matchAt(text, i)
+            val markOpen = MARK_OPEN.matchAt(text, i)?.value?.takeIf { i + it.length <= end }
 
             when {
                 markOpen != null -> {
-                    open += OpenMarker(markOpen.value, "</mark>", setOf(MarkdownStyle.HIGHLIGHT))
-                    i += markOpen.value.length
+                    open += OpenMarker(markOpen, "</mark>", setOf(MarkdownStyle.HIGHLIGHT))
+                    i += markOpen.length
                 }
 
-                text.startsWith("</mark>", i) -> {
+                fits("</mark>") -> {
                     open.removeLastMatching { MarkdownStyle.HIGHLIGHT in it.styles }
                     i += "</mark>".length
                 }
 
-                text.startsWith("<u>", i) -> {
+                fits("<u>") -> {
                     open += OpenMarker("<u>", "</u>", setOf(MarkdownStyle.UNDERLINE))
                     i += "<u>".length
                 }
 
-                text.startsWith("</u>", i) -> {
+                fits("</u>") -> {
                     open.removeLastMatching { MarkdownStyle.UNDERLINE in it.styles }
                     i += "</u>".length
                 }
 
                 else -> {
-                    val symmetric = SYMMETRIC.firstOrNull { text.startsWith(it.first, i) }
+                    val symmetric = SYMMETRIC.firstOrNull { fits(it.first) }
                     if (symmetric == null) {
                         i++
                     } else {

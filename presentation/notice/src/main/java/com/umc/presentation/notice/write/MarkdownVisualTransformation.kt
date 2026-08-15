@@ -361,6 +361,8 @@ private enum class InlineTokenKind(
 ) {
     EMPTY_UNDERLINE(Regex("<u></u>")),
     EMPTY_STRIKETHROUGH(Regex("~~~~")),
+    // 굵게+기울임 빈 쌍(`***` + `***`). 굵게 빈 쌍보다 먼저 잡아야 뒤 두 개가 남지 않는다
+    EMPTY_BOLD_ITALIC(Regex("\\*{6}")),
     EMPTY_BOLD(Regex("\\*\\*\\*\\*")),
     CODE(Regex("(?<!\\\\)`((?:\\\\.|[^`\\n])+?)`")),
     LINK(Regex("\\[(.+?)]\\((.+?)\\)"), listOf(TextDecoration.Underline)),
@@ -379,7 +381,7 @@ private enum class InlineTokenKind(
         val end = match.range.last + 1
         return when (this) {
             EMPTY_UNDERLINE -> InlineToken(start, end, openLength = 3, closeLength = 4, kind = this)
-            EMPTY_STRIKETHROUGH, EMPTY_BOLD -> {
+            EMPTY_STRIKETHROUGH, EMPTY_BOLD, EMPTY_BOLD_ITALIC -> {
                 val half = (end - start) / 2
                 InlineToken(start, end, openLength = half, closeLength = half, kind = this)
             }
@@ -405,7 +407,7 @@ private enum class InlineTokenKind(
     ): SpanStyle? {
         val decoration = decorations.takeIf { it.isNotEmpty() }?.let { TextDecoration.combine(it) }
         return when (this) {
-            EMPTY_UNDERLINE, EMPTY_STRIKETHROUGH, EMPTY_BOLD -> null
+            EMPTY_UNDERLINE, EMPTY_STRIKETHROUGH, EMPTY_BOLD, EMPTY_BOLD_ITALIC -> null
             CODE -> SpanStyle(fontFamily = FontFamily.Monospace)
             HIGHLIGHT -> SpanStyle(background = parseMarkColor(argument))
             LINK -> SpanStyle(color = linkColor, textDecoration = decoration)
