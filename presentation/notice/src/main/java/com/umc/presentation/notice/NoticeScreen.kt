@@ -243,10 +243,10 @@ fun NoticeScreen(
                 cornerRadius = 28.dp,
                 prevIcon = painterResource(id = R.drawable.ic_plus_circle),
                 prevIconTint = grey000(),
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 24.dp),
+                    .padding(bottom = 18.dp),
             )
         }
     }
