@@ -51,8 +51,9 @@ class NormalChallengerViewModel @Inject constructor(
     }
 
     fun selectPartFilter(part: UserPart) {
-        updateState { copy(selectedPart = part, isPartFilterVisible = false) }
-        getChallengers(selectedPart = part)
+        val nextPart = part.takeUnless { uiState.value.selectedPart == it }
+        updateState { copy(selectedPart = nextPart, isPartFilterVisible = false) }
+        getChallengers(selectedPart = nextPart)
     }
 
     private fun getChallengers(

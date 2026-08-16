@@ -189,7 +189,7 @@ fun FixLocationScreen(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(700.dp)
+            .height(550.dp)
             .imePadding()
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(grey000())
