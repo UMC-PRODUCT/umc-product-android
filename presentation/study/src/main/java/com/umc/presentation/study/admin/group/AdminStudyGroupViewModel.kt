@@ -207,11 +207,11 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                 val currentMembers = targetGroup.members.map { member ->
                     AdminStudyGroupCreateMemberUiModel(
-                        id = member.challengerId,
+                        id = member.challengerId, // 실제 값은 memberId
                         name = member.name,
                         displayName = member.name,
                         partLabel = targetGroup.partLabel,
-                        school = "",
+                        school = member.school,
                     )
                 }
 

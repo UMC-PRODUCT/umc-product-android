@@ -20,6 +20,7 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.green500
 import com.umc.component.theme.grey500
+import com.umc.presentation.study.admin.group.bottomsheet.AdminStudyGroupMemberEditBottomSheet
 import com.umc.presentation.study.admin.group.component.AdminStudyGroupCard
 import com.umc.presentation.study.admin.group.component.AdminStudyGroupCreateCard
 
@@ -63,9 +64,8 @@ fun AdminStudyGroupScreen(
     }
 
     if (state.isMemberBottomSheetOpen) {
-        GroupCreateMemberBottomSheet(
+        AdminStudyGroupMemberEditBottomSheet(
             preSelected = state.editingMembers,
-            resolvePreSelectedFromApi = true,
             onDismissRequest = {
                 onAction(
                     AdminStudyGroupAction.CloseMemberBottomSheet
