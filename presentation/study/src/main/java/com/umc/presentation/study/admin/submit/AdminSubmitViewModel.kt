@@ -33,6 +33,11 @@ class AdminSubmitViewModel @Inject constructor(
         loadSubmissions()
     }
 
+    fun refresh() {
+        loadWeeks()
+        loadSubmissions()
+    }
+
 
     fun onAction(action: AdminSubmitAction) {
         when (action) {
@@ -490,21 +495,12 @@ class AdminSubmitViewModel @Inject constructor(
 
                     updateState {
                         val updatedGroups = if (studyGroupId == null) {
-                            (
-                                    listOf(
-                                        AdminSubmitGroupUiModel(
-                                            id = null,
-                                            name = "전체 그룹",
-                                        )
-                                    ) +
-                                            availableGroups.filter { group ->
-                                                group.id != null
-                                            } +
-                                            groups
-                                    )
-                                .distinctBy { group ->
-                                    group.id
-                                }
+                            listOf(
+                                AdminSubmitGroupUiModel(
+                                    id = null,
+                                    name = "전체 그룹",
+                                )
+                            ) + groups
                         } else {
                             availableGroups
                         }

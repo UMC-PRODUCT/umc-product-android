@@ -34,10 +34,17 @@ import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun AdminSubmitRoute(
-    viewModel: AdminSubmitViewModel = hiltViewModel()
+    isActive: Boolean,
+    viewModel: AdminSubmitViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    LaunchedEffect(isActive) {
+        if (isActive) {
+            viewModel.refresh()
+        }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
@@ -57,7 +64,6 @@ fun AdminSubmitRoute(
         onAction = viewModel::onAction
     )
 }
-
 @Composable
 fun AdminSubmitScreen(
     state: AdminSubmitState,
