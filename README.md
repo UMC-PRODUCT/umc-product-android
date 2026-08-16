@@ -186,7 +186,7 @@ Gemini Nano로 공지 요약·
 <a href="https://github.com/starshape7">
 <img src="https://avatars.githubusercontent.com/u/111961655?v=4" width="120" style="border-radius:50%" alt="추연우" /><br/>
 <b>추연우</b><br/>
-<sub>&nbsp;</sub><br/>
+<sub>우연</sub><br/>
 <sub>@starshape7</sub>
 </a>
 </td>
