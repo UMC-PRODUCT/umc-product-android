@@ -45,6 +45,8 @@ import com.umc.presentation.community.chatting.CommunityChattingRoute
 import com.umc.presentation.community.search.CommunitySearchRoute
 import com.umc.presentation.community.create.CommunityCreateRoute
 import com.umc.presentation.community.edit.CommunityEditRoute
+import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateRoute
+import com.umc.presentation.study.admin.group.schedule.AdminStudyGroupScheduleRoute
 
 private const val COMMUNITY_REFRESH_KEY = "community_refresh"
 private const val COMMUNITY_THREAD_DEEP_LINK_BASE =
@@ -289,14 +291,30 @@ fun MainNavHost(
             )
         }
 
-        /**홈 화면 탭에 대한 내용입니다.**/
+        /**활동 화면**/
         composable<MainDestination.Act> {
             ActManageRoute(
                 onNavigateToChallengerDetail = { challengerId ->
                     navHostController.navigate(
                         MainDestination.AdminChallengerDetail(challengerId)
                     )
-                }
+                },
+
+                onNavigateCreateStudyGroup = {
+                    navHostController.navigate(
+                        MainDestination.AdminStudyGroupCreate
+                    )
+                },
+
+                onNavigateAddStudySchedule = { groupId, groupTitle, groupPart ->
+                    navHostController.navigate(
+                        MainDestination.AdminStudyGroupSchedule(
+                            groupId = groupId,
+                            groupTitle = groupTitle,
+                            groupPart = groupPart,
+                        )
+                    )
+                },
             )
         }
 
@@ -306,6 +324,29 @@ fun MainNavHost(
             AdminChallengerDetailRoute(
                 challengerId = destination.challengerId,
                 onNavigateToBack = { navHostController.popBackStack() },
+            )
+        }
+
+        composable<MainDestination.AdminStudyGroupCreate> {
+            AdminStudyGroupCreateRoute(
+                navigateBack = {
+                    navHostController.popBackStack()
+                },
+            )
+        }
+
+        composable<MainDestination.AdminStudyGroupSchedule> { backStackEntry ->
+
+            val destination =
+                backStackEntry.toRoute<MainDestination.AdminStudyGroupSchedule>()
+
+            AdminStudyGroupScheduleRoute(
+                groupId = destination.groupId,
+                groupTitle = destination.groupTitle,
+                groupPart = destination.groupPart,
+                onNavigateBack = {
+                    navHostController.popBackStack()
+                },
             )
         }
 
@@ -463,6 +504,10 @@ fun MainNavHost(
                 }
             )
         }
+
+
+
+
 
         /** 커뮤니티 화면 **/
         composable<MainDestination.Community> {
