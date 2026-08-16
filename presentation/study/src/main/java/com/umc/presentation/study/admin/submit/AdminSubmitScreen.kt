@@ -24,6 +24,7 @@ import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.FootnoteBold
+import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitBottomSheet
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitGroupBottomSheet
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekBottomSheet
@@ -153,10 +154,16 @@ fun AdminSubmitScreen(
 
         if (state.items.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(grey100()),
                 contentAlignment = Alignment.Center
             ) {
-                UText(text = "제출 내역이 없어요", style = FootnoteBold, color = grey500())
+                UText(
+                    text = "제출 내역이 없어요",
+                    style = HeadlineBold,
+                    color = grey500()
+                )
             }
         } else {
             LazyColumn(
