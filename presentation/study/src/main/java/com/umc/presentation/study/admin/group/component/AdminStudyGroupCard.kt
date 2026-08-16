@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -94,14 +95,38 @@ fun AdminStudyGroupCard(
 
                 Spacer(Modifier.width(12.dp))
 
-                Icon(
-                    painter = painterResource(R.drawable.ic_setting_outline),
-                    contentDescription = "설정",
-                    tint = grey500(),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable(onClick = onSettingClick)
-                )
+                Box {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_setting_outline),
+                        contentDescription = "설정",
+                        tint = grey500(),
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable(onClick = onSettingClick)
+                    )
+
+                    DropdownMenu(
+                        expanded = isSettingOpen,
+                        onDismissRequest = onDismissSetting,
+                        modifier = Modifier
+                            .width(208.dp)
+                            .background(
+                                grey000(),
+                                RoundedCornerShape(16.dp)
+                            )
+                    ) {
+                        AdminStudyGroupSettingPopupContent(
+                            onEditClick = {
+                                onEditClick()
+                                onDismissSetting()
+                            },
+                            onDeleteClick = {
+                                onDeleteClick()
+                                onDismissSetting()
+                            },
+                        )
+                    }
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -202,15 +227,6 @@ fun AdminStudyGroupCard(
             )
         }
 
-        if (isSettingOpen) {
-            AdminStudyGroupSettingPopup(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 42.dp, end = 10.dp),
-                onEditClick = onEditClick,
-                onDeleteClick = onDeleteClick,
-                onDismiss = onDismissSetting
-            )
-        }
+
     }
 }
