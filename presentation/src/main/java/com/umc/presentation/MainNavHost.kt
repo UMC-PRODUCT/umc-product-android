@@ -373,7 +373,13 @@ fun MainNavHost(
                     navHostController.navigate(MainDestination.Notification)
                 },
                 onNavigateToCardShare = {
-                    navHostController.navigate(MainDestination.Mycard(openExchangeDialog = true))
+                    navHostController.navigate(MainDestination.Mycard(openExchangeDialog = true)){
+                        popUpTo<MainDestination.Home> {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
             )
         }
@@ -461,7 +467,7 @@ fun MainNavHost(
                 },
                 onNavigateToMyContent = {type ->
                     navHostController.navigate(MainDestination.MyContent(showType = type))
-                                        },
+                },
                 onNavigateToLogin = {},
                 onNavigateToQrCode = {
                     navHostController.navigate(MainDestination.Qrcode)
