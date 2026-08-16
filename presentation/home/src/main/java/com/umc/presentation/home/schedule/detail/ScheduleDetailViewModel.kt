@@ -173,6 +173,7 @@ constructor(
                 detail = item.description,
                 longitude = item.longitude,
                 latitude = item.latitude,
+                isonline = item.isOnline
             )
         }
 
@@ -265,6 +266,7 @@ data class ScheduleDetailUiState(
     val content : PlanDetailItem = PlanDetailItem(),
     val plusDay : Int = 0,
 
+    val isonline : Boolean = false,
     val isToday : Boolean = false, //출석 체크 버튼 visible 유무
     val dDay : String = "참여 예정", // or D-DAY or D-몇일
     val title : String = "정기 세션 3주차",

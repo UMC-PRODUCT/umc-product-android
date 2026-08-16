@@ -146,7 +146,7 @@ fun ScheduleDetailScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(grey000())
-            .padding(horizontal = 16.dp)
+
     ) {
 
         Column(modifier = Modifier
@@ -162,87 +162,110 @@ fun ScheduleDetailScreen(
                 .height(36.dp)
             )
 
-            //2. D-day 및 제목
-            UButton(
-                text = uiState.dDay,
-                backgroundColor = indigo100(),
-                textColor = indigo500(),
-                textStyle = UmcTypographyTokens.FootnoteBold,
-                onClick = {},
+            Column(
                 modifier = Modifier
-                    .height(24.dp),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            )
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
 
-            Spacer(modifier = Modifier
-                .height(16.dp)
-            )
-            UText(text = uiState.title,
-                style = UmcTypographyTokens.Title2Bold,
-                color = grey800()
-            )
 
-            Spacer(modifier = Modifier
-                .height(8.dp)
-            )
-
-            UText(text = uiState.startDate,
-                style = UmcTypographyTokens.Subheadline,
-                color = grey600()
-            )
-
-            Spacer(modifier = Modifier
-                .height(24.dp)
-            )
-
-            //3. 일시 및 장소 영역
-            ScheduleInfoCard(
-                todayDate = uiState.todayDate,
-                todayTime = uiState.todayTime,
-                place = uiState.place,
-                onMapClick = onMapClick
-            )
-
-            Spacer(modifier = Modifier
-                .height(40.dp)
-            )
-
-            //4. 상세 안내 영역
-            UText(text = AppStrings.HOME_PLAN_DETAIL_PLAN_NOTICE,
-                style = UmcTypographyTokens.Title3Bold,
-                color = grey800()
-            )
-
-            Spacer(modifier = Modifier
-                .height(16.dp)
-            )
-
-            UText(
-                text = uiState.detail,
-                style = UmcTypographyTokens.Body,
-                color = grey600(),
-                modifier = Modifier
-                    .weight(1f)
-            )
-
-            //5. 하단 출석 버튼
-            if(uiState.isToday){
+                //2. D-day 및 제목
                 UButton(
-                    text = AppStrings.HOME_PLAN_DETAIL_CHECK_CONFIRM,
-                    backgroundColor = grey950(), // accent 팔레트 제거로 yellow(구 warning)로 대체
-                    textColor = grey000(),
-                    textStyle = UmcTypographyTokens.HeadlineBold,
+                    text = uiState.dDay,
+                    backgroundColor = indigo100(),
+                    textColor = indigo500(),
+                    textStyle = UmcTypographyTokens.FootnoteBold,
+                    onClick = {},
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .padding(bottom = 24.dp),
-                    onClick = onAttendanceClick
+                        .height(24.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                 )
-            }
-            else {
-                Spacer(modifier = Modifier
-                    .height(32.dp)
+
+                Spacer(
+                    modifier = Modifier
+                        .height(16.dp)
                 )
+                UText(
+                    text = uiState.title,
+                    style = UmcTypographyTokens.Title2Bold,
+                    color = grey800()
+                )
+
+                Spacer(
+                    modifier = Modifier
+                        .height(8.dp)
+                )
+
+                UText(
+                    text = uiState.startDate,
+                    style = UmcTypographyTokens.Subheadline,
+                    color = grey600()
+                )
+
+                Spacer(
+                    modifier = Modifier
+                        .height(24.dp)
+                )
+
+                //3. 일시 및 장소 영역
+                ScheduleInfoCard(
+                    todayDate = uiState.todayDate,
+                    todayTime = uiState.todayTime,
+                    place = uiState.place,
+                    onMapClick = onMapClick,
+                    isonline = uiState.isonline
+                )
+
+                Spacer(
+                    modifier = Modifier
+                        .height(40.dp)
+                )
+
+                //4. 상세 안내 영역
+                UText(
+                    text = AppStrings.HOME_PLAN_DETAIL_PLAN_NOTICE,
+                    style = UmcTypographyTokens.Title3Bold,
+                    color = grey800()
+                )
+
+                Spacer(
+                    modifier = Modifier
+                        .height(16.dp)
+                )
+
+                UText(
+                    text = uiState.detail,
+                    style = UmcTypographyTokens.Body,
+                    color = grey600(),
+                    modifier = Modifier
+                        .weight(1f)
+                )
+
+                //5. 하단 출석 버튼
+                if (uiState.isToday) {
+                    UButton(
+                        text = AppStrings.HOME_PLAN_DETAIL_CHECK_CONFIRM,
+                        backgroundColor = grey950(), // accent 팔레트 제거로 yellow(구 warning)로 대체
+                        textColor = grey000(),
+                        textStyle = UmcTypographyTokens.HeadlineBold,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        cornerRadius = 12.dp,
+                        onClick = onAttendanceClick
+                    )
+
+                    Spacer(
+                        modifier = Modifier
+                            .height(32.dp)
+                    )
+
+                } else {
+                    Spacer(
+                        modifier = Modifier
+                            .height(32.dp)
+                    )
+                }
             }
 
         }
