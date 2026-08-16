@@ -116,7 +116,7 @@ fun ScheduleAddRoute(
         onLateDateTimeClick = {showLateEndPicker = true},
         onRegisterClick = {
             //운영진 여부 및 수정 모드에 따른 분기 로직
-            viewModel.submitPlan(uiState.editMode)
+            viewModel.submitPlan(uiState.isAttendanceChecked)
 
         }
     )
