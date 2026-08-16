@@ -173,7 +173,9 @@ fun ScheduleAddRoute(
                 viewModel.updateStartDateTime(utcDateTime)
                 showStartDateTimePicker = false
             },
-            onDismiss = { showStartDateTimePicker = false }
+            onDismiss = { showStartDateTimePicker = false },
+            isStartTime = true,
+            isAllday = uiState.isAllDay
         )
     }
 
@@ -183,7 +185,9 @@ fun ScheduleAddRoute(
                 viewModel.updateEndDateTime(utcDateTime)
                 showEndDateTimePicker = false
             },
-            onDismiss = { showEndDateTimePicker = false }
+            onDismiss = { showEndDateTimePicker = false },
+            isStartTime = false,
+            isAllday = uiState.isAllDay
         )
     }
 
