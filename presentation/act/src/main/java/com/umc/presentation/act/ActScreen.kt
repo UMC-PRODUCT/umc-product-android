@@ -19,12 +19,15 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.presentation.act.admin.attendance.AttendanceRoute
 import com.umc.presentation.study.normal.UserStudyRoute
 import com.umc.presentation.act.admin.challenger.AdminChallengerRoute
@@ -52,20 +55,62 @@ private data class ManageTab(
 )
 
 @Composable
-fun ActManageScreen(
+fun ActManageRoute(
+    vm: ActViewModel = hiltViewModel(),
+    onNavigateToChallengerDetail: (Long) -> Unit = {},
+    onNavigateCreateStudyGroup: () -> Unit,
+    onNavigateAddStudySchedule: (
+        groupId: Long,
+        groupTitle: String,
+        groupPart: String,
+    ) -> Unit = { _, _, _ -> },
+) {
+    val uiState by vm.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(vm) {
+        vm.getUserInfo()
+    }
+
+    ActManageScreen(
+        uiState = uiState,
+        onAdminCheckedChange = vm::setAdminMode,
+        onNavigateToChallengerDetail = onNavigateToChallengerDetail,
+        onNavigateCreateStudyGroup = onNavigateCreateStudyGroup,
+        onNavigateAddStudySchedule = onNavigateAddStudySchedule,
+    )
+}
+
+@Composable
+private fun ActManageScreen(
     uiState: ActUiState,
     onAdminCheckedChange: (Boolean) -> Unit,
     onNavigateToChallengerDetail: (Long) -> Unit = {},
+    onNavigateCreateStudyGroup: () -> Unit = {},
+    onNavigateAddStudySchedule: (
+        groupId: Long,
+        groupTitle: String,
+        groupPart: String,
+    ) -> Unit = { _, _, _ -> },
 ) {
-    val tabs = remember(uiState.isAdmin, onNavigateToChallengerDetail) {
+    val tabs = remember(
+        uiState.isAdmin,
+        onNavigateToChallengerDetail,
+        onNavigateCreateStudyGroup,
+        onNavigateAddStudySchedule,
+        ) {
         if (uiState.isAdmin) {
             listOf(
                 ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { isActive ->
                     AttendanceRoute(isActive = isActive)
                 },
-                ManageTab(AppStrings.TAB_STUDY_ADMIN) { ActStudyRoute(
-                    isAdmin = true,
-                ) },
+                ManageTab(AppStrings.TAB_STUDY_ADMIN) { isActive ->
+                    ActStudyRoute(
+                        isAdmin = true,
+                        isActive = isActive,
+                        onNavigateCreateGroup = onNavigateCreateStudyGroup,
+                        onNavigateAddSchedule = onNavigateAddStudySchedule,
+                    )
+                },
                 ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { isActive ->
                     AdminChallengerRoute(
                         isActive = isActive,

@@ -1,5 +1,8 @@
 package com.umc.data.repository.community
 
+import com.google.gson.Gson
+import com.umc.domain.model.base.ApiResponse
+import retrofit2.HttpException
 import com.umc.data.api.ChangeMemberRoleRequest
 import com.umc.data.api.CommunityThreadApi
 import com.umc.data.api.ReportMessageRequest
@@ -192,14 +195,29 @@ class CommunityThreadRepositoryImpl @Inject constructor(
     override suspend fun muteCommunityThread(
         threadId: String,
     ): Result<CommunityThreadDetail> {
-        return runCatching {
-
+        return try {
             val response =
                 communityThreadApi.muteCommunityThread(
                     threadId = threadId
                 )
 
-            requireNotNull(response.result).toDomain()
+            Result.success(
+                requireNotNull(response.result) {
+                    response.message.ifBlank {
+                        "알림 설정 응답 데이터가 없어요."
+                    }
+                }.toDomain()
+            )
+        } catch (e: HttpException) {
+            Result.failure(
+                Exception(
+                    e.getServerMessage(
+                        fallback = "알림 설정을 변경하지 못했어요."
+                    )
+                )
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
@@ -207,14 +225,29 @@ class CommunityThreadRepositoryImpl @Inject constructor(
     override suspend fun unmuteCommunityThread(
         threadId: String,
     ): Result<CommunityThreadDetail> {
-        return runCatching {
-
+        return try {
             val response =
                 communityThreadApi.unmuteCommunityThread(
                     threadId = threadId
                 )
 
-            requireNotNull(response.result).toDomain()
+            Result.success(
+                requireNotNull(response.result) {
+                    response.message.ifBlank {
+                        "알림 설정 응답 데이터가 없어요."
+                    }
+                }.toDomain()
+            )
+        } catch (e: HttpException) {
+            Result.failure(
+                Exception(
+                    e.getServerMessage(
+                        fallback = "알림 설정을 변경하지 못했어요."
+                    )
+                )
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
@@ -408,4 +441,30 @@ class CommunityThreadRepositoryImpl @Inject constructor(
 
     override suspend fun reportMessage(messageId: String, reason: CommunityMessageReportReason) =
         apiCall { communityThreadApi.reportMessage(messageId, ReportMessageRequest(reason)) }
+
+
+    private fun HttpException.getServerMessage(
+        fallback: String,
+    ): String {
+        return try {
+            val errorBody =
+                response()?.errorBody()?.string()
+
+            if (errorBody.isNullOrBlank()) {
+                return fallback
+            }
+
+            val errorResponse =
+                Gson().fromJson(
+                    errorBody,
+                    ApiResponse::class.java,
+                )
+
+            errorResponse.message
+                ?.takeIf { it.isNotBlank() }
+                ?: fallback
+        } catch (e: Exception) {
+            fallback
+        }
+    }
 }

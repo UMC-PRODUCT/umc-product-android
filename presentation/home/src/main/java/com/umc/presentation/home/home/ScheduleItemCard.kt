@@ -67,7 +67,7 @@ fun ActiveScheduleItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 12.dp)
+
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = grey000()),
@@ -154,7 +154,6 @@ fun DefaultScheduleItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 12.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = grey000()),

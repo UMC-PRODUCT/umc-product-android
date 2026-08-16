@@ -42,8 +42,43 @@ fun UDateTimePickerDialog(
     var timeInput by remember { mutableStateOf("") }
     var isAm by remember { mutableStateOf(true) }
 
-    //확인 버튼 활성화 조건 (날짜 8자리, 시간 4자리 모두 입력 시)
-    val isConfirmEnabled = dateInput.length == 8 && timeInput.length == 4
+    //날짜 검증 로직
+    val isValidDateTime by remember(dateInput, timeInput) {
+        derivedStateOf {
+            // 1. 길이 검증 (날짜 8자리, 시간 4자리)
+            if (dateInput.length != 8 || timeInput.length != 4) return@derivedStateOf false
+
+            try {
+                // 2. 날짜 데이터 추출 및 실제 존재하는 날짜인지 검증 (Lenient = false)
+                val year = dateInput.substring(0, 4).toInt()
+                val month = dateInput.substring(4, 6).toInt() - 1 // Calendar는 0 = 1월
+                val day = dateInput.substring(6, 8).toInt()
+
+                val testCal = Calendar.getInstance().apply {
+                    isLenient = false //자동 범위 계산 끄기
+                    set(Calendar.YEAR, year)
+                    set(Calendar.MONTH, month)
+                    set(Calendar.DAY_OF_MONTH, day)
+                }
+                testCal.time // 만약 잘못된 날짜(예: 88일)면 여기서 IllegalArgumentException 발생!
+
+                // 3. 시간 데이터 범위 검증 (12시간제: 01~12시 / 00~59분)
+                val hour = timeInput.substring(0, 2).toInt()
+                val minute = timeInput.substring(2, 4).toInt()
+
+                val isHourValid = hour in 1..12
+                val isMinuteValid = minute in 0..59
+
+                isHourValid && isMinuteValid
+            } catch (e: Exception) {
+                false // 날짜 파싱 실패 시 무조건 유효하지 않음
+            }
+        }
+    }
+
+
+    //확인 버튼 활성화 조건 (입력 자릿수 + 포맷)
+    val isConfirmEnabled = isValidDateTime
 
     AlertDialog(
         onDismissRequest = onDismiss,

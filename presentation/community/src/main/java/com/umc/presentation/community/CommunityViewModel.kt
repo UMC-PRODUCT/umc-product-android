@@ -307,6 +307,8 @@ class CommunityViewModel @Inject constructor(
         }
     }
 
+
+
     private fun updateSelectedThread(
         updatedThread: CommunityThreadUiModel,
     ) {
