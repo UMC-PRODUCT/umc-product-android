@@ -31,7 +31,7 @@ object AppStrings {
     const val HOME_PLAN_DETAIL_MAP_ERROR = "지도를 열 수 없습니다."
     const val HOME_PLAN_ADD_TITLE = "일정 등록"
     const val HOME_PLAN_ADD_PLAN_NAME = "일정 제목"
-    const val HOME_PLAN_ADD_ONLINE_TITLE = "비대면으로 진행하기"
+    const val HOME_PLAN_ADD_ONLINE_TITLE = "대면으로 진행하기"
     const val HOME_PLAN_ADD_ATTENDANCE_TITLE = "출석부 생성하기"
     const val HOME_PLAN_ADD_PLAN_NAME_PLACEHOLDER = "일정 제목을 입력하세요"
     const val HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER = "위치를 입력하세요"

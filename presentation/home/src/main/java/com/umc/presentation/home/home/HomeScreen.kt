@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -15,7 +16,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
@@ -23,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -52,6 +56,7 @@ import com.umc.component.component.UText
 import com.umc.component.component.UButton
 import com.umc.component.component.getGrowthText
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.UmcTypography
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
@@ -69,6 +74,8 @@ import com.umc.component.theme.green500
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
+import com.umc.component.theme.grey950
+import com.umc.component.theme.indigo900
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.home.SchedulePlanItem
@@ -82,6 +89,7 @@ fun HomeRoute(
     onNavigateToNotification: () -> Unit,
     onNavigateToScheduleDetail: (SchedulePlanItem) -> Unit,
     onNavigateToScheduleAdd: () -> Unit,
+    onNavigateToCardShare: () -> Unit
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -101,6 +109,8 @@ fun HomeRoute(
                 is HomeEvent.MoveScheduleDetailEvent -> onNavigateToScheduleDetail(event.plan)
                 //일정 추가 이동
                 is HomeEvent.MoveScheduleAddEvent -> onNavigateToScheduleAdd()
+                //카드 공유 이동
+                is HomeEvent.MoveShareCardEvent -> onNavigateToCardShare()
                 else -> {}
             }
         }
@@ -114,7 +124,8 @@ fun HomeRoute(
         onNotificationClick = viewModel::onClickNotification, //Topbar에서 알람 터치 시
         onScheduleAddClick = viewModel::onClickScheduleAdd, //일정 추가 터치 시
         onScheduleDetailClick = viewModel::onClickScheduleDetail,
-        onNoticeClick = viewModel::onClickNotice
+        onNoticeClick = viewModel::onClickNotice,
+        onShareCardClick = viewModel::onClickCardShare
     )
 }
 
@@ -129,6 +140,7 @@ fun HomeScreen(
     onScheduleAddClick: () -> Unit,
     onScheduleDetailClick: (SchedulePlanItem) -> Unit,
     onNoticeClick: () -> Unit,
+    onShareCardClick: () -> Unit,
 ) {
 
     //LazyColumn을 사용하여 전체 스크롤 관리(중첩 스크롤 방지)
@@ -138,6 +150,7 @@ fun HomeScreen(
             .background(grey100())
     ) {
 
+
         //1. 상단 섹션(유저 정보)
         item {
             Column(
@@ -146,12 +159,31 @@ fun HomeScreen(
                     .background(grey100())
                     .padding(horizontal = 16.dp)
                     .padding(top = 16.dp)
-                    .padding(bottom = 32.dp)
+                    .padding(bottom = 16.dp)
             ) {
+
                 HomeTopBar(
                     alarmExist = uiState.alarmExist,
                     onNotificationClick = onNotificationClick
                 )
+
+                Spacer(modifier = Modifier
+                    .height(16.dp)
+                )
+
+                //카드 교환 배너
+                if(uiState.isBannerVisible){
+                    HomeShareCardsRow(
+                        uiState = uiState,
+                        memberId = uiState.userMemberId,
+                        onCardClick = onShareCardClick
+                    )
+
+                    Spacer(modifier = Modifier
+                        .height(16.dp)
+                    )
+                }
+
 
                 //HomeProfileCard(uiState = uiState)
                 HomeProfileCardsRow(uiState = uiState)
@@ -171,7 +203,6 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp)
             ) {
                 HomePlanHeader(
                     viewMode = uiState.viewMode,
@@ -179,7 +210,7 @@ fun HomeScreen(
                     onChangeViewMode = onChangeViewMode
                 )
                 Spacer(modifier = Modifier
-                    .height(32.dp)
+                   .height(16.dp)
                 )
             }
         }
@@ -192,7 +223,7 @@ fun HomeScreen(
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                color = grey000(),
+                color = if (uiState.viewMode == HomeViewMode.CALENDAR) grey000() else grey100(),
                 shadowElevation = 0.dp
             ) {
                 Column(modifier = Modifier
@@ -212,6 +243,7 @@ fun HomeScreen(
                         // 일정 리스트가 있을 때만 구분선과 리스트 표시
                         if (uiState.dailyPlans.isNotEmpty()) {
                             //구분선
+                            /*
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -224,16 +256,34 @@ fun HomeScreen(
                                 .height(16.dp)
                             )
 
+                             */
+
                             //달력 아래 일일 일정들
                             uiState.dailyPlans.forEach { plan ->
-                                Box(modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                ) {
-                                    ScheduleItemCard(
-                                        item = plan,
-                                        onItemClick = onScheduleDetailClick
-                                    )
-                                }
+
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp)
+
+                                    ) {
+                                        HorizontalDivider(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 8.dp), // 카드 사이 구분선의 위아래 여백
+                                            thickness = 1.dp,
+                                            color = grey200()
+                                        )
+
+                                        ScheduleItemCard(
+                                            item = plan,
+                                            onItemClick = onScheduleDetailClick
+                                        )
+                                    }
+
+
+
+
                             }
                             Spacer(modifier = Modifier
                                 .height(16.dp)
@@ -243,18 +293,15 @@ fun HomeScreen(
 
                     else {
                         //리스트 모드
-                        Spacer(modifier = Modifier
-                            .height(16.dp)
-                        )
                         uiState.allPlans.forEach { plan ->
-                            Box(modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                            ) {
+
                                 ScheduleItemCard(
                                     item = plan,
                                     onItemClick = onScheduleDetailClick
                                 )
-                            }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
                         }
                         Spacer(modifier = Modifier
                             .height(16.dp)
@@ -271,6 +318,86 @@ fun HomeScreen(
     }
 }
 
+
+
+/**명함 교환 카드**/
+@Composable
+fun HomeShareCardsRow(
+    uiState: HomeUiState,
+    memberId: Long,
+    onCardClick: () -> Unit,
+) {
+
+    val isTypeA = (memberId % 2 == 0L)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = indigo600()),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+
+        Box(
+            modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 32.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
+        ){
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+
+            ) {
+
+                Column(
+                    modifier = Modifier.padding(end = 50.dp)
+                ) {
+                    UText(
+                        text = if (isTypeA) "오늘 만난 인연,\n명함으로 이어가세요" else "디지털 명함,\n이제 UMC 앱에서",
+                        color = grey000(),
+                        style = UmcTypographyTokens.Title3Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    UText(
+                        text = "디지털 명함으로 간편하게 교환하세요",
+                        color = grey000(),
+                        style = UmcTypographyTokens.Footnote
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+
+                UButton(
+                    text = "명함 교환하기",
+                    onClick = onCardClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(42.dp),
+                    textColor = grey000(),
+                    backgroundColor = indigo900(),
+                    textStyle = UmcTypographyTokens.CalloutBold,
+                    cornerRadius = 8.dp,
+                    contentPadding = PaddingValues(horizontal = 13.dp, vertical = 8.dp)
+                )
+            }
+
+
+            Image(
+                painter = painterResource(id = R.drawable.ic_home_shard_card),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .wrapContentSize(align = Alignment.TopEnd, unbounded = true)
+                    .requiredSize(150.dp)
+                    .offset(x = 16.dp, y = (-32.dp))
+            )
+        }
+    }
+}
 
 /**
  * 프로필 카드 V2
@@ -315,11 +442,11 @@ fun HomeProfileCardsRow(
                 ) {
                     UText(
                         text = AppStrings.HOME_ACTIVATE_DAY,
-                        style = UmcTypographyTokens.BodyBold,
-                        color = grey800()
+                        style = UmcTypographyTokens.CalloutBold,
+                        color = grey950()
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
                         text = buildAnnotatedString {
@@ -372,11 +499,11 @@ fun HomeProfileCardsRow(
                 ) {
                     UText(
                         text = AppStrings.HOME_ATTEND_GISU,
-                        style = UmcTypographyTokens.BodyBold,
-                        color = grey800()
+                        style = UmcTypographyTokens.CalloutBold,
+                        color = grey950()
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     GisuGrid(gisuStrings = uiState.gisuTag)
 
@@ -492,19 +619,19 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
     ) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
 
             //X기 활동 상태
             UText(
                 text = uiState.activeString,
                 style = UmcTypographyTokens.HeadlineBold,
-                color = grey800()
+                color = grey950()
             )
 
             Spacer(
                 modifier = Modifier
-                    .height(12.dp)
+                    .height(16.dp)
             )
 
             //상벌점 UI 표
@@ -523,7 +650,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                     Row(
                         modifier = Modifier
                             .height(IntrinsicSize.Min)
-                            .padding(vertical = 12.dp),
+                        ,
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
@@ -651,16 +778,20 @@ fun HomePlanHeader(
             UText(
                 text = AppStrings.HOME_PLAN_TITLE,
                 style = UmcTypographyTokens.Title3Bold,
-                color = grey800()
+                color = grey950()
             )
 
-            IconButton(onClick = onAddClick) {
-                Icon(
+            Spacer(modifier = Modifier
+                .width(4.dp))
+
+            Icon(
                     painter = painterResource(id = R.drawable.ic_add_filled),
                     contentDescription = "Add",
-                    tint = grey800()
+                    tint = grey950(),
+                    modifier = Modifier
+                        .clickable { onAddClick() }
                 )
-            }
+
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -668,7 +799,7 @@ fun HomePlanHeader(
             //뷰 전환 선택기
             Surface(
                 color = grey000(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(4.dp)
             ) {
 
                 Row(modifier = Modifier
@@ -678,7 +809,7 @@ fun HomePlanHeader(
                     Box(
                         modifier = Modifier
                             .size(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(4.dp))
                             .background(
                                 color = if (viewMode == HomeViewMode.CALENDAR) grey800() else grey000()
                             )
@@ -700,7 +831,7 @@ fun HomePlanHeader(
                     Box(
                         modifier = Modifier
                             .size(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(4.dp))
                             .background(
                                 color = if (viewMode == HomeViewMode.LIST) grey800() else grey000()
                             )
@@ -754,6 +885,7 @@ private fun HomeScreenPreview() {
         onNotificationClick = {},
         onScheduleAddClick = {},
         onScheduleDetailClick = {},
-        onNoticeClick = {}
+        onNoticeClick = {},
+        onShareCardClick = {},
     )
 }
