@@ -84,7 +84,7 @@ private fun AttendanceRow(
                 painter = painterResource(R.drawable.ic_arrow_next),
                 contentDescription = null,
                 tint = grey500(),
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(14.dp),
             )
         } else {
             Box(

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -40,7 +41,10 @@ fun CommunityThreadMenuDialog(
         ),
     ) {
         Surface(
-            modifier = Modifier.width(370.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .widthIn(max = 370.dp),
             shape = RoundedCornerShape(12.dp),
             color = grey000(),
             shadowElevation = 12.dp,

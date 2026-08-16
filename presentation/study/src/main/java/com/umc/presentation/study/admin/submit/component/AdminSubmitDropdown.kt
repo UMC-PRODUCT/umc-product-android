@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.*
+import com.umc.component.theme.UmcTypographyTokens.Callout
+import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 
 @Composable
@@ -26,16 +28,21 @@ fun AdminSubmitDropdown(
         modifier = Modifier
             .background(grey100(), RoundedCornerShape(1000.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .padding(
+                start = 16.dp,
+                end = 12.dp,
+                top = 4.dp,
+                bottom = 4.dp,
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        UText(text = text, style = Caption1Bold, color = grey500())
+        UText(text = text, style = CalloutBold, color = grey500())
         Spacer(modifier = Modifier.width(4.dp))
         Icon(
             painter = painterResource(R.drawable.ic_dropdown_down),
             contentDescription = null,
             tint = grey500(),
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(24.dp)
         )
     }
 }

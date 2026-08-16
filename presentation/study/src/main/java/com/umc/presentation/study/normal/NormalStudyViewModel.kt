@@ -182,11 +182,7 @@ class UserStudyViewModel @Inject constructor(
             is ApiState.Fail -> {
                 stopLoading()
 
-                emitEvent(
-                    UserStudyEvent.ShowToast(
-                        message = result.failState.message,
-                    )
-                )
+                // API 실패 시 빈 화면으로 유지
             }
         }
     }

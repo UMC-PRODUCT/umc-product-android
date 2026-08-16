@@ -58,6 +58,12 @@ private data class ManageTab(
 fun ActManageRoute(
     vm: ActViewModel = hiltViewModel(),
     onNavigateToChallengerDetail: (Long) -> Unit = {},
+    onNavigateCreateStudyGroup: () -> Unit,
+    onNavigateAddStudySchedule: (
+        groupId: Long,
+        groupTitle: String,
+        groupPart: String,
+    ) -> Unit = { _, _, _ -> },
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
 
@@ -69,6 +75,8 @@ fun ActManageRoute(
         uiState = uiState,
         onAdminCheckedChange = vm::setAdminMode,
         onNavigateToChallengerDetail = onNavigateToChallengerDetail,
+        onNavigateCreateStudyGroup = onNavigateCreateStudyGroup,
+        onNavigateAddStudySchedule = onNavigateAddStudySchedule,
     )
 }
 
@@ -77,16 +85,32 @@ private fun ActManageScreen(
     uiState: ActUiState,
     onAdminCheckedChange: (Boolean) -> Unit,
     onNavigateToChallengerDetail: (Long) -> Unit = {},
+    onNavigateCreateStudyGroup: () -> Unit = {},
+    onNavigateAddStudySchedule: (
+        groupId: Long,
+        groupTitle: String,
+        groupPart: String,
+    ) -> Unit = { _, _, _ -> },
 ) {
-    val tabs = remember(uiState.isAdmin, onNavigateToChallengerDetail) {
+    val tabs = remember(
+        uiState.isAdmin,
+        onNavigateToChallengerDetail,
+        onNavigateCreateStudyGroup,
+        onNavigateAddStudySchedule,
+        ) {
         if (uiState.isAdmin) {
             listOf(
                 ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { isActive ->
                     AttendanceRoute(isActive = isActive)
                 },
-                ManageTab(AppStrings.TAB_STUDY_ADMIN) { ActStudyRoute(
-                    isAdmin = true,
-                ) },
+                ManageTab(AppStrings.TAB_STUDY_ADMIN) { isActive ->
+                    ActStudyRoute(
+                        isAdmin = true,
+                        isActive = isActive,
+                        onNavigateCreateGroup = onNavigateCreateStudyGroup,
+                        onNavigateAddSchedule = onNavigateAddStudySchedule,
+                    )
+                },
                 ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { isActive ->
                     AdminChallengerRoute(
                         isActive = isActive,
