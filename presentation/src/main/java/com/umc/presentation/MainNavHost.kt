@@ -414,6 +414,11 @@ fun MainNavHost(
                 onBackClick = {navHostController.popBackStack()},
                 onNavigateToAttendSchedule = {
                     /**TODO. 일정 출석 페이지로 이동하기**/
+                    navHostController.navigate(MainDestination.Act){
+                        popUpTo<MainDestination.ScheduleDetail>{
+                            inclusive = true
+                        }
+                    }
                 },
                 onNavigateToEditSchedule = { scheduleId ->
                     navHostController.navigate(MainDestination.ScheduleEdit(scheduleId = scheduleId))

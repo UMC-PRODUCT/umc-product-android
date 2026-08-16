@@ -322,7 +322,7 @@ fun MypageRoute(
             onPositive = {
                 /**TODO: 로그아웃 로직 연결*/
                 showLogoutDialog = false
-                viewModel.logout()
+                viewModel.navigateToOnboard()
             },
             onNegative = {
                 showLogoutDialog = false

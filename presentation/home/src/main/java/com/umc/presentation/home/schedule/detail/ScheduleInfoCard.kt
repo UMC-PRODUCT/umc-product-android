@@ -67,7 +67,7 @@ fun ScheduleInfoCard(
                 InfoRow(
                     iconRes = R.drawable.ic_location,
                     title = AppStrings.HOME_PLAN_DETAIL_LOCATION,
-                    content1 = place,
+                    content1 = "비대면 일정입니다",
                     isMapAction = true,
                     onMapClick = onMapClick,
                     isonline = true
@@ -77,7 +77,7 @@ fun ScheduleInfoCard(
                 InfoRow(
                     iconRes = R.drawable.ic_location,
                     title = AppStrings.HOME_PLAN_DETAIL_LOCATION,
-                    content1 = "비대면 일정입니다",
+                    content1 = place,
                     isMapAction = true,
                     onMapClick = onMapClick
                 )

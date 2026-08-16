@@ -67,6 +67,7 @@ fun ScheduleDetailRoute(
     onNavigateToAttendSchedule: () -> Unit,
     onNavigateToEditSchedule: (Long) -> Unit,
 
+
 ){
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -88,7 +89,7 @@ fun ScheduleDetailRoute(
 
                 is ScheduleDetailEvent.CheckDeletePlan -> { showDeleteDialog = true }
 
-                is ScheduleDetailEvent.TouchConfirmAttention -> {onNavigateToAttendSchedule}
+
                 else -> {}
             }
         }
@@ -105,7 +106,7 @@ fun ScheduleDetailRoute(
             uiState.latitude,
             uiState.longitude
         ) },
-        onAttendanceClick = viewModel::onClickConfirmAttention
+        onAttendanceClick = onNavigateToAttendSchedule,
     )
 
     //UBsaicDialog 사용(경고 버전)
@@ -138,7 +139,7 @@ fun ScheduleDetailScreen(
     onEditClick: () -> Unit, //수정하기 클릭 시(수정 이동)
     onDeleteClick: () -> Unit, //삭제 클릭
     onMapClick: () -> Unit, //장소 상세보기 클릭
-    onAttendanceClick: () -> Unit //출석 클릭
+    onAttendanceClick: () -> Unit, //출석 클릭
 ) {
 
     //케밥 메뉴 겹치기를 위해 BOX
@@ -298,7 +299,12 @@ fun ScheduleDetailTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 4.dp),
+            .padding(
+                start = 4.dp,
+                top = 8.dp,
+                end = 24.dp,
+                bottom = 8.dp
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -325,7 +331,9 @@ fun ScheduleDetailTopBar(
             painter = painterResource(id = R.drawable.ic_menu_kebab),
             contentDescription = null,
             modifier = Modifier
+                .size(24.dp)
                 .clickable { onMenuClick() },
+
             tint = grey800()
         )
 
