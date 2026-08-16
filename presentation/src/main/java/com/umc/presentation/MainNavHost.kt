@@ -468,7 +468,11 @@ fun MainNavHost(
                 onNavigateToMyContent = {type ->
                     navHostController.navigate(MainDestination.MyContent(showType = type))
                 },
-                onNavigateToLogin = {},
+                onNavigateToLogin = {
+                    navHostController.navigate(MainDestination.Splash) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
                 onNavigateToQrCode = {
                     navHostController.navigate(MainDestination.Qrcode)
                 },

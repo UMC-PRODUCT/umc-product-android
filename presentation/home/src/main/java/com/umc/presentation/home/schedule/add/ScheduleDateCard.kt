@@ -59,7 +59,7 @@ fun ScheduleDateCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(52.dp)
                     .padding(horizontal = 16.dp)
                     .padding(vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -112,7 +112,7 @@ fun DateTimeRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .height(52.dp)
             .clickable { onDateTimeClick()}
             .padding(horizontal = 16.dp)
             .padding(vertical = 8.dp),
