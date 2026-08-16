@@ -138,15 +138,14 @@ fun CommunityCreateScreen(
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(
-                        horizontal = 24.dp,
-                        vertical = 16.dp,
-                    )
+                    .padding(horizontal = 24.dp)
                     .then(
                         if (state.aiState == CommunityAiState.GUIDE) {
-                            Modifier.imePadding()
-                        } else {
                             Modifier
+                                .imePadding()
+                                .padding(bottom = 8.dp)
+                        } else {
+                            Modifier.padding(bottom = 16.dp)
                         }
                     ),
             )
