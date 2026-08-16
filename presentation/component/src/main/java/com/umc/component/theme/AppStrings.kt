@@ -17,7 +17,7 @@ object AppStrings {
 
     const val HOME_ACTIVATE_DAY = "누적 활동일"
     const val HOME_ATTEND_GISU = "참여 기수"
-    const val HOME_NOTIFICATION_NO_TITLE = "알림 내역이 없습니다"
+    const val HOME_NOTIFICATION_NO_TITLE = "알림 내역이 없어요"
     const val HOME_NOTIFICATION_NO_CONTENT = "새로운 소식이 도착하면 이곳에 표시됩니다."
     const val HOME_PLAN_DETAIL_TITLE = "일정 상세"
     const val HOME_PLAN_DETAIL_CALENDAR = "일시"
@@ -255,6 +255,7 @@ object AppStrings {
     const val CHANGE_PASSWORD_COMPLETE_CONTENT = "비밀번호가 성공적으로 변경되었어요.\n새로운 비밀번호로 다시 로그인해주세요."
     const val GO_LOGIN = "로그인하기"
     const val NOTICE_STAFF_CHIP = "운영진 공지"
+    const val NOTICE_CENTRAL_CHIP = "중앙운영사무국"
     const val NOTICE_VIEW_COUNT = "조회"
     const val NOTICE_SEARCH_RECENT = "최근 검색어"
     const val NOTICE_SEARCH_DELETE_ALL = "전체 삭제"
