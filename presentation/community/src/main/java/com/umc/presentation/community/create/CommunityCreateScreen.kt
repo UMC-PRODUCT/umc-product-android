@@ -16,7 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.umc.component.component.UText
+import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
+import com.umc.component.theme.grey950
 import com.umc.presentation.community.component.create.CommunityAiCard
 import com.umc.presentation.community.component.create.CommunityChallengerCard
 import com.umc.presentation.community.component.create.CommunityCreateTopBar
@@ -70,6 +73,14 @@ fun CommunityCreateScreen(
                         top = 8.dp,
                     ),
             ) {
+                UText(
+                    text = "챌린저 명단",
+                    style = UmcTypographyTokens.HeadlineBold,
+                    color = grey950(),
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 CommunityChallengerCard(
                     challengers = state.selectedChallengers,
                     maxCount = state.maxChallengerCount,
@@ -79,6 +90,8 @@ fun CommunityCreateScreen(
                         )
                     },
                 )
+
+
 
                 Spacer(modifier = Modifier.height(32.dp))
 
