@@ -2,14 +2,19 @@ package com.umc.presentation.community.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.community.CommunityThreadCategory
+import com.umc.domain.model.community.CommunityThreadMember
+import com.umc.domain.model.home.ParticipantItem
+import com.umc.domain.usecase.community.DeleteCommunityThreadUseCase
 import com.umc.domain.usecase.community.GetCommunityThreadDetailUseCase
+import com.umc.domain.usecase.community.GetCommunityThreadMembersUseCase
+import com.umc.domain.usecase.community.SearchCommunityCreateMembersUseCase
+import com.umc.domain.usecase.community.UpdateCommunityThreadUseCase
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
-import com.umc.domain.usecase.community.UpdateCommunityThreadUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import com.umc.domain.usecase.community.DeleteCommunityThreadUseCase
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -24,6 +29,10 @@ import kotlinx.coroutines.launch
 class CommunityEditViewModel @Inject constructor(
     private val getCommunityThreadDetailUseCase:
     GetCommunityThreadDetailUseCase,
+    private val getCommunityThreadMembersUseCase:
+    GetCommunityThreadMembersUseCase,
+    private val searchCommunityCreateMembersUseCase:
+    SearchCommunityCreateMembersUseCase,
     private val updateCommunityThreadUseCase:
     UpdateCommunityThreadUseCase,
     private val deleteCommunityThreadUseCase:
@@ -80,14 +89,15 @@ class CommunityEditViewModel @Inject constructor(
                     )
                 }
 
-                refreshMemberCount()
+                // 추가/삭제 후 수정 화면의 챌린저 목록도 다시 조회
+                loadCurrentMembers(
+                    threadId = _state.value.threadId,
+                )
 
                 sendEvent(
                     CommunityEditEvent.MemberInviteSuccess
                 )
             }
-
-
 
             CommunityEditAction.OnRetryClassificationClick -> {
                 requestClassification()
@@ -113,7 +123,9 @@ class CommunityEditViewModel @Inject constructor(
         }
     }
 
-
+    /**
+     * 수정 화면 최초 진입
+     */
     fun loadThread(
         threadId: String,
     ) {
@@ -138,6 +150,7 @@ class CommunityEditViewModel @Inject constructor(
             getCommunityThreadDetailUseCase(
                 threadId = threadId,
             ).onSuccess { thread ->
+
                 _state.update {
                     it.copy(
                         threadId = thread.threadId,
@@ -146,13 +159,21 @@ class CommunityEditViewModel @Inject constructor(
                         currentChallengerCount = thread.memberCount,
                         maxChallengerCount = thread.maxMembers,
                         aiState = CommunityAiState.SUCCESS,
-                        classifiedCategory = thread.category.toUiCategory(),
+                        classifiedCategory =
+                            thread.category.toUiCategory(),
                         selectedIcon = thread.icon,
                         isLoading = false,
                         errorMessage = null,
                     )
                 }
+
+                // 상세 API에는 멤버 이름 목록이 없으므로
+                // 현재 스레드 멤버를 별도로 조회
+                loadCurrentMembers(
+                    threadId = thread.threadId,
+                )
             }.onFailure { throwable ->
+
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -170,23 +191,88 @@ class CommunityEditViewModel @Inject constructor(
         }
     }
 
-    private fun refreshMemberCount() {
-        val threadId = _state.value.threadId
-
+    /**
+     * 현재 스레드에 참여 중인 챌린저 조회
+     *
+     * OWNER는 챌린저 명단에서 제외
+     */
+    private fun loadCurrentMembers(
+        threadId: String,
+    ) {
         if (threadId.isBlank()) {
             return
         }
 
         viewModelScope.launch {
-            getCommunityThreadDetailUseCase(
+            val memberPage = getCommunityThreadMembersUseCase(
                 threadId = threadId,
-            ).onSuccess { thread ->
-                _state.update {
-                    it.copy(
-                        currentChallengerCount = thread.memberCount,
-                        maxChallengerCount = thread.maxMembers,
+                query = null,
+                role = null,
+                part = null,
+                generation = null,
+                offset = FIRST_OFFSET,
+                limit = CURRENT_MEMBER_PAGE_SIZE,
+            ).getOrElse {
+                return@launch
+            }
+
+            val members = memberPage.items
+                .filterNot { member ->
+                    member.role.equals(
+                        OWNER_ROLE,
+                        ignoreCase = true,
                     )
                 }
+                .map { threadMember ->
+                    findChallengerDetail(
+                        threadMember = threadMember,
+                    )
+                }
+                .distinctBy { member ->
+                    member.memberId
+                }
+
+            _state.update {
+                it.copy(
+                    selectedChallengers = members,
+                    currentChallengerCount = members.size,
+                )
+            }
+        }
+    }
+
+    /**
+     * 스레드 멤버 정보에 없는 학교/닉네임 등의 정보를
+     * 챌린저 검색 API를 통해 보완
+     */
+    private suspend fun findChallengerDetail(
+        threadMember: CommunityThreadMember,
+    ): CommunityChallengerUiModel {
+        val targetMemberId =
+            threadMember.memberId.toLongOrNull()
+
+        if (targetMemberId == null) {
+            return threadMember.toFallbackUiModel()
+        }
+
+        return when (
+            val response = searchCommunityCreateMembersUseCase(
+                cursor = null,
+                size = MEMBER_MATCH_PAGE_SIZE,
+                keyword = threadMember.name,
+            )
+        ) {
+            is ApiState.Success -> {
+                response.data.content
+                    .firstOrNull { participant ->
+                        participant.id == targetMemberId
+                    }
+                    ?.toCommunityChallengerUiModel()
+                    ?: threadMember.toFallbackUiModel()
+            }
+
+            is ApiState.Fail -> {
+                threadMember.toFallbackUiModel()
             }
         }
     }
@@ -205,7 +291,7 @@ class CommunityEditViewModel @Inject constructor(
     }
 
     /**
-     * 스레드 특징을 수정했을 때만 재분류 필요 상태로 바꿈
+     * 스레드 특징을 수정했을 때만 재분류 필요 상태로 변경
      */
     private fun updateDescription(
         description: String,
@@ -245,8 +331,6 @@ class CommunityEditViewModel @Inject constructor(
             )
         }
     }
-
-
 
     private fun requestClassification() {
         val currentState = _state.value
@@ -351,7 +435,6 @@ class CommunityEditViewModel @Inject constructor(
             }
 
         viewModelScope.launch {
-
             _state.update {
                 it.copy(
                     isSaving = true,
@@ -436,6 +519,7 @@ class CommunityEditViewModel @Inject constructor(
             deleteCommunityThreadUseCase(
                 threadId = currentState.threadId,
             ).onSuccess {
+
                 _state.update {
                     it.copy(
                         isDeleting = false,
@@ -446,6 +530,7 @@ class CommunityEditViewModel @Inject constructor(
                     CommunityEditEvent.DeleteSuccess
                 )
             }.onFailure { throwable ->
+
                 _state.update {
                     it.copy(
                         isDeleting = false,
@@ -477,13 +562,19 @@ class CommunityEditViewModel @Inject constructor(
 
     companion object {
         private const val CLASSIFICATION_DELAY = 1500L
+
+        private const val FIRST_OFFSET = 0
+        private const val CURRENT_MEMBER_PAGE_SIZE = 100
+        private const val MEMBER_MATCH_PAGE_SIZE = 100
+        private const val OWNER_ROLE = "OWNER"
     }
 }
 
 /**
- * 상세 API의 카테고리 타입이 String일 때 사용
+ * 상세 API 카테고리 → UI 카테고리
  */
-private fun CommunityThreadCategory.toUiCategory(): CommunityCategory {
+private fun CommunityThreadCategory.toUiCategory():
+        CommunityCategory {
     return when (this) {
         CommunityThreadCategory.STUDY -> {
             CommunityCategory.STUDY
@@ -505,4 +596,36 @@ private fun CommunityThreadCategory.toUiCategory(): CommunityCategory {
             CommunityCategory.FREE
         }
     }
+}
+
+/**
+ * 챌린저 검색 결과 → 커뮤니티 UI 모델
+ */
+private fun ParticipantItem.toCommunityChallengerUiModel():
+        CommunityChallengerUiModel {
+    return CommunityChallengerUiModel(
+        memberId = id,
+        name = name,
+        nickname = nickname,
+        school = school,
+        generation = gisu,
+        partLabel = userPart.name,
+        profileImage = profileImage,
+    )
+}
+
+/**
+ * 챌린저 상세 매칭 실패 시 스레드 멤버 정보로 대체
+ */
+private fun CommunityThreadMember.toFallbackUiModel():
+        CommunityChallengerUiModel {
+    return CommunityChallengerUiModel(
+        memberId = memberId.toLongOrNull() ?: 0L,
+        name = name,
+        nickname = "",
+        school = "",
+        generation = generation.toLongOrNull() ?: 0L,
+        partLabel = part,
+        profileImage = "",
+    )
 }

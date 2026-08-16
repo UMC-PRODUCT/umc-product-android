@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun AdminStudyGroupRoute(
+    isActive: Boolean,
     viewModel: AdminStudyGroupViewModel = hiltViewModel(),
     onNavigateCreateGroup: () -> Unit = {},
     onNavigateAddSchedule: (
@@ -22,6 +23,12 @@ fun AdminStudyGroupRoute(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    LaunchedEffect(isActive) {
+        if (isActive) {
+            viewModel.refreshGroups()
+        }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
@@ -43,7 +50,11 @@ fun AdminStudyGroupRoute(
                 }
 
                 is AdminStudyGroupEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        event.message,
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }
             }
         }
