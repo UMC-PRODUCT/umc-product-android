@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,6 +39,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.DialogType
@@ -79,10 +83,26 @@ fun ScheduleDetailRoute(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
 
+    //화면이 resume에서 복귀할떄마다 재호출
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.getScheduleDetail()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+
     LaunchedEffect(viewModel){
         viewModel.uiEvent.collectLatest { event ->
             when (event){
-                is ScheduleDetailEvent.MoveBackPressedEvent -> onBackClick
+                is ScheduleDetailEvent.MoveBackPressedEvent -> onBackClick()
 
                 //일정 수정
                 is ScheduleDetailEvent.EditPlan -> onNavigateToEditSchedule(uiState.content.scheduleId)
