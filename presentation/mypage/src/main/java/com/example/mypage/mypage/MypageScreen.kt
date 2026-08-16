@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -781,31 +782,24 @@ fun MypageTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000()),
+            .background(grey000())
+            .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
 
         //뒤로 가기 버튼
-        Box(
+        Icon(
             modifier = Modifier
-                .size(48.dp)
-                .background(color = Color.Transparent, shape = CircleShape)
-                .clip(CircleShape)
-                .clickable(
-                    onClick = onBackClick
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(
-                    id = R.drawable.ic_back
-                ),
-                contentDescription = null,
-                tint = grey950(),
-                modifier = Modifier.size(24.dp)
-            )
-        }
-        
+                .padding(12.dp)
+                .clickable { onBackClick() },
+            painter = painterResource(id = R.drawable.ic_back),
+            contentDescription = null,
+            tint = Color.Unspecified,
+        )
+
+        //Spacer(modifier = Modifier.width(4.dp))
+
+
         UText(
             text = AppStrings.SETTING,
             style = UmcTypographyTokens.Title2Bold,

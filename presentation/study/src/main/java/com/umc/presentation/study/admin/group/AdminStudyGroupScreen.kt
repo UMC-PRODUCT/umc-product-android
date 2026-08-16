@@ -16,10 +16,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens.FootnoteBold
+import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.green500
 import com.umc.component.theme.grey500
+import com.umc.presentation.study.admin.group.bottomsheet.AdminStudyGroupMemberEditBottomSheet
 import com.umc.presentation.study.admin.group.component.AdminStudyGroupCard
 import com.umc.presentation.study.admin.group.component.AdminStudyGroupCreateCard
 
@@ -63,9 +65,8 @@ fun AdminStudyGroupScreen(
     }
 
     if (state.isMemberBottomSheetOpen) {
-        GroupCreateMemberBottomSheet(
+        AdminStudyGroupMemberEditBottomSheet(
             preSelected = state.editingMembers,
-            resolvePreSelectedFromApi = true,
             onDismissRequest = {
                 onAction(
                     AdminStudyGroupAction.CloseMemberBottomSheet
@@ -102,7 +103,7 @@ fun AdminStudyGroupScreen(
             ) {
                 UText(
                     text = "생성된 스터디 그룹이 없어요",
-                    style = FootnoteBold,
+                    style = HeadlineBold,
                     color = grey500(),
                 )
             }

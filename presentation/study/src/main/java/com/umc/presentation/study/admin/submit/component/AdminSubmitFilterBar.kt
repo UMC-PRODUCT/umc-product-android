@@ -15,8 +15,13 @@ fun AdminSubmitFilterBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 8.dp,
+                bottom = 16.dp,
+            ),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         AdminSubmitDropdown(
             text = "${selectedWeek}주차",

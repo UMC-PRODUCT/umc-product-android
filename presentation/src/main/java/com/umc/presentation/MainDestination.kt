@@ -40,6 +40,23 @@ sealed interface MainDestination {
     @Serializable
     data object SignUpFailCode : MainDestination
 
+    /**활동 섹션**/
+
+    @Serializable
+    data object Act : MainDestination
+
+    @Serializable
+    data class AdminChallengerDetail(val challengerId: Long) : MainDestination
+    @Serializable
+    data object AdminStudyGroupCreate : MainDestination
+    @Serializable
+    data class AdminStudyGroupSchedule(
+        val groupId: Long,
+        val groupTitle: String,
+        val groupPart: String,
+    ) : MainDestination
+
+
     /**공지 섹션**/
     //공지 목록
     @Serializable
@@ -66,11 +83,7 @@ sealed interface MainDestination {
     @Serializable
     data object Home : MainDestination
 
-    @Serializable
-    data object Act : MainDestination
 
-    @Serializable
-    data class AdminChallengerDetail(val challengerId: Long) : MainDestination
 
     //공지 화면
     @Serializable
@@ -94,7 +107,8 @@ sealed interface MainDestination {
     //신 마이페이지
     @Serializable
     data class Mycard(
-        val memberId: String? = null
+        val memberId: String? = null,
+        val openExchangeDialog: Boolean = false
     ) : MainDestination
 
     //(구 마이페이지) -> (신 설정)

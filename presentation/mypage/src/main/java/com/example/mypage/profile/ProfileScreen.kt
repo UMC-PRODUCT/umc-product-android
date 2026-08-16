@@ -57,6 +57,7 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
@@ -275,32 +276,22 @@ fun ProfileTopbar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000()),
+            .background(grey000())
+            .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ){
-            Box(
+            Icon(
                 modifier = Modifier
-                    .size(48.dp)
-                    .background(color = Color.Transparent, shape = CircleShape)
-                    .clip(CircleShape)
-                    .clickable(
-                        onClick = onBackClick
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(
-                        id = R.drawable.ic_back
-                    ),
-                    contentDescription = null,
-                    tint = grey950(),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+                    .padding(12.dp)
+                    .clickable { onBackClick() },
+                painter = painterResource(id = R.drawable.ic_back),
+                contentDescription = null,
+                tint = Color.Unspecified,
+            )
 
             UText(
                 text = AppStrings.MYPAGE_MODIFY_PROFILE,

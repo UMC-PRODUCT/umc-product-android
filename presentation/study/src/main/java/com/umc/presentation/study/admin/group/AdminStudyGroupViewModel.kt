@@ -30,6 +30,10 @@ class AdminStudyGroupViewModel @Inject constructor(
         loadManagedStudyGroups()
     }
 
+    fun refreshGroups() {
+        loadManagedStudyGroups()
+    }
+
 
 
     fun onAction(action: AdminStudyGroupAction) {
@@ -203,11 +207,11 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                 val currentMembers = targetGroup.members.map { member ->
                     AdminStudyGroupCreateMemberUiModel(
-                        id = member.challengerId,
+                        id = member.challengerId, // 실제 값은 memberId
                         name = member.name,
                         displayName = member.name,
                         partLabel = targetGroup.partLabel,
-                        school = "",
+                        school = member.school,
                     )
                 }
 
@@ -273,11 +277,6 @@ class AdminStudyGroupViewModel @Inject constructor(
                     }
 
                     if (hasFailed) {
-                        emitEvent(
-                            AdminStudyGroupEvent.ShowToast(
-                                "스터디원 수정에 실패했어요."
-                            )
-                        )
                         return@launch
                     }
 

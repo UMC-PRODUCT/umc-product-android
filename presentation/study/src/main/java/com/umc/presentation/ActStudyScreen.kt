@@ -19,11 +19,13 @@ import com.umc.presentation.study.admin.group.AdminStudyGroupItemUiModel
 import com.umc.presentation.study.admin.group.AdminStudyGroupRoute
 import com.umc.presentation.study.admin.submit.AdminSubmitRoute
 import com.umc.presentation.study.normal.UserStudyRoute
+import kotlinx.coroutines.NonCancellable.isActive
 import kotlinx.coroutines.launch
 
 @Composable
 fun ActStudyRoute(
     isAdmin: Boolean,
+    isActive: Boolean,
     onNavigateCreateGroup: () -> Unit = {},
     onNavigateAddSchedule: (
         groupId: Long,
@@ -34,6 +36,7 @@ fun ActStudyRoute(
 ) {
     ActStudyScreen(
         isAdmin = isAdmin,
+        isActive = isActive,
         onNavigateCreateGroup = onNavigateCreateGroup,
         onNavigateAddSchedule = onNavigateAddSchedule,
         onOpenEditMembers = onOpenEditMembers,
@@ -43,6 +46,7 @@ fun ActStudyRoute(
 @Composable
 fun ActStudyScreen(
     isAdmin: Boolean,
+    isActive: Boolean,
     onNavigateCreateGroup: () -> Unit = {},
     onNavigateAddSchedule: (
         groupId: Long,
@@ -53,6 +57,7 @@ fun ActStudyScreen(
 ) {
     if (isAdmin) {
         AdminStudyScreen(
+            isActive = isActive,
             onNavigateCreateGroup = onNavigateCreateGroup,
             onNavigateAddSchedule = onNavigateAddSchedule,
             onOpenEditMembers = onOpenEditMembers,
@@ -64,6 +69,7 @@ fun ActStudyScreen(
 
 @Composable
 private fun AdminStudyScreen(
+    isActive: Boolean,
     onNavigateCreateGroup: () -> Unit,
     onNavigateAddSchedule: (
         groupId: Long,
@@ -125,11 +131,14 @@ private fun AdminStudyScreen(
         ) { page ->
             when (page) {
                 0 -> {
-                    AdminSubmitRoute()
+                    AdminSubmitRoute(
+                        isActive = isActive && pagerState.currentPage == 0,
+                    )
                 }
 
                 1 -> {
                     AdminStudyGroupRoute(
+                        isActive = isActive && pagerState.currentPage == 1,
                         onNavigateCreateGroup = onNavigateCreateGroup,
                         onNavigateAddSchedule = onNavigateAddSchedule,
                         onOpenEditMembers = onOpenEditMembers,

@@ -366,7 +366,12 @@ public fun CalendarDatePickerDialog(
             containerColor = grey000(),
         )
     ) {
-        DatePicker(state = datePickerState)
+        DatePicker(
+            state = datePickerState,
+            colors = DatePickerDefaults.colors(
+                containerColor = grey000()
+            )
+        )
     }
 }
 

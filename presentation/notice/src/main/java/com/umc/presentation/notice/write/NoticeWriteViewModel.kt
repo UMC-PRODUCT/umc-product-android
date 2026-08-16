@@ -154,8 +154,9 @@ class NoticeWriteViewModel @Inject constructor(
             NoticeWriterRole.CENTRAL_STAFF ->
                 listOf(WriteCategory(WriteCategoryType.CENTRAL_STAFF, AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL))
 
-            NoticeWriterRole.CHAPTER_PRESIDENT ->
-                listOf(WriteCategory(WriteCategoryType.CHAPTER_PRESIDENT, AppStrings.NOTICE_WRITE_CATEGORY_CHAPTER))
+            // 지부장 보류 (NoticeWriterRole.CHAPTER_PRESIDENT 주석 참고)
+            // NoticeWriterRole.CHAPTER_PRESIDENT ->
+            //     listOf(WriteCategory(WriteCategoryType.CHAPTER_PRESIDENT, AppStrings.NOTICE_WRITE_CATEGORY_CHAPTER))
 
             NoticeWriterRole.SCHOOL_CORE ->
                 listOf(WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE))
@@ -190,9 +191,10 @@ class NoticeWriteViewModel @Inject constructor(
                     BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART, BoardChipType.CHAPTER
                 ) to AppStrings.NOTICE_WRITE_CLASS_HINT
 
-                NoticeWriterRole.CHAPTER_PRESIDENT -> listOf(
-                    BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART, BoardChipType.SCHOOL
-                ) to AppStrings.NOTICE_WRITE_CLASS_HINT
+                // 지부장 보류 (NoticeWriterRole.CHAPTER_PRESIDENT 주석 참고)
+                // NoticeWriterRole.CHAPTER_PRESIDENT -> listOf(
+                //     BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART, BoardChipType.SCHOOL
+                // ) to AppStrings.NOTICE_WRITE_CLASS_HINT
 
                 NoticeWriterRole.SCHOOL_CORE -> listOf(
                     BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART
@@ -240,12 +242,22 @@ class NoticeWriteViewModel @Inject constructor(
         }
     }
 
+    /** 전체는 나머지 분류와 배타적이다. 켜는 순간 다른 선택을 모두 해제한다 */
     fun onToggleAll() {
-        updateState { copy(isAllSelected = !isAllSelected) }
+        updateState {
+            val turningOn = !isAllSelected
+            copy(
+                isAllSelected = turningOn,
+                isStaffSelected = if (turningOn) false else isStaffSelected,
+                selectedChapter = if (turningOn) null else selectedChapter,
+                selectedSchool = if (turningOn) null else selectedSchool,
+                selectedPart = if (turningOn) null else selectedPart,
+            )
+        }
     }
 
     fun onToggleStaff() {
-        updateState { copy(isStaffSelected = !isStaffSelected) }
+        updateState { copy(isStaffSelected = !isStaffSelected, isAllSelected = false) }
     }
 
     /** 지부 선택. 기수 카테고리에서는 학교와 동시 선택 불가 */
@@ -255,6 +267,7 @@ class NoticeWriteViewModel @Inject constructor(
             copy(
                 selectedChapter = chapter,
                 selectedSchool = if (isExclusive) null else selectedSchool,
+                isAllSelected = false,
             )
         }
     }
@@ -266,20 +279,23 @@ class NoticeWriteViewModel @Inject constructor(
             copy(
                 selectedSchool = school,
                 selectedChapter = if (isExclusive) null else selectedChapter,
+                isAllSelected = false,
             )
         }
     }
 
     fun onSelectPart(part: UserPart) {
-        updateState { copy(selectedPart = part) }
+        updateState { copy(selectedPart = part, isAllSelected = false) }
     }
 
     fun onTitleChanged(title: String) {
         updateState { copy(title = title) }
     }
 
+    /** 개행이 들어오면 그 줄에서 열린 마크다운은 닫아서 다음 줄로 넘기지 않는다 */
     fun onContentChanged(content: TextFieldValue) {
-        updateState { copy(content = content) }
+        val adjusted = MarkdownEditActions.closeMarkersOnNewline(uiState.value.content, content)
+        updateState { copy(content = adjusted) }
     }
 
     /** 알림 발송 여부 토글 (종 아이콘) */

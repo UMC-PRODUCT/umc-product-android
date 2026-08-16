@@ -45,6 +45,8 @@ import com.umc.presentation.community.chatting.CommunityChattingRoute
 import com.umc.presentation.community.search.CommunitySearchRoute
 import com.umc.presentation.community.create.CommunityCreateRoute
 import com.umc.presentation.community.edit.CommunityEditRoute
+import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateRoute
+import com.umc.presentation.study.admin.group.schedule.AdminStudyGroupScheduleRoute
 
 private const val COMMUNITY_REFRESH_KEY = "community_refresh"
 private const val COMMUNITY_THREAD_DEEP_LINK_BASE =
@@ -61,14 +63,8 @@ fun MainNavHost(
         navController = navHostController,
 
 
-        startDestination = if (BuildConfig.DEBUG) {
-            MainDestination.Login
-        } else {
-            MainDestination.Home
-        },
-
-
-        //startDestination = MainDestination.Mycard(),
+        // 스플래시에서 저장된 토큰으로 자동 로그인 판정 후 홈/로그인/코드입력으로 분기
+        startDestination = MainDestination.Splash,
 
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
@@ -76,13 +72,22 @@ fun MainNavHost(
         popExitTransition = { ExitTransition.None },
     ) {
         composable<MainDestination.Splash> {
+            // 스플래시는 백스택에서 제거 (뒤로가기 시 스플래시로 돌아가지 않도록)
             SplashRoute(
-                navigateToLogin = { navHostController.navigate(MainDestination.Login) },
+                navigateToLogin = {
+                    navHostController.navigate(MainDestination.Login) {
+                        popUpTo(MainDestination.Splash) { inclusive = true }
+                    }
+                },
                 navigateToMain = {
-                    navHostController.navigate(MainDestination.Home)
+                    navHostController.navigate(MainDestination.Home) {
+                        popUpTo(MainDestination.Splash) { inclusive = true }
+                    }
                 },
                 navigateToInputCode = {
-                    navHostController.navigate(MainDestination.SignUpFailCode)
+                    navHostController.navigate(MainDestination.SignUpFailCode) {
+                        popUpTo(MainDestination.Splash) { inclusive = true }
+                    }
                 }
             )
         }
@@ -188,8 +193,9 @@ fun MainNavHost(
             PermissionRoute(
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToMain = {
+                    // 스플래시는 이미 스택에서 제거된 상태라 가입 스택 전체를 비우고 홈으로
                     navHostController.navigate(MainDestination.Home) {
-                        popUpTo(MainDestination.Splash) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 navigateToFail = {
@@ -289,14 +295,30 @@ fun MainNavHost(
             )
         }
 
-        /**홈 화면 탭에 대한 내용입니다.**/
+        /**활동 화면**/
         composable<MainDestination.Act> {
             ActManageRoute(
                 onNavigateToChallengerDetail = { challengerId ->
                     navHostController.navigate(
                         MainDestination.AdminChallengerDetail(challengerId)
                     )
-                }
+                },
+
+                onNavigateCreateStudyGroup = {
+                    navHostController.navigate(
+                        MainDestination.AdminStudyGroupCreate
+                    )
+                },
+
+                onNavigateAddStudySchedule = { groupId, groupTitle, groupPart ->
+                    navHostController.navigate(
+                        MainDestination.AdminStudyGroupSchedule(
+                            groupId = groupId,
+                            groupTitle = groupTitle,
+                            groupPart = groupPart,
+                        )
+                    )
+                },
             )
         }
 
@@ -306,6 +328,29 @@ fun MainNavHost(
             AdminChallengerDetailRoute(
                 challengerId = destination.challengerId,
                 onNavigateToBack = { navHostController.popBackStack() },
+            )
+        }
+
+        composable<MainDestination.AdminStudyGroupCreate> {
+            AdminStudyGroupCreateRoute(
+                navigateBack = {
+                    navHostController.popBackStack()
+                },
+            )
+        }
+
+        composable<MainDestination.AdminStudyGroupSchedule> { backStackEntry ->
+
+            val destination =
+                backStackEntry.toRoute<MainDestination.AdminStudyGroupSchedule>()
+
+            AdminStudyGroupScheduleRoute(
+                groupId = destination.groupId,
+                groupTitle = destination.groupTitle,
+                groupPart = destination.groupPart,
+                onNavigateBack = {
+                    navHostController.popBackStack()
+                },
             )
         }
 
@@ -326,6 +371,9 @@ fun MainNavHost(
                 },
                 onNavigateToNotification = {
                     navHostController.navigate(MainDestination.Notification)
+                },
+                onNavigateToCardShare = {
+                    navHostController.navigate(MainDestination.Mycard(openExchangeDialog = true))
                 }
             )
         }
@@ -384,10 +432,12 @@ fun MainNavHost(
             // Type-Safe Navigation 파라미터 추출 (딥링크 포함)
             val mycardDestination = backStackEntry.toRoute<MainDestination.Mycard>()
             val targetMemberId = mycardDestination.memberId
+            val openExchangeDialog = mycardDestination.openExchangeDialog
 
 
             MycardRoute(
                 targetMemberId = targetMemberId,
+                openExchangeDialog = openExchangeDialog,
                 onNavigateToMypage = {
                     navHostController.navigate(MainDestination.Mypage)
                 },
@@ -458,6 +508,10 @@ fun MainNavHost(
                 }
             )
         }
+
+
+
+
 
         /** 커뮤니티 화면 **/
         composable<MainDestination.Community> {
