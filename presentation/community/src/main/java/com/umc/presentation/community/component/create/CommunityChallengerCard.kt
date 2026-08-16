@@ -3,11 +3,9 @@ package com.umc.presentation.community.component.create
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,10 +22,9 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
+import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
-import com.umc.component.theme.grey600
-import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.grey800
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 
 @Composable
@@ -42,67 +39,67 @@ fun CommunityChallengerCard(
         MutableInteractionSource()
     }
 
+    val challengerText = when {
+        challengers.isEmpty() -> {
+            "챌린저를 선택하세요"
+        }
+
+        challengers.size == 1 -> {
+            challengers.first().name
+        }
+
+        else -> {
+            "${challengers.first().name} 외 ${challengers.size - 1}명"
+        }
+    }
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .height(48.dp)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
             ),
         color = grey000(),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(8.dp),
         border = BorderStroke(
             width = 1.dp,
-            color = indigo500(),
+            color = grey300(),
         ),
         shadowElevation = 0.dp,
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = 14.dp,
+                    end = 12.dp,
+                ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(
+            UText(
+                text = challengerText,
+                style = UmcTypographyTokens.Body,
+                color = if (challengers.isEmpty()) {
+                    grey400()
+                } else {
+                    grey800()
+                },
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                UText(
-                    text = "추가할 챌린저",
-                    style = UmcTypographyTokens.HeadlineBold,
-                    color = grey950(),
-                )
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
 
-
-                UText(
-                    text = "최대 ${maxCount}명까지 추가할 수 있습니다",
-                    style = UmcTypographyTokens.Footnote,
-                    color = grey600(),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-
-            Spacer(modifier = Modifier.size(12.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                UText(
-                    text = "$currentCount / $maxCount",
-                    style = UmcTypographyTokens.Footnote,
-                    color = indigo500(),
-                )
-
-                Icon(
-                    painter = painterResource(
-                        id = R.drawable.ic_next,
-                    ),
-                    contentDescription = "챌린저 선택",
-                    tint = grey400(),
-                    modifier = Modifier.size( 32.dp),
-                )
-            }
+            Icon(
+                painter = painterResource(
+                    id = R.drawable.ic_next,
+                ),
+                contentDescription = "챌린저 선택",
+                tint = grey400(),
+                modifier = Modifier.size(24.dp),
+            )
         }
     }
 }
