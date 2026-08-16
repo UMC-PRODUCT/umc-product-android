@@ -96,8 +96,7 @@ fun PenaltyPointsScreen(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .height(700.dp)
-            .imePadding()
+            .height(600.dp)
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(grey000())
             .padding(horizontal = 16.dp)

@@ -84,8 +84,7 @@ fun RewardPointsScreen(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .height(700.dp)
-            .imePadding()
+            .height(600.dp)
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(grey000())
             .padding(horizontal = 16.dp)
@@ -145,7 +144,7 @@ fun RewardPointsScreen(
             onClick = onSubmitClick
         )
 
-        Spacer(modifier = Modifier.height(72.dp))
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
@@ -262,6 +261,7 @@ private fun MemoInput(
         textColor = grey800(),
         textStyle = Callout,
         backgroundColor = grey000(),
+        verticalAlignment = Alignment.Top,
         strokeColor = grey300(),
         focusStrokeColor = grey900(),
         modifier = Modifier

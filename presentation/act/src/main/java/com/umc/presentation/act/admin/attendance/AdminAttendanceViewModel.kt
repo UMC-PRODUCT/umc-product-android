@@ -31,7 +31,14 @@ class AdminAttendanceViewModel @Inject constructor(
             resultResponse(
                 response = getAdminSessionListUseCase(),
                 successCallback = { sessions ->
-                    updateState { copy(sessions = sessions) }
+                    updateState {
+                        copy(
+                            sessions = sessions.sortedWith(
+                                compareByDescending<AdminSessionCheck> { it.date.toAttendanceLocalDate() }
+                                    .thenByDescending { it.startTime }
+                            )
+                        )
+                    }
                 },
                 errorCallback = { failState ->
                     emitEvent(AdminAttendanceEvent.ShowToast(failState.message))
@@ -147,14 +154,20 @@ sealed interface AdminAttendanceEvent : UiEvent {
 private const val FORCE_DELETE_REQUIRED_ERROR_CODE = "SCHEDULE-0033"
 
 fun String.toAttendanceDisplayDate(): String {
-    val date = substringBefore(" ")
-    val localDate = runCatching {
-        LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE)
-    }.recoverCatching {
-        LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy.MM.dd"))
-    }.getOrNull() ?: return this
+    val localDate = toAttendanceLocalDate()
+        .takeUnless { it == LocalDate.MIN }
+        ?: return this
 
     return localDate.format(
         DateTimeFormatter.ofPattern("yyyy.MM.dd (E)", Locale.KOREAN)
     )
+}
+
+private fun String.toAttendanceLocalDate(): LocalDate {
+    val date = substringBefore(" ")
+    return runCatching {
+        LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE)
+    }.recoverCatching {
+        LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+    }.getOrDefault(LocalDate.MIN)
 }

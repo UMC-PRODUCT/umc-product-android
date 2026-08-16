@@ -61,13 +61,14 @@ class AdminChallengerViewModel @Inject constructor(
     }
 
     fun selectPartFilter(part: UserPart) {
+        val nextPart = part.takeUnless { uiState.value.selectedPart == it }
         updateState {
             copy(
-                selectedPart = part,
+                selectedPart = nextPart,
                 isPartFilterVisible = false
             )
         }
-        getChallengers(selectedPart = part)
+        getChallengers(selectedPart = nextPart)
     }
 
     //관리자용 챌린저 목록 조회
