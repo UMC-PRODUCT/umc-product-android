@@ -82,7 +82,7 @@ fun ScheduleChallengerAddBottomSheet(
 
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
+        skipPartiallyExpanded = false
     )
 
     //리스트 추적
@@ -358,7 +358,7 @@ fun AddedParticipantRow(
             .weight(1f)
         ) {
             UText(
-                text = item.name,
+                text = "${item.name}/${item.nickname} (${item.gisu}기)",
                 style = UmcTypographyTokens.SubheadlineBold,
                 color = grey800()
             )
@@ -428,7 +428,7 @@ fun SearchParticipantRow(
             .weight(1f)
         ) {
             UText(
-                text = item.name,
+                text = "${item.name}/${item.nickname} (${item.gisu}기)",
                 style = UmcTypographyTokens.SubheadlineBold,
                 color = grey800()
             )

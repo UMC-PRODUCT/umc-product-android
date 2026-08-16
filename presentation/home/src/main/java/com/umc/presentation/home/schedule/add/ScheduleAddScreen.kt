@@ -250,18 +250,20 @@ fun ScheduleAddScreen(
 
     ) {
         //1. 상단 바
-        ScheduleAddTopBar(onBackClick = onBackClick)
+        ScheduleAddTopBar(
+            onBackClick = onBackClick,
+            registerOk = uiState.isRegisterOk,
+            editMode = uiState.editMode,
+            onRegisterClick = onRegisterClick
+            )
 
         //2. 일정 입력 영역(스크롤)
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
                 .verticalScroll(scrollState)
         ) {
-            Spacer(modifier = Modifier
-                .height(16.dp)
-            )
 
             //3. 일정 제목
             ScheduleInputSection(
@@ -352,8 +354,10 @@ fun ScheduleAddScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     USwitch(
-                        checked = uiState.isOnlineChecked,
-                        onCheckedChange = onOnlineChanged,
+                        checked = !uiState.isOnlineChecked,
+                        onCheckedChange = { isOffline ->
+                            onOnlineChanged(!isOffline)
+                        },
                     )
                     Spacer(modifier = Modifier.
                     width(8.dp)
@@ -362,18 +366,21 @@ fun ScheduleAddScreen(
 
                 }
 
-                Spacer(modifier = Modifier
-                    .height(8.dp)
-                )
 
+                if(!uiState.isOnlineChecked) {
+                    Spacer(
+                        modifier = Modifier
+                            .height(8.dp)
+                    )
 
-                //content()
-                SelectableField(
-                    text = if (uiState.planLocation.isEmpty()) AppStrings.HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER else uiState.planLocation,
-                    isPlaceholder = uiState.planLocation.isEmpty(),
-                    onClick = onLocationClick,
-                    isDisabled = uiState.isOnlineChecked
-                )
+                    //content()
+                    SelectableField(
+                        text = if (uiState.planLocation.isEmpty()) AppStrings.HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER else uiState.planLocation,
+                        isPlaceholder = uiState.planLocation.isEmpty(),
+                        onClick = onLocationClick,
+                        isDisabled = uiState.isOnlineChecked
+                    )
+                }
             }
 
 
@@ -457,10 +464,11 @@ fun ScheduleAddScreen(
 
             Spacer(
                 modifier = Modifier
-                    .height(48.dp)
+                    .height(64.dp)
             )
 
             //10. 하단 버튼들
+            /*
             ScheduleAddActionButtons(
                 registerOk = uiState.isRegisterOk,
                 editMode = uiState.editMode,
@@ -472,6 +480,8 @@ fun ScheduleAddScreen(
                 .height(64.dp)
             )
 
+             */
+
         }
 
 
@@ -481,43 +491,46 @@ fun ScheduleAddScreen(
 
 /**상단 top bar**/
 @Composable
-fun ScheduleAddTopBar(onBackClick: () -> Unit){
+fun ScheduleAddTopBar(
+    onBackClick: () -> Unit,
+    registerOk: Boolean,
+    editMode: Boolean,
+    onRegisterClick: () -> Unit
+){
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 18.dp)
-            .padding(horizontal = 16.dp),
+            .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-
-        Box(
+        Icon(
             modifier = Modifier
-                .size(48.dp)
-                .background(color = Color.Transparent, shape = CircleShape)
-                .clip(CircleShape)
-                .clickable(
-                    onClick = onBackClick
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(
-                    id = R.drawable.ic_back
-                ),
-                contentDescription = null,
-                tint = grey950(),
-                modifier = Modifier.size(24.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier
-            .width(16.dp)
+                .padding(12.dp)
+                .clickable { onBackClick() },
+            painter = painterResource(id = R.drawable.ic_back),
+            contentDescription = null,
+            tint = Color.Unspecified,
         )
+
+
         UText(
             text = AppStrings.HOME_PLAN_ADD_TITLE,
             style = UmcTypographyTokens.Title2Bold,
             color = grey800()
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        UText(
+            text = if (editMode) AppStrings.EDIT else AppStrings.REGISTER,
+            style = UmcTypographyTokens.HeadlineBold,
+            color = if (registerOk) indigo500() else grey400(),
+            modifier = Modifier
+                .clickable(enabled = registerOk) { onRegisterClick() }
+                .padding(horizontal = 22.dp)
+            ,
         )
 
     }
@@ -676,7 +689,10 @@ fun AttendanceTimeRow(
                     borderColor = grey200(),
                     borderWidth = 0.dp,
                     textColor = indigo500(),
-                    textStyle = UmcTypographyTokens.SubheadlineBold)
+                    textStyle = UmcTypographyTokens.SubheadlineBold,
+                    onClick = {onDateTimeClick()}
+
+                )
             }
         }
 

@@ -81,6 +81,7 @@ fun CardExchangeBottomSheet(
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp)
         ) {
+            /*
             when (currentStep) {
                 /**1. 방법 선택일 경우 (선택 모습 띄우기)**/
                 ExchangeStep.SELECT_METHOD -> {
@@ -137,8 +138,10 @@ fun CardExchangeBottomSheet(
                     )
                 }
 
+             */
+
                 /**2. wifi aware 눌렀을 때, nearbyConnection 수행하고 유저 탐색**/
-                ExchangeStep.DISCOVER_USERS -> {
+                //ExchangeStep.DISCOVER_USERS -> {
                     UText(
                         text = AppStrings.EXCHANGE_CARD_WIFI_USER_TITLE,
                         style = UmcTypographyTokens.Title3Bold,
@@ -191,10 +194,10 @@ fun CardExchangeBottomSheet(
                         cornerRadius = 12.dp,
                         onClick = onDismissRequest
                     )
-                }
+                //}
             }
         }
-    }
+    //}
 
     //유저 눌렀을 때 선택 다이얼로그
     if (selectedTargetUser != null) {

@@ -6,7 +6,7 @@ import com.umc.domain.model.community.thread.CommunityThreadMessage
 sealed interface CommunityChattingAction {
     data object OnBackClick : CommunityChattingAction
     data object OnMoreClick : CommunityChattingAction
-    data class OnUnreadSummaryClick(val unreadCount: Int? = null) : CommunityChattingAction
+    data object OnUnreadSummaryClick : CommunityChattingAction
     data object OnRetryUnreadSummary : CommunityChattingAction
     data object OnDismissUnreadSummary : CommunityChattingAction
     data object OnCameraClick : CommunityChattingAction

@@ -1,7 +1,6 @@
 package com.umc.presentation.community.create
 
 import com.umc.presentation.community.DEFAULT_COMMUNITY_MAX_MEMBER_COUNT
-
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel

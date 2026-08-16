@@ -85,20 +85,6 @@ private fun UmcApp() {
             else -> null
         }
         val showBottomBar = currentTab != null
-        /*
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .safeDrawingPadding()
-                .imePadding(),
-        ) {
-            val navController = rememberNavController()
-            MainNavHost(
-                navHostController = navController,
-            )
-        }
-
-         */
 
         Scaffold(
             bottomBar = {
