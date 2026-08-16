@@ -210,10 +210,6 @@ constructor(
     }
 
 
-    //출석 체크 로직
-    fun onClickConfirmAttention(){
-        emitEvent(ScheduleDetailEvent.TouchConfirmAttention)
-    }
 
     //상단 케밥 메뉴 열기
     fun toggleKebabMenu(){
