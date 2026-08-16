@@ -48,6 +48,26 @@ constructor(
 
 
 
+    fun getScheduleDetail(){
+        viewModelScope.launch {
+            resultResponse(
+                response = getScheduleDetailHomeUseCase(checkScheduleId),
+                successCallback = {
+                    Log.d("log_home", "일정 상세: $it")
+                    updateState { copy(
+                        content = it,
+                        plusDay = plusDay)
+                    }
+                    //settingScheduleAuthAccess(it.scheduleId)
+
+                    convertPlanDetailItemToUiState(it, checkPlusDay)
+                },
+                errorCallback = {
+
+                }
+            )
+        }
+    }
 
 
     //서버에서 게시글 상세 정보 가져오기
