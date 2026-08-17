@@ -23,6 +23,31 @@ object MarkdownEditActions {
 
     private val headingPrefixes = listOf("### ", "## ", "# ")
 
+    /**
+     * 개행이 입력되면 그 줄에서 열려 있던 인라인 마커를 개행 앞에서 모두 닫는다.
+     *
+     * 파서가 줄 단위로만 인라인 토큰을 찾으므로 토큰이 개행을 넘기면 마커가 화면에
+     * 그대로 드러난다. 또한 사용자 기대상 `<mark>가나다` 뒤에서 엔터를 치면
+     * 형광펜은 "가나다"까지만 적용되어야 한다
+     */
+    fun closeMarkersOnNewline(previous: TextFieldValue, current: TextFieldValue): TextFieldValue {
+        val cursor = current.selection.min
+        val isSingleNewlineInput = current.text.length == previous.text.length + 1 &&
+                current.selection.collapsed &&
+                cursor in 1..current.text.length &&
+                current.text[cursor - 1] == '\n'
+        if (!isSingleNewlineInput) return current
+
+        val closers = MarkdownScanner.closersAt(current.text, cursor - 1)
+        if (closers.isEmpty()) return current
+
+        val newlineAt = cursor - 1
+        return current.copy(
+            text = current.text.replaceRange(newlineAt, newlineAt, closers),
+            selection = TextRange(cursor + closers.length),
+        )
+    }
+
     /** 색상 인자가 없는 `<mark>`도 렌더러가 받아주므로 동일하게 인식한다 */
     private val MARK_OPEN = Regex("""<mark(?:\s+color="[^"]*")?>""")
     private const val MARK_CLOSE = "</mark>"
@@ -50,18 +75,26 @@ object MarkdownEditActions {
     }
 
     /** 굵게(`**`) 토글. 기울임과 조합되면 `***...***` 형태가 됨 */
-    fun toggleBold(value: TextFieldValue): TextFieldValue = toggleAsterisk(value, count = 2)
+    fun toggleBold(value: TextFieldValue): TextFieldValue =
+        toggleAsterisk(value, count = 2, style = MarkdownStyle.BOLD)
 
-    /** 기울임(`*`) 토글 */
-    fun toggleItalic(value: TextFieldValue): TextFieldValue = toggleAsterisk(value, count = 1)
+    /**
+     * 기울임 토글.
+     *
+     * 이미 있는 `*...*`도 그대로 해제하지만, 새로 넣을 때는 `_`를 쓴다.
+     * 굵게 안에 별표 기울임을 넣으면 `**` + `*`가 `***`(굵게+기울임)와 구분되지 않아
+     * 기울임을 끌 때 굵게까지 함께 사라진다. `_`는 별표와 섞이지 않는다
+     */
+    fun toggleItalic(value: TextFieldValue): TextFieldValue =
+        toggleAsterisk(value, count = 1, style = MarkdownStyle.ITALIC, insertMarker = "_")
 
     /** 밑줄(`<u></u>`) 토글 */
     fun toggleUnderline(value: TextFieldValue): TextFieldValue =
-        toggleWrap(value, open = "<u>", close = "</u>")
+        toggleWrap(value, open = "<u>", close = "</u>", style = MarkdownStyle.UNDERLINE)
 
     /** 취소선(`~~`) 토글 */
     fun toggleStrikethrough(value: TextFieldValue): TextFieldValue =
-        toggleWrap(value, open = "~~", close = "~~")
+        toggleWrap(value, open = "~~", close = "~~", style = MarkdownStyle.STRIKETHROUGH)
 
     /**
      * 형광펜(`<mark color="...">`) 토글.
@@ -69,7 +102,8 @@ object MarkdownEditActions {
      */
     fun toggleHighlight(value: TextFieldValue, color: MarkdownHighlightColor): TextFieldValue {
         val open = """<mark color="${color.markColorCode}">"""
-        val (start, end) = value.trimmedSelection() ?: return insertEmptyMarker(value, open, MARK_CLOSE)
+        val (start, end) = value.trimmedSelection()
+            ?: return deactivateOrInsert(value, open, MARK_CLOSE, MarkdownStyle.HIGHLIGHT)
         val text = value.text
         val selected = text.substring(start, end)
 
@@ -185,9 +219,16 @@ object MarkdownEditActions {
      * 별표 마커 토글. 굵게/기울임은 같은 문자를 공유하므로 양끝 별표 개수로 상태를 판단:
      * 1개=기울임, 2개=굵게, 3개=굵게+기울임
      */
-    private fun toggleAsterisk(value: TextFieldValue, count: Int): TextFieldValue {
+    private fun toggleAsterisk(
+        value: TextFieldValue,
+        count: Int,
+        style: MarkdownStyle,
+        /** 선택 없이 새로 넣을 때 쓸 마커. 기본은 별표와 동일 */
+        insertMarker: String = "*".repeat(count),
+    ): TextFieldValue {
         val marker = "*".repeat(count)
-        val (start, end) = value.trimmedSelection() ?: return insertEmptyMarker(value, marker, marker)
+        val (start, end) = value.trimmedSelection()
+            ?: return deactivateOrInsert(value, insertMarker, insertMarker, style)
 
         val selected = value.text.substring(start, end)
         val edgeMarks = minOf(
@@ -207,8 +248,14 @@ object MarkdownEditActions {
     }
 
     /** 열림/닫힘 마커가 다른 스타일(밑줄, 취소선) 토글 */
-    private fun toggleWrap(value: TextFieldValue, open: String, close: String): TextFieldValue {
-        val (start, end) = value.trimmedSelection() ?: return insertEmptyMarker(value, open, close)
+    private fun toggleWrap(
+        value: TextFieldValue,
+        open: String,
+        close: String,
+        style: MarkdownStyle,
+    ): TextFieldValue {
+        val (start, end) = value.trimmedSelection()
+            ?: return deactivateOrInsert(value, open, close, style)
         val text = value.text
         val selected = text.substring(start, end)
 
@@ -244,6 +291,40 @@ object MarkdownEditActions {
         while (start < end && text[start].isWhitespace()) start++
         while (end > start && text[end - 1].isWhitespace()) end--
         return if (start == end) null else start to end
+    }
+
+    /**
+     * 선택 없이 툴바를 눌렀을 때의 동작. 누를 때마다 그 스타일 하나만 켜지고 꺼져야 한다.
+     *
+     * 켜져 있는 상태에서 다시 누르면:
+     * - 아직 아무것도 입력하지 않은 빈 마커 쌍이면 마커째 지운다.
+     *   커서만 밖으로 옮기면 `****` 같은 별표 뭉치가 남고, 거기서 한 번 더 누르면
+     *   `***`(굵게+기울임)로 읽혀 누르지도 않은 기울임까지 켜진다
+     * - 이미 입력한 내용이 있으면 닫는 마커 뒤로 커서를 옮겨 스타일을 끝낸다
+     */
+    private fun deactivateOrInsert(
+        value: TextFieldValue,
+        open: String,
+        close: String,
+        style: MarkdownStyle,
+    ): TextFieldValue {
+        val marker = MarkdownScanner.activeMarkerAt(value, style)
+            ?: return insertEmptyMarker(value, open, close)
+
+        val text = value.text
+        val at = value.selection.min
+        if (!text.startsWith(marker.close, at)) return insertEmptyMarker(value, open, close)
+
+        val isEmptyPair = at >= marker.open.length && text.startsWith(marker.open, at - marker.open.length)
+
+        return if (isEmptyPair) {
+            val newText = text
+                .removeRange(at, at + marker.close.length)
+                .removeRange(at - marker.open.length, at)
+            value.copy(text = newText, selection = TextRange(at - marker.open.length))
+        } else {
+            value.copy(selection = TextRange(at + marker.close.length))
+        }
     }
 
     /** 선택이 없을 때 커서 위치에 빈 마커 쌍을 삽입하고 커서를 그 사이로 이동 */

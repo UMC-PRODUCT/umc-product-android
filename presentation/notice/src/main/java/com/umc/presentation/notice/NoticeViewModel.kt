@@ -82,7 +82,7 @@ class NoticeViewModel @Inject constructor(
             updateState {
                 copy(
                     dropdownList = dropdownList,
-                    orgChipList = createOrgChips(userInfo),
+                    chipList = createFilterChips(userInfo),
                 )
             }
             refreshNoticeList()
@@ -102,10 +102,16 @@ class NoticeViewModel @Inject constructor(
             .sortedByDescending { it.generation }
     }
 
-    /** 선택된 기수의 소속(지부/학교) 정보로 1차 필터 칩 생성 */
-    private fun createOrgChips(userInfo: UserInfo): List<NoticeChipState> {
+    /**
+     * 필터 칩 생성. 전체 / 중앙운영사무국 / 지부 / 학교 / 파트를 한 줄에 나열한다.
+     *
+     * 칩 하나가 서버 파라미터 하나(chapterId·schoolId·part·noticeTab)에 대응하고
+     * 항상 하나만 선택된다. 서버가 이 값들을 평면적으로 받기 때문에
+     * 여러 칩을 겹쳐 적용하면 조건이 AND로 누적돼 결과가 비어버린다
+     */
+    private fun createFilterChips(userInfo: UserInfo): List<NoticeChipState> {
         val selectedGisu = uiState.value.selectedGisu
-        val selectedText = uiState.value.selectedOrgChipText
+        val selectedText = uiState.value.selectedChipText
 
         val filteredRecords = if (selectedGisu == 0L) {
             userInfo.challengerRecords
@@ -116,6 +122,18 @@ class NoticeViewModel @Inject constructor(
         val chipList = mutableListOf(
             NoticeChipState(text = AppStrings.ALL, isClicked = selectedText == AppStrings.ALL)
         )
+
+        // 중앙운영사무국 공지(noticeTab=CENTRAL_MEMBER)는 중앙운영진만 조회할 수 있다.
+        // 자기 role보다 상위 탭을 요청하면 403이므로 권한이 있을 때만 칩을 노출한다
+        if (hasCentralStaffRole(userInfo)) {
+            chipList.add(
+                NoticeChipState(
+                    text = AppStrings.NOTICE_CENTRAL_CHIP,
+                    isStaffNoticeChip = true,
+                    isClicked = selectedText == AppStrings.NOTICE_CENTRAL_CHIP,
+                )
+            )
+        }
 
         filteredRecords.forEach { record ->
             val chapterName = record.chapterName
@@ -144,8 +162,23 @@ class NoticeViewModel @Inject constructor(
             }
         }
 
+        // 파트 칩은 바텀시트로 파트를 고른 뒤 활성화된다
+        val selectedPart = uiState.value.selectedPart
+        chipList.add(
+            NoticeChipState(
+                text = selectedPart?.label ?: AppStrings.PART,
+                part = selectedPart?.name,
+                hanBottomSheet = true,
+                isClicked = selectedPart != null,
+            )
+        )
+
         return chipList
     }
+
+    /** 중앙운영사무국 공지(CENTRAL_MEMBER 탭)를 조회할 수 있는 권한인지 */
+    private fun hasCentralStaffRole(userInfo: UserInfo): Boolean =
+        userInfo.roles.any { UserChallengerRole.from(it.roleType) in CENTRAL_STAFF_ROLES }
 
     /** 공지 작성 권한 확인 (MEMBER가 아닌 경우에만 권한 있음) */
     private fun updateWritePermission(userInfo: UserInfo) {
@@ -155,36 +188,35 @@ class NoticeViewModel @Inject constructor(
         updateState { copy(canWriteNotice = hasWritePermission) }
     }
 
-    /** 1차 필터(소속) 칩 클릭. 선택 시 2차 필터는 전체로 초기화 */
-    fun onClickOrgChip(clickedItem: NoticeChipState) {
+    /** 필터 칩 클릭. 다른 칩은 모두 해제해 항상 한 조건으로만 조회한다 */
+    fun onClickChip(clickedItem: NoticeChipState) {
         updateState {
             copy(
-                orgChipList = orgChipList.map { chip ->
+                chipList = chipList.map { chip ->
                     chip.copy(isClicked = chip.text == clickedItem.text)
                 },
-                selectedOrgChipText = clickedItem.text,
-                selectedSubChip = NoticeSubChip.ALL,
+                selectedChipText = clickedItem.text,
                 selectedPart = null,
             )
         }
         refreshNoticeList()
     }
 
-    /** 2차 필터 - 전체 */
-    fun onClickSubChipAll() {
-        updateState { copy(selectedSubChip = NoticeSubChip.ALL, selectedPart = null) }
-        refreshNoticeList()
-    }
-
-    /** 2차 필터 - 운영진 공지 */
-    fun onClickSubChipStaff() {
-        updateState { copy(selectedSubChip = NoticeSubChip.STAFF, selectedPart = null) }
-        refreshNoticeList()
-    }
-
-    /** 2차 필터 - 파트 바텀시트에서 파트 선택 */
+    /** 파트 바텀시트에서 파트 선택. 파트 칩만 활성화된다 */
     fun onSelectPart(part: UserPart) {
-        updateState { copy(selectedSubChip = NoticeSubChip.PART, selectedPart = part) }
+        updateState {
+            copy(
+                selectedPart = part,
+                selectedChipText = part.label,
+                chipList = chipList.map { chip ->
+                    if (chip.hanBottomSheet) {
+                        chip.copy(text = part.label, part = part.name, isClicked = true)
+                    } else {
+                        chip.copy(isClicked = false)
+                    }
+                },
+            )
+        }
         refreshNoticeList()
     }
 
@@ -194,14 +226,13 @@ class NoticeViewModel @Inject constructor(
             copy(
                 nowTitle = item.displayText,
                 selectedGisu = item.gisuId.toLong(),
-                selectedOrgChipText = AppStrings.ALL,
-                selectedSubChip = NoticeSubChip.ALL,
+                selectedChipText = AppStrings.ALL,
                 selectedPart = null,
                 isShowDropDown = false,
             )
         }
         cachedUserInfo?.let { userInfo ->
-            updateState { copy(orgChipList = createOrgChips(userInfo)) }
+            updateState { copy(chipList = createFilterChips(userInfo)) }
         }
         refreshNoticeList()
     }
@@ -246,25 +277,19 @@ class NoticeViewModel @Inject constructor(
 
         if (state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
 
-        val selectedOrg = state.orgChipList.firstOrNull {
-            it.isClicked && it.text != AppStrings.ALL
-        }
-        val isStaffNotice = state.selectedSubChip == NoticeSubChip.STAFF
-        // 일반 공지는 항상 CHALLENGER 고정, 운영진 공지만 role에 맞는 탭으로 조회 (서버 스펙)
-        val noticeTab = if (isStaffNotice) computeStaffNoticeTab() else NOTICE_TAB_CHALLENGER
+        val query = buildNoticeQuery(state, computeStaffNoticeTab())
 
-        updateState { copy(isPageLoading = true, currentNoticeTab = noticeTab) }
+        updateState { copy(isPageLoading = true, currentNoticeTab = query.noticeTab) }
 
         val pageToFetch = if (isRefresh) 0 else state.currentPage
 
         resultResponse(
             response = getNoticeListUseCase(
                 gisuId = state.selectedGisu,
-                noticeTab = noticeTab,
-                // 운영진 공지는 schoolId 입력 여부로 중앙/교내 공지가 구분되므로 chapterId는 전달하지 않음
-                chapterId = if (isStaffNotice) null else selectedOrg?.chapterId,
-                schoolId = selectedOrg?.schoolId,
-                part = state.selectedPart?.name,
+                noticeTab = query.noticeTab,
+                chapterId = query.chapterId,
+                schoolId = query.schoolId,
+                part = query.part,
                 page = pageToFetch,
                 size = 20
             ),
@@ -284,6 +309,14 @@ class NoticeViewModel @Inject constructor(
         )
     }
 
+    /**
+     * 현재 필터 상태를 서버 쿼리로 바꾼다.
+     *
+     * 소속(chapterId·schoolId) / 파트 / 운영진 탭은 **한 번에 하나만** 전달한다.
+     * 여럿을 함께 보내면 조건이 AND로 누적돼 결과가 비고, 특히 운영진 공지에서는
+     * 명세상 chapterId·part를 쓸 수 없으며 schoolId는 중앙/교내 운영진 공지를
+     * 가르는 기준이라 소속 칩 값을 그대로 실어 보내면 의미가 어긋난다
+     */
     /** 운영진 공지 조회 시 사용자 role에 맞는 탭 계산 (서버 스펙) */
     private fun computeStaffNoticeTab(): String {
         val roles = cachedUserInfo?.roles
@@ -299,17 +332,47 @@ class NoticeViewModel @Inject constructor(
     }
 }
 
-/** 2차 필터 종류 (1차 필터에서 전체 외 소속 선택 시 노출) */
-enum class NoticeSubChip { ALL, STAFF, PART }
+/** 공지 목록 조회 쿼리. 소속·파트·운영진 탭 중 하나만 채워진다 */
+internal data class NoticeQuery(
+    val noticeTab: String,
+    val chapterId: Long? = null,
+    val schoolId: Long? = null,
+    val part: String? = null,
+)
+
+/**
+ * 현재 필터 상태를 서버 쿼리로 바꾼다.
+ *
+ * 소속(chapterId·schoolId) / 파트 / 운영진 탭은 **한 번에 하나만** 전달한다.
+ * 여럿을 함께 보내면 조건이 AND로 누적돼 결과가 비고, 특히 운영진 공지에서는
+ * 명세상 chapterId·part를 쓸 수 없으며 schoolId는 중앙/교내 운영진 공지를
+ * 가르는 기준이라 소속 칩 값을 그대로 실어 보내면 의미가 어긋난다
+ */
+internal fun buildNoticeQuery(state: NoticeUiState, staffNoticeTab: String): NoticeQuery {
+    val selected = state.chipList.firstOrNull { it.isClicked && it.text != AppStrings.ALL }
+        ?: return NoticeQuery(noticeTab = NOTICE_TAB_CHALLENGER)
+
+    // 중앙운영사무국 공지: 탭만 바꾼다.
+    // 명세상 chapterId는 쓸 수 없고, schoolId는 넣는 순간 교내 운영진 공지로 분류되므로
+    // 중앙운영사무국 공지를 보려면 schoolId를 비워야 한다
+    if (selected.isStaffNoticeChip) return NoticeQuery(noticeTab = staffNoticeTab)
+
+    // 그 외는 일반 공지. 칩이 가진 축 하나만 실린다
+    return NoticeQuery(
+        noticeTab = NOTICE_TAB_CHALLENGER,
+        chapterId = selected.chapterId,
+        schoolId = selected.schoolId,
+        part = selected.part,
+    )
+}
 
 data class NoticeUiState(
     val isShowDropDown: Boolean = false,
     val nowTitle: String = "",
     val selectedGisu: Long = 0,
     val dropdownList: List<GisuItem> = emptyList(),
-    val orgChipList: List<NoticeChipState> = emptyList(),
-    val selectedOrgChipText: String = AppStrings.ALL,
-    val selectedSubChip: NoticeSubChip = NoticeSubChip.ALL,
+    val chipList: List<NoticeChipState> = emptyList(),
+    val selectedChipText: String = AppStrings.ALL,
     val selectedPart: UserPart? = null,
     val noticeList: List<NoticeSummary> = emptyList(),
     val currentPage: Int = 0,
@@ -318,11 +381,7 @@ data class NoticeUiState(
     val canWriteNotice: Boolean = false,
     val readNoticeIds: Set<Long> = emptySet(),
     val currentNoticeTab: String = NOTICE_TAB_CHALLENGER,
-) : UiState {
-    // 1차 필터에서 전체 외 항목 선택 시 2차 필터 노출
-    val isSubChipVisible: Boolean
-        get() = selectedOrgChipText != AppStrings.ALL
-}
+) : UiState
 
 sealed interface NoticeEvent : UiEvent {
 

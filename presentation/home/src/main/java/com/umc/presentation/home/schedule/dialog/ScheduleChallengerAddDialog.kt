@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,6 +37,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -82,8 +87,19 @@ fun ScheduleChallengerAddBottomSheet(
 
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = false
+        skipPartiallyExpanded = true
     )
+
+    //LazyColumn 내부 스크롤 시 바텀시트 전체가 끌려 내려가지 않도록 차단하는 Connection
+    val lazyColumnNestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                // 아래로 스크롤할 때(available.y > 0) 바텀시트가 이 이벤트를 훔쳐가지 못하도록
+                // LazyColumn 영역에서는 오직 리스트 스크롤만 동작하게 이벤트를 격리합니다.
+                return Offset.Zero
+            }
+        }
+    }
 
     //리스트 추적
     val listState = rememberLazyListState()
@@ -117,7 +133,8 @@ fun ScheduleChallengerAddBottomSheet(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .fillMaxHeight(0.8f)
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp)
         ) {
@@ -155,6 +172,7 @@ fun ScheduleChallengerAddBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
+                    .nestedScroll(lazyColumnNestedScrollConnection)
             ) {
                 //분기 A: 검색창이 비어있을 때 -> 이미 선택된 챌린저 목록 노출
                 if (!isSearching) {

@@ -106,7 +106,10 @@ data class ScheduleDetailResponse(
                 onTimeEndDay = onTimeEndDay,
                 onTimeEndTime = onTimeEndTime,
                 lateEndDay = lateEndDay,
-                lateEndTime = lateEndTime
+                lateEndTime = lateEndTime,
+
+                //온라인 여부
+                isOnline = isOnline
             )
         }
     }

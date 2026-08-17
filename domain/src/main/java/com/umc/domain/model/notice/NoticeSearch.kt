@@ -15,10 +15,12 @@ data class NoticeSummary(
     val title: String,
     val content: String,
     val shouldSendNotification: Boolean,
+    val mustRead: Boolean = false,
     val viewCount: Int,
     val createdAt: String,
     val targetInfo: NoticeTarget,
     val authorChallengerId: Long,
+    val authorMemberId: Long = -1L,
     val authorNickname: String,
     val authorName: String
 )
