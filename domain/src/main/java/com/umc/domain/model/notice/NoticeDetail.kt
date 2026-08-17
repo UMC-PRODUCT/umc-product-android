@@ -4,8 +4,10 @@ data class NoticeDetail(
     val id: Long = -1L,
     val title: String = "",
     val content: String = "",
+    // 작성자 판별(내 챌린저 ID와 비교)은 challengerId, 프로필 조회는 memberId를 쓴다
     val authorChallengerId: Long = -1L,
-    val mustRead: Boolean = false, // TODO 현재 필독 여부 추가
+    val authorMemberId: Long = -1L,
+    val mustRead: Boolean = false,
     val vote: NoticeVote? = null,
     val images: List<NoticeImage> = emptyList(),
     val links: List<NoticeLink> = emptyList(),
@@ -22,8 +24,6 @@ data class NoticeVote(
     val status: String = "",
     val startsAt: String = "",
     val endsAtExclusive: String = "",
-    val startDateKst: String = "",
-    val endDateKst: String = "",
     val totalParticipants: Int = 0,
     val options: List<NoticeVoteOption> = emptyList(),
     val mySelectedOptionIds: List<Long> = emptyList()
@@ -61,5 +61,6 @@ data class NoticeTarget(
     val targetChapterId: Int? = null,
     val targetChapterName: String? = null,
     val targetSchoolId: Int? = null,
-    val targetParts: List<String> = emptyList()
+    val targetParts: List<String> = emptyList(),
+    val targetNoticeTab: String = ""
 )

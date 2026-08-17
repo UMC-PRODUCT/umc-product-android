@@ -63,14 +63,8 @@ fun MainNavHost(
         navController = navHostController,
 
 
-        startDestination = if (BuildConfig.DEBUG) {
-            MainDestination.Login
-        } else {
-            MainDestination.Home
-        },
-
-
-        //startDestination = MainDestination.Mycard(),
+        // 스플래시에서 저장된 토큰으로 자동 로그인 판정 후 홈/로그인/코드입력으로 분기
+        startDestination = MainDestination.Splash,
 
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
@@ -78,13 +72,22 @@ fun MainNavHost(
         popExitTransition = { ExitTransition.None },
     ) {
         composable<MainDestination.Splash> {
+            // 스플래시는 백스택에서 제거 (뒤로가기 시 스플래시로 돌아가지 않도록)
             SplashRoute(
-                navigateToLogin = { navHostController.navigate(MainDestination.Login) },
+                navigateToLogin = {
+                    navHostController.navigate(MainDestination.Login) {
+                        popUpTo(MainDestination.Splash) { inclusive = true }
+                    }
+                },
                 navigateToMain = {
-                    navHostController.navigate(MainDestination.Home)
+                    navHostController.navigate(MainDestination.Home) {
+                        popUpTo(MainDestination.Splash) { inclusive = true }
+                    }
                 },
                 navigateToInputCode = {
-                    navHostController.navigate(MainDestination.SignUpFailCode)
+                    navHostController.navigate(MainDestination.SignUpFailCode) {
+                        popUpTo(MainDestination.Splash) { inclusive = true }
+                    }
                 }
             )
         }
@@ -190,8 +193,9 @@ fun MainNavHost(
             PermissionRoute(
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToMain = {
+                    // 스플래시는 이미 스택에서 제거된 상태라 가입 스택 전체를 비우고 홈으로
                     navHostController.navigate(MainDestination.Home) {
-                        popUpTo(MainDestination.Splash) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 navigateToFail = {
@@ -369,7 +373,13 @@ fun MainNavHost(
                     navHostController.navigate(MainDestination.Notification)
                 },
                 onNavigateToCardShare = {
-                    navHostController.navigate(MainDestination.Mycard(openExchangeDialog = true))
+                    navHostController.navigate(MainDestination.Mycard(openExchangeDialog = true)){
+                        popUpTo<MainDestination.Home> {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
             )
         }
@@ -404,6 +414,11 @@ fun MainNavHost(
                 onBackClick = {navHostController.popBackStack()},
                 onNavigateToAttendSchedule = {
                     /**TODO. 일정 출석 페이지로 이동하기**/
+                    navHostController.navigate(MainDestination.Act){
+                        popUpTo<MainDestination.ScheduleDetail>{
+                            inclusive = true
+                        }
+                    }
                 },
                 onNavigateToEditSchedule = { scheduleId ->
                     navHostController.navigate(MainDestination.ScheduleEdit(scheduleId = scheduleId))
@@ -457,8 +472,12 @@ fun MainNavHost(
                 },
                 onNavigateToMyContent = {type ->
                     navHostController.navigate(MainDestination.MyContent(showType = type))
-                                        },
-                onNavigateToLogin = {},
+                },
+                onNavigateToLogin = {
+                    navHostController.navigate(MainDestination.Splash) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
                 onNavigateToQrCode = {
                     navHostController.navigate(MainDestination.Qrcode)
                 },

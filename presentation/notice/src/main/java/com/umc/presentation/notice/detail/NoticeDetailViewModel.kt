@@ -118,9 +118,10 @@ class NoticeDetailViewModel @Inject constructor(
             loadReadStatus(isRead = true)
         }
 
-        if (detail.authorChallengerId > 0) {
+        // 프로필 조회는 memberId 기준 (작성자 판별에 쓰는 challengerId와 다른 값)
+        if (detail.authorMemberId > 0) {
             resultResponse(
-                response = getMemberProfileUseCase(detail.authorChallengerId),
+                response = getMemberProfileUseCase(detail.authorMemberId),
                 successCallback = { author ->
                     updateState {
                         copy(

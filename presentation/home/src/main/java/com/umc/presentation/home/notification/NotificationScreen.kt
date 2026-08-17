@@ -37,8 +37,8 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
+import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
-import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 
 import com.umc.domain.model.home.NotificationItem
@@ -77,8 +77,6 @@ fun NotificationScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(grey000())
-            .padding(bottom = 32.dp)
-
     ) {
 
         //1. 상단 바
@@ -88,8 +86,11 @@ fun NotificationScreen(
         if(notifications.isEmpty()){
 
             //공지가 아무것도 없네요
+            // 디자인상 안내 문구 묶음은 남은 영역 정중앙보다 살짝 아래에 놓인다
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 13.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ){
@@ -100,19 +101,17 @@ fun NotificationScreen(
                 )
 
                 UText(
-                    modifier = Modifier.
-                        padding(top = 16.dp),
+                    modifier = Modifier.padding(top = 13.dp),
                     text = AppStrings.HOME_NOTIFICATION_NO_TITLE,
                     style = UmcTypographyTokens.HeadlineBold,
                     color = grey600()
                 )
 
                 UText(
-                    modifier = Modifier.
-                        padding(top = 4.dp),
+                    modifier = Modifier.padding(top = 6.dp),
                     text = AppStrings.HOME_NOTIFICATION_NO_CONTENT,
                     style = UmcTypographyTokens.Subheadline,
-                    color = grey400()
+                    color = grey500()
                 )
 
             }
@@ -140,25 +139,38 @@ fun NotificationTopBar(onBackClick: () -> Unit){
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 4.dp),
+            .padding(vertical = 9.dp)
+            .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
 
-        Icon(
+        Box(
             modifier = Modifier
-                .padding(12.dp)
-                .clickable { onBackClick() },
-            painter = painterResource(id = R.drawable.ic_back),
-            contentDescription = null,
-            tint = Color.Unspecified,
-        )
+                .size(48.dp)
+                .background(color = Color.Transparent, shape = CircleShape)
+                .clip(CircleShape)
+                .clickable(
+                    onClick = onBackClick
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(
+                    id = R.drawable.ic_back
+                ),
+                contentDescription = null,
+                tint = grey950(),
+                modifier = Modifier.size(24.dp)
+            )
+        }
 
+        Spacer(modifier = Modifier.width(4.dp))
 
         UText(
             text = AppStrings.HOME_NOTIFICATION_TITLE,
             style = UmcTypographyTokens.Title2Bold,
-            color = grey800()
+            color = grey950()
         )
 
     }
@@ -180,19 +192,17 @@ fun NotificationRow(item: NotificationItem) {
 
         Row(
             modifier = Modifier
-                .padding(16.dp)
                 .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 UText(
                     text = item.title,
                     style = UmcTypographyTokens.HeadlineBold,
-                    color = grey800()
+                    color = grey950()
                 )
 
-                Spacer(modifier = Modifier
-                    .height(4.dp)
-                )
+                Spacer(modifier = Modifier.height(11.dp))
 
                 UText(
                     text = item.content,
