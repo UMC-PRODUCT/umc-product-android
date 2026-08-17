@@ -3,6 +3,10 @@ package com.umc.presentation.study.admin.submit
 data class AdminSubmitItemUiModel(
     val id: Long,
     val challengerWorkbookId: Long? = null,
+    val memberId: Long,
+    val studyGroupId: Long,
+    val weeklyCurriculumId: Long,
+    val weeklyBestWorkbookId: Long? = null,
     val name: String,
     val nickname: String,
     val partLabel: String,

@@ -7,6 +7,7 @@ import com.umc.domain.model.curriculum.ChallengerWorkbook
 import com.umc.domain.model.curriculum.CurriculumOverview
 import com.umc.domain.model.curriculum.StudyGroup
 import com.umc.domain.model.curriculum.StudyMemberSubmissionPage
+import com.umc.domain.model.curriculum.WeeklyBestWorkbookPage
 import com.umc.domain.model.curriculum.WorkbookSubmissionItem
 
 interface CurriculumRepository {
@@ -83,4 +84,14 @@ interface CurriculumRepository {
     suspend fun getWorkbookSubmissionWeeks(
         studyGroupId: Long? = null,
     ): ApiState<List<Long>>
+
+    suspend fun getWeeklyBestWorkbooks(
+        gisuId: Long? = null,
+        schoolIds: List<Long>? = null,
+        parts: List<String>? = null,
+        weekNos: List<Long>? = null,
+        studyGroupIds: List<Long>? = null,
+        page: Int = 0,
+        size: Int = 20,
+    ): ApiState<WeeklyBestWorkbookPage>
 }

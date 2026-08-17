@@ -10,6 +10,7 @@ import com.umc.data.response.curriculum.OriginalWorkbookResponse
 import com.umc.data.response.curriculum.StudyGroupResponse
 import com.umc.data.request.curriculum.CreateBestWorkbookRequest
 import com.umc.data.request.curriculum.CreateMissionFeedbackRequest
+import com.umc.data.response.curriculum.WeeklyBestWorkbooksResponse
 import com.umc.data.response.curriculum.WorkbookSubmissionsV2Response
 import com.umc.domain.model.base.ApiResponse
 import retrofit2.http.Body
@@ -34,10 +35,12 @@ interface CurriculumApi {
         @Query("gisuId") gisuId: Long,
     ): ApiResponse<CurriculumProgressResponse>
 
-    @POST(Endpoints.Curriculum.SUBMIT)
-    suspend fun submitChallengerWorkbook(
-        @Body body: ChallengerWorkbookSubmitRequest,
-    ): ApiResponse<Unit>
+    @GET(Endpoints.Curriculum.CHALLENGER_WORKBOOK_DETAIL)
+    suspend fun getChallengerWorkbookDetail(
+        @Path("challengerWorkbookId")
+        challengerWorkbookId: Long,
+    ): ApiResponse<ChallengerWorkbookResponse>
+
 
     @GET(Endpoints.Curriculum.WORKBOOK_SUBMISSIONS)
     suspend fun getWorkbookSubmissions(
@@ -80,10 +83,46 @@ interface CurriculumApi {
         studyGroupId: Long? = null,
     ): ApiResponse<List<Long>>
 
+    // 운영진 - 베스트 워크북 조회
+    @GET(Endpoints.Curriculum.WEEKLY_BEST_WORKBOOKS)
+    suspend fun getWeeklyBestWorkbooks(
+        @Query("gisuId")
+        gisuId: Long? = null,
+
+        @Query("schoolIds")
+        schoolIds: List<Long>? = null,
+
+        @Query("parts")
+        parts: List<String>? = null,
+
+        @Query("weekNos")
+        weekNos: List<Long>? = null,
+
+        @Query("studyGroupIds")
+        studyGroupIds: List<Long>? = null,
+
+        @Query("page")
+        page: Int = 0,
+
+        @Query("size")
+        size: Int = 20,
+    ): ApiResponse<WeeklyBestWorkbooksResponse>
+
     @POST(Endpoints.Curriculum.CREATE_WEEKLY_BEST_WORKBOOK)
     suspend fun createWeeklyBestWorkbook(
         @Body
         body: CreateBestWorkbookRequest,
+    ): ApiResponse<Unit>
+
+    @POST(Endpoints.Curriculum.SUBMIT)
+    suspend fun submitChallengerWorkbook(
+        @Body body: ChallengerWorkbookSubmitRequest,
+    ): ApiResponse<Unit>
+
+    @POST(Endpoints.Curriculum.CREATE_MISSION_FEEDBACK)
+    suspend fun createMissionFeedback(
+        @Body
+        body: CreateMissionFeedbackRequest,
     ): ApiResponse<Unit>
 
     @PATCH(Endpoints.Curriculum.UPDATE_WEEKLY_BEST_WORKBOOK)
@@ -95,18 +134,6 @@ interface CurriculumApi {
         reason: String,
     ): ApiResponse<Unit>
 
-    @DELETE(Endpoints.Curriculum.DELETE_WEEKLY_BEST_WORKBOOK)
-    suspend fun deleteWeeklyBestWorkbook(
-        @Path("weeklyBestWorkbookId")
-        weeklyBestWorkbookId: Long,
-    ): ApiResponse<Unit>
-
-    @POST(Endpoints.Curriculum.CREATE_MISSION_FEEDBACK)
-    suspend fun createMissionFeedback(
-        @Body
-        body: CreateMissionFeedbackRequest,
-    ): ApiResponse<Unit>
-
     @PATCH(Endpoints.Curriculum.UPDATE_MISSION_FEEDBACK)
     suspend fun updateMissionFeedback(
         @Path("missionFeedbackId")
@@ -116,9 +143,12 @@ interface CurriculumApi {
         content: String,
     ): ApiResponse<Unit>
 
-    @GET(Endpoints.Curriculum.CHALLENGER_WORKBOOK_DETAIL)
-    suspend fun getChallengerWorkbookDetail(
-        @Path("challengerWorkbookId")
-        challengerWorkbookId: Long,
-    ): ApiResponse<ChallengerWorkbookResponse>
+
+    @DELETE(Endpoints.Curriculum.DELETE_WEEKLY_BEST_WORKBOOK)
+    suspend fun deleteWeeklyBestWorkbook(
+        @Path("weeklyBestWorkbookId")
+        weeklyBestWorkbookId: Long,
+    ): ApiResponse<Unit>
+
+
 }
