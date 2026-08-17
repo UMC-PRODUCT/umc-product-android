@@ -51,7 +51,6 @@ fun CommunityThreadItem(
             .fillMaxWidth()
             .combinedClickable(
                 interactionSource = interactionSource,
-                indication = null,
                 onClick = onClick,
                 onLongClick = onLongClick,
             ),
