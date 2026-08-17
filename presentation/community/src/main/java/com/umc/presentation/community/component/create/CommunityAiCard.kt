@@ -494,21 +494,21 @@ private fun categoryIconRes(
         }
 
         CommunityCategory.PROJECT -> {
-            R.drawable.ic_community_part_notice
-        }
-
-        CommunityCategory.QNA -> {
             R.drawable.ic_community_question
         }
 
-        CommunityCategory.FREE -> {
+        CommunityCategory.QNA -> {
             R.drawable.ic_community_chat
+        }
+
+        CommunityCategory.FREE -> {
+            R.drawable.ic_community_part_notice
         }
 
         CommunityCategory.ALL,
         CommunityCategory.UNREAD,
             -> {
-            R.drawable.ic_community_part_notice
+            R.drawable.ic_community_chat
         }
     }
 }

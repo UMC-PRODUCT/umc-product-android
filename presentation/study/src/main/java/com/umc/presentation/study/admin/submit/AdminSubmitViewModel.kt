@@ -8,6 +8,10 @@ import com.umc.domain.usecase.curriculum.GetChallengerWorkbookDetailUseCase
 import com.umc.domain.usecase.curriculum.GetWorkbookSubmissionWeeksUseCase
 import com.umc.domain.usecase.curriculum.GetWorkbookSubmissionsV2UseCase
 import com.umc.domain.usecase.curriculum.UpdateMissionFeedbackUseCase
+import com.umc.domain.usecase.curriculum.GetWeeklyBestWorkbooksUseCase
+import com.umc.domain.usecase.curriculum.CreateWeeklyBestWorkbookUseCase
+import com.umc.domain.usecase.curriculum.UpdateWeeklyBestWorkbookUseCase
+import com.umc.domain.usecase.curriculum.DeleteWeeklyBestWorkbookUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,6 +28,14 @@ class AdminSubmitViewModel @Inject constructor(
     GetWorkbookSubmissionsV2UseCase,
     private val getWorkbookSubmissionWeeksUseCase:
     GetWorkbookSubmissionWeeksUseCase,
+    private val getWeeklyBestWorkbooksUseCase:
+    GetWeeklyBestWorkbooksUseCase,
+    private val createWeeklyBestWorkbookUseCase:
+    CreateWeeklyBestWorkbookUseCase,
+    private val updateWeeklyBestWorkbookUseCase:
+    UpdateWeeklyBestWorkbookUseCase,
+    private val deleteWeeklyBestWorkbookUseCase:
+    DeleteWeeklyBestWorkbookUseCase,
 ) : BaseViewModel<AdminSubmitState, AdminSubmitEvent>(
     AdminSubmitState()
 ) {
@@ -164,37 +176,13 @@ class AdminSubmitViewModel @Inject constructor(
                 }
             }
 
-            /*
-             * 베스트 관련 API는 필요한 ID가 부족하므로
-             * 현재 로컬 UI 동작을 유지
-             */
             is AdminSubmitAction.ConfirmBest -> {
-                val targetId =
-                    uiState.value.bottomSheetItem?.id ?: return
-                val comment =
-                    uiState.value.bestCommentDraft.trim()
+                val target = uiState.value.bottomSheetItem ?: return
 
-                updateState {
-                    copy(
-                        items = items.map { item ->
-                            if (item.id == targetId) {
-                                item.copy(
-                                    bestComment = comment,
-                                    isBestRegistered = true,
-                                )
-                            } else {
-                                item
-                            }
-                        },
-                        bottomSheetItem =
-                            bottomSheetItem?.copy(
-                                bestComment = comment,
-                                isBestRegistered = true,
-                            ),
-                        bestCommentDraft = comment,
-                        isEditingBest = false,
-                        showBestConfirmDialog = false,
-                    )
+                if (target.isBestRegistered) {
+                    updateBestWorkbook()
+                } else {
+                    registerBestWorkbook()
                 }
             }
 
@@ -211,28 +199,7 @@ class AdminSubmitViewModel @Inject constructor(
             }
 
             is AdminSubmitAction.ConfirmCancelBest -> {
-                updateState {
-                    copy(
-                        items = items.map { item ->
-                            if (item.id == bottomSheetItem?.id) {
-                                item.copy(
-                                    isBestRegistered = false,
-                                    bestComment = "",
-                                )
-                            } else {
-                                item
-                            }
-                        },
-                        bottomSheetItem =
-                            bottomSheetItem?.copy(
-                                isBestRegistered = false,
-                                bestComment = "",
-                            ),
-                        bestCommentDraft = "",
-                        isEditingBest = false,
-                        showBestCancelDialog = false,
-                    )
-                }
+                deleteBestWorkbook()
             }
 
             is AdminSubmitAction.EditBest -> {
@@ -467,6 +434,11 @@ class AdminSubmitViewModel @Inject constructor(
                             AdminSubmitItemUiModel(
                                 id = member.studyGroupMemberId,
                                 challengerWorkbookId = week.challengerWorkbookId,
+
+                                memberId = member.memberId,
+                                studyGroupId = member.studyGroupId,
+                                weeklyCurriculumId = week.weeklyCurriculumId,
+
                                 name = member.memberName,
                                 nickname = member.nickname,
                                 partLabel = member.part,
@@ -478,6 +450,7 @@ class AdminSubmitViewModel @Inject constructor(
                                 } else {
                                     week.status
                                 },
+                                isBestRegistered = week.isBest,
                             )
                         }
                     }
@@ -518,6 +491,13 @@ class AdminSubmitViewModel @Inject constructor(
                             hasNext = page.hasNext,
                         )
                     }
+
+                    if (!append) {
+                        loadBestWorkbooks(
+                            studyGroupId = studyGroupId,
+                            weekNo = weekNos?.singleOrNull(),
+                        )
+                    }
                 }
 
                 is ApiState.Fail -> {
@@ -531,6 +511,57 @@ class AdminSubmitViewModel @Inject constructor(
                     emitEvent(
                         AdminSubmitEvent.ShowToast(
                             "제출 현황을 불러오지 못했어요."
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun loadBestWorkbooks(
+        studyGroupId: Long? = null,
+        weekNo: Long? = null,
+    ) {
+        viewModelScope.launch {
+            when (
+                val result = getWeeklyBestWorkbooksUseCase(
+                    studyGroupIds = studyGroupId?.let { listOf(it) },
+                    weekNos = weekNo?.let { listOf(it) },
+                    page = 0,
+                    size = 100,
+                )
+            ) {
+                is ApiState.Success -> {
+                    val bestWorkbooks = result.data.content
+
+                    updateState {
+                        copy(
+                            items = items.map { item ->
+                                val best = bestWorkbooks.find { best ->
+                                    item.challengerWorkbookId != null &&
+                                            item.challengerWorkbookId in
+                                            best.challengerWorkbookIds
+                                }
+
+                                if (best != null) {
+                                    item.copy(
+                                        weeklyBestWorkbookId =
+                                            best.weeklyBestWorkbookId,
+                                        bestComment = best.reason,
+                                        isBestRegistered = true,
+                                    )
+                                } else {
+                                    item
+                                }
+                            }
+                        )
+                    }
+                }
+
+                is ApiState.Fail -> {
+                    emitEvent(
+                        AdminSubmitEvent.ShowToast(
+                            "베스트 워크북 정보를 불러오지 못했어요."
                         )
                     )
                 }
@@ -569,10 +600,6 @@ class AdminSubmitViewModel @Inject constructor(
             return
         }
 
-        /*
-         * 피드백 수정 API는 내용만 수정 가능
-         * 이미 등록된 결과와 다른 PASS/FAIL은 api상 변경이 불가능..
-         */
         if (
             state.missionFeedbackId != null &&
             state.existingFeedbackResult != null &&
@@ -653,6 +680,239 @@ class AdminSubmitViewModel @Inject constructor(
                     emitEvent(
                         AdminSubmitEvent.ShowToast(
                             "피드백 저장에 실패했어요."
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun registerBestWorkbook() {
+        val state = uiState.value
+        val target = state.bottomSheetItem ?: return
+        val comment = state.bestCommentDraft.trim()
+
+        if (comment.isBlank()) {
+            emitEvent(
+                AdminSubmitEvent.ShowToast(
+                    "베스트 선정 사유를 입력해주세요."
+                )
+            )
+            return
+        }
+
+        viewModelScope.launch {
+            when (
+                createWeeklyBestWorkbookUseCase(
+                    bestMemberId = target.memberId,
+                    weeklyCurriculumId = target.weeklyCurriculumId,
+                    studyGroupId = target.studyGroupId,
+                    reason = comment,
+                )
+            ) {
+                is ApiState.Success -> {
+                    updateState {
+                        copy(
+                            items = items.map { item ->
+                                if (
+                                    item.id == target.id &&
+                                    item.weeklyCurriculumId ==
+                                    target.weeklyCurriculumId
+                                ) {
+                                    item.copy(
+                                        bestComment = comment,
+                                        isBestRegistered = true,
+                                    )
+                                } else {
+                                    item
+                                }
+                            },
+                            bottomSheetItem =
+                                bottomSheetItem?.copy(
+                                    bestComment = comment,
+                                    isBestRegistered = true,
+                                ),
+                            bestCommentDraft = comment,
+                            isEditingBest = false,
+                            showBestConfirmDialog = false,
+                        )
+                    }
+
+                    emitEvent(
+                        AdminSubmitEvent.ShowToast(
+                            "베스트 워크북으로 선정했어요."
+                        )
+                    )
+
+                    loadBestWorkbooks(
+                        studyGroupId = target.studyGroupId,
+                    )
+                }
+
+                is ApiState.Fail -> {
+                    updateState {
+                        copy(
+                            showBestConfirmDialog = false,
+                        )
+                    }
+
+                    emitEvent(
+                        AdminSubmitEvent.ShowToast(
+                            "베스트 워크북 선정에 실패했어요."
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun updateBestWorkbook() {
+        val state = uiState.value
+        val target = state.bottomSheetItem ?: return
+
+        val weeklyBestWorkbookId =
+            target.weeklyBestWorkbookId ?: return
+
+        val comment = state.bestCommentDraft.trim()
+
+        if (comment.isBlank()) {
+            emitEvent(
+                AdminSubmitEvent.ShowToast(
+                    "베스트 선정 사유를 입력해주세요."
+                )
+            )
+            return
+        }
+
+        viewModelScope.launch {
+            when (
+                updateWeeklyBestWorkbookUseCase(
+                    weeklyBestWorkbookId = weeklyBestWorkbookId,
+                    reason = comment,
+                )
+            ) {
+                is ApiState.Success -> {
+                    updateState {
+                        copy(
+                            items = items.map { item ->
+                                if (
+                                    item.weeklyBestWorkbookId ==
+                                    weeklyBestWorkbookId
+                                ) {
+                                    item.copy(
+                                        bestComment = comment,
+                                    )
+                                } else {
+                                    item
+                                }
+                            },
+                            bottomSheetItem =
+                                bottomSheetItem?.copy(
+                                    bestComment = comment,
+                                ),
+                            bestCommentDraft = comment,
+                            isEditingBest = false,
+                            showBestConfirmDialog = false,
+                        )
+                    }
+
+                    emitEvent(
+                        AdminSubmitEvent.ShowToast(
+                            "베스트 선정 사유가 수정됐어요."
+                        )
+                    )
+                }
+
+                is ApiState.Fail -> {
+                    updateState {
+                        copy(
+                            showBestConfirmDialog = false,
+                        )
+                    }
+
+                    emitEvent(
+                        AdminSubmitEvent.ShowToast(
+                            "베스트 선정 사유 수정에 실패했어요."
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun deleteBestWorkbook() {
+        val target =
+            uiState.value.bottomSheetItem ?: return
+
+        val weeklyBestWorkbookId =
+            target.weeklyBestWorkbookId ?: return
+
+        viewModelScope.launch {
+            when (
+                deleteWeeklyBestWorkbookUseCase(
+                    weeklyBestWorkbookId =
+                        weeklyBestWorkbookId,
+                )
+            ) {
+                is ApiState.Success -> {
+                    updateState {
+                        copy(
+                            items = items.map { item ->
+                                if (
+                                    item.weeklyBestWorkbookId ==
+                                    weeklyBestWorkbookId
+                                ) {
+                                    item.copy(
+                                        weeklyBestWorkbookId = null,
+                                        isBestRegistered = false,
+                                        bestComment = "",
+                                        status = if (item.status == "BEST") {
+                                            "PASS"
+                                        } else {
+                                            item.status
+                                        },
+                                    )
+                                } else {
+                                    item
+                                }
+                            },
+                            bottomSheetItem =
+                                bottomSheetItem?.copy(
+                                    weeklyBestWorkbookId = null,
+                                    isBestRegistered = false,
+                                    bestComment = "",
+                                    status = if (
+                                        bottomSheetItem?.status == "BEST"
+                                    ) {
+                                        "PASS"
+                                    } else {
+                                        bottomSheetItem?.status
+                                            ?: ""
+                                    },
+                                ),
+                            bestCommentDraft = "",
+                            isEditingBest = false,
+                            showBestCancelDialog = false,
+                        )
+                    }
+
+                    emitEvent(
+                        AdminSubmitEvent.ShowToast(
+                            "베스트 선정을 취소했어요."
+                        )
+                    )
+                }
+
+                is ApiState.Fail -> {
+                    updateState {
+                        copy(
+                            showBestCancelDialog = false,
+                        )
+                    }
+
+                    emitEvent(
+                        AdminSubmitEvent.ShowToast(
+                            "베스트 선정 취소에 실패했어요."
                         )
                     )
                 }

@@ -7,6 +7,7 @@ import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
 import com.umc.data.response.curriculum.CurriculumOverviewResponse
 import com.umc.domain.model.curriculum.StudyGroup
 import com.umc.data.response.curriculum.ChallengerWorkbookResponse
+import com.umc.data.response.curriculum.WeeklyBestWorkbooksResponse
 import com.umc.data.response.curriculum.WorkbookSubmissionsV2Response
 
 interface CurriculumRemoteDataSource {
@@ -46,6 +47,16 @@ interface CurriculumRemoteDataSource {
         studyGroupId: Long?,
     ): ApiState<List<Long>>
 
+    // 운영진 - 베스트 워크북 조회
+    suspend fun getWeeklyBestWorkbooks(
+        gisuId: Long? = null,
+        schoolIds: List<Long>? = null,
+        parts: List<String>? = null,
+        weekNos: List<Long>? = null,
+        studyGroupIds: List<Long>? = null,
+        page: Int = 0,
+        size: Int = 20,
+    ): ApiState<WeeklyBestWorkbooksResponse>
 
     suspend fun getStudyGroups(
         schoolId: Long,
