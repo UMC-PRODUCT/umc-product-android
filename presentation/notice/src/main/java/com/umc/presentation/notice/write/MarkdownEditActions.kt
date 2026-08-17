@@ -102,8 +102,9 @@ object MarkdownEditActions {
      */
     fun toggleHighlight(value: TextFieldValue, color: MarkdownHighlightColor): TextFieldValue {
         val open = """<mark color="${color.markColorCode}">"""
-        val (start, end) = value.trimmedSelection()
-            ?: return deactivateOrInsert(value, open, MARK_CLOSE, MarkdownStyle.HIGHLIGHT)
+        // 형광펜 마커는 `<mark color="...">`로 길어서, 빈 쌍을 넣어두면 줄을 넘기며
+        // 화면에 그대로 드러난다. 그래서 선택 영역이 있을 때만 적용한다
+        val (start, end) = value.trimmedSelection() ?: return value
         val text = value.text
         val selected = text.substring(start, end)
 

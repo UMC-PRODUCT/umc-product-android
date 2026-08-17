@@ -201,14 +201,37 @@ class MarkdownScannerTest {
         assertEquals(0, result.selection.min)
     }
 
+    // ---------------------------------------------------------------
+    // 형광펜은 선택 영역이 있을 때만 동작한다
+    // ---------------------------------------------------------------
+
     @Test
-    fun `형광펜 빈 쌍 가운데에서 형광펜을 다시 누르면 마커가 지워진다`() {
-        val value = valueAt("$mark</mark>", cursor = mark.length)
+    fun `선택 영역이 없으면 형광펜은 아무것도 바꾸지 않는다`() {
+        // 마커가 길어서 빈 쌍을 넣어두면 줄을 넘기며 화면에 드러난다
+        val value = valueAt("가나다", cursor = 3)
 
         val result = MarkdownEditActions.toggleHighlight(value, MarkdownHighlightColor.entries.first())
 
-        assertEquals("", result.text)
-        assertEquals(0, result.selection.min)
+        assertEquals(value, result)
+    }
+
+    @Test
+    fun `선택 영역이 공백뿐이어도 형광펜은 동작하지 않는다`() {
+        val value = TextFieldValue("가나 다", TextRange(2, 3))
+
+        val result = MarkdownEditActions.toggleHighlight(value, MarkdownHighlightColor.entries.first())
+
+        assertEquals(value, result)
+    }
+
+    @Test
+    fun `선택 영역이 있으면 형광펜 마커로 감싼다`() {
+        val value = TextFieldValue("가나다", TextRange(0, 3))
+        val color = MarkdownHighlightColor.entries.first()
+
+        val result = MarkdownEditActions.toggleHighlight(value, color)
+
+        assertEquals("<mark color=\"" + color.markColorCode + "\">가나다</mark>", result.text)
     }
 
     // ---------------------------------------------------------------
