@@ -295,6 +295,7 @@ private fun CommunityThread.toSearchUiModel(
         isPinned = forcePinned || isPinned,
         isNotificationEnabled = !isMuted,
         isMine = myRole == CommunityThreadRole.OWNER,
+        isJoined = isJoined,
     )
 }
 

@@ -13,6 +13,7 @@ data class CommunityThreadUiModel(
     val isPinned: Boolean = false,
     val isNotificationEnabled: Boolean = true,
     val isMine: Boolean = false,
+    val isJoined: Boolean,
 ) {
     val isRead: Boolean
         get() = unreadCount == 0
