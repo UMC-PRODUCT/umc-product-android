@@ -112,6 +112,8 @@ fun NoticeWriteRoute(
     editNoticeId: Long = 0L,
     viewModel: NoticeWriteViewModel = hiltViewModel(),
     navigateToBack: () -> Unit = {},
+    /** 등록·수정 성공 시. 목록 새로고침 후 뒤로 가기 위해 분리 */
+    onSubmitSuccess: () -> Unit = navigateToBack,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -140,7 +142,7 @@ fun NoticeWriteRoute(
                         AppStrings.NOTICE_WRITE_SUCCESS
                     }
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                    navigateToBack()
+                    onSubmitSuccess()
                 }
 
                 is NoticeWriteEvent.ShowError -> {

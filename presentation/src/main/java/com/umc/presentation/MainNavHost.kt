@@ -47,9 +47,21 @@ import com.umc.presentation.community.create.CommunityCreateRoute
 import com.umc.presentation.community.edit.CommunityEditRoute
 
 private const val COMMUNITY_REFRESH_KEY = "community_refresh"
+private const val NOTICE_REFRESH_KEY = "notice_refresh"
 private const val COMMUNITY_THREAD_DEEP_LINK_BASE =
     "https://api.university.neordinary.com/community/threads"
 
+
+/**
+ * 공지 목록 화면에 새로고침이 필요함을 알린다.
+ * 목록이 백스택 어디에 있든(작성 -> 목록, 상세 -> 목록) 찾아서 표시한다
+ */
+private fun NavHostController.notifyNoticeListRefresh() {
+    runCatching { getBackStackEntry(MainDestination.Notice) }
+        .getOrNull()
+        ?.savedStateHandle
+        ?.set(NOTICE_REFRESH_KEY, true)
+}
 
 @Composable
 fun MainNavHost(
@@ -228,8 +240,18 @@ fun MainNavHost(
 
         /**공지 탭에 대한 내용입니다.**/
         //공지 목록
-        composable<MainDestination.Notice> {
+        composable<MainDestination.Notice> { backStackEntry ->
+            // 공지 작성·수정·삭제 후 돌아오면 목록을 다시 불러온다
+            val shouldRefresh by backStackEntry
+                .savedStateHandle
+                .getStateFlow(NOTICE_REFRESH_KEY, false)
+                .collectAsStateWithLifecycle()
+
             NoticeRoute(
+                shouldRefresh = shouldRefresh,
+                onRefreshHandled = {
+                    backStackEntry.savedStateHandle[NOTICE_REFRESH_KEY] = false
+                },
                 navigateToSearch = { gisuId ->
                     navHostController.navigate(MainDestination.NoticeSearch(gisuId))
                 },
@@ -251,6 +273,10 @@ fun MainNavHost(
             NoticeWriteRoute(
                 editNoticeId = destination.noticeId,
                 navigateToBack = { navHostController.popBackStack() },
+                onSubmitSuccess = {
+                    navHostController.notifyNoticeListRefresh()
+                    navHostController.popBackStack()
+                },
             )
         }
 
