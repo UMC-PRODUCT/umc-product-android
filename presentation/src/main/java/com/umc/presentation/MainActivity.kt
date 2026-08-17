@@ -101,6 +101,7 @@ private fun UmcApp() {
                                  * **/
                                 popUpTo(MainDestination.Home) {
                                     saveState = true
+                                    inclusive = false // Home 화면 자체는 백스택에 남겨둠
                                 }
                                 launchSingleTop = true
                                 restoreState = true

@@ -35,7 +35,9 @@ import java.util.TimeZone
 @Composable
 fun UDateTimePickerDialog(
     onConfirm: (utcDateTime: String) -> Unit, // UTC로 변환된 결과 반환
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    isAllday: Boolean = false, //하루 종일일 경우의 true/false
+    isStartTime: Boolean = true, //해당 시간이 시작 시간인지 아닌지 (기본 시작 시간 = 00:00 / 종료 시간 = 23:59)
 ) {
     //상태 관리 (순수 숫자만 저장하도록 처리)
     var dateInput by remember { mutableStateOf("") }
@@ -45,8 +47,11 @@ fun UDateTimePickerDialog(
     //날짜 검증 로직
     val isValidDateTime by remember(dateInput, timeInput) {
         derivedStateOf {
-            // 1. 길이 검증 (날짜 8자리, 시간 4자리)
-            if (dateInput.length != 8 || timeInput.length != 4) return@derivedStateOf false
+            // 1. 날짜 8자리 길이 필수 검증
+            if (dateInput.length != 8) return@derivedStateOf false
+
+            // 1. 하루 종일이 아닐 때만 시간 4자리 길이 검증
+            if (!isAllday && timeInput.length != 4) return@derivedStateOf false
 
             try {
                 // 2. 날짜 데이터 추출 및 실제 존재하는 날짜인지 검증 (Lenient = false)
@@ -62,14 +67,18 @@ fun UDateTimePickerDialog(
                 }
                 testCal.time // 만약 잘못된 날짜(예: 88일)면 여기서 IllegalArgumentException 발생!
 
-                // 3. 시간 데이터 범위 검증 (12시간제: 01~12시 / 00~59분)
-                val hour = timeInput.substring(0, 2).toInt()
-                val minute = timeInput.substring(2, 4).toInt()
+                if(!isAllday) {
+                    // 3. 시간 데이터 범위 검증 (12시간제: 01~12시 / 00~59분)
+                    val hour = timeInput.substring(0, 2).toInt()
+                    val minute = timeInput.substring(2, 4).toInt()
 
-                val isHourValid = hour in 1..12
-                val isMinuteValid = minute in 0..59
+                    val isHourValid = hour in 1..12
+                    val isMinuteValid = minute in 0..59
 
-                isHourValid && isMinuteValid
+                    if (!isHourValid || !isMinuteValid) return@derivedStateOf false
+                }
+                true
+
             } catch (e: Exception) {
                 false // 날짜 파싱 실패 시 무조건 유효하지 않음
             }
@@ -127,7 +136,7 @@ fun UDateTimePickerDialog(
                     placeholder = { UText("YYYY . MM . DD", color = grey400()) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 24.dp),
+                        ,
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = indigo500(),
@@ -137,77 +146,88 @@ fun UDateTimePickerDialog(
                     visualTransformation = DateVisualTransformation()
                 )
 
-                //2. 시간 입력 섹션
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .padding(bottom = 8.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_clock),
-                        contentDescription = null,
-                        tint = grey900(),
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(
-                        modifier = Modifier
-                            .width(8.dp)
-                    )
-                    UText(
-                        text = AppStrings.DIALOG_DATETIME_TIME,
-                        style = UmcTypographyTokens.CalloutBold,
-                        color = grey900()
-                    )
-                }
 
-                // 오전/오후 토글 버튼
-                Row(
-                    modifier = Modifier
-                        .padding(bottom = 12.dp)
-                ) {
-                    AmPmToggleButton(
-                        text = AppStrings.TIME_AM,
-                        isSelected = isAm,
-                        onClick = { isAm = true }
-                    )
+
+
+                if (!isAllday) {
                     Spacer(modifier = Modifier
-                        .width(8.dp)
+                        .height(24.dp)
                     )
-                    AmPmToggleButton(
-                        text = AppStrings.TIME_PM,
-                        isSelected = !isAm,
-                        onClick = { isAm = false }
+
+                    //2. 시간 입력 섹션
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_clock),
+                            contentDescription = null,
+                            tint = grey900(),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(
+                            modifier = Modifier
+                                .width(8.dp)
+                        )
+                        UText(
+                            text = AppStrings.DIALOG_DATETIME_TIME,
+                            style = UmcTypographyTokens.CalloutBold,
+                            color = grey900()
+                        )
+                    }
+
+                    // 오전/오후 토글 버튼
+                    Row(
+                        modifier = Modifier
+                            .padding(bottom = 12.dp)
+                    ) {
+                        AmPmToggleButton(
+                            text = AppStrings.TIME_AM,
+                            isSelected = isAm,
+                            onClick = { isAm = true }
+                        )
+                        Spacer(
+                            modifier = Modifier
+                                .width(8.dp)
+                        )
+                        AmPmToggleButton(
+                            text = AppStrings.TIME_PM,
+                            isSelected = !isAm,
+                            onClick = { isAm = false }
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = timeInput,
+                        onValueChange = { newValue ->
+                            //숫자만 필터링 및 최대 4자리 허용, 간단한 시간 규칙 방어
+                            val digits = newValue.filter { it.isDigit() }.take(4)
+                            var valid = true
+                            if (digits.length >= 2) { //길이 2 이상 시(시간 입력)
+                                val hh = digits.substring(0, 2).toIntOrNull() ?: 0
+                                if (hh > 12) valid = false // 12시간제 검증
+                            }
+                            if (digits.length >= 4) { //길이 4 이상 시(분 입력)
+                                val mm = digits.substring(2, 4).toIntOrNull() ?: 0
+                                if (mm > 59) valid = false // 분 검증
+                            }
+                            if (valid) timeInput = digits
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        placeholder = {
+                            UText("12:00", color = grey400())
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = indigo500(),
+                            unfocusedBorderColor = grey200()
+                        ),
+                        //분 입력 시 자동으로 :00 형태로 바꿔주는 함수
+                        visualTransformation = TimeVisualTransformation()
                     )
                 }
-
-                OutlinedTextField(
-                    value = timeInput,
-                    onValueChange = { newValue ->
-                        //숫자만 필터링 및 최대 4자리 허용, 간단한 시간 규칙 방어
-                        val digits = newValue.filter { it.isDigit() }.take(4)
-                        var valid = true
-                        if (digits.length >= 2) { //길이 2 이상 시(시간 입력)
-                            val hh = digits.substring(0, 2).toIntOrNull() ?: 0
-                            if (hh > 12) valid = false // 12시간제 검증
-                        }
-                        if (digits.length >= 4) { //길이 4 이상 시(분 입력)
-                            val mm = digits.substring(2, 4).toIntOrNull() ?: 0
-                            if (mm > 59) valid = false // 분 검증
-                        }
-                        if (valid) timeInput = digits
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    placeholder = {
-                        UText("12:00", color = grey400()) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = indigo500(),
-                        unfocusedBorderColor = grey200()
-                    ),
-                    //분 입력 시 자동으로 :00 형태로 바꿔주는 함수
-                    visualTransformation = TimeVisualTransformation()
-                )
             }
         },
         confirmButton = {
@@ -235,18 +255,50 @@ fun UDateTimePickerDialog(
                             val month = dateInput.substring(4, 6).toInt() - 1 //Calendar.MONTH는 0부터 시작
                             val day = dateInput.substring(6, 8).toInt()
 
-                            //2. 시간 데이터 추출 및 24시간제 변환
-                            var hour = timeInput.substring(0, 2).toInt()
-                            val minute = timeInput.substring(2, 4).toInt()
+                            var hour: Int
+                            var minute: Int
+                            var second = 0
+                            var millisecond = 0
 
-                            //오전오후 여부에 따라 시간 +-
-                            if (isAm && hour == 12) hour = 0
-                            if (!isAm && hour < 12) hour += 12
+                            //하루 종일일 경우
+                            if(isAllday){
+                                //시작 시간인 경우
+                                if(isStartTime){
+                                    hour = 0
+                                    minute = 0
+                                    second = 0
+                                    millisecond = 0
+                                }
+                                else{
+                                    hour = 23
+                                    minute = 59
+                                    second = 59
+                                    millisecond = 999
+                                }
+                            }
+
+                            //직접 시간 입력인 경우
+                            else{
+                                //시간 데이터 추출 및 24시간제 변환
+                                hour = timeInput.substring(0, 2).toInt()
+                                minute = timeInput.substring(2, 4).toInt()
+
+                                //오전오후 여부에 따라 시간 +-
+                                if (isAm && hour == 12) hour = 0
+                                if (!isAm && hour < 12) hour += 12
+                            }
+
+
 
                             //3. Calendar 객체 생성 후 UTC 변환
                             val cal = Calendar.getInstance().apply {
-                                set(year, month, day, hour, minute, 0)
-                                set(Calendar.MILLISECOND, 0)
+                                set(Calendar.YEAR, year)
+                                set(Calendar.MONTH, month)
+                                set(Calendar.DAY_OF_MONTH, day)
+                                set(Calendar.HOUR_OF_DAY, hour)
+                                set(Calendar.MINUTE, minute)
+                                set(Calendar.SECOND, second)
+                                set(Calendar.MILLISECOND, millisecond)
                             }
 
                             val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {

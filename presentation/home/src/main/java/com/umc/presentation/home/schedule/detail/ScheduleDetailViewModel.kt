@@ -48,6 +48,26 @@ constructor(
 
 
 
+    fun getScheduleDetail(){
+        viewModelScope.launch {
+            resultResponse(
+                response = getScheduleDetailHomeUseCase(checkScheduleId),
+                successCallback = {
+                    Log.d("log_home", "일정 상세: $it")
+                    updateState { copy(
+                        content = it,
+                        plusDay = plusDay)
+                    }
+                    //settingScheduleAuthAccess(it.scheduleId)
+
+                    convertPlanDetailItemToUiState(it, checkPlusDay)
+                },
+                errorCallback = {
+
+                }
+            )
+        }
+    }
 
 
     //서버에서 게시글 상세 정보 가져오기
@@ -173,6 +193,7 @@ constructor(
                 detail = item.description,
                 longitude = item.longitude,
                 latitude = item.latitude,
+                isonline = item.isOnline
             )
         }
 
@@ -209,10 +230,6 @@ constructor(
     }
 
 
-    //출석 체크 로직
-    fun onClickConfirmAttention(){
-        emitEvent(ScheduleDetailEvent.TouchConfirmAttention)
-    }
 
     //상단 케밥 메뉴 열기
     fun toggleKebabMenu(){
@@ -265,6 +282,7 @@ data class ScheduleDetailUiState(
     val content : PlanDetailItem = PlanDetailItem(),
     val plusDay : Int = 0,
 
+    val isonline : Boolean = false,
     val isToday : Boolean = false, //출석 체크 버튼 visible 유무
     val dDay : String = "참여 예정", // or D-DAY or D-몇일
     val title : String = "정기 세션 3주차",

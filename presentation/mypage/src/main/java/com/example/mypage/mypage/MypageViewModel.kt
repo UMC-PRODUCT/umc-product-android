@@ -318,6 +318,10 @@ class MypageViewModel @Inject constructor(
         }
     }
 
+    fun navigateToOnboard(){
+        emitEvent(MypageEvent.MoveToOnBoardPage)
+    }
+
 
 }
 

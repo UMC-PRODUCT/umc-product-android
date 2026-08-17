@@ -373,7 +373,13 @@ fun MainNavHost(
                     navHostController.navigate(MainDestination.Notification)
                 },
                 onNavigateToCardShare = {
-                    navHostController.navigate(MainDestination.Mycard(openExchangeDialog = true))
+                    navHostController.navigate(MainDestination.Mycard(openExchangeDialog = true)){
+                        popUpTo<MainDestination.Home> {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
             )
         }
@@ -408,6 +414,11 @@ fun MainNavHost(
                 onBackClick = {navHostController.popBackStack()},
                 onNavigateToAttendSchedule = {
                     /**TODO. 일정 출석 페이지로 이동하기**/
+                    navHostController.navigate(MainDestination.Act){
+                        popUpTo<MainDestination.ScheduleDetail>{
+                            inclusive = true
+                        }
+                    }
                 },
                 onNavigateToEditSchedule = { scheduleId ->
                     navHostController.navigate(MainDestination.ScheduleEdit(scheduleId = scheduleId))
@@ -461,8 +472,12 @@ fun MainNavHost(
                 },
                 onNavigateToMyContent = {type ->
                     navHostController.navigate(MainDestination.MyContent(showType = type))
-                                        },
-                onNavigateToLogin = {},
+                },
+                onNavigateToLogin = {
+                    navHostController.navigate(MainDestination.Splash) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
                 onNavigateToQrCode = {
                     navHostController.navigate(MainDestination.Qrcode)
                 },
