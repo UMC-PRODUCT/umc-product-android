@@ -438,6 +438,7 @@ object AppStrings {
     const val AI_MODEL_DOWNLOADING = "AI 모델을 준비하고 있어요 %d%%"
     const val AI_EMPTY_CONTENT = "다듬을 내용을 입력해주세요"
     const val AI_EMPTY_CLIPBOARD = "복사한 공지 내용이 없어요"
+    const val NOTICE_WRITE_HIGHLIGHT_NEEDS_SELECTION = "형광펜을 칠할 텍스트를 먼저 선택해주세요."
     const val HIGHLIGHT_PURPLE = "보라색"
     const val HIGHLIGHT_PINK = "분홍색"
     const val HIGHLIGHT_ORANGE = "주황색"

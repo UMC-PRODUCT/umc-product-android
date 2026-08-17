@@ -632,7 +632,7 @@ private fun MarkdownToolbar(
     onClickUnderline: () -> Unit = {},
     onClickStrikethrough: () -> Unit = {},
     onSelectHighlight: (MarkdownHighlightColor) -> Unit = {},
-    highlightColor: MarkdownHighlightColor = MarkdownHighlightColor.PURPLE,
+    highlightColor: MarkdownHighlightColor? = null,
     onClickBullet: () -> Unit = {},
     onClickQuote: () -> Unit = {},
     activeStyles: MarkdownActiveStyles = MarkdownActiveStyles(),

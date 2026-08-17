@@ -406,12 +406,13 @@ class NoticeWriteViewModel @Inject constructor(
 
     /** 형광펜 색상 선택. 고른 색을 적용하고 다음 선택의 기본값으로 기억한다 */
     fun onSelectHighlight(color: MarkdownHighlightColor) {
-        updateState {
-            copy(
-                highlightColor = color,
-                content = MarkdownEditActions.toggleHighlight(content, color),
-            )
+        val applied = MarkdownEditActions.toggleHighlight(uiState.value.content, color)
+        // 선택 영역이 없으면 toggleHighlight가 원본을 그대로 돌려준다. 이때는 색도 기록하지 않는다
+        if (applied == uiState.value.content) {
+            emitEvent(NoticeWriteEvent.ShowError(AppStrings.NOTICE_WRITE_HIGHLIGHT_NEEDS_SELECTION))
+            return
         }
+        updateState { copy(highlightColor = color, content = applied) }
     }
 
     // ---------------------------------------------------------------
@@ -687,7 +688,8 @@ data class NoticeWriteUiState(
     val isAiProcessing: Boolean = false,
     // 모델 다운로드가 진행 중일 때만 0~100, 추론 단계에서는 null
     val aiDownloadPercent: Int? = null,
-    val highlightColor: MarkdownHighlightColor = MarkdownHighlightColor.PURPLE,
+    /** 마지막으로 적용한 형광펜 색. 아직 쓴 적 없으면 null이라 메뉴에 체크가 없다 */
+    val highlightColor: MarkdownHighlightColor? = null,
     val isEditMode: Boolean = false,
     val editNoticeId: Long = 0L,
 ) : UiState {
