@@ -12,6 +12,7 @@ import com.umc.domain.model.base.FailState
 import com.umc.data.request.curriculum.CreateBestWorkbookRequest
 import com.umc.data.request.curriculum.CreateMissionFeedbackRequest
 import com.umc.data.response.curriculum.ChallengerWorkbookResponse
+import com.umc.data.response.curriculum.WeeklyBestWorkbooksResponse
 import com.umc.data.response.curriculum.WorkbookSubmissionsV2Response
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.curriculum.StudyGroup
@@ -93,6 +94,29 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
         return fetch {
             curriculumApi.getWorkbookSubmissionWeeks(
                 studyGroupId = studyGroupId,
+            )
+        }
+    }
+
+    // 운영진 - 베스트 워크북 조회
+    override suspend fun getWeeklyBestWorkbooks(
+        gisuId: Long?,
+        schoolIds: List<Long>?,
+        parts: List<String>?,
+        weekNos: List<Long>?,
+        studyGroupIds: List<Long>?,
+        page: Int,
+        size: Int,
+    ): ApiState<WeeklyBestWorkbooksResponse> {
+        return fetch {
+            curriculumApi.getWeeklyBestWorkbooks(
+                gisuId = gisuId,
+                schoolIds = schoolIds,
+                parts = parts,
+                weekNos = weekNos,
+                studyGroupIds = studyGroupIds,
+                page = page,
+                size = size,
             )
         }
     }

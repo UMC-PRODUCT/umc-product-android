@@ -12,6 +12,7 @@ import com.umc.domain.model.curriculum.WorkbookSubmissionItem
 import com.umc.domain.repository.curriculum.CurriculumRepository
 import com.umc.domain.model.curriculum.ChallengerWorkbook
 import com.umc.domain.model.curriculum.StudyMemberSubmissionPage
+import com.umc.domain.model.curriculum.WeeklyBestWorkbookPage
 import javax.inject.Inject
 
 class CurriculumRepositoryImpl @Inject constructor(
@@ -104,6 +105,28 @@ class CurriculumRepositoryImpl @Inject constructor(
         return remote.getWorkbookSubmissionWeeks(
             studyGroupId = studyGroupId,
         )
+    }
+
+    override suspend fun getWeeklyBestWorkbooks(
+        gisuId: Long?,
+        schoolIds: List<Long>?,
+        parts: List<String>?,
+        weekNos: List<Long>?,
+        studyGroupIds: List<Long>?,
+        page: Int,
+        size: Int,
+    ): ApiState<WeeklyBestWorkbookPage> {
+        return remote.getWeeklyBestWorkbooks(
+            gisuId = gisuId,
+            schoolIds = schoolIds,
+            parts = parts,
+            weekNos = weekNos,
+            studyGroupIds = studyGroupIds,
+            page = page,
+            size = size,
+        ).map { response ->
+            response.toDomain()
+        }
     }
 
     override suspend fun getStudyGroups(
