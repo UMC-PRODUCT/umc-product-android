@@ -63,7 +63,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                     AdminStudyGroupEvent.NavigateAddSchedule(
                         groupId = action.item.groupId,
                         groupTitle = action.item.title,
-                        groupPart = action.item.partLabel,
+                        groupPart = action.item.studyPart,
                     )
                 )
             }
