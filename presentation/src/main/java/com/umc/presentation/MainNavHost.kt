@@ -252,8 +252,10 @@ fun MainNavHost(
                 onRefreshHandled = {
                     backStackEntry.savedStateHandle[NOTICE_REFRESH_KEY] = false
                 },
-                navigateToSearch = { gisuId ->
-                    navHostController.navigate(MainDestination.NoticeSearch(gisuId))
+                navigateToSearch = { gisuId, noticeTab, chapterId, schoolId, part ->
+                    navHostController.navigate(
+                        MainDestination.NoticeSearch(gisuId, noticeTab, chapterId, schoolId, part)
+                    )
                 },
                 navigateToAdminNotice = { gisuId ->
                     navHostController.navigate(MainDestination.AdminNotice(gisuId))
@@ -298,8 +300,14 @@ fun MainNavHost(
             AdminNoticeRoute(
                 gisuId = destination.gisuId,
                 navigateToBack = { navHostController.popBackStack() },
-                navigateToSearch = { gisuId ->
-                    navHostController.navigate(MainDestination.NoticeSearch(gisuId))
+                navigateToSearch = { gisuId, noticeTab, schoolId ->
+                    navHostController.navigate(
+                        MainDestination.NoticeSearch(
+                            gisuId = gisuId,
+                            noticeTab = noticeTab,
+                            schoolId = schoolId,
+                        )
+                    )
                 },
                 navigateToDetail = { noticeId ->
                     navHostController.navigate(MainDestination.NoticeDetail(noticeId))
@@ -312,6 +320,10 @@ fun MainNavHost(
             val destination = backStackEntry.toRoute<MainDestination.NoticeSearch>()
             NoticeSearchRoute(
                 gisuId = destination.gisuId,
+                noticeTab = destination.noticeTab,
+                chapterId = destination.chapterId,
+                schoolId = destination.schoolId,
+                part = destination.part,
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToDetail = { noticeId ->
                     navHostController.navigate(MainDestination.NoticeDetail(noticeId))
