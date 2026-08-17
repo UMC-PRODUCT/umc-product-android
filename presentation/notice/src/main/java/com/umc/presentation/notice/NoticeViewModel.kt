@@ -242,7 +242,20 @@ class NoticeViewModel @Inject constructor(
     }
 
     fun onClickSearch() {
-        emitEvent(NoticeEvent.MoveToSearchEvent(uiState.value.selectedGisu))
+        val state = uiState.value
+        if (state.selectedGisu <= 0L) return
+
+        // 검색도 목록과 같은 조건으로 조회해야 한다
+        val query = buildNoticeQuery(state, computeStaffNoticeTab())
+        emitEvent(
+            NoticeEvent.MoveToSearchEvent(
+                gisuId = state.selectedGisu,
+                noticeTab = query.noticeTab,
+                chapterId = query.chapterId,
+                schoolId = query.schoolId,
+                part = query.part,
+            )
+        )
     }
 
     fun onClickAdminNotice() {
@@ -414,7 +427,13 @@ data class NoticeUiState(
 
 sealed interface NoticeEvent : UiEvent {
 
-    data class MoveToSearchEvent(val gisuId: Long) : NoticeEvent
+    data class MoveToSearchEvent(
+        val gisuId: Long,
+        val noticeTab: String,
+        val chapterId: Long?,
+        val schoolId: Long?,
+        val part: String?,
+    ) : NoticeEvent
 
     data class MoveToAdminNoticeEvent(val gisuId: Long) : NoticeEvent
 

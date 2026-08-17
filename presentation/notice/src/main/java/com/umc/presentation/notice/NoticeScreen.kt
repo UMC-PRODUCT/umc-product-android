@@ -65,7 +65,7 @@ fun NoticeRoute(
     viewModel: NoticeViewModel = hiltViewModel(),
     shouldRefresh: Boolean = false,
     onRefreshHandled: () -> Unit = {},
-    navigateToSearch: (Long) -> Unit = {},
+    navigateToSearch: (Long, String, Long?, Long?, String?) -> Unit = { _, _, _, _, _ -> },
     navigateToAdminNotice: (Long) -> Unit = {},
     navigateToWrite: () -> Unit = {},
     navigateToDetail: (Long) -> Unit = {},
@@ -86,7 +86,8 @@ fun NoticeRoute(
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
-                is NoticeEvent.MoveToSearchEvent -> navigateToSearch(event.gisuId)
+                is NoticeEvent.MoveToSearchEvent ->
+                    navigateToSearch(event.gisuId, event.noticeTab, event.chapterId, event.schoolId, event.part)
                 is NoticeEvent.MoveToAdminNoticeEvent -> navigateToAdminNotice(event.gisuId)
                 is NoticeEvent.MoveToWriteEvent -> navigateToWrite()
                 is NoticeEvent.MoveToDetailEvent -> navigateToDetail(event.noticeId)
