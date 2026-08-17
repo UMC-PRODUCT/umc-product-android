@@ -176,6 +176,7 @@ private fun AdminStudyGroupScreenPreview() {
                     createdAtRaw = "2024-03-01T00:00:00",
                     memberCount = 3,
                     leaderUniv = "중앙대",
+                    studyPart = "Web",
                 )
             )
         )
@@ -200,6 +201,7 @@ private fun previewState() = AdminStudyGroupState(
             createdAtRaw = "2024-03-01T00:00:00",
             memberCount = 3,
             leaderUniv = "중앙대",
+            studyPart = "Web",
         ),
         AdminStudyGroupItemUiModel(
             groupId = 2L,
@@ -216,6 +218,7 @@ private fun previewState() = AdminStudyGroupState(
             createdAtRaw = "2024-03-01T00:00:00",
             memberCount = 2,
             leaderUniv = "서울여대",
+            studyPart = "Android",
         )
     )
 )

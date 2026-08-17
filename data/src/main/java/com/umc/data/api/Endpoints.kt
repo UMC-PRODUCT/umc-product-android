@@ -238,6 +238,11 @@ object Endpoints {
         const val CHALLENGER_WORKBOOK_DETAIL =
             "api/v2/curriculums/challenger-workbooks/{challengerWorkbookId}"
 
+
+        // 베스트 워크북 조회
+        const val WEEKLY_BEST_WORKBOOKS =
+            "api/v2/curriculums/weekly-best-workbooks"
+
         // 베스트 워크북 선정
         const val CREATE_WEEKLY_BEST_WORKBOOK =
             "api/v2/curriculums/challenger-workbooks/weekly-best"

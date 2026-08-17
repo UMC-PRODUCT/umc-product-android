@@ -209,6 +209,8 @@ class CommunityViewModel @Inject constructor(
             thread.id == threadId
         } ?: return
 
+        if (!selectedThread.isJoined) return
+
         _state.update {
             it.copy(
                 selectedThread = selectedThread,
@@ -444,6 +446,7 @@ private fun CommunityThread.toUiModel(
         isPinned = forcePinned || isPinned,
         isNotificationEnabled = !isMuted,
         isMine = myRole == CommunityThreadRole.OWNER,
+        isJoined = isJoined,
     )
 }
 
@@ -498,6 +501,7 @@ private fun CommunityThreadDetail.toUiModel(): CommunityThreadUiModel {
         isPinned = isPinned,
         isNotificationEnabled = !isMuted,
         isMine = myRole == CommunityThreadRole.OWNER,
+        isJoined = isJoined,
     )
 }
 

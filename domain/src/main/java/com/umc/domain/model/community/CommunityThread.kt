@@ -11,6 +11,7 @@ data class CommunityThread(
     val maxMembers: Int,
     val isPinned: Boolean,
     val isMuted: Boolean,
+    val isJoined: Boolean,
     val myRole: CommunityThreadRole,
     val lastMessage: CommunityThreadLastMessage?,
     val createdBy: String,
