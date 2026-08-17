@@ -27,6 +27,9 @@ data class PlanDetailItem (
     val isParticipant: Boolean = false,
     val isAttendanceChecked: Boolean = false,
 
+    //온라인 여부
+    val isOnline: Boolean = false,
+
     //출석 정책 (Attendance Policy) 추가
     val checkInStartDay: String = "", // 출석 시작 가능 시간 (ISO UTC 문자열)
     val checkInStartTime: String = "",

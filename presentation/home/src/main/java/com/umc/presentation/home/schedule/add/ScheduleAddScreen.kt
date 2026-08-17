@@ -116,7 +116,7 @@ fun ScheduleAddRoute(
         onLateDateTimeClick = {showLateEndPicker = true},
         onRegisterClick = {
             //운영진 여부 및 수정 모드에 따른 분기 로직
-            viewModel.submitPlan(uiState.editMode)
+            viewModel.submitPlan(uiState.isAttendanceChecked)
 
         }
     )
@@ -173,7 +173,9 @@ fun ScheduleAddRoute(
                 viewModel.updateStartDateTime(utcDateTime)
                 showStartDateTimePicker = false
             },
-            onDismiss = { showStartDateTimePicker = false }
+            onDismiss = { showStartDateTimePicker = false },
+            isStartTime = true,
+            isAllday = uiState.isAllDay
         )
     }
 
@@ -183,7 +185,9 @@ fun ScheduleAddRoute(
                 viewModel.updateEndDateTime(utcDateTime)
                 showEndDateTimePicker = false
             },
-            onDismiss = { showEndDateTimePicker = false }
+            onDismiss = { showEndDateTimePicker = false },
+            isStartTime = false,
+            isAllday = uiState.isAllDay
         )
     }
 

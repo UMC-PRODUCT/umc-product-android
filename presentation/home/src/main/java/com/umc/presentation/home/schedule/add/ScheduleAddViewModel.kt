@@ -258,7 +258,9 @@ constructor(
                 onTimeEndDateText = onTimeEndDateTextFormatted,
                 onTimeEndTimeText = onTimeEndTimeTextFormatted,
                 lateEndDateText = lateEndDateTextFormatted,
-                lateEndTimeText = lateEndTimeTextFormatted
+                lateEndTimeText = lateEndTimeTextFormatted,
+
+                isOnlineChecked = detail.isOnline,
             )
         }
     }

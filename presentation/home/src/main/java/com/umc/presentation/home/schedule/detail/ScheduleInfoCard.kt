@@ -36,7 +36,8 @@ fun ScheduleInfoCard(
     todayDate: String,
     todayTime: String,
     place: String,
-    onMapClick: () -> Unit
+    onMapClick: () -> Unit,
+    isonline: Boolean
 ){
     Surface(
         modifier = Modifier
@@ -62,13 +63,25 @@ fun ScheduleInfoCard(
             )
 
             //장소
-            InfoRow(
-                iconRes = R.drawable.ic_calendar_color,
-                title = AppStrings.HOME_PLAN_DETAIL_LOCATION,
-                content1 = place,
-                isMapAction = true,
-                onMapClick = onMapClick
-            )
+            if(isonline){
+                InfoRow(
+                    iconRes = R.drawable.ic_location,
+                    title = AppStrings.HOME_PLAN_DETAIL_LOCATION,
+                    content1 = "비대면 일정입니다",
+                    isMapAction = true,
+                    onMapClick = onMapClick,
+                    isonline = true
+                )
+            }
+            else {
+                InfoRow(
+                    iconRes = R.drawable.ic_location,
+                    title = AppStrings.HOME_PLAN_DETAIL_LOCATION,
+                    content1 = place,
+                    isMapAction = true,
+                    onMapClick = onMapClick
+                )
+            }
 
         }
 
@@ -83,6 +96,7 @@ fun InfoRow(
     content1: String,
     content2: String? = null,
     isMapAction: Boolean = false,
+    isonline: Boolean = false,
     onMapClick: (() -> Unit)? = null
 ) {
     Row(
@@ -131,7 +145,7 @@ fun InfoRow(
             }
 
             ////지도 보기
-            if (isMapAction) {
+            if (isMapAction && !isonline) {
                 Spacer(modifier = Modifier
                     .height(4.dp)
                 )
