@@ -2,6 +2,7 @@ package com.example.mypage.mycard
 
 import androidx.lifecycle.viewModelScope
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import com.example.mypage.dialog.ExchangeStep
 import com.example.mypage.mypage.MypageEvent
 import com.example.mypage.mypage.MypageUiState
@@ -32,6 +33,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MycardViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val getUserCardUseCase: GetUserCardUseCase, //유저 명함 가져오기
     private val getMemberProfileUseCase: GetMemberProfileUseCase, //유저 검색하기
@@ -223,6 +225,5 @@ data class MycardUiState(
 sealed interface MycardEvent : UiEvent {
     //이동하기
     object NavigateToMypage: MycardEvent
-
 
 }

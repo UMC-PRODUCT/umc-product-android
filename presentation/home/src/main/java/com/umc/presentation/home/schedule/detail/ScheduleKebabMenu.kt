@@ -39,13 +39,14 @@ import com.umc.component.theme.grey800
 @Composable
 fun ScheduleKebabMenu(
     isVisible: Boolean,
-    isAuthor: Boolean,
+    canEdit: Boolean,
+    canDelete: Boolean,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
     //위에서 아래로 애니메이션 표시하기
     AnimatedVisibility(
-        visible = isVisible && isAuthor, //작성 권한이 있는 사람만 수정/삭제 가능
+        visible = isVisible && (canEdit || canDelete), //작성 권한이 있는 사람만 수정/삭제 가능
         enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
         exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut()
     ) {
@@ -59,21 +60,32 @@ fun ScheduleKebabMenu(
             Column(modifier = Modifier
                 .padding(8.dp)
             ) {
-                MenuItem(
-                    icon = R.drawable.ic_edit,
-                    text = AppStrings.NOTICE_WRITE_VOTE_EDIT,
-                    color = grey800(),
-                    onClick = onEditClick)
+                if(canEdit) {
+                    MenuItem(
+                        icon = R.drawable.ic_edit,
+                        text = AppStrings.NOTICE_WRITE_VOTE_EDIT,
+                        color = grey800(),
+                        onClick = onEditClick
+                    )
 
-                HorizontalDivider(modifier = Modifier
-                    .padding(vertical = 4.dp),
-                    color = grey200())
+                }
 
-                MenuItem(
-                    icon = R.drawable.ic_trash_can,
-                    text = AppStrings.NOTICE_WRITE_VOTE_DELETE,
-                    color = red500(),
-                    onClick = onDeleteClick)
+                if(canEdit && canDelete) {
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .padding(vertical = 4.dp),
+                        color = grey200()
+                    )
+                }
+
+                if(canDelete) {
+                    MenuItem(
+                        icon = R.drawable.ic_trash_can,
+                        text = AppStrings.NOTICE_WRITE_VOTE_DELETE,
+                        color = red500(),
+                        onClick = onDeleteClick
+                    )
+                }
             }
         }
     }

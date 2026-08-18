@@ -129,7 +129,7 @@ fun MycardRoute(
 
     //처음 홈 실행 시 체크
     LaunchedEffect(openExchangeDialog) {
-        if(openExchangeDialog == true){
+        if(openExchangeDialog){
             nearbyViewModel.openBottomSheet()
         }
     }
@@ -169,6 +169,7 @@ fun MycardRoute(
                 is MycardEvent.NavigateToMypage -> {
 
                 }
+
                 else -> {}
             }
         }

@@ -179,6 +179,10 @@ constructor(
     //가져온 정보를 바탕으로 불러온 일정 정보들을 ViewModel에 반영하는 함수
     private fun applyScheduleDetail(detail: PlanDetailItem, participants: List<ParticipantItem>){
         updateState {
+
+            //0. isAllday 판별용
+            val checkIsAllDay = detail.startTime.trim() == "00:00" && detail.endTime.trim() == "23:59"
+
             //1. 도메인 String -> 내부 연산용 Calendar 생성
             val startCal = stringToCalendar(detail.startDay, detail.startTime)
             val endCal = stringToCalendar(detail.endDay, detail.endTime)
@@ -230,7 +234,7 @@ constructor(
                 latitude = detail.latitude,
                 longitude = detail.longitude,
                 planDetail = detail.description,
-                isAllDay = detail.isAllDay,
+                isAllDay = checkIsAllDay,
                 startDate = startCal, startTime = startCal,
                 endDate = endCal, endTime = endCal,
                 categories = updatedCategories,
