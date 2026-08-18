@@ -25,7 +25,7 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
-import com.umc.presentation.community.bottomsheet.CommunityMemberBottomSheet
+import com.umc.presentation.community.bottomsheet.edit.CommunityMemberBottomSheet
 import com.umc.presentation.community.component.create.CommunityAiCard
 import com.umc.presentation.community.component.create.CommunityChallengerCard
 import com.umc.presentation.community.component.create.CommunityCreateTopBar
