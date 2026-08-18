@@ -128,8 +128,9 @@ fun NoticeCard(
 /** 공지 대상 정보에 따라 중앙/지부/학교/파트 태그 노출. 목록 카드·상세 화면 공용 */
 @Composable
 fun NoticeTags(target: NoticeTarget) {
-    val isCentral = target.targetGisuId != 0 ||
-            (target.targetChapterId == null && target.targetSchoolId == null && target.targetParts.isEmpty())
+    // 중앙 여부는 오직 schoolId로 갈린다 (서버 스펙: schoolId 미입력이면 중앙, 입력이면 교내).
+    // 기존 조건은 targetGisuId만 있어도 참이라 사실상 모든 공지에 [중앙]이 붙었다
+    val isCentral = target.targetSchoolId == null
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (isCentral) {
