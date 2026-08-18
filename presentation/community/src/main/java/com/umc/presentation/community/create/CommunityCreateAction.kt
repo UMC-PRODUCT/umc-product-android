@@ -1,7 +1,6 @@
 package com.umc.presentation.community.create
 
 import com.umc.presentation.community.model.CommunityChallengerUiModel
-import com.umc.presentation.community.model.CommunityInvitableMemberUiModel
 
 sealed interface CommunityCreateAction {
 

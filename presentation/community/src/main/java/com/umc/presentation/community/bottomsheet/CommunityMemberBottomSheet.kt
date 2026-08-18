@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,12 +30,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
@@ -52,6 +56,18 @@ import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 
+/**
+ * 커뮤니티 스레드의 현재 멤버를 관리하는 BottomSheet입니다.
+ *
+ * 주요 기능
+ * - 현재 참여 중인 멤버 조회
+ * - 챌린저 검색
+ * - 멤버 선택/해제
+ * - 새 멤버 초대
+ * - 기존 멤버 삭제
+ * - 검색 결과 페이지네이션
+ * - 프로필 이미지 표시
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityMemberBottomSheet(
@@ -68,12 +84,21 @@ fun CommunityMemberBottomSheet(
         skipPartiallyExpanded = true,
     )
 
+    /**
+     * BottomSheet가 열릴 때 threadId를 기준으로
+     * 현재 스레드 멤버 정보를 조회합니다.
+     */
     LaunchedEffect(threadId) {
         viewModel.initialize(
             threadId = threadId,
         )
     }
 
+    /**
+     * ViewModel에서 발생한 일회성 이벤트를 처리합니다.
+     *
+     * 멤버 추가/삭제 성공 또는 에러 발생 시 Toast를 표시합니다.
+     */
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collect { event ->
             when (event) {
@@ -170,6 +195,12 @@ fun CommunityMemberBottomSheet(
                 modifier = Modifier.height(18.dp),
             )
 
+            /**
+             * 챌린저 이름 검색 필드입니다.
+             *
+             * 실제 검색 API 호출과 300ms 디바운스 처리는
+             * ViewModel에서 수행합니다.
+             */
             UTextField(
                 value = state.query,
                 onValueChange = viewModel::searchMembers,
@@ -199,6 +230,7 @@ fun CommunityMemberBottomSheet(
                     .weight(1f),
             ) {
                 when {
+                    // 최초 데이터 또는 검색 결과 로딩 중
                     state.isLoading -> {
                         CircularProgressIndicator(
                             modifier = Modifier.align(
@@ -208,6 +240,7 @@ fun CommunityMemberBottomSheet(
                         )
                     }
 
+                    // 멤버 조회 또는 검색 실패
                     state.errorMessage != null &&
                             state.displayedMembers.isEmpty() -> {
                         CommunityMemberEmptyContent(
@@ -215,6 +248,7 @@ fun CommunityMemberBottomSheet(
                         )
                     }
 
+                    // 현재 멤버 또는 검색 결과가 없는 상태
                     state.isEmpty -> {
                         CommunityMemberEmptyContent(
                             text = if (state.isSearching) {
@@ -225,6 +259,7 @@ fun CommunityMemberBottomSheet(
                         )
                     }
 
+                    // 검색 중일 때 검색 결과 표시
                     state.isSearching -> {
                         CommunityMemberSearchContent(
                             members = state.displayedMembers,
@@ -243,6 +278,7 @@ fun CommunityMemberBottomSheet(
                         )
                     }
 
+                    // 검색 중이 아닐 때 현재 스레드 멤버 표시
                     else -> {
                         CommunityCurrentMemberContent(
                             members = state.currentMembers,
@@ -260,6 +296,11 @@ fun CommunityMemberBottomSheet(
     }
 }
 
+/**
+ * BottomSheet 상단 Header입니다.
+ *
+ * 검색 중일 때만 확인 버튼을 표시합니다.
+ */
 @Composable
 private fun CommunityMemberBottomSheetHeader(
     title: String,
@@ -310,6 +351,9 @@ private fun CommunityMemberBottomSheetHeader(
     }
 }
 
+/**
+ * 현재 스레드에 참여 중인 멤버 목록을 표시합니다.
+ */
 @Composable
 private fun CommunityCurrentMemberContent(
     members: List<CommunityChallengerUiModel>,
@@ -336,6 +380,9 @@ private fun CommunityCurrentMemberContent(
     }
 }
 
+/**
+ * 현재 참여 중인 멤버 한 명을 표시하는 Row입니다.
+ */
 @Composable
 private fun CommunityCurrentMemberRow(
     member: CommunityChallengerUiModel,
@@ -348,7 +395,9 @@ private fun CommunityCurrentMemberRow(
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CommunityMemberProfile()
+        CommunityMemberProfile(
+            profileImage = member.profileImage,
+        )
 
         Spacer(
             modifier = Modifier.width(8.dp),
@@ -397,6 +446,12 @@ private fun CommunityCurrentMemberRow(
     }
 }
 
+/**
+ * 검색된 챌린저 목록을 표시합니다.
+ *
+ * 검색 결과를 파트별로 그룹화하고,
+ * 리스트 하단 접근 시 다음 페이지를 요청합니다.
+ */
 @Composable
 private fun CommunityMemberSearchContent(
     members: List<CommunityChallengerUiModel>,
@@ -409,12 +464,17 @@ private fun CommunityMemberSearchContent(
 ) {
     val listState = rememberLazyListState()
 
+    // 파트별로 챌린저 검색 결과를 그룹화
     val groupedMembers = members
         .groupBy { member ->
             member.partLabel
         }
         .toList()
 
+    /**
+     * 리스트 마지막 영역에 가까워졌을 때
+     * 다음 페이지가 존재하면 추가 검색을 요청합니다.
+     */
     val shouldLoadMore by remember {
         derivedStateOf {
             val lastVisibleItemIndex =
@@ -468,6 +528,7 @@ private fun CommunityMemberSearchContent(
                         selectedMember.memberId == member.memberId
                     }
 
+                // 최대 인원 도달 후에도 이미 선택된 멤버는 해제 가능
                 val isEnabled =
                     isChecked ||
                             selectedMembers.size < maxCount
@@ -493,6 +554,7 @@ private fun CommunityMemberSearchContent(
             }
         }
 
+        // 다음 페이지 조회 중 표시
         if (isLoadingMore) {
             item(
                 key = "loading_more",
@@ -514,6 +576,9 @@ private fun CommunityMemberSearchContent(
     }
 }
 
+/**
+ * 검색 결과의 챌린저 한 명을 표시하는 Row입니다.
+ */
 @Composable
 private fun CommunityMemberSearchRow(
     member: CommunityChallengerUiModel,
@@ -531,7 +596,9 @@ private fun CommunityMemberSearchRow(
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CommunityMemberProfile()
+        CommunityMemberProfile(
+            profileImage = member.profileImage,
+        )
 
         Spacer(
             modifier = Modifier.width(8.dp),
@@ -588,6 +655,9 @@ private fun CommunityMemberSearchRow(
     }
 }
 
+/**
+ * 목록에 표시할 멤버가 없을 때 사용하는 Empty UI입니다.
+ */
 @Composable
 private fun CommunityMemberEmptyContent(
     text: String,
@@ -619,18 +689,40 @@ private fun CommunityMemberEmptyContent(
     }
 }
 
+/**
+ * 멤버 프로필 이미지를 표시합니다.
+ *
+ * profileImage URL이 존재하면 실제 프로필 이미지를 표시하고,
+ * URL이 없으면 기본 프로필 아이콘을 표시합니다.
+ */
 @Composable
-private fun CommunityMemberProfile() {
-    Icon(
-        painter = painterResource(
-            id = R.drawable.ic_profile_default,
-        ),
-        contentDescription = null,
-        tint = Color.Unspecified,
-        modifier = Modifier.size(32.dp),
-    )
+private fun CommunityMemberProfile(
+    profileImage: String,
+) {
+    if (profileImage.isNotBlank()) {
+        AsyncImage(
+            model = profileImage,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape),
+        )
+    } else {
+        Icon(
+            painter = painterResource(
+                id = R.drawable.ic_profile_default,
+            ),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(32.dp),
+        )
+    }
 }
 
+/**
+ * 챌린저 이름/닉네임과 기수 정보를 화면 표시용 문자열로 변환합니다.
+ */
 private fun buildMemberTitle(
     member: CommunityChallengerUiModel,
 ): String {
