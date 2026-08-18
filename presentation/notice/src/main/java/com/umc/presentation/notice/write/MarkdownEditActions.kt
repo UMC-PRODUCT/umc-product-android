@@ -42,9 +42,15 @@ object MarkdownEditActions {
         if (closers.isEmpty()) return current
 
         val newlineAt = cursor - 1
+        // 마커 안에서 엔터를 치면 짝이 되던 닫는 마커가 다음 줄로 밀려 고아가 된다.
+        // (`<mark>가나|</mark>` -> `<mark>가나</mark>\n</mark>`)
+        // 줄 끝에서 스타일을 닫고, 뒤에 남는 같은 마커는 걷어내 다음 줄은 일반 텍스트로 시작한다
+        val orphanEnd = if (current.text.startsWith(closers, cursor)) cursor + closers.length else cursor
+
         return current.copy(
-            text = current.text.replaceRange(newlineAt, newlineAt, closers),
-            selection = TextRange(cursor + closers.length),
+            text = current.text.substring(0, newlineAt) + closers + "\n" +
+                    current.text.substring(orphanEnd),
+            selection = TextRange(newlineAt + closers.length + 1),
         )
     }
 
