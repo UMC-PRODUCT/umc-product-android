@@ -1,6 +1,5 @@
 package com.umc.presentation
 
-import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -48,14 +47,20 @@ import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
 import dagger.hilt.android.AndroidEntryPoint
 
+/** 상태바 배경. presentation/res/values(-night)/colors.xml 의 grey000과 같은 값 */
+private const val LIGHT_GREY_000 = 0xFFFFFFFF.toInt()
+private const val DARK_GREY_000 = 0xFF121212.toInt()
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 상태바를 앱 배경(grey000)과 같은 색으로. auto는 시스템 다크모드를 감지해
+        // 배경색과 아이콘 명암을 함께 뒤집는다 (light: #FFFFFF / dark: #121212)
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(
-                scrim = Color.WHITE,
-                darkScrim = Color.BLACK,
+            statusBarStyle = SystemBarStyle.auto(
+                lightScrim = LIGHT_GREY_000,
+                darkScrim = DARK_GREY_000,
             ),
         )
         setContent {
