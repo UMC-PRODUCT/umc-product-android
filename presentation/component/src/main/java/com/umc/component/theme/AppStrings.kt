@@ -487,6 +487,7 @@ object AppStrings {
     const val REWARD_ETC_TITLE = "기타 상벌점 부여하기"
     const val REWARD_ETC_CONTENT = "기타 상벌점 사유와 점수를 입력해 주세요."
     const val REWARD = "상점"
+    const val COMMUNITY_CREATE_SELF_NOT_ALLOWED = "본인은 참여자로 추가할 수 없어요."
     const val PUNISH = "벌점"
     const val HAB = "총합"
     const val REWARD_ETC_REASON = "사유"
