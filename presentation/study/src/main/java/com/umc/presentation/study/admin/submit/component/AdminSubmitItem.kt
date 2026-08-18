@@ -54,7 +54,7 @@ fun AdminSubmitItem(
     ) {
         // 사용자 프로필 이미지
         AdminSubmitProfileImage(
-            profileImage = item.profileImage,
+            profileImageUrl = item.profileImageUrl,
         )
 
         Spacer(modifier = Modifier.width(10.dp))
@@ -223,11 +223,11 @@ fun AdminSubmitItem(
  */
 @Composable
 private fun AdminSubmitProfileImage(
-    profileImage: String,
+    profileImageUrl: String?,
 ) {
-    if (profileImage.isNotBlank()) {
+    if (!profileImageUrl.isNullOrBlank()) {
         AsyncImage(
-            model = profileImage,
+            model = profileImageUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier

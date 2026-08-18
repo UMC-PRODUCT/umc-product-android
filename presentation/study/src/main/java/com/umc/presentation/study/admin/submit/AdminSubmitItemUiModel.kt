@@ -19,11 +19,11 @@ data class AdminSubmitItemUiModel(
     val nickname: String,
     val partLabel: String,
     val weekText: String,
-    val studyTitle: String,
+    val studyTitle: String = "",
     val schoolName: String,
 
     // 사용자 프로필 이미지 URL
-    val profileImage: String = "",
+    val profileImageUrl: String? = null,
 
     // 워크북 제출 상태 및 제출 정보
     val status: String,

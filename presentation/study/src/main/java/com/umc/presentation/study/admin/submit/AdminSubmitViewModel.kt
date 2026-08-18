@@ -456,6 +456,7 @@ class AdminSubmitViewModel @Inject constructor(
                                 partLabel = member.part,
                                 weekText = "${week.weekNo}주차",
                                 studyTitle = member.studyGroupName,
+                                profileImageUrl = member.profileImageUrl,
                                 schoolName = member.schoolName,
                                 status = if (week.isBest) {
                                     "BEST"

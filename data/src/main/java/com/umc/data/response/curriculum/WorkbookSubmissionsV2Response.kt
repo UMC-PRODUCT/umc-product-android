@@ -25,4 +25,5 @@ data class StudyMemberSubmissionWeekResponse(
     val challengerWorkbookId: Long?,
     val status: String,
     val isBest: Boolean,
+    val content: String?,
 )
