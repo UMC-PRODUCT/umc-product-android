@@ -19,6 +19,9 @@ import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Body
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 
+/**
+ * 일정의 시작/종료 일시와 하루 종일 여부를 설정하는 영역
+ */
 @Composable
 fun GroupScheduleDateTimeBox(
     isAllDay: Boolean,
@@ -28,6 +31,7 @@ fun GroupScheduleDateTimeBox(
     onStartClick: () -> Unit,
     onEndClick: () -> Unit,
 ) {
+    // 하루 종일 일정은 시간 없이 날짜만 표시
     val displayedStartText = if (isAllDay) {
         startText?.substringBefore(" ")
     } else {
@@ -51,6 +55,7 @@ fun GroupScheduleDateTimeBox(
             )
             .background(grey000()),
     ) {
+        // 하루 종일 설정
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -67,12 +72,15 @@ fun GroupScheduleDateTimeBox(
 
             Switch(
                 checked = isAllDay,
-                onCheckedChange = { onAllDayClick() },
+                onCheckedChange = {
+                    onAllDayClick()
+                },
             )
         }
 
         DividerLine()
 
+        // 시작 일시
         DateTimeRow(
             title = "시작",
             value = displayedStartText,
@@ -81,6 +89,7 @@ fun GroupScheduleDateTimeBox(
 
         DividerLine()
 
+        // 종료 일시
         DateTimeRow(
             title = "종료",
             value = displayedEndText,
@@ -88,6 +97,10 @@ fun GroupScheduleDateTimeBox(
         )
     }
 }
+
+/**
+ * 시작 또는 종료 일시 선택 항목
+ */
 @Composable
 private fun DateTimeRow(
     title: String,
@@ -109,18 +122,28 @@ private fun DateTimeRow(
             modifier = Modifier.weight(1f),
         )
 
+        // 아직 일시를 선택하지 않은 경우
         if (value == null) {
             Icon(
-                painter = painterResource(R.drawable.ic_arrow_next),
+                painter = painterResource(
+                    R.drawable.ic_arrow_next
+                ),
                 contentDescription = null,
                 tint = grey500(),
                 modifier = Modifier.size(14.dp),
             )
         } else {
+            // 선택된 일시 표시
             Box(
                 modifier = Modifier
-                    .background(indigo100(), RoundedCornerShape(999.dp))
-                    .padding(horizontal = 14.dp, vertical = 7.dp),
+                    .background(
+                        indigo100(),
+                        RoundedCornerShape(999.dp)
+                    )
+                    .padding(
+                        horizontal = 14.dp,
+                        vertical = 7.dp
+                    ),
             ) {
                 UText(
                     text = value,
@@ -132,6 +155,9 @@ private fun DateTimeRow(
     }
 }
 
+/**
+ * 항목 사이 구분선
+ */
 @Composable
 private fun DividerLine() {
     Box(

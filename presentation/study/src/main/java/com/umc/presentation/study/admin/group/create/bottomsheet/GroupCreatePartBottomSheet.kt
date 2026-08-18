@@ -25,6 +25,9 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.indigo500
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreatePartUiModel
 
+/**
+ * 스터디 그룹에서 선택 가능한 파트 목록
+ */
 private val groupCreateParts = listOf(
     AdminStudyGroupCreatePartUiModel(
         label = "Plan",
@@ -60,6 +63,12 @@ private val groupCreateParts = listOf(
     ),
 )
 
+/**
+ * 스터디 그룹 생성 시 담당 파트를 선택하는 BottomSheet
+ *
+ * 선택 가능한 파트 목록을 표시하며,
+ * 현재 선택된 파트는 강조하여 표시합니다.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupCreatePartBottomSheet(
@@ -90,6 +99,7 @@ fun GroupCreatePartBottomSheet(
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp),
         ) {
+            // 파트 선택 안내 문구
             UText(
                 text = "파트를 선택하세요",
                 style = UmcTypographyTokens.Title3Bold,
@@ -101,21 +111,29 @@ fun GroupCreatePartBottomSheet(
                 modifier = Modifier.height(20.dp),
             )
 
+            // 선택 가능한 전체 파트 목록
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 items(
                     items = groupCreateParts,
-                    key = { part -> part.value },
+                    key = { part ->
+                        part.value
+                    },
                 ) { part ->
                     UText(
                         text = part.label,
                         style = UmcTypographyTokens.Body,
-                        color = if (selectedPart?.value == part.value) {
+
+                        // 현재 선택된 파트 강조
+                        color = if (
+                            selectedPart?.value == part.value
+                        ) {
                             indigo500()
                         } else {
                             grey800()
                         },
+
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
