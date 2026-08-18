@@ -453,7 +453,7 @@ fun MainNavHost(
                 onNavigateToAttendSchedule = {
                     /**TODO. 일정 출석 페이지로 이동하기**/
                     navHostController.navigate(MainDestination.Act){
-                        popUpTo<MainDestination.ScheduleDetail>{
+                        popUpTo<MainDestination.Home>{
                             inclusive = true
                         }
                     }
