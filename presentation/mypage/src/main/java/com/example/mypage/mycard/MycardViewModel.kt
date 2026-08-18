@@ -33,7 +33,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MycardViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val getUserCardUseCase: GetUserCardUseCase, //유저 명함 가져오기
     private val getMemberProfileUseCase: GetMemberProfileUseCase, //유저 검색하기
@@ -41,7 +40,6 @@ class MycardViewModel @Inject constructor(
 
 ) : BaseViewModel<MycardUiState, MycardEvent>(
     MycardUiState()){
-
 
 
     //초기 상태

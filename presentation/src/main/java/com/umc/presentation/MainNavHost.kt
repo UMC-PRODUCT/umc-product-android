@@ -416,7 +416,7 @@ fun MainNavHost(
                             saveState = true
                         }
                         launchSingleTop = true
-                        restoreState = true
+                        //restoreState = true
                     }
                 }
             )
