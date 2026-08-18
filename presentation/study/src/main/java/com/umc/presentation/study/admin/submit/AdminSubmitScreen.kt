@@ -33,6 +33,13 @@ import com.umc.presentation.study.admin.submit.component.AdminSubmitFilterBar
 import com.umc.presentation.study.admin.submit.component.AdminSubmitItem
 import kotlinx.coroutines.flow.collectLatest
 
+/**
+ * 관리자 제출 현황 화면의 Route
+ *
+ * 화면이 활성화될 때 제출 현황을 새로 조회하고,
+ * ViewModel의 상태 및 Toast 이벤트를 처리합니다.
+ */
+
 @Composable
 fun AdminSubmitRoute(
     isActive: Boolean,
@@ -65,6 +72,14 @@ fun AdminSubmitRoute(
         onAction = viewModel::onAction
     )
 }
+
+/**
+ * 관리자 스터디 제출 현황 화면
+ *
+ * 주차/그룹 필터와 제출 목록을 표시하며,
+ * 제출 상세 조회, 승인/반려 및 베스트 워크북 관리를 위한
+ * BottomSheet와 Dialog를 제공합니다.
+ */
 @Composable
 fun AdminSubmitScreen(
     state: AdminSubmitState,

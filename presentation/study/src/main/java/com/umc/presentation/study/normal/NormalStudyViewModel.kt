@@ -18,18 +18,27 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 일반 사용자 스터디 화면에서 사용하는 UI 상태
+ *
+ * 커리큘럼 제목, 파트, 주차별 항목과
+ * 전체 진행률 정보를 관리합니다.
+ */
 data class UserStudyState(
     val title: String = "",
     val part: UserPart = UserPart.UNKNOWN,
     val items: List<NormalStudyItemUiModel> = emptyList(),
 ) : UiState {
 
+    /** 전체 커리큘럼 개수 */
     val totalCount: Int
         get() = items.size
 
+    /** PASS 상태의 커리큘럼 개수 */
     val passCount: Int
         get() = items.count { it.status == StudyStatus.PASS }
 
+    /** 전체 커리큘럼 기준 달성률 */
     val progress: Int
         get() = if (totalCount == 0) {
             0
@@ -37,9 +46,11 @@ data class UserStudyState(
             passCount * 100 / totalCount
         }
 
+    /** 화면에 표시할 퍼센트 문자열 */
     val percentText: String
         get() = "$progress%"
 
+    /** 완료 개수 / 전체 개수 안내 문구 */
     val subText: String
         get() = AppStrings.STUDY_COMPLETE_FORMAT.format(
             passCount,
@@ -47,13 +58,28 @@ data class UserStudyState(
         )
 }
 
+/**
+ * 일반 사용자 스터디 화면에서 발생하는 일회성 UI 이벤트
+ */
 sealed interface UserStudyEvent : UiEvent {
 
+    /** 사용자에게 Toast 메시지 표시 */
     data class ShowToast(
         val message: String,
     ) : UserStudyEvent
 }
 
+/**
+ * 일반 사용자 스터디 화면의 상태와 비즈니스 로직을 관리하는 ViewModel
+ *
+ * 주요 기능
+ * - 현재 사용자 프로필 조회
+ * - 현재 활성 기수 및 파트 확인
+ * - 개인 커리큘럼 진행 현황 조회
+ * - 워크북 상태를 화면 상태로 변환
+ * - 주차별 항목 펼치기/접기
+ * - 로딩 및 Toast 이벤트 처리
+ */
 @HiltViewModel
 class UserStudyViewModel @Inject constructor(
     private val getMyProfileUseCase: GetMyProfileUseCase,
@@ -66,6 +92,10 @@ class UserStudyViewModel @Inject constructor(
         load()
     }
 
+    /**
+     * 현재 사용자 정보를 조회한 뒤
+     * 현재 활성 기수와 파트를 기준으로 커리큘럼 진행 현황을 조회합니다.
+     */
     private fun load() {
         startLoading()
 
@@ -85,6 +115,10 @@ class UserStudyViewModel @Inject constructor(
                         return@launch
                     }
 
+                    /**
+                     * ACTIVE 상태의 가장 최신 챌린저 기록을 우선 사용하고,
+                     * 없다면 가장 최근 기수 기록을 사용합니다.
+                     */
                     val currentRecord = userInfo.challengerRecords
                         .filter { record ->
                             record.challengerStatus == "ACTIVE"
@@ -107,6 +141,7 @@ class UserStudyViewModel @Inject constructor(
                         return@launch
                     }
 
+                    // 서버의 파트 문자열을 UserPart enum으로 변환
                     val part = UserPart.from(currentRecord.part)
 
                     loadStudyProgress(
@@ -128,6 +163,12 @@ class UserStudyViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 현재 기수의 개인 커리큘럼 진행 현황을 조회합니다.
+     *
+     * 서버 워크북 데이터를 주차 순으로 정렬한 뒤
+     * 화면에서 사용하는 NormalStudyItemUiModel로 변환합니다.
+     */
     private suspend fun loadStudyProgress(
         gisuId: Long,
         part: UserPart,
@@ -151,6 +192,7 @@ class UserStudyViewModel @Inject constructor(
                     return
                 }
 
+                // 서버 워크북 목록을 화면 표시용 모델로 변환
                 val items = data.workbooks
                     .sortedBy { workbook ->
                         workbook.weekNo
@@ -187,6 +229,11 @@ class UserStudyViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 선택한 주차의 상세 영역을 펼치거나 접습니다.
+     *
+     * 잠긴 항목은 상태를 변경하지 않습니다.
+     */
     fun toggleExpand(index: Int) {
         updateState {
             val target = items.getOrNull(index)
@@ -210,6 +257,9 @@ class UserStudyViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 서버 WorkbookStatus를 화면에서 사용하는 StudyStatus로 변환합니다.
+     */
     private fun WorkbookStatus.toStudyStatus(): StudyStatus {
         return when (this) {
             WorkbookStatus.PASS,
@@ -227,6 +277,9 @@ class UserStudyViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 워크북 제출 방식에 따라 화면에 표시할 플랫폼 문자열로 변환합니다.
+     */
     private fun WorkbookMissionType.toPlatformLabel(): String {
         return when (this) {
             WorkbookMissionType.LINK -> "Github"

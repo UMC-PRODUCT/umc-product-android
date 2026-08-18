@@ -14,7 +14,13 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey950
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.Alignment
 
+/**
+ * 스레드 생성/수정 화면의 기본 정보 입력 폼
+ *
+ * 스레드 제목과 특징(상세 내용)을 입력받습니다.
+ */
 @Composable
 fun CommunityThreadForm(
     title: String,
@@ -26,6 +32,7 @@ fun CommunityThreadForm(
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
+        // 스레드 제목 입력 영역
         UText(
             text = "제목",
             style = UmcTypographyTokens.HeadlineBold,
@@ -46,6 +53,7 @@ fun CommunityThreadForm(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        // AI 카테고리 분류 등에 사용되는 스레드 특징 입력 영역
         UText(
             text = "스레드 특징",
             style = UmcTypographyTokens.HeadlineBold,
@@ -64,7 +72,7 @@ fun CommunityThreadForm(
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Default,
             ),
-            verticalAlignment = androidx.compose.ui.Alignment.Top,
+            verticalAlignment = Alignment.Top,
         )
     }
 }

@@ -10,7 +10,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.component.UToastData
 import com.umc.component.component.UToastState
-import com.umc.presentation.community.bottomsheet.CommunityMemberBottomSheet
+import com.umc.presentation.community.bottomsheet.edit.CommunityMemberBottomSheet
 import com.umc.component.theme.AppStrings
 
 @Composable

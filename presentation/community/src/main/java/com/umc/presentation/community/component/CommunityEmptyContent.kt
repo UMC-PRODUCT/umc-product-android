@@ -25,6 +25,12 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 
+/**
+ * 커뮤니티에 생성된 스레드가 없을 때 표시하는 Empty 화면
+ *
+ * 스레드가 존재하지 않는다는 안내와
+ * 새로운 스레드 생성을 유도하는 문구를 표시합니다.
+ */
 @Composable
 fun CommunityEmptyContent(
     modifier: Modifier = Modifier,
@@ -37,6 +43,7 @@ fun CommunityEmptyContent(
         verticalArrangement = Arrangement.Center,
     ) {
 
+        // 스레드가 없는 상태를 나타내는 아이콘
         Icon(
             painter = painterResource(
                 id = R.drawable.ic_community_empty,
@@ -48,6 +55,7 @@ fun CommunityEmptyContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Empty 상태 제목
         UText(
             text = "아직 스레드가 없어요",
             style = UmcTypographyTokens.HeadlineBold,
@@ -56,6 +64,7 @@ fun CommunityEmptyContent(
             modifier = Modifier.padding(top = 4.dp),
         )
 
+        // 새로운 스레드 생성을 안내하는 설명
         UText(
             text = "첫 쓰레드를 만들어 우리 파트의 대화를 시작해보세요.",
             style = UmcTypographyTokens.Subheadline,
@@ -66,6 +75,9 @@ fun CommunityEmptyContent(
     }
 }
 
+/**
+ * 스레드 Empty 화면 Preview
+ */
 @Preview(showBackground = true)
 @Composable
 private fun CommunityEmptyContentPreview() {

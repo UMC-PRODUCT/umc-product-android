@@ -11,6 +11,10 @@ import com.umc.component.component.UText
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Body
 
+/**
+ * 대면 진행, 출석부 생성 등
+ * Boolean 옵션을 변경하는 공통 토글 Row
+ */
 @Composable
 fun GroupScheduleToggleRow(
     checked: Boolean,
@@ -20,16 +24,24 @@ fun GroupScheduleToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable {
+                onClick()
+            },
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // 옵션 ON / OFF 스위치
         Switch(
             checked = checked,
-            onCheckedChange = { onClick() },
+            onCheckedChange = {
+                onClick()
+            },
         )
 
-        Spacer(Modifier.width(8.dp))
+        Spacer(
+            modifier = Modifier.width(8.dp)
+        )
 
+        // 옵션 설명
         UText(
             text = text,
             style = Body,

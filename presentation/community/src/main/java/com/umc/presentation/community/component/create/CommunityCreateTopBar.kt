@@ -24,6 +24,12 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo500
 
+/**
+ * 스레드 생성/수정 화면에서 사용하는 상단바
+ *
+ * 왼쪽에는 뒤로가기와 화면 제목을 표시하고,
+ * 오른쪽에는 등록/수정 등의 액션 버튼을 표시합니다.
+ */
 @Composable
 fun CommunityCreateTopBar(
     title: String,
@@ -46,6 +52,7 @@ fun CommunityCreateTopBar(
             .fillMaxWidth()
             .height(64.dp),
     ) {
+        // 뒤로가기 버튼과 화면 제목
         Row(
             modifier = Modifier.align(Alignment.CenterStart),
             verticalAlignment = Alignment.CenterVertically,
@@ -74,6 +81,7 @@ fun CommunityCreateTopBar(
             )
         }
 
+        // 입력 조건 충족 여부에 따라 활성화되는 우측 액션 버튼
         Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
@@ -89,7 +97,11 @@ fun CommunityCreateTopBar(
             UText(
                 text = actionText,
                 style = UmcTypographyTokens.CalloutBold,
-                color = if (isActionEnabled) indigo500() else grey400(),
+                color = if (isActionEnabled) {
+                    indigo500()
+                } else {
+                    grey400()
+                },
             )
         }
     }
