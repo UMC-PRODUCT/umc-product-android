@@ -176,7 +176,9 @@ fun ScheduleDetailScreen(
             //1. 상단 바 & 케밥 메뉴
             ScheduleDetailTopBar(
                 onBackClick = onBackClick,
-                onMenuClick = onMenuClick
+                onMenuClick = onMenuClick,
+                canEdit = uiState.canEdit,
+                canDelete = uiState.canDelete
             )
 
             Spacer(modifier = Modifier
@@ -301,7 +303,8 @@ fun ScheduleDetailScreen(
         ) {
             ScheduleKebabMenu(
                 isVisible = uiState.isMenuVisible,
-                isAuthor = uiState.isAuthor,
+                canEdit = uiState.canEdit,
+                canDelete = uiState.canDelete,
                 onEditClick = onEditClick,
                 onDeleteClick = onDeleteClick
             )
@@ -314,7 +317,9 @@ fun ScheduleDetailScreen(
 @Composable
 fun ScheduleDetailTopBar(
     onBackClick: () -> Unit,
-    onMenuClick: () -> Unit
+    onMenuClick: () -> Unit,
+    canEdit: Boolean,
+    canDelete: Boolean,
 ){
     Row(
         modifier = Modifier
@@ -347,15 +352,17 @@ fun ScheduleDetailTopBar(
             )
         }
         //메뉴 버튼
-        Icon(
-            painter = painterResource(id = R.drawable.ic_menu_kebab),
-            contentDescription = null,
-            modifier = Modifier
-                .size(24.dp)
-                .clickable { onMenuClick() },
+        if(canEdit || canDelete) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_menu_kebab),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { onMenuClick() },
 
-            tint = grey800()
-        )
+                tint = grey800()
+            )
+        }
 
     }
 }
@@ -407,7 +414,6 @@ fun PreviewScheduleDetailMenuOpen() {
         todayTime = "10:00-12:00",
         place = "온라인(Zoom)",
         detail = "이 화면은 케밥 메뉴가 열렸을 때의 레이아웃을 확인하기 위한 프리뷰입니다.",
-        isAuthor = true,
         isMenuVisible = true // 메뉴 열림 상태
     )
 
