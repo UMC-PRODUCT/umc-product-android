@@ -18,6 +18,11 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.indigo500
 
+/**
+ * 새로운 커뮤니티 스레드를 생성할 때 사용하는 플로팅 버튼
+ *
+ * 클릭 시 상위 화면에서 전달받은 스레드 생성 이동 로직을 실행합니다.
+ */
 @Composable
 fun CommunityFloatingButton(
     onClick: () -> Unit,
@@ -33,6 +38,7 @@ fun CommunityFloatingButton(
         color = indigo500(),
         shadowElevation = 6.dp,
     ) {
+        // 새 스레드 아이콘과 텍스트 표시
         Row(
             modifier = Modifier.fillMaxSize(),
             horizontalArrangement = Arrangement.spacedBy(

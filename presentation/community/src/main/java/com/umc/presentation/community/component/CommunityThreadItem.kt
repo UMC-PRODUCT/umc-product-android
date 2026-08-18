@@ -37,6 +37,14 @@ import com.umc.component.theme.indigo500
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityThreadUiModel
 
+/**
+ * 커뮤니티 목록에서 사용하는 개별 스레드 카드
+ *
+ * 스레드 제목, 카테고리, 내용 미리보기, 날짜,
+ * 읽지 않은 메시지 수 및 스레드 상태를 표시합니다.
+ *
+ * 일반 클릭과 롱클릭 이벤트를 모두 지원합니다.
+ */
 @Composable
 fun CommunityThreadItem(
     thread: CommunityThreadUiModel,
@@ -65,7 +73,7 @@ fun CommunityThreadItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
 
-            // 책 아이콘
+            // 카테고리에 맞는 아이콘 영역
             Surface(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(8.dp),
@@ -88,7 +96,7 @@ fun CommunityThreadItem(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // 가운데 콘텐츠
+            // 제목, 카테고리 칩, 내용 미리보기 영역
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -111,10 +119,12 @@ fun CommunityThreadItem(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
+                    // 스레드 카테고리 표시
                     CommunityCategoryChip(
                         category = thread.category,
                     )
 
+                    // 고정된 스레드인 경우 핀 아이콘 표시
                     if (thread.isPinned) {
                         Spacer(modifier = Modifier.width(6.dp))
 
@@ -128,6 +138,7 @@ fun CommunityThreadItem(
                         )
                     }
 
+                    // 알림이 꺼진 스레드인 경우 알림 OFF 아이콘 표시
                     if (!thread.isNotificationEnabled) {
                         Spacer(modifier = Modifier.width(6.dp))
 
@@ -145,6 +156,7 @@ fun CommunityThreadItem(
                 // 제목과 미리보기 사이 간격
                 Spacer(modifier = Modifier.height(4.dp))
 
+                // 최근 스레드 내용 미리보기
                 UText(
                     text = thread.contentPreview,
                     style = UmcTypographyTokens.Footnote,
@@ -156,7 +168,7 @@ fun CommunityThreadItem(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // 날짜 및 댓글
+            // 날짜 및 읽지 않은 메시지 수
             Column(
                 modifier = Modifier.height(48.dp),
                 horizontalAlignment = Alignment.End,
@@ -168,6 +180,7 @@ fun CommunityThreadItem(
                     color = grey600(),
                 )
 
+                // 읽지 않은 메시지가 있을 때만 카운트 표시
                 if (thread.unreadCount > 0) {
                     Surface(
                         modifier = Modifier.size(24.dp),
@@ -191,6 +204,9 @@ fun CommunityThreadItem(
     }
 }
 
+/**
+ * 스레드 카테고리에 대응하는 아이콘 리소스를 반환
+ */
 private fun categoryIconRes(
     category: CommunityCategory,
 ): Int {

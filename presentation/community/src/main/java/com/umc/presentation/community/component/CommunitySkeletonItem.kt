@@ -18,12 +18,19 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 
+/**
+ * 커뮤니티 스레드 목록 로딩 중 표시하는 Skeleton Item
+ *
+ * 실제 스레드 카드와 비슷한 형태를 만들고
+ * alpha 값을 반복적으로 변경하여 로딩 애니메이션을 표현합니다.
+ */
 @Composable
 fun CommunitySkeletonItem(
     modifier: Modifier = Modifier,
 ) {
     val transition = rememberInfiniteTransition(label = "")
 
+    // Skeleton 전체의 투명도를 반복적으로 변경
     val alpha = transition.animateFloat(
         initialValue = 0.4f,
         targetValue = 1f,
@@ -66,7 +73,7 @@ fun CommunitySkeletonItem(
                 modifier = Modifier.weight(1f)
             ) {
 
-                // 제목
+                // 제목 영역
                 Box(
                     modifier = Modifier
                         .width(150.dp)
@@ -79,7 +86,7 @@ fun CommunitySkeletonItem(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 미리보기 첫 줄
+                // 내용 미리보기 영역
                 Box(
                     modifier = Modifier
                         .width(220.dp)
@@ -89,8 +96,6 @@ fun CommunitySkeletonItem(
                             RoundedCornerShape(999.dp),
                         )
                 )
-
-
             }
         }
     }
