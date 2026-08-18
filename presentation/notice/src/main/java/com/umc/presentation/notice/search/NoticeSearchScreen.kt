@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -27,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -44,6 +47,8 @@ import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
+import com.umc.component.theme.grey600
+import com.umc.component.theme.indigo500
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
@@ -53,14 +58,18 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun NoticeSearchRoute(
     gisuId: Long = 0,
+    noticeTab: String = "CHALLENGER",
+    chapterId: Long? = null,
+    schoolId: Long? = null,
+    part: String? = null,
     viewModel: NoticeSearchViewModel = hiltViewModel(),
     navigateToBack: () -> Unit = {},
     navigateToDetail: (Long) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.setGisuId(gisuId)
+    LaunchedEffect(gisuId, noticeTab, chapterId, schoolId, part) {
+        viewModel.setSearchContext(gisuId, noticeTab, chapterId, schoolId, part)
     }
 
     LaunchedEffect(viewModel) {
@@ -104,6 +113,7 @@ fun NoticeSearchScreen(
     onClickDeleteAll: () -> Unit = {},
 ) {
     val searchFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     // 진입 시 검색 필드에 포커스
     LaunchedEffect(Unit) {
@@ -130,8 +140,15 @@ fun NoticeSearchScreen(
                 strokeColor = grey200(),
                 focusStrokeColor = grey900(),
                 cornerRadius = 12.dp,
+                singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        // 결과가 키보드에 가리지 않도록 내린다
+                        keyboardController?.hide()
+                        onSearch()
+                    },
+                ),
                 // 아이콘을 항상 배치해 필드 높이를 고정하고, 입력값이 없을 땐 투명 처리로 숨김
                 nextIcon = painterResource(id = R.drawable.ic_delete_filled),
                 nextIconTint = if (uiState.query.isNotEmpty()) grey300() else Color.Transparent,
@@ -260,31 +277,85 @@ fun NoticeSearchResultScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            items(
-                items = uiState.resultList,
-                key = { it.id },
-            ) { notice ->
-                NoticeCard(
-                    notice = notice,
-                    isRead = uiState.readNoticeIds.contains(notice.id),
-                    onClick = { onClickNotice(notice.id) },
+        // 결과가 없을 때 아무것도 안 그리면 "검색이 안 된다"로 보인다.
+        // 로딩 / 0건 / 실패를 구분해서 알려준다
+        when {
+            uiState.isPageLoading && uiState.resultList.isEmpty() -> {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = indigo500())
+                }
+            }
+
+            uiState.errorMessage != null && uiState.resultList.isEmpty() -> {
+                NoticeSearchMessage(
+                    modifier = Modifier.weight(1f),
+                    title = AppStrings.NOTICE_SEARCH_ERROR,
+                    content = uiState.errorMessage,
                 )
             }
 
-            // 마지막 아이템 노출 시 다음 페이지 로드
-            if (uiState.resultList.isNotEmpty() && !uiState.isLastPage) {
-                item {
-                    LaunchedEffect(Unit) {
-                        onLoadNextPage()
+            uiState.resultList.isEmpty() -> {
+                NoticeSearchMessage(
+                    modifier = Modifier.weight(1f),
+                    title = AppStrings.NOTICE_SEARCH_EMPTY_TITLE,
+                    content = AppStrings.NOTICE_SEARCH_EMPTY_CONTENT,
+                )
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    items(
+                        items = uiState.resultList,
+                        key = { it.id },
+                    ) { notice ->
+                        NoticeCard(
+                            notice = notice,
+                            isRead = uiState.readNoticeIds.contains(notice.id),
+                            onClick = { onClickNotice(notice.id) },
+                        )
+                    }
+
+                    // 마지막 아이템 노출 시 다음 페이지 로드
+                    if (!uiState.isLastPage) {
+                        item {
+                            LaunchedEffect(Unit) {
+                                onLoadNextPage()
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+/** 검색 결과 영역의 안내 문구 (0건 / 오류) */
+@Composable
+private fun NoticeSearchMessage(
+    title: String,
+    content: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        UText(
+            text = title,
+            style = UmcTypographyTokens.HeadlineBold,
+            color = grey600(),
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        UText(
+            text = content,
+            style = UmcTypographyTokens.Subheadline,
+            color = grey500(),
+        )
     }
 }
 

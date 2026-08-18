@@ -134,8 +134,20 @@ class AdminNoticeViewModel @Inject constructor(
         refreshIfReady()
     }
 
-    fun onClickSearch() {
-        emitEvent(AdminNoticeEvent.MoveToSearchEvent(uiState.value.gisuId))
+    fun onClickSearch() = viewModelScope.launch {
+        val state = uiState.value
+        val selectedTab = state.selectedTab ?: return@launch
+        if (state.gisuId <= 0L) return@launch
+
+        // 운영진 공지 검색도 목록과 같은 탭·schoolId 규칙으로 조회해야 한다
+        val isSchoolStaff = state.visibleTabs.firstOrNull()?.isSchoolLevel == true
+        emitEvent(
+            AdminNoticeEvent.MoveToSearchEvent(
+                gisuId = state.gisuId,
+                noticeTab = selectedTab.noticeTab,
+                schoolId = if (isSchoolStaff) findUserSchoolId() else null,
+            )
+        )
     }
 
     /** 공지 클릭 시 읽음 처리 후 상세로 이동 */
@@ -227,7 +239,11 @@ data class AdminNoticeUiState(
 
 sealed interface AdminNoticeEvent : UiEvent {
 
-    data class MoveToSearchEvent(val gisuId: Long) : AdminNoticeEvent
+    data class MoveToSearchEvent(
+        val gisuId: Long,
+        val noticeTab: String,
+        val schoolId: Long?,
+    ) : AdminNoticeEvent
 
     data class MoveToDetailEvent(val noticeId: Long) : AdminNoticeEvent
 }
