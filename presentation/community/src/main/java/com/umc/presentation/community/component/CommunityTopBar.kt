@@ -26,6 +26,12 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.presentation.community.model.CommunityCategory
 
+/**
+ * 커뮤니티 메인 화면에서 사용하는 상단바
+ *
+ * 화면 제목과 카테고리 필터 버튼,
+ * 스레드 검색 화면 이동 버튼을 제공합니다.
+ */
 @Composable
 fun CommunityTopBar(
     isFilterMenuExpanded: Boolean,
@@ -43,6 +49,7 @@ fun CommunityTopBar(
             .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // 화면 제목
         UText(
             text = "커뮤니티",
             style = UmcTypographyTokens.Title2Bold,
@@ -52,6 +59,7 @@ fun CommunityTopBar(
 
         Spacer(modifier = Modifier.weight(1f))
 
+        // 카테고리 필터 버튼 및 필터 메뉴
         Box(
             modifier = Modifier.size(44.dp),
             contentAlignment = Alignment.Center,
@@ -78,6 +86,7 @@ fun CommunityTopBar(
                 )
             }
 
+            // 선택한 카테고리를 변경하는 Popup 메뉴
             CommunityFilterMenu(
                 expanded = isFilterMenuExpanded,
                 selectedCategory = selectedCategory,
@@ -86,6 +95,7 @@ fun CommunityTopBar(
             )
         }
 
+        // 커뮤니티 검색 화면 이동 버튼
         IconButton(
             onClick = onSearchClick,
             modifier = Modifier.size(44.dp),
