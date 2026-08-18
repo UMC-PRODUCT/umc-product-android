@@ -32,6 +32,8 @@ import com.umc.domain.usecase.notice.AddNoticeImagesUseCase
 import com.umc.domain.usecase.notice.AddNoticeLinksUseCase
 import com.umc.domain.usecase.notice.AddNoticeVoteUseCase
 import com.umc.domain.usecase.notice.CreateNoticeUseCase
+import com.umc.domain.usecase.notice.DeleteNoticeVoteUseCase
+import com.umc.domain.usecase.notice.UpdateNoticeImagesUseCase
 import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
 import com.umc.domain.usecase.notice.UpdateNoticeUseCase
 import com.umc.domain.usecase.organization.GetChapterListUseCase
@@ -53,6 +55,8 @@ class NoticeWriteViewModel @Inject constructor(
     private val addNoticeImagesUseCase: AddNoticeImagesUseCase,
     private val addNoticeLinksUseCase: AddNoticeLinksUseCase,
     private val addNoticeVoteUseCase: AddNoticeVoteUseCase,
+    private val updateNoticeImagesUseCase: UpdateNoticeImagesUseCase,
+    private val deleteNoticeVoteUseCase: DeleteNoticeVoteUseCase,
     private val checkAiFeatureStatusUseCase: CheckAiFeatureStatusUseCase,
     private val refineNoticeMarkdownUseCase: RefineNoticeMarkdownUseCase,
     private val summarizeNoticeMarkdownUseCase: SummarizeNoticeMarkdownUseCase,
@@ -98,6 +102,20 @@ class NoticeWriteViewModel @Inject constructor(
                         images = detail.images
                             .sortedBy { it.displayOrder }
                             .map { NoticeImageAttachment(uri = it.url, fileId = it.id.toString()) },
+                        // 투표도 수정 대상이라 폼으로 되돌려 채운다
+                        vote = detail.vote?.let { vote ->
+                            NoticeVoteForm(
+                                title = vote.title,
+                                options = vote.options.map { it.content },
+                                isAnonymous = vote.isAnonymous,
+                                allowMultipleChoice = vote.allowMultipleChoice,
+                                startsAt = vote.startsAt.takeIf { it.isNotBlank() },
+                                endsAt = vote.endsAtExclusive.takeIf { it.isNotBlank() },
+                            )
+                        },
+                        // 필독 여부를 들고 있지 않으면 수정 저장 시 고정이 풀린다
+                        mustRead = detail.mustRead,
+                        originalVoteId = detail.vote?.voteId ?: -1L,
                     )
                 }
             },
@@ -502,6 +520,7 @@ class NoticeWriteViewModel @Inject constructor(
                     NoticeUpdateRequest(
                         title = state.title.trim(),
                         content = state.content.text,
+                        mustRead = state.mustRead,
                     )
                 ),
                 successCallback = { attachExtras(state.editNoticeId) },
@@ -624,9 +643,17 @@ class NoticeWriteViewModel @Inject constructor(
         val state = uiState.value
         var hasError = false
 
-        if (state.images.isNotEmpty()) {
+        val imageIds = state.images.map { it.fileId }
+        // 수정은 전체 교체(PATCH)로 보내야 기존 이미지가 중복되지 않고, 지운 것도 반영된다
+        if (state.isEditMode) {
             resultResponse(
-                response = addNoticeImagesUseCase(noticeId, state.images.map { it.fileId }),
+                response = updateNoticeImagesUseCase(noticeId, imageIds),
+                successCallback = { },
+                errorCallback = { hasError = true },
+            )
+        } else if (imageIds.isNotEmpty()) {
+            resultResponse(
+                response = addNoticeImagesUseCase(noticeId, imageIds),
                 successCallback = { },
                 errorCallback = { hasError = true },
             )
@@ -638,7 +665,8 @@ class NoticeWriteViewModel @Inject constructor(
             ?.map { it.trim() }
             ?.filter { it.isNotBlank() }
             .orEmpty()
-        if (links.isNotEmpty()) {
+        // 링크는 원래 전체 교체 API라, 수정 시에는 비어 있어도 보내야 삭제가 반영된다
+        if (links.isNotEmpty() || state.isEditMode) {
             resultResponse(
                 response = addNoticeLinksUseCase(noticeId, links),
                 successCallback = { },
@@ -646,7 +674,17 @@ class NoticeWriteViewModel @Inject constructor(
             )
         }
 
-        state.vote?.takeIf { it.canSubmit }?.let { vote ->
+        // 투표는 공지당 1개라 갈아끼우려면 기존 것을 먼저 지운다
+        val newVote = state.vote?.takeIf { it.canSubmit }
+        if (state.isEditMode && state.originalVoteId > 0L) {
+            resultResponse(
+                response = deleteNoticeVoteUseCase(noticeId),
+                successCallback = { },
+                errorCallback = { hasError = true },
+            )
+        }
+
+        newVote?.let { vote ->
             resultResponse(
                 response = addNoticeVoteUseCase(
                     noticeId,
@@ -690,6 +728,10 @@ data class NoticeWriteUiState(
     val title: String = "",
     val content: TextFieldValue = TextFieldValue(),
     val sendNotification: Boolean = true,
+    /** 상세에서 불러온 필독 여부. 수정 저장 시 그대로 돌려보낸다 */
+    val mustRead: Boolean = false,
+    /** 수정 진입 시 이미 달려 있던 투표 ID. 투표를 갈아끼울 때 먼저 지운다 */
+    val originalVoteId: Long = -1L,
     val images: List<NoticeImageAttachment> = emptyList(),
     val isUploadingImages: Boolean = false,
     val isLinkVisible: Boolean = false,
