@@ -19,7 +19,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -113,9 +117,19 @@ fun UTextField(
 
     // OutlinedTextField 대신 BasicTextField를 사용해 커스텀 decoration box 적용.
     // 내부 패딩(16dp/14dp)과 배경·테두리를 decoration box 안에서 직접 제어함
+    // BasicTextField(String)은 재진입할 때마다 커서가 맨 앞으로 돌아간다.
+    // 선택 위치를 직접 들고 있다가, 외부에서 값이 바뀌면 커서를 끝으로 보낸다
+    var fieldValue by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+    if (fieldValue.text != value) {
+        fieldValue = fieldValue.copy(text = value, selection = TextRange(value.length))
+    }
+
     BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
+        value = fieldValue,
+        onValueChange = {
+            fieldValue = it
+            onValueChange(it.text)
+        },
         enabled = enabled,
         textStyle = textStyle.copy(color = textColor),
         cursorBrush = SolidColor(focusStrokeColor),
