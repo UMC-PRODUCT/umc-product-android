@@ -19,6 +19,8 @@ data class CommunityCreateState(
 
     val selectedIcon: String = "📚",
     val isSubmitting: Boolean = false,
+    /** 내 memberId. 참여자에 본인이 들어갔는지 검사할 때 쓴다 */
+    val myMemberId: Long = 0L,
 ) {
     val selectedChallengerCountText: String
         get() = "${selectedChallengers.size} / $maxChallengerCount"
