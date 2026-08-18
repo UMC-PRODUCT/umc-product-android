@@ -44,6 +44,7 @@ class MarkdownVisualTransformation(
         val quoteLines = mutableListOf<IntRange>()
 
         collectBlocks(raw, hidden, replaced, spans, quoteLines)
+        hideOrphanMarkers(raw, hidden)
         hidden.sortBy { it.start }
 
         val mapping = MarkdownOffsetMapping(originalLength = raw.length, hidden = hidden)
@@ -96,6 +97,28 @@ class MarkdownVisualTransformation(
 
             collectInline(raw, contentStart, lineEnd, emptyList(), hidden, spans)
             lineStart = lineEnd + 1
+        }
+    }
+
+    /**
+     * 토큰으로 짝이 맞지 않아 남은 마커를 숨긴다.
+     *
+     * 글자를 지우다 한쪽 마커만 남으면(`<mark ...>가나` 처럼) 토큰이 성립하지 않아
+     * 마커가 화면에 그대로 드러난다. 에디터에는 어떤 경우에도 마커가 보이면 안 되므로
+     * 마지막에 한 번 훑어 남은 것을 걷어낸다.
+     *
+     * 별표·물결 같은 짧은 기호는 사용자가 일부러 쓴 글자일 수 있어 건드리지 않고,
+     * 본문에 쓸 일이 없는 태그형 마커만 대상으로 한다
+     */
+    private fun hideOrphanMarkers(raw: String, hidden: MutableList<HiddenRange>) {
+        ORPHAN_MARKER.findAll(raw).forEach { match ->
+            val start = match.range.first
+            val end = match.range.last + 1
+            val alreadyHidden = hidden.any { it.start <= start && end <= it.end }
+            if (!alreadyHidden) {
+                // 여는 태그는 커서를 뒤(안쪽)로, 닫는 태그는 앞으로 보내야 이어서 입력하기 자연스럽다
+                hidden += HiddenRange(start, end, mapAfter = !match.value.startsWith("</"))
+            }
         }
     }
 
@@ -284,6 +307,9 @@ fun DrawScope.drawMarkdownQuoteBars(
     }
 }
 
+/** 짝이 깨져 화면에 드러날 수 있는 태그형 마커 */
+private val ORPHAN_MARKER = Regex("""<mark(?:\s+color="[^"]*")?>|</mark>|<u>|</u>""")
+
 /** 화면에서 제거되는 마커 범위. [mapAfter]는 경계 커서를 범위 뒤(토큰 안쪽)로 보낼지 여부 */
 private data class HiddenRange(val start: Int, val end: Int, val mapAfter: Boolean)
 
@@ -360,6 +386,8 @@ private enum class InlineTokenKind(
     val innerGroup: Int = 1,
 ) {
     EMPTY_UNDERLINE(Regex("<u></u>")),
+    // 형광펜 안 글자를 모두 지운 경우. 마커가 길어 그대로 드러나면 가장 눈에 띈다
+    EMPTY_HIGHLIGHT(Regex("""<mark(?:\s+color="[^"]*")?></mark>""")),
     // 밑줄 기울임 빈 쌍 (`_` + `_`)
     EMPTY_ITALIC_UNDERSCORE(Regex("__")),
     EMPTY_STRIKETHROUGH(Regex("~~~~")),
@@ -383,6 +411,13 @@ private enum class InlineTokenKind(
         val end = match.range.last + 1
         return when (this) {
             EMPTY_UNDERLINE -> InlineToken(start, end, openLength = 3, closeLength = 4, kind = this)
+            // 여는 태그 길이는 색상 유무에 따라 달라지므로 전체에서 `</mark>`를 뺀 만큼
+            EMPTY_HIGHLIGHT -> InlineToken(
+                start, end,
+                openLength = (end - start) - 7,
+                closeLength = 7,
+                kind = this,
+            )
             EMPTY_ITALIC_UNDERSCORE, EMPTY_STRIKETHROUGH, EMPTY_BOLD, EMPTY_BOLD_ITALIC -> {
                 val half = (end - start) / 2
                 InlineToken(start, end, openLength = half, closeLength = half, kind = this)
@@ -409,8 +444,8 @@ private enum class InlineTokenKind(
     ): SpanStyle? {
         val decoration = decorations.takeIf { it.isNotEmpty() }?.let { TextDecoration.combine(it) }
         return when (this) {
-            EMPTY_UNDERLINE, EMPTY_ITALIC_UNDERSCORE, EMPTY_STRIKETHROUGH, EMPTY_BOLD,
-            EMPTY_BOLD_ITALIC -> null
+            EMPTY_UNDERLINE, EMPTY_HIGHLIGHT, EMPTY_ITALIC_UNDERSCORE, EMPTY_STRIKETHROUGH,
+            EMPTY_BOLD, EMPTY_BOLD_ITALIC -> null
             CODE -> SpanStyle(fontFamily = FontFamily.Monospace)
             HIGHLIGHT -> SpanStyle(background = parseMarkColor(argument))
             LINK -> SpanStyle(color = linkColor, textDecoration = decoration)

@@ -9,6 +9,7 @@ fun ManagedStudyGroup.toUiModel(): AdminStudyGroupItemUiModel {
         groupId = studyGroupId,
         title = name,
         partLabel = studyPart.toPartLabel(),
+        studyPart = studyPart,
 
         leaderName = leader?.memberName.orEmpty(),
 

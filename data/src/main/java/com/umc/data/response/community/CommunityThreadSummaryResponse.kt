@@ -11,6 +11,7 @@ data class CommunityThreadSummaryResponse(
     val maxMembers: String,
     val isPinned: Boolean,
     val isMuted: Boolean,
+    val isJoined: Boolean,
     val myRole: String?,
     val lastMessage: CommunityThreadLastMessageResponse?,
     val createdBy: String,

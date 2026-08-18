@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
@@ -37,21 +38,14 @@ fun AdminSubmitItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // 프로필 이미지
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .border(width = 1.dp, color = grey200(), shape = CircleShape)
-                .background(grey000()),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_person),
-                contentDescription = null,
-                tint = grey400(),
-                modifier = Modifier.size(24.dp)
-            )
-        }
+        Icon(
+            painter = painterResource(
+                R.drawable.ic_profile_default
+            ),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(32.dp),
+        )
 
         Spacer(modifier = Modifier.width(10.dp))
 
@@ -59,7 +53,7 @@ fun AdminSubmitItem(
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 UText(
-                    text = "${item.nickname}(${item.name})",
+                    text = "${item.name}(${item.nickname})",
                     style = BodyBold,
                     color = grey800()
                 )
@@ -124,7 +118,7 @@ fun AdminSubmitItem(
                 painter = painterResource(R.drawable.ic_arrow_next),
                 contentDescription = null,
                 tint = grey500(),
-                modifier = Modifier.size(7.dp, 14.dp)
+                modifier = Modifier.size(14.dp)
             )
         }
     }

@@ -242,7 +242,20 @@ class NoticeViewModel @Inject constructor(
     }
 
     fun onClickSearch() {
-        emitEvent(NoticeEvent.MoveToSearchEvent(uiState.value.selectedGisu))
+        val state = uiState.value
+        if (state.selectedGisu <= 0L) return
+
+        // 검색도 목록과 같은 조건으로 조회해야 한다
+        val query = buildNoticeQuery(state, computeStaffNoticeTab())
+        emitEvent(
+            NoticeEvent.MoveToSearchEvent(
+                gisuId = state.selectedGisu,
+                noticeTab = query.noticeTab,
+                chapterId = query.chapterId,
+                schoolId = query.schoolId,
+                part = query.part,
+            )
+        )
     }
 
     fun onClickAdminNotice() {
@@ -261,9 +274,21 @@ class NoticeViewModel @Inject constructor(
         emitEvent(NoticeEvent.MoveToDetailEvent(noticeId))
     }
 
-    /** 현재 선택된 필터 조합으로 목록 새로고침 */
+    /**
+     * 현재 선택된 필터 조합으로 목록 새로고침.
+     * 칩을 바꾼 직후엔 이전 요청이 진행 중이어도 새 조건이 우선이므로 가드를 건너뛴다
+     */
     private fun refreshNoticeList() {
-        getNoticeList(isRefresh = true)
+        getNoticeList(isRefresh = true, isUserRefresh = true)
+    }
+
+    /**
+     * 당겨서 새로고침 / 공지 작성·수정 후 목록 갱신.
+     * 진행 중인 조회가 있어도 최신 목록이 우선이므로 가드를 무시하고 다시 요청한다
+     */
+    fun onRefresh() {
+        updateState { copy(isRefreshing = true) }
+        getNoticeList(isRefresh = true, isUserRefresh = true)
     }
 
     fun loadNextPage() {
@@ -272,14 +297,23 @@ class NoticeViewModel @Inject constructor(
         }
     }
 
-    private fun getNoticeList(isRefresh: Boolean) = viewModelScope.launch {
+    private fun getNoticeList(isRefresh: Boolean, isUserRefresh: Boolean = false) = viewModelScope.launch {
         val state = uiState.value
 
-        if (state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
+        if (!isUserRefresh && (state.isPageLoading || (!isRefresh && state.isLastPage))) return@launch
 
         val query = buildNoticeQuery(state, computeStaffNoticeTab())
 
-        updateState { copy(isPageLoading = true, currentNoticeTab = query.noticeTab) }
+        // 새로고침이면 페이징 상태도 함께 되돌린다.
+        // 이전 필터가 마지막 페이지였는데 그대로 두면 다음 페이지를 영영 못 부른다
+        updateState {
+            copy(
+                isPageLoading = true,
+                currentNoticeTab = query.noticeTab,
+                isLastPage = if (isRefresh) false else isLastPage,
+                errorMessage = null,
+            )
+        }
 
         val pageToFetch = if (isRefresh) 0 else state.currentPage
 
@@ -299,12 +333,16 @@ class NoticeViewModel @Inject constructor(
                         noticeList = if (isRefresh) noticeSearch.content else noticeList + noticeSearch.content,
                         currentPage = pageToFetch + 1,
                         isPageLoading = false,
+                        isRefreshing = false,
                         isLastPage = !noticeSearch.hasNext,
                     )
                 }
             },
-            errorCallback = {
-                updateState { copy(isPageLoading = false) }
+            errorCallback = { fail ->
+                // 실패를 삼키면 "0건"과 구분되지 않아 원인 파악이 불가능하다
+                updateState {
+                    copy(isPageLoading = false, isRefreshing = false, errorMessage = fail.message)
+                }
             }
         )
     }
@@ -377,6 +415,10 @@ data class NoticeUiState(
     val noticeList: List<NoticeSummary> = emptyList(),
     val currentPage: Int = 0,
     val isPageLoading: Boolean = false,
+    /** 당겨서 새로고침 인디케이터 표시 여부 */
+    val isRefreshing: Boolean = false,
+    /** 조회 실패 사유. null이면 정상(결과가 0건일 수 있음) */
+    val errorMessage: String? = null,
     val isLastPage: Boolean = false,
     val canWriteNotice: Boolean = false,
     val readNoticeIds: Set<Long> = emptySet(),
@@ -385,7 +427,13 @@ data class NoticeUiState(
 
 sealed interface NoticeEvent : UiEvent {
 
-    data class MoveToSearchEvent(val gisuId: Long) : NoticeEvent
+    data class MoveToSearchEvent(
+        val gisuId: Long,
+        val noticeTab: String,
+        val chapterId: Long?,
+        val schoolId: Long?,
+        val part: String?,
+    ) : NoticeEvent
 
     data class MoveToAdminNoticeEvent(val gisuId: Long) : NoticeEvent
 

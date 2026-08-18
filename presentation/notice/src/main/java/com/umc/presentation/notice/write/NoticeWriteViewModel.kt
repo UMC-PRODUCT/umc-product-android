@@ -32,6 +32,8 @@ import com.umc.domain.usecase.notice.AddNoticeImagesUseCase
 import com.umc.domain.usecase.notice.AddNoticeLinksUseCase
 import com.umc.domain.usecase.notice.AddNoticeVoteUseCase
 import com.umc.domain.usecase.notice.CreateNoticeUseCase
+import com.umc.domain.usecase.notice.DeleteNoticeVoteUseCase
+import com.umc.domain.usecase.notice.UpdateNoticeImagesUseCase
 import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
 import com.umc.domain.usecase.notice.UpdateNoticeUseCase
 import com.umc.domain.usecase.organization.GetChapterListUseCase
@@ -53,6 +55,8 @@ class NoticeWriteViewModel @Inject constructor(
     private val addNoticeImagesUseCase: AddNoticeImagesUseCase,
     private val addNoticeLinksUseCase: AddNoticeLinksUseCase,
     private val addNoticeVoteUseCase: AddNoticeVoteUseCase,
+    private val updateNoticeImagesUseCase: UpdateNoticeImagesUseCase,
+    private val deleteNoticeVoteUseCase: DeleteNoticeVoteUseCase,
     private val checkAiFeatureStatusUseCase: CheckAiFeatureStatusUseCase,
     private val refineNoticeMarkdownUseCase: RefineNoticeMarkdownUseCase,
     private val summarizeNoticeMarkdownUseCase: SummarizeNoticeMarkdownUseCase,
@@ -98,6 +102,20 @@ class NoticeWriteViewModel @Inject constructor(
                         images = detail.images
                             .sortedBy { it.displayOrder }
                             .map { NoticeImageAttachment(uri = it.url, fileId = it.id.toString()) },
+                        // 투표도 수정 대상이라 폼으로 되돌려 채운다
+                        vote = detail.vote?.let { vote ->
+                            NoticeVoteForm(
+                                title = vote.title,
+                                options = vote.options.map { it.content },
+                                isAnonymous = vote.isAnonymous,
+                                allowMultipleChoice = vote.allowMultipleChoice,
+                                startsAt = vote.startsAt.takeIf { it.isNotBlank() },
+                                endsAt = vote.endsAtExclusive.takeIf { it.isNotBlank() },
+                            )
+                        },
+                        // 필독 여부를 들고 있지 않으면 수정 저장 시 고정이 풀린다
+                        mustRead = detail.mustRead,
+                        originalVoteId = detail.vote?.voteId ?: -1L,
                     )
                 }
             },
@@ -110,19 +128,26 @@ class NoticeWriteViewModel @Inject constructor(
     /** 작성자 권한을 계산하고 권한별 카테고리 목록 구성. 권한에 맞는 카테고리가 기본 선택됨 */
     private fun loadWriterRole() = viewModelScope.launch {
         getUserInfoUseCase().collect { userInfo ->
-            val roles = userInfo.roles.map { UserChallengerRole.from(it.roleType) }
-            val writerRole = NoticeWriterRole.from(roles) ?: return@collect
-
-            // 최고 관리자의 기수 카테고리 라벨용 현재(최신) 기수
+            // 활성 기수. 서버가 내려주는 현재 기수 정보를 우선 쓰고, 없으면 최신 챌린저 기록으로 폴백
             val currentRecord = userInfo.challengerRecords.maxByOrNull { it.gisu }
+            val activeGisuId = userInfo.currentGisuMemberInfo?.gisuId ?: currentRecord?.gisuId
+            val activeGeneration = userInfo.currentGisuMemberInfo?.generation ?: currentRecord?.gisu
 
-            val categories = createCategories(writerRole, currentRecord?.gisu)
+            // 공지 작성 권한은 반드시 "이번 기수"의 역할로만 판단한다.
+            // roles는 전 기수 이력이 평탄화된 목록이라, 거르지 않으면 지난 기수 운영진이
+            // 이번 기수 운영진 공지를 발행할 수 있다
+            val currentRoles = userInfo.roles
+                .filter { activeGisuId == null || it.gisuId == activeGisuId }
+                .map { UserChallengerRole.from(it.roleType) }
+            val writerRole = NoticeWriterRole.from(currentRoles) ?: return@collect
+
+            val categories = createCategories(writerRole, activeGeneration)
 
             updateState {
                 copy(
                     writerRole = writerRole,
                     availableCategories = categories,
-                    activeGisuId = currentRecord?.gisuId?.toInt(),
+                    activeGisuId = activeGisuId?.toInt(),
                     writerSchoolId = userInfo.schoolId.takeIf { it > 0 }?.toInt(),
                 )
             }
@@ -200,8 +225,10 @@ class NoticeWriteViewModel @Inject constructor(
                     BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART
                 ) to AppStrings.NOTICE_WRITE_CLASS_HINT
 
+                // 파트장은 자기 학교 안에서만 공지할 수 있으므로 학교 선택을 주지 않는다.
+                // 학교 목록은 전체 학교라, 칩을 열어주면 남의 학교를 대상으로 지정할 수 있다
                 NoticeWriterRole.SCHOOL_PART_LEADER -> listOf(
-                    BoardChipType.SCHOOL, BoardChipType.PART
+                    BoardChipType.PART
                 ) to AppStrings.NOTICE_WRITE_CLASS_HINT
 
                 NoticeWriterRole.SUPER_ADMIN -> emptyList<BoardChipType>() to null
@@ -406,12 +433,13 @@ class NoticeWriteViewModel @Inject constructor(
 
     /** 형광펜 색상 선택. 고른 색을 적용하고 다음 선택의 기본값으로 기억한다 */
     fun onSelectHighlight(color: MarkdownHighlightColor) {
-        updateState {
-            copy(
-                highlightColor = color,
-                content = MarkdownEditActions.toggleHighlight(content, color),
-            )
+        val applied = MarkdownEditActions.toggleHighlight(uiState.value.content, color)
+        // 선택 영역이 없으면 toggleHighlight가 원본을 그대로 돌려준다. 이때는 색도 기록하지 않는다
+        if (applied == uiState.value.content) {
+            emitEvent(NoticeWriteEvent.ShowError(AppStrings.NOTICE_WRITE_HIGHLIGHT_NEEDS_SELECTION))
+            return
         }
+        updateState { copy(highlightColor = color, content = applied) }
     }
 
     // ---------------------------------------------------------------
@@ -492,6 +520,7 @@ class NoticeWriteViewModel @Inject constructor(
                     NoticeUpdateRequest(
                         title = state.title.trim(),
                         content = state.content.text,
+                        mustRead = state.mustRead,
                     )
                 ),
                 successCallback = { attachExtras(state.editNoticeId) },
@@ -580,6 +609,10 @@ class NoticeWriteViewModel @Inject constructor(
             } else {
                 NoticeTab.SCHOOL_CORE
             }
+            // 교내 운영진 공지는 schoolId가 분류 기준이라, 비어 있으면 중앙(전 학교) 공지로
+            // 승격돼 버린다. 범위가 넓어지는 실패는 막고 발행 자체를 중단한다
+            if (isSchoolLevelWriter && state.writerSchoolId == null) return null
+
             return NoticeTargetRequest(
                 targetGisuId = state.activeGisuId,
                 targetChapterId = null,
@@ -595,7 +628,8 @@ class NoticeWriteViewModel @Inject constructor(
             targetGisuId = state.activeGisuId,
             targetChapterId = state.selectedChapter?.id?.toInt().takeIf { useFilters },
             targetSchoolId = when {
-                isSchoolLevelWriter -> state.selectedSchool?.schoolId?.toInt() ?: state.writerSchoolId
+                // 학교 단위 작성자는 선택값과 무관하게 항상 자기 학교
+                isSchoolLevelWriter -> state.writerSchoolId
                 useFilters -> state.selectedSchool?.schoolId?.toInt()
                 else -> null
             },
@@ -609,9 +643,17 @@ class NoticeWriteViewModel @Inject constructor(
         val state = uiState.value
         var hasError = false
 
-        if (state.images.isNotEmpty()) {
+        val imageIds = state.images.map { it.fileId }
+        // 수정은 전체 교체(PATCH)로 보내야 기존 이미지가 중복되지 않고, 지운 것도 반영된다
+        if (state.isEditMode) {
             resultResponse(
-                response = addNoticeImagesUseCase(noticeId, state.images.map { it.fileId }),
+                response = updateNoticeImagesUseCase(noticeId, imageIds),
+                successCallback = { },
+                errorCallback = { hasError = true },
+            )
+        } else if (imageIds.isNotEmpty()) {
+            resultResponse(
+                response = addNoticeImagesUseCase(noticeId, imageIds),
                 successCallback = { },
                 errorCallback = { hasError = true },
             )
@@ -623,7 +665,8 @@ class NoticeWriteViewModel @Inject constructor(
             ?.map { it.trim() }
             ?.filter { it.isNotBlank() }
             .orEmpty()
-        if (links.isNotEmpty()) {
+        // 링크는 원래 전체 교체 API라, 수정 시에는 비어 있어도 보내야 삭제가 반영된다
+        if (links.isNotEmpty() || state.isEditMode) {
             resultResponse(
                 response = addNoticeLinksUseCase(noticeId, links),
                 successCallback = { },
@@ -631,7 +674,17 @@ class NoticeWriteViewModel @Inject constructor(
             )
         }
 
-        state.vote?.takeIf { it.canSubmit }?.let { vote ->
+        // 투표는 공지당 1개라 갈아끼우려면 기존 것을 먼저 지운다
+        val newVote = state.vote?.takeIf { it.canSubmit }
+        if (state.isEditMode && state.originalVoteId > 0L) {
+            resultResponse(
+                response = deleteNoticeVoteUseCase(noticeId),
+                successCallback = { },
+                errorCallback = { hasError = true },
+            )
+        }
+
+        newVote?.let { vote ->
             resultResponse(
                 response = addNoticeVoteUseCase(
                     noticeId,
@@ -675,6 +728,10 @@ data class NoticeWriteUiState(
     val title: String = "",
     val content: TextFieldValue = TextFieldValue(),
     val sendNotification: Boolean = true,
+    /** 상세에서 불러온 필독 여부. 수정 저장 시 그대로 돌려보낸다 */
+    val mustRead: Boolean = false,
+    /** 수정 진입 시 이미 달려 있던 투표 ID. 투표를 갈아끼울 때 먼저 지운다 */
+    val originalVoteId: Long = -1L,
     val images: List<NoticeImageAttachment> = emptyList(),
     val isUploadingImages: Boolean = false,
     val isLinkVisible: Boolean = false,
@@ -687,7 +744,8 @@ data class NoticeWriteUiState(
     val isAiProcessing: Boolean = false,
     // 모델 다운로드가 진행 중일 때만 0~100, 추론 단계에서는 null
     val aiDownloadPercent: Int? = null,
-    val highlightColor: MarkdownHighlightColor = MarkdownHighlightColor.PURPLE,
+    /** 마지막으로 적용한 형광펜 색. 아직 쓴 적 없으면 null이라 메뉴에 체크가 없다 */
+    val highlightColor: MarkdownHighlightColor? = null,
     val isEditMode: Boolean = false,
     val editNoticeId: Long = 0L,
 ) : UiState {
