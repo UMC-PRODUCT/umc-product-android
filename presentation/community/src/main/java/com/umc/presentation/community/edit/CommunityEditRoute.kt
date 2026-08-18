@@ -8,6 +8,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
+/**
+ * 스레드 수정 화면의 Route
+ *
+ * 수정할 스레드 정보를 불러오고 ViewModel의 상태를 구독하며,
+ * 화면 이동 및 Toast와 같은 일회성 이벤트를 처리합니다.
+ */
 @Composable
 fun CommunityEditRoute(
     threadId: String,
@@ -19,21 +25,26 @@ fun CommunityEditRoute(
 ) {
     val context = LocalContext.current
 
+    // 스레드 수정 화면의 UI 상태 구독
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    // 수정 화면 진입 시 전달받은 threadId로 스레드 상세 조회
     LaunchedEffect(threadId) {
         viewModel.loadThread(
             threadId = threadId,
         )
     }
 
+    // ViewModel에서 발생하는 일회성 이벤트 처리
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event: CommunityEditEvent ->
             when (event) {
+                // 이전 화면으로 이동
                 CommunityEditEvent.NavigateBack -> {
                     onNavigateBack()
                 }
 
+                // 스레드 수정 완료
                 CommunityEditEvent.SaveSuccess -> {
                     Toast.makeText(
                         context,
@@ -44,6 +55,7 @@ fun CommunityEditRoute(
                     onEditSuccess()
                 }
 
+                // 스레드 삭제 완료
                 CommunityEditEvent.DeleteSuccess -> {
                     Toast.makeText(
                         context,
@@ -54,10 +66,12 @@ fun CommunityEditRoute(
                     onEditSuccess()
                 }
 
+                // 아이콘 선택 화면으로 이동
                 CommunityEditEvent.NavigateToEmojiPicker -> {
                     onNavigateToEmojiPicker()
                 }
 
+                // 챌린저 추가/삭제 완료
                 CommunityEditEvent.MemberInviteSuccess -> {
                     Toast.makeText(
                         context,
@@ -66,6 +80,7 @@ fun CommunityEditRoute(
                     ).show()
                 }
 
+                // 공통 안내 Toast 처리
                 is CommunityEditEvent.ShowToast -> {
                     Toast.makeText(
                         context,
@@ -77,6 +92,7 @@ fun CommunityEditRoute(
         }
     }
 
+    // 실제 스레드 수정 화면
     CommunityEditScreen(
         state = state,
         onAction = viewModel::onAction,
