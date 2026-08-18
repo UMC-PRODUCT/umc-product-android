@@ -264,6 +264,12 @@ private fun AdminSubmitScreenPreview() {
             items = listOf(
                 AdminSubmitItemUiModel(
                     id = 1L,
+                    challengerWorkbookId = 10L,
+
+                    memberId = 1L,
+                    studyGroupId = 15L,
+                    weeklyCurriculumId = 100L,
+
                     name = "홍길동",
                     nickname = "닉네임",
                     partLabel = "iOS",

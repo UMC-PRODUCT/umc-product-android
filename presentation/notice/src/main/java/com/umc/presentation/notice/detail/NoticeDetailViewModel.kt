@@ -12,8 +12,8 @@ import com.umc.domain.model.notice.NoticeDetail
 import com.umc.domain.model.notice.NoticeReadStatistics
 import com.umc.domain.model.notice.NoticeVoteOption
 import com.umc.domain.model.notice.NoticeVoteParticipant
-import com.umc.domain.usecase.GetChallengerIdUseCase
 import com.umc.domain.usecase.GetGisuInfoUseCase
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.notice.DeleteNoticeUseCase
 import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
@@ -23,13 +23,14 @@ import com.umc.domain.usecase.notice.SendNoticeReminderUseCase
 import com.umc.domain.usecase.notice.SubmitVoteResponseUseCase
 import com.umc.domain.usecase.notice.UpdateVoteResponseUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NoticeDetailViewModel @Inject constructor(
     private val getNoticeDetailUseCase: GetNoticeDetailUseCase,
-    private val getChallengerIdUseCase: GetChallengerIdUseCase,
+    private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getGisuInfoUseCase: GetGisuInfoUseCase,
     private val getMemberProfileUseCase: GetMemberProfileUseCase,
     private val submitVoteResponseUseCase: SubmitVoteResponseUseCase,
@@ -106,10 +107,25 @@ class NoticeDetailViewModel @Inject constructor(
         }
     }
 
-    /** 작성자 여부 판단(메뉴/수신 확인 현황 노출 조건) 후 작성자 프로필 로드 */
+    /**
+     * 작성자 여부 판단(메뉴/수신 확인 현황 노출 조건) 후 작성자 프로필 로드.
+     *
+     * memberId는 기수와 무관한 전역 식별자라 1순위로 비교한다.
+     * challengerId는 기수마다 달라지므로 "최신 기수 하나"가 아니라
+     * 내가 가진 모든 기수의 challengerId 집합에 들어 있는지로 본다
+     */
     private fun loadAuthorInfo(detail: NoticeDetail) = viewModelScope.launch {
-        val myChallengerId = getChallengerIdUseCase()
-        val isAuthor = myChallengerId != -1L && myChallengerId == detail.authorChallengerId
+        val userInfo = getUserInfoUseCase().first()
+
+        val myMemberId = userInfo.id
+        val myChallengerIds = (
+            userInfo.challengerRecords.map { it.challengerId } +
+                userInfo.roles.map { it.challengerId }
+            ).filter { it > 0L }.toSet()
+
+        val isAuthor = (myMemberId > 0L && myMemberId == detail.authorMemberId) ||
+                (detail.authorChallengerId > 0L && detail.authorChallengerId in myChallengerIds)
+
         updateState { copy(isAuthor = isAuthor) }
 
         if (isAuthor) {

@@ -63,7 +63,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                     AdminStudyGroupEvent.NavigateAddSchedule(
                         groupId = action.item.groupId,
                         groupTitle = action.item.title,
-                        groupPart = action.item.partLabel,
+                        groupPart = action.item.studyPart,
                     )
                 )
             }
@@ -110,7 +110,9 @@ class AdminStudyGroupViewModel @Inject constructor(
 
             is AdminStudyGroupAction.ConfirmEditGroup -> {
                 val target = uiState.value.editTargetItem ?: return
+
                 val newName = uiState.value.editGroupName.trim()
+                val newPart = uiState.value.editPartLabel.toPartApiValue()
 
                 if (newName.isBlank()) return
 
@@ -120,6 +122,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                             studyGroupId = target.groupId,
                             request = UpdateStudyGroupRequest(
                                 name = newName,
+                                part = newPart,
                             ),
                         )
                     ) {
@@ -343,6 +346,19 @@ class AdminStudyGroupViewModel @Inject constructor(
         }
     }
 
+    private fun String.toPartApiValue(): String {
+        return when (this) {
+            "Plan" -> "PLAN"
+            "Design" -> "DESIGN"
+            "Web" -> "WEB"
+            "Android" -> "ANDROID"
+            "iOS" -> "IOS"
+            "Node.js" -> "NODEJS"
+            "Spring Boot" -> "SPRINGBOOT"
+            "Admin" -> "ADMIN"
+            else -> uppercase()
+        }
+    }
 
 
     companion object {

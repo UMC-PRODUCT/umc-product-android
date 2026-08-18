@@ -40,9 +40,27 @@ class NoticeSearchViewModel @Inject constructor(
         }
     }
 
-    /** 검색 대상 기수는 공지 화면에서 nav argument로 전달받아 주입 */
-    fun setGisuId(gisuId: Long) {
-        updateState { copy(gisuId = gisuId) }
+    /**
+     * 검색 조건은 목록 화면에서 nav argument로 전달받아 주입한다.
+     * 명세상 검색은 "필터 조건이 전체 조회와 동일하게 적용"되므로 탭·소속·파트를 함께 보내야
+     * 운영진 공지 화면에서 들어온 검색이 챌린저 공지만 뒤지는 문제가 생기지 않는다
+     */
+    fun setSearchContext(
+        gisuId: Long,
+        noticeTab: String,
+        chapterId: Long?,
+        schoolId: Long?,
+        part: String?,
+    ) {
+        updateState {
+            copy(
+                gisuId = gisuId,
+                noticeTab = noticeTab,
+                chapterId = chapterId,
+                schoolId = schoolId,
+                part = part,
+            )
+        }
     }
 
     fun onQueryChanged(query: String) {
@@ -56,7 +74,17 @@ class NoticeSearchViewModel @Inject constructor(
         viewModelScope.launch {
             addRecentSearchNoticeUseCase(keyword)
         }
-        updateState { copy(query = keyword, isResultMode = true) }
+        // 이전 검색 결과가 남아 있으면 검색어를 바꿔도 그대로 보여 오해를 준다
+        updateState {
+            copy(
+                query = keyword,
+                isResultMode = true,
+                resultList = emptyList(),
+                currentPage = 0,
+                isLastPage = false,
+                errorMessage = null,
+            )
+        }
         searchNotices(isRefresh = true)
     }
 
@@ -100,8 +128,10 @@ class NoticeSearchViewModel @Inject constructor(
         val state = uiState.value
 
         if (state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
+        // gisuId는 서버 필수값이라 아직 주입 전이면 요청하지 않는다 (400 방지)
+        if (state.gisuId <= 0L) return@launch
 
-        updateState { copy(isPageLoading = true) }
+        updateState { copy(isPageLoading = true, errorMessage = null) }
 
         val pageToFetch = if (isRefresh) 0 else state.currentPage
 
@@ -109,6 +139,10 @@ class NoticeSearchViewModel @Inject constructor(
             response = searchNoticeListUseCase(
                 keyword = state.query,
                 gisuId = state.gisuId,
+                noticeTab = state.noticeTab,
+                chapterId = state.chapterId,
+                schoolId = state.schoolId,
+                part = state.part,
                 page = pageToFetch,
                 size = 20
             ),
@@ -122,8 +156,9 @@ class NoticeSearchViewModel @Inject constructor(
                     )
                 }
             },
-            errorCallback = {
-                updateState { copy(isPageLoading = false) }
+            errorCallback = { fail ->
+                // 실패를 삼키면 0건인지 오류인지 구분할 수 없어 "검색이 안 된다"로 보인다
+                updateState { copy(isPageLoading = false, errorMessage = fail.message) }
             }
         )
     }
@@ -131,6 +166,11 @@ class NoticeSearchViewModel @Inject constructor(
 
 data class NoticeSearchUiState(
     val gisuId: Long = 0,
+    val noticeTab: String = "CHALLENGER",
+    val chapterId: Long? = null,
+    val schoolId: Long? = null,
+    val part: String? = null,
+    val errorMessage: String? = null,
     val query: String = "",
     val recentSearchList: List<String> = emptyList(),
     val isResultMode: Boolean = false,

@@ -49,9 +49,21 @@ import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateRoute
 import com.umc.presentation.study.admin.group.schedule.AdminStudyGroupScheduleRoute
 
 private const val COMMUNITY_REFRESH_KEY = "community_refresh"
+private const val NOTICE_REFRESH_KEY = "notice_refresh"
 private const val COMMUNITY_THREAD_DEEP_LINK_BASE =
     "https://api.university.neordinary.com/community/threads"
 
+
+/**
+ * 공지 목록 화면에 새로고침이 필요함을 알린다.
+ * 목록이 백스택 어디에 있든(작성 -> 목록, 상세 -> 목록) 찾아서 표시한다
+ */
+private fun NavHostController.notifyNoticeListRefresh() {
+    runCatching { getBackStackEntry(MainDestination.Notice) }
+        .getOrNull()
+        ?.savedStateHandle
+        ?.set(NOTICE_REFRESH_KEY, true)
+}
 
 @Composable
 fun MainNavHost(
@@ -230,10 +242,22 @@ fun MainNavHost(
 
         /**공지 탭에 대한 내용입니다.**/
         //공지 목록
-        composable<MainDestination.Notice> {
+        composable<MainDestination.Notice> { backStackEntry ->
+            // 공지 작성·수정·삭제 후 돌아오면 목록을 다시 불러온다
+            val shouldRefresh by backStackEntry
+                .savedStateHandle
+                .getStateFlow(NOTICE_REFRESH_KEY, false)
+                .collectAsStateWithLifecycle()
+
             NoticeRoute(
-                navigateToSearch = { gisuId ->
-                    navHostController.navigate(MainDestination.NoticeSearch(gisuId))
+                shouldRefresh = shouldRefresh,
+                onRefreshHandled = {
+                    backStackEntry.savedStateHandle[NOTICE_REFRESH_KEY] = false
+                },
+                navigateToSearch = { gisuId, noticeTab, chapterId, schoolId, part ->
+                    navHostController.navigate(
+                        MainDestination.NoticeSearch(gisuId, noticeTab, chapterId, schoolId, part)
+                    )
                 },
                 navigateToAdminNotice = { gisuId ->
                     navHostController.navigate(MainDestination.AdminNotice(gisuId))
@@ -253,6 +277,10 @@ fun MainNavHost(
             NoticeWriteRoute(
                 editNoticeId = destination.noticeId,
                 navigateToBack = { navHostController.popBackStack() },
+                onSubmitSuccess = {
+                    navHostController.notifyNoticeListRefresh()
+                    navHostController.popBackStack()
+                },
             )
         }
 
@@ -274,8 +302,14 @@ fun MainNavHost(
             AdminNoticeRoute(
                 gisuId = destination.gisuId,
                 navigateToBack = { navHostController.popBackStack() },
-                navigateToSearch = { gisuId ->
-                    navHostController.navigate(MainDestination.NoticeSearch(gisuId))
+                navigateToSearch = { gisuId, noticeTab, schoolId ->
+                    navHostController.navigate(
+                        MainDestination.NoticeSearch(
+                            gisuId = gisuId,
+                            noticeTab = noticeTab,
+                            schoolId = schoolId,
+                        )
+                    )
                 },
                 navigateToDetail = { noticeId ->
                     navHostController.navigate(MainDestination.NoticeDetail(noticeId))
@@ -288,6 +322,10 @@ fun MainNavHost(
             val destination = backStackEntry.toRoute<MainDestination.NoticeSearch>()
             NoticeSearchRoute(
                 gisuId = destination.gisuId,
+                noticeTab = destination.noticeTab,
+                chapterId = destination.chapterId,
+                schoolId = destination.schoolId,
+                part = destination.part,
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToDetail = { noticeId ->
                     navHostController.navigate(MainDestination.NoticeDetail(noticeId))
@@ -373,7 +411,13 @@ fun MainNavHost(
                     navHostController.navigate(MainDestination.Notification)
                 },
                 onNavigateToCardShare = {
-                    navHostController.navigate(MainDestination.Mycard(openExchangeDialog = true))
+                    navHostController.navigate(MainDestination.Mycard(openExchangeDialog = true)){
+                        popUpTo<MainDestination.Home> {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
             )
         }
@@ -408,6 +452,11 @@ fun MainNavHost(
                 onBackClick = {navHostController.popBackStack()},
                 onNavigateToAttendSchedule = {
                     /**TODO. 일정 출석 페이지로 이동하기**/
+                    navHostController.navigate(MainDestination.Act){
+                        popUpTo<MainDestination.ScheduleDetail>{
+                            inclusive = true
+                        }
+                    }
                 },
                 onNavigateToEditSchedule = { scheduleId ->
                     navHostController.navigate(MainDestination.ScheduleEdit(scheduleId = scheduleId))
@@ -461,8 +510,12 @@ fun MainNavHost(
                 },
                 onNavigateToMyContent = {type ->
                     navHostController.navigate(MainDestination.MyContent(showType = type))
-                                        },
-                onNavigateToLogin = {},
+                },
+                onNavigateToLogin = {
+                    navHostController.navigate(MainDestination.Splash) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
                 onNavigateToQrCode = {
                     navHostController.navigate(MainDestination.Qrcode)
                 },

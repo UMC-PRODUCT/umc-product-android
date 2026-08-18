@@ -34,6 +34,7 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
+import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityThreadUiModel
 
 @Composable
@@ -51,7 +52,6 @@ fun CommunityThreadItem(
             .fillMaxWidth()
             .combinedClickable(
                 interactionSource = interactionSource,
-                indication = null,
                 onClick = onClick,
                 onLongClick = onLongClick,
             ),
@@ -76,7 +76,9 @@ fun CommunityThreadItem(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_book_filled),
+                        painter = painterResource(
+                            id = categoryIconRes(thread.category),
+                        ),
                         contentDescription = null,
                         tint = indigo500(),
                         modifier = Modifier.size(22.dp),
@@ -186,5 +188,19 @@ fun CommunityThreadItem(
                 }
             }
         }
+    }
+}
+
+private fun categoryIconRes(
+    category: CommunityCategory,
+): Int {
+    return when (category) {
+        CommunityCategory.STUDY -> R.drawable.ic_book_filled
+        CommunityCategory.PROJECT -> R.drawable.ic_community_question
+        CommunityCategory.QNA -> R.drawable.ic_community_chat
+        CommunityCategory.FREE -> R.drawable.ic_community_part_notice
+        CommunityCategory.ALL,
+        CommunityCategory.UNREAD,
+            -> R.drawable.ic_community_chat
     }
 }

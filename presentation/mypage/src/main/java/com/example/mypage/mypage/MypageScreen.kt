@@ -230,6 +230,9 @@ fun MypageRoute(
                 //온보드 누를 때
                 is MypageEvent.MoveToOnBoardPage -> onNavigateToLogin()
 
+                //로그아웃 시 이동
+                is MypageEvent.Logout -> onNavigateToLogin()
+
                 //챌린저 기록 추가 시 (다이얼로그)
                 is MypageEvent.ConfirmAddCode -> {
                     Toast.makeText(context, "활동기록이 추가되었습니다.", Toast.LENGTH_SHORT).show()
@@ -319,6 +322,7 @@ fun MypageRoute(
             onPositive = {
                 /**TODO: 로그아웃 로직 연결*/
                 showLogoutDialog = false
+                viewModel.navigateToOnboard()
             },
             onNegative = {
                 showLogoutDialog = false
@@ -341,6 +345,7 @@ fun MypageRoute(
             onPositive = {
                 /**TODO: 회원 탈퇴 로직 연결*/
                 showDeleteUserDialog = false
+                viewModel.deleteUser()
             },
             onNegative = {
                 showDeleteUserDialog = false

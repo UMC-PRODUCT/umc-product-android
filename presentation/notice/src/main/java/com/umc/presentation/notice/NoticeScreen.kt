@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -62,7 +63,9 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun NoticeRoute(
     viewModel: NoticeViewModel = hiltViewModel(),
-    navigateToSearch: (Long) -> Unit = {},
+    shouldRefresh: Boolean = false,
+    onRefreshHandled: () -> Unit = {},
+    navigateToSearch: (Long, String, Long?, Long?, String?) -> Unit = { _, _, _, _, _ -> },
     navigateToAdminNotice: (Long) -> Unit = {},
     navigateToWrite: () -> Unit = {},
     navigateToDetail: (Long) -> Unit = {},
@@ -72,10 +75,19 @@ fun NoticeRoute(
     var showPartBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    // 공지 작성·수정·삭제 후 돌아왔을 때 목록 갱신
+    LaunchedEffect(shouldRefresh) {
+        if (shouldRefresh) {
+            viewModel.onRefresh()
+            onRefreshHandled()
+        }
+    }
+
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
-                is NoticeEvent.MoveToSearchEvent -> navigateToSearch(event.gisuId)
+                is NoticeEvent.MoveToSearchEvent ->
+                    navigateToSearch(event.gisuId, event.noticeTab, event.chapterId, event.schoolId, event.part)
                 is NoticeEvent.MoveToAdminNoticeEvent -> navigateToAdminNotice(event.gisuId)
                 is NoticeEvent.MoveToWriteEvent -> navigateToWrite()
                 is NoticeEvent.MoveToDetailEvent -> navigateToDetail(event.noticeId)
@@ -96,6 +108,7 @@ fun NoticeRoute(
             },
             onClickNotice = viewModel::onClickNotice,
             onLoadNextPage = viewModel::loadNextPage,
+            onRefresh = viewModel::onRefresh,
             onClickWriteNotice = viewModel::onClickWriteNotice,
         )
 
@@ -116,6 +129,7 @@ fun NoticeRoute(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoticeScreen(
     uiState: NoticeUiState = NoticeUiState(),
@@ -126,6 +140,7 @@ fun NoticeScreen(
     onClickChip: (NoticeChipState) -> Unit = {},
     onClickNotice: (Long) -> Unit = {},
     onLoadNextPage: () -> Unit = {},
+    onRefresh: () -> Unit = {},
     onClickWriteNotice: () -> Unit = {},
 ) {
     Box(
@@ -165,27 +180,43 @@ fun NoticeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn(
+            // 목록을 아래로 당기면 새로고침
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = onRefresh,
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                items(
-                    items = uiState.noticeList,
-                    key = { it.id },
-                ) { notice ->
-                    NoticeCard(
-                        notice = notice,
-                        isRead = uiState.readNoticeIds.contains(notice.id),
-                        onClick = { onClickNotice(notice.id) },
+                // 실패와 0건을 구분해서 보여준다. 아무것도 안 그리면 원인을 알 수 없다
+                if (uiState.noticeList.isEmpty() && !uiState.isPageLoading) {
+                    NoticeListMessage(
+                        title = uiState.errorMessage?.let { AppStrings.NOTICE_LIST_ERROR }
+                            ?: AppStrings.NOTICE_LIST_EMPTY_TITLE,
+                        content = uiState.errorMessage ?: AppStrings.NOTICE_LIST_EMPTY_CONTENT,
                     )
                 }
 
-                // 마지막 아이템 노출 시 다음 페이지 로드
-                if (uiState.noticeList.isNotEmpty() && !uiState.isLastPage) {
-                    item {
-                        LaunchedEffect(Unit) {
-                            onLoadNextPage()
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 100.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    items(
+                        items = uiState.noticeList,
+                        key = { it.id },
+                    ) { notice ->
+                        NoticeCard(
+                            notice = notice,
+                            isRead = uiState.readNoticeIds.contains(notice.id),
+                            onClick = { onClickNotice(notice.id) },
+                        )
+                    }
+
+                    // 마지막 아이템 노출 시 다음 페이지 로드
+                    if (uiState.noticeList.isNotEmpty() && !uiState.isLastPage) {
+                        item {
+                            LaunchedEffect(Unit) {
+                                onLoadNextPage()
+                            }
                         }
                     }
                 }
@@ -211,6 +242,30 @@ fun NoticeScreen(
         }
     }
 }
+/** 목록이 비었을 때의 안내 문구 (0건 / 오류) */
+@Composable
+private fun NoticeListMessage(title: String, content: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        UText(
+            text = title,
+            style = UmcTypographyTokens.HeadlineBold,
+            color = grey600(),
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        UText(
+            text = content,
+            style = UmcTypographyTokens.Subheadline,
+            color = grey500(),
+        )
+    }
+}
+
 
 /** 상단 헤더: 기수 드롭다운 타이틀 + 관리자 + 검색 아이콘 */
 @Composable

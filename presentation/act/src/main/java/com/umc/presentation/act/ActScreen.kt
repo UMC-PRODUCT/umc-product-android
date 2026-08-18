@@ -81,7 +81,7 @@ fun ActManageRoute(
 }
 
 @Composable
-private fun ActManageScreen(
+fun ActManageScreen(
     uiState: ActUiState,
     onAdminCheckedChange: (Boolean) -> Unit,
     onNavigateToChallengerDetail: (Long) -> Unit = {},

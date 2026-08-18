@@ -12,6 +12,7 @@ data class AdminStudyGroupItemUiModel(
     val createdAtRaw: String,
     val memberCount: Int,
     val leaderUniv: String,
+    val studyPart: String,
 ) {
     val createdAtText: String
         get() = createdAtRaw

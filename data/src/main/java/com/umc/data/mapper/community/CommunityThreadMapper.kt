@@ -41,6 +41,7 @@ fun CommunityThreadSummaryResponse.toDomain(): CommunityThread {
         createdBy = createdBy,
         createdAt = createdAt,
         updatedAt = updatedAt,
+        isJoined = isJoined,
     )
 }
 
@@ -63,6 +64,7 @@ fun CommunityThreadDetailResponse.toDomain(): CommunityThreadDetail {
         updatedAt = updatedAt,
         shareUrl = shareUrl,
         deletedAt = deletedAt,
+        isJoined = isJoined,
     )
 }
 

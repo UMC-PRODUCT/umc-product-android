@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,6 +39,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.DialogType
@@ -67,6 +71,7 @@ fun ScheduleDetailRoute(
     onNavigateToAttendSchedule: () -> Unit,
     onNavigateToEditSchedule: (Long) -> Unit,
 
+
 ){
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -78,17 +83,33 @@ fun ScheduleDetailRoute(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
 
+    //화면이 resume에서 복귀할떄마다 재호출
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.getScheduleDetail()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+
     LaunchedEffect(viewModel){
         viewModel.uiEvent.collectLatest { event ->
             when (event){
-                is ScheduleDetailEvent.MoveBackPressedEvent -> onBackClick
+                is ScheduleDetailEvent.MoveBackPressedEvent -> onBackClick()
 
                 //일정 수정
                 is ScheduleDetailEvent.EditPlan -> onNavigateToEditSchedule(uiState.content.scheduleId)
 
                 is ScheduleDetailEvent.CheckDeletePlan -> { showDeleteDialog = true }
 
-                is ScheduleDetailEvent.TouchConfirmAttention -> {onNavigateToAttendSchedule}
+
                 else -> {}
             }
         }
@@ -105,7 +126,7 @@ fun ScheduleDetailRoute(
             uiState.latitude,
             uiState.longitude
         ) },
-        onAttendanceClick = viewModel::onClickConfirmAttention
+        onAttendanceClick = onNavigateToAttendSchedule,
     )
 
     //UBsaicDialog 사용(경고 버전)
@@ -138,7 +159,7 @@ fun ScheduleDetailScreen(
     onEditClick: () -> Unit, //수정하기 클릭 시(수정 이동)
     onDeleteClick: () -> Unit, //삭제 클릭
     onMapClick: () -> Unit, //장소 상세보기 클릭
-    onAttendanceClick: () -> Unit //출석 클릭
+    onAttendanceClick: () -> Unit, //출석 클릭
 ) {
 
     //케밥 메뉴 겹치기를 위해 BOX
@@ -146,7 +167,7 @@ fun ScheduleDetailScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(grey000())
-            .padding(horizontal = 16.dp)
+
     ) {
 
         Column(modifier = Modifier
@@ -162,87 +183,110 @@ fun ScheduleDetailScreen(
                 .height(36.dp)
             )
 
-            //2. D-day 및 제목
-            UButton(
-                text = uiState.dDay,
-                backgroundColor = indigo100(),
-                textColor = indigo500(),
-                textStyle = UmcTypographyTokens.FootnoteBold,
-                onClick = {},
+            Column(
                 modifier = Modifier
-                    .height(24.dp),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            )
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
 
-            Spacer(modifier = Modifier
-                .height(16.dp)
-            )
-            UText(text = uiState.title,
-                style = UmcTypographyTokens.Title2Bold,
-                color = grey800()
-            )
 
-            Spacer(modifier = Modifier
-                .height(8.dp)
-            )
-
-            UText(text = uiState.startDate,
-                style = UmcTypographyTokens.Subheadline,
-                color = grey600()
-            )
-
-            Spacer(modifier = Modifier
-                .height(24.dp)
-            )
-
-            //3. 일시 및 장소 영역
-            ScheduleInfoCard(
-                todayDate = uiState.todayDate,
-                todayTime = uiState.todayTime,
-                place = uiState.place,
-                onMapClick = onMapClick
-            )
-
-            Spacer(modifier = Modifier
-                .height(40.dp)
-            )
-
-            //4. 상세 안내 영역
-            UText(text = AppStrings.HOME_PLAN_DETAIL_PLAN_NOTICE,
-                style = UmcTypographyTokens.Title3Bold,
-                color = grey800()
-            )
-
-            Spacer(modifier = Modifier
-                .height(16.dp)
-            )
-
-            UText(
-                text = uiState.detail,
-                style = UmcTypographyTokens.Body,
-                color = grey600(),
-                modifier = Modifier
-                    .weight(1f)
-            )
-
-            //5. 하단 출석 버튼
-            if(uiState.isToday){
+                //2. D-day 및 제목
                 UButton(
-                    text = AppStrings.HOME_PLAN_DETAIL_CHECK_CONFIRM,
-                    backgroundColor = grey950(), // accent 팔레트 제거로 yellow(구 warning)로 대체
-                    textColor = grey000(),
-                    textStyle = UmcTypographyTokens.HeadlineBold,
+                    text = uiState.dDay,
+                    backgroundColor = indigo100(),
+                    textColor = indigo500(),
+                    textStyle = UmcTypographyTokens.FootnoteBold,
+                    onClick = {},
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .padding(bottom = 24.dp),
-                    onClick = onAttendanceClick
+                        .height(24.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                 )
-            }
-            else {
-                Spacer(modifier = Modifier
-                    .height(32.dp)
+
+                Spacer(
+                    modifier = Modifier
+                        .height(16.dp)
                 )
+                UText(
+                    text = uiState.title,
+                    style = UmcTypographyTokens.Title2Bold,
+                    color = grey800()
+                )
+
+                Spacer(
+                    modifier = Modifier
+                        .height(8.dp)
+                )
+
+                UText(
+                    text = uiState.startDate,
+                    style = UmcTypographyTokens.Subheadline,
+                    color = grey600()
+                )
+
+                Spacer(
+                    modifier = Modifier
+                        .height(24.dp)
+                )
+
+                //3. 일시 및 장소 영역
+                ScheduleInfoCard(
+                    todayDate = uiState.todayDate,
+                    todayTime = uiState.todayTime,
+                    place = uiState.place,
+                    onMapClick = onMapClick,
+                    isonline = uiState.isonline
+                )
+
+                Spacer(
+                    modifier = Modifier
+                        .height(40.dp)
+                )
+
+                //4. 상세 안내 영역
+                UText(
+                    text = AppStrings.HOME_PLAN_DETAIL_PLAN_NOTICE,
+                    style = UmcTypographyTokens.Title3Bold,
+                    color = grey800()
+                )
+
+                Spacer(
+                    modifier = Modifier
+                        .height(16.dp)
+                )
+
+                UText(
+                    text = uiState.detail,
+                    style = UmcTypographyTokens.Body,
+                    color = grey600(),
+                    modifier = Modifier
+                        .weight(1f)
+                )
+
+                //5. 하단 출석 버튼
+                if (uiState.isToday) {
+                    UButton(
+                        text = AppStrings.HOME_PLAN_DETAIL_CHECK_CONFIRM,
+                        backgroundColor = grey950(), // accent 팔레트 제거로 yellow(구 warning)로 대체
+                        textColor = grey000(),
+                        textStyle = UmcTypographyTokens.HeadlineBold,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        cornerRadius = 12.dp,
+                        onClick = onAttendanceClick
+                    )
+
+                    Spacer(
+                        modifier = Modifier
+                            .height(32.dp)
+                    )
+
+                } else {
+                    Spacer(
+                        modifier = Modifier
+                            .height(32.dp)
+                    )
+                }
             }
 
         }
@@ -275,7 +319,12 @@ fun ScheduleDetailTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 4.dp),
+            .padding(
+                start = 4.dp,
+                top = 8.dp,
+                end = 24.dp,
+                bottom = 8.dp
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -302,7 +351,9 @@ fun ScheduleDetailTopBar(
             painter = painterResource(id = R.drawable.ic_menu_kebab),
             contentDescription = null,
             modifier = Modifier
+                .size(24.dp)
                 .clickable { onMenuClick() },
+
             tint = grey800()
         )
 
