@@ -16,6 +16,18 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 관리자 스터디 제출 현황 화면의 상태와 비즈니스 로직을 관리하는 ViewModel
+ *
+ * 주요 기능
+ * - 제출 가능한 주차 및 그룹별 제출 현황 조회
+ * - 커서 기반 제출 목록 페이지네이션
+ * - 챌린저 워크북 제출 상세 조회
+ * - 제출 피드백 작성 및 수정
+ * - PASS / FAIL 승인 및 반려 처리
+ * - 베스트 워크북 조회, 등록, 수정 및 취소
+ * - 제출 상세 BottomSheet 및 각종 Dialog 상태 관리
+ */
 @HiltViewModel
 class AdminSubmitViewModel @Inject constructor(
     private val getChallengerWorkbookDetailUseCase:
