@@ -18,6 +18,12 @@ import com.umc.component.theme.red700
 import com.umc.domain.model.enums.StudyStatus
 import com.umc.presentation.study.normal.NormalStudyItemUiModel
 
+/**
+ * 스터디 제출 상태를 표시하는 뱃지
+ *
+ * PASS, FAIL, IN_PROGRESS 상태에 따라
+ * 문구와 배경색, 글자색을 다르게 표시합니다.
+ */
 @Composable
 fun StudyStatusBadge(
     item: NormalStudyItemUiModel,
