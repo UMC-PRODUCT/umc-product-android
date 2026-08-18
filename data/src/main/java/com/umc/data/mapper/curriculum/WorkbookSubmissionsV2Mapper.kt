@@ -42,5 +42,6 @@ fun StudyMemberSubmissionWeekResponse.toDomain():
         challengerWorkbookId = challengerWorkbookId,
         status = status,
         isBest = isBest,
+        content = content,
     )
 }
