@@ -18,6 +18,11 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 
+/**
+ * 스레드 수정 화면에서 사용하는 삭제 버튼
+ *
+ * 클릭 시 상위 화면에서 전달받은 스레드 삭제 로직을 실행합니다.
+ */
 @Composable
 fun CommunityDeleteButton(
     onClick: () -> Unit,
@@ -38,22 +43,16 @@ fun CommunityDeleteButton(
                 onClick = onClick,
             )
             .then(
-                Modifier
-                    .clip(RoundedCornerShape(8.dp))
+                Modifier.clip(RoundedCornerShape(8.dp))
             ),
         contentAlignment = Alignment.Center,
     ) {
-        androidx.compose.foundation.layout.Box(
+        // 삭제 버튼 배경
+        Box(
             modifier = Modifier
                 .matchParentSize()
-                .then(
-                    Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                )
-                .then(
-                    Modifier
-                        .background(red100())
-                ),
+                .clip(RoundedCornerShape(8.dp))
+                .background(red100()),
         )
 
         UText(

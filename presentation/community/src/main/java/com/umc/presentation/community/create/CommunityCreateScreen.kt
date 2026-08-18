@@ -24,7 +24,7 @@ import com.umc.presentation.community.component.create.CommunityAiCard
 import com.umc.presentation.community.component.create.CommunityChallengerCard
 import com.umc.presentation.community.component.create.CommunityCreateTopBar
 import com.umc.presentation.community.component.create.CommunityThreadForm
-import com.umc.presentation.community.create.bottomsheet.CommunityCreateMemberBottomSheet
+import com.umc.presentation.community.bottomsheet.create.CommunityCreateMemberBottomSheet
 import com.umc.presentation.community.model.CommunityAiState
 
 @Composable
