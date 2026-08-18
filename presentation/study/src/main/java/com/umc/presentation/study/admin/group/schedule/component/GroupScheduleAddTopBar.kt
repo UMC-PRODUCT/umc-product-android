@@ -14,6 +14,12 @@ import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Title2Bold
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 
+/**
+ * 스터디 일정 등록 화면의 상단 바
+ *
+ * 뒤로가기, 화면 제목, 알림 아이콘,
+ * 일정 등록 버튼을 표시합니다.
+ */
 @Composable
 fun GroupScheduleAddTopBar(
     canRegister: Boolean,
@@ -27,6 +33,7 @@ fun GroupScheduleAddTopBar(
             .padding(horizontal = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // 뒤로가기
         Icon(
             painter = painterResource(R.drawable.ic_back),
             contentDescription = null,
@@ -38,6 +45,7 @@ fun GroupScheduleAddTopBar(
 
         Spacer(Modifier.width(12.dp))
 
+        // 화면 제목
         UText(
             text = "스터디 일정 등록",
             style = Title2Bold,
@@ -45,6 +53,7 @@ fun GroupScheduleAddTopBar(
             modifier = Modifier.weight(1f),
         )
 
+        // 알림 아이콘
         Icon(
             painter = painterResource(R.drawable.ic_alarm_filled),
             contentDescription = null,
@@ -54,11 +63,14 @@ fun GroupScheduleAddTopBar(
 
         Spacer(Modifier.width(20.dp))
 
+        // 필수 입력값이 충족된 경우에만 등록 가능
         UText(
             text = "등록",
             style = HeadlineBold,
             color = if (canRegister) indigo500() else grey300(),
-            modifier = Modifier.clickable(enabled = canRegister) {
+            modifier = Modifier.clickable(
+                enabled = canRegister
+            ) {
                 onRegisterClick()
             },
         )
