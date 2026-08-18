@@ -12,6 +12,12 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
+/**
+ * 커뮤니티 메인 화면의 Route
+ *
+ * ViewModel 상태를 구독하고 화면 이동 및 Toast 이벤트를 처리하며,
+ * 화면 Lifecycle에 맞춰 스레드 목록 Polling을 시작/중지합니다.
+ */
 @Composable
 fun CommunityRoute(
     onNavigateToThreadDetail: (String) -> Unit,
@@ -24,12 +30,14 @@ fun CommunityRoute(
 
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    // 화면 Lifecycle에 맞춰 스레드 목록 Polling 관리
     ThreadPollingLifecycleEffect(
         pollingKey = viewModel,
         onStartPolling = viewModel::startThreadPolling,
         onStopPolling = viewModel::stopThreadPolling,
     )
 
+    // ViewModel에서 발생하는 일회성 이벤트 처리
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
@@ -66,6 +74,10 @@ fun CommunityRoute(
     )
 }
 
+/**
+ * 커뮤니티 화면의 Lifecycle에 따라
+ * 스레드 목록 Polling을 시작하거나 중지합니다.
+ */
 @Composable
 internal fun ThreadPollingLifecycleEffect(
     pollingKey: Any,
@@ -74,20 +86,24 @@ internal fun ThreadPollingLifecycleEffect(
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    // 이미 RESUMED 상태로 진입한 경우 Polling 시작
     LaunchedEffect(pollingKey, lifecycleOwner) {
         if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
             onStartPolling()
         }
     }
 
+    // 화면이 Pause 상태가 되면 Polling 중지
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
         onStopPolling()
     }
 
+    // 화면이 다시 Resume되면 Polling 재시작
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         onStartPolling()
     }
 
+    // Composable이 제거될 때 Polling 정리
     DisposableEffect(pollingKey) {
         onDispose(onStopPolling)
     }
