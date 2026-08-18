@@ -27,6 +27,11 @@ import com.umc.component.theme.red700
 import com.umc.domain.model.enums.StudyStatus
 import com.umc.presentation.study.normal.NormalStudyItemUiModel
 
+/**
+ * 스터디 항목을 펼쳤을 때 제출 결과에 따른 피드백을 표시합니다.
+ *
+ * PASS와 FAIL 상태에 따라 각각 다른 상태 배너를 표시합니다.
+ */
 @Composable
 fun StudyExpandedContent(
     item: NormalStudyItemUiModel,
@@ -56,6 +61,9 @@ fun StudyExpandedContent(
     }
 }
 
+/**
+ * 스터디 제출 결과 메시지를 상태별 색상과 아이콘으로 표시하는 배너
+ */
 @Composable
 private fun StudyStatusBanner(
     iconRes: Int,

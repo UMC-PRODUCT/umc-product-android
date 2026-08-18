@@ -25,6 +25,12 @@ import com.umc.presentation.study.normal.component.StudyItemRow
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.domain.model.enums.StudyStatus
 
+/**
+ * 일반 사용자 스터디 화면의 Route
+ *
+ * ViewModel 상태를 구독하고 Toast 이벤트를 처리한 뒤,
+ * 실제 스터디 화면에 상태와 이벤트를 전달합니다.
+ */
 @Composable
 fun UserStudyRoute(
     viewModel: UserStudyViewModel = hiltViewModel(),
@@ -32,6 +38,7 @@ fun UserStudyRoute(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    // ViewModel에서 발생한 일회성 Toast 이벤트 처리
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
@@ -52,6 +59,12 @@ fun UserStudyRoute(
     )
 }
 
+/**
+ * 일반 사용자의 스터디 커리큘럼 화면
+ *
+ * 전체 진행률 카드와 주차별 커리큘럼 목록을 표시하며,
+ * 데이터가 없을 경우 Empty 화면을 표시합니다.
+ */
 @Composable
 fun UserStudyScreen(
     state: UserStudyState,
@@ -66,11 +79,13 @@ fun UserStudyScreen(
                 vertical = 12.dp,
             )
     ) {
+        // 조회된 커리큘럼이 없을 경우 Empty 화면 표시
         if (state.items.isEmpty()) {
             StudyEmptyCard(
                 modifier = Modifier.fillMaxSize(),
             )
         } else {
+            // 전체 진행률 카드와 주차별 커리큘럼 목록
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
@@ -103,6 +118,9 @@ fun UserStudyScreen(
     }
 }
 
+/**
+ * 일반 사용자 스터디 화면 Preview
+ */
 @Preview(showBackground = true)
 @Composable
 private fun UserStudyScreenPreview() {
