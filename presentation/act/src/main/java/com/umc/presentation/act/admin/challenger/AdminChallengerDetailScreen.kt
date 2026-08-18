@@ -65,6 +65,7 @@ import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
+import com.umc.component.theme.grey950
 import com.umc.component.theme.grey900
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
@@ -274,26 +275,27 @@ private fun Header(
     onBackClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp, end = 10.dp, top = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
+        Icon(
+            // clickable을 패딩보다 먼저 걸어 48dp 터치 영역을 유지한다
             modifier = Modifier
-                .size(40.dp)
-                .clickable(onClick = onBackClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_back),
-                contentDescription = null,
-                tint = grey800(),
-                modifier = Modifier.size(24.dp)
-            )
-        }
+                .clickable(onClick = onBackClick)
+                .padding(12.dp),
+            painter = painterResource(R.drawable.ic_back),
+            contentDescription = null,
+            tint = Color.Unspecified,
+        )
 
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(8.dp))
 
         UText(
-            text = AppStrings.CHALLENGER_MANAGE_PROFILE_TITLE, style = Title2Bold, color = grey800()
+            text = AppStrings.CHALLENGER_MANAGE_PROFILE_TITLE,
+            style = Title2Bold,
+            color = grey950(),
         )
     }
 }
