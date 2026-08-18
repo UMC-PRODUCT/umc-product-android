@@ -1,4 +1,4 @@
-package com.umc.presentation.community.bottomsheet
+package com.umc.presentation.community.bottomsheet.edit
 
 import com.umc.presentation.community.DEFAULT_COMMUNITY_MAX_MEMBER_COUNT
 import com.umc.component.base.UiEvent

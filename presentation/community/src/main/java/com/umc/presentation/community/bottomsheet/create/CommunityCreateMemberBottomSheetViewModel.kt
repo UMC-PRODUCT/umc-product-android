@@ -1,4 +1,4 @@
-package com.umc.presentation.community.create.bottomsheet
+package com.umc.presentation.community.bottomsheet.create
 
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
