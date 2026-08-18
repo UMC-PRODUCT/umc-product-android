@@ -16,6 +16,11 @@ import com.umc.component.component.UText
 import com.umc.component.theme.*
 import com.umc.domain.model.enums.UserPart
 
+/**
+ * 일반 사용자의 스터디 커리큘럼 진행 현황을 표시하는 카드
+ *
+ * 파트명, 커리큘럼 제목, 달성률과 진행 상태를 표시합니다.
+ */
 @Composable
 fun StudyCurriculumCard(
     part: UserPart,

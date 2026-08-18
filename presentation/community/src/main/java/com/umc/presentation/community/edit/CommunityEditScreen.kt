@@ -25,13 +25,19 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
-import com.umc.presentation.community.bottomsheet.CommunityMemberBottomSheet
+import com.umc.presentation.community.bottomsheet.edit.CommunityMemberBottomSheet
 import com.umc.presentation.community.component.create.CommunityAiCard
 import com.umc.presentation.community.component.create.CommunityChallengerCard
 import com.umc.presentation.community.component.create.CommunityCreateTopBar
 import com.umc.presentation.community.component.create.CommunityDeleteButton
 import com.umc.presentation.community.component.create.CommunityThreadForm
 
+/**
+ * 커뮤니티 스레드 수정 화면
+ *
+ * 챌린저 관리, 제목/특징 수정, AI 카테고리 재분류,
+ * 스레드 수정 및 삭제 기능을 제공합니다.
+ */
 @Composable
 fun CommunityEditScreen(
     state: CommunityEditState,
@@ -46,6 +52,7 @@ fun CommunityEditScreen(
             .background(grey000())
             .navigationBarsPadding(),
     ) {
+        // 스레드 수정 화면 상단바
         CommunityCreateTopBar(
             title = "스레드 수정하기",
             actionText = "완료",
@@ -71,6 +78,7 @@ fun CommunityEditScreen(
                 .fillMaxWidth()
                 .weight(1f),
         ) {
+            // 스레드 수정 입력 영역
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -83,6 +91,7 @@ fun CommunityEditScreen(
                     ),
             ) {
 
+                // 현재 스레드에 참여 중인 챌린저 명단
                 UText(
                     text = "챌린저 명단",
                     style = UmcTypographyTokens.HeadlineBold,
@@ -93,6 +102,7 @@ fun CommunityEditScreen(
                     modifier = Modifier.height(8.dp)
                 )
 
+                // 클릭 시 챌린저 관리 BottomSheet 표시
                 CommunityChallengerCard(
                     challengers = state.selectedChallengers,
                     maxCount = state.maxChallengerCount,
@@ -108,6 +118,7 @@ fun CommunityEditScreen(
                     modifier = Modifier.height(32.dp),
                 )
 
+                // 스레드 제목 및 특징 수정 영역
                 CommunityThreadForm(
                     title = state.title,
                     description = state.description,
@@ -132,6 +143,7 @@ fun CommunityEditScreen(
                 )
             }
 
+            // 화면 하단 AI 분류 및 스레드 삭제 영역
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -140,6 +152,7 @@ fun CommunityEditScreen(
                         vertical = 16.dp,
                     ),
             ) {
+                // AI 카테고리 분류 카드
                 CommunityAiCard(
                     aiState = state.aiState,
                     classifiedCategory = state.classifiedCategory,
@@ -168,6 +181,7 @@ fun CommunityEditScreen(
                     modifier = Modifier.height(16.dp),
                 )
 
+                // 스레드 삭제 버튼
                 CommunityDeleteButton(
                     onClick = {
                         onAction(
@@ -179,6 +193,7 @@ fun CommunityEditScreen(
         }
     }
 
+    // 스레드 삭제 확인 Dialog
     if (state.showDeleteDialog) {
         UBasicDialog(
             title = "스레드를 삭제하시겠습니까?",
@@ -211,6 +226,7 @@ fun CommunityEditScreen(
         )
     }
 
+    // 챌린저 추가/삭제를 위한 멤버 관리 BottomSheet
     if (
         state.showChallengerBottomSheet &&
         state.threadId.isNotBlank()

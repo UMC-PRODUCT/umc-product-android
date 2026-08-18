@@ -1,7 +1,6 @@
-package com.umc.presentation.community.create.bottomsheet
+package com.umc.presentation.community.bottomsheet.create
 
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,11 +33,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
@@ -54,6 +56,17 @@ import com.umc.component.theme.indigo500
 import com.umc.component.theme.red500
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 
+/**
+ * 스레드 생성 시 챌린저를 추가하는 BottomSheet
+ *
+ * - 챌린저 이름 검색
+ * - 챌린저 선택/삭제
+ * - 최대 선택 인원 제한
+ * - 검색 결과 페이지네이션
+ * - 프로필 이미지 표시
+ *
+ * 검색 및 선택 상태는 CommunityCreateMemberBottomSheetViewModel에서 관리합니다.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityCreateMemberBottomSheet(
@@ -72,6 +85,10 @@ fun CommunityCreateMemberBottomSheet(
         skipPartiallyExpanded = true,
     )
 
+    /**
+     * 바텀시트가 열릴 때
+     * 기존에 선택되어 있던 챌린저 목록을 ViewModel에 전달합니다.
+     */
     LaunchedEffect(
         preSelected,
         maxCount,
@@ -82,6 +99,9 @@ fun CommunityCreateMemberBottomSheet(
         )
     }
 
+    /**
+     * ViewModel에서 발생하는 일회성 이벤트 처리
+     */
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collect { event ->
             when (event) {
@@ -96,6 +116,10 @@ fun CommunityCreateMemberBottomSheet(
         }
     }
 
+    /**
+     * 바텀시트를 닫을 때 현재 선택된 챌린저를
+     * 스레드 생성 화면에 반영합니다.
+     */
     fun dismissWithApply() {
         onConfirm(
             state.selectedMembers
@@ -148,6 +172,11 @@ fun CommunityCreateMemberBottomSheet(
                 modifier = Modifier.height(18.dp),
             )
 
+            /**
+             * 챌린저 이름 검색
+             *
+             * 실제 검색 API 호출 및 디바운스는 ViewModel에서 처리합니다.
+             */
             UTextField(
                 value = state.query,
                 onValueChange = viewModel::searchMembers,
@@ -177,6 +206,7 @@ fun CommunityCreateMemberBottomSheet(
                     .weight(1f),
             ) {
                 when {
+                    // 최초 검색 결과 로딩
                     state.isLoading -> {
                         CircularProgressIndicator(
                             modifier = Modifier.align(
@@ -186,6 +216,7 @@ fun CommunityCreateMemberBottomSheet(
                         )
                     }
 
+                    // 검색 API 실패
                     state.errorMessage != null &&
                             state.searchResults.isEmpty() -> {
                         CommunityCreateMemberEmptyContent(
@@ -193,6 +224,7 @@ fun CommunityCreateMemberBottomSheet(
                         )
                     }
 
+                    // 검색 결과 없음
                     state.isSearching &&
                             state.searchResults.isEmpty() -> {
                         CommunityCreateMemberEmptyContent(
@@ -200,6 +232,7 @@ fun CommunityCreateMemberBottomSheet(
                         )
                     }
 
+                    // 챌린저 검색 결과
                     state.isSearching -> {
                         CommunityCreateMemberSearchContent(
                             members = state.searchResults,
@@ -212,12 +245,14 @@ fun CommunityCreateMemberBottomSheet(
                         )
                     }
 
+                    // 선택된 챌린저가 없는 경우
                     state.selectedMembers.isEmpty() -> {
                         CommunityCreateMemberEmptyContent(
                             text = "아직 추가한 챌린저가 없어요",
                         )
                     }
 
+                    // 현재 선택된 챌린저 목록
                     else -> {
                         CommunityCreateSelectedMemberContent(
                             selectedMembers = state.selectedMembers,
@@ -230,6 +265,11 @@ fun CommunityCreateMemberBottomSheet(
     }
 }
 
+/**
+ * 바텀시트 상단 Header
+ *
+ * 검색 중에는 우측에 확인 버튼을 표시합니다.
+ */
 @Composable
 private fun CommunityCreateMemberHeader(
     title: String,
@@ -251,6 +291,11 @@ private fun CommunityCreateMemberHeader(
             modifier = Modifier.weight(1f),
         )
 
+        /*
+         * CSV 업로드 기능
+         *
+         * 현재 사용하지 않아 비활성화 상태입니다.
+         */
 //        CommunityCsvUploadButton(
 //            onClick = onCsvUploadClick,
 //        )
@@ -284,48 +329,12 @@ private fun CommunityCreateMemberHeader(
     }
 }
 
-//@Composable
-//private fun CommunityCsvUploadButton(
-//    onClick: () -> Unit,
-//) {
-//    Row(
-//        modifier = Modifier
-//            .height(32.dp)
-//            .clip(
-//                RoundedCornerShape(6.dp)
-//            )
-//            .background(
-//                grey900()
-//            )
-//            .clickable(
-//                onClick = onClick,
-//            )
-//            .padding(
-//                horizontal = 10.dp,
-//            ),
-//        verticalAlignment = Alignment.CenterVertically,
-//    ) {
-//        Icon(
-//            painter = painterResource(
-//                id = R.drawable.ic_upload,
-//            ),
-//            contentDescription = "CSV 업로드",
-//            tint = grey000(),
-//            modifier = Modifier.size(16.dp),
-//        )
-//
-//        Spacer(
-//            modifier = Modifier.width(4.dp),
-//        )
-//
-//        UText(
-//            text = "CSV 업로드",
-//            style = UmcTypographyTokens.Caption1Bold,
-//            color = grey000(),
-//        )
-//    }
-//}
-
+/**
+ * 챌린저 검색 결과 목록
+ *
+ * 파트별로 검색 결과를 그룹화해서 표시하며,
+ * 리스트 하단 접근 시 다음 페이지를 요청합니다.
+ */
 @Composable
 private fun CommunityCreateMemberSearchContent(
     members: List<CommunityChallengerUiModel>,
@@ -338,12 +347,17 @@ private fun CommunityCreateMemberSearchContent(
 ) {
     val listState = rememberLazyListState()
 
+    // 검색 결과를 파트별로 그룹화
     val groupedMembers = members
         .groupBy { member ->
             member.partLabel
         }
         .toList()
 
+    /**
+     * 리스트 끝에서 3개 전까지 스크롤했을 경우
+     * 다음 페이지가 존재하면 추가 데이터를 조회합니다.
+     */
     val shouldLoadMore by remember {
         derivedStateOf {
             val lastVisibleItemIndex =
@@ -370,6 +384,7 @@ private fun CommunityCreateMemberSearchContent(
         state = listState,
     ) {
         groupedMembers.forEach { (partLabel, partMembers) ->
+            // 파트 Header
             item(
                 key = "part_header_$partLabel",
             ) {
@@ -386,6 +401,7 @@ private fun CommunityCreateMemberSearchContent(
                 )
             }
 
+            // 해당 파트의 챌린저 목록
             items(
                 items = partMembers,
                 key = { member ->
@@ -398,6 +414,7 @@ private fun CommunityCreateMemberSearchContent(
                                 member.memberId
                     }
 
+                // 최대 인원에 도달해도 이미 선택된 멤버는 선택 해제 가능
                 val isEnabled =
                     isChecked ||
                             selectedMembers.size < maxCount
@@ -423,6 +440,7 @@ private fun CommunityCreateMemberSearchContent(
             }
         }
 
+        // 다음 페이지 로딩
         if (isLoadingMore) {
             item(
                 key = "loading_more",
@@ -444,6 +462,9 @@ private fun CommunityCreateMemberSearchContent(
     }
 }
 
+/**
+ * 검색된 챌린저 한 명을 표시하는 Row
+ */
 @Composable
 private fun CommunityCreateMemberSearchRow(
     member: CommunityChallengerUiModel,
@@ -461,7 +482,9 @@ private fun CommunityCreateMemberSearchRow(
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CommunityCreateMemberProfile()
+        CommunityCreateMemberProfile(
+            profileImage = member.profileImage,
+        )
 
         Spacer(
             modifier = Modifier.width(8.dp),
@@ -528,6 +551,9 @@ private fun CommunityCreateMemberSearchRow(
     }
 }
 
+/**
+ * 현재 선택된 챌린저 목록
+ */
 @Composable
 private fun CommunityCreateSelectedMemberContent(
     selectedMembers: List<CommunityChallengerUiModel>,
@@ -553,6 +579,9 @@ private fun CommunityCreateSelectedMemberContent(
     }
 }
 
+/**
+ * 선택된 챌린저 한 명을 표시하는 Row
+ */
 @Composable
 private fun CommunityCreateSelectedMemberRow(
     member: CommunityChallengerUiModel,
@@ -564,7 +593,9 @@ private fun CommunityCreateSelectedMemberRow(
             .padding(vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CommunityCreateMemberProfile()
+        CommunityCreateMemberProfile(
+            profileImage = member.profileImage,
+        )
 
         Spacer(
             modifier = Modifier.width(8.dp),
@@ -620,6 +651,9 @@ private fun CommunityCreateSelectedMemberRow(
     }
 }
 
+/**
+ * 검색 결과 또는 선택된 챌린저가 없을 때 표시하는 Empty UI
+ */
 @Composable
 private fun CommunityCreateMemberEmptyContent(
     text: String,
@@ -651,14 +685,33 @@ private fun CommunityCreateMemberEmptyContent(
     }
 }
 
+/**
+ * 챌린저 프로필 이미지
+ *
+ * 프로필 이미지 URL이 존재하면 해당 이미지를 표시하고,
+ * URL이 없는 경우 기본 프로필 이미지를 표시합니다.
+ */
 @Composable
-private fun CommunityCreateMemberProfile() {
-    Icon(
-        painter = painterResource(
-            id = R.drawable.ic_profile_default,
-        ),
-        contentDescription = null,
-        tint = Color.Unspecified,
-        modifier = Modifier.size(32.dp),
-    )
+private fun CommunityCreateMemberProfile(
+    profileImage: String,
+) {
+    if (profileImage.isNotBlank()) {
+        AsyncImage(
+            model = profileImage,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape),
+        )
+    } else {
+        Icon(
+            painter = painterResource(
+                id = R.drawable.ic_profile_default,
+            ),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(32.dp),
+        )
+    }
 }

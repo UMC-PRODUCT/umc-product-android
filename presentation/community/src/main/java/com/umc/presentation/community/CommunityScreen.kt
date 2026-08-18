@@ -31,12 +31,19 @@ import com.umc.presentation.community.component.CommunityTopBar
 import com.umc.presentation.community.dialog.CommunityLeaveDialog
 import com.umc.presentation.community.dialog.CommunityThreadMenuDialog
 
+/**
+ * 커뮤니티 메인 화면
+ *
+ * 스레드 목록과 카테고리 필터를 표시하고,
+ * 검색/생성/스레드 관리 기능을 제공합니다.
+ */
 @Composable
 fun CommunityScreen(
     state: CommunityState,
     onAction: (CommunityAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // 카테고리 필터 Popup 표시 여부
     var isFilterMenuExpanded by remember {
         mutableStateOf(false)
     }
@@ -49,6 +56,7 @@ fun CommunityScreen(
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
+            // 커뮤니티 상단바 및 카테고리 필터
             CommunityTopBar(
                 isFilterMenuExpanded = isFilterMenuExpanded,
                 selectedCategory = state.selectedCategory,
@@ -74,6 +82,7 @@ fun CommunityScreen(
                     .fillMaxSize()
                     .weight(1f),
             ) {
+                // 목록 상태에 따라 로딩/에러/Empty/스레드 목록 표시
                 when {
                     state.isLoading -> {
                         CommunityLoadingContent()
@@ -111,6 +120,7 @@ fun CommunityScreen(
             }
         }
 
+        // 로딩 또는 에러 상태가 아닐 때 새 스레드 생성 버튼 표시
         if (!state.isLoading && !state.isError) {
             CommunityFloatingButton(
                 onClick = {
@@ -122,6 +132,7 @@ fun CommunityScreen(
             )
         }
 
+        // 스레드 롱클릭 시 관리 메뉴 표시
         if (
             state.showThreadMenuDialog &&
             state.selectedThread != null
@@ -148,6 +159,7 @@ fun CommunityScreen(
             )
         }
 
+        // 스레드 나가기 확인 Dialog
         if (state.showLeaveDialog) {
             CommunityLeaveDialog(
                 onDismissRequest = {
@@ -161,6 +173,9 @@ fun CommunityScreen(
     }
 }
 
+/**
+ * 고정 스레드와 일반 스레드 목록을 구분하여 표시합니다.
+ */
 @Composable
 private fun CommunityThreadList(
     state: CommunityState,
@@ -176,6 +191,7 @@ private fun CommunityThreadList(
             bottom = 96.dp,
         ),
     ) {
+        // 고정된 스레드 목록
         if (state.pinnedThreads.isNotEmpty()) {
             item(
                 key = "pinned_title",
@@ -210,6 +226,7 @@ private fun CommunityThreadList(
             }
         }
 
+        // 현재 선택한 카테고리의 일반 스레드 목록
         item(
             key = "normal_title_${state.selectedCategory.name}",
         ) {
@@ -238,6 +255,9 @@ private fun CommunityThreadList(
     }
 }
 
+/**
+ * 스레드 목록의 섹션 제목을 표시합니다.
+ */
 @Composable
 private fun CommunitySectionTitle(
     text: String,

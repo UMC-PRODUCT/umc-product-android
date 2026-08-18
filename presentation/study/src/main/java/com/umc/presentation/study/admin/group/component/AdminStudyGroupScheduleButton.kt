@@ -14,8 +14,12 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
-import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 
+/**
+ * 스터디 그룹 카드에서 사용하는 일정 등록 버튼
+ *
+ * 클릭 시 선택한 스터디 그룹의 일정 등록 화면으로 이동합니다.
+ */
 @Composable
 fun AdminStudyGroupScheduleButton(
     onClick: () -> Unit,
@@ -28,7 +32,9 @@ fun AdminStudyGroupScheduleButton(
                 color = indigo400(),
                 shape = RoundedCornerShape(8.dp)
             )
-            .clickable(onClick = onClick)
+            .clickable(
+                onClick = onClick
+            )
             .padding(
                 horizontal = 12.dp,
                 vertical = 10.dp
@@ -36,14 +42,19 @@ fun AdminStudyGroupScheduleButton(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // 일정 등록 아이콘
         Icon(
-            painter = painterResource(R.drawable.ic_study_caendar),
+            painter = painterResource(
+                R.drawable.ic_study_caendar
+            ),
             contentDescription = null,
             tint = indigo500(),
             modifier = Modifier.size(20.dp)
         )
 
-        Spacer(Modifier.width(4.dp))
+        Spacer(
+            modifier = Modifier.width(4.dp)
+        )
 
         UText(
             text = "스터디 일정 등록하기",

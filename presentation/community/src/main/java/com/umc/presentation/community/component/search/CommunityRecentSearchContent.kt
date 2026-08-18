@@ -22,6 +22,11 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
 
+/**
+ * 커뮤니티 검색 화면에서 최근 검색어 목록을 표시하는 영역
+ *
+ * 최근 검색어 선택, 개별 삭제, 전체 삭제 기능을 제공합니다.
+ */
 @Composable
 fun CommunityRecentSearchContent(
     recentSearches: List<String>,
@@ -33,6 +38,7 @@ fun CommunityRecentSearchContent(
     Column(
         modifier = modifier,
     ) {
+        // 최근 검색어 제목 및 전체 삭제 버튼
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -56,6 +62,7 @@ fun CommunityRecentSearchContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // 저장된 최근 검색어 목록
         recentSearches.forEach { recentSearch ->
             Row(
                 modifier = Modifier
@@ -72,6 +79,7 @@ fun CommunityRecentSearchContent(
                     modifier = Modifier.weight(1f),
                 )
 
+                // 개별 최근 검색어 삭제
                 IconButton(
                     onClick = {
                         onDeleteRecentSearchClick(recentSearch)
