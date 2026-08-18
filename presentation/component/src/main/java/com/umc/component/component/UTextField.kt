@@ -86,6 +86,8 @@ fun UTextField(
     focusBackgroundColor: Color = backgroundColor,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    /** 한 줄 입력 여부. 검색창처럼 엔터가 개행이 되면 안 되는 곳에서 true */
+    singleLine: Boolean = false,
     prevIcon: Painter? = null,
     prevIconTint: Color? = null,
     prevIconSize: Dp = 24.dp,
@@ -120,6 +122,7 @@ fun UTextField(
         visualTransformation = visualTransformation,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
+        singleLine = singleLine,
         interactionSource = interactionSource,
         modifier = modifier,
         decorationBox = { innerTextField ->

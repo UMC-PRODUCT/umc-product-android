@@ -51,7 +51,7 @@ fun AdminNoticeRoute(
     gisuId: Long = 0,
     viewModel: AdminNoticeViewModel = hiltViewModel(),
     navigateToBack: () -> Unit = {},
-    navigateToSearch: (Long) -> Unit = {},
+    navigateToSearch: (Long, String, Long?) -> Unit = { _, _, _ -> },
     navigateToDetail: (Long) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -63,7 +63,8 @@ fun AdminNoticeRoute(
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
-                is AdminNoticeEvent.MoveToSearchEvent -> navigateToSearch(event.gisuId)
+                is AdminNoticeEvent.MoveToSearchEvent ->
+                    navigateToSearch(event.gisuId, event.noticeTab, event.schoolId)
                 is AdminNoticeEvent.MoveToDetailEvent -> navigateToDetail(event.noticeId)
             }
         }

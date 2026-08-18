@@ -64,7 +64,14 @@ sealed interface MainDestination {
 
     //공지 검색
     @Serializable
-    data class NoticeSearch(val gisuId: Long) : MainDestination
+    /** 검색은 목록과 같은 필터 조건으로 조회해야 하므로 현재 탭·필터를 함께 넘긴다 */
+    data class NoticeSearch(
+        val gisuId: Long,
+        val noticeTab: String = "CHALLENGER",
+        val chapterId: Long? = null,
+        val schoolId: Long? = null,
+        val part: String? = null,
+    ) : MainDestination
 
     //운영진 공지
     @Serializable
