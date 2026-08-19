@@ -5,6 +5,7 @@ import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.domain.model.act.challenger.ChallengerPoint
 import com.umc.domain.model.enums.PointType
+import com.umc.domain.model.enums.UserPart
 
 data class ChallengerResponse(
     @SerializedName("challengerId") val challengerId: Long? = null,
@@ -29,7 +30,7 @@ data class ChallengerResponse(
             return ChallengerInfoDialogModel(
                 name = name ?: defaultModel.name,
                 university = schoolName ?: defaultModel.university,
-                part = part ?: defaultModel.part,
+                part = UserPart.from(part),
                 generation = gisu ?: defaultModel.generation,
                 profileImageUrl = profileImageLink ?: defaultModel.profileImageUrl,
                 totalPoints = totalPoints ?: defaultModel.totalPoints
@@ -57,7 +58,7 @@ data class ChallengerResponse(
 
                     ChallengerPoint(
                         id = point.id ?: 0L,
-                        date = point.createdAt.orEmpty(),
+                        date = point.createdAt.toDateOnly(),
                         title = point.description?.takeIf { it.isNotBlank() } ?: "사유 없음",
                         pointType = parsedPointType,
                         value = point.point ?: 0.0
@@ -69,14 +70,18 @@ data class ChallengerResponse(
                 name = name ?: defaultModel.name,
                 nickname = nickname ?: defaultModel.nickname,
                 university = schoolName ?: defaultModel.university,
-                part = part ?: defaultModel.part,
+                part = UserPart.from(part),
                 gisu = gisu ?: defaultModel.gisu,
                 profileImageUrl = profileImageLink ?: defaultModel.profileImageUrl,
                 totalScore = totalPoints ?: defaultModel.totalScore,
-                positiveCount = pointList.count { it.value > 0 },
-                warningCount = pointList.count { it.value < 0 },
+                rewardScore = pointList.filter { it.value > 0 }.sumOf { it.value }.toInt(),
+                penaltyScore = pointList.filter { it.value < 0 }.sumOf { -it.value }.toInt(),
                 history = pointList
             )
         }
     }
 }
+
+private fun String?.toDateOnly(): String = orEmpty()
+    .substringBefore('T')
+    .substringBefore(' ')

@@ -4,5 +4,6 @@ import com.umc.domain.model.enums.PointType
 
 data class ChallengerPointRequest (
     val pointType: PointType, // "BEST_WORKBOOK", "WARNING", "OUT"
-    val description: String
+    val description: String,
+    val pointValue: Int? = null,
 )

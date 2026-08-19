@@ -1,4 +1,4 @@
-package com.umc.presentation.act.admin.challenger
+package com.umc.presentation.act.admin.challenger.bottomsheet
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -57,6 +57,8 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.domain.model.enums.PunishCategory
 import com.umc.domain.model.enums.RewardType
+import com.umc.presentation.act.admin.challenger.AdminChallengerUiState
+import com.umc.presentation.act.admin.challenger.AdminChallengerViewModel
 
 @Composable
 fun PenaltyPointsRoute(
@@ -94,8 +96,7 @@ fun PenaltyPointsScreen(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .height(848.dp)
-            .imePadding()
+            .height(600.dp)
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(grey000())
             .padding(horizontal = 16.dp)
@@ -305,6 +306,7 @@ private fun MemoInput(
         backgroundColor = grey000(),
         strokeColor = grey300(),
         focusStrokeColor = grey900(),
+        verticalAlignment = Alignment.Top,
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)

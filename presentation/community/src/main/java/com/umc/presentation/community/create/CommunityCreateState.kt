@@ -36,6 +36,8 @@ data class CommunityCreateState(
 
     /** 스레드 생성 API 호출 진행 여부 */
     val isSubmitting: Boolean = false,
+    /** 내 memberId. 참여자에 본인이 들어갔는지 검사할 때 쓴다 */
+    val myMemberId: Long = 0L,
 ) {
 
     /** 현재 선택된 챌린저 수 / 최대 선택 가능 수 */

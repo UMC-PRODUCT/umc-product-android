@@ -1,5 +1,7 @@
 package com.umc.presentation.act.normal.attendance
 
+import com.umc.presentation.act.normal.attendance.dialog.AttendanceReasonDialog
+
 import android.Manifest
 import android.content.pm.PackageManager
 import android.widget.Toast
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -51,8 +54,12 @@ import androidx.core.content.ContextCompat
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.CameraPosition
 import com.naver.maps.map.compose.ExperimentalNaverMapApi
+import com.naver.maps.map.compose.CircleOverlay
+import com.naver.maps.map.compose.LocationTrackingMode
+import com.naver.maps.map.compose.MapProperties
 import com.naver.maps.map.compose.MapUiSettings
 import com.naver.maps.map.compose.NaverMap
+import com.naver.maps.map.compose.rememberFusedLocationSource
 import com.naver.maps.map.compose.rememberCameraPositionState
 import com.umc.component.R
 import com.umc.component.component.UButton
@@ -612,6 +619,24 @@ private fun AvailableSessionExpandedContent(
     }
 }
 
+/** 출석 인정 반경(m). ViewModel의 판정 기준과 같은 값이어야 원과 실제 인증이 어긋나지 않는다 */
+private const val ATTENDANCE_RADIUS_METERS = 50.0
+
+/** 반경 50m 원이 지도에 꽉 차 보이는 배율 */
+private const val ATTENDANCE_MAP_ZOOM = 16.5
+
+/** 지도의 내 위치 표시 여부를 정하기 위한 위치 권한 확인 */
+@Composable
+private fun rememberHasLocationPermission(): Boolean {
+    val context = LocalContext.current
+    return remember(context) {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+}
+
 @OptIn(ExperimentalNaverMapApi::class)
 @Composable
 private fun AttendanceLocationMap(
@@ -635,21 +660,44 @@ private fun AttendanceLocationMap(
         if (hasLocation) {
             val attendancePosition = LatLng(latitude!!, longitude!!)
             val cameraPositionState = rememberCameraPositionState {
-                position = CameraPosition(attendancePosition, 16.0)
+                position = CameraPosition(attendancePosition, ATTENDANCE_MAP_ZOOM)
             }
 
             LaunchedEffect(latitude, longitude) {
-                cameraPositionState.position = CameraPosition(attendancePosition, 16.0)
+                cameraPositionState.position = CameraPosition(attendancePosition, ATTENDANCE_MAP_ZOOM)
             }
+
+            // 위치 권한이 있을 때만 내 위치(파란 점)를 켠다.
+            // 권한이 없으면 LocationSource가 계속 권한을 요청해 화면이 깜빡인다
+            val hasLocationPermission = rememberHasLocationPermission()
+            val locationSource = rememberFusedLocationSource()
 
             NaverMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
+                locationSource = locationSource.takeIf { hasLocationPermission },
+                properties = MapProperties(
+                    locationTrackingMode = if (hasLocationPermission) {
+                        // 카메라는 출석 지점에 고정하고 내 위치만 표시한다
+                        LocationTrackingMode.NoFollow
+                    } else {
+                        LocationTrackingMode.None
+                    },
+                ),
                 uiSettings = MapUiSettings(
                     isLocationButtonEnabled = false,
                     isZoomControlEnabled = false
                 )
-            )
+            ) {
+                // 출석 인정 반경(50m)을 파란 원으로 표시
+                CircleOverlay(
+                    center = attendancePosition,
+                    radius = ATTENDANCE_RADIUS_METERS,
+                    color = indigo500().copy(alpha = 0.15f),
+                    outlineWidth = 1.dp,
+                    outlineColor = indigo500(),
+                )
+            }
 
             Icon(
                 painter = painterResource(id = R.drawable.ic_location_marker),
@@ -843,6 +891,8 @@ private fun StatusChip(
 ) {
     Box(
         modifier = Modifier
+            .wrapContentWidth()
+            .height(24.dp)
             .background(background, RoundedCornerShape(4.dp))
             .padding(horizontal = 8.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center

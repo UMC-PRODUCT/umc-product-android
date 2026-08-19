@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -139,6 +141,7 @@ fun AdminChallengerScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(grey100()),
+        contentPadding = PaddingValues(bottom = 30.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item {
@@ -356,8 +359,11 @@ private fun ChallengerMemberRow(
         ) {
             UText(
                 text = member.nicknameWithName,
+                modifier = Modifier.weight(1f, fill = false),
                 style = BodyBold,
-                color = grey800()
+                color = grey800(),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.width(8.dp))
             UText(
@@ -367,7 +373,8 @@ private fun ChallengerMemberRow(
             )
         }
 
-        member.totalScore.let { score ->
+        /* member.totalScore.let { score ->
+            Spacer(Modifier.width(8.dp))
             Box(
                 modifier = Modifier
                     .wrapContentWidth()
@@ -385,7 +392,7 @@ private fun ChallengerMemberRow(
                 )
             }
             Spacer(Modifier.width(10.dp))
-        }
+        } */
 
 
         Box(

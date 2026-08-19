@@ -49,6 +49,7 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UText
 import com.umc.component.component.DialogType
+import com.umc.component.component.UDialog
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
@@ -171,6 +172,10 @@ fun AttendanceRoute(
             content = AppStrings.ADMIN_CHECK_FORCE_DELETE_CONTENT,
             positiveText = AppStrings.NOTICE_WRITE_VOTE_DELETE,
             type = DialogType.ERROR,
+            negativeBackgroundColor = grey100(),
+            negativeBorderColor = grey100(),
+            positiveBackgroundColor = red100(),
+            positiveBorderColor = red100(),
             onPositive = viewModel::forceDeleteSelectedSession,
             onNegative = viewModel::dismissForceDeleteSession,
             onDismissRequest = viewModel::dismissForceDeleteSession

@@ -1,4 +1,4 @@
-package com.umc.presentation.act.normal.attendance
+package com.umc.presentation.act.normal.attendance.dialog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource

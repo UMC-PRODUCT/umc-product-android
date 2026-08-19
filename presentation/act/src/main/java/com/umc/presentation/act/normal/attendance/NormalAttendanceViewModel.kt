@@ -204,7 +204,6 @@ class NormalAttendanceViewModel @Inject constructor(
                     )
                 ),
                 successCallback = {
-                    emitEvent(NormalAttendanceEvent.ShowToast(it))
                     refresh()
                 },
                 errorCallback = { emitEvent(NormalAttendanceEvent.ShowToast(it.message)) }
@@ -284,7 +283,6 @@ class NormalAttendanceViewModel @Inject constructor(
             resultResponse(
                 response = postAttendanceReasonUseCase(session.sheetId, reason),
                 successCallback = {
-                    emitEvent(NormalAttendanceEvent.ShowToast(it))
                     updateState { copy(reasonSessionId = null, reason = "") }
                     refresh()
                 },

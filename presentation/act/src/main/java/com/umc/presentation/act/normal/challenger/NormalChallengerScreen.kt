@@ -1,11 +1,14 @@
 package com.umc.presentation.act.normal.challenger
 
+import com.umc.presentation.act.normal.challenger.dialog.NormalChallengerInfoDialog
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,12 +17,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -42,6 +51,7 @@ import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
+import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
@@ -49,10 +59,19 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
-import com.umc.component.theme.yellow100
-import com.umc.component.theme.yellow300
-import com.umc.component.theme.yellow500
-
+import com.umc.component.theme.indigo100
+import com.umc.component.theme.indigo300
+import com.umc.component.theme.indigo500
+import com.umc.domain.model.enums.UserPart
+private val challengerPartFilters = listOf(
+    UserPart.PLAN,
+    UserPart.DESIGN,
+    UserPart.WEB,
+    UserPart.ANDROID,
+    UserPart.IOS,
+    UserPart.NODEJS,
+    UserPart.SPRINGBOOT,
+)
 
 @Composable
 fun NormalChallengerRoute(
@@ -68,9 +87,18 @@ fun NormalChallengerRoute(
     NormalChallengerScreen(
         uiState = uiState,
         onSearchKeywordChange = viewModel::onSearchKeywordChanged,
+        onPartFilterClick = viewModel::openPartFilter,
         onMemberClick = viewModel::getChallengerDetail,
         onDismissDialog = viewModel::dismissChallengerDetail
     )
+
+    if (uiState.isPartFilterVisible) {
+        NormalChallengerPartBottomSheet(
+            selectedPart = uiState.selectedPart,
+            onDismissRequest = viewModel::dismissPartFilter,
+            onPartSelected = viewModel::selectPartFilter,
+        )
+    }
 }
 
 
@@ -106,6 +134,7 @@ private fun EmptyScreen() {
 fun NormalChallengerScreen(
     uiState: NormalChallengerUiState = NormalChallengerUiState(),
     onSearchKeywordChange: (String) -> Unit = {},
+    onPartFilterClick: () -> Unit = {},
     onMemberClick: (Long) -> Unit = {},
     onDismissDialog: () -> Unit = {},
 ) {
@@ -113,12 +142,15 @@ fun NormalChallengerScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(grey100()),
+        contentPadding = PaddingValues(bottom = 30.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item {
             SearchBar(
                 searchKeyword = uiState.searchKeyword,
+                selectedPart = uiState.selectedPart,
                 onSearchKeywordChange = onSearchKeywordChange,
+                onPartFilterClick = onPartFilterClick,
             )
         }
         if (uiState.sections.isEmpty()) {
@@ -144,9 +176,11 @@ fun NormalChallengerScreen(
 @Composable
 private fun SearchBar(
     searchKeyword: String,
+    selectedPart: UserPart?,
     onSearchKeywordChange: (String) -> Unit,
+    onPartFilterClick: () -> Unit,
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .background(grey000())
             .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -167,8 +201,87 @@ private fun SearchBar(
             prevIcon = painterResource(R.drawable.ic_search),
             prevIconTint = grey400()
         )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(14.dp))
+                .background(if (selectedPart == null) grey100() else grey800())
+                .clickable(onClick = onPartFilterClick)
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            UText(
+                text = selectedPart?.filterLabel ?: "파트",
+                style = Footnote,
+                color = if (selectedPart == null) grey600() else grey000(),
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+                painter = painterResource(R.drawable.ic_dropdown_down),
+                contentDescription = "파트 선택",
+                tint = if (selectedPart == null) grey600() else grey000(),
+                modifier = Modifier.size(12.dp),
+            )
+        }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NormalChallengerPartBottomSheet(
+    selectedPart: UserPart?,
+    onDismissRequest: () -> Unit,
+    onPartSelected: (UserPart) -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = grey000(),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(420.dp)
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 24.dp),
+        ) {
+            UText(
+                text = "파트를 선택하세요",
+                style = Title3Bold,
+                color = grey800(),
+                modifier = Modifier.padding(top = 8.dp),
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(challengerPartFilters, key = UserPart::name) { part ->
+                    UText(
+                        text = part.filterLabel,
+                        style = Body,
+                        color = if (selectedPart == part) indigo500() else grey800(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onPartSelected(part) }
+                            .padding(vertical = 14.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+private val UserPart.filterLabel: String
+    get() = when (this) {
+        UserPart.PLAN -> "PM"
+        UserPart.IOS -> "iOS"
+        UserPart.SPRINGBOOT -> "Spring Boot"
+        else -> label
+    }
 
 @Composable
 private fun ChallengerSection(
@@ -200,9 +313,8 @@ private fun ChallengerSection(
 
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(grey000())
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             section.members.forEach { member ->
                 ChallengerMemberRow(
@@ -222,6 +334,8 @@ private fun ChallengerMemberRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(grey000())
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -252,8 +366,11 @@ private fun ChallengerMemberRow(
         ) {
             UText(
                 text = member.nicknameWithName,
+                modifier = Modifier.weight(1f, fill = false),
                 style = BodyBold,
-                color = grey800()
+                color = grey800(),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.width(8.dp))
             UText(
@@ -264,20 +381,21 @@ private fun ChallengerMemberRow(
         }
 
         member.roleBadge?.let { role ->
+            Spacer(Modifier.width(8.dp))
             Box(
                 modifier = Modifier
-                    .width(37.dp)
+                    .widthIn(min = 39.dp)
                     .height(24.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(yellow100())
-                    .border(1.dp, yellow300(), RoundedCornerShape(4.dp))
+                    .background(indigo100())
+                    .border(1.dp, indigo300(), RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 UText(
                     text = role,
                     style = Caption1Bold,
-                    color = yellow500()
+                    color = indigo500()
                 )
             }
             Spacer(Modifier.width(10.dp))

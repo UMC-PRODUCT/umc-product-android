@@ -42,9 +42,24 @@ class NormalChallengerViewModel @Inject constructor(
         getChallengers()
     }
 
+    fun openPartFilter() {
+        updateState { copy(isPartFilterVisible = true) }
+    }
+
+    fun dismissPartFilter() {
+        updateState { copy(isPartFilterVisible = false) }
+    }
+
+    fun selectPartFilter(part: UserPart) {
+        val nextPart = part.takeUnless { uiState.value.selectedPart == it }
+        updateState { copy(selectedPart = nextPart, isPartFilterVisible = false) }
+        getChallengers(selectedPart = nextPart)
+    }
+
     private fun getChallengers(
         keyword: String? = uiState.value.searchKeyword.trim().takeIf { it.isNotEmpty() },
         debounce: Boolean = false,
+        selectedPart: UserPart? = uiState.value.selectedPart,
     ) {
         challengerListJob?.cancel()
         challengerListJob = viewModelScope.launch {
@@ -52,8 +67,8 @@ class NormalChallengerViewModel @Inject constructor(
             startLoading()
 
             val responses = coroutineScope {
-                UserPart.entries
-                    .filterNot { it == UserPart.UNKNOWN }
+                (selectedPart?.let(::listOf)
+                    ?: UserPart.entries.filterNot { it == UserPart.UNKNOWN })
                     .map { part ->
                         async {
                             getNormalChallengerListUseCase(
@@ -93,6 +108,7 @@ class NormalChallengerViewModel @Inject constructor(
     fun getChallengerDetail(challengerId: Long) {
         viewModelScope.launch {
             startLoading()
+
             resultResponse(
                 response = getNormalChallengerDetailUseCase(challengerId),
                 successCallback = { detail ->
@@ -112,6 +128,8 @@ class NormalChallengerViewModel @Inject constructor(
 
 data class NormalChallengerUiState(
     val searchKeyword: String = "",
+    val selectedPart: UserPart? = null,
+    val isPartFilterVisible: Boolean = false,
     val sections: List<NormalChallengerSectionUi> = emptyList(),
     val selectedChallenger: ChallengerInfoDialogModel? = null,
 ) : UiState
