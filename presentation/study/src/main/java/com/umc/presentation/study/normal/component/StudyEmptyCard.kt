@@ -19,6 +19,9 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 
+/**
+ * 조회할 스터디 커리큘럼이 없을 때 표시하는 빈 화면
+ */
 @Composable
 fun StudyEmptyCard(
     modifier: Modifier = Modifier,

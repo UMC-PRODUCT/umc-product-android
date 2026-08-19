@@ -164,16 +164,29 @@ class CommunityThreadRepositoryImpl @Inject constructor(
     override suspend fun leaveCommunityThread(
         threadId: String,
     ): Result<Unit> {
-        return runCatching {
-
+        return try {
             val response =
                 communityThreadApi.leaveCommunityThread(
-                    threadId = threadId
+                    threadId = threadId,
                 )
 
-            requireNotNull(response.result)
+            requireNotNull(response.result) {
+                response.message.ifBlank {
+                    "스레드 나가기 응답 데이터가 없어요."
+                }
+            }
 
-            Unit
+            Result.success(Unit)
+        } catch (e: HttpException) {
+            Result.failure(
+                Exception(
+                    e.getServerMessage(
+                        fallback = "스레드에서 나가지 못했어요.",
+                    )
+                )
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

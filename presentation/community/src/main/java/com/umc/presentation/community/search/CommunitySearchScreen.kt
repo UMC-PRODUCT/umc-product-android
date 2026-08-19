@@ -25,6 +25,12 @@ import kotlinx.coroutines.delay
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalFocusManager
 
+/**
+ * 커뮤니티 스레드 검색 화면
+ *
+ * 검색어 입력, 최근 검색어 표시 및 관리,
+ * 검색 결과 목록과 검색 결과 없음 화면을 구성합니다.
+ */
 @Composable
 fun CommunitySearchScreen(
     state: CommunitySearchState,
@@ -153,6 +159,9 @@ fun CommunitySearchScreen(
     }
 }
 
+/**
+ * 검색된 스레드 목록을 표시하는 영역
+ */
 @Composable
 private fun CommunitySearchResultList(
     state: CommunitySearchState,

@@ -27,11 +27,18 @@ import com.umc.component.theme.yellow200
 import com.umc.component.theme.yellow500
 import com.umc.presentation.community.model.CommunityCategory
 
+/**
+ * 스레드의 카테고리를 표시하는 칩
+ *
+ * 카테고리에 따라 배경색, 테두리색, 텍스트 색상을 다르게 표시합니다.
+ * ALL, UNREAD는 필터에서만 사용하는 카테고리이므로 칩을 표시하지 않습니다.
+ */
 @Composable
 fun CommunityCategoryChip(
     category: CommunityCategory,
     modifier: Modifier = Modifier,
 ) {
+    // 전체 및 안읽음 카테고리는 스레드 카드에 표시하지 않음
     if (
         category == CommunityCategory.ALL ||
         category == CommunityCategory.UNREAD
@@ -43,6 +50,7 @@ fun CommunityCategoryChip(
     val borderColor: Color
     val textColor: Color
 
+    // 카테고리별 칩 색상 설정
     when (category) {
         CommunityCategory.STUDY -> {
             backgroundColor = indigo100()
@@ -73,6 +81,7 @@ fun CommunityCategoryChip(
             -> return
     }
 
+    // 카테고리 칩 UI
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(4.dp),

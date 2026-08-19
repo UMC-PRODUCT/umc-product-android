@@ -23,6 +23,12 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.presentation.community.model.CommunityThreadUiModel
 
+/**
+ * 스레드 롱클릭 시 표시되는 관리 메뉴 다이얼로그
+ *
+ * 스레드 고정, 알림 설정, 편집, 나가기 기능을 제공합니다.
+ * 편집 메뉴는 사용자가 작성한 스레드인 경우에만 표시됩니다.
+ */
 @Composable
 fun CommunityThreadMenuDialog(
     thread: CommunityThreadUiModel,
@@ -57,6 +63,7 @@ fun CommunityThreadMenuDialog(
                     bottom = 16.dp,
                 ),
             ) {
+                // 선택한 스레드 제목
                 UText(
                     text = thread.title,
                     style = UmcTypographyTokens.Title3Bold,
@@ -66,6 +73,7 @@ fun CommunityThreadMenuDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // 스레드 고정 또는 고정 해제
                 CommunityThreadMenuItem(
                     text = if (thread.isPinned) {
                         "고정 해제"
@@ -78,6 +86,7 @@ fun CommunityThreadMenuDialog(
                     },
                 )
 
+                // 스레드 알림 켜기 또는 끄기
                 CommunityThreadMenuItem(
                     text = if (thread.isNotificationEnabled) {
                         "알림 끄기"
@@ -101,6 +110,7 @@ fun CommunityThreadMenuDialog(
                     )
                 }
 
+                // 현재 스레드에서 나가기
                 CommunityThreadMenuItem(
                     text = "나가기",
                     textColor = grey950(),
@@ -111,6 +121,9 @@ fun CommunityThreadMenuDialog(
     }
 }
 
+/**
+ * 스레드 관리 메뉴에서 사용하는 공통 메뉴 항목
+ */
 @Composable
 private fun CommunityThreadMenuItem(
     text: String,

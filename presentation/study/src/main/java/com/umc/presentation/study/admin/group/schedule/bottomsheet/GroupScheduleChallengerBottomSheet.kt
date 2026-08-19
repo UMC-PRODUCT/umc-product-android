@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,11 +26,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
@@ -40,31 +44,53 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
-import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.red500
 
+/**
+ * 스터디 일정에 초대할 챌린저를 선택하는 BottomSheet
+ *
+ * 주요 기능
+ * - 기존 선택 챌린저 표시
+ * - 이름 기반 챌린저 검색
+ * - 검색 결과 파트별 표시
+ * - 챌린저 선택 및 선택 해제
+ * - 선택된 챌린저 삭제
+ * - 검색 결과 페이지네이션
+ * - 사용자 프로필 이미지 표시
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupScheduleChallengerBottomSheet(
     viewModel: GroupScheduleChallengerViewModel = hiltViewModel(),
     preSelected: List<GroupScheduleChallengerUiModel>,
     onDismissRequest: () -> Unit,
-    onConfirm: (List<GroupScheduleChallengerUiModel>, String) -> Unit,
+    onConfirm: (
+        List<GroupScheduleChallengerUiModel>,
+        String,
+    ) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
+    /**
+     * BottomSheet를 닫을 때 현재 선택 결과를
+     * 상위 화면으로 전달합니다.
+     */
     fun dismissWithApply() {
         onConfirm(
             state.selectedChallengers,
             state.selectedSummaryText
         )
+
         viewModel.resetAfterConfirm()
         onDismissRequest()
     }
 
+    /**
+     * BottomSheet가 열릴 때 기존 선택 목록을 초기화합니다.
+     */
     LaunchedEffect(preSelected) {
         viewModel.resetAfterConfirm()
         viewModel.setSelected(preSelected)
@@ -93,6 +119,7 @@ fun GroupScheduleChallengerBottomSheet(
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp)
         ) {
+            // 검색 여부에 따라 제목과 확인 버튼 표시
             GroupScheduleChallengerHeader(
                 title = if (state.isSearching) {
                     "초대할 챌린저를 검색하세요"
@@ -100,17 +127,22 @@ fun GroupScheduleChallengerBottomSheet(
                     "초대할 챌린저를 추가하세요"
                 },
                 showConfirmButton = state.isSearching,
-                isConfirmEnabled = state.selectedChallengers.isNotEmpty(),
+                isConfirmEnabled =
+                    state.selectedChallengers.isNotEmpty(),
                 onConfirmClick = {
                     viewModel.clearSearchOnly()
                 }
             )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(
+                modifier = Modifier.height(18.dp)
+            )
 
+            // 챌린저 검색창
             UTextField(
                 value = state.query,
-                onValueChange = viewModel::searchChallengers,
+                onValueChange =
+                    viewModel::searchChallengers,
                 placeholder = "이름을 입력하세요",
                 modifier = Modifier
                     .fillMaxWidth()
@@ -127,7 +159,9 @@ fun GroupScheduleChallengerBottomSheet(
                 cornerRadius = 8.dp
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(
+                modifier = Modifier.height(28.dp)
+            )
 
             Box(
                 modifier = Modifier
@@ -135,28 +169,43 @@ fun GroupScheduleChallengerBottomSheet(
                     .weight(1f)
             ) {
                 if (!state.isSearching) {
+
+                    // 검색 전: 현재 선택된 챌린저 표시
                     if (state.selectedChallengers.isEmpty()) {
                         GroupScheduleEmptyChallengerContent()
                     } else {
                         GroupScheduleSelectedChallengerList(
-                            challengers = state.selectedChallengers,
-                            onRemoveClick = viewModel::toggleChallenger
+                            challengers =
+                                state.selectedChallengers,
+                            onRemoveClick =
+                                viewModel::toggleChallenger
                         )
                     }
                 } else {
+
+                    // 검색 중: 검색 결과 표시
                     GroupScheduleSearchChallengerList(
-                        searchResults = state.searchResults,
-                        selectedChallengers = state.selectedChallengers,
-                        isLoading = state.isLoading,
-                        hasNext = state.hasNext,
-                        onToggleClick = viewModel::toggleChallenger,
-                        onLoadMore = viewModel::loadMoreChallengers,
+                        searchResults =
+                            state.searchResults,
+                        selectedChallengers =
+                            state.selectedChallengers,
+                        isLoading =
+                            state.isLoading,
+                        hasNext =
+                            state.hasNext,
+                        onToggleClick =
+                            viewModel::toggleChallenger,
+                        onLoadMore =
+                            viewModel::loadMoreChallengers,
                     )
                 }
 
+                // API 검색 로딩
                 if (state.isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
+                        modifier = Modifier.align(
+                            Alignment.Center
+                        ),
                         color = indigo500()
                     )
                 }
@@ -165,6 +214,9 @@ fun GroupScheduleChallengerBottomSheet(
     }
 }
 
+/**
+ * 챌린저 선택 BottomSheet의 상단 헤더
+ */
 @Composable
 fun GroupScheduleChallengerHeader(
     title: String,
@@ -185,6 +237,7 @@ fun GroupScheduleChallengerHeader(
             modifier = Modifier.weight(1f)
         )
 
+        // 검색 중일 때만 확인 버튼 표시
         if (showConfirmButton) {
             UButton(
                 text = "확인",
@@ -193,23 +246,29 @@ fun GroupScheduleChallengerHeader(
                 modifier = Modifier
                     .width(52.dp)
                     .height(32.dp),
-                backgroundColor = if (isConfirmEnabled) {
-                    indigo500()
-                } else {
-                    grey100()
-                },
-                textColor = if (isConfirmEnabled) {
-                    grey000()
-                } else {
-                    grey400()
-                },
-                textStyle = UmcTypographyTokens.SubheadlineBold,
+                backgroundColor =
+                    if (isConfirmEnabled) {
+                        indigo500()
+                    } else {
+                        grey100()
+                    },
+                textColor =
+                    if (isConfirmEnabled) {
+                        grey000()
+                    } else {
+                        grey400()
+                    },
+                textStyle =
+                    UmcTypographyTokens.SubheadlineBold,
                 cornerRadius = 8.dp
             )
         }
     }
 }
 
+/**
+ * 아직 초대한 챌린저가 없을 때 표시하는 빈 화면
+ */
 @Composable
 fun GroupScheduleEmptyChallengerContent() {
     Column(
@@ -227,7 +286,9 @@ fun GroupScheduleEmptyChallengerContent() {
             tint = grey400()
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
 
         UText(
             text = "아직 초대한 챌린저가 없어요",
@@ -237,10 +298,15 @@ fun GroupScheduleEmptyChallengerContent() {
     }
 }
 
+/**
+ * 현재 선택된 챌린저 목록
+ */
 @Composable
 fun GroupScheduleSelectedChallengerList(
     challengers: List<GroupScheduleChallengerUiModel>,
-    onRemoveClick: (GroupScheduleChallengerUiModel) -> Unit,
+    onRemoveClick: (
+        GroupScheduleChallengerUiModel
+    ) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
@@ -261,6 +327,12 @@ fun GroupScheduleSelectedChallengerList(
     }
 }
 
+/**
+ * 현재 선택된 개별 챌린저 항목
+ *
+ * 프로필 이미지, 이름, 학교 정보를 표시하며
+ * 삭제 버튼으로 초대 대상에서 제거할 수 있습니다.
+ */
 @Composable
 fun GroupScheduleAddedChallengerRow(
     item: GroupScheduleChallengerUiModel,
@@ -272,20 +344,28 @@ fun GroupScheduleAddedChallengerRow(
             .padding(vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        GroupScheduleChallengerProfile()
+        // 사용자 프로필 이미지
+        GroupScheduleChallengerProfile(
+            profileImageUrl = item.profileImageUrl,
+        )
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(
+            modifier = Modifier.width(8.dp)
+        )
 
         Column(
             modifier = Modifier.weight(1f)
         ) {
             UText(
                 text = item.displayName,
-                style = UmcTypographyTokens.SubheadlineBold,
+                style =
+                    UmcTypographyTokens.SubheadlineBold,
                 color = grey800()
             )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(
+                modifier = Modifier.height(2.dp)
+            )
 
             UText(
                 text = item.school,
@@ -294,27 +374,38 @@ fun GroupScheduleAddedChallengerRow(
             )
         }
 
+        // 초대 대상에서 제거
         UButton(
             text = "삭제",
             onClick = onRemoveClick,
             modifier = Modifier
                 .width(50.dp)
                 .height(32.dp),
-            backgroundColor = red500().copy(alpha = 0.12f),
+            backgroundColor =
+                red500().copy(alpha = 0.12f),
             textColor = red500(),
-            textStyle = UmcTypographyTokens.SubheadlineBold,
+            textStyle =
+                UmcTypographyTokens.SubheadlineBold,
             cornerRadius = 6.dp
         )
     }
 }
 
+/**
+ * 챌린저 검색 결과 목록
+ *
+ * 검색 결과를 파트별로 그룹화하고,
+ * 현재 선택 여부를 체크박스로 표시합니다.
+ */
 @Composable
 fun GroupScheduleSearchChallengerList(
     searchResults: List<GroupScheduleChallengerUiModel>,
     selectedChallengers: List<GroupScheduleChallengerUiModel>,
     isLoading: Boolean,
     hasNext: Boolean,
-    onToggleClick: (GroupScheduleChallengerUiModel) -> Unit,
+    onToggleClick: (
+        GroupScheduleChallengerUiModel
+    ) -> Unit,
     onLoadMore: () -> Unit,
 ) {
     val groupedResults = searchResults
@@ -326,14 +417,18 @@ fun GroupScheduleSearchChallengerList(
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
-        groupedResults.forEach { (partLabel, challengers) ->
+        groupedResults.forEach {
+                (partLabel, challengers) ->
+
+            // 파트별 검색 결과 제목
             if (partLabel.isNotBlank()) {
                 item(
                     key = "part_header_$partLabel"
                 ) {
                     UText(
                         text = partLabel,
-                        style = UmcTypographyTokens.BodyBold,
+                        style =
+                            UmcTypographyTokens.BodyBold,
                         color = grey900(),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -351,9 +446,10 @@ fun GroupScheduleSearchChallengerList(
                     challenger.id
                 }
             ) { item ->
-                val isChecked = selectedChallengers.any { selected ->
-                    selected.id == item.id
-                }
+                val isChecked =
+                    selectedChallengers.any { selected ->
+                        selected.id == item.id
+                    }
 
                 GroupScheduleSearchChallengerRow(
                     item = item,
@@ -373,12 +469,18 @@ fun GroupScheduleSearchChallengerList(
             }
         }
 
+        /**
+         * 다음 페이지가 존재하면
+         * 리스트 하단에서 추가 검색 결과를 조회합니다.
+         */
         if (
             hasNext &&
             searchResults.isNotEmpty() &&
             !isLoading
         ) {
-            item(key = "load_more") {
+            item(
+                key = "load_more"
+            ) {
                 LaunchedEffect(
                     searchResults.size,
                     hasNext,
@@ -390,9 +492,9 @@ fun GroupScheduleSearchChallengerList(
     }
 }
 
-
-
-
+/**
+ * 챌린저 검색 결과의 개별 사용자 항목
+ */
 @Composable
 fun GroupScheduleSearchChallengerRow(
     item: GroupScheduleChallengerUiModel,
@@ -408,20 +510,28 @@ fun GroupScheduleSearchChallengerRow(
             .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        GroupScheduleChallengerProfile()
+        // 검색 결과 사용자 프로필 이미지
+        GroupScheduleChallengerProfile(
+            profileImageUrl = item.profileImageUrl,
+        )
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(
+            modifier = Modifier.width(8.dp)
+        )
 
         Column(
             modifier = Modifier.weight(1f)
         ) {
             UText(
                 text = item.displayName,
-                style = UmcTypographyTokens.SubheadlineBold,
+                style =
+                    UmcTypographyTokens.SubheadlineBold,
                 color = grey800()
             )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(
+                modifier = Modifier.height(2.dp)
+            )
 
             UText(
                 text = item.school,
@@ -430,6 +540,7 @@ fun GroupScheduleSearchChallengerRow(
             )
         }
 
+        // 선택 여부 체크박스
         Icon(
             painter = painterResource(
                 id = if (isChecked) {
@@ -445,14 +556,33 @@ fun GroupScheduleSearchChallengerRow(
     }
 }
 
+/**
+ * 일정 초대 챌린저의 프로필 이미지
+ *
+ * profileImageUrl이 존재하면 서버 이미지를 표시하고,
+ * 이미지가 없으면 기본 프로필 아이콘을 표시합니다.
+ */
 @Composable
-fun GroupScheduleChallengerProfile() {
-    Icon(
-        painter = painterResource(
-            id = R.drawable.ic_profile_default
-        ),
-        contentDescription = null,
-        tint = Color.Unspecified,
-        modifier = Modifier.size(32.dp)
-    )
+fun GroupScheduleChallengerProfile(
+    profileImageUrl: String?,
+) {
+    if (!profileImageUrl.isNullOrBlank()) {
+        AsyncImage(
+            model = profileImageUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape),
+        )
+    } else {
+        Icon(
+            painter = painterResource(
+                id = R.drawable.ic_profile_default
+            ),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(32.dp)
+        )
+    }
 }

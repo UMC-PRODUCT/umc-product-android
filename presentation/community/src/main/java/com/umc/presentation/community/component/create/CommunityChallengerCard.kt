@@ -27,6 +27,12 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey800
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 
+/**
+ * 스레드 생성 화면에서 선택된 챌린저 정보를 표시하는 카드
+ *
+ * 선택된 인원에 따라 이름 또는 "OOO 외 N명" 형식으로 표시하며,
+ * 클릭 시 챌린저 선택 BottomSheet를 엽니다.
+ */
 @Composable
 fun CommunityChallengerCard(
     challengers: List<CommunityChallengerUiModel>,
@@ -39,6 +45,7 @@ fun CommunityChallengerCard(
         MutableInteractionSource()
     }
 
+    // 선택된 챌린저 수에 따라 카드에 표시할 문구 구성
     val challengerText = when {
         challengers.isEmpty() -> {
             "챌린저를 선택하세요"

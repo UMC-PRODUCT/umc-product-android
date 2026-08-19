@@ -18,6 +18,9 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.R
 
+/**
+ * 커뮤니티 검색 결과가 없을 때 표시하는 Empty 화면
+ */
 @Composable
 fun CommunitySearchEmptyContent(
     modifier: Modifier = Modifier,
@@ -27,6 +30,7 @@ fun CommunitySearchEmptyContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        // 검색 결과 없음 아이콘
         Icon(
             painter = painterResource(
                 id = R.drawable.ic_search,

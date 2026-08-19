@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,38 +25,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
-import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
-import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
-import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
-import com.umc.component.theme.red100
-import com.umc.component.theme.red500
-import com.umc.component.theme.yellow100
-import com.umc.component.theme.yellow500
-import com.umc.component.theme.yellow700
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 
+/**
+ * 스레드 생성 화면에서 AI 카테고리 분류 결과를 표시하는 카드
+ *
+ * AI 상태에 따라 안내, 로딩, 분류 결과, 재분류 안내 화면을 표시합니다.
+ */
 @Composable
 fun CommunityAiCard(
     aiState: CommunityAiState,
@@ -80,6 +73,7 @@ fun CommunityAiCard(
         color = indigo100(),
         shadowElevation = 0.dp,
     ) {
+        // AI 분류 진행 상태에 따라 카드 내부 UI 변경
         when (aiState) {
             CommunityAiState.GUIDE -> {
                 CommunityAiGuideContent()
@@ -122,6 +116,9 @@ fun CommunityAiCard(
     }
 }
 
+/**
+ * AI 분류 전 최초 안내 화면
+ */
 @Composable
 private fun CommunityAiGuideContent() {
     Row(
@@ -154,6 +151,9 @@ private fun CommunityAiGuideContent() {
     }
 }
 
+/**
+ * AI가 스레드 특징을 분석하고 있는 동안 표시하는 로딩 화면
+ */
 @Composable
 private fun CommunityAiLoadingContent() {
     Column(
@@ -191,6 +191,9 @@ private fun CommunityAiLoadingContent() {
     }
 }
 
+/**
+ * AI 분석 중 표시되는 애니메이션 ProgressBar
+ */
 @Composable
 private fun CommunityAiProgressBar(
     modifier: Modifier = Modifier,
@@ -199,6 +202,7 @@ private fun CommunityAiProgressBar(
         label = "community_ai_loading",
     )
 
+    // 서로 다른 속도로 움직이는 두 개의 Progress 애니메이션
     val firstProgress = transition.animateFloat(
         initialValue = 0.35f,
         targetValue = 0.75f,
@@ -233,6 +237,9 @@ private fun CommunityAiProgressBar(
     }
 }
 
+/**
+ * AI 로딩 ProgressBar의 한 줄을 표시
+ */
 @Composable
 private fun CommunityAiProgressLine(
     progress: Float,
@@ -259,6 +266,12 @@ private fun CommunityAiProgressLine(
     }
 }
 
+/**
+ * AI 카테고리 분류 결과 화면
+ *
+ * 분류된 카테고리와 아이콘을 표시하며,
+ * 상태에 따라 다시 분류하기 버튼과 안내 메시지를 표시합니다.
+ */
 @Composable
 private fun CommunityAiResultContent(
     category: CommunityCategory,
@@ -267,8 +280,6 @@ private fun CommunityAiResultContent(
     onRetryClassificationClick: () -> Unit,
     onChangeEmojiClick: () -> Unit,
 ) {
-
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -290,6 +301,7 @@ private fun CommunityAiResultContent(
 
         Spacer(modifier = Modifier.height(14.dp))
 
+        // AI가 분류한 카테고리 및 아이콘
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -337,6 +349,7 @@ private fun CommunityAiResultContent(
 
         Spacer(modifier = Modifier.height(18.dp))
 
+        // AI 재분류 버튼
         CommunityAiResultButton(
             text = if (canRetry) {
                 "다시 분류하기"
@@ -349,6 +362,7 @@ private fun CommunityAiResultContent(
             modifier = Modifier.fillMaxWidth(),
         )
 
+        // 재분류가 필요하거나 불가능한 경우 안내 메시지 표시
         if (warningMessage != null) {
             Spacer(modifier = Modifier.height(14.dp))
 
@@ -386,6 +400,9 @@ private fun CommunityAiResultContent(
     }
 }
 
+/**
+ * AI 분류 결과 화면에서 사용하는 공통 버튼
+ */
 @Composable
 private fun CommunityAiResultButton(
     text: String,
@@ -398,6 +415,7 @@ private fun CommunityAiResultButton(
         MutableInteractionSource()
     }
 
+    // 버튼 활성화 여부에 따라 배경색 결정
     val backgroundColor = when {
         !enabled -> grey100()
         isPrimary -> indigo500()
@@ -432,6 +450,9 @@ private fun CommunityAiResultButton(
     }
 }
 
+/**
+ * AI 관련 화면에서 공통으로 사용하는 Galaxy AI 아이콘
+ */
 @Composable
 private fun AiIcon() {
     Icon(
@@ -444,6 +465,9 @@ private fun AiIcon() {
     )
 }
 
+/**
+ * CommunityCategory를 화면에 표시할 한글 카테고리명으로 변환
+ */
 private fun categoryLabel(
     category: CommunityCategory,
 ): String {
@@ -457,6 +481,9 @@ private fun categoryLabel(
     }
 }
 
+/**
+ * AI 분류 결과에 표시할 카테고리별 설명 문구 반환
+ */
 private fun categoryResultDescription(
     category: CommunityCategory,
 ): String {
@@ -485,6 +512,9 @@ private fun categoryResultDescription(
     }
 }
 
+/**
+ * 카테고리에 대응하는 아이콘 리소스를 반환
+ */
 private fun categoryIconRes(
     category: CommunityCategory,
 ): Int {
@@ -513,6 +543,9 @@ private fun categoryIconRes(
     }
 }
 
+/**
+ * AI 분류 실패 상태 확인용 Preview
+ */
 @Preview(showBackground = true)
 @Composable
 private fun CommunityAiFailedPreview() {

@@ -23,6 +23,12 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey800
 import com.umc.presentation.study.admin.submit.AdminSubmitGroupUiModel
 
+/**
+ * 관리자 제출 현황에서 조회할 스터디 그룹을 선택하는 BottomSheet
+ *
+ * 전체 그룹 또는 특정 스터디 그룹을 선택할 수 있으며,
+ * 선택 완료 후 BottomSheet를 닫습니다.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminSubmitGroupBottomSheet(
@@ -48,13 +54,17 @@ fun AdminSubmitGroupBottomSheet(
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp),
         ) {
+            // 그룹 선택 안내 문구
             UText(
                 text = "확인할 그룹을 선택하세요",
                 style = Title3Bold,
                 color = grey800(),
-                modifier = Modifier.padding(bottom = 16.dp),
+                modifier = Modifier.padding(
+                    bottom = 16.dp
+                ),
             )
 
+            // 조회 가능한 그룹 목록
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
             ) {
@@ -68,6 +78,7 @@ fun AdminSubmitGroupBottomSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
+                                // 선택된 그룹 전달 후 BottomSheet 닫기
                                 onSelect(group)
                                 onDismiss()
                             }

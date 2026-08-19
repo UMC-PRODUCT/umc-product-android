@@ -24,9 +24,15 @@ import com.umc.presentation.community.component.create.CommunityAiCard
 import com.umc.presentation.community.component.create.CommunityChallengerCard
 import com.umc.presentation.community.component.create.CommunityCreateTopBar
 import com.umc.presentation.community.component.create.CommunityThreadForm
-import com.umc.presentation.community.create.bottomsheet.CommunityCreateMemberBottomSheet
+import com.umc.presentation.community.bottomsheet.create.CommunityCreateMemberBottomSheet
 import com.umc.presentation.community.model.CommunityAiState
 
+/**
+ * 커뮤니티 스레드 생성 화면
+ *
+ * 챌린저 선택, 제목/특징 입력,
+ * AI 카테고리 분류 및 스레드 생성을 위한 UI를 구성합니다.
+ */
 @Composable
 fun CommunityCreateScreen(
     state: CommunityCreateState,
@@ -41,6 +47,7 @@ fun CommunityCreateScreen(
             .background(grey000())
             .navigationBarsPadding(),
     ) {
+        // 스레드 생성 화면 상단바
         CommunityCreateTopBar(
             title = "스레드 만들기",
             actionText = "완료",
@@ -62,6 +69,7 @@ fun CommunityCreateScreen(
                 .fillMaxWidth()
                 .weight(1f),
         ) {
+            // 스레드 생성에 필요한 기본 입력 영역
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -73,6 +81,7 @@ fun CommunityCreateScreen(
                         top = 8.dp,
                     ),
             ) {
+                // 챌린저 선택 영역
                 UText(
                     text = "챌린저 명단",
                     style = UmcTypographyTokens.HeadlineBold,
@@ -91,10 +100,9 @@ fun CommunityCreateScreen(
                     },
                 )
 
-
-
                 Spacer(modifier = Modifier.height(32.dp))
 
+                // 스레드 제목 및 특징 입력 영역
                 CommunityThreadForm(
                     title = state.title,
                     description = state.description,
@@ -117,6 +125,12 @@ fun CommunityCreateScreen(
                 Spacer(modifier = Modifier.height(32.dp))
             }
 
+            /**
+             * AI 카테고리 분류 카드
+             *
+             * 입력 상태에 따라 안내, 로딩,
+             * 분류 결과 및 재분류 상태를 표시합니다.
+             */
             CommunityAiCard(
                 aiState = state.aiState,
                 classifiedCategory = state.classifiedCategory,
@@ -141,6 +155,7 @@ fun CommunityCreateScreen(
                     .padding(horizontal = 24.dp)
                     .then(
                         if (state.aiState == CommunityAiState.GUIDE) {
+                            // 입력 중 키보드에 AI 카드가 가려지지 않도록 처리
                             Modifier
                                 .imePadding()
                                 .padding(bottom = 8.dp)
@@ -152,6 +167,7 @@ fun CommunityCreateScreen(
         }
     }
 
+    // 챌린저 선택 BottomSheet
     if (state.showChallengerBottomSheet) {
         CommunityCreateMemberBottomSheet(
             preSelected = state.selectedChallengers,
