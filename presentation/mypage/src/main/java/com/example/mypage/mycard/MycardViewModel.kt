@@ -2,6 +2,7 @@ package com.example.mypage.mycard
 
 import androidx.lifecycle.viewModelScope
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import com.example.mypage.dialog.ExchangeStep
 import com.example.mypage.mypage.MypageEvent
 import com.example.mypage.mypage.MypageUiState
@@ -39,7 +40,6 @@ class MycardViewModel @Inject constructor(
 
 ) : BaseViewModel<MycardUiState, MycardEvent>(
     MycardUiState()){
-
 
 
     //초기 상태
@@ -223,6 +223,5 @@ data class MycardUiState(
 sealed interface MycardEvent : UiEvent {
     //이동하기
     object NavigateToMypage: MycardEvent
-
 
 }
