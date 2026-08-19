@@ -104,6 +104,13 @@ fun MycardRoute(
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    // 백스택 Restore가 발생해도 다이얼로그 열림 여부를 유지하는 플래그
+    // rememberSaveable
+    var hasOpenedExchangeDialog by androidx.compose.runtime.saveable.rememberSaveable {
+        mutableStateOf(false)
+    }
+
+
     //화면이 resume에서 복귀할떄마다 재호출
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -129,8 +136,9 @@ fun MycardRoute(
 
     //처음 홈 실행 시 체크
     LaunchedEffect(openExchangeDialog) {
-        if(openExchangeDialog == true){
+        if (openExchangeDialog && !hasOpenedExchangeDialog) {
             nearbyViewModel.openBottomSheet()
+            hasOpenedExchangeDialog = true //오픈 후 즉시 처리 완료 상태로 변경!
         }
     }
     
@@ -169,6 +177,7 @@ fun MycardRoute(
                 is MycardEvent.NavigateToMypage -> {
 
                 }
+
                 else -> {}
             }
         }

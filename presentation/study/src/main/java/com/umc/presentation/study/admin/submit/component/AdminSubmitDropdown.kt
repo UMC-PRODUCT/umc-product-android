@@ -19,6 +19,12 @@ import com.umc.component.theme.UmcTypographyTokens.Callout
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 
+/**
+ * 관리자 제출 현황 화면에서 사용하는 드롭다운 버튼
+ *
+ * 현재 선택된 주차 또는 스터디 그룹을 표시하며,
+ * 클릭 시 해당 선택 BottomSheet를 엽니다.
+ */
 @Composable
 fun AdminSubmitDropdown(
     text: String,
@@ -36,8 +42,14 @@ fun AdminSubmitDropdown(
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        UText(text = text, style = CalloutBold, color = grey500())
+        UText(
+            text = text,
+            style = CalloutBold,
+            color = grey500()
+        )
+
         Spacer(modifier = Modifier.width(4.dp))
+
         Icon(
             painter = painterResource(R.drawable.ic_dropdown_down),
             contentDescription = null,

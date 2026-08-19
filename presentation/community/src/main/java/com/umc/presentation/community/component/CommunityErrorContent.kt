@@ -26,7 +26,11 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.indigo500
 
-
+/**
+ * 커뮤니티 스레드 목록 조회에 실패했을 때 표시하는 에러 화면
+ *
+ * 네트워크 오류 안내와 다시 시도하기 버튼을 제공합니다.
+ */
 @Composable
 fun CommunityErrorContent(
     errorMessage: String,
@@ -42,6 +46,7 @@ fun CommunityErrorContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        // 스레드 조회 실패 아이콘
         Icon(
             painter = painterResource(
                 id = R.drawable.ic_community_error,
@@ -53,6 +58,7 @@ fun CommunityErrorContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // 에러 상태 제목
         UText(
             text = "스레드를 불러오지 못했어요.",
             style = UmcTypographyTokens.HeadlineBold,
@@ -62,6 +68,7 @@ fun CommunityErrorContent(
 
         Spacer(modifier = Modifier.height(4.dp))
 
+        // 네트워크 확인 안내 문구
         UText(
             text = "네트워크 연결을 확인하고 다시 시도해주세요.",
             style = UmcTypographyTokens.Subheadline,
@@ -71,6 +78,7 @@ fun CommunityErrorContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // 스레드 목록 재조회 버튼
         UButton(
             text = "다시 시도하기",
             onClick = onRetryClick,
@@ -85,6 +93,9 @@ fun CommunityErrorContent(
     }
 }
 
+/**
+ * 스레드 조회 에러 화면 Preview
+ */
 @Preview(showBackground = true)
 @Composable
 private fun CommunityErrorContentPreview() {

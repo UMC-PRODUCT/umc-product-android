@@ -34,6 +34,12 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
 
+/**
+ * 커뮤니티 스레드 검색 화면에서 사용하는 검색바
+ *
+ * 검색어 입력, 검색 실행, 검색어 초기화 및
+ * 검색 전/후 상태에 따른 취소·뒤로가기 기능을 제공합니다.
+ */
 @Composable
 fun CommunitySearchBar(
     query: String,
@@ -50,6 +56,7 @@ fun CommunitySearchBar(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // 검색 완료 후에는 검색바 왼쪽에 뒤로가기 버튼 표시
         if (hasSearched) {
             IconButton(
                 onClick = onBackClick,
@@ -66,6 +73,7 @@ fun CommunitySearchBar(
             Spacer(modifier = Modifier.width(8.dp))
         }
 
+        // 검색어 입력 영역
         Surface(
             modifier = Modifier.weight(1f),
             color = grey000(),
@@ -106,6 +114,7 @@ fun CommunitySearchBar(
                                     vertical = 15.5.dp,
                                 ),
                         ) {
+                            // 검색어가 없을 때 placeholder 표시
                             if (query.isBlank()) {
                                 UText(
                                     text = "제목, 내용 검색",
@@ -119,6 +128,7 @@ fun CommunitySearchBar(
                     },
                 )
 
+                // 입력된 검색어 전체 삭제 버튼
                 if (query.isNotBlank()) {
                     IconButton(
                         onClick = onClearClick,
@@ -139,6 +149,7 @@ fun CommunitySearchBar(
             }
         }
 
+        // 검색 전에는 검색 화면을 종료할 수 있는 취소 버튼 표시
         if (!hasSearched) {
             Spacer(modifier = Modifier.width(12.dp))
 

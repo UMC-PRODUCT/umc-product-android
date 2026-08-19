@@ -7,11 +7,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.component.UDateTimePickerDialog
 import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleChallengerBottomSheet
 import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleLocationBottomSheet
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekBottomSheet
-import com.umc.component.component.UDatePickerDialog
-import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekUiModel
+import kotlinx.coroutines.flow.collectLatest
 
+/**
+ * 스터디 그룹 일정 등록 화면의 Route
+ *
+ * ViewModel과 Screen을 연결하고,
+ * 날짜/시간 다이얼로그 및 각종 BottomSheet 표시 상태를 관리합니다.
+ */
 @Composable
 fun AdminStudyGroupScheduleRoute(
     groupId: Long,
@@ -21,8 +25,12 @@ fun AdminStudyGroupScheduleRoute(
     onNavigateBack: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
+
     val context = LocalContext.current
 
+    /**
+     * 전달받은 스터디 그룹 정보를 ViewModel에 초기화
+     */
     LaunchedEffect(
         groupId,
         groupTitle,
@@ -35,65 +43,118 @@ fun AdminStudyGroupScheduleRoute(
         )
     }
 
-    var showStartPicker by remember { mutableStateOf(false) }
-    var showEndPicker by remember { mutableStateOf(false) }
-    var showCheckInStartPicker by remember { mutableStateOf(false) }
-    var showOnTimeEndPicker by remember { mutableStateOf(false) }
-    var showLateEndPicker by remember { mutableStateOf(false) }
+    // 일정 시작 날짜/시간 선택 Dialog
+    var showStartPicker by remember {
+        mutableStateOf(false)
+    }
 
-    var showLocationBottomSheet by remember { mutableStateOf(false) }
-    var showChallengerBottomSheet by remember { mutableStateOf(false) }
+    // 일정 종료 날짜/시간 선택 Dialog
+    var showEndPicker by remember {
+        mutableStateOf(false)
+    }
 
-    var showWeekBottomSheet by remember { mutableStateOf(false) }
+    // 출석 시작 시간 선택 Dialog
+    var showCheckInStartPicker by remember {
+        mutableStateOf(false)
+    }
 
+    // 정상 출석 종료 시간 선택 Dialog
+    var showOnTimeEndPicker by remember {
+        mutableStateOf(false)
+    }
+
+    // 지각 인정 종료 시간 선택 Dialog
+    var showLateEndPicker by remember {
+        mutableStateOf(false)
+    }
+
+    // 장소 선택 BottomSheet
+    var showLocationBottomSheet by remember {
+        mutableStateOf(false)
+    }
+
+    // 챌린저 선택 BottomSheet
+    var showChallengerBottomSheet by remember {
+        mutableStateOf(false)
+    }
+
+    // 주차 선택 BottomSheet
+    var showWeekBottomSheet by remember {
+        mutableStateOf(false)
+    }
+
+    /**
+     * ViewModel에서 발생하는 일회성 이벤트 처리
+     */
     LaunchedEffect(viewModel) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
-                AdminStudyGroupScheduleEvent.NavigateBack -> onNavigateBack()
+                AdminStudyGroupScheduleEvent.NavigateBack -> {
+                    onNavigateBack()
+                }
 
                 is AdminStudyGroupScheduleEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        event.message,
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }
             }
         }
     }
 
+    /**
+     * 실제 일정 등록 화면
+     */
     AdminStudyGroupScheduleScreen(
         state = state,
         onAction = { action ->
             when (action) {
+                // 일정 시작일 선택
                 AdminStudyGroupScheduleAction.ClickStartDateTime -> {
                     showStartPicker = true
                 }
 
+                // 일정 종료일 선택
                 AdminStudyGroupScheduleAction.ClickEndDateTime -> {
                     showEndPicker = true
                 }
 
+                // 출석 시작 시간 선택
                 AdminStudyGroupScheduleAction.ClickCheckInStart -> {
                     showCheckInStartPicker = true
                 }
 
+                // 정상 출석 종료 시간 선택
                 AdminStudyGroupScheduleAction.ClickOnTimeEnd -> {
                     showOnTimeEndPicker = true
                 }
 
+                // 지각 인정 종료 시간 선택
                 AdminStudyGroupScheduleAction.ClickLateEnd -> {
                     showLateEndPicker = true
                 }
 
+                // 장소 선택
                 AdminStudyGroupScheduleAction.ClickPlace -> {
                     showLocationBottomSheet = true
                 }
 
+                // 챌린저 선택
                 AdminStudyGroupScheduleAction.ClickChallenger -> {
                     showChallengerBottomSheet = true
                 }
 
+                // 주차 선택
                 AdminStudyGroupScheduleAction.ClickWeek -> {
                     showWeekBottomSheet = true
                 }
 
+                /**
+                 * 위의 UI 표시 액션을 제외한 나머지는
+                 * ViewModel에서 처리
+                 */
                 else -> {
                     viewModel.onAction(action)
                 }
@@ -101,89 +162,120 @@ fun AdminStudyGroupScheduleRoute(
         }
     )
 
+    /**
+     * 일정 시작 날짜/시간 선택
+     *
+     * 하루 종일 OFF
+     * -> 날짜 + 시간 입력
+     *
+     * 하루 종일 ON
+     * -> 날짜만 입력
+     * -> 내부 시간은 00:00:00.000으로 설정
+     */
     if (showStartPicker) {
-        if (state.isAllDay) {
-            UDatePickerDialog(
-                initialDate = state.startDateTime,
-                onConfirm = {
-                    viewModel.updateStartDateTime(it)
-                    showStartPicker = false
-                },
-                onDismiss = {
-                    showStartPicker = false
-                }
-            )
-        } else {
-            UDateTimePickerDialog(
-                onConfirm = {
-                    viewModel.updateStartDateTime(it)
-                    showStartPicker = false
-                },
-                onDismiss = {
-                    showStartPicker = false
-                }
-            )
-        }
+        UDateTimePickerDialog(
+            isAllday = state.isAllDay,
+            isStartTime = true,
+            onConfirm = { utcDateTime ->
+                viewModel.updateStartDateTime(
+                    utcDateTime
+                )
+
+                showStartPicker = false
+            },
+            onDismiss = {
+                showStartPicker = false
+            }
+        )
     }
 
+    /**
+     * 일정 종료 날짜/시간 선택
+     *
+     * 하루 종일 OFF
+     * -> 날짜 + 시간 입력
+     *
+     * 하루 종일 ON
+     * -> 날짜만 입력
+     * -> 내부 시간은 23:59:59.999로 설정
+     */
     if (showEndPicker) {
-        if (state.isAllDay) {
-            UDatePickerDialog(
-                initialDate = state.endDateTime ?: state.startDateTime,
-                onConfirm = {
-                    viewModel.updateEndDateTime(it)
-                    showEndPicker = false
-                },
-                onDismiss = {
-                    showEndPicker = false
-                }
-            )
-        } else {
-            UDateTimePickerDialog(
-                onConfirm = {
-                    viewModel.updateEndDateTime(it)
-                    showEndPicker = false
-                },
-                onDismiss = {
-                    showEndPicker = false
-                }
-            )
-        }
+        UDateTimePickerDialog(
+            isAllday = state.isAllDay,
+            isStartTime = false,
+            onConfirm = { utcDateTime ->
+                viewModel.updateEndDateTime(
+                    utcDateTime
+                )
+
+                showEndPicker = false
+            },
+            onDismiss = {
+                showEndPicker = false
+            }
+        )
     }
 
-
-
-
+    /**
+     * 출석 시작 시간 선택
+     *
+     * 출석 시간은 하루 종일 여부와 상관없이
+     * 날짜 + 시간을 직접 선택합니다.
+     */
     if (showCheckInStartPicker) {
         UDateTimePickerDialog(
-            onConfirm = {
-                viewModel.updateCheckInStartDateTime(it)
+            onConfirm = { utcDateTime ->
+                viewModel.updateCheckInStartDateTime(
+                    utcDateTime
+                )
+
                 showCheckInStartPicker = false
             },
-            onDismiss = { showCheckInStartPicker = false }
+            onDismiss = {
+                showCheckInStartPicker = false
+            }
         )
     }
 
+    /**
+     * 정상 출석 종료 시간 선택
+     */
     if (showOnTimeEndPicker) {
         UDateTimePickerDialog(
-            onConfirm = {
-                viewModel.updateOnTimeEndDateTime(it)
+            onConfirm = { utcDateTime ->
+                viewModel.updateOnTimeEndDateTime(
+                    utcDateTime
+                )
+
                 showOnTimeEndPicker = false
             },
-            onDismiss = { showOnTimeEndPicker = false }
+            onDismiss = {
+                showOnTimeEndPicker = false
+            }
         )
     }
 
+    /**
+     * 지각 인정 종료 시간 선택
+     */
     if (showLateEndPicker) {
         UDateTimePickerDialog(
-            onConfirm = {
-                viewModel.updateLateEndDateTime(it)
+            onConfirm = { utcDateTime ->
+                viewModel.updateLateEndDateTime(
+                    utcDateTime
+                )
+
                 showLateEndPicker = false
             },
-            onDismiss = { showLateEndPicker = false }
+            onDismiss = {
+                showLateEndPicker = false
+            }
         )
     }
 
+    /**
+     * 장소 선택 BottomSheet
+     */
     if (showLocationBottomSheet) {
         GroupScheduleLocationBottomSheet(
             onDismissRequest = {
@@ -197,11 +289,15 @@ fun AdminStudyGroupScheduleRoute(
                         longitude = location.longitude,
                     )
                 )
+
                 showLocationBottomSheet = false
             }
         )
     }
 
+    /**
+     * 챌린저 선택 BottomSheet
+     */
     if (showChallengerBottomSheet) {
         GroupScheduleChallengerBottomSheet(
             preSelected = state.selectedChallengers,
@@ -212,14 +308,18 @@ fun AdminStudyGroupScheduleRoute(
                 viewModel.onAction(
                     AdminStudyGroupScheduleAction.SelectChallengers(
                         challengers = challengers,
-                        summaryText = summaryText
+                        summaryText = summaryText,
                     )
                 )
+
                 showChallengerBottomSheet = false
             }
         )
     }
 
+    /**
+     * 주차 선택 BottomSheet
+     */
     if (showWeekBottomSheet) {
         AdminSubmitWeekBottomSheet(
             weeks = state.weeks,
@@ -227,9 +327,11 @@ fun AdminStudyGroupScheduleRoute(
                 viewModel.onAction(
                     AdminStudyGroupScheduleAction.SelectWeek(
                         week = weekItem.week,
-                        weeklyCurriculumId = weekItem.weeklyCurriculumId,
+                        weeklyCurriculumId =
+                            weekItem.weeklyCurriculumId,
                     )
                 )
+
                 showWeekBottomSheet = false
             },
             onDismiss = {

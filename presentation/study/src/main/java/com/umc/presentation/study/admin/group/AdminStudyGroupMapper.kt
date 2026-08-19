@@ -2,41 +2,92 @@ package com.umc.presentation.study.admin.group
 
 import com.umc.domain.model.organization.ManagedStudyGroup
 
+/**
+ * 서버에서 조회한 ManagedStudyGroup을
+ * 관리자 스터디 그룹 화면용 UI 모델로 변환합니다.
+ *
+ * 그룹 기본 정보뿐 아니라
+ * 파트장과 스터디원의 학교 및 프로필 이미지 정보도
+ * 함께 매핑합니다.
+ */
 fun ManagedStudyGroup.toUiModel(): AdminStudyGroupItemUiModel {
+
+    /**
+     * mentors 목록의 첫 번째 멤버를
+     * 해당 그룹의 담당 파트장으로 사용합니다.
+     */
     val leader = mentors.firstOrNull()
 
     return AdminStudyGroupItemUiModel(
         groupId = studyGroupId,
         title = name,
+
+        // API용 파트 값을 화면 표시용 이름으로 변환
         partLabel = studyPart.toPartLabel(),
+
+        // 서버 원본 파트 값 유지
         studyPart = studyPart,
 
-        leaderName = leader?.memberName.orEmpty(),
+        // 담당 파트장 이름
+        leaderName = leader
+            ?.memberName
+            .orEmpty(),
 
-        // managed API에는 challengerId가 없으므로 memberId 사용
-        leaderChallengerId = leader?.memberId ?: 0L,
+        /**
+         * Managed API에는 challengerId가 존재하지 않으므로
+         * memberId를 화면 내부 식별값으로 사용합니다.
+         */
+        leaderChallengerId =
+            leader?.memberId ?: 0L,
 
-        leaderProfileImageUrl = leader?.profileImageUrl,
+        // 담당 파트장 프로필 이미지
+        leaderProfileImageUrl =
+            leader?.profileImageUrl,
 
+        /**
+         * 서버의 그룹 멤버 목록을
+         * 화면용 멤버 UI 모델로 변환합니다.
+         */
         members = members.map { member ->
             AdminStudyGroupMemberUiModel(
                 challengerId = member.memberId,
                 name = member.memberName,
                 school = member.schoolName,
+
+                // 스터디원 프로필 이미지
                 profileImageUrl = member.profileImageUrl,
             )
         },
 
+        /**
+         * 멤버 변경 비교 및 API 요청 등에 사용할
+         * 현재 멤버 ID 목록
+         */
         memberChallengerIds = members.map { member ->
             member.memberId
         },
 
         createdAtRaw = createdAt,
+
+        // 현재 그룹의 스터디원 수
         memberCount = members.size,
-        leaderUniv = leader?.schoolName.orEmpty(),
+
+        // 담당 파트장 학교
+        leaderUniv = leader
+            ?.schoolName
+            .orEmpty(),
     )
 }
 
+/**
+ * 서버에서 사용하는 파트 값을
+ * 사용자에게 표시할 파트명으로 변환합니다.
+ *
+ * 예)
+ * ANDROID -> Android
+ * IOS -> iOS
+ * SPRINGBOOT -> Spring Boot
+ */
 private fun String.toPartLabel(): String {
     return when (uppercase()) {
         "PLAN" -> "Plan"

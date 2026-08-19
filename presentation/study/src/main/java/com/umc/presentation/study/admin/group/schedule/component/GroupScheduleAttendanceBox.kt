@@ -18,6 +18,11 @@ import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Body
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 
+/**
+ * 출석부 생성 시 출석 시간을 설정하는 영역
+ *
+ * 체크인 시작, 정시 종료, 지각 종료 시간을 선택합니다.
+ */
 @Composable
 fun GroupScheduleAttendanceBox(
     checkInStartText: String?,
@@ -31,7 +36,11 @@ fun GroupScheduleAttendanceBox(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .border(1.dp, grey300(), RoundedCornerShape(12.dp))
+            .border(
+                1.dp,
+                grey300(),
+                RoundedCornerShape(12.dp)
+            )
             .background(grey000()),
     ) {
         AttendanceRow(
@@ -58,6 +67,9 @@ fun GroupScheduleAttendanceBox(
     }
 }
 
+/**
+ * 개별 출석 시간 선택 항목
+ */
 @Composable
 private fun AttendanceRow(
     title: String,
@@ -79,18 +91,28 @@ private fun AttendanceRow(
             modifier = Modifier.weight(1f),
         )
 
+        // 아직 시간이 선택되지 않은 경우 이동 아이콘 표시
         if (value == null) {
             Icon(
-                painter = painterResource(R.drawable.ic_arrow_next),
+                painter = painterResource(
+                    R.drawable.ic_arrow_next
+                ),
                 contentDescription = null,
                 tint = grey500(),
                 modifier = Modifier.size(14.dp),
             )
         } else {
+            // 선택된 시간 표시
             Box(
                 modifier = Modifier
-                    .background(indigo100(), RoundedCornerShape(999.dp))
-                    .padding(horizontal = 14.dp, vertical = 7.dp),
+                    .background(
+                        indigo100(),
+                        RoundedCornerShape(999.dp)
+                    )
+                    .padding(
+                        horizontal = 14.dp,
+                        vertical = 7.dp
+                    ),
             ) {
                 UText(
                     text = value,
@@ -102,6 +124,9 @@ private fun AttendanceRow(
     }
 }
 
+/**
+ * 항목 사이 구분선
+ */
 @Composable
 private fun DividerLine() {
     Box(

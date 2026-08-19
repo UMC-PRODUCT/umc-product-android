@@ -25,6 +25,20 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+
+
+/**
+ * 커뮤니티 스레드 수정 화면의 상태와 비즈니스 로직을 관리하는 ViewModel
+ *
+ * 주요 기능
+ * - 스레드 상세 정보 조회
+ * - 현재 참여 중인 챌린저 조회
+ * - 제목 및 스레드 특징 수정
+ * - AI 카테고리 재분류
+ * - 챌린저 추가/삭제 후 목록 갱신
+ * - 스레드 수정 및 삭제
+ * - 화면 이동 및 Toast 이벤트 전달
+ */
 @HiltViewModel
 class CommunityEditViewModel @Inject constructor(
     private val getCommunityThreadDetailUseCase:

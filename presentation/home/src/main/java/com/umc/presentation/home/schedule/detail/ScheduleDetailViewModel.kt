@@ -122,11 +122,26 @@ constructor(
     fun checkScheduleCapabilities(){
         viewModelScope.launch {
             resultResponse(
-                response = getScheduleCapabilities(),
-                successCallback = {
+                response = getAuthAccessUseCase(ResourceType.SCHEDULE, checkScheduleId),
+                successCallback = { accessInfo ->
+
+                    Log.d("log_home", "checkScheduleCapabilities: $accessInfo")
+
+                    var checkEdit = false
+                    var checkDelete = false
+                    for(item in accessInfo.permissions){
+                        if(item.type == PermissionType.EDIT){
+                            checkEdit = item.hasPermission
+                        }
+                        if(item.type == PermissionType.DELETE){
+                            checkDelete = item.hasPermission
+                        }
+                    }
+
                     updateState {
                         copy(
-                            isAuthor = it.canCreateSchedule
+                            canEdit = checkEdit,
+                            canDelete = checkDelete
                         )
                     }
                 },
@@ -296,7 +311,8 @@ data class ScheduleDetailUiState(
 
 
     //내가 작성한 것인지 여부
-    val isAuthor: Boolean = false,
+    val canEdit: Boolean = false,
+    val canDelete: Boolean = false,
 
     //케밥 메뉴 아이콘 보이기 여부
     val isMenuVisible : Boolean = false,

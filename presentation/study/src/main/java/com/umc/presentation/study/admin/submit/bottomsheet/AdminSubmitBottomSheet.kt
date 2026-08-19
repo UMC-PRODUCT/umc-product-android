@@ -29,6 +29,16 @@ import com.umc.presentation.study.admin.submit.AdminSubmitAction
 import com.umc.presentation.study.admin.submit.AdminSubmitItemUiModel
 import com.umc.presentation.study.admin.submit.AdminSubmitState
 
+/**
+ * 관리자 스터디 제출 상세 BottomSheet
+ *
+ * 주요 기능
+ * - 제출 URL 및 제출 내용 확인
+ * - 관리자 피드백 작성
+ * - PASS / FAIL 승인 및 반려
+ * - 기존 피드백 및 제출 상태 수정
+ * - 베스트 워크북 등록/수정 탭 제공
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminSubmitBottomSheet(
@@ -104,6 +114,12 @@ fun AdminSubmitBottomSheet(
     }
 }
 
+
+/**
+ * 챌린저가 제출한 URL을 표시하는 영역
+ *
+ * 제출 URL과 링크 바로가기 버튼을 제공합니다.
+ */
 @Composable
 private fun SubmitUrlSection(item: AdminSubmitItemUiModel) {
     UText(text = "제출 URL", style = SubheadlineBold, color = grey800())
@@ -147,6 +163,11 @@ private fun SubmitUrlSection(item: AdminSubmitItemUiModel) {
     }
 }
 
+/**
+ * 아직 검토되지 않은 제출물의 피드백 작성 영역
+ *
+ * 피드백을 작성한 뒤 제출을 통과 또는 반려할 수 있습니다.
+ */
 @Composable
 private fun ReviewContent(
     item: AdminSubmitItemUiModel,
@@ -219,6 +240,11 @@ private fun ReviewContent(
     }
 }
 
+/**
+ * 이미 검토가 완료된 제출물의 피드백 수정 영역
+ *
+ * 기존 피드백을 수정하고 PASS / FAIL 상태를 변경할 수 있습니다.
+ */
 @Composable
 private fun ReviewedContent(
     item: AdminSubmitItemUiModel,

@@ -20,6 +20,17 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+
+/**
+ * 커뮤니티 스레드 검색 화면의 상태와 검색 로직을 관리하는 ViewModel
+ *
+ * 주요 기능
+ * - 검색어 입력 및 초기화
+ * - 스레드 검색 API 호출
+ * - 최근 검색어 추가 및 삭제
+ * - 검색 결과 상태 관리
+ * - 스레드 상세 화면 이동 이벤트 전달
+ */
 @HiltViewModel
 class CommunitySearchViewModel @Inject constructor(
     private val getCommunityThreadsUseCase: GetCommunityThreadsUseCase,

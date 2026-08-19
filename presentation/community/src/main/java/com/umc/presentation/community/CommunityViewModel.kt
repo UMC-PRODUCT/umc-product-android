@@ -29,6 +29,18 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * 커뮤니티 메인 화면의 상태와 비즈니스 로직을 관리하는 ViewModel
+ *
+ * 주요 기능
+ * - 스레드 목록 조회 및 주기적 Polling
+ * - 카테고리 필터 상태 관리
+ * - 스레드 고정/고정 해제
+ * - 스레드 알림 켜기/끄기
+ * - 스레드 수정 화면 이동
+ * - 스레드 나가기
+ * - 화면 이동 및 Toast 이벤트 전달
+ */
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
     private val getCommunityThreadsUseCase: GetCommunityThreadsUseCase,

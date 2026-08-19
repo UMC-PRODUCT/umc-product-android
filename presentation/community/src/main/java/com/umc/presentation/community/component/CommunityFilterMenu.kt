@@ -34,6 +34,12 @@ import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo500
 import com.umc.presentation.community.model.CommunityCategory
 
+/**
+ * 커뮤니티 스레드 목록의 카테고리 필터 메뉴
+ *
+ * 전체, 안읽음 및 각 스레드 카테고리를 선택할 수 있으며,
+ * 현재 선택된 카테고리에는 체크 아이콘을 표시합니다.
+ */
 @Composable
 fun CommunityFilterMenu(
     expanded: Boolean,
@@ -42,12 +48,15 @@ fun CommunityFilterMenu(
     onCategorySelected: (CommunityCategory) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // 메뉴가 닫힌 상태라면 Popup을 표시하지 않음
     if (!expanded) return
 
+    // 필터 버튼 아래에 메뉴가 표시되도록 Y 위치 설정
     val menuYOffset = with(LocalDensity.current) {
         44.dp.roundToPx()
     }
 
+    // 화면 바깥 클릭 또는 뒤로가기 시 닫히는 필터 Popup
     Popup(
         alignment = Alignment.TopEnd,
         offset = IntOffset(
@@ -83,6 +92,7 @@ fun CommunityFilterMenu(
                     vertical = 6.dp,
                 ),
         ) {
+            // 전체 스레드 필터
             CommunityFilterMenuItem(
                 text = CommunityCategory.ALL.label,
                 isSelected = selectedCategory == CommunityCategory.ALL,
@@ -92,6 +102,7 @@ fun CommunityFilterMenu(
                 },
             )
 
+            // 읽지 않은 스레드 필터
             CommunityFilterMenuItem(
                 text = CommunityCategory.UNREAD.label,
                 isSelected = selectedCategory == CommunityCategory.UNREAD,
@@ -103,6 +114,7 @@ fun CommunityFilterMenu(
 
             Spacer(modifier = Modifier.height(4.dp))
 
+            // 기본 필터와 카테고리 필터를 구분하는 구분선
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -113,6 +125,7 @@ fun CommunityFilterMenu(
 
             Spacer(modifier = Modifier.height(4.dp))
 
+            // 파트공지 카테고리
             CommunityFilterMenuItem(
                 text = CommunityCategory.PROJECT.label,
                 isSelected = selectedCategory == CommunityCategory.PROJECT,
@@ -122,6 +135,7 @@ fun CommunityFilterMenu(
                 },
             )
 
+            // 스터디 카테고리
             CommunityFilterMenuItem(
                 text = CommunityCategory.STUDY.label,
                 isSelected = selectedCategory == CommunityCategory.STUDY,
@@ -131,6 +145,7 @@ fun CommunityFilterMenu(
                 },
             )
 
+            // 질문 카테고리
             CommunityFilterMenuItem(
                 text = CommunityCategory.QNA.label,
                 isSelected = selectedCategory == CommunityCategory.QNA,
@@ -140,6 +155,7 @@ fun CommunityFilterMenu(
                 },
             )
 
+            // 자유 카테고리
             CommunityFilterMenuItem(
                 text = CommunityCategory.FREE.label,
                 isSelected = selectedCategory == CommunityCategory.FREE,
@@ -152,6 +168,11 @@ fun CommunityFilterMenu(
     }
 }
 
+/**
+ * 필터 메뉴에서 사용하는 개별 카테고리 항목
+ *
+ * 현재 선택된 카테고리에는 우측에 체크 아이콘을 표시합니다.
+ */
 @Composable
 private fun CommunityFilterMenuItem(
     text: String,
@@ -171,6 +192,7 @@ private fun CommunityFilterMenuItem(
             color = grey950(),
         )
 
+        // 현재 선택된 필터 표시
         if (isSelected) {
             Icon(
                 painter = painterResource(

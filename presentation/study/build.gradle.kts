@@ -60,4 +60,5 @@ dependencies {
 
     implementation(libs.naver.maps.compose)
     implementation(libs.naver.maps.sdk)
+    implementation(libs.coil.compose)
 }

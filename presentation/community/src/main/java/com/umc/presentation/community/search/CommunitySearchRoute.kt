@@ -6,6 +6,12 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
+/**
+ * 커뮤니티 검색 화면의 Route
+ *
+ * ViewModel의 상태를 구독하고 화면 이동과 같은
+ * 일회성 이벤트를 처리합니다.
+ */
 @Composable
 fun CommunitySearchRoute(
     onNavigateBack: () -> Unit,
