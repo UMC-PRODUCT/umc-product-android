@@ -81,15 +81,9 @@ fun PermissionRoute(
                             add(Manifest.permission.ACCESS_FINE_LOCATION)
                             add(Manifest.permission.ACCESS_COARSE_LOCATION)
                         }
-                        if (uiState.isPhotoCheck) {
-                            add(
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    Manifest.permission.READ_MEDIA_IMAGES
-                                } else {
-                                    Manifest.permission.READ_EXTERNAL_STORAGE
-                                }
-                            )
-                        }
+                        // 사진은 시스템 사진 선택 도구(PickVisualMedia)로만 접근하므로
+                        // 저장소 권한을 요청하지 않는다. 광범위 저장소 권한을 선언·요청하면
+                        // Play 정책 위반으로 심사에서 거부된다
                     }.filter { permission ->
                         ContextCompat.checkSelfPermission(
                             context, permission
