@@ -22,6 +22,8 @@ import com.umc.domain.usecase.schedule.UpdateScheduleLocationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
@@ -39,6 +41,7 @@ class FixLocationViewModel @Inject constructor(
 ) {
     private val geocoder = Geocoder(context, Locale.KOREAN)
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+    private var searchJob: Job? = null
 
     init {
         observeRecentPlaces()
@@ -99,6 +102,17 @@ class FixLocationViewModel @Inject constructor(
                 searchResults = if (keyword.isBlank()) emptyList() else searchResults,
             )
         }
+
+        if (keyword.isBlank()) {
+            searchJob?.cancel()
+            return
+        }
+
+        searchLocation(
+            keyword = keyword.trim(),
+            debounce = true,
+            saveRecent = false,
+        )
     }
 
     //검색어로 장소 검색
@@ -109,13 +123,23 @@ class FixLocationViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
+        searchLocation(keyword = keyword, debounce = false, saveRecent = true)
+    }
+
+    private fun searchLocation(
+        keyword: String,
+        debounce: Boolean,
+        saveRecent: Boolean,
+    ) {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            if (debounce) delay(300)
             startLoading()
             resultResponse(
                 response = getSearchLocationUseCase(keyword),
                 successCallback = { locations ->
                     updateState { copy(searchResults = locations) }
-                    if (locations.isNotEmpty()) {
+                    if (saveRecent && locations.isNotEmpty()) {
                         viewModelScope.launch {
                             updateRecentSearchPlaceUseCase(keyword)
                         }

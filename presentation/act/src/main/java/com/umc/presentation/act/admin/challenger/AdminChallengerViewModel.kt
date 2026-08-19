@@ -61,13 +61,14 @@ class AdminChallengerViewModel @Inject constructor(
     }
 
     fun selectPartFilter(part: UserPart) {
+        val nextPart = part.takeUnless { uiState.value.selectedPart == it }
         updateState {
             copy(
-                selectedPart = part,
+                selectedPart = nextPart,
                 isPartFilterVisible = false
             )
         }
-        getChallengers(selectedPart = part)
+        getChallengers(selectedPart = nextPart)
     }
 
     //관리자용 챌린저 목록 조회
@@ -237,18 +238,38 @@ class AdminChallengerViewModel @Inject constructor(
 
     //기타 상벌점 부여
     fun grantCustomPoint(challengerId: Long) {
-        grantPoint(challengerId, PointType.CUSTOM, uiState.value.customReason)
+        val state = uiState.value
+        if (state.customRewardScore > 0 && state.customPunishScore > 0) {
+            emitEvent(AdminChallengerEvent.ShowToast("상점과 벌점을 동시에 입력할 수 없습니다."))
+            return
+        }
+
+        val pointValue = when {
+            state.customRewardScore > 0 -> state.customRewardScore
+            state.customPunishScore > 0 -> -state.customPunishScore
+            else -> return
+        }
+        grantPoint(challengerId, PointType.CUSTOM, state.customReason, pointValue)
     }
 
     //상벌점 부여 공통 처리
-    private fun grantPoint(challengerId: Long, pointType: PointType, description: String) {
+    private fun grantPoint(
+        challengerId: Long,
+        pointType: PointType,
+        description: String,
+        pointValue: Int? = null,
+    ) {
         if (challengerId <= 0L) return
         viewModelScope.launch {
             startLoading()
             resultResponse(
                 response = grantChallengerPointUseCase(
                     id = challengerId,
-                    request = ChallengerPointRequest(pointType = pointType, description = description)
+                    request = ChallengerPointRequest(
+                        pointType = pointType,
+                        description = description,
+                        pointValue = pointValue,
+                    )
                 ),
                 successCallback = { detail ->
                     updateState {

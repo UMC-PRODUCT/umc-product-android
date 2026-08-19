@@ -426,6 +426,9 @@ fun CommunityChattingScreen(
                         onSend(replyingMessage?.messageId)
                         replyingMessage = null
                     },
+                    onCancelReply = {
+                        replyingMessage = null
+                    },
                 )
             }
         },

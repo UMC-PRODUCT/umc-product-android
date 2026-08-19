@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -62,6 +65,7 @@ import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
+import com.umc.component.theme.grey950
 import com.umc.component.theme.grey900
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
@@ -70,6 +74,10 @@ import com.umc.component.theme.white
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow400
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
+import com.umc.domain.model.enums.UserPart
+import com.umc.presentation.act.admin.challenger.bottomsheet.OtherPointsScreen
+import com.umc.presentation.act.admin.challenger.bottomsheet.PenaltyPointsScreen
+import com.umc.presentation.act.admin.challenger.bottomsheet.RewardPointsScreen
 import kotlinx.coroutines.flow.collectLatest
 
 private enum class PointGrantSheet {
@@ -143,7 +151,14 @@ fun AdminChallengerDetailRoute(
                     onSubmitClick = { viewModel.grantPenalty(challengerId) },
                 )
 
-                PointGrantSheet.REWARD, PointGrantSheet.OTHER -> OtherPointsScreen(
+                PointGrantSheet.REWARD -> RewardPointsScreen(
+                    uiState = uiState,
+                    onSelectReward = viewModel::selectReward,
+                    onMemoChange = viewModel::onMemoChanged,
+                    onSubmitClick = { viewModel.grantReward(challengerId) },
+                )
+
+                PointGrantSheet.OTHER -> OtherPointsScreen(
                     uiState = uiState,
                     onRewardMinusClick = viewModel::decreaseRewardScore,
                     onRewardPlusClick = viewModel::increaseRewardScore,
@@ -171,48 +186,53 @@ fun AdminChallengerDetailScreen(
 ) {
     val ui = uiState.detail.toDetailUi()
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().background(white()), verticalArrangement = Arrangement.spacedBy(16.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(white())
     ) {
-        item {
-            Spacer(modifier = Modifier.height(56.dp))
+        Header(onBackClick = onBackClick)
 
-            Header(onBackClick = onBackClick)
-        }
-
-        item {
-            ProfileInfoSection(ui = ui)
-        }
-
-        item {
-            ScoreButtons(
-                onAddClick = onAddScoreClick,
-                onMinusClick = onMinusScoreClick,
-                onOtherClick = onOtherScoreClick,
-            )
-        }
-
-        item {
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(12.dp)
-                    .background(grey100())
-            )
-        }
-
-        if(ui.history.isNotEmpty()) {
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
             item {
-                HistorySection(
-                    totalPlusCount = ui.totalPlusCount,
-                    totalMinusCount = ui.totalMinusCount,
-                    history = ui.history,
-                    isEditMode = uiState.isDetailEditMode,
-                    onDeleteClick = { item -> onDeleteClick(item.id) })
+                ProfileInfoSection(ui = ui)
             }
 
             item {
-                EditChip(onEditClick = onEditClick)
+                ScoreButtons(
+                    onAddClick = onAddScoreClick,
+                    onMinusClick = onMinusScoreClick,
+                    onOtherClick = onOtherScoreClick,
+                )
+            }
+
+            item {
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(12.dp)
+                        .background(grey100())
+                )
+            }
+
+            item {
+                HistorySection(
+                    totalRewardScore = ui.totalRewardScore,
+                    totalPenaltyScore = ui.totalPenaltyScore,
+                    history = ui.history,
+                    isEditMode = uiState.isDetailEditMode,
+                    onDeleteClick = { item -> onDeleteClick(item.id) },
+                )
+            }
+
+            if (ui.history.isNotEmpty()) {
+                item {
+                    EditChip(onEditClick = onEditClick)
+                }
             }
         }
     }
@@ -255,26 +275,27 @@ private fun Header(
     onBackClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp, end = 10.dp, top = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
+        Icon(
+            // clickable을 패딩보다 먼저 걸어 48dp 터치 영역을 유지한다
             modifier = Modifier
-                .size(40.dp)
-                .clickable(onClick = onBackClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_back),
-                contentDescription = null,
-                tint = grey800(),
-                modifier = Modifier.size(24.dp)
-            )
-        }
+                .clickable(onClick = onBackClick)
+                .padding(12.dp),
+            painter = painterResource(R.drawable.ic_back),
+            contentDescription = null,
+            tint = Color.Unspecified,
+        )
 
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(8.dp))
 
         UText(
-            text = AppStrings.CHALLENGER_MANAGE_PROFILE_TITLE, style = Title2Bold, color = grey800()
+            text = AppStrings.CHALLENGER_MANAGE_PROFILE_TITLE,
+            style = Title2Bold,
+            color = grey950(),
         )
     }
 }
@@ -304,7 +325,12 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             UText(
-                text = ui.nicknameWithName, style = HeadlineBold, color = grey800()
+                text = ui.nicknameWithName,
+                modifier = Modifier.weight(1f, fill = false),
+                style = HeadlineBold,
+                color = grey800(),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Spacer(modifier = Modifier.width(8.dp))
             UText(
@@ -315,9 +341,7 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
                 text = ui.school, type = UInfoChipType.SCHOOL
             )
             Spacer(modifier = Modifier.width(8.dp))
-            UInfoChip(
-                text = ui.part, type = UInfoChipType.PART
-            )
+            UInfoChip(part = ui.part)
         }
 
         Box(
@@ -357,7 +381,7 @@ private fun AddScore(
                 painter = painterResource(R.drawable.ic_add_filled),
                 contentDescription = null,
                 tint = green500(),
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(32.dp)
             )
         }
         Spacer(Modifier.width(14.dp))
@@ -472,8 +496,8 @@ private fun OtherScore(
 
 @Composable
 private fun HistorySection(
-    totalPlusCount: Int,
-    totalMinusCount: Int,
+    totalRewardScore: Int,
+    totalPenaltyScore: Int,
     history: List<HistoryDetail>,
     isEditMode: Boolean,
     onDeleteClick: (HistoryDetail) -> Unit
@@ -501,29 +525,34 @@ private fun HistorySection(
             )
 
             ScoreCountChip(
-                text = "${AppStrings.REWARD} $totalPlusCount",
+                text = "${AppStrings.REWARD} $totalRewardScore",
                 bgColor = green100(),
                 textColor = green500()
             )
             ScoreCountChip(
-                text = "${AppStrings.PUNISH} $totalMinusCount",
+                text = "${AppStrings.PUNISH} $totalPenaltyScore",
                 bgColor = red100(),
                 textColor = red500()
             )
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(grey000())
-                .border(1.dp, grey200(), RoundedCornerShape(12.dp))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            history.forEach { item ->
-                HistoryRow(
-                    item = item, isEditMode = isEditMode, onDeleteClick = { onDeleteClick(item) })
+        if (history.isNotEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(grey000())
+                    .border(1.dp, grey200(), RoundedCornerShape(12.dp))
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                history.forEach { item ->
+                    HistoryRow(
+                        item = item,
+                        isEditMode = isEditMode,
+                        onDeleteClick = { onDeleteClick(item) },
+                    )
+                }
             }
         }
     }
@@ -573,6 +602,7 @@ private fun ScoreCountChip(
 ) {
     Box(
         modifier = Modifier
+            .wrapContentWidth()
             .height(24.dp)
             .clip(RoundedCornerShape(4.dp))
             .background(bgColor)
@@ -649,9 +679,9 @@ private data class ChallengerDetailUi(
     val generation: String,
     val totalScore: Int,
     val school: String,
-    val part: String,
-    val totalPlusCount: Int,
-    val totalMinusCount: Int,
+    val part: UserPart,
+    val totalRewardScore: Int,
+    val totalPenaltyScore: Int,
     val history: List<HistoryDetail>
 )
 
@@ -666,9 +696,9 @@ private fun ChallengerManageDialogModel?.toDetailUi(): ChallengerDetailUi {
             generation = "기수",
             totalScore = 0,
             school = "중앙대학교",
-            part = "Web",
-            totalPlusCount = 1,
-            totalMinusCount = 1,
+            part = UserPart.WEB,
+            totalRewardScore = 1,
+            totalPenaltyScore = 1,
             history = listOf(
                 HistoryDetail(id = 1L, date = "2024.01.01", content = "스터디 미제출", score = -1),
                 HistoryDetail(id = 2L, date = "2024.01.01", content = "베스트 워크북 수행", score = 1)
@@ -682,8 +712,8 @@ private fun ChallengerManageDialogModel?.toDetailUi(): ChallengerDetailUi {
         totalScore = totalScore.toInt(),
         school = university,
         part = part,
-        totalPlusCount = positiveCount,
-        totalMinusCount = warningCount,
+        totalRewardScore = rewardScore,
+        totalPenaltyScore = penaltyScore,
         history = history.map { point ->
             HistoryDetail(
                 id = point.id, date = point.date, content = point.title, score = point.value.toInt()

@@ -1,4 +1,4 @@
-package com.umc.presentation.act.normal.challenger
+package com.umc.presentation.act.normal.challenger.dialog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -27,6 +28,7 @@ import com.umc.component.R
 import com.umc.component.component.UInfoChip
 import com.umc.component.component.UInfoChipType
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Callout
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
@@ -48,6 +50,7 @@ import com.umc.component.theme.yellow500
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.domain.model.enums.CheckHistoryStatus
+import com.umc.domain.model.enums.UserPart
 
 @Composable
 fun NormalChallengerInfoDialog(
@@ -94,7 +97,7 @@ fun NormalChallengerInfoDialog(
                         contentDescription = null,
                         tint = grey600(),
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(24.dp)
                             .clickable(onClick = onDismissRequest)
                     )
                 }
@@ -108,8 +111,11 @@ fun NormalChallengerInfoDialog(
             ) {
                 UText(
                     text = model.name,
+                    modifier = Modifier.weight(1f, fill = false),
                     style = Title3Bold,
-                    color = grey800()
+                    color = grey800(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
 
                 UInfoChip(
@@ -117,8 +123,7 @@ fun NormalChallengerInfoDialog(
                     type = UInfoChipType.SCHOOL
                 )
                 UInfoChip(
-                    text = model.part,
-                    type = UInfoChipType.PART
+                    part = model.part
                 )
             }
 
@@ -141,38 +146,40 @@ fun NormalChallengerInfoDialog(
                 )
             }
 
-            Spacer(Modifier.height(24.dp))
+            if (model.history.isNotEmpty()) {
+                Spacer(Modifier.height(24.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_history),
-                    contentDescription = null,
-                    tint = grey600(),
-                    modifier = Modifier.size(24.dp)
-                )
-                UText(
-                    text = "상벌점 기록",
-                    style = HeadlineBold,
-                    color = grey900()
-                )
-            }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_history),
+                        contentDescription = null,
+                        tint = grey600(),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    UText(
+                        text = AppStrings.CHALLENGER_INFO_HISTORY_LABEL,
+                        style = HeadlineBold,
+                        color = grey900()
+                    )
+                }
 
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .border(1.dp, grey200(), RoundedCornerShape(12.dp))
-                    .background(grey000())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                model.history.forEach { history ->
-                    HistoryItemRow(history = history)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(1.dp, grey200(), RoundedCornerShape(12.dp))
+                        .background(grey000())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    model.history.forEach { history ->
+                        HistoryItemRow(history = history)
+                    }
                 }
             }
         }
@@ -264,7 +271,7 @@ private fun ChallengerInfoDialogPreview() {
             model = ChallengerInfoDialogModel(
                 name = "김디자",
                 university = "중앙대학교",
-                part = "Web",
+                part = UserPart.WEB,
                 generation = 12,
                 totalPoints = 1.0,
                 history = listOf(

@@ -2,6 +2,8 @@ package com.umc.presentation.community.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.component.theme.AppStrings
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.ai.ClassifyCommunityThreadUseCase
 import com.umc.domain.usecase.community.CreateCommunityThreadUseCase
 import com.umc.presentation.community.model.CommunityAiState
@@ -16,6 +18,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -34,6 +37,7 @@ import kotlinx.coroutines.launch
 class CommunityCreateViewModel @Inject constructor(
     private val createCommunityThreadUseCase: CreateCommunityThreadUseCase,
     private val classifyCommunityThreadUseCase: ClassifyCommunityThreadUseCase,
+    private val getUserInfoUseCase: GetUserInfoUseCase,
 ) : ViewModel() {
 
     /** 스레드 생성 화면 UI 상태 */
@@ -49,6 +53,15 @@ class CommunityCreateViewModel @Inject constructor(
 
     /** AI 분류 요청 및 디바운스를 관리하는 Job */
     private var classificationJob: Job? = null
+
+    init {
+        // 생성 시점에 동기로 검사할 수 있도록 내 memberId를 미리 들고 있는다
+        viewModelScope.launch {
+            getUserInfoUseCase().collectLatest { userInfo ->
+                _state.update { it.copy(myMemberId = userInfo.id) }
+            }
+        }
+    }
 
     /**
      * 화면에서 전달된 Action을 처리합니다.
@@ -398,6 +411,17 @@ class CommunityCreateViewModel @Inject constructor(
             sendEvent(
                 CommunityCreateEvent.ShowToast(
                     message = "카테고리 분류를 완료해주세요.",
+                )
+            )
+            return
+        }
+
+        // 본인은 참여자로 넣을 수 없다. 후보 목록이 범용 챌린저 검색이라 본인이 섞여 들어온다
+        val myMemberId = currentState.myMemberId
+        if (myMemberId > 0L && currentState.selectedChallengers.any { it.memberId == myMemberId }) {
+            sendEvent(
+                CommunityCreateEvent.ShowToast(
+                    message = AppStrings.COMMUNITY_CREATE_SELF_NOT_ALLOWED,
                 )
             )
             return

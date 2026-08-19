@@ -1,6 +1,7 @@
 package com.umc.domain.model.act.challenger
 
 import com.umc.domain.model.enums.CheckHistoryStatus
+import com.umc.domain.model.enums.UserPart
 
 /**
  * 다이얼로그의 출석/활동 기록 리스트 아이템 모델
@@ -16,7 +17,7 @@ data class ChallengerInfoHistory(
 data class ChallengerInfoDialogModel(
     val name: String = "알수없음",
     val university: String = "알수없음",
-    val part: String = "알수없음",
+    val part: UserPart = UserPart.UNKNOWN,
     val generation: Int = 0,
     val profileImageUrl: String = "",
     val totalPoints: Double = 0.0,
