@@ -42,6 +42,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import com.umc.component.base.CollectUiEvents
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -132,8 +133,7 @@ fun NoticeWriteRoute(
         if (editNoticeId > 0L) viewModel.initEditMode(editNoticeId)
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
+    CollectUiEvents(viewModel.uiEvent) { event ->
             when (event) {
                 NoticeWriteEvent.SubmitSuccess -> {
                     val message = if (editNoticeId > 0L) {
@@ -149,7 +149,6 @@ fun NoticeWriteRoute(
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
             }
-        }
     }
 
     NoticeWriteScreen(

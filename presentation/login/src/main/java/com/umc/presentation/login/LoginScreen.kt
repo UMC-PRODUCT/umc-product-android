@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import com.umc.component.base.CollectUiEvents
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -85,8 +86,7 @@ fun LoginRoute(
 
     var toastData by remember { mutableStateOf<UToastData?>(null) }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
+    CollectUiEvents(viewModel.uiEvent) { event ->
             when (event) {
                 is LoginEvent.MoveToSignUpEvent -> navigateToSignUp(event.oAuthToken)
                 is LoginEvent.MoveToMainEvent -> navigateToMain()
@@ -94,7 +94,6 @@ fun LoginRoute(
                 is LoginEvent.ShowErrorToast ->
                     toastData = UToastData(event.message, UToastState.ERROR)
             }
-        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
