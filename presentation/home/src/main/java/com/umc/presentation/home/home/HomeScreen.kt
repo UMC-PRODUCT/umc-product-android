@@ -183,9 +183,6 @@ fun HomeScreen(
                         .height(16.dp)
                     )
                 }
-
-
-                //HomeProfileCard(uiState = uiState)
                 HomeProfileCardsRow(uiState = uiState)
 
                 if (uiState.userType == UserType.ACTIVE) {
@@ -242,21 +239,6 @@ fun HomeScreen(
 
                         // 일정 리스트가 있을 때만 구분선과 리스트 표시
                         if (uiState.dailyPlans.isNotEmpty()) {
-                            //구분선
-                            /*
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
-                                    .height(1.dp)
-                                    .background(grey200())
-                            )
-
-                            Spacer(modifier = Modifier
-                                .height(16.dp)
-                            )
-
-                             */
 
                             //달력 아래 일일 일정들
                             uiState.dailyPlans.forEach { plan ->
@@ -320,7 +302,7 @@ fun HomeScreen(
 
 
 
-/**명함 교환 카드**/
+/**명함 교환 배너 카드**/
 @Composable
 fun HomeShareCardsRow(
     uiState: HomeUiState,
@@ -400,8 +382,8 @@ fun HomeShareCardsRow(
 }
 
 /**
- * 프로필 카드 V2
- *
+ * 활동 정보 및 기수 프로필 카드
+ * 유저의 누적 활동일(growDay) 카드와 수료/참여 기수(gisuTag) 칩 카드를 좌우로 배치
  * **/
 @Composable
 fun HomeProfileCardsRow(
@@ -517,9 +499,11 @@ fun HomeProfileCardsRow(
     }
 }
 
-/**HomeProfileCardRows에 쓰이는 grid (2*2) 형태
+/**
+ * HomeProfileCardRows에 쓰이는 격자 grid (2*2) 형태
  * GisuChip을 item으로 쓴다.
  *
+ * 기수 목록이 4개를 초과할 경우, 최신 3개만 보여주고 남은 개수를 "+N" 형태의 칩으로 표기
  * **/
 @Composable
 fun GisuGrid(gisuStrings: List<String>){
@@ -532,7 +516,7 @@ fun GisuGrid(gisuStrings: List<String>){
 
     val addItems = mutableListOf<String>() //보여줄 item 리스트
     if(hasMore){
-        addItems.add("MORE") //체크 용도(제일 마지막 출력을 위해 제일 먼저 넣는다)
+        addItems.add("MORE") //더보기 칩 구분용 더미 키값(제일 마지막 출력을 위해 제일 먼저 넣는다)
     }
     addItems.addAll(latestGisus.take(displayCount))
 
@@ -584,7 +568,8 @@ fun GisuGrid(gisuStrings: List<String>){
 
 }
 
-/**HomeProfileCardRows 전용 기수 칩
+/**
+ * HomeProfileCardRows 전용 기수 칩
  * 기수 int 정보 In시 `10기` 형태로 제공
  * **/
 @Composable
@@ -758,8 +743,6 @@ private fun ScoreCard(
 /**
  * 일정 제목 및 뷰 모드(달력/리스트) 전환 헤더
  */
-
-//Arrangement.SpaceBetween = 2개를 양 끝으로 밀어냄
 @Composable
 fun HomePlanHeader(
     viewMode: HomeViewMode,

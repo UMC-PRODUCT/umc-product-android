@@ -27,7 +27,20 @@ data class GisuSummary(
     val fromRecords: List<RolePartItem>   // 챌린저 활동 내역
 )
 
-//UserInfo 데이터를 기수별로 그룹화하고 정렬
+/**
+ * UserInfo 도메인 모델을 기수별 요약 정보 목록(List of GisuSummary)으로 가공 및 변환하는 확장 메서드
+ *
+ * 유저의 역할(roles) 및 챌린저 기록(challengerRecords)에 흩어져 있는 기수 정보를 수집하고
+ * 기수 번호 기준으로 그룹화하여 최신 기수 순으로 정렬된 요약 데이터 리스트를 생성합니다.
+ *
+ * 주요 동작 흐름:
+ * 1. roles와 challengerRecords에서 (기수 번호, 기수 ID) 쌍을 추출한 뒤 기수 번호 기준으로 중복을 제거합니다.
+ * 2. 추출된 기수 목록을 최신 기수가 상단에 오도록 내림차순(sortedByDescending) 정렬합니다.
+ * 3. 각 기수별로 유저가 맡았던 운영진 역할(roleItems)과 챌린저 파트 기록(recordItems)을 매핑하여 GisuSummary 객체로 가공합니다.
+ *
+ *
+ * @return 기수별 운영진 및 챌린저 이력이 포함된 최신순 정렬 리스트
+ */
 fun UserInfo.getGisuSummaryList(): List<GisuSummary> {
 
     // 기수(gisu)와 기수ID(gisuId) 쌍을 추출하여 고유 리스트 생성

@@ -49,7 +49,22 @@ import com.umc.component.theme.AppStrings
 
 
 /**
- * 홈 화면에서 보여주는 달력 composible 함수
+ * 홈 화면에서 보여주는 커스텀 달력
+ *
+ * HorizontalPager 기반 무한 스크롤 및 DatePicker 연동을 지원하는 월간 달력 컴포넌트입니다.
+ * [주요 기능 및 작동 원리]:
+ * 1. `initialPage = 5000`을 중앙(현재 월)으로 설정하여, 좌우 스와이프 시 과거/미래 월을 양방향으로 스크롤할 수 있습니다.
+ * 2. `selectedDate` 변경 시 해당 월 페이지로 자동 애니메이션 스크롤(`animateScrollToPage`)되며,
+ *    페이지 이동 완료 시 `onMonthChange` 콜백을 발생시켜 해당 월의 일정 데이터(Event)를 재조회하도록 유도합니다.
+ * 3. 화살표 버튼, 스와이프 gesture, 또는 중앙 타이틀("YYYY.MM") 클릭 시 뜨는 DatePicker를 통해 원하는 날짜로 빠르게 이동 가능합니다.
+ * 4. 일요일(Red 컬러), 오늘 날짜 하이라이트, 선택된 날짜 테두리 강조, 일정 보유 날짜 하단 Dot 표시를 지원합니다.
+ *
+ * @param selectedDate 현재 사용자가 선택한 날짜
+ * @param eventDates 일정이 등록된 날짜 목록 (하단에 빨간 Dot 표시)
+ * @param onDateClick 날짜 셀 클릭 시 호출되는 콜백
+ * @param onMonthChange 달력의 월(Month)이 변경되었을 때 호출되는 콜백 (서버 일정 데이터 재조회 트리거)
+ *
+ *
  * **/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,22 +76,22 @@ fun HomeCalendar(
     modifier: Modifier = Modifier
 ) {
 
-    //달력 좌우 스크롤을 위한 값들
-    val initialPage = 5000
+    // 달력 pager 상태 및 페이징 오프셋 설정
+    val initialPage = 5000 // (최대 좌우 페이징 총합 5000개월 가능)
     val pagerState = rememberPagerState(initialPage = initialPage) { 10000 }
     val coroutineScope = rememberCoroutineScope()
 
-    //달력 DatePicker를 여는 변수
+    // DatePicker 다이얼로그 노출 여부 상태
     var showDatePicker by remember { mutableStateOf(false) }
 
-    //현재 월 (pagerState가 바뀌면 날짜도 같이 바뀌게 하기)
-    //이번달에서 (현재 페이지 - 초기 페이지) 값을 증가해서 바꾸기
+    // 현재 Pager 페이지에 해당하는 YearMonth 계산
+    // 이번달에서 (현재 페이지 - 초기 페이지) 값을 증가해서 바꿈
     val currentMonth = remember(pagerState.currentPage) {
         YearMonth.from(LocalDate.now()).
         plusMonths((pagerState.currentPage - initialPage).toLong())
     }
 
-    //달력 DatePickerDialog를 통해 만들기
+    //달력 DatePickerDialog 노출 (날짜 이동 지원)
     if (showDatePicker) {
         CalendarDatePickerDialog(
             selectedDate = selectedDate,
@@ -88,7 +103,7 @@ fun HomeCalendar(
         )
     }
 
-    //외부에서 selectedDate 변경(DatePicker) 시 페이지 이동
+    //외부 selectedDate 변경(DatePicker 등) 시 해당 월 Pager 페이지로 스크롤
     LaunchedEffect(selectedDate) {
         val targetMonth = YearMonth.from(selectedDate)
         val currentMonth = YearMonth.from(LocalDate.now()).plusMonths((pagerState.currentPage - initialPage).toLong())
@@ -99,7 +114,7 @@ fun HomeCalendar(
         }
     }
 
-    //이동 끝난 후 (월이 바뀌었을 때, 달이 바뀌었음을 호출)
+    //월 변경 감지 시 상위 화면으로 이벤트 전달 (일정 재조회용)
     LaunchedEffect(currentMonth) {
         onMonthChange(currentMonth)
     }
@@ -112,7 +127,7 @@ fun HomeCalendar(
             .background(grey000())
             .padding(16.dp)
     ) {
-        //헤더 - 월정보(2026.04) 및 화살표
+        // 상단 헤더: 이전/다음 월 이동 화살표 및 "YYYY.MM" 타이틀
         CalendarHeader(
             currentMonth = currentMonth,
             //누르면 달 - 1
@@ -137,7 +152,7 @@ fun HomeCalendar(
             .height(24.dp)
         )
 
-        //달력 몸통 (요일 + 날짜)
+        // 달력 몸통 (요일 + 날짜)
         CalendarBody(
             pagerState = pagerState,
             initialPage = initialPage,
@@ -148,7 +163,12 @@ fun HomeCalendar(
     }
 }
 
-//달력 상단 헤더( < 2026.04.09 > )
+/**
+ * 달력 상단 헤더
+ *
+ * 이전/다음 달 이동 화살표 버튼과 현재 연/월("YYYY.MM") 정보를 표시합니다.
+ * 연/월 텍스트 클릭 시 DatePicker 다이얼로그를 트리거합니다.
+ */
 @Composable
 private fun CalendarHeader(
     currentMonth: YearMonth, //현재 월 정보
@@ -172,9 +192,9 @@ private fun CalendarHeader(
             )
 
 
+        // 년.월 타이틀 (클릭 시 DatePicker 오픈)
         UText(
             text = "${currentMonth.year}.${String.format("%02d", currentMonth.monthValue)}",
-            //style =, /**임시 폰트**/
             color = grey800(),
             style = UmcTypographyTokens.HeadlineBold,
             modifier = Modifier
@@ -192,7 +212,12 @@ private fun CalendarHeader(
     }
 }
 
-//달력 몸통 (요일 라인 + 날짜 뷰페이저)
+/**
+ * 달력 몸통 영역 (요일 헤더 + 날짜 HorizontalPager)
+ *
+ * 요일 라인("일", "월", ... "토")을 고정 노출하고, 하단에 HorizontalPager를 배치해
+ * 각 월별 날짜 그리드를 7개씩 Chunk하여 주(Week) 단위 Row로 그려냅니다.
+ */
 @Composable
 private fun CalendarBody(
     pagerState: PagerState,
@@ -202,7 +227,7 @@ private fun CalendarBody(
     onDateClick: (LocalDate) -> Unit
 ) {
     Column {
-        // 요일 헤더
+        // 요일 헤더 (일~토, 일요일은 Red500 컬러 적용)
         Row(modifier = Modifier
             .fillMaxWidth()
         ) {
@@ -223,7 +248,7 @@ private fun CalendarBody(
             .height(12.dp)
         )
 
-        //날짜 표시 페이저
+        // 월별 날짜 페이저 (HorizontalPager)
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
@@ -231,13 +256,16 @@ private fun CalendarBody(
             verticalAlignment = Alignment.Top
         ) { page ->
             val pageMonth = YearMonth.from(LocalDate.now()).plusMonths((page - initialPage).toLong())
+
+            //해당 월의 날짜 리스트 생성 (시작 요일 이전 빈칸은 null로 채워짐)
             val days = remember(pageMonth) { getDaysInMonth(pageMonth) }
 
             //Column으로 1주 표현
             Column(modifier = Modifier
                 .fillMaxWidth()
             ) {
-                //리스트를 7개씩 잘라서 만들자 (null,null,null,1,2,3,4 .. 31)을 7개씩
+                // 7개 단위로 주(Week)를 분할하여 렌더링
+                // (null,null,null,1,2,3,4 .. 31)을 7개씩
                 days.chunked(7).forEach { week ->
                     Row(modifier = Modifier
                         .fillMaxWidth()
@@ -255,6 +283,7 @@ private fun CalendarBody(
                                         onClick = { onDateClick(date) }
                                     )
                                 } else {
+                                    // 월 시작 전 빈 공간
                                     Spacer(modifier = Modifier
                                         .aspectRatio(1f)
                                     )
@@ -278,7 +307,17 @@ private fun CalendarBody(
 }
 
 
-//날짜 1칸에 대한 컴포지블 함수 : 날짜 색깔과 선택 원 및 일정 시 색깔 표시
+/**
+ * 개별 날짜 1개에 대한 컴포지블
+ *
+ * 오늘 날짜, 선택된 날짜, 일요일, 일정이 있는 날짜(Dot) 상태에 따라 배경 및 텍스트 스타일을 다르게 표현합니다.
+ *
+ * [스타일 규칙]:
+ * - 오늘(`isToday`): Indigo500 원형 배경 + 흰색 텍스트
+ * - 선택됨(`isSelected`): Indigo100 배경 + Indigo600 테두리 + Indigo500 텍스트
+ * - 일요일(`dayOfWeek == SUNDAY`): Red500 텍스트
+ * - 일정 보유(`hasEvent`): 셀 하단 중앙에 Red500 4dp 원형 점(Dot) 표시
+ */
 @Composable
 private fun DayItem(
     date: LocalDate,
@@ -338,10 +377,18 @@ private fun DayItem(
     }
 }
 
-//DatePicker 다이얼로그
+/**
+ * Material3 DatePickerDialog
+ *
+ * 빠른 날짜 이동을 위해 연/월/일 선택 모달 시스템 다이얼로그를 띄웁니다.
+ *
+ * [유의사항]:
+ * Material3 DatePicker는 Epoch Milliseconds를 사용하므로 확장함수(`toMillis()`, `toLocalDate()`)를 통해
+ * java.time.LocalDate`와의 상호 변환을 수행하고 있습니다.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-public fun CalendarDatePickerDialog(
+fun CalendarDatePickerDialog(
     selectedDate: LocalDate, //선택한 날짜
     onDateSelected: (LocalDate) -> Unit, //날짜를 선택했을 때 콜백 함수
     onDismiss: () -> Unit //DatePicker 사라질 때 콜백 함수 (없애)
@@ -376,7 +423,15 @@ public fun CalendarDatePickerDialog(
 }
 
 
-//이번 달에 날짜들을 반환(시작 요일에 맞춰 출력)
+/**
+ * 특정 월(YearMonth)의 1일 시작 요일 오프셋이 적용된 날짜 리스트 생성 함수
+ *
+ * @param month 계산 타겟 월 (`YearMonth`)
+ * @return `List<LocalDate?>` 시작 요일 이전의 빈칸은 `null`로 채워지며, 1일부터 말일까지의 `LocalDate` 객체를 포함합니다.
+ *
+ * [계산 예시 (2026년 4월 - 수요일 시작 가정)]:
+ * -> `[null, null, null, 2026-04-01, 2026-04-02, ... 2026-04-30]`
+ */
 private fun getDaysInMonth(month: YearMonth): List<LocalDate?> {
     //이번 달 1일이 무슨 요일인지 체크
     val firstDayOfWeek = month.atDay(1).dayOfWeek.value % 7

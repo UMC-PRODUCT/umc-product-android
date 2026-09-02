@@ -23,7 +23,12 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
     // 검색 작업 스케줄링 제어용 Job 레퍼런스
     private var searchJob: Job? = null
 
-    // 부모 뷰가 열릴 때 기존 기등록 상태를 강제 주입 동기화하기 위한 함수
+    /**
+     * 상위 스크린에서 선택된 기존 챌린저 목록을 수신하여 다이얼로그 내부 UI State로 동기화하는 메서드
+     * 일정 수정 시 기존 참여 챌린저를 dialog에도 반영하기 위함
+     *
+     * @param list 현재 선택되어 있는 ParticipantItem 리스트
+     */
     fun setSelectedParticipant(list : List<ParticipantItem>) {
         updateState {
             val summaryText = when {
@@ -38,18 +43,22 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
         }
     }
 
-    // 유저 검색 로직
+    /**
+     * 검색 쿼리를 입력받아 500ms 디바운스 처리 후 서버 조회를 요청하는 메서드
+     *
+     * @param query 사용자가 입력한 검색 문자열
+     */
     fun searchParticipants(query: String) {
-        //이전 작업 취소
+        // 이전 검색 대기 작업이 존재하는 경우 즉시 취소
         searchJob?.cancel()
 
-        //쿼리가 비어있으면 검색X
+        // 검색어가 비어있는 경우 결과를 초기화하고 검색 취소
         if (query.isBlank()) {
             clearParticipantSearch()
             return
         }
 
-        //일단 현재 상태를 반영해서
+        // 일단 현재 상태를 반영해서
         updateState {
             copy(
                 searchQuery = query,
@@ -66,7 +75,11 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
     }
 
 
-    // 실질적으로 usecae로 유저 데이터를 가져오는 로직
+    /**
+     * UseCase를 호출하여 챌린저 목록 데이터를 서버에서 페이징 수신하는 메서드
+     *
+     * @param isNextPage 첫 진입 검색인지, 추가 페이지 수신인지 구분하는 플래그
+     */
     private fun fetchParticipants(isNextPage: Boolean) {
         val state = uiState.value
 
@@ -106,7 +119,9 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
         }
     }
 
-    // 무한 스크롤 로직 (바닥 도달 시 추가 데이터 로드)
+    /**
+     * 스크롤이 하단에 도달했을 때 추가 챌린저 목록을 페이징 조회하는 메서드
+     */
     fun loadMoreParticipants() {
         val state = uiState.value
         // 로딩 중이거나 다음 페이지가 없으면 중단
@@ -115,7 +130,11 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
         fetchParticipants(isNextPage = true)
     }
 
-    // 인원 토글 로직
+    /**
+     * 특정 챌린저를 선택 목록에 추가하거나 제거하고, 상단 표시용 요약 문구를 갱신하는 메서드
+     *
+     * @param user 토글할 챌린저 객체
+     */
     fun toggleParticipant(user: ParticipantItem) {
         updateState {
             val isExist = selectedParticipants.any { it.id == user.id }
@@ -139,8 +158,9 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
     }
 
 
-
-    //검색 기록을 초기화하하고 중지하는 함수
+    /**
+     * 진행 중인 검색 코루틴을 취소하고 검색 결과 목록과 검색어를 초기화하는 메서드
+     */
     fun clearParticipantSearch() {
         searchJob?.cancel()
         updateState {

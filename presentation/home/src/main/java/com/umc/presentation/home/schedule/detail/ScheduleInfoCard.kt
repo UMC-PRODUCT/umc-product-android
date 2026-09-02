@@ -30,7 +30,9 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.indigo500
 
 
-/**일정의 일시와 장소를 작성하는 영역**/
+/**
+ * 일시 정보 및 장소(대면/비대면) 정보를 카드 형태로 묶어서 렌더링하는 컴포저블
+ */
 @Composable
 fun ScheduleInfoCard(
     todayDate: String,
@@ -88,7 +90,9 @@ fun ScheduleInfoCard(
     }
 }
 
-/**아이콘 + 제목 + 정보를 작성하는 영역(일시와 장소)**/
+/**
+ * 아이콘과 제목, 서브 코멘트 및 지도 보기 액션을 렌더링하는 정보 행 컴포저블
+ */
 @Composable
 fun InfoRow(
     iconRes: Int,

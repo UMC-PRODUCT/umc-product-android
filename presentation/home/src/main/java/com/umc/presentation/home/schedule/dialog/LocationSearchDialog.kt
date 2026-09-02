@@ -51,8 +51,21 @@ import com.naver.maps.map.compose.MapUiSettings
 import com.naver.maps.map.compose.ExperimentalNaverMapApi
 import com.naver.maps.map.compose.LocationTrackingMode
 
-/**일정 생성에서 장소 설정을 담당하는 다이얼로그**/
-
+/**
+ * 일정 생성 및 수정 과정에서 장소(위치) 검색 및 선택을 담당하는 바텀시트 다이얼로그 컴포저블
+ *
+ * 카카오 장소 검색 API 기반으로 키워드에 따른 장소 목록을 조회하고,
+ * 선택된 장소(LocationItem: 장소명, 주소, 위경도) 정보를 상위 스케줄 작성 스크린으로 전달합니다.
+ *
+ * 주요 동작 흐름:
+ * 1. 입력 키워드가 비어있는 초기 상태에서는 최근 검색어 목록(RecentSearchList)을 표시합니다.
+ * 2. 검색창에 장소명을 입력하고 검색 실행 시 카카오 장소 검색 API 결과를 SearchResultList로 분기하여 노출합니다.
+ * 3. 최근 검색어 또는 검색 결과 리스트 항목 클릭 시 onLocationSelected 콜백을 발생시켜 장소 정보를 넘겨주고 바텀시트를 닫습니다.
+ *
+ * [유의사항]
+ * - 기획 변경으로 인해 네이버 지도(NaverMap) 드래그 및 역지오코딩 기반 장소 선택 기능이 철회되고 카카오 API 키워드 검색 방식으로 변경되었습니다.
+ * - 지도 연동 관련 코드(CameraPositionState, NaverMap, SelectedLocationCard 등)는 추후 재도입 가능성에 대비해 주석 처리되어 있습니다.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalNaverMapApi::class)
 @Composable
 fun LocationSearchBottomSheet(
@@ -72,7 +85,6 @@ fun LocationSearchBottomSheet(
     )
 
     /** 지도 검색 기능 철회로 주석 처리
-    // 공식 SDK 가이드 기준 카메라 상태 초기화
     val cameraPositionState = rememberCameraPositionState()
 
     //위치 변경에 따른 지도의 핀포인트 위치 변경
@@ -97,7 +109,7 @@ fun LocationSearchBottomSheet(
                     
                 }
 
-/** 지도 검색 기능 철회로 주석 처리
+    /** 지도 검색 기능 철회로 주석 처리
                 //위도 경도로 지도를 이동
                 is LocationSearchEvent.MoveCameraTo -> {
                     cameraPositionState.animate(
@@ -110,7 +122,7 @@ fun LocationSearchBottomSheet(
                     onLocationSelected(event.placeInfo)
                     onDismissRequest()
                 }
-**/
+    **/
             }
         }
     }
@@ -165,7 +177,7 @@ fun LocationSearchBottomSheet(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-/** 지도 검색 기능 철회로 주석 처리
+            /** 지도 검색 기능 철회로 주석 처리
             //2. 네이버 지도 뷰
             LocationNaverMapContent(
                 modifier = Modifier
@@ -185,7 +197,7 @@ fun LocationSearchBottomSheet(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-**/
+            **/
 
             //4. 분기 영역 : 검색어 입력 유무에 따른 하단 리스트 스위칭
             Box(
@@ -221,7 +233,9 @@ fun LocationSearchBottomSheet(
 
 }
 
-//1. 상단 제목 부분 및 검색 파트
+/**
+ * 장소 검색 바텀시트의 타이틀 및 키워드 입력 텍스트 필드를 구성하는 컴포저블
+ */
 @Composable
 fun LocationHeaderAndSearchBar(
     uiState: LocationSearchUiState,
@@ -272,7 +286,9 @@ fun LocationHeaderAndSearchBar(
     }
 }
 
-/**지도 기능 철회로 X**/
+/**
+ * 네이버 지도 뷰 및 정중앙 핀을 렌더링하는 컴포저블 (기능 철회로 사용 중단)
+ */
 //지도 컴포저블
 @OptIn(ExperimentalNaverMapApi::class, androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
@@ -325,7 +341,9 @@ fun LocationNaverMapContent(
     }
 }
 
-//지도에 나오는 타겟 장소 정보창 및 확인 버튼
+/**
+ * 지도 중앙 좌표 기반 선택된 장소명과 주소를 표시하는 카드 컴포저블 (기능 철회로 사용 중단)
+ */
 @Composable
 fun SelectedLocationCard(
     selectedPlace: LocationItem,
@@ -368,7 +386,9 @@ fun SelectedLocationCard(
     }
 }
 
-//최근 검색 결과 lazyColumn
+/**
+ * 사용자의 최근 장소 검색어 목록을 노출하는 컴포저블
+ */
 @Composable
 fun RecentSearchList(
     recentSearchList: List<String>,
@@ -406,7 +426,9 @@ fun RecentSearchList(
     }
 }
 
-//카카오 API로 검색한 결과 lazycolumn
+/**
+ * 카카오 장소 검색 API를 통해 수신된 장소 결과 목록을 노출하는 컴포저블
+ */
 @Composable
 fun SearchResultList(
     searchResultList: List<LocationItem>,
