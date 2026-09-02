@@ -37,6 +37,7 @@ import com.umc.component.theme.*
  * onConfirm = { hour, minute ->}: 확인을 눌렀을 때 처리함수,
  * onDismiss = { showEndTimePicker = false }
  *
+ * 해당 Dialog는 Date와 Time 기능을 통합한 UDateTimePickerDialog로 대체 가능합니다.
  *
  * **/
 @Composable

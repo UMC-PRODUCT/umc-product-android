@@ -19,12 +19,11 @@ import com.google.android.gms.nearby.connection.Strategy
 import com.umc.domain.model.mypage.NearbyUserInfo
 import com.umc.domain.model.mypage.UserCard
 
-/** 통신 흐름 (QR코드 스캔 + nearbyconnection) / 그냥은 3번 이후부터
+/** 통신 흐름표 (nearbyconnection)
  *
- * [기기 A (QR 스캐너)]                                [기기 B (QR 노출자)]
+ *
+ * [기기 A (정보 수신)]                                [기기 B (정보 송신)]
  *         │                                                    │
- *   1. CameraX로 B의 QR 스캔                                   │
- *      ('SM-T733' 획득)                                         │
  *         │                                            startAdvertising()
  *   startDiscovery()                                   (Name: 'SM-T733')
  *         │                                                    │
@@ -53,30 +52,43 @@ import com.umc.domain.model.mypage.UserCard
  *
  * **/
 
+
+
 /**
- * Nearby Connections API를 총괄 관리하는 클래스
+ * 구글 Nearby Connections API의 P2P 통신 파이프라인 전체를 저수준에서 제어하는 핵심 매니지먼트 클래스
+ *
+ * Wi-Fi Direct 및 Bluetooth LE 기반의 P2P_CLUSTER 전략을 사용하여 주변 기기를 수신/발견하고,
+ * 핸드셰이킹 연결 수립, UserCard 페이로드 바이트 전송, ACK 수신 확인 후 소켓 안전 해제 과정을 총괄합니다.
+ *
+ *
  * @param context 애플리케이션 컨텍스트
  * @param onEvent ViewModel로 통신 상태 및 데이터 이벤트를 전달하는 콜백
+ *
+ * [유의사항]
+ * - SERVICE_ID 매개변수는 타 앱과의 신호 혼선을 차단하는 고유 ID이므로 패키지명("com.example.mypage.nearby")을 유지해야 합니다.
+ * - Strategy.P2P_CLUSTER 전략은 1:N 근거리 매칭에 최적화되어 있으나, 통신 성공 직후 스캔을 중단해 주어야 블루투스/Wi-Fi 간섭을 방지할 수 있습니다.
  */
+
 class NearbyManager(
     context: Context,
     private val onEvent: (NearbyManagerEvent) -> Unit
 ) {
+    // 구글 플레이 서비스 Nearby Connections 클라이언트 객체
     private val client = Nearby.getConnectionsClient(context)
 
     //타 앱과의 신호 혼선을 막기위한 고유 ID(패키지 이름) -
     private val SERVICE_ID = "com.example.mypage.nearby"
 
-    //endpoint 이름 = 기기 모델명 (SM-G991N)
+    //endpoint 이름 = 로컬 디바이스 모델명 (기본 디버깅용) ex.(SM-G991N)
     private val localEndpointName = Build.MODEL
 
-    private var myEndpointId: String = ""
-
-    //주변 기기에 내 기기를 광고 시작
+    /**
+     * 주변 기기들에게 내 존재를 알리기 위해 광고(Advertising) 세션을 시작하는 메서드
+     *
+     * @param userInfo 광고 헤더(endpointName)에 실어 보낼 내 근거리 요약 프로필
+     */
     fun startAdvertising(userInfo: NearbyUserInfo) {
 
-        //기존 기기 이름 -> 유저 정보 json
-        //val advertisingName = "${localEndpointName}"
         val advertisingName = userInfo.toJson()
         Log.d("NearbyDebug", "1. Advertising 시작 시도: $advertisingName")
 
@@ -95,7 +107,9 @@ class NearbyManager(
             }
     }
 
-    //주변에서 광고중인 기기를 1:N으로 탐색
+    /**
+     * 주변에서 광고 세션을 열어둔 타 기기들을 1:N 매칭으로 스캔하는 탐색(Discovery) 시작 메서드
+     */
     fun startDiscovery() {
 
         Log.d("NearbyDebug", "2. Discovery 시작 시도...")
@@ -114,15 +128,20 @@ class NearbyManager(
             }
     }
 
-    //광고와 동시에 탐색 시작
+    /**
+     * 광고와 탐색을 동시에 수행하여 양방향 기기 발굴이 가능하도록 만드는 메서드
+     *
+     * @param userInfo 광고 데이터로 송출할 내 정보
+     */
     fun startAdvertisingAndDiscovery(userInfo: NearbyUserInfo) {
         startAdvertising(userInfo)
         startDiscovery()
     }
 
     /**
-     * 발견된 특정 endpointId 기기에 P2P 연결 요청
-     * @param endpointId 구글 Nearby API에서 발급한 상대 기기의 일회성 고유 식별자
+     * 스캔된 특정 상대방 endpointId 기기로 P2P 소켓 연결 요청을 보내는 메서드
+     *
+     * @param endpointId 구글 Nearby API에서 할당한 상대 기기의 고유 인스턴스 ID
      */
     fun requestConnection(endpointId: String) {
         Log.d("NearbyDebug", "3. RequestConnection 호출 -> target ID: $endpointId")
@@ -151,33 +170,43 @@ class NearbyManager(
             }
     }
 
-    //상대방과의 연결을 승인
+    /**
+     * 핸드셰이킹 요청을 수신했을 때 연결을 수락하고 데이터 수신 파이프라인(payloadCallback)을 연결하는 메서드
+     *
+     * @param endpointId 연결을 수락할 대상 기기 ID
+     */
     fun acceptConnection(endpointId: String) {
         client.acceptConnection(endpointId, payloadCallback)
     }
 
     /**
-     * 상대방 기기로 내 UserCard 객체(JSON) 전송
-     * @param endpointId 대상 기기의 ID
-     * @param card 전송할 유저 명함 데이터
+     * 수립된 P2P 채널을 통해 내 명함 객체(UserCard)를 바이트 페이로드 형태로 직렬화하여 전송하는 메서드
+     *
+     * @param endpointId 전송 대상 기기 ID
+     * @param card 전송할 유저 명함 도메인 모델
      */
     fun sendUserCard(endpointId: String, card: UserCard) {
         client.sendPayload(endpointId, Payload.fromBytes(card.toJson().toByteArray()))
             .addOnSuccessListener {
                 onEvent(NearbyManagerEvent.StatusUpdate("카드 전송이 완료되었습니다. 연결을 종료합니다."))
-                //disconnect(endpointId)
             }
             .addOnFailureListener {
                 onEvent(NearbyManagerEvent.Error("카드 전송에 실패했습니다."))
             }
     }
 
-    //특정 기기와의 연결 해제 함수
+    /**
+     * 특정 상대방 기기와의 P2P 소켓 연결을 종료하는 메서드
+     *
+     * @param endpointId 해제할 대상 기기 ID
+     */
     fun disconnect(endpointId: String) {
         client.disconnectFromEndpoint(endpointId)
     }
 
-    //모든 통신 정리
+    /**
+     * 진행 중인 탐색 및 광고 세션을 모두 중단하고 통신 리소스를 해제하는 메서드
+     */
     fun stopAll() {
         client.stopDiscovery()
         client.stopAdvertising()
@@ -192,12 +221,14 @@ class NearbyManager(
     }
 
     /**
-     * 연결 수립 과정에서의 기기 간 핸드셰이킹 콜백
+     * P2P 연결 수립 및 상태 변화를 감지하는 바인딩 콜백 객체
      */
     private val lifecycleCallback = object : ConnectionLifecycleCallback() {
-        //상대방과의 연결 파이프라인 첫 수립시
+        /**
+         * 상대방 기기로부터 연결 요청이 도달했을 때 자동 승인 처리 파이프라인
+         */
         override fun onConnectionInitiated(id: String, info: ConnectionInfo) {
-            //구글에서 자동 생성한 6자리 인증번호 이벤트 전달
+            //구글에서 자동 생성한 6자리 인증번호 이벤트 전달 (기존에는 구글 인증번호 도입 -> 삭제)
             //onEvent(NearbyManagerEvent.AuthVerification(id, info.authenticationDigits))
 
             Log.d("NearbyDebug", "4. ConnectionInitiated 발생 -> ID: $id, AuthCode: ${info.authenticationDigits}")
@@ -207,12 +238,15 @@ class NearbyManager(
             acceptConnection(id)
         }
 
-        //연결 승인 결과 (성공/실패)
+        /**
+         * 연결 결과(성공/거절) 수신 시 탐색/광고를 멈추고 통신 성공 이벤트를 발생시키는 콜백
+         */
         override fun onConnectionResult(id: String, res: ConnectionResolution) {
             Log.d("NearbyDebug", "5. ConnectionResult 수신 -> Success: ${res.status.isSuccess}, Status: ${res.status.statusCode}")
             if (res.status.isSuccess) {
-                client.stopDiscovery() //연결 성공 시 탐색 중지
-                client.stopAdvertising() //연결 성공 시 광고 중지
+                // 채널 안정화 및 대원 혼선 방지를 위해 연결 직후 탐색/광고 중단
+                client.stopDiscovery() // 연결 성공 시 탐색 중지
+                client.stopAdvertising() // 연결 성공 시 광고 중지
                 onEvent(NearbyManagerEvent.ConnectionSuccess(id))
             }
             else{
@@ -220,7 +254,9 @@ class NearbyManager(
             }
         }
 
-        //연결이 종료되었을 때
+        /**
+         * 소켓 연결이 끊어졌을 때 발생하는 콜백
+         */
         override fun onDisconnected(id: String) {
             Log.d("NearbyDebug", "X. Disconnected 발생: $id")
             onEvent(NearbyManagerEvent.StatusUpdate("연결이 끊어졌습니다."))
@@ -228,7 +264,7 @@ class NearbyManager(
     }
 
     /**
-     * 데이터 페이로드 송수신 처리 콜백
+     * 바이트 데이터 페이로드 송수신 및 ACK 응답 처리를 담당하는 콜백 객체
      */
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(id: String, payload: Payload) {
@@ -267,7 +303,7 @@ class NearbyManager(
     }
 
     /**
-     * 주변 기기 검색 콜백
+     * 주변 광고 디바이스를 감지했을 때 실행되는 탐색 콜백 객체
      */
     private val discoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(id: String, info: DiscoveredEndpointInfo) {
@@ -288,7 +324,7 @@ class NearbyManager(
 
 
 /**
- * NearbyManager 내부 이벤트를 ViewModel로 전달하는 봉인된 클래스
+ * NearbyManager 내부 통신 이벤트를 ViewModel 레이어로 전달하기 위한 봉인된 클래스
  */
 sealed class NearbyManagerEvent {
     data class EndpointFound(val id: String, val userInfo: NearbyUserInfo) : NearbyManagerEvent()

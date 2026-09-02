@@ -36,9 +36,10 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
 
-/**일정 등록에서 일시 (하루 종일) or 시작/종료 날짜를 선택하는 섹션
+/**일정 등록에서 일시를 선택하는 섹션
  *
- * 하루 종일 + DateTimeRow(UChip 같이 존재)
+ * 하루 종일 토글 여부에 따라 다른 UDateTimePickerDialog를 호출하고
+ * 날짜&시간 정보를 입력
  * **/
 @Composable
 fun ScheduleDateCard(
@@ -100,7 +101,10 @@ fun ScheduleDateCard(
     }
 }
 
-/**시작(종료) 날짜와 시간을 UChip 형태로 제공하고 터치 시 Date/Time picker로 선택하는 함수**/
+/**
+ * 시작(종료) 날짜와 시간을 UChip 형태로 제공하고 터치 시
+ * Date/Time picker로 선택하는 개별 컴포지블
+ * **/
 @Composable
 fun DateTimeRow(
     label: String,

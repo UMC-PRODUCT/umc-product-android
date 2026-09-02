@@ -44,11 +44,12 @@ class MycardViewModel @Inject constructor(
 
     //초기 상태
     init {
+        // 내 프로필 데이터 로드
         viewModelScope.launch {
-            //유저 정보 가져오기
             getUserInfo()
         }
 
+        // DataStore 내에 저장되어 있는 명함 리스트를 실시간 수신하여 명함 수 갱신
         viewModelScope.launch {
             getUserCardUseCase().collect { cards ->
                 updateState {
@@ -60,7 +61,9 @@ class MycardViewModel @Inject constructor(
         }
     }
 
-    // 서버에서 내 정보 가져오기
+    /**
+     * 서버 API를 호출하여 내 프로필 상세 정보를 조회하는 메서드
+     */
     fun getUserInfo() {
         viewModelScope.launch {
             resultResponse(
@@ -76,7 +79,7 @@ class MycardViewModel @Inject constructor(
 
                 },
                 errorCallback = {
-                    /**TODO. 에러 토스트 메시지 등을 전송**/
+                    // 에러 발생 시에도 qr 생성을 위해 null값으로 qr 생성
                     generateMyUserCardQr(null)
                 }
             )
@@ -84,17 +87,21 @@ class MycardViewModel @Inject constructor(
     }
 
 
-    //UserInfo를 받아았을 때 이를 파싱해서 UI 요소로 분할하는 함수
+    /**
+     * 서버에서 수신받은 UserInfo 객체를 파싱하여 최신 기수, 파트, 직함 텍스트를 연산하고 UI State에 기입하는 메서드
+     *
+     * @param userInfo 서버에서 받아온 내 정보 도메인 모델
+     */
     fun settingUserInfoToUI(userInfo: UserInfo){
-        Log.d("log_mypage", "settingUserInfoToUI: $userInfo")
-        // 기수별 정보가 담긴 것.
+
+        // 기수별 정보 요약본 get
         val gisuSummaryList = userInfo.getGisuSummaryList()
 
         // 최신기수를 가져오기
         val latestGisu = gisuSummaryList.maxByOrNull { it.gisu }
 
         latestGisu?.let { summary ->
-            //권위 or 챌린저에서 1개 선택
+            // 운영진/대표 역할(fromRoles) 또는 참가 기록(fromRecords) 중 대표 항목 추출
             val representativeItem = summary.fromRoles.firstOrNull() ?: summary.fromRecords.firstOrNull()
 
             val positionString = representativeItem?.let { item ->
@@ -124,7 +131,15 @@ class MycardViewModel @Inject constructor(
     }
 
 
-    //QR코드 생성하기
+    /**
+     * 명함 뒷면에 표시될 내 회원 고유 QR 코드 인텐트 딥링크 URL을 생성하는 메서드
+     *
+     * @param userInfo 내 프로필 객체
+     *
+     * [유의사항]
+     * 현재 애플리케이션이 없을 경우, 자동으로 playstore로 연결하는 딥링크를 준비했지만(qrDeepLinkUrl)
+     * 디버깅 모드에서는 사용 불가 문제로 앱이 존재할 경우, 애플리케이션을 호출하는 qrDeepLinkUrlDebug를 사용 중입니다.
+     */
     private fun generateMyUserCardQr(userInfo: UserInfo?) {
         val memberId = userInfo?.id ?: 21
         val packageName = "com.umc.product"
@@ -141,7 +156,11 @@ class MycardViewModel @Inject constructor(
 
     }
 
-    //qr코드에 있는 유저 정보를 바탕으로 검색
+    /**
+     * QR 코드 스캔 또는 딥링크를 통해 수신된 상대방 memberId로 유저 정보를 조회하는 메서드
+     *
+     * @param memberId 조회할 상대방 회원의 고유 ID
+     */
     fun searchUser(memberId: Long) {
 
         //이미 처리한 거 중복 처리 방지
@@ -168,7 +187,11 @@ class MycardViewModel @Inject constructor(
         }
     }
 
-    //검색한 정보를 바탕으로 유저 카드 저장
+    /**
+     * 조회된 상대방 명함(UserCard)을 내 명함첩(DataStore)에 보관하고 성공 오버레이를 표시하는 메서드
+     *
+     * @param userCard 저장할 상대방 명함 도메인 모델
+     */
     fun saveUserCard(userCard: UserCard) {
         Log.d("log_mypage", "saveUserCard: $userCard")
         viewModelScope.launch {
@@ -184,6 +207,9 @@ class MycardViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 명함 교환 성공 전면 오버레이를 닫고 수신 상태를 초기화하는 메서드
+     */
     fun dismissSuccessOverlay() {
         updateState {
             copy(

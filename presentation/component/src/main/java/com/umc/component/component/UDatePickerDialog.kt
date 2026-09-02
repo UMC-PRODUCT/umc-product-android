@@ -22,6 +22,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import com.umc.component.R
 
+
+/**
+ * 해당 Dialog는 Date와 Time 기능을 통합한 UDateTimePickerDialog로 대체 가능합니다.
+ *
+ *
+ * **/
 @Composable
 fun UDatePickerDialog(
     initialDate: String? = null,
