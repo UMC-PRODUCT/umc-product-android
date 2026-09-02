@@ -75,15 +75,13 @@ fun ScheduleDetailRoute(
 ){
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    //지도 가져오기 위한 context
     val context = LocalContext.current
 
-    //다이얼로그 노출 여부 체크
+    // 일정 삭제 확인 다이얼로그 표시 여부 플래그 변수
     var showDeleteDialog by remember { mutableStateOf(false) }
 
 
-    //화면이 resume에서 복귀할떄마다 재호출
+    // 화면으로 재진입(ON_RESUME)할 때마다 일정 상세 정보를 재조회하는 라이프사이클 관찰자
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -129,7 +127,7 @@ fun ScheduleDetailRoute(
         onAttendanceClick = onNavigateToAttendSchedule,
     )
 
-    //UBsaicDialog 사용(경고 버전)
+    // 일정 삭제 확인 경고 다이얼로그 컴포저블
     if(showDeleteDialog){
         UBasicDialog(
             title = AppStrings.HOME_PLAN_DETAIL_DELETE_DIALOG_TITLE,
@@ -313,7 +311,12 @@ fun ScheduleDetailScreen(
 
 }
 
-/**상단 top bar**/
+/**
+ * 일정 상세 상단 탑바 컴포저블
+ *
+ * 뒤로가기 버튼과 타이틀을 표시하며,
+ * 권한(canEdit 또는 canDelete)이 존재하는 경우에만 우상단 케밥 메뉴 아이콘을 활성화합니다.
+ */
 @Composable
 fun ScheduleDetailTopBar(
     onBackClick: () -> Unit,
@@ -351,7 +354,7 @@ fun ScheduleDetailTopBar(
                 color = grey800()
             )
         }
-        //메뉴 버튼
+        //수정 또는 삭제 권한이 존재하는 유저에게만 케밥 메뉴 버튼 노출
         if(canEdit || canDelete) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_menu_kebab),
@@ -370,7 +373,15 @@ fun ScheduleDetailTopBar(
 
 
 
-//지도를 열고 닫는 로직
+/**
+ * 네이버 지도 앱 인텐트를 호출하거나 설치되어 있지 않은 경우
+ * 브라우저 지도 URL로 라우팅하는 메서드
+ *
+ * @param context 안드로이드 컨텍스트
+ * @param placeName 장소 이름
+ * @param latitude 장소 위도
+ * @param longitude 장소 경도
+ */
 private fun openNaverMap(
     context: Context,
     placeName: String, //장소 이름

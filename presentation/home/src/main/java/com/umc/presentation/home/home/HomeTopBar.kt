@@ -35,7 +35,7 @@ import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo600
 
 /**
- * 로고, 알림 버튼, 유저 타입(ACTIVE/OB) 배지를 포함하는 상단 바
+ * 로고, 알림 버튼을 포함하는 상단 바
  */
 @Composable
 fun HomeTopBar(
@@ -55,25 +55,7 @@ fun HomeTopBar(
             contentDescription = "UMC Logo"
         )
 
-        //OB냐 ACTIVE냐
         Row(verticalAlignment = Alignment.CenterVertically) {
-            //유저 상태 배지 (ACTIVE / OB 분기 처리)
-            /*
-            UButton(
-                text = userType.name,
-                backgroundColor = if (userType == UserType.ACTIVE) indigo100() else grey200(),
-                textColor = if (userType == UserType.ACTIVE) indigo600() else grey700(),
-                textStyle = UmcTypographyTokens.FootnoteBold,
-                onClick = {},
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-            )
-
-            Spacer(modifier = Modifier
-                .width(8.dp)
-            )
-
-             */
-
             // 알림 버튼 (상태에 따라 점이 있는 아이콘으로 교체)
             Box(
                 modifier = Modifier

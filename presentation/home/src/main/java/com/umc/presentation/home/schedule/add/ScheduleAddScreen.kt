@@ -42,11 +42,6 @@ import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddBottomShee
 import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddDialogViewModel
 
 
-/**TODO. 할 거
- * 1. time이랑 date 분리된거 dateTime으로 획일화
- * 2. API 보내는거 조나단 껄로 변경
- *
- * **/
 
 @Composable
 fun ScheduleAddRoute(
@@ -64,19 +59,18 @@ fun ScheduleAddRoute(
     val participantUiState by participantViewModel.uiState.collectAsStateWithLifecycle()
 
     //뒤로 가기 디스패처
-    /**TODO. 삭제 - MainActivity에서 적용할 예정**/
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-    //다이얼로그 표시 여부 체크
+    //바텀시트 및 다이얼로그 노출 상태 제어 플래그 변수들
     var showCategoryDialog by remember { mutableStateOf(false) }
     var showLocationDialog by remember {mutableStateOf(false)}
     var showParticipantDialog by remember { mutableStateOf(false) }
 
-    //시작 및 종료 날짜 플래그
+    //시작 및 종료 날짜 timePicker dialog 플래그
     var showStartDateTimePicker by remember { mutableStateOf(false) }
     var showEndDateTimePicker by remember { mutableStateOf(false) }
 
-    //출석 정책용 view 플래그
+    //출석 정책용 날짜 timePicker dialog 플래그
     var showCheckInStartPicker by remember { mutableStateOf(false) }
     var showOnTimeEndPicker by remember { mutableStateOf(false) }
     var showLateEndPicker by remember { mutableStateOf(false) }
@@ -121,7 +115,7 @@ fun ScheduleAddRoute(
         }
     )
 
-    //다이얼로그 정의
+    //카테고리(태그) 선택 바텀시트 컴포저블
     if (showCategoryDialog) {
         ScheduleCategoryBottomSheet(
             onCategoryClick = viewModel::selectCategory,
@@ -131,6 +125,7 @@ fun ScheduleAddRoute(
         )
     }
 
+    // 장소 검색 바텀시트 컴포저블
     if (showLocationDialog) {
         LocationSearchBottomSheet(
             onDismissRequest = { showLocationDialog = false },
@@ -141,6 +136,7 @@ fun ScheduleAddRoute(
         )
     }
 
+    // 참여 챌린저 검색 및 다중 선택 바텀시트 컴포저블
     if (showParticipantDialog) {
         ScheduleChallengerAddBottomSheet(
             searchQuery = participantUiState.searchQuery,
@@ -167,6 +163,7 @@ fun ScheduleAddRoute(
         )
     }
 
+    // 일정 시작 일시 선택 다이얼로그 컴포저블
     if (showStartDateTimePicker) {
         UDateTimePickerDialog(
             onConfirm = { utcDateTime ->
@@ -179,6 +176,7 @@ fun ScheduleAddRoute(
         )
     }
 
+    // 일정 종료 일시 선택 다이얼로그 컴포저블
     if (showEndDateTimePicker) {
         UDateTimePickerDialog(
             onConfirm = { utcDateTime ->
@@ -191,6 +189,7 @@ fun ScheduleAddRoute(
         )
     }
 
+    // 출석 체크인 시작 일시 선택 다이얼로그 컴포저블
     if (showCheckInStartPicker) {
         UDateTimePickerDialog(
             onConfirm = { utcDateTime ->
@@ -201,6 +200,7 @@ fun ScheduleAddRoute(
         )
     }
 
+    // 출석 정시 종료 일시 선택 다이얼로그 컴포저블
     if (showOnTimeEndPicker) {
         UDateTimePickerDialog(
             onConfirm = { utcDateTime ->
@@ -211,6 +211,7 @@ fun ScheduleAddRoute(
         )
     }
 
+    // 출석 지각 종료 일시 선택 다이얼로그 컴포저블
     if(showLateEndPicker){
         UDateTimePickerDialog(
             onConfirm = { utcDateTime ->
@@ -295,7 +296,7 @@ fun ScheduleAddScreen(
                 .height(32.dp)
             )
             
-            //4. 태그
+            //4. 카테고리 태그 선택
             ScheduleInputSection(
                 title = AppStrings.HOME_PLAN_ADD_PLAN_CATEGORY,
                 required = true
@@ -311,7 +312,7 @@ fun ScheduleAddScreen(
                 .height(32.dp)
             )
 
-            //5. 일시
+            //5. 일시 및 하루종일 선택
             ScheduleInputSection(
                 title = AppStrings.HOME_PLAN_DETAIL_CALENDAR,
                 required = false
@@ -328,7 +329,7 @@ fun ScheduleAddScreen(
                 .height(32.dp)
             )
 
-            //6. 장소
+            //6. 대면/비대면 토글 및 장소 선택
             Column(modifier = Modifier
                 .fillMaxWidth()
             ) {
@@ -370,14 +371,13 @@ fun ScheduleAddScreen(
 
                 }
 
-
+                // 대면 일정일 때만 장소 검색 필드 노출
                 if(!uiState.isOnlineChecked) {
                     Spacer(
                         modifier = Modifier
                             .height(8.dp)
                     )
-
-                    //content()
+                    
                     SelectableField(
                         text = if (uiState.planLocation.isEmpty()) AppStrings.HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER else uiState.planLocation,
                         isPlaceholder = uiState.planLocation.isEmpty(),
@@ -414,7 +414,7 @@ fun ScheduleAddScreen(
                 .height(32.dp)
             )
 
-            //8. 챌린저 명단
+            //8. 챌린저 명단 선택
             ScheduleInputSection(title = AppStrings.HOME_PLAN_ADD_PLAN_ATTEND, required = false) {
                 SelectableField(
                     text = if (!uiState.isSelectedParticipant) AppStrings.HOME_PLAN_ADD_PLAN_CHALLENGER_PLACEHOLDER else uiState.selectedParticipantsString,
@@ -423,7 +423,7 @@ fun ScheduleAddScreen(
                 )
             }
 
-            //9. 출석부 생성
+            // 9. 출석부 생성 토글 및 출석 시간 카드 설정
             if(true) {
                 Spacer(modifier = Modifier
                     .height(8.dp)
@@ -454,6 +454,7 @@ fun ScheduleAddScreen(
                         .height(8.dp)
                 )
 
+                // 출석부 생성 활성화 시 체크인/정시/지각 시간 설정 카드 노출
                 if(uiState.isAttendanceChecked){
                     AttendanceDateCard(
                         uiState = uiState,
@@ -471,21 +472,6 @@ fun ScheduleAddScreen(
                     .height(64.dp)
             )
 
-            //10. 하단 버튼들
-            /*
-            ScheduleAddActionButtons(
-                registerOk = uiState.isRegisterOk,
-                editMode = uiState.editMode,
-                onCancelClick = onBackClick,
-                onRegisterClick = onRegisterClick
-            )
-
-            Spacer(modifier = Modifier
-                .height(64.dp)
-            )
-
-             */
-
         }
 
 
@@ -493,7 +479,11 @@ fun ScheduleAddScreen(
 
 }
 
-/**상단 top bar**/
+/**
+ * 일정 작성 상단 탑바 컴포저블
+ *
+ * 뒤로가기 버튼, 일정 등록/수정 완료 버튼을 표시
+ */
 @Composable
 fun ScheduleAddTopBar(
     onBackClick: () -> Unit,
@@ -540,7 +530,10 @@ fun ScheduleAddTopBar(
     }
 }
 
-/**스케쥴에서 필요한 제목을 작성하는 섹션**/
+/**
+ * 일정 입력 항목의 제목과 필수 입력 여부를
+ * 렌더링하는 공통 wrapper 컴포저블
+ */
 @Composable
 fun ScheduleInputSection(
     title: String,
@@ -572,7 +565,10 @@ fun ScheduleInputSection(
     }
 }
 
-/**터치하여 선택하는 textField**/
+/**
+ * 터치 시 다이얼로그나 바텀시트를 호출하는
+ * 텍스트 필드 형태의 컴포저블
+ */
 @Composable
 fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit, isDisabled: Boolean = false) {
     Surface(
@@ -603,7 +599,10 @@ fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit, i
     }
 }
 
-/**출석부 생성 시 필요 field들의 집합**/
+/**
+ * 출석부 생성 시 체크인, 정시 종료, 지각 종료 시간을
+ * 설정할 수 있는 카드 컴포저블
+ */
 @Composable
 fun AttendanceDateCard(
     uiState: ScheduleAddUiState,
@@ -650,10 +649,10 @@ fun AttendanceDateCard(
     }
 }
 
-/**출석부 생성 시 1개의 field를 담당하는 컴포지블 함수
- *
- *
- * **/
+/**
+ * 출석부 설정 카드의 개별 시간 항목(체크인, 정시, 지각)을
+ * 표시하는 컴포저블
+ */
 @Composable
 fun AttendanceTimeRow(
     label: String,
@@ -703,50 +702,4 @@ fun AttendanceTimeRow(
 
 
     }
-}
-
-
-/**일정 등록&취소 버튼**/
-@Composable
-fun ScheduleAddActionButtons(
-    registerOk: Boolean,
-    editMode: Boolean,
-    onCancelClick: () -> Unit,
-    onRegisterClick: () -> Unit
-) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-    ) {
-        UButton(
-            text = AppStrings.CANCEL,
-            modifier = Modifier
-                .weight(1f)
-                .height(52.dp),
-            backgroundColor = grey000(),
-            borderColor = grey300(),
-            borderWidth = 1.dp,
-            textColor = grey800(),
-            onClick = onCancelClick
-        )
-        Spacer(modifier = Modifier
-            .width(16.dp)
-        )
-        UButton(
-            text = if (editMode) AppStrings.EDIT else AppStrings.REGISTER,
-            modifier = Modifier
-                .weight(1f)
-                .height(52.dp),
-            backgroundColor = if (registerOk) indigo500() else grey300(),
-            textColor = grey000(),
-            onClick = onRegisterClick
-        )
-    }
-}
-
-
-
-@Preview(showBackground = true)
-@Composable
-private fun ScheduleAddScreenPreview() {
-    //ScheduleAddScreen()
 }
