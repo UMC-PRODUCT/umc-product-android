@@ -29,7 +29,15 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.indigo500
 
 
-/**활동 기록 추가 시 활동 코드를 입력받는 다이얼로그입니다.**/
+/**
+ * 마이페이지 활동 기록 추가 시 개별 활동 코드를 입력받는 바텀시트 다이얼로그 컴포저블
+ *
+ * 유저가 발급받은 코드 문자열을 텍스트 필드(UTextField)로 입력받고,
+ * 확인 버튼 클릭 콜백(onConfirmClick)을 통해 상위 뷰모델로 코드를 전달하는 레이아웃 구조를 제공합니다.
+ *
+ * [주의]
+ * 커뮤니티 개편으로 현재 사용되지는 않지만, 추후 사용 가능성이 있기에 남겨둡니다.
+ * **/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCodeDialog(
@@ -38,6 +46,7 @@ fun AddCodeDialog(
     onConfirmClick: () -> Unit, //버튼 클릭 콜백
     onDismissRequest: () -> Unit, //시트 닫기 요청 콜백
 ){
+    // 바텀시트 초기 확장 상태를 완전 확장 모드로 지정하는 시트 스태이트
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -79,26 +88,6 @@ fun AddCodeDialog(
 
             )
 
-            /*
-            OutlinedTextField(
-                value = code,
-                onValueChange = onCodeChanged,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-                    .height(52.dp),
-                placeholder = { Text(
-                    AppStrings.MYPAGE_ADDCODE_CONTENT,
-                    color = grey400()
-                ) },
-                shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = grey300(),
-                    focusedBorderColor = indigo500()
-                )
-            )
-
-             */
 
             Spacer(modifier = Modifier
                 .height(32.dp)

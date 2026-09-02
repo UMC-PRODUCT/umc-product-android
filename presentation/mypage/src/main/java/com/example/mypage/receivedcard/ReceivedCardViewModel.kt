@@ -26,10 +26,14 @@ class ReceivedCardViewModel @Inject constructor(
 
     //초기 상태
     init {
+        //명함 호출
         loadReceivedCards()
     }
 
 
+    /**
+     * AppDataStore로부터 보관된 유저 명함 리스트를 실시간으로 수신받아 UI State에 바인딩하는 메서드
+     */
     private fun loadReceivedCards() {
 
         viewModelScope.launch {
@@ -44,6 +48,11 @@ class ReceivedCardViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 사용자가 입력한 검색어 키워드를 기반으로 명함 데이터 목록을 실시간 필터링하는 메서드
+     *
+     * @param query 검색창에 입력된 텍스트
+     */
     fun onSearchQueryChanged(query: String) {
         updateState {
             val filtered = if (query.isBlank()) {
@@ -60,6 +69,9 @@ class ReceivedCardViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 검색어를 초기화하고 필터링 리스트를 전체 명함 목록으로 되돌리는 메서드
+     */
     fun clearSearchQuery() {
         onSearchQueryChanged("")
     }
