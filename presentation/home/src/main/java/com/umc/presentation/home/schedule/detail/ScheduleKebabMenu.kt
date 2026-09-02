@@ -32,9 +32,12 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey800
 
-/**케밥 메뉴 창
+/**
+ * 케밥 메뉴 창
  *
- * MenuItem들을 추가해서 사용 + HorizontalDivider
+ * 일정 수정 및 삭제 선택 옵션을
+ * 수직 확장 애니메이션으로 표시하는 케밥 팝업 메뉴 컴포저블
+ *
  * **/
 @Composable
 fun ScheduleKebabMenu(
@@ -92,7 +95,9 @@ fun ScheduleKebabMenu(
 }
 
 
-/**1개의 메뉴 컴포지블 함수**/
+/**
+ * 케밥 메뉴 내 개별 수정/삭제 항목 행을 표시하는 컴포저블
+ */
 @Composable
 fun MenuItem(icon: Int, text: String, color: Color, onClick: () -> Unit) {
     Row(

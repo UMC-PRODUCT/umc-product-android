@@ -45,42 +45,40 @@ import kotlin.text.isEmpty
 @HiltViewModel
 class ScheduleAddViewModel @Inject
 constructor(
-    savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle, //nav에서 인자로 넘긴 일정 id 체크용
     private val getUserInfoUseCase: GetUserInfoUseCase, //유저 정보 가져오기
     private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase, //일정 상세 정보 가져오기,
     private val createScheduleUseCase: CreateScheduleUseCase, //일정 생성하기
     private val updateScheduleUseCase: UpdateScheduleUseCase, //일정 수정하기
-    private val getMemberProfileUseCase: GetMemberProfileUseCase, //유저 정보 가져오기
-    private val searchChallengerScheduleUseCase: SearchChallengerScheduleUseCase, //유저 검색
+    private val getMemberProfileUseCase: GetMemberProfileUseCase, //유저 정보 가져오
 ): BaseViewModel<ScheduleAddUiState, ScheduleAddEvent>(
     ScheduleAddUiState()
 ) {
-    //Calender를 String으로 변경하는 포맷들이 담김
+
+    // 날짜 및 시간 포맷팅 및 파싱을 위한 SimpleDateFormat 변수들
     private val dateDisplaySdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
     private val timeDisplaySdf = SimpleDateFormat("a h:mm", Locale.KOREAN)
     private val parseDateSdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
     private val parseTimeSdf = SimpleDateFormat("HH:mm", Locale.KOREAN)
 
-    private val dateTimeDisplaySdf = SimpleDateFormat("yyyy.MM.dd • a h:mm", Locale.KOREAN)
-
+    // SavedStateHandle에서 전달받은 수정 대상 일정 ID 변수 (-1L인 경우 신규 작성)
     private val checkScheduleId: Long = savedStateHandle.get<Long>("scheduleId") ?: -1L
-
-    //검색 작업용 코루틴
-    private var searchJob: Job? = null
 
 
     init {
+        // 초기 유저 정보 로드 실행
         loadInitialData()
 
-        Log.d("log_home", "checkScheduleId: $checkScheduleId")
-
+        // 전달받은 일정 ID가 존재하는 경우 일정 수정 모드로 데이터 바인딩 실행
         if(checkScheduleId != -1L){
             settingUpdateSchedule(checkScheduleId)
         }
     }
 
-    /**초기 데이터 가져오는 작업들 정의 및 파싱 함수들 정의**/
-    // 초기 데이터(장소 검색 기록 및 유저 정보 가져오기)
+    /**
+     * 앱 내 유저 기본 정보 및 최신 기수/운영진 권한 여부를
+     * 조회하는 메서드
+     */
     private fun loadInitialData() {
         viewModelScope.launch {
             //유저 정보 가져오기
@@ -106,9 +104,13 @@ constructor(
         }
     }
 
-    //일정 수정 시 기존 일정 데이터로 UI 채우기
+    /**
+     * 기존 일정 수정 모드 진입 시 서버에서 상세 데이터를 불러와
+     * UI State에 반영하는 메서드
+     *
+     * @param scheduleId 수정할 일정 고유 ID
+     */
     private fun settingUpdateSchedule(scheduleId: Long) {
-
         updateState {
             copy(
                 editMode = true,
@@ -125,13 +127,10 @@ constructor(
                     val usersIdList = users.map { it ->
                         it.memberId
                     }
-                    Log.d("log_home", "일정 상세 정보: $detail")
-                    Log.d("log_home", "일정 상세 정보/users: $users")
-                    Log.d("log_home", "일정 상세 정보/usersIdList: $usersIdList")
 
-                    //1. 참석자들 프로필 정보 로드
+                    // 참석자 회원들의 프로필 정보를 병렬로 비동기 로드한 뒤 UI에 적용
                     loadParticipantsProfiles(usersIdList) { participants ->
-                        //2. 받아온 데이터를 UI 상태에 맞게 가공 및 반영
+                        // 받아온 데이터를 UI 상태에 맞게 가공 및 반영
                         applyScheduleDetail(detail, participants)
                     }
                 },
@@ -140,12 +139,19 @@ constructor(
         }
     }
 
-    //일정 참여자 ID List를 이용해, 참여자 리스트(ParticipantItem)을 생성
+    /**
+     * 참석자 ID 리스트를 받아 각 회원의 상세 프로필 정보를 병렬로 불러와 ParticipantItem 목록으로 가공하는 메서드
+     *
+     * @param memberIds 참석자 회원 ID 리스트
+     * @param onComplete 가공이 완료된 ParticipantItem 리스트를 전달받는 콜백
+     */
     private fun loadParticipantsProfiles(
         memberIds: List<Long>,
         onComplete: (List<ParticipantItem>) -> Unit
     ) {
         viewModelScope.launch {
+            /**코루틴 async를 이용해 각 회원의 프로필 조회를 동시 병렬 요청**/
+
             //각 유저들의 memberId로 정보들 불러오기
             val tasks = memberIds.map { id -> async { getMemberProfileUseCase(id) } }
             val responses = tasks.awaitAll()
@@ -176,11 +182,16 @@ constructor(
         }
     }
 
-    //가져온 정보를 바탕으로 불러온 일정 정보들을 ViewModel에 반영하는 함수
+    /**
+     * 서버에서 가져온 일정 상세 도메인 데이터(PlanDetailItem)를 ViewModel UI 상태에 파싱 및 적용하는 메서드
+     *
+     * @param detail 서버에서 수신한 일정 상세 정보
+     * @param participants 가공 완료된 참석자 목록
+     */
     private fun applyScheduleDetail(detail: PlanDetailItem, participants: List<ParticipantItem>){
         updateState {
 
-            //0. isAllday 판별용
+            // 하루종일 설정 여부 판별 (00:00 시작 ~ 23:59 종료 기준)
             val checkIsAllDay = detail.startTime.trim() == "00:00" && detail.endTime.trim() == "23:59"
 
             //1. 도메인 String -> 내부 연산용 Calendar 생성
@@ -269,7 +280,10 @@ constructor(
         }
     }
 
-    //string을 이용해 Calendar로 바꾸는 함수
+    /**
+     * 날짜 문자열(yyyy.MM.dd)과 시간 문자열(HH:mm)을 조합해
+     * Calendar 객체로 파싱 및 변환하는 메서드
+     */
     private fun stringToCalendar(day: String, time: String): Calendar {
         val cal = Calendar.getInstance()
         try {
@@ -291,9 +305,10 @@ constructor(
     }
 
     /**
-     * Calendar 객체 두 개(날짜, 시간)를 합쳐 ISO 8601 문자열로 변환
-     * 예: 2026-02-08T09:57:19.628Z
-     * TODO 시간 형태 변경 -9시간
+     * 날짜 Calendar와 시간 Calendar 두 개를 합쳐
+     * ISO 8601 규격의 UTC 시간 문자열로 변환하는 메서드
+     *
+     * @return ISO 8601 포맷 문자열 (예: 2026-02-08T09:57:19.628Z)
      */
     private fun getIsoDateTime(dateCal: Calendar, timeCal: Calendar): String {
         //그냥 하나의 타임 포맷으로 바꾸자
@@ -316,14 +331,17 @@ constructor(
 
 
 
-    /**일정을 생성 or 수정하는 함수
-     * isAttendance = 출석부도 같이 생성하는지 여부
-     * **/
+    /**
+     * 입력을 완료한 일정 데이터를 서버로 생성 또는 수정하여
+     * 전송하는 메서드
+     *
+     * @param isAttendance 출석부 정책 생성 여부 플래그
+     */
     fun submitPlan(isAttendance: Boolean){
         val state = uiState.value
         val isEditMode = state.updateScheduleId != -1L
 
-        //하루 종일(isAllDay) 여부에 따른 Calendar 시/분/초 세팅
+        // 하루종일 여부에 따라 시작(00:00:00) 및 종료(23:59:59) 시각 보정 연산
         val startCal = (state.startDate.clone() as Calendar).apply {
             if (state.isAllDay) {
                 set(Calendar.HOUR_OF_DAY, 0)
@@ -346,33 +364,27 @@ constructor(
         val startsAt = getIsoDateTime(startCal, if (state.isAllDay) startCal else state.startTime)
         val endsAt = getIsoDateTime(endCal, if (state.isAllDay) endCal else state.endTime)
 
-        Log.d("log_home", "startsAt: $startsAt, endsAt: $endsAt")
-
-
-        //선택한 카테고리 enums -> String list로
+        //선택한 카테고리 enums -> String 문자열 리스트로 변환
         val selectedTags = state.categories
             .filter { it.isChecked }
             .mapNotNull { item ->
                 CategoryType.entries.find { it.label == item.name }?.name
             }
 
-
-        //내 ID도 추가(만약 이미 있으면 중복 체거)
+        // 작성자 본인 ID를 포함한 최종 참석자 ID 목록 생성 (중복 제거)
         val participantIds = (state.selectedParticipants.map { it.id } + state.myInfo.id).distinct()
-
-
 
         viewModelScope.launch {
             if (isEditMode) {
+                // 기존 일정 수정 처리
                 
-                //[수정] 출석부 내용 추가
+                //출석부 정보 생성
                 val attendancePolicy = if (isAttendance) UpdateSchedule.AttendancePolicy(
                     checkInStartAt = getIsoDateTime(state.checkInStartDate, state.checkInStartTime),
                     onTimeEndAt = getIsoDateTime(state.onTimeEndDate, state.onTimeEndTime),
                     lateEndAt = getIsoDateTime(state.lateEndDate, state.lateEndTime)
                 ) else null
                 
-                // [기존 일정 수정]
                 val request = UpdateSchedule(
                     name = state.planTitle,
                     description = state.planDetail,
@@ -396,8 +408,8 @@ constructor(
                     /* 에러 처리 */ }
                 )
             } else {
-                //[새 일정 생성]
-                //[수정]출석부 처리
+
+                // 신규 일정 생성 처리
                 val attendancePolicy = if (isAttendance) CreateSchedule.AttendancePolicy(
                     checkInStartAt = getIsoDateTime(state.checkInStartDate, state.checkInStartTime),
                     onTimeEndAt = getIsoDateTime(state.onTimeEndDate, state.onTimeEndTime),
@@ -428,8 +440,12 @@ constructor(
 
 
     }
-    
-    // 비대면 체크 상태 토글하는 함수
+
+    /**
+     * 비대면(온라인) 진행 여부를 스위치 토글로 전환하는 메서드
+     *
+     * @param isOnline 비대면 체크 여부 (true인 경우 기존 기입된 장소 텍스트 및 위경도 초기화)
+     */
     fun toggleOnlineCheck(isOnline: Boolean) {
         updateState {
             copy(
@@ -442,14 +458,19 @@ constructor(
         }
     }
 
-    //출석부 생성 여부 토글하는 함수
+    /**
+     * 출석부 생성 여부를 스위치 토글로 전환하는 메서드
+     */
     fun toggleAttendanceCheck(isAttendance: Boolean) {
         updateState { copy(isAttendanceChecked = isAttendance) }
     }
 
 
 
-    // 다이얼로그에서 가져온 참여자 정보를 업데이트 하는 함수
+    /**
+     * 바텀시트 다이얼로그에서 선택 완료된 참석자 정보를
+     * 업데이트하는 메서드
+     */
     fun updateParticipants(participants: List<ParticipantItem>, participantsString: String) {
         updateState {
             copy(
@@ -458,21 +479,27 @@ constructor(
             ) }
     }
 
-    // 일정 이름 변경
+    /**
+     * 일정 제목 입력값을 업데이트하는 메서드
+     */
     fun updatePlanTitle(title: String) = updateState {
         copy(
             planTitle = title
         )
     }
 
-    // 일정 상세내용 변경
+    /**
+     * 일정 상세 내용 입력값을 업데이트하는 메서드
+     */
     fun updatePlanDetail(detail: String) = updateState {
         copy(
             planDetail = detail
         )
     }
 
-    // 일정 위치 변경
+    /**
+     * 장소 검색 결과에서 선택된 장소명 및 좌표 정보를 업데이트하는 메서드
+     */
     fun updatePlanLocation(location: LocationItem) = updateState {
         copy(
             planLocation = location.title,
@@ -480,51 +507,12 @@ constructor(
             longitude = location.longitude
         )
     }
+    
 
-    // 일정 시작 날짜 변경
-    fun updateStartDate(year: Int, month: Int, day: Int) {
-        val newCal = (uiState.value.startDate.clone() as Calendar).apply { set(year, month, day) }
-        updateState {
-            copy(
-                startDate = newCal,
-                startDateText = dateDisplaySdf.format(newCal.time)
-            )
-        }
-    }
-
-    // 일정 시작 시간 변경
-    fun updateStartTime(hour: Int, minute: Int) {
-        val newCal = (uiState.value.startTime.clone() as Calendar).apply { set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute) }
-        updateState {
-            copy(startTime = newCal,
-                startTimeText = timeDisplaySdf.format(newCal.time)
-            )
-        }
-    }
-
-    // 일정 종료 날짜 변경
-    fun updateEndDate(year: Int, month: Int, day: Int) {
-        val newCal = (uiState.value.endDate.clone() as Calendar).apply { set(year, month, day) }
-        updateState {
-            copy(
-                endDate = newCal,
-                endDateText = dateDisplaySdf.format(newCal.time)
-            )
-        }
-    }
-
-    // 일정 종료 시간 변경
-    fun updateEndTime(hour: Int, minute: Int) {
-        val newCal = (uiState.value.endTime.clone() as Calendar).apply { set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute) }
-        updateState {
-            copy(
-                endTime = newCal,
-                endTimeText = timeDisplaySdf.format(newCal.time)
-            )
-        }
-    }
-
-    // 일정 시작 날짜/시간 통합 변경
+    /**
+     * UTC 일시 문자열을 수신받아 
+     * 일정 시작 날짜 및 시간을 통합 업데이트하는 메서드
+     */
     fun updateStartDateTime(utcDateTime: String) {
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
@@ -546,7 +534,10 @@ constructor(
         }
     }
 
-    // 일정 종료 날짜/시간 통합 변경
+    /**
+     * UTC 일시 문자열을 수신받아
+     * 일정 종료 날짜 및 시간을 통합 업데이트하는 메서드
+     */
     fun updateEndDateTime(utcDateTime: String) {
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
@@ -567,8 +558,10 @@ constructor(
         }
     }
 
-    //출석부 관련 시간 업데이트
-    //체크인 시간
+    /**
+     * UTC 일시 문자열을 수신받아
+     * 출석 체크인 시작 날짜 및 시간을 통합 업데이트하는 메서드
+     */
     fun updateCheckInStartDateTime(utcDateTime: String) {
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
@@ -589,7 +582,10 @@ constructor(
         }
     }
 
-    //정시 종료 시간
+    /**
+     * UTC 일시 문자열을 수신받아
+     * 출석 정시 종료 날짜 및 시간을 통합 업데이트하는 메서드
+     */
     fun updateOnTimeEndDateTime(utcDateTime: String) {
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
@@ -610,7 +606,10 @@ constructor(
         }
     }
 
-    //지각 종료 시간
+    /**
+     * UTC 일시 문자열을 수신받아
+     * 출석 지각 인정 날짜 및 시간을 통합 업데이트하는 메서드
+     */
     fun updateLateEndDateTime(utcDateTime: String) {
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
@@ -630,11 +629,15 @@ constructor(
             Log.e("log_home", "Parsing Error: ${e.message}")
         }
     }
-    
 
 
 
-    // 카테고리를 선택하면 진행하는 함수
+
+    /**
+    * 카테고리(태그) 선택 시 토글 및 상단 요약 문구를 생성하여 업데이트하는 메서드
+    *
+    * @param category 사용자가 선택한 카테고리 아이템
+    */
     fun selectCategory(category: CategoryItem) {
         updateState {
             //카테고리 uistate 업데이트
@@ -650,11 +653,12 @@ constructor(
 
             //선택된 카테코리 필터링
             val selectedOnes = selectedCategories.filter { it.isChecked }
-            //더미 텍스트 및 선택 여부 반영
             val isSelected = when {
                 selectedOnes.isEmpty() -> false
                 else -> true
             }
+
+            // 선택 개수에 따른 요약 문구 가공 (예: "스터디, 프로젝트, 모임 외 2개")
             val summaryText = when {
                 selectedOnes.isEmpty() -> ""
                 selectedOnes.size <= 3 -> selectedOnes.joinToString(", ") { it.name }
@@ -670,8 +674,9 @@ constructor(
 
 
 
-    //하루종일 관련
-    //모집 중 스위치 누를 때마다 상태 변화하고 필터링
+    /**
+     * 하루종일 설정 스위치 상태를 업데이트하는 메서드
+     */
     fun setAllday(isAllday: Boolean) {
         updateState {
             copy(
@@ -707,12 +712,11 @@ data class ScheduleAddUiState(
     val longitude: Double = 0.0,
     val planDetail: String = "",
 
-    //시간 관련
+    //시간 관련 Calendar 및 표시용 텍스트 상태
     val startDate: Calendar = Calendar.getInstance(),
     val startTime: Calendar = Calendar.getInstance(),
     val endDate: Calendar = Calendar.getInstance(),
     val endTime: Calendar = Calendar.getInstance(),
-    //(필수)
     val startDateText: String = "",
     val startTimeText: String = "",
     val endDateText : String = "",
@@ -731,9 +735,7 @@ data class ScheduleAddUiState(
     val lateEndDateText: String = "",
     val lateEndTimeText: String = "",
 
-
-
-
+    // 참석자 및 비대면/출석 스위치 상태
     val selectedParticipants: List<ParticipantItem> = emptyList(), //선택된 참여자 결과(recyclerview에 쓰임)
     val selectedParticipantsString : String = "", //cdv에 보여줄 string
 
@@ -767,12 +769,12 @@ data class ScheduleAddUiState(
 
 
 ) : UiState {
-    //참여자 명단(recyclerview를 보여주는지 체크 여부)
+    // 참석자 존재 여부를 실시간으로 계산하는 프로퍼티
     val isSelectedParticipant: Boolean
         get() = selectedParticipants.isNotEmpty()
 
 
-    //최종 여부를 판단하는 실시간 계산
+    // 필수 입력 조건(제목, 카테고리, 대면 장소) 통과 여부를 실시간으로 연산하여 등록 버튼 활성화 상태를 반환하는 프로퍼티
     val isRegisterOk: Boolean get() = planTitle.isNotBlank() && isSelectedCategory && (isOnlineChecked || planLocation.isNotEmpty())
 }
 

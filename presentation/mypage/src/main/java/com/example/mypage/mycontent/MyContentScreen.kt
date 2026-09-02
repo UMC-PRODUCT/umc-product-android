@@ -43,8 +43,8 @@ import kotlinx.coroutines.flow.collectLatest
 
 
 /**
- *
- * 커뮤니티 개편으로 제거됩니다.
+ * [주의]
+ * 커뮤니티 개편으로 더 이상 사용되지 않는 모듈입니다.
  *
  * **/
 

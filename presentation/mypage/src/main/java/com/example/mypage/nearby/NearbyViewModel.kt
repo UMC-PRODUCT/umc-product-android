@@ -16,17 +16,24 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
+/**
+ * Nearby Connections 비동기 근거리 통신과 UI 계층(바텀시트, 다이얼로그, 오버레이)을 중계하는 뷰모델 클래스
+ *
+ * NearbyManager로부터 수신된 이벤트를 매핑하여 주변 기기 리스트(devices) 업데이트,
+ * P2P 연결 성공 시 자동 명함(send) 전송, 수신된 카드(receivedCard)의 DataStore 저장 및 교환 성공 오버레이 상태를 관리합니다.
+ *
+ */
 @HiltViewModel
 class NearbyViewModel @Inject constructor(
     application: Application,
     private val SaveUserCardUseCase: SaveUserCardUseCase, //명함 저장
 ) : BaseViewModel<NearbyUiState, NearbyEvent>(NearbyUiState()) {
 
-    //manager 초기화
+    // NearbyManager 인스턴스를 생성하고 내부 통신 이벤트를 수신하는 리스너 바인딩
     private val manager = NearbyManager(application) { event ->
-        //ManagerEvent를 받아 viewModel 값 업데이트
         when(event) {
-            //기기 찾으면
+            // 주변 기기 감지 시 중복 체크 후 디바이스 목록에 추가
             is NearbyManagerEvent.EndpointFound -> {
                 updateState {
                     //id 기준 중복 제거 후 추가
@@ -34,11 +41,13 @@ class NearbyViewModel @Inject constructor(
                     copy(devices = currentList + (event.id to event.userInfo))
                 }
             }
-            //인증 과정(현재는 자동)
+
+            // 자동 연결 승인 시 상태 갱신
             is NearbyManagerEvent.AuthVerification -> {
                 updateState { copy(pendingAuth = event) }
             }
-            //연결 설공 시(인증 성공) -> 자동 카드 전송
+
+            // P2P 연결 성공 시 내 명함(UserCard)을 자동 전송
             is NearbyManagerEvent.ConnectionSuccess -> {
                 updateState { copy(connectedId = event.id, pendingAuth = null, status = "연결 완료") }
                 emitEvent(NearbyEvent.ShowToast("연결에 성공했습니다."))
@@ -58,7 +67,7 @@ class NearbyViewModel @Inject constructor(
 
 
             }
-            //카드 받을 경우
+            // 상대방 명함 카드 수신 성공 시 저장 및 오버레이 노출
             is NearbyManagerEvent.UserCardReceived -> {
                 updateState {
                     copy(
@@ -68,18 +77,21 @@ class NearbyViewModel @Inject constructor(
                     )
                 }
 
-                // AppDataStore에 카드 저장
+                // 수신받은 상대방 명함을 AppDataStore 로컬 DB에 비동기 저장
                 viewModelScope.launch {
                     SaveUserCardUseCase(event.card)
                 }
 
-                stopExchange() // 통신 완료 후 연결 및 스캔 종료
+                // 트랜잭션 완료 후 연결 및 소켓 세션 즉시 정리
+                stopExchange()
             }
-            //현재 상태 업데이트
+
+            // 현재 통신 진행 상태 메시지 업데이트
             is NearbyManagerEvent.StatusUpdate -> {
                 updateState { copy(status = event.message) }
                 //emitEvent(NearbyEvent.ShowToast(event.message))
             }
+
             //에러
             is NearbyManagerEvent.Error -> {
                 updateState { copy(status = event.message) }
@@ -88,19 +100,25 @@ class NearbyViewModel @Inject constructor(
         }
     }
 
-    
 
-    // 내 기본 정보 세팅 (화면 진입 시 호출)
+
+    /**
+     * 내 프로필 정보(NearbyUserInfo)를 매니저에 전달하기 위해 상태에 설정하는 메서드
+     */
     fun setMyUserInfo(userInfo: NearbyUserInfo, ) {
         updateState { copy(myUserInfo = userInfo) }
     }
 
-    // 내 유저 카드 받아오기 (화면 진입 시 호출)
+    /**
+     * 내 명함 모델(UserCard)을 전송용 상태(명함)로 설정하는 메서드
+     */
     fun setMyUserCard(card: UserCard) {
         updateState { copy(myUserCard = card) }
     }
 
-    // 바텀시트 열기/닫기 제어
+    /**
+     * 명함 교환 바텀시트를 오픈하고 상태값을 초기화하는 메서드
+     */
     fun openBottomSheet() {
         updateState {
             copy(
@@ -112,12 +130,17 @@ class NearbyViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 바텀시트를 닫고 진행 중인 통신 자원을 정리하는 메서드
+     */
     fun closeBottomSheet() {
         stopExchange()
         updateState { copy(isBottomSheetOpen = false) }
     }
 
-    //기기 광고 및 탐색 동시 시작
+    /**
+     * 기기 광고(Advertising) 및 탐색(Discovery)을 동시에 개시하여 P2P 상호 감지를 시작하는 메서드
+     */
     fun startAdvertisingAndDiscovery() {
         val myInfo = uiState.value.myUserInfo ?: NearbyUserInfo(name = "실패", info = "Connect 실패")
 
@@ -125,13 +148,16 @@ class NearbyViewModel @Inject constructor(
         manager.startAdvertisingAndDiscovery(myInfo)
     }
 
-    /**다이얼로그와 관련된 데이터 다듬기(CardExchangeBottomSheet)**/
-    //유저 목록에서 특정 멤버 클릭 (다이얼로그 팝업 준비)
+    /**
+     * 발견된 기기 목록 중 사용자가 클릭한 타겟 기기를 전송 확인 다이얼로그용 상태로 지정하는 메서드
+     */
     fun selectTargetUser(target: Pair<String, NearbyUserInfo>?) {
         updateState { copy(selectedTargetUser = target) }
     }
 
-    //확인 다이얼로그 '전송하기' 클릭 시 실제 연결 시도
+    /**
+     * 전송 확인 팝업에서 '전송하기' 클릭 시 선택된 타겟 디바이스로 연결 요청(requestConnection)을 수행하는 메서드
+     */
     fun confirmAndConnect() {
         val target = uiState.value.selectedTargetUser ?: return
         val targetId = target.first
@@ -143,7 +169,9 @@ class NearbyViewModel @Inject constructor(
         requestConnection(targetId)
     }
 
-    //확인 버튼 클릭 -> 성공 오버레이 감추고 MycardScreen으로 완전히 돌아감
+    /**
+     * 교환 성공 오버레이를 닫고 내 명함 화면으로 완전히 되돌아가는 메서드
+     */
     fun dismissSuccessOverlay() {
         updateState {
             copy(
@@ -153,7 +181,9 @@ class NearbyViewModel @Inject constructor(
         }
     }
 
-    //계속 교환하기 버튼 클릭 -> 성공 오버레이를 닫고 다시 탐색 다이얼로그(DISCOVER_USERS) 오픈!
+    /**
+     * 교환 성공 오버레이에서 '계속 교환하기' 클릭 시 성공 화면을 닫고 즉시 탐색 모드를 재가동하는 메서드
+     */
     fun continueExchange() {
         updateState {
             copy(
@@ -166,40 +196,55 @@ class NearbyViewModel @Inject constructor(
         updateState { copy(isBottomSheetOpen = true) }
     }
 
-    
 
-    //기기 광고 시작
+
+    /**
+     * 수동 기기 광고 시작 메서드
+     */
     fun startAdvertising(userInfo: NearbyUserInfo) {
         manager.startAdvertising(userInfo)
     }
 
-    //1:N 유저 탐색
+    /**
+     * 수동 1:N 유저 스캔 탐색 시작 메서드
+     */
     fun startDiscovery() {
         manager.startDiscovery()
     }
 
-    //연결 시도
+    /**
+     * 지정한 endpointId로 소켓 연결을 요청하는 메서드
+     */
     fun requestConnection(id: String) {
         manager.requestConnection(id)
     }
 
-    //인증 후 연결 승인 (현재는 NearbyManger 내부에서 자동 인증되도록 수정)
+    /**
+     * 수신된 연결 요청을 승인하는 메서드
+     * (현재는 NearbyManger 내부에서 자동 인증되도록 수정)
+     */
     fun accept(id: String) {
         manager.acceptConnection(id)
     }
 
-    //값 전송
+    /**
+     * 명함 카드 데이터를 상대 기기로 발송하는 메서드
+     */
     fun send(id: String, card: UserCard) {
         manager.sendUserCard(id, card)
     }
 
-    //리셋
+    /**
+     * 뷰모델 소멸 시 근거리 통신 세션 및 백그라운드 스캔을 안전하게 전면 해제하는 메서드
+     */
     override fun onCleared() {
         super.onCleared()
         manager.stopAll() // 연결 종료 추가
     }
 
-    //교환 종료
+    /**
+     * 진행 중인 탐색 및 광고를 중단하고 선택 상태를 리셋하는 메서드
+     */
     fun stopExchange() {
         manager.stopAll()
         updateState {

@@ -78,6 +78,18 @@ import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.OutLinkType
 import com.umc.domain.model.mypage.UserCard
 
+
+/**
+ * 앱 설정, 외부 링크 연결, 약관 및 계정 제어(로그아웃/탈퇴)를 담당하는 설정 화면 컴포저블
+ *
+ * 본래 마이페이지 탭의 메인 화면이었으나, 개편을 통해 MycardScreen이 마이페이지 최초 진입점 역할을 맡게 되면서
+ * 본 화면은 내 카드 상단 탑바의 설정 아이콘을 클릭했을 때 진입하는 설정 전용 라우트로 기능이 변경되었습니다.
+ *
+
+ * [유의사항]
+ * - 마이페이지 탭 클릭 시 최초 노출되는 화면은 MycardScreen이며, MypageScreen은 설정 버튼을 통해 진입하는 서브 화면 구조입니다.
+ */
+
 @Composable
 fun MypageRoute(
     viewModel: MypageViewModel = hiltViewModel(),
@@ -89,8 +101,6 @@ fun MypageRoute(
     onNavigateToQrCode: () -> Unit, /**qr 코드 이동**/
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    //nearby 기능
-    val nearbyState by nearbyViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     var showAddCodeDialog by remember { mutableStateOf(false) }
@@ -100,68 +110,6 @@ fun MypageRoute(
     //OutLink 3종(깃허브,링크드인,블로그)
     var selectedOutLinkType by remember { mutableStateOf<OutLinkType?>(null) }
     var showOutLinkDialog by remember { mutableStateOf(false) }
-
-
-    // 권한 요청 동작 구분 플래그
-    var pendingNearbyAction by remember { mutableStateOf<String?>(null) }
-
-    //권한 요청 추가
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        if (permissions.values.all { it }) {
-            when (pendingNearbyAction) {
-                "ADVERTISE" -> {
-                    //nearbyViewModel.startAdvertising()
-                }
-                "DISCOVER" -> {
-                    nearbyViewModel.startDiscovery()
-                }
-            }
-        } else {
-            Toast.makeText(context, "Nearby 기능을 위한 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
-        }
-        pendingNearbyAction = null
-    }
-
-    // 권한 배열을 반환하는 헬퍼 함수
-    fun getRequiredPermissions(): Array<String> {
-        val permissions = mutableListOf(
-            android.Manifest.permission.ACCESS_FINE_LOCATION,
-            android.Manifest.permission.ACCESS_COARSE_LOCATION
-        )
-
-        // Android 12 (API 31) 이상: Bluetooth 관련 권한
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            permissions.add(android.Manifest.permission.BLUETOOTH_SCAN)
-            permissions.add(android.Manifest.permission.BLUETOOTH_CONNECT)
-            permissions.add(android.Manifest.permission.BLUETOOTH_ADVERTISE)
-
-        }
-
-        // Android 13 (API 33) 이상: Nearby WiFi Devices 권한
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissions.add(android.Manifest.permission.NEARBY_WIFI_DEVICES)
-        }
-
-        return permissions.toTypedArray()
-    }
-
-
-
-
-    /**테스트 용도**/
-    /** 2. Nearby ViewModel 이벤트 (Toast) 수신 **/
-    LaunchedEffect(nearbyViewModel) {
-        nearbyViewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is NearbyEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
-                else -> {}
-            }
-        }
-    }
 
 
     LaunchedEffect(viewModel) {
@@ -196,12 +144,6 @@ fun MypageRoute(
                 }
                 //프로필 누를 때 (이동)
                 is MypageEvent.NavigateToEditProfile -> onNavigateToEditProfile()
-                //내가 쓴 글 누를 때 (이동)
-                is MypageEvent.NavigateToMypost -> onNavigateToMyContent("MYPOST")
-                //댓글 단 글 누를 때 (이동)
-                is MypageEvent.NavigateToMyComment -> onNavigateToMyContent("MYCOMMENT")
-                //스크랩 누를 때 (이동)
-                is MypageEvent.NavigateToScrap -> onNavigateToMyContent("MYSCRAP")
                 //챌린저 기록 추가 누를 때 (이동)
                 is MypageEvent.NavigateToAddActivity -> {
                     showAddCodeDialog = true
@@ -254,16 +196,10 @@ fun MypageRoute(
 
     MypageScreen(
         uiState = uiState,
-        nearbyState = nearbyState,
         onBackClick = viewModel::navigateToBack,
-        //onProfileClick = viewModel::navigateToEditProfile, //프로필 화면
         onGithubClick = viewModel::navigateToGithub, //깃허브 이동
         onLinkedinClick = viewModel::navigateToLinkedin, //링크드인 이동
         onBlogClick = viewModel::navigateToBlog, //블로그 이동
-        //onMyPostClick = viewModel::navigateToMypost, //내 게시글 이동
-        //onMyCommentClick = viewModel::navigateToMyComment, //댓글단 글 이동
-        //onScrapClick = viewModel::navigateToScrap, //스크랩한 글 이동
-        //onAddActivityClick = viewModel::navigateToAddActivity, //활동 추가 이동
         onAssistClick = viewModel::navigateToAssistUmc, //UMC 어시스트(카톡) 이동
         onNoticeSettingClick = viewModel::navigateToSettingNotice, //알림 설정 이동
         onLocationSettingClick = viewModel::navigateToSettingLocation, //위치 설정 이동
@@ -276,8 +212,7 @@ fun MypageRoute(
 
     )
 
-    //OutLink 다이얼로그 관련
-    /**TODO : 다이얼로그 형태 바꾸기**/
+    // 외부 링크 미등록 안내 다이얼로그 컴포저블
     if(showOutLinkDialog && selectedOutLinkType != null){
         val name = when(selectedOutLinkType) {
             OutLinkType.GITHUB -> "Github를"
@@ -299,7 +234,7 @@ fun MypageRoute(
 
     }
 
-    //챌린저 코드 다이얼로그 관련
+    // 활동 코드 입력 다이얼로그 컴포저블 (현재 사용 X)
     if(showAddCodeDialog){
         AddCodeDialog(
             code = uiState.code,
@@ -309,7 +244,7 @@ fun MypageRoute(
         )
     }
 
-    //로그아웃 다이얼로그 관련
+    // 로그아웃 확인 다이얼로그 컴포저블
     if(showLogoutDialog){
 
 
@@ -333,7 +268,7 @@ fun MypageRoute(
 
     }
 
-    //회원 탈퇴 관련
+    // 회원 탈퇴 확인 다이얼로그 컴포저블
     if(showDeleteUserDialog){
 
         UDialog(
@@ -362,7 +297,9 @@ fun MypageRoute(
 
 
 
-//웹페이지 이동
+/**
+ * 외부 브라우저 인텐트를 호출하는 암시적 인텐트 연결 메서드
+ */
 private fun openWebpage(context: Context, url: String) {
     if (url.isBlank()) return
 
@@ -387,7 +324,9 @@ private fun openWebpage(context: Context, url: String) {
     }
 }
 
-//앱 권한 페이지로 이동(설정 페이지)
+/**
+ * 안드로이드 OS 세부 애플리케이션 설정 화면을 호출하는 메서드
+ */
 private fun openPermissionPage(context: Context) {
     try {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
@@ -403,7 +342,9 @@ private fun openPermissionPage(context: Context) {
 
 }
 
-//카카오톡 문의 페이지로 이동
+/**
+ * 카카오톡 앱 채널 채팅창을 호출하거나 웹 링크로 라우팅하는 메서드
+ */
 private fun openKakaoChannel(context: Context, channelId: String){
 
     if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
@@ -420,7 +361,9 @@ private fun openKakaoChannel(context: Context, channelId: String){
     }
 }
 
-// intent로 카카오 채널 열기
+/**
+ * 카카오 채널 웹 인텐트를 실행하는 메서드
+ */
 fun openKakaoChannelIntent(context: Context, channelId: String){
     val url = "https://pf.kakao.com/$channelId/chat"
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -430,16 +373,10 @@ fun openKakaoChannelIntent(context: Context, channelId: String){
 @Composable
 fun MypageScreen(
     uiState: MypageUiState,
-    nearbyState: NearbyUiState,
     onBackClick: () -> Unit,
-    //onProfileClick: () -> Unit,
     onGithubClick: () -> Unit,
     onLinkedinClick: () -> Unit,
     onBlogClick: () -> Unit,
-    //onMyPostClick: () -> Unit,
-    //onMyCommentClick: () -> Unit,
-    //onScrapClick: () -> Unit,
-    //onAddActivityClick: () -> Unit,
     onAssistClick: () -> Unit,
     onNoticeSettingClick: () -> Unit,
     onLocationSettingClick: () -> Unit,
@@ -471,133 +408,6 @@ fun MypageScreen(
                 .padding(horizontal = 16.dp)
                 .padding(top = 16.dp)
         ) {
-            /*
-        item{
-            //상단바
-            UText(
-                text = AppStrings.MYPAGE_TITLE,
-                style = UmcTypographyTokens.Title2Bold,
-                modifier = Modifier
-                    .padding(top = 18.dp)
-                    .padding(horizontal = 16.dp)
-            )
-        }
-
-         */
-
-            /*
-        item{
-            //유저 프로필 카드
-            MypageProfileCard(
-                uiState= uiState,
-                onClick = onProfileClick
-            )
-        }
-        
-         */
-
-            /** ────────────────────────────────────────────── **/
-            /**              Nearby 교환 테스트 섹션             **/
-            /** ────────────────────────────────────────────── **/
-            /*
-            item {
-                MypageSectionTitle(text = "Nearby 유저카드 교환 테스트")
-                MypageListCard {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        // 상태 정보 출력
-                        Text(
-                            text = "상태: ${nearbyState.status}",
-                            style = UmcTypographyTokens.Caption1Bold,
-                            color = grey600()
-                        )
-                        if (nearbyState.connectedId != null) {
-                            Text(
-                                text = "연결 완료! (ID: ${nearbyState.connectedId.take(6)}...)",
-                                style = UmcTypographyTokens.Caption1Bold,
-                                color = Color(0xFF2E7D32)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-
-
-                        MypageListItem(
-                            iconRes = R.drawable.ic_add,
-                            text = "QR 코드 만들기",
-                            onClick = onQrcodeClick
-                        )
-                        // 1. [기기 A] 광고 시작
-                        MypageListItem(
-                            iconRes = R.drawable.ic_add,
-                            text = "내 카드 노출하기",
-                            onClick = onStartAdvertise
-                        )
-
-                        // 2. [기기 B] 탐색 시작
-                        MypageListItem(
-                            iconRes = R.drawable.ic_add,
-                            text = "주변 카드 탐색하기",
-                            onClick = onStartDiscovery
-                        )
-
-                        // 3. 연결 수립 시 수동 데이터 전송 버튼
-                        if (nearbyState.connectedId != null) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            MypageListItem(
-                                iconRes = R.drawable.ic_add,
-                                text = "내 카드 전송하기",
-                                onClick = onSendCardClick
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 발견된 주변 기기 목록 (클릭 시 requestConnection 호출)
-            if (nearbyState.devices.isNotEmpty()) {
-                item {
-                    MypageSectionTitle(text = "발견된 주변 기기 (클릭하여 연결 시도)")
-                    MypageListCard {
-                        nearbyState.devices.forEach { device ->
-                            MypageListItem(
-                                iconRes = R.drawable.ic_location_primary,
-                                text = "${device.second} (${device.first.take(6)}...)",
-                                onClick = { onDeviceClick(device.first) }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 수신된 카드 정보 노출
-            nearbyState.receivedCard?.let { card ->
-                item {
-                    MypageSectionTitle(text = "수신된 유저 카드")
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = grey000()),
-                        elevation = CardDefaults.cardElevation(0.dp),
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            UText(
-                                text = "이름: ${card.name}",
-                                style = UmcTypographyTokens.BodyBold,
-                                color = grey800()
-                            )
-                            UText(
-                                text = "닉네임: ${card.nickname}",
-                                style = UmcTypographyTokens.Body,
-                                color = grey700()
-                            )
-                        }
-                    }
-                }
-            }
-            /** ────────────────────────────────────────────── **/
-
-             */
 
 
             item {
@@ -623,38 +433,6 @@ fun MypageScreen(
                     )
                 }
             }
-
-            /*
-        item{
-            //내 활동 섹션
-            MypageSectionTitle(
-                text = AppStrings.MYPAGE_MYACTIVITY
-            )
-            MypageListCard {
-                MypageListItem(
-                    R.drawable.ic_page,
-                    AppStrings.MYPAGE_MYPOST,
-                    onClick = onMyPostClick
-                )
-                MypageListItem(
-                    R.drawable.ic_comment,
-                    AppStrings.MYPAGE_MYCOMMENT,
-                    onClick = onMyCommentClick
-                )
-                MypageListItem(
-                    R.drawable.ic_star,
-                    AppStrings.MYPAGE_MYSCRAP,
-                    onClick = onScrapClick
-                )
-                MypageListItem(
-                    R.drawable.ic_add,
-                    AppStrings.MYPAGE_ADDACTIVITY,
-                    onClick = onAddActivityClick
-                )
-            }
-        }
-
-         */
 
             item {
                 //지원 섹션
@@ -779,7 +557,9 @@ fun MypageScreen(
     }
 }
 
-/**설정(내 카드) Top bar**/
+/**
+ * 설정 상단 탑바 컴포저블
+ */
 @Composable
 fun MypageTopBar(
     onBackClick: () -> Unit //뒤로 가기
@@ -802,9 +582,6 @@ fun MypageTopBar(
             tint = Color.Unspecified,
         )
 
-        //Spacer(modifier = Modifier.width(4.dp))
-
-
         UText(
             text = AppStrings.SETTING,
             style = UmcTypographyTokens.Title2Bold,
@@ -818,95 +595,10 @@ fun MypageTopBar(
 }
 
 
-/**내 프로필 카드**/
 
-/*
-@Composable
-fun MypageProfileCard(uiState: MypageUiState, onClick: () -> Unit){
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 24.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            //프로필 이미지(비동기 - Coil 사용)
-            AsyncImage(
-                model = uiState.userInfo.profileImageLink,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .border(1.dp, grey200(), CircleShape),
-                placeholder = painterResource(R.drawable.ic_profile_default),
-                error = painterResource(R.drawable.ic_profile_default)
-            )
-
-            Column(modifier = Modifier
-                .padding(start = 16.dp)
-                .weight(1f)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    //이름(닉네임)
-                    UText(
-                        text = "${uiState.userInfo.nickname}(${uiState.userInfo.name})",
-                        style = UmcTypographyTokens.Title3Bold
-                    )
-                    //카카오 or Google 배지
-                    if (uiState.linkedPlatforms.contains(LoginType.KAKAO)) {
-                        SocialBadge(
-                            platform = LoginType.KAKAO
-                        )
-                    }
-                    if(uiState.linkedPlatforms.contains(LoginType.GOOGLE)){
-                        SocialBadge(
-                            platform = LoginType.GOOGLE
-                        )
-                    }
-                }
-                //학교 정보
-                UText(text = uiState.userInfo.schoolName,
-                    modifier = Modifier.padding(top = 4.dp),
-                    style = UmcTypographyTokens.Headline, 
-                    color = grey600()
-                )
-                //최근 정보
-                if (uiState.myRecentCarrer.isNotEmpty()) {
-                    UButton(
-                        text = uiState.myRecentCarrer,
-                        onClick = {},
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                            .height(24.dp),
-                        backgroundColor = grey000(),
-                        borderColor = grey100(),
-                        borderWidth = 1.dp,
-                        textColor = grey700(),
-                        textStyle = UmcTypographyTokens.Caption1Bold
-                    )
-                }
-            }
-
-            Icon(
-                painterResource(R.drawable.ic_arrow_next),
-                contentDescription = null,
-                tint = grey500()
-            )
-        }
-    }
-}
-
-
+/**
+ * 섹션 헤더 타이틀 컴포저블
  */
-
-/**각 섹션의 헤더 제목**/
 @Composable
 fun MypageSectionTitle(text: String) {
     UText(
@@ -918,7 +610,9 @@ fun MypageSectionTitle(text: String) {
     )
 }
 
-/**여러 메뉴를 감싸는 아이템 카드**/
+/**
+ * 리스트 항목을 둘러싸는 라운드 카드 컴포저블
+ */
 @Composable
 fun MypageListCard(content: @Composable ColumnScope.() -> Unit) {
     Card(
@@ -932,7 +626,9 @@ fun MypageListCard(content: @Composable ColumnScope.() -> Unit) {
     )
 }
 
-/**메뉴 1개**/
+/**
+ * 설정 개별 메뉴 행 컴포저블
+ */
 @Composable
 fun MypageListItem(
     iconRes: Int,
@@ -972,7 +668,9 @@ fun MypageListItem(
     }
 }
 
-/**ProfileCard 옆에 있는 소셜 배지**/
+/**
+ * 소셜 로그인 플랫폼 표시 배지 컴포저블
+ */
 @Composable
 fun SocialBadge(platform: LoginType) {
     val bgColor = if (platform == LoginType.KAKAO) Color(0xFFFEE500) else grey100()
@@ -993,8 +691,10 @@ fun SocialBadge(platform: LoginType) {
         )
     }
 }
-
-/**소셜 연동 부분 (카카오 /구글 로그인 여부에 따라 보여주기 다름)**/
+/**
+ * 미연동 소셜 계정 연동 안내 카드 컴포저블
+ * (카카오 /구글 로그인 여부에 따라 보여주기 다름)
+ */
 @Composable
 fun MypageSocialLinkCard(
     targetPlatform: LoginType,
@@ -1040,7 +740,9 @@ fun MypageSocialLinkCard(
     }
 }
 
-/**하단 채널 버튼들**/
+/**
+ * UMC 외부 채널(웹사이트 및 인스타그램) 연결 버튼 그룹 컴포저블
+ */
 @Composable
 fun UMCChannelButtons(
     onWebsiteClick: () -> Unit,

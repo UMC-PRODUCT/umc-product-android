@@ -77,21 +77,13 @@ fun ProfileRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    /*
-    //텍스트 상태 추적
-    var githubText by remember(uiState.githubLink) { mutableStateOf(uiState.githubLink) }
-    var linkedinText by remember(uiState.linkedinLink) { mutableStateOf(uiState.linkedinLink) }
-    var blogText by remember(uiState.blogLink) { mutableStateOf(uiState.blogLink) }
-
-     */
-
-    //이미지 picker 세팅
+    // 안드로이드 표준 Photo Picker 미디어 선택 계약 런처
     val pickMedia = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
 
-            //ContentResolver를 이용해 메타 정보 추출
+            // ContentResolver를 이용한 파일 용량 및 MIME 타입 메타데이터 추출
             val fileSize =
                 context.contentResolver.openAssetFileDescriptor(uri, "r")?.use { it.length } ?: 0L
             //fileType은 MINETYPE -> image/jpg 이런 형식
@@ -101,11 +93,12 @@ fun ProfileRoute(
             val category = UploadFileCategory.PROFILE_IMAGE
 
             when {
+                // 허용되지 않은 파일 확장자 검증
                 category.alloweType.isNotEmpty() && !category.alloweType.contains(extension.lowercase()) -> {
                     Toast.makeText(context, "${category.label}에 허용되지 않는 형식입니다.", Toast.LENGTH_SHORT)
                         .show()
                 }
-
+                // 용량 제한(MB) 초과 검증
                 fileSize > category.maxSizeBytes -> {
                     val maxSizeMb = category.maxSizeBytes / (1024 * 1024)
                     Toast.makeText(
@@ -266,7 +259,9 @@ fun ProfileScreen(
 }
 
 
-/**상단 top bar**/
+/**
+ * 프로필 수정 화면 상단 탑바 컴포저블
+ */
 @Composable
 fun ProfileTopbar(
     onBackClick: () -> Unit,
@@ -314,7 +309,9 @@ fun ProfileTopbar(
     }
 }
 
-/**프로필 이미지 섹션 부분**/
+/**
+ * 카메라 배지가 포함된 원형 프로필 이미지 세션 컴포저블
+ */
 @Composable
 fun ProfileImageSection(imageUri: Uri, defaultUrl: String, onImageClick: () -> Unit) {
     Box(
@@ -362,7 +359,9 @@ fun ProfileImageSection(imageUri: Uri, defaultUrl: String, onImageClick: () -> U
     }
 }
 
-/**각 정보 섹션(고정된 부분)**/
+/**
+ * 수정 불가능한 기본 프로필 정보 항목 행 컴포저블
+ */
 @Composable
 fun ProfileInfoSection(title: String, content: String, platforms: List<LoginType> = emptyList()) {
     Column {
@@ -390,7 +389,9 @@ fun ProfileInfoSection(title: String, content: String, platforms: List<LoginType
     }
 }
 
-/**내 활동 섹션(여러 개)**/
+/**
+ * 기수별 활동 내역 및 파트/직함 배지를 표시하는 레코드 행 컴포저블
+ */
 @Composable
 fun ActiveHistoryItem(
     history: UserActiveItem
@@ -454,7 +455,9 @@ fun ActiveHistoryItem(
 }
 
 
-/**링크 넣는 섹션(입력 가능)**/
+/**
+ * 외부 링크 수정을 위한 UTextField 입력 컴포저블
+ */
 @Composable
 fun LinkInputSection(title: String, value: String, onValueChange: (String) -> Unit) {
     Column {

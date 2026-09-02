@@ -14,6 +14,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
+/**
+ * [주의]
+ * 커뮤니티 개편으로 더 이상 사용되지 않는 모듈입니다.
+ *
+ * **/
 @HiltViewModel
 class MyContentViewModel @Inject
 constructor(

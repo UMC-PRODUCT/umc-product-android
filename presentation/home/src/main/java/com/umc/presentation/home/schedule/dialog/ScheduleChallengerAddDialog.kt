@@ -63,8 +63,23 @@ import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.domain.model.home.SearchResultItem
 
-/**일정 생성에서 챌린저를 선택하는 다이얼로그**/
-
+/**
+ * 일정 생성 및 수정에서 참여 챌린저를 검색하고 다중 선택하는 바텀시트 다이얼로그 컴포저블
+ * 지만 챌린저 검색이 필요한 곳에서 응용이 가능합니다.
+ * [주의]
+ * 사용을 위해 ScheduleChallengerAddDialogViewModel을 별도로 사용해야 합니다. (추가 기록 저장)
+ * 사용 예시는 ShcedueleAddScreen을 참고하세요.
+ *
+ * 실시간 검색 쿼리에 따라 회원 리스트를 페이징 조회하고 파트(Android, Server 등)별로 그룹화하여 렌더링하며,
+ * 선택된 챌린저 명단(selectedParticipants)을 동기화하여 확정 버튼 클릭 시 상위 일정 추가 스크린으로 전달합니다.
+ *
+ * 주요 동작 흐름:
+ * 1. 검색창(searchQuery)이 비어있는 일반 상태(!isSearching)에서는 현재 선택 완료된 챌린저 리스트(SelectedParticipantList)를 노출합니다.
+ * 2. 검색어를 입력 중인 상태(isSearching == true)에서는 서버 API에서 조회된 검색 결과 리스트(SearchParticipantList)를 파트별 그룹 헤더와 함께 렌더링합니다.
+ * 3. LazyColumn 스크롤 시 바닥에서 2번째 항목 노출 시점에서 derivedStateOf 및 LaunchedEffect를 이용해 다음 페이지 데이터(onLoadMore)를 무한 스크롤로 로드합니다.
+ * 4. 바텀시트 내부 스크롤 시 모달 레이아웃이 닫히지 않도록 NestedScrollConnection을 선언하여 내부 리스트 스크롤 영역을 격리합니다.
+ *
+ **/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleChallengerAddBottomSheet(
@@ -101,10 +116,10 @@ fun ScheduleChallengerAddBottomSheet(
         }
     }
 
-    //리스트 추적
+    // 페이징 스크롤 상태 추적을 위한 LazyListState 객체
     val listState = rememberLazyListState()
 
-    //무한 스크롤 트리거 로직
+    // 리스트 하단 진입 시(스크롤) 다음 페이지 추가 로드를 트리거하는 상태 감지 변수
     val shouldLoadMore = remember {
         derivedStateOf {
             //현재 화면에 렌더링된 거 중 제일 마지막 리스트
@@ -116,7 +131,7 @@ fun ScheduleChallengerAddBottomSheet(
         }
     }
 
-    //shouldLoadMore이 true일 때 go
+    // 추가 데이터 로드 조건 만족 시 onLoadMore 콜백 호출
     LaunchedEffect(shouldLoadMore.value) {
         if (shouldLoadMore.value && !isLoading && hasNext) {
             onLoadMore()
@@ -139,7 +154,7 @@ fun ScheduleChallengerAddBottomSheet(
                 .padding(bottom = 24.dp)
         ) {
 
-            //1. 다이얼로그 헤더
+            //1. 다이얼로그 헤더 및 확정 버튼 컴포저블
             ChallengerHeader(
                 selectedParticipants = selectedParticipants,
                 selectedParticipantsString = selectedParticipantsString,
@@ -151,7 +166,7 @@ fun ScheduleChallengerAddBottomSheet(
                 .height(24.dp)
             )
 
-            //2. 검색 창
+            //2. 챌린저 이름 및 닉네임 검색 텍스트 필드 컴포저블
             UTextField(
                 value = searchQuery,
                 onValueChange = onQueryChanged,
@@ -167,7 +182,7 @@ fun ScheduleChallengerAddBottomSheet(
                 .height(24.dp)
             )
 
-            //3. 검색 유무에 따른 분기 처리
+            //3. 검색 중 여부에 따른 리스트 스위칭 박스 (NestedScroll 수신기 적용)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -214,8 +229,8 @@ fun ScheduleChallengerAddBottomSheet(
 }
 
 /**
- * 다이얼로그의 제목 및 확인 버튼이 포함되 페더
- * **/    
+ * 참여자 다이얼로그의 타이틀과 최종 선택 확정 버튼을 포함하는 헤더 컴포저블
+ */
 @Composable
 fun ChallengerHeader(
     selectedParticipants: List<ParticipantItem>,
@@ -254,8 +269,8 @@ fun ChallengerHeader(
 }
 
 /**
- * 챌린저 없을 때 보여주는 빈 화면
- * **/
+ * 선택된 챌린저가 없을 때 중앙에 아이콘과 안내 텍스트를 노출하는 뷰 컴포저블
+ */
 @Composable
 fun EmptyParticipantContent() {
     Column(
@@ -285,8 +300,8 @@ fun EmptyParticipantContent() {
 }
 
 /**
- * 선택된 챌린저들을 보여주는 화면
- * **/
+ * 현재 추가된 챌린저들의 리스트(삭제 버튼 포함)를 보여주는 컴포저블
+ */
 @Composable
 fun SelectedParticipantList(
     participants: List<ParticipantItem>,
@@ -303,8 +318,8 @@ fun SelectedParticipantList(
 }
 
 /**
- * 인원 검색 리스트 뷰
- * **/
+ * 검색된 챌린저 결과를 파트별 헤더와 체크박스 항목으로 렌더링하는 컴포저블
+ */
 @Composable
 fun SearchParticipantList(
     listState: LazyListState,
@@ -341,7 +356,7 @@ fun SearchParticipantList(
 
 
 /**
- * 이미 추가된 참석자 항목 뷰 (이름, 기수 정보 및 우측 X 삭제 버튼)
+ * 이미 일정 참여자로 추가된 챌린저의 프로필 및 삭제(X) 버튼 행을 표시하는 컴포저블
  */
 @Composable
 fun AddedParticipantRow(
@@ -411,7 +426,7 @@ fun AddedParticipantRow(
 }
 
 /**
- * 검색 결과 목록의 개별 유저 뷰 (우측 체크박스 포함)
+ * 검색 목록 내 개별 챌린저 정보 및 선택 체크박스 행을 표시하는 컴포저블
  */
 @Composable
 fun SearchParticipantRow(
@@ -475,7 +490,7 @@ fun SearchParticipantRow(
 }
 
 /**
- * 파트별(Android, Server 등) 구분을 지어주는 헤더 셀
+ * 파트(Android, Server 등) 구분을 표현하는 헤더 셀 컴포저블
  */
 @Composable
 fun PartHeaderRow(title: String) {
@@ -492,7 +507,7 @@ fun PartHeaderRow(title: String) {
 
 /**
  * API로 받아온 단순 유저 리스트를 파트(UserPart) 기준으로 그룹핑하고,
- * 각각의 그룹 상단에 'Header' 타입의 아이템을 꽂아넣어 UI 렌더링에 최적화된 리스트로 변환
+ * 각각의 그룹 상단에 'Header' 타입의 아이템을 꽂아넣어 UI 렌더링에 최적화된 리스트(SearchResultItem)로 변환하는 메서드
  */
 private fun processSearchResults(results: List<ParticipantItem>): List<SearchResultItem> {
     if (results.isEmpty()) return emptyList()

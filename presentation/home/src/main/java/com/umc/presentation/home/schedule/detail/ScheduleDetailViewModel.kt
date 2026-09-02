@@ -24,42 +24,48 @@ import javax.inject.Inject
 @HiltViewModel
 class ScheduleDetailViewModel @Inject
 constructor(
-    private val savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle, //nav에서 인자로 넘긴 일정 id 체크용
     private val getScheduleDetailHomeUseCase: GetScheduleDetailHomeUseCase, //일정 상세 정보 가져오기
     private val deleteScheduleUseCase: DeleteScheduleUseCase, //일정 삭제하기
     private val getAuthAccessUseCase: GetAuthAccessUseCase, //리소스 권한 조회
-    private val getScheduleCapabilities: GetScheduleCapabilities, //일정 권한 조회
 ) : BaseViewModel<ScheduleDetailUiState, ScheduleDetailEvent>(
     ScheduleDetailUiState()){
 
+    // SavedStateHandle에서 전달받은 일정 ID 및 연속 일정 일수 오프셋 변수
+    /** [예시]
+     *  일정이 2026.01.01 ~ 2026.01.17 일 경우,
+     *  2026.01.03에 있는 일정을 터치할 경우, 2026.01.01 일정 ID에 +2 day를 포함한 정보가 전송
+     * **/
     private val checkScheduleId: Long = savedStateHandle.get<Long>("scheduleId") ?: -1L
     private val checkPlusDay: Int = savedStateHandle.get<Int>("plusDay") ?: -1
 
 
     init{
+        // 전달받은 인자값이 유효한 경우 상세 데이터를 로드
         if(checkScheduleId != -1L && checkPlusDay != -1) {
             getScheduleDetail(checkScheduleId, checkPlusDay)
         }
 
+        // 일정에 대한 수정 및 삭제 권한 조회
         checkScheduleCapabilities()
-
-
     }
 
 
 
+    /**
+     * SavedStateHandle에 저장된 기본 ID값으로 일정 상세 정보를 조회 및 로드하는 메서드
+     */
     fun getScheduleDetail(){
         viewModelScope.launch {
             resultResponse(
                 response = getScheduleDetailHomeUseCase(checkScheduleId),
                 successCallback = {
-                    Log.d("log_home", "일정 상세: $it")
                     updateState { copy(
                         content = it,
                         plusDay = plusDay)
                     }
-                    //settingScheduleAuthAccess(it.scheduleId)
 
+                    // 서버에서 받은 데이터를 UI 상태에 맞게 변환 및 D-Day 계산
                     convertPlanDetailItemToUiState(it, checkPlusDay)
                 },
                 errorCallback = {
@@ -70,19 +76,23 @@ constructor(
     }
 
 
-    //서버에서 게시글 상세 정보 가져오기
+    /**
+     * 특정 일정 ID와 오프셋 일수를 직접 전달받아 상세 정보를 서버에서 조회하는 메서드
+     *
+     * @param scheduleId 일정 고유 ID
+     * @param plusDay 시작일 기준 오프셋 일수
+     */
     fun getScheduleDetail(scheduleId : Long, plusDay: Int){
         viewModelScope.launch {
             resultResponse(
                 response = getScheduleDetailHomeUseCase(scheduleId),
                 successCallback = {
-                    Log.d("log_home", "일정 상세: $it")
                     updateState { copy(
                         content = it,
                         plusDay = plusDay)
                     }
-                    //settingScheduleAuthAccess(it.scheduleId)
 
+                    // 서버에서 받은 데이터를 UI 상태에 맞게 변환 및 D-Day 계산
                     convertPlanDetailItemToUiState(it, plusDay)
                 },
                 errorCallback = {
@@ -92,40 +102,16 @@ constructor(
         }
     }
 
-    //일정 게시글 접근 권한 조회 및 UI 설정 함수
-    /*
-    fun settingScheduleAuthAccess(scheduleId : Long){
-        viewModelScope.launch {
-            resultResponse(
-                response = getAuthAccessUseCase(ResourceType.SCHEDULE, scheduleId),
-                successCallback = { authAccess ->
-                    //삭제나 작성 권한이 있으면 isAuthor로 취급
-                    val isAuthor = authAccess.permissions.any { item ->
-                        (item.type == PermissionType.DELETE || item.type == PermissionType.EDIT)
-                                && item.hasPermission
-                    }
 
-                    updateState {
-                        copy(isAuthor = isAuthor)
-                    }
 
-                },
-                errorCallback = {},
-            )
-
-        }
-    }
-
+    /**
+     * 유저의 일정 수정 및 삭제 권한을 조회하고 UI 케밥 메뉴 항목 노출 상태를 변경하는 메서드
      */
-
-    //일정 권한 조회하기(메뉴 팝업)
     fun checkScheduleCapabilities(){
         viewModelScope.launch {
             resultResponse(
                 response = getAuthAccessUseCase(ResourceType.SCHEDULE, checkScheduleId),
                 successCallback = { accessInfo ->
-
-                    Log.d("log_home", "checkScheduleCapabilities: $accessInfo")
 
                     var checkEdit = false
                     var checkDelete = false
@@ -153,14 +139,19 @@ constructor(
     }
 
 
-    //PlanDetailItem에서 UI에 맞게 데이터를 조절하는 함수
+    /**
+    * 서버에서 수신받은 상세 도메인 모델(PlanDetailItem)을 UI 상태에 맞춰 변환하고 D-Day를 계산하는 메서드
+    *
+    * @param item 일정 상세 정보 도메인 모델
+    * @param plusDay 시작일 기준 경과 일수 오프셋
+    */
     fun convertPlanDetailItemToUiState(item: PlanDetailItem, plusDay: Int) {
         val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
         val startDate = LocalDate.parse(item.startDay, formatter)
         val today = LocalDate.now()
         val dDay = ChronoUnit.DAYS.between(today, startDate).toInt()
 
-
+        // 시작일 기준 D-Day에 경과 일수를 보정하여 최종 D-Day 연산
         val finalDDayValue = dDay + plusDay //시작 시간과 진행 상황 합치기
 
         val dDayString: String //D-몇일 포맷
@@ -169,7 +160,7 @@ constructor(
         when {
             finalDDayValue == 0 -> {
                 dDayString = "D-DAY"
-                //여기서 startTime과 endTime 사이에 현 시간이 있는지 판단
+                // 오늘 날짜인 경우 현재 시간이 일정 종료 시각 이전인지 확인하여 출석 버튼 활성화
                 isTodayCheck = checkTodayTime(item)
             }
             finalDDayValue > 31 -> {
@@ -214,7 +205,12 @@ constructor(
 
     }
 
-    //D-Day일 때 시간 체크 함수
+    /**
+     * 오늘 날짜의 일정일 때 현재 시각이 일정 종료 시각 이전인지 검증하는 메서드
+     *
+     * @param item 일정 상세 도메인 객체
+     * @return 하루종일이거나 현재 시간이 종료 시간 이전이면 true를 반환
+     */
     private fun checkTodayTime(item: PlanDetailItem): Boolean{
         if(item.isAllDay){
             return true
@@ -233,7 +229,9 @@ constructor(
         return isTimeInRange
     }
 
-    //일정 계산하는 포맷 함수
+    /**
+     * 일정 시작일과 plusDay 오프셋을 더해 실제 진행 일자(yyyy.MM.dd)를 연산하는 메서드
+     */
     private fun calculateTargetDate(startDay: String, plusDay: Int): String {
         return try {
             val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
@@ -246,26 +244,34 @@ constructor(
 
 
 
-    //상단 케밥 메뉴 열기
+    /**
+     * 상단 우상단 케밥(수정/삭제) 팝업 메뉴 노출 상태를 토글하는 메서드
+     */
     fun toggleKebabMenu(){
         updateState { copy(isMenuVisible = !isMenuVisible) }
     }
 
 
 
-    //수정 로직 수행
+    /**
+     * 일정 수정 화면 이동 이벤트를 발행하는 메서드
+     */
     fun editPlan(){
         updateState { copy(isMenuVisible = false) }
         emitEvent(ScheduleDetailEvent.EditPlan)
     }
 
-    //삭제 로직 확인 다이얼로그 생성 로직 수행
+    /**
+     * 일정 삭제 확인 다이얼로그 노출 이벤트를 발행하는 메서드
+     */
     fun checkDeletePlan(){
         updateState { copy(isMenuVisible = false) }
         emitEvent(ScheduleDetailEvent.CheckDeletePlan)
     }
 
-    //삭제 로직 수행
+    /**
+     * 서버에 일정 삭제를 요청하고 성공 시 뒤로가기 이벤트를 발생시키는 메서드
+     */
     fun deletePlan(){
         viewModelScope.launch {
             val scheduleId = uiState.value.content.scheduleId
@@ -280,15 +286,6 @@ constructor(
             )
         }
     }
-
-
-    //뒤로 가기
-    fun onClickBackPressed(){
-        emitEvent(ScheduleDetailEvent.MoveBackPressedEvent)
-    }
-
-
-
 
 }
 
@@ -310,7 +307,7 @@ data class ScheduleDetailUiState(
     val latitude : Double = 0.0,
 
 
-    //내가 작성한 것인지 여부
+    //수정 및 삭제 권한 표출 상태
     val canEdit: Boolean = false,
     val canDelete: Boolean = false,
 
