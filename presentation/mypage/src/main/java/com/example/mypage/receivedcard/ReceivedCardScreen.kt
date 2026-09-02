@@ -66,11 +66,20 @@ import com.umc.component.theme.white
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.model.mypage.UserCardPartType
 
+/**
+ * 수신된 명함 파트별(Android, iOS, Server 등) 메인 컬러와 투명도 기반 그라데이션 브러시를 보관하는 데이터 클래스
+ */
 data class PartTheme(
     val badgeColor: Color,
     val backgroundBrush: Brush
 )
 
+/**
+ * 명함의 파트 타입(UserCardPartType)에 맞춰 적절한 배지 색상 및 배경 수직 그라데이션 브러시를 생성하는 헬퍼 함수
+ *
+ * @param partType 명함 모델에 포함된 파트 종류 Enum
+ * @return 파트 메인 헥사 컬러가 반영된 PartTheme 객체
+ */
 fun getPartTheme(partType: UserCardPartType): PartTheme {
     val baseColor = Color(partType.mainColorHex)
 
@@ -218,7 +227,9 @@ fun ReceivedCardScreen(
 }
 
 
-/**받은 명함 Top bar**/
+/**
+ * 받은 명함 화면 상단 탑바 컴포저블
+ */
 @Composable
 fun ReceivedCardScreenTopBar(
     onBackClick: () -> Unit, //뒤로 가기
@@ -251,7 +262,9 @@ fun ReceivedCardScreenTopBar(
     }
 }
 
-/** 개별 개별 명함 아이템 컴포저블 */
+/**
+ * 명함 1개의 비주얼 레이아웃을 렌더링하는 개별 카드 컴포저블
+ */
 @Composable
 private fun ReceivedCardItem(
     card: UserCard,

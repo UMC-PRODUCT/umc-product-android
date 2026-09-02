@@ -83,8 +83,6 @@ fun QrCodeRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    //val localEndpointName = Build.MODEL
-
     //권한 요청
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -135,25 +133,10 @@ fun QrCodeRoute(
     }
 
 
-    /*
-    uiState.receivedCard?.let { card ->
-        UDialog(
-            title = "명함 수신 완료!",
-            content = "${card.name}(${card.nickname})님의 명함을 성공적으로 전달받았습니다.",
-            isTwoButton = false,
-            positiveText = "확인",
-            onPositive = { viewModel.clearReceivedCard() },
-            onDismissRequest = { viewModel.clearReceivedCard() }
-        )
-    }
-
-     */
-
-
-    //QR 생성 (UserCard Json 데이터 기반)
+    // QR 코드 인코딩용 딥링크 데이터 파싱
     val qrContent = uiState.myQrcodeData.ifEmpty { "umc://card?memberId=21" }
-    
-    //해당 bitmap 변수가 qr 이미지를 생성
+
+    // 비트맵 비동기 생성 및 캐싱
     val qrBitmap = remember(qrContent) { QrCodeUtils.generateQrCode(qrContent, 600) }
 
     QrCodeScreen(
@@ -162,41 +145,9 @@ fun QrCodeRoute(
         onBackClick = viewModel::navigateBack,
         onShareClick = viewModel::shareQrCode,
         onSaveImageClick = { viewModel.saveQrImage(qrBitmap) },
-        //onOpenScannerClick = viewModel::startScanner
     )
 
-    /*
-    // 카메라 스캐너 팝업 다이얼로그
-    if (uiState.isScannerOpen) {
-        Dialog(onDismissRequest = viewModel::closeScanner) {
-            Card(
-                modifier = Modifier.size(320.dp, 420.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    QrCodeScannerView(
-                        onQrCodeScanned = { scannedValue ->
-                            viewModel.onQrScanned(scannedValue)
-                        }
-                    )
-                }
-            }
-        }
-    }
 
-     */
-
-    //유저 명함 성공 오버레이
-    /*
-    if (uiState.isSuccessOverlayOpen) {
-        CardExchangeSuccessOverlay(
-            receivedCard = uiState.receivedCard,
-            onContinueExchange = { viewModel.dismissSuccessOverlay() },
-            onConfirm = { viewModel.dismissSuccessOverlay() }
-        )
-    }
-
-     */
 
 }
 
@@ -207,7 +158,7 @@ fun QrCodeScreen(
     onBackClick: () -> Unit,
     onShareClick: () -> Unit,
     onSaveImageClick: () -> Unit,
-    //onOpenScannerClick: () -> Unit
+
 ) {
     Column(
         modifier = Modifier
@@ -216,12 +167,10 @@ fun QrCodeScreen(
         
     ) {
         
-        
-        
+
         // 1. 상단 바 (뒤로가기 + 타이틀)
         QrCodeScreenTopBar(
             onBackClick = onBackClick,
-            //onOpenScannerClick = onOpenScannerClick
         )
 
         LazyColumn(
@@ -329,7 +278,9 @@ fun QrCodeScreen(
     }
 }
 
-/**설정(내 카드) Top bar**/
+/**
+ * QR 화면 상단 탑바 컴포저블
+ */
 @Composable
 fun QrCodeScreenTopBar(
     onBackClick: () -> Unit, //뒤로 가기
@@ -361,38 +312,14 @@ fun QrCodeScreenTopBar(
 
         )
 
-
-        /*
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(color = Color.Transparent, shape = CircleShape)
-                .clip(CircleShape)
-                .clickable(
-                    onClick = { onOpenScannerClick() }
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(
-                    id =  R.drawable.ic_add
-                ),
-                contentDescription = null,
-                tint = grey950(),
-                modifier = Modifier.size(24.dp)
-            )
-        }
-
-         */
-
-
-
     }
 }
 
 
 
-/**QR 코드에 나올 명함 프로필**/
+/**
+ * QR 화면 상단에 표시되는 내 명함 요약 카드 컴포저블
+ */
 @Composable
 fun MycardProfileCard(
     uiState: QrCodeUiState,
@@ -470,7 +397,9 @@ fun MycardProfileCard(
     }
 }
 
-
+/**
+ * 안드로이드 OS 버전에 따른 QR 스캔 및 근거리 연결 권한 목록을 반환하는 메서드
+ */
 private fun getQrPermissions(): Array<String> {
     val list = mutableListOf(
         Manifest.permission.CAMERA,

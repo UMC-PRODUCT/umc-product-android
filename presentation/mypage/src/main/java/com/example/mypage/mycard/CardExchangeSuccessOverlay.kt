@@ -32,12 +32,18 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey950
 
+
+/**
+ * 명함 교환 트랜잭션이 성공적으로 완료되었을 때 수신된 명함 정보와 완료 안내를 노출하는 전면 오버레이 컴포저블
+ *
+ */
 @Composable
 fun CardExchangeSuccessOverlay(
     receivedCard: UserCard?,
     onContinueExchange: () -> Unit, //[계속 교환하기] -> 탐색 다이얼로그 재노출
     onConfirm: () -> Unit           //[확인] -> 오버레이 닫고 MycardScreen으로 복귀
 ) {
+    // 수신받은 카드 객체에서 상대방 이름을 파싱
     val receivedName = receivedCard?.name?.ifEmpty { "테스트 이름" } ?: "null 이름"
 
     Box(

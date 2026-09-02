@@ -86,6 +86,15 @@ import com.umc.domain.model.toUserCard
 import kotlinx.coroutines.flow.collectLatest
 
 
+/**
+ * 마이페이지 탭 진입 시 표출되는 최초 진입점(메인 화면) 및 라우트 컴포저블
+ *
+ * 내 명함 카드(앞/뒷면 뒤집기), 명함 교환 바텀시트, Nearby Connections 및 QR 딥링크 교환 성공 오버레이를 통합 제어하고,
+ * 받은 명함함, 명함 편집, 나의 스터디 및 활동 화면으로의 네비게이션 라우팅을 수행합니다.
+ *
+ * [유의사항]
+ * - 하단 바의 마이페이지 탭 클릭 시 최초 렌더링되는 화면은 MycardScreen이며, 우상단 설정 아이콘 클릭 시 기존의 MypageScreen(설정 전용 화면)으로 이동하는 구조입니다.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MycardRoute(
@@ -104,14 +113,14 @@ fun MycardRoute(
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // 백스택 Restore가 발생해도 다이얼로그 열림 여부를 유지하는 플래그
+    // 화면 복귀(Restore) 시에도 교환 다이얼로그의 중복 실행을 방지하는 플래그
     // rememberSaveable
     var hasOpenedExchangeDialog by androidx.compose.runtime.saveable.rememberSaveable {
         mutableStateOf(false)
     }
 
 
-    //화면이 resume에서 복귀할떄마다 재호출
+    // 화면 복귀(ON_RESUME) 라이프사이클 시 최신 내 정보를 동기화하는 관찰자
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -125,23 +134,22 @@ fun MycardRoute(
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
-    
 
-    /**TODO. 딥링크 전달 시 API 호출 및 저장**/
+
+    // QR 딥링크로 전달된 상대방 회원 ID 존재 시 회원 조회 수행
     LaunchedEffect(targetMemberId) {
         if (!targetMemberId.isNullOrEmpty()) {
             viewModel.searchUser(targetMemberId.toLong())
         }
     }
 
-    //처음 홈 실행 시 체크
+    // 홈 화면 등 외부에서 명함 교환 요청 플래그를 가지고 진입 시 다이얼로그 즉시 오픈
     LaunchedEffect(openExchangeDialog) {
         if (openExchangeDialog && !hasOpenedExchangeDialog) {
             nearbyViewModel.openBottomSheet()
             hasOpenedExchangeDialog = true //오픈 후 즉시 처리 완료 상태로 변경!
         }
     }
-    
     
 
     //내 프로필 정보가 업데이트 될 때 NearbyViewModel에도 이를 반영
@@ -159,7 +167,7 @@ fun MycardRoute(
         }
     }
 
-    //Nearby 이벤트 처리 (Toast 메시지 오픈)
+    // Nearby Connections 전용 단발성 이벤트(토스트) 수신
     LaunchedEffect(nearbyViewModel) {
         nearbyViewModel.uiEvent.collectLatest { event ->
             when (event) {
@@ -313,7 +321,9 @@ fun MycardScreen(
 
 }
 
-/**마이페이지(내 카드) Top bar**/
+/**
+ * 마이페이지 메인 상단 탑바 컴포저블
+ */
 @Composable
 fun MycardTopBar(
     onMypageClick: () -> Unit //마이페이지 클릭
@@ -359,7 +369,9 @@ fun MycardTopBar(
     }
 }
 
-/**내 카드 프로필**/
+/**
+ * 3D 회전 애니메이션이 적용된 내 명함 프로필 카드 컴포저블
+ */
 @Composable
 fun MycardProfileCard(
     uiState: MycardUiState,
@@ -368,10 +380,10 @@ fun MycardProfileCard(
 
 ) {
 
-    //카드가 뒤집혔는지 여부 (Front / Back)
+    //카드 상태 토글 플래그 (Front / Back)
     var isFlipped by remember { mutableStateOf(false) }
 
-    //3D 뒤집기 회전 애니메이션 (0도 -> 180도)
+    // 0도 ~ 180도 Y축 회전 애니메이션
     val rotation by animateFloatAsState(
         targetValue = if (isFlipped) 180f else 0f,
         animationSpec = tween(durationMillis = 500),
@@ -408,7 +420,7 @@ fun MycardProfileCard(
                 .background(radialGradient)
                 .padding(20.dp)
         ) {
-            //90도를 기준으로 앞면/뒷면 분기
+            // 회전 각도 90도를 경계로 앞면/뒷면 분기
             if (rotation <= 90f) {
                 //---------------- [ 앞면 (DEFAULT) ] ----------------
                 CardFrontContent(
@@ -435,7 +447,9 @@ fun MycardProfileCard(
     }
 }
 
-/**앞면 레이아웃 **/
+/**
+* 명함 카드 앞면 레이아웃 컴포저블
+*/
 @Composable
 private fun CardFrontContent(
     uiState: MycardUiState,
@@ -544,7 +558,9 @@ private fun CardFrontContent(
         }
     }
 
-/** ## 2. 뒷면 레이아웃**/
+/**
+ * 명함 카드 뒷면 레이아웃 컴포저블
+ */
 @Composable
 private fun CardBackContent(
     uiState: MycardUiState,
@@ -658,7 +674,9 @@ private fun CardBackContent(
 }
 
 
-/**내 명함에 들어갈 공통 버튼 2종**/
+/**
+ * 명함 카드 하단 기능 버튼(명함 교환 / 내 QR) 컴포저블
+ */
 @Composable
 private fun CardBottomButtons(
     onExchangeCardClick: () -> Unit,
@@ -700,7 +718,9 @@ private fun CardBottomButtons(
     }
 }
 
-/**내 명함에서 각 소셜 링크 item**/
+/**
+ * 명함 뒷면 소셜 미디어 항목 행 컴포저블
+ */
 @Composable
 private fun SocialLinkItem(
     @DrawableRes iconRes: Int,
@@ -728,7 +748,9 @@ private fun SocialLinkItem(
     }
 }
 
-/**각 섹션의 헤더 제목**/
+/**
+ * 각 메뉴 카드 상단 섹션 제목 컴포저블
+ */
 @Composable
 fun MycardSectionTitle(text: String) {
     UText(
@@ -741,7 +763,9 @@ fun MycardSectionTitle(text: String) {
     )
 }
 
-/**여러 메뉴를 감싸는 아이템 카드**/
+/**
+ * 메뉴 목록을 둘러싸는 라운드 카드 컴포저블
+ */
 @Composable
 fun MycardListCard(content: @Composable ColumnScope.() -> Unit) {
     Card(
@@ -756,7 +780,9 @@ fun MycardListCard(content: @Composable ColumnScope.() -> Unit) {
     )
 }
 
-/**메뉴 1개**/
+/**
+ * 메뉴 항목 개별 행 컴포저블
+ */
 @Composable
 fun MycardListItem(
     iconRes: Int,

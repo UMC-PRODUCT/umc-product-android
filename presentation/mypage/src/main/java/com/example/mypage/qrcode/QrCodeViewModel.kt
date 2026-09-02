@@ -21,29 +21,20 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * QR CODE + NearbyConnection을 이용한 연결
- * QR code에 기기값을 넣고, 해당 코드를 스캔 시, nearbyconnection에서 기기 필터링을 진행
- * 그 이후는 블루투스/wifi를 통한 연결
- *
- * **/
-
 @HiltViewModel
 class QrCodeViewModel @Inject constructor(
     private val application: Application,
     private val getMyProfileUseCase: GetMyProfileUseCase
 ) : BaseViewModel<QrCodeUiState, QrCodeEvent>(QrCodeUiState()) {
 
-    //nearbyConnection
-    //private var nearbyManager: NearbyManager? = null
-
-    //private var localEndpointName = Build.MODEL
 
     init {
         getUserProfile()
     }
 
-    //내 프로필 정보 로드 및 Nearby Advertising 시작 (QR 코드가 뜬 시점에서 광고 시작)
+    /**
+     * 서버 API를 호출하여 내 프로필 정보를 수신하고 QR 딥링크 생성을 시작하는 메서드
+     */
     private fun getUserProfile() {
         viewModelScope.launch {
             startLoading()
@@ -51,13 +42,11 @@ class QrCodeViewModel @Inject constructor(
                 response = getMyProfileUseCase(),
                 successCallback = { userInfo ->
                     updateState { copy(userInfo = userInfo) }
-                    //initNearbyAdvertising()
                     generateMyUserCardQr(userInfo)
                     settingUserInfoToUI(userInfo)
                 },
                 errorCallback = {
                     emitEvent(QrCodeEvent.ShowToast("프로필 정보를 불러오지 못했습니다."))
-                    //initNearbyAdvertising()
                     generateMyUserCardQr(null)
                 }
             )
@@ -65,7 +54,11 @@ class QrCodeViewModel @Inject constructor(
         }
     }
 
-    //UserInfo를 받아았을 때 이를 파싱해서 UI 요소로 분할하는 함수
+    /**
+     * 수신받은 UserInfo 도메인 객체를 파싱하여 최신 기수 및 직함 텍스트를 구성하는 메서드
+     *
+     * @param userInfo 서버에서 조회된 내 정보
+     */
     fun settingUserInfoToUI(userInfo: UserInfo){
         // 기수별 정보가 담긴 것.
         val gisuSummaryList = userInfo.getGisuSummaryList()
@@ -101,7 +94,9 @@ class QrCodeViewModel @Inject constructor(
     }
 
     /**
-     * 내 유저 ID가 담긴 딥링크를 생성한다.
+     * 내 회원 ID(memberId)를 매핑한 딥링크 스키마 텍스트 및 QR 비트맵 객체를 가공하는 메서드
+     *
+     * @param userInfo 내 프로필 데이터
      */
     private fun generateMyUserCardQr(userInfo: UserInfo?) {
         val memberId = userInfo?.id ?: 21
@@ -129,97 +124,17 @@ class QrCodeViewModel @Inject constructor(
 
     }
 
-
-    //확인 버튼 클릭 -> 성공 오버레이 감추고 QR 화면으로 돌아감
-    /*
-    fun dismissSuccessOverlay() {
-        updateState {
-            copy(
-                isSuccessOverlayOpen = false,
-                receivedCard = null,
-                scannedTargetQr = ""
-            )
-        }
-    }
-
-     */
-
-    /**
-     * 스캐너 열기 (내 광고 중단 후 상대 탐색 시작)
-     */
-    /*
-    fun startScanner() {
-        //if (uiState.value.isScannerOpen) return
-        //nearbyManager?.stopAdvertising()
-        //nearbyManager?.startDiscovery()
-
-        //updateState { copy(isScannerOpen = true) }
-    }
-
-    fun closeScanner() {
-        updateState { copy(isScannerOpen = false) }
-    }
-
-     */
-
-    /**
-     * CameraX로 상대방 QR 스캔 완료 시 실행되는 메서드
-     * @param scannedValue 스캔된 문자열 (상대 기기의 Build.MODEL)
-     */
-
-    /*
-    fun onQrScanned(scannedValue: String) {
-        Log.d("NearbyDebug", "0. QR 스캔 완료! 읽은 텍스트: '$scannedValue'")
-        updateState {
-            copy(
-                scannedTargetQr = scannedValue,
-                isScannerOpen = false,
-            )
-        }
-
-        //그냥 json을 읽은 다음 역직렬화
-        try {
-            //QR 데이터(JSON) -> UserCard 객체 직접 파싱
-            val card = UserCard.fromJson(scannedValue)
-
-            //파싱 성공 시 별도 네트워크/블루투스 연결 없이 즉시 UI State 반영 -> UDialog 팝업 뜸!
-            updateState { 
-                copy(
-                    receivedCard = card,
-                    isSuccessOverlayOpen = true
-                ) 
-            }
-            //emitEvent(QrCodeEvent.ShowToast("${card.name}님의 명함을 읽어왔습니다!"))
-        } catch (e: Exception) {
-            Log.e("QrScanDebug", "UserCard 파싱 실패: ${e.message}")
-            emitEvent(QrCodeEvent.ShowToast("유효하지 않은 명함 QR 코드입니다."))
-        }
-
-
-        /*
-        val currentDevices = uiState.value.discoveredDevices
-        Log.d("NearbyDebug", "0-1. 현재 발견되어 있는 기기 목록: $currentDevices")
-
-        emitEvent(QrCodeEvent.ShowToast("QR 스캔 완료! 주변 기기를 탐색해 연결합니다."))
-
-        //이미 기존에 발견된 기기 목록에 스캔한 대상이 있다면 즉시 연결 요청
-        val targetDevice = uiState.value.discoveredDevices.find { it.second.contains(scannedValue) }
-        if (targetDevice != null) {
-            nearbyManager?.requestConnection(targetDevice.first)
-        }
-
-         */
-    }
-
-     */
-
-
     
 
     fun navigateBack() {
         emitEvent(QrCodeEvent.NavigateBack)
     }
 
+    /**
+     * 비트맵 이미지를 기기 갤러리 MediaStore 경로에 기입 저장하는 메서드
+     *
+     * @param bitmap 저장할 QR ImageBitmap
+     */
     fun saveQrImage(bitmap: ImageBitmap?) {
         if (bitmap == null) return
         val success = QrCodeUtils.saveImageToGallery(application, bitmap, "MyUserCard_QR")
@@ -230,19 +145,13 @@ class QrCodeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * QR 코드 이미지를 외부 애플리케이션으로 공유하는 이벤트를 발행하는 메서드
+     */
     fun shareQrCode() {
         emitEvent(QrCodeEvent.ShareQrCode)
     }
 
-    /*
-    override fun onCleared() {
-        super.onCleared()
-        //nearbyManager?.stopAll()
-    }
-
-     */
-    
-    
     
 }
 
@@ -254,10 +163,6 @@ data class QrCodeUiState(
     val myQrcodeData: String = "",
     val qrImageBitmap: ImageBitmap? = null
 
-    //val scannedTargetQr: String = "", //스캔한 qr코드의 값 = 기기 모델명 or ""
-    //val isScannerOpen: Boolean = false, //스캐너(카메라)가 열렸는지 확인
-    //val receivedCard: UserCard? = null,
-    //val isSuccessOverlayOpen: Boolean = false, //스캔 완료 오버레이 창 띄우기
 ) : UiState
 
 sealed interface QrCodeEvent : UiEvent {

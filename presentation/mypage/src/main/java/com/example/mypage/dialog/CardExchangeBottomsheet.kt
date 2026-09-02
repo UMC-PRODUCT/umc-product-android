@@ -49,12 +49,29 @@ import com.umc.component.theme.indigo500
 import com.umc.component.theme.white
 import com.umc.domain.model.mypage.NearbyUserInfo
 
+/**
+ * 명함 교환 방식 선택 및 주변 유저 탐색을 진행하는 바텀시트 다이얼로그 컴포저블
+ */
 enum class ExchangeStep {
-    SELECT_METHOD, // 1번째 이미지: 방식 선택
-    DISCOVER_USERS  // 2번째 이미지: 주변 유저 탐색
+    SELECT_METHOD, // 명함 교환 방식 선택 단계
+    DISCOVER_USERS  // Nearby Connections 기반 주변 유저 탐색 단계
 }
 
-
+/**
+ * 명함 교환 시 근거리 감지된 주변 유저 목록을 노출하고 연결 다이얼로그를 호출하는 바텀시트 컴포저블
+ *
+ * Nearby Connections 기술로 검색된 디바이스 목록(discoveredDevices)을 수신하여 렌더링하며,
+ * 특정 타겟 유저 클릭 시 명함 전송 확인 팝업(UDialog)을 띄워 연결 트랜잭션을 시작합니다.
+ *
+ * 주요 동작 흐름:
+ * 1. 바텀시트 오픈 시 현재 수신된 주변 디바이스 데이터 유무에 따라 비어있는 안내 문구 또는 NearbyUserListItem 목록을 노출합니다.
+ * 2. 특정 유저를 클릭하면 onUserSelect 콜백이 동작하여 selectedTargetUser 상태가 기입되고 전송 확인 팝업이 노출됩니다.
+ * 3. 팝업에서 전송하기 클릭 시 onConfirmConnect 콜백을 통해 상대방 디바이스로 연결 및 명함 전송 패킷을 전달합니다.
+ *
+ * [유의사항]
+ * - 기능 추가 및 교환 UX 단순화 정책으로 인해 1단계 교환 방식 선택(SELECT_METHOD: Wi-Fi Aware vs QR) 단계는 현재 사용하고 있지 않습니다.
+ *
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CardExchangeBottomSheet(
@@ -82,6 +99,7 @@ fun CardExchangeBottomSheet(
                 .padding(bottom = 24.dp)
         ) {
             /*
+            // 명함 교환 방식 선택 단계 (기능 정책 단순화로 현재 미사용 및 주석 보존 처리)
             when (currentStep) {
                 /**1. 방법 선택일 경우 (선택 모습 띄우기)**/
                 ExchangeStep.SELECT_METHOD -> {
@@ -140,7 +158,7 @@ fun CardExchangeBottomSheet(
 
              */
 
-                /**2. wifi aware 눌렀을 때, nearbyConnection 수행하고 유저 탐색**/
+            // 2. Nearby Connections 기반 주변 유저 탐색 단계 (현재 단일 진입점으로 활성화)
                 //ExchangeStep.DISCOVER_USERS -> {
                     UText(
                         text = AppStrings.EXCHANGE_CARD_WIFI_USER_TITLE,
@@ -199,7 +217,7 @@ fun CardExchangeBottomSheet(
         }
     //}
 
-    //유저 눌렀을 때 선택 다이얼로그
+    // 목록에서 대상 유저 클릭 시 노출되는 명함 전송 확인 다이얼로그
     if (selectedTargetUser != null) {
         val targetInfo = selectedTargetUser.second
         UDialog(
@@ -213,7 +231,9 @@ fun CardExchangeBottomSheet(
 }
 
 
-/** 옵션 카드 (Wi-Fi, QR) **/
+/**
+ * 명함 교환 옵션 방식(Wi-Fi Connections, QR 코드)을 보여주는 카드 컴포저블 (현재 미사용)
+ */
 @Composable
 private fun ExchangeOptionCard(
     iconRes: Int,
@@ -278,7 +298,9 @@ private fun ExchangeOptionCard(
     }
 }
 
-/** 2번째 이미지: 감지된 멤버 item */
+/**
+ * Nearby Connections를 통해 근거리에서 감지된 개별 유저 항목을 표시하는 컴포저블
+ */
 @Composable
 private fun NearbyUserListItem(
     userInfo: NearbyUserInfo,

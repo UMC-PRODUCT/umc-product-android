@@ -47,7 +47,9 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    // 서버에서 내 정보 가져오기
+    /**
+     * 서버에서 내 프로필 데이터를 조회하고 깃허브, 링크드인, 블로그 URL을 UI State에 갱신하는 메서드
+     */
     fun getUserInfo() {
         viewModelScope.launch {
             resultResponse(
@@ -61,7 +63,6 @@ class MypageViewModel @Inject constructor(
                             blogUrl = userInfo.profile.blog
                         )
                     }
-                    settingUserInfoToUI(userInfo)
 
                 },
                 errorCallback = {
@@ -72,42 +73,9 @@ class MypageViewModel @Inject constructor(
     }
 
 
-    //UserInfo를 받아았을 때 이를 파싱해서 UI 요소로 분할하는 함수
-    fun settingUserInfoToUI(userInfo: UserInfo){
-        // 기수별 정보가 담긴 것.
-        val gisuSummaryList = userInfo.getGisuSummaryList()
-
-        // 최신기수를 가져오기
-        val latestGisu = gisuSummaryList.maxByOrNull { it.gisu }
-
-        latestGisu?.let { summary ->
-            //권위 or 챌린저에서 1개 선택
-            val representativeItem = summary.fromRoles.firstOrNull() ?: summary.fromRecords.firstOrNull()
-
-            val positionString = representativeItem?.let { item ->
-                //파트명 변환 (UserPart Enum 활용, 없으면 빈 문자열)
-                val partLabel = runCatching { UserPart.valueOf(item.responsiblePart ?: "").label }
-                    .getOrNull()?.let { "$it " } ?: ""
-
-                //직함명 변환 (displayName이 null이면 원본 role 사용)
-                val roleEnum = UserChallengerRole.from(item.role)
-                val roleLabel = roleEnum.displayName ?: item.role
-
-                //최종 포맷: "N기 Part Role"
-                "${summary.gisu}기 $partLabel$roleLabel"
-            } ?: "${summary.gisu}기 챌린저" // 예외 상황 대비 기본값
-
-            updateState {
-                copy(
-                    myRecentCarrer = positionString
-                )
-            }
-
-        }
-
-    }
-
-    //소셜 정보(OAuth 받아오기)
+    /**
+     * 연동되어 있는 소셜 로그인 플랫폼(KAKAO, GOOGLE 등) 목록을 조회하는 메서드
+     */
     fun getUserOAuth(){
         viewModelScope.launch {
             resultResponse(
@@ -124,13 +92,6 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    //usecase를 통해 appdatastore에 저장된 내용 날리기
-    fun deleteAllData(){
-        viewModelScope.launch {
-            clearAllDataUseCase()
-        }
-    }
-
     fun navigateToGithub(){
         emitEvent(MypageEvent.NavigateToGithub)
     }
@@ -140,24 +101,6 @@ class MypageViewModel @Inject constructor(
     }
     fun navigateToBlog(){
         emitEvent(MypageEvent.NavigateToBlog)
-    }
-
-    fun navigateToEditProfile(){
-        emitEvent(MypageEvent.NavigateToEditProfile)
-    }
-
-    fun navigateToMypost(){
-        emitEvent(MypageEvent.NavigateToMypost)
-    }
-    fun navigateToMyComment(){
-        emitEvent(MypageEvent.NavigateToMyComment)
-    }
-    fun navigateToScrap(){
-        emitEvent(MypageEvent.NavigateToScrap)
-    }
-
-    fun navigateToAddActivity(){
-        emitEvent(MypageEvent.NavigateToAddActivity)
     }
 
 
@@ -238,7 +181,9 @@ class MypageViewModel @Inject constructor(
     }
 
 
-    //카카오 및 구글 토큰 get(회원 탈퇴)
+    /**
+     * 소셜 인증 토큰 정보(카카오, 구글)를 수신하여 UI State에 설정하는 메서드
+     */
     fun getKakaoAndGoogleToken(googleToken: String){
         //카카오 토큰
         TokenManagerProvider.instance.manager.getToken()?.let { token ->
@@ -253,7 +198,9 @@ class MypageViewModel @Inject constructor(
 
     }
 
-    //2. 유저 삭제 로직(여기서 실징 수행)
+    /**
+     * 서버에 회원 탈퇴 요청을 보내고 로컬 DataStore 초기화 후 로그인 화면으로 이동하는 메서드
+     */
     fun deleteUser(){
 
         viewModelScope.launch {
@@ -273,12 +220,16 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    //코드 추가 다이얼로그에서 바꿀 때
+    /**
+     * 레거시: 챌린저 활동 코드 입력 텍스트 변경 처리 메서드 (현재 미사용)
+     */
     fun onCodeChanged(code: String) {
         updateState { copy(code = code) }
     }
 
-    //챌린저 코드를 추가할 떄 서버에게 보내고 유저 정보 업데이트 로직
+    /**
+     * 레거시: 챌린저 활동 코드를 검증하여 프로필에 추가하는 메서드 (기능 개편으로 현재 미사용)
+     */
     fun addChallengerCode() {
         viewModelScope.launch {
             val request = ChallengerRecordMemberRequest(
@@ -333,9 +284,6 @@ data class MypageUiState(
     val userInfo: UserInfo = UserInfo(),
     val linkedPlatforms: List<LoginType> = emptyList(),
 
-    // 현재 직책
-    val myRecentCarrer : String = "",
-
     // 링크 데이터
     val githubUrl : String = "",
     val blogUrl : String = "",
@@ -371,9 +319,7 @@ sealed interface MypageEvent : UiEvent {
     object NavigateToLinkedin : MypageEvent //리으드인 링크
 
     object NavigateToEditProfile : MypageEvent //프로필 수정
-    object NavigateToMypost : MypageEvent //내가 쓴 글
-    object NavigateToMyComment : MypageEvent //내가 쓴 댓글
-    object NavigateToScrap : MypageEvent //스크랩
+
 
     object NavigateToAddActivity : MypageEvent //활동 추가
 

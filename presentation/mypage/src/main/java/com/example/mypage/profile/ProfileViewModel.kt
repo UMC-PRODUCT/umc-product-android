@@ -46,13 +46,15 @@ class ProfileViewModel @Inject constructor(
 
     //초기화 작업
     init {
+        // 프로필 정보 및 소셜 플랫폼 연결 정보 로드
         getUserInfo()
-
         getUserOAuth()
 
     }
 
-    //AppDataStore에 저장된 유저 정보 로드
+    /**
+     * 서버에서 내 프로필 정보를 수신하여 UI State에 바인딩하고 활동 이력을 가공하는 메서드
+     */
     private fun getUserInfo() {
         viewModelScope.launch {
             resultResponse(
@@ -77,9 +79,11 @@ class ProfileViewModel @Inject constructor(
             )
         }
     }
-    
 
-    //소셜 정보(OAuth 받아오기)
+
+    /**
+     * 연동되어 있는 소셜 계정 제공자 플랫폼 리스트를 조회하는 메서드
+     */
     fun getUserOAuth(){
         viewModelScope.launch {
             resultResponse(
@@ -96,7 +100,11 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    //유저 정보를 통해 활동 이력 및 기수파트 작성
+    /**
+     * 유저 프로필 데이터에서 활동 기수, 운영진 및 챌린저 기록을 비동기로 수집하여 활동 이력 목록을 만드는 메서드
+     *
+     * @param userInfo 서버 수신 유저 프로필 모델
+     */
     fun processActiveHistory(userInfo: UserInfo){
 
         viewModelScope.launch {
@@ -137,9 +145,11 @@ class ProfileViewModel @Inject constructor(
 
     }
 
-    //운영진 아이템 생성
+    /**
+     * 운영진 이력 정보(학교, 지부, 총괄 등)를 조회하여 UserActiveItem 객체를 생성하는 메서드
+     */
     private suspend fun createRoleActiveItem(generationText: String, roleItem: RolePartItem): UserActiveItem {
-        //파트가 있는 경우 (ex. 안드로이드 파트장)
+        //담당 파트가 있는 경우 (ex. 안드로이드 파트장)
         if (roleItem.responsiblePart != null) {
             return UserActiveItem(
                 generation = generationText,
@@ -147,7 +157,7 @@ class ProfileViewModel @Inject constructor(
                 position = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
             )
         }
-        //그 외 - 학교일 때
+        //그 외 - 학교 단위 운영진인 경우
         else if(roleItem.organizationType == "SCHOOL"){
             //들어갈 값
             var itemResult: UserActiveItem? = null
@@ -166,7 +176,7 @@ class ProfileViewModel @Inject constructor(
             )
             return itemResult!!
         }
-        //그 외 - 지부일 때
+        //그 외 - 지부 단위 운영진인 경우
         else if(roleItem.organizationType == "CHAPTER"){
             var itemResult: UserActiveItem? = null
             resultResponse(
@@ -183,7 +193,7 @@ class ProfileViewModel @Inject constructor(
             )
             return itemResult!!
         }
-        //그 외 - 파트 자리 없고, central만 있는 경우
+        //그 외 - 중앙/총괄 운영진인 경우
         else{
             val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
             val itemResult = UserActiveItem(generationText, label, "총괄")
@@ -191,7 +201,9 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    //챌린저 아이템 생성
+    /**
+     * 일반 챌린저 이력 아이템을 생성하는 메서드
+     */
     private fun createChallengerActiveItem(generationText: String, recordItem: RolePartItem): UserActiveItem {
         return UserActiveItem(
             generation = generationText,
@@ -201,12 +213,19 @@ class ProfileViewModel @Inject constructor(
     }
 
 
-    //프로필 이미지 수정했을 때 이벤트
+    /**
+     * 프로필 사진 클릭 이벤트를 발행하여 Photo Picker를 여는 메서드
+     */
     fun onClickProfileImage(){
         emitEvent(ProfileEvent.ClickProfileImage)
     }
 
 
+    /**
+     * 사용자가 선택한 새 프로필 사진 URI를 UI State에 저장하는 메서드
+     *
+     * @param uri 선택한 미디어 URI
+     */
     fun settingImage(uri: Uri){
         updateState {
             copy(
@@ -216,7 +235,9 @@ class ProfileViewModel @Inject constructor(
     }
 
 
-    //완료 누르고 뒤로 가기
+    /**
+     * 상단 완료 버튼 클릭 시 외부 링크 저장 및 프로필 이미지 업로드를 트리거하는 메서드
+     */
     fun onClickComplete(){
         val nowUri = uiState.value.userProfileImageUri
 
@@ -232,7 +253,9 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    // 완료 버튼을 눌렀을 때 호출될 저장 로직
+    /**
+     * 외부 소셜 링크 3종(GitHub, LinkedIn, Blog) 정보를 서버에 전송하여 업데이트하는 메서드
+     */
     fun saveUserOutLink(github: String, linkedin: String, blog: String) {
         val request = UpdateLinkRequest(
             links = listOf(
@@ -254,8 +277,11 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    //viewModel에서 갤러리->이미지 가져온 후 처리
-    //서버에 파일 업로드 후, 해당 파일 ID를 프로필 정보에 적용
+    /**
+     * 선택된 프로필 이미지 파일(URI)을 서버에 업로드하고 발급받은 fileId로 회원 프로필을 업데이트하는 메서드
+     *
+     * @param uri 업로드할 이미지 URI
+     */
     fun updateProfileImage(uri: Uri){
         //uri을 이용해 파일 전송하기
         viewModelScope.launch {
