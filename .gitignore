@@ -24,3 +24,7 @@ umc_release_key.jks
 
 # Kotlin 컴파일러 세션 임시 파일
 .kotlin/
+
+# CI 가 커밋에서 생성하는 릴리스 노트 산출물
+/whatsnew/
+/release-notes.md

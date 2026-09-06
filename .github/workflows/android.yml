@@ -53,6 +53,7 @@ jobs:
       scope: ${{ steps.resolve.outputs.scope }}
       tag-after: ${{ steps.resolve.outputs.tag-after }}
       tag-prefix: ${{ steps.resolve.outputs.tag-prefix }}
+      notes-from: ${{ steps.resolve.outputs.notes-from }}
 
     steps:
       - name: 체크아웃
@@ -121,6 +122,8 @@ jobs:
             fi
             API_ENV=prod; TRACK=production; DEPLOY=true
             VERSION_NAME="${GITHUB_REF_NAME#v}"
+            # HEAD 가 이 태그 자체이므로 직전 커밋 기준으로 이전 릴리스를 찾는다.
+            NOTES_FROM=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' HEAD^ 2>/dev/null || echo "")
           else
             case "$BRANCH" in
               develop-compose)
@@ -163,6 +166,9 @@ jobs:
           # Play 는 동일 versionCode 재업로드를 거부한다. 실행 횟수로 단조 증가시킨다.
           # (파이프라인 도입 시점의 Play 최신 versionCode 가 21)
           VERSION_CODE=$(( 21 + GITHUB_RUN_NUMBER ))
+          # 태그 푸시가 아니면 현재까지의 최신 릴리스 태그가 비교 기준이다.
+          NOTES_FROM="${NOTES_FROM-$LATEST_TAG}"
+          if [ "$NOTES_FROM" = "v0.0.0" ]; then NOTES_FROM=""; fi
 
           {
             echo "api-env=$API_ENV"
@@ -170,6 +176,7 @@ jobs:
             echo "deploy=$DEPLOY"
             echo "tag-after=$TAG_AFTER"
             echo "tag-prefix=$TAG_PREFIX"
+            echo "notes-from=$NOTES_FROM"
             echo "scope=$SCOPE"
             echo "version-code=$VERSION_CODE"
             echo "version-name=$VERSION_NAME"
@@ -360,11 +367,13 @@ jobs:
     if: needs.verify.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # main 자동 릴리스에서 태그를 남긴다
+      contents: write   # 태그와 GitHub Release 를 남긴다
 
     steps:
       - name: 체크아웃
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 릴리스 노트를 만들려면 이전 태그까지의 커밋이 필요하다
 
       - name: JDK 17 설치
         uses: actions/setup-java@v4
@@ -419,6 +428,34 @@ jobs:
             exit 1
           fi
 
+      # 커밋에서 Play 업데이트 내용과 GitHub Release 본문을 만든다.
+      # 앱 코드를 건드리지 않은 커밋(CI/빌드 설정)은 사용자 노트에서 제외된다.
+      - name: 릴리스 노트 생성
+        id: notes
+        env:
+          VERSION_NAME: ${{ needs.verify.outputs.version-name }}
+          NOTES_FROM: ${{ needs.verify.outputs.notes-from }}
+        run: |
+          set -euo pipefail
+          RANGE="HEAD"
+          if [ -n "$NOTES_FROM" ] && git rev-parse "$NOTES_FROM" >/dev/null 2>&1; then
+            RANGE="${NOTES_FROM}..HEAD"
+          fi
+          echo "커밋 범위: $RANGE"
+          git log --format=$'\x01%s' --name-only "$RANGE" \
+            | python3 .github/scripts/release_notes.py \
+                --version "$VERSION_NAME" \
+                --prev "$NOTES_FROM" \
+                --repo "$GITHUB_REPOSITORY"
+          {
+            echo ""
+            echo "### 📝 Play 업데이트 내용"
+            echo ""
+            echo '```'
+            cat whatsnew/whatsnew-ko-KR
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: 난독화 매핑 확인
         run: |
           set -euo pipefail
@@ -439,6 +476,8 @@ jobs:
           status: completed
           # R8 난독화 매핑. 없으면 Play Console 크래시 스택이 난독화된 채로 보인다.
           mappingFile: app/build/outputs/mapping/release/mapping.txt
+          # 커밋에서 생성한 "업데이트 내용". 없으면 Play 가 이전 노트를 유지한다.
+          whatsNewDirectory: whatsnew
 
       # Play 업로드가 성공한 뒤에만 태그를 남긴다. 실패한 버전 번호를 태우지 않는다.
       # GITHUB_TOKEN 으로 민 태그는 새 워크플로를 트리거하지 않으므로 재귀 실행이 없다.
@@ -460,6 +499,24 @@ jobs:
           git push origin "$TAG"
           echo "태그 $TAG 생성"
           echo "| 태그 | \`$TAG\` |" >> "$GITHUB_STEP_SUMMARY"
+
+      # Play 업로드와 태그가 모두 끝난 뒤에만 Release 를 만든다.
+      # 이렇게 해야 GitHub Release 와 스토어 출시본이 항상 같은 것을 가리킨다.
+      - name: GitHub Release 생성
+        if: needs.verify.outputs.tag-after == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION_NAME: ${{ needs.verify.outputs.version-name }}
+          TAG_PREFIX: ${{ needs.verify.outputs.tag-prefix }}
+        run: |
+          set -euo pipefail
+          TAG="${TAG_PREFIX}${VERSION_NAME}"
+          gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$TAG" \
+            --notes-file release-notes.md \
+            --verify-tag
+          echo "GitHub Release $TAG 생성"
 
       - name: 배포 요약
         run: |
