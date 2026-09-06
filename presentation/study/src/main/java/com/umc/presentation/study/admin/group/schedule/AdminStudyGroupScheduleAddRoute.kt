@@ -9,6 +9,7 @@ import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupSchedule
 import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleLocationBottomSheet
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekBottomSheet
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 /**
  * 스터디 그룹 일정 등록 화면의 Route
@@ -86,20 +87,18 @@ fun AdminStudyGroupScheduleRoute(
     /**
      * ViewModel에서 발생하는 일회성 이벤트 처리
      */
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                AdminStudyGroupScheduleEvent.NavigateBack -> {
-                    onNavigateBack()
-                }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            AdminStudyGroupScheduleEvent.NavigateBack -> {
+                onNavigateBack()
+            }
 
-                is AdminStudyGroupScheduleEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message,
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
+            is AdminStudyGroupScheduleEvent.ShowToast -> {
+                Toast.makeText(
+                    context,
+                    event.message,
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         }
     }

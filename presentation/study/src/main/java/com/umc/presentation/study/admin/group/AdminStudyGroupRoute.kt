@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 /**
  * 관리자 스터디 그룹 화면의 Route
@@ -75,47 +76,45 @@ fun AdminStudyGroupRoute(
     /**
      * ViewModel에서 발생한 일회성 UI 이벤트 처리
      */
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
 
-                /**
-                 * 그룹 생성 화면 이동
-                 */
-                is AdminStudyGroupEvent.NavigateCreateGroup -> {
-                    onNavigateCreateGroup()
-                }
+            /**
+             * 그룹 생성 화면 이동
+             */
+            is AdminStudyGroupEvent.NavigateCreateGroup -> {
+                onNavigateCreateGroup()
+            }
 
-                /**
-                 * 선택한 그룹의 일정 등록 화면 이동
-                 */
-                is AdminStudyGroupEvent.NavigateAddSchedule -> {
-                    onNavigateAddSchedule(
-                        event.groupId,
-                        event.groupTitle,
-                        event.groupPart,
-                    )
-                }
+            /**
+             * 선택한 그룹의 일정 등록 화면 이동
+             */
+            is AdminStudyGroupEvent.NavigateAddSchedule -> {
+                onNavigateAddSchedule(
+                    event.groupId,
+                    event.groupTitle,
+                    event.groupPart,
+                )
+            }
 
-                /**
-                 * 선택한 그룹의 멤버 수정 화면 열기
-                 */
-                is AdminStudyGroupEvent.OpenEditMembers -> {
-                    onOpenEditMembers(
-                        event.item
-                    )
-                }
+            /**
+             * 선택한 그룹의 멤버 수정 화면 열기
+             */
+            is AdminStudyGroupEvent.OpenEditMembers -> {
+                onOpenEditMembers(
+                    event.item
+                )
+            }
 
-                /**
-                 * 사용자에게 Toast 메시지 표시
-                 */
-                is AdminStudyGroupEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message,
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
+            /**
+             * 사용자에게 Toast 메시지 표시
+             */
+            is AdminStudyGroupEvent.ShowToast -> {
+                Toast.makeText(
+                    context,
+                    event.message,
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         }
     }

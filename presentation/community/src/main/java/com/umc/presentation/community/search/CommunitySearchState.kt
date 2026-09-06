@@ -1,6 +1,8 @@
 package com.umc.presentation.community.search
 
 import com.umc.presentation.community.model.CommunityThreadUiModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 커뮤니티 검색 화면에서 사용하는 UI 상태
@@ -10,8 +12,8 @@ import com.umc.presentation.community.model.CommunityThreadUiModel
  */
 data class CommunitySearchState(
     val query: String = "",
-    val recentSearches: List<String> = emptyList(),
-    val searchResults: List<CommunityThreadUiModel> = emptyList(),
+    val recentSearches: ImmutableList<String> = persistentListOf(),
+    val searchResults: ImmutableList<CommunityThreadUiModel> = persistentListOf(),
     val hasSearched: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,

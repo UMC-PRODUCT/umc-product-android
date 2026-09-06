@@ -80,6 +80,7 @@ import com.umc.presentation.notice.formatNoticeDate
 import com.umc.presentation.notice.write.MarkdownRenderer
 import com.umc.presentation.notice.write.drawMarkdownQuoteBars
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,14 +101,12 @@ fun NoticeDetailRoute(
         viewModel.load(noticeId)
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                NoticeDetailEvent.MoveBack -> navigateToBack()
-                is NoticeDetailEvent.MoveToEdit -> navigateToEdit(event.noticeId)
-                is NoticeDetailEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            NoticeDetailEvent.MoveBack -> navigateToBack()
+            is NoticeDetailEvent.MoveToEdit -> navigateToEdit(event.noticeId)
+            is NoticeDetailEvent.ShowToast -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
         }
     }

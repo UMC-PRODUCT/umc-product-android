@@ -12,6 +12,8 @@ import com.umc.domain.usecase.organization.UpdateStudyGroupUseCase
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMemberUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 
 /**
@@ -377,7 +379,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                             profileImageUrl =
                                 member.profileImageUrl,
                         )
-                    }
+                    }.toImmutableList()
 
                 updateState {
                     copy(
@@ -398,7 +400,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                 updateState {
                     copy(
                         memberEditTargetItem = null,
-                        editingMembers = emptyList(),
+                        editingMembers = persistentListOf(),
                     )
                 }
             }
@@ -506,7 +508,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                     updateState {
                         copy(
                             memberEditTargetItem = null,
-                            editingMembers = emptyList(),
+                            editingMembers = persistentListOf(),
                         )
                     }
 
@@ -560,7 +562,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                             // Domain 모델을 화면용 UI 모델로 변환
                             groups = page.content.map { group ->
                                 group.toUiModel()
-                            },
+                            }.toImmutableList(),
 
                             nextCursor =
                                 page.nextCursor,

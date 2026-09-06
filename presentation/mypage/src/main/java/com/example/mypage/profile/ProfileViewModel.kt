@@ -26,6 +26,9 @@ import com.umc.domain.usecase.organization.GetChapterDetailUseCase
 import com.umc.domain.usecase.organization.GetSchoolNameUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -91,7 +94,7 @@ class ProfileViewModel @Inject constructor(
                 successCallback = { myOAuth ->
                     val platforms = myOAuth.map { LoginType.valueOf(it.provider) }
                     updateState {
-                        copy(linkedPlatforms = platforms)
+                        copy(linkedPlatforms = platforms.toImmutableList())
                     }
 
                 },
@@ -138,7 +141,7 @@ class ProfileViewModel @Inject constructor(
 
             //모든 데이터가 수집된 후 UI 업데이트
             updateState {
-                copy(myActiveHistory = finalActiveHistory)
+                copy(myActiveHistory = finalActiveHistory.toImmutableList())
             }
         }
 
@@ -345,7 +348,7 @@ class ProfileViewModel @Inject constructor(
 
 data class ProfileUiState(
     //유저 정보 (고정)
-    val linkedPlatforms: List<LoginType> = emptyList(),
+    val linkedPlatforms: ImmutableList<LoginType> = persistentListOf(),
     val userInfo : UserInfo = UserInfo(),
 
 
@@ -358,7 +361,7 @@ data class ProfileUiState(
 
 
     //임시 정보
-    val myActiveHistory: List<UserActiveItem> = emptyList(),
+    val myActiveHistory: ImmutableList<UserActiveItem> = persistentListOf(),
 
     ) : UiState
 

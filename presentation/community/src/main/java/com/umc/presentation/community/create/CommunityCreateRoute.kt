@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.umc.component.base.CollectUiEvents
 
 /**
  * 스레드 생성 화면의 Route
@@ -28,37 +29,35 @@ fun CommunityCreateRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     // ViewModel에서 발생한 일회성 이벤트 처리
-    LaunchedEffect(viewModel) {
-        viewModel.event.collect { event: CommunityCreateEvent ->
-            when (event) {
-                CommunityCreateEvent.NavigateBack -> {
-                    onNavigateBack()
-                }
+    CollectUiEvents(viewModel.event) { event ->
+        when (event) {
+            CommunityCreateEvent.NavigateBack -> {
+                onNavigateBack()
+            }
 
-                // 스레드 생성 성공 후 Toast 표시 및 생성 완료 처리
-                is CommunityCreateEvent.CreateSuccess -> {
-                    Toast.makeText(
-                        context,
-                        "스레드가 생성되었습니다.",
-                        Toast.LENGTH_SHORT,
-                    ).show()
+            // 스레드 생성 성공 후 Toast 표시 및 생성 완료 처리
+            is CommunityCreateEvent.CreateSuccess -> {
+                Toast.makeText(
+                    context,
+                    "스레드가 생성되었습니다.",
+                    Toast.LENGTH_SHORT,
+                ).show()
 
-                    onCreateSuccess(event.threadId)
-                }
+                onCreateSuccess(event.threadId)
+            }
 
-                // 아이콘 선택 화면으로 이동
-                CommunityCreateEvent.NavigateToEmojiPicker -> {
-                    onNavigateToEmojiPicker()
-                }
+            // 아이콘 선택 화면으로 이동
+            CommunityCreateEvent.NavigateToEmojiPicker -> {
+                onNavigateToEmojiPicker()
+            }
 
-                // 공통 안내 Toast 처리
-                is CommunityCreateEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message,
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
+            // 공통 안내 Toast 처리
+            is CommunityCreateEvent.ShowToast -> {
+                Toast.makeText(
+                    context,
+                    event.message,
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         }
     }

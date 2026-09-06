@@ -48,6 +48,8 @@ import com.umc.component.theme.yellow600
 import com.umc.domain.model.enums.NoticeVoteStatus
 import com.umc.domain.model.notice.NoticeVote
 import com.umc.domain.model.notice.NoticeVoteOption
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 공지 상세의 투표 카드 (연회색 채움 카드 + 상태 배지).
@@ -58,7 +60,7 @@ import com.umc.domain.model.notice.NoticeVoteOption
 @Composable
 fun NoticeDetailVoteSection(
     vote: NoticeVote,
-    selectedOptionIds: List<Long>,
+    selectedOptionIds: ImmutableList<Long>,
     showResult: Boolean,
     voteStatus: NoticeVoteStatus,
     onClickOption: (NoticeVoteOption) -> Unit = {},
@@ -337,7 +339,7 @@ private fun VoteSectionInProgressPreview() {
                     NoticeVoteOption(optionId = 3L, content = "피자"),
                 ),
             ),
-            selectedOptionIds = listOf(3L),
+            selectedOptionIds = persistentListOf(3L),
             showResult = false,
             voteStatus = NoticeVoteStatus.OPEN,
         )
@@ -355,7 +357,7 @@ private fun VoteSectionInProgressPreview() {
                 ),
                 mySelectedOptionIds = listOf(1L),
             ),
-            selectedOptionIds = listOf(1L),
+            selectedOptionIds = persistentListOf(1L),
             showResult = true,
             voteStatus = NoticeVoteStatus.OPEN,
         )
@@ -378,7 +380,7 @@ private fun VoteSectionClosedPreview() {
                 ),
                 mySelectedOptionIds = listOf(1L),
             ),
-            selectedOptionIds = emptyList(),
+            selectedOptionIds = persistentListOf(),
             showResult = true,
             voteStatus = NoticeVoteStatus.CLOSED,
         )
@@ -393,7 +395,7 @@ private fun VoteSectionClosedPreview() {
                     NoticeVoteOption(optionId = 2L, content = "치킨"),
                 ),
             ),
-            selectedOptionIds = emptyList(),
+            selectedOptionIds = persistentListOf(),
             showResult = false,
             voteStatus = NoticeVoteStatus.CLOSED,
         )

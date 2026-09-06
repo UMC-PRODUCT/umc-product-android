@@ -4,6 +4,8 @@ import com.umc.presentation.community.DEFAULT_COMMUNITY_MAX_MEMBER_COUNT
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 스레드 생성 화면에서 사용하는 UI 상태
@@ -17,7 +19,7 @@ data class CommunityCreateState(
     val description: String = "",
 
     /** 스레드에 추가할 챌린저 목록 */
-    val selectedChallengers: List<CommunityChallengerUiModel> = emptyList(),
+    val selectedChallengers: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
 
     /** 선택 가능한 최대 챌린저 수 */
     val maxChallengerCount: Int = DEFAULT_COMMUNITY_MAX_MEMBER_COUNT,

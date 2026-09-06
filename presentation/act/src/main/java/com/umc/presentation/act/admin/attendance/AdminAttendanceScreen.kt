@@ -78,10 +78,14 @@ import com.umc.domain.model.act.check.AdminSessionCheck
 import com.umc.domain.model.enums.AdminSessionStatus
 import com.umc.presentation.act.admin.attendance.fixlocation.FixLocationRoute
 import com.umc.presentation.act.admin.attendance.pendinglist.PendingListRoute
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,15 +101,13 @@ fun AttendanceRoute(
         if (isActive) viewModel.getSessions()
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            val message = when (event) {
-                AdminAttendanceEvent.DeleteSuccess ->
-                    AppStrings.ADMIN_CHECK_DELETE_SESSION_SUCCESS
-                is AdminAttendanceEvent.ShowToast -> event.message
-            }
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        val message = when (event) {
+            AdminAttendanceEvent.DeleteSuccess ->
+                AppStrings.ADMIN_CHECK_DELETE_SESSION_SUCCESS
+            is AdminAttendanceEvent.ShowToast -> event.message
         }
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
     AttendanceScreen(
@@ -147,7 +149,8 @@ fun AttendanceRoute(
                 initialUsers = uiState.sessions
                     .firstOrNull { session -> session.id == scheduleId }
                     ?.pendingUsers
-                    .orEmpty(),
+                    .orEmpty()
+                    .toImmutableList(),
             )
         }
     }
@@ -535,7 +538,7 @@ private fun VerticalDivider() {
     )
 }
 
-private fun sampleSessions(): List<AdminSessionCheck> = listOf(
+private fun sampleSessions(): ImmutableList<AdminSessionCheck> = persistentListOf(
     AdminSessionCheck(
         id = 1L,
         title = AppStrings.ADMIN_CHECK_PREVIEW_SESSION_TITLE,

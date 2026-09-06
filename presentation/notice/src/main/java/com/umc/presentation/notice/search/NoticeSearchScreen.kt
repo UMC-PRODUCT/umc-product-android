@@ -53,7 +53,9 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
 import com.umc.presentation.notice.NoticeCard
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun NoticeSearchRoute(
@@ -72,11 +74,9 @@ fun NoticeSearchRoute(
         viewModel.setSearchContext(gisuId, noticeTab, chapterId, schoolId, part)
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is NoticeSearchEvent.MoveToDetailEvent -> navigateToDetail(event.noticeId)
-            }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is NoticeSearchEvent.MoveToDetailEvent -> navigateToDetail(event.noticeId)
         }
     }
 
@@ -364,7 +364,7 @@ private fun NoticeSearchMessage(
 private fun NoticeSearchScreenPreview() {
     NoticeSearchScreen(
         uiState = NoticeSearchUiState(
-            recentSearchList = listOf("중앙", "해커톤"),
+            recentSearchList = persistentListOf("중앙", "해커톤"),
         ),
     )
 }

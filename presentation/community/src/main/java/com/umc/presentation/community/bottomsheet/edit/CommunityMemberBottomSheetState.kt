@@ -4,6 +4,10 @@ import com.umc.presentation.community.DEFAULT_COMMUNITY_MAX_MEMBER_COUNT
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.presentation.community.model.CommunityChallengerUiModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 
 /**
  * 커뮤니티 스레드 멤버 관리 BottomSheet의 UI 상태입니다.
@@ -41,7 +45,7 @@ data class CommunityMemberBottomSheetState(
      * 검색 화면에서 기존 멤버의 체크 상태를 결정하거나,
      * 최종 선택 목록과 비교해 추가/삭제 대상을 계산할 때 사용합니다.
      */
-    val currentMembers: List<CommunityChallengerUiModel> = emptyList(),
+    val currentMembers: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
 
     /**
      * 초대 및 삭제 대상에서 제외할 스레드 OWNER의 memberId 목록
@@ -49,7 +53,7 @@ data class CommunityMemberBottomSheetState(
      * OWNER는 일반 멤버 관리 대상이 아니므로
      * 챌린저 검색 결과에서도 제외합니다.
      */
-    val ownerMemberIds: Set<Long> = emptySet(),
+    val ownerMemberIds: ImmutableSet<Long> = persistentSetOf(),
 
     /**
      * 검색 가능한 전체 챌린저 목록
@@ -57,10 +61,10 @@ data class CommunityMemberBottomSheetState(
      * 현재 구조에서는 검색 API 결과를 searchResults로 직접 사용하고 있어
      * 실제 사용 여부를 확인한 뒤 불필요하다면 제거 가능합니다.
      */
-    val invitableMembers: List<CommunityChallengerUiModel> = emptyList(),
+    val invitableMembers: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
 
     /** 현재 검색어에 대한 챌린저 검색 결과 */
-    val searchResults: List<CommunityChallengerUiModel> = emptyList(),
+    val searchResults: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
 
     /**
      * 검색 화면에서 최종적으로 체크된 멤버 목록
@@ -68,7 +72,7 @@ data class CommunityMemberBottomSheetState(
      * 현재 멤버와 비교하여
      * 새로 추가된 멤버와 삭제된 멤버를 계산합니다.
      */
-    val selectedMembers: List<CommunityChallengerUiModel> = emptyList(),
+    val selectedMembers: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
 
     /**
      * 현재 삭제 API가 진행 중인 멤버의 memberId
@@ -100,7 +104,7 @@ data class CommunityMemberBottomSheetState(
      * 검색 중이 아닐 때:
      * - 현재 스레드 멤버 표시
      */
-    val displayedMembers: List<CommunityChallengerUiModel>
+    val displayedMembers: ImmutableList<CommunityChallengerUiModel>
         get() = if (isSearching) {
             searchResults
         } else {

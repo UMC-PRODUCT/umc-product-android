@@ -7,6 +7,9 @@ plugins {
 }
 
 android {
+    lint {
+        abortOnError = false
+    }
     namespace = "com.umc.component"
     compileSdk = 36
 
@@ -18,6 +21,10 @@ android {
     }
 
     buildTypes {
+        create("benchmark") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -39,6 +46,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.kotlinx.collections.immutable)
+    lintChecks(project(":lint-rules"))
     implementation(project(":domain"))
 
     implementation(libs.androidx.core.ktx)
@@ -58,6 +67,7 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 

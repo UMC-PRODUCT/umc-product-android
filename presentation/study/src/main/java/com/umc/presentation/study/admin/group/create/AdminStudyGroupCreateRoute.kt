@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.umc.component.base.CollectUiEvents
 
 /**
  * 스터디 그룹 생성 화면의 Route
@@ -50,23 +51,21 @@ fun AdminStudyGroupCreateRoute(
      * RegisterFailure
      * -> 그룹 생성 API가 실패한 경우
      */
-    LaunchedEffect(Unit) {
-        viewModel.uiEvent.collect { event ->
-            when (event) {
-                AdminStudyGroupCreateEvent.NavigateBack -> {
-                    navigateBack()
-                }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            AdminStudyGroupCreateEvent.NavigateBack -> {
+                navigateBack()
+            }
 
-                AdminStudyGroupCreateEvent.RegisterSuccess -> {
-                    // 그룹 생성 성공 후 이전 화면으로 이동
-                    navigateBack()
-                }
+            AdminStudyGroupCreateEvent.RegisterSuccess -> {
+                // 그룹 생성 성공 후 이전 화면으로 이동
+                navigateBack()
+            }
 
-                is AdminStudyGroupCreateEvent.RegisterFailure -> {
-                    // TODO 그룹 생성 실패 메시지 표시
-                    // 추후 Toast 또는 Snackbar 등으로
-                    // event.message를 사용자에게 표시
-                }
+            is AdminStudyGroupCreateEvent.RegisterFailure -> {
+                // TODO 그룹 생성 실패 메시지 표시
+                // 추후 Toast 또는 Snackbar 등으로
+                // event.message를 사용자에게 표시
             }
         }
     }

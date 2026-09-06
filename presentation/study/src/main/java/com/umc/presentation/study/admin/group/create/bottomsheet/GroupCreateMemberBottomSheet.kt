@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -51,7 +52,7 @@ import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMember
 @Composable
 fun GroupCreateMemberBottomSheet(
     viewModel: GroupCreateMemberPickerViewModel = hiltViewModel(),
-    preSelected: List<AdminStudyGroupCreateMemberUiModel>,
+    preSelected: ImmutableList<AdminStudyGroupCreateMemberUiModel>,
     resolvePreSelectedFromApi: Boolean = false,
     onDismissRequest: () -> Unit,
     onConfirm: (List<AdminStudyGroupCreateMemberUiModel>) -> Unit,
@@ -393,7 +394,7 @@ fun GroupCreatePickerTitle(
  */
 @Composable
 private fun CurrentMemberContent(
-    members: List<AdminStudyGroupCreateMemberUiModel>,
+    members: ImmutableList<AdminStudyGroupCreateMemberUiModel>,
     onRemoveMember: (AdminStudyGroupCreateMemberUiModel) -> Unit,
 ) {
     if (members.isEmpty()) {

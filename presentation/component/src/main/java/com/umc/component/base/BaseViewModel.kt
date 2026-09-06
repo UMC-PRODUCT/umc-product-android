@@ -4,12 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.text.startsWith
@@ -29,12 +29,17 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
     val uiState: StateFlow<STATE>
         get() = _uiState.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<EVENT>()
-    val uiEvent: SharedFlow<EVENT>
-        get() = _uiEvent.asSharedFlow()
+    // 단발성 이벤트는 Channel + receiveAsFlow로 전달한다.
+    // MutableSharedFlow(replay=0, buffer=0)는 구독자가 0인 순간의 emit을 조용히 버린다.
+    // 화면 회전·다크모드 전환으로 컴포지션이 재생성되는 구간에 구독자가 0이 되는데,
+    // ViewModel은 살아 있어 그 사이 결과 이벤트를 내보내므로 유실이 실제로 발생했다.
+    // Channel은 버퍼에 보관했다가 구독이 붙는 시점에 전달하고, receiveAsFlow가
+    // 단일 소비를 보장해 재구독 시 중복 소비도 없다.
+    private val _uiEvent = Channel<EVENT>(Channel.BUFFERED)
+    val uiEvent: Flow<EVENT> = _uiEvent.receiveAsFlow()
 
-    private val _commonEvent = MutableSharedFlow<CommonViewModelEvent>()
-    val commonEvent: SharedFlow<CommonViewModelEvent> = _commonEvent.asSharedFlow()
+    private val _commonEvent = Channel<CommonViewModelEvent>(Channel.BUFFERED)
+    val commonEvent: Flow<CommonViewModelEvent> = _commonEvent.receiveAsFlow()
 
     // 로딩 상태 관리
     private val _isLoading = MutableStateFlow(false)
@@ -46,13 +51,13 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
 
     protected fun emitEvent(event: EVENT) {
         viewModelScope.launch {
-            _uiEvent.emit(event)
+            _uiEvent.send(event)
         }
     }
 
     private fun emitCommonEvent(event: CommonViewModelEvent) {
         viewModelScope.launch {
-            _commonEvent.emit(event)
+            _commonEvent.send(event)
         }
     }
 
@@ -70,6 +75,9 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
                 stopLoading()
                 if (response.failState.code.startsWith(JWT_ERROR_PREFIX)) {
                     emitCommonEvent(CommonViewModelEvent.MoveToSplash)
+                    // 화면별 commonEvent는 구독자가 없을 수 있으므로 전역 신호도 함께 보낸다.
+                    // (NavHost 최상단이 이 신호 하나만 관찰해 재로그인으로 보낸다)
+                    SessionExpiryBus.notifyExpired()
                 }
                 errorCallback?.invoke(response.failState)
             }

@@ -21,6 +21,7 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * 커뮤니티 검색 화면에서 최근 검색어 목록을 표시하는 영역
@@ -29,7 +30,7 @@ import com.umc.component.theme.grey950
  */
 @Composable
 fun CommunityRecentSearchContent(
-    recentSearches: List<String>,
+    recentSearches: ImmutableList<String>,
     onRecentSearchClick: (String) -> Unit,
     onDeleteRecentSearchClick: (String) -> Unit,
     onClearAllClick: () -> Unit,

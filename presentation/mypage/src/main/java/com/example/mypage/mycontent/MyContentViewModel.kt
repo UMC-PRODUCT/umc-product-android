@@ -11,6 +11,9 @@ import com.umc.domain.usecase.community.GetMyCommentedPostsUseCase
 import com.umc.domain.usecase.community.GetMyPostsUseCase
 import com.umc.domain.usecase.community.GetMyScrappedPostsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -94,7 +97,7 @@ constructor(
                 successCallback = { pageModel ->
                     updateState {
                         copy(
-                            nowContents = if (isRefresh) pageModel.posts else nowContents + pageModel.posts,
+                            nowContents = if (isRefresh) pageModel.posts.toImmutableList() else (nowContents + pageModel.posts).toImmutableList(),
                             currentPage = pageToFetch + 1,
                             isPageLoading = false,
                             isLastPage = !pageModel.hasNext,
@@ -118,7 +121,7 @@ data class MyContentUiState(
     //현재 보고 있는 타입
     val showType: String = "",
     //현재 받아온 컨텐츠
-    val nowContents: List<ContentItem> = emptyList(),
+    val nowContents: ImmutableList<ContentItem> = persistentListOf(),
     //컨텐츠가 있는지 여부
     val isContents : Boolean = false,
 

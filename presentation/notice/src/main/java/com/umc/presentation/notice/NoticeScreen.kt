@@ -57,7 +57,9 @@ import com.umc.component.theme.indigo700
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.organization.GisuItem
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,15 +85,13 @@ fun NoticeRoute(
         }
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is NoticeEvent.MoveToSearchEvent ->
-                    navigateToSearch(event.gisuId, event.noticeTab, event.chapterId, event.schoolId, event.part)
-                is NoticeEvent.MoveToAdminNoticeEvent -> navigateToAdminNotice(event.gisuId)
-                is NoticeEvent.MoveToWriteEvent -> navigateToWrite()
-                is NoticeEvent.MoveToDetailEvent -> navigateToDetail(event.noticeId)
-            }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is NoticeEvent.MoveToSearchEvent ->
+                navigateToSearch(event.gisuId, event.noticeTab, event.chapterId, event.schoolId, event.part)
+            is NoticeEvent.MoveToAdminNoticeEvent -> navigateToAdminNotice(event.gisuId)
+            is NoticeEvent.MoveToWriteEvent -> navigateToWrite()
+            is NoticeEvent.MoveToDetailEvent -> navigateToDetail(event.noticeId)
         }
     }
 
@@ -440,7 +440,7 @@ private fun NoticeScreenPreview() {
     NoticeScreen(
         uiState = NoticeUiState(
             nowTitle = "12기 공지사항",
-            chipList = listOf(
+            chipList = persistentListOf(
                 NoticeChipState(text = "전체", isClicked = true),
                 NoticeChipState(text = "중앙운영사무국", isStaffNoticeChip = true),
                 NoticeChipState(text = "Ain 지부"),
@@ -458,7 +458,7 @@ private fun NoticeScreenPartSelectedPreview() {
     NoticeScreen(
         uiState = NoticeUiState(
             nowTitle = "12기 공지사항",
-            chipList = listOf(
+            chipList = persistentListOf(
                 NoticeChipState(text = "전체"),
                 NoticeChipState(text = "중앙운영사무국", isStaffNoticeChip = true),
                 NoticeChipState(

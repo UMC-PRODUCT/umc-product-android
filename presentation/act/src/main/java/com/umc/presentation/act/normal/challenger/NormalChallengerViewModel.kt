@@ -11,6 +11,9 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.usecase.challenger.GetChallengerDetailUseCase
 import com.umc.domain.usecase.challenger.GetChallengerListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -130,13 +133,13 @@ data class NormalChallengerUiState(
     val searchKeyword: String = "",
     val selectedPart: UserPart? = null,
     val isPartFilterVisible: Boolean = false,
-    val sections: List<NormalChallengerSectionUi> = emptyList(),
+    val sections: ImmutableList<NormalChallengerSectionUi> = persistentListOf(),
     val selectedChallenger: ChallengerInfoDialogModel? = null,
 ) : UiState
 
 data class NormalChallengerSectionUi(
     val partName: String,
-    val members: List<NormalChallengerMemberUi>,
+    val members: ImmutableList<NormalChallengerMemberUi>,
 )
 
 data class NormalChallengerMemberUi(
@@ -159,13 +162,14 @@ private fun UserChallenger.toMemberUi(): NormalChallengerMemberUi {
     )
 }
 
-private fun List<UserChallenger>.toSections(): List<NormalChallengerSectionUi> {
+private fun List<UserChallenger>.toSections(): ImmutableList<NormalChallengerSectionUi> {
     return groupBy { it.part }
         .toSortedMap(compareBy<UserPart> { UserPart.entries.indexOf(it) })
         .map { (part, members) ->
             NormalChallengerSectionUi(
                 partName = part.label,
-                members = members.map { it.toMemberUi() }
+                members = members.map { it.toMemberUi() }.toImmutableList()
             )
         }
+        .toImmutableList()
 }

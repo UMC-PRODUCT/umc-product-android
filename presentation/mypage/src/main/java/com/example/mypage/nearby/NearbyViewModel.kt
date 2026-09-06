@@ -13,6 +13,9 @@ import com.umc.domain.model.mypage.NearbyUserInfo
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.usecase.appDataStore.usercard.SaveUserCardUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -38,7 +41,7 @@ class NearbyViewModel @Inject constructor(
                 updateState {
                     //id 기준 중복 제거 후 추가
                     val currentList = devices.filterNot { it.first == event.id }
-                    copy(devices = currentList + (event.id to event.userInfo))
+                    copy(devices = (currentList + (event.id to event.userInfo)).toImmutableList())
                 }
             }
 
@@ -124,7 +127,7 @@ class NearbyViewModel @Inject constructor(
             copy(
                 isBottomSheetOpen = true,
                 exchangeStep = ExchangeStep.SELECT_METHOD,
-                devices = emptyList(),
+                devices = persistentListOf(),
                 selectedTargetUser = null
             )
         }
@@ -144,7 +147,7 @@ class NearbyViewModel @Inject constructor(
     fun startAdvertisingAndDiscovery() {
         val myInfo = uiState.value.myUserInfo ?: NearbyUserInfo(name = "실패", info = "Connect 실패")
 
-        updateState { copy(exchangeStep = ExchangeStep.DISCOVER_USERS, devices = emptyList()) }
+        updateState { copy(exchangeStep = ExchangeStep.DISCOVER_USERS, devices = persistentListOf()) }
         manager.startAdvertisingAndDiscovery(myInfo)
     }
 
@@ -250,7 +253,7 @@ class NearbyViewModel @Inject constructor(
         updateState {
             copy(
                 exchangeStep = ExchangeStep.SELECT_METHOD,
-                devices = emptyList(),
+                devices = persistentListOf(),
                 selectedTargetUser = null
             )
         }
@@ -266,7 +269,7 @@ data class NearbyUiState(
     val exchangeStep: ExchangeStep = ExchangeStep.SELECT_METHOD, //현재 단계
 
     //<구글 고유 EndpointId, NearbyUserInfo>
-    val devices: List<Pair<String, NearbyUserInfo>> = emptyList(),
+    val devices: ImmutableList<Pair<String, NearbyUserInfo>> = persistentListOf(),
     val selectedTargetUser: Pair<String, NearbyUserInfo>? = null, // 다이얼로그용 선택 유저
     val pendingAuth: NearbyManagerEvent.AuthVerification? = null,
 

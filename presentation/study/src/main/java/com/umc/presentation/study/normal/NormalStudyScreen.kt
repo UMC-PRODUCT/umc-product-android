@@ -22,8 +22,10 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.study.normal.component.StudyCurriculumCard
 import com.umc.presentation.study.normal.component.StudyEmptyCard
 import com.umc.presentation.study.normal.component.StudyItemRow
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.domain.model.enums.StudyStatus
+import com.umc.component.base.CollectUiEvents
 
 /**
  * 일반 사용자 스터디 화면의 Route
@@ -39,16 +41,14 @@ fun UserStudyRoute(
     val context = LocalContext.current
 
     // ViewModel에서 발생한 일회성 Toast 이벤트 처리
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is UserStudyEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message,
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is UserStudyEvent.ShowToast -> {
+                Toast.makeText(
+                    context,
+                    event.message,
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         }
     }
@@ -128,7 +128,7 @@ private fun UserStudyScreenPreview() {
         state = UserStudyState(
             title = "웹 프론트엔드 기초",
             part = UserPart.WEB,
-            items = listOf(
+            items = persistentListOf(
                 NormalStudyItemUiModel(
                     id = 1,
                     week = 1,

@@ -28,10 +28,13 @@ import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitBottomSheet
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitGroupBottomSheet
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekBottomSheet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekUiModel
 import com.umc.presentation.study.admin.submit.component.AdminSubmitFilterBar
 import com.umc.presentation.study.admin.submit.component.AdminSubmitItem
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 /**
  * 관리자 제출 현황 화면의 Route
@@ -54,16 +57,14 @@ fun AdminSubmitRoute(
         }
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is AdminSubmitEvent.ShowToast ->
-                    Toast.makeText(
-                        context,
-                        event.message,
-                        Toast.LENGTH_SHORT
-                    ).show()
-            }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is AdminSubmitEvent.ShowToast ->
+                Toast.makeText(
+                    context,
+                    event.message,
+                    Toast.LENGTH_SHORT
+                ).show()
         }
     }
 
@@ -248,7 +249,7 @@ fun AdminSubmitScreen(
                     week = week,
                     weeklyCurriculumId = 0L,
                 )
-            },
+            }.toImmutableList(),
             onSelect = { weekItem ->
                 onAction(
                     AdminSubmitAction.SelectWeek(weekItem.week)
@@ -276,7 +277,7 @@ fun AdminSubmitScreen(
 private fun AdminSubmitScreenPreview() {
     AdminSubmitScreen(
         state = AdminSubmitState(
-            items = listOf(
+            items = persistentListOf(
                 AdminSubmitItemUiModel(
                     id = 1L,
                     challengerWorkbookId = 10L,

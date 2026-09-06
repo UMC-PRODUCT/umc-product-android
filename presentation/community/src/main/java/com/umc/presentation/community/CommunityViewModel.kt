@@ -19,6 +19,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -189,7 +191,7 @@ class CommunityViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     isLoading = false,
-                    threads = uiThreads,
+                    threads = uiThreads.toImmutableList(),
                     errorMessage = null,
                 )
             }
@@ -205,7 +207,7 @@ class CommunityViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        threads = emptyList(),
+                        threads = persistentListOf(),
                         errorMessage =
                             "네트워크 연결을 확인하고 다시 시도해주세요.",
                     )
@@ -265,7 +267,7 @@ class CommunityViewModel @Inject constructor(
                             } else {
                                 thread
                             }
-                        },
+                        }.toImmutableList(),
                         selectedThread = null,
                         showThreadMenuDialog = false,
                     )
@@ -334,7 +336,7 @@ class CommunityViewModel @Inject constructor(
                     } else {
                         thread
                     }
-                },
+                }.toImmutableList(),
                 selectedThread = updatedThread,
                 showThreadMenuDialog = false,
             )
@@ -387,7 +389,7 @@ class CommunityViewModel @Inject constructor(
                     currentState.copy(
                         threads = currentState.threads.filterNot { thread ->
                             thread.id == selectedThread.id
-                        },
+                        }.toImmutableList(),
                         selectedThread = null,
                         showThreadMenuDialog = false,
                         showLeaveDialog = false,

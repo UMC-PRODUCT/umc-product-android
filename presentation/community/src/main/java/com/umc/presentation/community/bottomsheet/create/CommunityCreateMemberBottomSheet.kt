@@ -55,6 +55,8 @@ import com.umc.component.theme.grey900
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.red500
 import com.umc.presentation.community.model.CommunityChallengerUiModel
+import kotlinx.collections.immutable.ImmutableList
+import com.umc.component.base.CollectUiEvents
 
 /**
  * 스레드 생성 시 챌린저를 추가하는 BottomSheet
@@ -70,7 +72,7 @@ import com.umc.presentation.community.model.CommunityChallengerUiModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityCreateMemberBottomSheet(
-    preSelected: List<CommunityChallengerUiModel>,
+    preSelected: ImmutableList<CommunityChallengerUiModel>,
     maxCount: Int,
     onDismissRequest: () -> Unit,
     onConfirm: (List<CommunityChallengerUiModel>) -> Unit,
@@ -102,16 +104,14 @@ fun CommunityCreateMemberBottomSheet(
     /**
      * ViewModel에서 발생하는 일회성 이벤트 처리
      */
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collect { event ->
-            when (event) {
-                is CommunityCreateMemberBottomSheetEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message,
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is CommunityCreateMemberBottomSheetEvent.ShowToast -> {
+                Toast.makeText(
+                    context,
+                    event.message,
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         }
     }
@@ -337,8 +337,8 @@ private fun CommunityCreateMemberHeader(
  */
 @Composable
 private fun CommunityCreateMemberSearchContent(
-    members: List<CommunityChallengerUiModel>,
-    selectedMembers: List<CommunityChallengerUiModel>,
+    members: ImmutableList<CommunityChallengerUiModel>,
+    selectedMembers: ImmutableList<CommunityChallengerUiModel>,
     maxCount: Int,
     isLoadingMore: Boolean,
     hasNext: Boolean,
@@ -556,7 +556,7 @@ private fun CommunityCreateMemberSearchRow(
  */
 @Composable
 private fun CommunityCreateSelectedMemberContent(
-    selectedMembers: List<CommunityChallengerUiModel>,
+    selectedMembers: ImmutableList<CommunityChallengerUiModel>,
     onRemoveClick: (CommunityChallengerUiModel) -> Unit,
 ) {
     LazyColumn(

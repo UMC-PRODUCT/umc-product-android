@@ -51,6 +51,7 @@ import com.umc.component.theme.indigo600
 import com.umc.component.theme.indigo700
 import com.umc.component.theme.white
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun PermissionRoute(
@@ -68,37 +69,35 @@ fun PermissionRoute(
         viewModel.signUp()
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                PermissionEvent.MoveToBack -> navigateToBack()
-                PermissionEvent.ShowPermissionDialog -> {
-                    val permissions = buildList {
-                        if (uiState.isAlarmCheck && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            add(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                        if (uiState.isLocationCheck) {
-                            add(Manifest.permission.ACCESS_FINE_LOCATION)
-                            add(Manifest.permission.ACCESS_COARSE_LOCATION)
-                        }
-                        // 사진은 시스템 사진 선택 도구(PickVisualMedia)로만 접근하므로
-                        // 저장소 권한을 요청하지 않는다. 광범위 저장소 권한을 선언·요청하면
-                        // Play 정책 위반으로 심사에서 거부된다
-                    }.filter { permission ->
-                        ContextCompat.checkSelfPermission(
-                            context, permission
-                        ) != PackageManager.PERMISSION_GRANTED
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            PermissionEvent.MoveToBack -> navigateToBack()
+            PermissionEvent.ShowPermissionDialog -> {
+                val permissions = buildList {
+                    if (uiState.isAlarmCheck && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        add(Manifest.permission.POST_NOTIFICATIONS)
                     }
-
-                    if (permissions.isNotEmpty()) {
-                        requestPermissionsLauncher.launch(permissions.toTypedArray())
-                    } else {
-                        viewModel.signUp()
+                    if (uiState.isLocationCheck) {
+                        add(Manifest.permission.ACCESS_FINE_LOCATION)
+                        add(Manifest.permission.ACCESS_COARSE_LOCATION)
                     }
+                    // 사진은 시스템 사진 선택 도구(PickVisualMedia)로만 접근하므로
+                    // 저장소 권한을 요청하지 않는다. 광범위 저장소 권한을 선언·요청하면
+                    // Play 정책 위반으로 심사에서 거부된다
+                }.filter { permission ->
+                    ContextCompat.checkSelfPermission(
+                        context, permission
+                    ) != PackageManager.PERMISSION_GRANTED
                 }
-                PermissionEvent.MoveToMainEvent -> navigateToMain()
-                PermissionEvent.MoveToFailEvent -> navigateToFail()
+
+                if (permissions.isNotEmpty()) {
+                    requestPermissionsLauncher.launch(permissions.toTypedArray())
+                } else {
+                    viewModel.signUp()
+                }
             }
+            PermissionEvent.MoveToMainEvent -> navigateToMain()
+            PermissionEvent.MoveToFailEvent -> navigateToFail()
         }
     }
 

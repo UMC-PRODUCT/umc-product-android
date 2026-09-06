@@ -55,6 +55,7 @@ import com.umc.component.theme.indigo500
 import com.umc.component.theme.indigo700
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.tasks.await
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun SignUpFailRoute(
@@ -78,21 +79,19 @@ fun SignUpFailRoute(
         viewModel.setGoogleToken(googleToken)
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                SignUpFailEvent.MoveToBack -> context.findActivity()?.finish()
-                SignUpFailEvent.MoveToHomePage -> {
-                    val intent = Intent(Intent.ACTION_VIEW, "https://umc.it.kr".toUri())
-                    context.startActivity(intent)
-                }
-                SignUpFailEvent.MoveToCode -> navigateToCode()
-                SignUpFailEvent.MoveToKakaoInquiry -> {
-                    val intent = Intent(Intent.ACTION_VIEW, "https://pf.kakao.com/_MDxhqX/chat".toUri())
-                    context.startActivity(intent)
-                }
-                SignUpFailEvent.MoveToLogin -> navigateToLogin()
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            SignUpFailEvent.MoveToBack -> context.findActivity()?.finish()
+            SignUpFailEvent.MoveToHomePage -> {
+                val intent = Intent(Intent.ACTION_VIEW, "https://umc.it.kr".toUri())
+                context.startActivity(intent)
             }
+            SignUpFailEvent.MoveToCode -> navigateToCode()
+            SignUpFailEvent.MoveToKakaoInquiry -> {
+                val intent = Intent(Intent.ACTION_VIEW, "https://pf.kakao.com/_MDxhqX/chat".toUri())
+                context.startActivity(intent)
+            }
+            SignUpFailEvent.MoveToLogin -> navigateToLogin()
         }
     }
 

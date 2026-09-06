@@ -17,6 +17,9 @@ import com.umc.domain.usecase.challenger.GetAdminChallengerDetailUseCase
 import com.umc.domain.usecase.challenger.GetAdminChallengerListUseCase
 import com.umc.domain.usecase.challenger.GrantChallengerPointUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -297,7 +300,7 @@ data class AdminChallengerUiState(
     val selectedPart: UserPart? = null,
     val isPartFilterVisible: Boolean = false,
     //파트별 챌린저 목록
-    val sections: List<AdminChallengerSectionUi> = emptyList(),
+    val sections: ImmutableList<AdminChallengerSectionUi> = persistentListOf(),
     //선택한 챌린저 상세 정보
     val detail: ChallengerManageDialogModel? = null,
     //상세 화면 상벌점 수정 모드
@@ -322,7 +325,7 @@ data class AdminChallengerUiState(
 
 data class AdminChallengerSectionUi(
     val partName: String,
-    val members: List<AdminChallengerMemberUi>,
+    val members: ImmutableList<AdminChallengerMemberUi>,
 )
 
 data class AdminChallengerMemberUi(
@@ -349,15 +352,16 @@ private fun AdminChallenger.toMemberUi(): AdminChallengerMemberUi {
     )
 }
 
-private fun List<AdminChallenger>.toSections(): List<AdminChallengerSectionUi> {
+private fun List<AdminChallenger>.toSections(): ImmutableList<AdminChallengerSectionUi> {
     return groupBy { it.part }
         .toSortedMap(compareBy<UserPart> { UserPart.entries.indexOf(it) })
         .map { (part, members) ->
             AdminChallengerSectionUi(
                 partName = part.label,
-                members = members.map { it.toMemberUi() }
+                members = members.map { it.toMemberUi() }.toImmutableList()
             )
         }
+        .toImmutableList()
 }
 
 //RewardType을 상벌점 부여 요청용 PointType으로 변환

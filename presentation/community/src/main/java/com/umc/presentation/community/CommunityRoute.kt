@@ -11,6 +11,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.umc.component.base.CollectUiEvents
 
 /**
  * 커뮤니티 메인 화면의 Route
@@ -38,32 +39,30 @@ fun CommunityRoute(
     )
 
     // ViewModel에서 발생하는 일회성 이벤트 처리
-    LaunchedEffect(viewModel) {
-        viewModel.event.collect { event ->
-            when (event) {
-                is CommunityEvent.NavigateToThreadDetail -> {
-                    onNavigateToThreadDetail(event.threadId)
-                }
+    CollectUiEvents(viewModel.event) { event ->
+        when (event) {
+            is CommunityEvent.NavigateToThreadDetail -> {
+                onNavigateToThreadDetail(event.threadId)
+            }
 
-                CommunityEvent.NavigateToSearch -> {
-                    onNavigateToSearch()
-                }
+            CommunityEvent.NavigateToSearch -> {
+                onNavigateToSearch()
+            }
 
-                is CommunityEvent.NavigateToEditThread -> {
-                    onNavigateToEditThread(event.threadId)
-                }
+            is CommunityEvent.NavigateToEditThread -> {
+                onNavigateToEditThread(event.threadId)
+            }
 
-                CommunityEvent.NavigateToCreateThread -> {
-                    onNavigateToCreateThread()
-                }
+            CommunityEvent.NavigateToCreateThread -> {
+                onNavigateToCreateThread()
+            }
 
-                is CommunityEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message,
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
+            is CommunityEvent.ShowToast -> {
+                Toast.makeText(
+                    context,
+                    event.message,
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         }
     }

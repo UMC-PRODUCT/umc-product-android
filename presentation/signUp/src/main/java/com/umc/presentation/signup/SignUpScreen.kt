@@ -56,6 +56,7 @@ import com.umc.component.theme.red500
 import com.umc.domain.model.enums.SignUpType
 import com.umc.domain.model.school.SchoolInfo
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,14 +84,12 @@ fun SignUpRoute(
         )
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is SignUpEvent.MoveToBack -> navigateToBack()
-                is SignUpEvent.MoveToPermissionEvent -> navigateToPermission()
-                is SignUpEvent.ShowSchoolBottomSheet -> showSchoolBottomSheet = true
-                is SignUpEvent.ShowRegisterErrorDialog -> errorDialogMessage = event.message
-            }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is SignUpEvent.MoveToBack -> navigateToBack()
+            is SignUpEvent.MoveToPermissionEvent -> navigateToPermission()
+            is SignUpEvent.ShowSchoolBottomSheet -> showSchoolBottomSheet = true
+            is SignUpEvent.ShowRegisterErrorDialog -> errorDialogMessage = event.message
         }
     }
 
