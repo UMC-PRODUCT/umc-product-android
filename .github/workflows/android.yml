@@ -90,9 +90,14 @@ jobs:
             fi
             local range="HEAD"
             if git rev-parse "$LATEST_TAG" >/dev/null 2>&1; then range="${LATEST_TAG}..HEAD"; fi
-            local log; log=$(git log --format='%s%n%b' "$range" 2>/dev/null || printf '')
-            if printf '%s' "$log" | grep -qE 'BREAKING[ -]CHANGE'; then printf 'major'
-            elif printf '%s' "$log" | grep -qiE '^\[?(feat|feature)'; then printf 'minor'
+            # major 는 Conventional Commits 의 푸터 형식만 인정한다 —
+            # 줄 맨 앞의 "BREAKING CHANGE:" (콜론 필수).
+            # 규칙을 설명하는 문장이 본문에 섞였다고 major 로 튀면 안 된다.
+            local body; body=$(git log --format='%B' "$range" 2>/dev/null || printf '')
+            # minor 는 커밋 "제목"만 본다. 본문에 [Feat] 를 언급한 것까지 세지 않는다.
+            local subjects; subjects=$(git log --format='%s' "$range" 2>/dev/null || printf '')
+            if printf '%s' "$body" | grep -qE '^BREAKING[ -]CHANGE:'; then printf 'major'
+            elif printf '%s' "$subjects" | grep -qiE '^\[?(feat|feature)'; then printf 'minor'
             else printf 'patch'; fi
           }
 
