@@ -8,6 +8,9 @@ import com.umc.domain.usecase.challenger.SearchChallengerScheduleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Locale
 import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -50,7 +53,7 @@ class GroupScheduleChallengerViewModel @Inject constructor(
     ) {
         updateState {
             copy(
-                selectedChallengers = list,
+                selectedChallengers = list.toImmutableList(),
                 selectedSummaryText = makeSummaryText(list),
                 hasConfirmButton = list.isNotEmpty(),
             )
@@ -78,7 +81,7 @@ class GroupScheduleChallengerViewModel @Inject constructor(
                 query = query,
                 isSearching = true,
                 isLoading = true,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
                 hasConfirmButton = true,
@@ -113,9 +116,9 @@ class GroupScheduleChallengerViewModel @Inject constructor(
                 selectedChallengers.filterNot {
                         challenger ->
                     challenger.id == item.id
-                }
+                }.toImmutableList()
             } else {
-                selectedChallengers + item
+                (selectedChallengers + item).toImmutableList()
             }
 
             copy(
@@ -138,7 +141,7 @@ class GroupScheduleChallengerViewModel @Inject constructor(
                 query = "",
                 isSearching = false,
                 isLoading = false,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
             )
@@ -158,7 +161,7 @@ class GroupScheduleChallengerViewModel @Inject constructor(
                 query = "",
                 isSearching = false,
                 isLoading = false,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
                 hasConfirmButton =
@@ -177,12 +180,12 @@ class GroupScheduleChallengerViewModel @Inject constructor(
 
         updateState {
             copy(
-                selectedChallengers = emptyList(),
+                selectedChallengers = persistentListOf(),
                 selectedSummaryText = "",
                 query = "",
                 isSearching = false,
                 isLoading = false,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
                 hasConfirmButton = false,
@@ -304,12 +307,12 @@ class GroupScheduleChallengerViewModel @Inject constructor(
                                                     mappedResults
                                             ).distinctBy { challenger ->
                                             challenger.id
-                                        }
+                                        }.toImmutableList()
                                 } else {
                                     mappedResults.distinctBy {
                                             challenger ->
                                         challenger.id
-                                    }
+                                    }.toImmutableList()
                                 },
 
                             nextCursor =
@@ -362,7 +365,7 @@ data class GroupScheduleChallengerState(
 
     /** 현재 선택된 챌린저 목록 */
     val selectedChallengers:
-    List<GroupScheduleChallengerUiModel> = emptyList(),
+    ImmutableList<GroupScheduleChallengerUiModel> = persistentListOf(),
 
     /** 선택된 챌린저를 요약한 화면 표시 문구 */
     val selectedSummaryText: String = "",
@@ -381,7 +384,7 @@ data class GroupScheduleChallengerState(
 
     /** 챌린저 검색 결과 */
     val searchResults:
-    List<GroupScheduleChallengerUiModel> = emptyList(),
+    ImmutableList<GroupScheduleChallengerUiModel> = persistentListOf(),
 
     /** 다음 페이지 조회 cursor */
     val nextCursor: Long? = null,

@@ -23,6 +23,9 @@ import com.umc.domain.usecase.notice.SendNoticeReminderUseCase
 import com.umc.domain.usecase.notice.SubmitVoteResponseUseCase
 import com.umc.domain.usecase.notice.UpdateVoteResponseUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -66,7 +69,7 @@ class NoticeDetailViewModel @Inject constructor(
                     copy(
                         detail = detail,
                         isLoading = false,
-                        selectedOptionIds = detail.vote?.mySelectedOptionIds.orEmpty(),
+                        selectedOptionIds = detail.vote?.mySelectedOptionIds.orEmpty().toImmutableList(),
                         isSubmittingVote = false,
                         voteStatus = detail.vote
                             ?.let { NoticeVoteStatus.from(it.status) }
@@ -168,7 +171,7 @@ class NoticeDetailViewModel @Inject constructor(
             selected.clear()
             if (!wasSelected) selected.add(option.optionId)
         }
-        updateState { copy(selectedOptionIds = selected) }
+        updateState { copy(selectedOptionIds = selected.toImmutableList()) }
     }
 
     /** 투표하기/다시 투표하기 버튼. 이미 투표한 상태면 수정 API로 제출 */
@@ -232,12 +235,12 @@ class NoticeDetailViewModel @Inject constructor(
             VoteOptionParticipants(
                 optionId = option.optionId,
                 optionTitle = option.content,
-                participants = option.selectedMemberIds.mapNotNull { profiles[it] },
+                participants = option.selectedMemberIds.mapNotNull { profiles[it] }.toImmutableList(),
             )
         }
         updateState {
             copy(
-                voteParticipantSections = sections,
+                voteParticipantSections = sections.toImmutableList(),
                 isLoadingVoteParticipants = false,
             )
         }
@@ -276,14 +279,22 @@ class NoticeDetailViewModel @Inject constructor(
                 updateState {
                     if (isRead) {
                         copy(
-                            readList = if (cursorId == null) readStatus.content else readList + readStatus.content,
+                            readList = if (cursorId == null) {
+                                readStatus.content.toImmutableList()
+                            } else {
+                                (readList + readStatus.content).toImmutableList()
+                            },
                             readNextCursor = readStatus.nextCursor,
                             readHasNext = readStatus.hasNext,
                             isLoadingReadList = false,
                         )
                     } else {
                         copy(
-                            unreadList = if (cursorId == null) readStatus.content else unreadList + readStatus.content,
+                            unreadList = if (cursorId == null) {
+                                readStatus.content.toImmutableList()
+                            } else {
+                                (unreadList + readStatus.content).toImmutableList()
+                            },
                             unreadNextCursor = readStatus.nextCursor,
                             unreadHasNext = readStatus.hasNext,
                             isLoadingUnreadList = false,
@@ -360,17 +371,17 @@ data class NoticeDetailUiState(
     val isAuthor: Boolean = false,
     val authorName: String = "",
     val authorProfileImageUrl: String = "",
-    val selectedOptionIds: List<Long> = emptyList(),
+    val selectedOptionIds: ImmutableList<Long> = persistentListOf(),
     val isSubmittingVote: Boolean = false,
     val receiverText: String = "",
     val voteStatus: NoticeVoteStatus = NoticeVoteStatus.OPEN,
-    val voteParticipantSections: List<VoteOptionParticipants> = emptyList(),
+    val voteParticipantSections: ImmutableList<VoteOptionParticipants> = persistentListOf(),
     val isLoadingVoteParticipants: Boolean = false,
     val readStatistics: NoticeReadStatistics? = null,
-    val readList: List<ChallengerReadInfo> = emptyList(),
+    val readList: ImmutableList<ChallengerReadInfo> = persistentListOf(),
     val readNextCursor: Long? = null,
     val readHasNext: Boolean = false,
-    val unreadList: List<ChallengerReadInfo> = emptyList(),
+    val unreadList: ImmutableList<ChallengerReadInfo> = persistentListOf(),
     val unreadNextCursor: Long? = null,
     val unreadHasNext: Boolean = false,
     val isLoadingReadList: Boolean = false,
@@ -403,5 +414,5 @@ sealed interface NoticeDetailEvent : UiEvent {
 data class VoteOptionParticipants(
     val optionId: Long,
     val optionTitle: String,
-    val participants: List<NoticeVoteParticipant>,
+    val participants: ImmutableList<NoticeVoteParticipant>,
 )

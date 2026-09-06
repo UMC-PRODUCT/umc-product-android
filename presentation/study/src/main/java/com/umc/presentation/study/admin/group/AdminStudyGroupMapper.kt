@@ -1,6 +1,7 @@
 package com.umc.presentation.study.admin.group
 
 import com.umc.domain.model.organization.ManagedStudyGroup
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * 서버에서 조회한 ManagedStudyGroup을
@@ -57,7 +58,7 @@ fun ManagedStudyGroup.toUiModel(): AdminStudyGroupItemUiModel {
                 // 스터디원 프로필 이미지
                 profileImageUrl = member.profileImageUrl,
             )
-        },
+        }.toImmutableList(),
 
         /**
          * 멤버 변경 비교 및 API 요청 등에 사용할
@@ -65,7 +66,7 @@ fun ManagedStudyGroup.toUiModel(): AdminStudyGroupItemUiModel {
          */
         memberChallengerIds = members.map { member ->
             member.memberId
-        },
+        }.toImmutableList(),
 
         createdAtRaw = createdAt,
 

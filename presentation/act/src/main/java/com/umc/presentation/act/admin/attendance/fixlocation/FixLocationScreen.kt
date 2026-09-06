@@ -83,6 +83,7 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.indigo500
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @OptIn(ExperimentalNaverMapApi::class)
 @Composable
@@ -113,19 +114,17 @@ fun FixLocationRoute(
         position = CameraPosition(LatLng(37.3943, 126.6388), 16.0)
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is FixLocationEvent.MoveCameraTo -> {
-                    cameraPositionState.animate(
-                        CameraUpdate.scrollTo(LatLng(event.latitude, event.longitude))
-                    )
-                }
-                is FixLocationEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
-                FixLocationEvent.UpdateSuccess -> onUpdateSuccess()
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is FixLocationEvent.MoveCameraTo -> {
+                cameraPositionState.animate(
+                    CameraUpdate.scrollTo(LatLng(event.latitude, event.longitude))
+                )
             }
+            is FixLocationEvent.ShowToast -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            }
+            FixLocationEvent.UpdateSuccess -> onUpdateSuccess()
         }
     }
 

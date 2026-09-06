@@ -67,7 +67,10 @@ import com.umc.component.theme.indigo500
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.mypage.UserActiveItem
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun ProfileRoute(
@@ -120,20 +123,18 @@ fun ProfileRoute(
         }
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is ProfileEvent.ClickProfileImage -> {
-                    pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                }
-                is ProfileEvent.ClickComplete -> {
-                    viewModel.saveUserOutLink(uiState.githubLink, uiState.linkedinLink, uiState.blogLink)
-                }
-                is ProfileEvent.ClickBackPressed -> {
-                    onNavigateToBack()
-                }
-                is ProfileEvent.MakeToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is ProfileEvent.ClickProfileImage -> {
+                pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }
+            is ProfileEvent.ClickComplete -> {
+                viewModel.saveUserOutLink(uiState.githubLink, uiState.linkedinLink, uiState.blogLink)
+            }
+            is ProfileEvent.ClickBackPressed -> {
+                onNavigateToBack()
+            }
+            is ProfileEvent.MakeToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -364,7 +365,7 @@ fun ProfileImageSection(imageUri: Uri, defaultUrl: String, onImageClick: () -> U
 
 /**각 정보 섹션(고정된 부분)**/
 @Composable
-fun ProfileInfoSection(title: String, content: String, platforms: List<LoginType> = emptyList()) {
+fun ProfileInfoSection(title: String, content: String, platforms: ImmutableList<LoginType> = persistentListOf()) {
     Column {
         UText(text = title, style = UmcTypographyTokens.HeadlineBold)
         Box(

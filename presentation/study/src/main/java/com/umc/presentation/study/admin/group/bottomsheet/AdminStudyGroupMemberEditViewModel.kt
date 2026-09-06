@@ -8,6 +8,9 @@ import com.umc.domain.usecase.challenger.SearchChallengerScheduleUseCase
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMemberUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -48,13 +51,13 @@ class AdminStudyGroupMemberEditViewModel @Inject constructor(
 
         updateState {
             copy(
-                initialMembers = members,
-                selectedMembers = members,
-                pendingMembers = emptyList(),
+                initialMembers = members.toImmutableList(),
+                selectedMembers = members.toImmutableList(),
+                pendingMembers = persistentListOf(),
                 query = "",
                 isSearching = false,
                 isLoading = false,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
             )
@@ -82,8 +85,8 @@ class AdminStudyGroupMemberEditViewModel @Inject constructor(
                 query = query,
                 isSearching = true,
                 isLoading = true,
-                searchResults = emptyList(),
-                pendingMembers = emptyList(),
+                searchResults = persistentListOf(),
+                pendingMembers = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
             )
@@ -189,11 +192,11 @@ class AdminStudyGroupMemberEditViewModel @Inject constructor(
                                                     mappedMembers
                                             ).distinctBy { member ->
                                             member.id
-                                        }
+                                        }.toImmutableList()
                                 } else {
                                     mappedMembers.distinctBy { member ->
                                         member.id
-                                    }
+                                    }.toImmutableList()
                                 },
 
                             nextCursor =
@@ -249,9 +252,9 @@ class AdminStudyGroupMemberEditViewModel @Inject constructor(
                     if (isPending) {
                         pendingMembers.filterNot { member ->
                             member.id == item.id
-                        }
+                        }.toImmutableList()
                     } else {
-                        pendingMembers + item
+                        (pendingMembers + item).toImmutableList()
                     }
             )
         }
@@ -270,10 +273,10 @@ class AdminStudyGroupMemberEditViewModel @Inject constructor(
                                     pendingMembers
                             ).distinctBy { member ->
                             member.id
-                        },
+                        }.toImmutableList(),
 
                 pendingMembers =
-                    emptyList(),
+                    persistentListOf(),
 
                 query =
                     "",
@@ -285,7 +288,7 @@ class AdminStudyGroupMemberEditViewModel @Inject constructor(
                     false,
 
                 searchResults =
-                    emptyList(),
+                    persistentListOf(),
 
                 nextCursor =
                     null,
@@ -308,7 +311,7 @@ class AdminStudyGroupMemberEditViewModel @Inject constructor(
                 selectedMembers =
                     selectedMembers.filterNot { member ->
                         member.id == item.id
-                    }
+                    }.toImmutableList()
             )
         }
     }
@@ -325,8 +328,8 @@ class AdminStudyGroupMemberEditViewModel @Inject constructor(
                 query = "",
                 isSearching = false,
                 isLoading = false,
-                searchResults = emptyList(),
-                pendingMembers = emptyList(),
+                searchResults = persistentListOf(),
+                pendingMembers = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
             )
@@ -372,15 +375,15 @@ data class AdminStudyGroupMemberEditState(
 
     /** BottomSheet를 처음 열었을 때 전달받은 기존 멤버 */
     val initialMembers:
-    List<AdminStudyGroupCreateMemberUiModel> = emptyList(),
+    ImmutableList<AdminStudyGroupCreateMemberUiModel> = persistentListOf(),
 
     /** 현재 수정 화면에서 유지 중인 멤버 */
     val selectedMembers:
-    List<AdminStudyGroupCreateMemberUiModel> = emptyList(),
+    ImmutableList<AdminStudyGroupCreateMemberUiModel> = persistentListOf(),
 
     /** 검색 화면에서 아직 확인하지 않은 임시 선택 멤버 */
     val pendingMembers:
-    List<AdminStudyGroupCreateMemberUiModel> = emptyList(),
+    ImmutableList<AdminStudyGroupCreateMemberUiModel> = persistentListOf(),
 
     /** 현재 입력된 검색어 */
     val query: String = "",
@@ -393,7 +396,7 @@ data class AdminStudyGroupMemberEditState(
 
     /** 챌린저 검색 결과 */
     val searchResults:
-    List<AdminStudyGroupCreateMemberUiModel> = emptyList(),
+    ImmutableList<AdminStudyGroupCreateMemberUiModel> = persistentListOf(),
 
     /** 다음 페이지 조회용 cursor */
     val nextCursor: Long? = null,

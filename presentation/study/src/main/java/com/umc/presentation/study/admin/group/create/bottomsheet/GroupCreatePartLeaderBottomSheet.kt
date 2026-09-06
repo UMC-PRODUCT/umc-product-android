@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
@@ -55,7 +56,7 @@ import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMember
 @Composable
 fun GroupCreatePartLeaderBottomSheet(
     viewModel: GroupCreateMemberPickerViewModel = hiltViewModel(),
-    preSelected: List<AdminStudyGroupCreateMemberUiModel>,
+    preSelected: ImmutableList<AdminStudyGroupCreateMemberUiModel>,
     onDismissRequest: () -> Unit,
     onConfirm: (List<AdminStudyGroupCreateMemberUiModel>) -> Unit,
 ) {
@@ -226,8 +227,8 @@ fun GroupCreatePartLeaderBottomSheet(
  */
 @Composable
 private fun GroupCreatePartLeaderSearchResults(
-    searchResults: List<AdminStudyGroupCreateMemberUiModel>,
-    selectedMembers: List<AdminStudyGroupCreateMemberUiModel>,
+    searchResults: ImmutableList<AdminStudyGroupCreateMemberUiModel>,
+    selectedMembers: ImmutableList<AdminStudyGroupCreateMemberUiModel>,
     onSelectClick: (AdminStudyGroupCreateMemberUiModel) -> Unit,
 ) {
     val groupedResults = searchResults

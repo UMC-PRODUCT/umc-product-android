@@ -59,6 +59,9 @@ import com.umc.domain.model.enums.PunishCategory
 import com.umc.domain.model.enums.RewardType
 import com.umc.presentation.act.admin.challenger.AdminChallengerUiState
 import com.umc.presentation.act.admin.challenger.AdminChallengerViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun PenaltyPointsRoute(
@@ -79,7 +82,7 @@ fun PenaltyPointsRoute(
 @Composable
 fun PenaltyPointsScreen(
     modifier: Modifier = Modifier,
-    penalties: List<PenaltyPointItem> = defaultPenaltyItems(),
+    penalties: ImmutableList<PenaltyPointItem> = defaultPenaltyItems(),
     uiState: AdminChallengerUiState = AdminChallengerUiState(),
     onFilterSelected: (PunishCategory) -> Unit = {},
     onSelectPenalty: (RewardType) -> Unit = {},
@@ -88,7 +91,7 @@ fun PenaltyPointsScreen(
 ) {
     val filteredPenalties = penalties.filter {
         uiState.selectedPenaltyFilter == PunishCategory.ALL || it.filter == uiState.selectedPenaltyFilter
-    }
+    }.toImmutableList()
     val selectedPenalty = uiState.selectedPenaltyType
     val hasMemo = uiState.pointMemo.isNotBlank()
     val isSubmitEnabled = selectedPenalty != null && hasMemo
@@ -216,7 +219,7 @@ private fun FilterTabs(
 
 @Composable
 private fun PenaltyList(
-    penalties: List<PenaltyPointItem>,
+    penalties: ImmutableList<PenaltyPointItem>,
     selectedPenaltyType: RewardType?,
     onSelectPenalty: (RewardType) -> Unit
 ) {
@@ -321,7 +324,7 @@ data class PenaltyPointItem(
     val type: RewardType,
 )
 
-private fun defaultPenaltyItems(): List<PenaltyPointItem> =
+private fun defaultPenaltyItems(): ImmutableList<PenaltyPointItem> =
     RewardType.getPenaltyList().mapIndexed { index, type ->
         PenaltyPointItem(
             id = index.toLong(),
@@ -330,7 +333,7 @@ private fun defaultPenaltyItems(): List<PenaltyPointItem> =
             filter = type.category,
             type = type
         )
-    }
+    }.toImmutableList()
 
 @Preview(showBackground = false)
 @Composable

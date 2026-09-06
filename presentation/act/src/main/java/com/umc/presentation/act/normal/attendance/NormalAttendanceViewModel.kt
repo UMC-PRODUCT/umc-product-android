@@ -23,6 +23,9 @@ import com.umc.domain.usecase.attendance.PostAttendanceCheckUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceReasonUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -251,7 +254,7 @@ class NormalAttendanceViewModel @Inject constructor(
                     } else {
                         session
                     }
-                }
+                }.toImmutableList()
             )
         }
     }
@@ -298,7 +301,7 @@ class NormalAttendanceViewModel @Inject constructor(
             resultResponse(
                 response = getAttendanceAvailableUseCase(),
                 successCallback = { sessions ->
-                    updateState { copy(availableSessions = sessions.map { it.toUi() }) }
+                    updateState { copy(availableSessions = sessions.map { it.toUi() }.toImmutableList()) }
                 },
                 errorCallback = { emitEvent(NormalAttendanceEvent.ShowToast(it.message)) }
             )
@@ -312,7 +315,7 @@ class NormalAttendanceViewModel @Inject constructor(
             resultResponse(
                 response = getAttendanceHistoryUseCase(),
                 successCallback = { sessions ->
-                    updateState { copy(historySessions = sessions.map { it.toUi() }) }
+                    updateState { copy(historySessions = sessions.map { it.toUi() }.toImmutableList()) }
                 },
                 errorCallback = { emitEvent(NormalAttendanceEvent.ShowToast(it.message)) }
             )
@@ -322,9 +325,9 @@ class NormalAttendanceViewModel @Inject constructor(
 
 data class NormalAttendanceUiState(
     //출석 가능한 세션 목록
-    val availableSessions: List<NormalAvailableSessionUi> = emptyList(),
+    val availableSessions: ImmutableList<NormalAvailableSessionUi> = persistentListOf(),
     //내 출석 기록 목록
-    val historySessions: List<NormalHistorySessionUi> = emptyList(),
+    val historySessions: ImmutableList<NormalHistorySessionUi> = persistentListOf(),
     //펼쳐진 세션 ID
     val expandedSessionId: Long? = null,
     //출석 실패 사유 작성 대상 세션 ID

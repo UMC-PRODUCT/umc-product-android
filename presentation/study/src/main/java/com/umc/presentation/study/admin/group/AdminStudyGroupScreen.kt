@@ -23,6 +23,7 @@ import com.umc.presentation.study.admin.group.component.AdminStudyGroupCard
 import com.umc.presentation.study.admin.group.component.AdminStudyGroupCreateCard
 import com.umc.presentation.study.admin.group.dialog.AdminStudyGroupDeleteDialog
 import com.umc.presentation.study.admin.group.dialog.AdminStudyGroupEditDialog
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 관리자 스터디 그룹 화면
@@ -268,7 +269,7 @@ fun AdminStudyGroupScreen(
 private fun AdminStudyGroupScreenPreview() {
     AdminStudyGroupScreen(
         state = AdminStudyGroupState(
-            groups = listOf(
+            groups = persistentListOf(
                 AdminStudyGroupItemUiModel(
                     groupId = 1L,
                     title = "React A팀",
@@ -276,7 +277,7 @@ private fun AdminStudyGroupScreenPreview() {
                     leaderName = "홍길동",
                     leaderChallengerId = 1L,
                     leaderProfileImageUrl = null,
-                    members = listOf(
+                    members = persistentListOf(
                         AdminStudyGroupMemberUiModel(
                             challengerId = 1L,
                             name = "홍길동",
@@ -291,7 +292,7 @@ private fun AdminStudyGroupScreenPreview() {
                         ),
                     ),
                     memberChallengerIds =
-                        listOf(1L, 2L, 3L),
+                        persistentListOf(1L, 2L, 3L),
                     createdAtRaw =
                         "2024-03-01T00:00:00",
                     memberCount = 3,
@@ -308,7 +309,7 @@ private fun AdminStudyGroupScreenPreview() {
  */
 private fun previewState() =
     AdminStudyGroupState(
-        groups = listOf(
+        groups = persistentListOf(
             AdminStudyGroupItemUiModel(
                 groupId = 1L,
                 title = "React A팀",
@@ -316,7 +317,7 @@ private fun previewState() =
                 leaderName = "홍길동",
                 leaderChallengerId = 1L,
                 leaderProfileImageUrl = null,
-                members = listOf(
+                members = persistentListOf(
                     AdminStudyGroupMemberUiModel(
                         1L,
                         "홍길동"
@@ -331,7 +332,7 @@ private fun previewState() =
                     ),
                 ),
                 memberChallengerIds =
-                    listOf(1L, 2L, 3L),
+                    persistentListOf(1L, 2L, 3L),
                 createdAtRaw =
                     "2024-03-01T00:00:00",
                 memberCount = 3,
@@ -346,7 +347,7 @@ private fun previewState() =
                 leaderName = "김철수",
                 leaderChallengerId = 2L,
                 leaderProfileImageUrl = null,
-                members = listOf(
+                members = persistentListOf(
                     AdminStudyGroupMemberUiModel(
                         4L,
                         "김철수"
@@ -357,7 +358,7 @@ private fun previewState() =
                     ),
                 ),
                 memberChallengerIds =
-                    listOf(4L, 5L),
+                    persistentListOf(4L, 5L),
                 createdAtRaw =
                     "2024-03-01T00:00:00",
                 memberCount = 2,

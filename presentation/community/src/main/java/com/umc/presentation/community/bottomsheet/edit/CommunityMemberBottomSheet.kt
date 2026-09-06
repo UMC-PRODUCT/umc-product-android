@@ -55,6 +55,8 @@ import com.umc.component.theme.indigo500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.presentation.community.model.CommunityChallengerUiModel
+import kotlinx.collections.immutable.ImmutableList
+import com.umc.component.base.CollectUiEvents
 
 /**
  * 커뮤니티 스레드의 현재 멤버를 관리하는 BottomSheet입니다.
@@ -99,56 +101,54 @@ fun CommunityMemberBottomSheet(
      *
      * 멤버 추가/삭제 성공 또는 에러 발생 시 Toast를 표시합니다.
      */
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collect { event ->
-            when (event) {
-                is CommunityMemberBottomSheetEvent.MemberUpdateSuccess -> {
-                    val message = when {
-                        event.addedMemberCount > 0 &&
-                                event.removedMemberCount > 0 -> {
-                            "${event.addedMemberCount}명을 추가하고 " +
-                                    "${event.removedMemberCount}명을 삭제했어요."
-                        }
-
-                        event.addedMemberCount > 0 -> {
-                            "${event.addedMemberCount}명을 추가했어요."
-                        }
-
-                        event.removedMemberCount > 0 -> {
-                            "${event.removedMemberCount}명을 삭제했어요."
-                        }
-
-                        else -> {
-                            "멤버 구성이 변경되었어요."
-                        }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is CommunityMemberBottomSheetEvent.MemberUpdateSuccess -> {
+                val message = when {
+                    event.addedMemberCount > 0 &&
+                            event.removedMemberCount > 0 -> {
+                        "${event.addedMemberCount}명을 추가하고 " +
+                                "${event.removedMemberCount}명을 삭제했어요."
                     }
 
-                    Toast.makeText(
-                        context,
-                        message,
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                    event.addedMemberCount > 0 -> {
+                        "${event.addedMemberCount}명을 추가했어요."
+                    }
 
-                    onInviteSuccess()
+                    event.removedMemberCount > 0 -> {
+                        "${event.removedMemberCount}명을 삭제했어요."
+                    }
+
+                    else -> {
+                        "멤버 구성이 변경되었어요."
+                    }
                 }
 
-                is CommunityMemberBottomSheetEvent.MemberKickSuccess -> {
-                    Toast.makeText(
-                        context,
-                        "멤버를 삭제했어요.",
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                Toast.makeText(
+                    context,
+                    message,
+                    Toast.LENGTH_SHORT,
+                ).show()
 
-                    onInviteSuccess()
-                }
+                onInviteSuccess()
+            }
 
-                is CommunityMemberBottomSheetEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message,
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
+            is CommunityMemberBottomSheetEvent.MemberKickSuccess -> {
+                Toast.makeText(
+                    context,
+                    "멤버를 삭제했어요.",
+                    Toast.LENGTH_SHORT,
+                ).show()
+
+                onInviteSuccess()
+            }
+
+            is CommunityMemberBottomSheetEvent.ShowToast -> {
+                Toast.makeText(
+                    context,
+                    event.message,
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         }
     }
@@ -356,7 +356,7 @@ private fun CommunityMemberBottomSheetHeader(
  */
 @Composable
 private fun CommunityCurrentMemberContent(
-    members: List<CommunityChallengerUiModel>,
+    members: ImmutableList<CommunityChallengerUiModel>,
     deletingMemberId: Long?,
     onDeleteClick: (CommunityChallengerUiModel) -> Unit,
 ) {
@@ -454,8 +454,8 @@ private fun CommunityCurrentMemberRow(
  */
 @Composable
 private fun CommunityMemberSearchContent(
-    members: List<CommunityChallengerUiModel>,
-    selectedMembers: List<CommunityChallengerUiModel>,
+    members: ImmutableList<CommunityChallengerUiModel>,
+    selectedMembers: ImmutableList<CommunityChallengerUiModel>,
     maxCount: Int,
     isLoadingMore: Boolean,
     hasNext: Boolean,

@@ -1,5 +1,8 @@
 package com.umc.presentation.study.admin.group
 
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+
 /**
  * 관리자 스터디 그룹 목록에서 사용하는 그룹 UI 모델
  *
@@ -39,14 +42,14 @@ data class AdminStudyGroupItemUiModel(
     val leaderProfileImageUrl: String? = null,
 
     /** 현재 그룹에 포함된 스터디원 목록 */
-    val members: List<AdminStudyGroupMemberUiModel> = emptyList(),
+    val members: ImmutableList<AdminStudyGroupMemberUiModel> = persistentListOf(),
 
     /**
      * 현재 그룹 멤버 식별 ID 목록
      *
      * 현재 ManagedStudyGroup API에서는 memberId를 사용합니다.
      */
-    val memberChallengerIds: List<Long> = emptyList(),
+    val memberChallengerIds: ImmutableList<Long> = persistentListOf(),
 
     /** 서버에서 전달받은 원본 생성일 */
     val createdAtRaw: String,

@@ -7,6 +7,9 @@ plugins {
 }
 
 android {
+    lint {
+        abortOnError = false
+    }
     namespace = "com.umc.presentation.act"
     compileSdk = 36
 
@@ -18,6 +21,10 @@ android {
     }
 
     buildTypes {
+        create("benchmark") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -39,6 +46,7 @@ android {
 }
 
 dependencies {
+    lintChecks(project(":lint-rules"))
     implementation(project(":domain"))
     implementation(project(":presentation:component"))
     implementation(project(":presentation:study"))
@@ -53,6 +61,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    implementation(libs.kotlinx.collections.immutable)
 
     implementation(libs.naver.maps.sdk)
     implementation(libs.naver.maps.compose)

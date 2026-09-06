@@ -10,6 +10,7 @@ java {
 }
 
 dependencies {
+    testImplementation(libs.junit)
     // 안드로이드 의존성이 없는 'core' 버전만 가져옵니다.
     implementation(libs.kotlinx.coroutines.core)
 }

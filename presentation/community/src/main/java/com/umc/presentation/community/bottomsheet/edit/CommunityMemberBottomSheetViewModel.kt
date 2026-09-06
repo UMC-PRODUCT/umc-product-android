@@ -13,6 +13,9 @@ import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -163,7 +166,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 .mapNotNull { member ->
                     member.memberId.toLongOrNull()
                 }
-                .toSet()
+                .toImmutableSet()
 
             /**
              * OWNER를 제외한 현재 참여 멤버 목록
@@ -183,6 +186,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                         threadMember = threadMember,
                     )
                 }
+                .toImmutableList()
 
             updateState {
                 copy(
@@ -293,7 +297,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
 
                 isLoading = true,
                 isLoadingMore = false,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = false,
                 errorMessage = null,
@@ -405,7 +409,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                                 }
                         } else {
                             searchedMembers
-                        }
+                        }.toImmutableList()
 
                         copy(
                             searchResults = mergedMembers,
@@ -494,7 +498,8 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 selectedMembers = updatedMembers
                     .distinctBy { selectedMember ->
                         selectedMember.memberId
-                    },
+                    }
+                    .toImmutableList(),
             )
         }
     }
@@ -562,6 +567,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                         .distinctBy { member ->
                             member.memberId
                         }
+                        .toImmutableList()
 
                 updateState {
                     copy(
@@ -575,7 +581,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                         isLoadingMore = false,
                         isUpdatingMembers = false,
 
-                        searchResults = emptyList(),
+                        searchResults = persistentListOf(),
                         nextCursor = null,
                         hasNext = false,
                         errorMessage = null,
@@ -645,11 +651,11 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                         currentMembers =
                             currentMembers.filterNot { currentMember ->
                                 currentMember.memberId == member.memberId
-                            },
+                            }.toImmutableList(),
                         selectedMembers =
                             selectedMembers.filterNot { selectedMember ->
                                 selectedMember.memberId == member.memberId
-                            },
+                            }.toImmutableList(),
                         deletingMemberId = null,
                     )
                 }
@@ -694,7 +700,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 query = "",
                 isSearching = false,
                 selectedMembers = currentMembers,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 isLoading = false,
                 isLoadingMore = false,
                 nextCursor = null,

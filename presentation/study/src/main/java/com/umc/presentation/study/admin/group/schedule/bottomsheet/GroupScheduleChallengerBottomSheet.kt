@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -65,7 +66,7 @@ import com.umc.component.theme.red500
 @Composable
 fun GroupScheduleChallengerBottomSheet(
     viewModel: GroupScheduleChallengerViewModel = hiltViewModel(),
-    preSelected: List<GroupScheduleChallengerUiModel>,
+    preSelected: ImmutableList<GroupScheduleChallengerUiModel>,
     onDismissRequest: () -> Unit,
     onConfirm: (
         List<GroupScheduleChallengerUiModel>,
@@ -303,7 +304,7 @@ fun GroupScheduleEmptyChallengerContent() {
  */
 @Composable
 fun GroupScheduleSelectedChallengerList(
-    challengers: List<GroupScheduleChallengerUiModel>,
+    challengers: ImmutableList<GroupScheduleChallengerUiModel>,
     onRemoveClick: (
         GroupScheduleChallengerUiModel
     ) -> Unit,
@@ -399,8 +400,8 @@ fun GroupScheduleAddedChallengerRow(
  */
 @Composable
 fun GroupScheduleSearchChallengerList(
-    searchResults: List<GroupScheduleChallengerUiModel>,
-    selectedChallengers: List<GroupScheduleChallengerUiModel>,
+    searchResults: ImmutableList<GroupScheduleChallengerUiModel>,
+    selectedChallengers: ImmutableList<GroupScheduleChallengerUiModel>,
     isLoading: Boolean,
     hasNext: Boolean,
     onToggleClick: (

@@ -25,6 +25,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "UMC product"
 include(":app")
+include(":lint-rules")
+include(":benchmark")
 include(":data")
 include(":domain")
 include(":presentation")

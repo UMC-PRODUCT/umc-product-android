@@ -15,6 +15,12 @@ import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.GetNoticeListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -58,7 +64,7 @@ class NoticeViewModel @Inject constructor(
     /** 읽은 공지 ID를 dataStore에서 구독해 상태에 반영 (읽지 않은 공지 빨간 점 표시용) */
     private fun collectReadNoticeIds() = viewModelScope.launch {
         appDataStoreRepository.getReadNoticeIds().collect { readIds ->
-            updateState { copy(readNoticeIds = readIds) }
+            updateState { copy(readNoticeIds = readIds.toImmutableSet()) }
         }
     }
 
@@ -81,8 +87,8 @@ class NoticeViewModel @Inject constructor(
             updateWritePermission(userInfo)
             updateState {
                 copy(
-                    dropdownList = dropdownList,
-                    chipList = createFilterChips(userInfo),
+                    dropdownList = dropdownList.toImmutableList(),
+                    chipList = createFilterChips(userInfo).toImmutableList(),
                 )
             }
             refreshNoticeList()
@@ -194,7 +200,7 @@ class NoticeViewModel @Inject constructor(
             copy(
                 chipList = chipList.map { chip ->
                     chip.copy(isClicked = chip.text == clickedItem.text)
-                },
+                }.toImmutableList(),
                 selectedChipText = clickedItem.text,
                 selectedPart = null,
             )
@@ -214,7 +220,7 @@ class NoticeViewModel @Inject constructor(
                     } else {
                         chip.copy(isClicked = false)
                     }
-                },
+                }.toImmutableList(),
             )
         }
         refreshNoticeList()
@@ -232,7 +238,7 @@ class NoticeViewModel @Inject constructor(
             )
         }
         cachedUserInfo?.let { userInfo ->
-            updateState { copy(chipList = createFilterChips(userInfo)) }
+            updateState { copy(chipList = createFilterChips(userInfo).toImmutableList()) }
         }
         refreshNoticeList()
     }
@@ -330,7 +336,11 @@ class NoticeViewModel @Inject constructor(
             successCallback = { noticeSearch ->
                 updateState {
                     copy(
-                        noticeList = if (isRefresh) noticeSearch.content else noticeList + noticeSearch.content,
+                        noticeList = if (isRefresh) {
+                            noticeSearch.content.toImmutableList()
+                        } else {
+                            (noticeList + noticeSearch.content).toImmutableList()
+                        },
                         currentPage = pageToFetch + 1,
                         isPageLoading = false,
                         isRefreshing = false,
@@ -408,11 +418,11 @@ data class NoticeUiState(
     val isShowDropDown: Boolean = false,
     val nowTitle: String = "",
     val selectedGisu: Long = 0,
-    val dropdownList: List<GisuItem> = emptyList(),
-    val chipList: List<NoticeChipState> = emptyList(),
+    val dropdownList: ImmutableList<GisuItem> = persistentListOf(),
+    val chipList: ImmutableList<NoticeChipState> = persistentListOf(),
     val selectedChipText: String = AppStrings.ALL,
     val selectedPart: UserPart? = null,
-    val noticeList: List<NoticeSummary> = emptyList(),
+    val noticeList: ImmutableList<NoticeSummary> = persistentListOf(),
     val currentPage: Int = 0,
     val isPageLoading: Boolean = false,
     /** 당겨서 새로고침 인디케이터 표시 여부 */
@@ -421,7 +431,7 @@ data class NoticeUiState(
     val errorMessage: String? = null,
     val isLastPage: Boolean = false,
     val canWriteNotice: Boolean = false,
-    val readNoticeIds: Set<Long> = emptySet(),
+    val readNoticeIds: ImmutableSet<Long> = persistentSetOf(),
     val currentNoticeTab: String = NOTICE_TAB_CHALLENGER,
 ) : UiState
 

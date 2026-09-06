@@ -7,6 +7,6 @@ data class CategoryItem(
     val name : String,
     val unselectedIcon: Int? = null,
     val selectedIcon: Int? = null,
-    var isChecked : Boolean = false
+    val isChecked : Boolean = false
 )
 

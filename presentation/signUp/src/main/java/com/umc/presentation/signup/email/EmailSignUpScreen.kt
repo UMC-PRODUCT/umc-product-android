@@ -60,6 +60,7 @@ import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.domain.model.enums.EmailVerifyType
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun EmailSignUpRoute(
@@ -71,18 +72,16 @@ fun EmailSignUpRoute(
 
     var toastData by remember { mutableStateOf<UToastData?>(null) }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is EmailSignUpEvent.MoveToNextEvent ->
-                    navigateToNext(event.emailVerificationToken, event.rawPassword)
-                is EmailSignUpEvent.ShowVerifyToast ->
-                    toastData = UToastData(AppStrings.SIGN_UP_CODE_SENT_TOAST, UToastState.CHECK)
-                is EmailSignUpEvent.ShowVerifyCompleteToast ->
-                    toastData = UToastData(AppStrings.SIGN_UP_EMAIL_VERIFY_COMPLETE, UToastState.CHECK)
-                is EmailSignUpEvent.ShowErrorToast ->
-                    toastData = UToastData(event.message, UToastState.ERROR)
-            }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is EmailSignUpEvent.MoveToNextEvent ->
+                navigateToNext(event.emailVerificationToken, event.rawPassword)
+            is EmailSignUpEvent.ShowVerifyToast ->
+                toastData = UToastData(AppStrings.SIGN_UP_CODE_SENT_TOAST, UToastState.CHECK)
+            is EmailSignUpEvent.ShowVerifyCompleteToast ->
+                toastData = UToastData(AppStrings.SIGN_UP_EMAIL_VERIFY_COMPLETE, UToastState.CHECK)
+            is EmailSignUpEvent.ShowErrorToast ->
+                toastData = UToastData(event.message, UToastState.ERROR)
         }
     }
 

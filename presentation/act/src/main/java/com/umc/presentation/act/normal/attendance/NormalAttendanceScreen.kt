@@ -98,7 +98,10 @@ import com.umc.component.theme.yellow700
 import com.umc.component.theme.yellow900
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun NormalAttendanceRoute(
@@ -138,12 +141,10 @@ fun NormalAttendanceRoute(
         if (isActive) viewModel.refresh()
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is NormalAttendanceEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is NormalAttendanceEvent.ShowToast -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -251,7 +252,7 @@ fun NormalAttendanceScreen(
 @Composable
 private fun AvailableSession(
     isEmpty: Boolean,
-    sessions: List<NormalAvailableSessionUi>,
+    sessions: ImmutableList<NormalAvailableSessionUi>,
     expandedSessionId: Long?,
     onExpandToggle: (Long) -> Unit,
     onAttendanceClick: (NormalAvailableSessionUi) -> Unit,
@@ -290,7 +291,7 @@ private fun AvailableSession(
 @Composable
 private fun MyAttendance(
     isEmpty: Boolean,
-    sessions: List<NormalHistorySessionUi>
+    sessions: ImmutableList<NormalHistorySessionUi>
 ) {
     Column {
         Text(
@@ -944,7 +945,7 @@ fun EmptyComponent(
     }
 }
 
-private fun sampleAvailableSessions(): List<NormalAvailableSessionUi> = listOf(
+private fun sampleAvailableSessions(): ImmutableList<NormalAvailableSessionUi> = persistentListOf(
     NormalAvailableSessionUi(
         id = 1L,
         sheetId = 1L,
@@ -980,7 +981,7 @@ private fun sampleAvailableSessions(): List<NormalAvailableSessionUi> = listOf(
     )
 )
 
-private fun sampleHistorySessions(): List<NormalHistorySessionUi> = listOf(
+private fun sampleHistorySessions(): ImmutableList<NormalHistorySessionUi> = persistentListOf(
     NormalHistorySessionUi(
         id = 1L,
         title = "정기 세션",

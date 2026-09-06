@@ -63,12 +63,15 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.domain.model.act.check.AdminPendingUser
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun PendingListRoute(
     scheduleId: Long = 0L,
-    initialUsers: List<AdminPendingUser> = emptyList(),
+    initialUsers: ImmutableList<AdminPendingUser> = persistentListOf(),
     viewModel: PendingListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -78,15 +81,13 @@ fun PendingListRoute(
         viewModel.getPendingUsers(scheduleId, initialUsers)
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            val message = when (event) {
-                PendingListEvent.ApproveSuccess -> AppStrings.ADMIN_APPROVE_SUCCESS
-                PendingListEvent.RejectSuccess -> AppStrings.ADMIN_REJECT_SUCCESS
-                is PendingListEvent.ShowToast -> event.message
-            }
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        val message = when (event) {
+            PendingListEvent.ApproveSuccess -> AppStrings.ADMIN_APPROVE_SUCCESS
+            PendingListEvent.RejectSuccess -> AppStrings.ADMIN_REJECT_SUCCESS
+            is PendingListEvent.ShowToast -> event.message
         }
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
     PendingListScreen(
@@ -100,7 +101,7 @@ fun PendingListRoute(
 
 @Composable
 fun PendingListScreen(
-    users: List<AdminPendingUser>,
+    users: ImmutableList<AdminPendingUser>,
     onSelectApproveClick: () -> Unit = {},
     onApproveSelectedClick: (List<Long>) -> Unit = {},
     onReasonClick: (AdminPendingUser) -> Unit = {},
@@ -381,7 +382,7 @@ private fun ActionIcon(
     }
 }
 
-private fun sampleList(): List<AdminPendingUser> = listOf(
+private fun sampleList(): ImmutableList<AdminPendingUser> = persistentListOf(
     AdminPendingUser(
         id = 1L,
         name = "홍길동",

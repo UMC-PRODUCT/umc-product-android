@@ -21,6 +21,9 @@ import com.umc.domain.usecase.member.DeleteUserUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -115,7 +118,7 @@ class MypageViewModel @Inject constructor(
                 successCallback = { myOAuth ->
                     val platforms = myOAuth.map { LoginType.valueOf(it.provider) }
                     updateState {
-                        copy(linkedPlatforms = platforms)
+                        copy(linkedPlatforms = platforms.toImmutableList())
                     }
 
                 },
@@ -331,7 +334,7 @@ class MypageViewModel @Inject constructor(
 data class MypageUiState(
     // 현재 카카오 구글 로그인 2개로 비교하니 카카오를 기준으로 view 세팅
     val userInfo: UserInfo = UserInfo(),
-    val linkedPlatforms: List<LoginType> = emptyList(),
+    val linkedPlatforms: ImmutableList<LoginType> = persistentListOf(),
 
     // 현재 직책
     val myRecentCarrer : String = "",

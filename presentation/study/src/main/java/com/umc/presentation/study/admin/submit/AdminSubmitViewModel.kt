@@ -13,6 +13,7 @@ import com.umc.domain.usecase.curriculum.CreateWeeklyBestWorkbookUseCase
 import com.umc.domain.usecase.curriculum.UpdateWeeklyBestWorkbookUseCase
 import com.umc.domain.usecase.curriculum.DeleteWeeklyBestWorkbookUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -388,7 +389,7 @@ class AdminSubmitViewModel @Inject constructor(
 
                     updateState {
                         copy(
-                            availableWeeks = weeks,
+                            availableWeeks = weeks.toImmutableList(),
                             selectedWeek = when {
                                 weeks.isEmpty() -> 1
                                 selectedWeek in weeks -> selectedWeek
@@ -481,21 +482,23 @@ class AdminSubmitViewModel @Inject constructor(
 
                     updateState {
                         val updatedGroups = if (studyGroupId == null) {
-                            listOf(
-                                AdminSubmitGroupUiModel(
-                                    id = null,
-                                    name = "전체 그룹",
-                                )
-                            ) + groups
+                            (
+                                listOf(
+                                    AdminSubmitGroupUiModel(
+                                        id = null,
+                                        name = "전체 그룹",
+                                    )
+                                ) + groups
+                            ).toImmutableList()
                         } else {
                             availableGroups
                         }
 
                         copy(
                             items = if (append) {
-                                items + newItems
+                                (items + newItems).toImmutableList()
                             } else {
-                                newItems
+                                newItems.toImmutableList()
                             },
                             availableGroups = updatedGroups,
                             isLoading = false,
@@ -566,7 +569,7 @@ class AdminSubmitViewModel @Inject constructor(
                                 } else {
                                     item
                                 }
-                            }
+                            }.toImmutableList()
                         )
                     }
                 }
@@ -654,7 +657,7 @@ class AdminSubmitViewModel @Inject constructor(
                                 } else {
                                     item
                                 }
-                            },
+                            }.toImmutableList(),
                             bottomSheetItem = null,
                             feedback = "",
                             pendingStatus = null,
@@ -739,7 +742,7 @@ class AdminSubmitViewModel @Inject constructor(
                                 } else {
                                     item
                                 }
-                            },
+                            }.toImmutableList(),
                             bottomSheetItem =
                                 bottomSheetItem?.copy(
                                     bestComment = comment,
@@ -818,7 +821,7 @@ class AdminSubmitViewModel @Inject constructor(
                                 } else {
                                     item
                                 }
-                            },
+                            }.toImmutableList(),
                             bottomSheetItem =
                                 bottomSheetItem?.copy(
                                     bestComment = comment,
@@ -888,7 +891,7 @@ class AdminSubmitViewModel @Inject constructor(
                                 } else {
                                     item
                                 }
-                            },
+                            }.toImmutableList(),
                             bottomSheetItem =
                                 bottomSheetItem?.copy(
                                     weeklyBestWorkbookId = null,

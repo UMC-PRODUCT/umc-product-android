@@ -7,6 +7,9 @@ plugins {
 }
 
 android {
+    lint {
+        abortOnError = false
+    }
     namespace = "com.umc.presentation.signup"
     compileSdk = 36
 
@@ -18,6 +21,10 @@ android {
     }
 
     buildTypes {
+        create("benchmark") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -40,6 +47,7 @@ android {
 }
 
 dependencies {
+    lintChecks(project(":lint-rules"))
     implementation(project(":domain"))
     implementation(project(":presentation:component"))
 

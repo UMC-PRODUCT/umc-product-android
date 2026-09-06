@@ -18,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.theme.grey000
 import com.umc.component.R
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun SplashRoute(
@@ -26,13 +27,11 @@ fun SplashRoute(
     navigateToMain: () -> Unit = {},
     navigateToInputCode: () -> Unit = {},
 ) {
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest {
-            when(it) {
-                SplashEvent.MoveToLoginEvent -> navigateToLogin()
-                SplashEvent.MoveToMainEvent -> navigateToMain()
-                SplashEvent.MoveToInputCodeEvent -> navigateToInputCode()
-            }
+    CollectUiEvents(viewModel.uiEvent) { it ->
+        when(it) {
+            SplashEvent.MoveToLoginEvent -> navigateToLogin()
+            SplashEvent.MoveToMainEvent -> navigateToMain()
+            SplashEvent.MoveToInputCodeEvent -> navigateToInputCode()
         }
     }
 

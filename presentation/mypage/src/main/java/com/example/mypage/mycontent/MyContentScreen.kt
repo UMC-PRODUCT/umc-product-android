@@ -39,6 +39,7 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey800
 import com.umc.component.theme.indigo500
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 
 
@@ -58,17 +59,15 @@ fun MyContentRoute(
     val context = LocalContext.current
 
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is MyContentEvent.ClickBackPressed -> {
-                    /**TODO 차후 activity단으로 */
-                }
-                is MyContentEvent.ShowErrorToast -> {
-                    //Toast.makeText(context, event.errorMessage, Toast.LENGTH_SHORT).show()
-                }
-                else -> {}
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is MyContentEvent.ClickBackPressed -> {
+                /**TODO 차후 activity단으로 */
             }
+            is MyContentEvent.ShowErrorToast -> {
+                //Toast.makeText(context, event.errorMessage, Toast.LENGTH_SHORT).show()
+            }
+            else -> {}
         }
     }
 
