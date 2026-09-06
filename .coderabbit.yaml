@@ -1,107 +1,144 @@
 # ---------------------------------------------------------------- #
-# AI 기본 설정 (언어 및 페르소나)
+# UMC Product Android — CodeRabbit 설정
+#
+# 이 레포는 Kotlin 단일 Android 앱(멀티모듈)이다.
+# 이전 설정은 다른 팀의 웹 모노레포(frontend/**, backend/**)에서 복사돼 와서
+# 매칭되는 경로가 하나도 없었고, auto_review 도 꺼져 있어 리뷰가 전혀 돌지 않았다.
 # ---------------------------------------------------------------- #
 
-# AI가 응답할 때 사용할 기본 언어를 설정합니다. (예: ko-KR, en-US)
 language: ko-KR
-# AI의 페르소나와 응답 톤앤매너를 상세하게 지시합니다. 최대 200자까지 작성할 수 있습니다.
+
+# AI 페르소나와 톤. 짧게 유지한다(길면 뒷부분이 잘린다).
 tone_instructions: >
-  당신은 '우아한테크코스'의 코치입니다. 목표는 우테코 크루들이 코드 품질을 개선하며 성장하도록 돕는 것입니다.
-  1. 피드백은 명확하고 구체적이어야 하며, 문제의 원인과 개선 방법을 반드시 제시하세요.
-  2. 리뷰는 교육적이어야 하며, 관련 개념이나 공식 문서를 함께 추천하세요.
-  3. 비판보다는 개선 중심의 제안을 우선하세요.
-  4. 칭찬은 짧고 위트 있게 작성하세요.
+  UMC Product Android 팀의 시니어 Android 리뷰어입니다.
+  근거를 코드와 함께 제시하고, 대안을 제안 형태로 남기세요.
+  사소한 취향 지적은 생략하고 동작·설계에 영향을 주는 것만 지적하세요.
 
 # ---------------------------------------------------------------- #
 # 코드 리뷰 기능 세부 설정
 # ---------------------------------------------------------------- #
 reviews:
-  # 리뷰의 전반적인 스타일을 설정합니다. 'chill'은 비교적 덜 엄격하고 부드러운 톤을 의미합니다.
+  # 'chill' 은 덜 엄격, 'assertive' 는 더 깐깐하게 지적한다.
   profile: chill
-  # CodeRabbit의 코멘트를 모두 `resolve`하면, 자동으로 Approve를 하는 기능입니다.
-  # PR은 2명의 리뷰어의 Approve 후 가능하다는 팀 컨벤션이 있기 때문에 false로 설정했습니다.
+  # 코멘트를 모두 resolve 하면 자동 Approve. 사람 리뷰어 승인 절차를 유지하려고 끈다.
   request_changes_workflow: false
-  # PR의 전체적인 변경 사항에 대한 고수준의 요약(summary)을 생성할지 여부입니다.
   high_level_summary: true
-  # 변경된 각 파일에 대한 요약을 생성할지 여부입니다. 
-  # PR이 너무 길어지는 것을 방지하기 위해 비활성화했습니다.
+  # PR 이 길어지는 것을 막기 위해 파일별 요약과 시퀀스 다이어그램은 끈다.
   changed_files_summary: false
-  # 코드의 실행 흐름을 보여주는 시퀀스 다이어그램을 생성할지 여부입니다.
-  # PR이 너무 길어지는 것을 방지하기 위해 비활성화했습니다.
   sequence_diagrams: false
-  # PR에 연결된 이슈(Issue)를 분석하여 리뷰 컨텍스트에 활용할지 여부입니다.
   assess_linked_issues: true
-  # 연관된 다른 이슈를 찾아서 링크할지 여부입니다.
   related_issues: false
-  # 연관된 다른 PR을 찾아서 링크할지 여부입니다.
   related_prs: false
-  # PR에 적절한 레이블(e.g., 'bug', 'enhancement')을 제안할지 여부입니다.
   suggested_labels: false
-  # 제안된 레이블을 자동으로 PR에 적용할지 여부입니다.
   auto_apply_labels: false
-  # 이 PR을 리뷰할 만한 적절한 동료 리뷰어를 추천할지 여부입니다.
   suggested_reviewers: false
-  # 추천된 리뷰어를 자동으로 할당할지 여부입니다.
   auto_assign_reviewers: false
-  # 리뷰 요약에 위트 있는 시(poem)를 포함할지 여부입니다.
-  # 몇몇 팀원들의 반대가 있었지만, CodeRabbit이 써주는 시가 귀여워서 개인 취향으로 강력 주장해서 활성화시켰습니다.
   poem: true
-  # 특정 파일 경로에 따라 다른 리뷰 지침을 적용합니다.
-  # 모노레포를 사용하는 프로젝트였기 때문에 각 분야마다 다른 인스트럭션을 작성했습니다.
-  path_instructions:
-    - path: frontend/**
-      # 최대 2,000자까지 작성 가능합니다.
-      instructions: |
-        1. React(Typescript) 팀 코드 컨벤션(docs/fe-code-convention.md) 및 공식 스타일 가이드(Biome, React/TS best practices)를 우선적으로 반영하여, 가독성·안정성(Null/에러 처리)·테스트/유지보수 용이성·브라우저/접근성 이슈 등을 검토해주세요.
-        2. 최신 React/TypeScript 트렌드, JSDoc·Storybook 등 문서화, 팀 스타일 통일성도 함께 확인해 주세요.
-        3. 각 리뷰 포인트별로 문제점과 대안, 장단점을 논리적으로 제시하고, 필요한 경우 예시 코드도 추가해 주세요.
-        4. 리뷰가 너무 많아서 피로감을 줄 수 있으니, 꼭 필요한 부분에 집중해주고, 나머지는 캡션으로 설명해주세요.
-        5. 리뷰 남겨주는 부분은 해당 라인 범위의 코멘트에 작성해주세요.
-    - path: backend/**
-      instructions: |
-        1. 팀 및 공식 컨벤션(docs/be-code-convention.md), 가독성, 예외처리, 테스트/확장/유지보수성, 모듈화, API/DB/보안 설계 기준을 기반으로 리뷰해주세요.
-        2. 객체지향, 최신 트렌드, 불필요한 로직, 클린코드, 리팩토링, 서비스/도메인 설계, 공통 예외 처리, 확장성도 함께 확인해주세요.
-        3. 각 리뷰 포인트별로 문제점과 대안, 장단점을 논리적으로 제시하고, 필요한 경우 예시 코드도 추가해 주세요.
-        4. 리뷰가 너무 많아서 피로감을 줄 수 있으니, 꼭 필요한 부분에 집중해주고, 나머지는 캡션으로 설명해주세요.
-        5. 리뷰 남겨주는 부분은 해당 라인 범위의 코멘트에 작성해주세요.
-        6. 미작성한 테스트 코드 케이스가 있다면, 어떤 테스트가 필요한지 제안해주세요. (예: API 테스트, Service 단위 테스트, Repository 단위 테스트)
 
   # ---------------------------------------------------------------- #
-  # 자동 리뷰 트리거 설정
+  # 전 경로 공통 지침
+  # ---------------------------------------------------------------- #
+  path_instructions:
+    - path: "**/*.kt"
+      instructions: |
+        [이 프로젝트에서 이미 자동 검사되는 항목 — 리뷰에서 지적하지 말 것]
+        아래 세 가지는 :lint-rules 커스텀 Lint 가 CI 에서 잡고, 위반 시 파이프라인이 막힌다.
+        중복 지적은 순수 소음이므로 언급하지 않는다.
+          - OneShotEventSharedFlow: 단발성 이벤트를 StateFlow/SharedFlow(replay>0)로 노출
+          - LifecycleUnawareEventCollect: 수명주기를 고려하지 않은 이벤트 수집
+          - BlockingCallInRequestPath: 요청 경로에서 runBlocking 사용
+        ktlint/Android Lint 가 잡는 포매팅·네이밍 규칙도 지적하지 않는다.
+
+        [리뷰에서 봐야 할 것]
+        1. 동작이 바뀌는 결함을 우선한다. 널 처리, 예외 경로, 경계값, 동시성.
+        2. 모듈 의존 방향 위반. domain 은 어디에도 의존하지 않는다.
+           presentation 의 잎 모듈끼리 직접 의존하면 안 된다(공통은 presentation:component).
+        3. 근거 없는 추측은 쓰지 않는다. 확신이 없으면 질문으로 남긴다.
+        4. 지적은 해당 라인 범위 코멘트로 남기고, 대안 코드를 함께 제시한다.
+
+    - path: "data/**"
+      instructions: |
+        [R8 난독화와 직결되는 규칙 — 가장 중요]
+        release 빌드는 R8 이 켜져 있고, proguard-rules.pro 는 아래 패키지만 keep 한다.
+          com.umc.data.request.**, com.umc.data.response.**, com.umc.domain.model.**
+        이 앱의 DTO 는 @SerializedName 이 없는 것이 많아 "필드 이름이 곧 JSON 키"다.
+        따라서 위 패키지 "밖"에 새 DTO 를 만들면 디버그에서는 멀쩡하고
+        릴리스에서만 필드가 난독화되어 파싱 결과가 조용히 null 이 된다.
+        새 요청/응답 모델이 저 패키지 밖에 생기면 반드시 지적할 것.
+
+        [그 외]
+        1. Retrofit 인터페이스의 suspend 시그니처, 에러 응답 처리, ApiResponse<T> 래퍼 사용 일관성.
+        2. Gson 과 kotlinx.serialization 이 혼용된다. 한 DTO 안에서 섞이지 않는지 확인한다.
+        3. DataSource -> Repository -> UseCase 경계를 넘는 누수(Retrofit/OkHttp 타입 노출)를 지적한다.
+
+    - path: "domain/**"
+      instructions: |
+        1. 이 모듈은 순수 Kotlin(JVM)이다. Android SDK, Retrofit, Compose 등에 의존하면 안 된다.
+        2. enum 상수 이름은 서버 계약이다. R8 이 이름을 보존하도록 keep 되어 있으므로
+           이름 변경은 서버와의 값 불일치를 의미한다. 변경이 있으면 서버 합의 여부를 물을 것.
+        3. UseCase 는 단일 책임을 유지하고, 비즈니스 규칙이 presentation 으로 새지 않는지 본다.
+
+    - path: "presentation/**"
+      instructions: |
+        1. Compose 안정성: 파라미터로 넘기는 컬렉션은 ImmutableList/ImmutableSet 을 쓴다.
+           List/Set 을 그대로 넘기면 불필요한 리컴포지션이 생긴다.
+        2. 상태는 ViewModel 이 단일 소유한다. Composable 안에서 비즈니스 분기를 만들지 않는다.
+        3. 네비게이션 인자, 뒤로가기, 화면 회전/프로세스 종료 후 복원 경로를 확인한다.
+        4. 잎 모듈(home, notice, study ...)은 서로 의존하지 않는다. 공통은 presentation:component.
+
+    - path: "app/**"
+      instructions: |
+        1. Hilt 모듈의 스코프와 바인딩 중복을 확인한다.
+        2. 네트워크 설정(인터셉터, 토큰 갱신)은 실패·만료 경로를 함께 본다.
+        3. versionCode 와 versionName 은 CI 가 환경변수로 주입한다(VERSION_CODE / VERSION_NAME).
+           build.gradle.kts 에서 이 값을 하드코딩으로 되돌리는 변경은 배포를 깨뜨리므로 지적할 것.
+        4. BASE_URL 은 -PapiEnv 스위치로 결정된다. 서버 주소를 코드에 다시 박으면 지적할 것.
+
+    - path: ".github/**"
+      instructions: |
+        1. 배포 파이프라인이다. 시크릿이 로그로 새지 않는지 먼저 본다.
+        2. 셸 스텝은 set -euo pipefail 전제다. 미정의 변수 참조와
+           `[ ... ] && cmd` 형태(마지막 명령의 실패가 스텝 전체를 죽인다)를 지적한다.
+        3. GitHub Actions 표현식은 산술 연산자를 지원하지 않는다. ${{ a + b }} 형태를 지적한다.
+        4. 브랜치별 배포 규칙을 바꾸는 변경은 영향 범위를 명시적으로 확인한다.
+           main 푸시 = 프로덕션 출시, develop-compose 푸시 = 내부 테스트 트랙.
+
+    - path: "**/build.gradle.kts"
+      instructions: |
+        1. release 의 isMinifyEnabled 를 끄는 변경은 Play 앱 최적화 점수와
+           크래시 난독화 해제(mapping.txt)에 직접 영향을 준다. 반드시 근거를 묻는다.
+        2. 의존성 추가 시 libs.versions.toml 을 거치는지, 모듈 의존 방향을 지키는지 확인한다.
+        3. signingConfig 와 시크릿 관련 변경은 특히 주의 깊게 본다.
+
+  # ---------------------------------------------------------------- #
+  # 자동 리뷰 트리거
   # ---------------------------------------------------------------- #
   auto_review:
-    # PR이 생성됐을 때
-    # `@coderabbitai review`를 코멘트에 입력하면 리뷰를 시작합니다.
-    enabled: false
-    # 이미 리뷰가 진행된 PR에 새로운 커밋이 추가될 때, 변경된 부분에 대해서만 자동으로 리뷰를 진행할지 여부입니다.
-    auto_incremental_review: false
+    # PR 이 열리면 자동으로 리뷰한다.
+    enabled: true
+    # 리뷰된 PR 에 새 커밋이 붙으면 변경분만 증분 리뷰한다.
+    auto_incremental_review: true
 
 # ---------------------------------------------------------------- #
-# 채팅 기능 설정
+# 채팅 기능
 # ---------------------------------------------------------------- #
 chat:
-  # 사용자가 @coderabbitai 태그를 지정하지 않아도 자동으로 답글을 달 수 있도록 설정합니다.
   auto_reply: true
 
 # ---------------------------------------------------------------- #
-# CodeRabbit의 지식 기반(Knowledge Base) 설정
+# 지식 기반
 # ---------------------------------------------------------------- #
 knowledge_base:
-  # 웹 검색을 통해 최신 정보나 문서를 참조할 수 있도록 허용할지 여부입니다.
   web_search:
     enabled: true
-  # 레포지토리 내의 특정 파일을 AI의 코드 스타일 가이드라인으로 사용하도록 설정합니다.
+  # 이 레포에는 별도의 컨벤션 문서가 없다. 규칙은 위 path_instructions 에 직접 적었다.
+  # 존재하지 않는 파일을 가리키면 설정이 통째로 무효가 되므로 끈다.
   code_guidelines:
-    enabled: true
-    filePatterns:
-      - docs/be-code-convention.md
-      - docs/fe-code-convention.md
-  # CodeRabbit이 대화나 리뷰를 통해 학습한 내용을 어디에 저장하고 참조할지 범위를 설정합니다. 'local'은 현재 레포지토리에 한정됨을 의미합니다.
+    enabled: false
+  # 'local' = 이 레포에 한정. 다른 레포로 학습이 넘어가지 않는다.
   learnings:
     scope: local
-  # 이슈 정보를 참조할 범위를 설정합니다.
   issues:
     scope: local
-  # 풀 리퀘스트 정보를 참조할 범위를 설정합니다.
   pull_requests:
     scope: local
