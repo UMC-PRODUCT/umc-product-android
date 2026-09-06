@@ -35,6 +35,7 @@ jobs:
     outputs:
       api-env: ${{ steps.resolve.outputs.api-env }}
       track: ${{ steps.resolve.outputs.track }}
+      version-code: ${{ steps.resolve.outputs.version-code }}
 
     steps:
       - name: 체크아웃
@@ -52,8 +53,12 @@ jobs:
             *)               API_ENV=dev  ; TRACK=internal   ;;
           esac
           if [ -n "$MANUAL_TRACK" ]; then TRACK="$MANUAL_TRACK"; fi
-          echo "api-env=$API_ENV" >> "$GITHUB_OUTPUT"
-          echo "track=$TRACK"     >> "$GITHUB_OUTPUT"
+          # Play 는 동일 versionCode 재업로드를 거부한다. 실행 횟수로 단조 증가시킨다.
+          # (Play 에 올라가 있는 현재 최신 versionCode 가 21)
+          VERSION_CODE=$(( 21 + GITHUB_RUN_NUMBER ))
+          echo "api-env=$API_ENV"           >> "$GITHUB_OUTPUT"
+          echo "track=$TRACK"               >> "$GITHUB_OUTPUT"
+          echo "version-code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
           echo "### 🎯 \`$BRANCH\` → API \`$API_ENV\` · 트랙 \`$TRACK\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: JDK 17 설치
@@ -213,9 +218,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          # Play 는 동일 versionCode 재업로드를 거부하므로 실행 횟수로 단조 증가시킨다.
-          # (현재 Play 최신 versionCode 는 21)
-          VERSION_CODE: ${{ 21 + github.run_number }}
+          VERSION_CODE: ${{ needs.verify.outputs.version-code }}
         run: |
           ./gradlew :app:bundleRelease \
             -PapiEnv=${{ needs.verify.outputs.api-env }} \
@@ -251,6 +254,6 @@ jobs:
             echo "| 브랜치 | \`${{ github.ref_name }}\` |"
             echo "| API 환경 | \`${{ needs.verify.outputs.api-env }}\` |"
             echo "| 트랙 | \`${{ needs.verify.outputs.track }}\` |"
-            echo "| versionCode | \`${{ 21 + github.run_number }}\` |"
+            echo "| versionCode | \`${{ needs.verify.outputs.version-code }}\` |"
             echo "| 커밋 | \`${{ github.sha }}\` |"
           } >> "$GITHUB_STEP_SUMMARY"
