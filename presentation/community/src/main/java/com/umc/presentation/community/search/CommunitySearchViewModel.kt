@@ -12,6 +12,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -106,7 +109,7 @@ class CommunitySearchViewModel @Inject constructor(
             it.copy(
                 query = query,
                 hasSearched = false,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 errorMessage = null,
             )
         }
@@ -157,7 +160,7 @@ class CommunitySearchViewModel @Inject constructor(
                     query = query,
                     isLoading = true,
                     hasSearched = true,
-                    searchResults = emptyList(),
+                    searchResults = persistentListOf(),
                     errorMessage = null,
                 )
             }
@@ -191,7 +194,7 @@ class CommunitySearchViewModel @Inject constructor(
                 _state.update { currentState ->
                     currentState.copy(
                         query = query,
-                        searchResults = searchResults,
+                        searchResults = searchResults.toImmutableList(),
                         recentSearches = addRecentSearch(
                             recentSearches =
                                 currentState.recentSearches,
@@ -205,7 +208,7 @@ class CommunitySearchViewModel @Inject constructor(
             }.onFailure { throwable ->
                 _state.update {
                     it.copy(
-                        searchResults = emptyList(),
+                        searchResults = persistentListOf(),
                         hasSearched = true,
                         isLoading = false,
                         errorMessage = throwable.message
@@ -220,7 +223,7 @@ class CommunitySearchViewModel @Inject constructor(
         _state.update {
             it.copy(
                 query = "",
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 hasSearched = false,
                 isLoading = false,
                 errorMessage = null,
@@ -236,7 +239,7 @@ class CommunitySearchViewModel @Inject constructor(
                 recentSearches =
                     currentState.recentSearches.filterNot {
                         it == query
-                    },
+                    }.toImmutableList(),
             )
         }
     }
@@ -244,15 +247,15 @@ class CommunitySearchViewModel @Inject constructor(
     private fun clearAllRecentSearches() {
         _state.update {
             it.copy(
-                recentSearches = emptyList(),
+                recentSearches = persistentListOf(),
             )
         }
     }
 
     private fun addRecentSearch(
-        recentSearches: List<String>,
+        recentSearches: ImmutableList<String>,
         query: String,
-    ): List<String> {
+    ): ImmutableList<String> {
         return buildList {
             add(query)
 
@@ -261,7 +264,7 @@ class CommunitySearchViewModel @Inject constructor(
                     recentSearch == query
                 }
             )
-        }.take(MAX_RECENT_SEARCH_COUNT)
+        }.take(MAX_RECENT_SEARCH_COUNT).toImmutableList()
     }
 
     private fun sendEvent(

@@ -50,6 +50,9 @@ import com.umc.component.theme.indigo500
 import com.umc.component.theme.red500
 import com.umc.domain.model.notice.ChallengerReadInfo
 import com.umc.domain.model.notice.NoticeReadStatistics
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import androidx.compose.material3.Icon
 import com.umc.component.theme.grey600
 
@@ -61,8 +64,8 @@ import com.umc.component.theme.grey600
 @Composable
 fun NoticeReadStatusSheetContent(
     statistics: NoticeReadStatistics?,
-    unreadList: List<ChallengerReadInfo>,
-    readList: List<ChallengerReadInfo>,
+    unreadList: ImmutableList<ChallengerReadInfo>,
+    readList: ImmutableList<ChallengerReadInfo>,
     isReminderSent: Boolean,
     isSendingReminder: Boolean,
     onLoadMore: (isRead: Boolean) -> Unit = {},
@@ -316,8 +319,8 @@ private fun ReadStatusSheetPreview() {
         statistics = NoticeReadStatistics(totalCount = 15, readCount = 10, unreadCount = 5, readRate = 66.7),
         unreadList = List(4) {
             ChallengerReadInfo(it.toLong(), "홍길동", "", "ANDROID", 1L, "대학교", 1L, "지부이름")
-        },
-        readList = emptyList(),
+        }.toImmutableList(),
+        readList = persistentListOf(),
         isReminderSent = true,
         isSendingReminder = false,
     )

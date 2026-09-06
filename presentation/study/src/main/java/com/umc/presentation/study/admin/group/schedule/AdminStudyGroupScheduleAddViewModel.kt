@@ -16,6 +16,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 
 /**
@@ -164,7 +165,7 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
                 updateState {
                     copy(
                         selectedChallengers =
-                            action.challengers,
+                            action.challengers.toImmutableList(),
                         challengerText =
                             action.summaryText,
                     )
@@ -370,7 +371,7 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
 
                             updateState {
                                 copy(
-                                    weeks = weeks
+                                    weeks = weeks.toImmutableList()
                                 )
                             }
                         }

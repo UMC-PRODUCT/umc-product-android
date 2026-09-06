@@ -84,6 +84,7 @@ import com.umc.domain.model.mypage.NearbyUserInfo
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.model.toUserCard
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -160,26 +161,22 @@ fun MycardRoute(
     }
 
     //Nearby 이벤트 처리 (Toast 메시지 오픈)
-    LaunchedEffect(nearbyViewModel) {
-        nearbyViewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is NearbyEvent.ShowToast -> {
-                    //UToast(event.message, UToastState.NONE)
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
+    CollectUiEvents(nearbyViewModel.uiEvent) { event ->
+        when (event) {
+            is NearbyEvent.ShowToast -> {
+                //UToast(event.message, UToastState.NONE)
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is MycardEvent.NavigateToMypage -> {
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is MycardEvent.NavigateToMypage -> {
 
-                }
-
-                else -> {}
             }
+
+            else -> {}
         }
     }
 

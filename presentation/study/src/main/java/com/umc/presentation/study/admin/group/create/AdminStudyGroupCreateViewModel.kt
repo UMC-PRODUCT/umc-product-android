@@ -7,6 +7,8 @@ import com.umc.domain.model.request.organization.CreateStudyGroupRequest
 import com.umc.domain.usecase.organization.CreateStudyGroupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 
 /**
@@ -341,10 +343,10 @@ class AdminStudyGroupCreateViewModel @Inject constructor(
                 selectedPart = part,
 
                 // 기존 담당 파트장 선택 초기화
-                selectedPartLeaders = emptyList(),
+                selectedPartLeaders = persistentListOf(),
 
                 // 기존 스터디원 선택 초기화
-                selectedMembers = emptyList(),
+                selectedMembers = persistentListOf(),
 
                 // 파트 선택 바텀시트 닫기
                 showPartBottomSheet = false,
@@ -365,7 +367,7 @@ class AdminStudyGroupCreateViewModel @Inject constructor(
     ) {
         updateState {
             copy(
-                selectedPartLeaders = leaders,
+                selectedPartLeaders = leaders.toImmutableList(),
                 showPartLeaderBottomSheet = false,
             )
         }
@@ -384,7 +386,7 @@ class AdminStudyGroupCreateViewModel @Inject constructor(
     ) {
         updateState {
             copy(
-                selectedMembers = members,
+                selectedMembers = members.toImmutableList(),
                 showMemberBottomSheet = false,
             )
         }

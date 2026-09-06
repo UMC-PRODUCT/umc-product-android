@@ -53,6 +53,8 @@ import com.umc.component.theme.green500
 import com.umc.domain.model.enums.RewardType
 import com.umc.presentation.act.admin.challenger.AdminChallengerUiState
 import com.umc.presentation.act.admin.challenger.AdminChallengerViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun RewardPointsRoute(
@@ -72,7 +74,7 @@ fun RewardPointsRoute(
 @Composable
 fun RewardPointsScreen(
     modifier: Modifier = Modifier,
-    rewards: List<RewardPointItem> = defaultRewardItems(),
+    rewards: ImmutableList<RewardPointItem> = defaultRewardItems(),
     uiState: AdminChallengerUiState = AdminChallengerUiState(),
     onSelectReward: (RewardType) -> Unit = {},
     onMemoChange: (String) -> Unit = {},
@@ -170,7 +172,7 @@ private fun DragHeader(
 
 @Composable
 private fun RewardListCard(
-    rewards: List<RewardPointItem>,
+    rewards: ImmutableList<RewardPointItem>,
     selectedRewardType: RewardType?,
     onSelectReward: (RewardType) -> Unit
 ) {
@@ -277,10 +279,10 @@ data class RewardPointItem(
     val type: RewardType,
 )
 
-private fun defaultRewardItems(): List<RewardPointItem> =
+private fun defaultRewardItems(): ImmutableList<RewardPointItem> =
     RewardType.getBonusList().mapIndexed { index, type ->
         RewardPointItem(id = index.toLong(), title = type.label, score = type.score, type = type)
-    }
+    }.toImmutableList()
 
 @Preview(showBackground = false)
 @Composable

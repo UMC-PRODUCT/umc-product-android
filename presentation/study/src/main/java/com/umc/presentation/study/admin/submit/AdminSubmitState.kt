@@ -1,6 +1,8 @@
 package com.umc.presentation.study.admin.submit
 
 import com.umc.component.base.UiState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 관리자 제출 현황의 그룹 필터 UI 모델
@@ -29,11 +31,11 @@ data class AdminSubmitState(
         ),
 
     /** API에서 조회한 제출 현황 주차 목록 */
-    val availableWeeks: List<Int> = emptyList(),
+    val availableWeeks: ImmutableList<Int> = persistentListOf(),
 
     /** 선택 가능한 스터디 그룹 목록 */
-    val availableGroups: List<AdminSubmitGroupUiModel> =
-        listOf(
+    val availableGroups: ImmutableList<AdminSubmitGroupUiModel> =
+        persistentListOf(
             AdminSubmitGroupUiModel(
                 id = null,
                 name = "전체 그룹",
@@ -41,7 +43,7 @@ data class AdminSubmitState(
         ),
 
     /** 현재 조회된 제출 현황 목록 */
-    val items: List<AdminSubmitItemUiModel> = emptyList(),
+    val items: ImmutableList<AdminSubmitItemUiModel> = persistentListOf(),
 
     /** 제출 현황 또는 상세 정보 로딩 여부 */
     val isLoading: Boolean = false,

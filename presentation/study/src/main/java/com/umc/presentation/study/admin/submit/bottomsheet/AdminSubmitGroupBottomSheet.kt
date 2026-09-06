@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
+import kotlinx.collections.immutable.ImmutableList
 import com.umc.component.theme.UmcTypographyTokens.Body
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.grey000
@@ -32,7 +33,7 @@ import com.umc.presentation.study.admin.submit.AdminSubmitGroupUiModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminSubmitGroupBottomSheet(
-    groups: List<AdminSubmitGroupUiModel>,
+    groups: ImmutableList<AdminSubmitGroupUiModel>,
     onSelect: (AdminSubmitGroupUiModel) -> Unit,
     onDismiss: () -> Unit,
 ) {

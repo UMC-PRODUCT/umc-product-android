@@ -12,6 +12,9 @@ class ClassifyCommunityThreadUseCase @Inject constructor(
         description: String,
         onDownloadProgress: (Int) -> Unit = {},
     ): ApiState<String> {
+        // 신호가 뚜렷한 스레드는 규칙으로 확정해 추론 자체를 건너뛴다.
+        // 미지원 기기에서도 동작하고, 같은 입력에 같은 답이 나오며, 대기 시간도 없다.
+        CommunityCategoryRules.classify(title, description)?.let { return ApiState.Success(it) }
 
         val prompt = """
             아래 스레드의 제목과 설명을 보고 가장 적절한 카테고리 하나를 골라주세요.

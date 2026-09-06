@@ -49,6 +49,7 @@ import com.umc.presentation.community.create.CommunityCreateRoute
 import com.umc.presentation.community.edit.CommunityEditRoute
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateRoute
 import com.umc.presentation.study.admin.group.schedule.AdminStudyGroupScheduleRoute
+import com.umc.component.base.CollectUiEvents
 
 private const val COMMUNITY_REFRESH_KEY = "community_refresh"
 private const val NOTICE_REFRESH_KEY = "notice_refresh"
@@ -75,12 +76,10 @@ fun MainNavHost(
     // 세션 만료(재로그인 필요) 전역 관찰 — 어느 화면에서 만료되든 여기 한 곳에서 스플래시로 보낸다.
     // 이전에는 ViewModel별 commonEvent로만 알렸는데 구독자가 앱 전체에 0개라 만료 복구가
     // 동작하지 않았고, 사용자는 앱을 강제 종료하기 전까지 모든 API가 실패하는 상태에 갇혔다.
-    LaunchedEffect(Unit) {
-        SessionExpiryBus.expired.collect {
-            navHostController.navigate(MainDestination.Splash) {
-                popUpTo(0) { inclusive = true }
-                launchSingleTop = true
-            }
+    CollectUiEvents(SessionExpiryBus.expired) { it ->
+        navHostController.navigate(MainDestination.Splash) {
+            popUpTo(0) { inclusive = true }
+            launchSingleTop = true
         }
     }
 

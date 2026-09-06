@@ -1,6 +1,8 @@
 package com.umc.presentation.study.admin.group.create
 
 import com.umc.component.base.UiState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 스터디 그룹 생성 화면의 UI 상태
@@ -44,7 +46,7 @@ data class AdminStudyGroupCreateState(
      * 그룹 생성 API 요청 시 mentorIds로 변환하여 전달합니다.
      */
     val selectedPartLeaders:
-    List<AdminStudyGroupCreateMemberUiModel> = emptyList(),
+    ImmutableList<AdminStudyGroupCreateMemberUiModel> = persistentListOf(),
 
     /**
      * 현재 선택한 스터디원 목록
@@ -52,7 +54,7 @@ data class AdminStudyGroupCreateState(
      * 그룹 생성 API 요청 시 memberIds로 변환하여 전달합니다.
      */
     val selectedMembers:
-    List<AdminStudyGroupCreateMemberUiModel> = emptyList(),
+    ImmutableList<AdminStudyGroupCreateMemberUiModel> = persistentListOf(),
 
     /**
      * 파트 선택 바텀시트 표시 여부

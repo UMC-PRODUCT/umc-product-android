@@ -12,6 +12,7 @@ import com.umc.presentation.community.model.CommunityChallengerUiModel
 import com.umc.domain.model.base.ApiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -283,7 +284,8 @@ class CommunityCreateViewModel @Inject constructor(
                     .distinctBy { challenger ->
                         challenger.memberId
                     }
-                    .take(currentState.maxChallengerCount),
+                    .take(currentState.maxChallengerCount)
+                    .toImmutableList(),
                 showChallengerBottomSheet = false,
             )
         }

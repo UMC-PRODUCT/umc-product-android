@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -60,7 +61,7 @@ import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMember
 @Composable
 fun AdminStudyGroupMemberEditBottomSheet(
     viewModel: AdminStudyGroupMemberEditViewModel = hiltViewModel(),
-    preSelected: List<AdminStudyGroupCreateMemberUiModel>,
+    preSelected: ImmutableList<AdminStudyGroupCreateMemberUiModel>,
     onDismissRequest: () -> Unit,
     onConfirm: (List<AdminStudyGroupCreateMemberUiModel>) -> Unit,
 ) {
@@ -261,7 +262,7 @@ private fun EditMemberHeader(
  */
 @Composable
 private fun EditCurrentMemberContent(
-    members: List<AdminStudyGroupCreateMemberUiModel>,
+    members: ImmutableList<AdminStudyGroupCreateMemberUiModel>,
     onRemoveMember: (AdminStudyGroupCreateMemberUiModel) -> Unit,
 ) {
     if (members.isEmpty()) {

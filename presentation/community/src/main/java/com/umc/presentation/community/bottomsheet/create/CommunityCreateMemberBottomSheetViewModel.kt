@@ -11,6 +11,9 @@ import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -92,7 +95,8 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
                     .distinctBy { member ->
                         member.memberId
                     }
-                    .take(maxCount),
+                    .take(maxCount)
+                    .toImmutableList(),
                 maxMemberCount = maxCount,
             )
         }
@@ -119,7 +123,7 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
                 query = query,
                 isSearching = true,
                 isLoading = true,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = false,
                 errorMessage = null,
@@ -207,7 +211,7 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
             }
 
             copy(
-                selectedMembers = updatedMembers,
+                selectedMembers = updatedMembers.toImmutableList(),
             )
         }
     }
@@ -227,7 +231,7 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
                 isSearching = false,
                 isLoading = false,
                 isLoadingMore = false,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = false,
                 errorMessage = null,
@@ -304,7 +308,7 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
                                 }
                         } else {
                             newMembers
-                        }
+                        }.toImmutableList()
 
                         copy(
                             searchResults = mergedMembers,
@@ -351,7 +355,7 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
  */
 data class CommunityCreateMemberBottomSheetState(
     /** 현재 선택된 챌린저 */
-    val selectedMembers: List<CommunityChallengerUiModel> = emptyList(),
+    val selectedMembers: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
 
     /** 현재 입력된 검색어 */
     val query: String = "",
@@ -366,7 +370,7 @@ data class CommunityCreateMemberBottomSheetState(
     val isLoadingMore: Boolean = false,
 
     /** 챌린저 검색 결과 */
-    val searchResults: List<CommunityChallengerUiModel> = emptyList(),
+    val searchResults: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
 
     /** 다음 페이지 조회용 cursor */
     val nextCursor: Long? = null,

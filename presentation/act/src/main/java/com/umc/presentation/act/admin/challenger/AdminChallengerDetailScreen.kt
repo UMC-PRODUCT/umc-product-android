@@ -78,7 +78,11 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.act.admin.challenger.bottomsheet.OtherPointsScreen
 import com.umc.presentation.act.admin.challenger.bottomsheet.PenaltyPointsScreen
 import com.umc.presentation.act.admin.challenger.bottomsheet.RewardPointsScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 private enum class PointGrantSheet {
     REWARD,
@@ -101,13 +105,11 @@ fun AdminChallengerDetailRoute(
         viewModel.getChallengerDetail(challengerId)
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                AdminChallengerEvent.PointGranted -> pointGrantSheet = null
-                is AdminChallengerEvent.ShowToast ->
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-            }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            AdminChallengerEvent.PointGranted -> pointGrantSheet = null
+            is AdminChallengerEvent.ShowToast ->
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -498,7 +500,7 @@ private fun OtherScore(
 private fun HistorySection(
     totalRewardScore: Int,
     totalPenaltyScore: Int,
-    history: List<HistoryDetail>,
+    history: ImmutableList<HistoryDetail>,
     isEditMode: Boolean,
     onDeleteClick: (HistoryDetail) -> Unit
 ) {
@@ -682,7 +684,7 @@ private data class ChallengerDetailUi(
     val part: UserPart,
     val totalRewardScore: Int,
     val totalPenaltyScore: Int,
-    val history: List<HistoryDetail>
+    val history: ImmutableList<HistoryDetail>
 )
 
 private data class HistoryDetail(
@@ -699,7 +701,7 @@ private fun ChallengerManageDialogModel?.toDetailUi(): ChallengerDetailUi {
             part = UserPart.WEB,
             totalRewardScore = 1,
             totalPenaltyScore = 1,
-            history = listOf(
+            history = persistentListOf(
                 HistoryDetail(id = 1L, date = "2024.01.01", content = "스터디 미제출", score = -1),
                 HistoryDetail(id = 2L, date = "2024.01.01", content = "베스트 워크북 수행", score = 1)
             )
@@ -718,7 +720,7 @@ private fun ChallengerManageDialogModel?.toDetailUi(): ChallengerDetailUi {
             HistoryDetail(
                 id = point.id, date = point.date, content = point.title, score = point.value.toInt()
             )
-        })
+        }.toImmutableList())
 }
 
 @Preview(showBackground = true, name = "Unfocused State")

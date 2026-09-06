@@ -12,6 +12,7 @@ import com.umc.component.component.UToastData
 import com.umc.component.component.UToastState
 import com.umc.presentation.community.bottomsheet.edit.CommunityMemberBottomSheet
 import com.umc.component.theme.AppStrings
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun CommunityChattingRoute(
@@ -37,29 +38,27 @@ fun CommunityChattingRoute(
         }
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.event.collect { event ->
-            when (event) {
-                CommunityChattingEvent.NavigateBack,
-                CommunityChattingEvent.ThreadUnavailable,
-                    -> onBack()
-                CommunityChattingEvent.ThreadDeleted -> onThreadDeleted()
-                CommunityChattingEvent.OpenMore -> onMore()
-                CommunityChattingEvent.OpenUnreadSummary -> onUnreadSummary()
-                CommunityChattingEvent.OpenCamera -> onCamera()
-                CommunityChattingEvent.OpenInviteParticipants -> {
-                    showInviteMemberSheet = true
-                }
-                CommunityChattingEvent.OpenEditThread -> onEditThread()
-                CommunityChattingEvent.MessageReported -> toastData = UToastData(
-                    message = AppStrings.CHAT_REPORT_SUCCESS,
-                    state = UToastState.CHECK,
-                )
-                is CommunityChattingEvent.ShowError -> toastData = UToastData(
-                    message = event.message,
-                    state = UToastState.ERROR,
-                )
+    CollectUiEvents(viewModel.event) { event ->
+        when (event) {
+            CommunityChattingEvent.NavigateBack,
+            CommunityChattingEvent.ThreadUnavailable,
+                -> onBack()
+            CommunityChattingEvent.ThreadDeleted -> onThreadDeleted()
+            CommunityChattingEvent.OpenMore -> onMore()
+            CommunityChattingEvent.OpenUnreadSummary -> onUnreadSummary()
+            CommunityChattingEvent.OpenCamera -> onCamera()
+            CommunityChattingEvent.OpenInviteParticipants -> {
+                showInviteMemberSheet = true
             }
+            CommunityChattingEvent.OpenEditThread -> onEditThread()
+            CommunityChattingEvent.MessageReported -> toastData = UToastData(
+                message = AppStrings.CHAT_REPORT_SUCCESS,
+                state = UToastState.CHECK,
+            )
+            is CommunityChattingEvent.ShowError -> toastData = UToastData(
+                message = event.message,
+                state = UToastState.ERROR,
+            )
         }
     }
 

@@ -50,6 +50,7 @@ import com.naver.maps.map.compose.MapProperties
 import com.naver.maps.map.compose.MapUiSettings
 import com.naver.maps.map.compose.ExperimentalNaverMapApi
 import com.naver.maps.map.compose.LocationTrackingMode
+import com.umc.component.base.CollectUiEvents
 
 /**일정 생성에서 장소 설정을 담당하는 다이얼로그**/
 
@@ -86,32 +87,30 @@ fun LocationSearchBottomSheet(
     }
     **/
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is LocationSearchEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is LocationSearchEvent.ShowToast -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            }
+            
+            else -> {
                 
-                else -> {
-                    
-                }
+            }
 
 /** 지도 검색 기능 철회로 주석 처리
-                //위도 경도로 지도를 이동
-                is LocationSearchEvent.MoveCameraTo -> {
-                    cameraPositionState.animate(
-                        CameraUpdate.scrollTo(LatLng(event.lat, event.lng))
-                    )
-                }
-
-                //위치 결정 시
-                is LocationSearchEvent.LocationConfirmed -> {
-                    onLocationSelected(event.placeInfo)
-                    onDismissRequest()
-                }
-**/
+            //위도 경도로 지도를 이동
+            is LocationSearchEvent.MoveCameraTo -> {
+                cameraPositionState.animate(
+                    CameraUpdate.scrollTo(LatLng(event.lat, event.lng))
+                )
             }
+
+            //위치 결정 시
+            is LocationSearchEvent.LocationConfirmed -> {
+                onLocationSelected(event.placeInfo)
+                onDismissRequest()
+            }
+**/
         }
     }
 

@@ -48,6 +48,7 @@ import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.white
 import com.umc.domain.model.mypage.NearbyUserInfo
+import kotlinx.collections.immutable.ImmutableList
 
 enum class ExchangeStep {
     SELECT_METHOD, // 1번째 이미지: 방식 선택
@@ -60,7 +61,7 @@ enum class ExchangeStep {
 fun CardExchangeBottomSheet(
     sheetState: SheetState,
     currentStep: ExchangeStep,
-    discoveredDevices: List<Pair<String, NearbyUserInfo>>, // (endpointId, userInfo) 형태로 찾은 리스트들
+    discoveredDevices: ImmutableList<Pair<String, NearbyUserInfo>>, // (endpointId, userInfo) 형태로 찾은 리스트들
     selectedTargetUser: Pair<String, NearbyUserInfo>?, // 선택한 유저 정보
     onDismissRequest: () -> Unit,
     onWifiAwareClick: () -> Unit, //wifi aware 선택 시 (nearbyConnection)

@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.umc.component.base.CollectUiEvents
 
 /**
  * 커뮤니티 검색 화면의 Route
@@ -21,18 +22,16 @@ fun CommunitySearchRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(viewModel) {
-        viewModel.event.collect { event ->
-            when (event) {
-                CommunitySearchEvent.NavigateBack -> {
-                    onNavigateBack()
-                }
+    CollectUiEvents(viewModel.event) { event ->
+        when (event) {
+            CommunitySearchEvent.NavigateBack -> {
+                onNavigateBack()
+            }
 
-                is CommunitySearchEvent.NavigateToThreadDetail -> {
-                    onNavigateToThreadDetail(
-                        event.threadId,
-                    )
-                }
+            is CommunitySearchEvent.NavigateToThreadDetail -> {
+                onNavigateToThreadDetail(
+                    event.threadId,
+                )
             }
         }
     }

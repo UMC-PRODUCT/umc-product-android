@@ -12,6 +12,12 @@ import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchNoticeUseCase
 import com.umc.domain.usecase.appDataStore.recent.RemoveRecentSearchNoticeUseCase
 import com.umc.domain.usecase.notice.SearchNoticeListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,12 +36,12 @@ class NoticeSearchViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             getRecentSearchNoticeUseCase().collect {
-                updateState { copy(recentSearchList = it) }
+                updateState { copy(recentSearchList = it.toImmutableList()) }
             }
         }
         viewModelScope.launch {
             appDataStoreRepository.getReadNoticeIds().collect { readIds ->
-                updateState { copy(readNoticeIds = readIds) }
+                updateState { copy(readNoticeIds = readIds.toImmutableSet()) }
             }
         }
     }
@@ -79,7 +85,7 @@ class NoticeSearchViewModel @Inject constructor(
             copy(
                 query = keyword,
                 isResultMode = true,
-                resultList = emptyList(),
+                resultList = persistentListOf(),
                 currentPage = 0,
                 isLastPage = false,
                 errorMessage = null,
@@ -149,7 +155,11 @@ class NoticeSearchViewModel @Inject constructor(
             successCallback = { noticeSearch ->
                 updateState {
                     copy(
-                        resultList = if (isRefresh) noticeSearch.content else resultList + noticeSearch.content,
+                        resultList = if (isRefresh) {
+                            noticeSearch.content.toImmutableList()
+                        } else {
+                            (resultList + noticeSearch.content).toImmutableList()
+                        },
                         currentPage = pageToFetch + 1,
                         isPageLoading = false,
                         isLastPage = !noticeSearch.hasNext,
@@ -172,13 +182,13 @@ data class NoticeSearchUiState(
     val part: String? = null,
     val errorMessage: String? = null,
     val query: String = "",
-    val recentSearchList: List<String> = emptyList(),
+    val recentSearchList: ImmutableList<String> = persistentListOf(),
     val isResultMode: Boolean = false,
-    val resultList: List<NoticeSummary> = emptyList(),
+    val resultList: ImmutableList<NoticeSummary> = persistentListOf(),
     val currentPage: Int = 0,
     val isPageLoading: Boolean = false,
     val isLastPage: Boolean = false,
-    val readNoticeIds: Set<Long> = emptySet(),
+    val readNoticeIds: ImmutableSet<Long> = persistentSetOf(),
 ) : UiState
 
 sealed interface NoticeSearchEvent : UiEvent {

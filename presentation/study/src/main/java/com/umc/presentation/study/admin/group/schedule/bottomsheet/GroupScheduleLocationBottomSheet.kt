@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.naver.maps.geometry.LatLng
@@ -34,6 +35,7 @@ import com.umc.component.component.UTextField
 import com.umc.component.theme.*
 import com.umc.domain.model.home.LocationItem
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 /**
  * 스터디 일정 등록 시 장소를 선택하는 BottomSheet
@@ -114,48 +116,46 @@ fun GroupScheduleLocationBottomSheet(
      * - 지도 카메라 이동
      * - 장소 선택 완료
      */
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                /**
-                 * 검색 실패 등의 안내 메시지 표시
-                 */
-                is GroupScheduleLocationEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            /**
+             * 검색 실패 등의 안내 메시지 표시
+             */
+            is GroupScheduleLocationEvent.ShowToast -> {
+                Toast.makeText(
+                    context,
+                    event.message,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
 
-                /**
-                 * 장소 검색 결과를 선택하면
-                 * 해당 장소 좌표로 지도 카메라 이동
-                 */
-                is GroupScheduleLocationEvent.MoveCameraTo -> {
-                    cameraPositionState.animate(
-                        CameraUpdate.scrollTo(
-                            LatLng(
-                                event.lat,
-                                event.lng
-                            )
+            /**
+             * 장소 검색 결과를 선택하면
+             * 해당 장소 좌표로 지도 카메라 이동
+             */
+            is GroupScheduleLocationEvent.MoveCameraTo -> {
+                cameraPositionState.animate(
+                    CameraUpdate.scrollTo(
+                        LatLng(
+                            event.lat,
+                            event.lng
                         )
                     )
-                }
+                )
+            }
 
-                /**
-                 * 최종 장소 선택 완료
-                 *
-                 * 선택된 장소 정보를 상위 화면에 전달하고
-                 * BottomSheet를 닫습니다.
-                 */
-                is GroupScheduleLocationEvent.LocationConfirmed -> {
-                    onLocationSelected(
-                        event.placeInfo
-                    )
+            /**
+             * 최종 장소 선택 완료
+             *
+             * 선택된 장소 정보를 상위 화면에 전달하고
+             * BottomSheet를 닫습니다.
+             */
+            is GroupScheduleLocationEvent.LocationConfirmed -> {
+                onLocationSelected(
+                    event.placeInfo
+                )
 
-                    onDismissRequest()
-                }
+                onDismissRequest()
             }
         }
     }
@@ -566,7 +566,7 @@ fun GroupScheduleSelectedLocationCard(
  */
 @Composable
 fun GroupScheduleRecentSearchList(
-    recentSearchList: List<String>,
+    recentSearchList: ImmutableList<String>,
     onItemClick: (String) -> Unit,
 ) {
     Column(
@@ -637,7 +637,7 @@ fun GroupScheduleRecentSearchList(
  */
 @Composable
 fun GroupScheduleSearchResultList(
-    searchResultList: List<LocationItem>,
+    searchResultList: ImmutableList<LocationItem>,
     onItemClick: (LocationItem) -> Unit,
 ) {
     LazyColumn(

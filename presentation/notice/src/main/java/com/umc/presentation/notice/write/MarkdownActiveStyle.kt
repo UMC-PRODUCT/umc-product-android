@@ -1,6 +1,9 @@
 package com.umc.presentation.notice.write
 
 import androidx.compose.ui.text.input.TextFieldValue
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableSet
 
 /** 툴바에서 활성 표시(indigo500)를 할 수 있는 마크다운 스타일 */
 enum class MarkdownStyle {
@@ -15,7 +18,7 @@ enum class MarkdownStyle {
 data class MarkdownMarker(val open: String, val close: String)
 
 data class MarkdownActiveStyles(
-    val inline: Set<MarkdownStyle> = emptySet(),
+    val inline: ImmutableSet<MarkdownStyle> = persistentSetOf(),
     val isBullet: Boolean = false,
     val isQuote: Boolean = false,
     val heading: MarkdownHeading = MarkdownHeading.BODY,
@@ -71,7 +74,7 @@ object MarkdownScanner {
         val body = line.removePrefix(headingPrefix ?: "")
 
         return MarkdownActiveStyles(
-            inline = openMarkers(text, lineStart, at).flatMap { it.styles }.toSet(),
+            inline = openMarkers(text, lineStart, at).flatMap { it.styles }.toImmutableSet(),
             isBullet = body.startsWith("- "),
             isQuote = body.startsWith("> "),
             heading = headingPrefix?.let { headingPrefixes[it] } ?: MarkdownHeading.BODY,

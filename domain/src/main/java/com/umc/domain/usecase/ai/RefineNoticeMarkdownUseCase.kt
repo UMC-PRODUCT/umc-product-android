@@ -16,6 +16,7 @@ class RefineNoticeMarkdownUseCase @Inject constructor(
         onDownloadProgress: (percent: Int) -> Unit = {},
     ): ApiState<String> {
         return aiTextRepository.generate(buildPrompt(content), onDownloadProgress)
+            .sanitizeMarkdown()
     }
 
     private fun buildPrompt(content: String): String {

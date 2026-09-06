@@ -38,6 +38,7 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.indigo700
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun SignUpFailCodeRoute(
@@ -48,13 +49,11 @@ fun SignUpFailCodeRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                SignUpFailCodeEvent.MoveToBack -> navigateToBack()
-                SignUpFailCodeEvent.MoveToHome -> navigateToHome()
-                is SignUpFailCodeEvent.ShowErrorDialog -> errorMessage = event.message
-            }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            SignUpFailCodeEvent.MoveToBack -> navigateToBack()
+            SignUpFailCodeEvent.MoveToHome -> navigateToHome()
+            is SignUpFailCodeEvent.ShowErrorDialog -> errorMessage = event.message
         }
     }
 

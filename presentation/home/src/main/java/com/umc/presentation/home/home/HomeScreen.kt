@@ -81,6 +81,8 @@ import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.home.SchedulePlanItem
 import kotlinx.coroutines.flow.collectLatest
 import java.time.YearMonth
+import com.umc.component.base.CollectUiEvents
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun HomeRoute(
@@ -97,22 +99,20 @@ fun HomeRoute(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(viewModel){
-        viewModel.uiEvent.collectLatest{ event ->
-            //이벤트 처리
-            when(event){
-                //공지사항 이동
-                is HomeEvent.MoveNoticeEvent -> onNavigateToNotice()
-                //알림 이동
-                is HomeEvent.MoveNotificationEvent -> onNavigateToNotification()
-                //일정 상세 이동
-                is HomeEvent.MoveScheduleDetailEvent -> onNavigateToScheduleDetail(event.plan)
-                //일정 추가 이동
-                is HomeEvent.MoveScheduleAddEvent -> onNavigateToScheduleAdd()
-                //카드 공유 이동
-                is HomeEvent.MoveShareCardEvent -> onNavigateToCardShare()
-                else -> {}
-            }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        //이벤트 처리
+        when(event){
+            //공지사항 이동
+            is HomeEvent.MoveNoticeEvent -> onNavigateToNotice()
+            //알림 이동
+            is HomeEvent.MoveNotificationEvent -> onNavigateToNotification()
+            //일정 상세 이동
+            is HomeEvent.MoveScheduleDetailEvent -> onNavigateToScheduleDetail(event.plan)
+            //일정 추가 이동
+            is HomeEvent.MoveScheduleAddEvent -> onNavigateToScheduleAdd()
+            //카드 공유 이동
+            is HomeEvent.MoveShareCardEvent -> onNavigateToCardShare()
+            else -> {}
         }
     }
 
@@ -870,10 +870,10 @@ private fun HomeScreenPreview() {
         sangjum = 5,
         buljum = -2,
         total = 3,
-        gisuTag = listOf("10기", "11기", "12기"),
+        gisuTag = persistentListOf("10기", "11기", "12기"),
         viewMode = HomeViewMode.CALENDAR,
         // 필요하다면 가짜 일정 리스트도 추가 가능
-        dailyPlans = emptyList()
+        dailyPlans = persistentListOf()
     )
 
     // 2. HomeScreen 호출 (모든 파라미터에 빈 람다나 더미 데이터 전달)

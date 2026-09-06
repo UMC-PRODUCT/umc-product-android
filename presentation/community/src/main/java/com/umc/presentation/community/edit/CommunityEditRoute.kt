@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.umc.component.base.CollectUiEvents
 
 /**
  * 스레드 수정 화면의 Route
@@ -36,58 +37,56 @@ fun CommunityEditRoute(
     }
 
     // ViewModel에서 발생하는 일회성 이벤트 처리
-    LaunchedEffect(viewModel) {
-        viewModel.event.collect { event: CommunityEditEvent ->
-            when (event) {
-                // 이전 화면으로 이동
-                CommunityEditEvent.NavigateBack -> {
-                    onNavigateBack()
-                }
+    CollectUiEvents(viewModel.event) { event ->
+        when (event) {
+            // 이전 화면으로 이동
+            CommunityEditEvent.NavigateBack -> {
+                onNavigateBack()
+            }
 
-                // 스레드 수정 완료
-                CommunityEditEvent.SaveSuccess -> {
-                    Toast.makeText(
-                        context,
-                        "스레드가 수정되었습니다.",
-                        Toast.LENGTH_SHORT,
-                    ).show()
+            // 스레드 수정 완료
+            CommunityEditEvent.SaveSuccess -> {
+                Toast.makeText(
+                    context,
+                    "스레드가 수정되었습니다.",
+                    Toast.LENGTH_SHORT,
+                ).show()
 
-                    onEditSuccess()
-                }
+                onEditSuccess()
+            }
 
-                // 스레드 삭제 완료
-                CommunityEditEvent.DeleteSuccess -> {
-                    Toast.makeText(
-                        context,
-                        "스레드가 삭제되었습니다.",
-                        Toast.LENGTH_SHORT,
-                    ).show()
+            // 스레드 삭제 완료
+            CommunityEditEvent.DeleteSuccess -> {
+                Toast.makeText(
+                    context,
+                    "스레드가 삭제되었습니다.",
+                    Toast.LENGTH_SHORT,
+                ).show()
 
-                    onEditSuccess()
-                }
+                onEditSuccess()
+            }
 
-                // 아이콘 선택 화면으로 이동
-                CommunityEditEvent.NavigateToEmojiPicker -> {
-                    onNavigateToEmojiPicker()
-                }
+            // 아이콘 선택 화면으로 이동
+            CommunityEditEvent.NavigateToEmojiPicker -> {
+                onNavigateToEmojiPicker()
+            }
 
-                // 챌린저 추가/삭제 완료
-                CommunityEditEvent.MemberInviteSuccess -> {
-                    Toast.makeText(
-                        context,
-                        "챌린저를 추가했습니다.",
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
+            // 챌린저 추가/삭제 완료
+            CommunityEditEvent.MemberInviteSuccess -> {
+                Toast.makeText(
+                    context,
+                    "챌린저를 추가했습니다.",
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
 
-                // 공통 안내 Toast 처리
-                is CommunityEditEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message,
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
+            // 공통 안내 Toast 처리
+            is CommunityEditEvent.ShowToast -> {
+                Toast.makeText(
+                    context,
+                    event.message,
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         }
     }

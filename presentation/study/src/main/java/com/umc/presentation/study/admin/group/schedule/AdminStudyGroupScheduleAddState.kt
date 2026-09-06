@@ -3,6 +3,8 @@ package com.umc.presentation.study.admin.group.schedule
 import com.umc.component.base.UiState
 import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleChallengerUiModel
 import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekUiModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 관리자 스터디 그룹 일정 등록 화면 상태
@@ -42,7 +44,7 @@ data class AdminStudyGroupScheduleState(
 
     // 일정에 참여할 챌린저 목록
     val selectedChallengers:
-    List<GroupScheduleChallengerUiModel> = emptyList(),
+    ImmutableList<GroupScheduleChallengerUiModel> = persistentListOf(),
 
     // 화면에 표시할 챌린저 선택 요약 문구
     val challengerText: String = "",
@@ -61,7 +63,7 @@ data class AdminStudyGroupScheduleState(
     val lateEndText: String? = null,
 
     // 선택 가능한 커리큘럼 주차 목록
-    val weeks: List<AdminSubmitWeekUiModel> = emptyList(),
+    val weeks: ImmutableList<AdminSubmitWeekUiModel> = persistentListOf(),
 
     // 선택한 주차의 커리큘럼 ID
     val selectedWeeklyCurriculumId: Long? = null,

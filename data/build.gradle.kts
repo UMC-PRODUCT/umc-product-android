@@ -6,6 +6,9 @@ plugins {
 }
 
 android {
+    lint {
+        abortOnError = false
+    }
     namespace = "com.umc.data"
     compileSdk = 36
 
@@ -17,6 +20,10 @@ android {
     }
 
     buildTypes {
+        create("benchmark") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(

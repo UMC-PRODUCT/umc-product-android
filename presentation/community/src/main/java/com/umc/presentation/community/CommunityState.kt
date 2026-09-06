@@ -2,6 +2,9 @@ package com.umc.presentation.community
 
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityThreadUiModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * 커뮤니티 메인 화면에서 사용하는 UI 상태
@@ -12,7 +15,7 @@ import com.umc.presentation.community.model.CommunityThreadUiModel
 data class CommunityState(
     val isLoading: Boolean = true,
     val selectedCategory: CommunityCategory = CommunityCategory.ALL,
-    val threads: List<CommunityThreadUiModel> = emptyList(),
+    val threads: ImmutableList<CommunityThreadUiModel> = persistentListOf(),
     val errorMessage: String? = null,
 
     val selectedThread: CommunityThreadUiModel? = null,
@@ -20,23 +23,23 @@ data class CommunityState(
     val showLeaveDialog: Boolean = false,
 ) {
     /** 고정된 스레드 목록 */
-    val pinnedThreads: List<CommunityThreadUiModel>
+    val pinnedThreads: ImmutableList<CommunityThreadUiModel>
         get() = threads.filter { thread ->
             thread.isPinned
-        }
+        }.toImmutableList()
 
     /**
      * 현재 선택한 카테고리에 따라 필터링된 일반 스레드 목록
      *
      * 고정된 스레드는 별도 영역에서 표시하므로 제외합니다.
      */
-    val normalThreads: List<CommunityThreadUiModel>
+    val normalThreads: ImmutableList<CommunityThreadUiModel>
         get() {
             val unpinnedThreads = threads.filterNot { thread ->
                 thread.isPinned
             }
 
-            return when (selectedCategory) {
+            val filtered = when (selectedCategory) {
                 CommunityCategory.ALL -> {
                     unpinnedThreads
                 }
@@ -71,6 +74,8 @@ data class CommunityState(
                     }
                 }
             }
+
+            return filtered.toImmutableList()
         }
 
     /** 스레드 목록 조회 에러 여부 */

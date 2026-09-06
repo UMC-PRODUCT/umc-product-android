@@ -74,6 +74,7 @@ import com.umc.component.theme.indigo500
 import com.umc.component.theme.white
 import com.umc.domain.model.mypage.UserCard
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun QrCodeRoute(
@@ -99,36 +100,34 @@ fun QrCodeRoute(
         permissionLauncher.launch(getQrPermissions())
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is QrCodeEvent.NavigateBack -> onNavigateToBack()
-                is QrCodeEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
-                is QrCodeEvent.ShareQrCode -> {
-                    // 1. UI State 또는 스냅샷에서 보유 중인 ImageBitmap 가져오기
-                    val qrBitmap: ImageBitmap? = uiState.qrImageBitmap
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is QrCodeEvent.NavigateBack -> onNavigateToBack()
+            is QrCodeEvent.ShowToast -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            }
+            is QrCodeEvent.ShareQrCode -> {
+                // 1. UI State 또는 스냅샷에서 보유 중인 ImageBitmap 가져오기
+                val qrBitmap: ImageBitmap? = uiState.qrImageBitmap
 
-                    if (qrBitmap != null) {
-                        // 2. QrCodeUtils를 통해 공유용 Uri 추출
-                        val imageUri = QrCodeUtils.getShareableImageUri(context, qrBitmap)
+                if (qrBitmap != null) {
+                    // 2. QrCodeUtils를 통해 공유용 Uri 추출
+                    val imageUri = QrCodeUtils.getShareableImageUri(context, qrBitmap)
 
-                        if (imageUri != null) {
-                            // 3. 이미지 전송 Intent 생성
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "image/png"
-                                putExtra(Intent.EXTRA_STREAM, imageUri)
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) // 읽기 권한 부여
-                            }
-
-                            context.startActivity(Intent.createChooser(shareIntent, "명함 QR 코드 공유하기"))
-                        } else {
-                            Toast.makeText(context, "공유용 이미지를 생성하지 못했습니다.", Toast.LENGTH_SHORT).show()
+                    if (imageUri != null) {
+                        // 3. 이미지 전송 Intent 생성
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "image/png"
+                            putExtra(Intent.EXTRA_STREAM, imageUri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) // 읽기 권한 부여
                         }
+
+                        context.startActivity(Intent.createChooser(shareIntent, "명함 QR 코드 공유하기"))
                     } else {
-                        Toast.makeText(context, "공유할 QR 이미지 정보가 없습니다.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "공유용 이미지를 생성하지 못했습니다.", Toast.LENGTH_SHORT).show()
                     }
+                } else {
+                    Toast.makeText(context, "공유할 QR 이미지 정보가 없습니다.", Toast.LENGTH_SHORT).show()
                 }
             }
         }

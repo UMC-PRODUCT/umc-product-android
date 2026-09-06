@@ -21,6 +21,9 @@ import com.umc.domain.usecase.schedule.GetScheduleDetailUseCase
 import com.umc.domain.usecase.schedule.UpdateScheduleLocationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -50,7 +53,7 @@ class FixLocationViewModel @Inject constructor(
     private fun observeRecentPlaces() {
         viewModelScope.launch {
             getRecentSearchPlaceUseCase().collect { places ->
-                updateState { copy(recentAddresses = places) }
+                updateState { copy(recentAddresses = places.toImmutableList()) }
             }
         }
     }
@@ -61,7 +64,7 @@ class FixLocationViewModel @Inject constructor(
         updateState {
             copy(
                 searchKeyword = "",
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 selectedLocation = null,
             )
         }
@@ -99,7 +102,7 @@ class FixLocationViewModel @Inject constructor(
         updateState {
             copy(
                 searchKeyword = keyword,
-                searchResults = if (keyword.isBlank()) emptyList() else searchResults,
+                searchResults = if (keyword.isBlank()) persistentListOf() else searchResults,
             )
         }
 
@@ -119,7 +122,7 @@ class FixLocationViewModel @Inject constructor(
     fun searchLocation() {
         val keyword = uiState.value.searchKeyword.trim()
         if (keyword.isEmpty()) {
-            updateState { copy(searchResults = emptyList()) }
+            updateState { copy(searchResults = persistentListOf()) }
             return
         }
 
@@ -138,7 +141,7 @@ class FixLocationViewModel @Inject constructor(
             resultResponse(
                 response = getSearchLocationUseCase(keyword),
                 successCallback = { locations ->
-                    updateState { copy(searchResults = locations) }
+                    updateState { copy(searchResults = locations.toImmutableList()) }
                     if (saveRecent && locations.isNotEmpty()) {
                         viewModelScope.launch {
                             updateRecentSearchPlaceUseCase(keyword)
@@ -285,9 +288,9 @@ data class FixLocationUiState(
     //장소 검색어
     val searchKeyword: String = "",
     //장소 검색 결과
-    val searchResults: List<LocationItem> = emptyList(),
+    val searchResults: ImmutableList<LocationItem> = persistentListOf(),
     //최근 주소 목록
-    val recentAddresses: List<String> = emptyList(),
+    val recentAddresses: ImmutableList<String> = persistentListOf(),
     //선택한 장소
     val selectedLocation: LocationItem? = null,
 ) : UiState
