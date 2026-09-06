@@ -1,40 +1,256 @@
-name: Android CI
+name: Android CI/CD
+
+# 브랜치별 배포 규칙
+#   main            → API 운영 서버(api.university.neordinary.com) → Play 프로덕션 트랙
+#   develop-compose → API dev 서버(dev.api.university.neordinary.com) → Play 내부 테스트 트랙
+# PR 은 검사만 하고 배포하지 않는다.
 
 on:
   push:
-    branches: [ "master", "develop" ]
+    branches: [ main, develop-compose ]
   pull_request:
-    branches: [ "master", "develop" ]
+    branches: [ main, develop-compose ]
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "수동 실행 시 배포 트랙"
+        type: choice
+        default: internal
+        options: [ internal, alpha, beta, production ]
 
 permissions:
   contents: read
 
 concurrency:
-  group: android-ci-${{ github.ref }}
+  group: android-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  # ────────────────────────────────────────────────────────────────
+  # 1. 검사 및 빌드
+  # ────────────────────────────────────────────────────────────────
+  verify:
+    name: 검사 및 빌드
+    runs-on: ubuntu-latest
+    outputs:
+      api-env: ${{ steps.resolve.outputs.api-env }}
+      track: ${{ steps.resolve.outputs.track }}
+
+    steps:
+      - name: 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 브랜치별 환경 결정
+        id: resolve
+        env:
+          MANUAL_TRACK: ${{ inputs.track }}
+        run: |
+          BRANCH="${{ github.base_ref || github.ref_name }}"
+          case "$BRANCH" in
+            main)            API_ENV=prod ; TRACK=production ;;
+            develop-compose) API_ENV=dev  ; TRACK=internal   ;;
+            *)               API_ENV=dev  ; TRACK=internal   ;;
+          esac
+          if [ -n "$MANUAL_TRACK" ]; then TRACK="$MANUAL_TRACK"; fi
+          echo "api-env=$API_ENV" >> "$GITHUB_OUTPUT"
+          echo "track=$TRACK"     >> "$GITHUB_OUTPUT"
+          echo "### 🎯 \`$BRANCH\` → API \`$API_ENV\` · 트랙 \`$TRACK\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: JDK 17 설치
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Gradle 준비
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 시크릿 복원
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          KAKAO_NATIVE_KEY: ${{ secrets.KAKAO_NATIVE_KEY }}
+          KAKAO_APP_KEY: ${{ secrets.KAKAO_APP_KEY }}
+          KAKAO_REST_KEY: ${{ secrets.KAKAO_REST_KEY }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          GOOGLE_LOGIN_KEY: ${{ secrets.GOOGLE_LOGIN_KEY }}
+        run: |
+          chmod +x ./gradlew
+          printf '%s' "$GOOGLE_SERVICES_JSON" | base64 -d > app/google-services.json
+          cat > local.properties <<EOF
+          kakao.native.key=$KAKAO_NATIVE_KEY
+          kakao.app.key=$KAKAO_APP_KEY
+          kakao.rest.key=$KAKAO_REST_KEY
+          naver.client.id=$NAVER_CLIENT_ID
+          google.login.key=$GOOGLE_LOGIN_KEY
+          EOF
+
+      - name: 커스텀 Lint 규칙 자체 테스트
+        run: ./gradlew :lint-rules:test --console=plain
+
+      - name: 단위 테스트
+        run: ./gradlew testDebugUnitTest -PapiEnv=${{ steps.resolve.outputs.api-env }} --console=plain
+
+      - name: Android Lint
+        run: ./gradlew :app:lintDebug -PapiEnv=${{ steps.resolve.outputs.api-env }} --console=plain
+
+      # :lint-rules 가 스스로 선언한 severity 를 그대로 신뢰한다.
+      # ERROR(OneShotEventSharedFlow) 는 파이프라인을 세우고, WARNING 은 요약에만 남긴다.
+      - name: UMC 커스텀 Lint 게이트
+        run: |
+          python3 - <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          UMC = {"OneShotEventSharedFlow", "LifecycleUnawareEventCollect", "BlockingCallInRequestPath"}
+          report = Path("app/build/reports/lint-results-debug.xml")
+          if not report.exists():
+              sys.exit("lint 리포트를 찾을 수 없습니다: %s" % report)
+
+          errors, warnings = [], []
+          for issue in ET.parse(report).getroot().iter("issue"):
+              if issue.get("id") not in UMC:
+                  continue
+              loc = issue.find("location")
+              where = "%s:%s" % (loc.get("file", "?").split("/")[-1], loc.get("line", "?"))
+              row = (issue.get("id"), where, issue.get("message", ""))
+              (errors if issue.get("severity") == "Error" else warnings).append(row)
+
+          summary = Path(__import__("os").environ["GITHUB_STEP_SUMMARY"]).open("a")
+          summary.write("\n### 🔍 UMC 커스텀 Lint\n\n")
+          summary.write("- 오류 %d건 / 경고 %d건\n\n" % (len(errors), len(warnings)))
+          for iid, where, msg in errors + warnings:
+              summary.write("- `%s` %s — %s\n" % (iid, where, msg))
+          summary.close()
+
+          for iid, where, msg in warnings:
+              print("::warning file=%s::[%s] %s" % (where.split(":")[0], iid, msg))
+          for iid, where, msg in errors:
+              print("::error file=%s::[%s] %s" % (where.split(":")[0], iid, msg))
+
+          if errors:
+              sys.exit("UMC 커스텀 Lint 오류 %d건 — 배포를 중단합니다." % len(errors))
+          print("UMC 커스텀 Lint 오류 없음 (경고 %d건)" % len(warnings))
+          PY
+
+      - name: 빌드 검증 (Debug)
+        run: ./gradlew :app:assembleDebug -PapiEnv=${{ steps.resolve.outputs.api-env }} --console=plain
+
+      # 브랜치에 맞는 서버 주소가 실제로 박혔는지 확인한다.
+      # 이 검사가 없으면 apiEnv 전달이 빠져도 조용히 운영 서버로 빌드된다.
+      - name: 서버 주소 검증
+        env:
+          API_ENV: ${{ steps.resolve.outputs.api-env }}
+        run: |
+          case "$API_ENV" in
+            prod) EXPECTED="https://api.university.neordinary.com/" ;;
+            dev)  EXPECTED="https://dev.api.university.neordinary.com/" ;;
+            *)    echo "::error::알 수 없는 apiEnv: $API_ENV"; exit 1 ;;
+          esac
+          GEN=app/build/generated/source/buildConfig/debug/com/umc/product/BuildConfig.java
+          ACTUAL=$(sed -n 's/.*BASE_URL = "\(.*\)";/\1/p' "$GEN")
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::서버 주소 불일치 — 기대 $EXPECTED / 실제 $ACTUAL"
+            exit 1
+          fi
+          echo "### 🌐 서버 주소 \`$ACTUAL\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 리포트 업로드
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-${{ github.run_number }}
+          path: |
+            **/build/reports/tests/**
+            app/build/reports/lint-results-debug.*
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ────────────────────────────────────────────────────────────────
+  # 2. Play Store 배포 (검사 통과 후에만)
+  # ────────────────────────────────────────────────────────────────
+  deploy:
+    name: Play Store 배포 (${{ needs.verify.outputs.track }})
+    needs: verify
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: 체크아웃
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: JDK 17 설치
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
-          cache: gradle
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+      - name: Gradle 준비
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Decode google-services.json
+      - name: 시크릿 · 키스토어 복원
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        run: echo $GOOGLE_SERVICES_JSON | base64 -d > app/google-services.json
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KAKAO_NATIVE_KEY: ${{ secrets.KAKAO_NATIVE_KEY }}
+          KAKAO_APP_KEY: ${{ secrets.KAKAO_APP_KEY }}
+          KAKAO_REST_KEY: ${{ secrets.KAKAO_REST_KEY }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          GOOGLE_LOGIN_KEY: ${{ secrets.GOOGLE_LOGIN_KEY }}
+        run: |
+          chmod +x ./gradlew
+          printf '%s' "$GOOGLE_SERVICES_JSON" | base64 -d > app/google-services.json
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > umc_release_key.jks
+          cat > local.properties <<EOF
+          kakao.native.key=$KAKAO_NATIVE_KEY
+          kakao.app.key=$KAKAO_APP_KEY
+          kakao.rest.key=$KAKAO_REST_KEY
+          naver.client.id=$NAVER_CLIENT_ID
+          google.login.key=$GOOGLE_LOGIN_KEY
+          EOF
 
-      - name: Build
-        run: ./gradlew build --stacktrace
+      - name: AAB 빌드
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          # Play 는 동일 versionCode 재업로드를 거부하므로 실행 횟수로 단조 증가시킨다.
+          # (현재 Play 최신 versionCode 는 21)
+          VERSION_CODE: ${{ 21 + github.run_number }}
+        run: |
+          ./gradlew :app:bundleRelease \
+            -PapiEnv=${{ needs.verify.outputs.api-env }} \
+            --console=plain
+
+      - name: 서명 확인
+        run: |
+          AAB=app/build/outputs/bundle/release/app-release.aab
+          test -f "$AAB" || { echo "::error::AAB 를 찾을 수 없습니다"; exit 1; }
+          if jarsigner -verify "$AAB" | grep -q "jar verified"; then
+            echo "서명 확인 완료: $AAB"
+          else
+            echo "::error::AAB 가 서명되지 않았습니다 — KEYSTORE_* 시크릿을 확인하세요"
+            exit 1
+          fi
+
+      - name: Play Store 업로드
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.umc.product
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          track: ${{ needs.verify.outputs.track }}
+          status: completed
+
+      - name: 배포 요약
+        run: |
+          {
+            echo "### 🚀 배포 완료"
+            echo ""
+            echo "| 항목 | 값 |"
+            echo "| --- | --- |"
+            echo "| 브랜치 | \`${{ github.ref_name }}\` |"
+            echo "| API 환경 | \`${{ needs.verify.outputs.api-env }}\` |"
+            echo "| 트랙 | \`${{ needs.verify.outputs.track }}\` |"
+            echo "| versionCode | \`${{ 21 + github.run_number }}\` |"
+            echo "| 커밋 | \`${{ github.sha }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"

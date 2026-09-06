@@ -70,3 +70,11 @@ dependencies {
     implementation(libs.google.code.gson)
     implementation(libs.kotlinx.serialization.json)
 }
+
+// 실제 dev 서버로 네트워크를 타는 테스트는 CI 에서 제외한다.
+// (서버 가동 상태에 따라 결과가 달라져 파이프라인이 불안정해진다)
+tasks.withType<Test>().configureEach {
+    if (providers.environmentVariable("CI").isPresent) {
+        filter { excludeTestsMatching("com.umc.data.EmailLoginApiTest") }
+    }
+}

@@ -49,6 +49,11 @@ android {
 }
 
 dependencies {
+    // 다른 presentation 모듈과 동일한 단위 테스트 의존성 (누락되어 testDebugUnitTest 가 컴파일 실패했다)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+
     lintChecks(project(":lint-rules"))
     implementation(project(":domain"))
     implementation(project(":presentation:component"))
