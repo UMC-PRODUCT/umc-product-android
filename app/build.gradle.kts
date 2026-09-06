@@ -8,9 +8,25 @@ plugins {
     alias(libs.plugins.google.services)
 }
 
+/**
+ * API 서버 환경 스위치.
+ *
+ * - `-PapiEnv=dev`  → dev 서버 (develop-compose / 테스트 트랙)
+ * - 미지정 또는 `-PapiEnv=prod` → 운영 서버 (main / 프로덕션 트랙)
+ */
+val apiEnv = (project.findProperty("apiEnv") as String?) ?: "prod"
+val apiBaseUrl = when (apiEnv) {
+    "dev" -> "https://dev.api.university.neordinary.com/"
+    "prod" -> "https://api.university.neordinary.com/"
+    else -> throw GradleException("apiEnv 는 dev 또는 prod 여야 합니다 (입력값: $apiEnv)")
+}
+
 android {
     lint {
         abortOnError = false
+        // :lint-rules 커스텀 규칙을 presentation/data/domain 모듈까지 적용
+        checkDependencies = true
+        xmlReport = true
     }
     namespace = "com.umc.product"
     compileSdk = 36
@@ -31,14 +47,26 @@ android {
             "NAVER_CLIENT_ID",
             "\"${getApiKey("naver.client.id")}\""
         )
+        buildConfigField("String", "BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "API_ENV", "\"$apiEnv\"")
         manifestPlaceholders["KAKAO_APP_KEY"] = getApiKey("kakao.app.key")
         applicationId = "com.umc.product"
         minSdk = 24
         targetSdk = 36
-        versionCode = 21
+        // CI 는 VERSION_CODE 를 주입한다. Play 는 동일 versionCode 재업로드를 거부한다.
+        versionCode = (System.getenv("VERSION_CODE") ?: "21").toInt()
         versionName = "3.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("KEYSTORE_PATH") ?: "../umc_release_key.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: getApiKey("keystore.password")
+            keyAlias = System.getenv("KEY_ALIAS") ?: getApiKey("key.alias")
+            keyPassword = System.getenv("KEY_PASSWORD") ?: getApiKey("key.password")
+        }
     }
 
     buildTypes {
@@ -50,6 +78,7 @@ android {
             isDebuggable = false
         }
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
