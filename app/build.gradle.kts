@@ -24,8 +24,11 @@ val apiBaseUrl = when (apiEnv) {
 android {
     lint {
         abortOnError = false
-        // :lint-rules 커스텀 규칙을 presentation/data/domain 모듈까지 적용
-        checkDependencies = true
+        // :lint-rules 커스텀 규칙을 presentation/data/domain 모듈까지 적용.
+        // PR 축약 검사에서는 각 모듈이 자기 lintDebug 를 직접 돌리므로
+        // -PlintCheckDependencies=false 로 꺼서 중복 검사를 피한다.
+        checkDependencies =
+            (project.findProperty("lintCheckDependencies") as String?)?.toBoolean() ?: true
         xmlReport = true
     }
     namespace = "com.umc.product"
@@ -55,7 +58,11 @@ android {
         targetSdk = 36
         // CI 는 VERSION_CODE 를 주입한다. Play 는 동일 versionCode 재업로드를 거부한다.
         versionCode = (System.getenv("VERSION_CODE") ?: "21").toInt()
-        versionName = "3.0.0"
+        // 릴리스 버전의 단일 출처는 git 태그다. CI 가 VERSION_NAME 을 주입한다.
+        //   main 은 v* 태그를 푸시할 때만 프로덕션 배포 (예: v3.1.0 -> "3.1.0")
+        //   develop-compose 는 "<최신태그>-dev.<실행번호>" (예: "3.0.0-dev.12")
+        // 아래 literal 은 로컬 빌드 기본값일 뿐이다.
+        versionName = System.getenv("VERSION_NAME") ?: "3.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
