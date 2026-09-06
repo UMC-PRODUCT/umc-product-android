@@ -1,9 +1,10 @@
 name: Android CI/CD
 
 # 배포 규칙
-#   v* 태그 푸시     → API 운영 서버 → Play 프로덕션 트랙 (versionName = 태그)
-#   develop-compose  → API dev 서버  → Play 내부 테스트 트랙 (versionName = <최신태그>-dev.N)
-#   main 브랜치 푸시 → 검사만. 프로덕션 배포는 태그로만 한다.
+#   main 브랜치 푸시 → 검사 후 버전을 자동으로 올려 프로덕션 배포하고, 성공하면 태그를 남긴다
+#                      ([Feat] 커밋이 있으면 minor, BREAKING CHANGE 면 major, 아니면 patch)
+#   v* 태그 푸시     → 그 태그 버전 그대로 프로덕션 배포 (자동 증가를 건너뛰고 싶을 때)
+#   develop-compose  → API dev 서버 → Play 내부 테스트 트랙 (versionName = <최신태그>-dev.N)
 #   PR               → 변경된 모듈과 그 역의존만 검사 (배포 없음)
 
 on:
@@ -19,6 +20,11 @@ on:
         type: choice
         default: internal
         options: [ internal, alpha, beta, production ]
+      bump:
+        description: "버전 증가 방식 (main 자동 릴리스에만 적용)"
+        type: choice
+        default: auto
+        options: [ auto, patch, minor, major ]
 
 permissions:
   contents: read
@@ -41,6 +47,7 @@ jobs:
       version-name: ${{ steps.resolve.outputs.version-name }}
       deploy: ${{ steps.resolve.outputs.deploy }}
       scope: ${{ steps.resolve.outputs.scope }}
+      tag-after: ${{ steps.resolve.outputs.tag-after }}
 
     steps:
       - name: 체크아웃
@@ -52,10 +59,38 @@ jobs:
         id: resolve
         env:
           MANUAL_TRACK: ${{ inputs.track }}
+          MANUAL_BUMP: ${{ inputs.bump }}
         run: |
           set -euo pipefail
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           BRANCH="${{ github.base_ref || github.ref_name }}"
+          TAG_AFTER=false
+
+          # 최신 태그 이후 커밋으로 증가 폭을 정한다.
+          # 이 레포의 컨벤션은 [Feat] / [Fix] / [Chore] 형태다.
+          decide_bump() {
+            if [ -n "${MANUAL_BUMP:-}" ] && [ "$MANUAL_BUMP" != "auto" ]; then
+              printf '%s' "$MANUAL_BUMP"; return
+            fi
+            local range="HEAD"
+            if git rev-parse "$LATEST_TAG" >/dev/null 2>&1; then range="${LATEST_TAG}..HEAD"; fi
+            local log; log=$(git log --format='%s%n%b' "$range" 2>/dev/null || printf '')
+            if printf '%s' "$log" | grep -qE 'BREAKING[ -]CHANGE'; then printf 'major'
+            elif printf '%s' "$log" | grep -qiE '^\[?(feat|feature)'; then printf 'minor'
+            else printf 'patch'; fi
+          }
+
+          bump_version() {
+            local cur="${1#v}" kind="$2" ma mi pa
+            IFS=. read -r ma mi pa <<< "$cur"
+            ma=${ma:-0}; mi=${mi:-0}; pa=${pa:-0}
+            case "$kind" in
+              major) ma=$((ma + 1)); mi=0; pa=0 ;;
+              minor) mi=$((mi + 1)); pa=0 ;;
+              *)     pa=$((pa + 1)) ;;
+            esac
+            printf '%s.%s.%s' "$ma" "$mi" "$pa"
+          }
 
           if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
             # v3.1.0 형태만 허용한다. 오타로 엉뚱한 버전이 프로덕션에 나가는 것을 막는다.
@@ -72,9 +107,19 @@ jobs:
                 VERSION_NAME="${LATEST_TAG#v}-dev.${GITHUB_RUN_NUMBER}"
                 ;;
               main)
-                # main 은 검사만 한다. 프로덕션 출시는 태그를 통해서만.
-                API_ENV=prod; TRACK=production; DEPLOY=false
-                VERSION_NAME="${LATEST_TAG#v}"
+                # 검사를 통과하면 버전을 자동으로 올려 프로덕션에 내보내고,
+                # Play 업로드가 성공한 뒤에야 태그를 남긴다(실패한 버전 번호를 태우지 않기 위해).
+                API_ENV=prod; TRACK=production; DEPLOY=true; TAG_AFTER=true
+                BUMP=$(decide_bump)
+                VERSION_NAME=$(bump_version "$LATEST_TAG" "$BUMP")
+                echo "최신 태그 $LATEST_TAG 기준 $BUMP 증가 -> $VERSION_NAME"
+                # 이 커밋이 이미 릴리스된 상태면(재실행 등) 버전을 또 올리지 않는다.
+                if git rev-parse "$LATEST_TAG" >/dev/null 2>&1 \
+                   && [ "$(git rev-list --count "${LATEST_TAG}..HEAD")" = "0" ]; then
+                  echo "::notice::HEAD 가 이미 $LATEST_TAG 로 릴리스되어 있어 배포를 건너뜁니다."
+                  DEPLOY=false; TAG_AFTER=false
+                  VERSION_NAME="${LATEST_TAG#v}"
+                fi
                 ;;
               *)
                 API_ENV=dev; TRACK=internal; DEPLOY=false
@@ -102,6 +147,7 @@ jobs:
             echo "api-env=$API_ENV"
             echo "track=$TRACK"
             echo "deploy=$DEPLOY"
+            echo "tag-after=$TAG_AFTER"
             echo "scope=$SCOPE"
             echo "version-code=$VERSION_CODE"
             echo "version-name=$VERSION_NAME"
@@ -119,12 +165,6 @@ jobs:
             echo "| 배포 | $([ "$DEPLOY" = true ] && echo "\`$TRACK\`" || echo "없음") |"
           } >> "$GITHUB_STEP_SUMMARY"
 
-          if [ "$DEPLOY" = "false" ] && [ "$GITHUB_REF_NAME" = "main" ] && [ "$GITHUB_EVENT_NAME" = "push" ]; then
-            {
-              echo ""
-              echo "> main 푸시는 검사만 합니다. 프로덕션 출시는 \`git tag vX.Y.Z && git push origin vX.Y.Z\` 로 하세요."
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
 
       - name: 검사할 모듈 계산
         id: affected
@@ -297,6 +337,8 @@ jobs:
     needs: verify
     if: needs.verify.outputs.deploy == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # main 자동 릴리스에서 태그를 남긴다
 
     steps:
       - name: 체크아웃
@@ -364,6 +406,24 @@ jobs:
           track: ${{ needs.verify.outputs.track }}
           status: completed
 
+      # Play 업로드가 성공한 뒤에만 태그를 남긴다. 실패한 버전 번호를 태우지 않는다.
+      # GITHUB_TOKEN 으로 민 태그는 새 워크플로를 트리거하지 않으므로 재귀 실행이 없다.
+      - name: 릴리스 태그 생성
+        if: needs.verify.outputs.tag-after == 'true'
+        env:
+          VERSION_NAME: ${{ needs.verify.outputs.version-name }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --tags origin "v$VERSION_NAME" >/dev/null 2>&1; then
+            echo "::error::태그 v$VERSION_NAME 가 이미 존재합니다 — 버전 계산을 확인하세요"
+            exit 1
+          fi
+          git tag -a "v$VERSION_NAME" -m "Release v$VERSION_NAME"
+          git push origin "v$VERSION_NAME"
+          echo "태그 v$VERSION_NAME 생성"
+
       - name: 배포 요약
         run: |
           {
@@ -376,4 +436,7 @@ jobs:
             echo "| 트랙 | \`${{ needs.verify.outputs.track }}\` |"
             echo "| 버전 | \`${{ needs.verify.outputs.version-name }}\` (code \`${{ needs.verify.outputs.version-code }}\`) |"
             echo "| 커밋 | \`${{ github.sha }}\` |"
+            if [ "${{ needs.verify.outputs.tag-after }}" = "true" ]; then
+              echo "| 태그 | \`v${{ needs.verify.outputs.version-name }}\` (자동 생성) |"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
