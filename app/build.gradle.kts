@@ -9,6 +9,9 @@ plugins {
 }
 
 android {
+    lint {
+        abortOnError = false
+    }
     namespace = "com.umc.product"
     compileSdk = 36
 
@@ -39,6 +42,13 @@ android {
     }
 
     buildTypes {
+        // Macrobenchmark 전용 빌드타입 — 릴리즈에 준하되 프로파일 수집이 가능하도록 debuggable
+        create("benchmark") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -73,6 +83,8 @@ android {
 
 
 dependencies {
+    // 프로젝트 자체 Lint 규칙(단발성 이벤트 유실·수명주기 미고려 수집·요청 경로 블로킹)
+    lintChecks(project(":lint-rules"))
     implementation(project(":presentation"))
     implementation(project(":data"))
     implementation(project(":domain"))

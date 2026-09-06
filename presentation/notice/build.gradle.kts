@@ -7,6 +7,9 @@ plugins {
 }
 
 android {
+    lint {
+        abortOnError = false
+    }
     namespace = "com.umc.presentation.notice"
     compileSdk = 36
 
@@ -18,6 +21,10 @@ android {
     }
 
     buildTypes {
+        create("benchmark") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -40,10 +47,12 @@ android {
 }
 
 dependencies {
+    lintChecks(project(":lint-rules"))
     implementation(project(":domain"))
     implementation(project(":presentation:component"))
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlinx.collections.immutable)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

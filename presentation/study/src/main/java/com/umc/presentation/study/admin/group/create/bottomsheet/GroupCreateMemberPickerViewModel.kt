@@ -7,6 +7,9 @@ import com.umc.component.base.UiState
 import com.umc.domain.usecase.challenger.SearchChallengerScheduleUseCase
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMemberUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -53,12 +56,12 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
 
         updateState {
             copy(
-                selectedMembers = list,
-                pendingMembers = emptyList(),
+                selectedMembers = list.toImmutableList(),
+                pendingMembers = persistentListOf(),
                 query = "",
                 isSearching = false,
                 isLoading = false,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
             )
@@ -89,8 +92,8 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                 query = query,
                 isSearching = true,
                 isLoading = true,
-                searchResults = emptyList(),
-                pendingMembers = emptyList(),
+                searchResults = persistentListOf(),
+                pendingMembers = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
             )
@@ -170,11 +173,11 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                                         )
                                     .distinctBy { member ->
                                         member.id
-                                    }
+                                    }.toImmutableList()
                             } else {
                                 mappedMembers.distinctBy { member ->
                                     member.id
-                                }
+                                }.toImmutableList()
                             },
                             nextCursor = response.nextCursor,
                             hasNext = response.hasNext,
@@ -216,11 +219,11 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
         updateState {
             copy(
                 isLoading = true,
-                selectedMembers = emptyList(),
-                pendingMembers = emptyList(),
+                selectedMembers = persistentListOf(),
+                pendingMembers = persistentListOf(),
                 query = "",
                 isSearching = false,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
             )
         }
 
@@ -252,7 +255,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
 
                     updateState {
                         copy(
-                            selectedMembers = selectedMembers,
+                            selectedMembers = selectedMembers.toImmutableList(),
                             isLoading = false,
                         )
                     }
@@ -360,9 +363,9 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                 pendingMembers = if (isPending) {
                     pendingMembers.filterNot { member ->
                         member.id == item.id
-                    }
+                    }.toImmutableList()
                 } else {
-                    pendingMembers + item
+                    (pendingMembers + item).toImmutableList()
                 }
             )
         }
@@ -384,12 +387,12 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                         )
                     .distinctBy { member ->
                         member.id
-                    },
-                pendingMembers = emptyList(),
+                    }.toImmutableList(),
+                pendingMembers = persistentListOf(),
                 query = "",
                 isSearching = false,
                 isLoading = false,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
             )
@@ -406,7 +409,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
             copy(
                 selectedMembers = selectedMembers.filterNot { member ->
                     member.id == item.id
-                }
+                }.toImmutableList()
             )
         }
     }
@@ -425,8 +428,8 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                 query = "",
                 isSearching = false,
                 isLoading = false,
-                searchResults = emptyList(),
-                pendingMembers = emptyList(),
+                searchResults = persistentListOf(),
+                pendingMembers = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
             )
@@ -453,11 +456,11 @@ data class GroupCreateMemberPickerState(
 
     // 현재 최종 선택되어 있는 멤버 목록
     val selectedMembers:
-    List<AdminStudyGroupCreateMemberUiModel> = emptyList(),
+    ImmutableList<AdminStudyGroupCreateMemberUiModel> = persistentListOf(),
 
     // 검색 화면에서 아직 확인하지 않은 임시 선택 목록
     val pendingMembers:
-    List<AdminStudyGroupCreateMemberUiModel> = emptyList(),
+    ImmutableList<AdminStudyGroupCreateMemberUiModel> = persistentListOf(),
 
     // 현재 검색어
     val query: String = "",
@@ -470,7 +473,7 @@ data class GroupCreateMemberPickerState(
 
     // 검색 API 결과
     val searchResults:
-    List<AdminStudyGroupCreateMemberUiModel> = emptyList(),
+    ImmutableList<AdminStudyGroupCreateMemberUiModel> = persistentListOf(),
 
     // 다음 페이지 조회 cursor
     val nextCursor: Long? = null,

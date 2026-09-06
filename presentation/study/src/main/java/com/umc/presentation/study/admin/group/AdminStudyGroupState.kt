@@ -2,6 +2,8 @@ package com.umc.presentation.study.admin.group
 
 import com.umc.component.base.UiState
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMemberUiModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 관리자 스터디 그룹 화면의 UI 상태
@@ -22,7 +24,7 @@ data class AdminStudyGroupState(
     /**
      * 관리자가 담당하고 있는 스터디 그룹 목록
      */
-    val groups: List<AdminStudyGroupItemUiModel> = emptyList(),
+    val groups: ImmutableList<AdminStudyGroupItemUiModel> = persistentListOf(),
 
     /**
      * 그룹 목록 최초 로딩 여부
@@ -87,7 +89,7 @@ data class AdminStudyGroupState(
      * 현재 스터디원 목록
      */
     val editingMembers:
-    List<AdminStudyGroupCreateMemberUiModel> = emptyList(),
+    ImmutableList<AdminStudyGroupCreateMemberUiModel> = persistentListOf(),
 ) : UiState {
 
     /**

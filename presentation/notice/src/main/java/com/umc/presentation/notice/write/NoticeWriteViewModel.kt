@@ -40,6 +40,9 @@ import com.umc.domain.usecase.organization.GetChapterListUseCase
 import com.umc.domain.usecase.school.GetAllSchoolUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -101,7 +104,8 @@ class NoticeWriteViewModel @Inject constructor(
                         linkText = linkText,
                         images = detail.images
                             .sortedBy { it.displayOrder }
-                            .map { NoticeImageAttachment(uri = it.url, fileId = it.id.toString()) },
+                            .map { NoticeImageAttachment(uri = it.url, fileId = it.id.toString()) }
+                            .toImmutableList(),
                         // 투표도 수정 대상이라 폼으로 되돌려 채운다
                         vote = detail.vote?.let { vote ->
                             NoticeVoteForm(
@@ -146,7 +150,7 @@ class NoticeWriteViewModel @Inject constructor(
             updateState {
                 copy(
                     writerRole = writerRole,
-                    availableCategories = categories,
+                    availableCategories = categories.toImmutableList(),
                     activeGisuId = activeGisuId?.toInt(),
                     writerSchoolId = userInfo.schoolId.takeIf { it > 0 }?.toInt(),
                 )
@@ -239,14 +243,14 @@ class NoticeWriteViewModel @Inject constructor(
     private fun loadChapterList() = viewModelScope.launch {
         resultResponse(
             response = getChapterListUseCase(),
-            successCallback = { updateState { copy(chapterList = it) } }
+            successCallback = { updateState { copy(chapterList = it.toImmutableList()) } }
         )
     }
 
     private fun loadSchoolList() = viewModelScope.launch {
         resultResponse(
             response = getAllSchoolUseCase(),
-            successCallback = { updateState { copy(schoolList = it) } }
+            successCallback = { updateState { copy(schoolList = it.toImmutableList()) } }
         )
     }
 
@@ -258,7 +262,7 @@ class NoticeWriteViewModel @Inject constructor(
         updateState {
             copy(
                 selectedCategory = category,
-                boardChips = chips,
+                boardChips = chips.toImmutableList(),
                 boardHint = hint,
                 isAllSelected = false,
                 isStaffSelected = false,
@@ -463,7 +467,12 @@ class NoticeWriteViewModel @Inject constructor(
                 response = uploadFileUseCase(uri, UploadFileCategory.NOTICE_ATTACHMENT),
                 successCallback = { uploaded ->
                     updateState {
-                        copy(images = images + NoticeImageAttachment(uri = uri, fileId = uploaded.fileId))
+                        copy(
+                            images = (images + NoticeImageAttachment(
+                                uri = uri,
+                                fileId = uploaded.fileId,
+                            )).toImmutableList()
+                        )
                     }
                 },
                 errorCallback = { hasError = true },
@@ -477,7 +486,7 @@ class NoticeWriteViewModel @Inject constructor(
     }
 
     fun onRemoveImage(image: NoticeImageAttachment) {
-        updateState { copy(images = images - image) }
+        updateState { copy(images = (images - image).toImmutableList()) }
     }
 
     /** 링크 첨부 패널 표시 (툴바 링크 버튼) */
@@ -714,17 +723,17 @@ class NoticeWriteViewModel @Inject constructor(
 
 data class NoticeWriteUiState(
     val writerRole: NoticeWriterRole? = null,
-    val availableCategories: List<WriteCategory> = emptyList(),
+    val availableCategories: ImmutableList<WriteCategory> = persistentListOf(),
     val selectedCategory: WriteCategory? = null,
-    val boardChips: List<BoardChipType> = emptyList(),
+    val boardChips: ImmutableList<BoardChipType> = persistentListOf(),
     val boardHint: String? = null,
     val isAllSelected: Boolean = false,
     val isStaffSelected: Boolean = false,
     val selectedChapter: Chapter? = null,
     val selectedSchool: SchoolInfo? = null,
     val selectedPart: UserPart? = null,
-    val chapterList: List<Chapter> = emptyList(),
-    val schoolList: List<SchoolInfo> = emptyList(),
+    val chapterList: ImmutableList<Chapter> = persistentListOf(),
+    val schoolList: ImmutableList<SchoolInfo> = persistentListOf(),
     val title: String = "",
     val content: TextFieldValue = TextFieldValue(),
     val sendNotification: Boolean = true,
@@ -732,7 +741,7 @@ data class NoticeWriteUiState(
     val mustRead: Boolean = false,
     /** 수정 진입 시 이미 달려 있던 투표 ID. 투표를 갈아끼울 때 먼저 지운다 */
     val originalVoteId: Long = -1L,
-    val images: List<NoticeImageAttachment> = emptyList(),
+    val images: ImmutableList<NoticeImageAttachment> = persistentListOf(),
     val isUploadingImages: Boolean = false,
     val isLinkVisible: Boolean = false,
     val linkText: String = "",

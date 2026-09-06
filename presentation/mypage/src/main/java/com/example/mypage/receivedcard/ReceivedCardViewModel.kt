@@ -10,6 +10,9 @@ import com.umc.domain.model.mypage.UserCardPartType
 import com.umc.domain.usecase.appDataStore.usercard.GetUserCardUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -40,8 +43,8 @@ class ReceivedCardViewModel @Inject constructor(
             getUserCardUseCase().collect { cards ->
                 updateState {
                     copy(
-                        allCards = cards,
-                        filteredCards = cards
+                        allCards = cards.toImmutableList(),
+                        filteredCards = cards.toImmutableList()
                     )
                 }
             }
@@ -63,7 +66,7 @@ class ReceivedCardViewModel @Inject constructor(
                             card.nickname.contains(query, ignoreCase = true) ||
                             card.part.contains(query, ignoreCase = true) ||
                             card.university.contains(query, ignoreCase = true)
-                }
+                }.toImmutableList()
             }
             copy(searchQuery = query, filteredCards = filtered)
         }
@@ -83,8 +86,8 @@ class ReceivedCardViewModel @Inject constructor(
 data class ReceivedCardUiState(
 
     val searchQuery: String = "",
-    val allCards: List<UserCard> = emptyList(), //전체 명함
-    val filteredCards: List<UserCard> = emptyList(), //검색 명함
+    val allCards: ImmutableList<UserCard> = persistentListOf(), //전체 명함
+    val filteredCards: ImmutableList<UserCard> = persistentListOf(), //검색 명함
     val isLoading: Boolean = false
 
     ) : UiState

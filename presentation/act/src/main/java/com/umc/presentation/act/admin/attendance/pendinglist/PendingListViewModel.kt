@@ -9,6 +9,9 @@ import com.umc.domain.usecase.attendance.GetPendingUsersUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceApprovalUseCase
 import com.umc.domain.usecase.attendance.PostAttendanceRejectionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,7 +31,7 @@ class PendingListViewModel @Inject constructor(
         updateState {
             copy(
                 scheduleId = scheduleId,
-                users = initialUsers,
+                users = initialUsers.toImmutableList(),
             )
         }
         if (scheduleId <= 0L) return
@@ -39,7 +42,7 @@ class PendingListViewModel @Inject constructor(
             resultResponse(
                 response = getPendingUsersUseCase(scheduleId),
                 successCallback = { users ->
-                    updateState { copy(users = users) }
+                    updateState { copy(users = users.toImmutableList()) }
                 },
                 errorCallback = { failState ->
                     emitEvent(PendingListEvent.ShowToast(failState.message))
@@ -63,7 +66,7 @@ class PendingListViewModel @Inject constructor(
                 response = postAttendanceApprovalUseCase(uiState.value.scheduleId, recordIds),
                 successCallback = {
                     updateState {
-                        copy(users = users.filterNot { user -> user.id in recordIds })
+                        copy(users = users.filterNot { user -> user.id in recordIds }.toImmutableList())
                     }
                     emitEvent(PendingListEvent.ApproveSuccess)
                 },
@@ -82,7 +85,7 @@ class PendingListViewModel @Inject constructor(
                 response = postAttendanceRejectionUseCase(uiState.value.scheduleId, listOf(user.id)),
                 successCallback = {
                     updateState {
-                        copy(users = users.filterNot { pendingUser -> pendingUser.id == user.id })
+                        copy(users = users.filterNot { pendingUser -> pendingUser.id == user.id }.toImmutableList())
                     }
                     emitEvent(PendingListEvent.RejectSuccess)
                 },
@@ -98,7 +101,7 @@ data class PendingListUiState(
     //현재 세션 ID
     val scheduleId: Long = 0L,
     //승인 대기 유저 목록
-    val users: List<AdminPendingUser> = emptyList(),
+    val users: ImmutableList<AdminPendingUser> = persistentListOf(),
 ) : UiState
 
 sealed interface PendingListEvent : UiEvent {

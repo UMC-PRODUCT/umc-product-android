@@ -13,6 +13,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Body
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * 제출 현황에서 사용하는 주차 선택 UI 모델
@@ -34,7 +35,7 @@ data class AdminSubmitWeekUiModel(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminSubmitWeekBottomSheet(
-    weeks: List<AdminSubmitWeekUiModel>,
+    weeks: ImmutableList<AdminSubmitWeekUiModel>,
     onSelect: (AdminSubmitWeekUiModel) -> Unit,
     onDismiss: () -> Unit,
 ) {

@@ -15,6 +15,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale
 import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -97,7 +100,7 @@ class GroupScheduleLocationViewModel @Inject constructor(
                 .collect { places ->
                     updateState {
                         copy(
-                            recentSearchList = places
+                            recentSearchList = places.toImmutableList()
                         )
                     }
                 }
@@ -145,7 +148,7 @@ class GroupScheduleLocationViewModel @Inject constructor(
                     updateState {
                         copy(
                             searchResultList =
-                                locationList,
+                                locationList.toImmutableList(),
                             isSearching =
                                 false,
                         )
@@ -282,7 +285,7 @@ class GroupScheduleLocationViewModel @Inject constructor(
         updateState {
             copy(
                 selectedPlace = place,
-                searchResultList = emptyList(),
+                searchResultList = persistentListOf(),
                 searchQuery = place.title,
             )
         }
@@ -341,12 +344,12 @@ data class GroupScheduleLocationState(
         ),
 
     /** 최근 장소 검색어 목록 */
-    val recentSearchList: List<String> =
-        emptyList(),
+    val recentSearchList: ImmutableList<String> =
+        persistentListOf(),
 
     /** 장소 검색 결과 */
-    val searchResultList: List<LocationItem> =
-        emptyList(),
+    val searchResultList: ImmutableList<LocationItem> =
+        persistentListOf(),
 ) : UiState
 
 /**

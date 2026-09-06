@@ -34,13 +34,16 @@ import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
 import com.umc.domain.model.notice.NoticeVoteParticipant
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * 투표 현황 전체 화면. 옵션별 참여자를 2열 그리드로 표시 (실명 투표 전용)
  */
 @Composable
 fun NoticeVoteStatusScreen(
-    sections: List<VoteOptionParticipants>,
+    sections: ImmutableList<VoteOptionParticipants>,
     isLoading: Boolean,
     onClickBack: () -> Unit = {},
 ) {
@@ -169,20 +172,20 @@ private fun VoteParticipantCell(
 @Composable
 private fun NoticeVoteStatusScreenPreview() {
     NoticeVoteStatusScreen(
-        sections = listOf(
+        sections = persistentListOf(
             VoteOptionParticipants(
                 optionId = 1L,
                 optionTitle = "항목 1",
                 participants = List(4) {
                     NoticeVoteParticipant(memberId = it.toLong(), nickname = "닉네임", name = "홍길동")
-                },
+                }.toImmutableList(),
             ),
             VoteOptionParticipants(
                 optionId = 2L,
                 optionTitle = "항목 2",
                 participants = List(3) {
                     NoticeVoteParticipant(memberId = it.toLong(), nickname = "닉네임", name = "홍길동")
-                },
+                }.toImmutableList(),
             ),
         ),
         isLoading = false,

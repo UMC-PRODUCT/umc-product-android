@@ -54,6 +54,7 @@ import com.umc.component.theme.indigo500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun EmailLoginRoute(
@@ -68,14 +69,12 @@ fun EmailLoginRoute(
 
     var toastData by remember { mutableStateOf<UToastData?>(null) }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is EmailLoginEvent.MoveToMainEvent -> navigateToMain()
-                is EmailLoginEvent.MoveToInputCodeEvent -> navigateToInputCode()
-                is EmailLoginEvent.ShowErrorToast ->
-                    toastData = UToastData(event.message, UToastState.ERROR)
-            }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is EmailLoginEvent.MoveToMainEvent -> navigateToMain()
+            is EmailLoginEvent.MoveToInputCodeEvent -> navigateToInputCode()
+            is EmailLoginEvent.ShowErrorToast ->
+                toastData = UToastData(event.message, UToastState.ERROR)
         }
     }
 

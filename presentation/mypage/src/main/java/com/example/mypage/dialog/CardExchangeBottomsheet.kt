@@ -48,6 +48,7 @@ import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.white
 import com.umc.domain.model.mypage.NearbyUserInfo
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * 명함 교환 방식 선택 및 주변 유저 탐색을 진행하는 바텀시트 다이얼로그 컴포저블
@@ -77,7 +78,7 @@ enum class ExchangeStep {
 fun CardExchangeBottomSheet(
     sheetState: SheetState,
     currentStep: ExchangeStep,
-    discoveredDevices: List<Pair<String, NearbyUserInfo>>, // (endpointId, userInfo) 형태로 찾은 리스트들
+    discoveredDevices: ImmutableList<Pair<String, NearbyUserInfo>>, // (endpointId, userInfo) 형태로 찾은 리스트들
     selectedTargetUser: Pair<String, NearbyUserInfo>?, // 선택한 유저 정보
     onDismissRequest: () -> Unit,
     onWifiAwareClick: () -> Unit, //wifi aware 선택 시 (nearbyConnection)

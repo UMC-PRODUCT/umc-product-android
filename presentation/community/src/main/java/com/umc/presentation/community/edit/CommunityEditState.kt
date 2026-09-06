@@ -3,6 +3,8 @@ package com.umc.presentation.community.edit
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 스레드 수정 화면에서 사용하는 UI 상태
@@ -19,7 +21,7 @@ data class CommunityEditState(
     val description: String = "",
 
     /** 현재 스레드에 참여 중인 챌린저 목록 */
-    val selectedChallengers: List<CommunityChallengerUiModel> = emptyList(),
+    val selectedChallengers: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
 
     /** 현재 참여 중인 챌린저 수 */
     val currentChallengerCount: Int = 0,

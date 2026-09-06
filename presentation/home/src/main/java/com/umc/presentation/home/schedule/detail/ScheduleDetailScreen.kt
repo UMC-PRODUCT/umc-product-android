@@ -62,6 +62,7 @@ import com.umc.component.theme.indigo600
 import com.umc.presentation.home.schedule.add.ScheduleAddEvent
 import kotlinx.coroutines.flow.collectLatest
 import java.net.URLEncoder
+import com.umc.component.base.CollectUiEvents
 
 
 @Composable
@@ -97,19 +98,17 @@ fun ScheduleDetailRoute(
     }
 
 
-    LaunchedEffect(viewModel){
-        viewModel.uiEvent.collectLatest { event ->
-            when (event){
-                is ScheduleDetailEvent.MoveBackPressedEvent -> onBackClick()
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event){
+            is ScheduleDetailEvent.MoveBackPressedEvent -> onBackClick()
 
-                //일정 수정
-                is ScheduleDetailEvent.EditPlan -> onNavigateToEditSchedule(uiState.content.scheduleId)
+            //일정 수정
+            is ScheduleDetailEvent.EditPlan -> onNavigateToEditSchedule(uiState.content.scheduleId)
 
-                is ScheduleDetailEvent.CheckDeletePlan -> { showDeleteDialog = true }
+            is ScheduleDetailEvent.CheckDeletePlan -> { showDeleteDialog = true }
 
 
-                else -> {}
-            }
+            else -> {}
         }
     }
 

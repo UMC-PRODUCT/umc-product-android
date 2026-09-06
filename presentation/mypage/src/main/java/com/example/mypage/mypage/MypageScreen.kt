@@ -61,7 +61,7 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
-import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 import com.umc.component.R
 import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
@@ -112,85 +112,83 @@ fun MypageRoute(
     var showOutLinkDialog by remember { mutableStateOf(false) }
 
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when(event){
-                //깃허브 누를 때
-                is MypageEvent.NavigateToGithub -> {
-                    if (uiState.githubUrl.isBlank()) {
-                        selectedOutLinkType = OutLinkType.GITHUB
-                        showOutLinkDialog = true
-                    } else {
-                        openWebpage(context, uiState.githubUrl)
-                    }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when(event){
+            //깃허브 누를 때
+            is MypageEvent.NavigateToGithub -> {
+                if (uiState.githubUrl.isBlank()) {
+                    selectedOutLinkType = OutLinkType.GITHUB
+                    showOutLinkDialog = true
+                } else {
+                    openWebpage(context, uiState.githubUrl)
                 }
-                //블로그 누를 때
-                is MypageEvent.NavigateToBlog -> {
-                    if (uiState.blogUrl.isBlank()) {
-                        selectedOutLinkType = OutLinkType.BLOG
-                        showOutLinkDialog = true
-                    } else {
-                        openWebpage(context, uiState.blogUrl)
-                    }
-                }
-                //링크드인 누를 때
-                is MypageEvent.NavigateToLinkedin -> {
-                    if (uiState.linkedinUrl.isBlank()) {
-                        selectedOutLinkType = OutLinkType.LINKEDIN
-                        showOutLinkDialog = true
-                    } else {
-                        openWebpage(context, uiState.linkedinUrl)
-                    }
-                }
-                //프로필 누를 때 (이동)
-                is MypageEvent.NavigateToEditProfile -> onNavigateToEditProfile()
-                //챌린저 기록 추가 누를 때 (이동)
-                is MypageEvent.NavigateToAddActivity -> {
-                    showAddCodeDialog = true
-                }
-                //UMC 카카오톡 문의 누를 때
-                is MypageEvent.NavigateToAssistUmc -> openKakaoChannel(context, event.channelId)
-                //알림 설정 누를 때 + 위치 설정 누를 때
-                is MypageEvent.NavigateToSettingNotice,
-                is MypageEvent.NavigateToSettingLocation -> openPermissionPage(context)
-                //개인정보처리 방침 누를 때
-                is MypageEvent.NavigateToPersonalInformation -> openWebpage(context, event.privacyTerms)
-                //이용약관 누를 때
-                is MypageEvent.NavigateToUseManual -> openWebpage(context, event.manualTerms)
-                //UMC 웹사이트 누를 때
-                is MypageEvent.NavigateToWebstieUmc -> openWebpage(context, uiState.websiteUMC)
-                //UMC 인스타그램 누를 때
-                is MypageEvent.NavigateToInstagramUmc -> openWebpage(context, uiState.instagramUMC)
-                //로그아웃 누를 때
-                is MypageEvent.Logout -> {
-                    showLogoutDialog = true
-                }
-                //회원탈퇴 누를 때
-                is MypageEvent.DeleteUser -> {
-                    showDeleteUserDialog = true
-                }
-                //온보드 누를 때
-                is MypageEvent.MoveToOnBoardPage -> onNavigateToLogin()
-
-                //로그아웃 시 이동
-                is MypageEvent.Logout -> onNavigateToLogin()
-
-                //챌린저 기록 추가 시 (다이얼로그)
-                is MypageEvent.ConfirmAddCode -> {
-                    Toast.makeText(context, "활동기록이 추가되었습니다.", Toast.LENGTH_SHORT).show()
-                    showAddCodeDialog = false
-                }
-                //챌린저 기록 추가 실패 시(다이얼로그)
-                is MypageEvent.FailAddCode -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                    showAddCodeDialog = false
-
-                }
-                //뒤로 가기
-                is MypageEvent.NavigateToBack -> onNavigateToBack()
-
-                else -> {}
             }
+            //블로그 누를 때
+            is MypageEvent.NavigateToBlog -> {
+                if (uiState.blogUrl.isBlank()) {
+                    selectedOutLinkType = OutLinkType.BLOG
+                    showOutLinkDialog = true
+                } else {
+                    openWebpage(context, uiState.blogUrl)
+                }
+            }
+            //링크드인 누를 때
+            is MypageEvent.NavigateToLinkedin -> {
+                if (uiState.linkedinUrl.isBlank()) {
+                    selectedOutLinkType = OutLinkType.LINKEDIN
+                    showOutLinkDialog = true
+                } else {
+                    openWebpage(context, uiState.linkedinUrl)
+                }
+            }
+            //프로필 누를 때 (이동)
+            is MypageEvent.NavigateToEditProfile -> onNavigateToEditProfile()
+            //챌린저 기록 추가 누를 때 (이동)
+            is MypageEvent.NavigateToAddActivity -> {
+                showAddCodeDialog = true
+            }
+            //UMC 카카오톡 문의 누를 때
+            is MypageEvent.NavigateToAssistUmc -> openKakaoChannel(context, event.channelId)
+            //알림 설정 누를 때 + 위치 설정 누를 때
+            is MypageEvent.NavigateToSettingNotice,
+            is MypageEvent.NavigateToSettingLocation -> openPermissionPage(context)
+            //개인정보처리 방침 누를 때
+            is MypageEvent.NavigateToPersonalInformation -> openWebpage(context, event.privacyTerms)
+            //이용약관 누를 때
+            is MypageEvent.NavigateToUseManual -> openWebpage(context, event.manualTerms)
+            //UMC 웹사이트 누를 때
+            is MypageEvent.NavigateToWebstieUmc -> openWebpage(context, uiState.websiteUMC)
+            //UMC 인스타그램 누를 때
+            is MypageEvent.NavigateToInstagramUmc -> openWebpage(context, uiState.instagramUMC)
+            //로그아웃 누를 때
+            is MypageEvent.Logout -> {
+                showLogoutDialog = true
+            }
+            //회원탈퇴 누를 때
+            is MypageEvent.DeleteUser -> {
+                showDeleteUserDialog = true
+            }
+            //온보드 누를 때
+            is MypageEvent.MoveToOnBoardPage -> onNavigateToLogin()
+
+            //로그아웃 시 이동
+            is MypageEvent.Logout -> onNavigateToLogin()
+
+            //챌린저 기록 추가 시 (다이얼로그)
+            is MypageEvent.ConfirmAddCode -> {
+                Toast.makeText(context, "활동기록이 추가되었습니다.", Toast.LENGTH_SHORT).show()
+                showAddCodeDialog = false
+            }
+            //챌린저 기록 추가 실패 시(다이얼로그)
+            is MypageEvent.FailAddCode -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                showAddCodeDialog = false
+
+            }
+            //뒤로 가기
+            is MypageEvent.NavigateToBack -> onNavigateToBack()
+
+            else -> {}
         }
     }
 

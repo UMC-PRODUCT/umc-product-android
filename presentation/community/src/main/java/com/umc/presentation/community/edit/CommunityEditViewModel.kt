@@ -16,6 +16,7 @@ import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -248,7 +249,7 @@ class CommunityEditViewModel @Inject constructor(
 
             _state.update {
                 it.copy(
-                    selectedChallengers = members,
+                    selectedChallengers = members.toImmutableList(),
                     currentChallengerCount = members.size,
                 )
             }

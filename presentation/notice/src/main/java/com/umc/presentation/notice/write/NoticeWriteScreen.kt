@@ -42,6 +42,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import com.umc.component.base.CollectUiEvents
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -101,6 +102,9 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.enums.WriteCategoryType
 import com.umc.domain.model.notice.NoticeImageAttachment
 import com.umc.domain.model.notice.WriteCategory
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.collectLatest
 
 /** 공지 작성 화면 바텀시트 종류 */
@@ -132,8 +136,7 @@ fun NoticeWriteRoute(
         if (editNoticeId > 0L) viewModel.initEditMode(editNoticeId)
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
+    CollectUiEvents(viewModel.uiEvent) { event ->
             when (event) {
                 NoticeWriteEvent.SubmitSuccess -> {
                     val message = if (editNoticeId > 0L) {
@@ -149,7 +152,6 @@ fun NoticeWriteRoute(
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
             }
-        }
     }
 
     NoticeWriteScreen(
@@ -221,7 +223,7 @@ fun NoticeWriteRoute(
             when (type) {
                 WriteSheetType.CATEGORY -> WriteSelectSheetContent(
                     title = AppStrings.NOTICE_WRITE_CATEGORY_PLACEHOLDER,
-                    items = uiState.availableCategories.map { it.label },
+                    items = uiState.availableCategories.map { it.label }.toImmutableList(),
                     onSelect = { index ->
                         viewModel.onSelectCategory(uiState.availableCategories[index])
                         sheetType = null
@@ -230,7 +232,7 @@ fun NoticeWriteRoute(
 
                 WriteSheetType.CHAPTER -> WriteSelectSheetContent(
                     title = AppStrings.NOTICE_WRITE_CHAPTER_SELECT,
-                    items = uiState.chapterList.map { it.name },
+                    items = uiState.chapterList.map { it.name }.toImmutableList(),
                     onSelect = { index ->
                         viewModel.onSelectChapter(uiState.chapterList[index])
                         sheetType = null
@@ -239,7 +241,7 @@ fun NoticeWriteRoute(
 
                 WriteSheetType.SCHOOL -> WriteSelectSheetContent(
                     title = AppStrings.SIGN_UP_SELECT_SCHOOL_PLACEHOLDER,
-                    items = uiState.schoolList.map { it.schoolName },
+                    items = uiState.schoolList.map { it.schoolName }.toImmutableList(),
                     onSelect = { index ->
                         viewModel.onSelectSchool(uiState.schoolList[index])
                         sheetType = null
@@ -250,7 +252,7 @@ fun NoticeWriteRoute(
                     val parts = UserPart.entries.filter { it != UserPart.UNKNOWN && it != UserPart.ADMIN }
                     WriteSelectSheetContent(
                         title = AppStrings.NOTICE_BOTTOMSHEET_TITLE,
-                        items = parts.map { it.label },
+                        items = parts.map { it.label }.toImmutableList(),
                         onSelect = { index ->
                             viewModel.onSelectPart(parts[index])
                             sheetType = null
@@ -1176,7 +1178,7 @@ private fun WriteBoardChip(
 @Composable
 private fun WriteSelectSheetContent(
     title: String,
-    items: List<String>,
+    items: ImmutableList<String>,
     onSelect: (Int) -> Unit = {},
 ) {
     Column(
@@ -1219,7 +1221,7 @@ private fun NoticeWriteScreenPreview() {
                 WriteCategoryType.CENTRAL_STAFF,
                 AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL
             ),
-            boardChips = listOf(
+            boardChips = persistentListOf(
                 BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART, BoardChipType.CHAPTER
             ),
             boardHint = AppStrings.NOTICE_WRITE_CLASS_HINT,

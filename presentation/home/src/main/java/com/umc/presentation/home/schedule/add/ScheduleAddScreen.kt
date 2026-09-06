@@ -40,6 +40,7 @@ import com.umc.presentation.home.schedule.dialog.LocationSearchBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddDialogViewModel
+import com.umc.component.base.CollectUiEvents
 
 
 
@@ -76,15 +77,13 @@ fun ScheduleAddRoute(
     var showLateEndPicker by remember { mutableStateOf(false) }
 
 
-    LaunchedEffect(viewModel){
-        viewModel.uiEvent.collectLatest { event ->
-            when (event){
-                is ScheduleAddEvent.MoveBackPressedEvent -> onBackPressedDispatcher?.onBackPressed()
-                is ScheduleAddEvent.ShowErrorToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
-                else -> {}
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event){
+            is ScheduleAddEvent.MoveBackPressedEvent -> onBackPressedDispatcher?.onBackPressed()
+            is ScheduleAddEvent.ShowErrorToast -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
+            else -> {}
         }
     }
 

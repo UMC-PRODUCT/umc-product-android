@@ -26,6 +26,7 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey800
 import com.umc.presentation.community.model.CommunityChallengerUiModel
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * 스레드 생성 화면에서 선택된 챌린저 정보를 표시하는 카드
@@ -35,7 +36,7 @@ import com.umc.presentation.community.model.CommunityChallengerUiModel
  */
 @Composable
 fun CommunityChallengerCard(
-    challengers: List<CommunityChallengerUiModel>,
+    challengers: ImmutableList<CommunityChallengerUiModel>,
     maxCount: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,

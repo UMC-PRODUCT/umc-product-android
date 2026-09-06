@@ -9,6 +9,9 @@ import com.umc.domain.usecase.schedule.DeleteScheduleUseCase
 import com.umc.domain.usecase.schedule.ForceDeleteScheduleUseCase
 import com.umc.domain.usecase.schedule.GetAdminSessionListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -36,7 +39,7 @@ class AdminAttendanceViewModel @Inject constructor(
                             sessions = sessions.sortedWith(
                                 compareByDescending<AdminSessionCheck> { it.date.toAttendanceLocalDate() }
                                     .thenByDescending { it.startTime }
-                            )
+                            ).toImmutableList()
                         )
                     }
                 },
@@ -81,7 +84,7 @@ class AdminAttendanceViewModel @Inject constructor(
                 successCallback = {
                     updateState {
                         copy(
-                            sessions = sessions.filterNot { it.id == scheduleId },
+                            sessions = sessions.filterNot { it.id == scheduleId }.toImmutableList(),
                             deleteTargetId = null
                         )
                     }
@@ -118,7 +121,7 @@ class AdminAttendanceViewModel @Inject constructor(
                 successCallback = {
                     updateState {
                         copy(
-                            sessions = sessions.filterNot { it.id == scheduleId },
+                            sessions = sessions.filterNot { it.id == scheduleId }.toImmutableList(),
                             forceDeleteTargetId = null
                         )
                     }
@@ -135,7 +138,7 @@ class AdminAttendanceViewModel @Inject constructor(
 
 data class AdminAttendanceUiState(
     //관리자 세션 목록
-    val sessions: List<AdminSessionCheck> = emptyList(),
+    val sessions: ImmutableList<AdminSessionCheck> = persistentListOf(),
     val deleteTargetId: Long? = null,
     val forceDeleteTargetId: Long? = null,
     val pendingListScheduleId: Long? = null,

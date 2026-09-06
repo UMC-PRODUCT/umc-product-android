@@ -44,7 +44,10 @@ import com.umc.component.theme.grey700
 import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo500
 import com.umc.presentation.notice.NoticeCard
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.base.CollectUiEvents
 
 @Composable
 fun AdminNoticeRoute(
@@ -60,13 +63,11 @@ fun AdminNoticeRoute(
         viewModel.setGisuId(gisuId)
     }
 
-    LaunchedEffect(viewModel) {
-        viewModel.uiEvent.collectLatest { event ->
-            when (event) {
-                is AdminNoticeEvent.MoveToSearchEvent ->
-                    navigateToSearch(event.gisuId, event.noticeTab, event.schoolId)
-                is AdminNoticeEvent.MoveToDetailEvent -> navigateToDetail(event.noticeId)
-            }
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is AdminNoticeEvent.MoveToSearchEvent ->
+                navigateToSearch(event.gisuId, event.noticeTab, event.schoolId)
+            is AdminNoticeEvent.MoveToDetailEvent -> navigateToDetail(event.noticeId)
         }
     }
 
@@ -265,7 +266,7 @@ private fun AdminNoticeStatusContent(
 private fun AdminNoticeScreenPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
-            visibleTabs = AdminNoticeTab.entries,
+            visibleTabs = AdminNoticeTab.entries.toImmutableList(),
             selectedTab = AdminNoticeTab.CENTRAL,
         ),
     )
@@ -277,7 +278,7 @@ private fun AdminNoticeScreenNoAccessPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
             hasAccess = false,
-            visibleTabs = listOf(AdminNoticeTab.PART_LEADER),
+            visibleTabs = persistentListOf(AdminNoticeTab.PART_LEADER),
             selectedTab = AdminNoticeTab.PART_LEADER,
         ),
     )

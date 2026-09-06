@@ -15,6 +15,9 @@ import com.umc.domain.model.enums.WorkbookStatus
 import com.umc.domain.usecase.curriculum.GetMyCurriculumProgressUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,7 +30,7 @@ import javax.inject.Inject
 data class UserStudyState(
     val title: String = "",
     val part: UserPart = UserPart.UNKNOWN,
-    val items: List<NormalStudyItemUiModel> = emptyList(),
+    val items: ImmutableList<NormalStudyItemUiModel> = persistentListOf(),
 ) : UiState {
 
     /** 전체 커리큘럼 개수 */
@@ -214,7 +217,7 @@ class UserStudyViewModel @Inject constructor(
                     copy(
                         title = data.curriculumTitle,
                         part = part,
-                        items = items,
+                        items = items.toImmutableList(),
                     )
                 }
 
@@ -252,7 +255,7 @@ class UserStudyViewModel @Inject constructor(
                     } else {
                         item
                     }
-                }
+                }.toImmutableList()
             )
         }
     }

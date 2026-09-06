@@ -28,6 +28,12 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.ImmutableList
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -82,7 +88,7 @@ class HomeViewModel @Inject constructor(
         updateState {
             copy(
                 selectedDate = date,
-                dailyPlans = allPlans.filter { it.date == dateString }
+                dailyPlans = allPlans.filter { it.date == dateString }.toImmutableList()
             )
         }
     }
@@ -100,7 +106,7 @@ class HomeViewModel @Inject constructor(
             LocalDate.parse(it.date, dateFormatter)
         }.toSet()
 
-        updateState { copy(eventDates = dates) }
+        updateState { copy(eventDates = dates.toImmutableSet()) }
     }
 
     /**
@@ -147,7 +153,7 @@ class HomeViewModel @Inject constructor(
                 userName = userInfo.name,
                 userNickName = userInfo.nickname,
                 userMemberId = userInfo.id,
-                gisuTag = gisuTags,
+                gisuTag = gisuTags.toImmutableList(),
                 activeString = "${latestGisu?.gisu ?: 0}기 활동 상태",
                 growDay = userInfo.totalActivityDays.toInt()
             )
@@ -298,8 +304,8 @@ class HomeViewModel @Inject constructor(
 
                     updateState {
                         copy(
-                            allPlans = planItems,
-                            dailyPlans = planItems.filter { it.date == todayString },
+                            allPlans = planItems.toImmutableList(),
+                            dailyPlans = planItems.filter { it.date == todayString }.toImmutableList(),
                             isBannerVisible = shouldShowBanner
                         )
                     }
@@ -391,7 +397,9 @@ class HomeViewModel @Inject constructor(
 data class HomeUiState(
     // 달력 및 일정 관련 상태
     val selectedDate: LocalDate = LocalDate.now(),
-    val eventDates: Set<LocalDate> = emptySet(),
+    val eventDates: ImmutableSet<LocalDate> = persistentSetOf(),
+
+    //달력 <-> 일정 전환
     val viewMode: HomeViewMode = HomeViewMode.CALENDAR,
 
     // 유저 프로필 영역 상태
@@ -399,7 +407,8 @@ data class HomeUiState(
     val userMemberId : Long = 0L,
     val userNickName: String = "",
     val growDay: Int = 0,
-    val gisuTag: List<String> = emptyList(),
+    val gisuTag: ImmutableList<String> = persistentListOf(),
+
     val userType: UserType = UserType.ACTIVE,
     val warningStatus: WarningStatus = WarningStatus.NORMAL,
 
@@ -413,9 +422,8 @@ data class HomeUiState(
     val total: Int = 0,
 
     //일정 관련
-    val dailyPlans: List<SchedulePlanItem> = emptyList(), //선택한 날들의 일정
-    val allPlans: List<SchedulePlanItem> = listOf(
-    ), //월별 모든 일정
+    val dailyPlans: ImmutableList<SchedulePlanItem> = persistentListOf(), //선택한 날들의 일정
+    val allPlans: ImmutableList<SchedulePlanItem> = persistentListOf(), //월별 모든 일정
     val plusDays : Int = 0, //연속 날짜 처리 용도
 
     //홈 카드 보여주기

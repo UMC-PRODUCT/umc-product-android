@@ -12,6 +12,12 @@ import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.GetNoticeListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -96,7 +102,7 @@ class AdminNoticeViewModel @Inject constructor(
     /** 읽은 공지 ID를 dataStore에서 구독해 상태에 반영 (읽지 않은 공지 빨간 점 표시용) */
     private fun collectReadNoticeIds() = viewModelScope.launch {
         appDataStoreRepository.getReadNoticeIds().collect { readIds ->
-            updateState { copy(readNoticeIds = readIds) }
+            updateState { copy(readNoticeIds = readIds.toImmutableSet()) }
         }
     }
 
@@ -112,7 +118,7 @@ class AdminNoticeViewModel @Inject constructor(
                 updateState {
                     copy(
                         hasAccess = false,
-                        visibleTabs = listOf(AdminNoticeTab.PART_LEADER),
+                        visibleTabs = persistentListOf(AdminNoticeTab.PART_LEADER),
                         selectedTab = AdminNoticeTab.PART_LEADER,
                     )
                 }
@@ -120,7 +126,9 @@ class AdminNoticeViewModel @Inject constructor(
                 updateState {
                     copy(
                         hasAccess = true,
-                        visibleTabs = AdminNoticeTab.entries.filter { it.ordinal >= highestTab.ordinal },
+                        visibleTabs = AdminNoticeTab.entries
+                            .filter { it.ordinal >= highestTab.ordinal }
+                            .toImmutableList(),
                         selectedTab = selectedTab ?: highestTab,
                     )
                 }
@@ -198,7 +206,11 @@ class AdminNoticeViewModel @Inject constructor(
             successCallback = { noticeSearch ->
                 updateState {
                     copy(
-                        noticeList = if (isRefresh) noticeSearch.content else noticeList + noticeSearch.content,
+                        noticeList = if (isRefresh) {
+                            noticeSearch.content.toImmutableList()
+                        } else {
+                            (noticeList + noticeSearch.content).toImmutableList()
+                        },
                         currentPage = pageToFetch + 1,
                         isPageLoading = false,
                         isLastPage = !noticeSearch.hasNext,
@@ -224,13 +236,13 @@ class AdminNoticeViewModel @Inject constructor(
 data class AdminNoticeUiState(
     val gisuId: Long = 0,
     val hasAccess: Boolean = true,
-    val visibleTabs: List<AdminNoticeTab> = emptyList(),
+    val visibleTabs: ImmutableList<AdminNoticeTab> = persistentListOf(),
     val selectedTab: AdminNoticeTab? = null,
-    val noticeList: List<NoticeSummary> = emptyList(),
+    val noticeList: ImmutableList<NoticeSummary> = persistentListOf(),
     val currentPage: Int = 0,
     val isPageLoading: Boolean = false,
     val isLastPage: Boolean = false,
-    val readNoticeIds: Set<Long> = emptySet(),
+    val readNoticeIds: ImmutableSet<Long> = persistentSetOf(),
 ) : UiState {
     // 접근 가능 + 로딩 아님 + 목록 비어있음 -> 빈 상태 노출
     val isEmpty: Boolean
