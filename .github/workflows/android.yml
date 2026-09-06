@@ -1,13 +1,15 @@
 name: Android CI/CD
 
-# 브랜치별 배포 규칙
-#   main            → API 운영 서버(api.university.neordinary.com) → Play 프로덕션 트랙
-#   develop-compose → API dev 서버(dev.api.university.neordinary.com) → Play 내부 테스트 트랙
-# PR 은 검사만 하고 배포하지 않는다.
+# 배포 규칙
+#   v* 태그 푸시     → API 운영 서버 → Play 프로덕션 트랙 (versionName = 태그)
+#   develop-compose  → API dev 서버  → Play 내부 테스트 트랙 (versionName = <최신태그>-dev.N)
+#   main 브랜치 푸시 → 검사만. 프로덕션 배포는 태그로만 한다.
+#   PR               → 변경된 모듈과 그 역의존만 검사 (배포 없음)
 
 on:
   push:
     branches: [ main, develop-compose ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main, develop-compose ]
   workflow_dispatch:
@@ -36,30 +38,119 @@ jobs:
       api-env: ${{ steps.resolve.outputs.api-env }}
       track: ${{ steps.resolve.outputs.track }}
       version-code: ${{ steps.resolve.outputs.version-code }}
+      version-name: ${{ steps.resolve.outputs.version-name }}
+      deploy: ${{ steps.resolve.outputs.deploy }}
+      scope: ${{ steps.resolve.outputs.scope }}
 
     steps:
       - name: 체크아웃
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # git describe 로 최신 태그를 읽고 PR 변경 파일을 계산한다
 
-      - name: 브랜치별 환경 결정
+      - name: 배포 대상·버전 결정
         id: resolve
         env:
           MANUAL_TRACK: ${{ inputs.track }}
         run: |
+          set -euo pipefail
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           BRANCH="${{ github.base_ref || github.ref_name }}"
-          case "$BRANCH" in
-            main)            API_ENV=prod ; TRACK=production ;;
-            develop-compose) API_ENV=dev  ; TRACK=internal   ;;
-            *)               API_ENV=dev  ; TRACK=internal   ;;
-          esac
-          if [ -n "$MANUAL_TRACK" ]; then TRACK="$MANUAL_TRACK"; fi
+
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
+            # v3.1.0 형태만 허용한다. 오타로 엉뚱한 버전이 프로덕션에 나가는 것을 막는다.
+            if ! printf '%s' "$GITHUB_REF_NAME" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::릴리스 태그는 vMAJOR.MINOR.PATCH 형식이어야 합니다 (입력: $GITHUB_REF_NAME)"
+              exit 1
+            fi
+            API_ENV=prod; TRACK=production; DEPLOY=true
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+          else
+            case "$BRANCH" in
+              develop-compose)
+                API_ENV=dev; TRACK=internal; DEPLOY=true
+                VERSION_NAME="${LATEST_TAG#v}-dev.${GITHUB_RUN_NUMBER}"
+                ;;
+              main)
+                # main 은 검사만 한다. 프로덕션 출시는 태그를 통해서만.
+                API_ENV=prod; TRACK=production; DEPLOY=false
+                VERSION_NAME="${LATEST_TAG#v}"
+                ;;
+              *)
+                API_ENV=dev; TRACK=internal; DEPLOY=false
+                VERSION_NAME="${LATEST_TAG#v}-dev.${GITHUB_RUN_NUMBER}"
+                ;;
+            esac
+          fi
+
+          # 수동 실행은 항상 배포한다 (트랙은 입력값).
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            DEPLOY=true
+            if [ -n "$MANUAL_TRACK" ]; then TRACK="$MANUAL_TRACK"; fi
+          fi
+          # PR 은 어떤 경우에도 배포하지 않는다.
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then DEPLOY=false; fi
+
+          # PR 만 축약 검사. 배포로 이어지는 경로는 항상 전체 검사한다.
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then SCOPE=affected; else SCOPE=full; fi
+
           # Play 는 동일 versionCode 재업로드를 거부한다. 실행 횟수로 단조 증가시킨다.
-          # (Play 에 올라가 있는 현재 최신 versionCode 가 21)
+          # (파이프라인 도입 시점의 Play 최신 versionCode 가 21)
           VERSION_CODE=$(( 21 + GITHUB_RUN_NUMBER ))
-          echo "api-env=$API_ENV"           >> "$GITHUB_OUTPUT"
-          echo "track=$TRACK"               >> "$GITHUB_OUTPUT"
-          echo "version-code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "### 🎯 \`$BRANCH\` → API \`$API_ENV\` · 트랙 \`$TRACK\`" >> "$GITHUB_STEP_SUMMARY"
+
+          {
+            echo "api-env=$API_ENV"
+            echo "track=$TRACK"
+            echo "deploy=$DEPLOY"
+            echo "scope=$SCOPE"
+            echo "version-code=$VERSION_CODE"
+            echo "version-name=$VERSION_NAME"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "### 🎯 대상"
+            echo ""
+            echo "| 항목 | 값 |"
+            echo "| --- | --- |"
+            echo "| ref | \`${GITHUB_REF_NAME}\` (${GITHUB_REF_TYPE:-branch}) |"
+            echo "| API 환경 | \`$API_ENV\` |"
+            echo "| 버전 | \`$VERSION_NAME\` (code \`$VERSION_CODE\`) |"
+            echo "| 검사 범위 | \`$SCOPE\` |"
+            echo "| 배포 | $([ "$DEPLOY" = true ] && echo "\`$TRACK\`" || echo "없음") |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$DEPLOY" = "false" ] && [ "$GITHUB_REF_NAME" = "main" ] && [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            {
+              echo ""
+              echo "> main 푸시는 검사만 합니다. 프로덕션 출시는 \`git tag vX.Y.Z && git push origin vX.Y.Z\` 로 하세요."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: 검사할 모듈 계산
+        id: affected
+        if: steps.resolve.outputs.scope == 'affected'
+        run: |
+          set -euo pipefail
+          # fetch-depth: 0 으로 전체 이력을 받아뒀으므로 base 와의 merge-base 비교가 가능하다.
+          CHANGED=$(git diff --name-only "origin/${GITHUB_BASE_REF}...HEAD" || true)
+          if [ -z "$CHANGED" ]; then
+            echo "변경 파일을 계산하지 못했습니다 — 전체 검사로 후퇴합니다."
+            echo "tasks=ALL" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "변경된 파일:"; printf '%s\n' "$CHANGED" | sed 's/^/  /'
+          TASKS=$(printf '%s\n' "$CHANGED" | python3 .github/scripts/affected_modules.py)
+          echo "tasks=$TASKS" >> "$GITHUB_OUTPUT"
+          {
+            echo ""
+            echo "### 📦 축약 검사 대상"
+            echo ""
+            if [ "$TASKS" = "ALL" ]; then
+              echo "전역 파일이 바뀌어 전 모듈을 검사합니다."
+            else
+              printf '%s\n' "$TASKS" | tr ' ' '\n' | sed 's/^/- `/;s/$/`/'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: JDK 17 설치
         uses: actions/setup-java@v4
@@ -92,40 +183,64 @@ jobs:
       - name: 커스텀 Lint 규칙 자체 테스트
         run: ./gradlew :lint-rules:test --console=plain
 
-      - name: 단위 테스트
-        run: ./gradlew testDebugUnitTest -PapiEnv=${{ steps.resolve.outputs.api-env }} --console=plain
+      # 배포로 이어지는 경로: 전 모듈 테스트 + app 이 의존성까지 훑는 lint
+      - name: 테스트·Lint (전체)
+        if: steps.resolve.outputs.scope == 'full'
+        run: |
+          ./gradlew testDebugUnitTest :app:lintDebug \
+            -PapiEnv=${{ steps.resolve.outputs.api-env }} \
+            --console=plain
 
-      - name: Android Lint
-        run: ./gradlew :app:lintDebug -PapiEnv=${{ steps.resolve.outputs.api-env }} --console=plain
+      # PR: 변경된 모듈과 그 역의존만. 각 모듈이 자기 lintChecks 를 등록하고 있으므로
+      # app 의 checkDependencies 를 꺼도 커스텀 규칙 커버리지는 유지된다.
+      - name: 테스트·Lint (축약)
+        if: steps.resolve.outputs.scope == 'affected'
+        env:
+          TASKS: ${{ steps.affected.outputs.tasks }}
+        run: |
+          set -euo pipefail
+          if [ "$TASKS" = "ALL" ]; then
+            ./gradlew testDebugUnitTest :app:lintDebug \
+              -PapiEnv=${{ steps.resolve.outputs.api-env }} --console=plain
+          else
+            # shellcheck disable=SC2086
+            ./gradlew $TASKS \
+              -PapiEnv=${{ steps.resolve.outputs.api-env }} \
+              -PlintCheckDependencies=false \
+              --console=plain
+          fi
 
       # :lint-rules 가 스스로 선언한 severity 를 그대로 신뢰한다.
       # ERROR(OneShotEventSharedFlow) 는 파이프라인을 세우고, WARNING 은 요약에만 남긴다.
       - name: UMC 커스텀 Lint 게이트
         run: |
           python3 - <<'PY'
-          import sys, xml.etree.ElementTree as ET
+          import os, sys, xml.etree.ElementTree as ET
           from pathlib import Path
 
           UMC = {"OneShotEventSharedFlow", "LifecycleUnawareEventCollect", "BlockingCallInRequestPath"}
-          report = Path("app/build/reports/lint-results-debug.xml")
-          if not report.exists():
-              sys.exit("lint 리포트를 찾을 수 없습니다: %s" % report)
+          reports = sorted(Path(".").glob("**/build/reports/lint-results-debug.xml"))
+          if not reports:
+              print("lint 리포트가 없습니다 — 검사 대상 모듈이 없었을 수 있습니다.")
+              sys.exit(0)
 
           errors, warnings = [], []
-          for issue in ET.parse(report).getroot().iter("issue"):
-              if issue.get("id") not in UMC:
-                  continue
-              loc = issue.find("location")
-              where = "%s:%s" % (loc.get("file", "?").split("/")[-1], loc.get("line", "?"))
-              row = (issue.get("id"), where, issue.get("message", ""))
-              (errors if issue.get("severity") == "Error" else warnings).append(row)
+          for report in reports:
+              for issue in ET.parse(report).getroot().iter("issue"):
+                  if issue.get("id") not in UMC:
+                      continue
+                  loc = issue.find("location")
+                  where = "%s:%s" % (loc.get("file", "?").split("/")[-1], loc.get("line", "?"))
+                  row = (issue.get("id"), where, issue.get("message", ""))
+                  bucket = errors if issue.get("severity") == "Error" else warnings
+                  if row not in bucket:
+                      bucket.append(row)
 
-          summary = Path(__import__("os").environ["GITHUB_STEP_SUMMARY"]).open("a")
-          summary.write("\n### 🔍 UMC 커스텀 Lint\n\n")
-          summary.write("- 오류 %d건 / 경고 %d건\n\n" % (len(errors), len(warnings)))
-          for iid, where, msg in errors + warnings:
-              summary.write("- `%s` %s — %s\n" % (iid, where, msg))
-          summary.close()
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write("\n### 🔍 UMC 커스텀 Lint\n\n")
+              f.write("- 리포트 %d개 · 오류 %d건 / 경고 %d건\n\n" % (len(reports), len(errors), len(warnings)))
+              for iid, where, msg in errors + warnings:
+                  f.write("- `%s` %s — %s\n" % (iid, where, msg))
 
           for iid, where, msg in warnings:
               print("::warning file=%s::[%s] %s" % (where.split(":")[0], iid, msg))
@@ -134,30 +249,34 @@ jobs:
 
           if errors:
               sys.exit("UMC 커스텀 Lint 오류 %d건 — 배포를 중단합니다." % len(errors))
-          print("UMC 커스텀 Lint 오류 없음 (경고 %d건)" % len(warnings))
+          print("UMC 커스텀 Lint 오류 없음 (리포트 %d개, 경고 %d건)" % (len(reports), len(warnings)))
           PY
 
       - name: 빌드 검증 (Debug)
+        env:
+          VERSION_NAME: ${{ steps.resolve.outputs.version-name }}
         run: ./gradlew :app:assembleDebug -PapiEnv=${{ steps.resolve.outputs.api-env }} --console=plain
 
-      # 브랜치에 맞는 서버 주소가 실제로 박혔는지 확인한다.
+      # 브랜치에 맞는 서버 주소와 버전이 실제로 박혔는지 확인한다.
       # 이 검사가 없으면 apiEnv 전달이 빠져도 조용히 운영 서버로 빌드된다.
-      - name: 서버 주소 검증
+      - name: 서버 주소·버전 검증
         env:
           API_ENV: ${{ steps.resolve.outputs.api-env }}
+          EXPECTED_VERSION: ${{ steps.resolve.outputs.version-name }}
         run: |
+          set -euo pipefail
           case "$API_ENV" in
-            prod) EXPECTED="https://api.university.neordinary.com/" ;;
-            dev)  EXPECTED="https://dev.api.university.neordinary.com/" ;;
+            prod) EXPECTED_URL="https://api.university.neordinary.com/" ;;
+            dev)  EXPECTED_URL="https://dev.api.university.neordinary.com/" ;;
             *)    echo "::error::알 수 없는 apiEnv: $API_ENV"; exit 1 ;;
           esac
           GEN=app/build/generated/source/buildConfig/debug/com/umc/product/BuildConfig.java
-          ACTUAL=$(sed -n 's/.*BASE_URL = "\(.*\)";/\1/p' "$GEN")
-          if [ "$ACTUAL" != "$EXPECTED" ]; then
-            echo "::error::서버 주소 불일치 — 기대 $EXPECTED / 실제 $ACTUAL"
+          ACTUAL_URL=$(sed -n 's/.*BASE_URL = "\(.*\)";/\1/p' "$GEN")
+          if [ "$ACTUAL_URL" != "$EXPECTED_URL" ]; then
+            echo "::error::서버 주소 불일치 — 기대 $EXPECTED_URL / 실제 $ACTUAL_URL"
             exit 1
           fi
-          echo "### 🌐 서버 주소 \`$ACTUAL\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "### 🌐 서버 주소 \`$ACTUAL_URL\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: 리포트 업로드
         if: always()
@@ -166,7 +285,7 @@ jobs:
           name: reports-${{ github.run_number }}
           path: |
             **/build/reports/tests/**
-            app/build/reports/lint-results-debug.*
+            **/build/reports/lint-results-debug.*
           retention-days: 7
           if-no-files-found: ignore
 
@@ -176,7 +295,7 @@ jobs:
   deploy:
     name: Play Store 배포 (${{ needs.verify.outputs.track }})
     needs: verify
-    if: github.event_name != 'pull_request'
+    if: needs.verify.outputs.deploy == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -219,6 +338,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           VERSION_CODE: ${{ needs.verify.outputs.version-code }}
+          VERSION_NAME: ${{ needs.verify.outputs.version-name }}
         run: |
           ./gradlew :app:bundleRelease \
             -PapiEnv=${{ needs.verify.outputs.api-env }} \
@@ -251,9 +371,9 @@ jobs:
             echo ""
             echo "| 항목 | 값 |"
             echo "| --- | --- |"
-            echo "| 브랜치 | \`${{ github.ref_name }}\` |"
+            echo "| ref | \`${{ github.ref_name }}\` |"
             echo "| API 환경 | \`${{ needs.verify.outputs.api-env }}\` |"
             echo "| 트랙 | \`${{ needs.verify.outputs.track }}\` |"
-            echo "| versionCode | \`${{ needs.verify.outputs.version-code }}\` |"
+            echo "| 버전 | \`${{ needs.verify.outputs.version-name }}\` (code \`${{ needs.verify.outputs.version-code }}\`) |"
             echo "| 커밋 | \`${{ github.sha }}\` |"
           } >> "$GITHUB_STEP_SUMMARY"
