@@ -25,6 +25,10 @@ on:
         type: choice
         default: auto
         options: [ auto, patch, minor, major ]
+      simulate_main:
+        description: "main 자동 릴리스 경로 리허설 (태그를 rehearsal-v 접두사로 남긴다)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -48,6 +52,7 @@ jobs:
       deploy: ${{ steps.resolve.outputs.deploy }}
       scope: ${{ steps.resolve.outputs.scope }}
       tag-after: ${{ steps.resolve.outputs.tag-after }}
+      tag-prefix: ${{ steps.resolve.outputs.tag-prefix }}
 
     steps:
       - name: 체크아웃
@@ -60,11 +65,22 @@ jobs:
         env:
           MANUAL_TRACK: ${{ inputs.track }}
           MANUAL_BUMP: ${{ inputs.bump }}
+          SIMULATE_MAIN: ${{ inputs.simulate_main }}
         run: |
           set -euo pipefail
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          # 릴리스 태그(vX.Y.Z)만 버전 계산에 쓴다. rehearsal-v* 등은 무시된다.
+          LATEST_TAG=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || echo "v0.0.0")
           BRANCH="${{ github.base_ref || github.ref_name }}"
           TAG_AFTER=false
+          TAG_PREFIX=v
+
+          # 리허설: 실제 브랜치와 무관하게 main 경로를 그대로 태운다.
+          # 태그는 rehearsal-v 접두사로 남겨 릴리스 태그 네임스페이스를 오염시키지 않는다.
+          if [ "${SIMULATE_MAIN:-false}" = "true" ]; then
+            BRANCH=main
+            TAG_PREFIX="rehearsal-v"
+            echo "::notice::main 자동 릴리스 리허설 모드 — 태그 접두사 $TAG_PREFIX"
+          fi
 
           # 최신 태그 이후 커밋으로 증가 폭을 정한다.
           # 이 레포의 컨벤션은 [Feat] / [Fix] / [Chore] 형태다.
@@ -148,6 +164,7 @@ jobs:
             echo "track=$TRACK"
             echo "deploy=$DEPLOY"
             echo "tag-after=$TAG_AFTER"
+            echo "tag-prefix=$TAG_PREFIX"
             echo "scope=$SCOPE"
             echo "version-code=$VERSION_CODE"
             echo "version-name=$VERSION_NAME"
@@ -412,17 +429,20 @@ jobs:
         if: needs.verify.outputs.tag-after == 'true'
         env:
           VERSION_NAME: ${{ needs.verify.outputs.version-name }}
+          TAG_PREFIX: ${{ needs.verify.outputs.tag-prefix }}
         run: |
           set -euo pipefail
+          TAG="${TAG_PREFIX}${VERSION_NAME}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git ls-remote --exit-code --tags origin "v$VERSION_NAME" >/dev/null 2>&1; then
-            echo "::error::태그 v$VERSION_NAME 가 이미 존재합니다 — 버전 계산을 확인하세요"
+          if git ls-remote --exit-code --tags origin "$TAG" >/dev/null 2>&1; then
+            echo "::error::태그 $TAG 가 이미 존재합니다 — 버전 계산을 확인하세요"
             exit 1
           fi
-          git tag -a "v$VERSION_NAME" -m "Release v$VERSION_NAME"
-          git push origin "v$VERSION_NAME"
-          echo "태그 v$VERSION_NAME 생성"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+          echo "태그 $TAG 생성"
+          echo "| 태그 | \`$TAG\` |" >> "$GITHUB_STEP_SUMMARY"
 
       - name: 배포 요약
         run: |
@@ -436,7 +456,4 @@ jobs:
             echo "| 트랙 | \`${{ needs.verify.outputs.track }}\` |"
             echo "| 버전 | \`${{ needs.verify.outputs.version-name }}\` (code \`${{ needs.verify.outputs.version-code }}\`) |"
             echo "| 커밋 | \`${{ github.sha }}\` |"
-            if [ "${{ needs.verify.outputs.tag-after }}" = "true" ]; then
-              echo "| 태그 | \`v${{ needs.verify.outputs.version-name }}\` (자동 생성) |"
-            fi
           } >> "$GITHUB_STEP_SUMMARY"
