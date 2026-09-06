@@ -21,3 +21,6 @@ local.properties
 # Keystore files
 umc_release_key.jks
 *.jks
+
+# Kotlin 컴파일러 세션 임시 파일
+.kotlin/

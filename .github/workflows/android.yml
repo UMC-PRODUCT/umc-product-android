@@ -419,6 +419,16 @@ jobs:
             exit 1
           fi
 
+      - name: 난독화 매핑 확인
+        run: |
+          set -euo pipefail
+          MAP=app/build/outputs/mapping/release/mapping.txt
+          if [ ! -s "$MAP" ]; then
+            echo "::error::mapping.txt 가 없습니다 — release 의 isMinifyEnabled 가 꺼졌는지 확인하세요"
+            exit 1
+          fi
+          echo "매핑 파일 $(du -h "$MAP" | cut -f1)"
+
       - name: Play Store 업로드
         uses: r0adkll/upload-google-play@v1
         with:
@@ -427,6 +437,8 @@ jobs:
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
           track: ${{ needs.verify.outputs.track }}
           status: completed
+          # R8 난독화 매핑. 없으면 Play Console 크래시 스택이 난독화된 채로 보인다.
+          mappingFile: app/build/outputs/mapping/release/mapping.txt
 
       # Play 업로드가 성공한 뒤에만 태그를 남긴다. 실패한 버전 번호를 태우지 않는다.
       # GITHUB_TOKEN 으로 민 태그는 새 워크플로를 트리거하지 않으므로 재귀 실행이 없다.
