@@ -2,24 +2,23 @@
 # UMC Product Android — CodeRabbit 설정
 #
 # 이 레포는 Kotlin 단일 Android 앱(멀티모듈)이다.
-# 이전 설정은 다른 팀의 웹 모노레포(frontend/**, backend/**)에서 복사돼 와서
-# 매칭되는 경로가 하나도 없었고, auto_review 도 꺼져 있어 리뷰가 전혀 돌지 않았다.
+# 리뷰 방식: 교육형(oppia-android 스타일) + Conventional Comments 라벨 체계
 # ---------------------------------------------------------------- #
 
 language: ko-KR
 
-# AI 페르소나와 톤. 짧게 유지한다(길면 뒷부분이 잘린다).
+# AI 페르소나. 길면 뒷부분이 잘리므로 짧게 유지하고, 상세 규칙은 path_instructions 에 둔다.
 tone_instructions: >
-  UMC Product Android 팀의 시니어 Android 리뷰어입니다.
-  근거를 코드와 함께 제시하고, 대안을 제안 형태로 남기세요.
-  사소한 취향 지적은 생략하고 동작·설계에 영향을 주는 것만 지적하세요.
+  UMC Android 팀의 리뷰 코치입니다. 지적마다 원인과 개선 방법, 공식 문서 링크를 함께 제시해
+  크루가 스스로 학습하게 돕습니다. 모든 코멘트는 Conventional Comments 라벨로 시작하세요.
 
 # ---------------------------------------------------------------- #
 # 코드 리뷰 기능 세부 설정
 # ---------------------------------------------------------------- #
 reviews:
-  # 'chill' 은 덜 엄격, 'assertive' 는 더 깐깐하게 지적한다.
-  profile: chill
+  # 'assertive' — 설계·스타일까지 파고든다. 교육 목적에 맞춘 선택.
+  # 코멘트가 과하다고 느껴지면 'chill' 로 되돌리면 된다.
+  profile: assertive
   # 코멘트를 모두 resolve 하면 자동 Approve. 사람 리뷰어 승인 절차를 유지하려고 끈다.
   request_changes_workflow: false
   high_level_summary: true
@@ -36,12 +35,66 @@ reviews:
   poem: true
 
   # ---------------------------------------------------------------- #
-  # 전 경로 공통 지침
+  # 리뷰 대상에서 제외할 경로
+  # 이 레포는 PR 이 136파일까지 커진다. 사람이 볼 필요 없는 것을 먼저 걷어낸다.
+  # ---------------------------------------------------------------- #
+  path_filters:
+    - "!**/build/**"
+    # 아이콘 리소스만 212개다. 벡터/비트맵 에셋은 리뷰 가치가 거의 없다.
+    - "!**/res/drawable*/**"
+    - "!**/res/mipmap*/**"
+    - "!**/res/font/**"
+    - "!**/*.png"
+    - "!**/*.webp"
+    - "!**/*.jpg"
+    - "!**/*.ttf"
+    - "!**/*.otf"
+    - "!.idea/**"
+    - "!gradle/wrapper/**"
+
+  # ---------------------------------------------------------------- #
+  # 보안 도구
+  # ---------------------------------------------------------------- #
+  tools:
+    # 커밋에 섞여 들어간 시크릿을 탐지한다.
+    # 이 레포는 키스토어(umc_release_key.jks), Play 서비스 계정 JSON,
+    # 카카오/네이버 키를 다루므로 특히 중요하다.
+    gitleaks:
+      enabled: true
+
+  # ---------------------------------------------------------------- #
+  # 경로별 리뷰 지침
   # ---------------------------------------------------------------- #
   path_instructions:
+    - path: "**"
+      instructions: |
+        [코멘트 형식 — Conventional Comments]
+        모든 코멘트는 아래 형식으로 시작한다.
+          <label> [(decoration)]: <내용>
+        label: praise, nitpick, suggestion, issue, todo, question, thought, chore, note
+        decoration: (blocking) / (non-blocking) / (if-minor)
+        머지를 막아야 하는 지적에는 반드시 (blocking) 을 붙인다.
+        예)
+          issue (blocking): 응답이 null 일 때 NPE 가 발생합니다. ...
+          suggestion (non-blocking): ImmutableList 로 바꾸면 리컴포지션이 줄어듭니다. ...
+          question: 이 분기는 어떤 경우에 도달하나요?
+          nitpick (if-minor): 변수명이 역할을 드러내지 못합니다.
+
+        [교육형 리뷰 원칙]
+        1. 지적은 "무엇이 문제인지 -> 왜 문제인지 -> 어떻게 고치는지" 순으로 쓴다.
+           원인 설명 없이 결론만 쓰지 않는다.
+        2. 관련 공식 문서 링크를 함께 제시한다.
+           - Kotlin 코딩 컨벤션: https://kotlinlang.org/docs/coding-conventions.html
+           - Android Kotlin 스타일 가이드: https://developer.android.com/kotlin/style-guide
+           - 앱 아키텍처 가이드: https://developer.android.com/topic/architecture
+           - Compose 성능: https://developer.android.com/develop/ui/compose/performance
+        3. 비판보다 개선 제안을 우선한다. 칭찬은 짧게.
+        4. 확신이 없으면 단정하지 말고 question 라벨로 남긴다.
+        5. 지적은 해당 라인 범위 코멘트로 남기고 대안 코드를 함께 제시한다.
+
     - path: "**/*.kt"
       instructions: |
-        [이 프로젝트에서 이미 자동 검사되는 항목 — 리뷰에서 지적하지 말 것]
+        [이미 자동 검사되는 항목 — 리뷰에서 지적하지 말 것]
         아래 세 가지는 :lint-rules 커스텀 Lint 가 CI 에서 잡고, 위반 시 파이프라인이 막힌다.
         중복 지적은 순수 소음이므로 언급하지 않는다.
           - OneShotEventSharedFlow: 단발성 이벤트를 StateFlow/SharedFlow(replay>0)로 노출
@@ -53,8 +106,6 @@ reviews:
         1. 동작이 바뀌는 결함을 우선한다. 널 처리, 예외 경로, 경계값, 동시성.
         2. 모듈 의존 방향 위반. domain 은 어디에도 의존하지 않는다.
            presentation 의 잎 모듈끼리 직접 의존하면 안 된다(공통은 presentation:component).
-        3. 근거 없는 추측은 쓰지 않는다. 확신이 없으면 질문으로 남긴다.
-        4. 지적은 해당 라인 범위 코멘트로 남기고, 대안 코드를 함께 제시한다.
 
     - path: "data/**"
       instructions: |
@@ -64,7 +115,7 @@ reviews:
         이 앱의 DTO 는 @SerializedName 이 없는 것이 많아 "필드 이름이 곧 JSON 키"다.
         따라서 위 패키지 "밖"에 새 DTO 를 만들면 디버그에서는 멀쩡하고
         릴리스에서만 필드가 난독화되어 파싱 결과가 조용히 null 이 된다.
-        새 요청/응답 모델이 저 패키지 밖에 생기면 반드시 지적할 것.
+        새 요청/응답 모델이 저 패키지 밖에 생기면 issue (blocking) 으로 지적할 것.
 
         [그 외]
         1. Retrofit 인터페이스의 suspend 시그니처, 에러 응답 처리, ApiResponse<T> 래퍼 사용 일관성.
@@ -73,15 +124,17 @@ reviews:
 
     - path: "domain/**"
       instructions: |
-        1. 이 모듈은 순수 Kotlin(JVM)이다. Android SDK, Retrofit, Compose 등에 의존하면 안 된다.
+        1. 이 모듈은 순수 Kotlin(JVM)이다. Android SDK, Retrofit, Compose 등에 의존하면
+           issue (blocking) 으로 지적한다.
         2. enum 상수 이름은 서버 계약이다. R8 이 이름을 보존하도록 keep 되어 있으므로
-           이름 변경은 서버와의 값 불일치를 의미한다. 변경이 있으면 서버 합의 여부를 물을 것.
+           이름 변경은 서버와의 값 불일치를 의미한다. 변경이 있으면 서버 합의 여부를 question 으로 묻는다.
         3. UseCase 는 단일 책임을 유지하고, 비즈니스 규칙이 presentation 으로 새지 않는지 본다.
 
     - path: "presentation/**"
       instructions: |
         1. Compose 안정성: 파라미터로 넘기는 컬렉션은 ImmutableList/ImmutableSet 을 쓴다.
            List/Set 을 그대로 넘기면 불필요한 리컴포지션이 생긴다.
+           https://developer.android.com/develop/ui/compose/performance/stability
         2. 상태는 ViewModel 이 단일 소유한다. Composable 안에서 비즈니스 분기를 만들지 않는다.
         3. 네비게이션 인자, 뒤로가기, 화면 회전/프로세스 종료 후 복원 경로를 확인한다.
         4. 잎 모듈(home, notice, study ...)은 서로 의존하지 않는다. 공통은 presentation:component.
@@ -91,8 +144,9 @@ reviews:
         1. Hilt 모듈의 스코프와 바인딩 중복을 확인한다.
         2. 네트워크 설정(인터셉터, 토큰 갱신)은 실패·만료 경로를 함께 본다.
         3. versionCode 와 versionName 은 CI 가 환경변수로 주입한다(VERSION_CODE / VERSION_NAME).
-           build.gradle.kts 에서 이 값을 하드코딩으로 되돌리는 변경은 배포를 깨뜨리므로 지적할 것.
-        4. BASE_URL 은 -PapiEnv 스위치로 결정된다. 서버 주소를 코드에 다시 박으면 지적할 것.
+           build.gradle.kts 에서 이 값을 하드코딩으로 되돌리는 변경은 배포를 깨뜨리므로
+           issue (blocking) 으로 지적한다.
+        4. BASE_URL 은 -PapiEnv 스위치로 결정된다. 서버 주소를 코드에 다시 박으면 지적한다.
 
     - path: ".github/**"
       instructions: |
@@ -106,7 +160,7 @@ reviews:
     - path: "**/build.gradle.kts"
       instructions: |
         1. release 의 isMinifyEnabled 를 끄는 변경은 Play 앱 최적화 점수와
-           크래시 난독화 해제(mapping.txt)에 직접 영향을 준다. 반드시 근거를 묻는다.
+           크래시 난독화 해제(mapping.txt)에 직접 영향을 준다. issue (blocking) 으로 근거를 묻는다.
         2. 의존성 추가 시 libs.versions.toml 을 거치는지, 모듈 의존 방향을 지키는지 확인한다.
         3. signingConfig 와 시크릿 관련 변경은 특히 주의 깊게 본다.
 
@@ -114,9 +168,7 @@ reviews:
   # 자동 리뷰 트리거
   # ---------------------------------------------------------------- #
   auto_review:
-    # PR 이 열리면 자동으로 리뷰한다.
     enabled: true
-    # 리뷰된 PR 에 새 커밋이 붙으면 변경분만 증분 리뷰한다.
     auto_incremental_review: true
 
 # ---------------------------------------------------------------- #
