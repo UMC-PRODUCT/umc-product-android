@@ -28,3 +28,7 @@ umc_release_key.jks
 # CI 가 커밋에서 생성하는 릴리스 노트 산출물
 /whatsnew/
 /release-notes.md
+
+# Python 캐시
+__pycache__/
+*.pyc

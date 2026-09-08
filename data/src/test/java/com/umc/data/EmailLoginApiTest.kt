@@ -31,7 +31,7 @@ class EmailLoginApiTest {
     private val email = "gacheon_10_schoolpresident@umc.dev"
     private val password = "password12!"
 
-    private val baseUrl = "https://dev.api.university.neordinary.com/"
+    private val baseUrl = "https://api-dev.university.neordinary.com/"
 
     // ── DTO ───────────────────────────────────────────────
     data class EmailLoginRequest(

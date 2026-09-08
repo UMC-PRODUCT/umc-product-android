@@ -92,13 +92,18 @@ def module_of(path: str, modules: list[str]) -> str | None:
     return best
 
 
-def tasks_for(modules: set[str]) -> list[str]:
+def tasks_for(modules: set[str], FLAVOR_CAP: str) -> list[str]:
     out: list[str] = []
     for m in sorted(modules):
         kind = module_kind(m)
         if kind == "android":
-            out.append(f"{m}:testDebugUnitTest")
-            out.append(f"{m}:lintDebug")
+            # :app 만 server 차원(dev/prod) flavor 를 갖는다.
+            if m == ":app":
+                out.append(f"{m}:test{FLAVOR_CAP}DebugUnitTest")
+                out.append(f"{m}:lint{FLAVOR_CAP}Debug")
+            else:
+                out.append(f"{m}:testDebugUnitTest")
+                out.append(f"{m}:lintDebug")
         elif kind == "jvm":
             out.append(f"{m}:test")
         # android-test / unknown 은 검사 대상 없음
@@ -123,7 +128,8 @@ def main() -> int:
         return 0
 
     affected = reverse_closure(seeds, forward_deps())
-    tasks = tasks_for(affected)
+    flavor_cap = (sys.argv[1] if len(sys.argv) > 1 else "dev").capitalize()
+    tasks = tasks_for(affected, flavor_cap)
     print(" ".join(tasks) if tasks else "ALL")
     return 0
 
