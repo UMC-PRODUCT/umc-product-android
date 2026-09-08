@@ -535,3 +535,67 @@ jobs:
             echo "| 버전 | \`${{ needs.verify.outputs.version-name }}\` (code \`${{ needs.verify.outputs.version-code }}\`) |"
             echo "| 커밋 | \`${{ github.sha }}\` |"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # ────────────────────────────────────────────────────────────────
+  # 3. 배포 결과 알림 (Discord)
+  # ────────────────────────────────────────────────────────────────
+  notify:
+    name: 배포 알림
+    needs: [ verify, deploy ]
+    # 배포를 시도한 경우에만, 성공이든 실패든 알린다. PR 검사는 알리지 않는다.
+    if: always() && needs.verify.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Discord 알림
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          RESULT: ${{ needs.deploy.result }}
+          VERSION_NAME: ${{ needs.verify.outputs.version-name }}
+          VERSION_CODE: ${{ needs.verify.outputs.version-code }}
+          API_ENV: ${{ needs.verify.outputs.api-env }}
+          TRACK: ${{ needs.verify.outputs.track }}
+          # 커밋 메시지는 사람이 쓴 임의 문자열이다. 셸에 직접 보간하면 주입 위험이 있어
+          # 환경변수로만 전달한다.
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WEBHOOK:-}" ]; then
+            echo "::notice::DISCORD_WEBHOOK_URL 시크릿이 없어 알림을 건너뜁니다."
+            exit 0
+          fi
+          printf '%s' "${COMMIT_MSG:-}" > /tmp/commit_msg
+          python3 - <<'PY' > /tmp/payload.json
+          import json, os, pathlib
+
+          result = os.environ["RESULT"]
+          ok = result == "success"
+          subject = pathlib.Path("/tmp/commit_msg").read_text(encoding="utf-8", errors="replace").split("\n")[0][:200]
+
+          payload = {
+              "username": "UMC Android CD",
+              "embeds": [{
+                  "title": ("✅ 배포 완료" if ok else f"❌ 배포 실패 ({result})"),
+                  "url": f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}"
+                         f"/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+                  "color": 0x2ECC71 if ok else 0xE74C3C,
+                  "fields": [
+                      {"name": "버전", "value": f"{os.environ['VERSION_NAME']} (code {os.environ['VERSION_CODE']})", "inline": True},
+                      {"name": "트랙", "value": os.environ["TRACK"], "inline": True},
+                      {"name": "서버", "value": os.environ["API_ENV"], "inline": True},
+                      {"name": "커밋", "value": subject or "(제목 없음)"},
+                  ],
+                  "footer": {"text": f"{os.environ['GITHUB_REF_NAME']} · {os.environ['GITHUB_SHA'][:8]}"},
+              }],
+          }
+          print(json.dumps(payload, ensure_ascii=False))
+          PY
+          # 웹훅 URL 이 로그에 남지 않도록 --data 는 파일에서만 읽는다.
+          code=$(curl -sS -o /tmp/resp.txt -w '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            --data @/tmp/payload.json "$WEBHOOK")
+          if [ "$code" -ge 300 ]; then
+            echo "::warning::Discord 알림 실패 (HTTP $code): $(head -c 300 /tmp/resp.txt)"
+          else
+            echo "Discord 알림 전송 완료 (HTTP $code)"
+          fi
