@@ -24,9 +24,11 @@ class AuthenticationInterceptor @Inject constructor(
 
         val accessToken = runBlocking { appDataStoreRepository.getAccessToken() }
 
+        // addHeader 가 아니라 header 다. addHeader 는 기존 값을 두고 하나 더 붙이므로
+        // Authorization 이 이미 있는 요청에서 헤더가 중복될 수 있다.
         val request =
             chain.request().newBuilder()
-                .addHeader("Authorization", "Bearer ${accessToken}").build()
+                .header("Authorization", "Bearer $accessToken").build()
 
         Log.d(
             "RETROFIT",

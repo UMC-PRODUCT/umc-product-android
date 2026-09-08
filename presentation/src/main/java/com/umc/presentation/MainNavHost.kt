@@ -73,11 +73,13 @@ fun MainNavHost(
     navHostController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
-    // 세션 만료(재로그인 필요) 전역 관찰 — 어느 화면에서 만료되든 여기 한 곳에서 스플래시로 보낸다.
-    // 이전에는 ViewModel별 commonEvent로만 알렸는데 구독자가 앱 전체에 0개라 만료 복구가
-    // 동작하지 않았고, 사용자는 앱을 강제 종료하기 전까지 모든 API가 실패하는 상태에 갇혔다.
-    CollectUiEvents(SessionExpiryBus.expired) { it ->
-        navHostController.navigate(MainDestination.Splash) {
+    // 세션 만료(재로그인 필요) 전역 관찰 — 어느 화면에서 만료되든 여기 한 곳에서 처리한다.
+    //
+    // 스플래시로 보내면 안 된다. 스플래시가 하는 일이 저장된 토큰으로 내 정보를 조회하는 것이라,
+    // 만료 상태에서 스플래시로 되돌리면 그 조회가 또 실패하고 다시 만료 신호를 쏘아
+    // renew -> me -> renew ... 가 끝없이 반복된다. 만료의 해답은 재조회가 아니라 재로그인이다.
+    CollectUiEvents(SessionExpiryBus.expired) {
+        navHostController.navigate(MainDestination.Login) {
             popUpTo(0) { inclusive = true }
             launchSingleTop = true
         }
@@ -100,8 +102,10 @@ fun MainNavHost(
             // 스플래시는 백스택에서 제거 (뒤로가기 시 스플래시로 돌아가지 않도록)
             SplashRoute(
                 navigateToLogin = {
+                    // 세션 만료 신호도 같은 목적지로 보내므로 중복 적재를 막는다.
                     navHostController.navigate(MainDestination.Login) {
                         popUpTo(MainDestination.Splash) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 navigateToMain = {
