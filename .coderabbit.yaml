@@ -146,7 +146,8 @@ reviews:
         3. versionCode 와 versionName 은 CI 가 환경변수로 주입한다(VERSION_CODE / VERSION_NAME).
            build.gradle.kts 에서 이 값을 하드코딩으로 되돌리는 변경은 배포를 깨뜨리므로
            issue (blocking) 으로 지적한다.
-        4. BASE_URL 은 -PapiEnv 스위치로 결정된다. 서버 주소를 코드에 다시 박으면 지적한다.
+        4. BASE_URL 은 product flavor(dev/prod)의 buildConfigField 로 결정된다.
+           서버 주소를 코드에 다시 박거나 flavor 밖에서 분기하면 지적한다.
 
     - path: ".github/**"
       instructions: |

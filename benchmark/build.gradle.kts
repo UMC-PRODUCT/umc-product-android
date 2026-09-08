@@ -22,6 +22,8 @@ android {
         minSdk = 24
         targetSdk = 36
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // :app 이 server 차원을 갖게 됐다. 벤치마크는 dev 서버 변형을 대상으로 한다.
+        missingDimensionStrategy("server", "dev")
     }
 
     buildTypes {

@@ -46,6 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       api-env: ${{ steps.resolve.outputs.api-env }}
+      flavor-cap: ${{ steps.resolve.outputs.flavor-cap }}
       track: ${{ steps.resolve.outputs.track }}
       version-code: ${{ steps.resolve.outputs.version-code }}
       version-name: ${{ steps.resolve.outputs.version-name }}
@@ -171,6 +172,9 @@ jobs:
           if [ "$NOTES_FROM" = "v0.0.0" ]; then NOTES_FROM=""; fi
 
           {
+            # Gradle 태스크 이름에 쓰는 대문자 시작 형태 (dev -> Dev)
+            FLAVOR_CAP="$(printf '%s' "${API_ENV:0:1}" | tr '[:lower:]' '[:upper:]')${API_ENV:1}"
+            echo "flavor-cap=$FLAVOR_CAP"
             echo "api-env=$API_ENV"
             echo "track=$TRACK"
             echo "deploy=$DEPLOY"
@@ -208,7 +212,7 @@ jobs:
             exit 0
           fi
           echo "변경된 파일:"; printf '%s\n' "$CHANGED" | sed 's/^/  /'
-          TASKS=$(printf '%s\n' "$CHANGED" | python3 .github/scripts/affected_modules.py)
+          TASKS=$(printf '%s\n' "$CHANGED" | python3 .github/scripts/affected_modules.py "${{ steps.resolve.outputs.api-env }}")
           echo "tasks=$TASKS" >> "$GITHUB_OUTPUT"
           {
             echo ""
@@ -256,8 +260,10 @@ jobs:
       - name: 테스트·Lint (전체)
         if: steps.resolve.outputs.scope == 'full'
         run: |
-          ./gradlew testDebugUnitTest :app:lintDebug \
-            -PapiEnv=${{ steps.resolve.outputs.api-env }} \
+          F=${{ steps.resolve.outputs.flavor-cap }}
+          # 라이브러리 모듈은 flavor 가 없어 testDebugUnitTest 그대로, :app 만 flavor 태스크.
+          ./gradlew testDebugUnitTest \
+            ":app:test${F}DebugUnitTest" ":app:lint${F}Debug" \
             --console=plain
 
       # PR: 변경된 모듈과 그 역의존만. 각 모듈이 자기 lintChecks 를 등록하고 있으므로
@@ -269,12 +275,12 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$TASKS" = "ALL" ]; then
-            ./gradlew testDebugUnitTest :app:lintDebug \
-              -PapiEnv=${{ steps.resolve.outputs.api-env }} --console=plain
+            F=${{ steps.resolve.outputs.flavor-cap }}
+            ./gradlew testDebugUnitTest \
+              ":app:test${F}DebugUnitTest" ":app:lint${F}Debug" --console=plain
           else
             # shellcheck disable=SC2086
             ./gradlew $TASKS \
-              -PapiEnv=${{ steps.resolve.outputs.api-env }} \
               -PlintCheckDependencies=false \
               --console=plain
           fi
@@ -324,10 +330,10 @@ jobs:
       - name: 빌드 검증 (Debug)
         env:
           VERSION_NAME: ${{ steps.resolve.outputs.version-name }}
-        run: ./gradlew :app:assembleDebug -PapiEnv=${{ steps.resolve.outputs.api-env }} --console=plain
+        run: ./gradlew ":app:assemble${{ steps.resolve.outputs.flavor-cap }}Debug" --console=plain
 
       # 브랜치에 맞는 서버 주소와 버전이 실제로 박혔는지 확인한다.
-      # 이 검사가 없으면 apiEnv 전달이 빠져도 조용히 운영 서버로 빌드된다.
+      # 이 검사가 없으면 flavor 를 잘못 지정해도 조용히 엉뚱한 서버로 빌드된다.
       - name: 서버 주소·버전 검증
         env:
           API_ENV: ${{ steps.resolve.outputs.api-env }}
@@ -336,10 +342,10 @@ jobs:
           set -euo pipefail
           case "$API_ENV" in
             prod) EXPECTED_URL="https://api.university.neordinary.com/" ;;
-            dev)  EXPECTED_URL="https://dev.api.university.neordinary.com/" ;;
-            *)    echo "::error::알 수 없는 apiEnv: $API_ENV"; exit 1 ;;
+            dev)  EXPECTED_URL="https://api-dev.university.neordinary.com/" ;;
+            *)    echo "::error::알 수 없는 flavor: $API_ENV"; exit 1 ;;
           esac
-          GEN=app/build/generated/source/buildConfig/debug/com/umc/product/BuildConfig.java
+          GEN="app/build/generated/source/buildConfig/${API_ENV}/debug/com/umc/product/BuildConfig.java"
           ACTUAL_URL=$(sed -n 's/.*BASE_URL = "\(.*\)";/\1/p' "$GEN")
           if [ "$ACTUAL_URL" != "$EXPECTED_URL" ]; then
             echo "::error::서버 주소 불일치 — 기대 $EXPECTED_URL / 실제 $ACTUAL_URL"
@@ -413,13 +419,11 @@ jobs:
           VERSION_CODE: ${{ needs.verify.outputs.version-code }}
           VERSION_NAME: ${{ needs.verify.outputs.version-name }}
         run: |
-          ./gradlew :app:bundleRelease \
-            -PapiEnv=${{ needs.verify.outputs.api-env }} \
-            --console=plain
+          ./gradlew ":app:bundle${{ needs.verify.outputs.flavor-cap }}Release" --console=plain
 
       - name: 서명 확인
         run: |
-          AAB=app/build/outputs/bundle/release/app-release.aab
+          AAB="app/build/outputs/bundle/${{ needs.verify.outputs.api-env }}Release/app-${{ needs.verify.outputs.api-env }}-release.aab"
           test -f "$AAB" || { echo "::error::AAB 를 찾을 수 없습니다"; exit 1; }
           if jarsigner -verify "$AAB" | grep -q "jar verified"; then
             echo "서명 확인 완료: $AAB"
@@ -459,7 +463,7 @@ jobs:
       - name: 난독화 매핑 확인
         run: |
           set -euo pipefail
-          MAP=app/build/outputs/mapping/release/mapping.txt
+          MAP="app/build/outputs/mapping/${{ needs.verify.outputs.api-env }}Release/mapping.txt"
           if [ ! -s "$MAP" ]; then
             echo "::error::mapping.txt 가 없습니다 — release 의 isMinifyEnabled 가 꺼졌는지 확인하세요"
             exit 1
@@ -471,11 +475,11 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.umc.product
-          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          releaseFiles: app/build/outputs/bundle/${{ needs.verify.outputs.api-env }}Release/app-${{ needs.verify.outputs.api-env }}-release.aab
           track: ${{ needs.verify.outputs.track }}
           status: completed
           # R8 난독화 매핑. 없으면 Play Console 크래시 스택이 난독화된 채로 보인다.
-          mappingFile: app/build/outputs/mapping/release/mapping.txt
+          mappingFile: app/build/outputs/mapping/${{ needs.verify.outputs.api-env }}Release/mapping.txt
           # 커밋에서 생성한 "업데이트 내용". 없으면 Play 가 이전 노트를 유지한다.
           whatsNewDirectory: whatsnew
 

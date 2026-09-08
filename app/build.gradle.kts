@@ -8,19 +8,6 @@ plugins {
     alias(libs.plugins.google.services)
 }
 
-/**
- * API 서버 환경 스위치.
- *
- * - `-PapiEnv=dev`  → dev 서버 (develop-compose / 테스트 트랙)
- * - 미지정 또는 `-PapiEnv=prod` → 운영 서버 (main / 프로덕션 트랙)
- */
-val apiEnv = (project.findProperty("apiEnv") as String?) ?: "prod"
-val apiBaseUrl = when (apiEnv) {
-    "dev" -> "https://dev.api.university.neordinary.com/"
-    "prod" -> "https://api.university.neordinary.com/"
-    else -> throw GradleException("apiEnv 는 dev 또는 prod 여야 합니다 (입력값: $apiEnv)")
-}
-
 android {
     lint {
         abortOnError = false
@@ -50,8 +37,6 @@ android {
             "NAVER_CLIENT_ID",
             "\"${getApiKey("naver.client.id")}\""
         )
-        buildConfigField("String", "BASE_URL", "\"$apiBaseUrl\"")
-        buildConfigField("String", "API_ENV", "\"$apiEnv\"")
         manifestPlaceholders["KAKAO_APP_KEY"] = getApiKey("kakao.app.key")
         applicationId = "com.umc.product"
         minSdk = 24
@@ -65,6 +50,27 @@ android {
         versionName = System.getenv("VERSION_NAME") ?: "3.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    /**
+     * 서버 환경을 빌드 변형으로 분리한다.
+     * Android Studio 의 Build Variants 패널에서 devDebug / prodDebug 를 눌러 전환한다.
+     *
+     * applicationId 는 양쪽이 같아야 한다. 내부 테스트와 프로덕션이 Play 에서 같은 앱이라
+     * 패키지명이 다르면 업로드가 거부된다.
+     */
+    flavorDimensions += "server"
+    productFlavors {
+        create("dev") {
+            dimension = "server"
+            buildConfigField("String", "BASE_URL", "\"https://api-dev.university.neordinary.com/\"")
+            buildConfigField("String", "API_ENV", "\"dev\"")
+        }
+        create("prod") {
+            dimension = "server"
+            buildConfigField("String", "BASE_URL", "\"https://api.university.neordinary.com/\"")
+            buildConfigField("String", "API_ENV", "\"prod\"")
+        }
     }
 
     signingConfigs {
