@@ -61,6 +61,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
+/** 공지 목록 진입점. 이벤트 수집은 CollectUiEvents 로 수명주기를 따른다. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoticeRoute(
