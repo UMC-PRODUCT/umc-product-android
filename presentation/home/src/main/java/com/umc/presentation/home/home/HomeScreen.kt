@@ -37,7 +37,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import java.time.LocalDate
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -51,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
+import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.component.UButton
 import com.umc.component.component.getGrowthText
@@ -97,6 +101,10 @@ fun HomeRoute(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    // [임시] 명함 교환 차단 — iOS 구현 전까지 안내 다이얼로그만 띄운다.
+    // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 MoveShareCardEvent 를 다시 onNavigateToCardShare() 로 연결한다.
+    var showExchangeBlockedDialog by remember { mutableStateOf(false) }
+
     CollectUiEvents(viewModel.uiEvent) { event ->
         //이벤트 처리
         when(event){
@@ -108,10 +116,21 @@ fun HomeRoute(
             is HomeEvent.MoveScheduleDetailEvent -> onNavigateToScheduleDetail(event.plan)
             //일정 추가 이동
             is HomeEvent.MoveScheduleAddEvent -> onNavigateToScheduleAdd()
-            //카드 공유 이동
-            is HomeEvent.MoveShareCardEvent -> onNavigateToCardShare()
+            //카드 공유 이동 ([임시] 차단 중이라 이동 대신 안내)
+            is HomeEvent.MoveShareCardEvent -> showExchangeBlockedDialog = true
             else -> {}
         }
+    }
+
+    // [임시] 명함 교환 차단 안내
+    if (showExchangeBlockedDialog) {
+        UDialog(
+            title = AppStrings.EXCHANGE_CARD_BLOCKED_TITLE,
+            content = AppStrings.EXCHANGE_CARD_BLOCKED_CONTENT,
+            onDismissRequest = { showExchangeBlockedDialog = false },
+            confirmText = AppStrings.CONFIRM,
+            onConfirm = { showExchangeBlockedDialog = false },
+        )
     }
 
     HomeScreen(

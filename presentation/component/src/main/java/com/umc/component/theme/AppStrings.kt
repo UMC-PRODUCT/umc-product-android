@@ -81,6 +81,11 @@ object AppStrings {
     const val EXCHANGE_CARD_WIFI_USER_SEARCH_PAUSE = "탐색 중단하기"
     const val EXCHANGE_CARD_SEND_TITLE = "명함을 전송하시겠습니까?"
     const val EXCHANGE_CARD_SUCCESS_TITLE = "명함을 주고받았어요!"
+
+    // [임시] 명함 교환 차단 안내. iOS 구현이 끝나 교환을 다시 열 때 이 두 줄과 각 차단 지점을 함께 지운다.
+    // 본문은 한 줄에 다 담기지 않아 끝 글자만 넘어가므로, 읽기 좋게 직접 끊어 둔다.
+    const val EXCHANGE_CARD_BLOCKED_TITLE = "명함 교환은 개발 중이에요"
+    const val EXCHANGE_CARD_BLOCKED_CONTENT = "지금 열심히 준비하고 있어요.\n완료되면 안내드릴게요."
     
     const val RECEIVED_CARD_TITLE = "받은 명함"
     const val RECEIVED_CARD_TEXTHOLDER = "이름, 파트 검색"

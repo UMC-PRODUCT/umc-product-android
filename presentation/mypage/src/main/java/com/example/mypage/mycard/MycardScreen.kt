@@ -60,6 +60,7 @@ import com.example.mypage.nearby.NearbyViewModel
 import com.example.mypage.qrcode.QrCodeUtils
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.component.UToast
 import com.umc.component.component.UToastState
@@ -120,6 +121,11 @@ fun MycardRoute(
         mutableStateOf(false)
     }
 
+    // [임시] 명함 교환 차단 — iOS 구현 전까지 교환으로 가는 모든 입구에서 안내 다이얼로그만 띄운다.
+    // 차단 지점: 홈 배너 진입(openExchangeDialog), 명함 교환 버튼, 내 QR 코드, QR 딥링크 수신.
+    // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 각 지점의 원래 호출을 주석에서 되살린다.
+    var showExchangeBlockedDialog by remember { mutableStateOf(false) }
+
 
     // 화면 복귀(ON_RESUME) 라이프사이클 시 최신 내 정보를 동기화하는 관찰자
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -140,14 +146,16 @@ fun MycardRoute(
     // QR 딥링크로 전달된 상대방 회원 ID 존재 시 회원 조회 수행
     LaunchedEffect(targetMemberId) {
         if (!targetMemberId.isNullOrEmpty()) {
-            viewModel.searchUser(targetMemberId.toLong())
+            // [임시] 명함 교환 차단 — 원래 동작: viewModel.searchUser(targetMemberId.toLong())
+            showExchangeBlockedDialog = true
         }
     }
 
     // 홈 화면 등 외부에서 명함 교환 요청 플래그를 가지고 진입 시 다이얼로그 즉시 오픈
     LaunchedEffect(openExchangeDialog) {
         if (openExchangeDialog && !hasOpenedExchangeDialog) {
-            nearbyViewModel.openBottomSheet()
+            // [임시] 명함 교환 차단 — 원래 동작: nearbyViewModel.openBottomSheet()
+            showExchangeBlockedDialog = true
             hasOpenedExchangeDialog = true //오픈 후 즉시 처리 완료 상태로 변경!
         }
     }
@@ -191,13 +199,26 @@ fun MycardRoute(
     MycardScreen(
         uiState = uiState,
         onNavigateToMypage = onNavigateToMypage,
-        onNavigateToMyqrCode = onNavigateToMyqrCode,
+        // [임시] 명함 교환 차단 — 원래 동작: onNavigateToMyqrCode (QR 공유도 교환 경로라 함께 막는다)
+        onNavigateToMyqrCode = { showExchangeBlockedDialog = true },
         onNavigateToReceivedCard = onNavigateToReceivedCard,
         onNavigateToEditCard = onNavigateToEditCard,
         onNavigateToMyStudy = {},
         onNavigateToMyActivity = {},
-        onOpenExchangeBottomSheet = { nearbyViewModel.openBottomSheet() },
+        // [임시] 명함 교환 차단 — 원래 동작: { nearbyViewModel.openBottomSheet() }
+        onOpenExchangeBottomSheet = { showExchangeBlockedDialog = true },
     )
+
+    // [임시] 명함 교환 차단 안내
+    if (showExchangeBlockedDialog) {
+        UDialog(
+            title = AppStrings.EXCHANGE_CARD_BLOCKED_TITLE,
+            content = AppStrings.EXCHANGE_CARD_BLOCKED_CONTENT,
+            onDismissRequest = { showExchangeBlockedDialog = false },
+            confirmText = AppStrings.CONFIRM,
+            onConfirm = { showExchangeBlockedDialog = false },
+        )
+    }
 
     //유저 명함 교환 다이얼로그
     if(nearbyUiState.isBottomSheetOpen){
@@ -292,7 +313,7 @@ fun MycardScreen(
 
         item {
             Spacer(modifier = Modifier.height(12.dp))
-            MycardSectionTitle(AppStrings.MYCARD_CARD_TITLE)
+            MycardSectionTitle(AppStrings.MYCARD_ACTVITY_TITLE)
             MycardListCard {
                 MycardListItem(
                     iconRes = R.drawable.ic_my_study,
