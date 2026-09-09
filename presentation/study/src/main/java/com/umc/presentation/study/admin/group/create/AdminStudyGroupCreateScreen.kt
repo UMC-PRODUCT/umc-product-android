@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.study.admin.group.create.bottomsheet.GroupCreateMemberBottomSheet
 import com.umc.presentation.study.admin.group.create.bottomsheet.GroupCreatePartBottomSheet
 import com.umc.presentation.study.admin.group.create.bottomsheet.GroupCreatePartLeaderBottomSheet
@@ -41,7 +42,7 @@ fun AdminStudyGroupCreateScreen(
     state: AdminStudyGroupCreateState,
     onAction: (AdminStudyGroupCreateAction) -> Unit,
     onDismissBottomSheet: () -> Unit,
-    onPartSelected: (AdminStudyGroupCreatePartUiModel) -> Unit,
+    onPartSelected: (UserPart) -> Unit,
     onPartLeaderSelected: (List<AdminStudyGroupCreateMemberUiModel>) -> Unit,
     onMembersSelected: (List<AdminStudyGroupCreateMemberUiModel>) -> Unit,
 ) {

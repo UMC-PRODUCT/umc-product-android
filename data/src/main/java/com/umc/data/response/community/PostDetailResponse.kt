@@ -57,7 +57,7 @@ data class PostDetailResponse(
                 lightningInfo = this.lightningInfo?.toLightningInfoDomain(),
                 userProfileImage = this.authorProfileImage ?: "",
                 userPart = try {
-                    UserPart.valueOf(this.authorPart.uppercase())
+                    UserPart.from(this.authorPart)
                 } catch (e: Exception) {
                     UserPart.ANDROID
                 },

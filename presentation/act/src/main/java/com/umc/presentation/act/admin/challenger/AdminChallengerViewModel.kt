@@ -86,8 +86,8 @@ class AdminChallengerViewModel @Inject constructor(
             startLoading()
 
             val responses = coroutineScope {
-                (selectedPart?.let(::listOf)
-                    ?: UserPart.entries.filterNot { it == UserPart.UNKNOWN })
+                // 서버 part 파라미터라 파트만 넣는다. UserPart 에는 트랙도 있어 entries 를 그대로 쓰면 안 된다.
+                (selectedPart?.let(::listOf) ?: UserPart.parts)
                     .map { part ->
                         async {
                             getAdminChallengerListUseCase(

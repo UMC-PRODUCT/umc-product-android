@@ -19,7 +19,7 @@ data class TrophyResponse(
     companion object{
         fun TrophyResponse.toTrophyBody() : TrophyBody{
             val userPart = try {
-                UserPart.valueOf(this.part)
+                UserPart.from(this.part)
             } catch (e: Exception) {
                 UserPart.UNKNOWN
             }

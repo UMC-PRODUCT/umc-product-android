@@ -63,15 +63,7 @@ import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow500
 import com.umc.domain.model.enums.UserPart
 
-private val challengerPartFilters = listOf(
-    UserPart.PLAN,
-    UserPart.DESIGN,
-    UserPart.WEB,
-    UserPart.ANDROID,
-    UserPart.IOS,
-    UserPart.NODEJS,
-    UserPart.SPRINGBOOT,
-)
+private val challengerPartFilters = UserPart.filters
 
 @Composable
 fun AdminChallengerRoute(
@@ -206,7 +198,7 @@ private fun SearchBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             UText(
-                text = selectedPart?.filterLabel ?: "파트",
+                text = selectedPart?.label ?: "파트",
                 style = Footnote,
                 color = if (selectedPart == null) grey600() else grey000(),
             )
@@ -254,7 +246,7 @@ private fun AdminChallengerPartBottomSheet(
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(challengerPartFilters, key = UserPart::name) { part ->
                     UText(
-                        text = part.filterLabel,
+                        text = part.label,
                         style = Body,
                         color = if (selectedPart == part) indigo500() else grey800(),
                         modifier = Modifier
@@ -268,13 +260,6 @@ private fun AdminChallengerPartBottomSheet(
     }
 }
 
-private val UserPart.filterLabel: String
-    get() = when (this) {
-        UserPart.PLAN -> "PM"
-        UserPart.IOS -> "iOS"
-        UserPart.SPRINGBOOT -> "Spring Boot"
-        else -> label
-    }
 
 @Composable
 private fun ChallengerSection(

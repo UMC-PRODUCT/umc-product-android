@@ -131,6 +131,12 @@ private fun partChipStyle(part: UserPart): UInfoChipStyle {
         UserPart.ANDROID -> UInfoChipStyle(green100(), green700())
         UserPart.SPRINGBOOT -> UInfoChipStyle(yellow100(), yellow600())
         UserPart.NODEJS -> UInfoChipStyle(yellow100(), yellow700())
+
+        // 트랙. 아직 화면에 쓰이는 곳은 없어 대응되는 파트 색을 따라간다.
+        UserPart.WEB_PRODUCT_ENGINEER -> UInfoChipStyle(green100(), green600())
+        UserPart.MOBILE_PRODUCT_ENGINEER -> UInfoChipStyle(indigo100(), indigo700())
+        UserPart.INFRA_PLUS -> UInfoChipStyle(yellow100(), yellow600())
+
         UserPart.ADMIN,
         UserPart.UNKNOWN -> UInfoChipStyle(grey100(), grey600())
     }

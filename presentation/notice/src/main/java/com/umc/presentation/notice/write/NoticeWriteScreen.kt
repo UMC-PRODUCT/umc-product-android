@@ -249,7 +249,7 @@ fun NoticeWriteRoute(
                 )
 
                 WriteSheetType.PART -> {
-                    val parts = UserPart.entries.filter { it != UserPart.UNKNOWN && it != UserPart.ADMIN }
+                    val parts = UserPart.filters
                     WriteSelectSheetContent(
                         title = AppStrings.NOTICE_BOTTOMSHEET_TITLE,
                         items = parts.map { it.label }.toImmutableList(),

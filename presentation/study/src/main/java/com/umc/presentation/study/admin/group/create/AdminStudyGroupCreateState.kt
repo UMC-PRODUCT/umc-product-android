@@ -1,6 +1,7 @@
 package com.umc.presentation.study.admin.group.create
 
 import com.umc.component.base.UiState
+import com.umc.domain.model.enums.UserPart
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -38,7 +39,7 @@ data class AdminStudyGroupCreateState(
      *
      * 선택되지 않은 초기 상태에서는 null입니다.
      */
-    val selectedPart: AdminStudyGroupCreatePartUiModel? = null,
+    val selectedPart: UserPart? = null,
 
     /**
      * 현재 선택한 담당 파트장 목록

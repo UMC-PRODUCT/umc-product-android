@@ -106,7 +106,7 @@ class MycardViewModel @Inject constructor(
 
             val positionString = representativeItem?.let { item ->
                 //파트명 변환 (UserPart Enum 활용, 없으면 빈 문자열)
-                val partLabel = runCatching { UserPart.valueOf(item.responsiblePart ?: "").label }
+                val partLabel = runCatching { UserPart.from(item.responsiblePart).label }
                     .getOrNull()?.let { "$it " } ?: ""
 
                 //직함명 변환 (displayName이 null이면 원본 role 사용)

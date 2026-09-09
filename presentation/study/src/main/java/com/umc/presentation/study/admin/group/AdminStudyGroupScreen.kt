@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group
 
+import com.umc.domain.model.enums.UserPart
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -273,7 +274,7 @@ private fun AdminStudyGroupScreenPreview() {
                 AdminStudyGroupItemUiModel(
                     groupId = 1L,
                     title = "React A팀",
-                    partLabel = "Web",
+                    partLabel = UserPart.WEB.label,
                     leaderName = "홍길동",
                     leaderChallengerId = 1L,
                     leaderProfileImageUrl = null,
@@ -297,7 +298,7 @@ private fun AdminStudyGroupScreenPreview() {
                         "2024-03-01T00:00:00",
                     memberCount = 3,
                     leaderUniv = "중앙대",
-                    studyPart = "Web",
+                    studyPart = UserPart.WEB.serverValue,
                 )
             )
         )
@@ -313,7 +314,7 @@ private fun previewState() =
             AdminStudyGroupItemUiModel(
                 groupId = 1L,
                 title = "React A팀",
-                partLabel = "Web",
+                partLabel = UserPart.WEB.label,
                 leaderName = "홍길동",
                 leaderChallengerId = 1L,
                 leaderProfileImageUrl = null,
@@ -337,13 +338,13 @@ private fun previewState() =
                     "2024-03-01T00:00:00",
                 memberCount = 3,
                 leaderUniv = "중앙대",
-                studyPart = "Web",
+                studyPart = UserPart.WEB.serverValue,
             ),
 
             AdminStudyGroupItemUiModel(
                 groupId = 2L,
                 title = "React B팀",
-                partLabel = "Android",
+                partLabel = UserPart.ANDROID.label,
                 leaderName = "김철수",
                 leaderChallengerId = 2L,
                 leaderProfileImageUrl = null,
@@ -363,7 +364,7 @@ private fun previewState() =
                     "2024-03-01T00:00:00",
                 memberCount = 2,
                 leaderUniv = "서울여대",
-                studyPart = "Android",
+                studyPart = UserPart.ANDROID.serverValue,
             )
         )
     )

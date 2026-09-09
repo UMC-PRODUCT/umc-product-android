@@ -46,8 +46,8 @@ data class PostSearchSummaryResponse (
                 content = this.content,
                 lightningInfo = null,
                 userPart = try {
-                    UserPart.valueOf(this.category) }
-                catch (e: Exception) { UserPart.ANDROID},
+                    UserPart.from(this.category) }
+                catch (e: Exception) { UserPart.UNKNOWN},
                 isLiked = false,             // 다른 API로 처리 예정 (X)
                 isScrapped = false,          // 다른 API로 처리 예정 (X)
                 scraps = 0                   // API 미제공 (X)

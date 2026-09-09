@@ -1,5 +1,6 @@
 package com.umc.presentation.notice
 
+import com.umc.domain.model.enums.UserPart
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -193,7 +194,7 @@ private fun NoticeCardPreview() {
             targetInfo = NoticeTarget(
                 targetGisuId = 1,
                 targetSchoolId = 1,
-                targetParts = listOf("ANDROID"),
+                targetParts = listOf(UserPart.ANDROID.serverValue),
             ),
             authorChallengerId = 1L,
             authorNickname = "중앙대 운영진",

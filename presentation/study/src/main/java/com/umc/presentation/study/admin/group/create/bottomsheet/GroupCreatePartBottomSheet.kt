@@ -23,45 +23,8 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.indigo500
-import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreatePartUiModel
+import com.umc.domain.model.enums.UserPart
 
-/**
- * 스터디 그룹에서 선택 가능한 파트 목록
- */
-private val groupCreateParts = listOf(
-    AdminStudyGroupCreatePartUiModel(
-        label = "Plan",
-        value = "PLAN",
-    ),
-    AdminStudyGroupCreatePartUiModel(
-        label = "Design",
-        value = "DESIGN",
-    ),
-    AdminStudyGroupCreatePartUiModel(
-        label = "Web",
-        value = "WEB",
-    ),
-    AdminStudyGroupCreatePartUiModel(
-        label = "Android",
-        value = "ANDROID",
-    ),
-    AdminStudyGroupCreatePartUiModel(
-        label = "iOS",
-        value = "IOS",
-    ),
-    AdminStudyGroupCreatePartUiModel(
-        label = "Node.js",
-        value = "NODEJS",
-    ),
-    AdminStudyGroupCreatePartUiModel(
-        label = "Spring Boot",
-        value = "SPRINGBOOT",
-    ),
-    AdminStudyGroupCreatePartUiModel(
-        label = "Admin",
-        value = "ADMIN",
-    ),
-)
 
 /**
  * 스터디 그룹 생성 시 담당 파트를 선택하는 BottomSheet
@@ -72,9 +35,9 @@ private val groupCreateParts = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupCreatePartBottomSheet(
-    selectedPart: AdminStudyGroupCreatePartUiModel?,
+    selectedPart: UserPart?,
     onDismissRequest: () -> Unit,
-    onPartSelected: (AdminStudyGroupCreatePartUiModel) -> Unit,
+    onPartSelected: (UserPart) -> Unit,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -116,9 +79,9 @@ fun GroupCreatePartBottomSheet(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 items(
-                    items = groupCreateParts,
+                    items = UserPart.selectable,
                     key = { part ->
-                        part.value
+                        part.name
                     },
                 ) { part ->
                     UText(
@@ -127,7 +90,7 @@ fun GroupCreatePartBottomSheet(
 
                         // 현재 선택된 파트 강조
                         color = if (
-                            selectedPart?.value == part.value
+                            selectedPart == part
                         ) {
                             indigo500()
                         } else {

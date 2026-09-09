@@ -150,14 +150,6 @@
     <string name="start_location">장소</string>
     <string name="start_participant">인원</string>
 
-    <!-- 파트 -->
-    <string name="pm">PM</string>
-    <string name="design">Design</string>
-    <string name="web">Web</string>
-    <string name="android">Android</string>
-    <string name="ios">iOS</string>
-    <string name="nodejs">Node.js</string>
-    <string name="springBoot">SpringBoot</string>
     <string name="select">선택</string>
     <string name="law">법률</string>
     <string name="assist">지원</string>

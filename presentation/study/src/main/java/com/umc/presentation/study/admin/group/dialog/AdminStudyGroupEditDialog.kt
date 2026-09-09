@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.dialog
 
+import com.umc.domain.model.enums.UserPart
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -79,16 +80,10 @@ fun AdminStudyGroupEditDialog(
 
     /**
      * 화면에서 선택 가능한 파트 목록
+     *
+     * 예전에는 라벨을 직접 나열해 Admin 이 빠지고 "Spring" 처럼 서버에 없는 값이 섞였습니다.
      */
-    val parts = listOf(
-        "Plan",
-        "Design",
-        "Web",
-        "Android",
-        "iOS",
-        "Spring",
-        "Node.js",
-    )
+    val parts = UserPart.selectable.map { it.label }
 
     Dialog(
         onDismissRequest = onDismiss

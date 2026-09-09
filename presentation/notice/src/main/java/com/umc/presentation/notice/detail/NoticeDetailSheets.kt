@@ -1,5 +1,6 @@
 package com.umc.presentation.notice.detail
 
+import com.umc.domain.model.enums.UserPart
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -318,7 +319,7 @@ private fun ReadStatusSheetPreview() {
     NoticeReadStatusSheetContent(
         statistics = NoticeReadStatistics(totalCount = 15, readCount = 10, unreadCount = 5, readRate = 66.7),
         unreadList = List(4) {
-            ChallengerReadInfo(it.toLong(), "홍길동", "", "ANDROID", 1L, "대학교", 1L, "지부이름")
+            ChallengerReadInfo(it.toLong(), "홍길동", "", UserPart.ANDROID.serverValue, 1L, "대학교", 1L, "지부이름")
         }.toImmutableList(),
         readList = persistentListOf(),
         isReminderSent = true,

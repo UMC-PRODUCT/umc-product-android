@@ -84,15 +84,25 @@ internal fun CommunityChatMemberTag(
 }
 
 @Composable
-internal fun communityChatPartTag(part: UserPart): Triple<String, Color, Color> = when (part) {
-    UserPart.IOS -> Triple("iOS", yellow100(), yellow500())
-    UserPart.ANDROID -> Triple("Android", green100(), green700())
-    UserPart.PLAN -> Triple("PM", indigo100(), indigo600())
-    UserPart.DESIGN -> Triple("Design", red100(), red600())
-    UserPart.WEB -> Triple("Web", indigo100(), indigo600())
-    UserPart.NODEJS -> Triple("Node.js", green100(), green700())
-    UserPart.SPRINGBOOT -> Triple("Spring", green100(), green700())
-    UserPart.ADMIN,
-    UserPart.UNKNOWN,
-        -> Triple(part.label, grey100(), grey600())
+internal fun communityChatPartTag(part: UserPart): Triple<String, Color, Color> {
+    // 라벨은 UserPart 하나만 쓰고, 여기서는 색만 고른다.
+    val (background, foreground) = when (part) {
+        UserPart.IOS -> yellow100() to yellow500()
+        UserPart.ANDROID -> green100() to green700()
+        UserPart.PLAN -> indigo100() to indigo600()
+        UserPart.DESIGN -> red100() to red600()
+        UserPart.WEB -> indigo100() to indigo600()
+        UserPart.NODEJS -> green100() to green700()
+        UserPart.SPRINGBOOT -> green100() to green700()
+
+        // 트랙. 아직 채팅에 쓰이는 곳은 없어 대응되는 파트 색을 따라간다.
+        UserPart.WEB_PRODUCT_ENGINEER -> indigo100() to indigo600()
+        UserPart.MOBILE_PRODUCT_ENGINEER -> yellow100() to yellow500()
+        UserPart.INFRA_PLUS -> green100() to green700()
+
+        UserPart.ADMIN,
+        UserPart.UNKNOWN,
+            -> grey100() to grey600()
+    }
+    return Triple(part.label, background, foreground)
 }

@@ -415,8 +415,7 @@ private fun PartSelectBottomSheetContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        UserPart.entries
-            .filter { it != UserPart.UNKNOWN && it != UserPart.ADMIN }
+        UserPart.filters
             .forEach { part ->
                 Row(
                     modifier = Modifier

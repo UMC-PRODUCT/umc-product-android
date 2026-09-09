@@ -3,6 +3,7 @@ package com.umc.presentation.study.admin.group.create
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.request.organization.CreateStudyGroupRequest
 import com.umc.domain.usecase.organization.CreateStudyGroupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -211,7 +212,7 @@ class AdminStudyGroupCreateViewModel @Inject constructor(
         val request = CreateStudyGroupRequest(
             name = state.groupName.trim(),
             gisuId = gisuId,
-            part = selectedPart.value,
+            part = selectedPart.serverValue,
 
             // 담당 파트장 ID 목록
             mentorIds = state.selectedPartLeaders.map {
@@ -336,7 +337,7 @@ class AdminStudyGroupCreateViewModel @Inject constructor(
      * @param part 새로 선택한 파트
      */
     fun selectPart(
-        part: AdminStudyGroupCreatePartUiModel,
+        part: UserPart,
     ) {
         updateState {
             copy(

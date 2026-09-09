@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group
 
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.organization.ManagedStudyGroup
 import kotlinx.collections.immutable.toImmutableList
 
@@ -81,24 +82,8 @@ fun ManagedStudyGroup.toUiModel(): AdminStudyGroupItemUiModel {
 }
 
 /**
- * 서버에서 사용하는 파트 값을
- * 사용자에게 표시할 파트명으로 변환합니다.
+ * 서버에서 사용하는 파트 값을 화면에 표시할 파트명으로 바꿉니다.
  *
- * 예)
- * ANDROID -> Android
- * IOS -> iOS
- * SPRINGBOOT -> Spring Boot
+ * 표기는 [UserPart] 한 곳에서만 정의합니다. 여기서 다시 만들지 않습니다.
  */
-private fun String.toPartLabel(): String {
-    return when (uppercase()) {
-        "PLAN" -> "Plan"
-        "DESIGN" -> "Design"
-        "WEB" -> "Web"
-        "ANDROID" -> "Android"
-        "IOS" -> "iOS"
-        "NODEJS" -> "Node.js"
-        "SPRINGBOOT" -> "Spring Boot"
-        "ADMIN" -> "Admin"
-        else -> this
-    }
-}
+private fun String.toPartLabel(): String = UserPart.from(this).label

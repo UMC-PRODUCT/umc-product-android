@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group
 
+import com.umc.domain.model.enums.UserPart
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.domain.model.base.ApiState
@@ -160,7 +161,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                         // 현재 파트 초기값
                         editPartLabel = action.item.partLabel
                             .ifBlank {
-                                "Web"
+                                DEFAULT_EDIT_PART.label
                             },
                     )
                 }
@@ -175,7 +176,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                     copy(
                         editTargetItem = null,
                         editGroupName = "",
-                        editPartLabel = "Web",
+                        editPartLabel = DEFAULT_EDIT_PART.label,
                     )
                 }
             }
@@ -247,7 +248,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                                 copy(
                                     editTargetItem = null,
                                     editGroupName = "",
-                                    editPartLabel = "Web",
+                                    editPartLabel = DEFAULT_EDIT_PART.label,
                                 )
                             }
 
@@ -597,29 +598,17 @@ class AdminStudyGroupViewModel @Inject constructor(
     }
 
     /**
-     * 화면 표시용 파트 이름을
-     * 서버 API에서 사용하는 파트 값으로 변환합니다.
+     * 화면 표시용 파트 이름을 서버 API 값으로 바꿉니다.
      *
-     * 예)
-     * Android -> ANDROID
-     * iOS -> IOS
-     * Spring Boot -> SPRINGBOOT
+     * 매핑은 [UserPart] 한 곳에서만 합니다. 예전에는 여기 when 에 없는 라벨("Spring")이 들어오면
+     * `uppercase()` 로 흘러가 서버에 없는 "SPRING" 을 보내는 버그가 있었습니다.
      */
-    private fun String.toPartApiValue(): String {
-        return when (this) {
-            "Plan" -> "PLAN"
-            "Design" -> "DESIGN"
-            "Web" -> "WEB"
-            "Android" -> "ANDROID"
-            "iOS" -> "IOS"
-            "Node.js" -> "NODEJS"
-            "Spring Boot" -> "SPRINGBOOT"
-            "Admin" -> "ADMIN"
-            else -> uppercase()
-        }
-    }
+    private fun String.toPartApiValue(): String = UserPart.from(this).serverValue
 
     companion object {
+
+        /** 수정 Dialog 의 파트 초기값 */
+        private val DEFAULT_EDIT_PART = UserPart.WEB
 
         /**
          * 스터디 그룹 목록 한 번 조회 시 요청하는 최대 개수

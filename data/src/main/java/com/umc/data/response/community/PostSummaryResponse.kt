@@ -54,9 +54,7 @@ data class PostSummaryResponse(
                 content = this.content,
                 lightningInfo = this.lightningInfo?.toLightningInfoDomain(),
                 //아래 부분은 더미 채우기 위한 부분으로 체크(summary에는 사용하지 않음)
-                userPart = try {
-                    UserPart.valueOf(this.category) }
-                catch (e: Exception) { UserPart.ANDROID},
+                userPart = UserPart.from(this.category),
                 isLiked = false,
                 isScrapped = false,
                 )
