@@ -10,6 +10,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.*
@@ -34,6 +35,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.red500
 import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.indigo100
@@ -47,6 +49,43 @@ import com.umc.component.util.UTimeFormat.toMillis
 import com.umc.component.R
 import com.umc.component.theme.AppStrings
 
+
+/*
+ * 한 주 칸의 세로 구성. 위에서부터 아래로 이 순서대로 쌓인다.
+ *
+ *   ── 구분선 ──
+ *      16dp        [DAY_DIVIDER_TO_CIRCLE]
+ *      ● 32dp      [DAY_CIRCLE_SIZE]  — 날짜 숫자는 이 원의 한가운데
+ *       6dp        [DAY_CIRCLE_TO_DOT]
+ *      · 4dp       [DAY_DOT_SIZE]
+ *      14dp        [DAY_DOT_TO_DIVIDER]
+ *   ── 구분선 ──
+ *
+ * 원과 점은 오늘·선택·일정 여부와 상관없이 **항상 같은 자리를 차지한다.**
+ * 배경 원만 조건부로 그리고 크기는 늘 32dp 라, 어떤 날이든 숫자와 점의 위치가 흔들리지 않는다.
+ */
+
+/** 날짜 원 지름 */
+private val DAY_CIRCLE_SIZE = 32.dp
+
+/** 위 구분선 → 원 */
+private val DAY_DIVIDER_TO_CIRCLE = 16.dp
+
+/** 원 → 점 */
+private val DAY_CIRCLE_TO_DOT = 6.dp
+
+/** 일정이 있는 날 아래에 찍는 점의 지름 */
+private val DAY_DOT_SIZE = 4.dp
+
+/** 점 → 아래 구분선 */
+private val DAY_DOT_TO_DIVIDER = 14.dp
+
+/** 한 주 칸의 높이. 위 항목들의 합이므로 따로 적지 않는다. */
+private val DAY_CELL_HEIGHT =
+    DAY_DIVIDER_TO_CIRCLE + DAY_CIRCLE_SIZE + DAY_CIRCLE_TO_DOT + DAY_DOT_SIZE + DAY_DOT_TO_DIVIDER
+
+/** 주와 주 사이 구분선 두께 */
+private val WEEK_DIVIDER_THICKNESS = 1.dp
 
 /**
  * 홈 화면에서 보여주는 커스텀 달력
@@ -125,7 +164,9 @@ fun HomeCalendar(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(grey000())
-            .padding(16.dp)
+            // 아래쪽은 비워 둔다. 마지막 주 칸이 이미 점 아래 14dp(날짜 아래 24dp)를 갖고 있어,
+            // 바로 이어지는 일정 리스트와의 간격이 그 값 그대로 유지된다.
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp)
     ) {
         // 상단 헤더: 이전/다음 월 이동 화살표 및 "YYYY.MM" 타이틀
         CalendarHeader(
@@ -194,7 +235,7 @@ private fun CalendarHeader(
 
         // 년.월 타이틀 (클릭 시 DatePicker 오픈)
         UText(
-            text = "${currentMonth.year}.${String.format("%02d", currentMonth.monthValue)}",
+            text = "${currentMonth.year}. ${String.format("%02d", currentMonth.monthValue)}",
             color = grey800(),
             style = UmcTypographyTokens.HeadlineBold,
             modifier = Modifier
@@ -239,7 +280,7 @@ private fun CalendarBody(
                         .weight(1f),
                     textAlign = TextAlign.Center,
                     color = if (index == 0) red500() else grey600(),
-                    style = UmcTypographyTokens.Caption1
+                    style = UmcTypographyTokens.Caption1Bold
                 )
             }
         }
@@ -266,7 +307,15 @@ private fun CalendarBody(
             ) {
                 // 7개 단위로 주(Week)를 분할하여 렌더링
                 // (null,null,null,1,2,3,4 .. 31)을 7개씩
-                days.chunked(7).forEach { week ->
+                days.chunked(7).forEachIndexed { weekIndex, week ->
+                    // 구분선은 주와 주 사이에만 넣는다. 첫 주 위와 마지막 주 아래에는 긋지 않는다.
+                    if (weekIndex > 0) {
+                        HorizontalDivider(
+                            thickness = WEEK_DIVIDER_THICKNESS,
+                            color = grey100(),
+                        )
+                    }
+
                     Row(modifier = Modifier
                         .fillMaxWidth()
                     ) {
@@ -285,7 +334,7 @@ private fun CalendarBody(
                                 } else {
                                     // 월 시작 전 빈 공간
                                     Spacer(modifier = Modifier
-                                        .aspectRatio(1f)
+                                        .height(DAY_CELL_HEIGHT)
                                     )
                                 }
                             }
@@ -295,7 +344,7 @@ private fun CalendarBody(
                             repeat(7 - week.size) {
                                 Spacer(modifier = Modifier
                                     .weight(1f)
-                                    .aspectRatio(1f)
+                                    .height(DAY_CELL_HEIGHT)
                                 )
                             }
                         }
@@ -316,7 +365,16 @@ private fun CalendarBody(
  * - 오늘(`isToday`): Indigo500 원형 배경 + 흰색 텍스트
  * - 선택됨(`isSelected`): Indigo100 배경 + Indigo600 테두리 + Indigo500 텍스트
  * - 일요일(`dayOfWeek == SUNDAY`): Red500 텍스트
- * - 일정 보유(`hasEvent`): 셀 하단 중앙에 Red500 4dp 원형 점(Dot) 표시
+ * - 일정 보유(`hasEvent`): 날짜 원과 바로 아래 행 원 사이의 정가운데에 Red500 점(Dot) 표시
+ *
+ * [점을 두 원 사이 정가운데에 놓는 방법]
+ * 칸은 `정사각 + 점 지름` 높이이고 원은 정사각 한가운데에 있다. 이때 내 원의 아래 테두리와
+ * 아래 행 원의 위 테두리를 잇는 구간의 중점은 항상 `정사각 아래 경계 + 점 반지름` 이 된다.
+ *
+ *   중점 = ((W/2 + r) + (W + DOT + W/2 - r)) / 2 = W + DOT/2
+ *
+ * r(원 반지름)이 식에서 지워지므로, 원 크기나 화면 너비가 달라져도 정사각 바로 아래 [DAY_DOT_SIZE]
+ * 높이의 자리에 점을 넣기만 하면 언제나 정확히 가운데에 온다. 그래서 별도 계산 없이 아래 칸만 하나 둔다.
  */
 @Composable
 private fun DayItem(
@@ -327,29 +385,34 @@ private fun DayItem(
     onClick: () -> Unit
 ) {
     //날짜 공간
-    Box(
+    Column(
         modifier = Modifier
-            .aspectRatio(1f)
+            .fillMaxWidth()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null //기본 사각 리플 제거
             ) { onClick() },
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        //원 크기를 칸의 70% 정도로 조절
-        val backgroundModifier = when {
-            isToday -> Modifier
-                .fillMaxSize(0.7f)
-                .background(indigo500(), CircleShape)
-            isSelected -> Modifier.fillMaxSize(0.7f)
-                .background(indigo100(), CircleShape)
-                .border(1.dp, indigo600(), CircleShape)
-            else -> Modifier
-        }
+        //위 구분선과의 간격
+        Spacer(modifier = Modifier
+            .height(DAY_DIVIDER_TO_CIRCLE)
+        )
 
-        //원 형태 보여주는 BOX
+        //날짜 원. 오늘·선택이 아니어도 32dp 자리는 그대로 차지해 숫자와 점 위치가 고정된다.
         Box(
-            modifier = backgroundModifier,
+            modifier = Modifier
+                .size(DAY_CIRCLE_SIZE)
+                .then(
+                    when {
+                        isToday -> Modifier
+                            .background(indigo500(), CircleShape)
+                        isSelected -> Modifier
+                            .background(indigo100(), CircleShape)
+                            .border(1.dp, indigo600(), CircleShape)
+                        else -> Modifier
+                    }
+                ),
             contentAlignment = Alignment.Center
         ) {
             UText(
@@ -364,16 +427,30 @@ private fun DayItem(
             )
         }
 
-        //일정이 있을 때 dot(점) 보여주는 BOX
-        if (hasEvent) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 2.dp)
-                    .size(4.dp)
-                    .background(red500(), CircleShape)
-            )
+        //원과 점 사이 간격
+        Spacer(modifier = Modifier
+            .height(DAY_CIRCLE_TO_DOT)
+        )
+
+        //점 자리. 일정이 없는 날도 같은 높이를 차지해야 행 높이가 흔들리지 않는다.
+        Box(
+            modifier = Modifier
+                .size(DAY_DOT_SIZE)
+        ) {
+            //일정이 있을 때 dot(점) 보여주는 BOX
+            if (hasEvent) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(red500(), CircleShape)
+                )
+            }
         }
+
+        //점과 아래 구분선 사이 간격
+        Spacer(modifier = Modifier
+            .height(DAY_DOT_TO_DIVIDER)
+        )
     }
 }
 

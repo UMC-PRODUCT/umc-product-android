@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -62,7 +61,6 @@ import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
-import com.umc.component.theme.grey200
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
@@ -229,44 +227,38 @@ fun HomeScreen(
                     if (uiState.viewMode == HomeViewMode.CALENDAR) {
                         //달력 모드
                         HomeCalendar(
+                            // 하단만 비운다. 일정 리스트가 마지막 주 칸 바로 아래에서 시작해야
+                            // 날짜와 24dp(점이 있으면 점과 14dp) 간격이 나온다.
                             modifier = Modifier
-                                .padding(16.dp),
+                                .padding(start = 16.dp, end = 16.dp, top = 16.dp),
                             selectedDate = uiState.selectedDate,
                             eventDates = uiState.eventDates,
                             onDateClick = onDateClick,
                             onMonthChange = onMonthChange
                         )
 
-                        // 일정 리스트가 있을 때만 구분선과 리스트 표시
+                        // 일정이 있을 때만 리스트 표시
                         if (uiState.dailyPlans.isNotEmpty()) {
-
                             //달력 아래 일일 일정들
                             uiState.dailyPlans.forEach { plan ->
-
                                     Column(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(horizontal = 16.dp)
 
                                     ) {
-                                        HorizontalDivider(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 8.dp), // 카드 사이 구분선의 위아래 여백
-                                            thickness = 1.dp,
-                                            color = grey200()
-                                        )
-
                                         ScheduleItemCard(
                                             item = plan,
                                             onItemClick = onScheduleDetailClick
                                         )
                                     }
-
-
-
-
                             }
+                            Spacer(modifier = Modifier
+                                .height(16.dp)
+                            )
+                        } else {
+                            // 일정이 없으면 달력 마지막 주가 카드 아래에 바로 붙어 허전해 보인다.
+                            // 달력은 아래 여백을 두지 않으므로(일정과 24dp/14dp 간격을 맞추기 위함) 여기서 채운다.
                             Spacer(modifier = Modifier
                                 .height(16.dp)
                             )
