@@ -106,6 +106,13 @@ class MypageViewModel @Inject constructor(
         emitEvent(MypageEvent.NavigateToBlog)
     }
 
+    /**
+     * 챌린저 기록 추가(코드 입력) 바텀시트를 여는 메서드
+     */
+    fun navigateToAddActivity(){
+        emitEvent(MypageEvent.NavigateToAddActivity)
+    }
+
 
     fun navigateToAssistUmc(){
         emitEvent(MypageEvent.NavigateToAssistUmc(uiState.value.kakaoInquireChannelId))
@@ -224,14 +231,26 @@ class MypageViewModel @Inject constructor(
     }
 
     /**
-     * 레거시: 챌린저 활동 코드 입력 텍스트 변경 처리 메서드 (현재 미사용)
+     * 챌린저 활동 코드 입력 텍스트 변경 처리 메서드
      */
     fun onCodeChanged(code: String) {
         updateState { copy(code = code) }
     }
 
     /**
-     * 레거시: 챌린저 활동 코드를 검증하여 프로필에 추가하는 메서드 (기능 개편으로 현재 미사용)
+     * 입력한 코드를 비우는 메서드
+     *
+     * 시트는 닫아도 ViewModel 은 살아있어서, 지우지 않으면 다시 열었을 때 이전 입력이 그대로 남는다.
+     */
+    fun clearCode() {
+        updateState { copy(code = "") }
+    }
+
+    /**
+     * 챌린저 활동 코드를 검증하여 내 계정에 기록을 추가하는 메서드
+     *
+     * 이미 다른 기수의 챌린저인 회원도 쓸 수 있다. 서버가 코드에 담긴 기수·파트·지부로 기록을
+     * 새로 붙여주므로, 성공하면 프로필을 다시 조회해 화면에 반영한다.
      */
     fun addChallengerCode() {
         viewModelScope.launch {
@@ -243,6 +262,7 @@ class MypageViewModel @Inject constructor(
             resultResponse(
                 response = addChallengerRecordMemberUseCase(request),
                 successCallback = {
+                    clearCode()
                     //유저 정보 업데이트를 위한 호출
                     viewModelScope.launch {
                         resultResponse(

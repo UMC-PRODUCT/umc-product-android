@@ -198,6 +198,7 @@ fun MypageRoute(
         onGithubClick = viewModel::navigateToGithub, //깃허브 이동
         onLinkedinClick = viewModel::navigateToLinkedin, //링크드인 이동
         onBlogClick = viewModel::navigateToBlog, //블로그 이동
+        onAddActivityClick = viewModel::navigateToAddActivity, //챌린저 기록 추가(코드 입력)
         onAssistClick = viewModel::navigateToAssistUmc, //UMC 어시스트(카톡) 이동
         onNoticeSettingClick = viewModel::navigateToSettingNotice, //알림 설정 이동
         onLocationSettingClick = viewModel::navigateToSettingLocation, //위치 설정 이동
@@ -232,13 +233,16 @@ fun MypageRoute(
 
     }
 
-    // 활동 코드 입력 다이얼로그 컴포저블 (현재 사용 X)
+    // 챌린저 기록 추가 코드 입력 다이얼로그 컴포저블
     if(showAddCodeDialog){
         AddCodeDialog(
             code = uiState.code,
             onCodeChanged = viewModel::onCodeChanged,
             onConfirmClick = viewModel::addChallengerCode,
-            onDismissRequest = {showAddCodeDialog = false}
+            onDismissRequest = {
+                showAddCodeDialog = false
+                viewModel.clearCode()
+            }
         )
     }
 
@@ -375,6 +379,7 @@ fun MypageScreen(
     onGithubClick: () -> Unit,
     onLinkedinClick: () -> Unit,
     onBlogClick: () -> Unit,
+    onAddActivityClick: () -> Unit,
     onAssistClick: () -> Unit,
     onNoticeSettingClick: () -> Unit,
     onLocationSettingClick: () -> Unit,
@@ -407,6 +412,20 @@ fun MypageScreen(
                 .padding(top = 16.dp)
         ) {
 
+
+            item {
+                //내 활동 섹션 - 운영진에게 받은 6자리 코드로 기수 활동 기록을 계정에 붙인다
+                MypageSectionTitle(
+                    text = AppStrings.MYPAGE_MYACTIVITY
+                )
+                MypageListCard {
+                    MypageListItem(
+                        R.drawable.ic_plus_circle,
+                        AppStrings.MYPAGE_ADDACTIVITY,
+                        onClick = onAddActivityClick
+                    )
+                }
+            }
 
             item {
                 //외부 링크 3종 섹션
