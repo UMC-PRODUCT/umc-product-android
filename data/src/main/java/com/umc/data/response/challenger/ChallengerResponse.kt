@@ -12,6 +12,8 @@ data class ChallengerResponse(
     @SerializedName("memberId") val memberId: Long? = null,
     @SerializedName("gisu") val gisu: Int? = null,
     @SerializedName("part") val part: String? = null,
+    // 서버가 파트와 함께 내려주는 트랙 목록. 챌린저 한 명이 여러 트랙을 가질 수 있다.
+    @SerializedName("tracks") val tracks: List<String>? = null,
     @SerializedName("challengerPoints") val challengerPoints: List<ChallengerPointResponse>? = null,
     @SerializedName("points") val points: List<ChallengerPointResponse>? = null,
     @SerializedName("totalPoints") val totalPoints: Double? = null,
@@ -31,6 +33,7 @@ data class ChallengerResponse(
                 name = name ?: defaultModel.name,
                 university = schoolName ?: defaultModel.university,
                 part = UserPart.from(part),
+                tracks = resolveTracks(tracks, part),
                 generation = gisu ?: defaultModel.generation,
                 profileImageUrl = profileImageLink ?: defaultModel.profileImageUrl,
                 totalPoints = totalPoints ?: defaultModel.totalPoints
@@ -71,6 +74,7 @@ data class ChallengerResponse(
                 nickname = nickname ?: defaultModel.nickname,
                 university = schoolName ?: defaultModel.university,
                 part = UserPart.from(part),
+                tracks = resolveTracks(tracks, part),
                 gisu = gisu ?: defaultModel.gisu,
                 profileImageUrl = profileImageLink ?: defaultModel.profileImageUrl,
                 totalScore = totalPoints ?: defaultModel.totalScore,
@@ -80,6 +84,22 @@ data class ChallengerResponse(
             )
         }
     }
+}
+
+/**
+ * 서버가 내려준 트랙 목록을 [UserPart] 로 바꾼다.
+ *
+ * 서버도 `tracks` 가 비어 있으면 `part` 를 변환해 내려주지만(Challenger.getEffectiveTracks),
+ * 필드가 아예 없는 응답이 섞여도 화면이 비지 않도록 여기서도 같은 폴백을 둔다.
+ */
+private fun resolveTracks(tracks: List<String>?, part: String?): List<UserPart> {
+    val parsed = tracks.orEmpty()
+        .map { UserPart.from(it) }
+        .filter { it != UserPart.UNKNOWN }
+
+    if (parsed.isNotEmpty()) return parsed
+
+    return listOfNotNull(UserPart.from(part).takeIf { it != UserPart.UNKNOWN })
 }
 
 private fun String?.toDateOnly(): String = orEmpty()

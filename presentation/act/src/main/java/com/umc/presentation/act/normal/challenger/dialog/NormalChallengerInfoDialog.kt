@@ -122,9 +122,10 @@ fun NormalChallengerInfoDialog(
                     text = model.university,
                     type = UInfoChipType.SCHOOL
                 )
-                UInfoChip(
-                    part = model.part
-                )
+                // 파트 대신 트랙을 보여준다. 한 명이 여러 트랙을 가질 수 있어 목록으로 그린다.
+                model.tracks.forEach { track ->
+                    UInfoChip(part = track)
+                }
             }
 
             Spacer(Modifier.height(20.dp))
@@ -272,6 +273,7 @@ private fun ChallengerInfoDialogPreview() {
                 name = "김디자",
                 university = "중앙대학교",
                 part = UserPart.WEB,
+                tracks = listOf(UserPart.WEB_PRODUCT_ENGINEER),
                 generation = 12,
                 totalPoints = 1.0,
                 history = listOf(

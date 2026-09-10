@@ -18,6 +18,8 @@ data class ChallengerInfoDialogModel(
     val name: String = "알수없음",
     val university: String = "알수없음",
     val part: UserPart = UserPart.UNKNOWN,
+    /** 서버가 내려준 트랙. 화면에는 파트 대신 이쪽을 보여준다. */
+    val tracks: List<UserPart> = emptyList(),
     val generation: Int = 0,
     val profileImageUrl: String = "",
     val totalPoints: Double = 0.0,

@@ -342,8 +342,11 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
             UInfoChip(
                 text = ui.school, type = UInfoChipType.SCHOOL
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            UInfoChip(part = ui.part)
+            // 파트 대신 트랙을 보여준다. 한 명이 여러 트랙을 가질 수 있어 목록으로 그린다.
+            ui.tracks.forEach { track ->
+                Spacer(modifier = Modifier.width(8.dp))
+                UInfoChip(part = track)
+            }
         }
 
         Box(
@@ -682,6 +685,8 @@ private data class ChallengerDetailUi(
     val totalScore: Int,
     val school: String,
     val part: UserPart,
+    /** 화면에는 파트 대신 이쪽을 보여준다 */
+    val tracks: ImmutableList<UserPart>,
     val totalRewardScore: Int,
     val totalPenaltyScore: Int,
     val history: ImmutableList<HistoryDetail>
@@ -699,6 +704,7 @@ private fun ChallengerManageDialogModel?.toDetailUi(): ChallengerDetailUi {
             totalScore = 0,
             school = "중앙대학교",
             part = UserPart.WEB,
+            tracks = persistentListOf(UserPart.WEB_PRODUCT_ENGINEER),
             totalRewardScore = 1,
             totalPenaltyScore = 1,
             history = persistentListOf(
@@ -714,6 +720,7 @@ private fun ChallengerManageDialogModel?.toDetailUi(): ChallengerDetailUi {
         totalScore = totalScore.toInt(),
         school = university,
         part = part,
+        tracks = tracks.toImmutableList(),
         totalRewardScore = rewardScore,
         totalPenaltyScore = penaltyScore,
         history = history.map { point ->
