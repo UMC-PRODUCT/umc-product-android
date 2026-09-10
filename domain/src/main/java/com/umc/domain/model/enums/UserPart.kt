@@ -44,7 +44,8 @@ enum class UserPart(val label: String) {
     MOBILE_PRODUCT_ENGINEER("Mobile"),
     INFRA_PLUS("Infra"),
 
-    UNKNOWN("Unknown");
+    /** 서버가 파트·트랙을 안 내려준 경우. TRACK 학습 유형 기수의 `part` 처럼 값 자체가 없을 수 있다. */
+    UNKNOWN("미정");
 
     /** 서버 요청·응답에 쓰는 값 */
     val serverValue: String get() = name
