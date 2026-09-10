@@ -556,8 +556,11 @@ jobs:
           API_ENV: ${{ needs.verify.outputs.api-env }}
           TRACK: ${{ needs.verify.outputs.track }}
           # 커밋 메시지는 사람이 쓴 임의 문자열이다. 셸에 직접 보간하면 주입 위험이 있어
-          # 환경변수로만 전달한다.
+          # 환경변수로만 전달하고, 파싱은 파이썬 json 으로만 한다.
           COMMIT_MSG: ${{ github.event.head_commit.message }}
+          # 이번 푸시에 담긴 커밋 전부. 태그 푸시나 수동 실행이면 비어 있을 수 있어
+          # 그때는 head_commit 하나로 대체한다. (GitHub 이 이 배열을 최대 20개로 자른다)
+          COMMITS_JSON: ${{ toJSON(github.event.commits) }}
         run: |
           set -euo pipefail
           if [ -z "${WEBHOOK:-}" ]; then
@@ -565,25 +568,66 @@ jobs:
             exit 0
           fi
           printf '%s' "${COMMIT_MSG:-}" > /tmp/commit_msg
+          printf '%s' "${COMMITS_JSON:-}" > /tmp/commits.json
           python3 - <<'PY' > /tmp/payload.json
           import json, os, pathlib
 
           result = os.environ["RESULT"]
           ok = result == "success"
-          subject = pathlib.Path("/tmp/commit_msg").read_text(encoding="utf-8", errors="replace").split("\n")[0][:200]
+
+          # production 트랙만 실제 배포고, internal·alpha·beta 는 테스트 배포로 본다.
+          kind = "release" if os.environ["TRACK"] == "production" else "test"
+          title = f"✅ ({kind})배포완료" if ok else f"❌ ({kind})배포실패 ({result})"
+
+          def read_commits():
+              raw = pathlib.Path("/tmp/commits.json").read_text(encoding="utf-8", errors="replace").strip()
+              try:
+                  items = json.loads(raw) if raw else []
+              except json.JSONDecodeError:
+                  items = []
+              if items:
+                  return items
+              # 태그 푸시·수동 실행처럼 commits 가 비는 경우
+              subject = pathlib.Path("/tmp/commit_msg").read_text(encoding="utf-8", errors="replace")
+              return [{"id": os.environ["GITHUB_SHA"], "message": subject, "author": {}}]
+
+          repo_url = f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}"
+
+          def commit_line(c):
+              sha = (c.get("id") or "")[:7]
+              subject = (c.get("message") or "").split("\n")[0].strip() or "(제목 없음)"
+              author = (c.get("author") or {}).get("name") or ""
+              url = c.get("url") or f"{repo_url}/commit/{c.get('id', '')}"
+              tail = f" — {author}" if author else ""
+              return f"[`{sha}`]({url}) {subject}{tail}"
+
+          # Discord 필드 값은 1024자가 한계라 넘치기 전에 끊고 몇 개가 빠졌는지 알린다.
+          commits = read_commits()
+          lines, used = [], 0
+          for i, c in enumerate(commits):
+              line = commit_line(c)
+              more = len(commits) - i
+              suffix = f"\n…외 {more}개" if more > 1 else ""
+              if used + len(line) + 1 + len(suffix) > 1024:
+                  if more > 0:
+                      lines.append(f"…외 {more}개")
+                  break
+              lines.append(line)
+              used += len(line) + 1
 
           payload = {
               "username": "UMC Android CD",
+              # 깃허브에서 온 알림임이 한눈에 보이도록 조직 프로필 이미지를 쓴다.
+              "avatar_url": f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY_OWNER']}.png",
               "embeds": [{
-                  "title": ("✅ 배포 완료" if ok else f"❌ 배포 실패 ({result})"),
-                  "url": f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}"
-                         f"/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+                  "title": title,
+                  "url": f"{repo_url}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
                   "color": 0x2ECC71 if ok else 0xE74C3C,
                   "fields": [
                       {"name": "버전", "value": f"{os.environ['VERSION_NAME']} (code {os.environ['VERSION_CODE']})", "inline": True},
                       {"name": "트랙", "value": os.environ["TRACK"], "inline": True},
                       {"name": "서버", "value": os.environ["API_ENV"], "inline": True},
-                      {"name": "커밋", "value": subject or "(제목 없음)"},
+                      {"name": f"커밋 {len(commits)}건", "value": "\n".join(lines) or "(없음)"},
                   ],
                   "footer": {"text": f"{os.environ['GITHUB_REF_NAME']} · {os.environ['GITHUB_SHA'][:8]}"},
               }],
