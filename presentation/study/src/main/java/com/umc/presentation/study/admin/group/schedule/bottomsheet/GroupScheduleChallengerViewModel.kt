@@ -287,7 +287,7 @@ class GroupScheduleChallengerViewModel @Inject constructor(
                                 },
 
                                 partLabel =
-                                    participant.userPart.name,
+                                    participant.userPart.label,
 
                                 school =
                                     participant.school,

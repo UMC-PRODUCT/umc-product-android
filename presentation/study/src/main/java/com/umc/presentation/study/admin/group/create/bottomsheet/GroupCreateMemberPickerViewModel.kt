@@ -158,7 +158,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                             name = participant.name,
                             nickname = participant.nickname,
                             gisu = participant.gisu,
-                            partLabel = participant.userPart.name,
+                            partLabel = participant.userPart.label,
                             school = participant.school,
                             profileImageUrl = participant.profileImage,
                         )
@@ -247,7 +247,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                                 name = participant.name,
                                 nickname = participant.nickname,
                                 gisu = participant.gisu,
-                                partLabel = participant.userPart.name,
+                                partLabel = participant.userPart.label,
                                 school = participant.school,
                                 profileImageUrl = participant.profileImage,
                             )

@@ -10,7 +10,8 @@ data class ParticipantItem(
     val nickname: String = "",
     val school: String = "",
     val gisu: Long = 0,
-    val userPart: UserPart = UserPart.ANDROID,
+    // 파트를 모를 때 특정 파트로 보이면 안 된다. 값을 안 넘기면 UNKNOWN 이어야 한다.
+    val userPart: UserPart = UserPart.UNKNOWN,
     val profileImage: String = ""
 )
 
