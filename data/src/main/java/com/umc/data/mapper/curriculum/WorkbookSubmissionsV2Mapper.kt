@@ -6,6 +6,7 @@ import com.umc.data.response.curriculum.WorkbookSubmissionsV2Response
 import com.umc.domain.model.curriculum.StudyMemberSubmission
 import com.umc.domain.model.curriculum.StudyMemberSubmissionPage
 import com.umc.domain.model.curriculum.StudyMemberSubmissionWeek
+import com.umc.domain.model.enums.UserPart
 
 fun WorkbookSubmissionsV2Response.toDomain(): StudyMemberSubmissionPage {
     return StudyMemberSubmissionPage(
@@ -27,7 +28,7 @@ fun StudyMemberSubmissionResponse.toDomain(): StudyMemberSubmission {
         profileImageUrl = profileImageUrl,
         studyGroupId = studyGroupId,
         studyGroupName = studyGroupName,
-        part = part,
+        part = UserPart.resolve(track, part),
         weeks = weeks.map { week ->
             week.toDomain()
         },

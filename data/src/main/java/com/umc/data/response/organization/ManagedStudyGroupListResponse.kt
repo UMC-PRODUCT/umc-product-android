@@ -26,6 +26,10 @@ data class ManagedStudyGroupResponse(
     @SerializedName("studyPart")
     val studyPart: String?,
 
+    // 학습 유형이 TRACK 인 기수는 studyPart 대신 이 값이 채워져 온다
+    @SerializedName("track")
+    val track: String?,
+
     @SerializedName("createdAt")
     val createdAt: String?,
 

@@ -1,6 +1,5 @@
 package com.umc.presentation.study.admin.group
 
-import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.organization.ManagedStudyGroup
 import kotlinx.collections.immutable.toImmutableList
 
@@ -24,8 +23,8 @@ fun ManagedStudyGroup.toUiModel(): AdminStudyGroupItemUiModel {
         groupId = studyGroupId,
         title = name,
 
-        // API용 파트 값을 화면 표시용 이름으로 변환
-        partLabel = studyPart.toPartLabel(),
+        // 트랙 기수면 트랙, 파트 기수면 파트를 화면 표시용 이름으로 변환
+        partLabel = displayPart.label,
 
         // 서버 원본 파트 값 유지
         studyPart = studyPart,
@@ -81,9 +80,4 @@ fun ManagedStudyGroup.toUiModel(): AdminStudyGroupItemUiModel {
     )
 }
 
-/**
- * 서버에서 사용하는 파트 값을 화면에 표시할 파트명으로 바꿉니다.
- *
- * 표기는 [UserPart] 한 곳에서만 정의합니다. 여기서 다시 만들지 않습니다.
- */
-private fun String.toPartLabel(): String = UserPart.from(this).label
+// 표기는 UserPart 한 곳에서만 정의합니다. 여기서 다시 만들지 않습니다.

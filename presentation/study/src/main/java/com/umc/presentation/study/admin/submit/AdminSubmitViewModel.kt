@@ -454,7 +454,7 @@ class AdminSubmitViewModel @Inject constructor(
 
                                 name = member.memberName,
                                 nickname = member.nickname,
-                                partLabel = member.part,
+                                partLabel = member.part.label,
                                 weekText = "${week.weekNo}주차",
                                 studyTitle = member.studyGroupName,
                                 profileImageUrl = member.profileImageUrl,

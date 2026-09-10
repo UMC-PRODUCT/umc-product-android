@@ -1,5 +1,7 @@
 package com.umc.domain.model.curriculum
 
+import com.umc.domain.model.enums.UserPart
+
 data class StudyMemberSubmissionPage(
     val content: List<StudyMemberSubmission>,
     val nextCursor: Long?,
@@ -15,7 +17,8 @@ data class StudyMemberSubmission(
     val profileImageUrl: String?,
     val studyGroupId: Long,
     val studyGroupName: String,
-    val part: String,
+    /** 트랙 기수면 트랙, 파트 기수면 파트 */
+    val part: UserPart,
     val weeks: List<StudyMemberSubmissionWeek>,
 )
 

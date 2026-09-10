@@ -18,6 +18,7 @@ fun ManagedStudyGroupResponse.toModel(): ManagedStudyGroup {
         name = name.orEmpty(),
         gisuId = gisuId ?: 0L,
         studyPart = studyPart.orEmpty(),
+        studyTrack = track,
         createdAt = createdAt.orEmpty(),
         mentors = mentors.orEmpty().map { it.toModel() },
         members = members.orEmpty().map { it.toModel() },

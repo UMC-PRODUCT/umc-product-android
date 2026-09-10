@@ -213,10 +213,16 @@ class UserStudyViewModel @Inject constructor(
                         )
                     }
 
+                // 커리큘럼 응답에는 트랙이 함께 오므로 이쪽이 정확하다.
+                // /member/me 에는 트랙 필드가 없어 TRACK 학습 유형 기수에서는 파트가 비어 온다.
+                val resolvedPart = data.part
+                    .takeIf { it != UserPart.UNKNOWN }
+                    ?: part
+
                 updateState {
                     copy(
                         title = data.curriculumTitle,
-                        part = part,
+                        part = resolvedPart,
                         items = items.toImmutableList(),
                     )
                 }

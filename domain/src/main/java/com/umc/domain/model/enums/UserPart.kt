@@ -84,6 +84,16 @@ enum class UserPart(val label: String) {
                 ?: UNKNOWN
         }
 
+        /**
+         * 트랙을 우선해서 하나의 값으로 고른다.
+         *
+         * 같은 응답에 `track` 과 `part` 가 함께 오는 API 가 여럿이다. 학습 유형이 TRACK 인
+         * 기수는 트랙만, PART 인 기수는 파트만 채워져 오므로 트랙이 있으면 트랙을 쓴다.
+         * 둘 다 없으면 [UNKNOWN] 이다.
+         */
+        fun resolve(track: String?, part: String?): UserPart =
+            from(track).takeIf { it != UNKNOWN } ?: from(part)
+
         /** 표기 차이(대소문자·공백·밑줄·점)를 지운 비교용 키 */
         private fun String.partKey(): String =
             trim().lowercase().filterNot { it == '_' || it == ' ' || it == '.' }
