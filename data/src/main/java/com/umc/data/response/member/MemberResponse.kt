@@ -120,7 +120,7 @@ data class CurrentGisuMemberInfoResponse(
 // 신규 : 현재 기수 챌린저 상태
 data class CurrentChallengerResponse(
     @SerializedName("challengerId") val challengerId: Long,
-    @SerializedName("part") val part: String,
+    @SerializedName("part") val part: String?,
     @SerializedName("challengerStatus") val challengerStatus: String,
     @SerializedName("points") val points: List<MemberPointResponse>?,
     @SerializedName("totalPoints") val totalPoints: Double?
@@ -145,7 +145,7 @@ data class MemberRoleResponse(
     @SerializedName("chapterName") val chapterName: String?,
     @SerializedName("organizationType") val organizationType: String,
     @SerializedName("organizationId") val organizationId: Long?,
-    @SerializedName("responsiblePart") val responsiblePart: String,
+    @SerializedName("responsiblePart") val responsiblePart: String?,
     @SerializedName("gisuId") val gisuId: Long,
     @SerializedName("gisu") val gisu: Long
 ) {
@@ -173,7 +173,7 @@ data class ChallengerHistoryResponse(
     @SerializedName("generation") val generation: Long, // 🔄 [수정] v1 gisu -> v2 generation
     @SerializedName("chapterId") val chapterId: Long?,
     @SerializedName("chapterName") val chapterName: String?,
-    @SerializedName("part") val part: String,
+    @SerializedName("part") val part: String?,
     @SerializedName("challengerStatus") val challengerStatus: String?,
     @SerializedName("points") val points: List<MemberPointResponse>?,
     @SerializedName("totalPoints") val totalPoints: Double?,

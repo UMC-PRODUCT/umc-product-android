@@ -37,7 +37,7 @@ data class CurrentGisuMemberInfo(
 //v2 신규: 현재 활성 기수의 챌린저 상세 정보
 data class CurrentChallengerInfo(
     val challengerId: Long,
-    val part: String,
+    val part: String?,
     val challengerStatus: String,
     val points: List<ChallengerPoint> = emptyList(),
     val totalPoints: Double = 0.0
@@ -65,7 +65,7 @@ data class ChallengerRecord(
     val gisu: Long,
     val chapterId: Long?,
     val chapterName: String?,
-    val part: String,
+    val part: String?,
     val challengerStatus: String?,
     val challengerPoints: List<ChallengerPoint> = emptyList(),
     val points: List<ChallengerPoint> = emptyList(), //추기
@@ -101,9 +101,12 @@ fun UserInfo.toUserCard(): UserCard {
     val currentChallenger = currentGisuMemberInfo?.challenger
     val latestRecord = challengerRecords.maxByOrNull { it.gisu }
 
+    // TRACK 학습 유형 기수의 챌린저는 part 가 없고 tracks 만 가진다(서버 응답에서 part 가 null).
+    // 없는 값을 "ADMIN" 으로 채우면 그 기수 사용자의 명함이 전부 운영진으로 보인다.
+    // /member/me 응답에는 tracks 가 없어 대신 보여줄 값도 없으므로 비워 둔다.
     val rawPart = currentChallenger?.part
         ?: latestRecord?.part
-        ?: "ADMIN"
+        ?: ""
 
     val rawGeneration = currentGisuMemberInfo?.generation?.toString()
         ?: latestRecord?.gisu?.toString()

@@ -22,7 +22,7 @@ data class PostSummaryResponse(
     @SerializedName("commentCount") val commentCount: Int,      // 댓글 수
     @SerializedName("likeCount") val likeCount: Int,            // 좋아요 수
     @SerializedName("isLiked") val isLiked: Boolean,            // 좋아요 여부
-    @SerializedName("authorPart") val authorPart: String,       // 게시글 작성자 부서
+    @SerializedName("authorPart") val authorPart: String?,       // 게시글 작성자 부서
     @SerializedName("lightningInfo") val lightningInfo: LightningInfoResponse? // 번개 모임 상세 정보 (일반글은 null)
 ) {
     companion object {

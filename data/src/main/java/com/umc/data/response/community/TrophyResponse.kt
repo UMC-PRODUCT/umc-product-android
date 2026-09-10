@@ -11,7 +11,7 @@ data class TrophyResponse(
     @SerializedName("challengerName") val challengerName: String,
     @SerializedName("challengerProfileImage") val challengerProfileImage: String?,
     @SerializedName("school") val school: String?,
-    @SerializedName("part") val part: String,
+    @SerializedName("part") val part: String?,
     @SerializedName("title") val title: String,
     @SerializedName("content") val content: String,
     @SerializedName("url") val url: String

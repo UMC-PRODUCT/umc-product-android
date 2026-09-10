@@ -18,7 +18,7 @@ data class PostDetailResponse(
     @SerializedName("authorName")val authorName: String?,       // 게시글 작성자 이름
     @SerializedName("authorNickname") val authorNickName: String?,
     @SerializedName("authorProfileImage") val authorProfileImage: String?, // 게시글 작성자 프로필 이미지
-    @SerializedName("authorPart") val authorPart: String,           // 게시글 작성자 유저파트
+    @SerializedName("authorPart") val authorPart: String?,           // 게시글 작성자 유저파트
     @SerializedName("lightningInfo") val lightningInfo: LightningInfoResponse?, // 번개 모임 상세 정보 (일반글은 null)
     @SerializedName("commentCount") val commentCount: Int,      // 댓글 수
     @SerializedName("writeTime") val writeTime: String?,        // 게시글 생성 시간

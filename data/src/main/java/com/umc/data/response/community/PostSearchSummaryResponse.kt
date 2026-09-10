@@ -18,7 +18,7 @@ data class PostSearchSummaryResponse (
     @SerializedName("authorNickname") val authorNickName: String?,
     @SerializedName("likeCount") val likeCount: Int,
     @SerializedName("commentCount") val commentCount: Int,
-    @SerializedName("authorPart") val authorPart: String,
+    @SerializedName("authorPart") val authorPart: String?,
     @SerializedName("createdAt") val createdAt: String,
     @SerializedName("matchType") val matchType: String,
     ) {

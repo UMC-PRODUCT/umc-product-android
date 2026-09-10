@@ -63,7 +63,7 @@ data class ChallengerCursorItemResponse(
     @SerializedName("gisu")
     val gisu: Int,
     @SerializedName("part")
-    val part: String,
+    val part: String?,
     @SerializedName("name")
     val name: String,
     @SerializedName("nickname")
@@ -133,7 +133,7 @@ data class ChallengerCursorItemResponse(
  */
 data class ChallengerPartCountResponse( // 명확성을 위해 이름 변경
     @SerializedName("part")
-    val part: String,
+    val part: String?,
     @SerializedName("count")
     val count: Int
 ) {
