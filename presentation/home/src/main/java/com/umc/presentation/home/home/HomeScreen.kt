@@ -86,6 +86,15 @@ import java.time.YearMonth
 import com.umc.component.base.CollectUiEvents
 import kotlinx.collections.immutable.persistentListOf
 
+/**
+ * [임시] 명함 교환 차단 — 교환이 막혀 있는 동안 홈 배너로 권하지 않는다.
+ *
+ * `isBannerVisible` 은 기본값이 true 라 일정 조회가 끝나기 전에도 배너가 잠깐 보인다.
+ * 상태가 아니라 그리는 자리에서 막아야 그 깜빡임까지 함께 사라진다.
+ * 차단을 풀 때는 이 상수와 아래 사용처를 지우면 된다.
+ */
+private const val HIDE_CARD_EXCHANGE_BANNER = true
+
 @Composable
 fun HomeRoute(
     viewModel: HomeViewModel = hiltViewModel(),
@@ -188,8 +197,8 @@ fun HomeScreen(
                     .height(16.dp)
                 )
 
-                //카드 교환 배너
-                if(uiState.isBannerVisible){
+                //카드 교환 배너 ([임시] 명함 교환 차단 중이라 숨긴다)
+                if(!HIDE_CARD_EXCHANGE_BANNER && uiState.isBannerVisible){
                     HomeShareCardsRow(
                         uiState = uiState,
                         memberId = uiState.userMemberId,
