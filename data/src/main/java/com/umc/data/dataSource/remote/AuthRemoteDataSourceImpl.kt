@@ -29,7 +29,7 @@ class AuthRemoteDataSourceImpl @Inject constructor(
         return apiCall { authApi.loginKakao(request) }
     }
 
-    override suspend fun loginGoogle(request: LoginRequest): ApiState<JwtLoginResponse> {
+    override suspend fun loginGoogle(request: LoginGoogleRequest): ApiState<JwtLoginResponse> {
         return apiCall { authApi.loginGoogle(request) }
     }
 

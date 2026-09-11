@@ -44,10 +44,6 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.android.gms.auth.api.identity.AuthorizationRequest
-import com.google.android.gms.auth.api.identity.Identity
-import com.google.android.gms.common.Scopes
-import com.google.android.gms.common.api.Scope
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -70,7 +66,6 @@ import com.umc.domain.model.enums.LoginType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import com.umc.component.R
 
 @Composable
@@ -331,7 +326,7 @@ private fun signInGoogle(
                 context = context
             )
 
-            handleSignIn(scope, context, result, onLoginSuccess)
+            handleSignIn(result, onLoginSuccess)
 
         } catch (e: GetCredentialException) {
             ULog.d("Google 로그인 실패: ${e.message}")
@@ -340,8 +335,6 @@ private fun signInGoogle(
 }
 
 private fun handleSignIn(
-    scope: CoroutineScope,
-    context: Context,
     result: GetCredentialResponse,
     onLoginSuccess : (String) -> Unit
 ) {
@@ -352,40 +345,16 @@ private fun handleSignIn(
         credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
 
         try {
-            // Access Token도 함께 요청
-            scope.launch {
-                try {
-                    val accessToken = requestAccessToken(context)
-                    ULog.d("Google Access Token: $accessToken")
-                    onLoginSuccess(accessToken)
-                } catch (e: Exception) {
-                    ULog.d("Access Token 획득 실패: ${e.message}")
-                }
-            }
-
+            // 서버에는 ID 토큰을 보낸다. aud 가 GOOGLE_LOGIN_KEY(Web 클라이언트) 하나로 고정돼서
+            // 서명 키(SHA-1)를 추가해도 서버 허용 목록을 고칠 필요가 없다.
+            val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
+            onLoginSuccess(idToken)
         } catch (e: GoogleIdTokenParsingException) {
             ULog.d("유효하지 않은 Google ID 토큰 $e")
         }
     } else {
         ULog.d("예상치 못한 자격 증명 유형")
     }
-}
-
-private suspend fun requestAccessToken(
-    context: Context,
-): String {
-    val authorizationRequest = AuthorizationRequest.builder()
-        .setRequestedScopes(
-            listOf(Scope(Scopes.PROFILE), Scope(Scopes.EMAIL))
-        )
-        .build()
-
-    val authorizationResult = Identity.getAuthorizationClient(context)
-        .authorize(authorizationRequest)
-        .await()
-
-    return authorizationResult.accessToken
-        ?: throw IllegalStateException("Access Token을 받을 수 없습니다")
 }
 
 @Preview(showBackground = true)

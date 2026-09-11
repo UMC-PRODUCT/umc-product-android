@@ -16,7 +16,7 @@ import com.umc.domain.model.request.RefreshTokenRequest
 interface AuthRemoteDataSource {
     suspend fun reissueToken(request: RefreshTokenRequest): ApiState<RefreshTokenResponse>
     suspend fun loginKakao(request: LoginRequest): ApiState<JwtLoginResponse>
-    suspend fun loginGoogle(request: LoginRequest): ApiState<JwtLoginResponse>
+    suspend fun loginGoogle(request: LoginGoogleRequest): ApiState<JwtLoginResponse>
     suspend fun loginEmail(request: LoginEmailRequest): ApiState<JwtLoginResponse>
     suspend fun emailVerify(request: EmailVerificationRequest): ApiState<EmailVerificationResponse>
     suspend fun emailVerifyComplete(request: EmailVerificationCompleteRequest): ApiState<EmailVerificationCompleteResponse>

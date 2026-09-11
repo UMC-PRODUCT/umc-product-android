@@ -29,7 +29,7 @@ interface AuthApi {
 
     @POST(Endpoints.Auth.LOGIN_GOOGLE)
     suspend fun loginGoogle(
-        @Body request: LoginRequest
+        @Body request: LoginGoogleRequest
     ): ApiResponse<JwtLoginResponse>
 
     @POST(Endpoints.Auth.LOGIN_EMAIL)

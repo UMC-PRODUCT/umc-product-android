@@ -13,7 +13,7 @@ import com.umc.domain.model.request.RefreshTokenRequest
 interface AuthRepository {
     suspend fun reissueToken(request: RefreshTokenRequest): ApiState<JwtToken>
     suspend fun kakaoLogin(request: LoginRequest): ApiState<JwtToken>
-    suspend fun googleLogin(request: LoginRequest): ApiState<JwtToken>
+    suspend fun googleLogin(request: LoginGoogleRequest): ApiState<JwtToken>
     suspend fun emailLogin(request: LoginEmailRequest): ApiState<JwtToken>
     suspend fun emailVerify(request: EmailVerificationRequest): ApiState<String>
     suspend fun emailVerifyComplete(request: EmailVerificationCompleteRequest): ApiState<String>

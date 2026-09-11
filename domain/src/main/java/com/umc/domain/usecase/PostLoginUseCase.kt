@@ -15,7 +15,7 @@ class PostLoginUseCase @Inject constructor(
         return when(loginType) {
             LoginType.KAKAO -> authRepository.kakaoLogin(LoginRequest(token))
             LoginType.APPLE,
-            LoginType.GOOGLE -> authRepository.googleLogin(LoginRequest(token))
+            LoginType.GOOGLE -> authRepository.googleLogin(LoginGoogleRequest(idToken = token))
         }
     }
 }
