@@ -37,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.component.UEmailVerifyNoticeDialog
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.component.UToastData
@@ -71,18 +72,26 @@ fun EmailSignUpRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var toastData by remember { mutableStateOf<UToastData?>(null) }
+    var showEmailVerifyNotice by remember { mutableStateOf(false) }
 
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
             is EmailSignUpEvent.MoveToNextEvent ->
                 navigateToNext(event.emailVerificationToken, event.rawPassword)
-            is EmailSignUpEvent.ShowVerifyToast ->
+            is EmailSignUpEvent.ShowVerifyToast -> {
                 toastData = UToastData(AppStrings.SIGN_UP_CODE_SENT_TOAST, UToastState.CHECK)
+                // 발송 한도를 넘기면 서버는 성공으로 응답해도 메일이 가지 않아, 접수되면 항상 안내한다
+                showEmailVerifyNotice = true
+            }
             is EmailSignUpEvent.ShowVerifyCompleteToast ->
                 toastData = UToastData(AppStrings.SIGN_UP_EMAIL_VERIFY_COMPLETE, UToastState.CHECK)
             is EmailSignUpEvent.ShowErrorToast ->
                 toastData = UToastData(event.message, UToastState.ERROR)
         }
+    }
+
+    if (showEmailVerifyNotice) {
+        UEmailVerifyNoticeDialog(onDismissRequest = { showEmailVerifyNotice = false })
     }
 
     Box(modifier = Modifier.fillMaxSize()) {

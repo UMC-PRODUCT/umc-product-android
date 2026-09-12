@@ -241,6 +241,9 @@ object AppStrings {
     const val SIGN_UP_EMAIL_SUB_TITLE = "이메일 인증 후 비밀번호를 설정해 주세요."
     const val SIGN_UP_VERIFY_CODE_6_PLACEHOLDER = "인증번호 6자리 입력"
     const val SIGN_UP_CODE_SENT_TOAST = "인증 번호가 발송 되었습니다."
+    const val EMAIL_VERIFY_NOTICE_TITLE = "인증 메일이 안 올 수 있어요"
+    const val EMAIL_VERIFY_NOTICE_CONTENT =
+        "지금 이메일 발송량이 많아 인증 메일이 늦거나 도착하지 않을 수 있어요. 메일이 오지 않으면 다음 날 다시 시도해주세요."
     const val SIGN_UP_PASSWORD_PLACEHOLDER = "8자 이상 입력"
     const val SIGN_UP_PASSWORD_CHECK_PLACEHOLDER = "비밀번호 다시 입력"
     const val PASSWORD_CHECK = "비밀번호 확인"
