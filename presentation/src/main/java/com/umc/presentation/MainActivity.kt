@@ -45,6 +45,7 @@ import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
+import com.umc.presentation.remotenotice.RemoteNoticeHost
 import dagger.hilt.android.AndroidEntryPoint
 
 /** 상태바 배경. presentation/res/values(-night)/colors.xml 의 grey000과 같은 값 */
@@ -123,6 +124,9 @@ private fun UmcApp() {
                     .padding(innerPadding)
                     .consumeWindowInsets(innerPadding)
             )
+
+            // 원격 설정으로 켠 안내를 현재 화면 위에 띄운다
+            RemoteNoticeHost(currentRoute = currentDestination?.route)
         }
     }
 }

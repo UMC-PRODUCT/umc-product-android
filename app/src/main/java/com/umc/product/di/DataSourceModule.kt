@@ -1,5 +1,7 @@
 package com.umc.product.di
 
+import com.umc.data.dataSource.remote.remoteconfig.RemoteConfigRemoteDataSource
+import com.umc.data.dataSource.remote.remoteconfig.RemoteConfigRemoteDataSourceImpl
 import com.umc.data.dataSource.AuthRemoteDataSource
 import com.umc.data.dataSource.NoticeRemoteDataSource
 import com.umc.data.dataSource.NotificationRemoteDataSource
@@ -123,4 +125,8 @@ abstract class DataSourceModule {
     @Singleton
     @Binds
     abstract fun bindsAuthenticationRemoteDataSource(dataSourceImpl: AuthenticationRemoteDataSourceImpl): AuthenticationRemoteDataSource
+
+    @Singleton
+    @Binds
+    abstract fun bindsRemoteConfigRemoteDataSource(dataSourceImpl: RemoteConfigRemoteDataSourceImpl): RemoteConfigRemoteDataSource
 }

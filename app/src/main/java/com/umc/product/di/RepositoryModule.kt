@@ -1,5 +1,7 @@
 package com.umc.product.di
 
+import com.umc.data.repository.remoteconfig.RemoteConfigRepositoryImpl
+import com.umc.domain.repository.remoteconfig.RemoteConfigRepository
 import com.umc.data.repository.AppDataStoreRepositoryImpl
 import com.umc.data.repository.ai.AiTextRepositoryImpl
 import com.umc.domain.repository.ai.AiTextRepository
@@ -156,4 +158,10 @@ abstract class RepositoryModule {
         repositoryImpl: CommunityChatRepositoryImpl,
     ): CommunityChatRepository
 
+
+    @Singleton
+    @Binds
+    abstract fun bindsRemoteConfigRepository(
+        repositoryImpl: RemoteConfigRepositoryImpl,
+    ): RemoteConfigRepository
 }

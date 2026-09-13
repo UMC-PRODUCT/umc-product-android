@@ -16,6 +16,10 @@ annotation class KakaoOkHttpClient
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
+annotation class RemoteConfigOkHttpClient
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
 annotation class NormalRetrofit
 
 @Qualifier
