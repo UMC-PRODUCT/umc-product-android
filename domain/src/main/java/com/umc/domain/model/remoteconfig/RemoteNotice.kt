@@ -9,7 +9,7 @@ import java.time.format.DateTimeParseException
  * 앱을 새로 배포하지 않고 특정 화면에 안내 다이얼로그를 켜고 끄는 데 쓴다.
  * 값의 규칙은 그 저장소의 schema.json 이 기준이다.
  *
- * @property screen 띄울 화면. 앱 경로 이름(MainDestination) 그대로다. 예: `EmailSignUp`
+ * @property screen 띄울 화면. 앱 경로 이름(MainDestination) 그대로다. 예: `EmailSignUp`. [ALL_SCREENS] 이면 모든 화면
  * @property until 이 날짜(포함)까지만 띄운다. `YYYY-MM-DD` 형식이고, 없으면 기한이 없다
  */
 data class RemoteNotice(
@@ -37,11 +37,21 @@ data class RemoteNotice(
         }
         return !today.isAfter(lastDay)
     }
+
+    /** 이 안내가 [currentScreen] 화면 대상인지 */
+    fun targets(currentScreen: String): Boolean =
+        screen == ALL_SCREENS || screen == currentScreen
+
+    companion object {
+        /** 모든 화면을 뜻하는 값. 점검 안내처럼 앱 전체에 띄울 때 쓴다 */
+        const val ALL_SCREENS = "ALL"
+    }
 }
 
 /** 다이얼로그 모양. 앱이 모르는 값은 [UNKNOWN] 으로 받아 무시한다 (새 모양이 추가돼도 구버전 앱이 깨지지 않도록) */
 enum class RemoteNoticeTemplate {
     INFO,
+    BLOCKING,
     UNKNOWN;
 
     companion object {

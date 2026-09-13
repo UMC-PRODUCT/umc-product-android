@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -92,40 +93,42 @@ private fun UmcApp() {
         }
         val showBottomBar = currentTab != null
 
-        Scaffold(
-            bottomBar = {
-                if (showBottomBar) {
-                    UmcBottomNavigationBar(
-                        currentTab = currentTab,
-                        onTabSelected = { tab ->
-                            // Type-Safe 객체로 navigate 실행
-                            navController.navigate(tab.destination) {
-                                /**
-                                 * 스택이 계속 쌓이는 것을 방지하기 위해 홈(메인 영역 루트)까지
-                                 * 기존 스택을 정리하고 saveState = true로 이전 화면 상태(스크롤 위치 등)를 보존
-                                 * (그래프 시작점은 스플래시라 findStartDestination은 사용 불가)
-                                 * **/
-                                popUpTo(MainDestination.Home) {
-                                    saveState = true
-                                    inclusive = false // Home 화면 자체는 백스택에 남겨둠
+        Box(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                bottomBar = {
+                    if (showBottomBar) {
+                        UmcBottomNavigationBar(
+                            currentTab = currentTab,
+                            onTabSelected = { tab ->
+                                // Type-Safe 객체로 navigate 실행
+                                navController.navigate(tab.destination) {
+                                    /**
+                                     * 스택이 계속 쌓이는 것을 방지하기 위해 홈(메인 영역 루트)까지
+                                     * 기존 스택을 정리하고 saveState = true로 이전 화면 상태(스크롤 위치 등)를 보존
+                                     * (그래프 시작점은 스플래시라 findStartDestination은 사용 불가)
+                                     * **/
+                                    popUpTo(MainDestination.Home) {
+                                        saveState = true
+                                        inclusive = false // Home 화면 자체는 백스택에 남겨둠
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
-                        }
-                    )
+                        )
+                    }
                 }
+            ) { innerPadding ->
+                // Scaffold 패딩을 적용하여 바텀바와 화면 내용이 겹치지 않게 처리
+                MainNavHost(
+                    navHostController = navController,
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .consumeWindowInsets(innerPadding)
+                )
             }
-        ) { innerPadding ->
-            // Scaffold 패딩을 적용하여 바텀바와 화면 내용이 겹치지 않게 처리
-            MainNavHost(
-                navHostController = navController,
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .consumeWindowInsets(innerPadding)
-            )
 
-            // 원격 설정으로 켠 안내를 현재 화면 위에 띄운다
+            // 원격 설정으로 켠 안내. 이용을 막는 화면(BLOCKING)은 하단바까지 덮어야 해서 Scaffold 바깥에 둔다
             RemoteNoticeHost(currentRoute = currentDestination?.route)
         }
     }
