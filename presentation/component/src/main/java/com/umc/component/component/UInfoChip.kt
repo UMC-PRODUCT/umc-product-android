@@ -7,21 +7,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 import com.umc.component.theme.green100
-import com.umc.component.theme.green600
 import com.umc.component.theme.green700
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo600
-import com.umc.component.theme.indigo700
 import com.umc.component.theme.red100
 import com.umc.component.theme.red600
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow600
-import com.umc.component.theme.yellow700
 import com.umc.component.theme.white
+import com.umc.component.theme.green500
+import com.umc.component.theme.yellow500
+import com.umc.component.theme.yellow400
+import com.umc.component.theme.indigo800
+import com.umc.component.theme.yellow800
+import com.umc.component.theme.mint100
+import com.umc.component.theme.teal600
 import com.umc.domain.model.enums.UserPart
+
+private const val INFRA_CHIP_LABEL = "Infra"
 
 enum class UInfoChipType {
     SCHOOL,
@@ -83,6 +89,25 @@ fun UInfoChip(
 }
 
 /**
+ * 인프라를 겸하는 챌린저에게 파트 칩과 함께 붙이는 정보 칩입니다.
+ *
+ * 인프라는 파트가 아니라 챌린저마다 따로 내려오는 여부 값이라 [UserPart] 를 받지 않습니다.
+ *
+ * @param modifier 크기와 배치를 지정하는 Modifier
+ */
+@Composable
+fun UInfraChip(
+    modifier: Modifier = Modifier,
+) {
+    UInfoChip(
+        text = INFRA_CHIP_LABEL,
+        backgroundColor = yellow100(),
+        textColor = yellow600(),
+        modifier = modifier
+    )
+}
+
+/**
  * 호출부에서 배경색과 텍스트 색상을 직접 지정할 수 있는 기본 정보 칩입니다.
  */
 @Composable
@@ -124,20 +149,21 @@ private fun schoolChipStyle() = UInfoChipStyle(grey800(), white())
 @Composable
 private fun partChipStyle(part: UserPart): UInfoChipStyle {
     return when (part) {
-        UserPart.PLAN -> UInfoChipStyle(indigo100(), indigo600())
+        // 지난 기수 파트. 디자인 지정색(Admin 보라 · PM 마젠타 · Web 브라운 · Android 시안 …)에
+        // 가장 가까운 팔레트 계열을 쓰고, 칩 규칙대로 배경은 옅은 단계 · 글자는 진한 단계로 둔다.
+        UserPart.ADMIN -> UInfoChipStyle(indigo100(), indigo600())
+        UserPart.PLAN -> UInfoChipStyle(indigo100(), indigo800())
         UserPart.DESIGN -> UInfoChipStyle(red100(), red600())
-        UserPart.WEB -> UInfoChipStyle(green100(), green600())
-        UserPart.IOS -> UInfoChipStyle(indigo100(), indigo700())
-        UserPart.ANDROID -> UInfoChipStyle(green100(), green700())
-        UserPart.SPRINGBOOT -> UInfoChipStyle(yellow100(), yellow600())
-        UserPart.NODEJS -> UInfoChipStyle(yellow100(), yellow700())
+        UserPart.WEB -> UInfoChipStyle(yellow100(), yellow800())
+        UserPart.ANDROID -> UInfoChipStyle(mint100(), teal600())
+        UserPart.IOS -> UInfoChipStyle(yellow100(), yellow500())
+        UserPart.SPRINGBOOT -> UInfoChipStyle(green100(), green500())
+        UserPart.NODEJS -> UInfoChipStyle(yellow100(), yellow400())
 
-        // 트랙. 아직 화면에 쓰이는 곳은 없어 대응되는 파트 색을 따라간다.
-        UserPart.WEB_PRODUCT_ENGINEER -> UInfoChipStyle(green100(), green600())
-        UserPart.MOBILE_PRODUCT_ENGINEER -> UInfoChipStyle(indigo100(), indigo700())
-        UserPart.INFRA_PLUS -> UInfoChipStyle(yellow100(), yellow600())
+        // 11기에 생긴 파트
+        UserPart.WEB_PRODUCT_ENGINEER -> UInfoChipStyle(yellow100(), yellow600())
+        UserPart.MOBILE_PRODUCT_ENGINEER -> UInfoChipStyle(green100(), green700())
 
-        UserPart.ADMIN,
         UserPart.UNKNOWN -> UInfoChipStyle(grey100(), grey600())
     }
 }

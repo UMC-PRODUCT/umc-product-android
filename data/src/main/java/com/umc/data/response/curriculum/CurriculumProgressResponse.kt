@@ -14,12 +14,9 @@ data class CurriculumProgressResponse(
     @SerializedName("title")
     val title: String?,
 
-    // 이 커리큘럼의 파트·트랙. 학습 유형이 TRACK 인 기수는 part 가 비고 track 만 온다
+    // 이 커리큘럼의 파트
     @SerializedName("part")
     val part: String?,
-
-    @SerializedName("track")
-    val track: String?,
 
     @SerializedName("weeks")
     val weeks: List<WeeklyProgressResponse>?,
@@ -31,7 +28,7 @@ data class CurriculumProgressResponse(
             curriculumId = curriculumId ?: 0L,
             curriculumTitle = title.orEmpty(),
 
-            part = UserPart.resolve(track, part),
+            part = UserPart.from(part),
 
             completedCount = weekList.count {
                 it.status == "PASS"

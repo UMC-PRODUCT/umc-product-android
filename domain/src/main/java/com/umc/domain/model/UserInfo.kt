@@ -101,9 +101,8 @@ fun UserInfo.toUserCard(): UserCard {
     val currentChallenger = currentGisuMemberInfo?.challenger
     val latestRecord = challengerRecords.maxByOrNull { it.gisu }
 
-    // TRACK 학습 유형 기수의 챌린저는 part 가 없고 tracks 만 가진다(서버 응답에서 part 가 null).
-    // 없는 값을 "ADMIN" 으로 채우면 그 기수 사용자의 명함이 전부 운영진으로 보인다.
-    // /member/me 응답에는 tracks 가 없어 대신 보여줄 값도 없으므로 비워 둔다.
+    // 파트가 없는 챌린저도 있다(서버 응답에서 part 가 null).
+    // 없는 값을 "ADMIN" 으로 채우면 그 사용자의 명함이 운영진으로 보이므로 비워 둔다.
     val rawPart = currentChallenger?.part
         ?: latestRecord?.part
         ?: ""

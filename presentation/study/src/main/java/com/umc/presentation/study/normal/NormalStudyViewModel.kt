@@ -213,8 +213,7 @@ class UserStudyViewModel @Inject constructor(
                         )
                     }
 
-                // 커리큘럼 응답에는 트랙이 함께 오므로 이쪽이 정확하다.
-                // /member/me 에는 트랙 필드가 없어 TRACK 학습 유형 기수에서는 파트가 비어 온다.
+                // 커리큘럼 응답의 파트가 실제 수강 파트라 /member/me 값보다 정확하다.
                 val resolvedPart = data.part
                     .takeIf { it != UserPart.UNKNOWN }
                     ?: part

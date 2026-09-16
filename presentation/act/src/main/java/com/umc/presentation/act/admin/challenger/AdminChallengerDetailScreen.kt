@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UDialog
 import com.umc.component.component.UInfoChip
+import com.umc.component.component.UInfraChip
 import com.umc.component.component.UInfoChipType
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
@@ -342,10 +343,12 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
             UInfoChip(
                 text = ui.school, type = UInfoChipType.SCHOOL
             )
-            // 파트 대신 트랙을 보여준다. 한 명이 여러 트랙을 가질 수 있어 목록으로 그린다.
-            ui.tracks.forEach { track ->
+            Spacer(modifier = Modifier.width(8.dp))
+            UInfoChip(part = ui.part)
+            // 인프라를 겸하면 파트 칩 옆에 인프라 칩을 함께 보여준다.
+            if (ui.infra) {
                 Spacer(modifier = Modifier.width(8.dp))
-                UInfoChip(part = track)
+                UInfraChip()
             }
         }
 
@@ -685,8 +688,8 @@ private data class ChallengerDetailUi(
     val totalScore: Int,
     val school: String,
     val part: UserPart,
-    /** 화면에는 파트 대신 이쪽을 보여준다 */
-    val tracks: ImmutableList<UserPart>,
+    /** 인프라를 겸하는 챌린저인지 */
+    val infra: Boolean,
     val totalRewardScore: Int,
     val totalPenaltyScore: Int,
     val history: ImmutableList<HistoryDetail>
@@ -703,8 +706,8 @@ private fun ChallengerManageDialogModel?.toDetailUi(): ChallengerDetailUi {
             generation = "기수",
             totalScore = 0,
             school = "중앙대학교",
-            part = UserPart.WEB,
-            tracks = persistentListOf(UserPart.WEB_PRODUCT_ENGINEER),
+            part = UserPart.WEB_PRODUCT_ENGINEER,
+            infra = true,
             totalRewardScore = 1,
             totalPenaltyScore = 1,
             history = persistentListOf(
@@ -720,7 +723,7 @@ private fun ChallengerManageDialogModel?.toDetailUi(): ChallengerDetailUi {
         totalScore = totalScore.toInt(),
         school = university,
         part = part,
-        tracks = tracks.toImmutableList(),
+        infra = infra,
         totalRewardScore = rewardScore,
         totalPenaltyScore = penaltyScore,
         history = history.map { point ->

@@ -15,9 +15,7 @@ data class StudyMemberSubmissionResponse(
     val profileImageUrl: String?,
     val studyGroupId: Long,
     val studyGroupName: String,
-    // TRACK 학습 유형 기수는 part 가 비고 track 만 온다
     val part: String?,
-    val track: String?,
     val weeks: List<StudyMemberSubmissionWeekResponse>,
 )
 

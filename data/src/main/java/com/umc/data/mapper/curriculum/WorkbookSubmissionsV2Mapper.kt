@@ -28,7 +28,7 @@ fun StudyMemberSubmissionResponse.toDomain(): StudyMemberSubmission {
         profileImageUrl = profileImageUrl,
         studyGroupId = studyGroupId,
         studyGroupName = studyGroupName,
-        part = UserPart.resolve(track, part),
+        part = UserPart.from(part),
         weeks = weeks.map { week ->
             week.toDomain()
         },

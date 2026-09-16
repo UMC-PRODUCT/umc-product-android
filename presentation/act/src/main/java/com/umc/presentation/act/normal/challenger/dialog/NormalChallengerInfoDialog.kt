@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.umc.component.R
 import com.umc.component.component.UInfoChip
+import com.umc.component.component.UInfraChip
 import com.umc.component.component.UInfoChipType
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
@@ -122,9 +123,10 @@ fun NormalChallengerInfoDialog(
                     text = model.university,
                     type = UInfoChipType.SCHOOL
                 )
-                // 파트 대신 트랙을 보여준다. 한 명이 여러 트랙을 가질 수 있어 목록으로 그린다.
-                model.tracks.forEach { track ->
-                    UInfoChip(part = track)
+                UInfoChip(part = model.part)
+                // 인프라를 겸하면 파트 칩 옆에 인프라 칩을 함께 보여준다.
+                if (model.infra) {
+                    UInfraChip()
                 }
             }
 
@@ -272,8 +274,8 @@ private fun ChallengerInfoDialogPreview() {
             model = ChallengerInfoDialogModel(
                 name = "김디자",
                 university = "중앙대학교",
-                part = UserPart.WEB,
-                tracks = listOf(UserPart.WEB_PRODUCT_ENGINEER),
+                part = UserPart.WEB_PRODUCT_ENGINEER,
+                infra = true,
                 generation = 12,
                 totalPoints = 1.0,
                 history = listOf(
