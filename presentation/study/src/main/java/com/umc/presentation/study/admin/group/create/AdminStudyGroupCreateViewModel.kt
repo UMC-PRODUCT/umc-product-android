@@ -6,6 +6,7 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.request.organization.CreateStudyGroupRequest
 import com.umc.domain.usecase.organization.CreateStudyGroupUseCase
+import com.umc.domain.usecase.organization.GetActiveGisuUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
@@ -32,6 +33,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class AdminStudyGroupCreateViewModel @Inject constructor(
     private val createStudyGroupUseCase: CreateStudyGroupUseCase,
+    private val getActiveGisuUseCase: GetActiveGisuUseCase,
 ) : BaseViewModel<
         AdminStudyGroupCreateState,
         AdminStudyGroupCreateEvent,
@@ -128,20 +130,33 @@ class AdminStudyGroupCreateViewModel @Inject constructor(
     }
 
     /**
-     * 그룹을 생성할 기수 ID 설정
+     * 그룹을 생성할 기수를 활성 기수로 맞춥니다.
      *
-     * Route 등 외부에서 전달받은 기수 ID를
-     * 현재 화면 상태에 저장합니다.
-     *
-     * @param gisuId 그룹을 생성할 기수 ID
+     * 예전에는 화면에서 기수를 직접 넘겨 10기(5L)가 하드코딩돼 있었습니다.
+     * 그 탓에 현재 기수 챌린저로 그룹을 만들면 서버가
+     * "해당 기수에서 트랙을 수강 중인 활동 상태의 챌린저만 참여할 수 있어요"(ORGANIZATION-0099)로 거절했습니다.
      */
-    fun setGisuId(
-        gisuId: Long,
-    ) {
-        updateState {
-            copy(
-                gisuId = gisuId
-            )
+    fun loadActiveGisu() {
+        viewModelScope.launch {
+            when (
+                val result = getActiveGisuUseCase()
+            ) {
+                is ApiState.Success -> {
+                    updateState {
+                        copy(
+                            gisuId = result.data.gisuId.toLong()
+                        )
+                    }
+                }
+
+                is ApiState.Fail -> {
+                    emitEvent(
+                        AdminStudyGroupCreateEvent.RegisterFailure(
+                            "기수 정보를 불러오지 못했어요."
+                        )
+                    )
+                }
+            }
         }
     }
 

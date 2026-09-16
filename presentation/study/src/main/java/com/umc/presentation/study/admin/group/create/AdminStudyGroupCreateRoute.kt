@@ -28,15 +28,10 @@ fun AdminStudyGroupCreateRoute(
         .value
 
     /**
-     * 현재 생성할 스터디 그룹의 기수 ID 설정
-     *
-     * TODO
-     * 현재는 5L로 하드코딩되어 있으므로
-     * 실제 로그인한 사용자의 현재 기수 정보를 통해
-     * gisuId를 전달하도록 변경해야 합니다.
+     * 현재 생성할 스터디 그룹의 기수는 활성 기수를 따른다.
      */
     LaunchedEffect(Unit) {
-        viewModel.setGisuId(5L)
+        viewModel.loadActiveGisu()
     }
 
     /**
