@@ -57,6 +57,8 @@ import com.umc.component.theme.indigo700
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.organization.GisuItem
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
@@ -119,6 +121,7 @@ fun NoticeRoute(
                 containerColor = grey000(),
             ) {
                 PartSelectBottomSheetContent(
+                    parts = uiState.partFilters.toImmutableList(),
                     onSelectPart = { part ->
                         viewModel.onSelectPart(part)
                         showPartBottomSheet = false
@@ -400,6 +403,7 @@ private fun NoticeFilterChip(
 /** 파트 선택 바텀시트 */
 @Composable
 private fun PartSelectBottomSheetContent(
+    parts: ImmutableList<UserPart>,
     onSelectPart: (UserPart) -> Unit = {},
 ) {
     Column(
@@ -415,7 +419,7 @@ private fun PartSelectBottomSheetContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        UserPart.filters
+        parts
             .forEach { part ->
                 Row(
                     modifier = Modifier

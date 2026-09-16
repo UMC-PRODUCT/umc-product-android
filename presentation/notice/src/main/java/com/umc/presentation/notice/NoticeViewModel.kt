@@ -433,7 +433,21 @@ data class NoticeUiState(
     val canWriteNotice: Boolean = false,
     val readNoticeIds: ImmutableSet<Long> = persistentSetOf(),
     val currentNoticeTab: String = NOTICE_TAB_CHALLENGER,
-) : UiState
+) : UiState {
+
+    /**
+     * 파트 필터 바텀시트에 올릴 목록.
+     *
+     * 11기부터 파트가 트랙 기준으로 바뀌어, 지금 보고 있는 기수에 맞는 목록만 보여준다.
+     */
+    val partFilters: List<UserPart>
+        get() = UserPart.filtersOf(
+            dropdownList
+                .firstOrNull { it.gisuId.toLong() == selectedGisu }
+                ?.generation
+                ?: 0
+        )
+}
 
 sealed interface NoticeEvent : UiEvent {
 
