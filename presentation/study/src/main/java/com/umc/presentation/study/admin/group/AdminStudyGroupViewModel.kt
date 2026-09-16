@@ -159,10 +159,9 @@ class AdminStudyGroupViewModel @Inject constructor(
                         editGroupName = action.item.title,
 
                         // 현재 파트 초기값
-                        editPartLabel = action.item.partLabel
-                            .ifBlank {
-                                DEFAULT_EDIT_PART.label
-                            },
+                        editPart = action.item.part
+                            .takeIf { it != UserPart.UNKNOWN }
+                            ?: DEFAULT_EDIT_PART,
                     )
                 }
             }
@@ -176,7 +175,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                     copy(
                         editTargetItem = null,
                         editGroupName = "",
-                        editPartLabel = DEFAULT_EDIT_PART.label,
+                        editPart = DEFAULT_EDIT_PART,
                     )
                 }
             }
@@ -198,7 +197,7 @@ class AdminStudyGroupViewModel @Inject constructor(
             is AdminStudyGroupAction.OnEditPartChanged -> {
                 updateState {
                     copy(
-                        editPartLabel = action.partLabel
+                        editPart = action.part
                     )
                 }
             }
@@ -218,8 +217,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                     uiState.value.editGroupName.trim()
 
                 val newPart =
-                    uiState.value.editPartLabel
-                        .toPartApiValue()
+                    uiState.value.editPart.serverValue
 
                 // 그룹 이름이 비어 있으면 수정 요청하지 않음
                 if (newName.isBlank()) {
@@ -248,7 +246,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                                 copy(
                                     editTargetItem = null,
                                     editGroupName = "",
-                                    editPartLabel = DEFAULT_EDIT_PART.label,
+                                    editPart = DEFAULT_EDIT_PART,
                                 )
                             }
 
@@ -603,12 +601,10 @@ class AdminStudyGroupViewModel @Inject constructor(
      * 매핑은 [UserPart] 한 곳에서만 합니다. 예전에는 여기 when 에 없는 라벨("Spring")이 들어오면
      * `uppercase()` 로 흘러가 서버에 없는 "SPRING" 을 보내는 버그가 있었습니다.
      */
-    private fun String.toPartApiValue(): String = UserPart.from(this).serverValue
-
     companion object {
 
         /** 수정 Dialog 의 파트 초기값 */
-        private val DEFAULT_EDIT_PART = UserPart.WEB
+        private val DEFAULT_EDIT_PART = UserPart.WEB_PRODUCT_ENGINEER
 
         /**
          * 스터디 그룹 목록 한 번 조회 시 요청하는 최대 개수

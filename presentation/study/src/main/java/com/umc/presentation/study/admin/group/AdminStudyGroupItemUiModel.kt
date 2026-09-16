@@ -1,5 +1,7 @@
 package com.umc.presentation.study.admin.group
 
+import com.umc.domain.model.enums.UserPart
+
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -26,6 +28,9 @@ data class AdminStudyGroupItemUiModel(
 
     /** 화면에 표시할 파트명 */
     val partLabel: String,
+
+    /** 수정 요청에 그대로 쓰는 파트. 라벨이 겹칠 수 있어 문자열 대신 이 값을 쓴다 */
+    val part: UserPart,
 
     /** 담당 파트장 이름 */
     val leaderName: String,

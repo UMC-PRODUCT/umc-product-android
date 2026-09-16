@@ -53,7 +53,7 @@ fun AdminStudyGroupScreen(
     if (state.isEditDialogOpen) {
         AdminStudyGroupEditDialog(
             groupName = state.editGroupName,
-            selectedPart = state.editPartLabel,
+            selectedPart = state.editPart,
             canConfirm = state.canConfirmEdit,
 
             // 그룹 이름 변경
@@ -274,7 +274,8 @@ private fun AdminStudyGroupScreenPreview() {
                 AdminStudyGroupItemUiModel(
                     groupId = 1L,
                     title = "React A팀",
-                    partLabel = UserPart.WEB.label,
+                    partLabel = UserPart.WEB_PRODUCT_ENGINEER.label,
+                    part = UserPart.WEB_PRODUCT_ENGINEER,
                     leaderName = "홍길동",
                     leaderChallengerId = 1L,
                     leaderProfileImageUrl = null,
@@ -314,7 +315,8 @@ private fun previewState() =
             AdminStudyGroupItemUiModel(
                 groupId = 1L,
                 title = "React A팀",
-                partLabel = UserPart.WEB.label,
+                partLabel = UserPart.WEB_PRODUCT_ENGINEER.label,
+                part = UserPart.WEB_PRODUCT_ENGINEER,
                 leaderName = "홍길동",
                 leaderChallengerId = 1L,
                 leaderProfileImageUrl = null,
@@ -344,7 +346,8 @@ private fun previewState() =
             AdminStudyGroupItemUiModel(
                 groupId = 2L,
                 title = "React B팀",
-                partLabel = UserPart.ANDROID.label,
+                partLabel = UserPart.MOBILE_PRODUCT_ENGINEER.label,
+                part = UserPart.MOBILE_PRODUCT_ENGINEER,
                 leaderName = "김철수",
                 leaderChallengerId = 2L,
                 leaderProfileImageUrl = null,

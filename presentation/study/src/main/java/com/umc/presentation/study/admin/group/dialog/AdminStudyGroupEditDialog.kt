@@ -48,10 +48,10 @@ import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 @Composable
 fun AdminStudyGroupEditDialog(
     groupName: String,
-    selectedPart: String,
+    selectedPart: UserPart,
     canConfirm: Boolean,
     onGroupNameChanged: (String) -> Unit,
-    onPartChanged: (String) -> Unit,
+    onPartChanged: (UserPart) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -83,7 +83,7 @@ fun AdminStudyGroupEditDialog(
      *
      * 예전에는 라벨을 직접 나열해 Admin 이 빠지고 "Spring" 처럼 서버에 없는 값이 섞였습니다.
      */
-    val parts = UserPart.selectable.map { it.label }
+    val parts = UserPart.selectable
 
     Dialog(
         onDismissRequest = onDismiss
@@ -244,7 +244,7 @@ fun AdminStudyGroupEditDialog(
                      * 현재 선택된 파트
                      */
                     UText(
-                        text = selectedPart,
+                        text = selectedPart.label,
                         style = Body,
                         color = grey800(),
                         modifier = Modifier.weight(1f)
@@ -283,7 +283,7 @@ fun AdminStudyGroupEditDialog(
                         DropdownMenuItem(
                             text = {
                                 UText(
-                                    text = part,
+                                    text = part.label,
                                     style = Body,
                                     color = grey800()
                                 )

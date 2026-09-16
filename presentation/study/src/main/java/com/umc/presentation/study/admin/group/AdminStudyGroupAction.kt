@@ -1,5 +1,7 @@
 package com.umc.presentation.study.admin.group
 
+import com.umc.domain.model.enums.UserPart
+
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMemberUiModel
 
 /**
@@ -89,10 +91,10 @@ sealed interface AdminStudyGroupAction {
     /**
      * 그룹 정보 수정 중 파트 변경
      *
-     * @param partLabel 새로 선택한 파트
+     * @param part 새로 선택한 파트
      */
     data class OnEditPartChanged(
-        val partLabel: String,
+        val part: UserPart,
     ) : AdminStudyGroupAction
 
     /**

@@ -1,5 +1,7 @@
 package com.umc.presentation.study.admin.group
 
+import com.umc.domain.model.enums.UserPart
+
 import com.umc.component.base.UiState
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMemberUiModel
 import kotlinx.collections.immutable.ImmutableList
@@ -68,7 +70,7 @@ data class AdminStudyGroupState(
     /**
      * 그룹 정보 수정 Dialog에서 선택 중인 파트
      */
-    val editPartLabel: String = "",
+    val editPart: UserPart = UserPart.UNKNOWN,
 
     /**
      * 현재 삭제하려는 그룹

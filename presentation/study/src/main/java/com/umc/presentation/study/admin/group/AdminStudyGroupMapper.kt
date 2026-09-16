@@ -23,8 +23,10 @@ fun ManagedStudyGroup.toUiModel(): AdminStudyGroupItemUiModel {
         groupId = studyGroupId,
         title = name,
 
-        // 트랙 기수면 트랙, 파트 기수면 파트를 화면 표시용 이름으로 변환
+        // 화면 표시용 이름
         partLabel = displayPart.label,
+
+        part = displayPart,
 
         // 서버 원본 파트 값 유지
         studyPart = studyPart,
