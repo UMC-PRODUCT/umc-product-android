@@ -46,8 +46,9 @@ fun CommunityThreadMemberResponse.toDomain():
     return CommunityThreadMember(
         memberId = memberId,
         name = name,
-        part = part,
-        generation = generation,
+        // 파트가 없는 멤버(회장·운영진)가 있어도 목록 전체가 실패하지 않도록 빈 값으로 둔다
+        part = part.orEmpty(),
+        generation = generation.orEmpty(),
         role = role,
         joinedAt = joinedAt,
         state = state,

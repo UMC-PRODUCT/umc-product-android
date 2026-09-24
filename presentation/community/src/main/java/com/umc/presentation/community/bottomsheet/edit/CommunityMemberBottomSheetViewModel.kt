@@ -139,12 +139,12 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 generation = null,
                 offset = FIRST_OFFSET,
                 limit = CURRENT_MEMBER_PAGE_SIZE,
-            ).getOrElse { throwable ->
+            ).getOrElse {
+                // 예외 메시지는 파싱 오류 원문 등이 그대로 들어올 수 있어 화면에 노출하지 않음
                 updateState {
                     copy(
                         isLoading = false,
-                        errorMessage = throwable.message
-                            ?: "현재 스레드 멤버를 불러오지 못했어요.",
+                        errorMessage = "현재 스레드 멤버를 불러오지 못했어요.",
                     )
                 }
                 return@launch
@@ -594,19 +594,17 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                         removedMemberCount = removedMembers.size,
                     )
                 )
-            }.onFailure { throwable ->
+            }.onFailure {
                 updateState {
                     copy(
                         isUpdatingMembers = false,
-                        errorMessage = throwable.message
-                            ?: "스레드 멤버를 변경하지 못했어요.",
+                        errorMessage = "스레드 멤버를 변경하지 못했어요.",
                     )
                 }
 
                 emitEvent(
                     CommunityMemberBottomSheetEvent.ShowToast(
-                        message = throwable.message
-                            ?: "스레드 멤버를 변경하지 못했어요.",
+                        message = "스레드 멤버를 변경하지 못했어요.",
                     )
                 )
             }
@@ -665,19 +663,17 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                         memberId = member.memberId,
                     )
                 )
-            }.onFailure { throwable ->
+            }.onFailure {
                 updateState {
                     copy(
                         deletingMemberId = null,
-                        errorMessage = throwable.message
-                            ?: "멤버를 삭제하지 못했어요.",
+                        errorMessage = "멤버를 삭제하지 못했어요.",
                     )
                 }
 
                 emitEvent(
                     CommunityMemberBottomSheetEvent.ShowToast(
-                        message = throwable.message
-                            ?: "멤버를 삭제하지 못했어요.",
+                        message = "멤버를 삭제하지 못했어요.",
                     )
                 )
             }
