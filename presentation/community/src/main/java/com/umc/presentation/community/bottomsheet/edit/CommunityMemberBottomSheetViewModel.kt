@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.community.CommunityThreadMember
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.usecase.community.GetCommunityThreadMembersUseCase
 import com.umc.domain.usecase.community.InviteCommunityThreadMembersUseCase
@@ -759,7 +760,7 @@ private fun ParticipantItem.toCommunityChallengerUiModel():
         nickname = nickname,
         school = school,
         generation = gisu,
-        partLabel = userPart.name,
+        partLabel = userPart.label,
         profileImage = profileImage,
     )
 }
@@ -781,7 +782,7 @@ private fun CommunityThreadMember.toFallbackUiModel():
         nickname = "",
         school = "",
         generation = generation.toLongOrNull() ?: 0L,
-        partLabel = part,
+        partLabel = UserPart.from(part).label,
         profileImage = "",
     )
 }
