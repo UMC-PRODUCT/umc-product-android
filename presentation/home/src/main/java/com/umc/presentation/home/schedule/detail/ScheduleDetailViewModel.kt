@@ -16,6 +16,7 @@ import com.umc.domain.usecase.schedule.GetScheduleDetailHomeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -177,7 +178,12 @@ constructor(
             }
         }
 
-        val todayDateString = calculateTargetDate(item.startDay, plusDay)
+        // 자정을 넘기거나 여러 날에 걸친 일정은 종료 날짜까지 함께 표시 (예: "2026.09.22-2026.09.23")
+        val todayDateString = if (item.endDay.isNotBlank() && item.endDay != item.startDay) {
+            "${item.startDay}-${item.endDay}"
+        } else {
+            calculateTargetDate(item.startDay, plusDay)
+        }
         val todayTime = if (item.isAllDay) {
             "00:00-23:59"
         } else {
@@ -193,7 +199,7 @@ constructor(
                 dDay = dDayString,
                 title = item.name,
                 startDate = item.startDay, // "2026.02.05"
-                todayDate = todayDateString, // "2026.02.07"
+                todayDate = todayDateString, // "2026.02.07" 또는 "2026.02.07-2026.02.08"
                 todayTime = todayTime, // "05:24-05:24"
                 place = item.locationName,
                 detail = item.description,
@@ -224,7 +230,15 @@ constructor(
         val end = LocalTime.parse(item.endTime, formatter)
 
         //종료 시간 이전인지만 확인
-        val isTimeInRange = !nowTime.isAfter(end)
+        //자정을 넘기는 일정은 종료 날짜까지 함께 비교해야 첫날 저녁에도 진행 중으로 판단된다
+        val endDate = runCatching {
+            LocalDate.parse(item.endDay, DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+        }.getOrNull()
+        val isTimeInRange = if (endDate != null) {
+            !LocalDateTime.now().isAfter(LocalDateTime.of(endDate, end))
+        } else {
+            !nowTime.isAfter(end)
+        }
 
         return isTimeInRange
     }
