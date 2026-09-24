@@ -335,7 +335,10 @@ class HomeViewModel @Inject constructor(
 
         domainModels.forEach { schedule ->
             val startDate = LocalDate.parse(schedule.startDay, dateFormatter)
-            val endDate = LocalDate.parse(schedule.endDay, dateFormatter)
+            // 다음 날 00:00 에 끝나는 일정은 그날 진행되는 시간이 없으므로 전날까지만 펼친다
+            val endDate = LocalDate.parse(schedule.endDay, dateFormatter).let { endDay ->
+                if (schedule.endTime == "00:00" && endDay.isAfter(startDate)) endDay.minusDays(1) else endDay
+            }
 
             // 일정 총 기간 일수 연산
             val daysBetween = ChronoUnit.DAYS.between(startDate, endDate).toInt()
@@ -350,7 +353,8 @@ class HomeViewModel @Inject constructor(
                     SchedulePlanItem(
                         id = schedule.scheduleId,
                         title = schedule.name,
-                        time = schedule.startTime,
+                        // 연일 일정의 둘째 날부터는 그날 00:00부터 이어지는 일정이므로 첫날 시작 시각 대신 00:00 표시
+                        time = if (i == 0) schedule.startTime else "00:00",
                         date = targetDate.format(dateFormatter),
                         dayOfWeek = targetDate.format(DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH)).uppercase(),
                         day = targetDate.dayOfMonth.toString().padStart(2, '0'),
@@ -366,7 +370,8 @@ class HomeViewModel @Inject constructor(
                 )
             }
         }
-        return result
+        // 연일 일정을 펼친 카드가 다른 일정 사이에 끼어들지 않도록 날짜 → 시간 순으로 정렬
+        return result.sortedWith(compareBy({ it.date }, { it.time }))
     }
 
 
