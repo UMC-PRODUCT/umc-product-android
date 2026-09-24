@@ -9,6 +9,7 @@ import com.umc.domain.model.base.map
 import com.umc.domain.model.request.attendance.AttendanceCheckRequest
 import com.umc.domain.model.request.attendance.AttendanceReasonRequest
 import com.umc.domain.repository.attendance.AttendanceRepository
+import java.time.Instant
 import javax.inject.Inject
 
 class AttendanceRepositoryImpl @Inject constructor(
@@ -17,7 +18,11 @@ class AttendanceRepositoryImpl @Inject constructor(
 
     override suspend fun getAttendanceAvailable(): ApiState<List<UserCheckAvailable>> {
         return attendanceRemoteDataSource.getAttendanceAvailable().map { responseList ->
-            responseList.map { it.toAvailable() }
+            val now = Instant.now()
+            responseList
+                //조회 범위(전날~다음날)에 걸린 이미 끝난 일정은 제외. 승인 대기 세션은 출석 기록에 아직 잡히지 않으므로 유지
+                .filterNot { it.isEnded(now) && it.attendanceStatus?.endsWith("_PENDING") != true }
+                .map { it.toAvailable() }
         }
     }
 
