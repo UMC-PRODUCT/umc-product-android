@@ -22,7 +22,14 @@ data class CurriculumProgressResponse(
     val weeks: List<WeeklyProgressResponse>?,
 ) {
     fun toModel(): StudyProgress {
-        val weekList = weeks.orEmpty()
+        val workbooks = weeks.orEmpty().flatMap { week ->
+            week.originalWorkbooks.orEmpty().map { workbook ->
+                workbook.toModel(
+                    weekNo = week.weekNo?.toInt(),
+                    weeklyStatus = week.status,
+                )
+            }
+        }
 
         return StudyProgress(
             curriculumId = curriculumId ?: 0L,
@@ -30,20 +37,15 @@ data class CurriculumProgressResponse(
 
             part = UserPart.from(part),
 
-            completedCount = weekList.count {
-                it.status == "PASS"
+            // 주차 상태(IN_PROGRESS 등)에는 PASS가 없으므로 워크북별 제출 결과로 센다
+            completedCount = workbooks.count {
+                it.status == WorkbookStatus.PASS ||
+                    it.status == WorkbookStatus.BEST
             },
 
-            totalCount = weekList.size,
+            totalCount = workbooks.size,
 
-            workbooks = weekList.flatMap { week ->
-                week.originalWorkbooks.orEmpty().map { workbook ->
-                    workbook.toModel(
-                        weekNo = week.weekNo?.toInt(),
-                        weeklyStatus = week.status,
-                    )
-                }
-            },
+            workbooks = workbooks,
         )
     }
 }
@@ -105,6 +107,11 @@ data class WorkbookProgressResponse(
     ): WorkbookProgress {
         val firstMission = missions.orEmpty().firstOrNull()
 
+        // 워크북 상태는 주차 상태가 아니라 미션 제출의 채점 상태(PENDING / PASS / FAIL)를 따른다.
+        // 아직 제출이 없으면 주차 상태로 표시한다.
+        val submissionStatus = missions.orEmpty()
+            .firstNotNullOfOrNull { mission -> mission.submission?.status }
+
         return WorkbookProgress(
             originalWorkbookId = originalWorkbookId ?: 0L,
             weekNo = weekNo ?: 0,
@@ -113,7 +120,7 @@ data class WorkbookProgressResponse(
             missionType = WorkbookMissionType.from(
                 firstMission?.missionType
             ),
-            status = WorkbookStatus.from(weeklyStatus),
+            status = WorkbookStatus.from(submissionStatus ?: weeklyStatus),
             isReleased = isDeployedToMember ?: false,
             isInProgress = weeklyStatus == "IN_PROGRESS",
         )
