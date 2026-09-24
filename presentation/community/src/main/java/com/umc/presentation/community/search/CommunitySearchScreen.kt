@@ -23,7 +23,6 @@ import com.umc.presentation.community.component.search.CommunitySearchBar
 import com.umc.presentation.community.component.search.CommunitySearchEmptyContent
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalFocusManager
 
 /**
  * 커뮤니티 스레드 검색 화면
@@ -43,11 +42,12 @@ fun CommunitySearchScreen(
     }
 
     val keyboardController = LocalSoftwareKeyboardController.current
-    val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
 
     // 검색 화면에 진입하면 검색창에 자동 포커스하고 키보드를 표시
+    // 결과를 보던 중 스레드에 들어갔다 돌아온 경우에는 결과 위로 키보드를 다시 띄우지 않는다
     LaunchedEffect(Unit) {
+        if (state.hasSearched) return@LaunchedEffect
         delay(100L)
         focusRequester.requestFocus()
         keyboardController?.show()
@@ -69,12 +69,13 @@ fun CommunitySearchScreen(
             },
             onSearchClick = {
                 if (state.query.isNotBlank()) {
-                    // 검색을 먼저 실행
-                    onAction(CommunitySearchAction.OnSearchClick)
-
-                    // 그다음 키보드와 포커스 정리
-                    focusManager.clearFocus()
+                    // 키보드만 내리고 포커스는 검색창에 둔다.
+                    // clearFocus() 는 ComposeView 의 View 포커스까지 지우는데, 하드웨어 키(Enter)로 검색해
+                    // 터치 모드가 아닐 때는 Android 가 곧바로 포커스를 되돌려 검색창이 다시 포커스를 받고
+                    // 키보드가 다시 올라온다.
                     keyboardController?.hide()
+
+                    onAction(CommunitySearchAction.OnSearchClick)
                 }
             },
             onClearClick = {
