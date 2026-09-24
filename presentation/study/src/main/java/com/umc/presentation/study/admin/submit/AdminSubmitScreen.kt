@@ -4,7 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
@@ -195,12 +195,19 @@ fun AdminSubmitScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                items(
+                /**
+                 * 한 챌린저가 같은 주차에 워크북을 여러 개 가질 수 있어
+                 * 멤버 ID + 주차 조합은 키가 겹칩니다.
+                 * 멤버 ID + 워크북 ID로 구분하고, 아직 배정 전이라 워크북 ID가 없으면 위치로 구분합니다.
+                 */
+                itemsIndexed(
                     items = state.items,
-                    key = { item ->
-                        "${item.id}_${item.weekText}"
+                    key = { index, item ->
+                        item.challengerWorkbookId
+                            ?.let { "${item.id}_workbook_$it" }
+                            ?: "${item.id}_${item.weeklyCurriculumId}_$index"
                     },
-                ) { item ->
+                ) { _, item ->
                     AdminSubmitItem(
                         item = item,
                         onClick = {
