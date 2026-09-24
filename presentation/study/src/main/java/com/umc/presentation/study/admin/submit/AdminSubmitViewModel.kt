@@ -54,13 +54,19 @@ class AdminSubmitViewModel @Inject constructor(
 ) {
 
     init {
-        loadWeeks()
-        loadSubmissions()
+        refresh()
     }
 
+    /**
+     * 현재 선택된 그룹 기준으로 주차를 확정한 뒤 제출 현황을 다시 조회합니다.
+     *
+     * 주차 필터 없이 조회하면 필터에는 "n주차"가 보이는데
+     * 목록에는 모든 주차가 섞여 나오므로, 항상 선택 주차로 조회합니다.
+     */
     fun refresh() {
-        loadWeeks()
-        loadSubmissions()
+        loadWeeks(
+            studyGroupId = uiState.value.selectedGroupId,
+        )
     }
 
 
@@ -171,13 +177,7 @@ class AdminSubmitViewModel @Inject constructor(
                     )
                 }
 
-                loadSubmissions(
-                    studyGroupId = action.group.id,
-                    weekNos = listOf(
-                        uiState.value.selectedWeek.toLong()
-                    ),
-                )
-
+                // 그룹마다 조회 가능한 주차가 달라 주차를 먼저 확정한 뒤 제출 현황을 조회
                 loadWeeks(
                     studyGroupId = action.group.id,
                 )
@@ -372,6 +372,10 @@ class AdminSubmitViewModel @Inject constructor(
     }
 
 
+    /**
+     * 조회 가능한 주차 목록으로 선택 주차를 확정하고,
+     * 확정된 주차로 제출 현황을 이어서 조회합니다.
+     */
     private fun loadWeeks(
         studyGroupId: Long? = null,
     ) {
@@ -382,6 +386,9 @@ class AdminSubmitViewModel @Inject constructor(
                 )
             ) {
                 is ApiState.Success -> {
+                    // 응답을 기다리는 사이 다른 그룹을 골랐다면 이 조회 결과는 버린다
+                    if (uiState.value.selectedGroupId != studyGroupId) return@launch
+
                     val weeks = result.data
                         .map { it.toInt() }
                         .distinct()
@@ -407,6 +414,12 @@ class AdminSubmitViewModel @Inject constructor(
                     )
                 }
             }
+
+            // 필터에 표시된 주차와 목록이 어긋나지 않도록 확정된 주차로 조회
+            loadSubmissions(
+                studyGroupId = studyGroupId,
+                weekNos = listOf(uiState.value.selectedWeek.toLong()),
+            )
         }
     }
 
@@ -651,8 +664,13 @@ class AdminSubmitViewModel @Inject constructor(
                     updateState {
                         copy(
                             isLoading = false,
+                            // 한 챌린저가 워크북을 여러 개 제출할 수 있어 멤버가 아닌 워크북 단위로 갱신
                             items = items.map { item ->
-                                if (item.id == targetItem.id) {
+                                if (
+                                    targetItem.challengerWorkbookId != null &&
+                                    item.challengerWorkbookId ==
+                                    targetItem.challengerWorkbookId
+                                ) {
                                     item.copy(status = result)
                                 } else {
                                     item

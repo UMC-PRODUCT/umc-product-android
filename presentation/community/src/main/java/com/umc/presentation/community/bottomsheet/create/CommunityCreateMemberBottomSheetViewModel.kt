@@ -423,7 +423,7 @@ private fun ParticipantItem.toCommunityChallengerUiModel():
         nickname = nickname,
         school = school,
         generation = gisu,
-        partLabel = userPart.name,
+        partLabel = userPart.label,
         profileImage = profileImage,
     )
 }

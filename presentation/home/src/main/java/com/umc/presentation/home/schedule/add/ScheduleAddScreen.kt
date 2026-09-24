@@ -35,6 +35,9 @@ import com.umc.component.component.USwitch
 import com.umc.component.component.UText
 import com.umc.component.component.UTimePickerDialog
 import com.umc.component.component.UToast
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
 import com.umc.presentation.home.home.CalendarDatePickerDialog
 import com.umc.presentation.home.schedule.dialog.LocationSearchBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
@@ -76,6 +79,8 @@ fun ScheduleAddRoute(
     var showOnTimeEndPicker by remember { mutableStateOf(false) }
     var showLateEndPicker by remember { mutableStateOf(false) }
 
+    var toastData by remember { mutableStateOf<UToastData?>(null) }
+
 
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event){
@@ -83,36 +88,49 @@ fun ScheduleAddRoute(
             is ScheduleAddEvent.ShowErrorToast -> {
                 Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
+            is ScheduleAddEvent.ShowCheckInAfterStartToast -> {
+                toastData = UToastData(AppStrings.HOME_PLAN_ADD_ATTENDANCE_CHECKIN_AFTER_START, UToastState.ERROR)
+            }
             else -> {}
         }
     }
 
-    ScheduleAddScreen(
-        uiState = uiState,
-        onBackClick = { onBackPressedDispatcher?.onBackPressed() },
-        onTitleChanged = viewModel::updatePlanTitle,
-        onDetailChanged = viewModel::updatePlanDetail,
-        onAlldayChanged = viewModel::setAllday,
-        onCategoryClick = { showCategoryDialog = true },
-        onLocationClick = { showLocationDialog = true },
-        onParticipantClick = {
-            //일정 추가에 있는 챌린저 정보를 다이얼로그 뷰모델에 전달(챌린저 추가/삭제 유지)
-            participantViewModel.setSelectedParticipant(uiState.selectedParticipants)
-            showParticipantDialog = true
-                             },
-        onStartDateTimeClick = { showStartDateTimePicker = true },
-        onEndDateTimeClick = { showEndDateTimePicker = true },
-        onOnlineChanged = viewModel::toggleOnlineCheck, //비대면 토글
-        onAttendanceChanged = viewModel::toggleAttendanceCheck, //출석부 토글
-        onCheckInDateTimeClick = {showCheckInStartPicker = true},
-        onOnDateTimeEndClick = {showOnTimeEndPicker = true},
-        onLateDateTimeClick = {showLateEndPicker = true},
-        onRegisterClick = {
-            //운영진 여부 및 수정 모드에 따른 분기 로직
-            viewModel.submitPlan(uiState.isAttendanceChecked)
+    Box(modifier = Modifier.fillMaxSize()) {
+        ScheduleAddScreen(
+            uiState = uiState,
+            onBackClick = { onBackPressedDispatcher?.onBackPressed() },
+            onTitleChanged = viewModel::updatePlanTitle,
+            onDetailChanged = viewModel::updatePlanDetail,
+            onAlldayChanged = viewModel::setAllday,
+            onCategoryClick = { showCategoryDialog = true },
+            onLocationClick = { showLocationDialog = true },
+            onParticipantClick = {
+                //일정 추가에 있는 챌린저 정보를 다이얼로그 뷰모델에 전달(챌린저 추가/삭제 유지)
+                participantViewModel.setSelectedParticipant(uiState.selectedParticipants)
+                showParticipantDialog = true
+                                 },
+            onStartDateTimeClick = { showStartDateTimePicker = true },
+            onEndDateTimeClick = { showEndDateTimePicker = true },
+            onOnlineChanged = viewModel::toggleOnlineCheck, //비대면 토글
+            onAttendanceChanged = viewModel::toggleAttendanceCheck, //출석부 토글
+            onCheckInDateTimeClick = {showCheckInStartPicker = true},
+            onOnDateTimeEndClick = {showOnTimeEndPicker = true},
+            onLateDateTimeClick = {showLateEndPicker = true},
+            onRegisterClick = {
+                //운영진 여부 및 수정 모드에 따른 분기 로직
+                viewModel.submitPlan(uiState.isAttendanceChecked)
 
-        }
-    )
+            }
+        )
+
+        UToastHost(
+            data = toastData,
+            onDismiss = { toastData = null },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 56.dp),
+        )
+    }
 
     //카테고리(태그) 선택 바텀시트 컴포저블
     if (showCategoryDialog) {

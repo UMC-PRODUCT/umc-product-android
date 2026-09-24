@@ -332,7 +332,11 @@ private fun PendingUserRow(
             )
             Spacer(modifier = Modifier.height(4.dp))
             UText(
-                text = "${user.university}  ${user.requestTime} 요청",
+                text = if (user.requestTime.isBlank()) {
+                    user.university
+                } else {
+                    "${user.university}  ${user.requestTime} 요청"
+                },
                 style = Footnote,
                 color = grey600()
             )

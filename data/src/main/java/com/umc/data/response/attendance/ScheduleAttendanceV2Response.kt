@@ -7,6 +7,7 @@ import com.umc.domain.model.act.check.UserCheckHistory
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
+import java.time.Instant
 
 data class ScheduleAttendanceV2Response(
     val scheduleId: Long,
@@ -19,6 +20,11 @@ data class ScheduleAttendanceV2Response(
     val attendanceStatus: String? = null,
     val isAttendanceChecked: Boolean = false
 ) {
+    //일정이 끝났는지 여부. 지각 마감 뒤에도 일정이 진행 중이면 사유 제출은 받아야 하므로 종료 시각을 기준으로 본다
+    fun isEnded(now: Instant): Boolean {
+        return runCatching { Instant.parse(endsAt).isBefore(now) }.getOrDefault(false)
+    }
+
     fun toAvailable(): UserCheckAvailable {
         val (_, startTime) = startsAt.parseDateTime()
         val (_, endTime) = endsAt.parseDateTime()
