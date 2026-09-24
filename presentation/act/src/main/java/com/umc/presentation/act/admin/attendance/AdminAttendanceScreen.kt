@@ -374,7 +374,8 @@ fun AdminSessionCard(
                 )
             }
 
-            if (session.status == AdminSessionStatus.IN_PROGRESS) {
+            //종료된 세션이어도 승인 대기 인원이 남아 있으면 명단을 열 수 있어야 한다
+            if (session.status == AdminSessionStatus.IN_PROGRESS || session.pendingCount > 0) {
                 CheckAttendanceListButton(onPendingListClick)
             } else {
                 SuccessCheckAllAttendanceButton()
@@ -563,7 +564,7 @@ private fun sampleSessions(): ImmutableList<AdminSessionCheck> = persistentListO
         attendanceRate = 85,
         totalChallengers = 40,
         attendedChallengers = 34,
-        pendingCount = 3,
+        pendingCount = 0,
         pendingUsers = emptyList<AdminPendingUser>(),
         sheetId = null
     )
