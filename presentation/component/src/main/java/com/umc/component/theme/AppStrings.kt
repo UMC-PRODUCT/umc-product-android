@@ -50,6 +50,7 @@ object AppStrings {
     const val HOME_PLAN_ADD_ATTENDANCE_CHECKIN_TITLE = "체크인 시작"
     const val HOME_PLAN_ADD_ATTENDANCE_ONTIMEEND_TITLE = "정시 종료"
     const val HOME_PLAN_ADD_ATTENDANCE_LATEEND_TITLE = "지각 종료"
+    const val HOME_PLAN_ADD_ATTENDANCE_CHECKIN_AFTER_START = "체크인 시작은 일정 시작보다 빨라야 해요"
     const val HOME_PLAN_ADD_LOCATION_TITLE = "\"장소를 선택하세요\""
     const val CSV_UPLOAD = "CSV 업로드"
     const val HOME_PLAN_ADD_PLAN_REGISTER = "일정 등록하기"

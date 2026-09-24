@@ -364,6 +364,13 @@ constructor(
         val startsAt = getIsoDateTime(startCal, if (state.isAllDay) startCal else state.startTime)
         val endsAt = getIsoDateTime(endCal, if (state.isAllDay) endCal else state.endTime)
 
+        // 출석부의 체크인은 일정 시작 전에 열려야 한다. 같거나 늦으면 서버가 일반 시간 오류 문구로만 거절해
+        // 원인을 알 수 없으므로 보내기 전에 막는다. 두 값 모두 같은 UTC ISO 형식이라 문자열 비교가 곧 시각 비교다.
+        if (isAttendance && getIsoDateTime(state.checkInStartDate, state.checkInStartTime) >= startsAt) {
+            emitEvent(ScheduleAddEvent.ShowCheckInAfterStartToast)
+            return
+        }
+
         //선택한 카테고리 enums -> String 문자열 리스트로 변환
         val selectedTags = state.categories
             .filter { it.isChecked }
@@ -783,5 +790,7 @@ sealed interface ScheduleAddEvent : UiEvent {
     //뒤로가기
     object MoveBackPressedEvent : ScheduleAddEvent
     data class ShowErrorToast(val message: String) : ScheduleAddEvent
+    //체크인 시작이 일정 시작과 같거나 늦을 때
+    object ShowCheckInAfterStartToast : ScheduleAddEvent
 
 }
