@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.umc.component.R
@@ -73,10 +74,17 @@ fun AdminStudyGroupCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // 스터디 그룹 이름
+                        // 이름이 길어도 파트 뱃지 폭을 뺏지 않도록 남은 폭만 쓰고 말줄임
                         UText(
                             text = item.title,
                             style = Title3Bold,
-                            color = grey900()
+                            color = grey900(),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(
+                                weight = 1f,
+                                fill = false,
+                            )
                         )
 
                         Spacer(
@@ -98,7 +106,9 @@ fun AdminStudyGroupCard(
                             UText(
                                 text = item.partLabel,
                                 style = Caption1Bold,
-                                color = indigo600()
+                                color = indigo600(),
+                                maxLines = 1,
+                                softWrap = false,
                             )
                         }
                     }
