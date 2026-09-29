@@ -37,7 +37,11 @@ def post(webhook: str, payload: dict, timeout: int) -> None:
         # wait=true 로 보내야 Discord 가 실패를 알려준다. 기본값은 202 로 삼켜 버린다.
         webhook + ("&" if "?" in webhook else "?") + "wait=true",
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            # UA 를 안 보내면 Cloudflare 가 403(error code 1010)으로 막는다. 실제로 겪었다.
+            "User-Agent": "umc-product-android-ci (+https://github.com/UMC-PRODUCT/umc-product-android)",
+        },
         method="POST",
     )
     with urllib.request.urlopen(request, timeout=timeout) as response:
