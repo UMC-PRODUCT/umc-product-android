@@ -172,11 +172,13 @@ def main() -> int:
     )
 
     polished = ""
+    used_model = ""
     for model in (args.model, args.fallback_model):
         if not model:
             continue
         try:
             polished = call_gemini(api_key, model, prompt, args.timeout)
+            used_model = model
             break
         except urllib.error.HTTPError as exc:
             # 본문에 원인이 적혀 있다(모델명 오타, 한도 초과 등). 키는 헤더라 찍히지 않는다.
@@ -193,7 +195,7 @@ def main() -> int:
 
     if play_looks_sane(play):
         target.write_text(play + "\n", encoding="utf-8")
-        print(f"Play 업데이트 내용 ({len(play)}/{PLAY_LIMIT}자, {args.model})")
+        print(f"Play 업데이트 내용 ({len(play)}/{PLAY_LIMIT}자, {used_model})")
         print("─" * 50)
         print(play)
         print("─" * 50)
