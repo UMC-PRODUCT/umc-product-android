@@ -460,6 +460,42 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # 커밋 제목을 그대로 옮긴 초안을 사용자가 읽는 문장으로 바꾼다.
+      # 실패해도 배포를 막지 않는다 — 키가 없거나 호출이 실패하면 초안이 그대로 올라간다.
+      - name: 릴리스 노트 다듬기
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          VERSION_NAME: ${{ needs.verify.outputs.version-name }}
+          NOTES_FROM: ${{ needs.verify.outputs.notes-from }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GEMINI_API_KEY:-}" ]; then
+            echo "::notice::GEMINI_API_KEY 가 없어 릴리스 노트 다듬기를 건너뜁니다"
+            exit 0
+          fi
+          RANGE="HEAD"
+          if [ -n "$NOTES_FROM" ] && git rev-parse "$NOTES_FROM" >/dev/null 2>&1; then
+            RANGE="${NOTES_FROM}..HEAD"
+          fi
+          # 제목만으로는 무엇이 달라졌는지 알기 어려워 커밋 본문까지 넘긴다.
+          git log --format='%s%n%b%n---' "$RANGE" \
+            | python3 .github/scripts/polish_release_notes.py --version "$VERSION_NAME"
+          {
+            echo ""
+            echo "### ✨ 다듬은 업데이트 내용"
+            echo ""
+            echo '```'
+            cat whatsnew/whatsnew-ko-KR
+            echo '```'
+            echo ""
+            echo "### 📄 GitHub 릴리스 본문"
+            echo ""
+            echo '```'
+            cat release-notes.md
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: 난독화 매핑 확인
         run: |
           set -euo pipefail
@@ -521,6 +557,22 @@ jobs:
             --notes-file release-notes.md \
             --verify-tag
           echo "GitHub Release $TAG 생성"
+
+      # 총괄단이 보는 공유 채널에는 버전마다 스레드 하나만 남긴다.
+      # 개발자용 배포 알림(android-github-ci)과 채널도 형식도 다르다.
+      - name: 공유 채널에 릴리스 알림
+        if: needs.verify.outputs.tag-after == 'true' && needs.verify.outputs.track == 'production'
+        env:
+          DISCORD_RELEASE_WEBHOOK_URL: ${{ secrets.DISCORD_RELEASE_WEBHOOK_URL }}
+          DISCORD_RELEASE_ROLE_ID: ${{ secrets.DISCORD_RELEASE_ROLE_ID }}
+          VERSION_NAME: ${{ needs.verify.outputs.version-name }}
+          TAG_PREFIX: ${{ needs.verify.outputs.tag-prefix }}
+        run: |
+          set -euo pipefail
+          TAG="${TAG_PREFIX}${VERSION_NAME}"
+          python3 .github/scripts/discord_release.py \
+            --version "$VERSION_NAME" \
+            --release-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
 
       - name: 배포 요약
         run: |
