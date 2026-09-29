@@ -37,7 +37,11 @@ def post(webhook: str, payload: dict, timeout: int) -> None:
         # wait=true 로 보내야 Discord 가 실패를 알려준다. 기본값은 202 로 삼켜 버린다.
         webhook + ("&" if "?" in webhook else "?") + "wait=true",
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            # UA 를 안 보내면 Cloudflare 가 403(error code 1010)으로 막는다. 실제로 겪었다.
+            "User-Agent": "umc-product-android-ci (+https://github.com/UMC-PRODUCT/umc-product-android)",
+        },
         method="POST",
     )
     with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -68,6 +72,9 @@ def main() -> int:
                 break
 
     role_id = os.environ.get("DISCORD_RELEASE_ROLE_ID", "").strip()
+    # 포럼 채널의 태그(예: Android)를 붙인다. 쉼표로 여러 개를 줄 수 있다.
+    # 태그는 이름이 아니라 ID 로만 지정할 수 있어서 Discord 에서 복사해 넣어야 한다.
+    tag_ids = [t.strip() for t in os.environ.get("DISCORD_RELEASE_TAG_IDS", "").split(",") if t.strip()]
     payload = {
         "content": build_body(intro, role_id, args.release_url),
         # 본문에 적힌 역할만 실제로 알림이 가게 한다. @everyone 은 어떤 경우에도 막는다.
@@ -75,8 +82,12 @@ def main() -> int:
     }
 
     thread_name = f"[{args.platform} {args.version}]"
+    thread_payload = dict(payload, thread_name=thread_name)
+    if tag_ids:
+        thread_payload["applied_tags"] = tag_ids
+
     try:
-        post(webhook, dict(payload, thread_name=thread_name), args.timeout)
+        post(webhook, thread_payload, args.timeout)
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", "replace")[:300]
         print(f"스레드 생성 실패 {exc.code}: {detail}")
@@ -87,7 +98,8 @@ def main() -> int:
         print(f"스레드 생성 실패: {exc}")
         return 1
 
-    print(f"스레드 '{thread_name}' 생성 완료")
+    tagged = f" (태그 {len(tag_ids)}개)" if tag_ids else ""
+    print(f"스레드 '{thread_name}' 생성 완료{tagged}")
     return 0
 
 
