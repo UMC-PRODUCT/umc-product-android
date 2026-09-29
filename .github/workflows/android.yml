@@ -565,6 +565,7 @@ jobs:
         env:
           DISCORD_RELEASE_WEBHOOK_URL: ${{ secrets.DISCORD_RELEASE_WEBHOOK_URL }}
           DISCORD_RELEASE_ROLE_ID: ${{ secrets.DISCORD_RELEASE_ROLE_ID }}
+          DISCORD_RELEASE_TAG_IDS: ${{ secrets.DISCORD_RELEASE_TAG_IDS }}
           VERSION_NAME: ${{ needs.verify.outputs.version-name }}
           TAG_PREFIX: ${{ needs.verify.outputs.tag-prefix }}
         run: |

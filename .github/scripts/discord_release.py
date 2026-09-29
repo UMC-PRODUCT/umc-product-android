@@ -72,6 +72,9 @@ def main() -> int:
                 break
 
     role_id = os.environ.get("DISCORD_RELEASE_ROLE_ID", "").strip()
+    # 포럼 채널의 태그(예: Android)를 붙인다. 쉼표로 여러 개를 줄 수 있다.
+    # 태그는 이름이 아니라 ID 로만 지정할 수 있어서 Discord 에서 복사해 넣어야 한다.
+    tag_ids = [t.strip() for t in os.environ.get("DISCORD_RELEASE_TAG_IDS", "").split(",") if t.strip()]
     payload = {
         "content": build_body(intro, role_id, args.release_url),
         # 본문에 적힌 역할만 실제로 알림이 가게 한다. @everyone 은 어떤 경우에도 막는다.
@@ -79,8 +82,12 @@ def main() -> int:
     }
 
     thread_name = f"[{args.platform} {args.version}]"
+    thread_payload = dict(payload, thread_name=thread_name)
+    if tag_ids:
+        thread_payload["applied_tags"] = tag_ids
+
     try:
-        post(webhook, dict(payload, thread_name=thread_name), args.timeout)
+        post(webhook, thread_payload, args.timeout)
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", "replace")[:300]
         print(f"스레드 생성 실패 {exc.code}: {detail}")
@@ -91,7 +98,8 @@ def main() -> int:
         print(f"스레드 생성 실패: {exc}")
         return 1
 
-    print(f"스레드 '{thread_name}' 생성 완료")
+    tagged = f" (태그 {len(tag_ids)}개)" if tag_ids else ""
+    print(f"스레드 '{thread_name}' 생성 완료{tagged}")
     return 0
 
 
