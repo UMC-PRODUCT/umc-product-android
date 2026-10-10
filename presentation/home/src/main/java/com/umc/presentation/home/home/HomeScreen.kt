@@ -49,6 +49,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -279,7 +280,8 @@ fun HomeScreen(
                             selectedDate = uiState.selectedDate,
                             eventDates = uiState.eventDates,
                             onDateClick = onDateClick,
-                            onMonthChange = onMonthChange
+                            onMonthChange = onMonthChange,
+                            initialMonth = uiState.viewedMonth
                         )
 
                         // 월별 일정 조회 실패 시 '일정 없음'과 구분되는 안내
@@ -326,7 +328,7 @@ fun HomeScreen(
                         // (달력 모드는 HomeCalendar 의 월 변경 효과가 같은 역할을 한다)
                         LaunchedEffect(Unit) { onScheduleRefresh() }
 
-                        if (uiState.isScheduleLoadFailed && uiState.allPlans.isEmpty()) {
+                        if (uiState.isScheduleLoadFailed) {
                             HomeLoadError(
                                 title = AppStrings.HOME_SCHEDULE_LOAD_ERROR_TITLE,
                                 onRetry = onScheduleRetryClick
@@ -420,7 +422,8 @@ fun HomeLoadError(
             UText(
                 text = title,
                 color = grey950(),
-                style = UmcTypographyTokens.HeadlineBold
+                style = UmcTypographyTokens.HeadlineBold,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -428,7 +431,8 @@ fun HomeLoadError(
             UText(
                 text = AppStrings.HOME_LOAD_ERROR_DESCRIPTION,
                 color = grey600(),
-                style = UmcTypographyTokens.Footnote
+                style = UmcTypographyTokens.Footnote,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(16.dp))

@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.temporal.ChronoUnit
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
@@ -102,6 +103,7 @@ private val WEEK_DIVIDER_THICKNESS = 1.dp
  * @param eventDates 일정이 등록된 날짜 목록 (하단에 빨간 Dot 표시)
  * @param onDateClick 날짜 셀 클릭 시 호출되는 콜백
  * @param onMonthChange 달력의 월(Month)이 변경되었을 때 호출되는 콜백 (서버 일정 데이터 재조회 트리거)
+ * @param initialMonth 처음 보여줄 달. 리스트 모드를 다녀와 달력이 새로 만들어질 때 보던 달에서 이어 보기 위함
  *
  *
  * **/
@@ -112,12 +114,15 @@ fun HomeCalendar(
     eventDates: Set<LocalDate>, //일정이 있는 날짜들
     onDateClick: (LocalDate) -> Unit, //날짜 선택 시 함수
     onMonthChange: (YearMonth) -> Unit, //월별 바꿀 시 함수
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    initialMonth: YearMonth = YearMonth.now() //처음 보여줄 달 (리스트 모드에서 돌아올 때 보던 달 유지)
 ) {
 
     // 달력 pager 상태 및 페이징 오프셋 설정
+    // initialPage 는 '이번 달'의 페이지, 처음 보이는 페이지는 initialMonth 만큼 떨어진 곳
     val initialPage = 5000 // (최대 좌우 페이징 총합 5000개월 가능)
-    val pagerState = rememberPagerState(initialPage = initialPage) { 10000 }
+    val startPage = initialPage + ChronoUnit.MONTHS.between(YearMonth.now(), initialMonth).toInt()
+    val pagerState = rememberPagerState(initialPage = startPage.coerceIn(0, 9999)) { 10000 }
     val coroutineScope = rememberCoroutineScope()
 
     // DatePicker 다이얼로그 노출 여부 상태

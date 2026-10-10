@@ -58,6 +58,9 @@ class HomeViewModel @Inject constructor(
     //마지막으로 일정을 요청한 달 (실패 후 재시도용)
     private var requestedMonth: YearMonth = YearMonth.now()
 
+    //마지막으로 일정을 성공적으로 받은 달 (같은 달 재조회가 실패해도 이미 받은 일정은 지우지 않기 위함)
+    private var loadedMonth: YearMonth? = null
+
     //월별 일정 요청 순번 (월을 빠르게 넘길 때 늦게 도착한 이전 달 응답이 최신 달 화면을 덮어쓰지 않게 한다)
     private var scheduleRequestSeq = 0
 
@@ -306,7 +309,10 @@ class HomeViewModel @Inject constructor(
      * @param todayCheck 초기 로딩 시 오늘 일정 존재 여부에 따른 명함 교환 배너 노출 처리 유무 (사용 X)
      */
     fun getScheduleMonth(year: Int, month: Int, todayCheck: Boolean = false) {
-        requestedMonth = YearMonth.of(year, month)
+        val targetMonth = YearMonth.of(year, month)
+        requestedMonth = targetMonth
+        // 달력↔리스트 전환으로 달력이 새로 만들어져도 보던 달에서 시작하도록 상태에 남긴다
+        updateState { copy(viewedMonth = targetMonth) }
         val requestSeq = ++scheduleRequestSeq
 
         viewModelScope.launch {
@@ -315,6 +321,7 @@ class HomeViewModel @Inject constructor(
                 successCallback = { scheduleMonth ->
                     // 더 최신 요청이 시작된 뒤 도착한 응답은 버린다
                     if (requestSeq != scheduleRequestSeq) return@resultResponse
+                    loadedMonth = targetMonth
 
                     // 기간제 원본 일정을 날짜별 개별 아이템 리스트로 평탄화(Flatten)
                     val planItems = convertToPlanItems(scheduleMonth)
@@ -343,7 +350,10 @@ class HomeViewModel @Inject constructor(
                     Log.d("log_home", "월별 일정 조회 실패: $message")
                     // 늦게 도착한 이전 달의 실패가 최신 달 화면을 비우지 않게 한다
                     if (requestSeq != scheduleRequestSeq) return@resultResponse
-                    // 실패를 상태로 남기고, 이전 달 일정/점이 새 달 아래에 남지 않게 비운다
+                    // 이미 받아 둔 같은 달의 재조회(복귀 시 갱신 등)가 실패한 경우에는 기존 일정과 점을 그대로 둔다
+                    if (loadedMonth == targetMonth) return@resultResponse
+                    // 다른 달 조회 실패는 상태로 남기고, 이전 달 일정/점이 새 달 아래에 남지 않게 비운다
+                    loadedMonth = null
                     updateState {
                         copy(
                             isScheduleLoadFailed = true,
@@ -444,6 +454,8 @@ enum class HomeLoadState { LOADING, SUCCESS, ERROR }
 data class HomeUiState(
     // 달력 및 일정 관련 상태
     val selectedDate: LocalDate = LocalDate.now(),
+    //마지막으로 일정을 요청한 달 (달력이 다시 만들어질 때 시작 달)
+    val viewedMonth: YearMonth = YearMonth.now(),
     val eventDates: ImmutableSet<LocalDate> = persistentSetOf(),
 
     //달력 <-> 일정 전환

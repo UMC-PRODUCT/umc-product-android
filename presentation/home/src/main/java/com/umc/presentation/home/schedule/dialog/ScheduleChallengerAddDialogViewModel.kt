@@ -103,6 +103,8 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
                     name = state.searchQuery.ifBlank { null } // 빈 검색어는 null로 그 외는 searchParticipant에서 가져온 쿼리로
                 ),
                 successCallback = { response ->
+                    // 요청 이후 검색어가 바뀌었으면 늦게 도착한 이전 응답이므로 버린다
+                    if (uiState.value.searchQuery != state.searchQuery) return@resultResponse
                     Log.d("log_home", "유저검색 성공: ${response.content}")
                     updateState {
                         copy(
@@ -117,6 +119,7 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
                 },
                 errorCallback = {
                     //검색 실패 시, 로딩 해제 및 다음 꺼 X
+                    if (uiState.value.searchQuery != state.searchQuery) return@resultResponse
                     Log.d("log_home", "유저검색 실패: ${it.message}")
                     updateState { copy(isLoading = false, hasNext = false, hasSearched = true, isSearchFailed = true) }
                 }
@@ -173,6 +176,8 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
                 searchResults = emptyList(), // 혹은 초기 리스트(allChallengers)
                 searchQuery = "",
                 isSearching = false,
+                // 버려지는 진행 중 요청이 로딩 상태를 풀어 주지 못하므로 여기서 해제한다
+                isLoading = false,
                 hasSearched = false,
                 isSearchFailed = false
             )
