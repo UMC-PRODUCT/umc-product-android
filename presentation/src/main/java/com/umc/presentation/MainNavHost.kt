@@ -680,7 +680,10 @@ fun MainNavHost(
                 onDeleteSuccess = {
                     // 채팅방에서 진입했어도 삭제된 채팅방을 건너뛰고 커뮤니티 목록으로 복귀
                     if (!navHostController.popBackStack<MainDestination.Community>(inclusive = false)) {
-                        navHostController.popBackStack()
+                        // 딥링크로 들어와 Community 가 스택에 없으면 삭제된 채팅방 엔트리까지 함께 걷어낸다.
+                        if (!navHostController.popBackStack<MainDestination.CommunityChatting>(inclusive = true)) {
+                            navHostController.popBackStack()
+                        }
                     }
                 },
             )

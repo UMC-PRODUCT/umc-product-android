@@ -312,6 +312,8 @@ class CommunityChattingViewModel @Inject constructor(
         content: String,
         mentionedMemberIds: List<Long> = emptyList(),
         replyToId: String? = null,
+        clientMessageId: String = UUID.randomUUID().toString(),
+        clearDraft: Boolean = true,
     ) {
         val trimmed = content.trim()
         if (trimmed.isEmpty()) return
@@ -319,12 +321,11 @@ class CommunityChattingViewModel @Inject constructor(
             emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_MESSAGE_TOO_LONG))
             return
         }
-        val clientMessageId = UUID.randomUUID().toString()
         if (chatRepository.connectionState.value != CommunityChatConnectionState.CONNECTED) {
             // 연결이 끊긴 상태에서는 바로 실패시키지 않고 재연결을 시도한 뒤 전송한다(재전송 경로 재사용).
             updateState {
                 copy(
-                    draft = "",
+                    draft = if (clearDraft) "" else draft,
                     pendingMessages = pendingMessages + (
                         clientMessageId to PendingCommunityMessage(
                             clientMessageId = clientMessageId,
@@ -351,7 +352,7 @@ class CommunityChattingViewModel @Inject constructor(
             .onSuccess { commandId ->
                 updateState {
                     copy(
-                        draft = "",
+                        draft = if (clearDraft) "" else draft,
                         pendingMessages = pendingMessages + (
                             clientMessageId to PendingCommunityMessage(
                                 clientMessageId = clientMessageId,
@@ -369,7 +370,7 @@ class CommunityChattingViewModel @Inject constructor(
             .onFailure {
                 updateState {
                     copy(
-                        draft = "",
+                        draft = if (clearDraft) "" else draft,
                         pendingMessages = pendingMessages + (
                             clientMessageId to PendingCommunityMessage(
                                 clientMessageId = clientMessageId,
@@ -480,10 +481,7 @@ class CommunityChattingViewModel @Inject constructor(
         lastReadMessageIdSent = messageId
         updateState { copy(thread = thread?.copy(unreadCount = "0")) }
         runCatching { chatRepository.updateRead(uiState.value.threadId, messageId) }
-            .onFailure {
-                lastReadMessageIdSent = null
-                emitEvent(CommunityChattingEvent.ShowError(it.message.orEmpty()))
-            }
+            .onFailure { lastReadMessageIdSent = null }
     }
 
     fun reportMessage(messageId: String, reason: CommunityMessageReportReason) = viewModelScope.launch {
@@ -516,7 +514,12 @@ class CommunityChattingViewModel @Inject constructor(
             if (pending.fileMetadataIds.isEmpty()) {
                 sendImages(pending.localUris)
             } else {
-                val newClientMessageId = UUID.randomUUID().toString()
+                // 소켓에 한 번 실린 메시지는 같은 clientMessageId 로 다시 보내 서버 중복 제거가 동작하게 한다.
+                val newClientMessageId = if (pending.commandId.isNotBlank()) {
+                    clientMessageId
+                } else {
+                    UUID.randomUUID().toString()
+                }
                 val command = CreateCommunityMessageCommand(
                     clientMessageId = newClientMessageId,
                     type = CommunityMessageType.IMAGE.name,
@@ -547,6 +550,12 @@ class CommunityChattingViewModel @Inject constructor(
                 content = pending.content,
                 mentionedMemberIds = pending.mentionedMemberIds,
                 replyToId = pending.replyToId,
+                clientMessageId = if (pending.commandId.isNotBlank()) {
+                    clientMessageId
+                } else {
+                    UUID.randomUUID().toString()
+                },
+                clearDraft = false,
             )
         }
     }
@@ -706,7 +715,13 @@ class CommunityChattingViewModel @Inject constructor(
 
     private fun runCommand(block: () -> String) {
         runCatching(block).onFailure {
-            emitEvent(CommunityChattingEvent.ShowError(it.message.orEmpty()))
+            // 예외 원문(영문)을 노출하지 않고 고정 문구를 쓴다.
+            val message = if (chatRepository.connectionState.value != CommunityChatConnectionState.CONNECTED) {
+                AppStrings.CHAT_ACTION_DISCONNECTED
+            } else {
+                AppStrings.CHAT_ACTION_FAILED
+            }
+            emitEvent(CommunityChattingEvent.ShowError(message))
         }
     }
 
@@ -972,7 +987,10 @@ class CommunityChattingViewModel @Inject constructor(
                     val newlyReceivedMessages = result.data.messages.filter { message ->
                         message.messageId !in existingMessageIds && message.senderId != myMemberId
                     }
+                    // 서버에 이미 도착한 내 메시지는 '전송 실패/전송 중' 말풍선이 중복으로 남지 않게 pending 에서 뺀다.
+                    val deliveredClientIds = result.data.messages.mapNotNullTo(hashSetOf()) { it.clientMessageId }
                     copy(
+                        pendingMessages = pendingMessages.filterKeys { it !in deliveredClientIds },
                         messages = (result.data.messages + messages)
                             .distinctBy(CommunityThreadMessage::messageId),
                         summaryCandidateMessages = (

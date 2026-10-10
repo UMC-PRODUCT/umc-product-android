@@ -669,6 +669,8 @@ object AppStrings {
     const val CHAT_MESSAGE_TOO_LONG = "메시지는 2,000자까지 입력할 수 있습니다."
     const val CHAT_SEND_IMAGE_FAILED = "이미지를 전송하지 못했습니다."
     const val CHAT_RETRY_DISCONNECTED = "연결되지 않아 재전송하지 못했습니다."
+    const val CHAT_ACTION_DISCONNECTED = "연결되지 않아 요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요."
+    const val CHAT_ACTION_FAILED = "요청을 처리하지 못했습니다."
     const val CHAT_CD_BACK = "뒤로가기"
     const val CHAT_CD_MORE = "더보기"
     const val CHAT_CD_PARTICIPANT_MENU = "참여자 관리 메뉴"
