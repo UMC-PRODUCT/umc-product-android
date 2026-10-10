@@ -17,6 +17,10 @@ object AppStrings {
 
     const val HOME_ACTIVATE_DAY = "누적 활동일"
     const val HOME_ATTEND_GISU = "참여 기수"
+    const val HOME_PROFILE_LOAD_ERROR_TITLE = "내 정보를 불러오지 못했어요"
+    const val HOME_SCHEDULE_LOAD_ERROR_TITLE = "일정을 불러오지 못했어요"
+    const val HOME_LOAD_ERROR_DESCRIPTION = "네트워크 연결을 확인하고 다시 시도해주세요."
+    const val HOME_RETRY = "다시 시도하기"
     const val HOME_NOTIFICATION_NO_TITLE = "알림 내역이 없어요"
     const val HOME_NOTIFICATION_NO_CONTENT = "새로운 소식이 도착하면 이곳에 표시됩니다."
     const val HOME_PLAN_DETAIL_TITLE = "일정 상세"

@@ -143,7 +143,14 @@ fun HomeCalendar(
     }
 
     //외부 selectedDate 변경(DatePicker 등) 시 해당 월 Pager 페이지로 스크롤
+    // 첫 실행(처음 진입/상세·등록에서 복귀)은 건너뛴다. 이때 pager 는 보던 달로 복원돼 있는데
+    // selectedDate 는 기본값(오늘)이라 그대로 두면 보던 달이 오늘 달로 되돌아간다.
+    var skipInitialSelectedDateSync by remember { mutableStateOf(true) }
     LaunchedEffect(selectedDate) {
+        if (skipInitialSelectedDateSync) {
+            skipInitialSelectedDateSync = false
+            return@LaunchedEffect
+        }
         val targetMonth = YearMonth.from(selectedDate)
         val currentMonth = YearMonth.from(LocalDate.now()).plusMonths((pagerState.currentPage - initialPage).toLong())
 
