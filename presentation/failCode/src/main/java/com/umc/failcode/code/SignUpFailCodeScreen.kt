@@ -79,8 +79,9 @@ fun SignUpFailCodeRoute(
         when (event) {
             SignUpFailEvent.MoveToLogin -> navigateToLogin()
             SignUpFailEvent.MoveToKakaoInquiry -> {
-                val intent = Intent(Intent.ACTION_VIEW, KAKAO_INQUIRY_URL.toUri())
-                context.startActivity(intent)
+                runCatching {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, KAKAO_INQUIRY_URL.toUri()))
+                }
             }
             is SignUpFailEvent.ShowErrorToast ->
                 toastData = UToastData(event.message, UToastState.ERROR)

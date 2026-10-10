@@ -63,7 +63,7 @@ import com.umc.component.theme.indigo500
  * @param focusStrokeColor 포커스 상태의 테두리 색상 및 커서 색상. 기본값 indigo500
  * @param cornerRadius 모서리 둥글기. 기본값 8dp
  * @param enabled false 이면 입력 불가. strokeColor는 항상 strokeColor로 고정
- * @param keyboardOptions 키보드 타입·IME 액션 등 설정. Next/Done/Search 등 IME 액션을 지정하면 자동으로 한 줄 입력이 된다
+ * @param keyboardOptions 키보드 타입·IME 액션 등 설정. Next/Done/Search 등 IME 액션을 지정하거나 Password 키보드를 쓰면 자동으로 한 줄 입력이 된다
  * @param keyboardActions IME 액션(완료·검색 등) 콜백
  * @param prevIcon 입력창 왼쪽에 표시할 아이콘 (선택)
  * @param prevIconTint prevIcon 틴트 색상. null 이면 원본 색상 유지
@@ -127,9 +127,11 @@ fun UTextField(
         fieldValue = fieldValue.copy(text = value, selection = TextRange(value.length))
     }
 
-    // IME 액션(Next/Done/Search 등)을 지정한 필드는 한 줄 입력으로 처리한다.
-    // 여러 줄 필드에서는 Enter 가 개행으로 입력되어 IME 액션이 호출되지 않기 때문이다.
+    // IME 액션(Next/Done/Search 등)을 지정한 필드와 비밀번호 필드는 한 줄 입력으로 처리한다.
+    // 여러 줄 필드에서는 Enter 가 개행으로 입력되어 IME 액션이 호출되지 않고,
+    // 비밀번호 필드에서는 개행이 '*' 로 가려져 보이지 않는 채로 비밀번호에 섞이기 때문이다.
     val resolvedSingleLine = singleLine ||
+        keyboardOptions.keyboardType == KeyboardType.Password ||
         (keyboardOptions.imeAction != ImeAction.Default &&
             keyboardOptions.imeAction != ImeAction.None &&
             keyboardOptions.imeAction != ImeAction.Unspecified)

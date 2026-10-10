@@ -82,8 +82,9 @@ fun SignUpFailRoute(
             }
             SignUpFailEvent.MoveToCode -> navigateToCode()
             SignUpFailEvent.MoveToKakaoInquiry -> {
-                val intent = Intent(Intent.ACTION_VIEW, KAKAO_INQUIRY_URL.toUri())
-                context.startActivity(intent)
+                runCatching {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, KAKAO_INQUIRY_URL.toUri()))
+                }
             }
             SignUpFailEvent.MoveToLogin -> navigateToLogin()
             is SignUpFailEvent.ShowErrorToast ->

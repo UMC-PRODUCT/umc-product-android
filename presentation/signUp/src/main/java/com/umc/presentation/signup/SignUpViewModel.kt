@@ -39,28 +39,33 @@ class SignUpViewModel @Inject constructor(
 
     private var schoolJob: Job? = null
 
+    /** 목록이 아직 없을 때 사용자가 학교 칸을 눌렀는지. 조회가 끝나면 이 의도에 따라 시트나 오류 안내를 띄운다 */
+    private var openSheetWhenLoaded = false
+
     init {
         getAllSchool()
     }
 
     /**
      * 학교 목록을 서버에서 조회해 상태에 저장. 화면 진입 시 1회 자동 호출됨.
-     * 사용자가 학교 칸을 눌러 호출한 경우(openSheetOnSuccess)에는 성공 시 바텀시트를 열고, 실패 시 안내 다이얼로그를 띄운다.
+     * 조회 중에 사용자가 학교 칸을 눌렀다면(openSheetWhenLoaded) 끝난 시점에 성공 시 바텀시트를 열고, 실패 시 안내 다이얼로그를 띄운다.
      * 진입 시 자동 호출이 실패하면 목록이 비어 있고, 학교 칸을 누를 때 다시 조회한다
      */
-    private fun getAllSchool(openSheetOnSuccess: Boolean = false) {
+    private fun getAllSchool() {
         if (schoolJob?.isActive == true) return
         schoolJob = viewModelScope.launch {
             resultResponse(
                 response = getAllSchoolUseCase(),
                 successCallback = {
                     updateState { copy(schoolList = it) }
-                    if (openSheetOnSuccess) emitEvent(SignUpEvent.ShowSchoolBottomSheet)
+                    if (openSheetWhenLoaded) emitEvent(SignUpEvent.ShowSchoolBottomSheet)
+                    openSheetWhenLoaded = false
                 },
                 errorCallback = { failState ->
-                    if (openSheetOnSuccess) {
+                    if (openSheetWhenLoaded) {
                         emitEvent(SignUpEvent.ShowRegisterErrorDialog(failState.message))
                     }
+                    openSheetWhenLoaded = false
                 }
             )
         }
@@ -100,9 +105,10 @@ class SignUpViewModel @Inject constructor(
     }
 
     fun onClickSchool() {
-        // 목록 조회가 실패해 비어 있으면 빈 시트를 열지 않고 다시 조회한다
+        // 목록이 비어 있으면 빈 시트를 열지 않는다. 조회 중이면 끝나길 기다리고, 실패했었다면 다시 조회한다
         if (uiState.value.schoolList.isEmpty()) {
-            getAllSchool(openSheetOnSuccess = true)
+            openSheetWhenLoaded = true
+            getAllSchool()
         } else {
             emitEvent(SignUpEvent.ShowSchoolBottomSheet)
         }

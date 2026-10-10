@@ -6,6 +6,7 @@ import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.isNetworkError
+import com.umc.domain.usecase.appDataStore.HasSessionTokenUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -16,6 +17,7 @@ import kotlin.time.Duration.Companion.seconds
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val getMyProfileUseCase: GetMyProfileUseCase,
+    private val hasSessionTokenUseCase: HasSessionTokenUseCase,
 ) : BaseViewModel<SplashState, SplashEvent>(SplashState()) {
 
     init {
@@ -32,6 +34,9 @@ class SplashViewModel @Inject constructor(
         viewModelScope.launch {
             if (withDelay) delay(3.seconds)
 
+            // 저장된 토큰이 없는 사용자(첫 설치·로그아웃 직후)는 오프라인이어도 로그인으로 보낸다
+            val hasSession = hasSessionTokenUseCase()
+
             // 기록되어있는 내 정보 가져오기
             resultResponse(
                 response = getMyProfileUseCase(),
@@ -45,8 +50,8 @@ class SplashViewModel @Inject constructor(
                     }
                 },
                 errorCallback = {
-                    if (it.isNetworkError) {
-                        // 네트워크 단절은 인증 실패가 아니므로 로그인으로 보내지 않고 재시도를 안내
+                    if (it.isNetworkError && hasSession) {
+                        // 로그인했던 사용자의 네트워크 단절은 인증 실패가 아니므로 로그인으로 보내지 않고 재시도를 안내
                         updateState { copy(isNetworkError = true) }
                     } else {
                         // 내 정보 가져오기 실패하면 로그인으로 이동
