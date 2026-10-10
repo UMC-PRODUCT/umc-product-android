@@ -5,7 +5,10 @@ import com.google.gson.reflect.TypeToken
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
+import com.umc.domain.model.base.NETWORK_ERROR_CODE
+import com.umc.domain.model.base.NETWORK_ERROR_MESSAGE
 import retrofit2.HttpException
+import java.io.IOException
 
 suspend inline fun <reified T> apiCall(
     crossinline apiCall: suspend () -> ApiResponse<T>
@@ -38,6 +41,12 @@ suspend inline fun <reified T> apiCall(
         val message = errorResponse?.message ?: e.message()
 
         ApiState.Fail(FailState(success = false, code = code, message = message))
+
+    } catch (e: IOException) {
+        e.printStackTrace()
+        ApiState.Fail(
+            FailState(success = false, code = NETWORK_ERROR_CODE, message = NETWORK_ERROR_MESSAGE)
+        )
 
     } catch (e: Exception) {
         e.printStackTrace()
