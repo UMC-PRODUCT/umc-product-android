@@ -700,7 +700,11 @@ fun SocialBadge(platform: LoginType) {
         shape = RoundedCornerShape(4.dp)
     ) {
         UText(
-            text = if (platform == LoginType.KAKAO) "카카오" else "구글",
+            text = when (platform) {
+                LoginType.KAKAO -> "카카오"
+                LoginType.GOOGLE -> "구글"
+                LoginType.APPLE -> "Apple"
+            },
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             style = UmcTypographyTokens.Caption1Bold,

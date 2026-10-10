@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.theme.AppStrings
+import com.umc.component.util.isValidWebUrl
+import com.umc.domain.model.ProfileInfo
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LinkType
 import com.umc.domain.model.enums.LoginType
@@ -35,6 +38,15 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// 학교·지부 소속이 아닌 중앙 운영진 역할
+private val CENTRAL_ROLES = setOf(
+    UserChallengerRole.SUPER_ADMIN,
+    UserChallengerRole.CENTRAL_PRESIDENT,
+    UserChallengerRole.CENTRAL_VICE_PRESIDENT,
+    UserChallengerRole.CENTRAL_OPERATING_TEAM_MEMBER,
+    UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER,
+)
+
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
@@ -50,9 +62,23 @@ class ProfileViewModel @Inject constructor(
     //초기화 작업
     init {
         // 프로필 정보 및 소셜 플랫폼 연결 정보 로드
+        loadProfile()
+    }
+
+    /**
+     * 프로필 정보와 소셜 플랫폼 연결 정보를 (다시) 불러오는 메서드
+     */
+    private fun loadProfile() {
+        updateState { copy(isProfileLoadFailed = false) }
         getUserInfo()
         getUserOAuth()
+    }
 
+    /**
+     * 프로필 조회 실패 안내에서 '다시 시도하기'를 눌렀을 때 호출
+     */
+    fun onClickRetry() {
+        loadProfile()
     }
 
     /**
@@ -68,7 +94,8 @@ class ProfileViewModel @Inject constructor(
                             userInfo = userInfo,
                             githubLink = userInfo.profile.github,
                             linkedinLink = userInfo.profile.linkedIn,
-                            blogLink = userInfo.profile.blog
+                            blogLink = userInfo.profile.blog,
+                            isProfileLoadFailed = false
                         )
                     }
                     processActiveHistory(userInfo)
@@ -76,8 +103,8 @@ class ProfileViewModel @Inject constructor(
 
                 },
                 errorCallback = {
-                    /**TODO. 에러 토스트 메시지 등을 전송**/
-
+                    updateState { copy(isProfileLoadFailed = true) }
+                    emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_LOAD_ERROR_TITLE))
                 }
             )
         }
@@ -118,17 +145,20 @@ class ProfileViewModel @Inject constructor(
             val finalActiveHistory = coroutineScope {
                 gisuSummaryList.flatMap { summary ->
                     val generationText = "${summary.gisu}기"
+                    val hasRole = summary.fromRoles.isNotEmpty()
 
                     //운영진 기록
                     val roleJobs = summary.fromRoles.map { roleItem ->
                         async {
-                            createRoleActiveItem(generationText, roleItem)
+                            createRoleActiveItem(generationText, roleItem, userInfo)
                         }
                     }
 
                     //챌린저 기록
+                    // 운영진 역할이 있는 기수의 파트 없는 레코드는 그 역할의 주인 레코드이므로 '미정 Part 챌린저' 행으로 또 그리지 않는다
                     val recordJobs = summary.fromRecords
                         .filter { it.responsiblePart != "ADMIN" }
+                        .filter { !(hasRole && UserPart.from(it.responsiblePart) == UserPart.UNKNOWN) }
                         .map { recordItem ->
                             async {
                                 createChallengerActiveItem(generationText, recordItem)
@@ -151,7 +181,30 @@ class ProfileViewModel @Inject constructor(
     /**
      * 운영진 이력 정보(학교, 지부, 총괄 등)를 조회하여 UserActiveItem 객체를 생성하는 메서드
      */
-    private suspend fun createRoleActiveItem(generationText: String, roleItem: RolePartItem): UserActiveItem {
+    private suspend fun createRoleActiveItem(
+        generationText: String,
+        roleItem: RolePartItem,
+        userInfo: UserInfo
+    ): UserActiveItem {
+        val role = UserChallengerRole.from(roleItem.role)
+        val roleLabel = role.displayName ?: roleItem.role
+
+        // v2 응답에는 역할의 조직 정보가 없어 모든 역할이 SCHOOL 로 복원되므로,
+        // 학교 소속이 아닌 중앙 운영진·지부장은 역할 종류로 먼저 분기한다
+        if (role in CENTRAL_ROLES) {
+            return UserActiveItem(generationText, roleLabel, roleLabel)
+        }
+        if (role == UserChallengerRole.CHAPTER_PRESIDENT) {
+            val chapterName = userInfo.challengerRecords
+                .firstOrNull { it.challengerId == roleItem.challengerId }
+                ?.chapterName
+            return if (!chapterName.isNullOrBlank()) {
+                UserActiveItem(generationText, "${chapterName}지부 $roleLabel", roleLabel)
+            } else {
+                UserActiveItem(generationText, roleLabel, roleLabel)
+            }
+        }
+
         //담당 파트가 있는 경우 (ex. 안드로이드 파트장)
         if (roleItem.responsiblePart != null) {
             return UserActiveItem(
@@ -199,7 +252,7 @@ class ProfileViewModel @Inject constructor(
         //그 외 - 중앙/총괄 운영진인 경우
         else{
             val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
-            val itemResult = UserActiveItem(generationText, label, "총괄")
+            val itemResult = UserActiveItem(generationText, label, label)
             return itemResult
         }
     }
@@ -239,34 +292,59 @@ class ProfileViewModel @Inject constructor(
 
 
     /**
-     * 상단 완료 버튼 클릭 시 외부 링크 저장 및 프로필 이미지 업로드를 트리거하는 메서드
+     * 상단 완료 버튼 클릭 시 외부 링크 검증 -> 저장 -> (선택된 경우) 프로필 이미지 업로드 순으로 진행하는 메서드.
+     * 모두 성공했을 때만 화면을 닫고, 실패하면 안내만 하고 화면과 입력값을 유지한다.
      */
     fun onClickComplete(){
-        val nowUri = uiState.value.userProfileImageUri
+        val state = uiState.value
 
-        //1. 아래의 saveAndExit를 수행 - 3개의 outLink를 저장 (fragment에서 데이터를 가져
-        emitEvent(ProfileEvent.ClickComplete)
+        //진행 중에는 재진입 차단 (연타 시 업로드/PATCH 중복 방지)
+        if (state.isSaving) return
 
-        //2. 이미지 파일을 업로드하고, 바꾸기(여기서 이미지를 바꿀 경우 = Uri가 empty가 아닐 경우만 진행)
-        if(nowUri != Uri.EMPTY){
-            updateProfileImage(nowUri)
+        //프로필 조회에 실패한 빈 상태에서 저장하면 서버 링크가 빈 값으로 덮어써지므로 차단
+        if (state.isProfileLoadFailed) {
+            emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_LOAD_ERROR_TITLE))
+            return
         }
-        else{
-            emitEvent(ProfileEvent.ClickBackPressed)
+
+        //바뀐 칸만 URL 형식 검사 (예전에 저장된 값 때문에 완료가 막히지 않도록)
+        val profile = state.userInfo.profile
+        val github = state.githubLink.trim()
+        val linkedin = state.linkedinLink.trim()
+        val blog = state.blogLink.trim()
+        val hasInvalidLink = listOf(
+            github to profile.github,
+            linkedin to profile.linkedIn,
+            blog to profile.blog
+        ).any { (now, saved) -> now != saved && now.isNotBlank() && !now.isValidWebUrl() }
+        if (hasInvalidLink) {
+            emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_LINK_INVALID))
+            return
         }
+
+        updateState { copy(isSaving = true) }
+        saveUserOutLink(github, linkedin, blog, state.userInfo.profile, state.userProfileImageUri)
     }
 
     /**
-     * 외부 소셜 링크 3종(GitHub, LinkedIn, Blog) 정보를 서버에 전송하여 업데이트하는 메서드
+     * 외부 링크 5종 정보를 서버에 전송하여 업데이트하는 메서드.
+     * 성공하면 선택된 프로필 이미지가 있을 때 이미지 업로드로 이어가고, 없으면 화면을 닫는다.
      */
-    fun saveUserOutLink(github: String, linkedin: String, blog: String) {
+    private fun saveUserOutLink(
+        github: String,
+        linkedin: String,
+        blog: String,
+        savedProfile: ProfileInfo,
+        imageUri: Uri
+    ) {
+        // 화면에서 수정하지 않는 Instagram/개인 링크는 서버 저장값을 그대로 보내 덮어쓰기를 막는다
         val request = UpdateLinkRequest(
             links = listOf(
                 LinkItem(LinkType.GITHUB.label, github),
                 LinkItem(LinkType.LINKEDIN.label, linkedin),
                 LinkItem(LinkType.BLOG.label, blog),
-                LinkItem(LinkType.PERSONAL.label, ""),
-                LinkItem(LinkType.INSTAGRAM.label, "")
+                LinkItem(LinkType.PERSONAL.label, savedProfile.personal),
+                LinkItem(LinkType.INSTAGRAM.label, savedProfile.instagram)
             )
         )
 
@@ -274,8 +352,17 @@ class ProfileViewModel @Inject constructor(
             // 서버에 저장하기
             resultResponse(
                 response = updateMyLinkUseCase(request),
-                successCallback = {},
-                errorCallback = {}
+                successCallback = {
+                    //이미지를 바꿀 경우 = Uri가 empty가 아닐 경우만 업로드 진행
+                    if (imageUri != Uri.EMPTY) {
+                        updateProfileImage(imageUri)
+                    } else {
+                        emitEvent(ProfileEvent.ClickBackPressed)
+                    }
+                },
+                errorCallback = {
+                    onSaveFailed(AppStrings.PROFILE_SAVE_FAIL)
+                }
             )
         }
     }
@@ -285,7 +372,7 @@ class ProfileViewModel @Inject constructor(
      *
      * @param uri 업로드할 이미지 URI
      */
-    fun updateProfileImage(uri: Uri){
+    private fun updateProfileImage(uri: Uri){
         //uri을 이용해 파일 전송하기
         viewModelScope.launch {
 
@@ -302,21 +389,28 @@ class ProfileViewModel @Inject constructor(
                                 emitEvent(ProfileEvent.ClickBackPressed)
                             },
                             errorCallback = {
-
+                                onSaveFailed(AppStrings.PROFILE_SAVE_FAIL)
                             }
                         )
                     }
 
                 },
                 errorCallback = {
-                    emitEvent(ProfileEvent.MakeToast(
-                        it.message))
+                    onSaveFailed(it.message.ifBlank { AppStrings.PROFILE_SAVE_FAIL })
 
                     Log.d("log_mypage", "실패! $it")
                 }
             )
         }
 
+    }
+
+    /**
+     * 저장 도중 실패했을 때 진행 상태를 풀고 안내만 띄우는 메서드 (화면과 입력값은 유지)
+     */
+    private fun onSaveFailed(message: String) {
+        updateState { copy(isSaving = false) }
+        emitEvent(ProfileEvent.MakeToast(message))
     }
 
 
@@ -359,6 +453,11 @@ data class ProfileUiState(
     val linkedinLink: String = "",
     val blogLink: String = "",
 
+    // 프로필 조회 실패 여부 (true 면 빈 정보 대신 실패 안내 + 다시 시도 표시)
+    val isProfileLoadFailed: Boolean = false,
+    // '완료' 저장 진행 중 여부 (중복 탭 방지, 진행 표시)
+    val isSaving: Boolean = false,
+
 
     //임시 정보
     val myActiveHistory: ImmutableList<UserActiveItem> = persistentListOf(),
@@ -373,9 +472,6 @@ sealed interface ProfileEvent : UiEvent {
     //토스트 만들기
     data class MakeToast(val message: String) : ProfileEvent
 
-
-    //완료 버튼을 눌렀을 때
-    object ClickComplete : ProfileEvent
 
     //그냥 뒤로 가기
     object ClickBackPressed : ProfileEvent

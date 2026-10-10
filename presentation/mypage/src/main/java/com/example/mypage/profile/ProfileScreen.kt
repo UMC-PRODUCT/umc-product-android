@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -42,6 +43,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,12 +55,14 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
+import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
@@ -121,9 +126,6 @@ fun ProfileRoute(
             is ProfileEvent.ClickProfileImage -> {
                 pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }
-            is ProfileEvent.ClickComplete -> {
-                viewModel.saveUserOutLink(uiState.githubLink, uiState.linkedinLink, uiState.blogLink)
-            }
             is ProfileEvent.ClickBackPressed -> {
                 onNavigateToBack()
             }
@@ -141,7 +143,8 @@ fun ProfileRoute(
         onBlogChange = { viewModel.updateBlogLink(it) },
         onBackPressed = viewModel::onClickBackPressed,
         onCompleteClick = viewModel::onClickComplete,
-        onProfileImageClick = viewModel::onClickProfileImage
+        onProfileImageClick = viewModel::onClickProfileImage,
+        onRetryClick = viewModel::onClickRetry
     )
 
     
@@ -160,7 +163,8 @@ fun ProfileScreen(
     onBlogChange: (String) -> Unit,
     onBackPressed: () -> Unit,
     onCompleteClick: () -> Unit,
-    onProfileImageClick: () -> Unit
+    onProfileImageClick: () -> Unit,
+    onRetryClick: () -> Unit
 ){
     Column(
         modifier = Modifier
@@ -171,8 +175,8 @@ fun ProfileScreen(
         //상단 바
         ProfileTopbar(
             onBackClick = onBackPressed,
-            onCompleteClick = onCompleteClick
-
+            onCompleteClick = onCompleteClick,
+            isSaving = uiState.isSaving
         )
 
         //각 아이템 당 자동 24dp 패딩
@@ -191,59 +195,66 @@ fun ProfileScreen(
                 )
             }
 
-            //연동 정보 (고정형)
-            item {
-                ProfileInfoSection(
-                    title = "연동된 계정",
-                    content = "로그인 제공자",
-                    platforms = uiState.linkedPlatforms
-                )
-            }
+            if (uiState.isProfileLoadFailed) {
+                //프로필 조회 실패 - 빈 칸 대신 안내와 다시 시도 표시
+                item {
+                    ProfileLoadError(onRetryClick = onRetryClick)
+                }
+            } else {
+                //연동 정보 (고정형)
+                item {
+                    ProfileInfoSection(
+                        title = "연동된 계정",
+                        content = "로그인 제공자",
+                        platforms = uiState.linkedPlatforms
+                    )
+                }
 
-            //이름/닉네임 (고정형)
-            item {
-                ProfileInfoSection(
-                    title = "닉네임/이름",
-                    content = "${uiState.userInfo.nickname} / ${uiState.userInfo.name}"
-                )
-            }
+                //이름/닉네임 (고정형)
+                item {
+                    ProfileInfoSection(
+                        title = "닉네임/이름",
+                        content = "${uiState.userInfo.nickname} / ${uiState.userInfo.name}"
+                    )
+                }
 
-            //학교 정보 (고정형)
-            item {
-                ProfileInfoSection(
-                    title = "학교",
-                    content = uiState.userInfo.schoolName
-                )
-            }
+                //학교 정보 (고정형)
+                item {
+                    ProfileInfoSection(
+                        title = "학교",
+                        content = uiState.userInfo.schoolName
+                    )
+                }
 
-            //활동 이력 리스트
-            item {
-                UText(text = "활동 이력", style = UmcTypographyTokens.HeadlineBold)
-                Card(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, grey300()),
-                    colors = CardDefaults.cardColors(containerColor = grey000())
-                ) {
-                    Column(
+                //활동 이력 리스트
+                item {
+                    UText(text = "활동 이력", style = UmcTypographyTokens.HeadlineBold)
+                    Card(
                         modifier = Modifier
-                            .padding(vertical = 8.dp)
+                            .padding(top = 8.dp)
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, grey300()),
+                        colors = CardDefaults.cardColors(containerColor = grey000())
                     ) {
-                        uiState.myActiveHistory.forEach { history ->
-                            ActiveHistoryItem(history)
+                        Column(
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
+                        ) {
+                            uiState.myActiveHistory.forEach { history ->
+                                ActiveHistoryItem(history)
+                            }
                         }
                     }
                 }
-            }
 
-            // 대외 링크 입력 (UTextField 적용)
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                    LinkInputSection("GitHub URL", githubText, onGithubChange)
-                    LinkInputSection("LinkedIn URL", linkedinText, onLinkedinChange)
-                    LinkInputSection("블로그 URL", blogText, onBlogChange)
+                // 대외 링크 입력 (UTextField 적용)
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                        LinkInputSection("GitHub URL", githubText, onGithubChange)
+                        LinkInputSection("LinkedIn URL", linkedinText, onLinkedinChange)
+                        LinkInputSection("블로그 URL", blogText, onBlogChange)
+                    }
                 }
             }
 
@@ -266,7 +277,8 @@ fun ProfileScreen(
 @Composable
 fun ProfileTopbar(
     onBackClick: () -> Unit,
-    onCompleteClick: () -> Unit
+    onCompleteClick: () -> Unit,
+    isSaving: Boolean = false
 ){
 
     Row(
@@ -298,14 +310,25 @@ fun ProfileTopbar(
         }
 
 
-        UText(
-            text = AppStrings.COMPLETE,
-            style = UmcTypographyTokens.CalloutBold,
-            color = indigo500(),
-            modifier = Modifier
-                .clickable { onCompleteClick() }
-                .padding(end = 16.dp)
-        )
+        if (isSaving) {
+            //저장 진행 중 - 완료 자리에 진행 표시 (재탭 불가)
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .padding(end = 16.dp)
+                    .size(20.dp),
+                color = indigo500(),
+                strokeWidth = 2.dp
+            )
+        } else {
+            UText(
+                text = AppStrings.COMPLETE,
+                style = UmcTypographyTokens.CalloutBold,
+                color = indigo500(),
+                modifier = Modifier
+                    .clickable { onCompleteClick() }
+                    .padding(end = 16.dp)
+            )
+        }
 
     }
 }
@@ -474,5 +497,97 @@ fun LinkInputSection(title: String, value: String, onValueChange: (String) -> Un
                 .padding(top = 8.dp)
                 .fillMaxWidth()
         )
+    }
+}
+
+/**
+ * 프로필 조회에 실패했을 때 빈 칸 대신 표시하는 실패 안내 + 다시 시도 컴포저블
+ */
+@Composable
+private fun ProfileLoadError(onRetryClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        UText(
+            text = AppStrings.PROFILE_LOAD_ERROR_TITLE,
+            style = UmcTypographyTokens.HeadlineBold,
+            color = grey600(),
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        UText(
+            text = AppStrings.PROFILE_LOAD_ERROR_DESCRIPTION,
+            style = UmcTypographyTokens.Subheadline,
+            color = grey500(),
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        UButton(
+            text = AppStrings.PROFILE_RETRY,
+            onClick = onRetryClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            backgroundColor = indigo500(),
+            textColor = grey000(),
+            textStyle = UmcTypographyTokens.HeadlineBold,
+            cornerRadius = 12.dp,
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+private fun ProfileScreenPreview() {
+    UmcTheme {
+        ProfileScreen(
+            uiState = ProfileUiState(
+                linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.APPLE),
+                myActiveHistory = persistentListOf(
+                    UserActiveItem("11기", "Web PE Part", "챌린저")
+                ),
+            ),
+            githubText = "https://github.com/umc",
+            onGithubChange = {},
+            linkedinText = "",
+            onLinkedinChange = {},
+            blogText = "",
+            onBlogChange = {},
+            onBackPressed = {},
+            onCompleteClick = {},
+            onProfileImageClick = {},
+            onRetryClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+private fun ProfileScreenLoadFailedPreview() {
+    UmcTheme {
+        ProfileScreen(
+            uiState = ProfileUiState(isProfileLoadFailed = true),
+            githubText = "",
+            onGithubChange = {},
+            linkedinText = "",
+            onLinkedinChange = {},
+            blogText = "",
+            onBlogChange = {},
+            onBackPressed = {},
+            onCompleteClick = {},
+            onProfileImageClick = {},
+            onRetryClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 200)
+@Composable
+private fun ProfileTopbarSavingPreview() {
+    UmcTheme {
+        ProfileTopbar(onBackClick = {}, onCompleteClick = {}, isSaving = true)
     }
 }
