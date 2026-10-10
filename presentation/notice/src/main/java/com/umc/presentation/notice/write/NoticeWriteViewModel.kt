@@ -113,7 +113,9 @@ class NoticeWriteViewModel @Inject constructor(
                         isLinkVisible = linkText.isNotBlank(),
                         linkText = linkText,
                         // 이미지 교체(PATCH)에는 이미지 행 id가 아니라 서버가 준 fileId를 보내야 한다.
-                        // fileId가 없는 항목은 잘못된 ID로 기존 이미지를 덮어쓰지 않도록 제외한다
+                        // fileId가 없는 항목은 폼에 채울 수 없어 제외하고, 이 경우 사용자가 이미지를 직접 바꾸기 전에는
+                        // 이미지 PATCH(전체 교체)를 보내지 않아 제외된 이미지가 저장 때 지워지지 않게 한다
+                        hasUnrestoredImages = detail.images.any { it.fileId.isBlank() },
                         images = detail.images
                             .filter { it.fileId.isNotBlank() }
                             .sortedBy { it.displayOrder }
@@ -473,6 +475,7 @@ class NoticeWriteViewModel @Inject constructor(
                 successCallback = { uploaded ->
                     updateState {
                         copy(
+                            hasUnrestoredImages = false,
                             images = (images + NoticeImageAttachment(
                                 uri = uri,
                                 fileId = uploaded.fileId,
@@ -491,7 +494,7 @@ class NoticeWriteViewModel @Inject constructor(
     }
 
     fun onRemoveImage(image: NoticeImageAttachment) {
-        updateState { copy(images = (images - image).toImmutableList()) }
+        updateState { copy(hasUnrestoredImages = false, images = (images - image).toImmutableList()) }
     }
 
     /** 링크 첨부 패널 표시 (툴바 링크 버튼) */
@@ -669,7 +672,10 @@ class NoticeWriteViewModel @Inject constructor(
 
         val imageIds = state.images.map { it.fileId }
         // 수정·재시도는 전체 교체(PATCH)로 보내야 기존 이미지가 중복되지 않고, 지운 것도 반영된다
-        if (isReplace) {
+        // 단, 서버 이미지 일부를 폼에 복원하지 못했고 사용자가 이미지를 건드리지 않았다면 보내지 않는다
+        if (isReplace && state.hasUnrestoredImages) {
+            // 이미지 변경 없음: 서버에 있는 이미지를 그대로 둔다
+        } else if (isReplace) {
             resultResponse(
                 response = updateNoticeImagesUseCase(noticeId, imageIds),
                 successCallback = { },
@@ -770,6 +776,8 @@ data class NoticeWriteUiState(
     /** 신규 작성에서 이미 생성된 공지 ID. 일부 항목 연결 실패 후 재등록 때 중복 생성을 막는다 */
     val createdNoticeId: Long? = null,
     val images: ImmutableList<NoticeImageAttachment> = persistentListOf(),
+    /** 수정 진입 시 fileId가 없어 폼에 복원하지 못한 서버 이미지가 있는지. 사용자가 이미지를 바꾸면 false */
+    val hasUnrestoredImages: Boolean = false,
     val isUploadingImages: Boolean = false,
     val isLinkVisible: Boolean = false,
     val linkText: String = "",
@@ -791,9 +799,13 @@ data class NoticeWriteUiState(
         get() = isAllSelected || isStaffSelected
                 || selectedChapter != null || selectedSchool != null || selectedPart != null
 
-    // 수정 모드에서는 수신 대상을 바꿀 수 없으므로 카테고리/분류 조건 제외
+    // 수정 모드이거나 이미 공지가 만들어진 뒤(부분 실패 재등록)에는 수신 대상을 바꿀 수 없다
+    val isTargetLocked: Boolean
+        get() = isEditMode || createdNoticeId != null
+
+    // 수신 대상이 잠겨 있으면 카테고리/분류 조건 제외
     val enableRegister: Boolean
-        get() = (isEditMode || (selectedCategory != null && (boardChips.isEmpty() || hasBoardSelection)))
+        get() = (isTargetLocked || (selectedCategory != null && (boardChips.isEmpty() || hasBoardSelection)))
                 && title.isNotBlank()
                 && content.text.isNotBlank()
                 && !isSubmitting

@@ -18,6 +18,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -87,6 +88,7 @@ class AdminNoticeViewModel @Inject constructor(
     AdminNoticeUiState(),
 ) {
     private var cachedUserInfo: UserInfo? = null
+    private var listJob: Job? = null
 
     init {
         loadUserAccess()
@@ -95,7 +97,8 @@ class AdminNoticeViewModel @Inject constructor(
 
     /** 조회 대상 기수는 공지 화면에서 nav argument로 전달받아 주입 */
     fun setGisuId(gisuId: Long) {
-        updateState { copy(gisuId = gisuId) }
+        // 기수를 알 수 없으면 조회가 시작되지 않으므로, 끝없는 로딩 대신 빈 상태로 떨어지게 한다
+        updateState { copy(gisuId = gisuId, hasLoaded = hasLoaded || gisuId <= 0L) }
         refreshIfReady()
     }
 
@@ -138,7 +141,21 @@ class AdminNoticeViewModel @Inject constructor(
     }
 
     fun onClickTab(tab: AdminNoticeTab) {
-        updateState { copy(selectedTab = tab) }
+        if (tab == uiState.value.selectedTab) return
+        // 진행 중이던 이전 탭 조회는 버리고, 이전 탭의 목록·페이징을 비워 새 탭 제목 아래에 남지 않게 한다.
+        // 비워 두면 전환 중에는 로딩이, 조회 실패 시에는 실패 안내가 새 탭 기준으로 보인다
+        listJob?.cancel()
+        updateState {
+            copy(
+                selectedTab = tab,
+                noticeList = persistentListOf(),
+                currentPage = 0,
+                isLastPage = false,
+                isPageLoading = false,
+                hasLoaded = false,
+                errorMessage = null,
+            )
+        }
         refreshIfReady()
     }
 
@@ -180,7 +197,11 @@ class AdminNoticeViewModel @Inject constructor(
         }
     }
 
-    private fun getNoticeList(isRefresh: Boolean) = viewModelScope.launch {
+    private fun getNoticeList(isRefresh: Boolean) {
+        listJob = fetchNoticeList(isRefresh)
+    }
+
+    private fun fetchNoticeList(isRefresh: Boolean) = viewModelScope.launch {
         val state = uiState.value
         val selectedTab = state.selectedTab ?: return@launch
 

@@ -3,17 +3,24 @@ package com.umc.data.repository.storage
 import android.content.Context
 import android.net.Uri
 import com.umc.data.StorageUriUtil
+import com.umc.data.dataSource.base.NETWORK_ERROR_MESSAGE
 import com.umc.data.dataSource.remote.storage.StorageRemoteDataSource
 import com.umc.data.request.storage.PrepareUploadRequest
 import com.umc.domain.model.UploadFileInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
+import com.umc.domain.model.base.NETWORK_ERROR_CODE
 import com.umc.domain.model.base.map
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.repository.storage.StorageRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.IOException
+import java.net.ProtocolException
 import kotlin.coroutines.cancellation.CancellationException
 import javax.inject.Inject
+
+private const val UPLOAD_FAIL_CODE = "S3_001"
+private const val UPLOAD_FAIL_MESSAGE = "파일 업로드에 실패했습니다. 잠시 후 다시 시도해주세요."
 
 class StorageRepositoryImpl @Inject constructor(
     private val storageRemoteDatasource: StorageRemoteDataSource,
@@ -61,15 +68,31 @@ class StorageRepositoryImpl @Inject constructor(
                 // 2. presigned url을 이용해 직접 전송한다.
                 // 이 호출은 apiCall을 거치지 않아 OkHttp의 IOException(ProtocolException 등)이 그대로 던져진다.
                 // 잡지 않으면 호출한 viewModelScope 안에서 앱이 종료되므로 실패 상태로 바꿔 돌려준다
+                val requestBody = try {
+                    StorageUriUtil.toRequestBody(context, uri)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    return ApiState.Fail(FailState(code = "LOCAL_001", message = "파일 읽기 실패"))
+                }
                 val uploadResponse = try {
-                    val requestBody = StorageUriUtil.toRequestBody(context, uri)
                     storageRemoteDatasource.uploadFile(
                         uploadData.uploadUrl, uploadData.headers, requestBody
                     )
                 } catch (e: CancellationException) {
                     throw e
+                } catch (e: ProtocolException) {
+                    // 연결 단절이 아닌 프로토콜 위반은 네트워크 오류로 보지 않는다(apiCall과 같은 기준)
+                    e.printStackTrace()
+                    return ApiState.Fail(FailState(code = UPLOAD_FAIL_CODE, message = UPLOAD_FAIL_MESSAGE))
+                } catch (e: IOException) {
+                    // 업로드 도중 연결이 끊긴 경우는 다른 API와 같은 네트워크 오류로 돌려준다
+                    e.printStackTrace()
+                    return ApiState.Fail(FailState(code = NETWORK_ERROR_CODE, message = NETWORK_ERROR_MESSAGE))
                 } catch (e: Exception) {
-                    return ApiState.Fail(FailState(code = "S3_001", message = "S3 전송 실패"))
+                    e.printStackTrace()
+                    return ApiState.Fail(FailState(code = UPLOAD_FAIL_CODE, message = UPLOAD_FAIL_MESSAGE))
                 }
 
                 // 얘는 ApiState가 아니라 직접 response로 감쌌기 때문에 isSuccessful로 비교
@@ -86,7 +109,7 @@ class StorageRepositoryImpl @Inject constructor(
                         }
                     }
                 } else {
-                    ApiState.Fail(FailState(code = "S3_001", message = "S3 전송 실패"))
+                    ApiState.Fail(FailState(code = UPLOAD_FAIL_CODE, message = UPLOAD_FAIL_MESSAGE))
                 }
             }
             is ApiState.Fail -> prepareState
