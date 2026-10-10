@@ -99,13 +99,25 @@ class AdminChallengerViewModel @Inject constructor(
                 response = response,
                 successCallback = { challengers ->
                     updateState {
-                        copy(sections = challengers.toSections(), loadState = AdminChallengerLoadState.SUCCESS)
+                        copy(
+                            sections = challengers.toSections(),
+                            loadState = AdminChallengerLoadState.SUCCESS,
+                            loadErrorMessage = null,
+                        )
                     }
                 },
-                errorCallback = {
-                    // 조용한 갱신이 실패하면 보이던 목록을 유지하고, 보여줄 목록이 없을 때만 오류 화면을 띄운다.
-                    updateState {
-                        if (sections.isEmpty()) copy(loadState = AdminChallengerLoadState.ERROR) else this
+                errorCallback = { failState ->
+                    // 조용한 갱신이 실패하면 보이던 목록은 유지하고 토스트로 알린다.
+                    // 보여줄 목록이 없을 때만 실패 원인(네트워크/서버)을 담아 오류 화면을 띄운다.
+                    if (uiState.value.sections.isEmpty()) {
+                        updateState {
+                            copy(
+                                loadState = AdminChallengerLoadState.ERROR,
+                                loadErrorMessage = failState.message.takeIf { it.isNotBlank() },
+                            )
+                        }
+                    } else {
+                        emitEvent(AdminChallengerEvent.ShowToast(failState.message))
                     }
                 }
             )
@@ -346,6 +358,8 @@ data class AdminChallengerUiState(
     val sections: ImmutableList<AdminChallengerSectionUi> = persistentListOf(),
     //챌린저 목록 조회 상태
     val loadState: AdminChallengerLoadState = AdminChallengerLoadState.LOADING,
+    //목록 조회 실패 원인 문구(없으면 기본 안내)
+    val loadErrorMessage: String? = null,
     //선택한 챌린저 상세 정보
     val detail: ChallengerManageDialogModel? = null,
     //챌린저 상세 조회 상태

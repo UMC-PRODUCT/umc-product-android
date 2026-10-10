@@ -1,5 +1,6 @@
 package com.umc.presentation.act.admin.challenger
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
+import com.umc.component.base.CollectUiEvents
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
@@ -77,9 +80,18 @@ fun AdminChallengerRoute(
     viewModel: AdminChallengerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LaunchedEffect(isActive) {
         if (isActive) viewModel.refresh()
+    }
+
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is AdminChallengerEvent.ShowToast ->
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            AdminChallengerEvent.PointGranted -> Unit
+        }
     }
 
     AdminChallengerScreen(
@@ -143,6 +155,7 @@ internal fun ChallengerLoadError(
     title: String,
     onRetryClick: () -> Unit,
     modifier: Modifier = Modifier,
+    description: String = AppStrings.CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION,
 ) {
     Column(
         modifier = modifier
@@ -166,7 +179,7 @@ internal fun ChallengerLoadError(
         )
         Spacer(modifier = Modifier.height(4.dp))
         UText(
-            text = AppStrings.CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION,
+            text = description,
             style = Subheadline,
             color = grey500(),
             textAlign = TextAlign.Center
@@ -221,7 +234,9 @@ fun AdminChallengerScreen(
                 ChallengerLoadError(
                     title = AppStrings.CHALLENGER_LIST_LOAD_ERROR_TITLE,
                     onRetryClick = onRetryClick,
-                    modifier = Modifier.padding(top = 64.dp)
+                    modifier = Modifier.padding(top = 64.dp),
+                    description = uiState.loadErrorMessage
+                        ?: AppStrings.CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION,
                 )
             }
             else -> item { EmptyScreen() }
@@ -526,6 +541,19 @@ private fun PreviewMainError() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(loadState = AdminChallengerLoadState.ERROR)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Error State (Server Message)")
+@Composable
+private fun PreviewMainServerError() {
+    UmcTheme(darkTheme = false) {
+        AdminChallengerScreen(
+            uiState = AdminChallengerUiState(
+                loadState = AdminChallengerLoadState.ERROR,
+                loadErrorMessage = "권한이 없어 챌린저 목록을 조회할 수 없습니다.",
+            )
         )
     }
 }

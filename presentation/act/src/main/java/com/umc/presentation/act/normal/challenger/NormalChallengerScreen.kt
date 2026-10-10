@@ -153,7 +153,10 @@ private fun ChallengerLoading() {
 }
 
 @Composable
-private fun ChallengerLoadError(onRetryClick: () -> Unit) {
+private fun ChallengerLoadError(
+    onRetryClick: () -> Unit,
+    description: String = AppStrings.CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -176,7 +179,7 @@ private fun ChallengerLoadError(onRetryClick: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         UText(
-            text = AppStrings.CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION,
+            text = description,
             style = Subheadline,
             color = grey500(),
             textAlign = TextAlign.Center
@@ -227,7 +230,11 @@ fun NormalChallengerScreen(
             }
             uiState.loadState == NormalChallengerLoadState.LOADING -> item { ChallengerLoading() }
             uiState.loadState == NormalChallengerLoadState.ERROR -> item {
-                ChallengerLoadError(onRetryClick = onRetryClick)
+                ChallengerLoadError(
+                    onRetryClick = onRetryClick,
+                    description = uiState.loadErrorMessage
+                        ?: AppStrings.CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION,
+                )
             }
             else -> item { EmptyScreen() }
         }
@@ -537,6 +544,19 @@ fun previewMainError() {
     UmcTheme(darkTheme = false) {
         NormalChallengerScreen(
             uiState = NormalChallengerUiState(loadState = NormalChallengerLoadState.ERROR)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Error State (Server Message)")
+@Composable
+private fun PreviewMainServerError() {
+    UmcTheme(darkTheme = false) {
+        NormalChallengerScreen(
+            uiState = NormalChallengerUiState(
+                loadState = NormalChallengerLoadState.ERROR,
+                loadErrorMessage = "권한이 없어 챌린저 목록을 조회할 수 없습니다.",
+            )
         )
     }
 }

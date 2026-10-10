@@ -288,3 +288,17 @@ private fun OtherPointsScreenPreview() {
         OtherPointsScreen()
     }
 }
+
+@Preview(showBackground = false)
+@Composable
+private fun OtherPointsScreenSubmittingPreview() {
+    UmcTheme(darkTheme = false) {
+        OtherPointsScreen(
+            uiState = AdminChallengerUiState(
+                customRewardScore = 2,
+                customReason = "행사 운영 지원",
+                isPointSubmitting = true,
+            )
+        )
+    }
+}

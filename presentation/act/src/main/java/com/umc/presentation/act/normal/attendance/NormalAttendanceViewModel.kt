@@ -55,12 +55,16 @@ class NormalAttendanceViewModel @Inject constructor(
         }
     }
 
-    fun verifySessionLocation(sessionId: Long) {
+    /**
+     * 현재 위치로 세션의 출석 가능 여부를 판정한다.
+     * silent 이면 실패해도 토스트를 내지 않는다(목록 재조회 후 자동 재판정용).
+     */
+    fun verifySessionLocation(sessionId: Long, silent: Boolean = false) {
         val session = uiState.value.availableSessions.firstOrNull { it.id == sessionId } ?: return
         if (session.isOnline) return
 
         if (!hasLocationPermission()) {
-            emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
+            if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
             return
         }
 
@@ -71,7 +75,7 @@ class NormalAttendanceViewModel @Inject constructor(
             targetLongitude == null ||
             (targetLatitude == 0.0 && targetLongitude == 0.0)
         ) {
-            emitEvent(NormalAttendanceEvent.ShowToast("출석 위치 정보가 없습니다."))
+            if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("출석 위치 정보가 없습니다."))
             return
         }
 
@@ -81,7 +85,7 @@ class NormalAttendanceViewModel @Inject constructor(
                 CancellationTokenSource().token
             ).addOnSuccessListener { currentLocation ->
                 if (currentLocation == null) {
-                    emitEvent(NormalAttendanceEvent.ShowToast("현재 위치를 확인할 수 없습니다."))
+                    if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("현재 위치를 확인할 수 없습니다."))
                     return@addOnSuccessListener
                 }
 
@@ -97,10 +101,10 @@ class NormalAttendanceViewModel @Inject constructor(
                     distanceMeters = distanceMeters.toInt(),
                 )
             }.addOnFailureListener {
-                emitEvent(NormalAttendanceEvent.ShowToast("현재 위치 확인에 실패했습니다."))
+                if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("현재 위치 확인에 실패했습니다."))
             }
         } catch (_: SecurityException) {
-            emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
+            if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
         }
     }
 
@@ -346,9 +350,18 @@ class NormalAttendanceViewModel @Inject constructor(
                             }.toImmutableList()
                         )
                     }
-                    // 펼쳐진 카드는 새 목록 기준으로 현재 위치를 다시 판정한다
+                    // 펼쳐진 카드는 새 목록 기준으로 현재 위치를 다시 판정한다.
+                    // 출석 전·반려 상태 카드만 대상이며, 재조회 경로에서는 실패 토스트를 내지 않는다.
                     if (hasLocationPermission()) {
-                        uiState.value.expandedSessionId?.let(::verifySessionLocation)
+                        val expandedId = uiState.value.expandedSessionId
+                        val expanded = uiState.value.availableSessions
+                            .firstOrNull { it.id == expandedId }
+                        if (expanded != null &&
+                            (expanded.status == CheckAvailableStatus.BEFORE ||
+                                expanded.status == CheckAvailableStatus.REJECTED)
+                        ) {
+                            verifySessionLocation(expanded.id, silent = true)
+                        }
                     }
                 },
                 errorCallback = { emitEvent(NormalAttendanceEvent.ShowToast(it.message)) }

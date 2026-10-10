@@ -162,6 +162,7 @@ private fun UserStudyScreenPreview() {
                     platform = "Github",
                     status = StudyStatus.FAIL,
                     isExpanded = true,
+                    feedbackMessage = "Flex 정렬 예제가 빠져 있어요.\nGrid 레이아웃 과제를 다시 확인하고, 반응형 화면에서 깨지는 부분까지 함께 수정해서 다시 제출해 주세요.",
                 ),
                 NormalStudyItemUiModel(
                     id = 3,

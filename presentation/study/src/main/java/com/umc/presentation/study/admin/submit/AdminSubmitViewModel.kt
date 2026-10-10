@@ -15,6 +15,9 @@ import com.umc.domain.usecase.curriculum.UpdateWeeklyBestWorkbookUseCase
 import com.umc.domain.usecase.curriculum.DeleteWeeklyBestWorkbookUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -433,13 +436,20 @@ class AdminSubmitViewModel @Inject constructor(
         }
     }
 
+    // 주차·그룹을 바꿔 새로 조회할 때 이전 조회가 늦게 끝나 목록을 덮어쓰지 않도록 추적한다.
+    private var submissionsJob: Job? = null
+
     private fun loadSubmissions(
         studyGroupId: Long? = null,
         weekNos: List<Long>? = null,
         cursor: Long? = null,
         append: Boolean = false,
     ) {
-        viewModelScope.launch {
+        if (!append) {
+            submissionsJob?.cancel()
+        }
+
+        submissionsJob = viewModelScope.launch {
             updateState {
                 if (append) {
                     copy(
@@ -466,7 +476,11 @@ class AdminSubmitViewModel @Inject constructor(
 
             // 서버는 미제출 인원도 행으로 내려준다. 한 페이지가 전부 미제출이면 목록이 비어
             // 스크롤로 다음 페이지를 부를 수 없으므로 제출이 있는 페이지를 만날 때까지 이어서 조회
-            while (true) {
+            var skippedPages = 0
+            while (skippedPages < MAX_SKIPPED_PAGES) {
+                // apiCall 이 취소 예외를 Fail 로 바꾸므로 취소된 조회는 여기서 멈춘다
+                currentCoroutineContext().ensureActive()
+
                 val current = (response as? ApiState.Success)?.data ?: break
                 val nextCursor = current.nextCursor
 
@@ -491,7 +505,10 @@ class AdminSubmitViewModel @Inject constructor(
                     cursor = nextCursor,
                     size = PAGE_SIZE,
                 )
+                skippedPages++
             }
+
+            currentCoroutineContext().ensureActive()
 
             when (val result = response) {
                 is ApiState.Success -> {
@@ -1004,6 +1021,9 @@ class AdminSubmitViewModel @Inject constructor(
 
     companion object {
         private const val PAGE_SIZE = 20
+
+        // 전부 미제출인 페이지를 이어서 훑는 최대 횟수
+        private const val MAX_SKIPPED_PAGES = 50
     }
 }
 

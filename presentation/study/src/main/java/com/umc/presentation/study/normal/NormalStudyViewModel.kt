@@ -19,6 +19,8 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -105,11 +107,16 @@ class UserStudyViewModel @Inject constructor(
      */
     fun refresh() {
         loadJob?.cancel()
-        updateState { copy(isError = false) }
         startLoading()
 
         loadJob = viewModelScope.launch {
-            when (val profileResult = getMyProfileUseCase()) {
+            // isError 는 조회 결과가 확정될 때 갱신한다. 재시도 중에 빈 상태 문구가 잠깐 보이지 않게 하기 위함이다.
+            val profileResult = getMyProfileUseCase()
+
+            // apiCall 이 취소 예외를 Fail 로 바꾸므로 취소된 조회는 여기서 멈춘다
+            currentCoroutineContext().ensureActive()
+
+            when (profileResult) {
                 is ApiState.Success<*> -> {
                     val userInfo = profileResult.data as? UserInfo
 
@@ -140,15 +147,10 @@ class UserStudyViewModel @Inject constructor(
                             record.gisu
                         }
 
+                    // 챌린저 기록이 없는 계정은 네트워크 오류가 아니므로 오류 카드 대신 빈 상태로 보여준다.
                     if (currentRecord == null) {
                         stopLoading()
-                        updateState { copy(isError = true) }
-
-                        emitEvent(
-                            UserStudyEvent.ShowToast(
-                                message = "챌린저 기수 정보를 찾을 수 없어요.",
-                            )
-                        )
+                        updateState { copy(isError = false) }
                         return@launch
                     }
 
@@ -185,11 +187,14 @@ class UserStudyViewModel @Inject constructor(
         gisuId: Long,
         part: UserPart,
     ) {
-        when (
-            val result = getMyCurriculumProgressUseCase(
-                gisuId = gisuId,
-            )
-        ) {
+        val result = getMyCurriculumProgressUseCase(
+            gisuId = gisuId,
+        )
+
+        // apiCall 이 취소 예외를 Fail 로 바꾸므로 취소된 조회는 여기서 멈춘다
+        currentCoroutineContext().ensureActive()
+
+        when (result) {
             is ApiState.Success<*> -> {
                 val data = result.data as? StudyProgress
 
@@ -242,6 +247,7 @@ class UserStudyViewModel @Inject constructor(
                         title = data.curriculumTitle,
                         part = resolvedPart,
                         items = items.toImmutableList(),
+                        isError = false,
                     )
                 }
 
@@ -253,6 +259,7 @@ class UserStudyViewModel @Inject constructor(
 
                 // 기본 트랙이 없는 운영진은 서버가 실패로 내려주지만 오류가 아니라 빈 상태로 보여준다.
                 if (result.failState.code == NO_DEFAULT_TRACK_CODE) {
+                    updateState { copy(isError = false) }
                     return
                 }
 

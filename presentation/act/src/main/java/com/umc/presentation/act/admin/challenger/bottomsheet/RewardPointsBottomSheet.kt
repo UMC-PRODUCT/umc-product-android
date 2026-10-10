@@ -291,3 +291,17 @@ private fun RewardPointsScreenPreview() {
         RewardPointsScreen()
     }
 }
+
+@Preview(showBackground = false)
+@Composable
+private fun RewardPointsScreenSubmittingPreview() {
+    UmcTheme(darkTheme = false) {
+        RewardPointsScreen(
+            uiState = AdminChallengerUiState(
+                selectedRewardType = RewardType.BLOG_CHALLENGE,
+                pointMemo = "블로그 챌린지 참여",
+                isPointSubmitting = true,
+            )
+        )
+    }
+}

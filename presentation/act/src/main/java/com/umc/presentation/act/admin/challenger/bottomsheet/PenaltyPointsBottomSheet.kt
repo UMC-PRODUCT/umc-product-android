@@ -342,3 +342,17 @@ private fun PenaltyPointsScreenPreview() {
         PenaltyPointsScreen()
     }
 }
+
+@Preview(showBackground = false)
+@Composable
+private fun PenaltyPointsScreenSubmittingPreview() {
+    UmcTheme(darkTheme = false) {
+        PenaltyPointsScreen(
+            uiState = AdminChallengerUiState(
+                selectedPenaltyType = RewardType.STUDY_LATE,
+                pointMemo = "스터디 지각",
+                isPointSubmitting = true,
+            )
+        )
+    }
+}

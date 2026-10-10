@@ -83,13 +83,25 @@ class NormalChallengerViewModel @Inject constructor(
                 response = response,
                 successCallback = { challengers ->
                     updateState {
-                        copy(sections = challengers.toSections(), loadState = NormalChallengerLoadState.SUCCESS)
+                        copy(
+                            sections = challengers.toSections(),
+                            loadState = NormalChallengerLoadState.SUCCESS,
+                            loadErrorMessage = null,
+                        )
                     }
                 },
-                errorCallback = {
-                    // 조용한 갱신이 실패하면 보이던 목록을 유지하고, 보여줄 목록이 없을 때만 오류 화면을 띄운다.
-                    updateState {
-                        if (sections.isEmpty()) copy(loadState = NormalChallengerLoadState.ERROR) else this
+                errorCallback = { failState ->
+                    // 조용한 갱신이 실패하면 보이던 목록은 유지하고 토스트로 알린다.
+                    // 보여줄 목록이 없을 때만 실패 원인(네트워크/서버)을 담아 오류 화면을 띄운다.
+                    if (uiState.value.sections.isEmpty()) {
+                        updateState {
+                            copy(
+                                loadState = NormalChallengerLoadState.ERROR,
+                                loadErrorMessage = failState.message.takeIf { it.isNotBlank() },
+                            )
+                        }
+                    } else {
+                        emitEvent(NormalChallengerEvent.ShowToast(failState.message))
                     }
                 }
             )
@@ -155,6 +167,8 @@ data class NormalChallengerUiState(
     val sections: ImmutableList<NormalChallengerSectionUi> = persistentListOf(),
     val selectedChallenger: ChallengerInfoDialogModel? = null,
     val loadState: NormalChallengerLoadState = NormalChallengerLoadState.LOADING,
+    //목록 조회 실패 원인 문구(없으면 기본 안내)
+    val loadErrorMessage: String? = null,
 ) : UiState
 
 enum class NormalChallengerLoadState { LOADING, SUCCESS, ERROR }
