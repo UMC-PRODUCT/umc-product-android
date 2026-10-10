@@ -65,7 +65,10 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
                 searchResults = emptyList(),
                 nextCursor = null,
                 hasNext = true,
-                isSearching = query.isNotBlank()
+                isSearching = query.isNotBlank(),
+                // 디바운스 대기 중에는 '결과 없음'/'실패' 문구가 깜빡이지 않도록 초기화
+                hasSearched = false,
+                isSearchFailed = false
             )
         }
         searchJob = viewModelScope.launch {
@@ -106,14 +109,16 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
                             searchResults = response.content,
                             nextCursor = response.nextCursor,
                             hasNext = response.hasNext,
-                            isLoading = false
+                            isLoading = false,
+                            hasSearched = true,
+                            isSearchFailed = false
                         )
                     }
                 },
                 errorCallback = {
                     //검색 실패 시, 로딩 해제 및 다음 꺼 X
                     Log.d("log_home", "유저검색 실패: ${it.message}")
-                    updateState { copy(isLoading = false, hasNext = false) }
+                    updateState { copy(isLoading = false, hasNext = false, hasSearched = true, isSearchFailed = true) }
                 }
             )
         }
@@ -167,7 +172,9 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
             copy(
                 searchResults = emptyList(), // 혹은 초기 리스트(allChallengers)
                 searchQuery = "",
-                isSearching = false
+                isSearching = false,
+                hasSearched = false,
+                isSearchFailed = false
             )
         }
     }
@@ -182,6 +189,10 @@ data class ScheduleChallengerAddDialogUiState(
     val nextCursor: Long? = null,
     val hasNext: Boolean = true,
     val isLoading: Boolean = false,
+    // 검색 응답(성공/실패)을 한 번이라도 받았는지. 디바운스 대기 중과 '결과 없음'을 구분한다.
+    val hasSearched: Boolean = false,
+    // 마지막 검색 요청이 실패했는지
+    val isSearchFailed: Boolean = false,
 ) : UiState {
     val isSelectedParticipant: Boolean get() = selectedParticipants.isNotEmpty()
 }

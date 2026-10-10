@@ -341,6 +341,17 @@ constructor(
         val state = uiState.value
         val isEditMode = state.updateScheduleId != -1L
 
+        // 미선택 상태는 Calendar 기본값(현재 시각)이라 값으로는 구분할 수 없고, 표시 텍스트가 비어 있는지로 판단한다.
+        // 비어 있는 채로 보내면 '현재 시각' 일정이 만들어지거나 서버가 일반 오류로만 거절한다.
+        if (state.startDateText.isBlank() || state.endDateText.isBlank()) {
+            emitEvent(ScheduleAddEvent.ShowDateTimeRequiredToast)
+            return
+        }
+        if (isAttendance && (state.checkInStartDateText.isBlank() || state.onTimeEndDateText.isBlank() || state.lateEndDateText.isBlank())) {
+            emitEvent(ScheduleAddEvent.ShowAttendanceTimeRequiredToast)
+            return
+        }
+
         // 하루종일 여부에 따라 시작(00:00:00) 및 종료(23:59:59) 시각 보정 연산
         val startCal = (state.startDate.clone() as Calendar).apply {
             if (state.isAllDay) {
@@ -792,5 +803,9 @@ sealed interface ScheduleAddEvent : UiEvent {
     data class ShowErrorToast(val message: String) : ScheduleAddEvent
     //체크인 시작이 일정 시작과 같거나 늦을 때
     object ShowCheckInAfterStartToast : ScheduleAddEvent
+    //시작/종료 일시를 선택하지 않았을 때
+    object ShowDateTimeRequiredToast : ScheduleAddEvent
+    //출석부 생성 시 출석 시간을 모두 선택하지 않았을 때
+    object ShowAttendanceTimeRequiredToast : ScheduleAddEvent
 
 }
