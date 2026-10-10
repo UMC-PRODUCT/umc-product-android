@@ -2,6 +2,7 @@ package com.umc.data.repository.community
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.umc.data.dataSource.base.NETWORK_ERROR_MESSAGE
 import com.umc.domain.model.community.chatting.*
 import com.umc.domain.model.community.thread.CommunityReaction
 import com.umc.domain.model.community.thread.CommunityThreadMessage
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import okhttp3.*
+import java.io.IOException
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Named
@@ -145,7 +147,9 @@ class CommunityChatRepositoryImpl @Inject constructor(
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             if (this@CommunityChatRepositoryImpl.webSocket !== webSocket) return
             stopHeartbeat()
-            _errors.tryEmit(CommunityChatError(code = "WS-CONNECTION", message = t.message.orEmpty(), retryable = true))
+            // 소켓 원문 메시지(호스트명 등)는 사용자에게 노출하지 않는다.
+            val message = if (t is IOException) NETWORK_ERROR_MESSAGE else "채팅 서버에 연결하지 못했습니다."
+            _errors.tryEmit(CommunityChatError(code = "WS-CONNECTION", message = message, retryable = true))
             _connectionState.value = CommunityChatConnectionState.DISCONNECTED
         }
     }

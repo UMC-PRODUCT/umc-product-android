@@ -315,11 +315,31 @@ class CommunityChattingViewModel @Inject constructor(
     ) {
         val trimmed = content.trim()
         if (trimmed.isEmpty()) return
-        if (trimmed.codePointCount(0, trimmed.length) > COMMUNITY_CHAT_MAX_MESSAGE_LENGTH) {
+        if (isCommunityChatMessageTooLong(trimmed)) {
             emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_MESSAGE_TOO_LONG))
             return
         }
         val clientMessageId = UUID.randomUUID().toString()
+        if (chatRepository.connectionState.value != CommunityChatConnectionState.CONNECTED) {
+            // 연결이 끊긴 상태에서는 바로 실패시키지 않고 재연결을 시도한 뒤 전송한다(재전송 경로 재사용).
+            updateState {
+                copy(
+                    draft = "",
+                    pendingMessages = pendingMessages + (
+                        clientMessageId to PendingCommunityMessage(
+                            clientMessageId = clientMessageId,
+                            commandId = "",
+                            content = trimmed,
+                            type = CommunityMessageType.TEXT,
+                            mentionedMemberIds = mentionedMemberIds.distinct(),
+                            replyToId = replyToId,
+                        )
+                    ),
+                )
+            }
+            retryPendingMessage(clientMessageId)
+            return
+        }
         val command = CreateCommunityMessageCommand(
             clientMessageId = clientMessageId,
             type = CommunityMessageType.TEXT.name,
@@ -344,8 +364,9 @@ class CommunityChattingViewModel @Inject constructor(
                         ),
                     )
                 }
+                scheduleAckTimeout(clientMessageId)
             }
-            .onFailure { throwable ->
+            .onFailure {
                 updateState {
                     copy(
                         draft = "",
@@ -355,7 +376,7 @@ class CommunityChattingViewModel @Inject constructor(
                                 commandId = "",
                                 content = trimmed,
                                 type = CommunityMessageType.TEXT,
-                                error = throwable.message.orEmpty().ifBlank { AppStrings.CHAT_SEND_MESSAGE_FAILED },
+                                error = AppStrings.CHAT_SEND_MESSAGE_FAILED,
                                 mentionedMemberIds = mentionedMemberIds.distinct(),
                                 replyToId = replyToId,
                             )
@@ -410,6 +431,11 @@ class CommunityChattingViewModel @Inject constructor(
             content = null,
             fileMetadataIds = fileIds,
         )
+        if (chatRepository.connectionState.value != CommunityChatConnectionState.CONNECTED && !ensureConnected()) {
+            markImagePendingFailed(clientMessageId, AppStrings.CHAT_RETRY_DISCONNECTED)
+            emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_RETRY_DISCONNECTED))
+            return@launch
+        }
         runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
             .onSuccess { commandId ->
                 updateState {
@@ -425,8 +451,9 @@ class CommunityChattingViewModel @Inject constructor(
                         )
                     )
                 }
+                scheduleAckTimeout(clientMessageId)
             }
-            .onFailure { throwable -> markImagePendingFailed(clientMessageId, throwable.message) }
+            .onFailure { markImagePendingFailed(clientMessageId, null) }
     }
 
     private fun markImagePendingFailed(clientMessageId: String, message: String?) = updateState {
@@ -470,32 +497,18 @@ class CommunityChattingViewModel @Inject constructor(
     fun retryPendingMessage(clientMessageId: String) = viewModelScope.launch {
         val pending = uiState.value.pendingMessages[clientMessageId] ?: return@launch
 
-        if (chatRepository.connectionState.value != CommunityChatConnectionState.CONNECTED) {
-            reconnectJob?.cancel()
-            reconnectJob = null
-            manualReconnectInProgress = true
-            chatRepository.disconnect()
-            runCatching { chatRepository.connect() }
-            val connected = withTimeoutOrNull(7_000) {
-                chatRepository.connectionState.first {
-                    it == CommunityChatConnectionState.CONNECTED
-                }
-            } != null
-            manualReconnectInProgress = false
-
-            if (!connected) {
-                updateState {
-                    copy(
-                        pendingMessages = pendingMessages + (
-                            clientMessageId to pending.copy(
-                                error = AppStrings.CHAT_RETRY_DISCONNECTED,
-                            )
+        if (!ensureConnected()) {
+            updateState {
+                copy(
+                    pendingMessages = pendingMessages + (
+                        clientMessageId to pending.copy(
+                            error = AppStrings.CHAT_RETRY_DISCONNECTED,
                         )
                     )
-                }
-                ensureReconnectLoop()
-                return@launch
+                )
             }
+            emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_RETRY_DISCONNECTED))
+            return@launch
         }
 
         updateState { copy(pendingMessages = pendingMessages - clientMessageId) }
@@ -523,6 +536,7 @@ class CommunityChattingViewModel @Inject constructor(
                                 )
                             )
                         }
+                        scheduleAckTimeout(newClientMessageId)
                     }
                     .onFailure {
                         updateState { copy(pendingMessages = pendingMessages + (clientMessageId to pending)) }
@@ -534,6 +548,58 @@ class CommunityChattingViewModel @Inject constructor(
                 mentionedMemberIds = pending.mentionedMemberIds,
                 replyToId = pending.replyToId,
             )
+        }
+    }
+
+    /** 연결돼 있으면 true, 아니면 재연결을 시도해 최대 7초 기다린다. 끝내 실패하면 자동 재연결 루프를 시작하고 false. */
+    private suspend fun ensureConnected(): Boolean {
+        if (chatRepository.connectionState.value == CommunityChatConnectionState.CONNECTED) return true
+        val startedHere = !manualReconnectInProgress
+        if (startedHere) {
+            reconnectJob?.cancel()
+            reconnectJob = null
+            manualReconnectInProgress = true
+            chatRepository.disconnect()
+            runCatching { chatRepository.connect() }
+        }
+        val connected = withTimeoutOrNull(MANUAL_RECONNECT_TIMEOUT_MILLIS) {
+            chatRepository.connectionState.first {
+                it == CommunityChatConnectionState.CONNECTED
+            }
+        } != null
+        if (startedHere) manualReconnectInProgress = false
+        if (!connected) ensureReconnectLoop()
+        return connected
+    }
+
+    /** 서버 확인(ack)이 오지 않은 전송 중 메시지를 실패 처리한다. clientMessageId 가 null 이면 대상 전체. */
+    private fun failUnacknowledgedPending(clientMessageId: String? = null) = updateState {
+        copy(
+            pendingMessages = pendingMessages.mapValues { (id, pending) ->
+                if (
+                    (clientMessageId == null || id == clientMessageId) &&
+                    pending.commandId.isNotBlank() &&
+                    !pending.acknowledged &&
+                    pending.error == null
+                ) {
+                    pending.copy(
+                        error = if (pending.type == CommunityMessageType.IMAGE) {
+                            AppStrings.CHAT_SEND_IMAGE_FAILED
+                        } else {
+                            AppStrings.CHAT_SEND_MESSAGE_FAILED
+                        },
+                    )
+                } else {
+                    pending
+                }
+            },
+        )
+    }
+
+    private fun scheduleAckTimeout(clientMessageId: String) {
+        viewModelScope.launch {
+            delay(PENDING_ACK_TIMEOUT_MILLIS)
+            failUnacknowledgedPending(clientMessageId)
         }
     }
 
@@ -656,11 +722,10 @@ class CommunityChattingViewModel @Inject constructor(
                             reconnectJob = null
                             reconcileLatestMessages()
                             markLatestMessageRead()
-                        } else if (
-                            connection == CommunityChatConnectionState.DISCONNECTED &&
-                            !manualReconnectInProgress
-                        ) {
-                            ensureReconnectLoop()
+                        } else if (connection == CommunityChatConnectionState.DISCONNECTED) {
+                            // 끊기기 전에 보낸 미확인 메시지는 더 이상 확인이 오지 않으므로 실패 처리한다.
+                            failUnacknowledgedPending()
+                            if (!manualReconnectInProgress) ensureReconnectLoop()
                         }
                     }
                 }
@@ -688,7 +753,12 @@ class CommunityChattingViewModel @Inject constructor(
                                 )
                             }
                         }
-                        emitEvent(CommunityChattingEvent.ShowError(error.message))
+                        // 자동/수동 재연결 중 시도마다 반복되는 소켓 연결 오류 토스트는 숨긴다(종료 시 별도 안내).
+                        val isReconnectNoise = error.code == WS_CONNECTION_ERROR_CODE &&
+                            (manualReconnectInProgress || reconnectJob?.isActive == true)
+                        if (!isReconnectNoise) {
+                            emitEvent(CommunityChattingEvent.ShowError(error.message))
+                        }
                     }
                 }
             }
@@ -792,7 +862,14 @@ class CommunityChattingViewModel @Inject constructor(
                 } else {
                     event.message
                 }
-                val withoutOld = messages.filterNot { it.messageId == receivedMessage.messageId }
+                // 수정·삭제 이벤트는 제자리에서 갱신하고, 새 메시지(CREATED)만 맨 앞(최신)에 넣는다.
+                val updatedMessages = when {
+                    messages.any { it.messageId == receivedMessage.messageId } ->
+                        messages.map { if (it.messageId == receivedMessage.messageId) receivedMessage else it }
+                    event.type == CommunityChatEvent.MessageChanged.Type.CREATED ->
+                        listOf(receivedMessage) + messages
+                    else -> messages
+                }
                 val isOwnMessage = receivedMessage.senderId == myMemberId || pending != null
                 val updatedSummaryCandidates = when (event.type) {
                     CommunityChatEvent.MessageChanged.Type.CREATED -> {
@@ -816,7 +893,7 @@ class CommunityChattingViewModel @Inject constructor(
                     }
                 }
                 copy(
-                    messages = listOf(receivedMessage) + withoutOld,
+                    messages = updatedMessages,
                     summaryCandidateMessages = updatedSummaryCandidates,
                     localImageUrisByMessageId = if (pending?.localUris?.isNotEmpty() == true) {
                         localImageUrisByMessageId + (receivedMessage.messageId to pending.localUris)
@@ -888,6 +965,10 @@ class CommunityChattingViewModel @Inject constructor(
             is ApiState.Success -> {
                 updateState {
                     val existingMessageIds = messages.mapTo(hashSetOf()) { it.messageId }
+                    val latestMessageIds = result.data.messages.mapTo(hashSetOf()) { it.messageId }
+                    // 현재 목록의 가장 오래된 메시지가 최신 페이지 밖이면 이미 이전 페이지를 불러온 상태라 커서를 유지한다.
+                    val hasLoadedOlderPages = messages.lastOrNull()
+                        ?.let { it.messageId !in latestMessageIds } == true
                     val newlyReceivedMessages = result.data.messages.filter { message ->
                         message.messageId !in existingMessageIds && message.senderId != myMemberId
                     }
@@ -899,8 +980,8 @@ class CommunityChattingViewModel @Inject constructor(
                         )
                             .distinctBy(CommunityThreadMessage::messageId)
                             .take(MAX_SUMMARY_MESSAGE_COUNT),
-                        hasMore = result.data.hasMore,
-                        nextBefore = result.data.nextBefore,
+                        hasMore = if (hasLoadedOlderPages) hasMore else result.data.hasMore,
+                        nextBefore = if (hasLoadedOlderPages) nextBefore else result.data.nextBefore,
                     )
                 }
                 logSummaryCandidates(
@@ -935,13 +1016,20 @@ class CommunityChattingViewModel @Inject constructor(
     private companion object {
         const val MAX_SUMMARY_MESSAGE_COUNT = 50
         const val MAX_RECONNECT_ATTEMPTS = 5
+        const val MANUAL_RECONNECT_TIMEOUT_MILLIS = 7_000L
+        const val PENDING_ACK_TIMEOUT_MILLIS = 10_000L
+        const val WS_CONNECTION_ERROR_CODE = "WS-CONNECTION"
         const val OWNERSHIP_TRANSFER_REQUIRED_CODE = "COMMUNITY-0041"
         const val SUMMARY_LOG_TAG = "CHAT_SUMMARY_CANDIDATES"
     }
 }
 
+private const val THREAD_NOT_FOUND_CODE = "COMMUNITY-0033"
+private const val THREAD_DELETED_CODE = "COMMUNITY-0037"
+
 private fun com.umc.domain.model.base.FailState.hasThreadUnavailableCode(): Boolean =
-    code == "404" || code.endsWith("-404")
+    code == "404" || code.endsWith("-404") ||
+        code == THREAD_NOT_FOUND_CODE || code == THREAD_DELETED_CODE
 
 private fun createInitialChattingState(savedStateHandle: SavedStateHandle): CommunityChattingState {
     val threadId = savedStateHandle.get<String>("threadId").orEmpty()

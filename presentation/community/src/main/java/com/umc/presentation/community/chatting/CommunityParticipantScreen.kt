@@ -44,6 +44,8 @@ import com.umc.component.R
 import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UDialog
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
@@ -72,6 +74,8 @@ internal fun CommunityParticipantScreen(
     onViewProfile: (String) -> Unit,
     onKickMember: (String) -> Unit,
     onTransferOwnership: (String) -> Unit,
+    toastData: UToastData? = null,
+    onToastDismiss: () -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
     var pendingKickMember by remember { mutableStateOf<CommunityThreadMember?>(null) }
@@ -85,6 +89,13 @@ internal fun CommunityParticipantScreen(
 
     Scaffold(
         containerColor = white(),
+        snackbarHost = {
+            UToastHost(
+                data = toastData,
+                onDismiss = onToastDismiss,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+        },
         topBar = {
             Surface(color = white()) {
                 Row(

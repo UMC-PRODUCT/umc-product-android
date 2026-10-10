@@ -296,7 +296,13 @@ fun CommunityChattingScreen(
             return@LaunchedEffect
         }
 
-        val newMessages = state.messages.filter { it.messageId !in knownMessageIds }
+        // messages 는 최신순이라 알려진 메시지보다 앞쪽에 추가된 것만 새 메시지다(이전 페이지는 뒤쪽에 붙는다).
+        val firstKnownIndex = state.messages.indexOfFirst { it.messageId in knownMessageIds }
+        val newMessages = if (firstKnownIndex < 0) {
+            state.messages.filter { it.messageId !in knownMessageIds }
+        } else {
+            state.messages.take(firstKnownIndex)
+        }
         knownMessageIds = currentIds
         if (newMessages.isEmpty()) return@LaunchedEffect
 
@@ -424,7 +430,8 @@ fun CommunityChattingScreen(
                     },
                     onSend = {
                         onSend(replyingMessage?.messageId)
-                        replyingMessage = null
+                        // 글자 수 초과로 전송이 거절되면 답장 대상을 유지한다.
+                        if (!isCommunityChatMessageTooLong(state.draft)) replyingMessage = null
                     },
                     onCancelReply = {
                         replyingMessage = null
@@ -691,6 +698,8 @@ fun CommunityChattingScreen(
             onViewProfile = onViewParticipantProfile,
             onKickMember = onKickMember,
             onTransferOwnership = onTransferOwnership,
+            toastData = toastData,
+            onToastDismiss = onToastDismiss,
         )
     }
 }
@@ -1350,6 +1359,7 @@ private fun OtherMessage(
                         message = message,
                         imageUris = imageUris,
                         isMine = false,
+                        onLongClick = onLongClick,
                         modifier = Modifier
                             .widthIn(max = 270.dp)
                             .combinedClickable(onClick = {}, onLongClick = onLongClick)
@@ -1386,6 +1396,7 @@ private fun MineMessage(
                 message = message,
                 imageUris = imageUris,
                 isMine = true,
+                onLongClick = onLongClick,
                 modifier = Modifier
                     .widthIn(max = 285.dp)
                     .combinedClickable(onClick = {}, onLongClick = onLongClick)
@@ -1398,12 +1409,14 @@ private fun MineMessage(
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun MessageBubbleContent(
     message: CommunityThreadMessage,
     imageUris: List<String> = emptyList(),
     isMine: Boolean,
     modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
 ) {
     var imageViewerIndex by remember(message.messageId) { mutableStateOf<Int?>(null) }
     val foreground = if (isMine) white() else grey950()
@@ -1434,7 +1447,7 @@ private fun MessageBubbleContent(
                 modifier = modifier
                     .size(width = 220.dp, height = 180.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .clickable { imageViewerIndex = 0 },
+                    .combinedClickable(onClick = { imageViewerIndex = 0 }, onLongClick = onLongClick),
                 contentScale = ContentScale.Crop,
             )
         } else if (models.isNotEmpty()) {
@@ -1442,6 +1455,7 @@ private fun MessageBubbleContent(
                 models = models,
                 modifier = modifier,
                 onImageClick = { imageViewerIndex = it },
+                onLongClick = onLongClick,
             )
         } else {
             Box(
@@ -1501,37 +1515,39 @@ private fun MessageBubbleContent(
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun ChatImageGrid(
     models: List<String>,
     modifier: Modifier = Modifier,
     onImageClick: (Int) -> Unit = {},
+    onLongClick: (() -> Unit)? = null,
 ) {
     val images = models.take(COMMUNITY_CHAT_MAX_IMAGE_COUNT)
     val containerModifier = modifier.width(220.dp).clip(RoundedCornerShape(16.dp))
 
     when (images.size) {
         0 -> Unit
-        1 -> ChatGridImage(images.first(), containerModifier.height(180.dp)) { onImageClick(0) }
+        1 -> ChatGridImage(images.first(), containerModifier.height(180.dp), onLongClick) { onImageClick(0) }
         2 -> Row(
             modifier = containerModifier.height(160.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             images.forEachIndexed { index, model ->
-                ChatGridImage(model, Modifier.weight(1f).fillMaxHeight()) { onImageClick(index) }
+                ChatGridImage(model, Modifier.weight(1f).fillMaxHeight(), onLongClick) { onImageClick(index) }
             }
         }
         3 -> Row(
             modifier = containerModifier.height(220.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            ChatGridImage(images.first(), Modifier.weight(1f).fillMaxHeight()) { onImageClick(0) }
+            ChatGridImage(images.first(), Modifier.weight(1f).fillMaxHeight(), onLongClick) { onImageClick(0) }
             Column(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 images.drop(1).forEachIndexed { index, model ->
-                    ChatGridImage(model, Modifier.weight(1f).fillMaxWidth()) { onImageClick(index + 1) }
+                    ChatGridImage(model, Modifier.weight(1f).fillMaxWidth(), onLongClick) { onImageClick(index + 1) }
                 }
             }
         }
@@ -1546,7 +1562,7 @@ private fun ChatImageGrid(
                 ) {
                     rowModels.forEachIndexed { columnIndex, model ->
                         val imageIndex = rowIndex * 2 + columnIndex
-                        ChatGridImage(model, Modifier.weight(1f).aspectRatio(1f)) {
+                        ChatGridImage(model, Modifier.weight(1f).aspectRatio(1f), onLongClick) {
                             onImageClick(imageIndex)
                         }
                     }
@@ -1556,12 +1572,18 @@ private fun ChatImageGrid(
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun ChatGridImage(model: String, modifier: Modifier, onClick: () -> Unit = {}) {
+private fun ChatGridImage(
+    model: String,
+    modifier: Modifier,
+    onLongClick: (() -> Unit)? = null,
+    onClick: () -> Unit = {},
+) {
     AsyncImage(
         model = model,
         contentDescription = AppStrings.CHAT_CD_IMAGE,
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
         contentScale = ContentScale.Crop,
     )
 }
