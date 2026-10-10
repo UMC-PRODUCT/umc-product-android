@@ -3,7 +3,7 @@ package com.umc.component.util
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
+import java.time.ZoneOffset
 import java.util.Locale
 
 /**시간 및 날짜 관련 파싱 함수 + 로드 함수들이 정의된 Util 입니다.**/
@@ -13,13 +13,13 @@ object UTimeFormat{
 
     /**파싱**/
 
-    /**LocalDate를 시스템 기본 타임존 기준 밀리초(Long)로 변환**/
+    /**LocalDate를 UTC 자정 기준 밀리초(Long)로 변환 (Material3 DatePicker 는 millis 를 UTC 날짜로 해석함)**/
     fun LocalDate.toMillis(): Long =
-        this.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        this.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 
-    /** 밀리초(Long)를 시스템 기본 타임존 기준 LocalDate로 변환**/
+    /** Material3 DatePicker 의 UTC 기준 밀리초(Long)를 LocalDate로 변환**/
     fun Long.toLocalDate(): LocalDate =
-        Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
+        Instant.ofEpochMilli(this).atZone(ZoneOffset.UTC).toLocalDate()
 
     /** 24시간 형식 ("14:00") -> 12시간 AM/PM 형식 ("오후 02:00")으로 변환**/
     fun formatToAmPm(time: String): String {

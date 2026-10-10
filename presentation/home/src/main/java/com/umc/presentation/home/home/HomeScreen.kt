@@ -75,6 +75,7 @@ import com.umc.component.theme.indigo600
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import com.umc.component.theme.grey400
+import com.umc.component.theme.grey500
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
@@ -154,7 +155,8 @@ fun HomeRoute(
         onNoticeClick = viewModel::onClickNotice,
         onShareCardClick = viewModel::onClickCardShare,
         onProfileRetryClick = viewModel::getUserInfo,
-        onScheduleRetryClick = viewModel::retryScheduleMonth
+        onScheduleRetryClick = viewModel::retryScheduleMonth,
+        onScheduleRefresh = viewModel::retryScheduleMonth
     )
 }
 
@@ -172,6 +174,7 @@ fun HomeScreen(
     onShareCardClick: () -> Unit,
     onProfileRetryClick: () -> Unit,
     onScheduleRetryClick: () -> Unit,
+    onScheduleRefresh: () -> Unit,
 ) {
 
     //LazyColumn을 사용하여 전체 스크롤 관리(중첩 스크롤 방지)
@@ -319,12 +322,19 @@ fun HomeScreen(
 
                     else {
                         //리스트 모드
+                        // 상세/등록에서 돌아오거나 달력에서 전환될 때 마지막으로 본 달의 일정을 다시 받는다
+                        // (달력 모드는 HomeCalendar 의 월 변경 효과가 같은 역할을 한다)
+                        LaunchedEffect(Unit) { onScheduleRefresh() }
+
                         if (uiState.isScheduleLoadFailed && uiState.allPlans.isEmpty()) {
                             HomeLoadError(
                                 title = AppStrings.HOME_SCHEDULE_LOAD_ERROR_TITLE,
                                 onRetry = onScheduleRetryClick
                             )
                             Spacer(modifier = Modifier.height(8.dp))
+                        } else if (uiState.allPlans.isEmpty()) {
+                            // 조회 실패가 아닌데 일정이 없으면 빈 화면 대신 안내
+                            HomePlanEmpty()
                         }
                         uiState.allPlans.forEach { plan ->
 
@@ -352,6 +362,38 @@ fun HomeScreen(
 }
 
 
+
+/** 리스트 모드에서 일정이 하나도 없을 때 보여주는 안내 **/
+@Composable
+private fun HomePlanEmpty() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_calendar),
+            contentDescription = null,
+            tint = grey400(),
+            modifier = Modifier.size(32.dp)
+        )
+
+        UText(
+            modifier = Modifier.padding(top = 12.dp),
+            text = AppStrings.HOME_PLAN_EMPTY_TITLE,
+            style = UmcTypographyTokens.HeadlineBold,
+            color = grey600()
+        )
+
+        UText(
+            modifier = Modifier.padding(top = 6.dp),
+            text = AppStrings.HOME_PLAN_EMPTY_CONTENT,
+            style = UmcTypographyTokens.Subheadline,
+            color = grey500()
+        )
+    }
+}
 
 /**
  * 홈 조회 실패 안내 카드 (제목 + 설명 + 다시 시도하기)
@@ -996,6 +1038,7 @@ private fun HomeScreenPreview() {
         onShareCardClick = {},
         onProfileRetryClick = {},
         onScheduleRetryClick = {},
+        onScheduleRefresh = {},
     )
 }
 
@@ -1018,6 +1061,7 @@ private fun HomeScreenLoadErrorPreview() {
         onShareCardClick = {},
         onProfileRetryClick = {},
         onScheduleRetryClick = {},
+        onScheduleRefresh = {},
     )
 }
 
@@ -1036,5 +1080,30 @@ private fun HomeScreenLoadingPreview() {
         onShareCardClick = {},
         onProfileRetryClick = {},
         onScheduleRetryClick = {},
+        onScheduleRefresh = {},
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenListEmptyPreview() {
+    HomeScreen(
+        uiState = HomeUiState(
+            profileLoadState = HomeLoadState.SUCCESS,
+            userType = UserType.ACTIVE,
+            viewMode = HomeViewMode.LIST,
+            allPlans = persistentListOf()
+        ),
+        onDateClick = {},
+        onMonthChange = {},
+        onChangeViewMode = {},
+        onNotificationClick = {},
+        onScheduleAddClick = {},
+        onScheduleDetailClick = {},
+        onNoticeClick = {},
+        onShareCardClick = {},
+        onProfileRetryClick = {},
+        onScheduleRetryClick = {},
+        onScheduleRefresh = {},
     )
 }

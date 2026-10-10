@@ -482,10 +482,12 @@ fun MainNavHost(
                 onBackClick = {navHostController.popBackStack()},
                 onNavigateToAttendSchedule = {
                     /**TODO. 일정 출석 페이지로 이동하기**/
+                    // 하단 탭 이동과 같은 스택([Home, Act])을 만들어 뒤로가기가 홈으로 돌아오게 한다
                     navHostController.navigate(MainDestination.Act){
                         popUpTo<MainDestination.Home>{
-                            inclusive = true
+                            inclusive = false
                         }
+                        launchSingleTop = true
                     }
                 },
                 onNavigateToEditSchedule = { scheduleId ->

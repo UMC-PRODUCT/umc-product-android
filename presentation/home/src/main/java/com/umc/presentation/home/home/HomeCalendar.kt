@@ -93,7 +93,7 @@ private val WEEK_DIVIDER_THICKNESS = 1.dp
  * HorizontalPager 기반 무한 스크롤 및 DatePicker 연동을 지원하는 월간 달력 컴포넌트입니다.
  * [주요 기능 및 작동 원리]:
  * 1. `initialPage = 5000`을 중앙(현재 월)으로 설정하여, 좌우 스와이프 시 과거/미래 월을 양방향으로 스크롤할 수 있습니다.
- * 2. `selectedDate` 변경 시 해당 월 페이지로 자동 애니메이션 스크롤(`animateScrollToPage`)되며,
+ * 2. DatePicker 에서 날짜를 확인하면 해당 월 페이지로 애니메이션 스크롤(`animateScrollToPage`)되며,
  *    페이지 이동 완료 시 `onMonthChange` 콜백을 발생시켜 해당 월의 일정 데이터(Event)를 재조회하도록 유도합니다.
  * 3. 화살표 버튼, 스와이프 gesture, 또는 중앙 타이틀("YYYY.MM") 클릭 시 뜨는 DatePicker를 통해 원하는 날짜로 빠르게 이동 가능합니다.
  * 4. 일요일(Red 컬러), 오늘 날짜 하이라이트, 선택된 날짜 테두리 강조, 일정 보유 날짜 하단 Dot 표시를 지원합니다.
@@ -137,27 +137,15 @@ fun HomeCalendar(
             onDateSelected = { date ->
                 onDateClick(date)
                 showDatePicker = false
+                // 같은 날짜를 다시 확인해도 선택한 달로 이동하도록 직접 스크롤한다.
+                // (selectedDate 변경 감지 효과는 첫 진입/복귀 때 보던 달을 오늘 달로 되돌려서 두지 않는다)
+                coroutineScope.launch {
+                    val diff = (date.year - YearMonth.now().year) * 12 + (date.monthValue - YearMonth.now().monthValue)
+                    pagerState.animateScrollToPage(initialPage + diff)
+                }
             },
             onDismiss = { showDatePicker = false }
         )
-    }
-
-    //외부 selectedDate 변경(DatePicker 등) 시 해당 월 Pager 페이지로 스크롤
-    // 첫 실행(처음 진입/상세·등록에서 복귀)은 건너뛴다. 이때 pager 는 보던 달로 복원돼 있는데
-    // selectedDate 는 기본값(오늘)이라 그대로 두면 보던 달이 오늘 달로 되돌아간다.
-    var skipInitialSelectedDateSync by remember { mutableStateOf(true) }
-    LaunchedEffect(selectedDate) {
-        if (skipInitialSelectedDateSync) {
-            skipInitialSelectedDateSync = false
-            return@LaunchedEffect
-        }
-        val targetMonth = YearMonth.from(selectedDate)
-        val currentMonth = YearMonth.from(LocalDate.now()).plusMonths((pagerState.currentPage - initialPage).toLong())
-
-        if (targetMonth != currentMonth) {
-            val diff = (targetMonth.year - YearMonth.now().year) * 12 + (targetMonth.monthValue - YearMonth.now().monthValue)
-            pagerState.animateScrollToPage(initialPage + diff)
-        }
     }
 
     //월 변경 감지 시 상위 화면으로 이벤트 전달 (일정 재조회용)

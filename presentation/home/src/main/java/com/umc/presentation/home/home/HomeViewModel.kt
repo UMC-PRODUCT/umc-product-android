@@ -58,6 +58,9 @@ class HomeViewModel @Inject constructor(
     //마지막으로 일정을 요청한 달 (실패 후 재시도용)
     private var requestedMonth: YearMonth = YearMonth.now()
 
+    //월별 일정 요청 순번 (월을 빠르게 넘길 때 늦게 도착한 이전 달 응답이 최신 달 화면을 덮어쓰지 않게 한다)
+    private var scheduleRequestSeq = 0
+
     init {
         val today = UTimeFormat.getToday()
 
@@ -304,11 +307,14 @@ class HomeViewModel @Inject constructor(
      */
     fun getScheduleMonth(year: Int, month: Int, todayCheck: Boolean = false) {
         requestedMonth = YearMonth.of(year, month)
+        val requestSeq = ++scheduleRequestSeq
 
         viewModelScope.launch {
             resultResponse(
                 response = getScheduleMonthUseCase(year, month),
                 successCallback = { scheduleMonth ->
+                    // 더 최신 요청이 시작된 뒤 도착한 응답은 버린다
+                    if (requestSeq != scheduleRequestSeq) return@resultResponse
 
                     // 기간제 원본 일정을 날짜별 개별 아이템 리스트로 평탄화(Flatten)
                     val planItems = convertToPlanItems(scheduleMonth)
@@ -335,6 +341,8 @@ class HomeViewModel @Inject constructor(
                 },
                 errorCallback = { message ->
                     Log.d("log_home", "월별 일정 조회 실패: $message")
+                    // 늦게 도착한 이전 달의 실패가 최신 달 화면을 비우지 않게 한다
+                    if (requestSeq != scheduleRequestSeq) return@resultResponse
                     // 실패를 상태로 남기고, 이전 달 일정/점이 새 달 아래에 남지 않게 비운다
                     updateState {
                         copy(
