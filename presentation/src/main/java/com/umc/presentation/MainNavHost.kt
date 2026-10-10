@@ -677,6 +677,12 @@ fun MainNavHost(
 
                     navHostController.popBackStack()
                 },
+                onDeleteSuccess = {
+                    // 채팅방에서 진입했어도 삭제된 채팅방을 건너뛰고 커뮤니티 목록으로 복귀
+                    if (!navHostController.popBackStack<MainDestination.Community>(inclusive = false)) {
+                        navHostController.popBackStack()
+                    }
+                },
             )
         }
 
