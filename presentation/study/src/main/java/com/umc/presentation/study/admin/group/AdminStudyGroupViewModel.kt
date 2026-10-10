@@ -305,6 +305,17 @@ class AdminStudyGroupViewModel @Inject constructor(
                     uiState.value.deleteTargetItem
                         ?: return
 
+                // 삭제 요청 진행 중 연속 탭으로 DELETE 가 중복 전송되는 것 방지
+                if (uiState.value.isDeleting) {
+                    return
+                }
+
+                updateState {
+                    copy(
+                        isDeleting = true
+                    )
+                }
+
                 viewModelScope.launch {
                     when (
                         val result = deleteStudyGroupUseCase(
@@ -318,7 +329,8 @@ class AdminStudyGroupViewModel @Inject constructor(
                             // 삭제 Dialog 닫기
                             updateState {
                                 copy(
-                                    deleteTargetItem = null
+                                    deleteTargetItem = null,
+                                    isDeleting = false,
                                 )
                             }
 
@@ -336,6 +348,13 @@ class AdminStudyGroupViewModel @Inject constructor(
                          * 그룹 삭제 실패
                          */
                         is ApiState.Fail -> {
+                            // 실패 후 다시 시도할 수 있도록 중복 방지 상태 해제
+                            updateState {
+                                copy(
+                                    isDeleting = false
+                                )
+                            }
+
                             emitEvent(
                                 AdminStudyGroupEvent.ShowToast(
                                     "삭제에 실패했어요."
@@ -497,12 +516,8 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                     /**
                      * 멤버 추가/삭제 중 하나라도 실패한 경우
-                     * 성공 처리하지 않습니다.
+                     * 실패 토스트를 띄우고 목록을 다시 불러옵니다.
                      */
-                    if (hasFailed) {
-                        return@launch
-                    }
-
                     // 멤버 수정 BottomSheet 닫기
                     updateState {
                         copy(
@@ -511,12 +526,16 @@ class AdminStudyGroupViewModel @Inject constructor(
                         )
                     }
 
-                    // 변경된 멤버 목록 반영
+                    // 일부만 반영됐을 수 있으므로 성공/실패 모두 실제 상태로 목록 갱신
                     loadManagedStudyGroups()
 
                     emitEvent(
                         AdminStudyGroupEvent.ShowToast(
-                            "스터디원이 수정됐어요."
+                            if (hasFailed) {
+                                "스터디원 수정에 실패했어요."
+                            } else {
+                                "스터디원이 수정됐어요."
+                            }
                         )
                     )
                 }

@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
@@ -149,6 +150,19 @@ fun GroupCreatePartLeaderBottomSheet(
                     .weight(1f)
             ) {
                 when {
+                    // 검색이 끝났는데 결과가 없거나 검색에 실패한 경우
+                    state.isSearching &&
+                            !state.isLoading &&
+                            state.searchResults.isEmpty() -> {
+                        GroupCreateEmptyContent(
+                            text = if (state.isSearchFailed) {
+                                AppStrings.NOTICE_SEARCH_ERROR
+                            } else {
+                                AppStrings.NOTICE_SEARCH_EMPTY_TITLE
+                            }
+                        )
+                    }
+
                     // 검색 중인 경우 검색 결과 표시
                     state.isSearching -> {
                         GroupCreatePartLeaderSearchResults(

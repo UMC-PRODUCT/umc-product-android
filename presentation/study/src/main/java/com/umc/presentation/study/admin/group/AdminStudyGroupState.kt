@@ -80,6 +80,13 @@ data class AdminStudyGroupState(
     val deleteTargetItem: AdminStudyGroupItemUiModel? = null,
 
     /**
+     * 그룹 삭제 요청 진행 여부
+     *
+     * true이면 삭제하기 버튼을 다시 눌러도 요청을 중복 전송하지 않습니다.
+     */
+    val isDeleting: Boolean = false,
+
+    /**
      * 현재 멤버를 수정 중인 스터디 그룹
      *
      * 값이 존재하면 멤버 수정 BottomSheet를 표시합니다.

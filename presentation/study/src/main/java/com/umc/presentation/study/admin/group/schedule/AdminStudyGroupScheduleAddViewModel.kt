@@ -3,6 +3,7 @@ package com.umc.presentation.study.admin.group.schedule
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.request.organization.CreateStudyGroupScheduleRequest
@@ -476,6 +477,20 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
             } else {
                 null
             }
+
+        // 체크인 시작이 일정 시작과 같거나 늦으면 서버가 일반 시간 오류로 거절하므로 요청 전에 막음
+        // (둘 다 UTC ISO 형식 문자열이라 문자열 비교가 곧 시각 비교)
+        if (
+            attendancePolicy != null &&
+            attendancePolicy.checkInStartAt >= startsAt
+        ) {
+            emitEvent(
+                AdminStudyGroupScheduleEvent.ShowToast(
+                    AppStrings.HOME_PLAN_ADD_ATTENDANCE_CHECKIN_AFTER_START
+                )
+            )
+            return
+        }
 
         /**
          * 일정 생성 API 요청 객체
