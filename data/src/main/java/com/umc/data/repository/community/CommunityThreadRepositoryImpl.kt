@@ -1,11 +1,13 @@
 package com.umc.data.repository.community
 
 import com.google.gson.Gson
+import com.google.gson.stream.MalformedJsonException
 import com.umc.domain.model.base.ApiResponse
 import retrofit2.HttpException
 import com.umc.data.api.ChangeMemberRoleRequest
 import com.umc.data.api.CommunityThreadApi
 import com.umc.data.api.ReportMessageRequest
+import com.umc.data.dataSource.base.NETWORK_ERROR_MESSAGE
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.mapper.community.toChatDomain
 import com.umc.data.mapper.community.toDomain
@@ -23,7 +25,10 @@ import com.umc.domain.model.community.thread.CreateCommunityThread
 import com.umc.domain.model.community.thread.UpdateCommunityThread
 import com.umc.domain.model.base.map
 import com.umc.domain.repository.community.CommunityThreadRepository
+import java.io.EOFException
+import java.io.IOException
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 class CommunityThreadRepositoryImpl @Inject constructor(
     private val communityThreadApi: CommunityThreadApi,
@@ -35,7 +40,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
         offset: Int,
         limit: Int,
     ): Result<CommunityThreadPage> {
-        return runCatching {
+        return communityCall(fallback = "스레드 목록을 불러오지 못했어요.") {
             val response = communityThreadApi.getCommunityThreads(
                 filter = filter,
                 query = query,
@@ -54,7 +59,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
     override suspend fun getCommunityThreadDetail(
         threadId: String,
     ): Result<CommunityThreadDetail> {
-        return runCatching {
+        return communityCall(fallback = "스레드 정보를 불러오지 못했어요.") {
             val response = communityThreadApi.getCommunityThreadDetail(
                 threadId = threadId,
             )
@@ -73,7 +78,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
         offset: Int,
         limit: Int,
     ): Result<CommunityInvitableMemberPage> {
-        return runCatching {
+        return communityCall(fallback = "멤버 목록을 불러오지 못했어요.") {
             val response =
                 communityThreadApi.getInvitableCommunityThreadMembers(
                     threadId = threadId,
@@ -94,7 +99,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
         threadId: String,
         memberIds: List<Long>,
     ): Result<CommunityThreadInvitation> {
-        return runCatching {
+        return communityCall(fallback = "멤버를 초대하지 못했어요.") {
             val response =
                 communityThreadApi.inviteCommunityThreadMembers(
                     threadId = threadId,
@@ -118,7 +123,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
         icon: String,
         memberIds: List<Long>,
     ): Result<CommunityThreadDetail> {
-        return runCatching {
+        return communityCall(fallback = "스레드를 만들지 못했어요.") {
             val response = communityThreadApi.createCommunityThread(
                 request = CreateCommunityThreadRequest(
                     title = title,
@@ -144,7 +149,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
         category: String,
         icon: String,
     ): Result<CommunityThreadDetail> {
-        return runCatching {
+        return communityCall(fallback = "스레드를 수정하지 못했어요.") {
 
             val response =
                 communityThreadApi.updateCommunityThread(
@@ -164,7 +169,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
     override suspend fun leaveCommunityThread(
         threadId: String,
     ): Result<Unit> {
-        return try {
+        return communityCall(fallback = "스레드에서 나가지 못했어요.") {
             val response =
                 communityThreadApi.leaveCommunityThread(
                     threadId = threadId,
@@ -176,24 +181,14 @@ class CommunityThreadRepositoryImpl @Inject constructor(
                 }
             }
 
-            Result.success(Unit)
-        } catch (e: HttpException) {
-            Result.failure(
-                Exception(
-                    e.getServerMessage(
-                        fallback = "스레드에서 나가지 못했어요.",
-                    )
-                )
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
+            Unit
         }
     }
 
     override suspend fun deleteCommunityThread(
         threadId: String,
     ): Result<CommunityThreadDetail> {
-        return runCatching {
+        return communityCall(fallback = "스레드를 삭제하지 못했어요.") {
             val response = communityThreadApi.deleteCommunityThread(
                 threadId = threadId,
             )
@@ -208,29 +203,17 @@ class CommunityThreadRepositoryImpl @Inject constructor(
     override suspend fun muteCommunityThread(
         threadId: String,
     ): Result<CommunityThreadDetail> {
-        return try {
+        return communityCall(fallback = "알림 설정을 변경하지 못했어요.") {
             val response =
                 communityThreadApi.muteCommunityThread(
                     threadId = threadId
                 )
 
-            Result.success(
-                requireNotNull(response.result) {
-                    response.message.ifBlank {
-                        "알림 설정 응답 데이터가 없어요."
-                    }
-                }.toDomain()
-            )
-        } catch (e: HttpException) {
-            Result.failure(
-                Exception(
-                    e.getServerMessage(
-                        fallback = "알림 설정을 변경하지 못했어요."
-                    )
-                )
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
+            requireNotNull(response.result) {
+                response.message.ifBlank {
+                    "알림 설정 응답 데이터가 없어요."
+                }
+            }.toDomain()
         }
     }
 
@@ -238,29 +221,17 @@ class CommunityThreadRepositoryImpl @Inject constructor(
     override suspend fun unmuteCommunityThread(
         threadId: String,
     ): Result<CommunityThreadDetail> {
-        return try {
+        return communityCall(fallback = "알림 설정을 변경하지 못했어요.") {
             val response =
                 communityThreadApi.unmuteCommunityThread(
                     threadId = threadId
                 )
 
-            Result.success(
-                requireNotNull(response.result) {
-                    response.message.ifBlank {
-                        "알림 설정 응답 데이터가 없어요."
-                    }
-                }.toDomain()
-            )
-        } catch (e: HttpException) {
-            Result.failure(
-                Exception(
-                    e.getServerMessage(
-                        fallback = "알림 설정을 변경하지 못했어요."
-                    )
-                )
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
+            requireNotNull(response.result) {
+                response.message.ifBlank {
+                    "알림 설정 응답 데이터가 없어요."
+                }
+            }.toDomain()
         }
     }
 
@@ -268,7 +239,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
     override suspend fun pinCommunityThread(
         threadId: String,
     ): Result<CommunityThreadDetail> {
-        return runCatching {
+        return communityCall(fallback = "스레드 고정 상태를 변경하지 못했어요.") {
 
             val response =
                 communityThreadApi.pinCommunityThread(
@@ -282,7 +253,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
     override suspend fun unpinCommunityThread(
         threadId: String,
     ): Result<CommunityThreadDetail> {
-        return runCatching {
+        return communityCall(fallback = "스레드 고정 상태를 변경하지 못했어요.") {
 
             val response =
                 communityThreadApi.unpinCommunityThread(
@@ -297,7 +268,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
         threadId: String,
         memberId: String,
     ): Result<Unit> {
-        return runCatching {
+        return communityCall(fallback = "멤버를 삭제하지 못했어요.") {
             val response =
                 communityThreadApi.kickCommunityThreadMember(
                     threadId = threadId,
@@ -323,7 +294,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
         offset: Int,
         limit: Int,
     ): Result<CommunityThreadMemberPage> {
-        return runCatching {
+        return communityCall(fallback = "멤버 목록을 불러오지 못했어요.") {
             val response =
                 communityThreadApi.getCommunityThreadMembers(
                     threadId = threadId,
@@ -455,6 +426,35 @@ class CommunityThreadRepositoryImpl @Inject constructor(
     override suspend fun reportMessage(messageId: String, reason: CommunityMessageReportReason) =
         apiCall { communityThreadApi.reportMessage(messageId, ReportMessageRequest(reason)) }
 
+
+    /**
+     * 커뮤니티 스레드 API 호출을 감싸 사용자에게 그대로 보여줘도 되는 한글 메시지의 실패로 바꾼다.
+     * ViewModel 이 `throwable.message` 를 토스트에 그대로 쓰므로 OkHttp/JVM 영문 원문이 새지 않게 한다.
+     */
+    private suspend inline fun <T> communityCall(
+        fallback: String,
+        block: () -> T,
+    ): Result<T> {
+        return try {
+            Result.success(block())
+        } catch (e: Throwable) {
+            Result.failure(e.toUserFacingException(fallback))
+        }
+    }
+
+    private fun Throwable.toUserFacingException(fallback: String): Exception {
+        return when (this) {
+            is CancellationException -> throw this
+            is HttpException -> Exception(getServerMessage(fallback))
+            // 응답 본문 변환 실패는 연결 문제가 아니므로 네트워크 문구를 쓰지 않는다.
+            is MalformedJsonException, is EOFException -> Exception(fallback)
+            is IOException -> Exception(NETWORK_ERROR_MESSAGE)
+            // 서버가 내려준 한글 메시지(requireNotNull 등)만 살리고 영문 원문은 fallback 으로 대체한다.
+            else -> Exception(
+                message?.takeIf { msg -> msg.any { it in '가'..'힣' } } ?: fallback
+            )
+        }
+    }
 
     private fun HttpException.getServerMessage(
         fallback: String,

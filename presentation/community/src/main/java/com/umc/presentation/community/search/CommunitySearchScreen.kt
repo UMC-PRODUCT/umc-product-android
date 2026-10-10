@@ -15,8 +15,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.grey000
+import com.umc.presentation.community.component.CommunityErrorContent
+import com.umc.presentation.community.component.CommunityLoadingContent
 import com.umc.presentation.community.component.CommunityThreadItem
 import com.umc.presentation.community.component.search.CommunityRecentSearchContent
 import com.umc.presentation.community.component.search.CommunitySearchBar
@@ -131,6 +135,23 @@ fun CommunitySearchScreen(
                 )
             }
 
+            // 검색 응답을 기다리는 중에는 결과 없음 문구 대신 로딩 표시
+            state.hasSearched && state.isLoading -> {
+                CommunityLoadingContent()
+            }
+
+            // 검색 요청이 실패했을 때는 결과 없음과 구분해 다시 시도 제공
+            state.hasSearched && state.errorMessage != null -> {
+                CommunityErrorContent(
+                    errorMessage = state.errorMessage,
+                    onRetryClick = {
+                        keyboardController?.hide()
+                        onAction(CommunitySearchAction.OnRetryClick)
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+
             // 검색을 실행했고 결과가 없을 때
             state.hasSearched && state.searchResults.isEmpty() -> {
                 CommunitySearchEmptyContent(
@@ -191,5 +212,41 @@ private fun CommunitySearchResultList(
                 modifier = Modifier.padding(bottom = 8.dp),
             )
         }
+    }
+}
+
+/**
+ * 검색 응답 대기 중 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunitySearchScreenLoadingPreview() {
+    UmcTheme {
+        CommunitySearchScreen(
+            state = CommunitySearchState(
+                query = "스터디",
+                hasSearched = true,
+                isLoading = true,
+            ),
+            onAction = {},
+        )
+    }
+}
+
+/**
+ * 검색 요청 실패 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunitySearchScreenErrorPreview() {
+    UmcTheme {
+        CommunitySearchScreen(
+            state = CommunitySearchState(
+                query = "스터디",
+                hasSearched = true,
+                errorMessage = "네트워크 연결을 확인하고 다시 시도해주세요.",
+            ),
+            onAction = {},
+        )
     }
 }
