@@ -38,9 +38,3 @@ data class FailState(
 }
 
 const val DEFAULT_ERROR = false
-
-const val NETWORK_ERROR_CODE = "NETWORK_ERROR"
-const val NETWORK_ERROR_MESSAGE = "네트워크 연결을 확인하고 다시 시도해주세요."
-
-val FailState.isNetworkError: Boolean
-    get() = code == NETWORK_ERROR_CODE

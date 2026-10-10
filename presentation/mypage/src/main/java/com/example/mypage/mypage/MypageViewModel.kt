@@ -7,6 +7,7 @@ import com.kakao.sdk.auth.TokenManagerProvider
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.TermsType
@@ -224,7 +225,12 @@ class MypageViewModel @Inject constructor(
                     }
                 },
                 errorCallback = { failState ->
-                    emitEvent(MypageEvent.ShowErrorToast(failState.message))
+                    // 표준 응답이 아닌 실패(게이트웨이 HTML 등)는 message 가 비거나 영문일 수 있어 기본 문구로 보정한다.
+                    emitEvent(
+                        MypageEvent.ShowErrorToast(
+                            failState.message.ifBlank { AppStrings.MYPAGE_DELETE_USER_FAIL }
+                        )
+                    )
                 }
             )
         }
