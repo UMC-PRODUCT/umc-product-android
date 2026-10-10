@@ -46,6 +46,8 @@ data class NoticeVoteOption(
 
 data class NoticeImage(
     val id: Long = -1L,
+    /** 파일 업로드 API가 준 파일 ID. 이미지 교체(PATCH)에는 행 id가 아니라 이 값을 보내야 한다 */
+    val fileId: String = "",
     val url: String = "",
     val displayOrder: Int = 0
 )

@@ -315,6 +315,10 @@ fun MainNavHost(
                 navigateToEdit = { noticeId ->
                     navHostController.navigate(MainDestination.NoticeWrite(noticeId))
                 },
+                onDeleted = {
+                    navHostController.notifyNoticeListRefresh()
+                    navHostController.popBackStack()
+                },
             )
         }
 

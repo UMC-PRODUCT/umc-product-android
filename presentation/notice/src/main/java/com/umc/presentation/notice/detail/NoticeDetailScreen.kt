@@ -89,6 +89,7 @@ fun NoticeDetailRoute(
     viewModel: NoticeDetailViewModel = hiltViewModel(),
     navigateToBack: () -> Unit = {},
     navigateToEdit: (Long) -> Unit = {},
+    onDeleted: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -104,6 +105,7 @@ fun NoticeDetailRoute(
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
             NoticeDetailEvent.MoveBack -> navigateToBack()
+            NoticeDetailEvent.Deleted -> onDeleted()
             is NoticeDetailEvent.MoveToEdit -> navigateToEdit(event.noticeId)
             is NoticeDetailEvent.ShowToast -> {
                 Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()

@@ -186,7 +186,7 @@ class AdminNoticeViewModel @Inject constructor(
 
         if (state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
 
-        updateState { copy(isPageLoading = true) }
+        updateState { copy(isPageLoading = true, errorMessage = null) }
 
         val pageToFetch = if (isRefresh) 0 else state.currentPage
 
@@ -213,12 +213,16 @@ class AdminNoticeViewModel @Inject constructor(
                         },
                         currentPage = pageToFetch + 1,
                         isPageLoading = false,
+                        hasLoaded = true,
                         isLastPage = !noticeSearch.hasNext,
                     )
                 }
             },
-            errorCallback = {
-                updateState { copy(isPageLoading = false) }
+            errorCallback = { fail ->
+                // 실패 사유를 남기지 않으면 "0건" 빈 상태와 구분되지 않는다
+                updateState {
+                    copy(isPageLoading = false, hasLoaded = true, errorMessage = fail.message)
+                }
             }
         )
     }
@@ -243,10 +247,17 @@ data class AdminNoticeUiState(
     val isPageLoading: Boolean = false,
     val isLastPage: Boolean = false,
     val readNoticeIds: ImmutableSet<Long> = persistentSetOf(),
+    // 첫 조회가 끝났는지 (끝나기 전의 빈 목록을 "0건"으로 오해하지 않기 위함)
+    val hasLoaded: Boolean = false,
+    val errorMessage: String? = null,
 ) : UiState {
-    // 접근 가능 + 로딩 아님 + 목록 비어있음 -> 빈 상태 노출
+    // 접근 가능 + 첫 조회 완료 + 로딩 아님 + 실패 아님 + 목록 비어있음 -> 빈 상태 노출
     val isEmpty: Boolean
-        get() = hasAccess && !isPageLoading && noticeList.isEmpty()
+        get() = hasAccess && hasLoaded && !isPageLoading && errorMessage == null && noticeList.isEmpty()
+
+    // 접근 가능 + 목록 비어있음 + 아직 조회 전이거나 조회 중 -> 로딩 표시
+    val isLoadingEmpty: Boolean
+        get() = hasAccess && noticeList.isEmpty() && errorMessage == null && (!hasLoaded || isPageLoading)
 }
 
 sealed interface AdminNoticeEvent : UiEvent {

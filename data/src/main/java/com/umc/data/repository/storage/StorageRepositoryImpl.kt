@@ -12,6 +12,7 @@ import com.umc.domain.model.base.map
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.repository.storage.StorageRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlin.coroutines.cancellation.CancellationException
 import javax.inject.Inject
 
 class StorageRepositoryImpl @Inject constructor(
@@ -58,10 +59,18 @@ class StorageRepositoryImpl @Inject constructor(
                 val uploadData = prepareState.data
 
                 // 2. presigned url을 이용해 직접 전송한다.
-                val requestBody = StorageUriUtil.toRequestBody(context, uri)
-                val uploadResponse = storageRemoteDatasource.uploadFile(
-                    uploadData.uploadUrl, uploadData.headers, requestBody
-                )
+                // 이 호출은 apiCall을 거치지 않아 OkHttp의 IOException(ProtocolException 등)이 그대로 던져진다.
+                // 잡지 않으면 호출한 viewModelScope 안에서 앱이 종료되므로 실패 상태로 바꿔 돌려준다
+                val uploadResponse = try {
+                    val requestBody = StorageUriUtil.toRequestBody(context, uri)
+                    storageRemoteDatasource.uploadFile(
+                        uploadData.uploadUrl, uploadData.headers, requestBody
+                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    return ApiState.Fail(FailState(code = "S3_001", message = "S3 전송 실패"))
+                }
 
                 // 얘는 ApiState가 아니라 직접 response로 감쌌기 때문에 isSuccessful로 비교
                 if (uploadResponse.isSuccessful) {

@@ -102,12 +102,14 @@ data class NoticeVoteOptionResponse(
 @Serializable
 data class NoticeImageResponse(
     val id: Long?,
+    val fileId: String?,
     val url: String?,
     val displayOrder: Int?
 ) {
     companion object {
         fun NoticeImageResponse.toModel(): NoticeImage = NoticeImage(
             id = id ?: -1L,
+            fileId = fileId.orEmpty(),
             url = url.orEmpty(),
             displayOrder = displayOrder ?: 0
         )

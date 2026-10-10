@@ -199,7 +199,12 @@ class NoticeViewModel @Inject constructor(
         updateState {
             copy(
                 chipList = chipList.map { chip ->
-                    chip.copy(isClicked = chip.text == clickedItem.text)
+                    // 파트 칩은 다른 칩을 누르면 선택했던 파트 문구를 지우고 초기 상태('파트')로 되돌린다
+                    if (chip.hanBottomSheet) {
+                        chip.copy(text = AppStrings.PART, part = null, isClicked = false)
+                    } else {
+                        chip.copy(isClicked = chip.text == clickedItem.text)
+                    }
                 }.toImmutableList(),
                 selectedChipText = clickedItem.text,
                 selectedPart = null,
