@@ -3,7 +3,6 @@ package com.umc.presentation
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -43,16 +42,13 @@ import com.umc.component.component.UText
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
+import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
 import com.umc.presentation.remotenotice.RemoteNoticeHost
 import dagger.hilt.android.AndroidEntryPoint
-
-/** 상태바 배경. presentation/res/values(-night)/colors.xml 의 grey000과 같은 값 */
-private const val LIGHT_GREY_000 = 0xFFFFFFFF.toInt()
-private const val DARK_GREY_000 = 0xFF121212.toInt()
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -77,14 +73,9 @@ class MainActivity : ComponentActivity() {
             PendingDeepLink.uri = link
             intent?.data = null
         }
-        // 상태바를 앱 배경(grey000)과 같은 색으로. auto는 시스템 다크모드를 감지해
-        // 배경색과 아이콘 명암을 함께 뒤집는다 (light: #FFFFFF / dark: #121212)
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(
-                lightScrim = LIGHT_GREY_000,
-                darkScrim = DARK_GREY_000,
-            ),
-        )
+        // 상태바는 투명으로 두고 뒤에 비치는 Scaffold 배경색(UmcApp)이 화면별로 칠한다.
+        // 아이콘 명암은 시스템 다크모드를 따라 자동으로 바뀐다
+        enableEdgeToEdge()
         setContent {
             UmcApp()
         }
@@ -123,6 +114,8 @@ private fun UmcApp() {
 
         Box(modifier = Modifier.fillMaxSize()) {
             Scaffold(
+                // 상태바 뒤 영역 색. 홈은 헤더 없이 grey100 배경이라 같은 색으로 맞추고, 나머지는 grey000
+                containerColor = if (currentTab == MainTab.Home) grey100() else grey000(),
                 bottomBar = {
                     if (showBottomBar) {
                         UmcBottomNavigationBar(

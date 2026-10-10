@@ -5,6 +5,7 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.RefreshTokenRequest
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.repository.AuthRepository
+import com.umc.domain.session.SessionExpiryBus
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -59,6 +60,7 @@ class TokenAuthenticator @Inject constructor(
                 if (refreshToken.isBlank()) {
                     Log.d(TAG, "TokenAuthenticator - refresh token 이 없다. 재로그인 필요")
                     appDataStoreRepository.clearTokens()
+                    SessionExpiryBus.notifyExpired()
                     return@withLock null
                 }
 
@@ -70,6 +72,7 @@ class TokenAuthenticator @Inject constructor(
                 }.getOrElse { e ->
                     Log.d(TAG, "TokenAuthenticator - 재발급 중 예외: ${e.message}")
                     appDataStoreRepository.clearTokens()
+                    SessionExpiryBus.notifyExpired()
                     return@withLock null
                 }
 
@@ -80,6 +83,7 @@ class TokenAuthenticator @Inject constructor(
                             // 성공 응답인데 토큰이 비어 있으면 재시도해도 같은 401이 반복된다.
                             Log.d(TAG, "TokenAuthenticator - 재발급 응답에 토큰이 없다. 재로그인 필요")
                             appDataStoreRepository.clearTokens()
+                            SessionExpiryBus.notifyExpired()
                             return@withLock null
                         }
                         val newRefresh = runCatching { state.data.refreshToken }.getOrNull().orEmpty()
@@ -92,6 +96,7 @@ class TokenAuthenticator @Inject constructor(
                         // 되풀이하고, 화면은 세션 만료 신호를 계속 받아 재진입을 반복한다.
                         Log.d(TAG, "TokenAuthenticator - 재발급 실패(${state.failState.code}). 재로그인 필요")
                         appDataStoreRepository.clearTokens()
+                        SessionExpiryBus.notifyExpired()
                         null
                     }
                 }

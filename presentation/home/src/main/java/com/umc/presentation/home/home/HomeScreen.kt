@@ -48,9 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -590,26 +588,22 @@ fun HomeProfileCardsRow(
                             color = indigo500()
                         )
                     } else {
-                        Text(
-                            text = buildAnnotatedString {
-                                withStyle(
-                                    style = UmcTypographyTokens.Title3Bold.toSpanStyle().copy(
-                                        color = indigo500(),
-                                    )
-                                ) {
-                                    append("${uiState.growDay}")
-                                    append(" ")
-                                }
-                                // 나머지 부분
-                                withStyle(
-                                    style = UmcTypographyTokens.Footnote.toSpanStyle().copy(
-                                        color = grey700(),
-                                    )
-                                ) {
-                                    append("Days")
-                                }
-                            }
-                        )
+                        // 글꼴을 키워도 숫자만 따라 커지고 단위(Days)는 UText 로 고정한다
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                text = "${uiState.growDay}",
+                                style = UmcTypographyTokens.Title3Bold,
+                                color = indigo500(),
+                                modifier = Modifier.alignByBaseline(),
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            UText(
+                                text = "Days",
+                                style = UmcTypographyTokens.Footnote,
+                                color = grey700(),
+                                modifier = Modifier.alignByBaseline(),
+                            )
+                        }
                     }
                 }
 
@@ -880,29 +874,22 @@ private fun ScoreCard(
                     .weight(1f)
             )
 
-            Text(
-                text = buildAnnotatedString {
-                    //숫자 부분
-                    withStyle(
-                        style = UmcTypographyTokens.CalloutBold.toSpanStyle().copy(
-                            color = grey900(),
-                            fontSize = 16.sp
-                        )
-                    ) {
-                        append(score.toString())
-                        append(" ")
-                    }
-                    // point
-                    withStyle(
-                        style = UmcTypographyTokens.Caption1.toSpanStyle().copy(
-                            color = grey600(),
-                            fontSize = 12.sp
-                        )
-                    ) {
-                        append("point")
-                    }
-                }
-            )
+            // 글꼴을 키워도 숫자만 따라 커지고 단위(point)는 UText 로 고정한다
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = score.toString(),
+                    style = UmcTypographyTokens.CalloutBold.copy(fontSize = 16.sp),
+                    color = grey900(),
+                    modifier = Modifier.alignByBaseline(),
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                UText(
+                    text = "point",
+                    style = UmcTypographyTokens.Caption1.copy(fontSize = 12.sp),
+                    color = grey600(),
+                    modifier = Modifier.alignByBaseline(),
+                )
+            }
         }
 
     }

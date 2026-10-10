@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -161,7 +162,7 @@ fun ActManageScreen(
             selectedTabIndex = pagerState.currentPage,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(55.dp),
+                .heightIn(min = 55.dp),
             containerColor = grey000(),
             contentColor = grey800(),
             indicator = { tabPositions ->
@@ -189,7 +190,8 @@ fun ActManageScreen(
                             } else {
                                 grey400()
                             },
-                            style = HeadlineBold
+                            style = HeadlineBold,
+                            textAlign = TextAlign.Center
                         )
                     }
                 )

@@ -5,11 +5,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
+import com.umc.component.theme.green100
 import com.umc.component.theme.green700
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
@@ -31,7 +31,7 @@ fun StudyStatusBadge(
 ) {
     val (backgroundColor, textColor, label) = when (item.status) {
         StudyStatus.PASS -> Triple(
-            Color(0xFFE4FCEC),
+            green100(),
             green700(),
             AppStrings.STUDY_BADGE_PASS,
         )

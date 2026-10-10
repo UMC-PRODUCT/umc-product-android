@@ -8,8 +8,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
-import com.umc.component.base.SessionExpiryBus
+import com.umc.domain.session.SessionExpiryBus
 import androidx.navigation.navDeepLink
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -79,6 +80,10 @@ fun MainNavHost(
     // 만료 상태에서 스플래시로 되돌리면 그 조회가 또 실패하고 다시 만료 신호를 쏘아
     // renew -> me -> renew ... 가 끝없이 반복된다. 만료의 해답은 재조회가 아니라 재로그인이다.
     CollectUiEvents(SessionExpiryBus.expired) {
+        // 이미 로그인 화면이면(스플래시·로그아웃이 같은 이유로 먼저 보낸 경우) 다시 이동하지 않는다.
+        if (navHostController.currentDestination?.hasRoute<MainDestination.Login>() == true) {
+            return@CollectUiEvents
+        }
         navHostController.navigate(MainDestination.Login) {
             popUpTo(0) { inclusive = true }
             launchSingleTop = true
