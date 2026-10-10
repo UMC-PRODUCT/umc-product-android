@@ -2,6 +2,8 @@ package com.umc.product.di
 
 import android.util.Log
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.base.FailState
+import com.umc.domain.model.base.isNetworkError
 import com.umc.domain.model.request.RefreshTokenRequest
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.repository.AuthRepository
@@ -92,6 +94,12 @@ class TokenAuthenticator @Inject constructor(
                     }
 
                     is ApiState.Fail -> {
+                        // 일시적 단절·서버 장애는 refresh token 이 거부된 것이 아니다.
+                        // 토큰을 지키고 이 요청만 실패시켜 다음 요청에서 재발급을 다시 시도한다.
+                        if (state.failState.isTransientFailure()) {
+                            Log.d(TAG, "TokenAuthenticator - 재발급 일시 실패(${state.failState.code}). 토큰 유지")
+                            return@withLock null
+                        }
                         // 죽은 토큰을 지운다. 남겨두면 이후 요청이 같은 토큰으로 401 -> 재발급을
                         // 되풀이하고, 화면은 세션 만료 신호를 계속 받아 재진입을 반복한다.
                         Log.d(TAG, "TokenAuthenticator - 재발급 실패(${state.failState.code}). 재로그인 필요")
@@ -103,6 +111,10 @@ class TokenAuthenticator @Inject constructor(
             }
         }
     }
+
+    /** 네트워크 단절이거나 HTTP 5xx 인 경우. 서버가 refresh token 을 명시적으로 거부한 것이 아니다. */
+    private fun FailState.isTransientFailure(): Boolean =
+        isNetworkError || code.toIntOrNull() in 500..599
 
     private fun okhttp3.Response.retryWith(accessToken: String): Request =
         request.newBuilder()

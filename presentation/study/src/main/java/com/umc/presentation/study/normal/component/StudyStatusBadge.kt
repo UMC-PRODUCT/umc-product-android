@@ -1,10 +1,13 @@
 package com.umc.presentation.study.normal.component
 
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
@@ -63,5 +66,25 @@ fun StudyStatusBadge(
                 vertical = 4.dp,
             ),
         )
+    }
+}
+
+/** 다크 모드에서도 세 상태의 배경·글자 대비가 유지되는지 확인한다. */
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun StudyStatusBadgeDarkPreview() {
+    Column(modifier = Modifier.padding(16.dp)) {
+        StudyStatus.entries.forEach { status ->
+            StudyStatusBadge(
+                item = NormalStudyItemUiModel(
+                    id = status.ordinal.toLong(),
+                    title = "스터디",
+                    status = status,
+                    week = 1,
+                    description = "",
+                ),
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+        }
     }
 }

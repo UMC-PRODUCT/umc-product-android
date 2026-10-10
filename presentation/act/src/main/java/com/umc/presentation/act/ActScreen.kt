@@ -298,3 +298,17 @@ private fun NormalActScreenPreview() {
         )
     }
 }
+
+@Preview(showBackground = true, fontScale = 2f)
+@Composable
+private fun NormalActScreenLargeFontPreview() {
+    UmcTheme(darkTheme = false) {
+        ActManageScreen(
+            uiState = ActUiState(
+                isAdmin = false,
+                hasAdminAccess = true
+            ),
+            onAdminCheckedChange = {}
+        )
+    }
+}
