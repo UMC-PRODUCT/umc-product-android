@@ -65,6 +65,9 @@ class MycardViewModel @Inject constructor(
      * 서버 API를 호출하여 내 프로필 상세 정보를 조회하는 메서드
      */
     fun getUserInfo() {
+        // 재시도 연타·중복 요청 방지
+        if (uiState.value.isProfileLoading) return
+        updateState { copy(isProfileLoading = true) }
         viewModelScope.launch {
             resultResponse(
                 response = getMyProfileUseCase(),
@@ -72,6 +75,7 @@ class MycardViewModel @Inject constructor(
                     updateState {
                         copy(
                             userInfo = userInfo,
+                            isProfileLoading = false,
                             isProfileLoadFailed = false,
                         )
                     }
@@ -82,7 +86,9 @@ class MycardViewModel @Inject constructor(
                 errorCallback = {
                     // 실패를 상태로 올려 화면이 빈 카드 대신 실패 안내와 재시도를 보여주게 한다
                     // (남의 회원 ID 로 QR 을 만들지 않는다)
-                    updateState { copy(isProfileLoadFailed = true) }
+                    updateState { copy(isProfileLoading = false, isProfileLoadFailed = true) }
+                    // 이미 실패 상태에서 재시도가 또 실패해도 결과를 알 수 있게 토스트로 알린다
+                    emitEvent(MycardEvent.ProfileLoadFailed)
                 }
             )
         }
@@ -234,6 +240,9 @@ data class MycardUiState(
     //내 프로필 조회 실패 여부 (성공하면 false로 되돌린다)
     val isProfileLoadFailed: Boolean = false,
 
+    //내 프로필 조회 요청 진행 중 (다시 시도 버튼 비활성화용)
+    val isProfileLoading: Boolean = false,
+
     //명함 관련 정보
     val myRecentInfoString: String = "",
     val myQrcodeData: String = "",
@@ -255,5 +264,8 @@ data class MycardUiState(
 sealed interface MycardEvent : UiEvent {
     //이동하기
     object NavigateToMypage: MycardEvent
+
+    //내 프로필 조회 실패 (재시도 실패 포함) 안내
+    object ProfileLoadFailed: MycardEvent
 
 }

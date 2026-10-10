@@ -198,7 +198,10 @@ fun ProfileScreen(
             if (uiState.isProfileLoadFailed) {
                 //프로필 조회 실패 - 빈 칸 대신 안내와 다시 시도 표시
                 item {
-                    ProfileLoadError(onRetryClick = onRetryClick)
+                    ProfileLoadError(
+                        isLoading = uiState.isProfileLoading,
+                        onRetryClick = onRetryClick
+                    )
                 }
             } else {
                 //연동 정보 (고정형)
@@ -504,7 +507,7 @@ fun LinkInputSection(title: String, value: String, onValueChange: (String) -> Un
  * 프로필 조회에 실패했을 때 빈 칸 대신 표시하는 실패 안내 + 다시 시도 컴포저블
  */
 @Composable
-private fun ProfileLoadError(onRetryClick: () -> Unit) {
+private fun ProfileLoadError(isLoading: Boolean, onRetryClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -528,6 +531,7 @@ private fun ProfileLoadError(onRetryClick: () -> Unit) {
         UButton(
             text = AppStrings.PROFILE_RETRY,
             onClick = onRetryClick,
+            enabled = !isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),

@@ -69,7 +69,7 @@ class ProfileViewModel @Inject constructor(
      * 프로필 정보와 소셜 플랫폼 연결 정보를 (다시) 불러오는 메서드
      */
     private fun loadProfile() {
-        updateState { copy(isProfileLoadFailed = false) }
+        // 실패 플래그는 성공했을 때만 내린다(재시도 중에 빈 기본값 화면이 다시 보이거나 저장되지 않도록)
         getUserInfo()
         getUserOAuth()
     }
@@ -78,6 +78,8 @@ class ProfileViewModel @Inject constructor(
      * 프로필 조회 실패 안내에서 '다시 시도하기'를 눌렀을 때 호출
      */
     fun onClickRetry() {
+        //재시도 요청이 진행 중이면 중복 호출하지 않는다
+        if (uiState.value.isProfileLoading) return
         loadProfile()
     }
 
@@ -85,12 +87,14 @@ class ProfileViewModel @Inject constructor(
      * 서버에서 내 프로필 정보를 수신하여 UI State에 바인딩하고 활동 이력을 가공하는 메서드
      */
     private fun getUserInfo() {
+        updateState { copy(isProfileLoading = true) }
         viewModelScope.launch {
             resultResponse(
                 response = getMyProfileUseCase(),
                 successCallback = { userInfo ->
                     updateState {
                         copy(
+                            isProfileLoading = false,
                             userInfo = userInfo,
                             githubLink = userInfo.profile.github,
                             linkedinLink = userInfo.profile.linkedIn,
@@ -103,7 +107,7 @@ class ProfileViewModel @Inject constructor(
 
                 },
                 errorCallback = {
-                    updateState { copy(isProfileLoadFailed = true) }
+                    updateState { copy(isProfileLoading = false, isProfileLoadFailed = true) }
                     emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_LOAD_ERROR_TITLE))
                 }
             )
@@ -301,8 +305,8 @@ class ProfileViewModel @Inject constructor(
         //진행 중에는 재진입 차단 (연타 시 업로드/PATCH 중복 방지)
         if (state.isSaving) return
 
-        //프로필 조회에 실패한 빈 상태에서 저장하면 서버 링크가 빈 값으로 덮어써지므로 차단
-        if (state.isProfileLoadFailed) {
+        //프로필 조회에 실패했거나 아직 불러오지 못한(id == 0) 빈 상태에서 저장하면 서버 링크가 빈 값으로 덮어써지므로 차단
+        if (state.isProfileLoadFailed || state.userInfo.id == 0L) {
             emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_LOAD_ERROR_TITLE))
             return
         }
@@ -455,6 +459,7 @@ data class ProfileUiState(
 
     // 프로필 조회 실패 여부 (true 면 빈 정보 대신 실패 안내 + 다시 시도 표시)
     val isProfileLoadFailed: Boolean = false,
+    val isProfileLoading: Boolean = false, //프로필 조회 요청 진행 중
     // '완료' 저장 진행 중 여부 (중복 탭 방지, 진행 표시)
     val isSaving: Boolean = false,
 

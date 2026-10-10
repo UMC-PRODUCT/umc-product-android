@@ -12,6 +12,8 @@ import com.example.mypage.BuildConfig
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.kakao.sdk.common.model.ClientError
+import com.kakao.sdk.common.model.ClientErrorCause
 import com.kakao.sdk.user.UserApiClient
 import com.umc.component.theme.AppStrings
 import com.umc.component.util.ULog
@@ -27,23 +29,37 @@ import kotlinx.coroutines.launch
 // 카카오 로그인
 internal fun signInKakao(
     context: Context,
-    onLoginSuccess: (String) -> Unit
+    onLoginSuccess: (String) -> Unit,
+    onFailure: (String) -> Unit
 ) {
     if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
-        signInKakaoApp(context, onLoginSuccess)
+        signInKakaoApp(context, onLoginSuccess, onFailure)
     } else {
-        signInKakaoEmail(context, onLoginSuccess)
+        signInKakaoEmail(context, onLoginSuccess, onFailure)
     }
 }
+
+// 사용자가 로그인을 직접 취소한 경우인지 판별
+private fun Throwable.isKakaoCancelled(): Boolean =
+    this is ClientError && reason == ClientErrorCause.Cancelled
 
 // 카카오 로그인(앱으로)
 private fun signInKakaoApp(
     context: Context,
-    onLoginSuccess: (String) -> Unit
+    onLoginSuccess: (String) -> Unit,
+    onFailure: (String) -> Unit
 ) {
-    UserApiClient.instance.loginWithKakaoTalk(context) { token, _ ->
-        token?.let {
-            onLoginSuccess(token.accessToken)
+    UserApiClient.instance.loginWithKakaoTalk(context) { token, error ->
+        when {
+            token != null -> onLoginSuccess(token.accessToken)
+            error == null -> Unit
+            // 사용자가 직접 취소한 경우는 안내하지 않는다.
+            error.isKakaoCancelled() -> Unit
+            // 카카오톡 로그인이 취소 외의 이유로 실패하면 카카오계정 로그인으로 넘어간다(카카오 SDK 권장 흐름).
+            else -> {
+                ULog.d("카카오톡 로그인 실패: ${error::class.simpleName} ${error.message}")
+                signInKakaoEmail(context, onLoginSuccess, onFailure)
+            }
         }
     }
 }
@@ -51,11 +67,18 @@ private fun signInKakaoApp(
 // 카카오 로그인(웹으로)
 private fun signInKakaoEmail(
     context: Context,
-    onLoginSuccess: (String) -> Unit
+    onLoginSuccess: (String) -> Unit,
+    onFailure: (String) -> Unit
 ) {
-    UserApiClient.instance.loginWithKakaoAccount(context) { token, _ ->
-        token?.let {
-            onLoginSuccess(token.accessToken)
+    UserApiClient.instance.loginWithKakaoAccount(context) { token, error ->
+        when {
+            token != null -> onLoginSuccess(token.accessToken)
+            error == null -> Unit
+            error.isKakaoCancelled() -> Unit
+            else -> {
+                ULog.d("카카오계정 로그인 실패: ${error::class.simpleName} ${error.message}")
+                onFailure(AppStrings.LOGIN_KAKAO_FAILED)
+            }
         }
     }
 }

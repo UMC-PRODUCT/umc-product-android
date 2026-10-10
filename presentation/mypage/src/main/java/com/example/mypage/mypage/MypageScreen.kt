@@ -46,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -59,6 +60,7 @@ import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
@@ -79,6 +81,7 @@ import com.umc.component.theme.grey950
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.OutLinkType
 import com.umc.domain.model.enums.TermsType
+import kotlinx.collections.immutable.persistentListOf
 import com.umc.domain.model.mypage.UserCard
 
 
@@ -234,9 +237,11 @@ fun MypageRoute(
         onInstagramClick = viewModel::navigateToInstagramUmc, //인스타그램 이동
         onSocialLinkClick = { type -> //소셜 연동
             if (!uiState.isLinkingSocial) when (type) {
-                LoginType.KAKAO -> signInKakao(context) { token ->
-                    viewModel.linkSocial(token, LoginType.KAKAO)
-                }
+                LoginType.KAKAO -> signInKakao(
+                    context = context,
+                    onLoginSuccess = { token -> viewModel.linkSocial(token, LoginType.KAKAO) },
+                    onFailure = { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+                )
                 else -> signInGoogle(
                     scope = scope,
                     context = context,
@@ -386,14 +391,26 @@ private fun openWebpage(context: Context, url: String) {
     // 프로필 링크는 사용자가 입력한 값이 그대로 저장되므로 스킴이 없을 수 있다(github.com/id). https:// 를 붙여 연다.
     val target = if (URL_SCHEME_REGEX.containsMatchIn(trimmed)) trimmed else "https://$trimmed"
 
+    // 인텐트 스킴 매칭은 대소문자를 구분하므로 소문자로 정규화한다(Https://... 대응)
+    val uri = target.toUri().normalizeScheme()
+
+    // 웹 링크(http/https)만 연다. file:// 등은 인텐트로 넘기면 앱이 종료될 수 있다.
+    if (uri.scheme != "http" && uri.scheme != "https") {
+        Toast.makeText(context, AppStrings.MYPAGE_LINK_OPEN_FAIL, Toast.LENGTH_SHORT).show()
+        return
+    }
+
     try {
-        val intent = Intent(Intent.ACTION_VIEW, target.toUri()).apply {
+        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
             //Activity 외부(Context)에서 시작할 경우 필요한 플래그
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)
     } catch (e: ActivityNotFoundException) {
         // 링크를 열 수 있는 앱이 없는 경우
+        Toast.makeText(context, AppStrings.MYPAGE_LINK_OPEN_FAIL, Toast.LENGTH_SHORT).show()
+    } catch (e: RuntimeException) {
+        // 그 외(SecurityException 등) 사용자 입력 값 때문에 앱이 종료되지 않게 같은 안내로 처리
         Toast.makeText(context, AppStrings.MYPAGE_LINK_OPEN_FAIL, Toast.LENGTH_SHORT).show()
     }
 }
@@ -865,4 +882,52 @@ fun UMCChannelButtons(
                 .clickable { onInstagramClick() }
         )
     }
+}
+
+@Composable
+private fun MypageScreenPreviewContent(uiState: MypageUiState) {
+    UmcTheme {
+        MypageScreen(
+            uiState = uiState,
+            onBackClick = {},
+            onGithubClick = {},
+            onLinkedinClick = {},
+            onBlogClick = {},
+            onAddActivityClick = {},
+            onAssistClick = {},
+            onNoticeSettingClick = {},
+            onLocationSettingClick = {},
+            onPrivacyClick = {},
+            onTermsClick = {},
+            onLogoutClick = {},
+            onDeleteUserClick = {},
+            onWebsiteClick = {},
+            onInstagramClick = {},
+            onSocialLinkClick = {},
+        )
+    }
+}
+
+// 카카오 + Apple 연동: 구글 연동 카드가 보인다
+@Preview(showBackground = true, widthDp = 360, heightDp = 1000)
+@Composable
+private fun MypageScreenGoogleLinkCardPreview() {
+    MypageScreenPreviewContent(
+        MypageUiState(
+            linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.APPLE),
+            isLinkedPlatformsLoaded = true
+        )
+    )
+}
+
+// 카카오 + 구글 연동: 소셜 연동 섹션이 숨겨진다
+@Preview(showBackground = true, widthDp = 360, heightDp = 1000)
+@Composable
+private fun MypageScreenAllLinkedPreview() {
+    MypageScreenPreviewContent(
+        MypageUiState(
+            linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.GOOGLE),
+            isLinkedPlatformsLoaded = true
+        )
+    )
 }

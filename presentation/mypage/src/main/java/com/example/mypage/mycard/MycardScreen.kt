@@ -195,6 +195,10 @@ fun MycardRoute(
 
             }
 
+            is MycardEvent.ProfileLoadFailed -> {
+                Toast.makeText(context, AppStrings.MYCARD_PROFILE_LOAD_ERROR_TITLE, Toast.LENGTH_SHORT).show()
+            }
+
             else -> {}
         }
     }
@@ -293,7 +297,10 @@ fun MycardScreen(
         item {
             // 이미 불러온 정보가 있으면(id != 0) 재조회에 실패해도 카드를 유지한다
             if (uiState.isProfileLoadFailed && uiState.userInfo.id == 0L) {
-                MycardProfileLoadError(onRetry = onRetryProfile)
+                MycardProfileLoadError(
+                    isLoading = uiState.isProfileLoading,
+                    onRetry = onRetryProfile
+                )
             } else {
                 MycardProfileCard(
                     uiState = uiState,
@@ -354,6 +361,7 @@ fun MycardScreen(
  */
 @Composable
 private fun MycardProfileLoadError(
+    isLoading: Boolean,
     onRetry: () -> Unit,
 ) {
     Card(
@@ -393,6 +401,7 @@ private fun MycardProfileLoadError(
             UButton(
                 text = AppStrings.MYCARD_RETRY,
                 onClick = onRetry,
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
