@@ -51,7 +51,8 @@ fun AttendanceReasonDialog(
     onReasonFocusChange: (Boolean) -> Unit = {},
     onDismissRequest: () -> Unit,
     onSubmit: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSubmitting: Boolean = false,
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
         AttendanceReasonDialogContent(
@@ -60,7 +61,8 @@ fun AttendanceReasonDialog(
             onReasonFocusChange = onReasonFocusChange,
             onDismissRequest = onDismissRequest,
             onSubmit = onSubmit,
-            modifier = modifier
+            modifier = modifier,
+            isSubmitting = isSubmitting,
         )
     }
 }
@@ -72,7 +74,8 @@ private fun AttendanceReasonDialogContent(
     onReasonFocusChange: (Boolean) -> Unit = {},
     onDismissRequest: () -> Unit,
     onSubmit: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSubmitting: Boolean = false,
 ) {
     val reasonInteractionSource = remember { MutableInteractionSource() }
     val isReasonFocused by reasonInteractionSource.collectIsFocusedAsState()
@@ -157,8 +160,13 @@ private fun AttendanceReasonDialogContent(
             )
 
             UButton(
-                text = AppStrings.COMMON_SUBMIT,
+                text = if (isSubmitting) {
+                    AppStrings.ATTENDANCE_REASON_SUBMITTING
+                } else {
+                    AppStrings.COMMON_SUBMIT
+                },
                 onClick = { onSubmit(reason) },
+                enabled = !isSubmitting,
                 modifier = Modifier
                     .weight(1f),
                 backgroundColor = grey800(),
@@ -168,6 +176,20 @@ private fun AttendanceReasonDialogContent(
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 13.dp)
             )
         }
+    }
+}
+
+@Preview(showBackground = false)
+@Composable
+private fun AttendanceReasonDialogSubmittingPreview() {
+    UmcTheme(darkTheme = false) {
+        AttendanceReasonDialogContent(
+            reason = "GPS 오류로 위치 인증이 되지 않았어요.",
+            onReasonChange = {},
+            onDismissRequest = {},
+            onSubmit = {},
+            isSubmitting = true,
+        )
     }
 }
 

@@ -149,8 +149,7 @@ fun AttendanceRoute(
                 initialUsers = uiState.sessions
                     .firstOrNull { session -> session.id == scheduleId }
                     ?.pendingUsers
-                    .orEmpty()
-                    .toImmutableList(),
+                    ?.toImmutableList(),
             )
         }
     }

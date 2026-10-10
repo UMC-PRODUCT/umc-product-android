@@ -48,8 +48,13 @@ class AttendanceRepositoryImpl @Inject constructor(
 
     override suspend fun getAttendanceHistory(): ApiState<List<UserCheckHistory>> {
         return attendanceRemoteDataSource.getAttendanceHistory().map { responseList ->
+            val now = Instant.now()
             responseList
-                .filter { it.attendanceStatus in completedAttendanceStatuses }
+                //출석 기록이 없는 채로 끝난 일정은 서버가 상태를 내려주지 않으므로(null) 결석으로 보여준다
+                .filter {
+                    it.attendanceStatus in completedAttendanceStatuses ||
+                        (it.attendanceStatus == null && it.isEnded(now))
+                }
                 .mapIndexed { index, response -> response.toHistory(index) }
         }
     }
