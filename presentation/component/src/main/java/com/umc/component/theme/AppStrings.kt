@@ -526,6 +526,7 @@ object AppStrings {
     const val MEMO = "메모"
     const val MEMO_PLACEHOLDER = "메모를 입력해주세요."
     const val REWARD_SUBMIT = "등록하기"
+    const val REWARD_SUBMITTING = "등록 중..."
     const val HELLO_BLANK_FRAGMENT = "Hello blank fragment"
     const val ADMIN_STUDY_SUBMIT_DESC = "%1\$s님의 %2\$s 스터디입니다."
     const val ADMIN_BEST_TITLE = "베스트 워크북 설정"

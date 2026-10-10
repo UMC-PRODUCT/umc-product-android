@@ -177,6 +177,10 @@ class AdminChallengerViewModel @Inject constructor(
     //선택된 상벌점 기록 삭제
     fun deleteSelectedPoint() {
         val targetId = uiState.value.deleteTarget ?: return
+        // 응답 전에 '삭제하기'를 다시 눌러도 같은 DELETE 가 중복으로 나가지 않게 한다.
+        if (uiState.value.isPointSubmitting) return
+        val challengerId = uiState.value.detail?.challengerId
+        updateState { copy(isPointSubmitting = true) }
         viewModelScope.launch {
             startLoading()
             resultResponse(
@@ -185,11 +189,17 @@ class AdminChallengerViewModel @Inject constructor(
                     updateState {
                         copy(
                             detail = detail?.copy(history = detail.history.filterNot { it.id == targetId }),
-                            deleteTarget = null
+                            deleteTarget = null,
+                            isPointSubmitting = false
                         )
                     }
+                    // 총점수·상점/벌점 칩은 서버 계산값이라 삭제 응답(Unit)으로는 갱신되지 않으므로 상세를 다시 조회한다.
+                    challengerId?.let(::getChallengerDetail)
                 },
-                errorCallback = { emitEvent(AdminChallengerEvent.ShowToast(it.message)) }
+                errorCallback = {
+                    updateState { copy(isPointSubmitting = false) }
+                    emitEvent(AdminChallengerEvent.ShowToast(it.message))
+                }
             )
         }
     }
@@ -289,7 +299,9 @@ class AdminChallengerViewModel @Inject constructor(
         description: String,
         pointValue: Int? = null,
     ) {
-        if (challengerId <= 0L) return
+        // 응답 전에 '등록하기'를 다시 눌러도 같은 POST 가 중복으로 나가지 않게 한다.
+        if (challengerId <= 0L || uiState.value.isPointSubmitting) return
+        updateState { copy(isPointSubmitting = true) }
         viewModelScope.launch {
             startLoading()
             resultResponse(
@@ -310,12 +322,16 @@ class AdminChallengerViewModel @Inject constructor(
                             pointMemo = "",
                             customRewardScore = 0,
                             customPunishScore = 0,
-                            customReason = ""
+                            customReason = "",
+                            isPointSubmitting = false
                         )
                     }
                     emitEvent(AdminChallengerEvent.PointGranted)
                 },
-                errorCallback = { emitEvent(AdminChallengerEvent.ShowToast(it.message)) }
+                errorCallback = {
+                    updateState { copy(isPointSubmitting = false) }
+                    emitEvent(AdminChallengerEvent.ShowToast(it.message))
+                }
             )
         }
     }
@@ -352,6 +368,8 @@ data class AdminChallengerUiState(
     val customPunishScore: Int = 0,
     //기타 상벌점 사유
     val customReason: String = "",
+    //상벌점 등록/삭제 요청 진행 중 여부
+    val isPointSubmitting: Boolean = false,
 ) : UiState
 
 enum class AdminChallengerLoadState { LOADING, SUCCESS, ERROR }

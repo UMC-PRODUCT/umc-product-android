@@ -161,8 +161,8 @@ fun PenaltyPointsScreen(
 
             UButton(
                 modifier = Modifier.fillMaxWidth(),
-                text = AppStrings.REWARD_SUBMIT,
-                enabled = isSubmitEnabled,
+                text = if (uiState.isPointSubmitting) AppStrings.REWARD_SUBMITTING else AppStrings.REWARD_SUBMIT,
+                enabled = isSubmitEnabled && !uiState.isPointSubmitting,
                 textStyle = HeadlineBold,
                 textColor = if (isSubmitEnabled) grey000() else grey300(),
                 backgroundColor = if (isSubmitEnabled) indigo500() else grey100(),
