@@ -689,11 +689,28 @@ class AdminSubmitViewModel @Inject constructor(
             return
         }
 
-        // 피드백 수정 API(PATCH)는 내용만 바꿀 수 있어 결과(PASS/FAIL)가 바뀌면 새 피드백을 등록
+        // 피드백 수정 API(PATCH)는 내용만 바꿀 수 있고, 이미 검토된 제출에 피드백(POST)을 더 등록해도
+        // 서버가 제출 결과(status)를 갱신하지 않는다. 결과 변경은 서버가 지원하기 전까지 보내지 않고 안내한다.
         val isResultChanged =
             state.missionFeedbackId != null &&
                 state.existingFeedbackResult != null &&
                 state.existingFeedbackResult != result
+
+        if (isResultChanged) {
+            updateState {
+                copy(
+                    pendingStatus = null,
+                    showApproveDialog = false,
+                    showRejectDialog = false,
+                )
+            }
+            emitEvent(
+                AdminSubmitEvent.ShowToast(
+                    "이미 검토한 제출의 결과는 변경할 수 없어요. 피드백 내용만 수정할 수 있어요."
+                )
+            )
+            return
+        }
 
         viewModelScope.launch {
             updateState {
@@ -701,7 +718,7 @@ class AdminSubmitViewModel @Inject constructor(
             }
 
             val apiResult =
-                if (state.missionFeedbackId == null || isResultChanged) {
+                if (state.missionFeedbackId == null) {
                     createMissionFeedbackUseCase(
                         missionSubmissionId =
                             missionSubmissionId,
@@ -741,14 +758,6 @@ class AdminSubmitViewModel @Inject constructor(
                             existingFeedbackResult = null,
                             showApproveDialog = false,
                             showRejectDialog = false,
-                        )
-                    }
-
-                    // 결과가 바뀐 경우 서버 값으로 목록을 확정
-                    if (isResultChanged) {
-                        loadSubmissions(
-                            studyGroupId = state.selectedGroupId,
-                            weekNos = listOf(state.selectedWeek.toLong()),
                         )
                     }
 
