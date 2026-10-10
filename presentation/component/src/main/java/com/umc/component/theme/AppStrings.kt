@@ -548,6 +548,7 @@ object AppStrings {
     const val STUDY_LOAD_ERROR_DESCRIPTION = "네트워크 연결을 확인하고 다시 시도해주세요."
     const val STUDY_RETRY = "다시 시도하기"
     const val STUDY_GROUP_CREATE_FAIL = "스터디 그룹 생성에 실패했어요."
+    const val STUDY_GROUP_NO_PERMISSION = "스터디 그룹을 관리할 권한이 없어요"
     const val STUDY_SUBMIT_LINK_TITLE = "제출할 링크"
     const val STUDY_SUBMIT_LINK_PLACEHOLDER = "링크를 입력하세요."
     const val STUDY_SUBMIT_LINK_BUTTON = "링크 제출하기"

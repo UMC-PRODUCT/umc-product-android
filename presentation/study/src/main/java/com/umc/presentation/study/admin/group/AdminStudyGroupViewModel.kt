@@ -1,10 +1,13 @@
 package com.umc.presentation.study.admin.group
 
+import com.umc.domain.model.enums.PermissionType
+import com.umc.domain.model.enums.ResourceType
 import com.umc.domain.model.enums.UserPart
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.organization.UpdateStudyGroupRequest
+import com.umc.domain.usecase.GetAuthAccessUseCase
 import com.umc.domain.usecase.organization.AddStudyGroupMemberUseCase
 import com.umc.domain.usecase.organization.DeleteStudyGroupMemberUseCase
 import com.umc.domain.usecase.organization.DeleteStudyGroupUseCase
@@ -40,6 +43,7 @@ class AdminStudyGroupViewModel @Inject constructor(
     private val deleteStudyGroupUseCase: DeleteStudyGroupUseCase,
     private val addStudyGroupMemberUseCase: AddStudyGroupMemberUseCase,
     private val deleteStudyGroupMemberUseCase: DeleteStudyGroupMemberUseCase,
+    private val getAuthAccessUseCase: GetAuthAccessUseCase,
 ) : BaseViewModel<
         AdminStudyGroupState,
         AdminStudyGroupEvent,
@@ -475,13 +479,14 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                 viewModelScope.launch {
                     var hasFailed = false
+                    var failMessage: String? = null
 
                     /**
                      * 삭제 대상 멤버 API 호출
                      */
                     memberIdsToDelete.forEach { memberId ->
                         when (
-                            deleteStudyGroupMemberUseCase(
+                            val result = deleteStudyGroupMemberUseCase(
                                 studyGroupId =
                                     targetGroup.groupId,
                                 memberId = memberId,
@@ -491,6 +496,9 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                             is ApiState.Fail -> {
                                 hasFailed = true
+                                if (failMessage == null) {
+                                    failMessage = result.failState.message
+                                }
                             }
                         }
                     }
@@ -500,7 +508,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                      */
                     memberIdsToAdd.forEach { memberId ->
                         when (
-                            addStudyGroupMemberUseCase(
+                            val result = addStudyGroupMemberUseCase(
                                 studyGroupId =
                                     targetGroup.groupId,
                                 memberId = memberId,
@@ -510,6 +518,9 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                             is ApiState.Fail -> {
                                 hasFailed = true
+                                if (failMessage == null) {
+                                    failMessage = result.failState.message
+                                }
                             }
                         }
                     }
@@ -532,7 +543,9 @@ class AdminStudyGroupViewModel @Inject constructor(
                     emitEvent(
                         AdminStudyGroupEvent.ShowToast(
                             if (hasFailed) {
-                                "스터디원 수정에 실패했어요."
+                                // 서버 메시지(예: 권한 없음)를 우선 안내하고, 없으면 기본 문구 표시
+                                failMessage?.takeIf { it.isNotBlank() }
+                                    ?: "스터디원 수정에 실패했어요."
                             } else {
                                 "스터디원이 수정됐어요."
                             }
@@ -575,8 +588,13 @@ class AdminStudyGroupViewModel @Inject constructor(
                 is ApiState.Success -> {
                     val page = result.data
 
+                    // 권한이 없어도 빈 목록이 내려오므로, 빈 경우에만 조회 권한을 확인해 구분
+                    val canRead = page.content.isNotEmpty() || checkStudyGroupReadAccess()
+
                     updateState {
                         copy(
+                            hasReadAccess = canRead,
+
                             // Domain 모델을 화면용 UI 모델로 변환
                             groups = page.content.map { group ->
                                 group.toUiModel()
@@ -613,6 +631,21 @@ class AdminStudyGroupViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * 스터디 그룹 조회(READ) 권한 보유 여부를 확인합니다.
+     *
+     * 조회에 실패하면 true로 간주해 기존 빈 목록 문구로 폴백합니다.
+     */
+    private suspend fun checkStudyGroupReadAccess(): Boolean =
+        when (val result = getAuthAccessUseCase(ResourceType.STUDY_GROUP, 0L)) {
+            is ApiState.Success ->
+                result.data.permissions.any { permission ->
+                    permission.type == PermissionType.READ && permission.hasPermission
+                }
+
+            is ApiState.Fail -> true
+        }
 
     /**
      * 화면 표시용 파트 이름을 서버 API 값으로 바꿉니다.

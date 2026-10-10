@@ -29,6 +29,15 @@ data class AdminStudyGroupState(
     val groups: ImmutableList<AdminStudyGroupItemUiModel> = persistentListOf(),
 
     /**
+     * 스터디 그룹 조회 권한 보유 여부
+     *
+     * 관리 그룹 목록 API는 권한이 없어도 빈 목록을 내려주므로,
+     * 목록이 비어 있을 때만 권한을 조회해 "권한 없음"과 "그룹 없음"을 구분합니다.
+     * 권한 조회에 실패하면 true로 두어 기존 빈 목록 문구를 보여줍니다.
+     */
+    val hasReadAccess: Boolean = true,
+
+    /**
      * 그룹 목록 최초 로딩 여부
      */
     val isLoading: Boolean = false,

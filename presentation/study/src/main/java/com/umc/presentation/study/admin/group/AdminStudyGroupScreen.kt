@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey500
@@ -146,13 +147,15 @@ fun AdminStudyGroupScreen(
          *
          * 클릭 시 그룹 생성 화면으로 이동합니다.
          */
-        AdminStudyGroupCreateCard(
-            onClick = {
-                onAction(
-                    AdminStudyGroupAction.ClickCreateGroup
-                )
-            },
-        )
+        if (state.hasReadAccess) {
+            AdminStudyGroupCreateCard(
+                onClick = {
+                    onAction(
+                        AdminStudyGroupAction.ClickCreateGroup
+                    )
+                },
+            )
+        }
 
         /**
          * 관리 중인 그룹이 없는 경우 빈 화면 표시
@@ -165,7 +168,11 @@ fun AdminStudyGroupScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 UText(
-                    text = "생성된 스터디 그룹이 없어요",
+                    text = if (state.hasReadAccess) {
+                        "생성된 스터디 그룹이 없어요"
+                    } else {
+                        AppStrings.STUDY_GROUP_NO_PERMISSION
+                    },
                     style = HeadlineBold,
                     color = grey500(),
                 )
@@ -302,6 +309,19 @@ private fun AdminStudyGroupScreenPreview() {
                     studyPart = UserPart.WEB.serverValue,
                 )
             )
+        )
+    )
+}
+
+/**
+ * 스터디 그룹 관리 권한이 없는 상태 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun AdminStudyGroupScreenNoPermissionPreview() {
+    AdminStudyGroupScreen(
+        state = AdminStudyGroupState(
+            hasReadAccess = false,
         )
     )
 }
