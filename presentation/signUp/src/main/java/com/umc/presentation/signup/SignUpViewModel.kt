@@ -20,6 +20,7 @@ import com.umc.domain.usecase.notification.RegisterFcmTokenUseCase
 import com.umc.domain.usecase.school.GetAllSchoolUseCase
 import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -36,18 +37,33 @@ class SignUpViewModel @Inject constructor(
     SignUpState(),
 ) {
 
+    private var schoolJob: Job? = null
+
     init {
         getAllSchool()
     }
 
-    /** 학교 목록을 서버에서 조회해 상태에 저장. 화면 진입 시 1회 자동 호출됨 */
-    private fun getAllSchool() = viewModelScope.launch {
-        resultResponse(
-            response = getAllSchoolUseCase(),
-            successCallback = {
-                updateState { copy(schoolList = it) }
-            }
-        )
+    /**
+     * 학교 목록을 서버에서 조회해 상태에 저장. 화면 진입 시 1회 자동 호출됨.
+     * 사용자가 학교 칸을 눌러 호출한 경우(openSheetOnSuccess)에는 성공 시 바텀시트를 열고, 실패 시 안내 다이얼로그를 띄운다.
+     * 진입 시 자동 호출이 실패하면 목록이 비어 있고, 학교 칸을 누를 때 다시 조회한다
+     */
+    private fun getAllSchool(openSheetOnSuccess: Boolean = false) {
+        if (schoolJob?.isActive == true) return
+        schoolJob = viewModelScope.launch {
+            resultResponse(
+                response = getAllSchoolUseCase(),
+                successCallback = {
+                    updateState { copy(schoolList = it) }
+                    if (openSheetOnSuccess) emitEvent(SignUpEvent.ShowSchoolBottomSheet)
+                },
+                errorCallback = { failState ->
+                    if (openSheetOnSuccess) {
+                        emitEvent(SignUpEvent.ShowRegisterErrorDialog(failState.message))
+                    }
+                }
+            )
+        }
     }
 
     /**
@@ -84,7 +100,12 @@ class SignUpViewModel @Inject constructor(
     }
 
     fun onClickSchool() {
-        emitEvent(SignUpEvent.ShowSchoolBottomSheet)
+        // 목록 조회가 실패해 비어 있으면 빈 시트를 열지 않고 다시 조회한다
+        if (uiState.value.schoolList.isEmpty()) {
+            getAllSchool(openSheetOnSuccess = true)
+        } else {
+            emitEvent(SignUpEvent.ShowSchoolBottomSheet)
+        }
     }
 
     /** 학교 바텀시트에서 선택된 학교를 상태에 반영 */
@@ -107,8 +128,9 @@ class SignUpViewModel @Inject constructor(
             successCallback = { privacyTerms ->
                 fetchServiceTermsAndRegister(privacyTerms.id.toInt())
             },
-            errorCallback = {
+            errorCallback = { failState ->
                 ULog.d("개인정보 약관 조회 실패")
+                emitEvent(SignUpEvent.ShowRegisterErrorDialog(failState.message))
             }
         )
     }
@@ -120,8 +142,9 @@ class SignUpViewModel @Inject constructor(
                 successCallback = { serviceTerms ->
                     executeRegister(privacyTermsId, serviceTerms.id.toInt())
                 },
-                errorCallback = {
+                errorCallback = { failState ->
                     ULog.d("서비스 약관 조회 실패")
+                    emitEvent(SignUpEvent.ShowRegisterErrorDialog(failState.message))
                 }
             )
         }
@@ -141,7 +164,7 @@ class SignUpViewModel @Inject constructor(
                 SignUpType.SOCIAL -> registerUseCase(
                     RegisterRequest(
                         oAuthVerificationToken = uiState.value.oAuthVerificationToken,
-                        name = uiState.value.name,
+                        name = uiState.value.name.trim(),
                         nickname = uiState.value.nickname,
                         emailVerificationToken = uiState.value.emailVerificationToken,
                         schoolId = uiState.value.school.schoolId,
@@ -153,7 +176,7 @@ class SignUpViewModel @Inject constructor(
                 SignUpType.EMAIL -> registerEmailUseCase(
                     RegisterEmailRequest(
                         rawPassword = uiState.value.rawPassword,
-                        name = uiState.value.name,
+                        name = uiState.value.name.trim(),
                         nickname = uiState.value.nickname,
                         emailVerificationToken = uiState.value.emailVerificationToken,
                         schoolId = uiState.value.school.schoolId,
@@ -209,7 +232,7 @@ data class SignUpState(
     val schoolList: List<SchoolInfo> = emptyList()
 ) : UiState {
     val enableNextButton: Boolean
-        get() = name.isNotEmpty() && nickname.isNotEmpty() && school.schoolId != -1
+        get() = name.isNotBlank() && nickname.isNotBlank() && school.schoolId != -1
 }
 
 sealed interface SignUpEvent : UiEvent {

@@ -254,6 +254,11 @@ fun MainNavHost(
                         popUpTo(0) { inclusive = true }
                     }
                 },
+                navigateToLogin = {
+                    navHostController.navigate(MainDestination.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
             )
         }
 

@@ -24,6 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,7 +72,7 @@ import com.umc.component.theme.indigo500
  * @param nextIconTint nextIcon 틴트 색상. null 이면 원본 색상 유지
  * @param nextIconSize nextIcon 크기. 기본값 24dp
  * @param onClickNextIcon nextIcon 클릭 콜백 (입력값 지우기·비밀번호 표시 전환 등). null 이면 클릭 불가
- * @param visualTransformation 입력 텍스트 표시 변환 (비밀번호 마스킹 등)
+ * @param visualTransformation 입력 텍스트 표시 변환 (비밀번호 마스킹 등). null 이면 Password 키보드는 자동으로 마스킹하고 그 외에는 변환하지 않는다
  * @param interactionSource 포커스 상태를 호출부에서 관찰해야 할 때 외부에서 주입
  * @param verticalAlignment 입력 내용의 세로 정렬. 기본값은 중앙 정렬
  */
@@ -100,7 +102,7 @@ fun UTextField(
     nextIconTint: Color? = null,
     nextIconSize: Dp = 24.dp,
     onClickNextIcon: (() -> Unit)? = null,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
+    visualTransformation: VisualTransformation? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
 ) {
@@ -132,6 +134,14 @@ fun UTextField(
             keyboardOptions.imeAction != ImeAction.None &&
             keyboardOptions.imeAction != ImeAction.Unspecified)
 
+    // 비밀번호 키보드는 키보드 타입만으로는 글자가 가려지지 않으므로 명시값이 없을 때 마스킹한다.
+    val resolvedVisualTransformation = visualTransformation
+        ?: if (keyboardOptions.keyboardType == KeyboardType.Password) {
+            PasswordVisualTransformation(mask = '*')
+        } else {
+            VisualTransformation.None
+        }
+
     BasicTextField(
         value = fieldValue,
         onValueChange = {
@@ -141,7 +151,7 @@ fun UTextField(
         enabled = enabled,
         textStyle = textStyle.copy(color = textColor),
         cursorBrush = SolidColor(focusStrokeColor),
-        visualTransformation = visualTransformation,
+        visualTransformation = resolvedVisualTransformation,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         singleLine = resolvedSingleLine,

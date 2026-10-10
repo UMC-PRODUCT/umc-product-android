@@ -43,6 +43,9 @@ import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.red500
@@ -64,19 +67,10 @@ fun SignUpFailRoute(
     navigateToLogin: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    var toastData by remember { mutableStateOf<UToastData?>(null) }
 
     LaunchedEffect(Unit) {
-        val googleToken = runCatching {
-            val activity = context.findActivity() ?: error("Activity를 찾을 수 없습니다.")
-            val authorizationRequest = AuthorizationRequest.builder()
-                .setRequestedScopes(listOf(Scope(Scopes.PROFILE), Scope(Scopes.EMAIL)))
-                .build()
-            val result = Identity.getAuthorizationClient(activity)
-                .authorize(authorizationRequest)
-                .await()
-            result.accessToken ?: ""
-        }.getOrDefault("")
-        viewModel.setGoogleToken(googleToken)
+        viewModel.setGoogleToken(requestGoogleAccessToken(context))
     }
 
     CollectUiEvents(viewModel.uiEvent) { event ->
@@ -88,23 +82,35 @@ fun SignUpFailRoute(
             }
             SignUpFailEvent.MoveToCode -> navigateToCode()
             SignUpFailEvent.MoveToKakaoInquiry -> {
-                val intent = Intent(Intent.ACTION_VIEW, "https://pf.kakao.com/_MDxhqX/chat".toUri())
+                val intent = Intent(Intent.ACTION_VIEW, KAKAO_INQUIRY_URL.toUri())
                 context.startActivity(intent)
             }
             SignUpFailEvent.MoveToLogin -> navigateToLogin()
+            is SignUpFailEvent.ShowErrorToast ->
+                toastData = UToastData(event.message, UToastState.ERROR)
         }
     }
 
     BackHandler { context.findActivity()?.finish() }
 
-    SignUpFailScreen(
-        onClickBack = viewModel::onClickBack,
-        onClickNext = viewModel::onClickNext,
-        onClickHomePage = viewModel::onClickHomePage,
-        onClickLogout = viewModel::onClickLogout,
-        onClickKakaoInquiry = viewModel::onClickKakaoInquiry,
-        onDeleteUserConfirm = viewModel::deleteUser,
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        SignUpFailScreen(
+            onClickBack = viewModel::onClickBack,
+            onClickNext = viewModel::onClickNext,
+            onClickHomePage = viewModel::onClickHomePage,
+            onClickLogout = viewModel::onClickLogout,
+            onClickKakaoInquiry = viewModel::onClickKakaoInquiry,
+            onDeleteUserConfirm = viewModel::deleteUser,
+        )
+
+        UToastHost(
+            data = toastData,
+            onDismiss = { toastData = null },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 56.dp),
+        )
+    }
 }
 
 @Composable
@@ -116,24 +122,6 @@ fun SignUpFailScreen(
     onClickKakaoInquiry: () -> Unit = {},
     onDeleteUserConfirm: () -> Unit = {},
 ) {
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
-    if (showDeleteDialog) {
-        UDialog(
-            title = AppStrings.SIGN_UP_FAIL_DELETE_USER_DIALOG_TITLE,
-            content = AppStrings.SIGN_UP_FAIL_DELETE_USER_DIALOG_CONTENT,
-            isTwoButton = true,
-            positiveText = AppStrings.DELETE,
-            negativeText = AppStrings.CANCEL,
-            onPositive = {
-                showDeleteDialog = false
-                onDeleteUserConfirm()
-            },
-            onNegative = { showDeleteDialog = false },
-            onDismissRequest = { showDeleteDialog = false },
-        )
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -180,37 +168,10 @@ fun SignUpFailScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            UText(
-                text = AppStrings.SIGN_UP_FAIL_LOGOUT,
-                style = UmcTypographyTokens
-                    .Footnote.copy(textDecoration = TextDecoration.Underline),
-                color = grey600(),
-                modifier = Modifier.clickable {
-                    onClickLogout()
-                }
-            )
-
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .width(1.dp)
-                    .height(12.dp)
-                    .background(grey400())
-            )
-
-            UText(
-                text = AppStrings.SIGN_UP_FAIL_DELETE_USER,
-                style = UmcTypographyTokens.Footnote
-                    .copy(textDecoration = TextDecoration.Underline),
-                color = red500(),
-                modifier = Modifier.clickable {
-                    showDeleteDialog = true
-                }
-            )
-        }
+        SignUpFailAccountLinks(
+            onClickLogout = onClickLogout,
+            onDeleteUserConfirm = onDeleteUserConfirm,
+        )
 
         Spacer(modifier = Modifier.height(80.dp))
 
@@ -245,16 +206,106 @@ fun SignUpFailScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        UText(
-            text = AppStrings.SIGN_UP_FAIL_QA_EMAIL,
-            style = UmcTypographyTokens.Footnote.copy(textDecoration = TextDecoration.Underline),
-            color = grey600(),
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .clickable { onClickKakaoInquiry() },
+        SignUpFailInquiryLink(
+            onClick = onClickKakaoInquiry,
+            modifier = Modifier.padding(bottom = 16.dp),
         )
     }
 }
+
+/** 카카오톡 채널 문의 URL */
+internal const val KAKAO_INQUIRY_URL = "https://pf.kakao.com/_MDxhqX/chat"
+
+/**
+ * '로그아웃하기 | 회원탈퇴하기' 링크 행과 탈퇴 확인 다이얼로그.
+ * 인증 대기 화면(SignUpFailScreen)과 코드 입력 화면(SignUpFailCodeScreen)이 함께 쓴다
+ */
+@Composable
+internal fun SignUpFailAccountLinks(
+    onClickLogout: () -> Unit,
+    onDeleteUserConfirm: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        UDialog(
+            title = AppStrings.SIGN_UP_FAIL_DELETE_USER_DIALOG_TITLE,
+            content = AppStrings.SIGN_UP_FAIL_DELETE_USER_DIALOG_CONTENT,
+            isTwoButton = true,
+            positiveText = AppStrings.DELETE,
+            negativeText = AppStrings.CANCEL,
+            onPositive = {
+                showDeleteDialog = false
+                onDeleteUserConfirm()
+            },
+            onNegative = { showDeleteDialog = false },
+            onDismissRequest = { showDeleteDialog = false },
+        )
+    }
+
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        UText(
+            text = AppStrings.SIGN_UP_FAIL_LOGOUT,
+            style = UmcTypographyTokens
+                .Footnote.copy(textDecoration = TextDecoration.Underline),
+            color = grey600(),
+            modifier = Modifier.clickable {
+                onClickLogout()
+            }
+        )
+
+        Box(
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+                .width(1.dp)
+                .height(12.dp)
+                .background(grey400())
+        )
+
+        UText(
+            text = AppStrings.SIGN_UP_FAIL_DELETE_USER,
+            style = UmcTypographyTokens.Footnote
+                .copy(textDecoration = TextDecoration.Underline),
+            color = red500(),
+            modifier = Modifier.clickable {
+                showDeleteDialog = true
+            }
+        )
+    }
+}
+
+/** 카카오톡 채널 문의 링크 */
+@Composable
+internal fun SignUpFailInquiryLink(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    UText(
+        text = AppStrings.SIGN_UP_FAIL_QA_EMAIL,
+        style = UmcTypographyTokens.Footnote.copy(textDecoration = TextDecoration.Underline),
+        color = grey600(),
+        modifier = modifier.clickable { onClick() },
+    )
+}
+
+/**
+ * 회원탈퇴 API 에 쓸 Google accessToken 을 Google Identity API 로 획득한다.
+ * 실패하거나 Activity 를 찾지 못하면 빈 문자열을 반환한다
+ */
+internal suspend fun requestGoogleAccessToken(context: Context): String = runCatching {
+    val activity = context.findActivity() ?: error("Activity를 찾을 수 없습니다.")
+    val authorizationRequest = AuthorizationRequest.builder()
+        .setRequestedScopes(listOf(Scope(Scopes.PROFILE), Scope(Scopes.EMAIL)))
+        .build()
+    val result = Identity.getAuthorizationClient(activity)
+        .authorize(authorizationRequest)
+        .await()
+    result.accessToken ?: ""
+}.getOrDefault("")
 
 @Preview(showBackground = true)
 @Composable
@@ -267,7 +318,7 @@ private fun SignUpFailScreenPreview() {
  * 감싸져 있을 수 있어 단순 `context as Activity` 는 ClassCastException 위험이 있다.
  * baseContext 체인을 거슬러 올라가며 실제 Activity 를 찾고, 없으면 null 을 반환한다.
  */
-private fun Context.findActivity(): Activity? {
+internal fun Context.findActivity(): Activity? {
     var current = this
     while (current is ContextWrapper) {
         if (current is Activity) return current
