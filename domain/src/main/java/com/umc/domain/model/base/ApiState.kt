@@ -38,3 +38,10 @@ data class FailState(
 }
 
 const val DEFAULT_ERROR = false
+
+/** 네트워크 단절(IOException 계열)로 요청 자체가 실패했을 때 FailState.code 로 쓰는 값. */
+const val NETWORK_ERROR_CODE = "NETWORK_ERROR"
+
+/** 서버 응답 없이 네트워크 단절로 실패한 경우인지 여부. 서버/인증 실패와 구분할 때 쓴다. */
+val FailState.isNetworkError: Boolean
+    get() = code == NETWORK_ERROR_CODE

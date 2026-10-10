@@ -57,6 +57,14 @@ private const val DARK_GREY_000 = 0xFF121212.toInt()
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 외부 링크로 처음 열린 경우 NavController 가 곧바로 목적지를 열지 않도록 링크를 보류한다.
+        // 앱은 항상 스플래시(인증 판정)부터 시작하고, 홈에 도착한 뒤 원래 목적지로 이동한다.
+        if (savedInstanceState == null) {
+            intent?.data?.let {
+                PendingDeepLink.uri = it
+                intent.data = null
+            }
+        }
         // 상태바를 앱 배경(grey000)과 같은 색으로. auto는 시스템 다크모드를 감지해
         // 배경색과 아이콘 명암을 함께 뒤집는다 (light: #FFFFFF / dark: #121212)
         enableEdgeToEdge(

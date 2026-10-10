@@ -2,8 +2,8 @@ package com.umc.data.mapper
 
 import com.umc.domain.model.base.FailState
 import com.google.gson.stream.MalformedJsonException
-import com.umc.data.dataSource.base.NETWORK_ERROR_CODE
 import com.umc.data.dataSource.base.NETWORK_ERROR_MESSAGE
+import com.umc.domain.model.base.NETWORK_ERROR_CODE
 import retrofit2.HttpException
 import java.io.EOFException
 import java.io.IOException

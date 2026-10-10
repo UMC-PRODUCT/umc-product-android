@@ -5,13 +5,13 @@ import com.google.gson.reflect.TypeToken
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
+import com.umc.domain.model.base.NETWORK_ERROR_CODE
 import com.google.gson.stream.MalformedJsonException
 import retrofit2.HttpException
 import java.io.EOFException
 import java.io.IOException
 
 // inline 함수에서 쓰므로 public 으로 둔다.
-const val NETWORK_ERROR_CODE = "NETWORK_ERROR"
 const val NETWORK_ERROR_MESSAGE = "네트워크 연결을 확인하고 다시 시도해주세요."
 
 suspend inline fun <reified T> apiCall(
