@@ -14,6 +14,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UButton
@@ -44,6 +45,7 @@ fun AddCodeDialog(
     code: String, //입력 코드
     onCodeChanged: (String) -> Unit, //상태 변경 요청 콜백
     onConfirmClick: () -> Unit, //버튼 클릭 콜백
+    isSubmitting: Boolean = false, //요청 진행 중(중복 전송 방지)
     onDismissRequest: () -> Unit, //시트 닫기 요청 콜백
 ){
     // 바텀시트 초기 확장 상태를 완전 확장 모드로 지정하는 시트 스태이트
@@ -94,15 +96,39 @@ fun AddCodeDialog(
             )
 
             UButton(
-                text = AppStrings.MYPAGE_ADDCODE_CONFIRM,
+                text = if (isSubmitting) AppStrings.MYPAGE_ADDCODE_SUBMITTING else AppStrings.MYPAGE_ADDCODE_CONFIRM,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                backgroundColor = indigo500(),
+                enabled = !isSubmitting,
+                backgroundColor = if (isSubmitting) grey400() else indigo500(),
                 textColor = grey000(),
                 textStyle = UmcTypographyTokens.SubheadlineBold,
                 onClick = onConfirmClick
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AddCodeDialogPreview() {
+    AddCodeDialog(
+        code = "ABC123",
+        onCodeChanged = {},
+        onConfirmClick = {},
+        onDismissRequest = {},
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AddCodeDialogSubmittingPreview() {
+    AddCodeDialog(
+        code = "ABC123",
+        onCodeChanged = {},
+        onConfirmClick = {},
+        isSubmitting = true,
+        onDismissRequest = {},
+    )
 }
