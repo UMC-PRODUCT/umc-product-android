@@ -3,6 +3,7 @@ package com.umc.presentation.study.admin.submit
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.curriculum.StudyMemberSubmissionWeek
 import com.umc.domain.usecase.curriculum.CreateMissionFeedbackUseCase
 import com.umc.domain.usecase.curriculum.GetChallengerWorkbookDetailUseCase
 import com.umc.domain.usecase.curriculum.GetWorkbookSubmissionWeeksUseCase
@@ -100,7 +101,12 @@ class AdminSubmitViewModel @Inject constructor(
             }
 
             is AdminSubmitAction.CompleteChange -> {
-                val status = uiState.value.pendingStatus ?: return
+                // 칩을 바꾸지 않고 문구만 수정한 경우에는 현재 결과를 그대로 사용
+                val state = uiState.value
+                val status = state.pendingStatus
+                    ?: state.existingFeedbackResult
+                    ?: state.bottomSheetItem?.markStatus
+                    ?: return
                 submitFeedback(result = status)
             }
 
@@ -271,6 +277,7 @@ class AdminSubmitViewModel @Inject constructor(
                 missionFeedbackId = null,
                 existingFeedbackResult = null,
                 isEditingBest = false,
+                reviewTabIndex = 0,
             )
         }
 
@@ -301,6 +308,7 @@ class AdminSubmitViewModel @Inject constructor(
                 missionFeedbackId = null,
                 existingFeedbackResult = null,
                 isEditingBest = false,
+                reviewTabIndex = 0,
                 showApproveDialog = false,
                 showRejectDialog = false,
             )
@@ -399,7 +407,9 @@ class AdminSubmitViewModel @Inject constructor(
                             availableWeeks = weeks.toImmutableList(),
                             selectedWeek = when {
                                 weeks.isEmpty() -> 1
-                                selectedWeek in weeks -> selectedWeek
+                                // 첫 로드(availableWeeks가 비어 있음)에는 기본값 대신 첫 주차를 선택
+                                availableWeeks.isNotEmpty() &&
+                                    selectedWeek in weeks -> selectedWeek
                                 else -> weeks.first()
                             },
                         )
@@ -444,19 +454,51 @@ class AdminSubmitViewModel @Inject constructor(
                 }
             }
 
-            when (
-                val result = getWorkbookSubmissionsV2UseCase(
+            // 건너뛴 페이지(전부 미제출)에서 나온 그룹도 그룹 목록에 포함
+            val skippedGroups = mutableListOf<AdminSubmitGroupUiModel>()
+
+            var response = getWorkbookSubmissionsV2UseCase(
+                studyGroupId = studyGroupId,
+                weekNos = weekNos,
+                cursor = cursor,
+                size = PAGE_SIZE,
+            )
+
+            // 서버는 미제출 인원도 행으로 내려준다. 한 페이지가 전부 미제출이면 목록이 비어
+            // 스크롤로 다음 페이지를 부를 수 없으므로 제출이 있는 페이지를 만날 때까지 이어서 조회
+            while (true) {
+                val current = (response as? ApiState.Success)?.data ?: break
+                val nextCursor = current.nextCursor
+
+                if (
+                    !current.hasNext ||
+                    nextCursor == null ||
+                    current.content.any { member -> member.weeks.any { it.isSubmitted() } }
+                ) {
+                    break
+                }
+
+                skippedGroups += current.content.map { member ->
+                    AdminSubmitGroupUiModel(
+                        id = member.studyGroupId,
+                        name = member.studyGroupName,
+                    )
+                }
+
+                response = getWorkbookSubmissionsV2UseCase(
                     studyGroupId = studyGroupId,
                     weekNos = weekNos,
-                    cursor = cursor,
+                    cursor = nextCursor,
                     size = PAGE_SIZE,
                 )
-            ) {
+            }
+
+            when (val result = response) {
                 is ApiState.Success -> {
                     val page = result.data
 
                     val newItems = page.content.flatMap { member ->
-                        member.weeks.map { week ->
+                        member.weeks.filter { it.isSubmitted() }.map { week ->
                             AdminSubmitItemUiModel(
                                 id = member.studyGroupMemberId,
                                 challengerWorkbookId = week.challengerWorkbookId,
@@ -482,13 +524,14 @@ class AdminSubmitViewModel @Inject constructor(
                         }
                     }
 
-                    val groups = page.content
-                        .map { member ->
+                    val groups = (
+                        skippedGroups + page.content.map { member ->
                             AdminSubmitGroupUiModel(
                                 id = member.studyGroupId,
                                 name = member.studyGroupName,
                             )
                         }
+                        )
                         .distinctBy { group ->
                             group.id
                         }
@@ -629,14 +672,11 @@ class AdminSubmitViewModel @Inject constructor(
             return
         }
 
-        if (
+        // 피드백 수정 API(PATCH)는 내용만 바꿀 수 있어 결과(PASS/FAIL)가 바뀌면 새 피드백을 등록
+        val isResultChanged =
             state.missionFeedbackId != null &&
-            state.existingFeedbackResult != null &&
-            state.existingFeedbackResult != result
-        ) {
-
-
-        }
+                state.existingFeedbackResult != null &&
+                state.existingFeedbackResult != result
 
         viewModelScope.launch {
             updateState {
@@ -644,7 +684,7 @@ class AdminSubmitViewModel @Inject constructor(
             }
 
             val apiResult =
-                if (state.missionFeedbackId == null) {
+                if (state.missionFeedbackId == null || isResultChanged) {
                     createMissionFeedbackUseCase(
                         missionSubmissionId =
                             missionSubmissionId,
@@ -684,6 +724,14 @@ class AdminSubmitViewModel @Inject constructor(
                             existingFeedbackResult = null,
                             showApproveDialog = false,
                             showRejectDialog = false,
+                        )
+                    }
+
+                    // 결과가 바뀐 경우 서버 값으로 목록을 확정
+                    if (isResultChanged) {
+                        loadSubmissions(
+                            studyGroupId = state.selectedGroupId,
+                            weekNos = listOf(state.selectedWeek.toLong()),
                         )
                     }
 
@@ -959,3 +1007,9 @@ class AdminSubmitViewModel @Inject constructor(
     }
 }
 
+// 서버가 제출 현황 목록에 함께 내려주는 미배포·미제출 행의 상태값
+private const val STATUS_NOT_SUBMITTED = "NOT_SUBMITTED"
+
+/** 제출 내역이 있는 주차인지 여부 (미제출 행은 제출 현황에서 제외) */
+private fun StudyMemberSubmissionWeek.isSubmitted(): Boolean =
+    status != STATUS_NOT_SUBMITTED

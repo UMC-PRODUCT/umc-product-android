@@ -74,7 +74,7 @@ fun ActStudyScreen(
         )
     } else {
         // 일반 사용자는 본인의 스터디 진행 화면 표시
-        UserStudyRoute()
+        UserStudyRoute(isActive = isActive)
     }
 }
 

@@ -104,7 +104,8 @@ fun AdminSubmitScreen(
         }
     }
 
-    LaunchedEffect(shouldLoadMore) {
+    // 미제출 행을 걸러 한 페이지 항목이 적을 때도 다음 페이지가 이어서 로드되도록 cursor를 키에 포함
+    LaunchedEffect(shouldLoadMore, state.nextCursor) {
         if (shouldLoadMore) {
             onAction(AdminSubmitAction.LoadMore)
         }

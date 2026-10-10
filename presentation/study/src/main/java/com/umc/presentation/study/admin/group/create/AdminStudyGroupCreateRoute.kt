@@ -1,10 +1,13 @@
 package com.umc.presentation.study.admin.group.create
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.base.CollectUiEvents
+import com.umc.component.theme.AppStrings
 
 /**
  * 스터디 그룹 생성 화면의 Route
@@ -26,6 +29,7 @@ fun AdminStudyGroupCreateRoute(
     val state = viewModel.uiState
         .collectAsStateWithLifecycle()
         .value
+    val context = LocalContext.current
 
     /**
      * 현재 생성할 스터디 그룹의 기수는 활성 기수를 따른다.
@@ -58,9 +62,12 @@ fun AdminStudyGroupCreateRoute(
             }
 
             is AdminStudyGroupCreateEvent.RegisterFailure -> {
-                // TODO 그룹 생성 실패 메시지 표시
-                // 추후 Toast 또는 Snackbar 등으로
-                // event.message를 사용자에게 표시
+                // 화면에 머물며 입력값은 유지하고, 서버 메시지가 없으면 기본 문구를 표시
+                Toast.makeText(
+                    context,
+                    event.message.ifBlank { AppStrings.STUDY_GROUP_CREATE_FAIL },
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         }
     }

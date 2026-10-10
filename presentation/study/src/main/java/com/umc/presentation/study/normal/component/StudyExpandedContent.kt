@@ -95,6 +95,7 @@ private fun StudyStatusBanner(
 
             UText(
                 text = text,
+                modifier = Modifier.weight(1f, fill = false),
                 style = UmcTypographyTokens.FootnoteBold,
                 color = textColor,
             )

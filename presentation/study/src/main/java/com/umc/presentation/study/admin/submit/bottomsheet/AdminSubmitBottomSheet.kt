@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
@@ -122,6 +123,8 @@ fun AdminSubmitBottomSheet(
  */
 @Composable
 private fun SubmitUrlSection(item: AdminSubmitItemUiModel) {
+    val uriHandler = LocalUriHandler.current
+
     UText(text = "제출 URL", style = SubheadlineBold, color = grey800())
     Spacer(Modifier.height(8.dp))
 
@@ -147,7 +150,16 @@ private fun SubmitUrlSection(item: AdminSubmitItemUiModel) {
         modifier = Modifier
             .fillMaxWidth()
             .background(grey100(), RoundedCornerShape(8.dp))
-            .clickable { }
+            .clickable(enabled = item.submitUrl.isNotBlank()) {
+                val url = item.submitUrl.trim()
+                val uri = if (url.startsWith("http://") || url.startsWith("https://")) {
+                    url
+                } else {
+                    "https://$url"
+                }
+                // 처리할 앱이 없거나 URL 형식이 아니어도 앱이 종료되지 않도록 삼킨다
+                runCatching { uriHandler.openUri(uri) }
+            }
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically

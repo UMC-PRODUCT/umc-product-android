@@ -21,6 +21,7 @@ import com.umc.component.theme.grey100
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.study.normal.component.StudyCurriculumCard
 import com.umc.presentation.study.normal.component.StudyEmptyCard
+import com.umc.presentation.study.normal.component.StudyErrorCard
 import com.umc.presentation.study.normal.component.StudyItemRow
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.collectLatest
@@ -35,10 +36,16 @@ import com.umc.component.base.CollectUiEvents
  */
 @Composable
 fun UserStudyRoute(
+    isActive: Boolean = true,
     viewModel: UserStudyViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    // 탭이 활성화될 때마다 커리큘럼 진행 현황을 다시 조회
+    LaunchedEffect(isActive) {
+        if (isActive) viewModel.refresh()
+    }
 
     // ViewModel에서 발생한 일회성 Toast 이벤트 처리
     CollectUiEvents(viewModel.uiEvent) { event ->
@@ -56,6 +63,7 @@ fun UserStudyRoute(
     UserStudyScreen(
         state = state,
         onToggle = viewModel::toggleExpand,
+        onRetry = viewModel::refresh,
     )
 }
 
@@ -69,6 +77,7 @@ fun UserStudyRoute(
 fun UserStudyScreen(
     state: UserStudyState,
     onToggle: (Int) -> Unit,
+    onRetry: () -> Unit = {},
 ) {
     Box(
         modifier = Modifier
@@ -79,11 +88,18 @@ fun UserStudyScreen(
                 vertical = 12.dp,
             )
     ) {
-        // 조회된 커리큘럼이 없을 경우 Empty 화면 표시
+        // 조회된 커리큘럼이 없을 경우 조회 실패면 오류 화면, 아니면 Empty 화면 표시
         if (state.items.isEmpty()) {
-            StudyEmptyCard(
-                modifier = Modifier.fillMaxSize(),
-            )
+            if (state.isError) {
+                StudyErrorCard(
+                    onRetry = onRetry,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                StudyEmptyCard(
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         } else {
             // 전체 진행률 카드와 주차별 커리큘럼 목록
             LazyColumn(
@@ -167,5 +183,19 @@ private fun UserStudyScreenPreview() {
             ),
         ),
         onToggle = {},
+        onRetry = {},
+    )
+}
+
+/**
+ * 일반 사용자 스터디 화면 조회 실패 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun UserStudyScreenErrorPreview() {
+    UserStudyScreen(
+        state = UserStudyState(isError = true),
+        onToggle = {},
+        onRetry = {},
     )
 }
