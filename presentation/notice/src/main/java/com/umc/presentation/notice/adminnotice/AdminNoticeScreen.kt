@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +43,7 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey950
+import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
 import com.umc.presentation.notice.NoticeCard
 import kotlinx.collections.immutable.persistentListOf
@@ -159,6 +161,26 @@ fun AdminNoticeScreen(
                 )
             }
 
+            uiState.isLoadingEmpty -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = indigo500(), trackColor = indigo100())
+                }
+            }
+
+            uiState.errorMessage != null && uiState.noticeList.isEmpty() -> {
+                AdminNoticeStatusContent(
+                    iconRes = R.drawable.ic_speaker,
+                    title = AppStrings.NOTICE_LIST_ERROR,
+                    content = uiState.errorMessage,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
             uiState.isEmpty -> {
                 AdminNoticeStatusContent(
                     // TODO: 확성기 아이콘 에셋 추가 후 교체 (임시로 ic_alarm 사용)
@@ -268,6 +290,7 @@ private fun AdminNoticeScreenPreview() {
         uiState = AdminNoticeUiState(
             visibleTabs = AdminNoticeTab.entries.toImmutableList(),
             selectedTab = AdminNoticeTab.CENTRAL,
+            hasLoaded = true,
         ),
     )
 }
@@ -280,6 +303,31 @@ private fun AdminNoticeScreenNoAccessPreview() {
             hasAccess = false,
             visibleTabs = persistentListOf(AdminNoticeTab.PART_LEADER),
             selectedTab = AdminNoticeTab.PART_LEADER,
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AdminNoticeScreenLoadingPreview() {
+    AdminNoticeScreen(
+        uiState = AdminNoticeUiState(
+            visibleTabs = AdminNoticeTab.entries.toImmutableList(),
+            selectedTab = AdminNoticeTab.CENTRAL,
+            isPageLoading = true,
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AdminNoticeScreenErrorPreview() {
+    AdminNoticeScreen(
+        uiState = AdminNoticeUiState(
+            visibleTabs = AdminNoticeTab.entries.toImmutableList(),
+            selectedTab = AdminNoticeTab.CENTRAL,
+            hasLoaded = true,
+            errorMessage = "네트워크 연결을 확인해 주세요",
         ),
     )
 }

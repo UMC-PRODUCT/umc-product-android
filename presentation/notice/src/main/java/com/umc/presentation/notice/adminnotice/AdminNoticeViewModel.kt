@@ -18,6 +18,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -87,6 +88,7 @@ class AdminNoticeViewModel @Inject constructor(
     AdminNoticeUiState(),
 ) {
     private var cachedUserInfo: UserInfo? = null
+    private var listJob: Job? = null
 
     init {
         loadUserAccess()
@@ -95,7 +97,8 @@ class AdminNoticeViewModel @Inject constructor(
 
     /** 조회 대상 기수는 공지 화면에서 nav argument로 전달받아 주입 */
     fun setGisuId(gisuId: Long) {
-        updateState { copy(gisuId = gisuId) }
+        // 기수를 알 수 없으면 조회가 시작되지 않으므로, 끝없는 로딩 대신 빈 상태로 떨어지게 한다
+        updateState { copy(gisuId = gisuId, hasLoaded = hasLoaded || gisuId <= 0L) }
         refreshIfReady()
     }
 
@@ -138,7 +141,21 @@ class AdminNoticeViewModel @Inject constructor(
     }
 
     fun onClickTab(tab: AdminNoticeTab) {
-        updateState { copy(selectedTab = tab) }
+        if (tab == uiState.value.selectedTab) return
+        // 진행 중이던 이전 탭 조회는 버리고, 이전 탭의 목록·페이징을 비워 새 탭 제목 아래에 남지 않게 한다.
+        // 비워 두면 전환 중에는 로딩이, 조회 실패 시에는 실패 안내가 새 탭 기준으로 보인다
+        listJob?.cancel()
+        updateState {
+            copy(
+                selectedTab = tab,
+                noticeList = persistentListOf(),
+                currentPage = 0,
+                isLastPage = false,
+                isPageLoading = false,
+                hasLoaded = false,
+                errorMessage = null,
+            )
+        }
         refreshIfReady()
     }
 
@@ -180,13 +197,17 @@ class AdminNoticeViewModel @Inject constructor(
         }
     }
 
-    private fun getNoticeList(isRefresh: Boolean) = viewModelScope.launch {
+    private fun getNoticeList(isRefresh: Boolean) {
+        listJob = fetchNoticeList(isRefresh)
+    }
+
+    private fun fetchNoticeList(isRefresh: Boolean) = viewModelScope.launch {
         val state = uiState.value
         val selectedTab = state.selectedTab ?: return@launch
 
         if (state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
 
-        updateState { copy(isPageLoading = true) }
+        updateState { copy(isPageLoading = true, errorMessage = null) }
 
         val pageToFetch = if (isRefresh) 0 else state.currentPage
 
@@ -213,12 +234,16 @@ class AdminNoticeViewModel @Inject constructor(
                         },
                         currentPage = pageToFetch + 1,
                         isPageLoading = false,
+                        hasLoaded = true,
                         isLastPage = !noticeSearch.hasNext,
                     )
                 }
             },
-            errorCallback = {
-                updateState { copy(isPageLoading = false) }
+            errorCallback = { fail ->
+                // 실패 사유를 남기지 않으면 "0건" 빈 상태와 구분되지 않는다
+                updateState {
+                    copy(isPageLoading = false, hasLoaded = true, errorMessage = fail.message)
+                }
             }
         )
     }
@@ -243,10 +268,17 @@ data class AdminNoticeUiState(
     val isPageLoading: Boolean = false,
     val isLastPage: Boolean = false,
     val readNoticeIds: ImmutableSet<Long> = persistentSetOf(),
+    // 첫 조회가 끝났는지 (끝나기 전의 빈 목록을 "0건"으로 오해하지 않기 위함)
+    val hasLoaded: Boolean = false,
+    val errorMessage: String? = null,
 ) : UiState {
-    // 접근 가능 + 로딩 아님 + 목록 비어있음 -> 빈 상태 노출
+    // 접근 가능 + 첫 조회 완료 + 로딩 아님 + 실패 아님 + 목록 비어있음 -> 빈 상태 노출
     val isEmpty: Boolean
-        get() = hasAccess && !isPageLoading && noticeList.isEmpty()
+        get() = hasAccess && hasLoaded && !isPageLoading && errorMessage == null && noticeList.isEmpty()
+
+    // 접근 가능 + 목록 비어있음 + 아직 조회 전이거나 조회 중 -> 로딩 표시
+    val isLoadingEmpty: Boolean
+        get() = hasAccess && noticeList.isEmpty() && errorMessage == null && (!hasLoaded || isPageLoading)
 }
 
 sealed interface AdminNoticeEvent : UiEvent {
