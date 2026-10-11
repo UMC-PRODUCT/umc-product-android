@@ -7,6 +7,7 @@ import com.kakao.sdk.auth.TokenManagerProvider
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.TermsType
@@ -223,8 +224,13 @@ class MypageViewModel @Inject constructor(
                         emitEvent(MypageEvent.MoveToOnBoardPage)
                     }
                 },
-                errorCallback = {
-                    /**TODO. 에러 토스트 메시지 등을 전송**/
+                errorCallback = { failState ->
+                    // 표준 응답이 아닌 실패(게이트웨이 HTML 등)는 message 가 비거나 영문일 수 있어 기본 문구로 보정한다.
+                    emitEvent(
+                        MypageEvent.ShowErrorToast(
+                            failState.message.ifBlank { AppStrings.MYPAGE_DELETE_USER_FAIL }
+                        )
+                    )
                 }
             )
         }
@@ -284,16 +290,18 @@ class MypageViewModel @Inject constructor(
     }
 
 
+    //로그아웃 다이얼로그 호출
+    fun showLogoutDialog(){
+        emitEvent(MypageEvent.Logout)
+    }
+
+    //로그아웃 확인 후 실제 로그아웃 처리
     fun logout(){
         viewModelScope.launch {
             // 로그아웃 시 dataStore의 모든 데이터 삭제
             clearAllDataUseCase()
-            emitEvent(MypageEvent.Logout)
+            emitEvent(MypageEvent.MoveToOnBoardPage)
         }
-    }
-
-    fun navigateToOnboard(){
-        emitEvent(MypageEvent.MoveToOnBoardPage)
     }
 
 
@@ -377,6 +385,9 @@ sealed interface MypageEvent : UiEvent {
     //챌린저 코드 다이얼로그 전용
     object ConfirmAddCode : MypageEvent
     data class FailAddCode(val message: String): MypageEvent
+
+    //일반 에러 토스트
+    data class ShowErrorToast(val message: String): MypageEvent
 
 
 }

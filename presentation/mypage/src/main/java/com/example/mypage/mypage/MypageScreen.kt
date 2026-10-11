@@ -171,9 +171,6 @@ fun MypageRoute(
             //온보드 누를 때
             is MypageEvent.MoveToOnBoardPage -> onNavigateToLogin()
 
-            //로그아웃 시 이동
-            is MypageEvent.Logout -> onNavigateToLogin()
-
             //챌린저 기록 추가 시 (다이얼로그)
             is MypageEvent.ConfirmAddCode -> {
                 Toast.makeText(context, "활동기록이 추가되었습니다.", Toast.LENGTH_SHORT).show()
@@ -184,6 +181,10 @@ fun MypageRoute(
                 Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 showAddCodeDialog = false
 
+            }
+            //에러 토스트 (회원 탈퇴 실패 등)
+            is MypageEvent.ShowErrorToast -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
             //뒤로 가기
             is MypageEvent.NavigateToBack -> onNavigateToBack()
@@ -204,7 +205,7 @@ fun MypageRoute(
         onLocationSettingClick = viewModel::navigateToSettingLocation, //위치 설정 이동
         onPrivacyClick = viewModel::navigateToPersonalInformation, //개인정보처리 방침 이동
         onTermsClick = viewModel::navigateToUseManual, //이용약관 이동
-        onLogoutClick = viewModel::logout, //로그아웃
+        onLogoutClick = viewModel::showLogoutDialog, //로그아웃
         onDeleteUserClick = viewModel::showDeleteUserDialog, //회원 탛퇴
         onWebsiteClick = viewModel::navigateToWebsiteUmc, //웹사이트 이동
         onInstagramClick = viewModel::navigateToInstagramUmc //인스타그램 이동
@@ -257,9 +258,8 @@ fun MypageRoute(
             positiveText = "로그아웃",
             negativeText = "취소",
             onPositive = {
-                /**TODO: 로그아웃 로직 연결*/
                 showLogoutDialog = false
-                viewModel.navigateToOnboard()
+                viewModel.logout()
             },
             onNegative = {
                 showLogoutDialog = false

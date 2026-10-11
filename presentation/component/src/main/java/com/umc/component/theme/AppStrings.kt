@@ -120,6 +120,7 @@ object AppStrings {
     const val MYPAGE_LOGOUT_TITLE = "로그아웃"
     const val MYPAGE_LOGOUT_CONTENT = "정말 로그아웃을 하시겠습니까?"
     const val MYPAGE_DELTE_USER_TITLE = "계정 삭제"
+    const val MYPAGE_DELETE_USER_FAIL = "계정 삭제에 실패했습니다. 잠시 후 다시 시도해주세요."
     const val MYPAGE_DELTE_USER_CONTENT = "계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 정말 삭제하시겠습니까?"
     const val MYPAGE_ADDCODE_TITLE = "운영진에게 발급받은\n6자리 인증코드를 입력해주세요."
     const val MYPAGE_ADDCODE_CONTENT = "6자리 코드를 입력하세요"
