@@ -25,13 +25,20 @@ class SignUpFailCodeViewModel @Inject constructor(
         updateState { copy(code = code) }
     }
 
-    /** 인증코드로 챌린저 기록 등록. 성공 시 홈으로, 실패 시 에러 메시지 다이얼로그 표시 */
+    /**
+     * 인증코드로 챌린저 기록 등록. 성공 시 홈으로, 실패 시 에러 메시지 다이얼로그 표시.
+     * 요청 진행 중에는 다시 호출되지 않아 연타해도 요청이 한 번만 나간다
+     */
     fun register() = viewModelScope.launch {
+        if (uiState.value.isSubmitting) return@launch
+        updateState { copy(isSubmitting = true) }
         val request = ChallengerRecordMemberRequest(code = uiState.value.code)
         resultResponse(
             response = addChallengerRecordMemberUseCase(request),
+            // 성공 시에는 홈으로 이동하므로 제출 중 상태를 유지한다
             successCallback = { emitEvent(SignUpFailCodeEvent.MoveToHome) },
             errorCallback = { failState ->
+                updateState { copy(isSubmitting = false) }
                 emitEvent(SignUpFailCodeEvent.ShowErrorDialog(failState.message))
             }
         )
@@ -40,6 +47,7 @@ class SignUpFailCodeViewModel @Inject constructor(
 
 data class SignUpFailCodeState(
     val code: String = "",
+    val isSubmitting: Boolean = false,
 ) : UiState
 
 sealed interface SignUpFailCodeEvent : UiEvent {

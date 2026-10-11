@@ -254,6 +254,11 @@ fun MainNavHost(
                         popUpTo(0) { inclusive = true }
                     }
                 },
+                navigateToLogin = {
+                    navHostController.navigate(MainDestination.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
             )
         }
 
@@ -413,6 +418,14 @@ fun MainNavHost(
 
         //홈 화면
         composable<MainDestination.Home> {
+            // 외부 링크로 열렸다면 인증 판정을 거쳐 홈에 도착한 지금 원래 목적지로 이동한다.
+            // 매칭되는 destination 이 없는 링크는 무시한다.
+            LaunchedEffect(Unit) {
+                PendingDeepLink.consume()?.let { uri ->
+                    runCatching { navHostController.navigate(uri) }
+                }
+            }
+
             HomeRoute(
                 onNavigateToNotice = {
                     navHostController.navigate(MainDestination.Notice)

@@ -5,6 +5,7 @@ import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.component.util.isValidEmail
+import com.umc.domain.model.base.isNetworkError
 import com.umc.domain.model.enums.EmailVerifyPurpose
 import com.umc.domain.model.enums.EmailVerifyType
 import com.umc.domain.model.request.EmailVerificationCompleteRequest
@@ -66,8 +67,11 @@ class SocialSignUpViewModel @Inject constructor(
                     emitEvent(SocialSignUpEvent.ShowVerifyToast)
                 },
                 errorCallback = { failState ->
-                    // 서버 에러 메시지를 그대로 토스트로 노출
-                    errorEmailVerify()
+                    // 네트워크 단절은 이메일 형식 오류가 아니므로 에러 상태 없이 토스트만 띄운다(재요청 가능).
+                    // 그 외에는 서버 에러 메시지를 토스트로 노출하고 에러 상태로 전환한다.
+                    if (!failState.isNetworkError) {
+                        errorEmailVerify()
+                    }
                     emitEvent(SocialSignUpEvent.ShowErrorToast(failState.message))
                 }
             )

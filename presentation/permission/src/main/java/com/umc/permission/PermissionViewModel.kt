@@ -64,8 +64,10 @@ class PermissionViewModel @Inject constructor(
                     emitEvent(PermissionEvent.MoveToFailEvent)
                 }
             },
-            errorCallback = {
-                emitEvent(PermissionEvent.MoveToFailEvent)
+            // 조회 자체가 실패한 것이지 챌린저 기록이 없는 것이 아니므로 인증 실패 화면으로 보내지 않는다.
+            // 화면에 남아 '가입 완료'를 다시 눌러 재시도할 수 있게 한다
+            errorCallback = { failState ->
+                emitEvent(PermissionEvent.ShowErrorToast(failState.message))
             }
         )
     }
@@ -89,4 +91,5 @@ sealed interface PermissionEvent : UiEvent {
     data object MoveToMainEvent : PermissionEvent
     data object MoveToFailEvent : PermissionEvent
     data object ShowPermissionDialog : PermissionEvent
+    data class ShowErrorToast(val message: String) : PermissionEvent
 }

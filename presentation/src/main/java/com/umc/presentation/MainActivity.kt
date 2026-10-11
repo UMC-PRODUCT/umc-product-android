@@ -1,5 +1,6 @@
 package com.umc.presentation
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -57,6 +58,25 @@ private const val DARK_GREY_000 = 0xFF121212.toInt()
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 외부 링크로 처음 열린 경우 NavController 가 곧바로 목적지를 열지 않도록 링크를 보류한다.
+        // 앱은 항상 스플래시(인증 판정)부터 시작하고, 홈에 도착한 뒤 원래 목적지로 이동한다.
+        if (savedInstanceState == null) {
+            val link = intent?.data
+            if (link != null && shouldRestartTask()) {
+                // 이미 떠 있는 앱 위로 링크가 새 인스턴스로 열린 경우. 링크를 비우면 NavController 가 하던
+                // 태스크 초기화가 사라져 인스턴스가 쌓이므로, 같은 방식으로 태스크를 비우고 다시 시작한다.
+                startActivity(
+                    Intent(this, MainActivity::class.java)
+                        .setData(link)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                )
+                finish()
+                return
+            }
+            // 링크 없이 시작했다면 이전에 남은 보류 링크도 비운다
+            PendingDeepLink.uri = link
+            intent?.data = null
+        }
         // 상태바를 앱 배경(grey000)과 같은 색으로. auto는 시스템 다크모드를 감지해
         // 배경색과 아이콘 명암을 함께 뒤집는다 (light: #FFFFFF / dark: #121212)
         enableEdgeToEdge(
@@ -68,6 +88,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             UmcApp()
         }
+    }
+
+    /** NEW_TASK 로 열렸지만 태스크 루트가 아니고 CLEAR_TASK 도 없다면, 기존 스택 위에 중복 생성된 것이다. */
+    private fun shouldRestartTask(): Boolean {
+        val flags = intent?.flags ?: return false
+        return !isTaskRoot &&
+            (flags and Intent.FLAG_ACTIVITY_NEW_TASK) != 0 &&
+            (flags and Intent.FLAG_ACTIVITY_CLEAR_TASK) == 0
     }
 }
 

@@ -1,6 +1,7 @@
 package com.umc.presentation.login
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -11,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -32,17 +34,17 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -67,6 +69,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import com.umc.component.R
+
+// UMC 카카오톡 채널 문의 주소 (SignUpFailScreen 과 동일)
+private const val KAKAO_INQUIRY_URL = "https://pf.kakao.com/_MDxhqX/chat"
 
 @Composable
 fun LoginRoute(
@@ -103,10 +108,16 @@ fun LoginRoute(
                 signInGoogle(
                     scope = scope,
                     context = context,
-                    onLoginSuccess = { token -> viewModel.login(token, LoginType.GOOGLE) }
+                    onLoginSuccess = { token -> viewModel.login(token, LoginType.GOOGLE) },
+                    onFailure = { message -> toastData = UToastData(message, UToastState.ERROR) }
                 )
             },
             onClickEmailLogin = navigateToEmailLogin,
+            onClickHelpCenter = {
+                runCatching {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, KAKAO_INQUIRY_URL.toUri()))
+                }
+            },
         )
 
         UToastHost(
@@ -124,6 +135,7 @@ fun LoginScreen(
     onClickKakaoLogin: () -> Unit = {},
     onClickGoogleLogin: () -> Unit = {},
     onClickEmailLogin: () -> Unit = {},
+    onClickHelpCenter: () -> Unit = {},
 ) {
     var animationStarted by remember { mutableStateOf(false) }
 
@@ -249,22 +261,21 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(2.dp))
 
-                UText(
-                    text = buildAnnotatedString {
-                        withStyle(
-                            SpanStyle(
-                                color = indigo600(),
-                                textDecoration = TextDecoration.Underline,
-                            )
-                        ) {
-                            append(AppStrings.LOGIN_HELP_CENTER)
-                        }
-                        withStyle(SpanStyle(color = grey500())) {
-                            append(AppStrings.LOGIN_HELP_SUFFIX)
-                        }
-                    },
-                    style = UmcTypographyTokens.Footnote,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    UText(
+                        text = AppStrings.LOGIN_HELP_CENTER,
+                        style = UmcTypographyTokens.Footnote,
+                        color = indigo600(),
+                        textDecoration = TextDecoration.Underline,
+                        modifier = Modifier.clickable { onClickHelpCenter() },
+                    )
+
+                    UText(
+                        text = AppStrings.LOGIN_HELP_SUFFIX,
+                        style = UmcTypographyTokens.Footnote,
+                        color = grey500(),
+                    )
+                }
             }
         }
     }
@@ -309,7 +320,8 @@ private fun signInKakaoEmail(
 private fun signInGoogle(
     scope : CoroutineScope,
     context : Context,
-    onLoginSuccess : (String) -> Unit
+    onLoginSuccess : (String) -> Unit,
+    onFailure : (String) -> Unit
 ) {
     scope.launch {
         try {
@@ -326,17 +338,24 @@ private fun signInGoogle(
                 context = context
             )
 
-            handleSignIn(result, onLoginSuccess)
+            handleSignIn(result, onLoginSuccess, onFailure)
 
         } catch (e: GetCredentialException) {
-            ULog.d("Google 로그인 실패: ${e.message}")
+            ULog.d("Google 로그인 실패: ${e::class.simpleName} ${e.message}")
+            when (e) {
+                // 사용자가 계정 선택 시트를 직접 닫은 경우는 안내하지 않는다.
+                is GetCredentialCancellationException -> Unit
+                is NoCredentialException -> onFailure(AppStrings.LOGIN_GOOGLE_NO_ACCOUNT)
+                else -> onFailure(AppStrings.LOGIN_GOOGLE_FAILED)
+            }
         }
     }
 }
 
 private fun handleSignIn(
     result: GetCredentialResponse,
-    onLoginSuccess : (String) -> Unit
+    onLoginSuccess : (String) -> Unit,
+    onFailure : (String) -> Unit
 ) {
     val credential = result.credential
 
@@ -351,9 +370,11 @@ private fun handleSignIn(
             onLoginSuccess(idToken)
         } catch (e: GoogleIdTokenParsingException) {
             ULog.d("유효하지 않은 Google ID 토큰 $e")
+            onFailure(AppStrings.LOGIN_GOOGLE_FAILED)
         }
     } else {
         ULog.d("예상치 못한 자격 증명 유형")
+        onFailure(AppStrings.LOGIN_GOOGLE_FAILED)
     }
 }
 

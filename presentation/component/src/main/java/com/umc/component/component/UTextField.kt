@@ -23,6 +23,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,7 +63,7 @@ import com.umc.component.theme.indigo500
  * @param focusStrokeColor 포커스 상태의 테두리 색상 및 커서 색상. 기본값 indigo500
  * @param cornerRadius 모서리 둥글기. 기본값 8dp
  * @param enabled false 이면 입력 불가. strokeColor는 항상 strokeColor로 고정
- * @param keyboardOptions 키보드 타입·IME 액션 등 설정
+ * @param keyboardOptions 키보드 타입·IME 액션 등 설정. Next/Done/Search 등 IME 액션을 지정하거나 Password 키보드를 쓰면 자동으로 한 줄 입력이 된다
  * @param keyboardActions IME 액션(완료·검색 등) 콜백
  * @param prevIcon 입력창 왼쪽에 표시할 아이콘 (선택)
  * @param prevIconTint prevIcon 틴트 색상. null 이면 원본 색상 유지
@@ -69,7 +72,7 @@ import com.umc.component.theme.indigo500
  * @param nextIconTint nextIcon 틴트 색상. null 이면 원본 색상 유지
  * @param nextIconSize nextIcon 크기. 기본값 24dp
  * @param onClickNextIcon nextIcon 클릭 콜백 (입력값 지우기·비밀번호 표시 전환 등). null 이면 클릭 불가
- * @param visualTransformation 입력 텍스트 표시 변환 (비밀번호 마스킹 등)
+ * @param visualTransformation 입력 텍스트 표시 변환 (비밀번호 마스킹 등). null 이면 Password 키보드는 자동으로 마스킹하고 그 외에는 변환하지 않는다
  * @param interactionSource 포커스 상태를 호출부에서 관찰해야 할 때 외부에서 주입
  * @param verticalAlignment 입력 내용의 세로 정렬. 기본값은 중앙 정렬
  */
@@ -99,7 +102,7 @@ fun UTextField(
     nextIconTint: Color? = null,
     nextIconSize: Dp = 24.dp,
     onClickNextIcon: (() -> Unit)? = null,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
+    visualTransformation: VisualTransformation? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
 ) {
@@ -124,6 +127,23 @@ fun UTextField(
         fieldValue = fieldValue.copy(text = value, selection = TextRange(value.length))
     }
 
+    // IME 액션(Next/Done/Search 등)을 지정한 필드와 비밀번호 필드는 한 줄 입력으로 처리한다.
+    // 여러 줄 필드에서는 Enter 가 개행으로 입력되어 IME 액션이 호출되지 않고,
+    // 비밀번호 필드에서는 개행이 '*' 로 가려져 보이지 않는 채로 비밀번호에 섞이기 때문이다.
+    val resolvedSingleLine = singleLine ||
+        keyboardOptions.keyboardType == KeyboardType.Password ||
+        (keyboardOptions.imeAction != ImeAction.Default &&
+            keyboardOptions.imeAction != ImeAction.None &&
+            keyboardOptions.imeAction != ImeAction.Unspecified)
+
+    // 비밀번호 키보드는 키보드 타입만으로는 글자가 가려지지 않으므로 명시값이 없을 때 마스킹한다.
+    val resolvedVisualTransformation = visualTransformation
+        ?: if (keyboardOptions.keyboardType == KeyboardType.Password) {
+            PasswordVisualTransformation(mask = '*')
+        } else {
+            VisualTransformation.None
+        }
+
     BasicTextField(
         value = fieldValue,
         onValueChange = {
@@ -133,10 +153,10 @@ fun UTextField(
         enabled = enabled,
         textStyle = textStyle.copy(color = textColor),
         cursorBrush = SolidColor(focusStrokeColor),
-        visualTransformation = visualTransformation,
+        visualTransformation = resolvedVisualTransformation,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
-        singleLine = singleLine,
+        singleLine = resolvedSingleLine,
         interactionSource = interactionSource,
         modifier = modifier,
         decorationBox = { innerTextField ->

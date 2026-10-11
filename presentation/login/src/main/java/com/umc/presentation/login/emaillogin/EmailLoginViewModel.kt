@@ -8,6 +8,7 @@ import com.umc.component.base.UiState
 import com.umc.component.util.ULog
 import com.umc.domain.model.JwtToken
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.base.isNetworkError
 import com.umc.domain.usecase.PostEmailLoginUseCase
 import com.umc.domain.usecase.appDataStore.SaveTokenUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
@@ -53,8 +54,11 @@ class EmailLoginViewModel @Inject constructor(
                 saveToken(it)
             },
             errorCallback = { failState ->
+                // 네트워크 단절은 계정 오류가 아니므로 입력 필드 에러 상태 없이 토스트만 띄운다.
                 // 계정 정보 불일치 → 입력 필드 에러 상태 표시 + 서버 에러 메시지 토스트
-                updateState { copy(isLoginFailed = true) }
+                if (!failState.isNetworkError) {
+                    updateState { copy(isLoginFailed = true) }
+                }
                 emitEvent(EmailLoginEvent.ShowErrorToast(failState.message))
             }
         )
