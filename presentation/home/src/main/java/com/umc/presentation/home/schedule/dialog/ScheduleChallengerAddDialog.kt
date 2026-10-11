@@ -43,6 +43,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.umc.component.component.UButton
@@ -88,6 +89,8 @@ fun ScheduleChallengerAddBottomSheet(
     isSearching: Boolean, //검색 여부
     isLoading: Boolean, //로딩 여부
     hasNext: Boolean, //다음 유저 리스트 시 여부
+    hasSearched: Boolean, //검색 응답(성공/실패)을 받았는지 여부
+    isSearchFailed: Boolean, //마지막 검색 요청 실패 여부
     selectedParticipants: List<ParticipantItem>, //선택된 챌린저 리스트
     selectedParticipantsString: String, //선택된 챌린저 이름들(UI 용도)
     searchResults: List<ParticipantItem>, //검색 결과 리스트
@@ -205,12 +208,24 @@ fun ScheduleChallengerAddBottomSheet(
                 }
                 //분기 B: 검색 중일 때 -> API로 검색된 결과 리스트 노출
                 else {
-                    SearchParticipantList(
-                        listState = listState,
-                        searchResults = searchResults,
-                        selectedParticipants = selectedParticipants,
-                        onToggleClick = onToggleParticipant
-                    )
+                    when {
+                        // 검색 요청이 실패했고 보여줄 결과도 없을 때 (다음 페이지 실패는 기존 목록 유지)
+                        searchResults.isEmpty() && !isLoading && isSearchFailed -> {
+                            EmptyParticipantContent(text = AppStrings.HOME_PLAN_ADD_PLAN_PARTICIPANT_SEARCH_ERROR)
+                        }
+                        // 응답은 받았지만 결과가 없을 때 (디바운스 대기 중에는 표시하지 않음)
+                        searchResults.isEmpty() && !isLoading && hasSearched -> {
+                            EmptyParticipantContent(text = AppStrings.HOME_PLAN_ADD_PLAN_PARTICIPANT_NO_RESULT)
+                        }
+                        else -> {
+                            SearchParticipantList(
+                                listState = listState,
+                                searchResults = searchResults,
+                                selectedParticipants = selectedParticipants,
+                                onToggleClick = onToggleParticipant
+                            )
+                        }
+                    }
                 }
 
                 //로딩 바
@@ -269,10 +284,12 @@ fun ChallengerHeader(
 }
 
 /**
- * 선택된 챌린저가 없을 때 중앙에 아이콘과 안내 텍스트를 노출하는 뷰 컴포저블
+ * 선택된 챌린저가 없거나 검색 결과가 없을 때 중앙에 아이콘과 안내 텍스트를 노출하는 뷰 컴포저블
  */
 @Composable
-fun EmptyParticipantContent() {
+fun EmptyParticipantContent(
+    text: String = AppStrings.HOME_PLAN_ADD_PLAN_PARTICIPANT_NO_CHALLENGER
+) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -292,9 +309,11 @@ fun EmptyParticipantContent() {
         )
 
         UText(
-            text = AppStrings.HOME_PLAN_ADD_PLAN_PARTICIPANT_NO_CHALLENGER,
+            text = text,
             style = UmcTypographyTokens.Body,
-            color = grey600()
+            color = grey600(),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
     }
 }

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,6 +49,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,6 +76,7 @@ import com.umc.component.theme.indigo600
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import com.umc.component.theme.grey400
+import com.umc.component.theme.grey500
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
@@ -151,7 +154,10 @@ fun HomeRoute(
         onScheduleAddClick = viewModel::onClickScheduleAdd, //일정 추가 터치 시
         onScheduleDetailClick = viewModel::onClickScheduleDetail,
         onNoticeClick = viewModel::onClickNotice,
-        onShareCardClick = viewModel::onClickCardShare
+        onShareCardClick = viewModel::onClickCardShare,
+        onProfileRetryClick = viewModel::getUserInfo,
+        onScheduleRetryClick = viewModel::retryScheduleMonth,
+        onScheduleRefresh = viewModel::retryScheduleMonth
     )
 }
 
@@ -167,6 +173,9 @@ fun HomeScreen(
     onScheduleDetailClick: (SchedulePlanItem) -> Unit,
     onNoticeClick: () -> Unit,
     onShareCardClick: () -> Unit,
+    onProfileRetryClick: () -> Unit,
+    onScheduleRetryClick: () -> Unit,
+    onScheduleRefresh: () -> Unit,
 ) {
 
     //LazyColumn을 사용하여 전체 스크롤 관리(중첩 스크롤 방지)
@@ -209,13 +218,22 @@ fun HomeScreen(
                         .height(16.dp)
                     )
                 }
-                HomeProfileCardsRow(uiState = uiState)
-
-                if (uiState.userType == UserType.ACTIVE) {
-                    Spacer(modifier = Modifier
-                        .height(16.dp)
+                if (uiState.profileLoadState == HomeLoadState.ERROR) {
+                    //프로필 조회 실패: 0 Days·0 point 같은 기본값 대신 안내와 재시도
+                    HomeLoadError(
+                        title = AppStrings.HOME_PROFILE_LOAD_ERROR_TITLE,
+                        onRetry = onProfileRetryClick
                     )
-                    HomeActivityStatusCard(uiState = uiState)
+                } else {
+                    HomeProfileCardsRow(uiState = uiState)
+
+                    //userType 이 null(확정 전)인 동안에는 활동 상태 카드를 그리지 않는다
+                    if (uiState.userType == UserType.ACTIVE) {
+                        Spacer(modifier = Modifier
+                            .height(16.dp)
+                        )
+                        HomeActivityStatusCard(uiState = uiState)
+                    }
                 }
             }
         }
@@ -262,11 +280,22 @@ fun HomeScreen(
                             selectedDate = uiState.selectedDate,
                             eventDates = uiState.eventDates,
                             onDateClick = onDateClick,
-                            onMonthChange = onMonthChange
+                            onMonthChange = onMonthChange,
+                            initialMonth = uiState.viewedMonth
                         )
 
-                        // 일정이 있을 때만 리스트 표시
-                        if (uiState.dailyPlans.isNotEmpty()) {
+                        // 월별 일정 조회 실패 시 '일정 없음'과 구분되는 안내
+                        if (uiState.isScheduleLoadFailed) {
+                            HomeLoadError(
+                                title = AppStrings.HOME_SCHEDULE_LOAD_ERROR_TITLE,
+                                onRetry = onScheduleRetryClick,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                            Spacer(modifier = Modifier
+                                .height(16.dp)
+                            )
+                        } else if (uiState.dailyPlans.isNotEmpty()) {
+                            // 일정이 있을 때만 리스트 표시
                             //달력 아래 일일 일정들
                             uiState.dailyPlans.forEach { plan ->
                                     Column(
@@ -295,6 +324,20 @@ fun HomeScreen(
 
                     else {
                         //리스트 모드
+                        // 상세/등록에서 돌아오거나 달력에서 전환될 때 마지막으로 본 달의 일정을 다시 받는다
+                        // (달력 모드는 HomeCalendar 의 월 변경 효과가 같은 역할을 한다)
+                        LaunchedEffect(Unit) { onScheduleRefresh() }
+
+                        if (uiState.isScheduleLoadFailed) {
+                            HomeLoadError(
+                                title = AppStrings.HOME_SCHEDULE_LOAD_ERROR_TITLE,
+                                onRetry = onScheduleRetryClick
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        } else if (uiState.allPlans.isEmpty()) {
+                            // 조회 실패가 아닌데 일정이 없으면 빈 화면 대신 안내
+                            HomePlanEmpty()
+                        }
                         uiState.allPlans.forEach { plan ->
 
                                 ScheduleItemCard(
@@ -321,6 +364,95 @@ fun HomeScreen(
 }
 
 
+
+/** 리스트 모드에서 일정이 하나도 없을 때 보여주는 안내 **/
+@Composable
+private fun HomePlanEmpty() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_calendar),
+            contentDescription = null,
+            tint = grey400(),
+            modifier = Modifier.size(32.dp)
+        )
+
+        UText(
+            modifier = Modifier.padding(top = 12.dp),
+            text = AppStrings.HOME_PLAN_EMPTY_TITLE,
+            style = UmcTypographyTokens.HeadlineBold,
+            color = grey600()
+        )
+
+        UText(
+            modifier = Modifier.padding(top = 6.dp),
+            text = AppStrings.HOME_PLAN_EMPTY_CONTENT,
+            style = UmcTypographyTokens.Subheadline,
+            color = grey500()
+        )
+    }
+}
+
+/**
+ * 홈 조회 실패 안내 카드 (제목 + 설명 + 다시 시도하기)
+ * 프로필/월별 일정 조회 실패에 공용으로 쓴다.
+ * **/
+@Composable
+fun HomeLoadError(
+    title: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = grey000()),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            UText(
+                text = title,
+                color = grey950(),
+                style = UmcTypographyTokens.HeadlineBold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            UText(
+                text = AppStrings.HOME_LOAD_ERROR_DESCRIPTION,
+                color = grey600(),
+                style = UmcTypographyTokens.Footnote,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            UButton(
+                text = AppStrings.HOME_RETRY,
+                onClick = onRetry,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(42.dp),
+                backgroundColor = indigo500(),
+                pressedColor = indigo600(),
+                textColor = grey000(),
+                textStyle = UmcTypographyTokens.CalloutBold,
+                cornerRadius = 8.dp,
+                contentPadding = PaddingValues(horizontal = 13.dp, vertical = 8.dp)
+            )
+        }
+    }
+}
 
 /**명함 교환 배너 카드**/
 @Composable
@@ -450,26 +582,35 @@ fun HomeProfileCardsRow(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    Text(
-                        text = buildAnnotatedString {
-                            withStyle(
-                                style = UmcTypographyTokens.Title3Bold.toSpanStyle().copy(
-                                    color = indigo500(),
-                                )
-                            ) {
-                                append("${uiState.growDay}")
-                                append(" ")
+                    if (uiState.profileLoadState == HomeLoadState.LOADING) {
+                        // 응답 전에는 기본값(0 Days) 대신 같은 자리에 로딩 표시
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = indigo500()
+                        )
+                    } else {
+                        Text(
+                            text = buildAnnotatedString {
+                                withStyle(
+                                    style = UmcTypographyTokens.Title3Bold.toSpanStyle().copy(
+                                        color = indigo500(),
+                                    )
+                                ) {
+                                    append("${uiState.growDay}")
+                                    append(" ")
+                                }
+                                // 나머지 부분
+                                withStyle(
+                                    style = UmcTypographyTokens.Footnote.toSpanStyle().copy(
+                                        color = grey700(),
+                                    )
+                                ) {
+                                    append("Days")
+                                }
                             }
-                            // 나머지 부분
-                            withStyle(
-                                style = UmcTypographyTokens.Footnote.toSpanStyle().copy(
-                                    color = grey700(),
-                                )
-                            ) {
-                                append("Days")
-                            }
-                        }
-                    )
+                        )
+                    }
                 }
 
             }
@@ -507,7 +648,15 @@ fun HomeProfileCardsRow(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    GisuGrid(gisuStrings = uiState.gisuTag)
+                    if (uiState.profileLoadState == HomeLoadState.LOADING) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = indigo500()
+                        )
+                    } else {
+                        GisuGrid(gisuStrings = uiState.gisuTag)
+                    }
 
 
                 }
@@ -865,6 +1014,7 @@ fun HomePlanHeader(
 private fun HomeScreenPreview() {
     // 1. 테스트용 가짜 UI 상태 생성
     val dummyUiState = HomeUiState(
+        profileLoadState = HomeLoadState.SUCCESS,
         userName = "박유수",
         userNickName = "어헛차",
         userType = UserType.ACTIVE,
@@ -890,5 +1040,74 @@ private fun HomeScreenPreview() {
         onScheduleDetailClick = {},
         onNoticeClick = {},
         onShareCardClick = {},
+        onProfileRetryClick = {},
+        onScheduleRetryClick = {},
+        onScheduleRefresh = {},
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenLoadErrorPreview() {
+    HomeScreen(
+        uiState = HomeUiState(
+            profileLoadState = HomeLoadState.ERROR,
+            isScheduleLoadFailed = true,
+            viewMode = HomeViewMode.CALENDAR
+        ),
+        onDateClick = {},
+        onMonthChange = {},
+        onChangeViewMode = {},
+        onNotificationClick = {},
+        onScheduleAddClick = {},
+        onScheduleDetailClick = {},
+        onNoticeClick = {},
+        onShareCardClick = {},
+        onProfileRetryClick = {},
+        onScheduleRetryClick = {},
+        onScheduleRefresh = {},
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenLoadingPreview() {
+    HomeScreen(
+        uiState = HomeUiState(),
+        onDateClick = {},
+        onMonthChange = {},
+        onChangeViewMode = {},
+        onNotificationClick = {},
+        onScheduleAddClick = {},
+        onScheduleDetailClick = {},
+        onNoticeClick = {},
+        onShareCardClick = {},
+        onProfileRetryClick = {},
+        onScheduleRetryClick = {},
+        onScheduleRefresh = {},
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenListEmptyPreview() {
+    HomeScreen(
+        uiState = HomeUiState(
+            profileLoadState = HomeLoadState.SUCCESS,
+            userType = UserType.ACTIVE,
+            viewMode = HomeViewMode.LIST,
+            allPlans = persistentListOf()
+        ),
+        onDateClick = {},
+        onMonthChange = {},
+        onChangeViewMode = {},
+        onNotificationClick = {},
+        onScheduleAddClick = {},
+        onScheduleDetailClick = {},
+        onNoticeClick = {},
+        onShareCardClick = {},
+        onProfileRetryClick = {},
+        onScheduleRetryClick = {},
+        onScheduleRefresh = {},
     )
 }

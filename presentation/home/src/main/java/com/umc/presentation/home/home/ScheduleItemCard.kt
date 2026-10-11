@@ -2,10 +2,11 @@ package com.umc.presentation.home.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,10 +20,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
-import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
@@ -118,19 +119,23 @@ fun ActiveScheduleItem(
                 )
             }
 
-            //D-Day 버튼
+            //D-Day 칩 (클릭 불가: 터치를 Card 의 clickable 로 그대로 전달)
             if (item.dDay != null) {
-                UButton(
-                    text = item.dDay!!,
-                    backgroundColor = grey100(),
-                    textColor = grey700(),
-                    textStyle = UmcTypographyTokens.Caption1Bold,
+                Box(
                     modifier = Modifier
                         .padding(end = 16.dp)
-                        .height(24.dp),
-                    onClick = {},
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                )
+                        .height(24.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(grey100())
+                        .padding(horizontal = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    UText(
+                        text = item.dDay!!,
+                        style = UmcTypographyTokens.Caption1Bold,
+                        color = grey700()
+                    )
+                }
             }
 
             //화살표 아이콘
