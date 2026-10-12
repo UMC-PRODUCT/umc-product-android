@@ -62,7 +62,7 @@ fun AdminStudyGroupScheduleScreen(
             // 현재 일정을 등록하고 있는 스터디 그룹 정보
             GroupScheduleInfoCard(
                 groupTitle = state.groupTitle,
-                groupPart = state.groupPart,
+                groupPart = state.groupPartLabel,
             )
 
             Spacer(Modifier.height(28.dp))

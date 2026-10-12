@@ -1,5 +1,6 @@
 package com.umc.presentation.act.admin.challenger
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -33,13 +35,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
+import com.umc.component.base.CollectUiEvents
+import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
@@ -55,6 +61,7 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
+import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
@@ -62,6 +69,7 @@ import com.umc.component.theme.indigo500
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow500
 import com.umc.domain.model.enums.UserPart
+import kotlinx.collections.immutable.persistentListOf
 
 private val challengerPartFilters = UserPart.filters
 
@@ -72,9 +80,18 @@ fun AdminChallengerRoute(
     viewModel: AdminChallengerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LaunchedEffect(isActive) {
         if (isActive) viewModel.refresh()
+    }
+
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is AdminChallengerEvent.ShowToast ->
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            AdminChallengerEvent.PointGranted -> Unit
+        }
     }
 
     AdminChallengerScreen(
@@ -82,6 +99,7 @@ fun AdminChallengerRoute(
         onSearchKeywordChange = viewModel::onSearchKeywordChanged,
         onPartFilterClick = viewModel::openPartFilter,
         onMemberClick = onNavigateToDetail,
+        onRetryClick = viewModel::refresh,
     )
 
     if (uiState.isPartFilterVisible) {
@@ -123,11 +141,69 @@ private fun EmptyScreen() {
 }
 
 @Composable
+internal fun ChallengerLoading(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(color = indigo500())
+    }
+}
+
+@Composable
+internal fun ChallengerLoadError(
+    title: String,
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    description: String = AppStrings.CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_community_error),
+            contentDescription = null,
+            tint = grey400(),
+            modifier = Modifier.size(32.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        UText(
+            text = title,
+            style = HeadlineBold,
+            color = grey600(),
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        UText(
+            text = description,
+            style = Subheadline,
+            color = grey500(),
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        UButton(
+            text = AppStrings.CHALLENGER_RETRY,
+            onClick = onRetryClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .padding(horizontal = 24.dp),
+            backgroundColor = indigo500()
+        )
+    }
+}
+
+@Composable
 fun AdminChallengerScreen(
     uiState: AdminChallengerUiState = AdminChallengerUiState(),
     onSearchKeywordChange: (String) -> Unit = {},
     onPartFilterClick: () -> Unit = {},
     onMemberClick: (Long) -> Unit = {},
+    onRetryClick: () -> Unit = {},
 ) {
     LazyColumn(
         modifier = Modifier
@@ -144,15 +220,26 @@ fun AdminChallengerScreen(
                 onPartFilterClick = onPartFilterClick,
             )
         }
-        if (uiState.sections.isEmpty()) {
-            item { EmptyScreen() }
-        } else {
-            items(uiState.sections) { section ->
+        when {
+            uiState.sections.isNotEmpty() -> items(uiState.sections) { section ->
                 ChallengerSection(
                     section = section,
                     onMemberClick = onMemberClick
                 )
             }
+            uiState.loadState == AdminChallengerLoadState.LOADING -> item {
+                ChallengerLoading(modifier = Modifier.padding(top = 64.dp))
+            }
+            uiState.loadState == AdminChallengerLoadState.ERROR -> item {
+                ChallengerLoadError(
+                    title = AppStrings.CHALLENGER_LIST_LOAD_ERROR_TITLE,
+                    onRetryClick = onRetryClick,
+                    modifier = Modifier.padding(top = 64.dp),
+                    description = uiState.loadErrorMessage
+                        ?: AppStrings.CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION,
+                )
+            }
+            else -> item { EmptyScreen() }
         }
     }
 
@@ -406,6 +493,67 @@ private fun preview() {
 @Composable
 private fun PreviewMainUnfocused() {
     UmcTheme(darkTheme = false) {
-        AdminChallengerScreen()
+        AdminChallengerScreen(
+            uiState = AdminChallengerUiState(
+                loadState = AdminChallengerLoadState.SUCCESS,
+                sections = persistentListOf(
+                    AdminChallengerSectionUi(
+                        partName = "Web PE",
+                        members = persistentListOf(
+                            AdminChallengerMemberUi(
+                                id = 1L,
+                                nicknameWithName = "홍길동(길동)",
+                                generation = "11기",
+                                totalScore = 0
+                            )
+                        )
+                    ),
+                    AdminChallengerSectionUi(
+                        partName = "미정",
+                        members = persistentListOf(
+                            AdminChallengerMemberUi(
+                                id = 2L,
+                                nicknameWithName = "김미정(미정)",
+                                generation = "11기",
+                                totalScore = 0
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Loading State")
+@Composable
+private fun PreviewMainLoading() {
+    UmcTheme(darkTheme = false) {
+        AdminChallengerScreen(
+            uiState = AdminChallengerUiState(loadState = AdminChallengerLoadState.LOADING)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Error State")
+@Composable
+private fun PreviewMainError() {
+    UmcTheme(darkTheme = false) {
+        AdminChallengerScreen(
+            uiState = AdminChallengerUiState(loadState = AdminChallengerLoadState.ERROR)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Error State (Server Message)")
+@Composable
+private fun PreviewMainServerError() {
+    UmcTheme(darkTheme = false) {
+        AdminChallengerScreen(
+            uiState = AdminChallengerUiState(
+                loadState = AdminChallengerLoadState.ERROR,
+                loadErrorMessage = "권한이 없어 챌린저 목록을 조회할 수 없습니다.",
+            )
+        )
     }
 }

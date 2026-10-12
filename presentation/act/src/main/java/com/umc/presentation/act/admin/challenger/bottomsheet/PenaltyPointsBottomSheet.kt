@@ -161,8 +161,8 @@ fun PenaltyPointsScreen(
 
             UButton(
                 modifier = Modifier.fillMaxWidth(),
-                text = AppStrings.REWARD_SUBMIT,
-                enabled = isSubmitEnabled,
+                text = if (uiState.isPointSubmitting) AppStrings.REWARD_SUBMITTING else AppStrings.REWARD_SUBMIT,
+                enabled = isSubmitEnabled && !uiState.isPointSubmitting,
                 textStyle = HeadlineBold,
                 textColor = if (isSubmitEnabled) grey000() else grey300(),
                 backgroundColor = if (isSubmitEnabled) indigo500() else grey100(),
@@ -340,5 +340,19 @@ private fun defaultPenaltyItems(): ImmutableList<PenaltyPointItem> =
 private fun PenaltyPointsScreenPreview() {
     UmcTheme(darkTheme = false) {
         PenaltyPointsScreen()
+    }
+}
+
+@Preview(showBackground = false)
+@Composable
+private fun PenaltyPointsScreenSubmittingPreview() {
+    UmcTheme(darkTheme = false) {
+        PenaltyPointsScreen(
+            uiState = AdminChallengerUiState(
+                selectedPenaltyType = RewardType.STUDY_LATE,
+                pointMemo = "스터디 지각",
+                isPointSubmitting = true,
+            )
+        )
     }
 }

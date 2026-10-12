@@ -50,6 +50,6 @@ data class ChallengerSearchV2ItemResponse(
     val challengerId: Long,
     val gisuId: Long,
     val generation: Long,
-    val part: String,
+    val part: String? = null,
     val roleTypes: List<String> = emptyList()
 )

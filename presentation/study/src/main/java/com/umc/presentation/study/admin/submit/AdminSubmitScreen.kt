@@ -13,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -89,6 +90,9 @@ fun AdminSubmitScreen(
 
     val listState = rememberLazyListState()
 
+    // remember 안의 derivedStateOf 는 첫 컴포지션의 state 를 캡처하므로 최신 state 를 따로 읽는다.
+    val latestState by rememberUpdatedState(state)
+
     val shouldLoadMore by remember {
         derivedStateOf {
             val lastVisibleItemIndex =
@@ -99,12 +103,13 @@ fun AdminSubmitScreen(
             lastVisibleItemIndex != null &&
                     lastVisibleItemIndex >=
                     listState.layoutInfo.totalItemsCount - 3 &&
-                    state.hasNext &&
-                    !state.isLoadingMore
+                    latestState.hasNext &&
+                    !latestState.isLoadingMore
         }
     }
 
-    LaunchedEffect(shouldLoadMore) {
+    // 미제출 행을 걸러 한 페이지 항목이 적을 때도 다음 페이지가 이어서 로드되도록 cursor를 키에 포함
+    LaunchedEffect(shouldLoadMore, state.nextCursor) {
         if (shouldLoadMore) {
             onAction(AdminSubmitAction.LoadMore)
         }

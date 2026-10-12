@@ -109,8 +109,9 @@ data class WorkbookProgressResponse(
 
         // 워크북 상태는 주차 상태가 아니라 미션 제출의 채점 상태(PENDING / PASS / FAIL)를 따른다.
         // 아직 제출이 없으면 주차 상태로 표시한다.
-        val submissionStatus = missions.orEmpty()
-            .firstNotNullOfOrNull { mission -> mission.submission?.status }
+        val submission = missions.orEmpty()
+            .firstNotNullOfOrNull { mission -> mission.submission }
+        val submissionStatus = submission?.status
 
         return WorkbookProgress(
             originalWorkbookId = originalWorkbookId ?: 0L,
@@ -123,6 +124,10 @@ data class WorkbookProgressResponse(
             status = WorkbookStatus.from(submissionStatus ?: weeklyStatus),
             isReleased = isDeployedToMember ?: false,
             isInProgress = weeklyStatus == "IN_PROGRESS",
+            feedbackMessage = submission?.feedbacks
+                ?.lastOrNull()
+                ?.content
+                ?.takeIf { it.isNotBlank() },
         )
     }
 }

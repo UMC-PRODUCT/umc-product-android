@@ -136,8 +136,8 @@ fun RewardPointsScreen(
 
         UButton(
             modifier = Modifier.fillMaxWidth(),
-            text = AppStrings.REWARD_SUBMIT,
-            enabled = isSubmitEnabled,
+            text = if (uiState.isPointSubmitting) AppStrings.REWARD_SUBMITTING else AppStrings.REWARD_SUBMIT,
+            enabled = isSubmitEnabled && !uiState.isPointSubmitting,
             textStyle = HeadlineBold,
             textColor = if (isSubmitEnabled) grey000() else grey300(),
             backgroundColor = if (isSubmitEnabled) indigo500() else grey100(),
@@ -289,5 +289,19 @@ private fun defaultRewardItems(): ImmutableList<RewardPointItem> =
 private fun RewardPointsScreenPreview() {
     UmcTheme(darkTheme = false) {
         RewardPointsScreen()
+    }
+}
+
+@Preview(showBackground = false)
+@Composable
+private fun RewardPointsScreenSubmittingPreview() {
+    UmcTheme(darkTheme = false) {
+        RewardPointsScreen(
+            uiState = AdminChallengerUiState(
+                selectedRewardType = RewardType.BLOG_CHALLENGE,
+                pointMemo = "블로그 챌린지 참여",
+                isPointSubmitting = true,
+            )
+        )
     }
 }

@@ -164,7 +164,7 @@ interface OrganizationApi {
     @POST(Endpoints.Organization.CREATE_STUDY_GROUP_SCHEDULE)
     suspend fun createStudyGroupSchedule(
         @Body request: CreateStudyGroupScheduleRequest,
-    ): ApiResponse<Unit>
+    ): ApiResponse<Long>
 
     @POST(Endpoints.Organization.SCHOOL)
     suspend fun createSchool(

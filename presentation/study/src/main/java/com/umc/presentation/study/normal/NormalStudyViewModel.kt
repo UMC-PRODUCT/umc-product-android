@@ -18,6 +18,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,6 +34,8 @@ data class UserStudyState(
     val title: String = "",
     val part: UserPart = UserPart.UNKNOWN,
     val items: ImmutableList<NormalStudyItemUiModel> = persistentListOf(),
+    // 커리큘럼 조회 실패 여부. 목록이 비어 있을 때만 오류 화면으로 표시한다.
+    val isError: Boolean = false,
 ) : UiState {
 
     /** 전체 커리큘럼 개수 */
@@ -91,24 +96,33 @@ class UserStudyViewModel @Inject constructor(
     UserStudyState(),
 ) {
 
-    init {
-        load()
-    }
+    // 겹치는 재조회 요청을 막기 위해 진행 중인 조회를 추적한다.
+    private var loadJob: Job? = null
 
     /**
      * 현재 사용자 정보를 조회한 뒤
      * 현재 활성 기수와 파트를 기준으로 커리큘럼 진행 현황을 조회합니다.
+     *
+     * 탭이 다시 활성화될 때마다 호출되며, 재조회 중에도 기존 목록은 유지합니다.
      */
-    private fun load() {
+    fun refresh() {
+        loadJob?.cancel()
         startLoading()
 
-        viewModelScope.launch {
-            when (val profileResult = getMyProfileUseCase()) {
+        loadJob = viewModelScope.launch {
+            // isError 는 조회 결과가 확정될 때 갱신한다. 재시도 중에 빈 상태 문구가 잠깐 보이지 않게 하기 위함이다.
+            val profileResult = getMyProfileUseCase()
+
+            // apiCall 이 취소 예외를 Fail 로 바꾸므로 취소된 조회는 여기서 멈춘다
+            currentCoroutineContext().ensureActive()
+
+            when (profileResult) {
                 is ApiState.Success<*> -> {
                     val userInfo = profileResult.data as? UserInfo
 
                     if (userInfo == null) {
                         stopLoading()
+                        updateState { copy(isError = true) }
 
                         emitEvent(
                             UserStudyEvent.ShowToast(
@@ -133,14 +147,10 @@ class UserStudyViewModel @Inject constructor(
                             record.gisu
                         }
 
+                    // 챌린저 기록이 없는 계정은 네트워크 오류가 아니므로 오류 카드 대신 빈 상태로 보여준다.
                     if (currentRecord == null) {
                         stopLoading()
-
-                        emitEvent(
-                            UserStudyEvent.ShowToast(
-                                message = "챌린저 기수 정보를 찾을 수 없어요.",
-                            )
-                        )
+                        updateState { copy(isError = false) }
                         return@launch
                     }
 
@@ -155,6 +165,7 @@ class UserStudyViewModel @Inject constructor(
 
                 is ApiState.Fail -> {
                     stopLoading()
+                    updateState { copy(isError = true) }
 
                     emitEvent(
                         UserStudyEvent.ShowToast(
@@ -176,16 +187,20 @@ class UserStudyViewModel @Inject constructor(
         gisuId: Long,
         part: UserPart,
     ) {
-        when (
-            val result = getMyCurriculumProgressUseCase(
-                gisuId = gisuId,
-            )
-        ) {
+        val result = getMyCurriculumProgressUseCase(
+            gisuId = gisuId,
+        )
+
+        // apiCall 이 취소 예외를 Fail 로 바꾸므로 취소된 조회는 여기서 멈춘다
+        currentCoroutineContext().ensureActive()
+
+        when (result) {
             is ApiState.Success<*> -> {
                 val data = result.data as? StudyProgress
 
                 if (data == null) {
                     stopLoading()
+                    updateState { copy(isError = true) }
 
                     emitEvent(
                         UserStudyEvent.ShowToast(
@@ -194,6 +209,12 @@ class UserStudyViewModel @Inject constructor(
                     )
                     return
                 }
+
+                // 재조회 시 사용자가 펼쳐 둔 주차는 그대로 유지한다.
+                val expandedIds = uiState.value.items
+                    .filter { item -> item.isExpanded }
+                    .map { item -> item.id }
+                    .toSet()
 
                 // 서버 워크북 목록을 화면 표시용 모델로 변환
                 val items = data.workbooks
@@ -210,6 +231,9 @@ class UserStudyViewModel @Inject constructor(
                             platform = workbook.missionType.toPlatformLabel(),
                             isLocked = !workbook.isReleased,
                             isBest = workbook.status == WorkbookStatus.BEST,
+                            isExpanded = workbook.originalWorkbookId in expandedIds &&
+                                workbook.isReleased,
+                            feedbackMessage = workbook.feedbackMessage,
                         )
                     }
 
@@ -223,6 +247,7 @@ class UserStudyViewModel @Inject constructor(
                         title = data.curriculumTitle,
                         part = resolvedPart,
                         items = items.toImmutableList(),
+                        isError = false,
                     )
                 }
 
@@ -232,7 +257,19 @@ class UserStudyViewModel @Inject constructor(
             is ApiState.Fail -> {
                 stopLoading()
 
-                // API 실패 시 빈 화면으로 유지
+                // 기본 트랙이 없는 운영진은 서버가 실패로 내려주지만 오류가 아니라 빈 상태로 보여준다.
+                if (result.failState.code == NO_DEFAULT_TRACK_CODE) {
+                    updateState { copy(isError = false) }
+                    return
+                }
+
+                updateState { copy(isError = true) }
+
+                emitEvent(
+                    UserStudyEvent.ShowToast(
+                        message = result.failState.message,
+                    )
+                )
             }
         }
     }
@@ -291,9 +328,13 @@ class UserStudyViewModel @Inject constructor(
     private fun WorkbookMissionType.toPlatformLabel(): String {
         return when (this) {
             WorkbookMissionType.LINK -> "Github"
-            WorkbookMissionType.FILE -> "File"
-            WorkbookMissionType.TEXT -> "Text"
+            WorkbookMissionType.MEMO,
+            WorkbookMissionType.PLAIN,
+                -> "Text"
             WorkbookMissionType.UNKNOWN -> "-"
         }
     }
 }
+
+// 조회할 기본 트랙이 없는 계정에 서버가 내려주는 오류 코드(CURRICULUM-0038)
+private const val NO_DEFAULT_TRACK_CODE = "CURRICULUM-0038"

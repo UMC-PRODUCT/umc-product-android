@@ -75,6 +75,8 @@ import com.umc.component.theme.white
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow400
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
+import com.umc.domain.model.act.challenger.ChallengerPoint
+import com.umc.domain.model.enums.PointType
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.act.admin.challenger.bottomsheet.OtherPointsScreen
 import com.umc.presentation.act.admin.challenger.bottomsheet.PenaltyPointsScreen
@@ -132,7 +134,8 @@ fun AdminChallengerDetailRoute(
         onEditClick = viewModel::toggleDetailEditMode,
         onDeleteClick = viewModel::selectDeleteTarget,
         onDismissDelete = { viewModel.selectDeleteTarget(null) },
-        onConfirmDelete = viewModel::deleteSelectedPoint
+        onConfirmDelete = viewModel::deleteSelectedPoint,
+        onRetryClick = { viewModel.getChallengerDetail(challengerId) }
     )
 
     pointGrantSheet?.let { sheet ->
@@ -185,9 +188,10 @@ fun AdminChallengerDetailScreen(
     onEditClick: () -> Unit = {},
     onDeleteClick: (Long) -> Unit = {},
     onDismissDelete: () -> Unit = {},
-    onConfirmDelete: () -> Unit = {}
+    onConfirmDelete: () -> Unit = {},
+    onRetryClick: () -> Unit = {}
 ) {
-    val ui = uiState.detail.toDetailUi()
+    val detail = uiState.detail
 
     Column(
         modifier = Modifier
@@ -195,6 +199,22 @@ fun AdminChallengerDetailScreen(
             .background(white())
     ) {
         Header(onBackClick = onBackClick)
+
+        if (detail == null) {
+            // 상세 응답 전/실패 시에는 샘플 데이터나 점수 부여·기록 수정 UI 를 보이지 않는다.
+            if (uiState.detailLoadState == AdminChallengerLoadState.ERROR) {
+                ChallengerLoadError(
+                    title = AppStrings.CHALLENGER_DETAIL_LOAD_ERROR_TITLE,
+                    onRetryClick = onRetryClick,
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                ChallengerLoading(modifier = Modifier.weight(1f))
+            }
+            return@Column
+        }
+
+        val ui = detail.toDetailUi()
 
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -240,7 +260,7 @@ fun AdminChallengerDetailScreen(
         }
     }
 
-    if (uiState.deleteTarget != null) {
+    if (uiState.deleteTarget != null && detail != null) {
         UDialog(
             isAccept = false,
             title = AppStrings.CHALLENGER_MANAGE_DELETE_TITLE,
@@ -699,24 +719,7 @@ private data class HistoryDetail(
     val id: Long, val date: String, val content: String, val score: Int
 )
 
-private fun ChallengerManageDialogModel?.toDetailUi(): ChallengerDetailUi {
-    if (this == null) {
-        return ChallengerDetailUi(
-            nicknameWithName = "홍길동(닉네임)",
-            generation = "기수",
-            totalScore = 0,
-            school = "중앙대학교",
-            part = UserPart.WEB_PRODUCT_ENGINEER,
-            infra = true,
-            totalRewardScore = 1,
-            totalPenaltyScore = 1,
-            history = persistentListOf(
-                HistoryDetail(id = 1L, date = "2024.01.01", content = "스터디 미제출", score = -1),
-                HistoryDetail(id = 2L, date = "2024.01.01", content = "베스트 워크북 수행", score = 1)
-            )
-        )
-    }
-
+private fun ChallengerManageDialogModel.toDetailUi(): ChallengerDetailUi {
     return ChallengerDetailUi(
         nicknameWithName = "$name($nickname)",
         generation = "${gisu}기",
@@ -737,7 +740,46 @@ private fun ChallengerManageDialogModel?.toDetailUi(): ChallengerDetailUi {
 @Composable
 private fun PreviewScreen() {
     UmcTheme(darkTheme = false) {
-        AdminChallengerDetailScreen()
+        AdminChallengerDetailScreen(
+            uiState = AdminChallengerUiState(
+                detail = ChallengerManageDialogModel(
+                    challengerId = 1L,
+                    name = "홍길동",
+                    nickname = "닉네임",
+                    university = "중앙대학교",
+                    part = UserPart.WEB_PRODUCT_ENGINEER,
+                    infra = true,
+                    gisu = 11,
+                    rewardScore = 1,
+                    penaltyScore = 1,
+                    history = listOf(
+                        ChallengerPoint(id = 1L, date = "2024.01.01", title = "스터디 미제출", pointType = PointType.WARNING, value = -1.0),
+                        ChallengerPoint(id = 2L, date = "2024.01.01", title = "베스트 워크북 수행", pointType = PointType.BEST_WORKBOOK, value = 1.0)
+                    )
+                ),
+                detailLoadState = AdminChallengerLoadState.SUCCESS
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Loading State")
+@Composable
+private fun PreviewLoadingScreen() {
+    UmcTheme(darkTheme = false) {
+        AdminChallengerDetailScreen(
+            uiState = AdminChallengerUiState(detailLoadState = AdminChallengerLoadState.LOADING)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Error State")
+@Composable
+private fun PreviewErrorScreen() {
+    UmcTheme(darkTheme = false) {
+        AdminChallengerDetailScreen(
+            uiState = AdminChallengerUiState(detailLoadState = AdminChallengerLoadState.ERROR)
+        )
     }
 }
 

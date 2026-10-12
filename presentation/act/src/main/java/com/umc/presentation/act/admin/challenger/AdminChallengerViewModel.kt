@@ -21,14 +21,14 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-private const val PAGE_SIZE = 30
+private const val PAGE_SIZE = 100
+private const val MAX_PAGES = 20
 
 @HiltViewModel
 class AdminChallengerViewModel @Inject constructor(
@@ -52,7 +52,8 @@ class AdminChallengerViewModel @Inject constructor(
     }
 
     fun refresh() {
-        getChallengers()
+        // 이미 목록이 있으면 탭 재진입 때 깜빡임 없이 조용히 갱신하고, 비었거나 오류였으면 로딩을 보인다.
+        getChallengers(showLoading = uiState.value.sections.isEmpty())
     }
 
     fun openPartFilter() {
@@ -79,60 +80,98 @@ class AdminChallengerViewModel @Inject constructor(
         keyword: String? = uiState.value.searchKeyword.trim().takeIf { it.isNotEmpty() },
         debounce: Boolean = false,
         selectedPart: UserPart? = uiState.value.selectedPart,
+        showLoading: Boolean = true,
     ) {
         challengerListJob?.cancel()
         challengerListJob = viewModelScope.launch {
             if (debounce) delay(300)
+            // 이전 검색 결과가 로딩·오류 화면 뒤에 남지 않도록 비운다. 조용한 갱신(탭 재진입)은 목록을 그대로 둔다.
+            if (showLoading) {
+                updateState { copy(loadState = AdminChallengerLoadState.LOADING, sections = persistentListOf()) }
+            }
             startLoading()
 
-            val responses = coroutineScope {
-                // 서버 part 파라미터라 파트만 넣는다. UserPart 에는 트랙도 있어 entries 를 그대로 쓰면 안 된다.
-                (selectedPart?.let(::listOf) ?: UserPart.parts)
-                    .map { part ->
-                        async {
-                            getAdminChallengerListUseCase(
-                                cursor = null,
-                                size = PAGE_SIZE,
-                                schoolId = null,
-                                gisuId = null,
-                                keyword = keyword,
-                                part = part.name
+            val response = fetchChallengers(keyword, selectedPart)
+            // apiCall 이 CancellationException 을 Fail 로 삼키므로, 취소된 조회가 상태를 덮어쓰지 않게 한다.
+            currentCoroutineContext().ensureActive()
+
+            resultResponse(
+                response = response,
+                successCallback = { challengers ->
+                    updateState {
+                        copy(
+                            sections = challengers.toSections(),
+                            loadState = AdminChallengerLoadState.SUCCESS,
+                            loadErrorMessage = null,
+                        )
+                    }
+                },
+                errorCallback = { failState ->
+                    // 조용한 갱신이 실패하면 보이던 목록은 유지하고 토스트로 알린다.
+                    // 보여줄 목록이 없을 때만 실패 원인(네트워크/서버)을 담아 오류 화면을 띄운다.
+                    if (uiState.value.sections.isEmpty()) {
+                        updateState {
+                            copy(
+                                loadState = AdminChallengerLoadState.ERROR,
+                                loadErrorMessage = failState.message.takeIf { it.isNotBlank() },
                             )
                         }
+                    } else {
+                        emitEvent(AdminChallengerEvent.ShowToast(failState.message))
                     }
-                    .awaitAll()
-            }
-
-            val challengers = responses
-                .flatMap { response ->
-                    var partChallengers = emptyList<AdminChallenger>()
-                    resultResponse(
-                        response = response,
-                        successCallback = { partChallengers = it.challengers }
-                    )
-                    partChallengers
                 }
-                .distinctBy { it.id }
-
-            updateState {
-                copy(sections = challengers.toSections())
-            }
-            responses.filterIsInstance<ApiState.Fail>().firstOrNull()?.let {
-                emitEvent(AdminChallengerEvent.ShowToast(it.failState.message))
-            }
-            stopLoading()
+            )
         }
+    }
+
+    //파트를 고르지 않으면 part 를 보내지 않는다. 서버가 part 를 주면 그 파트 행만 돌려주므로
+    //파트가 없는 챌린저(회장·부회장 등)는 part 없이 조회해야 목록에 나온다.
+    private suspend fun fetchChallengers(
+        keyword: String?,
+        selectedPart: UserPart?,
+    ): ApiState<List<AdminChallenger>> {
+        val challengers = mutableListOf<AdminChallenger>()
+        var cursor: Long? = null
+        repeat(MAX_PAGES) {
+            val response = getAdminChallengerListUseCase(
+                cursor = cursor,
+                size = PAGE_SIZE,
+                schoolId = null,
+                gisuId = null,
+                keyword = keyword,
+                part = selectedPart?.name
+            )
+            when (response) {
+                is ApiState.Fail -> return response
+                is ApiState.Success -> {
+                    challengers += response.data.challengers
+                    cursor = response.data.nextCursor
+                    if (!response.data.hasNext || cursor == null) return ApiState.Success(challengers.distinctBy { it.id })
+                }
+            }
+        }
+        return ApiState.Success(challengers.distinctBy { it.id })
     }
 
     //선택한 챌린저 상세 정보 조회
     fun getChallengerDetail(challengerId: Long) {
-        if (challengerId <= 0L) return
+        if (challengerId <= 0L) {
+            // 조회할 수 없는 id 라 영구 로딩이 되지 않도록 바로 오류 상태로 둔다.
+            updateState { copy(detailLoadState = AdminChallengerLoadState.ERROR) }
+            return
+        }
         viewModelScope.launch {
+            updateState { copy(detailLoadState = AdminChallengerLoadState.LOADING) }
             startLoading()
             resultResponse(
                 response = getAdminChallengerDetailUseCase(challengerId),
-                successCallback = { detail -> updateState { copy(detail = detail) } },
-                errorCallback = { emitEvent(AdminChallengerEvent.ShowToast(it.message)) }
+                successCallback = { detail ->
+                    updateState { copy(detail = detail, detailLoadState = AdminChallengerLoadState.SUCCESS) }
+                },
+                errorCallback = {
+                    updateState { copy(detailLoadState = AdminChallengerLoadState.ERROR) }
+                    emitEvent(AdminChallengerEvent.ShowToast(it.message))
+                }
             )
         }
     }
@@ -150,6 +189,10 @@ class AdminChallengerViewModel @Inject constructor(
     //선택된 상벌점 기록 삭제
     fun deleteSelectedPoint() {
         val targetId = uiState.value.deleteTarget ?: return
+        // 응답 전에 '삭제하기'를 다시 눌러도 같은 DELETE 가 중복으로 나가지 않게 한다.
+        if (uiState.value.isPointSubmitting) return
+        val challengerId = uiState.value.detail?.challengerId
+        updateState { copy(isPointSubmitting = true) }
         viewModelScope.launch {
             startLoading()
             resultResponse(
@@ -158,11 +201,17 @@ class AdminChallengerViewModel @Inject constructor(
                     updateState {
                         copy(
                             detail = detail?.copy(history = detail.history.filterNot { it.id == targetId }),
-                            deleteTarget = null
+                            deleteTarget = null,
+                            isPointSubmitting = false
                         )
                     }
+                    // 총점수·상점/벌점 칩은 서버 계산값이라 삭제 응답(Unit)으로는 갱신되지 않으므로 상세를 다시 조회한다.
+                    challengerId?.let(::getChallengerDetail)
                 },
-                errorCallback = { emitEvent(AdminChallengerEvent.ShowToast(it.message)) }
+                errorCallback = {
+                    updateState { copy(isPointSubmitting = false) }
+                    emitEvent(AdminChallengerEvent.ShowToast(it.message))
+                }
             )
         }
     }
@@ -262,7 +311,9 @@ class AdminChallengerViewModel @Inject constructor(
         description: String,
         pointValue: Int? = null,
     ) {
-        if (challengerId <= 0L) return
+        // 응답 전에 '등록하기'를 다시 눌러도 같은 POST 가 중복으로 나가지 않게 한다.
+        if (challengerId <= 0L || uiState.value.isPointSubmitting) return
+        updateState { copy(isPointSubmitting = true) }
         viewModelScope.launch {
             startLoading()
             resultResponse(
@@ -283,12 +334,16 @@ class AdminChallengerViewModel @Inject constructor(
                             pointMemo = "",
                             customRewardScore = 0,
                             customPunishScore = 0,
-                            customReason = ""
+                            customReason = "",
+                            isPointSubmitting = false
                         )
                     }
                     emitEvent(AdminChallengerEvent.PointGranted)
                 },
-                errorCallback = { emitEvent(AdminChallengerEvent.ShowToast(it.message)) }
+                errorCallback = {
+                    updateState { copy(isPointSubmitting = false) }
+                    emitEvent(AdminChallengerEvent.ShowToast(it.message))
+                }
             )
         }
     }
@@ -301,8 +356,14 @@ data class AdminChallengerUiState(
     val isPartFilterVisible: Boolean = false,
     //파트별 챌린저 목록
     val sections: ImmutableList<AdminChallengerSectionUi> = persistentListOf(),
+    //챌린저 목록 조회 상태
+    val loadState: AdminChallengerLoadState = AdminChallengerLoadState.LOADING,
+    //목록 조회 실패 원인 문구(없으면 기본 안내)
+    val loadErrorMessage: String? = null,
     //선택한 챌린저 상세 정보
     val detail: ChallengerManageDialogModel? = null,
+    //챌린저 상세 조회 상태
+    val detailLoadState: AdminChallengerLoadState = AdminChallengerLoadState.LOADING,
     //상세 화면 상벌점 수정 모드
     val isDetailEditMode: Boolean = false,
     //삭제 대상 상벌점 기록 ID
@@ -321,7 +382,11 @@ data class AdminChallengerUiState(
     val customPunishScore: Int = 0,
     //기타 상벌점 사유
     val customReason: String = "",
+    //상벌점 등록/삭제 요청 진행 중 여부
+    val isPointSubmitting: Boolean = false,
 ) : UiState
+
+enum class AdminChallengerLoadState { LOADING, SUCCESS, ERROR }
 
 data class AdminChallengerSectionUi(
     val partName: String,

@@ -11,6 +11,7 @@ enum class ResourceType {
     ATTENDANCE_RECORD,   //
     COMMUNITY_POST, //
     COMMUNITY_COMMENT, //
+    STUDY_GROUP,         //스터디 그룹
 
     UNKNOWN
 }

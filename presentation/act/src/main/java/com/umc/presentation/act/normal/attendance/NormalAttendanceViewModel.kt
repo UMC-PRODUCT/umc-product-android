@@ -55,12 +55,16 @@ class NormalAttendanceViewModel @Inject constructor(
         }
     }
 
-    fun verifySessionLocation(sessionId: Long) {
+    /**
+     * 현재 위치로 세션의 출석 가능 여부를 판정한다.
+     * silent 이면 실패해도 토스트를 내지 않는다(목록 재조회 후 자동 재판정용).
+     */
+    fun verifySessionLocation(sessionId: Long, silent: Boolean = false) {
         val session = uiState.value.availableSessions.firstOrNull { it.id == sessionId } ?: return
         if (session.isOnline) return
 
         if (!hasLocationPermission()) {
-            emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
+            if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
             return
         }
 
@@ -71,7 +75,7 @@ class NormalAttendanceViewModel @Inject constructor(
             targetLongitude == null ||
             (targetLatitude == 0.0 && targetLongitude == 0.0)
         ) {
-            emitEvent(NormalAttendanceEvent.ShowToast("출석 위치 정보가 없습니다."))
+            if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("출석 위치 정보가 없습니다."))
             return
         }
 
@@ -81,7 +85,7 @@ class NormalAttendanceViewModel @Inject constructor(
                 CancellationTokenSource().token
             ).addOnSuccessListener { currentLocation ->
                 if (currentLocation == null) {
-                    emitEvent(NormalAttendanceEvent.ShowToast("현재 위치를 확인할 수 없습니다."))
+                    if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("현재 위치를 확인할 수 없습니다."))
                     return@addOnSuccessListener
                 }
 
@@ -97,16 +101,20 @@ class NormalAttendanceViewModel @Inject constructor(
                     distanceMeters = distanceMeters.toInt(),
                 )
             }.addOnFailureListener {
-                emitEvent(NormalAttendanceEvent.ShowToast("현재 위치 확인에 실패했습니다."))
+                if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("현재 위치 확인에 실패했습니다."))
             }
         } catch (_: SecurityException) {
-            emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
+            if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
         }
     }
 
     //현재 위치를 조회해 세션 위치 반경 50m 이내인지 인증한 뒤 출석 요청
     fun requestAttendance(session: NormalAvailableSessionUi) {
+        // 위치 확인·요청 응답을 기다리는 동안 다시 눌러도 같은 요청이 중복 전송되지 않게 한다
+        if (uiState.value.isRequestingAttendance) return
+
         if (session.isOnline) {
+            updateState { copy(isRequestingAttendance = true) }
             submitAttendance(
                 session = session,
                 latitude = null,
@@ -132,6 +140,7 @@ class NormalAttendanceViewModel @Inject constructor(
             return
         }
 
+        updateState { copy(isRequestingAttendance = true) }
         startLoading()
         try {
             fusedLocationClient.getCurrentLocation(
@@ -139,7 +148,7 @@ class NormalAttendanceViewModel @Inject constructor(
                 CancellationTokenSource().token
             ).addOnSuccessListener { currentLocation ->
                 if (currentLocation == null) {
-                    stopLoading()
+                    finishAttendanceRequest()
                     emitEvent(NormalAttendanceEvent.ShowToast("현재 위치를 확인할 수 없습니다."))
                     return@addOnSuccessListener
                 }
@@ -152,7 +161,7 @@ class NormalAttendanceViewModel @Inject constructor(
                 )
 
                 if (distanceMeters > ATTENDANCE_RADIUS_METERS) {
-                    stopLoading()
+                    finishAttendanceRequest()
                     updateLocationVerification(
                         sessionId = session.id,
                         isCertified = false,
@@ -179,11 +188,13 @@ class NormalAttendanceViewModel @Inject constructor(
                     loadingAlreadyStarted = true
                 )
             }.addOnFailureListener {
-                stopLoading()
+                finishAttendanceRequest()
                 emitEvent(NormalAttendanceEvent.ShowToast("현재 위치 확인에 실패했습니다."))
+            }.addOnCanceledListener {
+                finishAttendanceRequest()
             }
         } catch (_: SecurityException) {
-            stopLoading()
+            finishAttendanceRequest()
             emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
         }
     }
@@ -207,11 +218,21 @@ class NormalAttendanceViewModel @Inject constructor(
                     )
                 ),
                 successCallback = {
+                    finishAttendanceRequest()
                     refresh()
                 },
-                errorCallback = { emitEvent(NormalAttendanceEvent.ShowToast(it.message)) }
+                errorCallback = {
+                    finishAttendanceRequest()
+                    emitEvent(NormalAttendanceEvent.ShowToast(it.message))
+                }
             )
         }
+    }
+
+    //출석 요청 진행 상태 해제
+    private fun finishAttendanceRequest() {
+        stopLoading()
+        updateState { copy(isRequestingAttendance = false) }
     }
 
     private fun hasLocationPermission(): Boolean {
@@ -280,16 +301,22 @@ class NormalAttendanceViewModel @Inject constructor(
         val session = state.availableSessions.firstOrNull { it.id == state.reasonSessionId } ?: return
         val reason = state.reason.trim()
         if (reason.isEmpty()) return
+        // 제출 응답을 기다리는 동안 다시 눌러도 같은 사유가 중복 전송되지 않게 한다
+        if (state.isSubmittingReason) return
 
+        updateState { copy(isSubmittingReason = true) }
         viewModelScope.launch {
             startLoading()
             resultResponse(
                 response = postAttendanceReasonUseCase(session.sheetId, reason),
                 successCallback = {
-                    updateState { copy(reasonSessionId = null, reason = "") }
+                    updateState { copy(reasonSessionId = null, reason = "", isSubmittingReason = false) }
                     refresh()
                 },
-                errorCallback = { emitEvent(NormalAttendanceEvent.ShowToast(it.message)) }
+                errorCallback = {
+                    updateState { copy(isSubmittingReason = false) }
+                    emitEvent(NormalAttendanceEvent.ShowToast(it.message))
+                }
             )
         }
     }
@@ -301,7 +328,41 @@ class NormalAttendanceViewModel @Inject constructor(
             resultResponse(
                 response = getAttendanceAvailableUseCase(),
                 successCallback = { sessions ->
-                    updateState { copy(availableSessions = sessions.map { it.toUi() }.toImmutableList()) }
+                    updateState {
+                        // 서버 응답에는 클라이언트가 판정한 위치 인증 결과가 없으므로,
+                        // 출석 위치가 그대로인 세션은 직전 인증 결과를 이어받는다
+                        val previousSessions = availableSessions.associateBy { it.id }
+                        copy(
+                            availableSessions = sessions.map { session ->
+                                val ui = session.toUi()
+                                val previous = previousSessions[ui.id]
+                                if (previous != null &&
+                                    previous.latitude == ui.latitude &&
+                                    previous.longitude == ui.longitude
+                                ) {
+                                    ui.copy(
+                                        isLocationCertified = previous.isLocationCertified,
+                                        locationDistanceMeters = previous.locationDistanceMeters,
+                                    )
+                                } else {
+                                    ui
+                                }
+                            }.toImmutableList()
+                        )
+                    }
+                    // 펼쳐진 카드는 새 목록 기준으로 현재 위치를 다시 판정한다.
+                    // 출석 전·반려 상태 카드만 대상이며, 재조회 경로에서는 실패 토스트를 내지 않는다.
+                    if (hasLocationPermission()) {
+                        val expandedId = uiState.value.expandedSessionId
+                        val expanded = uiState.value.availableSessions
+                            .firstOrNull { it.id == expandedId }
+                        if (expanded != null &&
+                            (expanded.status == CheckAvailableStatus.BEFORE ||
+                                expanded.status == CheckAvailableStatus.REJECTED)
+                        ) {
+                            verifySessionLocation(expanded.id, silent = true)
+                        }
+                    }
                 },
                 errorCallback = { emitEvent(NormalAttendanceEvent.ShowToast(it.message)) }
             )
@@ -334,6 +395,10 @@ data class NormalAttendanceUiState(
     val reasonSessionId: Long? = null,
     //출석 실패 사유
     val reason: String = "",
+    //출석 요청 진행 중 여부
+    val isRequestingAttendance: Boolean = false,
+    //출석 실패 사유 제출 진행 중 여부
+    val isSubmittingReason: Boolean = false,
 ) : UiState {
     //출석 가능한 세션 비어있음 여부
     val isAvailableEmpty: Boolean get() = availableSessions.isEmpty()

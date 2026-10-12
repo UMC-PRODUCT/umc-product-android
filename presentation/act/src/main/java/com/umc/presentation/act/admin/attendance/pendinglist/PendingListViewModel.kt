@@ -26,16 +26,17 @@ class PendingListViewModel @Inject constructor(
     //세션별 승인 대기 유저 목록 조회
     fun getPendingUsers(
         scheduleId: Long,
-        initialUsers: List<AdminPendingUser> = emptyList(),
+        initialUsers: List<AdminPendingUser>? = null,
     ) {
         updateState {
             copy(
                 scheduleId = scheduleId,
-                users = initialUsers.toImmutableList(),
+                users = initialUsers.orEmpty().toImmutableList(),
             )
         }
         if (scheduleId <= 0L) return
-        if (initialUsers.isNotEmpty()) return
+        // 목록이 넘어왔다면 비어 있어도(승인 대기 0명) 다시 조회하지 않는다
+        if (initialUsers != null) return
 
         viewModelScope.launch {
             startLoading()

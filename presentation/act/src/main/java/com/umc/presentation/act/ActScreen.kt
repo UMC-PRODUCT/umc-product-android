@@ -123,7 +123,9 @@ fun ActManageScreen(
                 ManageTab(AppStrings.TAB_ATTENDANCE_USER) { isActive ->
                     NormalAttendanceRoute(isActive = isActive)
                 },
-                ManageTab(AppStrings.TAB_STUDY_USER) { UserStudyRoute() },
+                ManageTab(AppStrings.TAB_STUDY_USER) { isActive ->
+                    UserStudyRoute(isActive = isActive)
+                },
                 ManageTab(AppStrings.TAB_CHALLENGE_USER) { isActive ->
                     NormalChallengerRoute(isActive = isActive)
                 }

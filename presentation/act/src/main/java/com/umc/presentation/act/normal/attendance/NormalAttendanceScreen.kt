@@ -3,7 +3,13 @@ package com.umc.presentation.act.normal.attendance
 import com.umc.presentation.act.normal.attendance.dialog.AttendanceReasonDialog
 
 import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -50,6 +56,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.CameraPosition
@@ -63,6 +70,7 @@ import com.naver.maps.map.compose.rememberFusedLocationSource
 import com.naver.maps.map.compose.rememberCameraPositionState
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
@@ -116,6 +124,7 @@ fun NormalAttendanceRoute(
     var pendingLocationVerificationSessionId by remember {
         mutableStateOf<Long?>(null)
     }
+    var showLocationSettingsDialog by remember { mutableStateOf(false) }
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -134,6 +143,16 @@ fun NormalAttendanceRoute(
                 "출석 위치 확인을 위해 정확한 위치 권한이 필요합니다.",
                 Toast.LENGTH_SHORT
             ).show()
+            // '다시 묻지 않음'까지 거부된 상태면 팝업이 뜨지 않으므로 앱 설정으로 안내한다
+            val activity = context.findActivity()
+            if (activity != null &&
+                !ActivityCompat.shouldShowRequestPermissionRationale(
+                    activity,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            ) {
+                showLocationSettingsDialog = true
+            }
         }
     }
 
@@ -200,6 +219,35 @@ fun NormalAttendanceRoute(
         onDismissReason = viewModel::dismissReasonDialog,
         onSubmitReason = viewModel::submitReason
     )
+
+    if (showLocationSettingsDialog) {
+        UDialog(
+            title = AppStrings.ATTENDANCE_LOCATION_PERMISSION_TITLE,
+            content = AppStrings.ATTENDANCE_LOCATION_PERMISSION_CONTENT,
+            onDismissRequest = { showLocationSettingsDialog = false },
+            isTwoButton = true,
+            negativeText = AppStrings.COMMON_CANCEL,
+            positiveText = AppStrings.ATTENDANCE_LOCATION_PERMISSION_SETTINGS,
+            positiveBackgroundColor = grey800(),
+            positiveTextColor = grey000(),
+            onNegative = { showLocationSettingsDialog = false },
+            onPositive = {
+                showLocationSettingsDialog = false
+                context.startActivity(
+                    Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.fromParts("package", context.packageName, null)
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            }
+        )
+    }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
 
 @Composable
@@ -225,6 +273,7 @@ fun NormalAttendanceScreen(
                 isEmpty = uiState.isAvailableEmpty,
                 sessions = uiState.availableSessions,
                 expandedSessionId = uiState.expandedSessionId,
+                isRequesting = uiState.isRequestingAttendance,
                 onExpandToggle = onExpandToggle,
                 onAttendanceClick = onAttendanceClick,
                 onReasonClick = onReasonClick
@@ -244,7 +293,8 @@ fun NormalAttendanceScreen(
             reason = uiState.reason,
             onReasonChange = onReasonChange,
             onDismissRequest = onDismissReason,
-            onSubmit = { onSubmitReason() }
+            onSubmit = { onSubmitReason() },
+            isSubmitting = uiState.isSubmittingReason
         )
     }
 }
@@ -254,6 +304,7 @@ private fun AvailableSession(
     isEmpty: Boolean,
     sessions: ImmutableList<NormalAvailableSessionUi>,
     expandedSessionId: Long?,
+    isRequesting: Boolean,
     onExpandToggle: (Long) -> Unit,
     onAttendanceClick: (NormalAvailableSessionUi) -> Unit,
     onReasonClick: (Long) -> Unit,
@@ -278,6 +329,7 @@ private fun AvailableSession(
                     AvailableSessionCard(
                         session = session,
                         isExpanded = expandedSessionId == session.id,
+                        isRequesting = isRequesting,
                         onExpandToggle = { onExpandToggle(session.id) },
                         onAttendanceClick = { onAttendanceClick(session) },
                         onReasonClick = { onReasonClick(session.id) }
@@ -339,6 +391,7 @@ private fun AvailableSessionCard(
     onExpandToggle: () -> Unit,
     onAttendanceClick: () -> Unit,
     onReasonClick: () -> Unit,
+    isRequesting: Boolean = false,
 ) {
     Column(
         modifier = Modifier
@@ -400,6 +453,7 @@ private fun AvailableSessionCard(
         ) {
             AvailableSessionExpandedContent(
                 session = session,
+                isRequesting = isRequesting,
                 onAttendanceClick = onAttendanceClick,
                 onReasonClick = onReasonClick
             )
@@ -410,11 +464,12 @@ private fun AvailableSessionCard(
 @Composable
 private fun AvailableSessionExpandedContent(
     session: NormalAvailableSessionUi,
+    isRequesting: Boolean,
     onAttendanceClick: () -> Unit,
     onReasonClick: () -> Unit,
 ) {
     val canRequestAttendance =
-        session.isOnline || session.isLocationCertified == true
+        (session.isOnline || session.isLocationCertified == true) && !isRequesting
 
     Column() {
         Spacer(modifier = Modifier.height(16.dp))
@@ -465,7 +520,11 @@ private fun AvailableSessionExpandedContent(
                     cornerRadius = 8.dp,
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                     backgroundColor = if(canRequestAttendance) indigo500() else grey100(),
-                    text = AppStrings.ATTENDANCE_REQUEST_BUTTON,
+                    text = if (isRequesting) {
+                        AppStrings.ATTENDANCE_REQUESTING
+                    } else {
+                        AppStrings.ATTENDANCE_REQUEST_BUTTON
+                    },
                     textStyle = CalloutBold,
                     textColor = if(canRequestAttendance) grey000() else grey300(),
                     prevIcon = painterResource(R.drawable.ic_location_white),
@@ -606,7 +665,11 @@ private fun AvailableSessionExpandedContent(
                         cornerRadius = 8.dp,
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                         backgroundColor = if(canRequestAttendance) indigo500() else grey100(),
-                        text = AppStrings.ATTENDANCE_REQUEST_AGAIN_BUTTON,
+                        text = if (isRequesting) {
+                            AppStrings.ATTENDANCE_REQUESTING
+                        } else {
+                            AppStrings.ATTENDANCE_REQUEST_AGAIN_BUTTON
+                        },
                         textStyle = CalloutBold,
                         textColor = if(canRequestAttendance) grey000() else grey300(),
                         prevIcon = painterResource(R.drawable.ic_location_white),
@@ -1061,6 +1124,28 @@ private fun AvailableSessionCardCantCheckPreview() {
                 onExpandToggle = {},
                 onAttendanceClick = {},
                 onReasonClick = {}
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Available Session Requesting")
+@Composable
+private fun AvailableSessionCardRequestingPreview() {
+    UmcTheme(darkTheme = false) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(grey100())
+                .padding(16.dp)
+        ) {
+            AvailableSessionCard(
+                session = sampleAvailableSessions().first().copy(isLocationCertified = true),
+                isExpanded = true,
+                onExpandToggle = {},
+                onAttendanceClick = {},
+                onReasonClick = {},
+                isRequesting = true
             )
         }
     }

@@ -12,7 +12,7 @@ data class ScheduleDetailResponse(
     @SerializedName("scheduleId") val scheduleId: Long,
     @SerializedName("name") val name: String,
     @SerializedName("description") val description: String?,
-    @SerializedName("tags") val tags: List<CategoryType>?,
+    @SerializedName("tags") val tags: List<CategoryType?>?, // Gson 은 모르는 enum 값을 null 원소로 넣는다
     @SerializedName("startsAt") val startsAt: String,
     @SerializedName("authorMemberId") val authorMemberId: Long? = null,
     @SerializedName("endsAt") val endsAt: String,
@@ -42,7 +42,7 @@ data class ScheduleDetailResponse(
                 /**TODO: 후에 Long 마이그레이션 시 해당 부분 교체 요망**/
                 id = scheduleId,
                 title = name,
-                tags = tags,
+                tags = tags?.filterNotNull(),
                 sheetId = 0,
                 startTime = startsAt,
                 endTime = endsAt,
@@ -71,7 +71,7 @@ data class ScheduleDetailResponse(
                 scheduleId = scheduleId,
                 name = name,
                 description = description ?: "",
-                tags = tags ?: emptyList(),
+                tags = tags.orEmpty().filterNotNull().distinct(),
                 startDay = startDay,
                 startTime = startTime,
                 endDay = endDay,

@@ -1,6 +1,7 @@
 package com.umc.presentation.study.admin.group.schedule.bottomsheet
 
 import android.content.Context
+import android.location.Address
 import android.location.Geocoder
 import android.os.Build
 import androidx.lifecycle.viewModelScope
@@ -202,27 +203,28 @@ class GroupScheduleLocationViewModel @Inject constructor(
                         lat,
                         lng,
                         1,
-                    ) { addresses ->
-                        if (addresses.isNotEmpty()) {
-                            val addr = addresses[0]
-
-                            updateState {
-                                copy(
-                                    selectedPlace =
-                                        LocationItem(
-                                            title =
-                                                addr.featureName
-                                                    ?: "지정된 위치",
-                                            address =
-                                                addr.getAddressLine(0)
-                                                    ?: "",
-                                            latitude = lat,
-                                            longitude = lng,
-                                        )
+                        object : Geocoder.GeocodeListener {
+                            override fun onGeocode(
+                                addresses: MutableList<Address>,
+                            ) {
+                                applyAddress(
+                                    lat,
+                                    lng,
+                                    addresses.firstOrNull(),
                                 )
                             }
-                        }
-                    }
+
+                            /**
+                             * 오프라인 / 백엔드 오류 시에도
+                             * 이전 장소가 남지 않도록 폴백 장소로 갱신합니다.
+                             */
+                            override fun onError(
+                                errorMessage: String?,
+                            ) {
+                                applyFallbackPlace(lat, lng)
+                            }
+                        },
+                    )
                 } else {
                     @Suppress("DEPRECATION")
                     val addresses =
@@ -232,44 +234,75 @@ class GroupScheduleLocationViewModel @Inject constructor(
                             1,
                         )
 
-                    if (!addresses.isNullOrEmpty()) {
-                        val addr = addresses[0]
-
-                        updateState {
-                            copy(
-                                selectedPlace =
-                                    LocationItem(
-                                        title =
-                                            addr.featureName
-                                                ?: "지정된 위치",
-                                        address =
-                                            addr.getAddressLine(0)
-                                                ?: "",
-                                        latitude = lat,
-                                        longitude = lng,
-                                    )
-                            )
-                        }
-                    }
+                    applyAddress(
+                        lat,
+                        lng,
+                        addresses?.firstOrNull(),
+                    )
                 }
             } catch (e: Exception) {
                 /**
                  * 주소 변환에 실패해도
                  * 현재 지도 좌표 자체는 유지합니다.
                  */
-                updateState {
-                    copy(
-                        selectedPlace =
-                            LocationItem(
-                                title = "선택한 지점",
-                                address =
-                                    "상세 주소를 불러올 수 없습니다.",
-                                latitude = lat,
-                                longitude = lng,
-                            )
-                    )
-                }
+                applyFallbackPlace(lat, lng)
             }
+        }
+    }
+
+    /**
+     * 변환된 주소를 선택 장소로 반영합니다.
+     *
+     * 주소가 없으면(빈 결과) 폴백 장소로 대체합니다.
+     */
+    private fun applyAddress(
+        lat: Double,
+        lng: Double,
+        address: Address?,
+    ) {
+        if (address == null) {
+            applyFallbackPlace(lat, lng)
+            return
+        }
+
+        updateState {
+            copy(
+                selectedPlace =
+                    LocationItem(
+                        title =
+                            address.featureName
+                                ?: "지정된 위치",
+                        address =
+                            address.getAddressLine(0)
+                                ?: "",
+                        latitude = lat,
+                        longitude = lng,
+                    ),
+                isPlaceSelected = true,
+            )
+        }
+    }
+
+    /**
+     * 주소 변환에 실패했거나 결과가 없을 때
+     * 좌표는 유지한 채 안내용 장소 정보로 갱신합니다.
+     */
+    private fun applyFallbackPlace(
+        lat: Double,
+        lng: Double,
+    ) {
+        updateState {
+            copy(
+                selectedPlace =
+                    LocationItem(
+                        title = "선택한 지점",
+                        address =
+                            "상세 주소를 불러올 수 없습니다.",
+                        latitude = lat,
+                        longitude = lng,
+                    ),
+                isPlaceSelected = true,
+            )
         }
     }
 
@@ -285,6 +318,7 @@ class GroupScheduleLocationViewModel @Inject constructor(
         updateState {
             copy(
                 selectedPlace = place,
+                isPlaceSelected = true,
                 searchResultList = persistentListOf(),
                 searchQuery = place.title,
             )
@@ -315,6 +349,16 @@ class GroupScheduleLocationViewModel @Inject constructor(
      * 현재 선택된 장소를 최종 확정합니다.
      */
     fun confirmSelection() {
+        // 지도 이동이나 검색 없이는 기본 위치를 장소로 확정하지 않음
+        if (!uiState.value.isPlaceSelected) {
+            emitEvent(
+                GroupScheduleLocationEvent.ShowToast(
+                    "지도를 움직이거나 검색하여 장소를 선택하세요."
+                )
+            )
+            return
+        }
+
         emitEvent(
             GroupScheduleLocationEvent.LocationConfirmed(
                 uiState.value.selectedPlace
@@ -342,6 +386,9 @@ data class GroupScheduleLocationState(
             0.0,
             0.0,
         ),
+
+    /** 사용자가 지도 이동 또는 검색으로 장소를 직접 선택했는지 여부 */
+    val isPlaceSelected: Boolean = false,
 
     /** 최근 장소 검색어 목록 */
     val recentSearchList: ImmutableList<String> =

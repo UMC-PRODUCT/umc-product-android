@@ -161,11 +161,8 @@ class FixLocationViewModel @Inject constructor(
     }
 
     //수정할 장소 선택
-    fun selectLocation(location: LocationItem, moveCamera: Boolean = true) {
+    fun selectLocation(location: LocationItem) {
         updateState { copy(selectedLocation = location) }
-        if (moveCamera) {
-            emitEvent(FixLocationEvent.MoveCameraTo(location.latitude, location.longitude))
-        }
     }
 
     fun moveToCurrentLocation() {
@@ -196,12 +193,6 @@ class FixLocationViewModel @Inject constructor(
                     return@addOnSuccessListener
                 }
 
-                emitEvent(
-                    FixLocationEvent.MoveCameraTo(
-                        latitude = location.latitude,
-                        longitude = location.longitude,
-                    )
-                )
                 updateLocationFromCoordinates(location.latitude, location.longitude)
             }.addOnFailureListener {
                 stopLoading()
@@ -226,7 +217,6 @@ class FixLocationViewModel @Inject constructor(
                                 latitude = latitude,
                                 longitude = longitude,
                             ),
-                            moveCamera = false,
                         )
                     }
                 } else {
@@ -241,7 +231,6 @@ class FixLocationViewModel @Inject constructor(
                             latitude = latitude,
                             longitude = longitude,
                         ),
-                        moveCamera = false,
                     )
                 }
             } catch (_: Exception) {
@@ -252,7 +241,6 @@ class FixLocationViewModel @Inject constructor(
                         latitude = latitude,
                         longitude = longitude,
                     ),
-                    moveCamera = false,
                 )
             }
         }
@@ -300,6 +288,4 @@ sealed interface FixLocationEvent : UiEvent {
     data object UpdateSuccess : FixLocationEvent
     //토스트 표시
     data class ShowToast(val message: String) : FixLocationEvent
-    //검색 결과 좌표로 지도 이동
-    data class MoveCameraTo(val latitude: Double, val longitude: Double) : FixLocationEvent
 }
