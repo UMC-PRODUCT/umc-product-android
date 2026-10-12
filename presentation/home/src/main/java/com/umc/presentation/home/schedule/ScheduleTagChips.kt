@@ -56,7 +56,8 @@ fun FlowRowScope.ScheduleTagChipItems(
     textColor: Color = grey700(),
     textStyle: TextStyle = UmcTypographyTokens.Caption1Bold,
 ) {
-    tags.take(maxVisible).forEach {
+    // 서버가 주는 순서가 응답마다 달라, 등록 폼과 같은 카테고리 순서로 맞춘다.
+    tags.sorted().take(maxVisible).forEach {
         ScheduleTagChip(text = it.label, textColor = textColor, textStyle = textStyle)
     }
     val hiddenCount = tags.size - maxVisible
