@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,6 +49,24 @@ fun AdminStudyGroupScreen(
     state: AdminStudyGroupState,
     onAction: (AdminStudyGroupAction) -> Unit = {},
 ) {
+    val listState = rememberLazyListState()
+
+    // 새로 생긴 그룹은 목록 앞쪽에 들어와 key 고정된 스크롤 위치 때문에 화면 위로 밀려나므로, 추가된 그룹 카드로 스크롤한다.
+    // 컴포지션에서 읽지 않는 값이라 상태가 아닌 홀더로 둔다.
+    val knownGroupIds = remember {
+        mutableSetOf<Long>().apply { addAll(state.groups.map { it.groupId }) }
+    }
+    LaunchedEffect(state.groups) {
+        val ids = state.groups.map { it.groupId }
+        val addedIndex = ids.indexOfFirst { it !in knownGroupIds }
+        val hadGroups = knownGroupIds.isNotEmpty()
+        knownGroupIds.clear()
+        knownGroupIds.addAll(ids)
+        if (hadGroups && addedIndex >= 0) {
+            listState.scrollToItem(addedIndex)
+        }
+    }
+
     /**
      * 그룹 정보 수정 Dialog
      *
@@ -182,6 +203,7 @@ fun AdminStudyGroupScreen(
              * 관리 중인 스터디 그룹 목록
              */
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .fillMaxSize()
                     .background(grey100()),

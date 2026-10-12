@@ -415,7 +415,8 @@ class HomeViewModel @Inject constructor(
                             else -> "D-${serverDDay + i}"
                         },
                         isPast = isPast,
-                        plusDay = i
+                        plusDay = i,
+                        tags = schedule.tags
                     )
                 )
             }

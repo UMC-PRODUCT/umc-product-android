@@ -1,5 +1,7 @@
 package com.umc.domain.model.home
 
+import com.umc.domain.model.enums.CategoryType
+
 //홈의 recyclerview를 표현할 때 필요한 data class
 data class SchedulePlanItem(
     val id: Long,          // 1
@@ -11,4 +13,5 @@ data class SchedulePlanItem(
     val dDay: String?,     // "D-1" (과거면 null)
     val isPast: Boolean,   // 과거 여부 (true면 회색, false면 파란색)
     val plusDay: Int,      // 시작 일정 기준으로 몇일이 지났는지 여부(02.06~02.08 등 연속 일정일 때 표시)
+    val tags: List<CategoryType> = emptyList(), // 일정 태그(카테고리)
 )

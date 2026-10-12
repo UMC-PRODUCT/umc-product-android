@@ -10,6 +10,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -61,6 +63,9 @@ import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.indigo600
+import com.umc.domain.model.enums.CategoryType
+import com.umc.domain.model.home.PlanDetailItem
+import com.umc.presentation.home.schedule.ScheduleTagChipItems
 import com.umc.presentation.home.schedule.add.ScheduleAddEvent
 import kotlinx.coroutines.flow.collectLatest
 import java.net.URLEncoder
@@ -154,6 +159,7 @@ fun ScheduleDetailRoute(
 
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ScheduleDetailScreen(
     uiState: ScheduleDetailUiState,
@@ -228,17 +234,28 @@ fun ScheduleDetailScreen(
                     ) {
 
 
-                        //2. D-day 및 제목
-                        UButton(
-                            text = uiState.dDay,
-                            backgroundColor = indigo100(),
-                            textColor = indigo500(),
-                            textStyle = UmcTypographyTokens.FootnoteBold,
-                            onClick = {},
-                            modifier = Modifier
-                                .height(24.dp),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                        )
+                        //2. D-day, 일정 태그 칩(최대 6개 + '+N') 및 제목
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            itemVerticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            UButton(
+                                text = uiState.dDay,
+                                backgroundColor = indigo100(),
+                                textColor = indigo500(),
+                                textStyle = UmcTypographyTokens.FootnoteBold,
+                                onClick = {},
+                                modifier = Modifier
+                                    .height(24.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                            )
+                            ScheduleTagChipItems(
+                                tags = uiState.content.tags,
+                                maxVisible = 6,
+                                textStyle = UmcTypographyTokens.FootnoteBold,
+                            )
+                        }
 
                         Spacer(
                             modifier = Modifier
@@ -465,12 +482,37 @@ fun PreviewScheduleDetailMenuOpen() {
         todayTime = "10:00-12:00",
         place = "온라인(Zoom)",
         detail = "이 화면은 케밥 메뉴가 열렸을 때의 레이아웃을 확인하기 위한 프리뷰입니다.",
+        content = PlanDetailItem(tags = listOf(CategoryType.STUDY)),
         isMenuVisible = true, // 메뉴 열림 상태
         isLoading = false
     )
 
     ScheduleDetailScreen(
         uiState = mockUiState,
+        onBackClick = {},
+        onMenuClick = {},
+        onEditClick = {},
+        onDeleteClick = {},
+        onMapClick = {},
+        onAttendanceClick = {}
+    )
+}
+
+@Preview(showBackground = true, widthDp = 320)
+@Composable
+fun PreviewScheduleDetailManyTags() {
+    ScheduleDetailScreen(
+        uiState = ScheduleDetailUiState(
+            title = "UMC 10기 전체 오리엔테이션 및 네트워킹 데이",
+            dDay = "D-14",
+            startDate = "2026.05.10",
+            todayDate = "2026.05.10",
+            todayTime = "10:00-12:00",
+            place = "온라인(Zoom)",
+            detail = "태그가 많은 일정의 레이아웃을 확인하기 위한 프리뷰입니다.",
+            isLoading = false,
+            content = PlanDetailItem(tags = CategoryType.entries.toList())
+        ),
         onBackClick = {},
         onMenuClick = {},
         onEditClick = {},
