@@ -60,9 +60,13 @@ fun AdminStudyGroupScreen(
         val ids = state.groups.map { it.groupId }
         val addedIndex = ids.indexOfFirst { it !in knownGroupIds }
         val hadGroups = knownGroupIds.isNotEmpty()
+        // 목록은 첫 페이지(20개)만 받아서, 20개를 넘는 상태에서 그룹을 삭제하면 뒤쪽 그룹이 끝으로 당겨져 들어온다.
+        // 사라진 id 가 있는데 새 id 가 맨 끝에만 있으면 삭제로 밀려 들어온 것이므로 스크롤하지 않는다.
+        val removed = knownGroupIds.any { it !in ids }
+        val pulledInByDelete = removed && addedIndex == ids.lastIndex
         knownGroupIds.clear()
         knownGroupIds.addAll(ids)
-        if (hadGroups && addedIndex >= 0) {
+        if (hadGroups && addedIndex >= 0 && !pulledInByDelete) {
             listState.scrollToItem(addedIndex)
         }
     }
