@@ -656,7 +656,6 @@ object AppStrings {
     const val CHAT_ADMIN_BADGE = "운영진"
     const val CHAT_GENERATION_FORMAT = "%s기"
     const val CHAT_OWNER_ONLY_KICK_GUIDE = "개설자만 참여자를 내보낼 수 있어요"
-    const val CHAT_PROFILE_VIEW = "프로필 보기"
     const val CHAT_TRANSFER_OWNER = "방장 변경"
     const val CHAT_KICK = "내보내기"
     const val CHAT_KICK_TITLE_FORMAT = "%s님을 내보낼까요?"
