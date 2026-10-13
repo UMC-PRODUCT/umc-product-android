@@ -25,8 +25,14 @@ object AuthNetworkModule {
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .readTimeout(120, TimeUnit.SECONDS)
-            .connectTimeout(120, TimeUnit.SECONDS)
+            // TCP 연결 수립 제한. 응답 대기(read)·업로드 전송(write)과는 별개라 짧게 둔다.
+            .connectTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(120, TimeUnit.SECONDS)
+            // HTTP/2 연결 생존 확인. 10초마다 ping 을 보내고 다음 주기까지 pong 이 없으면 연결을 닫는다.
+            // 진행 중이던 요청은 OkHttp 가 새 연결로 다시 보낸다.
+            // 네트워크가 잠깐 끊겼다 붙은 뒤 죽은 연결에 요청이 실려 read timeout(120초)까지 멈추던 문제를 막는다.
+            // 업로드 호스트(S3)는 HTTP/1.1 이라 ping 대상이 아니다(2026-10 확인).
+            .pingInterval(10, TimeUnit.SECONDS)
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authenticationInterceptor)
             .authenticator(authenticator)

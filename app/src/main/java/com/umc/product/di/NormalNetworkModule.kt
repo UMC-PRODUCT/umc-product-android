@@ -35,8 +35,13 @@ object NormalNetworkModule {
     fun provideHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
             .readTimeout(120, TimeUnit.SECONDS)
-            .connectTimeout(120, TimeUnit.SECONDS)
+            // TCP 연결 수립 제한. AuthNetworkModule 과 같은 값으로 맞춘다.
+            .connectTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(120, TimeUnit.SECONDS)
+            // HTTP/2 연결 생존 확인(AuthNetworkModule 과 동일).
+            // 이 클라이언트로 여는 커뮤니티 채팅 웹소켓에도 같은 주기의 ping 이 적용되어,
+            // pong 이 없으면 onFailure 로 떨어져 기존 재연결 루프가 돈다.
+            .pingInterval(10, TimeUnit.SECONDS)
             .addInterceptor(loggingInterceptor)
             .build()
     }
