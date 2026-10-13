@@ -185,6 +185,8 @@ fun CommunityChattingScreen(
     var pendingReportConfirmation by remember {
         mutableStateOf<Pair<String, CommunityMessageReportReason>?>(null)
     }
+    // 참여하지 않았거나 나간 스레드는 읽기만 가능하다(서버 역할 없음 = UNKNOWN).
+    val isViewOnly = state.thread?.myRole == CommunityThreadRole.UNKNOWN
     val clipboard = LocalClipboard.current
     val context = LocalContext.current
     DisposableEffect(context) {
@@ -383,7 +385,7 @@ fun CommunityChattingScreen(
                 isMuted = state.thread?.isMuted == true,
                 isPinned = state.thread?.isPinned == true,
                 isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
-                showMoreMenu = state.thread?.myRole != CommunityThreadRole.UNKNOWN,
+                showMoreMenu = state.thread != null && !isViewOnly,
                 onSummary = onUnreadSummary,
                 onToggleMuted = onToggleMuted,
                 onTogglePinned = onTogglePinned,
@@ -415,7 +417,7 @@ fun CommunityChattingScreen(
             if (
                 !state.isLoading &&
                 state.errorMessage == null &&
-                state.thread?.myRole != CommunityThreadRole.UNKNOWN
+                !isViewOnly
             ) {
                 CommunityChatInputBar(
                     value = state.draft,
@@ -456,6 +458,7 @@ fun CommunityChattingScreen(
                 )
             } else if (state.messages.isEmpty() && state.pendingMessages.isEmpty()) {
                 EmptyChatMessages(
+                    isViewOnly = isViewOnly,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding),
@@ -516,6 +519,7 @@ fun CommunityChattingScreen(
                         imageUris = state.localImageUrisByMessageId[message.messageId].orEmpty(),
                         member = message.senderId?.let(state.members::get),
                         isMine = isMine,
+                        isViewOnly = isViewOnly,
                         menuExpanded = selectedMessage?.messageId == message.messageId,
                         onLongClick = { selectedMessage = message },
                         onDismissMenu = { selectedMessage = null },
@@ -705,7 +709,10 @@ fun CommunityChattingScreen(
 }
 
 @Composable
-private fun EmptyChatMessages(modifier: Modifier = Modifier) {
+private fun EmptyChatMessages(
+    isViewOnly: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier.padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -723,12 +730,14 @@ private fun EmptyChatMessages(modifier: Modifier = Modifier) {
             color = grey800(),
             style = UmcTypographyTokens.HeadlineBold
         )
-        Spacer(Modifier.height(3.dp))
-        Text(
-            text = AppStrings.CHAT_NO_MESSAGES_DESCRIPTION,
-            color = grey400(),
-            style = UmcTypographyTokens.Subheadline
-        )
+        if (!isViewOnly) {
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = AppStrings.CHAT_NO_MESSAGES_DESCRIPTION,
+                color = grey400(),
+                style = UmcTypographyTokens.Subheadline
+            )
+        }
     }
 }
 
@@ -1230,6 +1239,7 @@ private fun ChatMessageRow(
     imageUris: List<String>,
     member: CommunityThreadMember?,
     isMine: Boolean,
+    isViewOnly: Boolean,
     menuExpanded: Boolean,
     onLongClick: () -> Unit,
     onDismissMenu: () -> Unit,
@@ -1251,6 +1261,7 @@ private fun ChatMessageRow(
                 MessageReactions(
                     reactions = message.reactions,
                     isMine = isMine,
+                    enabled = !isViewOnly,
                     onReactionClick = onReact,
                 )
             }
@@ -1258,6 +1269,7 @@ private fun ChatMessageRow(
         if (menuExpanded) {
             MessageActionPopup(
                 isMine = isMine,
+                isViewOnly = isViewOnly,
                 onDismiss = onDismissMenu,
                 onReply = onReply,
                 onCopy = onCopy,
@@ -1274,6 +1286,7 @@ private fun ChatMessageRow(
 private fun MessageReactions(
     reactions: List<CommunityReaction>,
     isMine: Boolean,
+    enabled: Boolean = true,
     onReactionClick: (String) -> Unit,
 ) {
     Row(
@@ -1291,7 +1304,7 @@ private fun MessageReactions(
             Surface(
                 modifier = Modifier
                     .padding(end = 5.dp)
-                    .clickable { onReactionClick(reaction.emoji) },
+                    .clickable(enabled = enabled) { onReactionClick(reaction.emoji) },
                 shape = RoundedCornerShape(14.dp),
                 color = selectedColor,
                 border = androidx.compose.foundation.BorderStroke(
@@ -1654,6 +1667,7 @@ private fun ChatImageViewer(
 @Composable
 private fun MessageActionPopup(
     isMine: Boolean,
+    isViewOnly: Boolean = false,
     onDismiss: () -> Unit,
     onReply: () -> Unit,
     onCopy: () -> Unit,
@@ -1715,18 +1729,22 @@ private fun MessageActionPopup(
                 shadowElevation = 7.dp,
             ) {
                 Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                    MessageActionItem(AppStrings.CHAT_ACTION_REPLY, R.drawable.ic_forward_circle, onClick = onReply)
+                    if (!isViewOnly) {
+                        MessageActionItem(AppStrings.CHAT_ACTION_REPLY, R.drawable.ic_forward_circle, onClick = onReply)
+                    }
                     MessageActionItem(AppStrings.CHAT_ACTION_COPY, R.drawable.ic_document, onClick = onCopy)
                     MessageActionItem(AppStrings.CHAT_ACTION_REPORT, R.drawable.ic_warning, onClick = onReport)
-                    MessageActionItem(
-                        text = AppStrings.CHAT_DELETE,
-                        iconRes = R.drawable.ic_trash_can,
-                        color = red400(),
-                        onClick = onDelete,
-                    )
+                    if (!isViewOnly) {
+                        MessageActionItem(
+                            text = AppStrings.CHAT_DELETE,
+                            iconRes = R.drawable.ic_trash_can,
+                            color = red400(),
+                            onClick = onDelete,
+                        )
+                    }
                 }
             }
-            Surface(
+            if (!isViewOnly) Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 color = white(),
@@ -2126,6 +2144,40 @@ private fun CommunityChattingScreenPreview() {
                     content = "저는 절반 정도요 ㅠㅠ 주말에 마무리하려구요",
                     createdAt = "2026-07-30T14:20:00",
                 ),
+                CommunityThreadMessage(
+                    messageId = "1",
+                    senderId = "20",
+                    senderName = "홍길동(닉네임)",
+                    content = "다들 이번 주 과제 어디까지 하셨어요? 저는 로그인 화면까지 했어요",
+                    createdAt = "2026-07-30T14:14:00",
+                ),
+            ),
+        ),
+        onAction = {},
+    )
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+private fun CommunityChattingScreenViewOnlyPreview() {
+    CommunityChattingScreen(
+        state = CommunityChattingState(
+            threadId = "1",
+            thread = CommunityThreadDetail(
+                threadId = "1",
+                title = "나간 스레드",
+                myRole = CommunityThreadRole.UNKNOWN,
+            ),
+            myMemberId = "10",
+            members = mapOf(
+                "20" to CommunityThreadMember(
+                    memberId = "20",
+                    name = "홍길동(닉네임)",
+                    part = UserPart.IOS,
+                    role = CommunityThreadRole.ADMIN,
+                )
+            ),
+            messages = listOf(
                 CommunityThreadMessage(
                     messageId = "1",
                     senderId = "20",

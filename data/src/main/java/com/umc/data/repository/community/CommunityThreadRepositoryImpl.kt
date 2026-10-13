@@ -321,7 +321,12 @@ class CommunityThreadRepositoryImpl @Inject constructor(
 
     override suspend fun getThread(threadId: String) =
         apiCall { communityThreadApi.getCommunityThreadDetail(threadId) }
-            .map { it.toChatDomain() }
+            .map { response ->
+                // 나간 스레드는 서버가 isJoined=false 와 함께 이전 myRole 을 그대로 내려준다.
+                // 서버가 명시적으로 참여 중이 아니라고 한 경우에만 역할 없음으로 맞춰 보기 전용으로 연다.
+                val detail = response.toChatDomain()
+                if (response.isJoined == false) detail.copy(myRole = CommunityThreadRole.UNKNOWN) else detail
+            }
 
     override suspend fun getMessages(threadId: String, before: String?, limit: Int) =
         apiCall { communityThreadApi.getMessages(threadId, before, limit) }

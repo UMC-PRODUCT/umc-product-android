@@ -423,8 +423,17 @@ class CommunityViewModel @Inject constructor(
             ).onSuccess {
                 _state.update { currentState ->
                     currentState.copy(
-                        threads = currentState.threads.filterNot { thread ->
-                            thread.id == selectedThread.id
+                        // 나간 스레드도 목록에 남는다(보기 전용). 미참여 상태로만 바꾼다.
+                        threads = currentState.threads.map { thread ->
+                            if (thread.id == selectedThread.id) {
+                                thread.copy(
+                                    isJoined = false,
+                                    memberCount = (thread.memberCount - 1).coerceAtLeast(0),
+                                    unreadCount = 0,
+                                )
+                            } else {
+                                thread
+                            }
                         }.toImmutableList(),
                         selectedThread = null,
                         showThreadMenuDialog = false,
