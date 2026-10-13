@@ -48,9 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -590,26 +588,25 @@ fun HomeProfileCardsRow(
                             color = indigo500()
                         )
                     } else {
-                        Text(
-                            text = buildAnnotatedString {
-                                withStyle(
-                                    style = UmcTypographyTokens.Title3Bold.toSpanStyle().copy(
-                                        color = indigo500(),
-                                    )
-                                ) {
-                                    append("${uiState.growDay}")
-                                    append(" ")
-                                }
-                                // 나머지 부분
-                                withStyle(
-                                    style = UmcTypographyTokens.Footnote.toSpanStyle().copy(
-                                        color = grey700(),
-                                    )
-                                ) {
-                                    append("Days")
-                                }
-                            }
-                        )
+                        // 글꼴을 키워도 숫자만 따라 커지고 단위(Days)는 UText 로 고정한다
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                text = "${uiState.growDay}",
+                                style = UmcTypographyTokens.Title3Bold,
+                                color = indigo500(),
+                                maxLines = 1,
+                                modifier = Modifier.alignByBaseline(),
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            UText(
+                                text = "Days",
+                                style = UmcTypographyTokens.Footnote,
+                                color = grey700(),
+                                softWrap = false,
+                                maxLines = 1,
+                                modifier = Modifier.alignByBaseline(),
+                            )
+                        }
                     }
                 }
 
@@ -880,29 +877,25 @@ private fun ScoreCard(
                     .weight(1f)
             )
 
-            Text(
-                text = buildAnnotatedString {
-                    //숫자 부분
-                    withStyle(
-                        style = UmcTypographyTokens.CalloutBold.toSpanStyle().copy(
-                            color = grey900(),
-                            fontSize = 16.sp
-                        )
-                    ) {
-                        append(score.toString())
-                        append(" ")
-                    }
-                    // point
-                    withStyle(
-                        style = UmcTypographyTokens.Caption1.toSpanStyle().copy(
-                            color = grey600(),
-                            fontSize = 12.sp
-                        )
-                    ) {
-                        append("point")
-                    }
-                }
-            )
+            // 글꼴을 키워도 숫자만 따라 커지고 단위(point)는 UText 로 고정한다
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = score.toString(),
+                    style = UmcTypographyTokens.CalloutBold.copy(fontSize = 16.sp),
+                    color = grey900(),
+                    maxLines = 1,
+                    modifier = Modifier.alignByBaseline(),
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                UText(
+                    text = "point",
+                    style = UmcTypographyTokens.Caption1.copy(fontSize = 12.sp),
+                    color = grey600(),
+                    softWrap = false,
+                    maxLines = 1,
+                    modifier = Modifier.alignByBaseline(),
+                )
+            }
         }
 
     }
@@ -1032,6 +1025,39 @@ private fun HomeScreenPreview() {
     // 2. HomeScreen 호출 (모든 파라미터에 빈 람다나 더미 데이터 전달)
     HomeScreen(
         uiState = dummyUiState,
+        onDateClick = {},
+        onMonthChange = {},
+        onChangeViewMode = {},
+        onNotificationClick = {},
+        onScheduleAddClick = {},
+        onScheduleDetailClick = {},
+        onNoticeClick = {},
+        onShareCardClick = {},
+        onProfileRetryClick = {},
+        onScheduleRetryClick = {},
+        onScheduleRefresh = {},
+    )
+}
+
+/** 글꼴 최대 배율과 두 자리 점수에서 단위(point/Days)가 쪼개지지 않는지 확인한다. */
+@Preview(showBackground = true, fontScale = 2f)
+@Composable
+private fun HomeScreenLargeFontPreview() {
+    HomeScreen(
+        uiState = HomeUiState(
+            profileLoadState = HomeLoadState.SUCCESS,
+            userName = "박유수",
+            userNickName = "어헛차",
+            userType = UserType.ACTIVE,
+            growDay = 120,
+            activeString = "12기 활동 상태",
+            sangjum = 10,
+            buljum = -10,
+            total = 100,
+            gisuTag = persistentListOf("10기", "11기", "12기"),
+            viewMode = HomeViewMode.CALENDAR,
+            dailyPlans = persistentListOf()
+        ),
         onDateClick = {},
         onMonthChange = {},
         onChangeViewMode = {},
