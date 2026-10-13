@@ -129,6 +129,9 @@ fun MycardRoute(
     // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 각 지점의 원래 호출을 주석에서 되살린다.
     var showExchangeBlockedDialog by remember { mutableStateOf(false) }
 
+    // 나의 스터디·나의 활동·프로젝트는 이동할 화면이 아직 없어 개발 중 안내 다이얼로그만 띄운다.
+    var showFeatureInDevelopmentDialog by remember { mutableStateOf(false) }
+
 
     // 화면 복귀(ON_RESUME) 라이프사이클 시 최신 내 정보를 동기화하는 관찰자
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -210,8 +213,8 @@ fun MycardRoute(
         onNavigateToMyqrCode = { showExchangeBlockedDialog = true },
         onNavigateToReceivedCard = onNavigateToReceivedCard,
         onNavigateToEditCard = onNavigateToEditCard,
-        onNavigateToMyStudy = {},
-        onNavigateToMyActivity = {},
+        onNavigateToMyStudy = { showFeatureInDevelopmentDialog = true },
+        onNavigateToMyActivity = { showFeatureInDevelopmentDialog = true },
         onRetryProfile = viewModel::getUserInfo,
         // [임시] 명함 교환 차단 — 원래 동작: { nearbyViewModel.openBottomSheet() }
         onOpenExchangeBottomSheet = { showExchangeBlockedDialog = true },
@@ -225,6 +228,16 @@ fun MycardRoute(
             onDismissRequest = { showExchangeBlockedDialog = false },
             confirmText = AppStrings.CONFIRM,
             onConfirm = { showExchangeBlockedDialog = false },
+        )
+    }
+
+    if (showFeatureInDevelopmentDialog) {
+        UDialog(
+            title = AppStrings.MYCARD_FEATURE_IN_DEVELOPMENT_TITLE,
+            content = AppStrings.MYCARD_FEATURE_IN_DEVELOPMENT_CONTENT,
+            onDismissRequest = { showFeatureInDevelopmentDialog = false },
+            confirmText = AppStrings.CONFIRM,
+            onConfirm = { showFeatureInDevelopmentDialog = false },
         )
     }
 

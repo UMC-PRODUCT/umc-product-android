@@ -81,6 +81,9 @@ object AppStrings {
     const val MYCARD_ACTVITY_TITLE = "나의 활동"
     const val MYCARD_ACTVITY_MYSTUDY = "나의 스터디"
     const val MYCARD_ACTVITY_MYACTIVTY_PROJECT = "나의 활동·프로젝트"
+    // 나의 스터디·나의 활동·프로젝트는 이동할 화면이 아직 없어, 누르면 이 안내만 띄운다.
+    const val MYCARD_FEATURE_IN_DEVELOPMENT_TITLE = "개발 중인 기능이에요"
+    const val MYCARD_FEATURE_IN_DEVELOPMENT_CONTENT = "지금 열심히 준비하고 있어요.\n완료되면 안내드릴게요."
     const val MYCARD_PROFILE_LOAD_ERROR_TITLE = "내 정보를 불러오지 못했어요"
     const val MYCARD_PROFILE_LOAD_ERROR_DESCRIPTION = "네트워크 연결을 확인하고 다시 시도해주세요."
     const val MYCARD_RETRY = "다시 시도하기"
