@@ -2190,3 +2190,20 @@ private fun CommunityChattingScreenViewOnlyPreview() {
         onAction = {},
     )
 }
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+private fun CommunityChattingScreenViewOnlyEmptyPreview() {
+    CommunityChattingScreen(
+        state = CommunityChattingState(
+            threadId = "1",
+            thread = CommunityThreadDetail(
+                threadId = "1",
+                title = "나간 스레드",
+                myRole = CommunityThreadRole.UNKNOWN,
+            ),
+            myMemberId = "10",
+        ),
+        onAction = {},
+    )
+}
