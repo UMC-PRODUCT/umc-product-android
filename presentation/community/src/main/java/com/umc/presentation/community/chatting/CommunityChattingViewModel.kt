@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.theme.AppStrings
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.base.isNetworkError
 import com.umc.domain.model.community.chatting.CommunityChatConnectionState
 import com.umc.domain.model.community.chatting.CommunityChatEvent
 import com.umc.domain.model.community.chatting.CreateCommunityMessageCommand
@@ -59,6 +60,8 @@ class CommunityChattingViewModel @Inject constructor(
     private var manualReconnectInProgress = false
     private var hasCapturedEntryUnreadMessages = false
     private var lastSummaryMessages: List<CommunityThreadMessage> = emptyList()
+    private var isLeaving = false
+    private var hasEmittedThreadLeft = false
 
     init {
         observeCurrentMember()
@@ -124,7 +127,14 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     fun bootstrap() = viewModelScope.launch {
-        updateState { copy(isLoading = true, errorMessage = null, isThreadUnavailable = false) }
+        updateState {
+            copy(
+                isLoading = true,
+                errorMessage = null,
+                isThreadUnavailable = false,
+                isAccessDenied = false,
+            )
+        }
         val threadId = uiState.value.threadId
         if (threadId.isBlank()) {
             stopRealtime()
@@ -139,7 +149,13 @@ class CommunityChattingViewModel @Inject constructor(
         if (detail is ApiState.Success && messages is ApiState.Success) {
             val loadedMessages = messages.data.messages
                 .distinctBy(CommunityThreadMessage::messageId)
-            val unreadCount = detail.data.unreadCount.toIntOrNull()?.coerceAtLeast(0) ?: 0
+            // 보기 전용(미참여·나간 스레드)은 읽음 처리를 보낼 수 없어 서버 unreadCount 가 나갈 때 값으로 남는다. 진입 미읽음으로 쓰지 않는다.
+            val isViewOnly = detail.data.myRole == CommunityThreadRole.UNKNOWN
+            val unreadCount = if (isViewOnly) {
+                0
+            } else {
+                detail.data.unreadCount.toIntOrNull()?.coerceAtLeast(0) ?: 0
+            }
             val entryUnreadMessages = loadedMessages
                 .take(unreadCount.coerceAtMost(MAX_SUMMARY_MESSAGE_COUNT))
             val isInitialSummaryCandidateCapture = !hasCapturedEntryUnreadMessages
@@ -192,6 +208,13 @@ class CommunityChattingViewModel @Inject constructor(
                         isThreadUnavailable = true,
                     )
                 }
+                return@launch
+            }
+            val messagesFailure = (messages as? ApiState.Fail)?.failState
+            if (detailFailure?.hasThreadAccessDeniedCode() == true ||
+                messagesFailure?.hasThreadAccessDeniedCode() == true
+            ) {
+                showAccessDenied()
                 return@launch
             }
             val message = (detail as? ApiState.Fail)?.failState?.message
@@ -302,6 +325,10 @@ class CommunityChattingViewModel @Inject constructor(
                 )
             }
             is ApiState.Fail -> {
+                if (response.failState.hasThreadAccessDeniedCode()) {
+                    showAccessDenied()
+                    return@launch
+                }
                 updateState { copy(isLoadingMore = false) }
                 emitEvent(CommunityChattingEvent.ShowError(response.failState.message))
             }
@@ -631,16 +658,51 @@ class CommunityChattingViewModel @Inject constructor(
         }
     }
 
+    // 나가기 완료는 HTTP 응답과 소켓 member.left 중 먼저 온 쪽에서 한 번만 알린다.
+    private fun emitThreadLeftOnce() {
+        if (hasEmittedThreadLeft) return
+        hasEmittedThreadLeft = true
+        emitEvent(CommunityChattingEvent.ThreadDeleted)
+    }
+
     fun leaveThread() = viewModelScope.launch {
-        when (val result = threadRepository.leaveThread(uiState.value.threadId)) {
-            is ApiState.Success -> emitEvent(CommunityChattingEvent.ThreadDeleted)
+        if (isLeaving) return@launch
+        isLeaving = true
+        val threadId = uiState.value.threadId
+        val thread = uiState.value.thread
+        // 나간 스레드는 더보기 메뉴가 없어 고정을 풀 수 없으므로 나가기 전에 먼저 푼다. 방장은 나가기가 거절되므로 건드리지 않는다.
+        var unpinnedFirst = false
+        if (thread?.isPinned == true && thread.myRole != CommunityThreadRole.OWNER) {
+            when (val unpinned = threadRepository.setPinned(threadId, false)) {
+                is ApiState.Success -> {
+                    unpinnedFirst = true
+                    updateState { copy(thread = unpinned.data) }
+                }
+                is ApiState.Fail -> if (unpinned.failState.isNetworkError) {
+                    // 네트워크가 불안정하면 고정이 서버에 남은 채 나가질 수 있어 나가기를 보내지 않는다.
+                    emitEvent(CommunityChattingEvent.ShowError(unpinned.failState.message))
+                    isLeaving = false
+                    return@launch
+                }
+            }
+        }
+        when (val result = threadRepository.leaveThread(threadId)) {
+            is ApiState.Success -> emitThreadLeftOnce()
             is ApiState.Fail -> {
+                // 네트워크 오류는 나가기 성공 여부를 알 수 없으므로 고정을 되돌리지 않는다.
+                if (unpinnedFirst && !result.failState.isNetworkError) {
+                    when (val restored = threadRepository.setPinned(threadId, true)) {
+                        is ApiState.Success -> updateState { copy(thread = restored.data) }
+                        is ApiState.Fail -> Unit
+                    }
+                }
                 if (result.failState.code == OWNERSHIP_TRANSFER_REQUIRED_CODE) {
                     emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
                     updateState { copy(showOwnershipTransferRequiredDialog = true) }
                 } else {
                     emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
                 }
+                isLeaving = false
             }
         }
     }
@@ -789,6 +851,27 @@ class CommunityChattingViewModel @Inject constructor(
         chatRepository.disconnect()
     }
 
+    // 내보내진 계정 등 접근 권한이 없으면 남은 내용을 지우고 전용 화면만 보여준다.
+    private fun showAccessDenied() {
+        stopRealtime()
+        updateState {
+            copy(
+                isLoading = false,
+                isLoadingMore = false,
+                errorMessage = null,
+                isAccessDenied = true,
+                thread = null,
+                messages = emptyList(),
+                members = emptyMap(),
+                pendingMessages = emptyMap(),
+                unreadMessagesAtEntry = emptyList(),
+                unreadCountAtEntry = 0,
+                summaryCandidateMessages = emptyList(),
+                draft = "",
+            )
+        }
+    }
+
     private fun observeCurrentMember() {
         viewModelScope.launch {
             appDataStoreRepository.getUserInfo().collectLatest { user ->
@@ -819,7 +902,7 @@ class CommunityChattingViewModel @Inject constructor(
                     copy(members = membersWithProfiles.associateBy(CommunityThreadMember::memberId))
                 }
             }
-            is ApiState.Fail -> Unit
+            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode()) showAccessDenied()
         }
     }
 
@@ -941,7 +1024,12 @@ class CommunityChattingViewModel @Inject constructor(
                 CommunityChatEvent.ThreadStateChanged.Type.MEMBER_KICKED,
                 CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT -> {
                     if (event.memberId == uiState.value.myMemberId) {
-                        emitEvent(CommunityChattingEvent.ThreadUnavailable)
+                        // 내가 요청한 나가기의 member.left 가 HTTP 응답보다 먼저 와도 나가기 완료로 처리한다(토스트 누락 방지).
+                        if (isLeaving && event.type == CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT) {
+                            emitThreadLeftOnce()
+                        } else {
+                            emitEvent(CommunityChattingEvent.ThreadUnavailable)
+                        }
                     } else {
                         event.memberId?.let { memberId ->
                             updateState {
@@ -966,7 +1054,7 @@ class CommunityChattingViewModel @Inject constructor(
     private fun refreshDetail() = viewModelScope.launch {
         when (val result = threadRepository.getThread(uiState.value.threadId)) {
             is ApiState.Success -> updateState { copy(thread = result.data) }
-            is ApiState.Fail -> Unit
+            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode()) showAccessDenied()
         }
     }
 
@@ -1008,7 +1096,7 @@ class CommunityChattingViewModel @Inject constructor(
                 )
                 markLatestMessageRead()
             }
-            is ApiState.Fail -> Unit
+            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode()) showAccessDenied()
         }
     }
 
@@ -1044,10 +1132,14 @@ class CommunityChattingViewModel @Inject constructor(
 
 private const val THREAD_NOT_FOUND_CODE = "COMMUNITY-0033"
 private const val THREAD_DELETED_CODE = "COMMUNITY-0037"
+private const val THREAD_ACCESS_DENIED_CODE = "COMMUNITY-0034"
 
 private fun com.umc.domain.model.base.FailState.hasThreadUnavailableCode(): Boolean =
     code == "404" || code.endsWith("-404") ||
         code == THREAD_NOT_FOUND_CODE || code == THREAD_DELETED_CODE
+
+private fun com.umc.domain.model.base.FailState.hasThreadAccessDeniedCode(): Boolean =
+    code == THREAD_ACCESS_DENIED_CODE
 
 private fun createInitialChattingState(savedStateHandle: SavedStateHandle): CommunityChattingState {
     val threadId = savedStateHandle.get<String>("threadId").orEmpty()

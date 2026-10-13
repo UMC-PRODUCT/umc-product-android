@@ -37,6 +37,7 @@ data class CommunityChattingState(
     val summarizedMessageCount: Int = 0,
     val errorMessage: String? = null,
     val isThreadUnavailable: Boolean = false,
+    val isAccessDenied: Boolean = false,
 ) : UiState
 
 data class PendingCommunityMessage(

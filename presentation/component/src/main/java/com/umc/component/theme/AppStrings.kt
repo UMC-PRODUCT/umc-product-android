@@ -684,4 +684,8 @@ object AppStrings {
     const val CHAT_CD_CANCEL_REPLY = "답장 취소"
     const val CHAT_CD_ATTACH_PHOTO = "사진 첨부"
     const val CHAT_CD_SEND = "전송"
+    const val CHAT_NO_ACCESS_TITLE = "볼 수 없는 스레드예요"
+    const val CHAT_NO_ACCESS_DESCRIPTION = "이 스레드를 볼 수 있는 권한이 없어요."
+    const val CHAT_NO_ACCESS_BACK = "돌아가기"
+    const val CHAT_LEAVE_SUCCESS = "스레드에서 나갔어요."
 }

@@ -161,6 +161,17 @@ fun CommunityChattingScreen(
         return
     }
 
+    if (state.isAccessDenied) {
+        ThreadUnavailableScreen(
+            onBack = onBack,
+            topBarTitle = AppStrings.CHAT_ROOM_DEFAULT,
+            title = AppStrings.CHAT_NO_ACCESS_TITLE,
+            description = AppStrings.CHAT_NO_ACCESS_DESCRIPTION,
+            buttonText = AppStrings.CHAT_NO_ACCESS_BACK,
+        )
+        return
+    }
+
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -278,7 +289,7 @@ fun CommunityChattingScreen(
         if (knownMessageIds.isEmpty()) {
             knownMessageIds = currentIds
             if (displayedMessages.isNotEmpty()) {
-                val entryUnreadCount = state.unreadCountAtEntry
+                val entryUnreadCount = if (isViewOnly) 0 else state.unreadCountAtEntry
                 val loadedUnreadCount = entryUnreadCount.coerceAtMost(displayedMessages.size)
                 val messageIndex = if (loadedUnreadCount > 0) {
                     val firstUnreadMessageIndex = displayedMessages.size - loadedUnreadCount
@@ -510,7 +521,7 @@ fun CommunityChattingScreen(
                         DateDivider(formatCommunityDate(message.createdAt))
                         Spacer(Modifier.height(14.dp))
                     }
-                    if (message.messageId == unreadDividerMessageId) {
+                    if (!isViewOnly && message.messageId == unreadDividerMessageId) {
                         NewMessagesDivider()
                         Spacer(Modifier.height(14.dp))
                     }
@@ -573,7 +584,7 @@ fun CommunityChattingScreen(
             }
             }
 
-            if (newMessageCount > 0 && !state.isLoading && state.errorMessage == null) {
+            if (!isViewOnly && newMessageCount > 0 && !state.isLoading && state.errorMessage == null) {
                 UnreadSummaryCard(
                     unreadCount = newMessageCount,
                     onClick = onUnreadSummary,
@@ -742,7 +753,13 @@ private fun EmptyChatMessages(
 }
 
 @Composable
-private fun ThreadUnavailableScreen(onBack: () -> Unit) {
+private fun ThreadUnavailableScreen(
+    onBack: () -> Unit,
+    topBarTitle: String = AppStrings.CHAT_UNAVAILABLE_TOP_BAR,
+    title: String = AppStrings.CHAT_UNAVAILABLE_TITLE,
+    description: String = AppStrings.CHAT_UNAVAILABLE_DESCRIPTION,
+    buttonText: String = AppStrings.CHAT_BACK_TO_COMMUNITY,
+) {
     Scaffold(
         containerColor = grey100(),
         topBar = {
@@ -763,7 +780,7 @@ private fun ThreadUnavailableScreen(onBack: () -> Unit) {
                         )
                     }
                     Text(
-                        text = AppStrings.CHAT_UNAVAILABLE_TOP_BAR,
+                        text = topBarTitle,
                         modifier = Modifier.padding(start = 4.dp),
                         color = grey950(),
                         style = UmcTypographyTokens.Title2Bold
@@ -788,19 +805,19 @@ private fun ThreadUnavailableScreen(onBack: () -> Unit) {
             )
             Spacer(Modifier.height(14.dp))
             Text(
-                text = AppStrings.CHAT_UNAVAILABLE_TITLE,
+                text = title,
                 color = grey800(),
                 style = UmcTypographyTokens.HeadlineBold
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = AppStrings.CHAT_UNAVAILABLE_DESCRIPTION,
+                text = description,
                 color = grey400(),
                 style = UmcTypographyTokens.Subheadline
             )
             Spacer(Modifier.height(34.dp))
             UButton(
-                text = AppStrings.CHAT_BACK_TO_COMMUNITY,
+                text = buttonText,
                 onClick = onBack,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -2167,7 +2184,9 @@ private fun CommunityChattingScreenViewOnlyPreview() {
                 threadId = "1",
                 title = "나간 스레드",
                 myRole = CommunityThreadRole.UNKNOWN,
+                unreadCount = "3",
             ),
+            unreadCountAtEntry = 1,
             myMemberId = "10",
             members = mapOf(
                 "20" to CommunityThreadMember(
@@ -2204,6 +2223,15 @@ private fun CommunityChattingScreenViewOnlyEmptyPreview() {
             ),
             myMemberId = "10",
         ),
+        onAction = {},
+    )
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+private fun CommunityChattingScreenNoAccessPreview() {
+    CommunityChattingScreen(
+        state = CommunityChattingState(threadId = "1", isAccessDenied = true),
         onAction = {},
     )
 }

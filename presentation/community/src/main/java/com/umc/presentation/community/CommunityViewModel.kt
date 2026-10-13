@@ -3,6 +3,7 @@ package com.umc.presentation.community
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.community.CommunityThread
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadRole
@@ -418,6 +419,12 @@ class CommunityViewModel @Inject constructor(
         if (leaveJob?.isActive == true) return
 
         leaveJob = viewModelScope.launch {
+            // 나간 스레드는 메뉴가 없어 고정을 풀 수 없으므로 나가기 전에 먼저 푼다. 방장은 나가기가 거절되므로 건드리지 않는다.
+            // 해제에 실패해도 나가기는 진행한다(목록 경로는 실패 원인을 구분하지 못한다).
+            if (selectedThread.isPinned && !selectedThread.isMine) {
+                unpinCommunityThreadUseCase(threadId = selectedThread.id)
+            }
+
             leaveCommunityThreadUseCase(
                 threadId = selectedThread.id,
             ).onSuccess {
@@ -428,6 +435,7 @@ class CommunityViewModel @Inject constructor(
                             if (thread.id == selectedThread.id) {
                                 thread.copy(
                                     isJoined = false,
+                                    isPinned = false,
                                     memberCount = (thread.memberCount - 1).coerceAtLeast(0),
                                     unreadCount = 0,
                                 )
@@ -443,7 +451,7 @@ class CommunityViewModel @Inject constructor(
 
                 sendEvent(
                     CommunityEvent.ShowToast(
-                        message = "스레드에서 나갔어요.",
+                        message = AppStrings.CHAT_LEAVE_SUCCESS,
                     )
                 )
             }.onFailure { throwable ->
