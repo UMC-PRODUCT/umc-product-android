@@ -689,6 +689,8 @@ class CommunityChattingViewModel @Inject constructor(
         when (val result = threadRepository.leaveThread(threadId)) {
             is ApiState.Success -> emitThreadLeftOnce()
             is ApiState.Fail -> {
+                // 소켓 member.left 로 나가기가 이미 확정됐으면(요청 재전송 등으로 늦게 온 실패) 재고정·오류 토스트를 건너뛴다.
+                if (hasEmittedThreadLeft) return@launch
                 // 네트워크 오류는 나가기 성공 여부를 알 수 없으므로 고정을 되돌리지 않는다.
                 if (unpinnedFirst && !result.failState.isNetworkError) {
                     when (val restored = threadRepository.setPinned(threadId, true)) {
