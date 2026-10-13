@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -65,6 +66,7 @@ import com.umc.component.component.UText
 import com.umc.component.component.UToast
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
@@ -78,6 +80,7 @@ import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo400
 import com.umc.component.theme.indigo500
+import com.umc.component.theme.indigo600
 import com.umc.component.theme.white
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UserType
@@ -125,6 +128,9 @@ fun MycardRoute(
     // 차단 지점: 홈 배너 진입(openExchangeDialog), 명함 교환 버튼, 내 QR 코드, QR 딥링크 수신.
     // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 각 지점의 원래 호출을 주석에서 되살린다.
     var showExchangeBlockedDialog by remember { mutableStateOf(false) }
+
+    // 나의 스터디·나의 활동·프로젝트는 이동할 화면이 아직 없어 개발 중 안내 다이얼로그만 띄운다.
+    var showFeatureInDevelopmentDialog by remember { mutableStateOf(false) }
 
 
     // 화면 복귀(ON_RESUME) 라이프사이클 시 최신 내 정보를 동기화하는 관찰자
@@ -192,6 +198,10 @@ fun MycardRoute(
 
             }
 
+            is MycardEvent.ProfileLoadFailed -> {
+                Toast.makeText(context, AppStrings.MYCARD_PROFILE_LOAD_ERROR_TITLE, Toast.LENGTH_SHORT).show()
+            }
+
             else -> {}
         }
     }
@@ -203,8 +213,9 @@ fun MycardRoute(
         onNavigateToMyqrCode = { showExchangeBlockedDialog = true },
         onNavigateToReceivedCard = onNavigateToReceivedCard,
         onNavigateToEditCard = onNavigateToEditCard,
-        onNavigateToMyStudy = {},
-        onNavigateToMyActivity = {},
+        onNavigateToMyStudy = { showFeatureInDevelopmentDialog = true },
+        onNavigateToMyActivity = { showFeatureInDevelopmentDialog = true },
+        onRetryProfile = viewModel::getUserInfo,
         // [임시] 명함 교환 차단 — 원래 동작: { nearbyViewModel.openBottomSheet() }
         onOpenExchangeBottomSheet = { showExchangeBlockedDialog = true },
     )
@@ -217,6 +228,16 @@ fun MycardRoute(
             onDismissRequest = { showExchangeBlockedDialog = false },
             confirmText = AppStrings.CONFIRM,
             onConfirm = { showExchangeBlockedDialog = false },
+        )
+    }
+
+    if (showFeatureInDevelopmentDialog) {
+        UDialog(
+            title = AppStrings.MYCARD_FEATURE_IN_DEVELOPMENT_TITLE,
+            content = AppStrings.MYCARD_FEATURE_IN_DEVELOPMENT_CONTENT,
+            onDismissRequest = { showFeatureInDevelopmentDialog = false },
+            confirmText = AppStrings.CONFIRM,
+            onConfirm = { showFeatureInDevelopmentDialog = false },
         )
     }
 
@@ -270,6 +291,7 @@ fun MycardScreen(
     onNavigateToMyStudy: () -> Unit, //나의 스터디 이동,
     onNavigateToMyActivity: () -> Unit, //나의 활동 이동,
     onOpenExchangeBottomSheet: () -> Unit, //명함 교환 BottomSheet 열기,
+    onRetryProfile: () -> Unit, //내 프로필 조회 실패 시 다시 시도
 ){
 
     LazyColumn(
@@ -286,11 +308,19 @@ fun MycardScreen(
         }
 
         item {
-            MycardProfileCard(
-                uiState = uiState,
-                onExchangeCardClick = onOpenExchangeBottomSheet,
-                onMyQrcodeClick = onNavigateToMyqrCode
-            )
+            // 이미 불러온 정보가 있으면(id != 0) 재조회에 실패해도 카드를 유지한다
+            if (uiState.isProfileLoadFailed && uiState.userInfo.id == 0L) {
+                MycardProfileLoadError(
+                    isLoading = uiState.isProfileLoading,
+                    onRetry = onRetryProfile
+                )
+            } else {
+                MycardProfileCard(
+                    uiState = uiState,
+                    onExchangeCardClick = onOpenExchangeBottomSheet,
+                    onMyQrcodeClick = onNavigateToMyqrCode
+                )
+            }
         }
 
         item {
@@ -337,6 +367,65 @@ fun MycardScreen(
 
     }
 
+}
+
+/**
+ * 내 프로필 조회에 실패했을 때 명함 카드 자리에 표시하는 실패 안내 + 다시 시도 컴포저블
+ */
+@Composable
+private fun MycardProfileLoadError(
+    isLoading: Boolean,
+    onRetry: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = grey000()),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_community_error),
+                contentDescription = null,
+                modifier = Modifier.size(46.dp),
+                tint = grey400()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            UText(
+                text = AppStrings.MYCARD_PROFILE_LOAD_ERROR_TITLE,
+                style = UmcTypographyTokens.HeadlineBold,
+                color = grey800()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            UText(
+                text = AppStrings.MYCARD_PROFILE_LOAD_ERROR_DESCRIPTION,
+                style = UmcTypographyTokens.Subheadline,
+                color = grey400()
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            UButton(
+                text = AppStrings.MYCARD_RETRY,
+                onClick = onRetry,
+                enabled = !isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                backgroundColor = indigo500(),
+                pressedColor = indigo600(),
+                textColor = white(),
+                textStyle = UmcTypographyTokens.HeadlineBold,
+                cornerRadius = 12.dp,
+            )
+        }
+    }
 }
 
 /**
@@ -870,5 +959,24 @@ fun MycardListItem(
                 tint = grey400()
             )
         }
+    }
+}
+
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+private fun MycardScreenProfileLoadFailedPreview() {
+    UmcTheme {
+        MycardScreen(
+            uiState = MycardUiState(isProfileLoadFailed = true),
+            onNavigateToMypage = {},
+            onNavigateToMyqrCode = {},
+            onNavigateToReceivedCard = {},
+            onNavigateToEditCard = {},
+            onNavigateToMyStudy = {},
+            onNavigateToMyActivity = {},
+            onOpenExchangeBottomSheet = {},
+            onRetryProfile = {},
+        )
     }
 }
