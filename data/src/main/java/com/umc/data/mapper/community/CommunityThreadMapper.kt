@@ -64,7 +64,7 @@ fun CommunityThreadDetailResponse.toDomain(): CommunityThreadDetail {
         updatedAt = updatedAt,
         shareUrl = shareUrl,
         deletedAt = deletedAt,
-        isJoined = isJoined,
+        isJoined = isJoined == true,
     )
 }
 

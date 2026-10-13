@@ -140,6 +140,15 @@ class CommunityCreateViewModel @Inject constructor(
         _state.update {
             it.copy(
                 title = title,
+                // 재분류 중 제목을 고치면 위에서 Job 이 취소되므로 LOADING 에 갇히지 않게 되돌린다
+                aiState = if (
+                    it.aiState == CommunityAiState.LOADING &&
+                    it.classifiedCategory != null
+                ) {
+                    CommunityAiState.NEEDS_RECLASSIFICATION
+                } else {
+                    it.aiState
+                },
             )
         }
 

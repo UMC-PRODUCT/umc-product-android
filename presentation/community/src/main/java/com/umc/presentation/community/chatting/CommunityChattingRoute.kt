@@ -1,11 +1,13 @@
 package com.umc.presentation.community.chatting
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.component.UToastData
@@ -22,11 +24,11 @@ fun CommunityChattingRoute(
     onUnreadSummary: () -> Unit = {},
     onCamera: () -> Unit = {},
     onEditThread: () -> Unit = {},
-    onViewParticipantProfile: (String) -> Unit = {},
     shouldRefresh: Boolean = false,
     onRefreshHandled: () -> Unit = {},
     viewModel: CommunityChattingViewModel = hiltViewModel(),
 ) {
+    val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     var toastData by remember { mutableStateOf<UToastData?>(null) }
     var showInviteMemberSheet by remember { mutableStateOf(false) }
@@ -43,7 +45,11 @@ fun CommunityChattingRoute(
             CommunityChattingEvent.NavigateBack,
             CommunityChattingEvent.ThreadUnavailable,
                 -> onBack()
-            CommunityChattingEvent.ThreadDeleted -> onThreadDeleted()
+            CommunityChattingEvent.ThreadDeleted -> {
+                // 채팅 화면의 토스트는 화면과 함께 사라지므로 시스템 토스트로 알린다(목록에서 나갈 때와 같은 방식).
+                Toast.makeText(context, AppStrings.CHAT_LEAVE_SUCCESS, Toast.LENGTH_SHORT).show()
+                onThreadDeleted()
+            }
             CommunityChattingEvent.OpenMore -> onMore()
             CommunityChattingEvent.OpenUnreadSummary -> onUnreadSummary()
             CommunityChattingEvent.OpenCamera -> onCamera()
@@ -66,11 +72,11 @@ fun CommunityChattingRoute(
         state = state,
         toastData = toastData,
         onToastDismiss = { toastData = null },
-        onViewParticipantProfile = onViewParticipantProfile,
         onAction = viewModel::onAction,
     )
 
-    if (showInviteMemberSheet) {
+    // 접근 권한이 없어진 뒤에는 열려 있던 초대 시트를 남기지 않는다.
+    if (showInviteMemberSheet && !state.isAccessDenied) {
         CommunityMemberBottomSheet(
             threadId = state.threadId,
             onDismissRequest = { showInviteMemberSheet = false },

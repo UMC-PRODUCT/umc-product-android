@@ -30,16 +30,16 @@ data class CommunityEditState(
     val maxChallengerCount: Int = 8,
 
     /** 현재 AI 카테고리 분류 상태 */
-    val aiState: CommunityAiState = CommunityAiState.SUCCESS,
+    val aiState: CommunityAiState = CommunityAiState.GUIDE,
 
     /** 현재 스레드의 분류 카테고리 */
-    val classifiedCategory: CommunityCategory? = CommunityCategory.STUDY,
+    val classifiedCategory: CommunityCategory? = null,
 
     /** 현재 스레드에 설정된 아이콘 */
     val selectedIcon: String = "BOOK",
 
-    /** 스레드 상세 정보 로딩 여부 */
-    val isLoading: Boolean = false,
+    /** 스레드 상세 정보 로딩 여부 (조회가 끝나기 전까지 입력 영역을 가리기 위해 true 로 시작) */
+    val isLoading: Boolean = true,
 
     /** 스레드 수정 API 요청 진행 여부 */
     val isSaving: Boolean = false,
