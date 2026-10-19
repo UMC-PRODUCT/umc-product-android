@@ -580,6 +580,7 @@ object AppStrings {
     const val STUDY_CONFIRM_DESCRIPTION = "버튼을 누르면 학습 인증 요청이 전송됩니다."
     const val STUDY_CONFIRM_BUTTON = "학습 완료 인증하기"
     const val STUDY_WEEK_FORMAT = "Week %d"
+    const val STUDY_LOCKED_WEEK_DESCRIPTION = "미공개 주차"
 
     // Community Chatting
     const val CHAT_ROOM_DEFAULT = "채팅방"

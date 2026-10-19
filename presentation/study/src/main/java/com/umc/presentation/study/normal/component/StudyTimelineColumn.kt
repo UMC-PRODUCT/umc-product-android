@@ -35,7 +35,8 @@ fun StudyTimelineColumn(
         if (isLocked) {
             Icon(
                 painter = painterResource(R.drawable.ic_locked),
-                contentDescription = null,
+                // 상태 배지가 없어져 잠금 아이콘이 유일한 단서라 TalkBack 이 미공개 주차임을 읽도록 한다
+                contentDescription = AppStrings.STUDY_LOCKED_WEEK_DESCRIPTION,
                 modifier = Modifier.size(24.dp),
                 tint = grey300()
             )
