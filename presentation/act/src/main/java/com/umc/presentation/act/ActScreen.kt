@@ -47,7 +47,6 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.presentation.study.ActStudyRoute
-import com.umc.presentation.study.admin.submit.AdminSubmitRoute
 import kotlinx.coroutines.launch
 
 private data class ManageTab(

@@ -7,7 +7,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.component.UDateTimePickerDialog
 import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleChallengerBottomSheet
 import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleLocationBottomSheet
-import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekBottomSheet
+import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleWeekBottomSheet
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
@@ -320,7 +320,7 @@ fun AdminStudyGroupScheduleRoute(
      * 주차 선택 BottomSheet
      */
     if (showWeekBottomSheet) {
-        AdminSubmitWeekBottomSheet(
+        GroupScheduleWeekBottomSheet(
             weeks = state.weeks,
             onSelect = { weekItem ->
                 viewModel.onAction(

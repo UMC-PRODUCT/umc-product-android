@@ -11,7 +11,7 @@ import com.umc.domain.usecase.curriculum.GetCurriculumOverviewUseCase
 import com.umc.domain.usecase.organization.CreateStudyGroupScheduleUseCase
 import com.umc.domain.usecase.organization.GetActiveGisuUseCase
 import com.umc.domain.usecase.schedule.CreateScheduleUseCase
-import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekUiModel
+import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleWeekUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -360,7 +360,7 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
                                         it.weekNo
                                     }
                                     .map { weeklyCurriculum ->
-                                        AdminSubmitWeekUiModel(
+                                        GroupScheduleWeekUiModel(
                                             week =
                                                 weeklyCurriculum.weekNo,
 

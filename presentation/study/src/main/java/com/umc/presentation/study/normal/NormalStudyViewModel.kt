@@ -4,14 +4,10 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
-import com.umc.component.theme.AppStrings
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.act.study.StudyProgress
 import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.enums.StudyStatus
 import com.umc.domain.model.enums.UserPart
-import com.umc.domain.model.enums.WorkbookMissionType
-import com.umc.domain.model.enums.WorkbookStatus
 import com.umc.domain.usecase.curriculum.GetMyCurriculumProgressUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,8 +23,7 @@ import javax.inject.Inject
 /**
  * 일반 사용자 스터디 화면에서 사용하는 UI 상태
  *
- * 커리큘럼 제목, 파트, 주차별 항목과
- * 전체 진행률 정보를 관리합니다.
+ * 커리큘럼 제목, 파트, 주차별 항목을 관리합니다.
  */
 data class UserStudyState(
     val title: String = "",
@@ -36,35 +31,7 @@ data class UserStudyState(
     val items: ImmutableList<NormalStudyItemUiModel> = persistentListOf(),
     // 커리큘럼 조회 실패 여부. 목록이 비어 있을 때만 오류 화면으로 표시한다.
     val isError: Boolean = false,
-) : UiState {
-
-    /** 전체 커리큘럼 개수 */
-    val totalCount: Int
-        get() = items.size
-
-    /** PASS 상태의 커리큘럼 개수 */
-    val passCount: Int
-        get() = items.count { it.status == StudyStatus.PASS }
-
-    /** 전체 커리큘럼 기준 달성률 */
-    val progress: Int
-        get() = if (totalCount == 0) {
-            0
-        } else {
-            passCount * 100 / totalCount
-        }
-
-    /** 화면에 표시할 퍼센트 문자열 */
-    val percentText: String
-        get() = "$progress%"
-
-    /** 완료 개수 / 전체 개수 안내 문구 */
-    val subText: String
-        get() = AppStrings.STUDY_COMPLETE_FORMAT.format(
-            passCount,
-            totalCount,
-        )
-}
+) : UiState
 
 /**
  * 일반 사용자 스터디 화면에서 발생하는 일회성 UI 이벤트
@@ -83,9 +50,7 @@ sealed interface UserStudyEvent : UiEvent {
  * 주요 기능
  * - 현재 사용자 프로필 조회
  * - 현재 활성 기수 및 파트 확인
- * - 개인 커리큘럼 진행 현황 조회
- * - 워크북 상태를 화면 상태로 변환
- * - 주차별 항목 펼치기/접기
+ * - 개인 커리큘럼(주차별) 조회
  * - 로딩 및 Toast 이벤트 처리
  */
 @HiltViewModel
@@ -101,7 +66,7 @@ class UserStudyViewModel @Inject constructor(
 
     /**
      * 현재 사용자 정보를 조회한 뒤
-     * 현재 활성 기수와 파트를 기준으로 커리큘럼 진행 현황을 조회합니다.
+     * 현재 활성 기수와 파트를 기준으로 커리큘럼을 조회합니다.
      *
      * 탭이 다시 활성화될 때마다 호출되며, 재조회 중에도 기존 목록은 유지합니다.
      */
@@ -178,9 +143,9 @@ class UserStudyViewModel @Inject constructor(
     }
 
     /**
-     * 현재 기수의 개인 커리큘럼 진행 현황을 조회합니다.
+     * 현재 기수의 개인 커리큘럼을 조회합니다.
      *
-     * 서버 워크북 데이터를 주차 순으로 정렬한 뒤
+     * 서버 커리큘럼 항목을 주차 순으로 정렬한 뒤
      * 화면에서 사용하는 NormalStudyItemUiModel로 변환합니다.
      */
     private suspend fun loadStudyProgress(
@@ -210,13 +175,7 @@ class UserStudyViewModel @Inject constructor(
                     return
                 }
 
-                // 재조회 시 사용자가 펼쳐 둔 주차는 그대로 유지한다.
-                val expandedIds = uiState.value.items
-                    .filter { item -> item.isExpanded }
-                    .map { item -> item.id }
-                    .toSet()
-
-                // 서버 워크북 목록을 화면 표시용 모델로 변환
+                // 서버 커리큘럼 목록을 화면 표시용 모델로 변환
                 val items = data.workbooks
                     .sortedBy { workbook ->
                         workbook.weekNo
@@ -225,15 +184,9 @@ class UserStudyViewModel @Inject constructor(
                         NormalStudyItemUiModel(
                             id = workbook.originalWorkbookId,
                             title = workbook.title,
-                            status = workbook.status.toStudyStatus(),
                             week = workbook.weekNo,
                             description = workbook.description,
-                            platform = workbook.missionType.toPlatformLabel(),
                             isLocked = !workbook.isReleased,
-                            isBest = workbook.status == WorkbookStatus.BEST,
-                            isExpanded = workbook.originalWorkbookId in expandedIds &&
-                                workbook.isReleased,
-                            feedbackMessage = workbook.feedbackMessage,
                         )
                     }
 
@@ -271,67 +224,6 @@ class UserStudyViewModel @Inject constructor(
                     )
                 )
             }
-        }
-    }
-
-    /**
-     * 선택한 주차의 상세 영역을 펼치거나 접습니다.
-     *
-     * 잠긴 항목은 상태를 변경하지 않습니다.
-     */
-    fun toggleExpand(index: Int) {
-        updateState {
-            val target = items.getOrNull(index)
-                ?: return@updateState this
-
-            if (target.isLocked) {
-                return@updateState this
-            }
-
-            copy(
-                items = items.mapIndexed { itemIndex, item ->
-                    if (itemIndex == index) {
-                        item.copy(
-                            isExpanded = !item.isExpanded,
-                        )
-                    } else {
-                        item
-                    }
-                }.toImmutableList()
-            )
-        }
-    }
-
-    /**
-     * 서버 WorkbookStatus를 화면에서 사용하는 StudyStatus로 변환합니다.
-     */
-    private fun WorkbookStatus.toStudyStatus(): StudyStatus {
-        return when (this) {
-            WorkbookStatus.PASS,
-            WorkbookStatus.BEST,
-                -> StudyStatus.PASS
-
-            WorkbookStatus.FAIL ->
-                StudyStatus.FAIL
-
-            WorkbookStatus.PENDING,
-            WorkbookStatus.IN_PROGRESS,
-            WorkbookStatus.SUBMITTED,
-            WorkbookStatus.UNKNOWN,
-                -> StudyStatus.IN_PROGRESS
-        }
-    }
-
-    /**
-     * 워크북 제출 방식에 따라 화면에 표시할 플랫폼 문자열로 변환합니다.
-     */
-    private fun WorkbookMissionType.toPlatformLabel(): String {
-        return when (this) {
-            WorkbookMissionType.LINK -> "Github"
-            WorkbookMissionType.MEMO,
-            WorkbookMissionType.PLAIN,
-                -> "Text"
-            WorkbookMissionType.UNKNOWN -> "-"
         }
     }
 }

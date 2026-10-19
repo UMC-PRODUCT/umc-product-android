@@ -3,7 +3,7 @@ package com.umc.presentation.study.admin.group.schedule
 import com.umc.component.base.UiState
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleChallengerUiModel
-import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekUiModel
+import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleWeekUiModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -64,7 +64,7 @@ data class AdminStudyGroupScheduleState(
     val lateEndText: String? = null,
 
     // 선택 가능한 커리큘럼 주차 목록
-    val weeks: ImmutableList<AdminSubmitWeekUiModel> = persistentListOf(),
+    val weeks: ImmutableList<GroupScheduleWeekUiModel> = persistentListOf(),
 
     // 선택한 주차의 커리큘럼 ID
     val selectedWeeklyCurriculumId: Long? = null,

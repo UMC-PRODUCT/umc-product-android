@@ -1,14 +1,11 @@
 package com.umc.presentation.study.normal.component
 
-import androidx.compose.foundation.background
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
@@ -17,17 +14,14 @@ import com.umc.component.theme.*
 import com.umc.domain.model.enums.UserPart
 
 /**
- * 일반 사용자의 스터디 커리큘럼 진행 현황을 표시하는 카드
+ * 일반 사용자의 스터디 커리큘럼 헤더 카드
  *
- * 파트명, 커리큘럼 제목, 달성률과 진행 상태를 표시합니다.
+ * 파트명과 커리큘럼 제목을 표시합니다.
  */
 @Composable
 fun StudyCurriculumCard(
     part: UserPart,
     title: String,
-    percentText: String,
-    progress: Int,
-    subText: String,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -58,67 +52,16 @@ fun StudyCurriculumCard(
                     color = indigo500(),
                     modifier = Modifier.weight(1f)
                 )
-                // 달성률 뱃지
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = indigo100(),
-                ) {
-                    UText(
-                        text = AppStrings.STUDY_ACHIEVEMENT_BADGE,
-                        style = UmcTypographyTokens.Caption1Bold,
-                        color = indigo500(),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                    )
-                }
             }
 
             Spacer(Modifier.height(8.dp))
 
-            // 제목 + 퍼센트
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom
-            ) {
-                UText(
-                    text = title,
-                    style = UmcTypographyTokens.Title2Bold,
-                    color = grey800(),
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(Modifier.width(8.dp))
-                UText(
-                    text = percentText,
-                    style = UmcTypographyTokens.Title1Bold,
-                    color = indigo500()
-                )
-            }
-
-            Spacer(Modifier.height(32.dp))
-
-            // 프로그레스바
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(grey200())
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(progress.coerceIn(0, 100) / 100f)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(indigo500())
-                )
-            }
-
-            Spacer(Modifier.height(8.dp))
-
+            // 커리큘럼 제목
             UText(
-                text = subText,
-                style = UmcTypographyTokens.Footnote,
-                color = grey500(),
-                modifier = Modifier.align(Alignment.End)
+                text = title,
+                style = UmcTypographyTokens.Title2Bold,
+                color = grey800(),
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
