@@ -15,21 +15,16 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.*
-import com.umc.domain.model.enums.StudyStatus
 
 /**
- * 각 스터디 아이템 왼쪽에 표시되는 타임라인 컬럼
+ * 각 커리큘럼 아이템 왼쪽에 표시되는 타임라인 컬럼
  *
- * 상태별 표시:
- * - 잠금: 자물쇠 아이콘 (흐리게)
- * - PASS: 체크 아이콘 (primary 색상)
- * - FAIL: X 아이콘 (danger 색상)
- * - IN_PROGRESS: 주차 번호 원형 뱃지 (primary 색상)
+ * - 잠금(미공개 주차): 자물쇠 아이콘 (흐리게)
+ * - 그 외: 주차 번호 원형 뱃지
  */
 @Composable
 fun StudyTimelineColumn(
     week: Int,
-    status: StudyStatus,
     isLocked: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -37,47 +32,29 @@ fun StudyTimelineColumn(
         modifier = modifier.width(32.dp),
         contentAlignment = Alignment.TopCenter
     ) {
-        when {
-            isLocked -> {
-                Icon(
-                    painter = painterResource(R.drawable.ic_locked),
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = grey300()
+        if (isLocked) {
+            Icon(
+                painter = painterResource(R.drawable.ic_locked),
+                // 상태 배지가 없어져 잠금 아이콘이 유일한 단서라 TalkBack 이 미공개 주차임을 읽도록 한다
+                contentDescription = AppStrings.STUDY_LOCKED_WEEK_DESCRIPTION,
+                modifier = Modifier.size(24.dp),
+                tint = grey300()
+            )
+        } else {
+            // 주차 번호 원형
+            Box(
+                modifier = Modifier
+                    .size(20.dp)
+                    .clip(CircleShape)
+                    .background(indigo500()),
+                contentAlignment = Alignment.Center
+            ) {
+                UText(
+                    text = week.toString(),
+                    style = UmcTypographyTokens.Caption1Bold,
+                    color = grey000(),
+                    textAlign = TextAlign.Center
                 )
-            }
-            status == StudyStatus.PASS -> {
-                Icon(
-                    painter = painterResource(R.drawable.ic_check_success),
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = green500()
-                )
-            }
-            status == StudyStatus.FAIL -> {
-                Icon(
-                    painter = painterResource(R.drawable.ic_check_failed),
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = red500()
-                )
-            }
-            else -> {
-                // IN_PROGRESS: 주차 번호 원형
-                Box(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clip(CircleShape)
-                        .background(indigo500()),
-                    contentAlignment = Alignment.Center
-                ) {
-                    UText(
-                        text = week.toString(),
-                        style = UmcTypographyTokens.Caption1Bold,
-                        color = grey000(),
-                        textAlign = TextAlign.Center
-                    )
-                }
             }
         }
     }

@@ -1,40 +1,42 @@
-package com.umc.presentation.study.admin.submit.bottomsheet
+package com.umc.presentation.study.admin.group.schedule.bottomsheet
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
-import kotlinx.collections.immutable.ImmutableList
+import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Body
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.grey000
-import com.umc.component.theme.grey800
-import com.umc.presentation.study.admin.submit.AdminSubmitGroupUiModel
+import kotlinx.collections.immutable.ImmutableList
 
 /**
- * 관리자 제출 현황에서 조회할 스터디 그룹을 선택하는 BottomSheet
+ * 스터디 그룹 일정 추가에서 사용하는 주차 선택 UI 모델
  *
- * 전체 그룹 또는 특정 스터디 그룹을 선택할 수 있으며,
- * 선택 완료 후 BottomSheet를 닫습니다.
+ * 화면에 표시할 주차와
+ * 해당 주차의 커리큘럼 ID를 함께 관리합니다.
+ */
+data class GroupScheduleWeekUiModel(
+    val week: Int,
+    val weeklyCurriculumId: Long,
+)
+
+/**
+ * 스터디 그룹 일정 추가에서 조회할 주차를 선택하는 BottomSheet
+ *
+ * API에서 조회 가능한 주차 목록을 표시하며,
+ * 선택 완료 후 해당 주차 정보를 전달하고 BottomSheet를 닫습니다.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminSubmitGroupBottomSheet(
-    groups: ImmutableList<AdminSubmitGroupUiModel>,
-    onSelect: (AdminSubmitGroupUiModel) -> Unit,
+fun GroupScheduleWeekBottomSheet(
+    weeks: ImmutableList<GroupScheduleWeekUiModel>,
+    onSelect: (GroupScheduleWeekUiModel) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
@@ -55,9 +57,9 @@ fun AdminSubmitGroupBottomSheet(
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp),
         ) {
-            // 그룹 선택 안내 문구
+            // 주차 선택 안내 문구
             UText(
-                text = "확인할 그룹을 선택하세요",
+                text = "확인할 주차를 선택하세요",
                 style = Title3Bold,
                 color = grey800(),
                 modifier = Modifier.padding(
@@ -65,28 +67,23 @@ fun AdminSubmitGroupBottomSheet(
                 ),
             )
 
-            // 조회 가능한 그룹 목록
+            // 일정 추가 시 선택 가능한 주차 목록
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
             ) {
-                items(
-                    items = groups,
-                    key = { group ->
-                        group.id ?: -1L
-                    },
-                ) { group ->
+                items(weeks) { weekItem ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                // 선택된 그룹 전달 후 BottomSheet 닫기
-                                onSelect(group)
+                                // 선택된 주차 전달 후 BottomSheet 닫기
+                                onSelect(weekItem)
                                 onDismiss()
                             }
                             .padding(vertical = 16.dp),
                     ) {
                         UText(
-                            text = group.name,
+                            text = "${weekItem.week}주차",
                             style = Body,
                             color = grey800(),
                         )

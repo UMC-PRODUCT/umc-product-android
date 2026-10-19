@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.theme.grey100
@@ -24,8 +25,6 @@ import com.umc.presentation.study.normal.component.StudyEmptyCard
 import com.umc.presentation.study.normal.component.StudyErrorCard
 import com.umc.presentation.study.normal.component.StudyItemRow
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.collectLatest
-import com.umc.domain.model.enums.StudyStatus
 import com.umc.component.base.CollectUiEvents
 
 /**
@@ -42,7 +41,7 @@ fun UserStudyRoute(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // 탭이 활성화될 때마다 커리큘럼 진행 현황을 다시 조회
+    // 탭이 활성화될 때마다 커리큘럼을 다시 조회
     LaunchedEffect(isActive) {
         if (isActive) viewModel.refresh()
     }
@@ -62,7 +61,6 @@ fun UserStudyRoute(
 
     UserStudyScreen(
         state = state,
-        onToggle = viewModel::toggleExpand,
         onRetry = viewModel::refresh,
     )
 }
@@ -70,13 +68,12 @@ fun UserStudyRoute(
 /**
  * 일반 사용자의 스터디 커리큘럼 화면
  *
- * 전체 진행률 카드와 주차별 커리큘럼 목록을 표시하며,
+ * 커리큘럼 헤더 카드와 주차별 커리큘럼 목록을 표시하며,
  * 데이터가 없을 경우 Empty 화면을 표시합니다.
  */
 @Composable
 fun UserStudyScreen(
     state: UserStudyState,
-    onToggle: (Int) -> Unit,
     onRetry: () -> Unit = {},
 ) {
     Box(
@@ -101,7 +98,7 @@ fun UserStudyScreen(
                 )
             }
         } else {
-            // 전체 진행률 카드와 주차별 커리큘럼 목록
+            // 커리큘럼 헤더 카드와 주차별 커리큘럼 목록
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
@@ -112,21 +109,15 @@ fun UserStudyScreen(
                     StudyCurriculumCard(
                         part = state.part,
                         title = state.title,
-                        percentText = state.percentText,
-                        progress = state.progress,
-                        subText = state.subText,
                     )
                 }
 
-                itemsIndexed(
+                items(
                     items = state.items,
-                    key = { _, item -> item.id },
-                ) { index, item ->
+                    key = { item -> item.id },
+                ) { item ->
                     StudyItemRow(
                         item = item,
-                        onToggle = {
-                            onToggle(index)
-                        }
                     )
                 }
             }
@@ -137,7 +128,7 @@ fun UserStudyScreen(
 /**
  * 일반 사용자 스터디 화면 Preview
  */
-@Preview(showBackground = true)
+@PreviewScreenSizes
 @Composable
 private fun UserStudyScreenPreview() {
     UserStudyScreen(
@@ -150,40 +141,28 @@ private fun UserStudyScreenPreview() {
                     week = 1,
                     title = "HTML/CSS 기초",
                     description = "HTML/CSS 기초를 학습합니다.",
-                    platform = "Github",
-                    status = StudyStatus.PASS,
-                    isBest = false,
                 ),
                 NormalStudyItemUiModel(
                     id = 2,
                     week = 2,
                     title = "HTML/CSS 심화",
                     description = "Flex와 Grid를 학습합니다.",
-                    platform = "Github",
-                    status = StudyStatus.FAIL,
-                    isExpanded = true,
-                    feedbackMessage = "Flex 정렬 예제가 빠져 있어요.\nGrid 레이아웃 과제를 다시 확인하고, 반응형 화면에서 깨지는 부분까지 함께 수정해서 다시 제출해 주세요.",
                 ),
                 NormalStudyItemUiModel(
                     id = 3,
                     week = 3,
                     title = "Javascript 기초",
                     description = "Javascript 문법을 학습합니다.",
-                    platform = "Github",
-                    status = StudyStatus.IN_PROGRESS,
                 ),
                 NormalStudyItemUiModel(
                     id = 4,
                     week = 4,
                     title = "React 기초",
                     description = "React를 학습합니다.",
-                    platform = "Github",
-                    status = StudyStatus.IN_PROGRESS,
                     isLocked = true,
                 ),
             ),
         ),
-        onToggle = {},
         onRetry = {},
     )
 }
@@ -196,7 +175,6 @@ private fun UserStudyScreenPreview() {
 private fun UserStudyScreenErrorPreview() {
     UserStudyScreen(
         state = UserStudyState(isError = true),
-        onToggle = {},
         onRetry = {},
     )
 }
