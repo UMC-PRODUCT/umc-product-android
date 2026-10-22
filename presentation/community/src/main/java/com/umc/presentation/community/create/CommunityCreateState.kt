@@ -1,6 +1,7 @@
 package com.umc.presentation.community.create
 
 import com.umc.presentation.community.DEFAULT_COMMUNITY_MAX_MEMBER_COUNT
+import com.umc.presentation.community.model.isCommunityThreadInputValid
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -62,9 +63,11 @@ data class CommunityCreateState(
      * (재분류 중에는 이전 카테고리가 남아 있으므로 분류 중에는 막는다)
      */
     val isCompleteEnabled: Boolean
-        get() = isTitleValid &&
+        get() = isCommunityThreadInputValid(title, description) && isTitleValid &&
                 isDescriptionValid &&
+                myMemberId > 0L &&
                 selectedChallengers.isNotEmpty() &&
+                selectedChallengers.all { it.memberId > 0L && it.memberId != myMemberId } &&
                 classifiedCategory != null &&
                 aiState != CommunityAiState.LOADING &&
                 !isSubmitting
@@ -76,7 +79,7 @@ data class CommunityCreateState(
      * 현재 AI 분석 중이 아닐 때 요청할 수 있습니다.
      */
     val canRequestClassification: Boolean
-        get() = title.isNotBlank() &&
+        get() = isCommunityThreadInputValid(title, description) && title.isNotBlank() &&
                 description.isNotBlank() &&
                 aiState != CommunityAiState.LOADING
 }

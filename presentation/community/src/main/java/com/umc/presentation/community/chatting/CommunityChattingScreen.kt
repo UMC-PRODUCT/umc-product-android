@@ -395,6 +395,7 @@ fun CommunityChattingScreen(
                 isMuted = state.thread?.isMuted == true,
                 isPinned = state.thread?.isPinned == true,
                 isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
+                canManage = state.thread?.myRole in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN),
                 showMoreMenu = state.thread != null && !isViewOnly,
                 onSummary = onUnreadSummary,
                 onToggleMuted = onToggleMuted,
@@ -708,6 +709,7 @@ fun CommunityChattingScreen(
             memberCount = state.thread?.memberCount.orEmpty(),
             myMemberId = state.myMemberId,
             isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
+            canManage = state.thread?.myRole in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN),
             onBack = { showParticipants = false },
             onKickMember = onKickMember,
             onTransferOwnership = onTransferOwnership,
@@ -971,6 +973,7 @@ private fun ChatTopBar(
     isMuted: Boolean,
     isPinned: Boolean,
     isOwner: Boolean,
+    canManage: Boolean,
     showMoreMenu: Boolean,
     onSummary: () -> Unit,
     onToggleMuted: () -> Unit,
@@ -1052,7 +1055,7 @@ private fun ChatTopBar(
                         menuExpanded = false
                         onParticipants()
                     }
-                    if (isOwner) {
+                    if (canManage) {
                         ThreadMenuItem(AppStrings.CHAT_MENU_INVITE_PARTICIPANTS) {
                             menuExpanded = false
                             onInviteParticipants()

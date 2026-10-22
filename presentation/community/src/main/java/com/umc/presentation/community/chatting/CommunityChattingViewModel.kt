@@ -24,6 +24,7 @@ import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.domain.usecase.ai.CheckAiFeatureStatusUseCase
 import com.umc.domain.usecase.ai.SummarizeUnreadChatUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.umc.domain.model.community.thread.CommunityThreadMemberState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -60,6 +61,10 @@ class CommunityChattingViewModel @Inject constructor(
     private var manualReconnectInProgress = false
     private var hasCapturedEntryUnreadMessages = false
     private var lastSummaryMessages: List<CommunityThreadMessage> = emptyList()
+    private var accessGeneration = 0
+    private var memberLoadGeneration = 0
+    private var detailLoadGeneration = 0
+    private var membershipMutationInProgress = false
     private var isLeaving = false
     private var hasEmittedThreadLeft = false
 
@@ -127,6 +132,8 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     fun bootstrap() = viewModelScope.launch {
+        if (uiState.value.isLoading) return@launch
+        val generation = accessGeneration
         updateState {
             copy(
                 isLoading = true,
@@ -145,6 +152,11 @@ class CommunityChattingViewModel @Inject constructor(
             val detailDeferred = async { threadRepository.getThread(threadId) }
             val messagesDeferred = async { threadRepository.getMessages(threadId) }
             detailDeferred.await() to messagesDeferred.await()
+        }
+        if (generation != accessGeneration) return@launch
+        if (detail is ApiState.Success && detail.data.deletedAt != null) {
+            showAccessDenied()
+            return@launch
         }
         if (detail is ApiState.Success && messages is ApiState.Success) {
             val loadedMessages = messages.data.messages
@@ -200,14 +212,7 @@ class CommunityChattingViewModel @Inject constructor(
         } else {
             val detailFailure = (detail as? ApiState.Fail)?.failState
             if (detailFailure != null && detailFailure.hasThreadUnavailableCode()) {
-                stopRealtime()
-                updateState {
-                    copy(
-                        isLoading = false,
-                        errorMessage = null,
-                        isThreadUnavailable = true,
-                    )
-                }
+                showAccessDenied()
                 return@launch
             }
             val messagesFailure = (messages as? ApiState.Fail)?.failState
@@ -343,6 +348,7 @@ class CommunityChattingViewModel @Inject constructor(
         clearDraft: Boolean = true,
     ) {
         val trimmed = content.trim()
+        if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return
         if (trimmed.isEmpty()) return
         if (isCommunityChatMessageTooLong(trimmed)) {
             emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_MESSAGE_TOO_LONG))
@@ -421,6 +427,7 @@ class CommunityChattingViewModel @Inject constructor(
         runCommand { chatRepository.deleteMessage(uiState.value.threadId, messageId) }
 
     fun sendImages(uriStrings: List<String>) = viewModelScope.launch {
+        if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return@launch
         val uploadUris = uriStrings
             .filter(String::isNotBlank)
             .distinct()
@@ -645,7 +652,10 @@ class CommunityChattingViewModel @Inject constructor(
     fun toggleMuted() = viewModelScope.launch {
         val state = uiState.value
         when (val result = threadRepository.setMuted(state.threadId, !(state.thread?.isMuted ?: false))) {
-            is ApiState.Success -> updateState { copy(thread = result.data) }
+            is ApiState.Success -> {
+                if (result.data.deletedAt != null) showAccessDenied()
+                else updateState { copy(thread = result.data) }
+            }
             is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
         }
     }
@@ -653,7 +663,10 @@ class CommunityChattingViewModel @Inject constructor(
     fun togglePinned() = viewModelScope.launch {
         val state = uiState.value
         when (val result = threadRepository.setPinned(state.threadId, !(state.thread?.isPinned ?: false))) {
-            is ApiState.Success -> updateState { copy(thread = result.data) }
+            is ApiState.Success -> {
+                if (result.data.deletedAt != null) showAccessDenied()
+                else updateState { copy(thread = result.data) }
+            }
             is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
         }
     }
@@ -711,43 +724,53 @@ class CommunityChattingViewModel @Inject constructor(
 
     fun kickMember(memberId: String) = viewModelScope.launch {
         val state = uiState.value
-        if (state.thread?.myRole != CommunityThreadRole.OWNER || memberId == state.myMemberId) return@launch
-
-        when (val result = threadRepository.kickMember(state.threadId, memberId)) {
-            is ApiState.Success -> updateState {
-                copy(
-                    members = members - memberId,
-                    thread = thread?.copy(memberCount = result.data.memberCount),
-                )
+        if (membershipMutationInProgress || state.thread?.myRole !in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN) || memberId == state.myMemberId || state.members[memberId]?.role == CommunityThreadRole.OWNER) return@launch
+        membershipMutationInProgress = true
+        try {
+            when (val result = threadRepository.kickMember(state.threadId, memberId)) {
+                is ApiState.Success -> updateState {
+                    copy(
+                        members = members - memberId,
+                        thread = thread?.copy(memberCount = result.data.memberCount),
+                    )
+                }
+                is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
             }
-            is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+        } finally {
+            membershipMutationInProgress = false
+            refreshThread()
         }
     }
 
     fun transferOwnership(memberId: String) = viewModelScope.launch {
         val state = uiState.value
-        if (state.thread?.myRole != CommunityThreadRole.OWNER || memberId == state.myMemberId) return@launch
-
-        when (
-            val result = threadRepository.changeMemberRole(
-                threadId = state.threadId,
-                memberId = memberId,
-                role = CommunityThreadRole.OWNER,
-            )
-        ) {
-            is ApiState.Success -> updateState {
-                copy(
-                    members = members.mapValues { (id, member) ->
-                        when (id) {
-                            memberId -> member.copy(role = CommunityThreadRole.OWNER)
-                            myMemberId -> member.copy(role = CommunityThreadRole.MEMBER)
-                            else -> member
-                        }
-                    },
-                    thread = thread?.copy(myRole = CommunityThreadRole.MEMBER),
+        if (membershipMutationInProgress || state.thread?.myRole != CommunityThreadRole.OWNER || memberId == state.myMemberId || state.members[memberId]?.state != CommunityThreadMemberState.ACTIVE) return@launch
+        membershipMutationInProgress = true
+        try {
+            when (
+                val result = threadRepository.changeMemberRole(
+                    threadId = state.threadId,
+                    memberId = memberId,
+                    role = CommunityThreadRole.OWNER,
                 )
+            ) {
+                is ApiState.Success -> updateState {
+                    copy(
+                        members = members.mapValues { (id, member) ->
+                            when (id) {
+                                memberId -> member.copy(role = CommunityThreadRole.OWNER)
+                                myMemberId -> member.copy(role = CommunityThreadRole.ADMIN)
+                                else -> member
+                            }
+                        },
+                        thread = thread?.copy(myRole = CommunityThreadRole.ADMIN),
+                    )
+                }
+                is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
             }
-            is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+        } finally {
+            membershipMutationInProgress = false
+            refreshThread()
         }
     }
 
@@ -767,7 +790,7 @@ class CommunityChattingViewModel @Inject constructor(
 
         updateState { copy(showDeleteDialog = false, isDeleting = true) }
         when (val result = threadRepository.deleteThread(state.threadId)) {
-            is ApiState.Success -> emitEvent(CommunityChattingEvent.ThreadUnavailable)
+            is ApiState.Success -> showAccessDenied()
             is ApiState.Fail -> {
                 updateState { copy(isDeleting = false) }
                 emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
@@ -778,6 +801,7 @@ class CommunityChattingViewModel @Inject constructor(
     fun updateDraft(value: String) = updateState { copy(draft = value) }
 
     private fun runCommand(block: () -> String) {
+        if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return
         runCatching(block).onFailure {
             // 예외 원문(영문)을 노출하지 않고 고정 문구를 쓴다.
             val message = if (chatRepository.connectionState.value != CommunityChatConnectionState.CONNECTED) {
@@ -799,6 +823,7 @@ class CommunityChattingViewModel @Inject constructor(
                         if (connection == CommunityChatConnectionState.CONNECTED) {
                             reconnectJob?.cancel()
                             reconnectJob = null
+                            refreshThread()
                             reconcileLatestMessages()
                             markLatestMessageRead()
                         } else if (connection == CommunityChatConnectionState.DISCONNECTED) {
@@ -855,6 +880,7 @@ class CommunityChattingViewModel @Inject constructor(
 
     // 내보내진 계정 등 접근 권한이 없으면 남은 내용을 지우고 전용 화면만 보여준다.
     private fun showAccessDenied() {
+        accessGeneration++
         stopRealtime()
         updateState {
             copy(
@@ -865,6 +891,11 @@ class CommunityChattingViewModel @Inject constructor(
                 thread = null,
                 messages = emptyList(),
                 members = emptyMap(),
+                localImageUrisByMessageId = emptyMap(),
+                readWatermarks = emptyMap(),
+                unreadSummary = null,
+                showDeleteDialog = false,
+                showOwnershipTransferRequiredDialog = false,
                 pendingMessages = emptyMap(),
                 unreadMessagesAtEntry = emptyList(),
                 unreadCountAtEntry = 0,
@@ -883,10 +914,22 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun loadMembers() = viewModelScope.launch {
-        when (val result = threadRepository.getMembers(uiState.value.threadId, limit = 100)) {
+        val loadGeneration = ++memberLoadGeneration
+        val generation = accessGeneration
+        val result = threadRepository.getMembers(uiState.value.threadId, limit = 100)
+        if (generation != accessGeneration || loadGeneration != memberLoadGeneration) return@launch
+        when (result) {
             is ApiState.Success -> {
                 val members = result.data.items
-                updateState { copy(members = members.associateBy(CommunityThreadMember::memberId)) }
+                val me = members.firstOrNull { it.memberId == uiState.value.myMemberId }
+                if (me?.state == CommunityThreadMemberState.KICKED) {
+                    showAccessDenied()
+                    return@launch
+                }
+                if (me != null) updateState {
+                    copy(thread = thread?.copy(myRole = if (me.state == CommunityThreadMemberState.ACTIVE) me.role else CommunityThreadRole.UNKNOWN))
+                }
+                updateState { copy(members = members.filter { it.state == CommunityThreadMemberState.ACTIVE }.associateBy(CommunityThreadMember::memberId)) }
                 val membersWithProfiles = coroutineScope {
                     members.map { member ->
                         async {
@@ -900,11 +943,12 @@ class CommunityChattingViewModel @Inject constructor(
                         }
                     }.awaitAll()
                 }
+                if (generation != accessGeneration || loadGeneration != memberLoadGeneration) return@launch
                 updateState {
-                    copy(members = membersWithProfiles.associateBy(CommunityThreadMember::memberId))
+                    copy(members = membersWithProfiles.filter { it.state == CommunityThreadMemberState.ACTIVE }.associateBy(CommunityThreadMember::memberId))
                 }
             }
-            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode()) showAccessDenied()
+            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode() || result.failState.hasThreadUnavailableCode()) showAccessDenied()
         }
     }
 
@@ -915,6 +959,7 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun ensureReconnectLoop() {
+        if (uiState.value.isAccessDenied || uiState.value.isThreadUnavailable || uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN) return
         if (reconnectJob?.isActive == true) return
         reconnectJob = viewModelScope.launch {
             var retryDelayMillis = 1_000L
@@ -1022,7 +1067,7 @@ class CommunityChattingViewModel @Inject constructor(
             }
             is CommunityChatEvent.ThreadStateChanged -> when (event.type) {
                 CommunityChatEvent.ThreadStateChanged.Type.DELETED ->
-                    emitEvent(CommunityChattingEvent.ThreadUnavailable)
+                    showAccessDenied()
                 CommunityChatEvent.ThreadStateChanged.Type.MEMBER_KICKED,
                 CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT -> {
                     if (event.memberId == uiState.value.myMemberId) {
@@ -1030,7 +1075,7 @@ class CommunityChattingViewModel @Inject constructor(
                         if (isLeaving && event.type == CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT) {
                             emitThreadLeftOnce()
                         } else {
-                            emitEvent(CommunityChattingEvent.ThreadUnavailable)
+                            showAccessDenied()
                         }
                     } else {
                         event.memberId?.let { memberId ->
@@ -1054,13 +1099,21 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun refreshDetail() = viewModelScope.launch {
-        when (val result = threadRepository.getThread(uiState.value.threadId)) {
-            is ApiState.Success -> updateState { copy(thread = result.data) }
-            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode()) showAccessDenied()
+        val loadGeneration = ++detailLoadGeneration
+        val generation = accessGeneration
+        val result = threadRepository.getThread(uiState.value.threadId)
+        if (generation != accessGeneration || loadGeneration != detailLoadGeneration) return@launch
+        when (result) {
+            is ApiState.Success -> {
+                if (result.data.deletedAt != null) showAccessDenied()
+                else updateState { copy(thread = result.data) }
+            }
+            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode() || result.failState.hasThreadUnavailableCode()) showAccessDenied()
         }
     }
 
     fun refreshThread() {
+        if (uiState.value.isAccessDenied) return
         refreshDetail()
         loadMembers()
     }
@@ -1141,7 +1194,7 @@ private fun com.umc.domain.model.base.FailState.hasThreadUnavailableCode(): Bool
         code == THREAD_NOT_FOUND_CODE || code == THREAD_DELETED_CODE
 
 private fun com.umc.domain.model.base.FailState.hasThreadAccessDeniedCode(): Boolean =
-    code == THREAD_ACCESS_DENIED_CODE
+    code == "403" || code.endsWith("-403") || code == THREAD_ACCESS_DENIED_CODE
 
 private fun createInitialChattingState(savedStateHandle: SavedStateHandle): CommunityChattingState {
     val threadId = savedStateHandle.get<String>("threadId").orEmpty()

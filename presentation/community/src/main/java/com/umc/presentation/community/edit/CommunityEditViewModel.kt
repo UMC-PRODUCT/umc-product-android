@@ -20,6 +20,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +57,7 @@ class CommunityEditViewModel @Inject constructor(
     DeleteCommunityThreadUseCase,
 ) : ViewModel() {
 
+    private var classificationJob: Job? = null
     private val _state = MutableStateFlow(
         CommunityEditState()
     )
@@ -174,10 +176,15 @@ class CommunityEditViewModel @Inject constructor(
             getCommunityThreadDetailUseCase(
                 threadId = threadId,
             ).onSuccess { thread ->
-
+                if (thread.myRole != com.umc.domain.model.community.CommunityThreadRole.OWNER || thread.deletedAt != null) {
+                    _state.update { it.copy(isLoading = false, canEdit = false, errorMessage = "스레드를 수정할 권한이 없어요.") }
+                    sendEvent(CommunityEditEvent.ShowToast("스레드를 수정할 권한이 없어요."))
+                    return@onSuccess
+                }
                 _state.update {
                     it.copy(
                         threadId = thread.threadId,
+                        canEdit = true,
                         title = thread.title,
                         description = thread.description,
                         currentChallengerCount = thread.memberCount,
@@ -307,8 +314,10 @@ class CommunityEditViewModel @Inject constructor(
     private fun updateTitle(
         title: String,
     ) {
+        classificationJob?.cancel()
         _state.update {
             it.copy(
+                aiState = if (it.aiState == CommunityAiState.LOADING) CommunityAiState.NEEDS_RECLASSIFICATION else it.aiState,
                 title = title,
             )
         }
@@ -320,6 +329,7 @@ class CommunityEditViewModel @Inject constructor(
     private fun updateDescription(
         description: String,
     ) {
+        classificationJob?.cancel()
         _state.update {
             it.copy(
                 description = description,
@@ -368,7 +378,8 @@ class CommunityEditViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
+        classificationJob?.cancel()
+        classificationJob = viewModelScope.launch {
             _state.update {
                 it.copy(
                     aiState = CommunityAiState.LOADING,
@@ -378,6 +389,7 @@ class CommunityEditViewModel @Inject constructor(
             delay(CLASSIFICATION_DELAY)
 
             val latestState = _state.value
+            if (!latestState.canEdit) return@launch
 
             val result = classifyCategory(
                 title = latestState.title,
@@ -455,7 +467,7 @@ class CommunityEditViewModel @Inject constructor(
         if (!currentState.isSaveEnabled) {
             sendEvent(
                 CommunityEditEvent.ShowToast(
-                    message = "제목과 스레드 특징을 모두 입력해주세요.",
+                    message = "제목 1~80자·특징 1~500자와 수정 권한을 확인해주세요.",
                 )
             )
             return
@@ -509,6 +521,7 @@ class CommunityEditViewModel @Inject constructor(
     }
 
     private fun openDeleteDialog() {
+        if (!_state.value.canEdit) return
         _state.update {
             it.copy(
                 showDeleteDialog = true,
@@ -536,7 +549,7 @@ class CommunityEditViewModel @Inject constructor(
             return
         }
 
-        if (currentState.isDeleting) {
+        if (!currentState.canEdit || currentState.isDeleting) {
             return
         }
 

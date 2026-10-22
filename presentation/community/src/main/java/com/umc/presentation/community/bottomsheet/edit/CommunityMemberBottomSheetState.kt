@@ -22,6 +22,7 @@ import kotlinx.collections.immutable.persistentSetOf
 data class CommunityMemberBottomSheetState(
 
     /** 현재 관리 중인 스레드 ID */
+    val canManage: Boolean = false,
     val threadId: String = "",
 
     /** 현재 입력된 챌린저 검색어 */
@@ -193,7 +194,7 @@ data class CommunityMemberBottomSheetState(
      * - 멤버 변경 API가 진행 중이지 않음
      */
     val isConfirmEnabled: Boolean
-        get() = isSearching &&
+        get() = canManage && isSearching &&
                 hasMemberChanges &&
                 !isUpdatingMembers
 
