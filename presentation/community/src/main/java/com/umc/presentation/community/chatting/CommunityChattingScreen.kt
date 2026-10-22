@@ -179,6 +179,9 @@ fun CommunityChattingScreen(
         INITIAL_UNREAD_SCROLL_OFFSET.roundToPx()
     }
     val displayedMessages = remember(state.messages) { state.messages.asReversed() }
+    // The load-more button may be the first visible item. Anchor to a message instead,
+    // otherwise prepending history keeps that button (and the oldest page) at the top.
+    var historyAnchor by remember { mutableStateOf<Pair<String, Int>?>(null) }
     var knownMessageIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var knownPendingMessageIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var newMessageCount by remember { mutableIntStateOf(0) }
@@ -283,8 +286,28 @@ fun CommunityChattingScreen(
             }
     }
 
+    var lastRecoveryRevision by remember { mutableStateOf(state.recoveryRevision) }
+    LaunchedEffect(state.messages, state.isLoadingMore) {
+        val anchor = historyAnchor ?: return@LaunchedEffect
+        if (state.isLoadingMore) return@LaunchedEffect
+        val messageIndex = displayedMessages.indexOfFirst { it.messageId == anchor.first }
+        if (messageIndex >= 0) {
+            listState.scrollToItem(
+                index = messageIndex + if (state.hasMore) 1 else 0,
+                scrollOffset = anchor.second,
+            )
+        }
+        if (historyAnchor == anchor) historyAnchor = null
+    }
+
     LaunchedEffect(state.messages) {
         val currentIds = state.messages.mapTo(linkedSetOf()) { it.messageId }
+        if (lastRecoveryRevision != state.recoveryRevision) {
+            lastRecoveryRevision = state.recoveryRevision
+            knownMessageIds = currentIds
+            // Stable message keys retain the viewport; HTTP reconciliation must not jump to an own echo.
+            return@LaunchedEffect
+        }
         if (knownMessageIds.isEmpty()) {
             knownMessageIds = currentIds
             if (displayedMessages.isNotEmpty()) {
@@ -356,26 +379,24 @@ fun CommunityChattingScreen(
         listState.animateScrollToItem(lastItemIndex)
     }
 
-    LaunchedEffect(
-        listState,
-        displayedMessages.size,
-        state.pendingMessages.size,
-        state.hasMore,
-    ) {
+    val imeScrollTarget by rememberUpdatedState(
+        if (displayedMessages.isEmpty()) null else latestListItemIndex(
+            messageCount = displayedMessages.size,
+            pendingMessageCount = state.pendingMessages.size,
+            hasMore = state.hasMore,
+        ),
+    )
+    // Only an IME inset change should trigger this scroll, not a history page insertion.
+    LaunchedEffect(listState) {
         snapshotFlow { imeInsets.getBottom(density) }
             .collectLatest { imeBottom ->
-                if (imeBottom <= 0 || displayedMessages.isEmpty()) return@collectLatest
+                if (imeBottom <= 0 || imeScrollTarget == null) return@collectLatest
 
                 // Wait until the IME animation and Scaffold bottom-bar remeasurement settle.
                 delay(120)
+                val target = imeScrollTarget ?: return@collectLatest
                 followsLatestMessage = true
-                listState.animateScrollToItem(
-                    latestListItemIndex(
-                        messageCount = displayedMessages.size,
-                        pendingMessageCount = state.pendingMessages.size,
-                        hasMore = state.hasMore,
-                    ),
-                )
+                listState.animateScrollToItem(target)
             }
     }
 
@@ -489,9 +510,26 @@ fun CommunityChattingScreen(
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
             if (state.hasMore) {
-                item {
+                item(key = "community-load-previous") {
                     TextButton(
-                        onClick = onLoadPrevious,
+                        enabled = !state.isLoadingMore && !state.isRecovering && !state.recoveryIncomplete,
+                        onClick = {
+                            val layout = listState.layoutInfo
+                            val visibleMessages = displayedMessages.mapTo(hashSetOf()) { it.messageId }
+                            val message = layout.visibleItemsInfo.firstOrNull {
+                                val key = it.key
+                                key is String && key in visibleMessages
+                            }
+                            val firstItem = layout.visibleItemsInfo.firstOrNull {
+                                it.index == listState.firstVisibleItemIndex
+                            }
+                            if (message != null && firstItem != null) {
+                                historyAnchor = (message.key as String) to (
+                                    listState.firstVisibleItemScrollOffset + firstItem.offset - message.offset
+                                )
+                            }
+                            onLoadPrevious()
+                        },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(

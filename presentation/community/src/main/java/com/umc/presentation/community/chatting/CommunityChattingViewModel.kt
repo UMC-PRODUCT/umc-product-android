@@ -24,7 +24,10 @@ import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.domain.usecase.ai.CheckAiFeatureStatusUseCase
 import com.umc.domain.usecase.ai.SummarizeUnreadChatUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.umc.domain.model.community.thread.CommunityMessageRecovery
 import com.umc.domain.model.community.thread.CommunityThreadMemberState
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -61,9 +64,14 @@ class CommunityChattingViewModel @Inject constructor(
     private var manualReconnectInProgress = false
     private var hasCapturedEntryUnreadMessages = false
     private var lastSummaryMessages: List<CommunityThreadMessage> = emptyList()
+    private val recoveryMutex = Mutex()
+    private var bufferingRecoveryEvents = false
+    private val recoveryEvents = mutableListOf<CommunityChatEvent>()
+    private val retryingMessageIds = hashSetOf<String>()
     private var accessGeneration = 0
     private var memberLoadGeneration = 0
     private var detailLoadGeneration = 0
+    private var foreground = false
     private var membershipMutationInProgress = false
     private var isLeaving = false
     private var hasEmittedThreadLeft = false
@@ -316,26 +324,31 @@ class CommunityChattingViewModel @Inject constructor(
         }
 
     fun loadPreviousMessages() = viewModelScope.launch {
-        val state = uiState.value
-        if (!state.hasMore || state.isLoadingMore) return@launch
-        updateState { copy(isLoadingMore = true) }
-        when (val response = threadRepository.getMessages(state.threadId, state.nextBefore)) {
-            is ApiState.Success -> updateState {
-                copy(
-                    messages = (messages + response.data.messages)
-                        .distinctBy(CommunityThreadMessage::messageId),
-                    hasMore = response.data.hasMore,
-                    nextBefore = response.data.nextBefore,
-                    isLoadingMore = false,
-                )
-            }
-            is ApiState.Fail -> {
-                if (response.failState.hasThreadAccessDeniedCode()) {
-                    showAccessDenied()
-                    return@launch
+        recoveryMutex.withLock {
+            val state = uiState.value
+            val generation = accessGeneration
+            if (!state.hasMore || state.isLoadingMore || state.isRecovering || state.recoveryIncomplete) return@withLock
+            updateState { copy(isLoadingMore = true) }
+            val response = threadRepository.getMessages(state.threadId, state.nextBefore)
+            if (generation != accessGeneration) return@withLock
+            when (response) {
+                is ApiState.Success -> updateState {
+                    copy(
+                        messages = (messages + response.data.messages)
+                            .distinctBy(CommunityThreadMessage::messageId),
+                        hasMore = response.data.hasMore,
+                        nextBefore = response.data.nextBefore,
+                        isLoadingMore = false,
+                    )
                 }
-                updateState { copy(isLoadingMore = false) }
-                emitEvent(CommunityChattingEvent.ShowError(response.failState.message))
+                is ApiState.Fail -> {
+                    if (response.failState.hasThreadAccessDeniedCode()) {
+                        showAccessDenied()
+                        return@withLock
+                    }
+                    updateState { copy(isLoadingMore = false) }
+                    emitEvent(CommunityChattingEvent.ShowError(response.failState.message))
+                }
             }
         }
     }
@@ -426,14 +439,19 @@ class CommunityChattingViewModel @Inject constructor(
     fun deleteMessage(messageId: String) =
         runCommand { chatRepository.deleteMessage(uiState.value.threadId, messageId) }
 
-    fun sendImages(uriStrings: List<String>) = viewModelScope.launch {
+    fun sendImages(uriStrings: List<String>, clientMessageId: String = UUID.randomUUID().toString()) = viewModelScope.launch {
         if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return@launch
+        val generation = accessGeneration
+        if (uriStrings.size > COMMUNITY_CHAT_MAX_IMAGE_COUNT) {
+            emitEvent(CommunityChattingEvent.ShowError("사진은 최대 4장까지 전송할 수 있어요."))
+            return@launch
+        }
         val uploadUris = uriStrings
             .filter(String::isNotBlank)
             .distinct()
             .take(COMMUNITY_CHAT_MAX_IMAGE_COUNT)
         if (uploadUris.isEmpty()) return@launch
-        val clientMessageId = UUID.randomUUID().toString()
+        val confirmedFiles = uiState.value.pendingMessages[clientMessageId]?.confirmedFilesByUri.orEmpty()
         updateState {
             copy(
                 pendingMessages = pendingMessages + (
@@ -443,14 +461,24 @@ class CommunityChattingViewModel @Inject constructor(
                         content = "",
                         type = CommunityMessageType.IMAGE,
                         localUris = uploadUris,
+                        confirmedFilesByUri = confirmedFiles,
                     )
                 )
             )
         }
 
         val uploads = coroutineScope {
-            uploadUris.map { uri ->
-                async { uploadFileUseCase(uri, UploadFileCategory.ETC) }
+            uploadUris.filterNot { it in confirmedFiles }.map { uri ->
+                async {
+                    val result = uploadFileUseCase(uri, UploadFileCategory.ETC)
+                    if (result is ApiState.Success) updateState {
+                        val pending = pendingMessages[clientMessageId] ?: return@updateState this
+                        copy(pendingMessages = pendingMessages + (clientMessageId to pending.copy(
+                            confirmedFilesByUri = pending.confirmedFilesByUri + (uri to result.data.fileId),
+                        )))
+                    }
+                    result
+                }
             }.awaitAll()
         }
         val uploadFailure = uploads.filterIsInstance<ApiState.Fail>().firstOrNull()
@@ -459,7 +487,13 @@ class CommunityChattingViewModel @Inject constructor(
             return@launch
         }
 
-        val fileIds = uploads.map { (it as ApiState.Success).data.fileId }
+        if (generation != accessGeneration) return@launch
+        val savedFiles = uiState.value.pendingMessages[clientMessageId]?.confirmedFilesByUri ?: return@launch
+        val fileIds = uploadUris.map { savedFiles.getValue(it) }
+        updateState {
+            val pending = pendingMessages[clientMessageId] ?: return@updateState this
+            copy(pendingMessages = pendingMessages + (clientMessageId to pending.copy(fileMetadataIds = fileIds)))
+        }
         val command = CreateCommunityMessageCommand(
             clientMessageId = clientMessageId,
             type = CommunityMessageType.IMAGE.name,
@@ -471,6 +505,7 @@ class CommunityChattingViewModel @Inject constructor(
             emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_RETRY_DISCONNECTED))
             return@launch
         }
+        if (generation != accessGeneration || clientMessageId !in uiState.value.pendingMessages) return@launch
         runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
             .onSuccess { commandId ->
                 updateState {
@@ -511,6 +546,7 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     fun markRead(messageId: String) {
+        if (!foreground || uiState.value.recoveryIncomplete) return
         if (messageId.isBlank() || lastReadMessageIdSent == messageId) return
         lastReadMessageIdSent = messageId
         updateState { copy(thread = thread?.copy(unreadCount = "0")) }
@@ -528,70 +564,67 @@ class CommunityChattingViewModel @Inject constructor(
 
     fun retryPendingMessage(clientMessageId: String) = viewModelScope.launch {
         val pending = uiState.value.pendingMessages[clientMessageId] ?: return@launch
-
-        if (!ensureConnected()) {
-            updateState {
-                copy(
-                    pendingMessages = pendingMessages + (
-                        clientMessageId to pending.copy(
-                            error = AppStrings.CHAT_RETRY_DISCONNECTED,
+        if (!retryingMessageIds.add(clientMessageId)) return@launch
+        val generation = accessGeneration
+        try {
+            val connected = ensureConnected()
+            if (generation != accessGeneration) return@launch
+            if (!connected) {
+                updateState {
+                    copy(
+                        pendingMessages = pendingMessages + (
+                            clientMessageId to pending.copy(
+                                error = AppStrings.CHAT_RETRY_DISCONNECTED,
+                            )
                         )
                     )
-                )
-            }
-            emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_RETRY_DISCONNECTED))
-            return@launch
-        }
-
-        updateState { copy(pendingMessages = pendingMessages - clientMessageId) }
-        if (pending.type == CommunityMessageType.IMAGE) {
-            if (pending.fileMetadataIds.isEmpty()) {
-                sendImages(pending.localUris)
-            } else {
-                // 소켓에 한 번 실린 메시지는 같은 clientMessageId 로 다시 보내 서버 중복 제거가 동작하게 한다.
-                val newClientMessageId = if (pending.commandId.isNotBlank()) {
-                    clientMessageId
-                } else {
-                    UUID.randomUUID().toString()
                 }
-                val command = CreateCommunityMessageCommand(
-                    clientMessageId = newClientMessageId,
-                    type = CommunityMessageType.IMAGE.name,
-                    content = null,
-                    fileMetadataIds = pending.fileMetadataIds,
-                )
-                runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
-                    .onSuccess { commandId ->
-                        updateState {
-                            copy(
-                                pendingMessages = pendingMessages + (
-                                    newClientMessageId to pending.copy(
-                                        clientMessageId = newClientMessageId,
-                                        commandId = commandId,
-                                        error = null,
+                emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_RETRY_DISCONNECTED))
+                return@launch
+            }
+
+            if (clientMessageId !in uiState.value.pendingMessages) return@launch
+            if (pending.type == CommunityMessageType.IMAGE) {
+                if (pending.fileMetadataIds.isEmpty()) {
+                    sendImages(pending.localUris, clientMessageId).join()
+                } else {
+                    // 소켓에 한 번 실린 메시지는 같은 clientMessageId 로 다시 보내 서버 중복 제거가 동작하게 한다.
+                    val newClientMessageId = clientMessageId
+                    val command = CreateCommunityMessageCommand(
+                        clientMessageId = newClientMessageId,
+                        type = CommunityMessageType.IMAGE.name,
+                        content = null,
+                        fileMetadataIds = pending.fileMetadataIds,
+                    )
+                    runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
+                        .onSuccess { commandId ->
+                            updateState {
+                                copy(
+                                    pendingMessages = pendingMessages + (
+                                        newClientMessageId to pending.copy(
+                                            clientMessageId = newClientMessageId,
+                                            commandId = commandId,
+                                            error = null,
+                                        )
                                     )
                                 )
-                            )
+                            }
+                            scheduleAckTimeout(newClientMessageId)
                         }
-                        scheduleAckTimeout(newClientMessageId)
-                    }
-                    .onFailure {
-                        updateState { copy(pendingMessages = pendingMessages + (clientMessageId to pending)) }
-                    }
+                        .onFailure {
+                            updateState { copy(pendingMessages = pendingMessages + (clientMessageId to pending)) }
+                        }
+                }
+            } else {
+                sendText(
+                    content = pending.content,
+                    mentionedMemberIds = pending.mentionedMemberIds,
+                    replyToId = pending.replyToId,
+                    clientMessageId = clientMessageId,
+                    clearDraft = false,
+                )
             }
-        } else {
-            sendText(
-                content = pending.content,
-                mentionedMemberIds = pending.mentionedMemberIds,
-                replyToId = pending.replyToId,
-                clientMessageId = if (pending.commandId.isNotBlank()) {
-                    clientMessageId
-                } else {
-                    UUID.randomUUID().toString()
-                },
-                clearDraft = false,
-            )
-        }
+        } finally { retryingMessageIds.remove(clientMessageId) }
     }
 
     /** 연결돼 있으면 true, 아니면 재연결을 시도해 최대 7초 기다린다. 끝내 실패하면 자동 재연결 루프를 시작하고 false. */
@@ -622,7 +655,6 @@ class CommunityChattingViewModel @Inject constructor(
                 if (
                     (clientMessageId == null || id == clientMessageId) &&
                     pending.commandId.isNotBlank() &&
-                    !pending.acknowledged &&
                     pending.error == null
                 ) {
                     pending.copy(
@@ -640,9 +672,10 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun scheduleAckTimeout(clientMessageId: String) {
+        val commandId = uiState.value.pendingMessages[clientMessageId]?.commandId
         viewModelScope.launch {
             delay(PENDING_ACK_TIMEOUT_MILLIS)
-            failUnacknowledgedPending(clientMessageId)
+            if (uiState.value.pendingMessages[clientMessageId]?.commandId == commandId) failUnacknowledgedPending(clientMessageId)
         }
     }
 
@@ -825,7 +858,6 @@ class CommunityChattingViewModel @Inject constructor(
                             reconnectJob = null
                             refreshThread()
                             reconcileLatestMessages()
-                            markLatestMessageRead()
                         } else if (connection == CommunityChatConnectionState.DISCONNECTED) {
                             // 끊기기 전에 보낸 미확인 메시지는 더 이상 확인이 오지 않으므로 실패 처리한다.
                             failUnacknowledgedPending()
@@ -836,13 +868,17 @@ class CommunityChattingViewModel @Inject constructor(
                 launch {
                     chatRepository.events.collect { event ->
                         if (event.threadId != uiState.value.threadId || !rememberEvent(event.eventId)) return@collect
-                        reduce(event)
+                        if (bufferingRecoveryEvents && event !is CommunityChatEvent.ThreadStateChanged) {
+                            recoveryEvents += event
+                        } else reduce(event)
                     }
                 }
                 launch {
                     chatRepository.errors.collect { error ->
                         val clientId = error.clientMessageId
-                        if (clientId != null) {
+                        if (clientId != null && uiState.value.pendingMessages[clientId]?.let {
+                                error.commandId.isNullOrBlank() || it.commandId == error.commandId
+                            } == true) {
                             updateState {
                                 copy(
                                     pendingMessages = pendingMessages + (
@@ -881,6 +917,7 @@ class CommunityChattingViewModel @Inject constructor(
     // 내보내진 계정 등 접근 권한이 없으면 남은 내용을 지우고 전용 화면만 보여준다.
     private fun showAccessDenied() {
         accessGeneration++
+        recoveryEvents.clear()
         stopRealtime()
         updateState {
             copy(
@@ -988,6 +1025,7 @@ class CommunityChattingViewModel @Inject constructor(
     private fun reduce(event: CommunityChatEvent) {
         when (event) {
             is CommunityChatEvent.CommandAcknowledged -> {
+                viewModelScope.launch { reconcileLatestMessages() }
                 event.clientMessageId?.let { clientId ->
                     updateState {
                         copy(pendingMessages = pendingMessages.mapValues { (id, pending) ->
@@ -1118,44 +1156,62 @@ class CommunityChattingViewModel @Inject constructor(
         loadMembers()
     }
 
-    private suspend fun reconcileLatestMessages() {
-        when (val result = threadRepository.getMessages(uiState.value.threadId)) {
-            is ApiState.Success -> {
-                updateState {
-                    val existingMessageIds = messages.mapTo(hashSetOf()) { it.messageId }
-                    val latestMessageIds = result.data.messages.mapTo(hashSetOf()) { it.messageId }
-                    // 현재 목록의 가장 오래된 메시지가 최신 페이지 밖이면 이미 이전 페이지를 불러온 상태라 커서를 유지한다.
-                    val hasLoadedOlderPages = messages.lastOrNull()
-                        ?.let { it.messageId !in latestMessageIds } == true
-                    val newlyReceivedMessages = result.data.messages.filter { message ->
-                        message.messageId !in existingMessageIds && message.senderId != myMemberId
-                    }
-                    // 서버에 이미 도착한 내 메시지는 '전송 실패/전송 중' 말풍선이 중복으로 남지 않게 pending 에서 뺀다.
-                    val deliveredClientIds = result.data.messages.mapNotNullTo(hashSetOf()) { it.clientMessageId }
-                    copy(
-                        pendingMessages = pendingMessages.filterKeys { it !in deliveredClientIds },
-                        messages = (result.data.messages + messages)
-                            .distinctBy(CommunityThreadMessage::messageId),
-                        summaryCandidateMessages = (
-                            newlyReceivedMessages + summaryCandidateMessages
+    private suspend fun reconcileLatestMessages() = recoveryMutex.withLock {
+        if (uiState.value.isAccessDenied || uiState.value.isThreadUnavailable) return@withLock
+        val generation = accessGeneration
+        val oldestId = uiState.value.messages.lastOrNull()?.messageId
+        bufferingRecoveryEvents = true
+        updateState { copy(isRecovering = true, recoveryIncomplete = true) }
+        try {
+            when (val result = CommunityMessageRecovery.recover(oldestId) { before ->
+                threadRepository.getMessages(uiState.value.threadId, before = before)
+            }) {
+                is ApiState.Success -> {
+                    if (generation != accessGeneration) return@withLock
+                    updateState {
+                        val delivered = result.data.messages.mapNotNullTo(hashSetOf()) { it.clientMessageId }
+                        copy(
+                            messages = result.data.messages,
+                            pendingMessages = pendingMessages.filterKeys { it !in delivered },
+                            hasMore = result.data.hasMore,
+                            nextBefore = result.data.nextBefore,
+                            recoveryIncomplete = false,
+                            recoveryRevision = recoveryRevision + 1,
                         )
-                            .distinctBy(CommunityThreadMessage::messageId)
-                            .take(MAX_SUMMARY_MESSAGE_COUNT),
-                        hasMore = if (hasLoadedOlderPages) hasMore else result.data.hasMore,
-                        nextBefore = if (hasLoadedOlderPages) nextBefore else result.data.nextBefore,
-                    )
+                    }
                 }
-                logSummaryCandidates(
-                    reason = "RECONNECT_RECONCILED",
-                    messages = uiState.value.summaryCandidateMessages,
-                )
-                markLatestMessageRead()
+                is ApiState.Fail -> {
+                    if (result.failState.hasThreadAccessDeniedCode() || result.failState.hasThreadUnavailableCode()) showAccessDenied()
+                    else emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+                }
             }
-            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode()) showAccessDenied()
+        } finally {
+            bufferingRecoveryEvents = false
+            val buffered = recoveryEvents.toList()
+            recoveryEvents.clear()
+            if (generation == accessGeneration) buffered.forEach(::reduce)
+            updateState { copy(isRecovering = false) }
+        }
+    }
+
+    fun onForegroundChanged(active: Boolean) {
+        foreground = active
+        if (active) onNetworkAvailable()
+    }
+
+    fun onNetworkAvailable() {
+        if (!foreground || uiState.value.isLoading || uiState.value.thread == null || uiState.value.isAccessDenied || uiState.value.isThreadUnavailable) return
+        viewModelScope.launch {
+            refreshThread()
+            if (uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN) return@launch
+            observeRealtime()
+            if (chatRepository.connectionState.value == CommunityChatConnectionState.CONNECTED) reconcileLatestMessages()
+            else ensureReconnectLoop()
         }
     }
 
     private fun markLatestMessageRead() {
+        if (!foreground || uiState.value.recoveryIncomplete) return
         uiState.value.messages.firstOrNull()?.messageId?.let(::markRead)
     }
 

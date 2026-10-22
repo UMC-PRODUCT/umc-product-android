@@ -1,6 +1,13 @@
 package com.umc.presentation.community.chatting
 
 import android.widget.Toast
+import android.net.ConnectivityManager
+import android.net.Network
+import androidx.core.content.getSystemService
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +39,31 @@ fun CommunityChattingRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var toastData by remember { mutableStateOf<UToastData?>(null) }
     var showInviteMemberSheet by remember { mutableStateOf(false) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, state.threadId) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.onForegroundChanged(true)
+            } else if (event == Lifecycle.Event.ON_PAUSE) {
+                viewModel.onForegroundChanged(false)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            viewModel.onForegroundChanged(true)
+        }
+        val connectivity = context.getSystemService<ConnectivityManager>()
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) { viewModel.onNetworkAvailable() }
+        }
+        connectivity?.registerDefaultNetworkCallback(callback)
+        onDispose {
+            connectivity?.unregisterNetworkCallback(callback)
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            viewModel.onForegroundChanged(false)
+        }
+    }
 
     LaunchedEffect(shouldRefresh) {
         if (shouldRefresh) {
