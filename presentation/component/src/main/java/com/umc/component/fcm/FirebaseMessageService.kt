@@ -1,5 +1,10 @@
 package com.umc.component.fcm
 
+import android.app.PendingIntent
+import android.content.Intent
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -33,38 +38,33 @@ class FirebaseMessageService : FirebaseMessagingService() {
     @Inject
     lateinit var addNotificationUseCase: AddNotificationUseCase
 
+    @Inject lateinit var tokenSynchronizer: FcmTokenSynchronizer
+
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     //새로운 토큰이 생성될 때 호출
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d("log_fcm", "획득한 토큰: $token")
-        /** 나중에 서버 API가 준비되면 여기로 토큰 송신**/
-
+        tokenSynchronizer.sync(token)
     }
 
-    //푸시 메시지를 받았을 때 호출
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-
-        // 알림(Notification) 페이로드가 포함된 경우
-        message.notification?.let {
-            Log.d("log_fcm", "데이터 없는 알람 수신")
-            val title = it.title ?: "데이터가 없어요"
-            val body = it.body ?: "그렇다네요"
-            saveNotificationToDataStore(title, body)
-            showNotification(title, body)
+        val route = CommunityNotification.parse(message.data)
+        val eventId = route?.eventId ?: message.messageId
+        if (eventId != null) {
+            val prefs = getSharedPreferences("fcm_events", Context.MODE_PRIVATE)
+            synchronized(FirebaseMessageService::class.java) {
+                val seen = prefs.getStringSet("displayed", emptySet()).orEmpty()
+                if (eventId in seen) return
+                prefs.edit().putStringSet("displayed", (seen.toList().takeLast(199) + eventId).toSet()).commit()
+            }
         }
-
-        // 데이터(Data) 페이로드가 포함된 경우
-        if (message.data.isNotEmpty()) {
-            Log.d("log_fcm", "데이터 있는 알람 수신")
-            val title = message.data["title"] ?: "데이터가 있대요"
-            val body = message.data["body"] ?: "글헣다네욘"
-            saveNotificationToDataStore(title, body)
-            showNotification(title, body)
-        }
-
+        val title = message.data["title"] ?: message.notification?.title ?: "UMC"
+        val body = message.data["body"] ?: message.notification?.body ?: "새 알림이 도착했어요."
+        saveNotificationToDataStore(title, body)
+        if (route != null && ActiveCommunityThread.threadId == route.threadId) return
+        showNotification(title, body, route)
     }
 
     // DataStore에 알림 저장
@@ -87,7 +87,8 @@ class FirebaseMessageService : FirebaseMessagingService() {
     }
 
     //포그라운드에서 메시지 받았을 때 처리
-    private fun showNotification(title: String, body: String){
+    private fun showNotification(title: String, body: String, route: CommunityNotification?) {
+        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
         val channelId = "umc_product_channel"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -101,11 +102,21 @@ class FirebaseMessageService : FirebaseMessagingService() {
         }
 
 
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+            action = Intent.ACTION_VIEW
+            data = route?.uri()
+            route?.eventId?.let { putExtra("notificationEventId", it) }
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val contentIntent = launchIntent?.let {
+            PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
         // 알람 빌더 생성
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_app_store_logo) //일단 UMC 로고 임시
             .setContentTitle(title)
             .setContentText(body)
+            .setContentIntent(contentIntent)
             .setAutoCancel(true) // 클릭하면 알림이 자동으로 사라짐
             .setPriority(NotificationCompat.PRIORITY_HIGH)
 

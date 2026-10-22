@@ -8,6 +8,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.umc.component.fcm.ActiveCommunityThread
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,13 +45,16 @@ fun CommunityChattingRoute(
     DisposableEffect(lifecycleOwner, state.threadId) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
+                ActiveCommunityThread.threadId = state.threadId
                 viewModel.onForegroundChanged(true)
             } else if (event == Lifecycle.Event.ON_PAUSE) {
+                ActiveCommunityThread.threadId = null
                 viewModel.onForegroundChanged(false)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            ActiveCommunityThread.threadId = state.threadId
             viewModel.onForegroundChanged(true)
         }
         val connectivity = context.getSystemService<ConnectivityManager>()
@@ -61,6 +65,7 @@ fun CommunityChattingRoute(
         onDispose {
             connectivity?.unregisterNetworkCallback(callback)
             lifecycleOwner.lifecycle.removeObserver(observer)
+            ActiveCommunityThread.threadId = null
             viewModel.onForegroundChanged(false)
         }
     }

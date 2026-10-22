@@ -1,5 +1,8 @@
 package com.umc.presentation
 
+import com.umc.component.fcm.CommunityNotification
+import com.umc.component.fcm.FcmTokenSynchronizer
+import javax.inject.Inject
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -52,12 +55,26 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject lateinit var tokenSynchronizer: FcmTokenSynchronizer
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        PendingDeepLink.initialize(this)
         // 외부 링크로 처음 열린 경우 NavController 가 곧바로 목적지를 열지 않도록 링크를 보류한다.
         // 앱은 항상 스플래시(인증 판정)부터 시작하고, 홈에 도착한 뒤 원래 목적지로 이동한다.
+        if (savedInstanceState != null) {
+            PendingDeepLink.uri = savedInstanceState.getString("pendingDeepLink")?.let(android.net.Uri::parse)
+        }
         if (savedInstanceState == null) {
-            val link = intent?.data
+            val payload = listOf("schemaVersion", "type", "threadId", "notificationEventId").associateWith { intent?.getStringExtra(it).orEmpty() }.filterValues { it.isNotEmpty() }.orEmpty()
+            val route = CommunityNotification.parse(payload)
+            val eventId = intent?.getStringExtra("notificationEventId") ?: route?.eventId
+            val preferences = getSharedPreferences("fcm_routes", MODE_PRIVATE)
+            val seen = preferences.getStringSet("consumed", emptySet()).orEmpty()
+            val duplicate = eventId != null && eventId in seen
+            val link = if (duplicate) null else route?.uri() ?: intent?.data
+            if (!duplicate && eventId != null) {
+                preferences.edit().putStringSet("consumed", (seen.toList().takeLast(199) + eventId).toSet()).apply()
+            }
             if (link != null && shouldRestartTask()) {
                 // 이미 떠 있는 앱 위로 링크가 새 인스턴스로 열린 경우. 링크를 비우면 NavController 가 하던
                 // 태스크 초기화가 사라져 인스턴스가 쌓이므로, 같은 방식으로 태스크를 비우고 다시 시작한다.
@@ -69,8 +86,8 @@ class MainActivity : ComponentActivity() {
                 finish()
                 return
             }
-            // 링크 없이 시작했다면 이전에 남은 보류 링크도 비운다
-            PendingDeepLink.uri = link
+            // 인증 중 프로세스가 종료되어도 보류 링크를 유지한다
+            if (link != null) PendingDeepLink.uri = link
             intent?.data = null
         }
         // 상태바는 투명으로 두고 뒤에 비치는 Scaffold 배경색(UmcApp)이 화면별로 칠한다.
@@ -79,6 +96,23 @@ class MainActivity : ComponentActivity() {
         setContent {
             UmcApp()
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("pendingDeepLink", PendingDeepLink.uri?.toString())
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        tokenSynchronizer.refresh()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        startActivity(Intent(intent).setClass(this, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
+        finish()
     }
 
     /** NEW_TASK 로 열렸지만 태스크 루트가 아니고 CLEAR_TASK 도 없다면, 기존 스택 위에 중복 생성된 것이다. */
