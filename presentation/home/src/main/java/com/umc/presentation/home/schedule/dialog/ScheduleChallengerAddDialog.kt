@@ -539,6 +539,6 @@ private fun processSearchResults(results: List<ParticipantItem>): List<SearchRes
         }
 }
 
-/** 닉네임이 비어 있으면 "이름/" 처럼 보이지 않게 이름만 쓴다. */
+/** 이름·닉네임 중 비어 있는 쪽은 빼고 이어 붙여 "이름/" 이나 "/닉네임" 처럼 보이지 않게 한다. */
 private fun ParticipantItem.displayName(): String =
-    if (nickname.isBlank()) name else "$name/$nickname"
+    listOf(name, nickname).filter { it.isNotBlank() }.joinToString("/")

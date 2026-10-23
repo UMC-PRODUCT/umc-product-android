@@ -1,6 +1,8 @@
 package com.umc.domain.model.base
 
 import kotlinx.serialization.Serializable
+import kotlin.coroutines.cancellation.CancellationException
+
 @Serializable
 sealed interface ApiState<out T> {
     data class Success<T>(val data: T): ApiState<T>
@@ -18,12 +20,16 @@ fun <S, T> ApiState<T>.map(function: (T) -> S) : ApiState<S> {
 /**
  * [map] 과 같지만 변환 중 예외가 나면 앱을 종료시키지 않고 실패로 돌려준다.
  * 서버 응답이 약속과 다를 때(필수 값이 비어 옴 등) 화면이 오류 상태로 처리하게 하려고 쓴다.
- * 변환 함수는 suspend 가 아니라 코루틴 취소 예외가 여기서 삼켜지지 않는다.
+ * inline 이라 suspend 함수 안에서는 변환 람다도 일시 중단될 수 있다. 그때 나는 취소 예외는
+ * 실패로 바꾸지 않고 그대로 다시 던져 코루틴 취소를 막지 않는다.
  */
 inline fun <S, T> ApiState<T>.mapCatching(function: (T) -> S): ApiState<S> {
     return when (this) {
         is ApiState.Success -> try {
             ApiState.Success(function(this.data))
+        } catch (e: CancellationException) {
+            // CancellationException 도 RuntimeException 의 하위라 아래 catch 보다 먼저 걸러야 한다
+            throw e
         } catch (e: RuntimeException) {
             e.printStackTrace()
             ApiState.Fail(
