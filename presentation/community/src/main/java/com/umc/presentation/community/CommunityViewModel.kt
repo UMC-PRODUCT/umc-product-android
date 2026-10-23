@@ -3,6 +3,7 @@ package com.umc.presentation.community
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.community.CommunityThread
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadRole
@@ -54,6 +55,7 @@ class CommunityViewModel @Inject constructor(
 ) : ViewModel() {
 
     private var threadPollingJob: Job? = null
+    private var leaveJob: Job? = null
     private val _state = MutableStateFlow(CommunityState())
     val state: StateFlow<CommunityState> = _state.asStateFlow()
 
@@ -169,20 +171,15 @@ class CommunityViewModel @Inject constructor(
             }
         }
 
-        getCommunityThreadsUseCase(
-            filter = "all",
-            query = null,
-            offset = 0,
-            limit = 20,
-        ).onSuccess { page ->
+        loadAllThreadPages().onSuccess { (pinnedThreads, threads) ->
             val uiThreads = buildList {
                 addAll(
-                    page.pinnedThreads.map { thread ->
+                    pinnedThreads.map { thread ->
                         thread.toUiModel(forcePinned = true)
                     }
                 )
                 addAll(
-                    page.threads.map { thread ->
+                    threads.map { thread ->
                         thread.toUiModel(forcePinned = false)
                     }
                 )
@@ -214,6 +211,45 @@ class CommunityViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * 목록은 폴링마다 통째로 교체되므로, 스크롤 페이징 대신 nextOffset 을 따라 모든 페이지를 한 번에 받아온다.
+     * 어느 페이지든 실패하면 전체를 실패로 처리해 마지막 성공 목록을 유지한다.
+     */
+    private suspend fun loadAllThreadPages(): Result<Pair<List<CommunityThread>, List<CommunityThread>>> {
+        val pinnedThreads = mutableListOf<CommunityThread>()
+        val threads = mutableListOf<CommunityThread>()
+        var offset = 0
+        var pageCount = 0
+
+        while (pageCount < MAX_THREAD_PAGES) {
+            val page = getCommunityThreadsUseCase(
+                filter = "all",
+                query = null,
+                offset = offset,
+                limit = THREAD_PAGE_SIZE,
+            ).getOrElse { throwable ->
+                return Result.failure(throwable)
+            }
+            pageCount++
+
+            pinnedThreads.addAll(page.pinnedThreads)
+            threads.addAll(page.threads)
+
+            val nextOffset = page.nextOffset?.toIntOrNull()
+            if (nextOffset == null || nextOffset <= offset) break
+            offset = nextOffset
+        }
+
+        // 페이지마다 고정 스레드가 반복되어도 LazyColumn key 가 겹치지 않게 중복을 걸러낸다.
+        val distinctPinned = pinnedThreads.distinctBy { it.threadId }
+        val pinnedIds = distinctPinned.mapTo(hashSetOf()) { it.threadId }
+        val distinctThreads = threads
+            .filterNot { it.threadId in pinnedIds }
+            .distinctBy { it.threadId }
+
+        return Result.success(distinctPinned to distinctThreads)
     }
 
     private fun openThreadMenu(
@@ -380,15 +416,32 @@ class CommunityViewModel @Inject constructor(
 
     private fun leaveSelectedThread() {
         val selectedThread = _state.value.selectedThread ?: return
+        if (leaveJob?.isActive == true) return
 
-        viewModelScope.launch {
+        leaveJob = viewModelScope.launch {
+            // 나간 스레드는 메뉴가 없어 고정을 풀 수 없으므로 나가기 전에 먼저 푼다. 방장은 나가기가 거절되므로 건드리지 않는다.
+            // 해제에 실패해도 나가기는 진행한다(목록 경로는 실패 원인을 구분하지 못한다).
+            if (selectedThread.isPinned && !selectedThread.isMine) {
+                unpinCommunityThreadUseCase(threadId = selectedThread.id)
+            }
+
             leaveCommunityThreadUseCase(
                 threadId = selectedThread.id,
             ).onSuccess {
                 _state.update { currentState ->
                     currentState.copy(
-                        threads = currentState.threads.filterNot { thread ->
-                            thread.id == selectedThread.id
+                        // 나간 스레드도 목록에 남는다(보기 전용). 미참여 상태로만 바꾼다.
+                        threads = currentState.threads.map { thread ->
+                            if (thread.id == selectedThread.id) {
+                                thread.copy(
+                                    isJoined = false,
+                                    isPinned = false,
+                                    memberCount = (thread.memberCount - 1).coerceAtLeast(0),
+                                    unreadCount = 0,
+                                )
+                            } else {
+                                thread
+                            }
                         }.toImmutableList(),
                         selectedThread = null,
                         showThreadMenuDialog = false,
@@ -398,7 +451,7 @@ class CommunityViewModel @Inject constructor(
 
                 sendEvent(
                     CommunityEvent.ShowToast(
-                        message = "스레드에서 나갔어요.",
+                        message = AppStrings.CHAT_LEAVE_SUCCESS,
                     )
                 )
             }.onFailure { throwable ->
@@ -520,3 +573,9 @@ private fun CommunityThreadDetail.toUiModel(): CommunityThreadUiModel {
 }
 
 private const val THREAD_POLLING_INTERVAL_MS = 3_000L
+
+// 서버가 허용하는 최대 limit. 평소에는 한 번의 요청으로 끝난다.
+private const val THREAD_PAGE_SIZE = 100
+
+// nextOffset 이 비정상적으로 이어져도 폴링이 무한 반복되지 않게 하는 상한
+private const val MAX_THREAD_PAGES = 10

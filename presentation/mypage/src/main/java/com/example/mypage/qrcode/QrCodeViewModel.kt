@@ -72,8 +72,9 @@ class QrCodeViewModel @Inject constructor(
 
             val positionString = representativeItem?.let { item ->
                 //파트명 변환 (UserPart Enum 활용, 없으면 빈 문자열)
-                val partLabel = runCatching { UserPart.from(item.responsiblePart).label }
-                    .getOrNull()?.let { "$it " } ?: ""
+                // from() 은 모르는 값에도 UNKNOWN("미정")을 돌려주므로 걸러서 '파트 없음'으로 다룬다
+                val partLabel = UserPart.from(item.responsiblePart)
+                    .takeUnless { it == UserPart.UNKNOWN }?.let { "${it.label} " } ?: ""
 
                 //직함명 변환 (displayName이 null이면 원본 role 사용)
                 val roleEnum = UserChallengerRole.from(item.role)

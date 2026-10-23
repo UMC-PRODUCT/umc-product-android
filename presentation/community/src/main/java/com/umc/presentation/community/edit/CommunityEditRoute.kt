@@ -21,6 +21,7 @@ fun CommunityEditRoute(
     onNavigateBack: () -> Unit,
     onNavigateToEmojiPicker: () -> Unit,
     onEditSuccess: () -> Unit,
+    onDeleteSuccess: () -> Unit,
     viewModel: CommunityEditViewModel =
         hiltViewModel<CommunityEditViewModel>(),
 ) {
@@ -63,7 +64,8 @@ fun CommunityEditRoute(
                     Toast.LENGTH_SHORT,
                 ).show()
 
-                onEditSuccess()
+                // 삭제된 스레드의 채팅방으로 돌아가지 않도록 목록까지 되돌아간다
+                onDeleteSuccess()
             }
 
             // 아이콘 선택 화면으로 이동

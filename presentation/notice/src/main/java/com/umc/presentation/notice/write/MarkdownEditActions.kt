@@ -15,6 +15,16 @@ enum class MarkdownHeading(val prefix: String, val label: String) {
 }
 
 /**
+ * 툴바가 가공한 값에서 IME 조합(composing) 영역을 비운다.
+ *
+ * `TextFieldValue.copy`는 composition을 그대로 유지한다. 조합 중이던 구간이 남아 있으면
+ * 키보드가 그 구간을 이어 써서, 서식을 끝낸 뒤 입력한 글자가 마커 안쪽에 들어가거나
+ * 새로 삽입한 마커와 조합 구간이 겹쳐 마커 쌍이 깨질 수 있다
+ */
+internal fun TextFieldValue.endComposition(): TextFieldValue =
+    if (composition == null) this else copy(composition = null)
+
+/**
  * 마크다운 툴바 버튼이 수행하는 TextFieldValue 변환 모음.
  * iOS 파서는 마커 안쪽 공백(`** text **`)을 인식하지 못하므로
  * 선택 영역 양끝 공백은 마커 바깥에 남긴다.

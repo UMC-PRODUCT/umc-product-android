@@ -91,6 +91,12 @@ fun ScheduleAddRoute(
             is ScheduleAddEvent.ShowCheckInAfterStartToast -> {
                 toastData = UToastData(AppStrings.HOME_PLAN_ADD_ATTENDANCE_CHECKIN_AFTER_START, UToastState.ERROR)
             }
+            is ScheduleAddEvent.ShowDateTimeRequiredToast -> {
+                toastData = UToastData(AppStrings.HOME_PLAN_ADD_DATETIME_REQUIRED, UToastState.ERROR)
+            }
+            is ScheduleAddEvent.ShowAttendanceTimeRequiredToast -> {
+                toastData = UToastData(AppStrings.HOME_PLAN_ADD_ATTENDANCE_TIME_REQUIRED, UToastState.ERROR)
+            }
             else -> {}
         }
     }
@@ -160,6 +166,8 @@ fun ScheduleAddRoute(
             isSearching = participantUiState.isSearching,
             isLoading = participantUiState.isLoading,
             hasNext = participantUiState.hasNext,
+            hasSearched = participantUiState.hasSearched,
+            isSearchFailed = participantUiState.isSearchFailed,
             selectedParticipants = participantUiState.selectedParticipants,
             selectedParticipantsString = participantUiState.selectedParticipantsString,
             searchResults = participantUiState.searchResults,

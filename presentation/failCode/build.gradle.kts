@@ -65,6 +65,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     ksp(libs.hilt.compiler)
 
+    // FCM 토큰 등록
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+
     implementation(libs.kakao.user)
     implementation(libs.google.play.services.auth)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")

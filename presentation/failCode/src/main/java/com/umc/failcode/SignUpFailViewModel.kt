@@ -60,7 +60,9 @@ class SignUpFailViewModel @Inject constructor(
                     emitEvent(SignUpFailEvent.MoveToLogin)
                 }
             },
-            errorCallback = {}
+            errorCallback = { failState ->
+                emitEvent(SignUpFailEvent.ShowErrorToast(failState.message))
+            }
         )
     }
 
@@ -80,4 +82,5 @@ sealed interface SignUpFailEvent : UiEvent {
     data object MoveToCode : SignUpFailEvent
     data object MoveToKakaoInquiry : SignUpFailEvent
     data object MoveToLogin : SignUpFailEvent
+    data class ShowErrorToast(val message: String) : SignUpFailEvent
 }

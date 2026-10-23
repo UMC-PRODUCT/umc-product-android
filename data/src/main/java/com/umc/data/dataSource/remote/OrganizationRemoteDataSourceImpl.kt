@@ -5,6 +5,7 @@ import com.umc.data.dataSource.OrganizationDataSource
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.response.organization.*
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.base.map
 import com.umc.domain.model.request.organization.*
 import javax.inject.Inject
 
@@ -121,11 +122,12 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
     override suspend fun createStudyGroupSchedule(
         request: CreateStudyGroupScheduleRequest,
     ): ApiState<Unit> =
+        // 서버 result 는 일정 연결 ID(Long)라 Long 으로 받은 뒤 Unit 으로 변환
         apiCall {
             organizationApi.createStudyGroupSchedule(
                 request = request,
             )
-        }
+        }.map { }
 
     override suspend fun updateStudyGroup(
         studyGroupId: Long,

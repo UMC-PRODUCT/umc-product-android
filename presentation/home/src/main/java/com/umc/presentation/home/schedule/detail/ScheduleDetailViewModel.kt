@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.theme.AppStrings
+import com.umc.domain.model.base.FailState
 import com.umc.domain.model.enums.PermissionType
 import com.umc.domain.model.enums.ResourceType
 import com.umc.domain.model.home.PlanDetailItem
@@ -45,6 +47,9 @@ constructor(
         // 전달받은 인자값이 유효한 경우 상세 데이터를 로드
         if(checkScheduleId != -1L && checkPlusDay != -1) {
             getScheduleDetail(checkScheduleId, checkPlusDay)
+        } else {
+            // 인자가 누락되면 조회 자체가 불가능하므로 무한 로딩 대신 오류 상태로 둔다
+            updateState { copy(isLoading = false, errorMessage = AppStrings.HOME_PLAN_DETAIL_LOAD_ERROR) }
         }
 
         // 일정에 대한 수정 및 삭제 권한 조회
@@ -69,9 +74,7 @@ constructor(
                     // 서버에서 받은 데이터를 UI 상태에 맞게 변환 및 D-Day 계산
                     convertPlanDetailItemToUiState(it, checkPlusDay)
                 },
-                errorCallback = {
-
-                }
+                errorCallback = { error -> onDetailLoadFailed(error) }
             )
         }
     }
@@ -96,10 +99,25 @@ constructor(
                     // 서버에서 받은 데이터를 UI 상태에 맞게 변환 및 D-Day 계산
                     convertPlanDetailItemToUiState(it, plusDay)
                 },
-                errorCallback = {
-
-                }
+                errorCallback = { error -> onDetailLoadFailed(error) }
             )
+        }
+    }
+
+    /**
+     * 일정 상세 조회 실패 처리
+     * 최초 조회가 실패한 경우에만 오류 화면으로 전환하고, 이미 받은 화면을 다시 조회(ON_RESUME)하다 실패한 경우는 화면을 유지한다.
+     */
+    private fun onDetailLoadFailed(error: FailState) {
+        updateState {
+            if (isLoading) {
+                copy(
+                    isLoading = false,
+                    errorMessage = error.message.ifBlank { AppStrings.HOME_PLAN_DETAIL_LOAD_ERROR }
+                )
+            } else {
+                this
+            }
         }
     }
 
@@ -197,6 +215,8 @@ constructor(
                 plusDay = plusDay,
                 isToday = isTodayCheck,
                 dDay = dDayString,
+                isLoading = false,
+                errorMessage = null,
                 title = item.name,
                 startDate = item.startDay, // "2026.02.05"
                 todayDate = todayDateString, // "2026.02.07" 또는 "2026.02.07-2026.02.08"
@@ -294,8 +314,12 @@ constructor(
                 successCallback = {
                     emitEvent(ScheduleDetailEvent.MoveBackPressedEvent)
                 },
-                errorCallback = {
-
+                errorCallback = { error ->
+                    emitEvent(
+                        ScheduleDetailEvent.ShowErrorToast(
+                            error.message.ifBlank { AppStrings.HOME_PLAN_DETAIL_DELETE_ERROR }
+                        )
+                    )
                 }
             )
         }
@@ -310,8 +334,8 @@ data class ScheduleDetailUiState(
 
     val isonline : Boolean = false,
     val isToday : Boolean = false, //출석 체크 버튼 visible 유무
-    val dDay : String = "참여 예정", // or D-DAY or D-몇일
-    val title : String = "정기 세션 3주차",
+    val dDay : String = "", // or D-DAY or D-몇일
+    val title : String = "",
     val startDate : String = "",
     val todayDate : String = "",
     val todayTime : String = "",
@@ -319,6 +343,10 @@ data class ScheduleDetailUiState(
     val detail : String = "",
     val longitude : Double = 0.0,
     val latitude : Double = 0.0,
+
+    //상세 조회 상태 (응답 전/실패 시 기본값이 실제 일정처럼 보이지 않게 구분)
+    val isLoading : Boolean = true,
+    val errorMessage : String? = null,
 
 
     //수정 및 삭제 권한 표출 상태
@@ -343,6 +371,8 @@ sealed interface ScheduleDetailEvent : UiEvent {
     object EditPlan : ScheduleDetailEvent
     //삭제하기 이벤트 (다이얼로그로 확인)
     object CheckDeletePlan : ScheduleDetailEvent
+    //오류 토스트 이벤트 (삭제 실패 등)
+    data class ShowErrorToast(val message: String) : ScheduleDetailEvent
 
 
     //출석 체크 이벤트

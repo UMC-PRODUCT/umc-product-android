@@ -1,5 +1,6 @@
 package com.example.mypage.mypage
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -36,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -57,6 +60,7 @@ import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
@@ -76,6 +80,8 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.OutLinkType
+import com.umc.domain.model.enums.TermsType
+import kotlinx.collections.immutable.persistentListOf
 import com.umc.domain.model.mypage.UserCard
 
 
@@ -102,10 +108,13 @@ fun MypageRoute(
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var showAddCodeDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showDeleteUserDialog by remember { mutableStateOf(false) }
+    var showUsedCodeDialog by remember { mutableStateOf(false) } //이미 사용된 코드 안내
+    var failedTermsType by remember { mutableStateOf<TermsType?>(null) } //약관 조회 실패 안내
 
     //OutLink 3종(깃허브,링크드인,블로그)
     var selectedOutLinkType by remember { mutableStateOf<OutLinkType?>(null) }
@@ -171,9 +180,6 @@ fun MypageRoute(
             //온보드 누를 때
             is MypageEvent.MoveToOnBoardPage -> onNavigateToLogin()
 
-            //로그아웃 시 이동
-            is MypageEvent.Logout -> onNavigateToLogin()
-
             //챌린저 기록 추가 시 (다이얼로그)
             is MypageEvent.ConfirmAddCode -> {
                 Toast.makeText(context, "활동기록이 추가되었습니다.", Toast.LENGTH_SHORT).show()
@@ -181,9 +187,30 @@ fun MypageRoute(
             }
             //챌린저 기록 추가 실패 시(다이얼로그)
             is MypageEvent.FailAddCode -> {
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 showAddCodeDialog = false
-
+                if (event.code == CODE_ALREADY_USED) {
+                    // 이미 사용된 코드는 다시 입력해도 소용없으므로 문의 채널을 안내한다.
+                    showUsedCodeDialog = true
+                } else {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+            //약관 조회 실패 시 (다시 시도 안내)
+            is MypageEvent.TermsLoadFailed -> failedTermsType = event.type
+            //프로필 조회 실패 상태에서 외부 링크를 눌렀을 때
+            is MypageEvent.ProfileLoadFailed -> {
+                Toast.makeText(context, AppStrings.MYPAGE_PROFILE_LOAD_FAIL, Toast.LENGTH_SHORT).show()
+            }
+            //소셜 연동 결과
+            is MypageEvent.SocialLinked -> {
+                Toast.makeText(context, AppStrings.MYPAGE_SOCIAL_LINK_SUCCESS, Toast.LENGTH_SHORT).show()
+            }
+            is MypageEvent.SocialLinkFailed -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            }
+            //에러 토스트 (회원 탈퇴 실패 등)
+            is MypageEvent.ShowErrorToast -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
             //뒤로 가기
             is MypageEvent.NavigateToBack -> onNavigateToBack()
@@ -204,11 +231,25 @@ fun MypageRoute(
         onLocationSettingClick = viewModel::navigateToSettingLocation, //위치 설정 이동
         onPrivacyClick = viewModel::navigateToPersonalInformation, //개인정보처리 방침 이동
         onTermsClick = viewModel::navigateToUseManual, //이용약관 이동
-        onLogoutClick = viewModel::logout, //로그아웃
+        onLogoutClick = viewModel::showLogoutDialog, //로그아웃
         onDeleteUserClick = viewModel::showDeleteUserDialog, //회원 탛퇴
         onWebsiteClick = viewModel::navigateToWebsiteUmc, //웹사이트 이동
-        onInstagramClick = viewModel::navigateToInstagramUmc //인스타그램 이동
-
+        onInstagramClick = viewModel::navigateToInstagramUmc, //인스타그램 이동
+        onSocialLinkClick = { type -> //소셜 연동
+            if (!uiState.isLinkingSocial) when (type) {
+                LoginType.KAKAO -> signInKakao(
+                    context = context,
+                    onLoginSuccess = { token -> viewModel.linkSocial(token, LoginType.KAKAO) },
+                    onFailure = { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+                )
+                else -> signInGoogle(
+                    scope = scope,
+                    context = context,
+                    onLoginSuccess = { token -> viewModel.linkSocial(token, LoginType.GOOGLE) },
+                    onFailure = { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+                )
+            }
+        }
     )
 
     // 외부 링크 미등록 안내 다이얼로그 컴포저블
@@ -239,10 +280,49 @@ fun MypageRoute(
             code = uiState.code,
             onCodeChanged = viewModel::onCodeChanged,
             onConfirmClick = viewModel::addChallengerCode,
+            isSubmitting = uiState.isAddingCode,
             onDismissRequest = {
                 showAddCodeDialog = false
                 viewModel.clearCode()
             }
+        )
+    }
+
+    // 이미 사용된 챌린저 코드 안내 다이얼로그 컴포저블
+    if(showUsedCodeDialog){
+        UDialog(
+            title = AppStrings.MYPAGE_ADDCODE_USED_TITLE,
+            content = AppStrings.MYPAGE_ADDCODE_USED_CONTENT,
+            isTwoButton = true,
+            positiveText = AppStrings.MYPAGE_ADDCODE_INQUIRE,
+            negativeText = AppStrings.CONFIRM,
+            positiveTextColor = grey800(),
+            onPositive = {
+                showUsedCodeDialog = false
+                viewModel.navigateToAssistUmc()
+            },
+            onDismissRequest = { showUsedCodeDialog = false }
+        )
+    }
+
+    // 약관 조회 실패 안내 다이얼로그 컴포저블
+    failedTermsType?.let { type ->
+        UDialog(
+            title = AppStrings.MYPAGE_TERMS_LOAD_FAIL_TITLE,
+            content = AppStrings.MYPAGE_TERMS_LOAD_FAIL_CONTENT,
+            isTwoButton = true,
+            positiveText = AppStrings.MYPAGE_TERMS_RETRY,
+            negativeText = "닫기",
+            positiveTextColor = grey800(),
+            onPositive = {
+                failedTermsType = null
+                if (type == TermsType.PRIVACY) {
+                    viewModel.navigateToPersonalInformation()
+                } else {
+                    viewModel.navigateToUseManual()
+                }
+            },
+            onDismissRequest = { failedTermsType = null }
         )
     }
 
@@ -257,9 +337,8 @@ fun MypageRoute(
             positiveText = "로그아웃",
             negativeText = "취소",
             onPositive = {
-                /**TODO: 로그아웃 로직 연결*/
                 showLogoutDialog = false
-                viewModel.navigateToOnboard()
+                viewModel.logout()
             },
             onNegative = {
                 showLogoutDialog = false
@@ -299,30 +378,40 @@ fun MypageRoute(
 
 
 
+// 스킴(https:// 등)으로 시작하는지 판별
+private val URL_SCHEME_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://")
+
 /**
  * 외부 브라우저 인텐트를 호출하는 암시적 인텐트 연결 메서드
  */
 private fun openWebpage(context: Context, url: String) {
-    if (url.isBlank()) return
+    val trimmed = url.trim()
+    if (trimmed.isEmpty()) return
+
+    // 프로필 링크는 사용자가 입력한 값이 그대로 저장되므로 스킴이 없을 수 있다(github.com/id). https:// 를 붙여 연다.
+    val target = if (URL_SCHEME_REGEX.containsMatchIn(trimmed)) trimmed else "https://$trimmed"
+
+    // 인텐트 스킴 매칭은 대소문자를 구분하므로 소문자로 정규화한다(Https://... 대응)
+    val uri = target.toUri().normalizeScheme()
+
+    // 웹 링크(http/https)만 연다. file:// 등은 인텐트로 넘기면 앱이 종료될 수 있다.
+    if (uri.scheme != "http" && uri.scheme != "https") {
+        Toast.makeText(context, AppStrings.MYPAGE_LINK_OPEN_FAIL, Toast.LENGTH_SHORT).show()
+        return
+    }
 
     try {
-        val webpage: Uri = url.toUri()
-        val intent = Intent(Intent.ACTION_VIEW, webpage).apply {
+        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
             //Activity 외부(Context)에서 시작할 경우 필요한 플래그
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)
-        //브라우저를 실행할 수 있는 앱이 있는지 확인
-        if (intent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(intent)
-        } else {
-            // 브라우저조차 없는 특수한 상황
-            val webIntent = Intent(Intent.ACTION_VIEW, webpage)
-            context.startActivity(webIntent)
-        }
-    }
-    catch (e: Exception){
-        e.printStackTrace()
+    } catch (e: ActivityNotFoundException) {
+        // 링크를 열 수 있는 앱이 없는 경우
+        Toast.makeText(context, AppStrings.MYPAGE_LINK_OPEN_FAIL, Toast.LENGTH_SHORT).show()
+    } catch (e: RuntimeException) {
+        // 그 외(SecurityException 등) 사용자 입력 값 때문에 앱이 종료되지 않게 같은 안내로 처리
+        Toast.makeText(context, AppStrings.MYPAGE_LINK_OPEN_FAIL, Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -389,6 +478,7 @@ fun MypageScreen(
     onDeleteUserClick: () -> Unit,
     onWebsiteClick: () -> Unit,
     onInstagramClick: () -> Unit,
+    onSocialLinkClick: (LoginType) -> Unit,
 ){
 
     Column(
@@ -486,14 +576,14 @@ fun MypageScreen(
             }
 
             //소셜 연동 섹션(조건부)
-            if (uiState.isSocialCardVisible) {
+            uiState.targetPlatform?.let { target ->
                 item {
                     MypageSectionTitle(
                         text = AppStrings.MYPAGE_SOCIAL
                     )
                     MypageSocialLinkCard(
-                        targetPlatform = uiState.targetPlatform,
-                        onClick = { /** TODO. VIewModel에서 로그인 화면으로 이동하기 **/ }
+                        targetPlatform = target,
+                        onClick = { onSocialLinkClick(target) }
                     )
                 }
             }
@@ -700,7 +790,11 @@ fun SocialBadge(platform: LoginType) {
         shape = RoundedCornerShape(4.dp)
     ) {
         UText(
-            text = if (platform == LoginType.KAKAO) "카카오" else "구글",
+            text = when (platform) {
+                LoginType.KAKAO -> "카카오"
+                LoginType.GOOGLE -> "구글"
+                LoginType.APPLE -> "Apple"
+            },
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             style = UmcTypographyTokens.Caption1Bold,
@@ -788,4 +882,52 @@ fun UMCChannelButtons(
                 .clickable { onInstagramClick() }
         )
     }
+}
+
+@Composable
+private fun MypageScreenPreviewContent(uiState: MypageUiState) {
+    UmcTheme {
+        MypageScreen(
+            uiState = uiState,
+            onBackClick = {},
+            onGithubClick = {},
+            onLinkedinClick = {},
+            onBlogClick = {},
+            onAddActivityClick = {},
+            onAssistClick = {},
+            onNoticeSettingClick = {},
+            onLocationSettingClick = {},
+            onPrivacyClick = {},
+            onTermsClick = {},
+            onLogoutClick = {},
+            onDeleteUserClick = {},
+            onWebsiteClick = {},
+            onInstagramClick = {},
+            onSocialLinkClick = {},
+        )
+    }
+}
+
+// 카카오 + Apple 연동: 구글 연동 카드가 보인다
+@Preview(showBackground = true, widthDp = 360, heightDp = 1000)
+@Composable
+private fun MypageScreenGoogleLinkCardPreview() {
+    MypageScreenPreviewContent(
+        MypageUiState(
+            linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.APPLE),
+            isLinkedPlatformsLoaded = true
+        )
+    )
+}
+
+// 카카오 + 구글 연동: 소셜 연동 섹션이 숨겨진다
+@Preview(showBackground = true, widthDp = 360, heightDp = 1000)
+@Composable
+private fun MypageScreenAllLinkedPreview() {
+    MypageScreenPreviewContent(
+        MypageUiState(
+            linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.GOOGLE),
+            isLinkedPlatformsLoaded = true
+        )
+    )
 }

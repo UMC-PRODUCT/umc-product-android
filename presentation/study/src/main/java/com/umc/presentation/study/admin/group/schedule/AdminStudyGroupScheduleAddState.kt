@@ -1,8 +1,9 @@
 package com.umc.presentation.study.admin.group.schedule
 
 import com.umc.component.base.UiState
+import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleChallengerUiModel
-import com.umc.presentation.study.admin.submit.bottomsheet.AdminSubmitWeekUiModel
+import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleWeekUiModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -63,7 +64,7 @@ data class AdminStudyGroupScheduleState(
     val lateEndText: String? = null,
 
     // 선택 가능한 커리큘럼 주차 목록
-    val weeks: ImmutableList<AdminSubmitWeekUiModel> = persistentListOf(),
+    val weeks: ImmutableList<GroupScheduleWeekUiModel> = persistentListOf(),
 
     // 선택한 주차의 커리큘럼 ID
     val selectedWeeklyCurriculumId: Long? = null,
@@ -75,6 +76,19 @@ data class AdminStudyGroupScheduleState(
     val isRegistering: Boolean = false,
 
     ) : UiState {
+
+    /**
+     * 그룹 카드에 표시할 파트 이름
+     *
+     * [groupPart]는 커리큘럼 조회 파라미터로 쓰는 서버 enum 원문이라
+     * 화면에는 [UserPart.label]로 바꿔서 보여줍니다.
+     */
+    val groupPartLabel: String
+        get() = if (groupPart.isBlank()) {
+            ""
+        } else {
+            UserPart.from(groupPart).label
+        }
 
     /**
      * 현재 입력값을 기준으로 일정 등록 가능 여부를 반환합니다.

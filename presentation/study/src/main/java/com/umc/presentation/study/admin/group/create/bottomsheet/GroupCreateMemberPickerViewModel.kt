@@ -61,6 +61,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                 query = "",
                 isSearching = false,
                 isLoading = false,
+                isSearchFailed = false,
                 searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
@@ -92,6 +93,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                 query = query,
                 isSearching = true,
                 isLoading = true,
+                isSearchFailed = false,
                 searchResults = persistentListOf(),
                 pendingMembers = persistentListOf(),
                 nextCursor = null,
@@ -182,6 +184,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                             nextCursor = response.nextCursor,
                             hasNext = response.hasNext,
                             isLoading = false,
+                            isSearchFailed = false,
                         )
                     }
                 },
@@ -190,6 +193,8 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                         copy(
                             isLoading = false,
                             hasNext = false,
+                            // 첫 페이지 실패만 '검색 실패'로 표시하고, 다음 페이지 실패는 기존 결과를 유지
+                            isSearchFailed = !isNextPage,
                         )
                     }
                 },
@@ -392,6 +397,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                 query = "",
                 isSearching = false,
                 isLoading = false,
+                isSearchFailed = false,
                 searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
@@ -428,6 +434,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                 query = "",
                 isSearching = false,
                 isLoading = false,
+                isSearchFailed = false,
                 searchResults = persistentListOf(),
                 pendingMembers = persistentListOf(),
                 nextCursor = null,
@@ -470,6 +477,9 @@ data class GroupCreateMemberPickerState(
 
     // API 로딩 여부
     val isLoading: Boolean = false,
+
+    // 첫 페이지 검색 실패 여부 (결과 없음과 구분하기 위해 사용)
+    val isSearchFailed: Boolean = false,
 
     // 검색 API 결과
     val searchResults:

@@ -19,9 +19,11 @@ import com.umc.domain.usecase.notice.DeleteNoticeUseCase
 import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatisticsUseCase
 import com.umc.domain.usecase.notice.GetNoticeReadStatusUseCase
+import com.umc.domain.usecase.notice.MarkNoticeAsReadUseCase
 import com.umc.domain.usecase.notice.SendNoticeReminderUseCase
 import com.umc.domain.usecase.notice.SubmitVoteResponseUseCase
 import com.umc.domain.usecase.notice.UpdateVoteResponseUseCase
+import com.umc.domain.usecase.organization.GetChapterListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -42,11 +44,16 @@ class NoticeDetailViewModel @Inject constructor(
     private val getNoticeReadStatusUseCase: GetNoticeReadStatusUseCase,
     private val sendNoticeReminderUseCase: SendNoticeReminderUseCase,
     private val deleteNoticeUseCase: DeleteNoticeUseCase,
+    private val markNoticeAsReadUseCase: MarkNoticeAsReadUseCase,
+    private val getChapterListUseCase: GetChapterListUseCase,
 ) : BaseViewModel<NoticeDetailUiState, NoticeDetailEvent>(
     NoticeDetailUiState(),
 ) {
 
     private var noticeId: Long = 0L
+
+    // 투표 등으로 loadDetail이 다시 불려도 읽음 등록은 상세 진입당 한 번만 보낸다
+    private var hasMarkedRead = false
 
     fun load(noticeId: Long) {
         this.noticeId = noticeId
@@ -76,6 +83,7 @@ class NoticeDetailViewModel @Inject constructor(
                             ?: NoticeVoteStatus.OPEN,
                     )
                 }
+                markAsRead()
                 loadAuthorInfo(detail)
                 loadReceiverText(detail)
             },
@@ -84,6 +92,18 @@ class NoticeDetailViewModel @Inject constructor(
                 emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_LOAD_FAIL))
             },
         )
+    }
+
+    /** 서버 수신 확인(읽음) 집계에 반영. 결과는 화면에 영향이 없으므로 실패해도 무시한다 */
+    private fun markAsRead() {
+        if (hasMarkedRead) return
+        hasMarkedRead = true
+        viewModelScope.launch {
+            resultResponse(
+                response = markNoticeAsReadUseCase(noticeId),
+                successCallback = {},
+            )
+        }
     }
 
     /** "12기/전체" 형태의 수신대상 문구 구성. 기수 번호는 별도 조회 */
@@ -98,7 +118,17 @@ class NoticeDetailViewModel @Inject constructor(
             )
         }
 
-        val scopeLabel = target.targetChapterName
+        // 상세 응답에는 지부 ID만 내려오므로 지부 이름은 지부 목록에서 찾는다
+        var chapterLabel: String? = target.targetChapterName
+        val chapterId = target.targetChapterId
+        if (chapterLabel == null && chapterId != null) {
+            resultResponse(
+                response = getChapterListUseCase(),
+                successCallback = { list -> chapterLabel = list.firstOrNull { it.id == chapterId }?.name },
+            )
+        }
+
+        val scopeLabel = chapterLabel
             ?: if (target.targetChapterId == null && target.targetSchoolId == null) "전체" else null
         val partLabel = target.targetParts.firstOrNull()?.let { UserPart.from(it).label }
 
@@ -355,7 +385,8 @@ class NoticeDetailViewModel @Inject constructor(
             response = deleteNoticeUseCase(noticeId),
             successCallback = {
                 emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_DELETE_SUCCESS))
-                emitEvent(NoticeDetailEvent.MoveBack)
+                // 목록이 삭제를 반영하도록 단순 뒤로가기와 구분해 알린다
+                emitEvent(NoticeDetailEvent.Deleted)
             },
             errorCallback = {
                 emitEvent(NoticeDetailEvent.ShowToast(it.message))
@@ -406,6 +437,7 @@ data class NoticeDetailUiState(
 
 sealed interface NoticeDetailEvent : UiEvent {
     data object MoveBack : NoticeDetailEvent
+    data object Deleted : NoticeDetailEvent
     data class MoveToEdit(val noticeId: Long) : NoticeDetailEvent
     data class ShowToast(val message: String) : NoticeDetailEvent
 }

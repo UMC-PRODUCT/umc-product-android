@@ -8,8 +8,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
-import com.umc.component.base.SessionExpiryBus
+import com.umc.domain.session.SessionExpiryBus
 import androidx.navigation.navDeepLink
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -79,6 +80,10 @@ fun MainNavHost(
     // 만료 상태에서 스플래시로 되돌리면 그 조회가 또 실패하고 다시 만료 신호를 쏘아
     // renew -> me -> renew ... 가 끝없이 반복된다. 만료의 해답은 재조회가 아니라 재로그인이다.
     CollectUiEvents(SessionExpiryBus.expired) {
+        // 이미 로그인 화면이면(스플래시·로그아웃이 같은 이유로 먼저 보낸 경우) 다시 이동하지 않는다.
+        if (navHostController.currentDestination?.hasRoute<MainDestination.Login>() == true) {
+            return@CollectUiEvents
+        }
         navHostController.navigate(MainDestination.Login) {
             popUpTo(0) { inclusive = true }
             launchSingleTop = true
@@ -254,6 +259,11 @@ fun MainNavHost(
                         popUpTo(0) { inclusive = true }
                     }
                 },
+                navigateToLogin = {
+                    navHostController.navigate(MainDestination.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
             )
         }
 
@@ -309,6 +319,10 @@ fun MainNavHost(
                 navigateToBack = { navHostController.popBackStack() },
                 navigateToEdit = { noticeId ->
                     navHostController.navigate(MainDestination.NoticeWrite(noticeId))
+                },
+                onDeleted = {
+                    navHostController.notifyNoticeListRefresh()
+                    navHostController.popBackStack()
                 },
             )
         }
@@ -413,6 +427,14 @@ fun MainNavHost(
 
         //홈 화면
         composable<MainDestination.Home> {
+            // 외부 링크로 열렸다면 인증 판정을 거쳐 홈에 도착한 지금 원래 목적지로 이동한다.
+            // 매칭되는 destination 이 없는 링크는 무시한다.
+            LaunchedEffect(Unit) {
+                PendingDeepLink.consume()?.let { uri ->
+                    runCatching { navHostController.navigate(uri) }
+                }
+            }
+
             HomeRoute(
                 onNavigateToNotice = {
                     navHostController.navigate(MainDestination.Notice)
@@ -469,10 +491,12 @@ fun MainNavHost(
                 onBackClick = {navHostController.popBackStack()},
                 onNavigateToAttendSchedule = {
                     /**TODO. 일정 출석 페이지로 이동하기**/
+                    // 하단 탭 이동과 같은 스택([Home, Act])을 만들어 뒤로가기가 홈으로 돌아오게 한다
                     navHostController.navigate(MainDestination.Act){
                         popUpTo<MainDestination.Home>{
-                            inclusive = true
+                            inclusive = false
                         }
+                        launchSingleTop = true
                     }
                 },
                 onNavigateToEditSchedule = { scheduleId ->
@@ -658,6 +682,15 @@ fun MainNavHost(
 
                     navHostController.popBackStack()
                 },
+                onDeleteSuccess = {
+                    // 채팅방에서 진입했어도 삭제된 채팅방을 건너뛰고 커뮤니티 목록으로 복귀
+                    if (!navHostController.popBackStack<MainDestination.Community>(inclusive = false)) {
+                        // 딥링크로 들어와 Community 가 스택에 없으면 삭제된 채팅방 엔트리까지 함께 걷어낸다.
+                        if (!navHostController.popBackStack<MainDestination.CommunityChatting>(inclusive = true)) {
+                            navHostController.popBackStack()
+                        }
+                    }
+                },
             )
         }
 
@@ -699,7 +732,6 @@ fun MainNavHost(
                         MainDestination.CommunityEdit(destination.threadId)
                     )
                 },
-                onViewParticipantProfile = {},
                 shouldRefresh = shouldRefresh,
                 onRefreshHandled = {
                     backStackEntry.savedStateHandle[COMMUNITY_REFRESH_KEY] = false

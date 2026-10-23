@@ -10,12 +10,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey500
@@ -45,6 +49,28 @@ fun AdminStudyGroupScreen(
     state: AdminStudyGroupState,
     onAction: (AdminStudyGroupAction) -> Unit = {},
 ) {
+    val listState = rememberLazyListState()
+
+    // 새로 생긴 그룹은 목록 앞쪽에 들어와 key 고정된 스크롤 위치 때문에 화면 위로 밀려나므로, 추가된 그룹 카드로 스크롤한다.
+    // 컴포지션에서 읽지 않는 값이라 상태가 아닌 홀더로 둔다.
+    val knownGroupIds = remember {
+        mutableSetOf<Long>().apply { addAll(state.groups.map { it.groupId }) }
+    }
+    LaunchedEffect(state.groups) {
+        val ids = state.groups.map { it.groupId }
+        val addedIndex = ids.indexOfFirst { it !in knownGroupIds }
+        val hadGroups = knownGroupIds.isNotEmpty()
+        // 목록은 첫 페이지(20개)만 받아서, 20개를 넘는 상태에서 그룹을 삭제하면 뒤쪽 그룹이 끝으로 당겨져 들어온다.
+        // 사라진 id 가 있는데 새 id 가 맨 끝에만 있으면 삭제로 밀려 들어온 것이므로 스크롤하지 않는다.
+        val removed = knownGroupIds.any { it !in ids }
+        val pulledInByDelete = removed && addedIndex == ids.lastIndex
+        knownGroupIds.clear()
+        knownGroupIds.addAll(ids)
+        if (hadGroups && addedIndex >= 0 && !pulledInByDelete) {
+            listState.scrollToItem(addedIndex)
+        }
+    }
+
     /**
      * 그룹 정보 수정 Dialog
      *
@@ -146,13 +172,15 @@ fun AdminStudyGroupScreen(
          *
          * 클릭 시 그룹 생성 화면으로 이동합니다.
          */
-        AdminStudyGroupCreateCard(
-            onClick = {
-                onAction(
-                    AdminStudyGroupAction.ClickCreateGroup
-                )
-            },
-        )
+        if (state.hasReadAccess) {
+            AdminStudyGroupCreateCard(
+                onClick = {
+                    onAction(
+                        AdminStudyGroupAction.ClickCreateGroup
+                    )
+                },
+            )
+        }
 
         /**
          * 관리 중인 그룹이 없는 경우 빈 화면 표시
@@ -165,7 +193,11 @@ fun AdminStudyGroupScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 UText(
-                    text = "생성된 스터디 그룹이 없어요",
+                    text = if (state.hasReadAccess) {
+                        "생성된 스터디 그룹이 없어요"
+                    } else {
+                        AppStrings.STUDY_GROUP_NO_PERMISSION
+                    },
                     style = HeadlineBold,
                     color = grey500(),
                 )
@@ -175,6 +207,7 @@ fun AdminStudyGroupScreen(
              * 관리 중인 스터디 그룹 목록
              */
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .fillMaxSize()
                     .background(grey100()),
@@ -302,6 +335,19 @@ private fun AdminStudyGroupScreenPreview() {
                     studyPart = UserPart.WEB.serverValue,
                 )
             )
+        )
+    )
+}
+
+/**
+ * 스터디 그룹 관리 권한이 없는 상태 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun AdminStudyGroupScreenNoPermissionPreview() {
+    AdminStudyGroupScreen(
+        state = AdminStudyGroupState(
+            hasReadAccess = false,
         )
     )
 }

@@ -7,6 +7,7 @@ import com.kakao.sdk.auth.TokenManagerProvider
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.TermsType
@@ -15,6 +16,8 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
 import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
+import com.umc.domain.usecase.PostLoginUseCase
+import com.umc.domain.usecase.authentication.AddMyOAuthUseCase
 import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
 import com.umc.domain.usecase.challenger.AddChallengerRecordMemberUseCase
 import com.umc.domain.usecase.member.DeleteUserUseCase
@@ -27,6 +30,9 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// 서버가 이미 사용된 챌린저 기록 추가 코드에 내려주는 에러 코드
+internal const val CODE_ALREADY_USED = "CHALLENGER-0012"
+
 @HiltViewModel
 class MypageViewModel @Inject constructor(
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
@@ -35,6 +41,8 @@ class MypageViewModel @Inject constructor(
     private val getTermsByTypeUseCase: GetTermsByTypeUseCase, //타입으로 약관 가져오기
     private val getMyOAuthUseCase: GetMyOAuthUseCase, //내 OAuth 가져오기
     private val addChallengerRecordMemberUseCase: AddChallengerRecordMemberUseCase, //챌린저 코드 추가
+    private val postLoginUseCase: PostLoginUseCase, //소셜 연동용 소셜 토큰 검증
+    private val addMyOAuthUseCase: AddMyOAuthUseCase, //소셜 계정 연동 추가
 ) : BaseViewModel<MypageUiState, MypageEvent>(
     MypageUiState()){
 
@@ -63,13 +71,15 @@ class MypageViewModel @Inject constructor(
                             userInfo = userInfo,
                             githubUrl = userInfo.profile.github,
                             linkedinUrl = userInfo.profile.linkedIn,
-                            blogUrl = userInfo.profile.blog
+                            blogUrl = userInfo.profile.blog,
+                            isProfileLoadFailed = false
                         )
                     }
 
                 },
                 errorCallback = {
-                    /**TODO. 에러 토스트 메시지 등을 전송**/
+                    // 조회 실패와 '링크 미등록'을 구분할 수 있도록 실패 상태를 남긴다.
+                    updateState { copy(isProfileLoadFailed = true) }
                 }
             )
         }
@@ -86,7 +96,10 @@ class MypageViewModel @Inject constructor(
                 successCallback = { myOAuth ->
                     val platforms = myOAuth.map { LoginType.valueOf(it.provider) }
                     updateState {
-                        copy(linkedPlatforms = platforms.toImmutableList())
+                        copy(
+                            linkedPlatforms = platforms.toImmutableList(),
+                            isLinkedPlatformsLoaded = true
+                        )
                     }
 
                 },
@@ -96,14 +109,28 @@ class MypageViewModel @Inject constructor(
     }
 
     fun navigateToGithub(){
-        emitEvent(MypageEvent.NavigateToGithub)
+        openOutLink(MypageEvent.NavigateToGithub)
     }
     fun navigateToLinkedin(){
-        emitEvent(MypageEvent.NavigateToLinkedin)
-
+        openOutLink(MypageEvent.NavigateToLinkedin)
     }
     fun navigateToBlog(){
-        emitEvent(MypageEvent.NavigateToBlog)
+        openOutLink(MypageEvent.NavigateToBlog)
+    }
+
+    /**
+     * 외부 링크(깃허브, 링크드인, 블로그) 이동 이벤트를 보내는 메서드
+     *
+     * 프로필 조회가 실패한 상태라면 링크가 비어 있는 것이 아니라 아직 못 불러온 것이므로,
+     * '링크 미등록' 안내 대신 불러오기 실패 안내를 보내고 프로필을 다시 조회한다.
+     */
+    private fun openOutLink(event: MypageEvent) {
+        if (uiState.value.isProfileLoadFailed) {
+            emitEvent(MypageEvent.ProfileLoadFailed)
+            getUserInfo()
+        } else {
+            emitEvent(event)
+        }
     }
 
     /**
@@ -127,12 +154,71 @@ class MypageViewModel @Inject constructor(
         emitEvent(MypageEvent.NavigateToSettingLocation)
     }
 
-    fun navigateToSocialSetting(){
-        viewModelScope.launch {
-            clearAllDataUseCase()
-            emitEvent(MypageEvent.NavigateToSocialSetting)
-        }
+    /**
+     * 소셜 계정(카카오, 구글)을 현재 계정에 연동하는 메서드
+     *
+     * 소셜 토큰으로 로그인 API를 호출해 연동용 검증 토큰(oAuthVerificationToken)을 받고, 그 토큰으로 연동을 추가한다.
+     * 검증 토큰이 없다면 그 소셜 계정은 이미 다른 회원으로 가입된 것이라 연동할 수 없다.
+     * 이때 함께 내려온 로그인 토큰은 저장하지 않고 버려서 현재 로그인 상태를 유지한다.
+     */
+    fun linkSocial(token: String, type: LoginType) {
+        // 연타·중복 요청 방지
+        if (uiState.value.isLinkingSocial) return
+        updateState { copy(isLinkingSocial = true) }
 
+        viewModelScope.launch {
+            resultResponse(
+                response = postLoginUseCase(type, token),
+                successCallback = { jwt ->
+                    if (jwt.oAuthVerificationToken.isNotEmpty()) {
+                        addMyOAuth(jwt.oAuthVerificationToken)
+                    } else {
+                        updateState { copy(isLinkingSocial = false) }
+                        emitEvent(MypageEvent.SocialLinkFailed(AppStrings.MYPAGE_SOCIAL_LINK_ALREADY_REGISTERED))
+                    }
+                },
+                errorCallback = { failState ->
+                    updateState { copy(isLinkingSocial = false) }
+                    emitEvent(
+                        MypageEvent.SocialLinkFailed(
+                            failState.message.ifBlank { AppStrings.MYPAGE_SOCIAL_LINK_FAIL }
+                        )
+                    )
+                }
+            )
+        }
+    }
+
+    private fun addMyOAuth(oAuthVerificationToken: String) {
+        viewModelScope.launch {
+            resultResponse(
+                response = addMyOAuthUseCase(oAuthVerificationToken),
+                successCallback = { added ->
+                    // 응답의 연동 목록을 기존 목록과 합쳐 바로 반영한다(재조회가 실패해도 카드가 남지 않게)
+                    val merged = (uiState.value.linkedPlatforms +
+                        added.mapNotNull { runCatching { LoginType.valueOf(it.provider) }.getOrNull() })
+                        .distinct()
+                    updateState {
+                        copy(
+                            isLinkingSocial = false,
+                            linkedPlatforms = merged.toImmutableList(),
+                            isLinkedPlatformsLoaded = true
+                        )
+                    }
+                    // 서버 기준으로 다시 맞추는 재조회는 보조로만 둔다.
+                    getUserOAuth()
+                    emitEvent(MypageEvent.SocialLinked)
+                },
+                errorCallback = { failState ->
+                    updateState { copy(isLinkingSocial = false) }
+                    emitEvent(
+                        MypageEvent.SocialLinkFailed(
+                            failState.message.ifBlank { AppStrings.MYPAGE_SOCIAL_LINK_FAIL }
+                        )
+                    )
+                }
+            )
+        }
     }
 
 
@@ -144,7 +230,9 @@ class MypageViewModel @Inject constructor(
                 successCallback = { term ->
                     emitEvent(MypageEvent.NavigateToPersonalInformation(term.link))
                 },
-                errorCallback = {}
+                errorCallback = {
+                    emitEvent(MypageEvent.TermsLoadFailed(TermsType.PRIVACY))
+                }
             )
         }
 
@@ -159,7 +247,9 @@ class MypageViewModel @Inject constructor(
                 successCallback = { term ->
                     emitEvent(MypageEvent.NavigateToUseManual(term.link))
                 },
-                errorCallback = {}
+                errorCallback = {
+                    emitEvent(MypageEvent.TermsLoadFailed(TermsType.SERVICE))
+                }
             )
         }
 
@@ -223,8 +313,13 @@ class MypageViewModel @Inject constructor(
                         emitEvent(MypageEvent.MoveToOnBoardPage)
                     }
                 },
-                errorCallback = {
-                    /**TODO. 에러 토스트 메시지 등을 전송**/
+                errorCallback = { failState ->
+                    // 표준 응답이 아닌 실패(게이트웨이 HTML 등)는 message 가 비거나 영문일 수 있어 기본 문구로 보정한다.
+                    emitEvent(
+                        MypageEvent.ShowErrorToast(
+                            failState.message.ifBlank { AppStrings.MYPAGE_DELETE_USER_FAIL }
+                        )
+                    )
                 }
             )
         }
@@ -253,12 +348,15 @@ class MypageViewModel @Inject constructor(
      * 새로 붙여주므로, 성공하면 프로필을 다시 조회해 화면에 반영한다.
      */
     fun addChallengerCode() {
+        // 요청 진행 중에는 다시 보내지 않는다(연타하면 같은 코드가 중복 전송되거나 입력이 비워진 빈 코드가 전송된다).
+        if (uiState.value.isAddingCode) return
+        updateState { copy(isAddingCode = true) }
+
         viewModelScope.launch {
             val request = ChallengerRecordMemberRequest(
                 code = uiState.value.code,
             )
 
-            startLoading()
             resultResponse(
                 response = addChallengerRecordMemberUseCase(request),
                 successCallback = {
@@ -268,32 +366,37 @@ class MypageViewModel @Inject constructor(
                         resultResponse(
                             response = getMyProfileUseCase(),
                             successCallback = {
+                                updateState { copy(isAddingCode = false) }
                                 emitEvent(MypageEvent.ConfirmAddCode)
                             },
                             errorCallback = {
+                                updateState { copy(isAddingCode = false) }
                                 emitEvent(MypageEvent.ConfirmAddCode)
                             }
                         )
                     }
                 },
                 errorCallback = { failState ->
-                    emitEvent(MypageEvent.FailAddCode(failState.message))
+                    updateState { copy(isAddingCode = false) }
+                    emitEvent(MypageEvent.FailAddCode(failState.code, failState.message))
                 }
             )
         }
     }
 
 
+    //로그아웃 다이얼로그 호출
+    fun showLogoutDialog(){
+        emitEvent(MypageEvent.Logout)
+    }
+
+    //로그아웃 확인 후 실제 로그아웃 처리
     fun logout(){
         viewModelScope.launch {
             // 로그아웃 시 dataStore의 모든 데이터 삭제
             clearAllDataUseCase()
-            emitEvent(MypageEvent.Logout)
+            emitEvent(MypageEvent.MoveToOnBoardPage)
         }
-    }
-
-    fun navigateToOnboard(){
-        emitEvent(MypageEvent.MoveToOnBoardPage)
     }
 
 
@@ -323,16 +426,26 @@ data class MypageUiState(
 
     //활동 추가 코드
     val code : String = "",
+    val isAddingCode : Boolean = false, //코드 추가 요청 진행 중
 
+    //프로필 조회 실패 여부(링크가 비어 있는 것과 구분하기 위함)
+    val isProfileLoadFailed : Boolean = false,
+
+    //소셜 연동 요청 진행 중
+    val isLinkingSocial : Boolean = false,
+
+    //연동된 플랫폼 목록을 한 번이라도 불러왔는지(불러오기 전에는 소셜 연동 카드를 그리지 않는다)
+    val isLinkedPlatformsLoaded : Boolean = false,
 
     ) : UiState {
-    //둘 다 연동되어 있으면(사이즈가 2 이상이면) 카드 숨기기
-    val isSocialCardVisible: Boolean
-        get() = linkedPlatforms.size < 2
+    //앱에서 연동할 수 있는 플랫폼(카카오, 구글) 중 아직 연동되지 않은 첫 번째(카카오 우선). 연동 목록을 불러오기 전에는 null. 서버 목록에 APPLE 등이 섞여 있어도 영향받지 않는다.
+    val targetPlatform: LoginType?
+        get() = if (!isLinkedPlatformsLoaded) null
+        else listOf(LoginType.KAKAO, LoginType.GOOGLE).firstOrNull { it !in linkedPlatforms }
 
-    //카카오가 있으면 구글을, 없으면(구글이 있거나 둘 다 없으면) 카카오
-    val targetPlatform: LoginType
-        get() = if (linkedPlatforms.contains(LoginType.KAKAO)) LoginType.GOOGLE else LoginType.KAKAO
+    //연동 목록을 불러온 뒤, 연동할 플랫폼이 남아 있을 때만 카드 보이기(둘 다 연동되어 있으면 숨김)
+    val isSocialCardVisible: Boolean
+        get() = targetPlatform != null
 }
 
 sealed interface MypageEvent : UiEvent {
@@ -351,7 +464,11 @@ sealed interface MypageEvent : UiEvent {
     object NavigateToSettingNotice : MypageEvent //알림 설정
     object NavigateToSettingLocation : MypageEvent //위치 설정
 
-    object NavigateToSocialSetting : MypageEvent //소셜 연동
+    object SocialLinked : MypageEvent //소셜 연동 성공
+    data class SocialLinkFailed(val message: String) : MypageEvent //소셜 연동 실패
+
+    object ProfileLoadFailed : MypageEvent //프로필 조회 실패 상태에서 링크 누름
+    data class TermsLoadFailed(val type: TermsType) : MypageEvent //약관 조회 실패
 
     data class NavigateToPersonalInformation(val privacyTerms : String) : MypageEvent //개인정보
     data class NavigateToUseManual(val manualTerms : String) : MypageEvent //이용 약관
@@ -376,7 +493,10 @@ sealed interface MypageEvent : UiEvent {
 
     //챌린저 코드 다이얼로그 전용
     object ConfirmAddCode : MypageEvent
-    data class FailAddCode(val message: String): MypageEvent
+    data class FailAddCode(val code: String, val message: String): MypageEvent
+
+    //일반 에러 토스트
+    data class ShowErrorToast(val message: String): MypageEvent
 
 
 }

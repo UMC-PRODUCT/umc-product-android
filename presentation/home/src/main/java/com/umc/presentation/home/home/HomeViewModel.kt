@@ -25,6 +25,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
@@ -53,6 +54,15 @@ class HomeViewModel @Inject constructor(
     private var isBannerDismissed: Boolean
         get() = savedStateHandle.get<Boolean>("IS_BANNER_DISMISSED") ?: false
         set(value) { savedStateHandle["IS_BANNER_DISMISSED"] = value }
+
+    //마지막으로 일정을 요청한 달 (실패 후 재시도용)
+    private var requestedMonth: YearMonth = YearMonth.now()
+
+    //마지막으로 일정을 성공적으로 받은 달 (같은 달 재조회가 실패해도 이미 받은 일정은 지우지 않기 위함)
+    private var loadedMonth: YearMonth? = null
+
+    //월별 일정 요청 순번 (월을 빠르게 넘길 때 늦게 도착한 이전 달 응답이 최신 달 화면을 덮어쓰지 않게 한다)
+    private var scheduleRequestSeq = 0
 
     init {
         val today = UTimeFormat.getToday()
@@ -115,6 +125,9 @@ class HomeViewModel @Inject constructor(
      * 사용자 기본 프로필, 수료/참여 기수 정보, 상벌점 레코드를 가져옵니다.
      */
     fun getUserInfo() {
+        // 다시 시도할 때도 이전 값(0 Days 등)이 아닌 로딩 표시가 보이도록 확정 전 상태로 되돌린다
+        updateState { copy(profileLoadState = HomeLoadState.LOADING, userType = null) }
+
         viewModelScope.launch {
             resultResponse(
                 response = getMyProfileUseCase(),
@@ -125,7 +138,7 @@ class HomeViewModel @Inject constructor(
 
                 },
                 errorCallback = {
-                    /**TODO. 에러 토스트 메시지 등을 전송**/
+                    updateState { copy(profileLoadState = HomeLoadState.ERROR) }
                 }
             )
         }
@@ -150,6 +163,7 @@ class HomeViewModel @Inject constructor(
         // 즉시 표출 가능한 기본 인적사항 UI State 반영
         updateState {
             copy(
+                profileLoadState = HomeLoadState.SUCCESS,
                 userName = userInfo.name,
                 userNickName = userInfo.nickname,
                 userMemberId = userInfo.id,
@@ -181,7 +195,11 @@ class HomeViewModel @Inject constructor(
      * 두 개의 API 요청을 coroutineScope + async로 동시 수행하여 네트워크 대기 시간을 최적화합니다.
      */
     private fun loadGisuDetailAndCalculateStatus(latestGisuId: Long?, startGisuId: Long?) {
-        if (latestGisuId == null || startGisuId == null) return
+        if (latestGisuId == null || startGisuId == null) {
+            // 기수 정보가 없으면 판별할 수 없으므로 기존 기본값(ACTIVE)대로 확정한다
+            updateState { copy(userType = UserType.ACTIVE) }
+            return
+        }
 
         viewModelScope.launch {
             coroutineScope {
@@ -193,6 +211,7 @@ class HomeViewModel @Inject constructor(
 
                 /**시작 기수와 최신 기수의 시작&종료 날짜 받아오기**/
                 //최신 기수 정보를 성공적으로 받아올 때
+                //기수 조회가 실패하면 userType 이 확정되지 않아 활동 상태 카드가 영영 안 뜨므로 ACTIVE 로 확정한다
                 resultResponse(response = latestRes, successCallback = { latestInfo ->
                     //시작 기수 정보 성공적으로 받아올 때
                     resultResponse(response = startRes, successCallback = { startInfo ->
@@ -206,7 +225,11 @@ class HomeViewModel @Inject constructor(
                                 userType = userStatus,
                             )
                         }
+                    }, errorCallback = {
+                        updateState { copy(userType = UserType.ACTIVE) }
                     })
+                }, errorCallback = {
+                    updateState { copy(userType = UserType.ACTIVE) }
                 })
             }
         }
@@ -286,10 +309,19 @@ class HomeViewModel @Inject constructor(
      * @param todayCheck 초기 로딩 시 오늘 일정 존재 여부에 따른 명함 교환 배너 노출 처리 유무 (사용 X)
      */
     fun getScheduleMonth(year: Int, month: Int, todayCheck: Boolean = false) {
+        val targetMonth = YearMonth.of(year, month)
+        requestedMonth = targetMonth
+        // 달력↔리스트 전환으로 달력이 새로 만들어져도 보던 달에서 시작하도록 상태에 남긴다
+        updateState { copy(viewedMonth = targetMonth) }
+        val requestSeq = ++scheduleRequestSeq
+
         viewModelScope.launch {
             resultResponse(
                 response = getScheduleMonthUseCase(year, month),
                 successCallback = { scheduleMonth ->
+                    // 더 최신 요청이 시작된 뒤 도착한 응답은 버린다
+                    if (requestSeq != scheduleRequestSeq) return@resultResponse
+                    loadedMonth = targetMonth
 
                     // 기간제 원본 일정을 날짜별 개별 아이템 리스트로 평탄화(Flatten)
                     val planItems = convertToPlanItems(scheduleMonth)
@@ -306,7 +338,8 @@ class HomeViewModel @Inject constructor(
                         copy(
                             allPlans = planItems.toImmutableList(),
                             dailyPlans = planItems.filter { it.date == todayString }.toImmutableList(),
-                            isBannerVisible = shouldShowBanner
+                            isBannerVisible = shouldShowBanner,
+                            isScheduleLoadFailed = false
                         )
                     }
 
@@ -315,10 +348,27 @@ class HomeViewModel @Inject constructor(
                 },
                 errorCallback = { message ->
                     Log.d("log_home", "월별 일정 조회 실패: $message")
+                    // 늦게 도착한 이전 달의 실패가 최신 달 화면을 비우지 않게 한다
+                    if (requestSeq != scheduleRequestSeq) return@resultResponse
+                    // 이미 받아 둔 같은 달의 재조회(복귀 시 갱신 등)가 실패한 경우에는 기존 일정과 점을 그대로 둔다
+                    if (loadedMonth == targetMonth) return@resultResponse
+                    // 다른 달 조회 실패는 상태로 남기고, 이전 달 일정/점이 새 달 아래에 남지 않게 비운다
+                    loadedMonth = null
+                    updateState {
+                        copy(
+                            isScheduleLoadFailed = true,
+                            allPlans = persistentListOf(),
+                            dailyPlans = persistentListOf(),
+                            eventDates = persistentSetOf()
+                        )
+                    }
                 }
             )
         }
     }
+
+    /** 마지막으로 요청한 달의 일정을 다시 조회 (월별 일정 조회 실패 후 '다시 시도하기') */
+    fun retryScheduleMonth() = getScheduleMonth(requestedMonth.year, requestedMonth.monthValue)
 
 
     /**
@@ -365,7 +415,8 @@ class HomeViewModel @Inject constructor(
                             else -> "D-${serverDDay + i}"
                         },
                         isPast = isPast,
-                        plusDay = i
+                        plusDay = i,
+                        tags = schedule.tags
                     )
                 )
             }
@@ -399,9 +450,13 @@ class HomeViewModel @Inject constructor(
 }
 
 
+enum class HomeLoadState { LOADING, SUCCESS, ERROR }
+
 data class HomeUiState(
     // 달력 및 일정 관련 상태
     val selectedDate: LocalDate = LocalDate.now(),
+    //마지막으로 일정을 요청한 달 (달력이 다시 만들어질 때 시작 달)
+    val viewedMonth: YearMonth = YearMonth.now(),
     val eventDates: ImmutableSet<LocalDate> = persistentSetOf(),
 
     //달력 <-> 일정 전환
@@ -414,7 +469,11 @@ data class HomeUiState(
     val growDay: Int = 0,
     val gisuTag: ImmutableList<String> = persistentListOf(),
 
-    val userType: UserType = UserType.ACTIVE,
+    //프로필 응답 상태 (기본값이 실제 값처럼 보이지 않게 구분)
+    val profileLoadState: HomeLoadState = HomeLoadState.LOADING,
+
+    //null = 아직 확정 전 (기수 조회 응답 전까지 활동 상태 카드를 그리지 않는다)
+    val userType: UserType? = null,
     val warningStatus: WarningStatus = WarningStatus.NORMAL,
 
     //알람 존재 관련
@@ -432,7 +491,10 @@ data class HomeUiState(
     val plusDays : Int = 0, //연속 날짜 처리 용도
 
     //홈 카드 보여주기
-    val isBannerVisible : Boolean = true
+    val isBannerVisible : Boolean = true,
+
+    //월별 일정 조회 실패 여부 ('일정 없음'과 구분)
+    val isScheduleLoadFailed: Boolean = false
 
 ) : UiState
 

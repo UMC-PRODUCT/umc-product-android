@@ -340,14 +340,14 @@ fun NoticeWriteScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // 알림 발송 토글 (ON: 종 / OFF: 알림 해제 종)
+            // 알림 발송 토글 (ON: 종 / OFF: 알림 해제 종). 이미 만들어진 공지에는 반영되지 않으므로 잠금 상태에서는 누를 수 없다
             Icon(
                 painter = painterResource(
                     id = if (uiState.sendNotification) R.drawable.ic_alarm_filled else R.drawable.ic_alarm_off
                 ),
                 contentDescription = null,
                 tint = if (uiState.sendNotification) grey600() else grey300(),
-                modifier = Modifier.clickable { onToggleNotification() },
+                modifier = Modifier.clickable(enabled = !uiState.isTargetLocked) { onToggleNotification() },
             )
 
             Spacer(modifier = Modifier.width(18.dp))
@@ -368,8 +368,8 @@ fun NoticeWriteScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 수정 모드에서는 수신 대상(카테고리/게시판 분류) 변경 불가
-            if (!uiState.isEditMode) {
+            // 수정 모드·생성 완료 후 재등록에서는 수신 대상(카테고리/게시판 분류) 변경 불가
+            if (!uiState.isTargetLocked) {
                 UText(
                     text = AppStrings.NOTICE_WRITE_CATEGORY_TITLE,
                     style = UmcTypographyTokens.HeadlineBold,

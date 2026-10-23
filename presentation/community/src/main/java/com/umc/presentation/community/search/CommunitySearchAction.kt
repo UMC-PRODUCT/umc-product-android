@@ -14,6 +14,8 @@ sealed interface CommunitySearchAction {
 
     data object OnSearchClick : CommunitySearchAction
 
+    data object OnRetryClick : CommunitySearchAction
+
     data object OnCancelClick : CommunitySearchAction
 
     data object OnBackClick : CommunitySearchAction

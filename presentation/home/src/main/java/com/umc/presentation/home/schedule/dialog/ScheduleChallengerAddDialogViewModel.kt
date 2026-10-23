@@ -65,7 +65,10 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
                 searchResults = emptyList(),
                 nextCursor = null,
                 hasNext = true,
-                isSearching = query.isNotBlank()
+                isSearching = query.isNotBlank(),
+                // 디바운스 대기 중에는 '결과 없음'/'실패' 문구가 깜빡이지 않도록 초기화
+                hasSearched = false,
+                isSearchFailed = false
             )
         }
         searchJob = viewModelScope.launch {
@@ -100,20 +103,25 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
                     name = state.searchQuery.ifBlank { null } // 빈 검색어는 null로 그 외는 searchParticipant에서 가져온 쿼리로
                 ),
                 successCallback = { response ->
+                    // 요청 이후 검색어가 바뀌었으면 늦게 도착한 이전 응답이므로 버린다
+                    if (uiState.value.searchQuery != state.searchQuery) return@resultResponse
                     Log.d("log_home", "유저검색 성공: ${response.content}")
                     updateState {
                         copy(
                             searchResults = response.content,
                             nextCursor = response.nextCursor,
                             hasNext = response.hasNext,
-                            isLoading = false
+                            isLoading = false,
+                            hasSearched = true,
+                            isSearchFailed = false
                         )
                     }
                 },
                 errorCallback = {
                     //검색 실패 시, 로딩 해제 및 다음 꺼 X
+                    if (uiState.value.searchQuery != state.searchQuery) return@resultResponse
                     Log.d("log_home", "유저검색 실패: ${it.message}")
-                    updateState { copy(isLoading = false, hasNext = false) }
+                    updateState { copy(isLoading = false, hasNext = false, hasSearched = true, isSearchFailed = true) }
                 }
             )
         }
@@ -167,7 +175,11 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
             copy(
                 searchResults = emptyList(), // 혹은 초기 리스트(allChallengers)
                 searchQuery = "",
-                isSearching = false
+                isSearching = false,
+                // 버려지는 진행 중 요청이 로딩 상태를 풀어 주지 못하므로 여기서 해제한다
+                isLoading = false,
+                hasSearched = false,
+                isSearchFailed = false
             )
         }
     }
@@ -182,6 +194,10 @@ data class ScheduleChallengerAddDialogUiState(
     val nextCursor: Long? = null,
     val hasNext: Boolean = true,
     val isLoading: Boolean = false,
+    // 검색 응답(성공/실패)을 한 번이라도 받았는지. 디바운스 대기 중과 '결과 없음'을 구분한다.
+    val hasSearched: Boolean = false,
+    // 마지막 검색 요청이 실패했는지
+    val isSearchFailed: Boolean = false,
 ) : UiState {
     val isSelectedParticipant: Boolean get() = selectedParticipants.isNotEmpty()
 }

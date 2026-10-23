@@ -41,6 +41,7 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.white
+import com.umc.domain.model.community.thread.CommunityMessageType
 import com.umc.domain.model.community.thread.CommunityThreadMessage
 
 @Composable
@@ -200,7 +201,12 @@ private fun ReplyTargetRow(
                 style = UmcTypographyTokens.SubheadlineBold,
             )
             Text(
-                text = message.content.orEmpty().ifBlank { AppStrings.CHAT_MESSAGE_CONTENT },
+                text = if (message.type == CommunityMessageType.IMAGE) {
+                    // 방금 보낸 사진은 content 에 로컬 URI 가 들어 있어 그대로 노출하지 않는다.
+                    AppStrings.CHAT_MESSAGE_CONTENT
+                } else {
+                    message.content.orEmpty().ifBlank { AppStrings.CHAT_MESSAGE_CONTENT }
+                },
                 color = grey400(),
                 style = UmcTypographyTokens.Footnote,
                 maxLines = 1,

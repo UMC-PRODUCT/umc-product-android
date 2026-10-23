@@ -65,6 +65,9 @@ class MycardViewModel @Inject constructor(
      * 서버 API를 호출하여 내 프로필 상세 정보를 조회하는 메서드
      */
     fun getUserInfo() {
+        // 재시도 연타·중복 요청 방지
+        if (uiState.value.isProfileLoading) return
+        updateState { copy(isProfileLoading = true) }
         viewModelScope.launch {
             resultResponse(
                 response = getMyProfileUseCase(),
@@ -72,6 +75,8 @@ class MycardViewModel @Inject constructor(
                     updateState {
                         copy(
                             userInfo = userInfo,
+                            isProfileLoading = false,
+                            isProfileLoadFailed = false,
                         )
                     }
                     generateMyUserCardQr(userInfo)
@@ -79,8 +84,11 @@ class MycardViewModel @Inject constructor(
 
                 },
                 errorCallback = {
-                    // 에러 발생 시에도 qr 생성을 위해 null값으로 qr 생성
-                    generateMyUserCardQr(null)
+                    // 실패를 상태로 올려 화면이 빈 카드 대신 실패 안내와 재시도를 보여주게 한다
+                    // (남의 회원 ID 로 QR 을 만들지 않는다)
+                    updateState { copy(isProfileLoading = false, isProfileLoadFailed = true) }
+                    // 이미 실패 상태에서 재시도가 또 실패해도 결과를 알 수 있게 토스트로 알린다
+                    emitEvent(MycardEvent.ProfileLoadFailed)
                 }
             )
         }
@@ -106,8 +114,9 @@ class MycardViewModel @Inject constructor(
 
             val positionString = representativeItem?.let { item ->
                 //파트명 변환 (UserPart Enum 활용, 없으면 빈 문자열)
-                val partLabel = runCatching { UserPart.from(item.responsiblePart).label }
-                    .getOrNull()?.let { "$it " } ?: ""
+                // from() 은 모르는 값에도 UNKNOWN("미정")을 돌려주므로 걸러서 '파트 없음'으로 다룬다
+                val partLabel = UserPart.from(item.responsiblePart)
+                    .takeUnless { it == UserPart.UNKNOWN }?.let { "${it.label} " } ?: ""
 
                 //직함명 변환 (displayName이 null이면 원본 role 사용)
                 val roleEnum = UserChallengerRole.from(item.role)
@@ -140,8 +149,8 @@ class MycardViewModel @Inject constructor(
      * 현재 애플리케이션이 없을 경우, 자동으로 playstore로 연결하는 딥링크를 준비했지만(qrDeepLinkUrl)
      * 디버깅 모드에서는 사용 불가 문제로 앱이 존재할 경우, 애플리케이션을 호출하는 qrDeepLinkUrlDebug를 사용 중입니다.
      */
-    private fun generateMyUserCardQr(userInfo: UserInfo?) {
-        val memberId = userInfo?.id ?: 21
+    private fun generateMyUserCardQr(userInfo: UserInfo) {
+        val memberId = userInfo.id
         val packageName = "com.umc.product"
 
         val qrDeepLinkUrl = "intent://card?memberId=$memberId#Intent;" +
@@ -150,7 +159,7 @@ class MycardViewModel @Inject constructor(
                 "S.browser_fallback_url=https://play.google.com/store/apps/details?id=$packageName;" +
                 "end"
 
-        val qrDeepLinkUrlDebug = "https://api.university.neordinary.com/community/threads/card?memberId=\$memberId"
+        val qrDeepLinkUrlDebug = "https://api.university.neordinary.com/community/threads/card?memberId=$memberId"
 
         updateState { copy(myQrcodeData = qrDeepLinkUrlDebug) }
 
@@ -228,6 +237,12 @@ data class MycardUiState(
 
     val userInfo: UserInfo = UserInfo(),
 
+    //내 프로필 조회 실패 여부 (성공하면 false로 되돌린다)
+    val isProfileLoadFailed: Boolean = false,
+
+    //내 프로필 조회 요청 진행 중 (다시 시도 버튼 비활성화용)
+    val isProfileLoading: Boolean = false,
+
     //명함 관련 정보
     val myRecentInfoString: String = "",
     val myQrcodeData: String = "",
@@ -249,5 +264,8 @@ data class MycardUiState(
 sealed interface MycardEvent : UiEvent {
     //이동하기
     object NavigateToMypage: MycardEvent
+
+    //내 프로필 조회 실패 (재시도 실패 포함) 안내
+    object ProfileLoadFailed: MycardEvent
 
 }

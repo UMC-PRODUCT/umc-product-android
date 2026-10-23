@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +33,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -36,6 +41,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
@@ -62,6 +70,7 @@ fun PermissionRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var toastData by remember { mutableStateOf<UToastData?>(null) }
 
     val requestPermissionsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -98,18 +107,30 @@ fun PermissionRoute(
             }
             PermissionEvent.MoveToMainEvent -> navigateToMain()
             PermissionEvent.MoveToFailEvent -> navigateToFail()
+            is PermissionEvent.ShowErrorToast ->
+                toastData = UToastData(event.message, UToastState.ERROR)
         }
     }
 
-    PermissionScreen(
-        uiState = uiState,
-        onClickBack = viewModel::onClickBack,
-        onClickAlarmCheck = viewModel::onClickAlarmCheck,
-        onClickLocationCheck = viewModel::onClickLocationCheck,
-        onClickPhotoCheck = viewModel::onClickPhotoCheck,
-        onClickAllCheck = viewModel::onClickAllCheck,
-        onClickSignUp = viewModel::onClickSignUp,
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        PermissionScreen(
+            uiState = uiState,
+            onClickBack = viewModel::onClickBack,
+            onClickAlarmCheck = viewModel::onClickAlarmCheck,
+            onClickLocationCheck = viewModel::onClickLocationCheck,
+            onClickPhotoCheck = viewModel::onClickPhotoCheck,
+            onClickAllCheck = viewModel::onClickAllCheck,
+            onClickSignUp = viewModel::onClickSignUp,
+        )
+
+        UToastHost(
+            data = toastData,
+            onDismiss = { toastData = null },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 56.dp),
+        )
+    }
 }
 
 @Composable
@@ -311,7 +332,7 @@ private fun PermissionItem(
     }
 }
 
-@Preview(showBackground = true)
+@PreviewScreenSizes
 @Composable
 private fun PermissionScreenPreview() {
     PermissionScreen()

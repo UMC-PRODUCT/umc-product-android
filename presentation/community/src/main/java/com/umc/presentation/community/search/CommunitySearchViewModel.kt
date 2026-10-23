@@ -64,6 +64,10 @@ class CommunitySearchViewModel @Inject constructor(
                 search()
             }
 
+            CommunitySearchAction.OnRetryClick -> {
+                search()
+            }
+
             CommunitySearchAction.OnClearQueryClick -> {
                 clearQuery()
             }

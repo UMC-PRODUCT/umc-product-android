@@ -51,17 +51,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.naver.maps.geometry.LatLng
-import com.naver.maps.map.CameraPosition
-import com.naver.maps.map.CameraUpdate
-import com.naver.maps.map.compose.CameraPositionState
 import com.naver.maps.map.compose.CameraUpdateReason
 import com.naver.maps.map.compose.ExperimentalNaverMapApi
 import com.naver.maps.map.compose.LocationTrackingMode
 import com.naver.maps.map.compose.MapProperties
 import com.naver.maps.map.compose.MapUiSettings
 import com.naver.maps.map.compose.NaverMap
-import com.naver.maps.map.compose.rememberCameraPositionState
 import com.naver.maps.map.compose.rememberFusedLocationSource
 import com.umc.component.R
 import com.umc.component.component.UButton
@@ -110,17 +105,9 @@ fun FixLocationRoute(
             ).show()
         }
     }
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition(LatLng(37.3943, 126.6388), 16.0)
-    }
 
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
-            is FixLocationEvent.MoveCameraTo -> {
-                cameraPositionState.animate(
-                    CameraUpdate.scrollTo(LatLng(event.latitude, event.longitude))
-                )
-            }
             is FixLocationEvent.ShowToast -> {
                 Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
@@ -134,7 +121,6 @@ fun FixLocationRoute(
 
     FixLocationScreen(
         uiState = uiState,
-        cameraPositionState = cameraPositionState,
         onSearchKeywordChange = viewModel::onSearchKeywordChanged,
         onSearchClick = viewModel::searchLocation,
         onRecentAddressClick = viewModel::searchRecentLocation,
@@ -172,9 +158,6 @@ fun FixLocationRoute(
 @Composable
 fun FixLocationScreen(
     uiState: FixLocationUiState = FixLocationUiState(),
-    cameraPositionState: CameraPositionState = rememberCameraPositionState {
-        position = CameraPosition(LatLng(37.3943, 126.6388), 16.0)
-    },
     onSearchKeywordChange: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
     onRecentAddressClick: (String) -> Unit = {},

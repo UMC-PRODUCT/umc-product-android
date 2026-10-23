@@ -1,10 +1,13 @@
 package com.umc.presentation.study.admin.group
 
+import com.umc.domain.model.enums.PermissionType
+import com.umc.domain.model.enums.ResourceType
 import com.umc.domain.model.enums.UserPart
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.organization.UpdateStudyGroupRequest
+import com.umc.domain.usecase.GetAuthAccessUseCase
 import com.umc.domain.usecase.organization.AddStudyGroupMemberUseCase
 import com.umc.domain.usecase.organization.DeleteStudyGroupMemberUseCase
 import com.umc.domain.usecase.organization.DeleteStudyGroupUseCase
@@ -40,6 +43,7 @@ class AdminStudyGroupViewModel @Inject constructor(
     private val deleteStudyGroupUseCase: DeleteStudyGroupUseCase,
     private val addStudyGroupMemberUseCase: AddStudyGroupMemberUseCase,
     private val deleteStudyGroupMemberUseCase: DeleteStudyGroupMemberUseCase,
+    private val getAuthAccessUseCase: GetAuthAccessUseCase,
 ) : BaseViewModel<
         AdminStudyGroupState,
         AdminStudyGroupEvent,
@@ -305,6 +309,17 @@ class AdminStudyGroupViewModel @Inject constructor(
                     uiState.value.deleteTargetItem
                         ?: return
 
+                // 삭제 요청 진행 중 연속 탭으로 DELETE 가 중복 전송되는 것 방지
+                if (uiState.value.isDeleting) {
+                    return
+                }
+
+                updateState {
+                    copy(
+                        isDeleting = true
+                    )
+                }
+
                 viewModelScope.launch {
                     when (
                         val result = deleteStudyGroupUseCase(
@@ -318,7 +333,8 @@ class AdminStudyGroupViewModel @Inject constructor(
                             // 삭제 Dialog 닫기
                             updateState {
                                 copy(
-                                    deleteTargetItem = null
+                                    deleteTargetItem = null,
+                                    isDeleting = false,
                                 )
                             }
 
@@ -336,6 +352,13 @@ class AdminStudyGroupViewModel @Inject constructor(
                          * 그룹 삭제 실패
                          */
                         is ApiState.Fail -> {
+                            // 실패 후 다시 시도할 수 있도록 중복 방지 상태 해제
+                            updateState {
+                                copy(
+                                    isDeleting = false
+                                )
+                            }
+
                             emitEvent(
                                 AdminStudyGroupEvent.ShowToast(
                                     "삭제에 실패했어요."
@@ -456,13 +479,14 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                 viewModelScope.launch {
                     var hasFailed = false
+                    var failMessage: String? = null
 
                     /**
                      * 삭제 대상 멤버 API 호출
                      */
                     memberIdsToDelete.forEach { memberId ->
                         when (
-                            deleteStudyGroupMemberUseCase(
+                            val result = deleteStudyGroupMemberUseCase(
                                 studyGroupId =
                                     targetGroup.groupId,
                                 memberId = memberId,
@@ -472,6 +496,9 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                             is ApiState.Fail -> {
                                 hasFailed = true
+                                if (failMessage == null) {
+                                    failMessage = result.failState.message
+                                }
                             }
                         }
                     }
@@ -481,7 +508,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                      */
                     memberIdsToAdd.forEach { memberId ->
                         when (
-                            addStudyGroupMemberUseCase(
+                            val result = addStudyGroupMemberUseCase(
                                 studyGroupId =
                                     targetGroup.groupId,
                                 memberId = memberId,
@@ -491,18 +518,17 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                             is ApiState.Fail -> {
                                 hasFailed = true
+                                if (failMessage == null) {
+                                    failMessage = result.failState.message
+                                }
                             }
                         }
                     }
 
                     /**
                      * 멤버 추가/삭제 중 하나라도 실패한 경우
-                     * 성공 처리하지 않습니다.
+                     * 실패 토스트를 띄우고 목록을 다시 불러옵니다.
                      */
-                    if (hasFailed) {
-                        return@launch
-                    }
-
                     // 멤버 수정 BottomSheet 닫기
                     updateState {
                         copy(
@@ -511,12 +537,18 @@ class AdminStudyGroupViewModel @Inject constructor(
                         )
                     }
 
-                    // 변경된 멤버 목록 반영
+                    // 일부만 반영됐을 수 있으므로 성공/실패 모두 실제 상태로 목록 갱신
                     loadManagedStudyGroups()
 
                     emitEvent(
                         AdminStudyGroupEvent.ShowToast(
-                            "스터디원이 수정됐어요."
+                            if (hasFailed) {
+                                // 서버 메시지(예: 권한 없음)를 우선 안내하고, 없으면 기본 문구 표시
+                                failMessage?.takeIf { it.isNotBlank() }
+                                    ?: "스터디원 수정에 실패했어요."
+                            } else {
+                                "스터디원이 수정됐어요."
+                            }
                         )
                     )
                 }
@@ -556,8 +588,13 @@ class AdminStudyGroupViewModel @Inject constructor(
                 is ApiState.Success -> {
                     val page = result.data
 
+                    // 권한이 없어도 빈 목록이 내려오므로, 빈 경우에만 조회 권한을 확인해 구분
+                    val canRead = page.content.isNotEmpty() || checkStudyGroupReadAccess()
+
                     updateState {
                         copy(
+                            hasReadAccess = canRead,
+
                             // Domain 모델을 화면용 UI 모델로 변환
                             groups = page.content.map { group ->
                                 group.toUiModel()
@@ -594,6 +631,21 @@ class AdminStudyGroupViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * 스터디 그룹 조회(READ) 권한 보유 여부를 확인합니다.
+     *
+     * 조회에 실패하면 true로 간주해 기존 빈 목록 문구로 폴백합니다.
+     */
+    private suspend fun checkStudyGroupReadAccess(): Boolean =
+        when (val result = getAuthAccessUseCase(ResourceType.STUDY_GROUP, 0L)) {
+            is ApiState.Success ->
+                result.data.permissions.any { permission ->
+                    permission.type == PermissionType.READ && permission.hasPermission
+                }
+
+            is ApiState.Fail -> true
+        }
 
     /**
      * 화면 표시용 파트 이름을 서버 API 값으로 바꿉니다.

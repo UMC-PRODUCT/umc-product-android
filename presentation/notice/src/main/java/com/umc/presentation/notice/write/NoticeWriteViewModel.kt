@@ -93,6 +93,16 @@ class NoticeWriteViewModel @Inject constructor(
         resultResponse(
             response = getNoticeDetailUseCase(noticeId),
             successCallback = { detail ->
+                val serverVote = detail.vote?.let { vote ->
+                    NoticeVoteForm(
+                        title = vote.title,
+                        options = vote.options.map { it.content },
+                        isAnonymous = vote.isAnonymous,
+                        allowMultipleChoice = vote.allowMultipleChoice,
+                        startsAt = vote.startsAt.takeIf { it.isNotBlank() },
+                        endsAt = vote.endsAtExclusive.takeIf { it.isNotBlank() },
+                    )
+                }
                 val linkText = detail.links
                     .sortedBy { it.displayOrder }
                     .joinToString(", ") { it.url }
@@ -102,24 +112,21 @@ class NoticeWriteViewModel @Inject constructor(
                         content = TextFieldValue(detail.content),
                         isLinkVisible = linkText.isNotBlank(),
                         linkText = linkText,
+                        // 이미지 교체(PATCH)에는 이미지 행 id가 아니라 서버가 준 fileId를 보내야 한다.
+                        // fileId가 없는 항목은 폼에 채울 수 없어 제외하고, 이 경우 사용자가 이미지를 직접 바꾸기 전에는
+                        // 이미지 PATCH(전체 교체)를 보내지 않아 제외된 이미지가 저장 때 지워지지 않게 한다
+                        hasUnrestoredImages = detail.images.any { it.fileId.isBlank() },
                         images = detail.images
+                            .filter { it.fileId.isNotBlank() }
                             .sortedBy { it.displayOrder }
-                            .map { NoticeImageAttachment(uri = it.url, fileId = it.id.toString()) }
+                            .map { NoticeImageAttachment(uri = it.url, fileId = it.fileId) }
                             .toImmutableList(),
-                        // 투표도 수정 대상이라 폼으로 되돌려 채운다
-                        vote = detail.vote?.let { vote ->
-                            NoticeVoteForm(
-                                title = vote.title,
-                                options = vote.options.map { it.content },
-                                isAnonymous = vote.isAnonymous,
-                                allowMultipleChoice = vote.allowMultipleChoice,
-                                startsAt = vote.startsAt.takeIf { it.isNotBlank() },
-                                endsAt = vote.endsAtExclusive.takeIf { it.isNotBlank() },
-                            )
-                        },
+                        // 투표도 수정 대상이라 폼으로 되돌려 채운다. 서버에 있는 투표와 같은 값을 따로 들고 있어야
+                        // 저장 때 건드리지 않은 투표를 지웠다 다시 만들지 않는다
+                        vote = serverVote,
+                        serverVote = serverVote,
                         // 필독 여부를 들고 있지 않으면 수정 저장 시 고정이 풀린다
                         mustRead = detail.mustRead,
-                        originalVoteId = detail.vote?.voteId ?: -1L,
                     )
                 }
             },
@@ -391,7 +398,7 @@ class NoticeWriteViewModel @Inject constructor(
                     copy(
                         isAiProcessing = false,
                         aiDownloadPercent = null,
-                        content = MarkdownEditActions.insertText(content, summary),
+                        content = MarkdownEditActions.insertText(content, summary).endComposition(),
                     )
                 }
             },
@@ -408,31 +415,31 @@ class NoticeWriteViewModel @Inject constructor(
 
     /** 텍스트 크기 변경. 커서가 위치한 줄의 제목 prefix 교체 */
     fun onSelectHeading(heading: MarkdownHeading) {
-        updateState { copy(content = MarkdownEditActions.applyHeading(content, heading)) }
+        updateState { copy(content = MarkdownEditActions.applyHeading(content, heading).endComposition()) }
     }
 
     fun onClickBold() {
-        updateState { copy(content = MarkdownEditActions.toggleBold(content)) }
+        updateState { copy(content = MarkdownEditActions.toggleBold(content).endComposition()) }
     }
 
     fun onClickItalic() {
-        updateState { copy(content = MarkdownEditActions.toggleItalic(content)) }
+        updateState { copy(content = MarkdownEditActions.toggleItalic(content).endComposition()) }
     }
 
     fun onClickUnderline() {
-        updateState { copy(content = MarkdownEditActions.toggleUnderline(content)) }
+        updateState { copy(content = MarkdownEditActions.toggleUnderline(content).endComposition()) }
     }
 
     fun onClickStrikethrough() {
-        updateState { copy(content = MarkdownEditActions.toggleStrikethrough(content)) }
+        updateState { copy(content = MarkdownEditActions.toggleStrikethrough(content).endComposition()) }
     }
 
     fun onClickBullet() {
-        updateState { copy(content = MarkdownEditActions.toggleBullet(content)) }
+        updateState { copy(content = MarkdownEditActions.toggleBullet(content).endComposition()) }
     }
 
     fun onClickQuote() {
-        updateState { copy(content = MarkdownEditActions.toggleQuote(content)) }
+        updateState { copy(content = MarkdownEditActions.toggleQuote(content).endComposition()) }
     }
 
     /** 형광펜 색상 선택. 고른 색을 적용하고 다음 선택의 기본값으로 기억한다 */
@@ -443,7 +450,7 @@ class NoticeWriteViewModel @Inject constructor(
             emitEvent(NoticeWriteEvent.ShowError(AppStrings.NOTICE_WRITE_HIGHLIGHT_NEEDS_SELECTION))
             return
         }
-        updateState { copy(highlightColor = color, content = applied) }
+        updateState { copy(highlightColor = color, content = applied.endComposition()) }
     }
 
     // ---------------------------------------------------------------
@@ -468,6 +475,7 @@ class NoticeWriteViewModel @Inject constructor(
                 successCallback = { uploaded ->
                     updateState {
                         copy(
+                            hasUnrestoredImages = false,
                             images = (images + NoticeImageAttachment(
                                 uri = uri,
                                 fileId = uploaded.fileId,
@@ -486,7 +494,7 @@ class NoticeWriteViewModel @Inject constructor(
     }
 
     fun onRemoveImage(image: NoticeImageAttachment) {
-        updateState { copy(images = (images - image).toImmutableList()) }
+        updateState { copy(hasUnrestoredImages = false, images = (images - image).toImmutableList()) }
     }
 
     /** 링크 첨부 패널 표시 (툴바 링크 버튼) */
@@ -521,18 +529,21 @@ class NoticeWriteViewModel @Inject constructor(
         val state = uiState.value
         if (!state.enableRegister || state.isSubmitting) return@launch
 
-        if (state.isEditMode) {
+        // 수정 모드이거나, 이미 생성은 됐지만 일부 항목 연결에 실패해 다시 등록을 누른 경우에는
+        // 새로 만들지 않고 만들어진 공지를 수정(PATCH)하는 경로로 재시도한다
+        val existingId: Long? = if (state.isEditMode) state.editNoticeId else state.createdNoticeId
+        if (existingId != null) {
             updateState { copy(isSubmitting = true) }
             resultResponse(
                 response = updateNoticeUseCase(
-                    state.editNoticeId,
+                    existingId,
                     NoticeUpdateRequest(
                         title = state.title.trim(),
                         content = state.content.text,
                         mustRead = state.mustRead,
                     )
                 ),
-                successCallback = { attachExtras(state.editNoticeId) },
+                successCallback = { attachExtras(existingId, isReplace = true) },
                 errorCallback = {
                     updateState { copy(isSubmitting = false) }
                     emitEvent(NoticeWriteEvent.ShowError(it.message))
@@ -557,7 +568,11 @@ class NoticeWriteViewModel @Inject constructor(
                     targetInfo = target,
                 )
             ),
-            successCallback = { noticeId -> attachExtras(noticeId) },
+            successCallback = { noticeId ->
+                // 일부 항목 연결이 실패해도 다시 등록했을 때 중복 생성되지 않도록 생성된 ID를 기억한다
+                updateState { copy(createdNoticeId = noticeId) }
+                attachExtras(noticeId, isReplace = false)
+            },
             errorCallback = {
                 updateState { copy(isSubmitting = false) }
                 emitEvent(NoticeWriteEvent.ShowError(it.message))
@@ -647,14 +662,20 @@ class NoticeWriteViewModel @Inject constructor(
         )
     }
 
-    /** 공지 생성 후 이미지/링크/투표를 순서대로 연결 */
-    private fun attachExtras(noticeId: Long) = viewModelScope.launch {
+    /**
+     * 공지 생성 후 이미지/링크/투표를 순서대로 연결.
+     * [isReplace]는 수정이거나 부분 실패 후 재시도라서 이미 연결된 항목이 있을 수 있는 경우다
+     */
+    private fun attachExtras(noticeId: Long, isReplace: Boolean) = viewModelScope.launch {
         val state = uiState.value
         var hasError = false
 
         val imageIds = state.images.map { it.fileId }
-        // 수정은 전체 교체(PATCH)로 보내야 기존 이미지가 중복되지 않고, 지운 것도 반영된다
-        if (state.isEditMode) {
+        // 수정·재시도는 전체 교체(PATCH)로 보내야 기존 이미지가 중복되지 않고, 지운 것도 반영된다
+        // 단, 서버 이미지 일부를 폼에 복원하지 못했고 사용자가 이미지를 건드리지 않았다면 보내지 않는다
+        if (isReplace && state.hasUnrestoredImages) {
+            // 이미지 변경 없음: 서버에 있는 이미지를 그대로 둔다
+        } else if (isReplace) {
             resultResponse(
                 response = updateNoticeImagesUseCase(noticeId, imageIds),
                 successCallback = { },
@@ -675,7 +696,7 @@ class NoticeWriteViewModel @Inject constructor(
             ?.filter { it.isNotBlank() }
             .orEmpty()
         // 링크는 원래 전체 교체 API라, 수정 시에는 비어 있어도 보내야 삭제가 반영된다
-        if (links.isNotEmpty() || state.isEditMode) {
+        if (links.isNotEmpty() || isReplace) {
             resultResponse(
                 response = addNoticeLinksUseCase(noticeId, links),
                 successCallback = { },
@@ -683,32 +704,43 @@ class NoticeWriteViewModel @Inject constructor(
             )
         }
 
-        // 투표는 공지당 1개라 갈아끼우려면 기존 것을 먼저 지운다
+        // 투표는 삭제하면 참여 결과도 함께 사라지므로, 서버에 있는 투표(serverVote)와 폼이 같으면
+        // 지우지도 다시 만들지도 않는다. 공지당 1개라 바뀐 경우에만 기존 것을 먼저 지우고 새로 만든다
         val newVote = state.vote?.takeIf { it.canSubmit }
-        if (state.isEditMode && state.originalVoteId > 0L) {
-            resultResponse(
-                response = deleteNoticeVoteUseCase(noticeId),
-                successCallback = { },
-                errorCallback = { hasError = true },
-            )
-        }
+        if (state.vote != state.serverVote) {
+            var isServerVoteRemoved = state.serverVote == null
+            if (state.serverVote != null) {
+                resultResponse(
+                    response = deleteNoticeVoteUseCase(noticeId),
+                    successCallback = {
+                        isServerVoteRemoved = true
+                        updateState { copy(serverVote = null) }
+                    },
+                    errorCallback = { hasError = true },
+                )
+            }
 
-        newVote?.let { vote ->
-            resultResponse(
-                response = addNoticeVoteUseCase(
-                    noticeId,
-                    NoticeVoteRequest(
-                        title = vote.title.trim().ifBlank { AppStrings.NOTICE_WRITE_VOTE_TITLE },
-                        isAnonymous = vote.isAnonymous,
-                        allowMultipleChoice = vote.allowMultipleChoice,
-                        startsAt = vote.startsAt.orEmpty(),
-                        endsAtExclusive = vote.endsAt.orEmpty(),
-                        options = vote.validOptions,
+            // 지우기에 실패했다면 이미 투표가 있는 상태라 추가가 항상 실패하므로 시도하지 않는다
+            if (isServerVoteRemoved) {
+                newVote?.let { vote ->
+                    resultResponse(
+                        response = addNoticeVoteUseCase(
+                            noticeId,
+                            NoticeVoteRequest(
+                                title = vote.title.trim().ifBlank { AppStrings.NOTICE_WRITE_VOTE_TITLE },
+                                isAnonymous = vote.isAnonymous,
+                                allowMultipleChoice = vote.allowMultipleChoice,
+                                startsAt = vote.startsAt.orEmpty(),
+                                endsAtExclusive = vote.endsAt.orEmpty(),
+                                options = vote.validOptions,
+                            )
+                        ),
+                        // 재시도 때 이미 만든 투표를 다시 추가하지 않도록 서버 상태를 기록한다
+                        successCallback = { updateState { copy(serverVote = vote) } },
+                        errorCallback = { hasError = true },
                     )
-                ),
-                successCallback = { },
-                errorCallback = { hasError = true },
-            )
+                }
+            }
         }
 
         updateState { copy(isSubmitting = false) }
@@ -739,9 +771,13 @@ data class NoticeWriteUiState(
     val sendNotification: Boolean = true,
     /** 상세에서 불러온 필독 여부. 수정 저장 시 그대로 돌려보낸다 */
     val mustRead: Boolean = false,
-    /** 수정 진입 시 이미 달려 있던 투표 ID. 투표를 갈아끼울 때 먼저 지운다 */
-    val originalVoteId: Long = -1L,
+    /** 지금 서버에 달려 있는 투표. 폼과 같으면 저장 때 건드리지 않고, 다르면 지우고 새로 만든다 */
+    val serverVote: NoticeVoteForm? = null,
+    /** 신규 작성에서 이미 생성된 공지 ID. 일부 항목 연결 실패 후 재등록 때 중복 생성을 막는다 */
+    val createdNoticeId: Long? = null,
     val images: ImmutableList<NoticeImageAttachment> = persistentListOf(),
+    /** 수정 진입 시 fileId가 없어 폼에 복원하지 못한 서버 이미지가 있는지. 사용자가 이미지를 바꾸면 false */
+    val hasUnrestoredImages: Boolean = false,
     val isUploadingImages: Boolean = false,
     val isLinkVisible: Boolean = false,
     val linkText: String = "",
@@ -763,9 +799,13 @@ data class NoticeWriteUiState(
         get() = isAllSelected || isStaffSelected
                 || selectedChapter != null || selectedSchool != null || selectedPart != null
 
-    // 수정 모드에서는 수신 대상을 바꿀 수 없으므로 카테고리/분류 조건 제외
+    // 수정 모드이거나 이미 공지가 만들어진 뒤(부분 실패 재등록)에는 수신 대상을 바꿀 수 없다
+    val isTargetLocked: Boolean
+        get() = isEditMode || createdNoticeId != null
+
+    // 수신 대상이 잠겨 있으면 카테고리/분류 조건 제외
     val enableRegister: Boolean
-        get() = (isEditMode || (selectedCategory != null && (boardChips.isEmpty() || hasBoardSelection)))
+        get() = (isTargetLocked || (selectedCategory != null && (boardChips.isEmpty() || hasBoardSelection)))
                 && title.isNotBlank()
                 && content.text.isNotBlank()
                 && !isSubmitting

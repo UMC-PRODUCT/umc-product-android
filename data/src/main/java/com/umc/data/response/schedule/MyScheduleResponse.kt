@@ -2,6 +2,7 @@ package com.umc.data.response.schedule
 
 import com.google.gson.annotations.SerializedName
 import com.umc.domain.model.UDomainFormat.parseDateTime
+import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.home.schedule.ScheduleMonthModel
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -34,7 +35,11 @@ data class MyScheduleItemResponse(
                 endDay = endDay,     // "2026.08.20"
                 endTime = endTime,   // "03:00"
                 status = attendanceStatus ?: "PENDING",
-                dDay = 0 // 필요시 UI 단에서 계산
+                dDay = 0, // 필요시 UI 단에서 계산
+                // 앱이 모르는 서버 태그 값은 버리고 중복은 제거
+                tags = tags.orEmpty()
+                    .mapNotNull { raw -> CategoryType.entries.firstOrNull { it.name == raw } }
+                    .distinct()
             )
         }
     }

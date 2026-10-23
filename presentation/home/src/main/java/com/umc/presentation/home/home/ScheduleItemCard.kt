@@ -2,10 +2,11 @@ package com.umc.presentation.home.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,10 +20,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
-import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
@@ -35,7 +37,9 @@ import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
+import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.home.SchedulePlanItem
+import com.umc.presentation.home.schedule.ScheduleTagChips
 
 /**
  *
@@ -116,21 +120,31 @@ fun ActiveScheduleItem(
                     style = UmcTypographyTokens.Footnote,
                     color = grey600()
                 )
+                //일정 태그 칩 (최대 3개 + '+N')
+                ScheduleTagChips(
+                    tags = item.tags,
+                    maxVisible = 3,
+                    modifier = Modifier.padding(top = 6.dp)
+                )
             }
 
-            //D-Day 버튼
+            //D-Day 칩 (클릭 불가: 터치를 Card 의 clickable 로 그대로 전달)
             if (item.dDay != null) {
-                UButton(
-                    text = item.dDay!!,
-                    backgroundColor = grey100(),
-                    textColor = grey700(),
-                    textStyle = UmcTypographyTokens.Caption1Bold,
+                Box(
                     modifier = Modifier
                         .padding(end = 16.dp)
-                        .height(24.dp),
-                    onClick = {},
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                )
+                        .height(24.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(grey100())
+                        .padding(horizontal = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    UText(
+                        text = item.dDay!!,
+                        style = UmcTypographyTokens.Caption1Bold,
+                        color = grey700()
+                    )
+                }
             }
 
             //화살표 아이콘
@@ -199,6 +213,13 @@ fun DefaultScheduleItem(
                     style = UmcTypographyTokens.Footnote,
                     color = grey400()
                 )
+                //일정 태그 칩 (최대 3개 + '+N')
+                ScheduleTagChips(
+                    tags = item.tags,
+                    maxVisible = 3,
+                    textColor = grey400(),
+                    modifier = Modifier.padding(top = 6.dp)
+                )
             }
 
             Icon(
@@ -208,4 +229,64 @@ fun DefaultScheduleItem(
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ScheduleItemCardTagPreview() {
+    ScheduleItemCard(
+        item = SchedulePlanItem(
+            id = 1L,
+            title = "스터디",
+            time = "10:00",
+            date = "2026.10.12",
+            dayOfWeek = "MON",
+            day = "12",
+            dDay = "D-Day",
+            isPast = false,
+            plusDay = 0,
+            tags = listOf(CategoryType.STUDY)
+        ),
+        onItemClick = {}
+    )
+}
+
+@Preview(showBackground = true, widthDp = 320)
+@Composable
+private fun ScheduleItemCardManyTagsPreview() {
+    ScheduleItemCard(
+        item = SchedulePlanItem(
+            id = 2L,
+            title = "UMC 10기 전체 오리엔테이션 및 네트워킹 데이",
+            time = "10:00",
+            date = "2026.10.12",
+            dayOfWeek = "MON",
+            day = "12",
+            dDay = "참여 예정",
+            isPast = false,
+            plusDay = 0,
+            tags = CategoryType.entries.toList()
+        ),
+        onItemClick = {}
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ScheduleItemCardPastTagPreview() {
+    ScheduleItemCard(
+        item = SchedulePlanItem(
+            id = 3L,
+            title = "스터디",
+            time = "10:00",
+            date = "2026.10.05",
+            dayOfWeek = "MON",
+            day = "05",
+            dDay = null,
+            isPast = true,
+            plusDay = 0,
+            tags = listOf(CategoryType.STUDY)
+        ),
+        onItemClick = {}
+    )
 }

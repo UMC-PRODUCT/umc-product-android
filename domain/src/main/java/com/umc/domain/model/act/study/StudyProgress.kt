@@ -21,5 +21,7 @@ data class WorkbookProgress(
     val missionType: WorkbookMissionType,
     val status: WorkbookStatus,
     val isReleased: Boolean,
-    val isInProgress: Boolean
+    val isInProgress: Boolean,
+    // 마지막 미션 피드백 내용. 없으면 null
+    val feedbackMessage: String? = null,
 )

@@ -7,6 +7,7 @@ import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadMember
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.ParticipantItem
+import com.umc.domain.usecase.ai.CommunityCategoryRules
 import com.umc.domain.usecase.community.DeleteCommunityThreadUseCase
 import com.umc.domain.usecase.community.GetCommunityThreadDetailUseCase
 import com.umc.domain.usecase.community.GetCommunityThreadMembersUseCase
@@ -146,6 +147,13 @@ class CommunityEditViewModel @Inject constructor(
         threadId: String,
     ) {
         if (threadId.isBlank()) {
+            // 로딩이 기본값(true)이라 조회 없이 끝나는 경우에도 로딩을 해제한다.
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                )
+            }
+
             sendEvent(
                 CommunityEditEvent.ShowToast(
                     message = "스레드 정보를 확인할 수 없어요.",
@@ -389,6 +397,14 @@ class CommunityEditViewModel @Inject constructor(
         title: String,
         description: String,
     ): ClassificationResult {
+        // 생성 화면과 같은 신호어 규칙을 먼저 적용한다. 기기 AI 는 쓰지 않는다.
+        CommunityCategoryRules.classify(title, description)?.let { code ->
+            return ClassificationResult(
+                aiState = CommunityAiState.SUCCESS,
+                category = code.toCommunityCategory(),
+            )
+        }
+
         val targetText =
             "$title $description".lowercase()
 
@@ -431,6 +447,11 @@ class CommunityEditViewModel @Inject constructor(
     private fun saveThread() {
         val currentState = _state.value
 
+        // 저장 요청 중(성공 후 화면이 닫히기 전 포함)의 추가 탭은 무시한다.
+        if (currentState.isSaving) {
+            return
+        }
+
         if (!currentState.isSaveEnabled) {
             sendEvent(
                 CommunityEditEvent.ShowToast(
@@ -465,12 +486,7 @@ class CommunityEditViewModel @Inject constructor(
                 icon = currentState.selectedIcon,
             ).onSuccess {
 
-                _state.update {
-                    it.copy(
-                        isSaving = false,
-                    )
-                }
-
+                // 성공 후에는 화면이 닫힐 때까지 isSaving 을 유지해 완료 버튼 재활성(PATCH 중복)을 막는다.
                 sendEvent(
                     CommunityEditEvent.SaveSuccess
                 )
@@ -536,12 +552,7 @@ class CommunityEditViewModel @Inject constructor(
                 threadId = currentState.threadId,
             ).onSuccess {
 
-                _state.update {
-                    it.copy(
-                        isDeleting = false,
-                    )
-                }
-
+                // 성공 후에는 화면이 닫힐 때까지 isDeleting 을 유지해 DELETE 중복 전송을 막는다.
                 sendEvent(
                     CommunityEditEvent.DeleteSuccess
                 )
@@ -583,6 +594,19 @@ class CommunityEditViewModel @Inject constructor(
         private const val CURRENT_MEMBER_PAGE_SIZE = 100
         private const val MEMBER_MATCH_PAGE_SIZE = 100
         private const val OWNER_ROLE = "OWNER"
+    }
+}
+
+/**
+ * 분류 규칙 코드 → UI 카테고리 (알 수 없는 값은 FREE)
+ */
+private fun String.toCommunityCategory():
+        CommunityCategory {
+    return when (this) {
+        "STUDY" -> CommunityCategory.STUDY
+        "PROJECT" -> CommunityCategory.PROJECT
+        "QNA" -> CommunityCategory.QNA
+        else -> CommunityCategory.FREE
     }
 }
 

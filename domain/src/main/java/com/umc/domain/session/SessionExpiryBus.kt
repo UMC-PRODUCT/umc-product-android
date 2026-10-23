@@ -1,4 +1,4 @@
-package com.umc.component.base
+package com.umc.domain.session
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow

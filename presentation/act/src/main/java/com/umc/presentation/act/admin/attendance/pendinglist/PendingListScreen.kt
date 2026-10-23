@@ -71,7 +71,7 @@ import com.umc.component.base.CollectUiEvents
 @Composable
 fun PendingListRoute(
     scheduleId: Long = 0L,
-    initialUsers: ImmutableList<AdminPendingUser> = persistentListOf(),
+    initialUsers: ImmutableList<AdminPendingUser>? = null,
     viewModel: PendingListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
