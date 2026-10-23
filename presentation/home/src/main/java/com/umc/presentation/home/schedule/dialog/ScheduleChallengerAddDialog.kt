@@ -410,7 +410,7 @@ fun AddedParticipantRow(
             .weight(1f)
         ) {
             UText(
-                text = "${item.name}/${item.nickname} (${item.gisu}기)",
+                text = "${item.displayName()} (${item.gisu}기)",
                 style = UmcTypographyTokens.SubheadlineBold,
                 color = grey800()
             )
@@ -480,7 +480,7 @@ fun SearchParticipantRow(
             .weight(1f)
         ) {
             UText(
-                text = "${item.name}/${item.nickname} (${item.gisu}기)",
+                text = "${item.displayName()} (${item.gisu}기)",
                 style = UmcTypographyTokens.SubheadlineBold,
                 color = grey800()
             )
@@ -538,4 +538,7 @@ private fun processSearchResults(results: List<ParticipantItem>): List<SearchRes
                     members.map { SearchResultItem.Participant(it) }
         }
 }
-    
+
+/** 이름·닉네임 중 비어 있는 쪽은 빼고 이어 붙여 "이름/" 이나 "/닉네임" 처럼 보이지 않게 한다. */
+private fun ParticipantItem.displayName(): String =
+    listOf(name, nickname).filter { it.isNotBlank() }.joinToString("/")
