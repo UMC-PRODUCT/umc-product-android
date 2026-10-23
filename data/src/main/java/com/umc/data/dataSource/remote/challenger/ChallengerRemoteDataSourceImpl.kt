@@ -7,7 +7,7 @@ import com.umc.data.response.challenger.ChallengerResponse
 import com.umc.data.response.challenger.ChallengerCursorResponse
 import com.umc.data.response.member.MemberResponse
 import com.umc.domain.model.base.ApiState
-import com.umc.domain.model.base.map
+import com.umc.domain.model.base.mapCatching
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
 import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
 import javax.inject.Inject
@@ -34,6 +34,7 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
         nickname: String?,
         keyword: String?
     ): ApiState<ChallengerCursorResponse> {
+        // 변환은 apiCall 밖에서 일어나 예외가 잡히지 않는다. 응답이 약속과 달라도 앱이 종료되지 않게 실패로 바꾼다.
         return apiCall {
             challengerApi.getChallengers(
                 page = cursor?.toInt() ?: 0,
@@ -44,7 +45,7 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
                 chapterId = null,
                 gisuId = gisuId
             )
-        }.map { it.toCursorResponse() }
+        }.mapCatching { it.toCursorResponse() }
     }
 
     override suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit> {

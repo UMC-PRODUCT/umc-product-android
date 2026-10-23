@@ -15,7 +15,9 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 /**
@@ -159,11 +161,14 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
             return
         }
 
-        loadMembers(
-            keyword = currentState.query.trim(),
-            cursor = nextCursor,
-            append = true,
-        )
+        // 검색어가 바뀌면 searchMembers 가 이 Job 을 취소해 이전 검색어의 다음 페이지가 붙지 않게 한다.
+        searchJob = viewModelScope.launch {
+            loadMembers(
+                keyword = currentState.query.trim(),
+                cursor = nextCursor,
+                append = true,
+            )
+        }
     }
 
     /**
@@ -255,88 +260,90 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
     /**
      * 챌린저 검색 API 호출
      *
+     * 호출한 쪽의 searchJob 안에서 실행되므로, 검색어가 바뀌어 Job 이 취소되면
+     * 늦게 도착한 이전 검색 결과가 화면을 덮어쓰지 않는다.
+     *
      * @param keyword 검색할 이름
      * @param cursor 다음 페이지 조회용 cursor
      * @param append true일 경우 기존 검색 결과 뒤에 추가
      */
-    private fun loadMembers(
+    private suspend fun loadMembers(
         keyword: String,
         cursor: Long?,
         append: Boolean,
     ) {
-        viewModelScope.launch {
-            updateState {
-                if (append) {
+        updateState {
+            if (append) {
+                copy(
+                    isLoadingMore = true,
+                    errorMessage = null,
+                )
+            } else {
+                copy(
+                    isLoading = true,
+                    errorMessage = null,
+                )
+            }
+        }
+
+        val response = searchCommunityCreateMembersUseCase(
+            cursor = cursor,
+            size = PAGE_SIZE,
+            keyword = keyword,
+        )
+
+        // apiCall 이 취소 예외를 Fail 로 바꾸므로, 취소된 조회는 여기서 멈춘다(실패 토스트도 띄우지 않음)
+        currentCoroutineContext().ensureActive()
+
+        when (response) {
+            is ApiState.Success -> {
+                val page = response.data
+
+                val newMembers = page.content
+                    // 스레드 생성자인 로그인 사용자는 검색 결과에서 제외
+                    .filter { participant ->
+                        participant.id != myMemberId
+                    }
+                    // Domain 모델을 화면용 UI 모델로 변환
+                    .map { participant ->
+                        participant.toCommunityChallengerUiModel()
+                    }
+
+                updateState {
+                    // 페이지네이션이면 기존 결과 뒤에 붙인다. 목록 key 가 memberId 라
+                    // 같은 회원이 두 번 오면 Compose 가 앱을 종료시키므로 첫 페이지도 중복을 제거한다.
+                    val mergedMembers = (if (append) searchResults + newMembers else newMembers)
+                        .distinctBy { member ->
+                            member.memberId
+                        }
+                        .toImmutableList()
+
                     copy(
-                        isLoadingMore = true,
-                        errorMessage = null,
-                    )
-                } else {
-                    copy(
-                        isLoading = true,
+                        searchResults = mergedMembers,
+                        isLoading = false,
+                        isLoadingMore = false,
+                        nextCursor = page.nextCursor,
+                        hasNext = page.hasNext,
                         errorMessage = null,
                     )
                 }
             }
 
-            when (
-                val response = searchCommunityCreateMembersUseCase(
-                    cursor = cursor,
-                    size = PAGE_SIZE,
-                    keyword = keyword,
-                )
-            ) {
-                is ApiState.Success -> {
-                    val page = response.data
-
-                    val newMembers = page.content
-                        // 스레드 생성자인 로그인 사용자는 검색 결과에서 제외
-                        .filter { participant ->
-                            participant.id != myMemberId
-                        }
-                        // Domain 모델을 화면용 UI 모델로 변환
-                        .map { participant ->
-                            participant.toCommunityChallengerUiModel()
-                        }
-
-                    updateState {
-                        val mergedMembers = if (append) {
-                            // 페이지네이션 결과를 기존 결과와 합치고 중복 제거
-                            (searchResults + newMembers)
-                                .distinctBy { member ->
-                                    member.memberId
-                                }
-                        } else {
-                            newMembers
-                        }.toImmutableList()
-
-                        copy(
-                            searchResults = mergedMembers,
-                            isLoading = false,
-                            isLoadingMore = false,
-                            nextCursor = page.nextCursor,
-                            hasNext = page.hasNext,
-                            errorMessage = null,
-                        )
-                    }
-                }
-
-                is ApiState.Fail -> {
-                    updateState {
-                        copy(
-                            isLoading = false,
-                            isLoadingMore = false,
-                            errorMessage =
-                                "챌린저 검색 결과를 불러오지 못했어요.",
-                        )
-                    }
-
-                    emitEvent(
-                        CommunityCreateMemberBottomSheetEvent.ShowToast(
-                            message = "챌린저 검색 결과를 불러오지 못했어요.",
-                        )
+            is ApiState.Fail -> {
+                updateState {
+                    copy(
+                        isLoading = false,
+                        isLoadingMore = false,
+                        errorMessage =
+                            "챌린저 검색 결과를 불러오지 못했어요.",
                     )
                 }
+
+                emitEvent(
+                    CommunityCreateMemberBottomSheetEvent.ShowToast(
+                        message = "챌린저 검색 결과를 불러오지 못했어요.",
+                    )
+                )
             }
         }
     }
