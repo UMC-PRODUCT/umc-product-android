@@ -51,6 +51,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import com.umc.component.component.UText
+import com.umc.component.component.UTextField
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -132,7 +138,6 @@ fun CommunityChattingScreen(
     val onCamera = { onAction(CommunityChattingAction.OnCameraClick) }
     val onSendImages: (List<String>) -> Unit = { onAction(CommunityChattingAction.OnSendImages(it)) }
     val onDraftChange: (String) -> Unit = { onAction(CommunityChattingAction.OnDraftChanged(it)) }
-    val onSend: (String?) -> Unit = { onAction(CommunityChattingAction.OnSendClick(it)) }
     val onLoadPrevious = { onAction(CommunityChattingAction.OnLoadPrevious) }
     val onDeleteMessage: (String) -> Unit = { onAction(CommunityChattingAction.OnDeleteMessage(it)) }
     val onReact: (CommunityThreadMessage, String) -> Unit = { message, emoji ->
@@ -190,6 +195,11 @@ fun CommunityChattingScreen(
     var wasUserScrolling by remember { mutableStateOf(false) }
     var selectedMessage by remember { mutableStateOf<CommunityThreadMessage?>(null) }
     var replyingMessage by remember { mutableStateOf<CommunityThreadMessage?>(null) }
+    // 참여자 태그 UI 임시 비활성화.
+    // var showMentionPicker by remember { mutableStateOf(false) }
+    var navigationTarget by remember { mutableStateOf<String?>(null) }
+    var navigationMessage by remember { mutableStateOf<String?>(null) }
+
     var emojiPickerMessage by remember { mutableStateOf<CommunityThreadMessage?>(null) }
     var pendingDeleteConfirmationId by remember { mutableStateOf<String?>(null) }
     var showLeaveDialog by remember { mutableStateOf(false) }
@@ -200,6 +210,80 @@ fun CommunityChattingScreen(
     }
     // 참여하지 않았거나 나간 스레드는 읽기만 가능하다(서버 역할 없음 = UNKNOWN).
     val isViewOnly = state.thread?.myRole == CommunityThreadRole.UNKNOWN
+    val navigationCursors = remember(navigationTarget) { hashSetOf<String?>() }
+    LaunchedEffect(navigationTarget, state.messages, state.isLoadingMore) {
+        val target = navigationTarget ?: return@LaunchedEffect
+        val index = displayedMessages.indexOfFirst { it.messageId == target }
+        when {
+            index >= 0 -> {
+                val message = displayedMessages[index]
+                navigationMessage = if (message.deletedAt != null || message.status == "DELETED") "삭제된 원문이에요." else null
+                listState.scrollToItem(index + if (state.hasMore) 1 else 0)
+                followsLatestMessage = false
+                navigationTarget = null
+            }
+            state.isLoadingMore -> Unit
+            state.hasMore -> {
+                if (navigationCursors.add(state.nextBefore)) onLoadPrevious()
+                else {
+                    navigationMessage = "원문을 불러오지 못했어요. 다시 시도해주세요."
+                    navigationTarget = null
+                }
+            }
+            else -> {
+                navigationMessage = "원문을 찾을 수 없어요."
+                navigationTarget = null
+            }
+        }
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val currentMessages by rememberUpdatedState(state.messages)
+    val currentOnAction by rememberUpdatedState(onAction)
+    LaunchedEffect(listState, lifecycleOwner, state.messages, state.recoveryIncomplete) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            snapshotFlow {
+                val visibleIds = listState.layoutInfo.visibleItemsInfo.map { it.key }.toSet()
+                currentMessages.firstOrNull { it.messageId in visibleIds }?.messageId
+            }.collect { id -> id?.let { currentOnAction(CommunityChattingAction.OnVisibleMessage(it)) } }
+        }
+    }
+    state.editingMessageId?.let {
+        AlertDialog(
+            onDismissRequest = { onAction(CommunityChattingAction.OnDismissEdit) },
+            title = { UText("메시지 편집") },
+            text = {
+                Column {
+                    UTextField(value = state.editDraft, onValueChange = { onAction(CommunityChattingAction.OnEditDraftChanged(it)) }, placeholder = "메시지")
+                    state.editError?.let { UText(it) }
+                    if (isCommunityChatMessageTooLong(state.editDraft)) UText(AppStrings.CHAT_MESSAGE_TOO_LONG)
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = state.editCommandId == null && state.editDraft.isNotBlank() && !isCommunityChatMessageTooLong(state.editDraft),
+                    onClick = {
+                        onAction(CommunityChattingAction.OnSaveEdit)
+                    },
+                ) { UText(if (state.editCommandId != null) "저장 확인 중…" else "저장") }
+            },
+            dismissButton = { TextButton(enabled = state.editCommandId == null, onClick = { onAction(CommunityChattingAction.OnDismissEdit) }) { UText("취소") } },
+        )
+    }
+    /* 참여자 태그 선택창 임시 비활성화
+    if (showMentionPicker) {
+        ModalBottomSheet(onDismissRequest = { showMentionPicker = false }) {
+            LazyColumn(Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
+                item { UText("태그할 참여자", modifier = Modifier.padding(16.dp)) }
+                items(state.members.values.filter { it.memberId != state.myMemberId }, key = { it.memberId }) { member ->
+                    TextButton(onClick = {
+                        onAction(CommunityChattingAction.OnMentionSelected(member.memberId))
+                        showMentionPicker = false
+                    }) { UText("${member.name.ifBlank { "참여자" }} · ${member.part?.name.orEmpty()} ${member.generation.orEmpty()}") }
+                }
+            }
+        }
+    }
+    */
     val clipboard = LocalClipboard.current
     val context = LocalContext.current
     DisposableEffect(context) {
@@ -264,6 +348,10 @@ fun CommunityChattingScreen(
     ) {
         ConversationSummaryBottomSheet(
             state = state,
+            onShowSource = {
+                onAction(CommunityChattingAction.OnDismissUnreadSummary)
+                navigationTarget = state.summaryMessageIds.firstOrNull()
+            },
             onRetry = { onAction(CommunityChattingAction.OnRetryUnreadSummary) },
             onDismiss = { onAction(CommunityChattingAction.OnDismissUnreadSummary) },
         )
@@ -286,7 +374,7 @@ fun CommunityChattingScreen(
             }
     }
 
-    var lastRecoveryRevision by remember { mutableStateOf(state.recoveryRevision) }
+    var lastRecoveryRevision by remember { mutableIntStateOf(state.recoveryRevision) }
     LaunchedEffect(state.messages, state.isLoadingMore) {
         val anchor = historyAnchor ?: return@LaunchedEffect
         if (state.isLoadingMore) return@LaunchedEffect
@@ -446,31 +534,42 @@ fun CommunityChattingScreen(
             )
         },
         bottomBar = {
-            if (
-                !state.isLoading &&
-                state.errorMessage == null &&
-                !isViewOnly
-            ) {
-                CommunityChatInputBar(
-                    value = state.draft,
-                    enabled = true,
-                    replyingMessage = replyingMessage,
-                    onValueChange = onDraftChange,
-                    onCamera = {
-                        onCamera()
-                        imagePicker.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    },
-                    onSend = {
-                        onSend(replyingMessage?.messageId)
-                        // 글자 수 초과로 전송이 거절되면 답장 대상을 유지한다.
-                        if (!isCommunityChatMessageTooLong(state.draft)) replyingMessage = null
-                    },
-                    onCancelReply = {
-                        replyingMessage = null
-                    },
+            Column {
+                SourceNavigationStatus(
+                    searching = navigationTarget != null,
+                    message = navigationMessage,
+                    onCancel = { navigationTarget = null },
+                    onDismiss = { navigationMessage = null },
                 )
+                if (!state.isLoading && state.errorMessage == null && !isViewOnly) {
+                    /* 참여자 태그 버튼 및 선택 태그 표시 임시 비활성화
+                    TextButton(onClick = { showMentionPicker = true }) { UText("참여자 태그") }
+                    if (state.mentionedMembers.isNotEmpty()) {
+                        FlowRow {
+                            state.mentionedMembers.forEach { (id, name) ->
+                                TextButton(onClick = { onAction(CommunityChattingAction.OnMentionRemoved(id)) }) { UText("@$name 태그 해제") }
+                            }
+                        }
+                    }
+                    */
+                    CommunityChatInputBar(
+                        value = state.draft,
+                        enabled = true,
+                        replyingMessage = replyingMessage,
+                        onValueChange = onDraftChange,
+                        onCamera = {
+                            onCamera()
+                            imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        },
+                        onSend = {
+                            onAction(CommunityChattingAction.OnSendClick(
+                                replyingMessage?.messageId,
+                            ))
+                            if (!isCommunityChatMessageTooLong(state.draft)) replyingMessage = null
+                        },
+                        onCancelReply = { replyingMessage = null },
+                    )
+                }
             }
         },
     ) { padding ->
@@ -555,6 +654,9 @@ fun CommunityChattingScreen(
                     ?.let(::communityCreatedAtDate)
 
                 Column {
+                    message.replyTo?.let { reply ->
+                        TextButton(onClick = { navigationTarget = reply.messageId }) { UText("답장 원문 보기") }
+                    }
                     if (index == 0 || messageDate != previousDate) {
                         DateDivider(formatCommunityDate(message.createdAt))
                         Spacer(Modifier.height(14.dp))
@@ -569,6 +671,11 @@ fun CommunityChattingScreen(
                         member = message.senderId?.let(state.members::get),
                         isMine = isMine,
                         isViewOnly = isViewOnly,
+                        canDelete = isMine || state.thread?.myRole in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN),
+                        onEdit = {
+                            onAction(CommunityChattingAction.OnStartEdit(message.messageId))
+                            selectedMessage = null
+                        },
                         menuExpanded = selectedMessage?.messageId == message.messageId,
                         onLongClick = { selectedMessage = message },
                         onDismissMenu = { selectedMessage = null },
@@ -1296,6 +1403,8 @@ private fun ChatMessageRow(
     member: CommunityThreadMember?,
     isMine: Boolean,
     isViewOnly: Boolean,
+    canDelete: Boolean,
+    onEdit: () -> Unit,
     menuExpanded: Boolean,
     onLongClick: () -> Unit,
     onDismissMenu: () -> Unit,
@@ -1322,10 +1431,13 @@ private fun ChatMessageRow(
                 )
             }
         }
-        if (menuExpanded) {
+        if (menuExpanded && message.deletedAt == null && message.status != "DELETED") {
             MessageActionPopup(
                 isMine = isMine,
                 isViewOnly = isViewOnly,
+                canDelete = canDelete,
+                canEdit = isMine && message.type == CommunityMessageType.TEXT,
+                onEdit = onEdit,
                 onDismiss = onDismissMenu,
                 onReply = onReply,
                 onCopy = onCopy,
@@ -1487,6 +1599,10 @@ private fun MessageBubbleContent(
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
 ) {
+    if (message.deletedAt != null || message.status == "DELETED") {
+        UText("삭제된 메시지예요.", modifier = modifier.padding(12.dp))
+        return
+    }
     var imageViewerIndex by remember(message.messageId) { mutableStateOf<Int?>(null) }
     val foreground = if (isMine) white() else grey950()
     val secondary = if (isMine) indigo100() else grey400()
@@ -1724,6 +1840,9 @@ private fun ChatImageViewer(
 private fun MessageActionPopup(
     isMine: Boolean,
     isViewOnly: Boolean = false,
+    canDelete: Boolean,
+    canEdit: Boolean,
+    onEdit: () -> Unit,
     onDismiss: () -> Unit,
     onReply: () -> Unit,
     onCopy: () -> Unit,
@@ -1789,8 +1908,11 @@ private fun MessageActionPopup(
                         MessageActionItem(AppStrings.CHAT_ACTION_REPLY, R.drawable.ic_forward_circle, onClick = onReply)
                     }
                     MessageActionItem(AppStrings.CHAT_ACTION_COPY, R.drawable.ic_document, onClick = onCopy)
-                    MessageActionItem(AppStrings.CHAT_ACTION_REPORT, R.drawable.ic_warning, onClick = onReport)
-                    if (!isViewOnly) {
+                    if (!isMine) MessageActionItem(AppStrings.CHAT_ACTION_REPORT, R.drawable.ic_warning, onClick = onReport)
+                    if (!isViewOnly && canEdit) {
+                        MessageActionItem("편집", R.drawable.ic_document, onClick = onEdit)
+                    }
+                    if (!isViewOnly && canDelete) {
                         MessageActionItem(
                             text = AppStrings.CHAT_DELETE,
                             iconRes = R.drawable.ic_trash_can,
@@ -2160,6 +2282,7 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     else -> null
 }
 
+@PreviewScreenSizes
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
 private fun CommunityChattingScreenPreview() {
@@ -2271,6 +2394,44 @@ private fun CommunityChattingScreenViewOnlyEmptyPreview() {
 private fun CommunityChattingScreenNoAccessPreview() {
     CommunityChattingScreen(
         state = CommunityChattingState(threadId = "1", isAccessDenied = true),
+        onAction = {},
+    )
+}
+
+@Composable
+private fun SourceNavigationStatus(
+    searching: Boolean,
+    message: String?,
+    onCancel: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    if (searching) TextButton(onClick = onCancel) { UText("원문 찾기 취소") }
+    message?.let { TextButton(onClick = onDismiss) { UText(it) } }
+}
+
+@Preview(showBackground = true, widthDp = 320)
+@Composable
+private fun SourceNavigationStatusPreview() {
+    Column {
+        SourceNavigationStatus(true, null, {}, {})
+        SourceNavigationStatus(false, "원문을 불러오지 못했어요. 다시 시도해주세요.", {}, {})
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+private fun CommunityChattingEditFailurePreview() {
+    CommunityChattingScreen(
+        state = CommunityChattingState(
+            threadId = "1",
+            thread = CommunityThreadDetail(threadId = "1", title = "스터디", myRole = CommunityThreadRole.OWNER),
+            editingMessageId = "1",
+            editDraft = "실패해도 유지되는 편집 내용",
+            editError = "저장하지 못했어요. 다시 시도해주세요.",
+            // 태그 UI 재활성화 시 복원할 Preview 데이터
+            // draft = "@동명이인 ",
+            // mentionedMembers = mapOf("10" to "동명이인", "20" to "동명이인"),
+        ),
         onAction = {},
     )
 }

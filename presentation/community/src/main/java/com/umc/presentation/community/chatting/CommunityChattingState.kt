@@ -22,6 +22,11 @@ data class CommunityChattingState(
     val readWatermarks: Map<String, String> = emptyMap(),
     val connectionState: CommunityChatConnectionState = CommunityChatConnectionState.DISCONNECTED,
     val draft: String = "",
+    val mentionedMembers: Map<String, String> = emptyMap(),
+    val editingMessageId: String? = null,
+    val editDraft: String = "",
+    val editCommandId: String? = null,
+    val editError: String? = null,
     val hasMore: Boolean = false,
     val nextBefore: String? = null,
     val isLoading: Boolean = false,
@@ -38,10 +43,24 @@ data class CommunityChattingState(
     val unreadSummary: String? = null,
     val unreadSummaryError: String? = null,
     val summarizedMessageCount: Int = 0,
+    val summaryMessageIds: List<String> = emptyList(),
+    val summaryStart: String = "",
+    val summaryEnd: String = "",
+    val summaryTruncated: Boolean = false,
     val errorMessage: String? = null,
     val isThreadUnavailable: Boolean = false,
     val isAccessDenied: Boolean = false,
-) : UiState
+) : UiState {
+    internal fun acknowledgeEdit(commandId: String): CommunityChattingState =
+        if (editCommandId == commandId) {
+            copy(editingMessageId = null, editDraft = "", editCommandId = null, editError = null)
+        } else this
+
+    internal fun rejectEdit(commandId: String?, message: String): CommunityChattingState =
+        if (commandId != null && editCommandId == commandId) {
+            copy(editCommandId = null, editError = message)
+        } else this
+}
 
 data class PendingCommunityMessage(
     val clientMessageId: String,

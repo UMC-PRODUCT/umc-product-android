@@ -26,6 +26,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import com.umc.component.component.UText
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,6 +58,7 @@ fun ConversationSummaryBottomSheet(
     state: CommunityChattingState,
     onRetry: () -> Unit,
     onDismiss: () -> Unit,
+    onShowSource: () -> Unit = {},
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -71,6 +76,7 @@ fun ConversationSummaryBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .heightIn(min = 300.dp)
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 40.dp),
@@ -103,6 +109,10 @@ fun ConversationSummaryBottomSheet(
             }
 
             Spacer(Modifier.height(12.dp))
+            if (state.summaryMessageIds.isNotEmpty()) {
+                UText("${state.summaryStart} ~ ${state.summaryEnd}\n텍스트 ${state.summarizedMessageCount}개 · 최대 50개 / 12,000자${if (state.summaryTruncated) " · 마지막 메시지 일부 포함" else ""}")
+                TextButton(onClick = onShowSource) { UText("요약 원문 보기") }
+            }
 
             when {
                 state.isSummarizingUnread -> SummaryLoadingContent(state.aiDownloadPercent)

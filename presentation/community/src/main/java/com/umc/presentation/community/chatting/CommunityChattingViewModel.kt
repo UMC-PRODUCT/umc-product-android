@@ -25,6 +25,7 @@ import com.umc.domain.usecase.ai.CheckAiFeatureStatusUseCase
 import com.umc.domain.usecase.ai.SummarizeUnreadChatUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.umc.domain.model.community.thread.CommunityMessageRecovery
+import com.umc.domain.model.community.thread.CommunityMessageMerge
 import com.umc.domain.model.community.thread.CommunityThreadMemberState
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -58,12 +59,14 @@ class CommunityChattingViewModel @Inject constructor(
     val event = uiEvent
 
     private val processedEventIds = LinkedHashSet<String>()
-    private var lastReadMessageIdSent: String? = null
+    private val readReceipt = CommunityReadReceipt()
+    private var readRetryJob: Job? = null
     private var reconnectJob: Job? = null
     private var realtimeObserverJob: Job? = null
     private var manualReconnectInProgress = false
     private var hasCapturedEntryUnreadMessages = false
     private var lastSummaryMessages: List<CommunityThreadMessage> = emptyList()
+    private var summaryGeneration = 0L
     private val recoveryMutex = Mutex()
     private var bufferingRecoveryEvents = false
     private val recoveryEvents = mutableListOf<CommunityChatEvent>()
@@ -88,6 +91,30 @@ class CommunityChattingViewModel @Inject constructor(
 
     fun onAction(action: CommunityChattingAction) {
         when (action) {
+            is CommunityChattingAction.OnStartEdit -> {
+                val message = state.value.messages.find { it.messageId == action.messageId }
+                if (message != null && state.value.editCommandId == null) updateState {
+                    copy(editingMessageId = message.messageId, editDraft = message.content.orEmpty(), editError = null)
+                }
+            }
+            is CommunityChattingAction.OnEditDraftChanged -> if (state.value.editCommandId == null) {
+                updateState { copy(editDraft = action.value, editError = null) }
+            }
+            CommunityChattingAction.OnDismissEdit -> if (state.value.editCommandId == null) {
+                updateState { copy(editingMessageId = null, editDraft = "", editError = null) }
+            }
+            CommunityChattingAction.OnSaveEdit -> state.value.editingMessageId?.let { editMessage(it, state.value.editDraft) }
+            is CommunityChattingAction.OnMentionSelected -> {
+                val member = state.value.members[action.memberId]
+                if (member?.state == CommunityThreadMemberState.ACTIVE) updateState {
+                    val label = member.name.ifBlank { "참여자" }
+                    copy(draft = draft + " @$label ", mentionedMembers = mentionedMembers + (member.memberId to label))
+                }
+            }
+            is CommunityChattingAction.OnMentionRemoved -> updateState {
+                copy(mentionedMembers = mentionedMembers - action.memberId)
+            }
+            is CommunityChattingAction.OnVisibleMessage -> markRead(action.messageId)
             CommunityChattingAction.OnBackClick -> emitEvent(CommunityChattingEvent.NavigateBack)
             CommunityChattingAction.OnMoreClick -> emitEvent(CommunityChattingEvent.OpenMore)
             CommunityChattingAction.OnUnreadSummaryClick ->
@@ -96,7 +123,8 @@ class CommunityChattingViewModel @Inject constructor(
                 updateState { copy(aiFeatureStatus = null) }
                 summarizeUnreadMessages(requestedMessages = lastSummaryMessages)
             }
-            CommunityChattingAction.OnDismissUnreadSummary ->
+            CommunityChattingAction.OnDismissUnreadSummary -> {
+                summaryGeneration++
                 updateState {
                     copy(
                         unreadSummary = null,
@@ -105,12 +133,14 @@ class CommunityChattingViewModel @Inject constructor(
                         aiDownloadPercent = null,
                     )
                 }
+            }
             CommunityChattingAction.OnCameraClick -> emitEvent(CommunityChattingEvent.OpenCamera)
             is CommunityChattingAction.OnSendImages -> sendImages(action.uris)
             is CommunityChattingAction.OnDraftChanged -> updateDraft(action.value)
             is CommunityChattingAction.OnSendClick -> sendText(
                 content = state.value.draft,
                 replyToId = action.replyToId,
+                mentionedMemberIds = state.value.mentionedMembers.keys.mapNotNull(String::toLongOrNull),
             )
             CommunityChattingAction.OnLoadPrevious -> loadPreviousMessages()
             is CommunityChattingAction.OnDeleteMessage -> deleteMessage(action.messageId)
@@ -249,14 +279,14 @@ class CommunityChattingViewModel @Inject constructor(
         viewModelScope.launch {
             val current = uiState.value
             if (current.isSummarizingUnread) return@launch
+            val generation = ++summaryGeneration
 
             val boundedMessages = when {
                 requestedMessages != null -> requestedMessages
                 else -> current.summaryCandidateMessages
             }
-            val targetMessages = boundedMessages
-                .take(MAX_SUMMARY_MESSAGE_COUNT)
-                .asReversed()
+            val input = SummarizeUnreadChatUseCase.prepareInput(boundedMessages.asReversed())
+            val targetMessages = input.messages
 
             if (targetMessages.isEmpty()) {
                 updateState {
@@ -279,6 +309,10 @@ class CommunityChattingViewModel @Inject constructor(
                     unreadSummary = null,
                     unreadSummaryError = null,
                     summarizedMessageCount = targetMessages.size,
+                    summaryMessageIds = targetMessages.map { it.messageId },
+                    summaryStart = targetMessages.firstOrNull()?.createdAt.orEmpty(),
+                    summaryEnd = targetMessages.lastOrNull()?.createdAt.orEmpty(),
+                    summaryTruncated = input.truncated,
                 )
             }
 
@@ -286,6 +320,7 @@ class CommunityChattingViewModel @Inject constructor(
             val aiStatus = uiState.value.aiFeatureStatus ?: checkAiFeatureStatusUseCase().also { status ->
                 updateState { copy(aiFeatureStatus = status) }
             }
+            if (generation != summaryGeneration) return@launch
             if (!aiStatus.isUsable) {
                 updateState {
                     copy(
@@ -299,10 +334,10 @@ class CommunityChattingViewModel @Inject constructor(
 
             when (
                 val result = summarizeUnreadChatUseCase(targetMessages) { percent ->
-                    updateState { copy(aiDownloadPercent = percent) }
+                    if (generation == summaryGeneration) updateState { copy(aiDownloadPercent = percent) }
                 }
             ) {
-                is ApiState.Success -> updateState {
+                is ApiState.Success -> if (generation == summaryGeneration) updateState {
                     copy(
                         isSummarizingUnread = false,
                         aiDownloadPercent = null,
@@ -312,6 +347,7 @@ class CommunityChattingViewModel @Inject constructor(
                 }
 
                 is ApiState.Fail -> {
+                    if (generation != summaryGeneration) return@launch
                     updateState {
                         copy(
                             isSummarizingUnread = false,
@@ -363,6 +399,11 @@ class CommunityChattingViewModel @Inject constructor(
         val trimmed = content.trim()
         if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return
         if (trimmed.isEmpty()) return
+        if (mentionedMemberIds.any { uiState.value.members[it.toString()]?.state != CommunityThreadMemberState.ACTIVE }) {
+            emitEvent(CommunityChattingEvent.ShowError("태그 대상이 더 이상 참여 중이 아니에요. 참여자를 다시 선택해주세요."))
+            loadMembers()
+            return
+        }
         if (isCommunityChatMessageTooLong(trimmed)) {
             emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_MESSAGE_TOO_LONG))
             return
@@ -372,6 +413,7 @@ class CommunityChattingViewModel @Inject constructor(
             updateState {
                 copy(
                     draft = if (clearDraft) "" else draft,
+                    mentionedMembers = if (clearDraft) emptyMap() else mentionedMembers,
                     pendingMessages = pendingMessages + (
                         clientMessageId to PendingCommunityMessage(
                             clientMessageId = clientMessageId,
@@ -399,6 +441,7 @@ class CommunityChattingViewModel @Inject constructor(
                 updateState {
                     copy(
                         draft = if (clearDraft) "" else draft,
+                        mentionedMembers = if (clearDraft) emptyMap() else mentionedMembers,
                         pendingMessages = pendingMessages + (
                             clientMessageId to PendingCommunityMessage(
                                 clientMessageId = clientMessageId,
@@ -417,6 +460,7 @@ class CommunityChattingViewModel @Inject constructor(
                 updateState {
                     copy(
                         draft = if (clearDraft) "" else draft,
+                        mentionedMembers = if (clearDraft) emptyMap() else mentionedMembers,
                         pendingMessages = pendingMessages + (
                             clientMessageId to PendingCommunityMessage(
                                 clientMessageId = clientMessageId,
@@ -433,11 +477,41 @@ class CommunityChattingViewModel @Inject constructor(
             }
     }
 
-    fun editMessage(messageId: String, content: String) =
-        runCommand { chatRepository.editMessage(uiState.value.threadId, messageId, content.trim()) }
+    fun editMessage(messageId: String, content: String) {
+        val current = uiState.value
+        if (current.editCommandId != null || current.isAccessDenied || current.thread == null ||
+            current.thread.myRole == CommunityThreadRole.UNKNOWN) return
+        val message = current.messages.find { it.messageId == messageId }
+        if (message == null || message.senderId != current.myMemberId || message.deletedAt != null ||
+            message.status == "DELETED" || message.type != CommunityMessageType.TEXT) {
+            updateState { copy(editError = "더 이상 편집할 수 없는 메시지예요.") }
+            return
+        }
+        if (content.isBlank() || isCommunityChatMessageTooLong(content)) return
+        runCatching { chatRepository.editMessage(current.threadId, messageId, content.trim()) }
+            .onSuccess { commandId ->
+                updateState { copy(editCommandId = commandId, editError = null) }
+                viewModelScope.launch {
+                    delay(PENDING_ACK_TIMEOUT_MILLIS)
+                    failEdit(commandId, "저장 확인이 지연되고 있어요. 내용을 유지했으니 다시 시도해주세요.")
+                }
+            }.onFailure {
+                updateState { copy(editError = "저장하지 못했어요. 다시 시도해주세요.") }
+            }
+    }
 
-    fun deleteMessage(messageId: String) =
-        runCommand { chatRepository.deleteMessage(uiState.value.threadId, messageId) }
+    private fun failEdit(commandId: String?, message: String) {
+        updateState { rejectEdit(commandId, message) }
+    }
+
+    fun deleteMessage(messageId: String) {
+        val current = uiState.value
+        val message = current.messages.find { it.messageId == messageId } ?: return
+        if (message.deletedAt != null || message.status == "DELETED") return
+        if (message.senderId != current.myMemberId && current.thread?.myRole !in
+            setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN)) return
+        runCommand { chatRepository.deleteMessage(current.threadId, messageId) }
+    }
 
     fun sendImages(uriStrings: List<String>, clientMessageId: String = UUID.randomUUID().toString()) = viewModelScope.launch {
         if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return@launch
@@ -546,19 +620,44 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     fun markRead(messageId: String) {
-        if (!foreground || uiState.value.recoveryIncomplete) return
-        if (messageId.isBlank() || lastReadMessageIdSent == messageId) return
-        lastReadMessageIdSent = messageId
-        updateState { copy(thread = thread?.copy(unreadCount = "0")) }
-        runCatching { chatRepository.updateRead(uiState.value.threadId, messageId) }
-            .onFailure { lastReadMessageIdSent = null }
+        if (!foreground) return
+        readReceipt.observed = messageId
+        sendObservedRead()
+    }
+
+    private fun sendObservedRead() {
+        val current = uiState.value
+        if (!foreground || current.recoveryIncomplete || current.isAccessDenied || current.thread == null ||
+            current.thread.myRole == CommunityThreadRole.UNKNOWN ||
+            chatRepository.connectionState.value != CommunityChatConnectionState.CONNECTED) return
+        val messageId = readReceipt.candidate(current.messages.map { it.messageId }) ?: return
+        runCatching { chatRepository.updateRead(current.threadId, messageId) }
+            .onSuccess { commandId ->
+                readReceipt.queued(commandId, messageId)
+                readRetryJob?.cancel()
+                readRetryJob = viewModelScope.launch {
+                    delay(PENDING_ACK_TIMEOUT_MILLIS)
+                    if (readReceipt.failed(commandId)) sendObservedRead()
+                }
+            }.onFailure { scheduleReadRetry() }
+    }
+
+    private fun scheduleReadRetry() {
+        readRetryJob?.cancel()
+        readRetryJob = viewModelScope.launch {
+            delay(PENDING_ACK_TIMEOUT_MILLIS)
+            sendObservedRead()
+        }
     }
 
     fun reportMessage(messageId: String, reason: CommunityMessageReportReason) = viewModelScope.launch {
+        val current = uiState.value
+        val message = current.messages.find { it.messageId == messageId } ?: return@launch
+        if (message.senderId == current.myMemberId || message.deletedAt != null || message.status == "DELETED") return@launch
         resultResponse(
             threadRepository.reportMessage(messageId, reason),
             successCallback = { emitEvent(CommunityChattingEvent.MessageReported) },
-            errorCallback = { emitEvent(CommunityChattingEvent.ShowError(it.message)) },
+            errorCallback = { emitEvent(CommunityChattingEvent.ShowError(if (it.code.contains("409")) "이미 접수된 신고예요." else it.message)) },
         )
     }
 
@@ -831,7 +930,9 @@ class CommunityChattingViewModel @Inject constructor(
         }
     }
 
-    fun updateDraft(value: String) = updateState { copy(draft = value) }
+    fun updateDraft(value: String) = updateState {
+        copy(draft = value, mentionedMembers = if (value.isBlank()) emptyMap() else mentionedMembers)
+    }
 
     private fun runCommand(block: () -> String) {
         if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return
@@ -861,6 +962,8 @@ class CommunityChattingViewModel @Inject constructor(
                         } else if (connection == CommunityChatConnectionState.DISCONNECTED) {
                             // 끊기기 전에 보낸 미확인 메시지는 더 이상 확인이 오지 않으므로 실패 처리한다.
                             failUnacknowledgedPending()
+                            readReceipt.pending?.first?.let { readReceipt.failed(it) }
+                            failEdit(uiState.value.editCommandId, "연결이 끊겼어요. 내용을 유지했으니 다시 시도해주세요.")
                             if (!manualReconnectInProgress) ensureReconnectLoop()
                         }
                     }
@@ -875,6 +978,9 @@ class CommunityChattingViewModel @Inject constructor(
                 }
                 launch {
                     chatRepository.errors.collect { error ->
+                        if (error.status == 403 || error.status == 409) refreshThread()
+                        failEdit(error.commandId, error.message)
+                        error.commandId?.let { if (readReceipt.failed(it)) scheduleReadRetry() }
                         val clientId = error.clientMessageId
                         if (clientId != null && uiState.value.pendingMessages[clientId]?.let {
                                 error.commandId.isNullOrBlank() || it.commandId == error.commandId
@@ -916,6 +1022,7 @@ class CommunityChattingViewModel @Inject constructor(
 
     // 내보내진 계정 등 접근 권한이 없으면 남은 내용을 지우고 전용 화면만 보여준다.
     private fun showAccessDenied() {
+        summaryGeneration++
         accessGeneration++
         recoveryEvents.clear()
         stopRealtime()
@@ -938,6 +1045,11 @@ class CommunityChattingViewModel @Inject constructor(
                 unreadCountAtEntry = 0,
                 summaryCandidateMessages = emptyList(),
                 draft = "",
+                mentionedMembers = emptyMap(),
+                editingMessageId = null,
+                editDraft = "",
+                editCommandId = null,
+                editError = null,
             )
         }
     }
@@ -1025,6 +1137,11 @@ class CommunityChattingViewModel @Inject constructor(
     private fun reduce(event: CommunityChatEvent) {
         when (event) {
             is CommunityChatEvent.CommandAcknowledged -> {
+                if (readReceipt.acknowledged(event.commandId, uiState.value.messages.map { it.messageId })) {
+                    sendObservedRead()
+                    return
+                }
+                updateState { acknowledgeEdit(event.commandId) }
                 viewModelScope.launch { reconcileLatestMessages() }
                 event.clientMessageId?.let { clientId ->
                     updateState {
@@ -1036,7 +1153,7 @@ class CommunityChattingViewModel @Inject constructor(
             }
             is CommunityChatEvent.MessageChanged -> updateState {
                 val pending = event.clientMessageId?.let(pendingMessages::get)
-                val receivedMessage = if (
+                val rawMessage = if (
                     event.message.type == CommunityMessageType.IMAGE &&
                     event.message.content.isNullOrBlank() &&
                     pending?.localUris?.isNotEmpty() == true
@@ -1045,6 +1162,12 @@ class CommunityChattingViewModel @Inject constructor(
                 } else {
                     event.message
                 }
+                val receivedMessage = CommunityMessageMerge.merge(
+                    messages.find { it.messageId == rawMessage.messageId },
+                    if (event.type == CommunityChatEvent.MessageChanged.Type.DELETED)
+                        rawMessage.copy(status = "DELETED", content = null, files = emptyList(), reactions = emptyList())
+                    else rawMessage,
+                )
                 // 수정·삭제 이벤트는 제자리에서 갱신하고, 새 메시지(CREATED)만 맨 앞(최신)에 넣는다.
                 val updatedMessages = when {
                     messages.any { it.messageId == receivedMessage.messageId } ->
@@ -1090,7 +1213,6 @@ class CommunityChattingViewModel @Inject constructor(
                     reason = "MESSAGE_${event.type.name}",
                     messages = uiState.value.summaryCandidateMessages,
                 )
-                markRead(event.message.messageId)
             }
             is CommunityChatEvent.ReactionChanged -> updateState {
                 copy(messages = messages.map {
@@ -1100,8 +1222,14 @@ class CommunityChattingViewModel @Inject constructor(
             is CommunityChatEvent.ReadUpdated -> updateState {
                 copy(
                     readWatermarks = readWatermarks + (event.memberId to event.lastReadMessageId),
-                    thread = if (event.memberId == myMemberId) thread?.copy(unreadCount = "0") else thread,
+                    thread = if (event.memberId == myMemberId && event.lastReadMessageId == messages.firstOrNull()?.messageId) thread?.copy(unreadCount = "0") else thread,
                 )
+            }.also {
+                if (event.memberId == uiState.value.myMemberId) {
+                    readReceipt.confirm(event.lastReadMessageId, uiState.value.messages.map { it.messageId })
+                    sendObservedRead()
+                    refreshDetail()
+                }
             }
             is CommunityChatEvent.ThreadStateChanged -> when (event.type) {
                 CommunityChatEvent.ThreadStateChanged.Type.DELETED ->
@@ -1171,7 +1299,9 @@ class CommunityChattingViewModel @Inject constructor(
                     updateState {
                         val delivered = result.data.messages.mapNotNullTo(hashSetOf()) { it.clientMessageId }
                         copy(
-                            messages = result.data.messages,
+                            messages = result.data.messages.map { incoming ->
+                                CommunityMessageMerge.merge(messages.find { it.messageId == incoming.messageId }, incoming)
+                            },
                             pendingMessages = pendingMessages.filterKeys { it !in delivered },
                             hasMore = result.data.hasMore,
                             nextBefore = result.data.nextBefore,
@@ -1191,6 +1321,7 @@ class CommunityChattingViewModel @Inject constructor(
             recoveryEvents.clear()
             if (generation == accessGeneration) buffered.forEach(::reduce)
             updateState { copy(isRecovering = false) }
+            sendObservedRead()
         }
     }
 
@@ -1208,11 +1339,6 @@ class CommunityChattingViewModel @Inject constructor(
             if (chatRepository.connectionState.value == CommunityChatConnectionState.CONNECTED) reconcileLatestMessages()
             else ensureReconnectLoop()
         }
-    }
-
-    private fun markLatestMessageRead() {
-        if (!foreground || uiState.value.recoveryIncomplete) return
-        uiState.value.messages.firstOrNull()?.messageId?.let(::markRead)
     }
 
     private fun logSummaryCandidates(
