@@ -80,7 +80,7 @@ data class CommunityState(
 
     /** 스레드 목록 조회 에러 여부 */
     val isError: Boolean
-        get() = errorMessage != null
+        get() = errorMessage != null && threads.isEmpty()
 
     /** 현재 표시할 스레드가 없는 상태인지 여부 */
     val isEmpty: Boolean

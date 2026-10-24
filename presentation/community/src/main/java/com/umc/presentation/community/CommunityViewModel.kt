@@ -204,7 +204,6 @@ class CommunityViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        threads = persistentListOf(),
                         errorMessage =
                             "네트워크 연결을 확인하고 다시 시도해주세요.",
                     )
