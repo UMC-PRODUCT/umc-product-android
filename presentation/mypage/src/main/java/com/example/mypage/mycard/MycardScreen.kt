@@ -198,6 +198,7 @@ fun MycardRoute(
 
             }
 
+            is MycardEvent.ShowError -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             is MycardEvent.ProfileLoadFailed -> {
                 Toast.makeText(context, AppStrings.MYCARD_PROFILE_LOAD_ERROR_TITLE, Toast.LENGTH_SHORT).show()
             }
@@ -309,7 +310,11 @@ fun MycardScreen(
 
         item {
             // 이미 불러온 정보가 있으면(id != 0) 재조회에 실패해도 카드를 유지한다
-            if (uiState.isProfileLoadFailed && uiState.userInfo.id == 0L) {
+            if (uiState.isProfileLoading && uiState.userInfo.id == 0L) {
+                Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                    androidx.compose.material3.CircularProgressIndicator()
+                }
+            } else if (uiState.isProfileLoadFailed && uiState.userInfo.id == 0L) {
                 MycardProfileLoadError(
                     isLoading = uiState.isProfileLoading,
                     onRetry = onRetryProfile
@@ -326,11 +331,12 @@ fun MycardScreen(
         item {
             Spacer(modifier = Modifier.height(12.dp))
             MycardSectionTitle(AppStrings.MYCARD_CARD_TITLE)
+            uiState.cardStorageError?.let { UText(it, modifier = Modifier.padding(horizontal = 16.dp)) }
             MycardListCard {
                 MycardListItem(
                     iconRes = R.drawable.ic_received_card,
                     text = AppStrings.MYCARD_CARD_CONTENT_RECEIVED,
-                    cardCount = uiState.cardCount,
+                    cardCount = if (uiState.cardStorageError == null && uiState.cardStatistics != null) uiState.cardCount else -1,
                     onClick = onNavigateToReceivedCard
                 )
                 MycardListItem(
@@ -764,7 +770,7 @@ private fun CardBackContent(
             Spacer(modifier = Modifier.width(16.dp))
 
             // 아이콘 + 링크 리스트 (GitHub, LinkedIn, Blog 등)
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 SocialLinkItem(iconRes = R.drawable.ic_github_link, text = uiState.userInfo.profile.github)
                 SocialLinkItem(iconRes = R.drawable.ic_linkedin_link, text = uiState.userInfo.profile.linkedIn)
                 SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = uiState.userInfo.profile.blog)
@@ -833,7 +839,10 @@ private fun SocialLinkItem(
     @DrawableRes iconRes: Int,
     text: String
 ) {
+    val link = com.umc.domain.model.mypage.validCardWebLink(text) ?: return
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     Row(
+        modifier = Modifier.clickable(onClickLabel = "링크 열기") { runCatching { uriHandler.openUri(link) } },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -848,7 +857,10 @@ private fun SocialLinkItem(
         )
 
         UText(
-            text = text.ifEmpty { "링크 없음" },
+            text = link,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             style = UmcTypographyTokens.Footnote,
             color = grey000()
         )

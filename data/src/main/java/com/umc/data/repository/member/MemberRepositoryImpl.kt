@@ -1,5 +1,7 @@
 package com.umc.data.repository.member
 
+import com.umc.data.dataSource.local.AppDataStore
+import com.umc.domain.model.base.FailState
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSource
 import com.umc.data.request.member.DeleteUserRequest
 import com.umc.data.request.member.LinkItemRequest
@@ -22,6 +24,7 @@ import javax.inject.Inject
 /**여기서 API의 response -> model의 data class로 변경**/
 
 class MemberRepositoryImpl @Inject constructor(
+    private val appDataStore: AppDataStore,
     private val memberRemoteDataSource: MemberRemoteDataSource,
     private val updateUserInfoUseCase: UpdateUserInfoUseCase,
     private val clearTokensUseCase: ClearTokensUseCase,
@@ -29,11 +32,16 @@ class MemberRepositoryImpl @Inject constructor(
 
     //내 정보 가져오기 + dataStore에 저장하기
     override suspend fun getMyProfile(): ApiState<UserInfo> {
+        val session = appDataStore.profileSession()
         val response = memberRemoteDataSource.getMyProfile().map { it.toDomain() }
 
         //여기서 체크 후 dataStore에 저장하는 로직 정의
         if (response is ApiState.Success) {
-            updateUserInfoUseCase(response.data)
+            try {
+                appDataStore.saveUserInfo(response.data, session)
+            } catch (_: IllegalStateException) {
+                return ApiState.Fail(FailState(code = "ACCOUNT_CHANGED", message = "계정이 변경됐어요. 다시 확인해주세요."))
+            }
         }
 
         return response
@@ -64,10 +72,15 @@ class MemberRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteUser(kakaoAccessToken: String, googleAccessToken: String): ApiState<Unit> {
+        val session = appDataStore.profileSession()
         val request = DeleteUserRequest(kakaoAccessToken, googleAccessToken)
         val response = memberRemoteDataSource.deleteUser(request)
         if (response is ApiState.Success) {
-            clearTokensUseCase()
+            try {
+                appDataStore.purgeCurrentCardBook(session)
+            } catch (_: IllegalStateException) {
+                return ApiState.Fail(FailState(code = "ACCOUNT_CHANGED", message = "계정이 변경됐어요."))
+            }
         }
         return response
     }

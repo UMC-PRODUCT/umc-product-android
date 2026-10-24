@@ -3,6 +3,8 @@ import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.home.NotificationItem
 import com.umc.domain.model.mypage.UserCard
+import com.umc.domain.model.mypage.CardBookState
+import com.umc.domain.model.mypage.CardWriteContext
 import com.umc.domain.model.mypage.UserOutLink
 import kotlinx.coroutines.flow.Flow
 
@@ -36,7 +38,7 @@ interface AppDataStoreRepository {
 
     suspend fun getAccessToken(): String
     suspend fun getRefreshToken(): String
-    suspend fun saveTokens(accessToken: String, refreshToken: String): ApiState<Unit>
+    suspend fun saveTokens(accessToken: String, refreshToken: String, newSession: Boolean = false): ApiState<Unit>
     suspend fun clearTokens()
 
     //싹 다 초기화
@@ -57,5 +59,10 @@ interface AppDataStoreRepository {
     suspend fun saveUserCard(card: UserCard)
     suspend fun removeUserCard(cardId: String)
     suspend fun clearUserCards()
+    fun getCardBook(): Flow<CardBookState>
+    suspend fun cardWriteContext(): CardWriteContext
+    suspend fun saveUserCard(card: UserCard, context: CardWriteContext)
+    suspend fun removeUserCard(cardId: String, context: CardWriteContext)
+    suspend fun updateCardNote(cardId: String, note: String, context: CardWriteContext)
 
 }

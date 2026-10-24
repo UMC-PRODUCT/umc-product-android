@@ -1,100 +1,131 @@
 package com.example.mypage.receivedcard
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
-import com.umc.domain.model.UserInfo
+import com.umc.domain.model.mypage.CardBook
+import com.umc.domain.model.mypage.CardSession
+import com.umc.domain.model.mypage.CardWriteContext
+import com.umc.domain.model.mypage.StoredCard
 import com.umc.domain.model.mypage.UserCard
-import com.umc.domain.model.mypage.UserCardPartType
-import com.umc.domain.usecase.appDataStore.usercard.GetUserCardUseCase
-import com.umc.domain.usecase.member.GetMyProfileUseCase
+import com.umc.domain.repository.AppDataStoreRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
 @HiltViewModel
 class ReceivedCardViewModel @Inject constructor(
-    private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
-    private val getUserCardUseCase: GetUserCardUseCase, //유저 명함 가져오기
-
+    private val repository: AppDataStoreRepository,
+    private val savedStateHandle: SavedStateHandle,
 ) : BaseViewModel<ReceivedCardUiState, ReceivedCardEvent>(
-    ReceivedCardUiState()) {
+    ReceivedCardUiState(searchQuery = savedStateHandle["cardSearch"] ?: ""),
+) {
+    private var book = CardBook()
+    private var session: CardSession? = null
+    private var observer: Job? = null
+    private var receivedInitialState = false
 
+    init { retry() }
 
-
-    //초기 상태
-    init {
-        //명함 호출
-        loadReceivedCards()
-    }
-
-
-    /**
-     * AppDataStore로부터 보관된 유저 명함 리스트를 실시간으로 수신받아 UI State에 바인딩하는 메서드
-     */
-    private fun loadReceivedCards() {
-
-        viewModelScope.launch {
-            getUserCardUseCase().collect { cards ->
+    fun retry() {
+        observer?.cancel()
+        updateState { copy(isLoading = true, error = null) }
+        observer = viewModelScope.launch {
+            repository.getCardBook().catch {
+                updateState { copy(isLoading = false, error = "명함을 불러오지 못했어요. 다시 시도해주세요.") }
+            }.collect { state ->
+                val changedAccount = if (receivedInitialState) session != state.session else
+                    savedStateHandle.get<Long>("cardSearchOwner")?.let { it != (state.session?.ownerId ?: 0L) } ?: false
+                receivedInitialState = true
+                if (changedAccount) savedStateHandle["cardSearch"] = ""
+                session = state.session
+                savedStateHandle["cardSearchOwner"] = state.session?.ownerId ?: 0L
+                book = state.book
                 updateState {
+                    val query = if (changedAccount) "" else searchQuery
+                    val cards = book.visibleCards.map { it.card }.toImmutableList()
                     copy(
-                        allCards = cards.toImmutableList(),
-                        filteredCards = cards.toImmutableList()
+                        searchQuery = query, allCards = cards, filteredCards = filterCards(cards, query),
+                        isLoading = false,
+                        error = if (state.storageUnavailable) "명함 저장소를 읽을 수 없어요. 원본을 보존했으니 다시 시도해주세요." else null,
+                        hasLegacyRecords = state.hasLegacyRecords,
+                        selectedId = if (changedAccount || book.cards[selectedId]?.pendingDelete != false) null else selectedId,
+                        noteDraft = if (changedAccount) "" else noteDraft,
+                        mutationError = if (changedAccount) null else mutationError,
+                        isSaving = if (changedAccount) false else isSaving,
+                        entries = book.cards,
                     )
                 }
             }
         }
     }
 
-    /**
-     * 사용자가 입력한 검색어 키워드를 기반으로 명함 데이터 목록을 실시간 필터링하는 메서드
-     *
-     * @param query 검색창에 입력된 텍스트
-     */
     fun onSearchQueryChanged(query: String) {
-        updateState {
-            val filtered = if (query.isBlank()) {
-                allCards
-            } else {
-                allCards.filter { card ->
-                    card.name.contains(query, ignoreCase = true) ||
-                            card.nickname.contains(query, ignoreCase = true) ||
-                            card.part.contains(query, ignoreCase = true) ||
-                            card.university.contains(query, ignoreCase = true)
-                }.toImmutableList()
+        savedStateHandle["cardSearch"] = query
+        updateState { copy(searchQuery = query, filteredCards = filterCards(allCards, query)) }
+    }
+    fun clearSearchQuery() = onSearchQueryChanged("")
+    fun selectCard(id: String) {
+        val entry = book.cards[id]?.takeUnless { it.pendingDelete } ?: return
+        updateState { copy(selectedId = id, noteDraft = entry.note, mutationError = null, showDeleteConfirmation = false) }
+    }
+    fun editNote(value: String) { if (!uiState.value.isSaving) updateState { copy(noteDraft = value, mutationError = null) } }
+    fun closeDetail() { if (!uiState.value.isSaving) updateState { copy(selectedId = null, mutationError = null, showDeleteConfirmation = false) } }
+    fun confirmDelete(show: Boolean) = updateState { copy(showDeleteConfirmation = show) }
+    fun saveNote() = mutate(delete = false)
+    fun deleteCard() = mutate(delete = true)
+
+    private fun mutate(delete: Boolean) {
+        if (uiState.value.isSaving) return
+        val id = uiState.value.selectedId ?: return
+        val expectedSession = session ?: return
+        val context = CardWriteContext(expectedSession, book.revision)
+        val note = uiState.value.noteDraft
+        updateState { copy(isSaving = true, mutationError = null) }
+        viewModelScope.launch {
+            try {
+                if (delete) repository.removeUserCard(id, context) else repository.updateCardNote(id, note, context)
+                if (session == expectedSession) updateState {
+                    copy(isSaving = false, selectedId = null, showDeleteConfirmation = false)
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                if (session == expectedSession) updateState {
+                    copy(isSaving = false, mutationError = "저장하지 못했어요. 내용을 유지했으니 다시 시도해주세요.")
+                }
             }
-            copy(searchQuery = query, filteredCards = filtered)
         }
     }
+}
 
-    /**
-     * 검색어를 초기화하고 필터링 리스트를 전체 명함 목록으로 되돌리는 메서드
-     */
-    fun clearSearchQuery() {
-        onSearchQueryChanged("")
-    }
-
-
-
+private fun filterCards(cards: List<UserCard>, query: String): ImmutableList<UserCard> {
+    val keyword = query.trim()
+    return cards.filter { card -> keyword.isEmpty() || listOf(card.name, card.nickname, card.part, card.university)
+        .any { it.contains(keyword, ignoreCase = true) } }.toImmutableList()
 }
 
 data class ReceivedCardUiState(
-
     val searchQuery: String = "",
-    val allCards: ImmutableList<UserCard> = persistentListOf(), //전체 명함
-    val filteredCards: ImmutableList<UserCard> = persistentListOf(), //검색 명함
-    val isLoading: Boolean = false
+    val allCards: ImmutableList<UserCard> = persistentListOf(),
+    val filteredCards: ImmutableList<UserCard> = persistentListOf(),
+    val entries: Map<String, StoredCard> = emptyMap(),
+    val selectedId: String? = null,
+    val noteDraft: String = "",
+    val isSaving: Boolean = false,
+    val showDeleteConfirmation: Boolean = false,
+    val mutationError: String? = null,
+    val hasLegacyRecords: Boolean = false,
+    val error: String? = null,
+    val isLoading: Boolean = false,
+) : UiState
 
-    ) : UiState
-
-sealed interface ReceivedCardEvent : UiEvent {
-    //이동하기
-    object NavigateToBack: ReceivedCardEvent
-
-
-}
+sealed interface ReceivedCardEvent : UiEvent
