@@ -492,8 +492,8 @@ class CommunityEditViewModel @Inject constructor(
 
             updateCommunityThreadUseCase(
                 threadId = currentState.threadId,
-                title = currentState.title,
-                description = currentState.description,
+                title = currentState.title.trim(),
+                description = currentState.description.trim(),
                 category = category.name,
                 icon = currentState.selectedIcon,
             ).onSuccess {

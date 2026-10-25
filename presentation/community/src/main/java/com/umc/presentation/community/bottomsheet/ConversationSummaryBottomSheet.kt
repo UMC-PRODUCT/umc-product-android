@@ -51,6 +51,9 @@ import com.umc.component.theme.green500
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.white
 import com.umc.presentation.community.chatting.CommunityChattingState
+import com.umc.presentation.community.chatting.formatCommunityDate
+import com.umc.presentation.community.chatting.formatCommunityCreatedAt
+import com.umc.domain.usecase.ai.SummarizeUnreadChatUseCase
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,7 +113,14 @@ fun ConversationSummaryBottomSheet(
 
             Spacer(Modifier.height(12.dp))
             if (state.summaryMessageIds.isNotEmpty()) {
-                UText("${state.summaryStart} ~ ${state.summaryEnd}\n텍스트 ${state.summarizedMessageCount}개 · 최대 50개 / 12,000자${if (state.summaryTruncated) " · 마지막 메시지 일부 포함" else ""}")
+                UText(AppStrings.CHAT_AI_SOURCE_RANGE_FORMAT.format(
+                    "${formatCommunityDate(state.summaryStart)} ${formatCommunityCreatedAt(state.summaryStart)}",
+                    "${formatCommunityDate(state.summaryEnd)} ${formatCommunityCreatedAt(state.summaryEnd)}",
+                    state.summarizedMessageCount,
+                    SummarizeUnreadChatUseCase.MAX_MESSAGE_COUNT,
+                    SummarizeUnreadChatUseCase.MAX_SOURCE_LENGTH,
+                    if (state.summaryTruncated) AppStrings.CHAT_AI_PARTIAL_SOURCE else "",
+                ))
                 TextButton(onClick = onShowSource) { UText("요약 원문 보기") }
             }
 

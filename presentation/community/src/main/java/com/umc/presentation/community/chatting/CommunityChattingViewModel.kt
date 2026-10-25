@@ -60,6 +60,9 @@ class CommunityChattingViewModel @Inject constructor(
 
     private val processedEventIds = LinkedHashSet<String>()
     private val readReceipt = CommunityReadReceipt()
+    private val commandRecovery = CommunityCommandRecovery()
+    private var commandRecoveryJob: Job? = null
+    private var networkRecoveryJob: Job? = null
     private var readRetryJob: Job? = null
     private var reconnectJob: Job? = null
     private var realtimeObserverJob: Job? = null
@@ -438,6 +441,7 @@ class CommunityChattingViewModel @Inject constructor(
         )
         runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
             .onSuccess { commandId ->
+                commandRecovery.expect(commandId, "created:$clientMessageId")
                 updateState {
                     copy(
                         draft = if (clearDraft) "" else draft,
@@ -490,6 +494,7 @@ class CommunityChattingViewModel @Inject constructor(
         if (content.isBlank() || isCommunityChatMessageTooLong(content)) return
         runCatching { chatRepository.editMessage(current.threadId, messageId, content.trim()) }
             .onSuccess { commandId ->
+                commandRecovery.expect(commandId, "updated:$messageId")
                 updateState { copy(editCommandId = commandId, editError = null) }
                 viewModelScope.launch {
                     delay(PENDING_ACK_TIMEOUT_MILLIS)
@@ -510,7 +515,7 @@ class CommunityChattingViewModel @Inject constructor(
         if (message.deletedAt != null || message.status == "DELETED") return
         if (message.senderId != current.myMemberId && current.thread?.myRole !in
             setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN)) return
-        runCommand { chatRepository.deleteMessage(current.threadId, messageId) }
+        runCommand("deleted:$messageId") { chatRepository.deleteMessage(current.threadId, messageId) }
     }
 
     fun sendImages(uriStrings: List<String>, clientMessageId: String = UUID.randomUUID().toString()) = viewModelScope.launch {
@@ -582,6 +587,7 @@ class CommunityChattingViewModel @Inject constructor(
         if (generation != accessGeneration || clientMessageId !in uiState.value.pendingMessages) return@launch
         runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
             .onSuccess { commandId ->
+                commandRecovery.expect(commandId, "created:$clientMessageId")
                 updateState {
                     val pending = pendingMessages[clientMessageId]
                         ?: return@updateState this
@@ -611,7 +617,7 @@ class CommunityChattingViewModel @Inject constructor(
         )
     }
 
-    fun toggleReaction(message: CommunityThreadMessage, emoji: String) = runCommand {
+    fun toggleReaction(message: CommunityThreadMessage, emoji: String) = runCommand("reaction:${message.messageId}") {
         if (message.reactions.any { it.emoji == emoji && it.reactedByMe }) {
             chatRepository.removeReaction(uiState.value.threadId, message.messageId, emoji)
         } else {
@@ -697,6 +703,7 @@ class CommunityChattingViewModel @Inject constructor(
                     )
                     runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
                         .onSuccess { commandId ->
+                            commandRecovery.expect(commandId, "created:$newClientMessageId")
                             updateState {
                                 copy(
                                     pendingMessages = pendingMessages + (
@@ -934,9 +941,9 @@ class CommunityChattingViewModel @Inject constructor(
         copy(draft = value, mentionedMembers = if (value.isBlank()) emptyMap() else mentionedMembers)
     }
 
-    private fun runCommand(block: () -> String) {
+    private fun runCommand(change: String, block: () -> String) {
         if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return
-        runCatching(block).onFailure {
+        runCatching(block).onSuccess { commandRecovery.expect(it, change) }.onFailure {
             // 예외 원문(영문)을 노출하지 않고 고정 문구를 쓴다.
             val message = if (chatRepository.connectionState.value != CommunityChatConnectionState.CONNECTED) {
                 AppStrings.CHAT_ACTION_DISCONNECTED
@@ -957,8 +964,7 @@ class CommunityChattingViewModel @Inject constructor(
                         if (connection == CommunityChatConnectionState.CONNECTED) {
                             reconnectJob?.cancel()
                             reconnectJob = null
-                            refreshThread()
-                            reconcileLatestMessages()
+                            requestNetworkRecovery()
                         } else if (connection == CommunityChatConnectionState.DISCONNECTED) {
                             // 끊기기 전에 보낸 미확인 메시지는 더 이상 확인이 오지 않으므로 실패 처리한다.
                             failUnacknowledgedPending()
@@ -971,6 +977,15 @@ class CommunityChattingViewModel @Inject constructor(
                 launch {
                     chatRepository.events.collect { event ->
                         if (event.threadId != uiState.value.threadId || !rememberEvent(event.eventId)) return@collect
+                        when (event) {
+                            is CommunityChatEvent.MessageChanged -> {
+                                val target = if (event.type == CommunityChatEvent.MessageChanged.Type.CREATED)
+                                    event.clientMessageId ?: event.message.clientMessageId else event.message.messageId
+                                commandRecovery.observed("${event.type.name.lowercase()}:$target")
+                            }
+                            is CommunityChatEvent.ReactionChanged -> commandRecovery.observed("reaction:${event.messageId}")
+                            else -> Unit
+                        }
                         if (bufferingRecoveryEvents && event !is CommunityChatEvent.ThreadStateChanged) {
                             recoveryEvents += event
                         } else reduce(event)
@@ -978,6 +993,7 @@ class CommunityChattingViewModel @Inject constructor(
                 }
                 launch {
                     chatRepository.errors.collect { error ->
+                        error.commandId?.let(commandRecovery::forget)
                         if (error.status == 403 || error.status == 409) refreshThread()
                         failEdit(error.commandId, error.message)
                         error.commandId?.let { if (readReceipt.failed(it)) scheduleReadRetry() }
@@ -1012,6 +1028,11 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun stopRealtime() {
+        networkRecoveryJob?.cancel()
+        networkRecoveryJob = null
+        commandRecoveryJob?.cancel()
+        commandRecoveryJob = null
+        commandRecovery.clear()
         reconnectJob?.cancel()
         reconnectJob = null
         realtimeObserverJob?.cancel()
@@ -1142,7 +1163,14 @@ class CommunityChattingViewModel @Inject constructor(
                     return
                 }
                 updateState { acknowledgeEdit(event.commandId) }
-                viewModelScope.launch { reconcileLatestMessages() }
+                if (commandRecovery.acknowledge(event.commandId) && commandRecoveryJob?.isActive != true) {
+                    commandRecoveryJob = viewModelScope.launch {
+                        do {
+                            delay(2_000)
+                            if (commandRecovery.takeMissing()) reconcileLatestMessages()
+                        } while (commandRecovery.hasAcknowledged)
+                    }
+                }
                 event.clientMessageId?.let { clientId ->
                     updateState {
                         copy(pendingMessages = pendingMessages.mapValues { (id, pending) ->
@@ -1326,18 +1354,27 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     fun onForegroundChanged(active: Boolean) {
+        if (foreground == active) return
         foreground = active
         if (active) onNetworkAvailable()
     }
 
     fun onNetworkAvailable() {
-        if (!foreground || uiState.value.isLoading || uiState.value.thread == null || uiState.value.isAccessDenied || uiState.value.isThreadUnavailable) return
+        // Connectivity callbacks may run off the main thread; serialize state and job checks.
         viewModelScope.launch {
-            refreshThread()
+            if (!foreground || uiState.value.isLoading || uiState.value.thread == null || uiState.value.isAccessDenied || uiState.value.isThreadUnavailable) return@launch
             if (uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN) return@launch
             observeRealtime()
-            if (chatRepository.connectionState.value == CommunityChatConnectionState.CONNECTED) reconcileLatestMessages()
+            if (chatRepository.connectionState.value == CommunityChatConnectionState.CONNECTED) requestNetworkRecovery()
             else ensureReconnectLoop()
+        }
+    }
+
+    private fun requestNetworkRecovery() {
+        if (networkRecoveryJob?.isActive == true) return
+        networkRecoveryJob = viewModelScope.launch {
+            refreshThread()
+            reconcileLatestMessages()
         }
     }
 

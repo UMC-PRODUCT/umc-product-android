@@ -46,6 +46,7 @@ class SummarizeUnreadChatUseCase @Inject constructor(
 
     companion object {
         const val MAX_SOURCE_LENGTH = 12_000
+        const val MAX_MESSAGE_COUNT = 50
         const val EMPTY_MESSAGES_CODE = "EMPTY_UNREAD_MESSAGES"
 
         fun prepareInput(messages: List<CommunityThreadMessage>): ChatSummaryInput {
@@ -55,7 +56,7 @@ class SummarizeUnreadChatUseCase @Inject constructor(
             for (message in messages.filter {
                 it.type == CommunityMessageType.TEXT && it.deletedAt == null &&
                     it.status != "DELETED" && !it.content.isNullOrBlank()
-            }.take(50)) {
+            }.take(MAX_MESSAGE_COUNT)) {
                 val line = "${message.senderName.orEmpty().ifBlank { "참여자" }}: ${message.content.orEmpty().trim()}"
                 val remaining = MAX_SOURCE_LENGTH - source.length - if (source.isEmpty()) 0 else 1
                 if (remaining <= 0) break

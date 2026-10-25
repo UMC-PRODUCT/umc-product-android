@@ -147,7 +147,7 @@ internal fun CommunityParticipantScreen(
                     onTransferOwnership = { pendingOwnershipMember = member },
                 )
             }
-            if (isOwner) {
+            if (canManage) {
                 item {
                     Row(
                         modifier = Modifier

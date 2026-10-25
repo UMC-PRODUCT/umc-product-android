@@ -32,6 +32,7 @@ class ChatSummaryInputTest {
             CommunityThreadMessage(messageId = "$it", content = "text")
         })
         assertEquals(50, input.messages.size)
-        assertFalse(input.source.contains("51:"))
+        assertEquals("50", input.messages.last().messageId)
+        assertEquals(50, input.source.lines().size)
     }
 }

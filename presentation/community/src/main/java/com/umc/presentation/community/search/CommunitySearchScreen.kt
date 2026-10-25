@@ -157,7 +157,7 @@ fun CommunitySearchScreen(
             }
 
             // 검색을 실행했고 결과가 없을 때
-            state.hasSearched && state.searchResults.isEmpty() -> {
+            state.hasSearched && state.searchResults.isEmpty() && state.nextOffset == null -> {
                 CommunitySearchEmptyContent(
                     modifier = Modifier.fillMaxSize(),
                 )

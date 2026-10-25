@@ -423,7 +423,10 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 }
                 is ApiState.Fail -> {
                     updateState { copy(isLoading = false, isLoadingMore = false, errorMessage = "초대 가능한 멤버를 불러오지 못했어요.") }
-                    loadCurrentMembers(threadId)
+                    if (result.failState.code in setOf("403", "409", "COMMUNITY-0034") ||
+                        result.failState.code.endsWith("-403") || result.failState.code.endsWith("-409")) {
+                        loadCurrentMembers(threadId)
+                    }
                 }
             }
         }
