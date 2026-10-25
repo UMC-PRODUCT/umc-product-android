@@ -1,7 +1,6 @@
 package com.umc.presentation.community.component
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -23,12 +23,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
+import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
@@ -44,6 +46,7 @@ import com.umc.presentation.community.model.CommunityThreadUiModel
  * 읽지 않은 메시지 수 및 스레드 상태를 표시합니다.
  *
  * 일반 클릭과 롱클릭 이벤트를 모두 지원합니다.
+ * [useUpdatedListStyle]은 기본 목록의 Figma 시범 적용용이며 검색 결과는 기존 스타일을 유지합니다.
  */
 @Composable
 fun CommunityThreadItem(
@@ -51,6 +54,7 @@ fun CommunityThreadItem(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
+    useUpdatedListStyle: Boolean = false,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -63,7 +67,7 @@ fun CommunityThreadItem(
                 onClick = onClick,
                 onLongClick = onLongClick,
             ),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(if (useUpdatedListStyle) 12.dp else 10.dp),
         color = grey000(),
         border = BorderStroke(1.dp, grey200()),
         shadowElevation = 0.dp,
@@ -89,7 +93,7 @@ fun CommunityThreadItem(
                         ),
                         contentDescription = null,
                         tint = indigo500(),
-                        modifier = Modifier.size(22.dp),
+                        modifier = Modifier.size(if (useUpdatedListStyle) 24.dp else 22.dp),
                     )
                 }
             }
@@ -101,13 +105,16 @@ fun CommunityThreadItem(
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
+                verticalArrangement = if (useUpdatedListStyle) Arrangement.Center else Arrangement.Top,
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     UText(
                         text = thread.title,
-                        style = UmcTypographyTokens.HeadlineBold,
+                        style = if (useUpdatedListStyle) {
+                            UmcTypographyTokens.HeadlineBold.copy(letterSpacing = (-0.41).sp)
+                        } else UmcTypographyTokens.HeadlineBold,
                         color = grey950(),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -122,6 +129,7 @@ fun CommunityThreadItem(
                     // 스레드 카테고리 표시
                     CommunityCategoryChip(
                         category = thread.category,
+                        useUpdatedListStyle = useUpdatedListStyle,
                     )
 
                     // 고정된 스레드인 경우 핀 아이콘 표시
@@ -133,7 +141,7 @@ fun CommunityThreadItem(
                                 id = R.drawable.ic_pin,
                             ),
                             contentDescription = "고정 스레드",
-                            tint = grey400(),
+                            tint = if (useUpdatedListStyle) grey500() else grey400(),
                             modifier = Modifier.size(18.dp),
                         )
                     }
@@ -159,20 +167,24 @@ fun CommunityThreadItem(
                 // 최근 스레드 내용 미리보기
                 UText(
                     text = thread.contentPreview,
-                    style = UmcTypographyTokens.Footnote,
+                    style = if (useUpdatedListStyle) {
+                        UmcTypographyTokens.Footnote.copy(letterSpacing = (-0.08).sp)
+                    } else UmcTypographyTokens.Footnote,
                     color = grey600(),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(if (useUpdatedListStyle) 24.dp else 12.dp))
 
             // 날짜 및 읽지 않은 메시지 수
             Column(
-                modifier = Modifier.height(48.dp),
+                modifier = Modifier.height(if (useUpdatedListStyle) 50.dp else 48.dp),
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = if (useUpdatedListStyle) {
+                    Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
+                } else Arrangement.SpaceBetween,
             ) {
                 UText(
                     text = thread.dayText,
@@ -183,17 +195,20 @@ fun CommunityThreadItem(
                 // 읽지 않은 메시지가 있을 때만 카운트 표시
                 if (thread.unreadCount > 0) {
                     Surface(
-                        modifier = Modifier.size(24.dp),
+                        modifier = if (useUpdatedListStyle) {
+                            Modifier.height(24.dp).widthIn(min = 24.dp)
+                        } else Modifier.size(24.dp),
                         shape = RoundedCornerShape(4.dp),
                         color = grey800(),
                         shadowElevation = 0.dp,
                     ) {
                         androidx.compose.foundation.layout.Box(
+                            modifier = if (useUpdatedListStyle) Modifier.padding(horizontal = 8.dp) else Modifier,
                             contentAlignment = Alignment.Center,
                         ) {
                             UText(
                                 text = thread.unreadCount.toString(),
-                                style = UmcTypographyTokens.Caption2Bold,
+                                style = if (useUpdatedListStyle) UmcTypographyTokens.Caption1Bold else UmcTypographyTokens.Caption2Bold,
                                 color = grey000(),
                             )
                         }

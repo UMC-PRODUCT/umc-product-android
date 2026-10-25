@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,13 +15,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.presentation.community.model.CommunityCategory
 
@@ -45,28 +44,30 @@ fun CommunityTopBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 52.dp)
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .heightIn(min = 64.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // 화면 제목
         UText(
             text = "커뮤니티",
-            style = UmcTypographyTokens.Title2Bold,
+            style = UmcTypographyTokens.Title2Bold.copy(
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.35.sp,
+            ),
             color = grey950(),
-            modifier = Modifier.padding(start = 8.dp),
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
         // 카테고리 필터 버튼 및 필터 메뉴
         Box(
-            modifier = Modifier.size(44.dp),
+            modifier = Modifier.size(48.dp),
             contentAlignment = Alignment.Center,
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(48.dp)
                     .clickable(
                         interactionSource = remember {
                             MutableInteractionSource()
@@ -98,7 +99,7 @@ fun CommunityTopBar(
         // 커뮤니티 검색 화면 이동 버튼
         IconButton(
             onClick = onSearchClick,
-            modifier = Modifier.size(44.dp),
+            modifier = Modifier.size(48.dp),
         ) {
             Icon(
                 painter = painterResource(
