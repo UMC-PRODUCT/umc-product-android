@@ -13,6 +13,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
+import android.util.Log
 
 @Singleton
 class FcmTokenSynchronizer @Inject constructor(
@@ -31,8 +33,14 @@ class FcmTokenSynchronizer @Inject constructor(
         scope.launch {
             mutex.withLock {
                 repeat(3) { attempt ->
-                    if (store.getAccessToken().isBlank()) return@withLock
-                    if (register(token) is ApiState.Success) return@withLock
+                    try {
+                        if (store.getAccessToken().isBlank()) return@withLock
+                        if (register(token) is ApiState.Success) return@withLock
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        Log.w("log_fcm", "FCM token synchronization failed; will retry")
+                    }
                     if (attempt < 2) delay(1_000L shl attempt)
                 }
             }

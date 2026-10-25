@@ -41,7 +41,7 @@ class CommunityChatRepositoryImpl @Inject constructor(
     private val _errors = MutableSharedFlow<CommunityChatError>(extraBufferCapacity = 16)
     override val errors: Flow<CommunityChatError> = _errors.asSharedFlow()
 
-    private var webSocket: WebSocket? = null
+    @Volatile private var webSocket: WebSocket? = null
     private var heartbeatJob: Job? = null
     private var accessToken: String = ""
 

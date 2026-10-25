@@ -16,8 +16,9 @@ object PendingDeepLink {
     @Volatile
     var uri: Uri? = null
         set(value) {
+            if (field == value) return
             field = value
-            preferences?.edit()?.putString("uri", value?.toString())?.commit()
+            preferences?.edit()?.putString("uri", value?.toString())?.apply()
         }
 
     fun initialize(context: Context) {

@@ -44,7 +44,7 @@ android {
 dependencies {
     implementation(project(":domain"))
     implementation(platform(libs.firebase.bom))
-    implementation("com.google.firebase:firebase-installations")
+    implementation(libs.firebase.installations)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

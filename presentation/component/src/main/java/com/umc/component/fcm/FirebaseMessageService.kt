@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+import java.util.UUID
 
 
 /**
@@ -118,10 +119,13 @@ class FirebaseMessageService : FirebaseMessagingService() {
         }
 
 
+        val notificationId = UUID.randomUUID().toString()
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
             action = Intent.ACTION_VIEW
             data = route?.uri()
             route?.eventId?.let { putExtra("notificationEventId", it) }
+            // Intent identity excludes extras. Each displayed notification needs its own identity.
+            addCategory("$packageName.notification.$notificationId")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val contentIntent = launchIntent?.let {
@@ -137,6 +141,6 @@ class FirebaseMessageService : FirebaseMessagingService() {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         // 알람 띄우기 (ID를 시스템으로 설정해서 쌓이도록)
-        notificationManager.notify(System.currentTimeMillis().toInt(), builder.build())
+        notificationManager.notify(notificationId, 0, builder.build())
     }
 }
