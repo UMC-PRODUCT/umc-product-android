@@ -151,7 +151,8 @@ fun ReceivedCardScreen(
 
     uiState.selectedId?.let { id ->
         uiState.entries[id]?.takeUnless { it.pendingDelete }?.let { entry ->
-            ReceivedCardDetail(uiState, entry, onCloseDetail, onEditNote, onSaveNote, onConfirmDelete)
+            ReceivedCardDetail(uiState.noteDraft, uiState.isSaving, uiState.mutationError,
+                entry, onCloseDetail, onEditNote, onSaveNote, onConfirmDelete)
         }
     }
     if (uiState.showDeleteConfirmation && uiState.selectedId != null) {
@@ -421,7 +422,9 @@ private fun ReceivedCardItem(
 }
 @Composable
 private fun ReceivedCardDetail(
-    state: ReceivedCardUiState,
+    noteDraft: String,
+    isSaving: Boolean,
+    mutationError: String?,
     entry: StoredCard,
     onClose: () -> Unit,
     onEditNote: (String) -> Unit,
@@ -442,11 +445,11 @@ private fun ReceivedCardDetail(
                 UText("최초 수신: " + java.text.DateFormat.getDateTimeInstance().format(java.util.Date(entry.receivedAt)))
             }
             UText("개인 메모")
-            UTextField(value = state.noteDraft, onValueChange = onEditNote, placeholder = "메모를 입력하세요")
-            state.mutationError?.let { UText(it) }
-            TextButton(enabled = !state.isSaving, onClick = { onConfirmDelete(true) }) { UText("명함 삭제") }
+            UTextField(value = noteDraft, onValueChange = onEditNote, placeholder = "메모를 입력하세요")
+            mutationError?.let { UText(it) }
+            TextButton(enabled = !isSaving, onClick = { onConfirmDelete(true) }) { UText("명함 삭제") }
         } },
-        confirmButton = { TextButton(enabled = !state.isSaving, onClick = onSave) { UText(if (state.isSaving) "저장 중…" else "메모 저장") } },
-        dismissButton = { TextButton(enabled = !state.isSaving, onClick = onClose) { UText("닫기") } },
+        confirmButton = { TextButton(enabled = !isSaving, onClick = onSave) { UText(if (isSaving) "저장 중…" else "메모 저장") } },
+        dismissButton = { TextButton(enabled = !isSaving, onClick = onClose) { UText("닫기") } },
     )
 }

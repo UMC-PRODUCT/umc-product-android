@@ -20,6 +20,8 @@ import com.umc.domain.repository.member.MemberRepository
 import com.umc.domain.usecase.appDataStore.ClearTokensUseCase
 import com.umc.domain.usecase.appDataStore.UpdateUserInfoUseCase
 import javax.inject.Inject
+import java.io.IOException
+import kotlinx.coroutines.CancellationException
 
 /**여기서 API의 response -> model의 data class로 변경**/
 
@@ -32,19 +34,25 @@ class MemberRepositoryImpl @Inject constructor(
 
     //내 정보 가져오기 + dataStore에 저장하기
     override suspend fun getMyProfile(): ApiState<UserInfo> {
-        val session = appDataStore.profileSession()
-        val response = memberRemoteDataSource.getMyProfile().map { it.toDomain() }
+        return try {
+            val session = appDataStore.profileSession()
+            val response = memberRemoteDataSource.getMyProfile().map { it.toDomain() }
 
-        //여기서 체크 후 dataStore에 저장하는 로직 정의
-        if (response is ApiState.Success) {
-            try {
-                appDataStore.saveUserInfo(response.data, session)
-            } catch (_: IllegalStateException) {
-                return ApiState.Fail(FailState(code = "ACCOUNT_CHANGED", message = "계정이 변경됐어요. 다시 확인해주세요."))
+            //여기서 체크 후 dataStore에 저장하는 로직 정의
+            if (response is ApiState.Success) {
+                try {
+                    appDataStore.saveUserInfo(response.data, session)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: IllegalStateException) {
+                    return ApiState.Fail(FailState(code = "ACCOUNT_CHANGED", message = "계정이 변경됐어요. 다시 확인해주세요."))
+                }
             }
-        }
 
-        return response
+            response
+        } catch (_: IOException) {
+            ApiState.Fail(FailState(code = "LOCAL_ERROR", message = "내 정보를 저장하거나 불러오지 못했어요. 다시 시도해주세요."))
+        }
     }
 
     override suspend fun getMemberProfile(id: Long): ApiState<UserInfo> {
@@ -72,17 +80,23 @@ class MemberRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteUser(kakaoAccessToken: String, googleAccessToken: String): ApiState<Unit> {
-        val session = appDataStore.profileSession()
-        val request = DeleteUserRequest(kakaoAccessToken, googleAccessToken)
-        val response = memberRemoteDataSource.deleteUser(request)
-        if (response is ApiState.Success) {
-            try {
-                appDataStore.purgeCurrentCardBook(session)
-            } catch (_: IllegalStateException) {
-                return ApiState.Fail(FailState(code = "ACCOUNT_CHANGED", message = "계정이 변경됐어요."))
+        return try {
+            val session = appDataStore.profileSession()
+            val request = DeleteUserRequest(kakaoAccessToken, googleAccessToken)
+            val response = memberRemoteDataSource.deleteUser(request)
+            if (response is ApiState.Success) {
+                try {
+                    appDataStore.purgeCurrentCardBook(session)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: IllegalStateException) {
+                    return ApiState.Fail(FailState(code = "ACCOUNT_CHANGED", message = "계정이 변경됐어요."))
+                }
             }
+            response
+        } catch (_: IOException) {
+            ApiState.Fail(FailState(code = "LOCAL_ERROR", message = "기기 데이터를 정리하지 못했어요. 다시 확인해주세요."))
         }
-        return response
     }
 
 }

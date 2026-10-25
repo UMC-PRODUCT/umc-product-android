@@ -9,7 +9,11 @@ data class StoredCard(
     val note: String = "",
     val version: Long = 0,
     val pendingDelete: Boolean = false,
-)
+) {
+    fun withoutDeletedContent(): StoredCard = if (pendingDelete) copy(
+        card = UserCard(memberNo = card.memberNo), note = "", receivedAt = 0,
+    ) else this
+}
 data class CardJournalEntry(
     val operationId: String,
     val peerId: String,
@@ -36,10 +40,11 @@ data class CardBook(
         // An older lookup/create result cannot undo a later delete or update.
         check(previous == null || previous.version <= context.revision) { "명함이 변경됐어요. 다시 확인해주세요." }
         val version = revision + 1
-        val stored = StoredCard(card.copy(memberNo = id), previous?.receivedAt ?: now, now,
-            previous?.note.orEmpty(), version)
+        val retained = previous?.takeUnless { it.pendingDelete }
+        val stored = StoredCard(card.copy(memberNo = id), retained?.receivedAt ?: now, now,
+            retained?.note.orEmpty(), version)
         return copy(revision = version, cards = cards + (id to stored),
-            journal = journal + CardJournalEntry(operationId, id, "SAVE", version))
+            journal = latestOperations(CardJournalEntry(operationId, id, "SAVE", version)))
     }
 
     fun delete(id: String, now: Long, operationId: String): CardBook {
@@ -47,9 +52,20 @@ data class CardBook(
         if (previous.pendingDelete) return this
         val version = revision + 1
         return copy(revision = version,
-            cards = cards + (id to previous.copy(pendingDelete = true, updatedAt = now, version = version)),
-            journal = journal + CardJournalEntry(operationId, id, "DELETE", version))
+            cards = cards + (id to previous.copy(pendingDelete = true, updatedAt = now, version = version).withoutDeletedContent()),
+            journal = latestOperations(CardJournalEntry(operationId, id, "DELETE", version)))
     }
+
+    // No server replay contract exists yet. Retain each peer's latest unsynced intent,
+    // rather than an ever-growing history of local saves and deletes.
+    private fun latestOperations(entry: CardJournalEntry): List<CardJournalEntry> =
+        (journal.sortedByDescending { it.version }.distinctBy { it.peerId }
+            .filterNot { it.peerId == entry.peerId }) + entry
+
+    fun withoutDeletedContent(): CardBook = copy(
+        cards = cards.mapValues { it.value.withoutDeletedContent() },
+        journal = journal.sortedByDescending { it.version }.distinctBy { it.peerId },
+    )
 
     fun updateNote(id: String, note: String): CardBook {
         val previous = cards[id]?.takeUnless { it.pendingDelete } ?: error("삭제된 명함이에요.")
@@ -75,9 +91,12 @@ fun UserCard.withoutUnverifiedContacts(): UserCard = copy(
     email = null, github = null, blog = null, linkedIn = null, qrPayload = null,
 )
 
-fun validCardWebLink(value: String?): String? = value?.trim()?.takeIf { raw ->
-    runCatching {
-        val uri = java.net.URI(raw)
+fun validCardWebLink(value: String?): String? = runCatching {
+    val raw = value?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+    val input = java.net.URI(raw)
+    val normalized = if (input.scheme == null) "https://${raw.removePrefix("//")}" else raw
+    val uri = java.net.URI(normalized)
+    normalized.takeIf {
         uri.scheme?.lowercase() in setOf("https", "http") && !uri.host.isNullOrBlank() && uri.userInfo == null
-    }.getOrDefault(false)
-}
+    }
+}.getOrNull()

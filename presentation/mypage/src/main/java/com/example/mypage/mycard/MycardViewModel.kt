@@ -62,13 +62,21 @@ class MycardViewModel @Inject constructor(
                 updateState { copy(cardStorageError = "보관 명함 수를 불러오지 못했어요.") }
             }.collect { state ->
                 updateState {
+                    val ownerChanged = state.session?.ownerId != userInfo.id
                     copy(
                         cardCount = state.book.statistics.localStoredCount,
                         cardStatistics = if (state.storageUnavailable || state.session == null) null else state.book.statistics,
                         cardStorageError = if (state.storageUnavailable) "보관 명함 수를 불러오지 못했어요." else null,
-                        userInfo = if (state.session?.ownerId != userInfo.id) UserInfo() else userInfo,
-                        receivedUserCard = if (state.session?.ownerId != userInfo.id) null else receivedUserCard,
-                        isSuccessOverlayOpen = if (state.session?.ownerId != userInfo.id) false else isSuccessOverlayOpen,
+                        userInfo = if (ownerChanged) UserInfo() else userInfo,
+                        receivedUserCard = if (ownerChanged) null else receivedUserCard,
+                        isSuccessOverlayOpen = if (ownerChanged) false else isSuccessOverlayOpen,
+                        myQrcodeData = if (ownerChanged) "" else myQrcodeData,
+                        myRecentInfoString = if (ownerChanged) "" else myRecentInfoString,
+                        githubLink = if (ownerChanged) "" else githubLink,
+                        linkedinLink = if (ownerChanged) "" else linkedinLink,
+                        blogLink = if (ownerChanged) "" else blogLink,
+                        processedTargetMemberId = if (ownerChanged) null else processedTargetMemberId,
+                        isProfileLoadFailed = if (ownerChanged) true else isProfileLoadFailed,
                     )
                 }
             }
@@ -205,6 +213,8 @@ class MycardViewModel @Inject constructor(
 
         viewModelScope.launch {
             val expected = runCatching { cardRepository.cardWriteContext() }.getOrElse {
+                if (it is CancellationException) throw it
+                updateState { copy(processedTargetMemberId = null) }
                 emitEvent(MycardEvent.ShowError("로그인 정보를 확인해주세요."))
                 return@launch
             }

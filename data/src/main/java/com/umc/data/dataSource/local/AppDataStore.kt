@@ -24,6 +24,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -145,6 +146,17 @@ class AppDataStore @Inject constructor(
             storageUnavailable = loaded.isFailure,
             hasLegacyRecords = !prefs[KEY_USER_CARDS].isNullOrBlank() && prefs[KEY_USER_CARDS] != "[]",
         )
+    }.onStart {
+        // Remove content retained by older tombstones, including accounts not currently active.
+        store.edit { prefs ->
+            prefs.asMap().keys.toList().forEach { key ->
+                val ownerId = key.name.removePrefix("card_book_v2_").toLongOrNull()
+                if (!key.name.startsWith("card_book_v2_") || ownerId == null) return@forEach
+                val book = runCatching { readBook(prefs, ownerId) }.getOrNull() ?: return@forEach
+                val normalized = book.withoutDeletedContent()
+                if (normalized != book) prefs[cardBookKey(ownerId)] = gson.toJson(normalized)
+            }
+        }
     }.distinctUntilChanged()
 
     val userCardFlow: Flow<List<UserCard>> = cardBookFlow.map { state ->
@@ -172,13 +184,17 @@ class AppDataStore @Inject constructor(
     }
 
     suspend fun saveUserCard(card: UserCard) = saveUserCard(card, cardWriteContext())
-    suspend fun saveUserCard(card: UserCard, expected: CardWriteContext) = changeCardBook(expected) { book ->
-        book.save(card.withoutUnverifiedContacts(), expected, System.currentTimeMillis(), UUID.randomUUID().toString())
+    suspend fun saveUserCard(card: UserCard, expected: CardWriteContext,
+        operationId: String = "save:${expected.session.ownerId}:${expected.session.epoch}:${expected.revision}:${card.cardId}",
+    ) = changeCardBook(expected) { book ->
+        book.withoutDeletedContent().save(card.withoutUnverifiedContacts(), expected, System.currentTimeMillis(), operationId)
     }
 
     suspend fun removeUserCard(cardId: String) = removeUserCard(cardId, cardWriteContext())
-    suspend fun removeUserCard(cardId: String, expected: CardWriteContext) = changeCardBook(expected) { book ->
-        book.delete(cardId, System.currentTimeMillis(), UUID.randomUUID().toString())
+    suspend fun removeUserCard(cardId: String, expected: CardWriteContext,
+        operationId: String = "delete:${expected.session.ownerId}:${expected.session.epoch}:${expected.revision}:$cardId",
+    ) = changeCardBook(expected) { book ->
+        book.withoutDeletedContent().delete(cardId, System.currentTimeMillis(), operationId)
     }
 
     suspend fun updateCardNote(cardId: String, note: String, expected: CardWriteContext) = changeCardBook(expected) {
