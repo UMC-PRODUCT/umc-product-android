@@ -295,7 +295,7 @@ object Endpoints {
     }
 
     object Notification {
-        const val NOTIFICATION = "api/v1/notification"
-        const val FCM_TOKEN = "$NOTIFICATION/fcm/token"
+        const val NOTIFICATION = "api/v1/notifications"
+        const val FCM_TOKEN = "$NOTIFICATION/fcm/installations"
     }
 }
