@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.pm.ApplicationInfo
 import androidx.core.content.ContextCompat
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -51,19 +52,34 @@ class FirebaseMessageService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         val route = CommunityNotification.parse(message.data)
+        val debugLogging = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        if (debugLogging) {
+            val routingFields = message.data.filterKeys {
+                it in setOf("schemaVersion", "type", "threadId", "deepLink", "deeplink", "deep_link")
+            }.mapValues { (_, value) -> value.take(500).replace('\n', ' ').replace('\r', ' ') }
+            Log.d("log_fcm", "received keys=${message.data.keys.sorted()} routing=$routingFields " +
+                "parsedThread=${route?.threadId} activeThread=${ActiveCommunityThread.threadId}")
+        }
         val eventId = route?.eventId ?: message.messageId
         if (eventId != null) {
             val prefs = getSharedPreferences("fcm_events", Context.MODE_PRIVATE)
             synchronized(FirebaseMessageService::class.java) {
                 val seen = prefs.getStringSet("displayed", emptySet()).orEmpty()
-                if (eventId in seen) return
+                if (eventId in seen) {
+                    if (debugLogging) Log.d("log_fcm", "suppressed: duplicate event")
+                    return
+                }
                 prefs.edit().putStringSet("displayed", (seen.toList().takeLast(199) + eventId).toSet()).commit()
             }
         }
         val title = message.data["title"] ?: message.notification?.title ?: "UMC"
         val body = message.data["body"] ?: message.notification?.body ?: "새 알림이 도착했어요."
         saveNotificationToDataStore(title, body)
-        if (route != null && ActiveCommunityThread.threadId == route.threadId) return
+        if (route != null && ActiveCommunityThread.threadId == route.threadId) {
+            if (debugLogging) Log.d("log_fcm", "suppressed: active thread")
+            return
+        }
+        if (debugLogging) Log.d("log_fcm", "notification requested: routePresent=${route != null}")
         showNotification(title, body, route)
     }
 
