@@ -714,6 +714,12 @@ fun MainNavHost(
             deepLinks = listOf(
                 navDeepLink {
                     uriPattern = "$COMMUNITY_THREAD_DEEP_LINK_BASE?threadId={threadId}"
+                },
+                navDeepLink {
+                    uriPattern = "umc://thread?threadId={threadId}"
+                },
+                navDeepLink {
+                    uriPattern = "umc://thread/{threadId}"
                 }
             ),
         ) { backStackEntry ->

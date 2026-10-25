@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
             PendingDeepLink.uri = savedInstanceState.getString("pendingDeepLink")?.let(android.net.Uri::parse)
         }
         if (savedInstanceState == null) {
-            val payload = listOf("schemaVersion", "type", "threadId", "notificationEventId").associateWith { intent?.getStringExtra(it).orEmpty() }.filterValues { it.isNotEmpty() }.orEmpty()
+            val payload = listOf("schemaVersion", "type", "threadId", "notificationEventId", "deepLink", "deeplink").associateWith { intent?.getStringExtra(it).orEmpty() }.filterValues { it.isNotEmpty() }.orEmpty()
             val route = CommunityNotification.parse(payload)
             val eventId = intent?.getStringExtra("notificationEventId") ?: route?.eventId
             val preferences = getSharedPreferences("fcm_routes", MODE_PRIVATE)

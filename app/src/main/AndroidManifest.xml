@@ -94,6 +94,14 @@
 
 
 
+            <!-- Community thread: umc://thread?threadId=123 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="umc" android:host="thread" />
+            </intent-filter>
+
             <!-- Custom Deep Link Scheme (umc://card?memberNo=123) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
