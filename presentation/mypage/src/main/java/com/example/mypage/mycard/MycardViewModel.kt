@@ -16,6 +16,12 @@ import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.mypage.NearbyUserInfo
+import com.umc.domain.model.mypage.CardWriteContext
+import com.umc.domain.model.mypage.CardSession
+import com.umc.domain.model.mypage.CardStatistics
+import com.umc.domain.repository.AppDataStoreRepository
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.CancellationException
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.model.toUserCard
 import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
@@ -33,6 +39,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MycardViewModel @Inject constructor(
+    private val cardRepository: AppDataStoreRepository,
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val getUserCardUseCase: GetUserCardUseCase, //유저 명함 가져오기
     private val getMemberProfileUseCase: GetMemberProfileUseCase, //유저 검색하기
@@ -51,10 +58,25 @@ class MycardViewModel @Inject constructor(
 
         // DataStore 내에 저장되어 있는 명함 리스트를 실시간 수신하여 명함 수 갱신
         viewModelScope.launch {
-            getUserCardUseCase().collect { cards ->
+            cardRepository.getCardBook().catch {
+                updateState { copy(cardStorageError = "보관 명함 수를 불러오지 못했어요.") }
+            }.collect { state ->
                 updateState {
+                    val ownerChanged = state.session?.ownerId != userInfo.id
                     copy(
-                        cardCount = cards.size
+                        cardCount = state.book.statistics.localStoredCount,
+                        cardStatistics = if (state.storageUnavailable || state.session == null) null else state.book.statistics,
+                        cardStorageError = if (state.storageUnavailable) "보관 명함 수를 불러오지 못했어요." else null,
+                        userInfo = if (ownerChanged) UserInfo() else userInfo,
+                        receivedUserCard = if (ownerChanged) null else receivedUserCard,
+                        isSuccessOverlayOpen = if (ownerChanged) false else isSuccessOverlayOpen,
+                        myQrcodeData = if (ownerChanged) "" else myQrcodeData,
+                        myRecentInfoString = if (ownerChanged) "" else myRecentInfoString,
+                        githubLink = if (ownerChanged) "" else githubLink,
+                        linkedinLink = if (ownerChanged) "" else linkedinLink,
+                        blogLink = if (ownerChanged) "" else blogLink,
+                        processedTargetMemberId = if (ownerChanged) null else processedTargetMemberId,
+                        isProfileLoadFailed = if (ownerChanged) true else isProfileLoadFailed,
                     )
                 }
             }
@@ -103,6 +125,12 @@ class MycardViewModel @Inject constructor(
     fun settingUserInfoToUI(userInfo: UserInfo){
 
         // 기수별 정보 요약본 get
+        updateState { copy(
+            githubLink = userInfo.profile.github,
+            linkedinLink = userInfo.profile.linkedIn,
+            blogLink = userInfo.profile.blog,
+            myRecentInfoString = "",
+        ) }
         val gisuSummaryList = userInfo.getGisuSummaryList()
 
         // 최신기수를 가져오기
@@ -184,14 +212,20 @@ class MycardViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            val expected = runCatching { cardRepository.cardWriteContext() }.getOrElse {
+                if (it is CancellationException) throw it
+                updateState { copy(processedTargetMemberId = null) }
+                emitEvent(MycardEvent.ShowError("로그인 정보를 확인해주세요."))
+                return@launch
+            }
             resultResponse(
                 response = getMemberProfileUseCase(memberId),
                 successCallback = { userInfo ->
                     val targetCard = userInfo.toUserCard()
-                    saveUserCard(targetCard)
+                    saveUserCard(targetCard, expected)
 
                 },
-                errorCallback = {}
+                errorCallback = { updateState { copy(processedTargetMemberId = null) } }
             )
         }
     }
@@ -201,18 +235,20 @@ class MycardViewModel @Inject constructor(
      *
      * @param userCard 저장할 상대방 명함 도메인 모델
      */
-    fun saveUserCard(userCard: UserCard) {
-        Log.d("log_mypage", "saveUserCard: $userCard")
+    fun saveUserCard(userCard: UserCard, expected: CardWriteContext? = null) {
         viewModelScope.launch {
-            SaveUserCardUseCase(userCard)
-
-            updateState {
-                copy(
-                    isSuccessOverlayOpen = true,
-                    receivedUserCard = userCard
-                )
+            try {
+                val context = expected ?: cardRepository.cardWriteContext()
+                cardRepository.saveUserCard(userCard, context)
+                // Account changes after the write must not open the prior account's success overlay.
+                if (cardRepository.cardWriteContext().session != context.session) return@launch
+                updateState { copy(isSuccessOverlayOpen = true, receivedUserCard = userCard) }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                updateState { copy(processedTargetMemberId = null) }
+                emitEvent(MycardEvent.ShowError("명함을 저장하지 못했어요. 다시 시도해주세요."))
             }
-
         }
     }
 
@@ -251,6 +287,8 @@ data class MycardUiState(
     val blogLink: String = "",
 
     val cardCount: Int = 0,
+    val cardStatistics: CardStatistics? = null,
+    val cardStorageError: String? = null,
 
     //qr로 받을 때 유저 id 정보
     val processedTargetMemberId: Long? = null,
@@ -262,6 +300,7 @@ data class MycardUiState(
     ) : UiState
 
 sealed interface MycardEvent : UiEvent {
+    data class ShowError(val message: String) : MycardEvent
     //이동하기
     object NavigateToMypage: MycardEvent
 

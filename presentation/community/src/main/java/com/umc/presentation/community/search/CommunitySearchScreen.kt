@@ -16,6 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.CircularProgressIndicator
+import com.umc.component.component.UText
 import androidx.compose.ui.unit.dp
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.grey000
@@ -136,12 +140,12 @@ fun CommunitySearchScreen(
             }
 
             // 검색 응답을 기다리는 중에는 결과 없음 문구 대신 로딩 표시
-            state.hasSearched && state.isLoading -> {
+            state.hasSearched && state.isLoading && state.searchResults.isEmpty() -> {
                 CommunityLoadingContent()
             }
 
             // 검색 요청이 실패했을 때는 결과 없음과 구분해 다시 시도 제공
-            state.hasSearched && state.errorMessage != null -> {
+            state.hasSearched && state.errorMessage != null && state.searchResults.isEmpty() -> {
                 CommunityErrorContent(
                     errorMessage = state.errorMessage,
                     onRetryClick = {
@@ -153,7 +157,7 @@ fun CommunitySearchScreen(
             }
 
             // 검색을 실행했고 결과가 없을 때
-            state.hasSearched && state.searchResults.isEmpty() -> {
+            state.hasSearched && state.searchResults.isEmpty() && state.nextOffset == null -> {
                 CommunitySearchEmptyContent(
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -163,6 +167,8 @@ fun CommunitySearchScreen(
             state.hasSearched -> {
                 CommunitySearchResultList(
                     state = state,
+                    onLoadMore = { onAction(CommunitySearchAction.OnLoadMore) },
+                    // onRefresh = { onAction(CommunitySearchAction.OnSearchClick) },
                     onThreadClick = { threadId ->
                         onAction(
                             CommunitySearchAction.OnThreadClick(threadId)
@@ -187,6 +193,8 @@ fun CommunitySearchScreen(
 @Composable
 private fun CommunitySearchResultList(
     state: CommunitySearchState,
+    onLoadMore: () -> Unit,
+    // onRefresh: () -> Unit,
     onThreadClick: (String) -> Unit,
 ) {
     LazyColumn(
@@ -197,6 +205,13 @@ private fun CommunitySearchResultList(
             bottom = 24.dp,
         ),
     ) {
+        item(key = "search_refresh") {
+            // 검색 결과 새로고침 버튼 임시 비활성화.
+            // TextButton(onClick = onRefresh, enabled = !state.isLoading) { UText(if (state.isLoading) "새로고침 중" else "새로고침") }
+            state.errorMessage?.let { message ->
+                UText(message)
+            }
+        }
         items(
             items = state.searchResults,
             key = { thread ->
@@ -212,12 +227,25 @@ private fun CommunitySearchResultList(
                 modifier = Modifier.padding(bottom = 8.dp),
             )
         }
+        item(key = "search_pagination") {
+            when {
+                state.isLoadingMore -> CircularProgressIndicator(Modifier.padding(16.dp))
+                state.loadMoreError != null -> Column {
+                    UText(state.loadMoreError)
+                    TextButton(onClick = onLoadMore) { UText("다시 시도") }
+                }
+                state.nextOffset != null -> TextButton(onClick = onLoadMore) {
+                    UText("검색 결과 더 보기")
+                }
+            }
+        }
     }
 }
 
 /**
  * 검색 응답 대기 중 Preview
  */
+@PreviewScreenSizes
 @Preview(showBackground = true)
 @Composable
 private fun CommunitySearchScreenLoadingPreview() {
@@ -246,6 +274,17 @@ private fun CommunitySearchScreenErrorPreview() {
                 hasSearched = true,
                 errorMessage = "네트워크 연결을 확인하고 다시 시도해주세요.",
             ),
+            onAction = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+private fun CommunitySearchScreenTypingPreview() {
+    UmcTheme {
+        CommunitySearchScreen(
+            state = CommunitySearchState(query = "스터디", hasSearched = false),
             onAction = {},
         )
     }

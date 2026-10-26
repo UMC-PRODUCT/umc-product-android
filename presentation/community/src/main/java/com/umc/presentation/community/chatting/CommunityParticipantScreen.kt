@@ -70,6 +70,7 @@ internal fun CommunityParticipantScreen(
     memberCount: String,
     myMemberId: String,
     isOwner: Boolean,
+    canManage: Boolean = isOwner,
     onBack: () -> Unit,
     onKickMember: (String) -> Unit,
     onTransferOwnership: (String) -> Unit,
@@ -140,12 +141,13 @@ internal fun CommunityParticipantScreen(
                 ParticipantRow(
                     member = member,
                     isMe = member.memberId == myMemberId,
-                    showManagement = isOwner,
+                    showManagement = canManage,
+                    canTransfer = isOwner,
                     onKick = { pendingKickMember = member },
                     onTransferOwnership = { pendingOwnershipMember = member },
                 )
             }
-            if (isOwner) {
+            if (canManage) {
                 item {
                     Row(
                         modifier = Modifier
@@ -225,6 +227,7 @@ private fun ParticipantRow(
     member: CommunityThreadMember,
     isMe: Boolean,
     showManagement: Boolean,
+    canTransfer: Boolean,
     onKick: () -> Unit,
     onTransferOwnership: () -> Unit,
 ) {
@@ -284,9 +287,11 @@ private fun ParticipantRow(
                     containerColor = white(),
                     shadowElevation = 8.dp,
                 ) {
-                    ParticipantMenuItem(AppStrings.CHAT_TRANSFER_OWNER, R.drawable.ic_swap_horizontal) {
-                        menuExpanded = false
-                        onTransferOwnership()
+                    if (canTransfer) {
+                        ParticipantMenuItem(AppStrings.CHAT_TRANSFER_OWNER, R.drawable.ic_swap_horizontal) {
+                            menuExpanded = false
+                            onTransferOwnership()
+                        }
                     }
                     ParticipantMenuItem(AppStrings.CHAT_KICK, R.drawable.ic_block, red400()) {
                         menuExpanded = false

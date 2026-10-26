@@ -6,6 +6,8 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
 import com.umc.domain.model.home.NotificationItem
 import com.umc.domain.model.mypage.UserCard
+import com.umc.domain.model.mypage.CardBookState
+import com.umc.domain.model.mypage.CardWriteContext
 import com.umc.domain.model.mypage.UserOutLink
 import com.umc.domain.repository.AppDataStoreRepository
 import kotlinx.coroutines.flow.Flow
@@ -76,9 +78,9 @@ class AppDataStoreRepositoryImpl @Inject constructor(
         return appDataStore.getRefreshToken()
     }
 
-    override suspend fun saveTokens(accessToken: String, refreshToken: String): ApiState<Unit> {
+    override suspend fun saveTokens(accessToken: String, refreshToken: String, newSession: Boolean): ApiState<Unit> {
         return try {
-            appDataStore.saveTokens(accessToken, refreshToken)
+            appDataStore.saveTokens(accessToken, refreshToken, newSession)
             ApiState.Success(Unit)
         } catch (e: Exception) {
             ApiState.Fail(
@@ -126,6 +128,13 @@ class AppDataStoreRepositoryImpl @Inject constructor(
     override suspend fun saveUserCard(card: UserCard) {
         appDataStore.saveUserCard(card)
     }
+
+    override fun getCardBook(): Flow<CardBookState> = appDataStore.cardBookFlow
+    override suspend fun cardWriteContext(): CardWriteContext = appDataStore.cardWriteContext()
+    override suspend fun saveUserCard(card: UserCard, context: CardWriteContext) = appDataStore.saveUserCard(card, context)
+    override suspend fun removeUserCard(cardId: String, context: CardWriteContext) = appDataStore.removeUserCard(cardId, context)
+    override suspend fun updateCardNote(cardId: String, note: String, context: CardWriteContext) =
+        appDataStore.updateCardNote(cardId, note, context)
 
     override suspend fun removeUserCard(cardId: String) {
         appDataStore.removeUserCard(cardId)

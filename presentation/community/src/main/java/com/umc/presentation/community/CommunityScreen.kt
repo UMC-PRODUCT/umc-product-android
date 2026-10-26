@@ -18,6 +18,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
+import com.umc.component.theme.UmcTheme
+import com.umc.presentation.community.model.CommunityCategory
+import com.umc.presentation.community.model.CommunityThreadUiModel
+import kotlinx.collections.immutable.toImmutableList
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
@@ -128,7 +134,7 @@ fun CommunityScreen(
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 20.dp),
+                    .padding(bottom = 18.dp),
             )
         }
 
@@ -187,7 +193,7 @@ private fun CommunityThreadList(
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
-            top = 10.dp,
+            top = 4.dp,
             bottom = 96.dp,
         ),
     ) {
@@ -215,14 +221,15 @@ private fun CommunityThreadList(
                     onLongClick = {
                         onThreadLongClick(thread.id)
                     },
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    modifier = Modifier.padding(bottom = 10.dp),
+                    useUpdatedListStyle = true,
                 )
             }
 
             item(
                 key = "normal_section_space",
             ) {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(2.dp))
             }
         }
 
@@ -249,7 +256,8 @@ private fun CommunityThreadList(
                 onLongClick = {
                     onThreadLongClick(thread.id)
                 },
-                modifier = Modifier.padding(bottom = 8.dp),
+                modifier = Modifier.padding(bottom = 10.dp),
+                useUpdatedListStyle = true,
             )
         }
     }
@@ -264,8 +272,44 @@ private fun CommunitySectionTitle(
 ) {
     UText(
         text = text,
-        style = UmcTypographyTokens.HeadlineBold,
+        style = UmcTypographyTokens.HeadlineBold.copy(letterSpacing = (-0.41).sp),
         color = grey950(),
-        modifier = Modifier.padding(8.dp),
+        modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
     )
+}
+
+@Preview(name = "커뮤니티 기본 목록 · Figma 1:3825", widthDp = 412, heightDp = 734, showBackground = true)
+@Composable
+private fun CommunityListPreview() {
+    val titles = listOf(
+        "iOS 3주차 과제 인증방",
+        "정기 모임 일정 안내",
+        "OT 장소 변경 안내",
+        "리액트 상태관리 질문 있어요",
+        "이번 주 회식 어때요?",
+    )
+    val categories = listOf(
+        CommunityCategory.STUDY, CommunityCategory.PROJECT,
+        CommunityCategory.PROJECT, CommunityCategory.QNA, CommunityCategory.FREE,
+    )
+    UmcTheme(darkTheme = false) {
+        CommunityScreen(
+            state = CommunityState(
+                isLoading = false,
+                threads = titles.mapIndexed { index, title ->
+                    CommunityThreadUiModel(
+                        id = "preview-$index",
+                        title = title,
+                        contentPreview = "다들 과제 인증 완료했나요? 오늘 자정까지...",
+                        category = categories[index],
+                        dayText = "화요일",
+                        unreadCount = 3,
+                        isPinned = index < 2,
+                        isJoined = true,
+                    )
+                }.toImmutableList(),
+            ),
+            onAction = {},
+        )
+    }
 }

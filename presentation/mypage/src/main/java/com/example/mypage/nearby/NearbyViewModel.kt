@@ -10,6 +10,9 @@ import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.mypage.NearbyUserInfo
+import com.umc.domain.model.mypage.CardWriteContext
+import com.umc.domain.repository.AppDataStoreRepository
+import kotlinx.coroutines.CancellationException
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.usecase.appDataStore.usercard.SaveUserCardUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,8 +33,10 @@ import javax.inject.Inject
 @HiltViewModel
 class NearbyViewModel @Inject constructor(
     application: Application,
-    private val SaveUserCardUseCase: SaveUserCardUseCase, //명함 저장
+    private val cardRepository: AppDataStoreRepository,
 ) : BaseViewModel<NearbyUiState, NearbyEvent>(NearbyUiState()) {
+
+    private var exchangeContext: CardWriteContext? = null
 
     // NearbyManager 인스턴스를 생성하고 내부 통신 이벤트를 수신하는 리스너 바인딩
     private val manager = NearbyManager(application) { event ->
@@ -72,21 +77,22 @@ class NearbyViewModel @Inject constructor(
             }
             // 상대방 명함 카드 수신 성공 시 저장 및 오버레이 노출
             is NearbyManagerEvent.UserCardReceived -> {
-                updateState {
-                    copy(
-                        receivedCard = event.card,
-                        isBottomSheetOpen = false, // 교환 성공 시 바텀시트 닫기
-                        isSuccessOverlayOpen = true // 오버레이 띄우기
-                    )
-                }
-
-                // 수신받은 상대방 명함을 AppDataStore 로컬 DB에 비동기 저장
-                viewModelScope.launch {
-                    SaveUserCardUseCase(event.card)
-                }
-
-                // 트랜잭션 완료 후 연결 및 소켓 세션 즉시 정리
+                val expected = exchangeContext
                 stopExchange()
+                if (expected == null) {
+                    emitEvent(NearbyEvent.ShowToast("명함을 저장할 계정을 확인할 수 없어요."))
+                } else viewModelScope.launch {
+                    try {
+                        cardRepository.saveUserCard(event.card, expected)
+                        if (cardRepository.cardWriteContext().session == expected.session) updateState {
+                            copy(receivedCard = event.card, isBottomSheetOpen = false, isSuccessOverlayOpen = true)
+                        }
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        emitEvent(NearbyEvent.ShowToast("명함을 저장하지 못했어요. 다시 시도해주세요."))
+                    }
+                }
             }
 
             // 현재 통신 진행 상태 메시지 업데이트
@@ -148,7 +154,7 @@ class NearbyViewModel @Inject constructor(
         val myInfo = uiState.value.myUserInfo ?: NearbyUserInfo(name = "실패", info = "Connect 실패")
 
         updateState { copy(exchangeStep = ExchangeStep.DISCOVER_USERS, devices = persistentListOf()) }
-        manager.startAdvertisingAndDiscovery(myInfo)
+        withCardSession { manager.startAdvertisingAndDiscovery(myInfo) }
     }
 
     /**
@@ -204,15 +210,31 @@ class NearbyViewModel @Inject constructor(
     /**
      * 수동 기기 광고 시작 메서드
      */
+    private fun withCardSession(start: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val expected = cardRepository.cardWriteContext()
+                check(uiState.value.myUserCard?.memberNo == expected.session.ownerId.toString())
+                exchangeContext = expected
+                start()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                exchangeContext = null
+                emitEvent(NearbyEvent.ShowToast("명함을 저장할 계정을 다시 확인해주세요."))
+            }
+        }
+    }
+
     fun startAdvertising(userInfo: NearbyUserInfo) {
-        manager.startAdvertising(userInfo)
+        withCardSession { manager.startAdvertising(userInfo) }
     }
 
     /**
      * 수동 1:N 유저 스캔 탐색 시작 메서드
      */
     fun startDiscovery() {
-        manager.startDiscovery()
+        withCardSession { manager.startDiscovery() }
     }
 
     /**
@@ -249,6 +271,7 @@ class NearbyViewModel @Inject constructor(
      * 진행 중인 탐색 및 광고를 중단하고 선택 상태를 리셋하는 메서드
      */
     fun stopExchange() {
+        exchangeContext = null
         manager.stopAll()
         updateState {
             copy(

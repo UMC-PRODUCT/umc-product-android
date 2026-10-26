@@ -1,6 +1,5 @@
 package com.umc.domain.model.mypage
 import com.google.gson.Gson
-import java.awt.Color
 
 data class UserCard(
     val name: String = "",
@@ -17,13 +16,15 @@ data class UserCard(
     val blog: String? = null,
     val memberNo: String? = null,
     val qrPayload: String? = null,
+    val linkedIn: String? = null,
 
 ){
     /**class <-> Json**/
     fun toJson(): String = Gson().toJson(this)
 
     val cardId: String
-        get() = "${name.trim()}_${nickname.trim()}"
+        get() = memberNo?.toLongOrNull()?.takeIf { it > 0 }?.toString()
+            ?: "legacy:${name.trim()}_${nickname.trim()}"
 
     val partType: UserCardPartType
         get() = UserCardPartType.from(part)

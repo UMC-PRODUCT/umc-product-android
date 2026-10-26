@@ -41,7 +41,7 @@ class CommunityChatRepositoryImpl @Inject constructor(
     private val _errors = MutableSharedFlow<CommunityChatError>(extraBufferCapacity = 16)
     override val errors: Flow<CommunityChatError> = _errors.asSharedFlow()
 
-    private var webSocket: WebSocket? = null
+    @Volatile private var webSocket: WebSocket? = null
     private var heartbeatJob: Job? = null
     private var accessToken: String = ""
 
@@ -104,6 +104,7 @@ class CommunityChatRepositoryImpl @Inject constructor(
 
     private inner class StompListener : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
+            if (this@CommunityChatRepositoryImpl.webSocket !== webSocket) return
             webSocket.send(
                 stompFrame(
                     command = "CONNECT",
@@ -118,6 +119,7 @@ class CommunityChatRepositoryImpl @Inject constructor(
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
+            if (this@CommunityChatRepositoryImpl.webSocket !== webSocket) return
             text.split('\u0000').forEach { rawFrame ->
                 val frame = parseFrame(rawFrame) ?: return@forEach
                 when (frame.command) {
@@ -194,7 +196,12 @@ class CommunityChatRepositoryImpl @Inject constructor(
     private fun handleMessage(frame: StompFrame) {
         when (frame.headers["subscription"]) {
             "community-errors" -> emitError(frame.body)
-            else -> parseEvent(frame.body)?.let(_events::tryEmit)
+            else -> parseEvent(frame.body)?.let { event ->
+                if (!_events.tryEmit(event)) {
+                    // Do not silently continue after losing a user-queue event; reconnect triggers HTTP recovery.
+                    disconnect()
+                }
+            }
         }
     }
 

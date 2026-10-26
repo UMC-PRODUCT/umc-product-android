@@ -22,10 +22,18 @@ data class CommunityChattingState(
     val readWatermarks: Map<String, String> = emptyMap(),
     val connectionState: CommunityChatConnectionState = CommunityChatConnectionState.DISCONNECTED,
     val draft: String = "",
+    val mentionedMembers: Map<String, String> = emptyMap(),
+    val editingMessageId: String? = null,
+    val editDraft: String = "",
+    val editCommandId: String? = null,
+    val editError: String? = null,
     val hasMore: Boolean = false,
     val nextBefore: String? = null,
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
+    val isRecovering: Boolean = false,
+    val recoveryRevision: Int = 0,
+    val recoveryIncomplete: Boolean = false,
     val showDeleteDialog: Boolean = false,
     val showOwnershipTransferRequiredDialog: Boolean = false,
     val isDeleting: Boolean = false,
@@ -35,10 +43,24 @@ data class CommunityChattingState(
     val unreadSummary: String? = null,
     val unreadSummaryError: String? = null,
     val summarizedMessageCount: Int = 0,
+    val summaryMessageIds: List<String> = emptyList(),
+    val summaryStart: String = "",
+    val summaryEnd: String = "",
+    val summaryTruncated: Boolean = false,
     val errorMessage: String? = null,
     val isThreadUnavailable: Boolean = false,
     val isAccessDenied: Boolean = false,
-) : UiState
+) : UiState {
+    internal fun acknowledgeEdit(commandId: String): CommunityChattingState =
+        if (editCommandId == commandId) {
+            copy(editingMessageId = null, editDraft = "", editCommandId = null, editError = null)
+        } else this
+
+    internal fun rejectEdit(commandId: String?, message: String): CommunityChattingState =
+        if (commandId != null && editCommandId == commandId) {
+            copy(editCommandId = null, editError = message)
+        } else this
+}
 
 data class PendingCommunityMessage(
     val clientMessageId: String,
@@ -47,6 +69,7 @@ data class PendingCommunityMessage(
     val type: CommunityMessageType = CommunityMessageType.TEXT,
     val localUris: List<String> = emptyList(),
     val fileMetadataIds: List<String> = emptyList(),
+    val confirmedFilesByUri: Map<String, String> = emptyMap(),
     val error: String? = null,
     val acknowledged: Boolean = false,
     val mentionedMemberIds: List<Long> = emptyList(),

@@ -201,7 +201,7 @@ fun CommunityEditScreen(
                     )
 
                     // 스레드 삭제 버튼
-                    CommunityDeleteButton(
+                    if (state.canEdit) CommunityDeleteButton(
                         onClick = {
                             onAction(
                                 CommunityEditAction.OnDeleteThreadClick

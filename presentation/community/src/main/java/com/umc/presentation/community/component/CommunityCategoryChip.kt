@@ -3,7 +3,6 @@ package com.umc.presentation.community.component
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -19,6 +18,8 @@ import com.umc.component.theme.green500
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey500
+import com.umc.component.theme.grey50
+import com.umc.component.theme.grey600
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo200
 import com.umc.component.theme.indigo500
@@ -37,6 +38,7 @@ import com.umc.presentation.community.model.CommunityCategory
 fun CommunityCategoryChip(
     category: CommunityCategory,
     modifier: Modifier = Modifier,
+    useUpdatedListStyle: Boolean = false,
 ) {
     // 전체 및 안읽음 카테고리는 스레드 카드에 표시하지 않음
     if (
@@ -65,9 +67,9 @@ fun CommunityCategoryChip(
         }
 
         CommunityCategory.QNA -> {
-            backgroundColor = grey100()
+            backgroundColor = if (useUpdatedListStyle) grey50() else grey100()
             borderColor = grey200()
-            textColor = grey500()
+            textColor = if (useUpdatedListStyle) grey600() else grey500()
         }
 
         CommunityCategory.FREE -> {

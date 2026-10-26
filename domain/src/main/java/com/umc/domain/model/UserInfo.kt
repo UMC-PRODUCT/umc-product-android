@@ -121,6 +121,8 @@ fun UserInfo.toUserCard(): UserCard {
         email = email,
         github = profile.github,
         blog = profile.blog,
+        linkedIn = profile.linkedIn,
+        memberNo = id.takeIf { it > 0 }?.toString(),
         qrPayload = ""
     )
 }

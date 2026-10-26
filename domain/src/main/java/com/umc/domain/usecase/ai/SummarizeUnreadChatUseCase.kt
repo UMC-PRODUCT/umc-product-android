@@ -15,20 +15,7 @@ class SummarizeUnreadChatUseCase @Inject constructor(
         messages: List<CommunityThreadMessage>,
         onDownloadProgress: (percent: Int) -> Unit = {},
     ): ApiState<String> {
-        val source = messages
-            .asSequence()
-            .filter { it.type == CommunityMessageType.TEXT }
-            .mapNotNull { message ->
-                message.content
-                    ?.trim()
-                    ?.takeIf(String::isNotBlank)
-                    ?.let { content ->
-                        val sender = message.senderName.orEmpty().ifBlank { "참여자" }
-                        "$sender: $content"
-                    }
-            }
-            .joinToString("\n")
-            .take(MAX_SOURCE_LENGTH)
+        val source = prepareInput(messages).source
 
         if (source.isBlank()) {
             return ApiState.Fail(
@@ -57,8 +44,37 @@ class SummarizeUnreadChatUseCase @Inject constructor(
         return aiTextRepository.generate(prompt, onDownloadProgress)
     }
 
-    private companion object {
+    companion object {
         const val MAX_SOURCE_LENGTH = 12_000
+        const val MAX_MESSAGE_COUNT = 50
         const val EMPTY_MESSAGES_CODE = "EMPTY_UNREAD_MESSAGES"
+
+        fun prepareInput(messages: List<CommunityThreadMessage>): ChatSummaryInput {
+            val selected = mutableListOf<CommunityThreadMessage>()
+            val source = StringBuilder()
+            var truncated = false
+            for (message in messages.filter {
+                it.type == CommunityMessageType.TEXT && it.deletedAt == null &&
+                    it.status != "DELETED" && !it.content.isNullOrBlank()
+            }.take(MAX_MESSAGE_COUNT)) {
+                val line = "${message.senderName.orEmpty().ifBlank { "참여자" }}: ${message.content.orEmpty().trim()}"
+                val remaining = MAX_SOURCE_LENGTH - source.length - if (source.isEmpty()) 0 else 1
+                if (remaining <= 0) break
+                if (source.isNotEmpty()) source.append('\n')
+                source.append(line.take(remaining))
+                selected += message
+                if (line.length > remaining) {
+                    truncated = true
+                    break
+                }
+            }
+            return ChatSummaryInput(source.toString(), selected, truncated)
+        }
     }
 }
+
+data class ChatSummaryInput(
+    val source: String,
+    val messages: List<CommunityThreadMessage>,
+    val truncated: Boolean,
+)

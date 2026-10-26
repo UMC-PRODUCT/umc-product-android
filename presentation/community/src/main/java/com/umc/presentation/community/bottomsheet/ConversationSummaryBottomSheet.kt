@@ -26,6 +26,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import com.umc.component.component.UText
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +51,9 @@ import com.umc.component.theme.green500
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.white
 import com.umc.presentation.community.chatting.CommunityChattingState
+import com.umc.presentation.community.chatting.formatCommunityDate
+import com.umc.presentation.community.chatting.formatCommunityCreatedAt
+import com.umc.domain.usecase.ai.SummarizeUnreadChatUseCase
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +61,7 @@ fun ConversationSummaryBottomSheet(
     state: CommunityChattingState,
     onRetry: () -> Unit,
     onDismiss: () -> Unit,
+    onShowSource: () -> Unit = {},
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -71,6 +79,7 @@ fun ConversationSummaryBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .heightIn(min = 300.dp)
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 40.dp),
@@ -103,6 +112,17 @@ fun ConversationSummaryBottomSheet(
             }
 
             Spacer(Modifier.height(12.dp))
+            if (state.summaryMessageIds.isNotEmpty()) {
+                UText(AppStrings.CHAT_AI_SOURCE_RANGE_FORMAT.format(
+                    "${formatCommunityDate(state.summaryStart)} ${formatCommunityCreatedAt(state.summaryStart)}",
+                    "${formatCommunityDate(state.summaryEnd)} ${formatCommunityCreatedAt(state.summaryEnd)}",
+                    state.summarizedMessageCount,
+                    SummarizeUnreadChatUseCase.MAX_MESSAGE_COUNT,
+                    SummarizeUnreadChatUseCase.MAX_SOURCE_LENGTH,
+                    if (state.summaryTruncated) AppStrings.CHAT_AI_PARTIAL_SOURCE else "",
+                ))
+                TextButton(onClick = onShowSource) { UText("요약 원문 보기") }
+            }
 
             when {
                 state.isSummarizingUnread -> SummaryLoadingContent(state.aiDownloadPercent)

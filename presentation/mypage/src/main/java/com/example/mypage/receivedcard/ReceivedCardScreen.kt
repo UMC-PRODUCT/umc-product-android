@@ -27,6 +27,15 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.umc.domain.model.mypage.StoredCard
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -113,6 +122,13 @@ fun ReceivedCardRoute(
         onBackClick = onNavigateToBack,
         onSearchQueryChange = { query -> viewModel.onSearchQueryChanged(query) },
         onClearSearch = { viewModel.clearSearchQuery() },
+        onSelectCard = viewModel::selectCard,
+        onCloseDetail = viewModel::closeDetail,
+        onEditNote = viewModel::editNote,
+        onSaveNote = viewModel::saveNote,
+        onConfirmDelete = viewModel::confirmDelete,
+        onDeleteCard = viewModel::deleteCard,
+        onRetry = viewModel::retry,
     )
 
 }
@@ -123,8 +139,34 @@ fun ReceivedCardScreen(
     onBackClick: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onClearSearch: () -> Unit,
+    onSelectCard: (String) -> Unit = {},
+    onCloseDetail: () -> Unit = {},
+    onEditNote: (String) -> Unit = {},
+    onSaveNote: () -> Unit = {},
+    onConfirmDelete: (Boolean) -> Unit = {},
+    onDeleteCard: () -> Unit = {},
+    onRetry: () -> Unit = {},
 
 ){
+
+    uiState.selectedId?.let { id ->
+        uiState.entries[id]?.takeUnless { it.pendingDelete }?.let { entry ->
+            ReceivedCardDetail(uiState.noteDraft, uiState.isSaving, uiState.mutationError,
+                entry, onCloseDetail, onEditNote, onSaveNote, onConfirmDelete)
+        }
+    }
+    if (uiState.showDeleteConfirmation && uiState.selectedId != null) {
+        AlertDialog(
+            onDismissRequest = { if (!uiState.isSaving) onConfirmDelete(false) },
+            title = { UText("명함을 삭제할까요?") },
+            text = { Column {
+                UText("이 명함을 명함첩에서 삭제합니다.")
+                uiState.mutationError?.let { UText(it) }
+            } },
+            confirmButton = { TextButton(enabled = !uiState.isSaving, onClick = onDeleteCard) { UText("삭제") } },
+            dismissButton = { TextButton(enabled = !uiState.isSaving, onClick = { onConfirmDelete(false) }) { UText("취소") } },
+        )
+    }
 
     val focusManager = LocalFocusManager.current
     val interactionSource = remember { MutableInteractionSource() } //상호작용 수집
@@ -206,9 +248,21 @@ fun ReceivedCardScreen(
                 .height(16.dp)
         )
 
+        if (uiState.isLoading) CircularProgressIndicator(Modifier.padding(16.dp))
+        uiState.error?.let { error ->
+            UText(error, modifier = Modifier.padding(horizontal = 16.dp))
+            TextButton(onClick = onRetry) { UText("다시 시도") }
+        }
+        if (!uiState.isLoading && uiState.error == null && uiState.filteredCards.isEmpty()) {
+            UText(
+                if (uiState.searchQuery.isBlank()) "보관한 명함이 없어요." else "검색 결과가 없어요.",
+                modifier = Modifier.padding(16.dp),
+            )
+        }
+
         //4. 명함 lazyGrid
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
+            columns = GridCells.Adaptive(minSize = 150.dp),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -220,6 +274,7 @@ fun ReceivedCardScreen(
             ) { card ->
                 ReceivedCardItem(
                     card = card,
+                    onClick = { onSelectCard(card.cardId) },
                 )
             }
         }
@@ -248,7 +303,7 @@ fun ReceivedCardScreenTopBar(
                 .padding(12.dp)
                 .clickable { onBackClick() },
             painter = painterResource(id = R.drawable.ic_back),
-            contentDescription = null,
+            contentDescription = "뒤로가기",
             tint = Color.Unspecified,
         )
 
@@ -268,6 +323,7 @@ fun ReceivedCardScreenTopBar(
 @Composable
 private fun ReceivedCardItem(
     card: UserCard,
+    onClick: () -> Unit,
 ) {
     val partTheme = getPartTheme(card.partType)
 
@@ -276,6 +332,7 @@ private fun ReceivedCardItem(
             .fillMaxWidth()
             .heightIn(min = 160.dp)
             .clip(RoundedCornerShape(16.dp))
+            .clickable(onClickLabel = "명함 상세 보기", onClick = onClick)
             .background(partTheme.backgroundBrush)
             .padding(16.dp)
     ) {
@@ -362,4 +419,37 @@ private fun ReceivedCardItem(
 
         }
     }
+}
+@Composable
+private fun ReceivedCardDetail(
+    noteDraft: String,
+    isSaving: Boolean,
+    mutationError: String?,
+    entry: StoredCard,
+    onClose: () -> Unit,
+    onEditNote: (String) -> Unit,
+    onSave: () -> Unit,
+    onConfirmDelete: (Boolean) -> Unit,
+) {
+    var showBack by rememberSaveable(entry.card.cardId) { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { UText("${entry.card.name.ifBlank { "이름 없음" }} 명함") },
+        text = { Column(Modifier.verticalScroll(rememberScrollState())) {
+            TextButton(onClick = { showBack = !showBack }) { UText(if (showBack) "앞면 보기" else "뒷면 보기") }
+            if (!showBack) {
+                UText("${entry.card.name} / ${entry.card.nickname}")
+                UText(entry.card.university)
+                UText("${entry.card.part.ifBlank { "파트 미정" }} · ${entry.card.generation}기")
+            } else {
+                UText("최초 수신: " + java.text.DateFormat.getDateTimeInstance().format(java.util.Date(entry.receivedAt)))
+            }
+            UText("개인 메모")
+            UTextField(value = noteDraft, onValueChange = onEditNote, placeholder = "메모를 입력하세요")
+            mutationError?.let { UText(it) }
+            TextButton(enabled = !isSaving, onClick = { onConfirmDelete(true) }) { UText("명함 삭제") }
+        } },
+        confirmButton = { TextButton(enabled = !isSaving, onClick = onSave) { UText(if (isSaving) "저장 중…" else "메모 저장") } },
+        dismissButton = { TextButton(enabled = !isSaving, onClick = onClose) { UText("닫기") } },
+    )
 }

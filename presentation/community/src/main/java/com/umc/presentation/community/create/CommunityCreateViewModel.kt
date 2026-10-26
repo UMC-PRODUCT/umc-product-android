@@ -146,6 +146,8 @@ class CommunityCreateViewModel @Inject constructor(
                     it.classifiedCategory != null
                 ) {
                     CommunityAiState.NEEDS_RECLASSIFICATION
+                } else if (it.aiState == CommunityAiState.LOADING) {
+                    CommunityAiState.GUIDE
                 } else {
                     it.aiState
                 },
@@ -155,7 +157,7 @@ class CommunityCreateViewModel @Inject constructor(
         // 최초 분류 전이고 제목과 특징이 모두 입력된 경우에만 자동 분류
         if (
             previousState.classifiedCategory == null &&
-            title.isNotBlank() &&
+            com.umc.presentation.community.model.isCommunityThreadInputValid(title, _state.value.description) &&
             _state.value.description.isNotBlank()
         ) {
             scheduleAutoClassification()
@@ -198,7 +200,7 @@ class CommunityCreateViewModel @Inject constructor(
         // 최초 분류 전이고 제목과 특징이 모두 입력된 경우에만 자동 분류
         if (
             previousState.classifiedCategory == null &&
-            _state.value.title.isNotBlank() &&
+            com.umc.presentation.community.model.isCommunityThreadInputValid(_state.value.title, description) &&
             description.isNotBlank()
         ) {
             scheduleAutoClassification()
@@ -251,6 +253,7 @@ class CommunityCreateViewModel @Inject constructor(
             )
 
             // AI 분류 결과 상태 반영
+            if (_state.value.title != latestState.title || _state.value.description != latestState.description) return@launch
             _state.update {
                 it.copy(
                     aiState = result.aiState,
@@ -336,6 +339,7 @@ class CommunityCreateViewModel @Inject constructor(
                 description = latestState.description,
             )
 
+            if (_state.value.title != latestState.title || _state.value.description != latestState.description) return@launch
             _state.update {
                 it.copy(
                     aiState = result.aiState,
@@ -409,7 +413,7 @@ class CommunityCreateViewModel @Inject constructor(
         if (!currentState.isCompleteEnabled) {
             sendEvent(
                 CommunityCreateEvent.ShowToast(
-                    message = "제목과 스레드 특징을 모두 입력해주세요.",
+                    message = "제목 1~80자·특징 1~500자와 초대 대상을 확인해주세요.",
                 )
             )
             return
@@ -465,12 +469,7 @@ class CommunityCreateViewModel @Inject constructor(
                 },
                 memberIds = memberIds,
             ).onSuccess { createdThread ->
-                _state.update {
-                    it.copy(
-                        isSubmitting = false,
-                    )
-                }
-
+                // Keep submission locked until navigation consumes the successful result.
                 // 생성된 threadId와 함께 성공 이벤트 전달
                 sendEvent(
                     CommunityCreateEvent.CreateSuccess(

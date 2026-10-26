@@ -1,5 +1,6 @@
 package com.umc.presentation.community.edit
 
+import com.umc.presentation.community.model.isCommunityThreadInputValid
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -43,6 +44,7 @@ data class CommunityEditState(
 
     /** 스레드 수정 API 요청 진행 여부 */
     val isSaving: Boolean = false,
+    val canEdit: Boolean = false,
 
     /** 스레드 삭제 API 요청 진행 여부 */
     val isDeleting: Boolean = false,
@@ -68,7 +70,7 @@ data class CommunityEditState(
      * 현재 수정 요청 중이 아닐 때 활성화됩니다.
      */
     val isSaveEnabled: Boolean
-        get() = title.isNotBlank() &&
+        get() = canEdit && !isLoading && !isDeleting && isCommunityThreadInputValid(title, description) && title.isNotBlank() &&
                 description.isNotBlank() &&
                 classifiedCategory != null &&
                 !isSaving
@@ -80,7 +82,7 @@ data class CommunityEditState(
      * 현재 AI 분류 중이 아닐 때 활성화됩니다.
      */
     val canRequestClassification: Boolean
-        get() = title.isNotBlank() &&
+        get() = isCommunityThreadInputValid(title, description) && title.isNotBlank() &&
                 description.isNotBlank() &&
                 aiState != CommunityAiState.LOADING
 }

@@ -75,6 +75,8 @@ import com.umc.component.theme.indigo500
  * @param visualTransformation 입력 텍스트 표시 변환 (비밀번호 마스킹 등). null 이면 Password 키보드는 자동으로 마스킹하고 그 외에는 변환하지 않는다
  * @param interactionSource 포커스 상태를 호출부에서 관찰해야 할 때 외부에서 주입
  * @param verticalAlignment 입력 내용의 세로 정렬. 기본값은 중앙 정렬
+ * @param acceptInput 새 입력의 허용 여부. 거절한 입력은 내부 편집 상태에도 반영하지 않는다.
+ * @param onInputRejected 입력이 거절되었을 때 안내를 표시하는 콜백
  */
 @Composable
 fun UTextField(
@@ -105,6 +107,8 @@ fun UTextField(
     visualTransformation: VisualTransformation? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
+    acceptInput: (String) -> Boolean = { true },
+    onInputRejected: () -> Unit = {},
 ) {
     val isFocused by interactionSource.collectIsFocusedAsState()
 
@@ -147,8 +151,14 @@ fun UTextField(
     BasicTextField(
         value = fieldValue,
         onValueChange = {
-            fieldValue = it
-            onValueChange(it.text)
+            // Keep cursor/composition changes, but do not display rejected text even when
+            // the parent value stays unchanged and therefore does not trigger recomposition.
+            if (it.text == fieldValue.text || acceptInput(it.text)) {
+                fieldValue = it
+                onValueChange(it.text)
+            } else {
+                onInputRejected()
+            }
         },
         enabled = enabled,
         textStyle = textStyle.copy(color = textColor),
