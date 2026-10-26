@@ -1167,7 +1167,7 @@ class CommunityChattingViewModel @Inject constructor(
                     commandRecoveryJob = viewModelScope.launch {
                         do {
                             delay(2_000)
-                            if (commandRecovery.takeMissing()) reconcileLatestMessages()
+                            if (commandRecovery.takeMissing()) requestNetworkRecovery()
                         } while (commandRecovery.hasAcknowledged)
                     }
                 }
@@ -1312,8 +1312,8 @@ class CommunityChattingViewModel @Inject constructor(
         loadMembers()
     }
 
-    private suspend fun reconcileLatestMessages() = recoveryMutex.withLock {
-        if (uiState.value.isAccessDenied || uiState.value.isThreadUnavailable) return@withLock
+    private suspend fun reconcileLatestMessages(): Boolean = recoveryMutex.withLock {
+        if (uiState.value.isAccessDenied || uiState.value.isThreadUnavailable) return@withLock true
         val generation = accessGeneration
         val oldestId = uiState.value.messages.lastOrNull()?.messageId
         bufferingRecoveryEvents = true
@@ -1323,7 +1323,7 @@ class CommunityChattingViewModel @Inject constructor(
                 threadRepository.getMessages(uiState.value.threadId, before = before)
             }) {
                 is ApiState.Success -> {
-                    if (generation != accessGeneration) return@withLock
+                    if (generation != accessGeneration) return@withLock true
                     updateState {
                         val delivered = result.data.messages.mapNotNullTo(hashSetOf()) { it.clientMessageId }
                         copy(
@@ -1337,10 +1337,17 @@ class CommunityChattingViewModel @Inject constructor(
                             recoveryRevision = recoveryRevision + 1,
                         )
                     }
+                    true
                 }
                 is ApiState.Fail -> {
-                    if (result.failState.hasThreadAccessDeniedCode() || result.failState.hasThreadUnavailableCode()) showAccessDenied()
-                    else emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+                    if (generation != accessGeneration) return@withLock true
+                    if (result.failState.hasThreadAccessDeniedCode() || result.failState.hasThreadUnavailableCode()) {
+                        showAccessDenied()
+                        true
+                    } else {
+                        emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+                        false
+                    }
                 }
             }
         } finally {
@@ -1374,7 +1381,7 @@ class CommunityChattingViewModel @Inject constructor(
         if (networkRecoveryJob?.isActive == true) return
         networkRecoveryJob = viewModelScope.launch {
             refreshThread()
-            reconcileLatestMessages()
+            recoverMessagesWithRetry { reconcileLatestMessages() }
         }
     }
 
