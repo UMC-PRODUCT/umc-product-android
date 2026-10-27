@@ -171,9 +171,20 @@ private fun CommunityThreadMenuItem(
     )
 }
 
-@Preview(showBackground = true)
+@Preview(name = "방장·관리자 (편집 메뉴 있음)", showBackground = true)
 @Composable
-private fun CommunityThreadMenuDialogPreview() {
+private fun CommunityThreadMenuDialogEditablePreview() {
+    CommunityThreadMenuContentPreview(canEdit = true)
+}
+
+@Preview(name = "일반 멤버 (편집 메뉴 없음)", showBackground = true)
+@Composable
+private fun CommunityThreadMenuDialogMemberPreview() {
+    CommunityThreadMenuContentPreview(canEdit = false)
+}
+
+@Composable
+private fun CommunityThreadMenuContentPreview(canEdit: Boolean) {
     UmcTheme {
         CommunityThreadMenuContent(
             thread = CommunityThreadUiModel(
@@ -184,8 +195,8 @@ private fun CommunityThreadMenuDialogPreview() {
                 dayText = "오늘",
                 isPinned = false,
                 isNotificationEnabled = true,
-                isMine = true,
-                canEdit = true,
+                isMine = canEdit,
+                canEdit = canEdit,
                 isJoined = true,
             ),
             onDismissRequest = {},

@@ -7,6 +7,7 @@ import com.umc.component.theme.AppStrings
 import com.umc.domain.model.community.CommunityThread
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadRole
+import com.umc.domain.model.community.canEditThread
 import com.umc.domain.usecase.community.GetCommunityThreadsUseCase
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityThreadUiModel
@@ -512,7 +513,7 @@ private fun CommunityThread.toUiModel(
         isPinned = forcePinned || isPinned,
         isNotificationEnabled = !isMuted,
         isMine = myRole == CommunityThreadRole.OWNER,
-        canEdit = myRole == CommunityThreadRole.OWNER || myRole == CommunityThreadRole.ADMIN,
+        canEdit = myRole.canEditThread(),
         isJoined = isJoined,
     )
 }
@@ -568,7 +569,7 @@ private fun CommunityThreadDetail.toUiModel(): CommunityThreadUiModel {
         isPinned = isPinned,
         isNotificationEnabled = !isMuted,
         isMine = myRole == CommunityThreadRole.OWNER,
-        canEdit = myRole == CommunityThreadRole.OWNER || myRole == CommunityThreadRole.ADMIN,
+        canEdit = myRole.canEditThread(),
         isJoined = isJoined,
     )
 }

@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadMember
-import com.umc.domain.model.community.CommunityThreadRole
+import com.umc.domain.model.community.canEditThread
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.usecase.ai.CommunityCategoryRules
@@ -177,13 +177,7 @@ class CommunityEditViewModel @Inject constructor(
             getCommunityThreadDetailUseCase(
                 threadId = threadId,
             ).onSuccess { thread ->
-                if (
-                    thread.myRole !in setOf(
-                        CommunityThreadRole.OWNER,
-                        CommunityThreadRole.ADMIN,
-                    ) ||
-                    thread.deletedAt != null
-                ) {
+                if (!thread.myRole.canEditThread() || thread.deletedAt != null) {
                     _state.update { it.copy(isLoading = false, canEdit = false, errorMessage = "스레드를 수정할 권한이 없어요.") }
                     sendEvent(CommunityEditEvent.ShowToast("스레드를 수정할 권한이 없어요."))
                     return@onSuccess
