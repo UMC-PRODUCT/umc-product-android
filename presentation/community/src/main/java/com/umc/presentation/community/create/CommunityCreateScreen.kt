@@ -32,6 +32,7 @@ import com.umc.presentation.community.component.create.CommunityCreateTopBar
 import com.umc.presentation.community.component.create.CommunityIconSelectItem
 import com.umc.presentation.community.component.create.CommunityThreadForm
 import com.umc.presentation.community.component.create.CommunityThreadPreview
+import com.umc.presentation.community.component.create.communityRequiredLabel
 import com.umc.presentation.community.R
 import com.umc.presentation.community.bottomsheet.create.CommunityCreateMemberBottomSheet
 import com.umc.presentation.community.model.CommunityAiState
@@ -117,7 +118,7 @@ fun CommunityCreateScreen(
 
                 // 챌린저 선택 영역
 //                UText(
-//                    text = "초대할 챌린저",
+//                    text = communityRequiredLabel("초대할 챌린저"),
 //                    style = UmcTypographyTokens.HeadlineBold,
 //                    color = grey950(),
 //                )
@@ -159,7 +160,7 @@ fun CommunityCreateScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 UText(
-                    text = "아이콘",
+                    text = communityRequiredLabel("아이콘"),
                     style = UmcTypographyTokens.HeadlineBold,
                     color = grey950(),
                 )
@@ -212,7 +213,6 @@ fun CommunityCreateScreen(
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
-
 
                 // AI 카드 오버레이로 인해 선택 영역이 막히는 문제 방지
                 // 스크롤 영역을 세로로 203만큼 늘림
