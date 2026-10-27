@@ -22,6 +22,8 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.indigo500
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.tooling.preview.Preview
 
 /**
  * 스레드 생성/수정 화면의 기본 정보 입력 폼
@@ -121,4 +123,34 @@ fun CommunityThreadForm(
             )
         }
     }
+}
+
+/**
+ * 입력 전 빈 폼 Preview
+ */
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun CommunityThreadFormEmptyPreview() {
+    CommunityThreadForm(
+        title = "",
+        description = "",
+        onTitleChanged = {},
+        onDescriptionChanged = {},
+        modifier = Modifier.padding(16.dp),
+    )
+}
+
+/**
+ * 제목 글자 수 초과로 오류가 표시되는 상태 Preview
+ */
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun CommunityThreadFormErrorPreview() {
+    CommunityThreadForm(
+        title = "가".repeat(81),
+        description = "안드로이드 파트 스터디 과제 인증과 코드 리뷰를 나누는 스레드예요.",
+        onTitleChanged = {},
+        onDescriptionChanged = {},
+        modifier = Modifier.padding(16.dp),
+    )
 }

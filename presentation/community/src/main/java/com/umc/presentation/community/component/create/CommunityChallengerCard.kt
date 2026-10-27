@@ -27,6 +27,10 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey800
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 import kotlinx.collections.immutable.ImmutableList
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.tooling.preview.Preview
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 스레드 생성 화면에서 선택된 챌린저 정보를 표시하는 카드
@@ -109,5 +113,62 @@ fun CommunityChallengerCard(
                 modifier = Modifier.size(24.dp),
             )
         }
+    }
+}
+
+/**
+ * 선택 인원별(미선택/1명/여러 명) 표시 문구 확인용 Preview
+ */
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun CommunityChallengerCardPreview() {
+    val challengers = persistentListOf(
+        CommunityChallengerUiModel(
+            memberId = 1L,
+            name = "김챌린",
+            nickname = "챌린",
+            school = "UMC대학교",
+            generation = 9L,
+            partLabel = "Android",
+        ),
+        CommunityChallengerUiModel(
+            memberId = 2L,
+            name = "이유엠",
+            nickname = "유엠",
+            school = "UMC대학교",
+            generation = 9L,
+            partLabel = "iOS",
+        ),
+        CommunityChallengerUiModel(
+            memberId = 3L,
+            name = "박씨",
+            nickname = "",
+            school = "UMC대학교",
+            generation = 9L,
+            partLabel = "Web",
+        ),
+    )
+
+    Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        CommunityChallengerCard(
+            challengers = persistentListOf(),
+            maxCount = 10,
+            onClick = {},
+        )
+
+        CommunityChallengerCard(
+            challengers = persistentListOf(challengers.first()),
+            maxCount = 10,
+            onClick = {},
+        )
+
+        CommunityChallengerCard(
+            challengers = challengers,
+            maxCount = 10,
+            onClick = {},
+        )
     }
 }
