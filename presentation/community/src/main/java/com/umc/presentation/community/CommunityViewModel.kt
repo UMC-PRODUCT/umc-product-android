@@ -381,7 +381,7 @@ class CommunityViewModel @Inject constructor(
     private fun navigateToEditSelectedThread() {
         val selectedThread = _state.value.selectedThread ?: return
 
-        if (!selectedThread.isMine) return
+        if (!selectedThread.canEdit) return
 
         _state.update {
             it.copy(
@@ -512,6 +512,7 @@ private fun CommunityThread.toUiModel(
         isPinned = forcePinned || isPinned,
         isNotificationEnabled = !isMuted,
         isMine = myRole == CommunityThreadRole.OWNER,
+        canEdit = myRole == CommunityThreadRole.OWNER || myRole == CommunityThreadRole.ADMIN,
         isJoined = isJoined,
     )
 }
@@ -567,6 +568,7 @@ private fun CommunityThreadDetail.toUiModel(): CommunityThreadUiModel {
         isPinned = isPinned,
         isNotificationEnabled = !isMuted,
         isMine = myRole == CommunityThreadRole.OWNER,
+        canEdit = myRole == CommunityThreadRole.OWNER || myRole == CommunityThreadRole.ADMIN,
         isJoined = isJoined,
     )
 }
