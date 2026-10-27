@@ -29,13 +29,20 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,6 +63,8 @@ import com.umc.component.theme.indigo500
 import com.umc.component.theme.red500
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import com.umc.component.base.CollectUiEvents
 
 /**
@@ -147,118 +156,141 @@ fun CommunityCreateMemberBottomSheet(
             topEnd = 28.dp,
         ),
     ) {
-        Column(
+        CommunityCreateMemberSheetContent(
+            state = state,
+            onQueryChange = viewModel::searchMembers,
+            onToggleMember = viewModel::toggleMember,
+            onLoadMore = viewModel::loadMoreMembers,
+            onSearchConfirmClick = viewModel::clearSearchOnly,
+            onCsvUploadClick = onCsvUploadClick,
+        )
+    }
+}
+
+/**
+ * 챌린저 추가 BottomSheet 내부 콘텐츠
+ *
+ * Preview에서도 사용할 수 있게
+ * ViewModel 없이 상태와 콜백만 받아 그리도록 함
+ */
+@Composable
+private fun CommunityCreateMemberSheetContent(
+    state: CommunityCreateMemberBottomSheetState,
+    onQueryChange: (String) -> Unit,
+    onToggleMember: (CommunityChallengerUiModel) -> Unit,
+    onLoadMore: () -> Unit,
+    onSearchConfirmClick: () -> Unit,
+    onCsvUploadClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(620.dp)
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 24.dp),
+    ) {
+        CommunityCreateMemberHeader(
+            title = if (state.isSearching) {
+                "챌린저를 검색하세요"
+            } else {
+                "챌린저를 추가하세요"
+            },
+            showConfirmButton = state.isSearching,
+            isConfirmEnabled = state.selectedMembers.isNotEmpty(),
+            onCsvUploadClick = onCsvUploadClick,
+            onConfirmClick = onSearchConfirmClick,
+        )
+
+        Spacer(
+            modifier = Modifier.height(18.dp),
+        )
+
+        /**
+         * 챌린저 이름 검색
+         *
+         * 실제 검색 API 호출 및 디바운스는 ViewModel에서 처리합니다.
+         */
+        UTextField(
+            value = state.query,
+            onValueChange = onQueryChange,
+            placeholder = "이름을 입력하세요",
             modifier = Modifier
                 .fillMaxWidth()
-                .height(620.dp)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp),
+                .height(48.dp),
+            prevIcon = painterResource(
+                id = R.drawable.ic_search,
+            ),
+            prevIconTint = grey500(),
+            prevIconSize = 24.dp,
+            backgroundColor = grey100(),
+            focusBackgroundColor = grey000(),
+            strokeColor = grey100(),
+            focusStrokeColor = grey900(),
+            cornerRadius = 8.dp,
+        )
+
+        Spacer(
+            modifier = Modifier.height(28.dp),
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
         ) {
-            CommunityCreateMemberHeader(
-                title = if (state.isSearching) {
-                    "챌린저를 검색하세요"
-                } else {
-                    "챌린저를 추가하세요"
-                },
-                showConfirmButton = state.isSearching,
-                isConfirmEnabled = state.selectedMembers.isNotEmpty(),
-                onCsvUploadClick = onCsvUploadClick,
-                onConfirmClick = {
-                    viewModel.clearSearchOnly()
-                },
-            )
+            when {
+                // 최초 검색 결과 로딩
+                state.isLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(
+                            Alignment.Center
+                        ),
+                        color = indigo500(),
+                    )
+                }
 
-            Spacer(
-                modifier = Modifier.height(18.dp),
-            )
+                // 검색 API 실패
+                state.errorMessage != null &&
+                        state.searchResults.isEmpty() -> {
+                    CommunityCreateMemberEmptyContent(
+                        text = state.errorMessage.orEmpty(),
+                    )
+                }
 
-            /**
-             * 챌린저 이름 검색
-             *
-             * 실제 검색 API 호출 및 디바운스는 ViewModel에서 처리합니다.
-             */
-            UTextField(
-                value = state.query,
-                onValueChange = viewModel::searchMembers,
-                placeholder = "이름을 입력하세요",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                prevIcon = painterResource(
-                    id = R.drawable.ic_search,
-                ),
-                prevIconTint = grey500(),
-                prevIconSize = 24.dp,
-                backgroundColor = grey100(),
-                focusBackgroundColor = grey000(),
-                strokeColor = grey100(),
-                focusStrokeColor = grey900(),
-                cornerRadius = 8.dp,
-            )
+                // 검색 결과 없음
+                state.isSearching &&
+                        state.searchResults.isEmpty() -> {
+                    CommunityCreateMemberEmptyContent(
+                        text = "검색 결과가 없어요",
+                    )
+                }
 
-            Spacer(
-                modifier = Modifier.height(28.dp),
-            )
+                // 챌린저 검색 결과
+                state.isSearching -> {
+                    CommunityCreateMemberSearchContent(
+                        members = state.searchResults,
+                        selectedMembers = state.selectedMembers,
+                        maxCount = state.maxMemberCount,
+                        isLoadingMore = state.isLoadingMore,
+                        hasNext = state.hasNext,
+                        onToggleClick = onToggleMember,
+                        onLoadMore = onLoadMore,
+                    )
+                }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-            ) {
-                when {
-                    // 최초 검색 결과 로딩
-                    state.isLoading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(
-                                Alignment.Center
-                            ),
-                            color = indigo500(),
-                        )
-                    }
+                // 선택된 챌린저가 없는 경우
+                state.selectedMembers.isEmpty() -> {
+                    CommunityCreateMemberEmptyContent(
+                        text = "아직 추가한 챌린저가 없어요",
+                    )
+                }
 
-                    // 검색 API 실패
-                    state.errorMessage != null &&
-                            state.searchResults.isEmpty() -> {
-                        CommunityCreateMemberEmptyContent(
-                            text = state.errorMessage.orEmpty(),
-                        )
-                    }
-
-                    // 검색 결과 없음
-                    state.isSearching &&
-                            state.searchResults.isEmpty() -> {
-                        CommunityCreateMemberEmptyContent(
-                            text = "검색 결과가 없어요",
-                        )
-                    }
-
-                    // 챌린저 검색 결과
-                    state.isSearching -> {
-                        CommunityCreateMemberSearchContent(
-                            members = state.searchResults,
-                            selectedMembers = state.selectedMembers,
-                            maxCount = state.maxMemberCount,
-                            isLoadingMore = state.isLoadingMore,
-                            hasNext = state.hasNext,
-                            onToggleClick = viewModel::toggleMember,
-                            onLoadMore = viewModel::loadMoreMembers,
-                        )
-                    }
-
-                    // 선택된 챌린저가 없는 경우
-                    state.selectedMembers.isEmpty() -> {
-                        CommunityCreateMemberEmptyContent(
-                            text = "아직 추가한 챌린저가 없어요",
-                        )
-                    }
-
-                    // 현재 선택된 챌린저 목록
-                    else -> {
-                        CommunityCreateSelectedMemberContent(
-                            selectedMembers = state.selectedMembers,
-                            onRemoveClick = viewModel::toggleMember,
-                        )
-                    }
+                // 현재 선택된 챌린저 목록
+                else -> {
+                    CommunityCreateSelectedMemberContent(
+                        selectedMembers = state.selectedMembers,
+                        onRemoveClick = onToggleMember,
+                    )
                 }
             }
         }
@@ -354,6 +386,10 @@ private fun CommunityCreateMemberSearchContent(
         }
         .toList()
 
+    // derivedStateOf가 처음 값에 고정되지 않도록 인자를 State로 감싸 최신 값을 읽음
+    val currentHasNext by rememberUpdatedState(hasNext)
+    val currentIsLoadingMore by rememberUpdatedState(isLoadingMore)
+
     /**
      * 리스트 끝에서 3개 전까지 스크롤했을 경우
      * 다음 페이지가 존재하면 추가 데이터를 조회합니다.
@@ -368,8 +404,8 @@ private fun CommunityCreateMemberSearchContent(
             lastVisibleItemIndex != null &&
                     lastVisibleItemIndex >=
                     listState.layoutInfo.totalItemsCount - 3 &&
-                    hasNext &&
-                    !isLoadingMore
+                    currentHasNext &&
+                    !currentIsLoadingMore
         }
     }
 
@@ -380,7 +416,9 @@ private fun CommunityCreateMemberSearchContent(
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(rememberSheetScrollGuard()),
         state = listState,
     ) {
         groupedMembers.forEach { (partLabel, partMembers) ->
@@ -552,6 +590,31 @@ private fun CommunityCreateMemberSearchRow(
 }
 
 /**
+ * 바텀시트 안 목록의 스크롤이 시트를 움직이거나 닫지 않도록 막는 NestedScrollConnection
+ *
+ * 목록이 쓰고 남은 이동량과 fling 속도를 모두 여기서 소비해 ModalBottomSheet로 넘기지 않습니다.
+ * 목록 영역에서는 스와이프로 시트가 닫히지 않고, 시트는 드래그 핸들·헤더를 끌거나
+ * 바깥 영역 탭, 뒤로가기로 닫습니다.
+ */
+@Composable
+private fun rememberSheetScrollGuard(): NestedScrollConnection {
+    return remember {
+        object : NestedScrollConnection {
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset = available
+
+            override suspend fun onPostFling(
+                consumed: Velocity,
+                available: Velocity,
+            ): Velocity = available
+        }
+    }
+}
+
+/**
  * 현재 선택된 챌린저 목록
  */
 @Composable
@@ -560,7 +623,9 @@ private fun CommunityCreateSelectedMemberContent(
     onRemoveClick: (CommunityChallengerUiModel) -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(rememberSheetScrollGuard()),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         items(
@@ -714,4 +779,92 @@ private fun CommunityCreateMemberProfile(
             modifier = Modifier.size(32.dp),
         )
     }
+}
+
+/**
+ * Preview용 챌린저 샘플 데이터
+ */
+private val previewChallengers = persistentListOf(
+    CommunityChallengerUiModel(
+        memberId = 1L,
+        name = "김챌린저",
+        nickname = "챌린",
+        school = "UMC대학교",
+        generation = 9L,
+        partLabel = "Android",
+        profileImage = "",
+    ),
+    CommunityChallengerUiModel(
+        memberId = 2L,
+        name = "이유엠",
+        nickname = "유엠",
+        school = "UMC대학교",
+        generation = 9L,
+        partLabel = "iOS",
+        profileImage = "",
+    ),
+    CommunityChallengerUiModel(
+        memberId = 3L,
+        name = "박씨",
+        nickname = "씨씨",
+        school = "UMC대학교",
+        generation = 8L,
+        partLabel = "Server",
+        profileImage = "",
+    ),
+)
+
+/**
+ * 추가한 챌린저가 없는 최초 상태 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityCreateMemberSheetEmptyPreview() {
+    CommunityCreateMemberSheetContent(
+        state = CommunityCreateMemberBottomSheetState(),
+        onQueryChange = {},
+        onToggleMember = {},
+        onLoadMore = {},
+        onSearchConfirmClick = {},
+        onCsvUploadClick = {},
+    )
+}
+
+/**
+ * 챌린저를 추가한 상태 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityCreateMemberSheetSelectedPreview() {
+    CommunityCreateMemberSheetContent(
+        state = CommunityCreateMemberBottomSheetState(
+            selectedMembers = previewChallengers.take(2).toImmutableList(),
+        ),
+        onQueryChange = {},
+        onToggleMember = {},
+        onLoadMore = {},
+        onSearchConfirmClick = {},
+        onCsvUploadClick = {},
+    )
+}
+
+/**
+ * 챌린저 검색 결과 상태 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityCreateMemberSheetSearchPreview() {
+    CommunityCreateMemberSheetContent(
+        state = CommunityCreateMemberBottomSheetState(
+            query = "김",
+            isSearching = true,
+            searchResults = previewChallengers,
+            selectedMembers = previewChallengers.take(1).toImmutableList(),
+        ),
+        onQueryChange = {},
+        onToggleMember = {},
+        onLoadMore = {},
+        onSearchConfirmClick = {},
+        onCsvUploadClick = {},
+    )
 }
