@@ -111,11 +111,22 @@ class CommunityChattingViewModel @Inject constructor(
                 val member = state.value.members[action.memberId]
                 if (member?.state == CommunityThreadMemberState.ACTIVE) updateState {
                     val label = member.name.ifBlank { "참여자" }
-                    copy(draft = draft + " @$label ", mentionedMembers = mentionedMembers + (member.memberId to label))
+                    val query = communityMentionQuery(draft, action.end)
+                    if (query == null || query.start != action.start) return@updateState this
+                    val updated = withMentionDraft(
+                        draft.replaceRange(action.start, action.end, "@$label "), action.start, action.end,
+                    )
+                    val mentions = updated.draftMentions + CommunityDraftMention(
+                        member.memberId, label, action.start, action.start + label.length + 1,
+                    )
+                    updated.copy(draftMentions = mentions, mentionedMembers = mentions.associate { it.memberId to it.label })
                 }
             }
             is CommunityChattingAction.OnMentionRemoved -> updateState {
-                copy(mentionedMembers = mentionedMembers - action.memberId)
+                copy(
+                    mentionedMembers = mentionedMembers - action.memberId,
+                    draftMentions = draftMentions.filterNot { it.memberId == action.memberId },
+                )
             }
             is CommunityChattingAction.OnVisibleMessage -> markRead(action.messageId)
             CommunityChattingAction.OnBackClick -> emitEvent(CommunityChattingEvent.NavigateBack)
@@ -139,7 +150,7 @@ class CommunityChattingViewModel @Inject constructor(
             }
             CommunityChattingAction.OnCameraClick -> emitEvent(CommunityChattingEvent.OpenCamera)
             is CommunityChattingAction.OnSendImages -> sendImages(action.uris)
-            is CommunityChattingAction.OnDraftChanged -> updateDraft(action.value)
+            is CommunityChattingAction.OnDraftChanged -> updateDraft(action.value, action.changeStart, action.changeEnd)
             is CommunityChattingAction.OnSendClick -> sendText(
                 content = state.value.draft,
                 replyToId = action.replyToId,
@@ -216,6 +227,7 @@ class CommunityChattingViewModel @Inject constructor(
                 copy(
                     thread = detail.data,
                     messages = loadedMessages,
+                    knownDeletedMessageIds = communityDeletedMessageIds(loadedMessages, knownDeletedMessageIds),
                     unreadMessagesAtEntry = if (hasCapturedEntryUnreadMessages) {
                         unreadMessagesAtEntry
                     } else {
@@ -375,6 +387,7 @@ class CommunityChattingViewModel @Inject constructor(
                     copy(
                         messages = (messages + response.data.messages)
                             .distinctBy(CommunityThreadMessage::messageId),
+                        knownDeletedMessageIds = communityDeletedMessageIds(response.data.messages, knownDeletedMessageIds),
                         hasMore = response.data.hasMore,
                         nextBefore = response.data.nextBefore,
                         isLoadingMore = false,
@@ -417,6 +430,7 @@ class CommunityChattingViewModel @Inject constructor(
                 copy(
                     draft = if (clearDraft) "" else draft,
                     mentionedMembers = if (clearDraft) emptyMap() else mentionedMembers,
+                    draftMentions = if (clearDraft) emptyList() else draftMentions,
                     pendingMessages = pendingMessages + (
                         clientMessageId to PendingCommunityMessage(
                             clientMessageId = clientMessageId,
@@ -446,6 +460,7 @@ class CommunityChattingViewModel @Inject constructor(
                     copy(
                         draft = if (clearDraft) "" else draft,
                         mentionedMembers = if (clearDraft) emptyMap() else mentionedMembers,
+                        draftMentions = if (clearDraft) emptyList() else draftMentions,
                         pendingMessages = pendingMessages + (
                             clientMessageId to PendingCommunityMessage(
                                 clientMessageId = clientMessageId,
@@ -465,6 +480,7 @@ class CommunityChattingViewModel @Inject constructor(
                     copy(
                         draft = if (clearDraft) "" else draft,
                         mentionedMembers = if (clearDraft) emptyMap() else mentionedMembers,
+                        draftMentions = if (clearDraft) emptyList() else draftMentions,
                         pendingMessages = pendingMessages + (
                             clientMessageId to PendingCommunityMessage(
                                 clientMessageId = clientMessageId,
@@ -937,8 +953,8 @@ class CommunityChattingViewModel @Inject constructor(
         }
     }
 
-    fun updateDraft(value: String) = updateState {
-        copy(draft = value, mentionedMembers = if (value.isBlank()) emptyMap() else mentionedMembers)
+    fun updateDraft(value: String, changeStart: Int, changeEnd: Int) = updateState {
+        withMentionDraft(value, changeStart, changeEnd)
     }
 
     private fun runCommand(change: String, block: () -> String) {
@@ -1067,6 +1083,7 @@ class CommunityChattingViewModel @Inject constructor(
                 summaryCandidateMessages = emptyList(),
                 draft = "",
                 mentionedMembers = emptyMap(),
+                draftMentions = emptyList(),
                 editingMessageId = null,
                 editDraft = "",
                 editCommandId = null,
@@ -1228,6 +1245,7 @@ class CommunityChattingViewModel @Inject constructor(
                 }
                 copy(
                     messages = updatedMessages,
+                    knownDeletedMessageIds = communityDeletedMessageIds(listOf(receivedMessage), knownDeletedMessageIds),
                     summaryCandidateMessages = updatedSummaryCandidates,
                     localImageUrisByMessageId = if (pending?.localUris?.isNotEmpty() == true) {
                         localImageUrisByMessageId + (receivedMessage.messageId to pending.localUris)
@@ -1330,6 +1348,7 @@ class CommunityChattingViewModel @Inject constructor(
                             messages = result.data.messages.map { incoming ->
                                 CommunityMessageMerge.merge(messages.find { it.messageId == incoming.messageId }, incoming)
                             },
+                            knownDeletedMessageIds = communityDeletedMessageIds(messages + result.data.messages, knownDeletedMessageIds),
                             pendingMessages = pendingMessages.filterKeys { it !in delivered },
                             hasMore = result.data.hasMore,
                             nextBefore = result.data.nextBefore,

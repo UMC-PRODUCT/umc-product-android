@@ -14,6 +14,7 @@ data class CommunityChattingState(
     val myMemberId: String = "",
     val members: Map<String, CommunityThreadMember> = emptyMap(),
     val messages: List<CommunityThreadMessage> = emptyList(),
+    val knownDeletedMessageIds: Set<String> = emptySet(),
     val unreadMessagesAtEntry: List<CommunityThreadMessage> = emptyList(),
     val unreadCountAtEntry: Int = 0,
     val summaryCandidateMessages: List<CommunityThreadMessage> = emptyList(),
@@ -23,6 +24,7 @@ data class CommunityChattingState(
     val connectionState: CommunityChatConnectionState = CommunityChatConnectionState.DISCONNECTED,
     val draft: String = "",
     val mentionedMembers: Map<String, String> = emptyMap(),
+    val draftMentions: List<CommunityDraftMention> = emptyList(),
     val editingMessageId: String? = null,
     val editDraft: String = "",
     val editCommandId: String? = null,
@@ -51,6 +53,9 @@ data class CommunityChattingState(
     val isThreadUnavailable: Boolean = false,
     val isAccessDenied: Boolean = false,
 ) : UiState {
+    val canSummarize: Boolean
+        get() = aiFeatureStatus?.isUsable == true
+
     internal fun acknowledgeEdit(commandId: String): CommunityChattingState =
         if (editCommandId == commandId) {
             copy(editingMessageId = null, editDraft = "", editCommandId = null, editError = null)

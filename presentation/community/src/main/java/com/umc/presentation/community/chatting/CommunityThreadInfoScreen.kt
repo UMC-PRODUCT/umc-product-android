@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,7 +49,10 @@ import com.umc.component.component.UToastData
 import com.umc.component.component.UToastHost
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey100
+import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
+import com.umc.component.theme.grey50
+import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
@@ -65,7 +69,9 @@ import com.umc.presentation.community.component.chatting.CommunityChatProfileIma
 import com.umc.presentation.community.component.chatting.communityChatPartTag
 
 @Composable
-internal fun CommunityParticipantScreen(
+internal fun CommunityThreadInfoScreen(
+    title: String,
+    description: String,
     members: List<CommunityThreadMember>,
     memberCount: String,
     myMemberId: String,
@@ -103,7 +109,7 @@ internal fun CommunityParticipantScreen(
                         .fillMaxWidth()
                         .statusBarsPadding()
                         .height(64.dp)
-                        .padding(horizontal = 8.dp),
+                        .padding(horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(onClick = onBack) {
@@ -114,8 +120,8 @@ internal fun CommunityParticipantScreen(
                         )
                     }
                     Text(
-                        text = AppStrings.CHAT_PARTICIPANT_MANAGEMENT,
-                        modifier = Modifier.padding(start = 2.dp),
+                        text = AppStrings.CHAT_THREAD_INFO,
+                        modifier = Modifier.padding(start = 8.dp),
                         color = grey950(),
                         style = UmcTypographyTokens.Title2Bold,
                     )
@@ -125,17 +131,37 @@ internal fun CommunityParticipantScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 64.dp),
         ) {
             item {
-                Text(
-                    text = AppStrings.CHAT_PARTICIPANT_COUNT_FORMAT.format(
-                        memberCount.ifBlank { members.size.toString() },
-                    ),
-                    color = grey950(),
-                    style = UmcTypographyTokens.Body,
-                    modifier = Modifier.padding(bottom = 8.dp),
+                ThreadInfoField(AppStrings.CHAT_THREAD_INFO_TITLE, title)
+            }
+            item {
+                ThreadInfoField(
+                    AppStrings.CHAT_THREAD_INFO_DESCRIPTION,
+                    description,
+                    modifier = Modifier.padding(top = 32.dp),
                 )
+            }
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 32.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = AppStrings.CHAT_PARTICIPANT_MANAGEMENT,
+                        color = grey950(),
+                        style = UmcTypographyTokens.HeadlineBold,
+                    )
+                    Text(
+                        text = AppStrings.CHAT_PARTICIPANT_COUNT_FORMAT.format(
+                            memberCount.ifBlank { members.size.toString() },
+                        ),
+                        color = grey950(),
+                        style = UmcTypographyTokens.Body,
+                    )
+                }
             }
             items(sortedMembers, key = { it.memberId }) { member ->
                 ParticipantRow(
@@ -147,29 +173,28 @@ internal fun CommunityParticipantScreen(
                     onTransferOwnership = { pendingOwnershipMember = member },
                 )
             }
-            if (canManage) {
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(grey100())
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_error_filled),
-                            contentDescription = null,
-                            colorFilter = ColorFilter.tint(grey400())
-                        )
-                        Text(
-                            text = AppStrings.CHAT_OWNER_ONLY_KICK_GUIDE,
-                            color = grey700(),
-                            style = UmcTypographyTokens.Subheadline
-                        )
-                    }
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(grey100())
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_error_filled),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        colorFilter = ColorFilter.tint(grey400()),
+                    )
+                    Text(
+                        text = AppStrings.CHAT_OWNER_ONLY_KICK_GUIDE,
+                        color = grey700(),
+                        style = UmcTypographyTokens.Subheadline,
+                    )
                 }
             }
         }
@@ -223,6 +248,24 @@ internal fun CommunityParticipantScreen(
 }
 
 @Composable
+private fun ThreadInfoField(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(text = label, color = grey950(), style = UmcTypographyTokens.HeadlineBold)
+        Text(
+            text = value,
+            modifier = Modifier.fillMaxWidth()
+                .border(1.dp, grey200(), RoundedCornerShape(8.dp))
+                .padding(16.dp),
+            color = grey800(),
+            style = UmcTypographyTokens.Body,
+        )
+    }
+}
+
+@Composable
 private fun ParticipantRow(
     member: CommunityThreadMember,
     isMe: Boolean,
@@ -233,13 +276,13 @@ private fun ParticipantRow(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     Row(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 62.dp),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp).heightIn(min = 64.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CommunityChatProfileImage(member.profileImageUrl)
+        CommunityChatProfileImage(member.profileImageUrl, useThreadStyle = true)
         Column(
             modifier = Modifier.weight(1f).padding(start = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(3.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -254,7 +297,10 @@ private fun ParticipantRow(
                     overflow = TextOverflow.Ellipsis,
                 )
                 if (member.role == CommunityThreadRole.OWNER) {
-                    ParticipantBadge(AppStrings.CHAT_OWNER_BADGE, grey800(), white())
+                    ParticipantBadge(AppStrings.CHAT_OWNER_BADGE, grey50(), grey600())
+                }
+                if (member.role == CommunityThreadRole.ADMIN) {
+                    ParticipantBadge(AppStrings.CHAT_THREAD_INFO_ADMIN_BADGE, grey800(), white())
                 }
                 if (isMe) ParticipantBadge(AppStrings.CHAT_ME, indigo100(), indigo500())
             }
@@ -262,7 +308,7 @@ private fun ParticipantRow(
             if (part.isNotBlank()) {
                 Text(
                     text = part,
-                    color = grey400(),
+                    color = grey600(),
                     style = UmcTypographyTokens.Footnote,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -331,7 +377,7 @@ private fun ParticipantBadge(text: String, background: Color, foreground: Color)
     Text(
         text = text,
         modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(background)
-            .padding(horizontal = 6.dp, vertical = 3.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         color = foreground,
         style = UmcTypographyTokens.Caption1Bold
     )
