@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
@@ -43,6 +44,7 @@ import com.umc.component.theme.grey700
 import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
+import com.umc.presentation.community.component.CommunityActionButton
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 
@@ -76,7 +78,9 @@ fun CommunityAiCard(
         // AI 분류 진행 상태에 따라 카드 내부 UI 변경
         when (aiState) {
             CommunityAiState.GUIDE -> {
-                CommunityAiGuideContent()
+                CommunityAiGuideContent(
+                    onRequestClassificationClick = onRequestClassificationClick,
+                )
             }
 
             CommunityAiState.LOADING -> {
@@ -120,34 +124,48 @@ fun CommunityAiCard(
  * AI 분류 전 최초 안내 화면
  */
 @Composable
-private fun CommunityAiGuideContent() {
-    Row(
+private fun CommunityAiGuideContent(
+    onRequestClassificationClick: () -> Unit,
+) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        verticalAlignment = Alignment.Top,
     ) {
-        AiIcon()
-
-        Spacer(modifier = Modifier.width(10.dp))
-
-        Column(
-            modifier = Modifier.weight(1f),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
         ) {
-            UText(
-                text = "Galaxy AI로 도와드릴게요",
-                style = UmcTypographyTokens.HeadlineBold,
-                color = indigo500(),
-            )
+            AiIcon()
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
-            UText(
-                text = "스레드 특징을 입력하면\nAI가 카테고리, 아이콘을 정해줘요",
-                style = UmcTypographyTokens.Footnote,
-                color = grey600(),
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
+                UText(
+                    text = "Galaxy AI로 도와드릴게요",
+                    style = UmcTypographyTokens.HeadlineBold,
+                    color = indigo500(),
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                UText(
+                    text = "스레드 특징을 입력하면\nAI가 카테고리, 아이콘을 정해줘요",
+                    style = UmcTypographyTokens.Footnote,
+                    color = grey600(),
+                )
+            }
         }
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // 입력값이 부족하면 ViewModel이 안내 토스트를 띄우므로 항상 활성화
+        CommunityActionButton(
+            text = "특징 다듬기",
+            onClick = onRequestClassificationClick,
+        )
     }
 }
 
@@ -541,6 +559,23 @@ private fun categoryIconRes(
             R.drawable.ic_community_chat
         }
     }
+}
+
+/**
+ * AI 분류 전 안내 상태 확인용 Preview
+ */
+@Preview
+@Composable
+private fun CommunityAiGuidePreview() {
+    CommunityAiCard(
+        aiState = CommunityAiState.GUIDE,
+        classifiedCategory = null,
+        canRequestClassification = true,
+        onRequestClassificationClick = {},
+        onRetryClassificationClick = {},
+        onChangeEmojiClick = {},
+        modifier = Modifier.padding(24.dp),
+    )
 }
 
 /**
