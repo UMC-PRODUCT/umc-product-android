@@ -348,7 +348,7 @@ private fun CommunityAiResultContent(
                 modifier = Modifier.weight(1f),
             ) {
                 UText(
-                    text = categoryLabel(category),
+                    text = category.label,
                     style = UmcTypographyTokens.Title3Bold,
                     color = grey950(),
                 )
@@ -480,22 +480,6 @@ private fun AiIcon() {
         tint = Color.Unspecified,
         modifier = Modifier.size(32.dp),
     )
-}
-
-/**
- * CommunityCategory를 화면에 표시할 한글 카테고리명으로 변환
- */
-private fun categoryLabel(
-    category: CommunityCategory,
-): String {
-    return when (category) {
-        CommunityCategory.ALL -> "전체"
-        CommunityCategory.UNREAD -> "안읽음"
-        CommunityCategory.PROJECT -> "파트공지"
-        CommunityCategory.STUDY -> "스터디"
-        CommunityCategory.QNA -> "질문"
-        CommunityCategory.FREE -> "자유"
-    }
 }
 
 /**

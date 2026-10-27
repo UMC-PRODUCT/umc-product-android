@@ -120,6 +120,36 @@ class CommunityCreateViewModel @Inject constructor(
                     CommunityCreateEvent.NavigateToEmojiPicker
                 )
             }
+
+            is CommunityCreateAction.OnCategorySelected -> {
+                selectCategory(
+                    category = action.category,
+                )
+            }
+        }
+    }
+
+    /**
+     * 사용자가 아이콘 선택 영역에서 카테고리를 직접 선택합니다.
+     *
+     * 진행 중이거나 예약된 AI 분류가 선택값을 덮어쓰지 않도록 취소하고,
+     * 분류 중이었다면 안내 상태로 되돌립니다.
+     * 이후 "특징 다듬기"나 재분류를 누르면 AI 결과로 다시 바뀝니다.
+     */
+    private fun selectCategory(
+        category: CommunityCategory,
+    ) {
+        classificationJob?.cancel()
+
+        _state.update {
+            it.copy(
+                classifiedCategory = category,
+                aiState = if (it.aiState == CommunityAiState.LOADING) {
+                    CommunityAiState.GUIDE
+                } else {
+                    it.aiState
+                },
+            )
         }
     }
 

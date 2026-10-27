@@ -91,12 +91,5 @@ data class CommunityState(
 
     /** 선택된 카테고리에 따라 목록에 표시할 섹션 제목 */
     val selectedSectionTitle: String
-        get() = when (selectedCategory) {
-            CommunityCategory.ALL -> "전체"
-            CommunityCategory.UNREAD -> "안읽음"
-            CommunityCategory.PROJECT -> "파트공지"
-            CommunityCategory.STUDY -> "스터디"
-            CommunityCategory.QNA -> "질문"
-            CommunityCategory.FREE -> "자유"
-        }
+        get() = selectedCategory.label
 }

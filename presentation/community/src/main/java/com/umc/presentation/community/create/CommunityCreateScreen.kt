@@ -174,15 +174,19 @@ fun CommunityCreateScreen(
                         .height(IntrinsicSize.Min),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    iconSelectCategories.forEach { (category, label) ->
+                    iconSelectCategories.forEach { category ->
                         // 화면 폭을 넘지 않도록 폭을 균등하게 나누고,
                         // 라벨이 줄바꿈되어도 가장 높은 아이템에 높이를 맞춤
                         CommunityIconSelectItem(
-                            label = label,
+                            label = category.label,
                             iconRes = category.previewIconRes(),
                             selected = previewCategory == category,
                             onClick = {
-                                // TODO 아이콘 선택 액션 연결
+                                onAction(
+                                    CommunityCreateAction.OnCategorySelected(
+                                        category = category,
+                                    )
+                                )
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -288,13 +292,13 @@ fun CommunityCreateScreen(
 }
 
 /**
- * 아이콘 선택 영역에 표시할 카테고리와 라벨 (Figma 표시 순서)
+ * 아이콘 선택 영역에 표시할 카테고리 (Figma 표시 순서)
  */
 private val iconSelectCategories = listOf(
-    CommunityCategory.STUDY to "스터디",
-    CommunityCategory.FREE to "자유",
-    CommunityCategory.PROJECT to "파트공지",
-    CommunityCategory.QNA to "질문",
+    CommunityCategory.STUDY,
+    CommunityCategory.FREE,
+    CommunityCategory.PROJECT,
+    CommunityCategory.QNA,
 )
 
 /**
