@@ -118,7 +118,6 @@ fun CommunityChattingRoute(
             threadId = state.threadId,
             onDismissRequest = { showInviteMemberSheet = false },
             onInviteSuccess = {
-                showInviteMemberSheet = false
                 viewModel.refreshThread()
             },
         )

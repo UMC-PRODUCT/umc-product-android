@@ -17,12 +17,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -34,6 +31,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -52,8 +52,6 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.indigo500
-import com.umc.component.theme.red100
-import com.umc.component.theme.red500
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 import kotlinx.collections.immutable.ImmutableList
 import com.umc.component.base.CollectUiEvents
@@ -66,7 +64,6 @@ import com.umc.component.base.CollectUiEvents
  * - 챌린저 검색
  * - 멤버 선택/해제
  * - 새 멤버 초대
- * - 기존 멤버 삭제
  * - 검색 결과 페이지네이션
  * - 프로필 이미지 표시
  */
@@ -79,12 +76,9 @@ fun CommunityMemberBottomSheet(
     viewModel: CommunityMemberBottomSheetViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val sheetHeight = LocalConfiguration.current.screenHeightDp.dp * 0.7f
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-    )
 
     /**
      * BottomSheet가 열릴 때 threadId를 기준으로
@@ -96,86 +90,52 @@ fun CommunityMemberBottomSheet(
         )
     }
 
-    /**
-     * ViewModel에서 발생한 일회성 이벤트를 처리합니다.
-     *
-     * 멤버 추가/삭제 성공 또는 에러 발생 시 Toast를 표시합니다.
-     */
-    CollectUiEvents(viewModel.uiEvent) { event ->
-        when (event) {
-            is CommunityMemberBottomSheetEvent.MemberUpdateSuccess -> {
-                val message = when {
-                    event.addedMemberCount > 0 &&
-                            event.removedMemberCount > 0 -> {
-                        "${event.addedMemberCount}명을 추가하고 " +
-                                "${event.removedMemberCount}명을 삭제했어요."
-                    }
-
-                    event.addedMemberCount > 0 -> {
-                        "${event.addedMemberCount}명을 추가했어요."
-                    }
-
-                    event.removedMemberCount > 0 -> {
-                        "${event.removedMemberCount}명을 삭제했어요."
-                    }
-
-                    else -> {
-                        "멤버 구성이 변경되었어요."
-                    }
-                }
-
-                Toast.makeText(
-                    context,
-                    message,
-                    Toast.LENGTH_SHORT,
-                ).show()
-
-                onInviteSuccess()
-            }
-
-            is CommunityMemberBottomSheetEvent.MemberKickSuccess -> {
-                Toast.makeText(
-                    context,
-                    "멤버를 삭제했어요.",
-                    Toast.LENGTH_SHORT,
-                ).show()
-
-                onInviteSuccess()
-            }
-
-            is CommunityMemberBottomSheetEvent.ShowToast -> {
-                Toast.makeText(
-                    context,
-                    event.message,
-                    Toast.LENGTH_SHORT,
-                ).show()
-            }
-        }
-    }
-
-    ModalBottomSheet(
+    CommunityInviteSheet(
+        height = sheetHeight,
         onDismissRequest = {
             viewModel.resetAfterDismiss()
             onDismissRequest()
         },
-        sheetState = sheetState,
-        containerColor = grey000(),
-        dragHandle = {
-            BottomSheetDefaults.DragHandle(
-                color = grey600(),
-            )
-        },
-        shape = RoundedCornerShape(
-            topStart = 28.dp,
-            topEnd = 28.dp,
-        ),
     ) {
+        val focusManager = LocalFocusManager.current
+        val keyboard = LocalSoftwareKeyboardController.current
+
+        /**
+         * ViewModel에서 발생한 일회성 이벤트를 처리합니다.
+         *
+         * 멤버 초대 성공 또는 에러 발생 시 Toast를 표시합니다.
+         */
+        CollectUiEvents(viewModel.uiEvent) { event ->
+            when (event) {
+                is CommunityMemberBottomSheetEvent.MemberUpdateSuccess -> {
+                    focusManager.clearFocus()
+                    keyboard?.hide()
+                    val message = "${event.addedMemberCount}명을 추가했어요."
+
+                    Toast.makeText(
+                        context,
+                        message,
+                        Toast.LENGTH_SHORT,
+                    ).show()
+
+                    onInviteSuccess()
+                }
+
+                is CommunityMemberBottomSheetEvent.ShowToast -> {
+                    Toast.makeText(
+                        context,
+                        event.message,
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
+            }
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(620.dp)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp),
+                .weight(1f)
+                .padding(horizontal = 16.dp),
         ) {
             CommunityMemberBottomSheetHeader(
                 title = if (state.isSearching) {
@@ -282,12 +242,6 @@ fun CommunityMemberBottomSheet(
                     else -> {
                         CommunityCurrentMemberContent(
                             members = state.currentMembers,
-                            deletingMemberId = state.deletingMemberId,
-                            onDeleteClick = { member ->
-                                viewModel.kickMember(
-                                    member = member,
-                                )
-                            },
                         )
                     }
                 }
@@ -357,8 +311,6 @@ private fun CommunityMemberBottomSheetHeader(
 @Composable
 private fun CommunityCurrentMemberContent(
     members: ImmutableList<CommunityChallengerUiModel>,
-    deletingMemberId: Long?,
-    onDeleteClick: (CommunityChallengerUiModel) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -371,10 +323,6 @@ private fun CommunityCurrentMemberContent(
         ) { member ->
             CommunityCurrentMemberRow(
                 member = member,
-                isDeleting = deletingMemberId == member.memberId,
-                onDeleteClick = {
-                    onDeleteClick(member)
-                },
             )
         }
     }
@@ -386,8 +334,6 @@ private fun CommunityCurrentMemberContent(
 @Composable
 private fun CommunityCurrentMemberRow(
     member: CommunityChallengerUiModel,
-    isDeleting: Boolean,
-    onDeleteClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -427,22 +373,6 @@ private fun CommunityCurrentMemberRow(
             )
         }
 
-        UButton(
-            text = if (isDeleting) {
-                "삭제 중"
-            } else {
-                "삭제"
-            },
-            onClick = onDeleteClick,
-            enabled = !isDeleting,
-            modifier = Modifier
-                .width(58.dp)
-                .height(32.dp),
-            backgroundColor = red100(),
-            textColor = red500(),
-            textStyle = UmcTypographyTokens.SubheadlineBold,
-            cornerRadius = 6.dp,
-        )
     }
 }
 
@@ -529,9 +459,7 @@ private fun CommunityMemberSearchContent(
                     }
 
                 // 최대 인원 도달 후에도 이미 선택된 멤버는 해제 가능
-                val isEnabled =
-                    isChecked ||
-                            selectedMembers.size < maxCount
+                val isEnabled = isChecked || selectedMembers.size < maxCount
 
                 CommunityMemberSearchRow(
                     member = member,

@@ -9,7 +9,6 @@ import com.umc.domain.model.community.CommunityThreadMember
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.usecase.community.GetCommunityThreadMembersUseCase
-import com.umc.domain.usecase.community.KickCommunityThreadMemberUseCase
 import com.umc.domain.usecase.community.SearchCommunityCreateMembersUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -33,7 +32,6 @@ import kotlinx.coroutines.launch
  * - 스레드 OWNER 검색 결과 제외
  * - 챌린저 선택/해제
  * - 새 멤버 초대
- * - 기존 멤버 삭제
  * - 멤버 변경사항 비교 및 반영
  */
 @HiltViewModel
@@ -43,8 +41,6 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
     GetCommunityThreadMembersUseCase,
     private val searchCommunityCreateMembersUseCase:
     SearchCommunityCreateMembersUseCase,
-    private val kickCommunityThreadMemberUseCase:
-    KickCommunityThreadMemberUseCase,
     private val getMyProfileUseCase:
     GetMyProfileUseCase,
 ) : BaseViewModel<
@@ -366,8 +362,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      * - 스레드 OWNER
      * - 현재 로그인한 본인
      *
-     * 기존 스레드 멤버도 검색 결과에는 포함되지만
-     * selectedMembers에 존재하면 체크된 상태로 표시됩니다.
+     * 기존 스레드 멤버는 초대 검색 결과에서 제외합니다.
      *
      * @param keyword 검색할 챌린저 이름
      * @param cursor 다음 페이지 조회용 cursor. 최초 조회 시 null
@@ -405,7 +400,9 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                     val page = result.data
                     val candidates = page.items.mapNotNull { member ->
                         val id = member.memberId.toLongOrNull() ?: return@mapNotNull null
-                        if (id == myMemberId || id in uiState.value.ownerMemberIds) return@mapNotNull null
+                        if (id == myMemberId || id in uiState.value.ownerMemberIds ||
+                            uiState.value.currentMembers.any { it.memberId == id }
+                        ) return@mapNotNull null
                         CommunityChallengerUiModel(
                             memberId = id, name = member.name, nickname = "", school = "",
                             generation = member.generation?.toLongOrNull() ?: 0L,
@@ -445,12 +442,13 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         member: CommunityChallengerUiModel,
     ) {
         val currentState = uiState.value
-        if (!currentState.canManage || currentState.isUpdatingMembers || currentState.deletingMemberId != null) return
+        if (!currentState.canManage || currentState.isUpdatingMembers) return
 
         // 검색 필터 외의 경로로 전달되더라도 본인과 OWNER 선택 방지
         if (
             member.memberId == myMemberId ||
-            member.memberId in currentState.ownerMemberIds
+            member.memberId in currentState.ownerMemberIds ||
+            currentState.currentMembers.any { it.memberId == member.memberId }
         ) {
             return
         }
@@ -499,13 +497,13 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      * 현재 멤버와 최종 선택된 멤버를 비교하여 변경사항을 적용합니다.
      *
      * - 새롭게 선택된 멤버 → invite API 호출
-     * - 기존 멤버 중 선택 해제된 멤버 → kick API 호출
+     * 기존 멤버는 유지하고 새롭게 선택한 멤버만 초대합니다.
      */
     fun updateMembers() {
         val currentState = uiState.value
 
         // 이미 멤버 변경 요청이 진행 중이라면 중복 요청 방지
-        if (!currentState.canManage || currentState.isUpdatingMembers || currentState.deletingMemberId != null) {
+        if (!currentState.canManage || currentState.isUpdatingMembers) {
             return
         }
 
@@ -517,7 +515,6 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
 
         val generation = sessionGeneration
         val addedMembers = currentState.addedMembers
-        val removedMembers = currentState.removedMembers
 
         viewModelScope.launch {
             updateState {
@@ -527,17 +524,9 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 )
             }
 
-            var removedCount = 0
             var addedCount = 0
             var failedCount = 0
             val failedNames = mutableListOf<String>()
-            // Free capacity first. Each completed operation is retained even if a later request fails.
-            removedMembers.forEach { member ->
-                when (threadRepository.kickMember(currentState.threadId, member.memberId.toString())) {
-                    is ApiState.Success -> removedCount++
-                    is ApiState.Fail -> { failedCount++; failedNames += member.name }
-                }
-            }
             if (addedMembers.isNotEmpty()) {
                 when (val result = threadRepository.inviteMembers(currentState.threadId, addedMembers.map { it.memberId })) {
                     is ApiState.Success -> {
@@ -555,84 +544,11 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
             loadCurrentMembers(currentState.threadId).join()
             updateState { copy(isUpdatingMembers = false, query = "", isSearching = false, searchResults = persistentListOf()) }
             if (failedCount == 0) {
-                emitEvent(CommunityMemberBottomSheetEvent.MemberUpdateSuccess(addedCount, removedCount))
+                emitEvent(CommunityMemberBottomSheetEvent.MemberUpdateSuccess(addedCount))
             } else {
                 emitEvent(CommunityMemberBottomSheetEvent.ShowToast(
-                    "제거 ${removedCount}명·초대 ${addedCount}명 완료, ${failedCount}명 미완료(${failedNames.joinToString()}). 현재 멤버 목록을 다시 확인해주세요."
+                    "초대 ${addedCount}명 완료, ${failedCount}명 미완료(${failedNames.joinToString()}). 현재 멤버 목록을 다시 확인해주세요."
                 ))
-            }
-        }
-    }
-
-    /**
-     * 현재 멤버 목록에서 삭제 버튼을 눌렀을 때 호출합니다.
-     *
-     * 해당 멤버를 스레드에서 즉시 제거한 뒤
-     * currentMembers와 selectedMembers에서도 함께 삭제합니다.
-     */
-    fun kickMember(
-        member: CommunityChallengerUiModel,
-    ) {
-        val currentState = uiState.value
-
-        // 이미 다른 멤버 삭제 요청이 진행 중이면 중복 요청 방지
-        if (!currentState.canManage || currentState.isUpdatingMembers || currentState.deletingMemberId != null || member.memberId in currentState.ownerMemberIds) {
-            return
-        }
-
-        val generation = sessionGeneration
-        // 현재 로그인한 본인이 목록에 존재하더라도 직접 삭제하지 못하도록 방지
-        if (member.memberId == myMemberId) {
-            return
-        }
-
-        viewModelScope.launch {
-            updateState {
-                copy(
-                    deletingMemberId = member.memberId,
-                    errorMessage = null,
-                )
-            }
-
-            kickCommunityThreadMemberUseCase(
-                threadId = currentState.threadId,
-                memberId = member.memberId.toString(),
-            ).onSuccess {
-                if (generation != sessionGeneration) return@onSuccess
-                updateState {
-                    copy(
-                        currentMembers =
-                            currentMembers.filterNot { currentMember ->
-                                currentMember.memberId == member.memberId
-                            }.toImmutableList(),
-                        selectedMembers =
-                            selectedMembers.filterNot { selectedMember ->
-                                selectedMember.memberId == member.memberId
-                            }.toImmutableList(),
-                        deletingMemberId = null,
-                    )
-                }
-
-                emitEvent(
-                    CommunityMemberBottomSheetEvent.MemberKickSuccess(
-                        memberId = member.memberId,
-                    )
-                )
-            }.onFailure {
-                if (generation != sessionGeneration) return@onFailure
-                loadCurrentMembers(currentState.threadId).join()
-                updateState {
-                    copy(
-                        deletingMemberId = null,
-                        errorMessage = "멤버를 삭제하지 못했어요.",
-                    )
-                }
-
-                emitEvent(
-                    CommunityMemberBottomSheetEvent.ShowToast(
-                        message = "멤버를 삭제하지 못했어요.",
-                    )
-                )
             }
         }
     }
