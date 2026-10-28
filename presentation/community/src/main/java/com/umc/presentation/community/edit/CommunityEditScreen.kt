@@ -11,8 +11,8 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.presentation.community.bottomsheet.edit.CommunityMemberBottomSheet
-import com.umc.presentation.community.component.create.CommunityThreadEditorContent
-import com.umc.presentation.community.component.create.CommunityThreadEditorMode
+import com.umc.presentation.community.component.CommunityThreadEditorContent
+import com.umc.presentation.community.component.CommunityThreadEditorMode
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel

@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.umc.presentation.community.bottomsheet.create.CommunityCreateMemberBottomSheet
-import com.umc.presentation.community.component.create.CommunityThreadEditorContent
-import com.umc.presentation.community.component.create.CommunityThreadEditorMode
+import com.umc.presentation.community.component.CommunityThreadEditorContent
+import com.umc.presentation.community.component.CommunityThreadEditorMode
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel

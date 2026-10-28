@@ -1,4 +1,4 @@
-package com.umc.presentation.community.component.create
+package com.umc.presentation.community.component
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
@@ -91,7 +91,7 @@ fun CommunityThreadEditorContent(
             .background(grey000())
             .navigationBarsPadding(),
     ) {
-        CommunityCreateTopBar(
+        _root_ide_package_.com.umc.presentation.community.component.create.CommunityCreateTopBar(
             title = if (isEditMode) "스레드 수정하기" else "스레드 만들기",
             actionText = if (isEditMode) "저장" else "완료",
             isActionEnabled = isSubmitEnabled,
@@ -145,7 +145,7 @@ fun CommunityThreadEditorContent(
              * 입력 상태에 따라 안내, 로딩,
              * 분류 결과 및 재분류 상태를 표시합니다.
              */
-            CommunityAiCard(
+            _root_ide_package_.com.umc.presentation.community.component.create.CommunityAiCard(
                 aiState = aiState,
                 classifiedCategory = classifiedCategory,
                 canRequestClassification = canRequestClassification,
@@ -211,7 +211,7 @@ private fun CommunityThreadEditorFields(
         // 분류 전에는 아이콘 선택 기본값인 자유로 표시
         val previewCategory = classifiedCategory ?: CommunityCategory.FREE
 
-        CommunityThreadPreview(
+        _root_ide_package_.com.umc.presentation.community.component.create.CommunityThreadPreview(
             title = title,
             description = description,
             category = previewCategory,
@@ -221,7 +221,7 @@ private fun CommunityThreadEditorFields(
         Spacer(modifier = Modifier.height(32.dp))
 
         // 스레드 제목 및 특징 입력 영역
-        CommunityThreadForm(
+        _root_ide_package_.com.umc.presentation.community.component.create.CommunityThreadForm(
             title = title,
             description = description,
             onTitleChanged = onTitleChanged,
@@ -231,7 +231,9 @@ private fun CommunityThreadEditorFields(
         Spacer(modifier = Modifier.height(32.dp))
 
         UText(
-            text = communityRequiredLabel("아이콘"),
+            text = _root_ide_package_.com.umc.presentation.community.component.create.communityRequiredLabel(
+                "아이콘"
+            ),
             style = UmcTypographyTokens.HeadlineBold,
             color = grey950(),
         )
@@ -248,7 +250,7 @@ private fun CommunityThreadEditorFields(
             iconSelectCategories.forEach { category ->
                 // 화면 폭을 넘지 않도록 폭을 균등하게 나누고,
                 // 라벨이 줄바꿈되어도 가장 높은 아이템에 높이를 맞춤
-                CommunityIconSelectItem(
+                _root_ide_package_.com.umc.presentation.community.component.create.CommunityIconSelectItem(
                     label = category.label,
                     iconRes = category.previewIconRes(),
                     selected = previewCategory == category,
@@ -271,7 +273,7 @@ private fun CommunityThreadEditorFields(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        CommunityChallengerCard(
+        _root_ide_package_.com.umc.presentation.community.component.create.CommunityChallengerCard(
             challengers = challengers,
             maxCount = maxChallengerCount,
             currentCount = currentChallengerCount,
@@ -282,7 +284,7 @@ private fun CommunityThreadEditorFields(
 
         // 스레드 삭제 버튼 (수정 모드 + 삭제 권한이 있을 때만)
         if (mode is CommunityThreadEditorMode.Edit && mode.canDelete) {
-            CommunityDeleteButton(
+            _root_ide_package_.com.umc.presentation.community.component.create.CommunityDeleteButton(
                 onClick = onDeleteClick,
             )
 
