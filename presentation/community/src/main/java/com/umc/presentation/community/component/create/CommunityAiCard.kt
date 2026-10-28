@@ -162,7 +162,7 @@ private fun CommunityAiGuideContent(
 
         // 입력값이 부족하면 ViewModel이 안내 토스트를 띄우므로 항상 활성화
         CommunityActionButton(
-            text = "특징 다듬기",
+            text = "카테고리 분류",
             onClick = onRequestClassificationClick,
         )
     }

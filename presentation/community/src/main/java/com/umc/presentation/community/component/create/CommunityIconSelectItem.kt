@@ -116,7 +116,7 @@ private fun CommunityIconSelectItemPreview() {
         listOf(
             Triple("스터디", R.drawable.ic_category_study, true),
             Triple("자유", R.drawable.ic_category_free, false),
-            Triple("파트공지", R.drawable.ic_category_part_notice, false),
+            Triple("프로젝트", R.drawable.ic_category_part_notice, false),
             Triple("질문", R.drawable.ic_category_question, false),
         ).forEach { (label, iconRes, selected) ->
             CommunityIconSelectItem(

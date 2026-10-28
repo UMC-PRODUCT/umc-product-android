@@ -14,6 +14,6 @@ enum class CommunityCategory(
 
     STUDY("스터디"),
     QNA("질문"),
-    PROJECT("파트공지"),
+    PROJECT("프로젝트"),
     FREE("자유"),
 }

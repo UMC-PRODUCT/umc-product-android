@@ -123,6 +123,12 @@ class CommunityEditViewModel @Inject constructor(
                 requestClassification()
             }
 
+            is CommunityEditAction.OnCategorySelected -> {
+                selectCategory(
+                    category = action.category,
+                )
+            }
+
             CommunityEditAction.OnChangeEmojiClick -> {
                 sendEvent(
                     CommunityEditEvent.NavigateToEmojiPicker
@@ -346,6 +352,29 @@ class CommunityEditViewModel @Inject constructor(
                     else -> {
                         CommunityAiState.GUIDE
                     }
+                },
+            )
+        }
+    }
+
+    /**
+     * 사용자가 아이콘 선택 영역에서 카테고리를 직접 선택합니다.
+     *
+     * 진행 중인 AI 재분류가 선택값을 덮어쓰지 않도록 취소하고,
+     * 분류 중이었다면 재분류 필요 상태로 되돌립니다.
+     */
+    private fun selectCategory(
+        category: CommunityCategory,
+    ) {
+        classificationJob?.cancel()
+
+        _state.update {
+            it.copy(
+                classifiedCategory = category,
+                aiState = if (it.aiState == CommunityAiState.LOADING) {
+                    CommunityAiState.NEEDS_RECLASSIFICATION
+                } else {
+                    it.aiState
                 },
             )
         }

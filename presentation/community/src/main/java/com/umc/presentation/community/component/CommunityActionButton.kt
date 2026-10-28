@@ -54,12 +54,12 @@ private fun CommunityActionButtonPreview() {
             .padding(16.dp),
     ) {
         CommunityActionButton(
-            text = "특징 다듬기",
+            text = "카테고리 분류",
             onClick = {},
         )
 
         CommunityActionButton(
-            text = "특징 다듬기",
+            text = "카테고리 분류",
             onClick = {},
             enabled = false,
             modifier = Modifier.padding(top = 12.dp),
