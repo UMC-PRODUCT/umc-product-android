@@ -21,6 +21,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
@@ -58,6 +59,8 @@ sealed interface CommunityThreadEditorMode {
  * 수정 모드에서는 상단 버튼이 "저장"으로 바뀌고 스크롤 영역 맨 아래에 삭제 버튼이 붙습니다.
  * 상태와 BottomSheet·Dialog는 각 화면(생성/수정)이 소유합니다.
  *
+ * @param aiCategory AI가 분류해 준 카테고리. AI 카드에만 표시됩니다.
+ * @param selectedCategory 실제로 선택된 카테고리. 미리보기·아이콘 선택 영역에 표시됩니다.
  * @param aboveAiCardContent AI 카드 바로 위에 붙여 표시할 영역 (토스트 등). 카드 높이·키보드에 따라 함께 움직입니다.
  */
 @Composable
@@ -66,7 +69,8 @@ fun CommunityThreadEditorContent(
     title: String,
     description: String,
     aiState: CommunityAiState,
-    classifiedCategory: CommunityCategory?,
+    aiCategory: CommunityCategory?,
+    selectedCategory: CommunityCategory?,
     canRequestClassification: Boolean,
     isSubmitEnabled: Boolean,
     challengers: ImmutableList<CommunityChallengerUiModel>,
@@ -131,7 +135,7 @@ fun CommunityThreadEditorContent(
                 mode = mode,
                 title = title,
                 description = description,
-                classifiedCategory = classifiedCategory,
+                selectedCategory = selectedCategory,
                 challengers = challengers,
                 maxChallengerCount = maxChallengerCount,
                 currentChallengerCount = currentChallengerCount,
@@ -168,7 +172,7 @@ fun CommunityThreadEditorContent(
 
                 _root_ide_package_.com.umc.presentation.community.component.create.CommunityAiCard(
                     aiState = aiState,
-                    classifiedCategory = classifiedCategory,
+                    classifiedCategory = aiCategory,
                     canRequestClassification = canRequestClassification,
                     onRequestClassificationClick = onRequestClassificationClick,
                     onRetryClassificationClick = onRetryClassificationClick,
@@ -188,7 +192,7 @@ private fun CommunityThreadEditorFields(
     mode: CommunityThreadEditorMode,
     title: String,
     description: String,
-    classifiedCategory: CommunityCategory?,
+    selectedCategory: CommunityCategory?,
     challengers: ImmutableList<CommunityChallengerUiModel>,
     maxChallengerCount: Int,
     currentChallengerCount: Int,
@@ -219,7 +223,7 @@ private fun CommunityThreadEditorFields(
         Spacer(modifier = Modifier.height(8.dp))
 
         // 분류 전에는 아이콘 선택 기본값인 자유로 표시
-        val previewCategory = classifiedCategory ?: CommunityCategory.FREE
+        val previewCategory = selectedCategory ?: CommunityCategory.FREE
 
         _root_ide_package_.com.umc.presentation.community.component.create.CommunityThreadPreview(
             title = title,
@@ -274,9 +278,15 @@ private fun CommunityThreadEditorFields(
 
         Spacer(Modifier.height(32.dp))
 
-        // 챌린저 영역 (생성: 초대할 챌린저 선택 / 수정: 현재 참여 중인 챌린저 관리)
+        // 챌린저 영역 (생성: 초대할 챌린저 선택(필수) / 수정: 현재 참여 중인 챌린저 관리)
         UText(
-            text = if (mode is CommunityThreadEditorMode.Edit) "챌린저 명단" else "초대할 챌린저",
+            text = if (mode is CommunityThreadEditorMode.Edit) {
+                AnnotatedString("챌린저 명단")
+            } else {
+                _root_ide_package_.com.umc.presentation.community.component.create.communityRequiredLabel(
+                    "초대할 챌린저"
+                )
+            },
             style = UmcTypographyTokens.HeadlineBold,
             color = grey950(),
         )

@@ -28,8 +28,16 @@ data class CommunityCreateState(
     /** 현재 AI 카테고리 분류 상태 */
     val aiState: CommunityAiState = CommunityAiState.GUIDE,
 
-    /** AI를 통해 최종 분류된 카테고리 */
-    val classifiedCategory: CommunityCategory? = null,
+    /** AI가 분류해 준 카테고리 (AI 카드 표시 전용) */
+    val aiCategory: CommunityCategory? = null,
+
+    /**
+     * 실제로 선택된 카테고리 (아이콘 선택·미리보기·생성 요청에 사용)
+     *
+     * 사용자가 아이콘을 직접 고르면 이것만 바뀌고,
+     * AI가 분류하면 [aiCategory]와 함께 갱신됩니다.
+     */
+    val selectedCategory: CommunityCategory? = null,
 
     /** 챌린저 선택 BottomSheet 표시 여부 */
     val showChallengerBottomSheet: Boolean = false,
@@ -68,7 +76,7 @@ data class CommunityCreateState(
                 myMemberId > 0L &&
                 selectedChallengers.isNotEmpty() &&
                 selectedChallengers.all { it.memberId > 0L && it.memberId != myMemberId } &&
-                classifiedCategory != null &&
+                selectedCategory != null &&
                 aiState != CommunityAiState.LOADING &&
                 !isSubmitting
 

@@ -197,7 +197,9 @@ class CommunityEditViewModel @Inject constructor(
                         currentChallengerCount = thread.memberCount,
                         maxChallengerCount = thread.maxMembers,
                         aiState = CommunityAiState.SUCCESS,
-                        classifiedCategory =
+                        aiCategory =
+                            thread.category.toUiCategory(),
+                        selectedCategory =
                             thread.category.toUiCategory(),
                         selectedIcon = thread.icon,
                         isLoading = false,
@@ -345,7 +347,7 @@ class CommunityEditViewModel @Inject constructor(
                         CommunityAiState.GUIDE
                     }
 
-                    it.classifiedCategory != null -> {
+                    it.aiCategory != null -> {
                         CommunityAiState.NEEDS_RECLASSIFICATION
                     }
 
@@ -370,7 +372,7 @@ class CommunityEditViewModel @Inject constructor(
 
         _state.update {
             it.copy(
-                classifiedCategory = category,
+                selectedCategory = category,
                 aiState = if (it.aiState == CommunityAiState.LOADING) {
                     CommunityAiState.NEEDS_RECLASSIFICATION
                 } else {
@@ -429,7 +431,9 @@ class CommunityEditViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     aiState = result.aiState,
-                    classifiedCategory = result.category,
+                    // AI가 분류하면 실제 선택값도 함께 갱신
+                    aiCategory = result.category,
+                    selectedCategory = result.category,
                 )
             }
         }
@@ -504,7 +508,7 @@ class CommunityEditViewModel @Inject constructor(
         }
 
         val category =
-            currentState.classifiedCategory ?: run {
+            currentState.selectedCategory ?: run {
                 sendEvent(
                     CommunityEditEvent.ShowToast(
                         message = "카테고리를 선택해주세요.",

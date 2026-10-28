@@ -33,8 +33,16 @@ data class CommunityEditState(
     /** 현재 AI 카테고리 분류 상태 */
     val aiState: CommunityAiState = CommunityAiState.GUIDE,
 
-    /** 현재 스레드의 분류 카테고리 */
-    val classifiedCategory: CommunityCategory? = null,
+    /** AI가 분류해 준 카테고리 (AI 카드 표시 전용, 진입 시 기존 카테고리로 시작) */
+    val aiCategory: CommunityCategory? = null,
+
+    /**
+     * 실제로 선택된 카테고리 (아이콘 선택·미리보기·저장 요청에 사용)
+     *
+     * 사용자가 아이콘을 직접 고르면 이것만 바뀌고,
+     * AI가 분류하면 [aiCategory]와 함께 갱신됩니다.
+     */
+    val selectedCategory: CommunityCategory? = null,
 
     /** 현재 스레드에 설정된 아이콘 */
     val selectedIcon: String = "BOOK",
@@ -72,7 +80,7 @@ data class CommunityEditState(
     val isSaveEnabled: Boolean
         get() = canEdit && !isLoading && !isDeleting && isCommunityThreadInputValid(title, description) && title.isNotBlank() &&
                 description.isNotBlank() &&
-                classifiedCategory != null &&
+                selectedCategory != null &&
                 !isSaving
 
     /**

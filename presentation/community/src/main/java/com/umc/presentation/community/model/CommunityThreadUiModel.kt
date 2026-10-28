@@ -21,6 +21,12 @@ data class CommunityThreadUiModel(
     val isMine: Boolean = false,
     val canEdit: Boolean = false,
     val isJoined: Boolean,
+    /**
+     * 내가 강퇴된 스레드인지 여부
+     *
+     * TODO: 강퇴 상태 API 스펙 확정 후 매핑 연결 (현재는 항상 false)
+     */
+    val isKicked: Boolean = false,
 ) {
     val isRead: Boolean
         get() = unreadCount == 0

@@ -39,7 +39,8 @@ fun CommunityCreateScreen(
         title = state.title,
         description = state.description,
         aiState = state.aiState,
-        classifiedCategory = state.classifiedCategory,
+        aiCategory = state.aiCategory,
+        selectedCategory = state.selectedCategory,
         canRequestClassification = state.canRequestClassification,
         isSubmitEnabled = state.isCompleteEnabled,
         challengers = state.selectedChallengers,
@@ -154,7 +155,8 @@ private fun CommunityCreateScreenFilledPreview() {
                 ),
             ),
             aiState = CommunityAiState.SUCCESS,
-            classifiedCategory = CommunityCategory.STUDY,
+            aiCategory = CommunityCategory.STUDY,
+            selectedCategory = CommunityCategory.STUDY,
             myMemberId = 1L,
         ),
         onAction = {},
@@ -173,5 +175,23 @@ private fun CommunityCreateScreenErrorToastPreview() {
             message = AppStrings.COMMUNITY_CREATE_FAILED,
             state = UToastState.ERROR,
         ),
+    )
+}
+
+/**
+ * AI 분류(스터디)와 다르게 아이콘을 직접 고른(자유) 상태 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityCreateScreenManualCategoryPreview() {
+    CommunityCreateScreen(
+        state = CommunityCreateState(
+            title = "안드로이드 스터디",
+            description = "매주 과제를 인증하고 코드 리뷰를 주고받아요",
+            aiState = CommunityAiState.SUCCESS,
+            aiCategory = CommunityCategory.STUDY,
+            selectedCategory = CommunityCategory.FREE,
+        ),
+        onAction = {},
     )
 }
