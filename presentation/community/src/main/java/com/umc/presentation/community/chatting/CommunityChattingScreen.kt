@@ -1522,24 +1522,6 @@ private fun ChatMessageRow(
             } else {
                 OtherMessage(message, imageUris, member, onLongClick, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick)
             }
-            if (
-                message.type == CommunityMessageType.TEXT && !message.editedAt.isNullOrBlank() &&
-                message.deletedAt == null && message.status != "DELETED"
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(
-                        start = if (isMine) 0.dp else 48.dp,
-                        top = 4.dp,
-                    ),
-                    horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start,
-                ) {
-                    Text(
-                        text = AppStrings.CHAT_MESSAGE_EDITED,
-                        color = grey400(),
-                        style = UmcTypographyTokens.Caption1,
-                    )
-                }
-            }
             if (message.reactions.isNotEmpty()) {
                 MessageReactions(
                     reactions = message.reactions,
@@ -1689,7 +1671,10 @@ private fun OtherMessage(
                             ),
                     )
                 }
-                MessageTime(message.createdAt, Modifier.padding(start = 8.dp, bottom = 2.dp))
+                MessageTime(
+                    message = message,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 2.dp),
+                )
             }
         }
     }
@@ -1710,7 +1695,11 @@ private fun MineMessage(
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.Bottom,
     ) {
-        MessageTime(message.createdAt, Modifier.padding(end = 8.dp, bottom = 2.dp))
+        MessageTime(
+            message = message,
+            modifier = Modifier.padding(end = 8.dp, bottom = 2.dp),
+            alignEnd = true,
+        )
         Surface(
             modifier = bubbleModifier,
             color = when {
@@ -2402,15 +2391,36 @@ private fun PendingMessageRow(
 }
 
 @Composable
-private fun MessageTime(createdAt: String, modifier: Modifier = Modifier) {
-    Text(
-        formatCommunityCreatedAt(createdAt),
+private fun MessageTime(
+    message: CommunityThreadMessage,
+    modifier: Modifier = Modifier,
+    alignEnd: Boolean = false,
+) {
+    Column(
         modifier = modifier.widthIn(min = MESSAGE_TIME_MIN_WIDTH),
-        color = grey400(),
-        style = UmcTypographyTokens.Footnote,
-        maxLines = 1,
-        softWrap = false,
-    )
+        horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        if (
+            message.type == CommunityMessageType.TEXT && !message.editedAt.isNullOrBlank() &&
+            message.deletedAt == null && message.status != "DELETED"
+        ) {
+            Text(
+                text = AppStrings.CHAT_MESSAGE_EDITED,
+                color = grey400(),
+                style = UmcTypographyTokens.Footnote,
+                maxLines = 1,
+                softWrap = false,
+            )
+        }
+        Text(
+            formatCommunityCreatedAt(message.createdAt),
+            color = grey400(),
+            style = UmcTypographyTokens.Footnote,
+            maxLines = 1,
+            softWrap = false,
+        )
+    }
 }
 
 internal fun latestListItemIndex(
