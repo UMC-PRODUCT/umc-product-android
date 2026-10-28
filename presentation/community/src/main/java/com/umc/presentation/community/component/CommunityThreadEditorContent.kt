@@ -57,6 +57,8 @@ sealed interface CommunityThreadEditorMode {
  * 상단바, 미리보기, 제목/특징 입력, 아이콘 선택, 챌린저 영역, AI 카테고리 카드를 구성합니다.
  * 수정 모드에서는 상단 버튼이 "저장"으로 바뀌고 스크롤 영역 맨 아래에 삭제 버튼이 붙습니다.
  * 상태와 BottomSheet·Dialog는 각 화면(생성/수정)이 소유합니다.
+ *
+ * @param aboveAiCardContent AI 카드 바로 위에 붙여 표시할 영역 (토스트 등). 카드 높이·키보드에 따라 함께 움직입니다.
  */
 @Composable
 fun CommunityThreadEditorContent(
@@ -82,6 +84,7 @@ fun CommunityThreadEditorContent(
     currentChallengerCount: Int = challengers.size,
     isLoading: Boolean = false,
     onDeleteClick: () -> Unit = {},
+    aboveAiCardContent: @Composable () -> Unit = {},
 ) {
     val isEditMode = mode is CommunityThreadEditorMode.Edit
 
@@ -145,16 +148,11 @@ fun CommunityThreadEditorContent(
              * 입력 상태에 따라 안내, 로딩,
              * 분류 결과 및 재분류 상태를 표시합니다.
              */
-            _root_ide_package_.com.umc.presentation.community.component.create.CommunityAiCard(
-                aiState = aiState,
-                classifiedCategory = classifiedCategory,
-                canRequestClassification = canRequestClassification,
-                onRequestClassificationClick = onRequestClassificationClick,
-                onRetryClassificationClick = onRetryClassificationClick,
-                onChangeEmojiClick = onChangeEmojiClick,
+            // AI 카드와 그 바로 위에 붙는 영역(토스트 등)을 함께 하단에 배치
+            Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(horizontal = 24.dp)
+                    .fillMaxWidth()
                     .then(
                         if (aiState == CommunityAiState.GUIDE) {
                             // 입력 중 키보드에 AI 카드가 가려지지 않도록 처리
@@ -165,7 +163,19 @@ fun CommunityThreadEditorContent(
                             Modifier.padding(bottom = 16.dp)
                         }
                     ),
-            )
+            ) {
+                aboveAiCardContent()
+
+                _root_ide_package_.com.umc.presentation.community.component.create.CommunityAiCard(
+                    aiState = aiState,
+                    classifiedCategory = classifiedCategory,
+                    canRequestClassification = canRequestClassification,
+                    onRequestClassificationClick = onRequestClassificationClick,
+                    onRetryClassificationClick = onRetryClassificationClick,
+                    onChangeEmojiClick = onChangeEmojiClick,
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                )
+            }
         }
     }
 }

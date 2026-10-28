@@ -104,7 +104,11 @@ fun CommunityScreen(
                     }
 
                     state.isEmpty -> {
-                        CommunityEmptyContent()
+                        CommunityEmptyContent(
+                            onCreateThreadClick = {
+                                onAction(CommunityAction.OnCreateThreadClick)
+                            },
+                        )
                     }
 
                     else -> {

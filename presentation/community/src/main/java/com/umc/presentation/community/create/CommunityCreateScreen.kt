@@ -1,8 +1,16 @@
 package com.umc.presentation.community.create
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
+import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
+import com.umc.component.theme.grey950
 import com.umc.presentation.community.bottomsheet.create.CommunityCreateMemberBottomSheet
 import com.umc.presentation.community.component.CommunityThreadEditorContent
 import com.umc.presentation.community.component.CommunityThreadEditorMode
@@ -23,6 +31,8 @@ fun CommunityCreateScreen(
     state: CommunityCreateState,
     onAction: (CommunityCreateAction) -> Unit,
     modifier: Modifier = Modifier,
+    toastData: UToastData? = null,
+    onToastDismiss: () -> Unit = {},
 ) {
     CommunityThreadEditorContent(
         mode = CommunityThreadEditorMode.Create,
@@ -72,6 +82,16 @@ fun CommunityCreateScreen(
         },
         onChangeEmojiClick = {
             onAction(CommunityCreateAction.OnChangeEmojiClick)
+        },
+        // 생성 실패 등 UToast: AI 카드 위 16dp 지점 (Figma SnackBar: grey950 배경 / grey050 글자)
+        aboveAiCardContent = {
+            UToastHost(
+                data = toastData,
+                onDismiss = onToastDismiss,
+                backgroundColor = grey950(),
+                textColor = grey50(),
+                modifier = Modifier.padding(bottom = 16.dp),
+            )
         },
         modifier = modifier,
     )
@@ -138,5 +158,20 @@ private fun CommunityCreateScreenFilledPreview() {
             myMemberId = 1L,
         ),
         onAction = {},
+    )
+}
+/**
+ * 스레드 생성 실패 에러 토스트 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityCreateScreenErrorToastPreview() {
+    CommunityCreateScreen(
+        state = CommunityCreateState(),
+        onAction = {},
+        toastData = UToastData(
+            message = AppStrings.COMMUNITY_CREATE_FAILED,
+            state = UToastState.ERROR,
+        ),
     )
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UButton
@@ -22,6 +23,7 @@ import com.umc.component.theme.indigo500
  * Figma `Action Button`(indigo500 배경, 8dp 모서리, Callout-emphasized 텍스트)을
  * 공통 컴포넌트인 [UButton]으로 구성.
  * 비활성화 상태에서는 grey100 배경과 grey300 텍스트를 사용.
+ * Headline-emphasized 텍스트를 쓰는 화면(Empty 화면 등)은 [textStyle]로 바꿔 사용.
  */
 @Composable
 fun CommunityActionButton(
@@ -29,6 +31,7 @@ fun CommunityActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    textStyle: TextStyle = UmcTypographyTokens.CalloutBold,
 ) {
     UButton(
         text = text,
@@ -37,7 +40,7 @@ fun CommunityActionButton(
         enabled = enabled,
         backgroundColor = if (enabled) indigo500() else grey100(),
         textColor = if (enabled) grey000() else grey300(),
-        textStyle = UmcTypographyTokens.CalloutBold,
+        textStyle = textStyle,
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 13.dp),
     )
 }

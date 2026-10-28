@@ -506,18 +506,16 @@ class CommunityCreateViewModel @Inject constructor(
                         threadId = createdThread.threadId,
                     )
                 )
-            }.onFailure { throwable ->
+            }.onFailure {
                 _state.update {
                     it.copy(
                         isSubmitting = false,
                     )
                 }
 
+                // 서버 메시지 대신 디자인에 정해진 문구의 에러 토스트를 띄운다.
                 sendEvent(
-                    CommunityCreateEvent.ShowToast(
-                        message = throwable.message
-                            ?: "스레드를 만들지 못했어요.",
-                    )
+                    CommunityCreateEvent.CreateFailed
                 )
             }
         }

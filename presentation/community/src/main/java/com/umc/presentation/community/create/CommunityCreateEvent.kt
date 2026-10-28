@@ -21,6 +21,9 @@ sealed interface CommunityCreateEvent {
         val threadId: String,
     ) : CommunityCreateEvent
 
+    /** 스레드 생성 API 실패 (화면 하단 에러 UToast 표시) */
+    data object CreateFailed : CommunityCreateEvent
+
     /** 스레드 아이콘 선택 화면으로 이동 */
     data object NavigateToEmojiPicker : CommunityCreateEvent
 
