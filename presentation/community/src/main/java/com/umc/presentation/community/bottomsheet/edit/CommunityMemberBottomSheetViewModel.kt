@@ -20,6 +20,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 /**
@@ -56,6 +57,14 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
 
     /** 검색 디바운스 처리를 위한 Job */
     private var searchJob: Job? = null
+
+    /**
+     * 초대 가능 멤버 조회 Job
+     *
+     * 본인 학교 회원만 남기려고 서버 페이지를 여러 번 받을 수 있어,
+     * 검색어가 바뀌거나 검색을 닫으면 진행 중인 조회를 바로 멈춥니다.
+     */
+    private var loadJob: Job? = null
     private var sessionGeneration = 0
 
     /**
@@ -108,6 +117,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         }
 
         searchJob?.cancel()
+        loadJob?.cancel()
 
         updateState {
             CommunityMemberBottomSheetState(
@@ -283,6 +293,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         query: String,
     ) {
         searchJob?.cancel()
+        loadJob?.cancel()
 
         val trimmedQuery = query.trim()
         val currentState = uiState.value
@@ -379,7 +390,8 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         cursor: Long?,
         append: Boolean,
     ) {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             updateState {
                 if (append) {
                     copy(
@@ -399,6 +411,8 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
             val result = threadRepository.getInvitableMembers(
                 threadId = threadId, query = keyword, offset = cursor?.toInt() ?: 0, limit = PAGE_SIZE,
             )
+            // 네트워크 호출부가 취소를 실패 응답으로 바꿔 돌려주므로, 취소된 조회가 상태를 덮어쓰지 않게 여기서 멈춘다
+            ensureActive()
             if (generation != sessionGeneration || uiState.value.threadId != threadId || uiState.value.query.trim() != keyword) return@launch
             when (result) {
                 is ApiState.Success -> {
@@ -647,6 +661,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      */
     fun clearSearchOnly() {
         searchJob?.cancel()
+        loadJob?.cancel()
 
         updateState {
             copy(
@@ -671,6 +686,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
     fun resetAfterDismiss() {
         sessionGeneration++
         searchJob?.cancel()
+        loadJob?.cancel()
 
         updateState {
             CommunityMemberBottomSheetState()

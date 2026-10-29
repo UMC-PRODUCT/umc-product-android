@@ -61,6 +61,7 @@ object Endpoints {
         const val MEMBER_REGISTER_OAUTH = "$MEMBER/register/oauth"
         const val MEMBER_REGISTER_EMAIL = "$MEMBER/register/email"
         const val MEMBER_PROFILE_LINK = "$MEMBER/profile/links"
+        const val MEMBER_SEARCH = "$MEMBER/search"
     }
 
     object Kakao {

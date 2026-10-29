@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -471,6 +472,10 @@ private fun CommunityMemberSearchContent(
         }
         .toList()
 
+    // derivedStateOf 는 처음 한 번만 만들어지므로, 파라미터를 직접 읽으면 처음 값에 묶여 다음 페이지를 영영 부르지 못한다
+    val currentHasNext by rememberUpdatedState(hasNext)
+    val currentIsLoadingMore by rememberUpdatedState(isLoadingMore)
+
     /**
      * 리스트 마지막 영역에 가까워졌을 때
      * 다음 페이지가 존재하면 추가 검색을 요청합니다.
@@ -485,8 +490,8 @@ private fun CommunityMemberSearchContent(
             lastVisibleItemIndex != null &&
                     lastVisibleItemIndex >=
                     listState.layoutInfo.totalItemsCount - 3 &&
-                    hasNext &&
-                    !isLoadingMore
+                    currentHasNext &&
+                    !currentIsLoadingMore
         }
     }
 

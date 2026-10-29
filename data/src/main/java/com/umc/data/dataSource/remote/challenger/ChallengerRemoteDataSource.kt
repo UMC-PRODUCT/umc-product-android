@@ -23,6 +23,16 @@ interface ChallengerRemoteDataSource {
         keyword: String? = null
     ): ApiState<ChallengerCursorResponse>
 
+    // 학교를 반드시 지정하는 회원 검색. 운영진 전용 검색을 쓸 수 없는 사용자에게 쓴다
+    suspend fun searchMembers(
+        cursor: Long?,
+        size: Int,
+        schoolId: Long,
+        gisuId: Long? = null,
+        part: String? = null,
+        keyword: String? = null
+    ): ApiState<ChallengerCursorResponse>
+
     suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit>
 
     suspend fun addChallengerRecordMember(request: ChallengerRecordMemberRequest): ApiState<Unit>

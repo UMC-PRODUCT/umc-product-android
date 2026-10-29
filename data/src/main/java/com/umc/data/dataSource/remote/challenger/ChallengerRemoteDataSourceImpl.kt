@@ -48,6 +48,26 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
         }.mapCatching { it.toCursorResponse() }
     }
 
+    override suspend fun searchMembers(
+        cursor: Long?,
+        size: Int,
+        schoolId: Long,
+        gisuId: Long?,
+        part: String?,
+        keyword: String?
+    ): ApiState<ChallengerCursorResponse> {
+        return apiCall {
+            challengerApi.searchMembers(
+                page = cursor?.toInt() ?: 0,
+                size = size,
+                part = part,
+                keyword = keyword,
+                schoolId = schoolId,
+                gisuId = gisuId
+            )
+        }.mapCatching { it.toCursorResponse() }
+    }
+
     override suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit> {
         return apiCall { challengerApi.deleteChallengerPoint(challengerPointId) }
     }
