@@ -145,6 +145,7 @@ class CommunityCreateViewModel @Inject constructor(
         _state.update {
             it.copy(
                 selectedCategory = category,
+                isCategorySelectedByUser = true,
                 aiState = if (it.aiState == CommunityAiState.LOADING) {
                     CommunityAiState.GUIDE
                 } else {
@@ -188,7 +189,7 @@ class CommunityCreateViewModel @Inject constructor(
         // 최초 분류 전(AI 결과·직접 선택 모두 없음)이고 제목과 특징이 모두 입력된 경우에만 자동 분류
         if (
             previousState.aiCategory == null &&
-            previousState.selectedCategory == null &&
+            !previousState.isCategorySelectedByUser &&
             com.umc.presentation.community.model.isCommunityThreadInputValid(title, _state.value.description) &&
             _state.value.description.isNotBlank()
         ) {
@@ -232,7 +233,7 @@ class CommunityCreateViewModel @Inject constructor(
         // 최초 분류 전(AI 결과·직접 선택 모두 없음)이고 제목과 특징이 모두 입력된 경우에만 자동 분류
         if (
             previousState.aiCategory == null &&
-            previousState.selectedCategory == null &&
+            !previousState.isCategorySelectedByUser &&
             com.umc.presentation.community.model.isCommunityThreadInputValid(_state.value.title, description) &&
             description.isNotBlank()
         ) {
@@ -456,17 +457,8 @@ class CommunityCreateViewModel @Inject constructor(
             return
         }
 
+        // 분류하지 않았다면 기본값 자유로 생성
         val category = currentState.selectedCategory
-
-        // AI 카테고리 분류가 완료되지 않은 경우 생성 방지
-        if (category == null) {
-            sendEvent(
-                CommunityCreateEvent.ShowToast(
-                    message = "카테고리 분류를 완료해주세요.",
-                )
-            )
-            return
-        }
 
         // 본인은 참여자로 넣을 수 없다. 후보 목록이 범용 챌린저 검색이라 본인이 섞여 들어온다
         val myMemberId = currentState.myMemberId
