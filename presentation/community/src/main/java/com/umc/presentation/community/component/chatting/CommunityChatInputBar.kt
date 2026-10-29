@@ -68,6 +68,8 @@ import com.umc.domain.model.community.thread.CommunityThreadMember
 import com.umc.domain.model.community.thread.CommunityThreadMemberState
 import com.umc.presentation.community.chatting.CommunityDraftMention
 import com.umc.presentation.community.chatting.communityMentionQuery
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun CommunityChatInputBar(
@@ -81,8 +83,8 @@ internal fun CommunityChatInputBar(
     modifier: Modifier = Modifier,
     onInputFocusChanged: (Boolean) -> Unit = {},
     onInputClick: () -> Unit = {},
-    mentionMembers: List<CommunityThreadMember> = emptyList(),
-    draftMentions: List<CommunityDraftMention> = emptyList(),
+    mentionMembers: ImmutableList<CommunityThreadMember> = persistentListOf(),
+    draftMentions: ImmutableList<CommunityDraftMention> = persistentListOf(),
     onMentionSelected: (String, Int, Int) -> Unit = { _, _, _ -> },
 ) {
     var isFocused by remember { mutableStateOf(false) }

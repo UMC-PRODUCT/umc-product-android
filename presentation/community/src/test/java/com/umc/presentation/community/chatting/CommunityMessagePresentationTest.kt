@@ -6,6 +6,23 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CommunityMessagePresentationTest {
+    @Test fun deletedMessagesDoNotConsumeTheUnreadSummaryLimit() {
+        val messages = listOf(
+            CommunityThreadMessage(messageId = "known-deleted"),
+            CommunityThreadMessage(messageId = "timestamp", deletedAt = "2026-10-29T00:00:00Z"),
+            CommunityThreadMessage(messageId = "status", status = "DELETED"),
+            CommunityThreadMessage(messageId = "first", content = "첫 메시지"),
+            CommunityThreadMessage(messageId = "second", content = "두 번째 메시지"),
+            CommunityThreadMessage(messageId = "third", content = "세 번째 메시지"),
+        )
+        val deletedIds = communityDeletedMessageIds(messages, setOf("known-deleted"))
+        assertEquals(
+            listOf("first", "second"),
+            communityUnreadSummaryCandidates(messages, deletedIds, 2).map { it.messageId },
+        )
+        assertTrue(communityUnreadSummaryCandidates(messages, deletedIds, 0).isEmpty())
+    }
+
     @Test fun deletedSourceIsHiddenAndItsExistingReplyKeepsOnlyTheDeletionNotice() {
         val source = CommunityThreadMessage(messageId = "source", content = "원문", status = "DELETED")
         val reply = CommunityThreadMessage(

@@ -220,14 +220,16 @@ class CommunityChattingViewModel @Inject constructor(
             } else {
                 detail.data.unreadCount.toIntOrNull()?.coerceAtLeast(0) ?: 0
             }
-            val entryUnreadMessages = loadedMessages
-                .take(unreadCount.coerceAtMost(MAX_SUMMARY_MESSAGE_COUNT))
+            val entryDeletedMessageIds = communityDeletedMessageIds(loadedMessages, uiState.value.knownDeletedMessageIds)
+            val entryUnreadMessages = communityUnreadSummaryCandidates(
+                loadedMessages, entryDeletedMessageIds, unreadCount.coerceAtMost(MAX_SUMMARY_MESSAGE_COUNT),
+            )
             val isInitialSummaryCandidateCapture = !hasCapturedEntryUnreadMessages
             updateState {
                 copy(
                     thread = detail.data,
                     messages = loadedMessages,
-                    knownDeletedMessageIds = communityDeletedMessageIds(loadedMessages, knownDeletedMessageIds),
+                    knownDeletedMessageIds = entryDeletedMessageIds,
                     unreadMessagesAtEntry = if (hasCapturedEntryUnreadMessages) {
                         unreadMessagesAtEntry
                     } else {
@@ -888,10 +890,11 @@ class CommunityChattingViewModel @Inject constructor(
         val state = uiState.value
         if (membershipMutationInProgress || state.thread?.myRole !in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN) || memberId == state.myMemberId || state.members[memberId]?.role == CommunityThreadRole.OWNER) return@launch
         membershipMutationInProgress = true
+        val requestId = UUID.randomUUID().toString()
         try {
             when (val result = threadRepository.kickMember(state.threadId, memberId)) {
                 is ApiState.Success -> updateState {
-                    copy(
+                    withSuccessfulKickNotice(state, memberId, requestId, java.time.Instant.now().toString()).copy(
                         members = members - memberId,
                         thread = thread?.copy(memberCount = result.data.memberCount),
                     )
@@ -1080,6 +1083,7 @@ class CommunityChattingViewModel @Inject constructor(
                 isAccessDenied = true,
                 thread = null,
                 messages = emptyList(),
+                departureNotices = emptyList(),
                 members = emptyMap(),
                 localImageUrisByMessageId = emptyMap(),
                 readWatermarks = emptyMap(),
@@ -1303,7 +1307,7 @@ class CommunityChattingViewModel @Inject constructor(
                     } else {
                         event.memberId?.let { memberId ->
                             updateState {
-                                copy(
+                                withDepartureNotice(event).copy(
                                     members = members - memberId,
                                     thread = event.memberCount?.let { count ->
                                         thread?.copy(memberCount = count)

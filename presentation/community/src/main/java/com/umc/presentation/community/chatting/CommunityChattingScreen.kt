@@ -61,6 +61,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -137,6 +138,7 @@ import java.time.format.DateTimeFormatter
 import java.net.URI
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.collections.immutable.toImmutableList
 
 @OptIn(
     androidx.compose.foundation.ExperimentalFoundationApi::class,
@@ -206,6 +208,11 @@ fun CommunityChattingScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     var inputBounds by remember { mutableStateOf<Rect?>(null) }
+    var inputOverlayHeightPx by remember { mutableIntStateOf(0) }
+    val mentionMembers = remember(state.members, state.myMemberId) {
+        state.members.values.filter { it.memberId != state.myMemberId }.toImmutableList()
+    }
+    val draftMentions = remember(state.draftMentions) { state.draftMentions.toImmutableList() }
     var screenPosition by remember { mutableStateOf(Offset.Zero) }
     val initialUnreadScrollOffset = with(density) {
         INITIAL_UNREAD_SCROLL_OFFSET.roundToPx()
@@ -213,8 +220,10 @@ fun CommunityChattingScreen(
     val deletedMessageIds = remember(state.messages, state.knownDeletedMessageIds) {
         communityDeletedMessageIds(state.messages, state.knownDeletedMessageIds)
     }
-    val displayedMessages = remember(state.messages, deletedMessageIds) {
-        communityDisplayedMessages(state.messages, deletedMessageIds)
+    val displayedMessages = remember(state.messages, state.departureNotices, deletedMessageIds) {
+        communityDisplayedMessages(
+            communityMessagesWithDepartureNotices(state.messages, state.departureNotices), deletedMessageIds,
+        )
     }
     // The load-more button may be the first visible item. Anchor to a message instead,
     // otherwise prepending history keeps that button (and the oldest page) at the top.
@@ -456,6 +465,14 @@ fun CommunityChattingScreen(
         }
     }
 
+    LaunchedEffect(state.departureNotices.size) {
+        if (state.departureNotices.isNotEmpty() && followsLatestMessage) {
+            listState.animateScrollToItem(
+                latestListItemIndex(displayedMessages.size, state.pendingMessages.size, state.hasMore),
+            )
+        }
+    }
+
     LaunchedEffect(state.pendingMessages.keys) {
         val currentIds = state.pendingMessages.keys.toSet()
         val hasNewPendingMessage = currentIds.any { it !in knownPendingMessageIds }
@@ -612,11 +629,15 @@ fun CommunityChattingScreen(
                         start = 16.dp,
                         end = 16.dp,
                         top = if (showUnreadSummary) 0.dp else 18.dp,
-                        bottom = (if (state.editingMessageId != null) 82.dp else 32.dp) + if (isInputFocused && imeBottom > 0) {
-                            with(density) { imeBottom.toDp() }
-                        } else {
-                            navigationBarInsets.asPaddingValues().calculateBottomPadding()
-                        },
+                        bottom = maxOf(
+                            with(density) { inputOverlayHeightPx.toDp() },
+                            (if (state.editingMessageId != null) 82.dp else 32.dp) +
+                                if (isInputFocused && imeBottom > 0) {
+                                    with(density) { imeBottom.toDp() }
+                                } else {
+                                    navigationBarInsets.asPaddingValues().calculateBottomPadding()
+                                },
+                        ),
                     ),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
@@ -771,7 +792,10 @@ fun CommunityChattingScreen(
                         .padding(bottom = 100.dp),
                 )
             }
-            Column(modifier = Modifier.align(Alignment.BottomCenter)) {
+            Column(
+                modifier = Modifier.align(Alignment.BottomCenter)
+                    .onGloballyPositioned { inputOverlayHeightPx = it.size.height },
+            ) {
                 SourceNavigationStatus(
                     message = navigationMessage,
                     onDismiss = { navigationMessage = null },
@@ -806,8 +830,8 @@ fun CommunityChattingScreen(
                         onInputClick = { inputClickGeneration++ },
                         modifier = Modifier.onGloballyPositioned { inputBounds = it.boundsInRoot() },
                         value = state.draft,
-                        mentionMembers = state.members.values.filter { it.memberId != state.myMemberId },
-                        draftMentions = state.draftMentions,
+                        mentionMembers = mentionMembers,
+                        draftMentions = draftMentions,
                         onMentionSelected = { memberId, start, end ->
                             onAction(CommunityChattingAction.OnMentionSelected(memberId, start, end))
                         },
@@ -1518,19 +1542,34 @@ private fun ChatMessageRow(
     onReact: (String) -> Unit,
     onShowMoreEmojis: () -> Unit,
 ) {
+    if (message.type == CommunityMessageType.SYSTEM) {
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Text(
+                text = message.content.orEmpty(),
+                style = UmcTypographyTokens.Footnote,
+                color = grey500(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.background(grey200(), RoundedCornerShape(1000.dp))
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+            )
+        }
+        return
+    }
+    val bubbleCoordinates = remember(message.messageId) { arrayOfNulls<LayoutCoordinates>(1) }
     var bubbleBounds by remember(message.messageId) { mutableStateOf<IntRect?>(null) }
-    val bubbleModifier = Modifier.onGloballyPositioned { coordinates ->
-        val bounds = coordinates.boundsInWindow()
-        bubbleBounds = IntRect(
-            bounds.left.toInt(), bounds.top.toInt(), bounds.right.toInt(), bounds.bottom.toInt(),
-        )
+    val bubbleModifier = Modifier.onGloballyPositioned { bubbleCoordinates[0] = it }
+    val openMenu = {
+        bubbleBounds = bubbleCoordinates[0]?.takeIf { it.isAttached }?.boundsInWindow()?.let { bounds ->
+            IntRect(bounds.left.toInt(), bounds.top.toInt(), bounds.right.toInt(), bounds.bottom.toInt())
+        }
+        onLongClick()
     }
     Box(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth()) {
             if (isMine) {
-                MineMessage(message, imageUris, onLongClick, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick)
+                MineMessage(message, imageUris, openMenu, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick)
             } else {
-                OtherMessage(message, imageUris, member, onLongClick, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick)
+                OtherMessage(message, imageUris, member, openMenu, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick)
             }
             if (message.reactions.isNotEmpty()) {
                 MessageReactions(
@@ -2375,7 +2414,6 @@ private fun PendingMessageRow(
             ) {
                 IconButton(
                     onClick = onRetry,
-                    modifier = Modifier.size(20.dp),
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_refresh),
@@ -2386,7 +2424,6 @@ private fun PendingMessageRow(
                 }
                 IconButton(
                     onClick = onDismiss,
-                    modifier = Modifier.size(20.dp),
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_close_big),

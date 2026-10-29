@@ -549,9 +549,11 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
             // Includes role/capacity revalidation after 403/409 or partial success.
             loadCurrentMembers(currentState.threadId).join()
             updateState { copy(isUpdatingMembers = false, query = "", isSearching = false, searchResults = persistentListOf()) }
-            if (failedCount == 0) {
+            // 일부만 초대되어도 상위 수정 화면과 채팅방의 참여자 정보를 갱신한다.
+            if (addedCount > 0 || failedCount == 0) {
                 emitEvent(CommunityMemberBottomSheetEvent.MemberUpdateSuccess(addedCount))
-            } else {
+            }
+            if (failedCount > 0) {
                 emitEvent(CommunityMemberBottomSheetEvent.ShowToast(
                     "초대 ${addedCount}명 완료, ${failedCount}명 미완료(${failedNames.joinToString()}). 현재 멤버 목록을 다시 확인해주세요."
                 ))

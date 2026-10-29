@@ -689,6 +689,9 @@ fun MainNavHost(
                         if (!navHostController.popBackStack<MainDestination.CommunityChatting>(inclusive = true)) {
                             navHostController.popBackStack()
                         }
+                        navHostController.navigate(MainDestination.Community) {
+                            launchSingleTop = true
+                        }
                     }
                 },
             )

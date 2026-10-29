@@ -89,7 +89,7 @@ internal fun CommunityChatEditInputBar(
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    IconButton(onClick = onCancel, enabled = !saving, modifier = Modifier.size(24.dp)) {
+                    IconButton(onClick = onCancel, enabled = !saving) {
                         Icon(
                             painterResource(R.drawable.ic_clear_circle),
                             contentDescription = "메시지 수정 취소",
@@ -117,7 +117,7 @@ internal fun CommunityChatEditInputBar(
                         cursorBrush = SolidColor(indigo500()),
                         maxLines = 4,
                     )
-                    IconButton(onClick = onSave, enabled = canSave, modifier = Modifier.size(24.dp)) {
+                    IconButton(onClick = onSave, enabled = canSave) {
                         if (saving) {
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                         } else {
