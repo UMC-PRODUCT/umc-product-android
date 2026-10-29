@@ -111,6 +111,7 @@ fun MycardRoute(
     onNavigateToMyqrCode:() -> Unit, // QR 코드 화면으로 이동
     onNavigateToEditCard: () -> Unit, //명함 편집
     onNavigateToReceivedCard: () -> Unit, //받은 명함 이동
+    onNavigateToMyStudy: () -> Unit, //나의 스터디(활동 탭 > 스터디 커리큘럼)로 이동
 
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -129,7 +130,7 @@ fun MycardRoute(
     // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 각 지점의 원래 호출을 주석에서 되살린다.
     var showExchangeBlockedDialog by remember { mutableStateOf(false) }
 
-    // 나의 스터디·나의 활동·프로젝트는 이동할 화면이 아직 없어 개발 중 안내 다이얼로그만 띄운다.
+    // 나의 활동·프로젝트는 이동할 화면이 아직 없어 개발 중 안내 다이얼로그만 띄운다.
     var showFeatureInDevelopmentDialog by remember { mutableStateOf(false) }
 
 
@@ -214,7 +215,7 @@ fun MycardRoute(
         onNavigateToMyqrCode = { showExchangeBlockedDialog = true },
         onNavigateToReceivedCard = onNavigateToReceivedCard,
         onNavigateToEditCard = onNavigateToEditCard,
-        onNavigateToMyStudy = { showFeatureInDevelopmentDialog = true },
+        onNavigateToMyStudy = onNavigateToMyStudy,
         onNavigateToMyActivity = { showFeatureInDevelopmentDialog = true },
         onRetryProfile = viewModel::getUserInfo,
         // [임시] 명함 교환 차단 — 원래 동작: { nearbyViewModel.openBottomSheet() }
@@ -354,7 +355,6 @@ fun MycardScreen(
                 MycardListItem(
                     iconRes = R.drawable.ic_my_study,
                     text = AppStrings.MYCARD_ACTVITY_MYSTUDY,
-                    studyCount = 0,
                     onClick = onNavigateToMyStudy
                 )
                 MycardListItem(
@@ -908,7 +908,6 @@ fun MycardListItem(
     text: String,
     showArrow: Boolean = true,
     cardCount: Int = -1,
-    studyCount: Int = -1,
     onClick: () -> Unit
 ) {
     Row(
@@ -937,21 +936,6 @@ fun MycardListItem(
         if (cardCount > -1) {
             UButton(
                 text = "${cardCount}장",
-                enabled = false,
-                backgroundColor = indigo100(),
-                textColor = indigo500(),
-                textStyle = UmcTypographyTokens.Caption1Bold,
-                cornerRadius = 4.dp,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                onClick = {}
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-
-        if (studyCount> -1) {
-            UButton(
-                text = "${studyCount}건",
                 enabled = false,
                 backgroundColor = indigo100(),
                 textColor = indigo500(),
