@@ -108,7 +108,12 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
                     Log.d("log_home", "유저검색 성공: ${response.content}")
                     updateState {
                         copy(
-                            searchResults = response.content,
+                            // 다음 페이지는 기존 결과 뒤에 이어 붙인다
+                            searchResults = if (isNextPage) {
+                                (searchResults + response.content).distinctBy { it.id }
+                            } else {
+                                response.content
+                            },
                             nextCursor = response.nextCursor,
                             hasNext = response.hasNext,
                             isLoading = false,
