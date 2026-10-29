@@ -106,13 +106,15 @@ fun ActManageScreen(
     openStudyTab: Boolean = false,
     onStudyTabOpened: () -> Unit = {},
 ) {
+    // '나의 스터디' 요청을 처리하는 동안에는 운영진 모드여도 챌린저 탭 목록을 써서 운영진 탭 화면의 조회가 먼저 돌지 않게 한다
+    val showAdminTabs = uiState.isAdmin && !openStudyTab
     val tabs = remember(
-        uiState.isAdmin,
+        showAdminTabs,
         onNavigateToChallengerDetail,
         onNavigateCreateStudyGroup,
         onNavigateAddStudySchedule,
         ) {
-        if (uiState.isAdmin) {
+        if (showAdminTabs) {
             listOf(
                 ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { isActive ->
                     AttendanceRoute(isActive = isActive)
@@ -161,17 +163,18 @@ fun ActManageScreen(
         }
     }
 
-    val currentTabs by rememberUpdatedState(tabs)
+    val isAdmin by rememberUpdatedState(uiState.isAdmin)
 
     // 마이페이지 '나의 스터디'에서 들어오면 챌린저 모드의 '스터디/활동' 탭(나의 커리큘럼)을 연다.
     // 운영진 모드의 스터디 탭은 그룹 관리 화면이라 그때만 챌린저 모드로 돌린다.
     LaunchedEffect(openStudyTab) {
         if (!openStudyTab) return@LaunchedEffect
         try {
-            if (uiState.isAdmin) onAdminCheckedChange(false)
-            // 모드 전환이 반영된 챌린저 탭 목록에서 위치를 찾는다
-            val studyTabIndex = snapshotFlow { currentTabs.indexOfStudyTab() }.first { it >= 0 }
-            pagerState.scrollToPage(studyTabIndex)
+            if (isAdmin) onAdminCheckedChange(false)
+            // 요청을 처리하는 동안 tabs 는 챌린저 탭 목록이다
+            pagerState.scrollToPage(tabs.indexOfStudyTab().coerceAtLeast(0))
+            // 모드 전환이 반영된 뒤에 요청을 지워야 운영진 탭 목록으로 잠깐 돌아가지 않는다
+            snapshotFlow { isAdmin }.first { !it }
         } finally {
             // 사용자 스와이프 등으로 스크롤이 취소돼도 신호를 지워야, 나중에 하단 탭으로 복원될 때 스터디 탭이 다시 열리지 않는다
             onStudyTabOpened()
@@ -235,7 +238,10 @@ fun ActManageScreen(
                 .fillMaxSize()
                 .background(grey100())
         ) { page ->
-            tabs[page].content(page == pagerState.currentPage)
+            // '나의 스터디' 요청을 처리하는 동안에는 복원된 다른 탭이 조회를 시작하지 않도록 스터디 탭만 활성으로 넘긴다
+            val isActive = page == pagerState.currentPage &&
+                (!openStudyTab || page == tabs.indexOfStudyTab())
+            tabs[page].content(isActive)
         }
     }
 }
