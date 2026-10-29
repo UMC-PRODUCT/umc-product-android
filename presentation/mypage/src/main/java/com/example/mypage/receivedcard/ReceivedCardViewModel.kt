@@ -73,6 +73,8 @@ class ReceivedCardViewModel @Inject constructor(
         updateState { copy(searchQuery = query, filteredCards = filterCards(allCards, query)) }
     }
     fun clearSearchQuery() = onSearchQueryChanged("")
+
+    // 아래 상세(메모·삭제) 함수는 명함 상세 화면 디자인이 나오면 다시 연결한다. 지금은 화면에서 부르지 않는다.
     fun selectCard(id: String) {
         val entry = book.cards[id]?.takeUnless { it.pendingDelete } ?: return
         updateState { copy(selectedId = id, noteDraft = entry.note, mutationError = null, showDeleteConfirmation = false) }
