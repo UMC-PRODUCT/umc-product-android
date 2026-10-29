@@ -187,12 +187,13 @@ fun UBasicDialog(
                 content?.let { text ->
                     Spacer(
                         modifier = Modifier
-                        .height(16.dp)
+                        .height(if (useCompactStyle) 8.dp else 16.dp)
                     )
 
                     Text(
                         text = text,
                         style = UmcTypographyTokens.Subheadline,
+                        textAlign = if (useCompactStyle) TextAlign.Center else TextAlign.Start,
                         color = grey600()
                     )
                 }

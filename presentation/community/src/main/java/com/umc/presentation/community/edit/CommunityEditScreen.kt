@@ -21,10 +21,12 @@ import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTheme
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
+import com.umc.component.theme.grey700
 import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.red100
@@ -215,16 +217,18 @@ fun CommunityEditScreen(
 
     // 스레드 삭제 확인 Dialog
     if (state.showDeleteDialog) {
+        val isLastOwner = state.isLastRemainingOwner
         UBasicDialog(
-            title = "스레드를 삭제하시겠습니까?",
-            content = "이 작업은 되돌릴 수 없어요.",
-            negativeText = "취소",
-            positiveText = "삭제하기",
+            title = AppStrings.CHAT_DELETE_THREAD_TITLE,
+            content = if (isLastOwner) AppStrings.CHAT_LAST_OWNER_LEAVE_DESCRIPTION else AppStrings.CHAT_DELETE_THREAD_DESCRIPTION,
+            negativeText = AppStrings.CHAT_CANCEL,
+            positiveText = if (isLastOwner) AppStrings.CHAT_DELETE_AND_LEAVE else AppStrings.CHAT_DELETE_ACTION,
+            useCompactStyle = true,
             type = DialogType.ERROR,
             showCloseButton = false,
             negativeBackgroundColor = grey100(),
             negativeBorderColor = grey100(),
-            negativeTextColor = grey600(),
+            negativeTextColor = grey700(),
             positiveBackgroundColor = red100(),
             positiveBorderColor = red100(),
             positiveTextColor = red500(),

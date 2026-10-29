@@ -26,6 +26,8 @@ data class CommunityEditState(
 
     /** 현재 참여 중인 챌린저 수 */
     val currentChallengerCount: Int = 0,
+    /** 방장을 포함하는 서버 기준 전체 참여 인원. 화면용 챌린저 수와 구분합니다. */
+    val totalMemberCount: Int? = null,
 
     /** 스레드 최대 참여 가능 인원 */
     val maxChallengerCount: Int = 8,
@@ -58,6 +60,8 @@ data class CommunityEditState(
     /** 스레드 삭제 확인 Dialog 표시 여부 */
     val showDeleteDialog: Boolean = false,
 ) {
+    val isLastRemainingOwner: Boolean
+        get() = canEdit && !isLoading && totalMemberCount == 1
 
     /** 현재 참여 인원 / 최대 참여 가능 인원 */
     val selectedChallengerCountText: String

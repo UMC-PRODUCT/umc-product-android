@@ -830,6 +830,13 @@ class CommunityChattingViewModel @Inject constructor(
     private fun emitThreadLeftOnce() {
         if (hasEmittedThreadLeft) return
         hasEmittedThreadLeft = true
+        summaryGeneration++
+        accessGeneration++
+        recoveryEvents.clear()
+        stopRealtime()
+        updateState {
+            copy(isLoading = false, isLoadingMore = false, isDeleting = false, isAccessDenied = false)
+        }
         emitEvent(CommunityChattingEvent.ThreadDeleted)
     }
 
@@ -945,8 +952,9 @@ class CommunityChattingViewModel @Inject constructor(
 
         updateState { copy(showDeleteDialog = false, isDeleting = true) }
         when (val result = threadRepository.deleteThread(state.threadId)) {
-            is ApiState.Success -> showAccessDenied()
+            is ApiState.Success -> emitThreadLeftOnce()
             is ApiState.Fail -> {
+                if (hasEmittedThreadLeft) return@launch
                 updateState { copy(isDeleting = false) }
                 emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
             }
@@ -1059,6 +1067,7 @@ class CommunityChattingViewModel @Inject constructor(
 
     // 내보내진 계정 등 접근 권한이 없으면 남은 내용을 지우고 전용 화면만 보여준다.
     private fun showAccessDenied() {
+        if (hasEmittedThreadLeft) return
         summaryGeneration++
         accessGeneration++
         recoveryEvents.clear()
@@ -1278,13 +1287,15 @@ class CommunityChattingViewModel @Inject constructor(
                 }
             }
             is CommunityChatEvent.ThreadStateChanged -> when (event.type) {
-                CommunityChatEvent.ThreadStateChanged.Type.DELETED ->
-                    showAccessDenied()
+                CommunityChatEvent.ThreadStateChanged.Type.DELETED -> {
+                    if (uiState.value.isDeleting || isLeaving) emitThreadLeftOnce()
+                    else showAccessDenied()
+                }
                 CommunityChatEvent.ThreadStateChanged.Type.MEMBER_KICKED,
                 CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT -> {
                     if (event.memberId == uiState.value.myMemberId) {
                         // 내가 요청한 나가기의 member.left 가 HTTP 응답보다 먼저 와도 나가기 완료로 처리한다(토스트 누락 방지).
-                        if (isLeaving && event.type == CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT) {
+                        if ((isLeaving || uiState.value.isDeleting) && event.type == CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT) {
                             emitThreadLeftOnce()
                         } else {
                             showAccessDenied()

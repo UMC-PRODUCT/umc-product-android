@@ -306,6 +306,7 @@ fun CommunityChattingScreen(
     if (state.showOwnershipTransferRequiredDialog) {
         UDialog(
             title = AppStrings.CHAT_OWNERSHIP_REQUIRED_TITLE,
+            useCompactStyle = true,
             subtitle = AppStrings.CHAT_OWNERSHIP_REQUIRED_DESCRIPTION,
             confirmText = AppStrings.CHAT_CONFIRM,
             confirmBackgroundColor = grey100(),
@@ -320,16 +321,18 @@ fun CommunityChattingScreen(
     }
 
     if (state.showDeleteDialog) {
+        val isLastOwner = state.isLastRemainingOwner
         UBasicDialog(
             title = AppStrings.CHAT_DELETE_THREAD_TITLE,
-            content = AppStrings.CHAT_DELETE_THREAD_DESCRIPTION,
+            useCompactStyle = true,
+            content = if (isLastOwner) AppStrings.CHAT_LAST_OWNER_LEAVE_DESCRIPTION else AppStrings.CHAT_DELETE_THREAD_DESCRIPTION,
             negativeText = AppStrings.CHAT_CANCEL,
-            positiveText = AppStrings.CHAT_DELETE_ACTION,
+            positiveText = if (isLastOwner) AppStrings.CHAT_DELETE_AND_LEAVE else AppStrings.CHAT_DELETE_ACTION,
             type = DialogType.ERROR,
             showCloseButton = false,
             negativeBackgroundColor = grey100(),
             negativeBorderColor = grey100(),
-            negativeTextColor = grey600(),
+            negativeTextColor = grey700(),
             positiveBackgroundColor = red100(),
             positiveBorderColor = red100(),
             positiveTextColor = red500(),
@@ -860,21 +863,28 @@ fun CommunityChattingScreen(
     }
 
     if (showLeaveDialog) {
+        val isLastOwner = state.isLastRemainingOwner
         UBasicDialog(
-            title = AppStrings.CHAT_LEAVE_THREAD_TITLE,
-            content = AppStrings.CHAT_LEAVE_THREAD_DESCRIPTION,
+            title = if (isLastOwner) AppStrings.CHAT_DELETE_THREAD_TITLE else AppStrings.CHAT_LEAVE_THREAD_TITLE,
+            useCompactStyle = true,
+            content = if (isLastOwner) AppStrings.CHAT_LAST_OWNER_LEAVE_DESCRIPTION else AppStrings.CHAT_LEAVE_THREAD_DESCRIPTION,
             negativeText = AppStrings.CHAT_CANCEL,
-            positiveText = AppStrings.CHAT_LEAVE,
-            type = DialogType.WARNING,
+            positiveText = if (isLastOwner) AppStrings.CHAT_DELETE_AND_LEAVE else AppStrings.CHAT_LEAVE,
+            type = DialogType.ERROR,
             showCloseButton = false,
             negativeBackgroundColor = grey100(),
             negativeBorderColor = grey100(),
+            negativeTextColor = grey700(),
             positiveBackgroundColor = red100(),
             positiveBorderColor = red100(),
             positiveTextColor = red500(),
             onPositive = {
                 showLeaveDialog = false
-                onLeave()
+                if (isLastOwner) {
+                    onAction(CommunityChattingAction.OnConfirmDeleteThread)
+                } else {
+                    onLeave()
+                }
             },
             onNegative = { showLeaveDialog = false },
             onDismissRequest = { showLeaveDialog = false },

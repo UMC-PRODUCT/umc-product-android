@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -22,7 +23,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.umc.component.R
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.green100
@@ -34,6 +37,7 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
+import com.umc.component.theme.grey950
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 
@@ -59,6 +63,7 @@ import com.umc.component.theme.red500
  * @param positiveBackgroundColor 이중 버튼 모드의 확인 버튼 배경색
  * @param positiveBorderColor 이중 버튼 모드의 확인 버튼 테두리 색상
  * @param positiveTextColor 이중 버튼 모드의 확인 버튼 텍스트 색상
+ * @param useCompactStyle 좁은 안내창의 최대 폭·좌측 정렬 제목·단일 버튼 크기를 적용합니다.
  */
 
 @Composable
@@ -94,16 +99,21 @@ fun UDialog(
         null -> red500()
     },
     positiveBorderColor: Color = Color.Transparent,
+    useCompactStyle: Boolean = false,
 ) {
     val description = subtitle ?: content
 
-    Dialog(onDismissRequest = onDismissRequest) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = !useCompactStyle),
+    ) {
         Column(
             modifier = modifier
+                .then(if (useCompactStyle) Modifier.widthIn(max = 340.dp) else Modifier)
                 .fillMaxWidth()
                 .background(grey000(), RoundedCornerShape(12.dp))
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = if (useCompactStyle) Alignment.Start else Alignment.CenterHorizontally,
         ) {
             if (isAccept != null) {
                 Box(
@@ -139,8 +149,10 @@ fun UDialog(
 
             UText(
                 text = title,
-                style = UmcTypographyTokens.Title3Bold,
-                color = grey800(),
+                style = if (useCompactStyle) {
+                    UmcTypographyTokens.Title2Bold.copy(fontSize = 20.sp, lineHeight = 25.sp, letterSpacing = 0.38.sp)
+                } else UmcTypographyTokens.Title3Bold,
+                color = if (useCompactStyle) grey950() else grey800(),
             )
 
             if (description.isNotBlank()) {
@@ -209,12 +221,13 @@ fun UDialog(
                 UButton(
                     text = confirmText,
                     onClick = onConfirm,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
+                        .then(if (useCompactStyle) Modifier.height(42.dp) else Modifier),
                     backgroundColor = confirmBackgroundColor,
                     textColor = confirmTextColor,
-                    textStyle = UmcTypographyTokens.SubheadlineBold,
+                    textStyle = if (useCompactStyle) UmcTypographyTokens.CalloutBold else UmcTypographyTokens.SubheadlineBold,
                     cornerRadius = 8.dp,
-                    contentPadding = PaddingValues(vertical = 14.dp),
+                    contentPadding = if (useCompactStyle) PaddingValues(0.dp) else PaddingValues(vertical = 14.dp),
                 )
             }
         }

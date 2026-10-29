@@ -24,6 +24,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +45,9 @@ import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
@@ -77,6 +82,7 @@ fun CommunityMemberBottomSheet(
 ) {
     val context = LocalContext.current
     val sheetHeight = LocalConfiguration.current.screenHeightDp.dp * 0.7f
+    var toastData by remember(threadId) { mutableStateOf<UToastData?>(null) }
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -92,6 +98,9 @@ fun CommunityMemberBottomSheet(
 
     CommunityInviteSheet(
         height = sheetHeight,
+        toast = {
+            UToastHost(data = toastData, onDismiss = { toastData = null })
+        },
         onDismissRequest = {
             viewModel.resetAfterDismiss()
             onDismissRequest()
@@ -122,11 +131,7 @@ fun CommunityMemberBottomSheet(
                 }
 
                 is CommunityMemberBottomSheetEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message,
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                    toastData = UToastData(event.message, UToastState.ERROR)
                 }
             }
         }
@@ -224,7 +229,7 @@ fun CommunityMemberBottomSheet(
                         CommunityMemberSearchContent(
                             members = state.displayedMembers,
                             selectedMembers = state.selectedMembers,
-                            maxCount = state.maxMemberCount,
+                            enabled = state.canManage && !state.isUpdatingMembers,
                             isLoadingMore = state.isLoadingMore,
                             hasNext = state.hasNext,
                             onToggleClick = { member ->
@@ -386,7 +391,7 @@ private fun CommunityCurrentMemberRow(
 private fun CommunityMemberSearchContent(
     members: ImmutableList<CommunityChallengerUiModel>,
     selectedMembers: ImmutableList<CommunityChallengerUiModel>,
-    maxCount: Int,
+    enabled: Boolean,
     isLoadingMore: Boolean,
     hasNext: Boolean,
     onToggleClick: (CommunityChallengerUiModel) -> Unit,
@@ -458,17 +463,12 @@ private fun CommunityMemberSearchContent(
                         selectedMember.memberId == member.memberId
                     }
 
-                // 최대 인원 도달 후에도 이미 선택된 멤버는 해제 가능
-                val isEnabled = isChecked || selectedMembers.size < maxCount
-
                 CommunityMemberSearchRow(
                     member = member,
                     isChecked = isChecked,
-                    isEnabled = isEnabled,
+                    isEnabled = enabled,
                     onToggleClick = {
-                        if (isEnabled) {
-                            onToggleClick(member)
-                        }
+                        onToggleClick(member)
                     },
                 )
             }

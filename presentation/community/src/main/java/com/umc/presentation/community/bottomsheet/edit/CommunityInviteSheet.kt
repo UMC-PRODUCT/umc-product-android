@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,6 +61,7 @@ import kotlin.math.roundToInt
 internal fun CommunityInviteSheet(
     height: Dp,
     onDismissRequest: () -> Unit,
+    toast: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val density = LocalDensity.current
@@ -140,6 +143,12 @@ internal fun CommunityInviteSheet(
                         }
                         content()
                     }
+                }
+                Box(
+                    Modifier.align(Alignment.BottomCenter).navigationBarsPadding().imePadding()
+                        .padding(bottom = 8.dp),
+                ) {
+                    toast()
                 }
             }
         }

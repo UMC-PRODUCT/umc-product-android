@@ -136,7 +136,13 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 updateState { copy(isLoading = false, canManage = false, currentMembers = persistentListOf(), selectedMembers = persistentListOf(), errorMessage = "멤버를 관리할 권한이 없어요.") }
                 return@launch
             }
-            updateState { copy(canManage = true, maxMemberCount = ((detail.data.maxMembers.toIntOrNull() ?: 1) - 1).coerceAtLeast(0)) }
+            updateState {
+                copy(
+                    canManage = true,
+                    maxMemberCount = ((detail.data.maxMembers.toIntOrNull() ?: 1) - 1)
+                        .coerceIn(0, INVITE_MEMBER_LIMIT),
+                )
+            }
             val memberPage = getCommunityThreadMembersUseCase(
                 threadId = threadId,
                 query = null,
@@ -467,7 +473,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
             emitEvent(
                 CommunityMemberBottomSheetEvent.ShowToast(
                     message =
-                        "챌린저는 최대 ${currentState.maxMemberCount}명까지 추가할 수 있어요.",
+                        "최대 ${currentState.maxMemberCount}명까지 초대할 수 있습니다.",
                 )
             )
             return
@@ -594,6 +600,8 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
     }
 
     companion object {
+        // 방장을 제외한 기존 참여자와 새 초대 대상의 최대 합계.
+        private const val INVITE_MEMBER_LIMIT = 99
 
         /** 챌린저 검색 API 한 페이지 조회 개수 */
         private const val PAGE_SIZE = 20

@@ -5,6 +5,7 @@ import com.umc.domain.model.community.chatting.CommunityChatConnectionState
 import com.umc.domain.model.community.thread.CommunityMessageType
 import com.umc.domain.model.community.thread.CommunityThreadDetail
 import com.umc.domain.model.community.thread.CommunityThreadMember
+import com.umc.domain.model.community.thread.CommunityThreadRole
 import com.umc.domain.model.community.thread.CommunityThreadMessage
 import com.umc.domain.model.enums.AiFeatureStatus
 
@@ -53,6 +54,9 @@ data class CommunityChattingState(
     val isThreadUnavailable: Boolean = false,
     val isAccessDenied: Boolean = false,
 ) : UiState {
+    val isLastRemainingOwner: Boolean
+        get() = thread?.myRole == CommunityThreadRole.OWNER && thread.memberCount.toIntOrNull() == 1
+
     val canSummarize: Boolean
         get() = aiFeatureStatus?.isUsable == true
 

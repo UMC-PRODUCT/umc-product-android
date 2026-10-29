@@ -182,6 +182,7 @@ class CommunityEditViewModel @Inject constructor(
                         title = thread.title,
                         description = thread.description,
                         currentChallengerCount = thread.memberCount,
+                        totalMemberCount = thread.memberCount,
                         maxChallengerCount = thread.maxMembers,
                         aiState = CommunityAiState.SUCCESS,
                         classifiedCategory =
@@ -261,6 +262,7 @@ class CommunityEditViewModel @Inject constructor(
                 it.copy(
                     selectedChallengers = members.toImmutableList(),
                     currentChallengerCount = members.size,
+                    totalMemberCount = memberPage.total,
                 )
             }
         }
