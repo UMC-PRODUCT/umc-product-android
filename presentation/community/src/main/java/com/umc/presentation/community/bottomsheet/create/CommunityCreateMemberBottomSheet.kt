@@ -1,6 +1,5 @@
 package com.umc.presentation.community.bottomsheet.create
 
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,8 +27,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,7 +40,6 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Velocity
@@ -51,15 +51,20 @@ import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
+import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo500
 import com.umc.component.theme.red500
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -89,9 +94,9 @@ fun CommunityCreateMemberBottomSheet(
     onCsvUploadClick: () -> Unit = {},
     viewModel: CommunityCreateMemberBottomSheetViewModel = hiltViewModel(),
 ) {
-    val context = LocalContext.current
-
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    var toastData by remember { mutableStateOf<UToastData?>(null) }
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -117,11 +122,10 @@ fun CommunityCreateMemberBottomSheet(
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
             is CommunityCreateMemberBottomSheetEvent.ShowToast -> {
-                Toast.makeText(
-                    context,
-                    event.message,
-                    Toast.LENGTH_SHORT,
-                ).show()
+                toastData = UToastData(
+                    message = event.message,
+                    state = UToastState.ERROR,
+                )
             }
         }
     }
@@ -164,6 +168,8 @@ fun CommunityCreateMemberBottomSheet(
             onLoadMore = viewModel::loadMoreMembers,
             onSearchConfirmClick = viewModel::clearSearchOnly,
             onCsvUploadClick = onCsvUploadClick,
+            toastData = toastData,
+            onToastDismiss = { toastData = null },
         )
     }
 }
@@ -182,120 +188,138 @@ private fun CommunityCreateMemberSheetContent(
     onLoadMore: () -> Unit,
     onSearchConfirmClick: () -> Unit,
     onCsvUploadClick: () -> Unit,
+    toastData: UToastData? = null,
+    onToastDismiss: () -> Unit = {},
 ) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(620.dp)
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 24.dp),
+            .height(620.dp),
     ) {
-        CommunityCreateMemberHeader(
-            title = if (state.isSearching) {
-                AppStrings.COMMUNITY_CREATE_MEMBER_SEARCH_TITLE
-            } else {
-                AppStrings.COMMUNITY_CREATE_MEMBER_ADD_TITLE
-            },
-            showConfirmButton = state.isSearching,
-            isConfirmEnabled = state.selectedMembers.isNotEmpty(),
-            onCsvUploadClick = onCsvUploadClick,
-            onConfirmClick = onSearchConfirmClick,
-        )
-
-        Spacer(
-            modifier = Modifier.height(18.dp),
-        )
-
-        /**
-         * 챌린저 이름 검색
-         *
-         * 실제 검색 API 호출 및 디바운스는 ViewModel에서 처리합니다.
-         */
-        UTextField(
-            value = state.query,
-            onValueChange = onQueryChange,
-            placeholder = AppStrings.COMMUNITY_CREATE_MEMBER_SEARCH_PLACEHOLDER,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            prevIcon = painterResource(
-                id = R.drawable.ic_search,
-            ),
-            prevIconTint = grey500(),
-            prevIconSize = 24.dp,
-            backgroundColor = grey100(),
-            focusBackgroundColor = grey000(),
-            strokeColor = grey100(),
-            focusStrokeColor = grey900(),
-            cornerRadius = 8.dp,
-        )
-
-        Spacer(
-            modifier = Modifier.height(28.dp),
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 24.dp),
         ) {
-            when {
-                // 최초 검색 결과 로딩
-                state.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(
-                            Alignment.Center
-                        ),
-                        color = indigo500(),
-                    )
-                }
+            CommunityCreateMemberHeader(
+                title = if (state.isSearching) {
+                    AppStrings.COMMUNITY_CREATE_MEMBER_SEARCH_TITLE
+                } else {
+                    AppStrings.COMMUNITY_CREATE_MEMBER_ADD_TITLE
+                },
+                showConfirmButton = state.isSearching,
+                isConfirmEnabled = state.selectedMembers.isNotEmpty(),
+                onCsvUploadClick = onCsvUploadClick,
+                onConfirmClick = onSearchConfirmClick,
+            )
 
-                // 검색 API 실패
-                state.errorMessage != null &&
-                        state.searchResults.isEmpty() -> {
-                    CommunityCreateMemberEmptyContent(
-                        text = state.errorMessage.orEmpty(),
-                    )
-                }
+            Spacer(
+                modifier = Modifier.height(18.dp),
+            )
 
-                // 검색 결과 없음
-                state.isSearching &&
-                        state.searchResults.isEmpty() -> {
-                    CommunityCreateMemberEmptyContent(
-                        text = AppStrings.COMMUNITY_CREATE_MEMBER_NO_RESULT,
-                    )
-                }
+            /**
+             * 챌린저 이름 검색
+             *
+             * 실제 검색 API 호출 및 디바운스는 ViewModel에서 처리합니다.
+             */
+            UTextField(
+                value = state.query,
+                onValueChange = onQueryChange,
+                placeholder = AppStrings.COMMUNITY_CREATE_MEMBER_SEARCH_PLACEHOLDER,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                prevIcon = painterResource(
+                    id = R.drawable.ic_search,
+                ),
+                prevIconTint = grey500(),
+                prevIconSize = 24.dp,
+                backgroundColor = grey100(),
+                focusBackgroundColor = grey000(),
+                strokeColor = grey100(),
+                focusStrokeColor = grey900(),
+                cornerRadius = 8.dp,
+            )
 
-                // 챌린저 검색 결과
-                state.isSearching -> {
-                    CommunityCreateMemberSearchContent(
-                        members = state.searchResults,
-                        selectedMembers = state.selectedMembers,
-                        maxCount = state.maxMemberCount,
-                        isLoadingMore = state.isLoadingMore,
-                        hasNext = state.hasNext,
-                        errorMessage = state.errorMessage,
-                        onToggleClick = onToggleMember,
-                        onLoadMore = onLoadMore,
-                    )
-                }
+            Spacer(
+                modifier = Modifier.height(28.dp),
+            )
 
-                // 선택된 챌린저가 없는 경우
-                state.selectedMembers.isEmpty() -> {
-                    CommunityCreateMemberEmptyContent(
-                        text = AppStrings.COMMUNITY_CREATE_MEMBER_EMPTY,
-                    )
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+            ) {
+                when {
+                    // 최초 검색 결과 로딩
+                    state.isLoading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(
+                                Alignment.Center
+                            ),
+                            color = indigo500(),
+                        )
+                    }
 
-                // 현재 선택된 챌린저 목록
-                else -> {
-                    CommunityCreateSelectedMemberContent(
-                        selectedMembers = state.selectedMembers,
-                        onRemoveClick = onToggleMember,
-                    )
+                    // 검색 API 실패
+                    state.errorMessage != null &&
+                            state.searchResults.isEmpty() -> {
+                        CommunityCreateMemberEmptyContent(
+                            text = state.errorMessage.orEmpty(),
+                        )
+                    }
+
+                    // 검색 결과 없음
+                    state.isSearching &&
+                            state.searchResults.isEmpty() -> {
+                        CommunityCreateMemberEmptyContent(
+                            text = AppStrings.COMMUNITY_CREATE_MEMBER_NO_RESULT,
+                        )
+                    }
+
+                    // 챌린저 검색 결과
+                    state.isSearching -> {
+                        CommunityCreateMemberSearchContent(
+                            members = state.searchResults,
+                            selectedMembers = state.selectedMembers,
+                            maxCount = state.maxMemberCount,
+                            isLoadingMore = state.isLoadingMore,
+                            hasNext = state.hasNext,
+                            errorMessage = state.errorMessage,
+                            onToggleClick = onToggleMember,
+                            onLoadMore = onLoadMore,
+                        )
+                    }
+
+                    // 선택된 챌린저가 없는 경우
+                    state.selectedMembers.isEmpty() -> {
+                        CommunityCreateMemberEmptyContent(
+                            text = AppStrings.COMMUNITY_CREATE_MEMBER_EMPTY,
+                        )
+                    }
+
+                    // 현재 선택된 챌린저 목록
+                    else -> {
+                        CommunityCreateSelectedMemberContent(
+                            selectedMembers = state.selectedMembers,
+                            onRemoveClick = onToggleMember,
+                        )
+                    }
                 }
             }
         }
+
+        // 최대 인원 초과·검색 실패 UToast: 시트 하단 16dp 지점 (Figma SnackBar: grey950 배경 / grey050 글자)
+        UToastHost(
+            data = toastData,
+            onDismiss = onToastDismiss,
+            backgroundColor = grey950(),
+            textColor = grey50(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp),
+        )
     }
 }
 
@@ -340,7 +364,7 @@ private fun CommunityCreateMemberHeader(
             )
 
             UButton(
-                text = AppStrings.COMMON_CONFIRM,
+                text = AppStrings.COMMUNITY_CREATE_MEMBER_INVITE,
                 onClick = onConfirmClick,
                 enabled = isConfirmEnabled,
                 modifier = Modifier
@@ -872,5 +896,30 @@ private fun CommunityCreateMemberSheetSearchPreview() {
         onLoadMore = {},
         onSearchConfirmClick = {},
         onCsvUploadClick = {},
+    )
+}
+
+/**
+ * 최대 인원 초과 UToast가 표시된 상태 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityCreateMemberSheetMaxCountToastPreview() {
+    CommunityCreateMemberSheetContent(
+        state = CommunityCreateMemberBottomSheetState(
+            query = "김",
+            isSearching = true,
+            searchResults = previewChallengers,
+            selectedMembers = previewChallengers.take(1).toImmutableList(),
+        ),
+        onQueryChange = {},
+        onToggleMember = {},
+        onLoadMore = {},
+        onSearchConfirmClick = {},
+        onCsvUploadClick = {},
+        toastData = UToastData(
+            message = AppStrings.COMMUNITY_CREATE_MEMBER_MAX_COUNT_FORMAT.format(99),
+            state = UToastState.ERROR,
+        ),
     )
 }

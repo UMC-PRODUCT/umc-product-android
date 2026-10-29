@@ -548,6 +548,7 @@ object AppStrings {
     const val COMMUNITY_CREATE_MEMBER_EMPTY = "아직 추가한 챌린저가 없어요"
     const val COMMUNITY_CREATE_MEMBER_GENERATION_FORMAT = "(%d기)"
     const val COMMUNITY_CREATE_MEMBER_DELETE = "삭제"
+    const val COMMUNITY_CREATE_MEMBER_INVITE = "초대"
     const val COMMUNITY_CREATE_MEMBER_CD_CHECKED = "선택됨"
     const val COMMUNITY_CREATE_MEMBER_CD_UNCHECKED = "선택되지 않음"
     const val COMMUNITY_CREATE_MEMBER_MAX_COUNT_FORMAT = "챌린저는 최대 %d명까지 추가할 수 있어요."
