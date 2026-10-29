@@ -13,11 +13,6 @@ import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LinkType
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UploadFileCategory
-import com.umc.domain.model.enums.UserChallengerRole
-import com.umc.domain.model.enums.UserPart
-import com.umc.domain.model.home.RolePartItem
-import com.umc.domain.model.home.getGisuSummaryList
-import com.umc.domain.model.mypage.UserActiveItem
 import com.umc.domain.model.request.member.LinkItem
 import com.umc.domain.model.request.member.UpdateLinkRequest
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
@@ -25,27 +20,13 @@ import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.member.UpdateMyLinkUseCase
 import com.umc.domain.usecase.member.UpdateMyProfileUseCase
-import com.umc.domain.usecase.organization.GetChapterDetailUseCase
-import com.umc.domain.usecase.organization.GetSchoolNameUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-// 학교·지부 소속이 아닌 중앙 운영진 역할
-private val CENTRAL_ROLES = setOf(
-    UserChallengerRole.SUPER_ADMIN,
-    UserChallengerRole.CENTRAL_PRESIDENT,
-    UserChallengerRole.CENTRAL_VICE_PRESIDENT,
-    UserChallengerRole.CENTRAL_OPERATING_TEAM_MEMBER,
-    UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER,
-)
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -53,8 +34,6 @@ class ProfileViewModel @Inject constructor(
     private val uploadFileUseCase: UploadFileUseCase, //파일 업로드 하기(이미지 업로드)
     private val updateMyProfileUseCase: UpdateMyProfileUseCase, //프로필 정보 업데이트
     private val updateMyLinkUseCase: UpdateMyLinkUseCase, //링크 정보 업데이트
-    private val getSchoolNameUseCase: GetSchoolNameUseCase, //학교 이름 가져오기
-    private val getChapterDetailUseCase: GetChapterDetailUseCase, //지부 이름 가져오기
     private val getMyOAuthUseCase: GetMyOAuthUseCase, //내 OAuth 가져오기
 ) : BaseViewModel<ProfileUiState, ProfileEvent>(
     ProfileUiState()){
@@ -84,7 +63,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     /**
-     * 서버에서 내 프로필 정보를 수신하여 UI State에 바인딩하고 활동 이력을 가공하는 메서드
+     * 서버에서 내 프로필 정보를 수신하여 UI State에 바인딩하는 메서드
      */
     private fun getUserInfo() {
         updateState { copy(isProfileLoading = true) }
@@ -102,9 +81,6 @@ class ProfileViewModel @Inject constructor(
                             isProfileLoadFailed = false
                         )
                     }
-                    processActiveHistory(userInfo)
-
-
                 },
                 errorCallback = {
                     updateState { copy(isProfileLoading = false, isProfileLoadFailed = true) }
@@ -133,145 +109,6 @@ class ProfileViewModel @Inject constructor(
             )
         }
     }
-
-    /**
-     * 유저 프로필 데이터에서 활동 기수, 운영진 및 챌린저 기록을 비동기로 수집하여 활동 이력 목록을 만드는 메서드
-     *
-     * @param userInfo 서버 수신 유저 프로필 모델
-     */
-    fun processActiveHistory(userInfo: UserInfo){
-
-        viewModelScope.launch {
-            //기수 정보 리스트 가져오기
-            val gisuSummaryList = userInfo.getGisuSummaryList()
-
-            //api 호출 시 coroutineScope를 사용하여 async를 호출 - 다 끝날때까지 기달
-            val finalActiveHistory = coroutineScope {
-                gisuSummaryList.flatMap { summary ->
-                    val generationText = "${summary.gisu}기"
-                    val hasRole = summary.fromRoles.isNotEmpty()
-
-                    //운영진 기록
-                    val roleJobs = summary.fromRoles.map { roleItem ->
-                        async {
-                            createRoleActiveItem(generationText, roleItem, userInfo)
-                        }
-                    }
-
-                    //챌린저 기록
-                    // 운영진 역할이 있는 기수의 파트 없는 레코드는 그 역할의 주인 레코드이므로 '미정 Part 챌린저' 행으로 또 그리지 않는다
-                    val recordJobs = summary.fromRecords
-                        .filter { it.responsiblePart != "ADMIN" }
-                        .filter { !(hasRole && UserPart.from(it.responsiblePart) == UserPart.UNKNOWN) }
-                        .map { recordItem ->
-                            async {
-                                createChallengerActiveItem(generationText, recordItem)
-                            }
-                        }
-
-                    roleJobs + recordJobs
-                }.awaitAll() // 모든 async 작업이 완료될 때까지 기다림
-            }
-
-            //모든 데이터가 수집된 후 UI 업데이트
-            updateState {
-                copy(myActiveHistory = finalActiveHistory.toImmutableList())
-            }
-        }
-
-
-    }
-
-    /**
-     * 운영진 이력 정보(학교, 지부, 총괄 등)를 조회하여 UserActiveItem 객체를 생성하는 메서드
-     */
-    private suspend fun createRoleActiveItem(
-        generationText: String,
-        roleItem: RolePartItem,
-        userInfo: UserInfo
-    ): UserActiveItem {
-        val role = UserChallengerRole.from(roleItem.role)
-        val roleLabel = role.displayName ?: roleItem.role
-
-        // v2 응답에는 역할의 조직 정보가 없어 모든 역할이 SCHOOL 로 복원되므로,
-        // 학교 소속이 아닌 중앙 운영진·지부장은 역할 종류로 먼저 분기한다
-        if (role in CENTRAL_ROLES) {
-            return UserActiveItem(generationText, roleLabel, roleLabel)
-        }
-        if (role == UserChallengerRole.CHAPTER_PRESIDENT) {
-            val chapterName = userInfo.challengerRecords
-                .firstOrNull { it.challengerId == roleItem.challengerId }
-                ?.chapterName
-            return if (!chapterName.isNullOrBlank()) {
-                UserActiveItem(generationText, "${chapterName}지부 $roleLabel", roleLabel)
-            } else {
-                UserActiveItem(generationText, roleLabel, roleLabel)
-            }
-        }
-
-        //담당 파트가 있는 경우 (ex. 안드로이드 파트장)
-        if (roleItem.responsiblePart != null) {
-            return UserActiveItem(
-                generation = generationText,
-                partName = "${UserPart.from(roleItem.responsiblePart).label} Part",
-                position = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
-            )
-        }
-        //그 외 - 학교 단위 운영진인 경우
-        else if(roleItem.organizationType == "SCHOOL"){
-            //들어갈 값
-            var itemResult: UserActiveItem? = null
-            resultResponse(
-                response = getSchoolNameUseCase(roleItem.organizationId),
-                //학교 불러오기 성공이면, 학교 이름을 가져오기
-                successCallback = { schoolInfo ->
-                    val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
-                    itemResult = UserActiveItem(generationText, "${schoolInfo.schoolName} $label",label, )
-                },
-                //못 불러오면 그대로 넣기
-                errorCallback = {
-                    val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
-                    itemResult = UserActiveItem(generationText, label, label)
-                }
-            )
-            return itemResult!!
-        }
-        //그 외 - 지부 단위 운영진인 경우
-        else if(roleItem.organizationType == "CHAPTER"){
-            var itemResult: UserActiveItem? = null
-            resultResponse(
-                response = getChapterDetailUseCase(roleItem.organizationId),
-                successCallback = { chapterInfo ->
-                    //지부 이름 넣기
-                    val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
-                    itemResult = UserActiveItem(generationText, "${chapterInfo.name}지부 $label",label, )
-                },
-                errorCallback = {
-                    val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
-                    itemResult = UserActiveItem(generationText, label, label)
-                }
-            )
-            return itemResult!!
-        }
-        //그 외 - 중앙/총괄 운영진인 경우
-        else{
-            val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
-            val itemResult = UserActiveItem(generationText, label, label)
-            return itemResult
-        }
-    }
-
-    /**
-     * 일반 챌린저 이력 아이템을 생성하는 메서드
-     */
-    private fun createChallengerActiveItem(generationText: String, recordItem: RolePartItem): UserActiveItem {
-        return UserActiveItem(
-            generation = generationText,
-            partName = "${UserPart.from(recordItem.responsiblePart).label} Part",
-            position = "챌린저"
-        )
-    }
-
 
     /**
      * 프로필 사진 클릭 이벤트를 발행하여 Photo Picker를 여는 메서드
@@ -462,10 +299,6 @@ data class ProfileUiState(
     val isProfileLoading: Boolean = false, //프로필 조회 요청 진행 중
     // '완료' 저장 진행 중 여부 (중복 탭 방지, 진행 표시)
     val isSaving: Boolean = false,
-
-
-    //임시 정보
-    val myActiveHistory: ImmutableList<UserActiveItem> = persistentListOf(),
 
     ) : UiState
 

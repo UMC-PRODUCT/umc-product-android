@@ -13,7 +13,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,12 +20,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -67,11 +63,9 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
 import com.umc.component.theme.indigo500
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UploadFileCategory
-import com.umc.domain.model.mypage.UserActiveItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.collectLatest
@@ -227,28 +221,6 @@ fun ProfileScreen(
                         title = "학교",
                         content = uiState.userInfo.schoolName
                     )
-                }
-
-                //활동 이력 리스트
-                item {
-                    UText(text = "활동 이력", style = UmcTypographyTokens.HeadlineBold)
-                    Card(
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                            .fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, grey300()),
-                        colors = CardDefaults.cardColors(containerColor = grey000())
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(vertical = 8.dp)
-                        ) {
-                            uiState.myActiveHistory.forEach { history ->
-                                ActiveHistoryItem(history)
-                            }
-                        }
-                    }
                 }
 
                 // 대외 링크 입력 (UTextField 적용)
@@ -417,72 +389,6 @@ fun ProfileInfoSection(title: String, content: String, platforms: ImmutableList<
 }
 
 /**
- * 기수별 활동 내역 및 파트/직함 배지를 표시하는 레코드 행 컴포저블
- */
-@Composable
-fun ActiveHistoryItem(
-    history: UserActiveItem
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        //1. 기수 정보 (ex. 10기)
-        UButton(
-            text = history.generation,
-            onClick = {},
-            modifier = Modifier
-                .height(24.dp),
-            backgroundColor = grey000(),
-            borderColor = grey200(),
-            borderWidth = 1.dp,
-            textColor = grey600(),
-            textStyle = UmcTypographyTokens.FootnoteBold,
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-        )
-
-
-        Spacer(
-            modifier = Modifier
-            .width(16.dp)
-        )
-
-
-        // 2. 활동 내용 (ex. Android Part 챌린저)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            UText(
-                text = history.partName, // "Android Part 챌린저" 등 합성된 문자열
-                style = UmcTypographyTokens.Subheadline,
-                color = grey600(),
-                modifier = Modifier
-                    .weight(1f)
-            )
-
-            UButton(
-                text = history.position,
-                onClick = {},
-                modifier = Modifier
-                    .height(24.dp),
-                backgroundColor = indigo100(),
-                borderWidth = 0.dp,
-                textColor = indigo500(),
-                textStyle = UmcTypographyTokens.FootnoteBold,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            )
-        }
-
-
-
-    }
-}
-
-
-/**
  * 외부 링크 수정을 위한 UTextField 입력 컴포저블
  */
 @Composable
@@ -550,9 +456,6 @@ private fun ProfileScreenPreview() {
         ProfileScreen(
             uiState = ProfileUiState(
                 linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.APPLE),
-                myActiveHistory = persistentListOf(
-                    UserActiveItem("11기", "Web PE Part", "챌린저")
-                ),
             ),
             githubText = "https://github.com/umc",
             onGithubChange = {},

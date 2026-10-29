@@ -112,6 +112,7 @@ fun MycardRoute(
     onNavigateToEditCard: () -> Unit, //명함 편집
     onNavigateToReceivedCard: () -> Unit, //받은 명함 이동
     onNavigateToMyStudy: () -> Unit, //나의 스터디(활동 탭 > 스터디 커리큘럼)로 이동
+    onNavigateToActivityHistory: () -> Unit, //활동 이력 화면으로 이동
 
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -129,9 +130,6 @@ fun MycardRoute(
     // 차단 지점: 홈 배너 진입(openExchangeDialog), 명함 교환 버튼, 내 QR 코드, QR 딥링크 수신.
     // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 각 지점의 원래 호출을 주석에서 되살린다.
     var showExchangeBlockedDialog by remember { mutableStateOf(false) }
-
-    // 나의 활동·프로젝트는 이동할 화면이 아직 없어 개발 중 안내 다이얼로그만 띄운다.
-    var showFeatureInDevelopmentDialog by remember { mutableStateOf(false) }
 
 
     // 화면 복귀(ON_RESUME) 라이프사이클 시 최신 내 정보를 동기화하는 관찰자
@@ -216,7 +214,7 @@ fun MycardRoute(
         onNavigateToReceivedCard = onNavigateToReceivedCard,
         onNavigateToEditCard = onNavigateToEditCard,
         onNavigateToMyStudy = onNavigateToMyStudy,
-        onNavigateToMyActivity = { showFeatureInDevelopmentDialog = true },
+        onNavigateToActivityHistory = onNavigateToActivityHistory,
         onRetryProfile = viewModel::getUserInfo,
         // [임시] 명함 교환 차단 — 원래 동작: { nearbyViewModel.openBottomSheet() }
         onOpenExchangeBottomSheet = { showExchangeBlockedDialog = true },
@@ -230,16 +228,6 @@ fun MycardRoute(
             onDismissRequest = { showExchangeBlockedDialog = false },
             confirmText = AppStrings.CONFIRM,
             onConfirm = { showExchangeBlockedDialog = false },
-        )
-    }
-
-    if (showFeatureInDevelopmentDialog) {
-        UDialog(
-            title = AppStrings.MYCARD_FEATURE_IN_DEVELOPMENT_TITLE,
-            content = AppStrings.MYCARD_FEATURE_IN_DEVELOPMENT_CONTENT,
-            onDismissRequest = { showFeatureInDevelopmentDialog = false },
-            confirmText = AppStrings.CONFIRM,
-            onConfirm = { showFeatureInDevelopmentDialog = false },
         )
     }
 
@@ -291,7 +279,7 @@ fun MycardScreen(
     onNavigateToReceivedCard: ()-> Unit, //받은 명함 이동
     onNavigateToEditCard: () -> Unit, //명함 편집 이동,
     onNavigateToMyStudy: () -> Unit, //나의 스터디 이동,
-    onNavigateToMyActivity: () -> Unit, //나의 활동 이동,
+    onNavigateToActivityHistory: () -> Unit, //활동 이력 이동,
     onOpenExchangeBottomSheet: () -> Unit, //명함 교환 BottomSheet 열기,
     onRetryProfile: () -> Unit, //내 프로필 조회 실패 시 다시 시도
 ){
@@ -358,9 +346,9 @@ fun MycardScreen(
                     onClick = onNavigateToMyStudy
                 )
                 MycardListItem(
-                    iconRes = R.drawable.ic_my_actvity,
-                    text = AppStrings.MYCARD_ACTVITY_MYACTIVTY_PROJECT,
-                    onClick = onNavigateToMyActivity
+                    iconRes = R.drawable.ic_activity_history,
+                    text = AppStrings.MYCARD_ACTVITY_HISTORY,
+                    onClick = onNavigateToActivityHistory
                 )
             }
         }
@@ -970,7 +958,7 @@ private fun MycardScreenProfileLoadFailedPreview() {
             onNavigateToReceivedCard = {},
             onNavigateToEditCard = {},
             onNavigateToMyStudy = {},
-            onNavigateToMyActivity = {},
+            onNavigateToActivityHistory = {},
             onOpenExchangeBottomSheet = {},
             onRetryProfile = {},
         )
