@@ -1,6 +1,8 @@
 package com.umc.presentation.community.bottomsheet.create
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -78,7 +80,7 @@ import com.umc.component.base.CollectUiEvents
  *
  * - 챌린저 이름 검색
  * - 챌린저 선택/삭제
- * - 최대 선택 인원 제한
+ * - 초대 시 최대 인원 검사 (통과해야 스레드 생성 화면에 반영)
  * - 검색 결과 페이지네이션
  * - 프로필 이미지 표시
  *
@@ -97,6 +99,10 @@ fun CommunityCreateMemberBottomSheet(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     var toastData by remember { mutableStateOf<UToastData?>(null) }
+
+    // 검색 TextField 포커스 여부에 따라 헤더 문구를 바꾸기 위해 관찰
+    val searchInteractionSource = remember { MutableInteractionSource() }
+    val isSearchFieldFocused by searchInteractionSource.collectIsFocusedAsState()
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -127,28 +133,27 @@ fun CommunityCreateMemberBottomSheet(
                     state = UToastState.ERROR,
                 )
             }
+
+            // 초대 버튼에서 인원 검사를 통과했을 때만 스레드 생성 화면에 반영
+            is CommunityCreateMemberBottomSheetEvent.InviteMembers -> {
+                onConfirm(event.members)
+                viewModel.resetAfterDismiss()
+                onDismissRequest()
+            }
         }
     }
 
     /**
-     * 바텀시트를 닫을 때 현재 선택된 챌린저를
-     * 스레드 생성 화면에 반영합니다.
+     * 바텀시트를 그냥 닫으면 선택 변경 사항은 버리고
+     * 스레드 생성 화면의 기존 선택을 유지합니다.
      */
-    fun dismissWithApply() {
-        onConfirm(
-            state.selectedMembers
-                .distinctBy { member ->
-                    member.memberId
-                }
-                .take(state.maxMemberCount)
-        )
-
+    fun dismissWithoutApply() {
         viewModel.resetAfterDismiss()
         onDismissRequest()
     }
 
     ModalBottomSheet(
-        onDismissRequest = ::dismissWithApply,
+        onDismissRequest = ::dismissWithoutApply,
         sheetState = sheetState,
         containerColor = grey000(),
         dragHandle = {
@@ -166,8 +171,10 @@ fun CommunityCreateMemberBottomSheet(
             onQueryChange = viewModel::searchMembers,
             onToggleMember = viewModel::toggleMember,
             onLoadMore = viewModel::loadMoreMembers,
-            onSearchConfirmClick = viewModel::clearSearchOnly,
+            onInviteClick = viewModel::onInviteClick,
             onCsvUploadClick = onCsvUploadClick,
+            isSearchFieldFocused = isSearchFieldFocused,
+            searchInteractionSource = searchInteractionSource,
             toastData = toastData,
             onToastDismiss = { toastData = null },
         )
@@ -186,8 +193,10 @@ private fun CommunityCreateMemberSheetContent(
     onQueryChange: (String) -> Unit,
     onToggleMember: (CommunityChallengerUiModel) -> Unit,
     onLoadMore: () -> Unit,
-    onSearchConfirmClick: () -> Unit,
+    onInviteClick: () -> Unit,
     onCsvUploadClick: () -> Unit,
+    isSearchFieldFocused: Boolean = false,
+    searchInteractionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     toastData: UToastData? = null,
     onToastDismiss: () -> Unit = {},
 ) {
@@ -203,15 +212,15 @@ private fun CommunityCreateMemberSheetContent(
                 .padding(bottom = 24.dp),
         ) {
             CommunityCreateMemberHeader(
-                title = if (state.isSearching) {
+                // 검색 TextField에 포커스가 있는 동안만 검색 문구 표시
+                title = if (isSearchFieldFocused) {
                     AppStrings.COMMUNITY_CREATE_MEMBER_SEARCH_TITLE
                 } else {
                     AppStrings.COMMUNITY_CREATE_MEMBER_ADD_TITLE
                 },
-                showConfirmButton = state.isSearching,
-                isConfirmEnabled = state.selectedMembers.isNotEmpty(),
+                isInviteEnabled = state.isConfirmEnabled,
                 onCsvUploadClick = onCsvUploadClick,
-                onConfirmClick = onSearchConfirmClick,
+                onInviteClick = onInviteClick,
             )
 
             Spacer(
@@ -240,6 +249,7 @@ private fun CommunityCreateMemberSheetContent(
                 strokeColor = grey100(),
                 focusStrokeColor = grey900(),
                 cornerRadius = 8.dp,
+                interactionSource = searchInteractionSource,
             )
 
             Spacer(
@@ -283,7 +293,6 @@ private fun CommunityCreateMemberSheetContent(
                         CommunityCreateMemberSearchContent(
                             members = state.searchResults,
                             selectedMembers = state.selectedMembers,
-                            maxCount = state.maxMemberCount,
                             isLoadingMore = state.isLoadingMore,
                             hasNext = state.hasNext,
                             errorMessage = state.errorMessage,
@@ -326,15 +335,14 @@ private fun CommunityCreateMemberSheetContent(
 /**
  * 바텀시트 상단 Header
  *
- * 검색 중에는 우측에 확인 버튼을 표시합니다.
+ * 우측 초대 버튼은 항상 표시하며, 선택된 챌린저가 있을 때만 활성화합니다.
  */
 @Composable
 private fun CommunityCreateMemberHeader(
     title: String,
-    showConfirmButton: Boolean,
-    isConfirmEnabled: Boolean,
+    isInviteEnabled: Boolean,
     onCsvUploadClick: () -> Unit,
-    onConfirmClick: () -> Unit,
+    onInviteClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -358,32 +366,30 @@ private fun CommunityCreateMemberHeader(
 //            onClick = onCsvUploadClick,
 //        )
 
-        if (showConfirmButton) {
-            Spacer(
-                modifier = Modifier.width(8.dp),
-            )
+        Spacer(
+            modifier = Modifier.width(8.dp),
+        )
 
-            UButton(
-                text = AppStrings.COMMUNITY_CREATE_MEMBER_INVITE,
-                onClick = onConfirmClick,
-                enabled = isConfirmEnabled,
-                modifier = Modifier
-                    .width(52.dp)
-                    .height(32.dp),
-                backgroundColor = if (isConfirmEnabled) {
-                    indigo500()
-                } else {
-                    grey100()
-                },
-                textColor = if (isConfirmEnabled) {
-                    grey000()
-                } else {
-                    grey400()
-                },
-                textStyle = UmcTypographyTokens.SubheadlineBold,
-                cornerRadius = 8.dp,
-            )
-        }
+        UButton(
+            text = AppStrings.COMMUNITY_CREATE_MEMBER_INVITE,
+            onClick = onInviteClick,
+            enabled = isInviteEnabled,
+            modifier = Modifier
+                .width(52.dp)
+                .height(32.dp),
+            backgroundColor = if (isInviteEnabled) {
+                indigo500()
+            } else {
+                grey100()
+            },
+            textColor = if (isInviteEnabled) {
+                grey000()
+            } else {
+                grey400()
+            },
+            textStyle = UmcTypographyTokens.SubheadlineBold,
+            cornerRadius = 8.dp,
+        )
     }
 }
 
@@ -397,7 +403,6 @@ private fun CommunityCreateMemberHeader(
 private fun CommunityCreateMemberSearchContent(
     members: ImmutableList<CommunityChallengerUiModel>,
     selectedMembers: ImmutableList<CommunityChallengerUiModel>,
-    maxCount: Int,
     isLoadingMore: Boolean,
     hasNext: Boolean,
     errorMessage: String? = null,
@@ -482,19 +487,13 @@ private fun CommunityCreateMemberSearchContent(
                                 member.memberId
                     }
 
-                // 최대 인원에 도달해도 이미 선택된 멤버는 선택 해제 가능
-                val isEnabled =
-                    isChecked ||
-                            selectedMembers.size < maxCount
-
+                // 최대 인원은 초대 버튼에서 검사하므로 선택은 막지 않음
                 CommunityCreateMemberSearchRow(
                     member = member,
                     isChecked = isChecked,
-                    isEnabled = isEnabled,
+                    isEnabled = true,
                     onToggleClick = {
-                        if (isEnabled) {
-                            onToggleClick(member)
-                        }
+                        onToggleClick(member)
                     },
                 )
             }
@@ -855,7 +854,7 @@ private fun CommunityCreateMemberSheetEmptyPreview() {
         onQueryChange = {},
         onToggleMember = {},
         onLoadMore = {},
-        onSearchConfirmClick = {},
+        onInviteClick = {},
         onCsvUploadClick = {},
     )
 }
@@ -873,7 +872,7 @@ private fun CommunityCreateMemberSheetSelectedPreview() {
         onQueryChange = {},
         onToggleMember = {},
         onLoadMore = {},
-        onSearchConfirmClick = {},
+        onInviteClick = {},
         onCsvUploadClick = {},
     )
 }
@@ -894,7 +893,7 @@ private fun CommunityCreateMemberSheetSearchPreview() {
         onQueryChange = {},
         onToggleMember = {},
         onLoadMore = {},
-        onSearchConfirmClick = {},
+        onInviteClick = {},
         onCsvUploadClick = {},
     )
 }
@@ -915,7 +914,7 @@ private fun CommunityCreateMemberSheetMaxCountToastPreview() {
         onQueryChange = {},
         onToggleMember = {},
         onLoadMore = {},
-        onSearchConfirmClick = {},
+        onInviteClick = {},
         onCsvUploadClick = {},
         toastData = UToastData(
             message = AppStrings.COMMUNITY_CREATE_MEMBER_MAX_COUNT_FORMAT.format(99),
