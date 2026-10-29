@@ -274,6 +274,7 @@ private fun CommunityCreateMemberSheetContent(
                         maxCount = state.maxMemberCount,
                         isLoadingMore = state.isLoadingMore,
                         hasNext = state.hasNext,
+                        errorMessage = state.errorMessage,
                         onToggleClick = onToggleMember,
                         onLoadMore = onLoadMore,
                     )
@@ -375,6 +376,7 @@ private fun CommunityCreateMemberSearchContent(
     maxCount: Int,
     isLoadingMore: Boolean,
     hasNext: Boolean,
+    errorMessage: String? = null,
     onToggleClick: (CommunityChallengerUiModel) -> Unit,
     onLoadMore: () -> Unit,
 ) {
@@ -390,6 +392,8 @@ private fun CommunityCreateMemberSearchContent(
     // derivedStateOf가 처음 값에 고정되지 않도록 인자를 State로 감싸 최신 값을 읽음
     val currentHasNext by rememberUpdatedState(hasNext)
     val currentIsLoadingMore by rememberUpdatedState(isLoadingMore)
+    // 추가 페이지 요청이 실패하면 hasNext 가 남아 같은 요청을 쉬지 않고 반복하므로, 오류가 있는 동안은 자동으로 부르지 않는다(검색어를 바꾸면 오류가 지워진다)
+    val currentHasError by rememberUpdatedState(errorMessage != null)
 
     /**
      * 리스트 끝에서 3개 전까지 스크롤했을 경우
@@ -406,7 +410,8 @@ private fun CommunityCreateMemberSearchContent(
                     lastVisibleItemIndex >=
                     listState.layoutInfo.totalItemsCount - 3 &&
                     currentHasNext &&
-                    !currentIsLoadingMore
+                    !currentIsLoadingMore &&
+                    !currentHasError
         }
     }
 

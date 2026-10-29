@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.create.bottomsheet
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
@@ -281,6 +282,13 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
 
                         cursor = response.nextCursor
                         hasMore = response.hasNext && response.nextCursor != null
+                    },
+                    errorCallback = { failState ->
+                        // 실패해도 기존 선택 멤버는 그대로 두고 조회만 멈춘다. 정보가 갱신되지 않은 원인을 추적할 수 있게 남긴다
+                        Log.w(
+                            "GroupCreateMemberPicker",
+                            "선택 멤버 정보 재조회 실패(page=$page): ${failState.code} ${failState.message}"
+                        )
                     },
                 )
 

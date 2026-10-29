@@ -23,6 +23,9 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
     // 검색 작업 스케줄링 제어용 Job 레퍼런스
     private var searchJob: Job? = null
 
+    // 새 검색마다 올리는 세대 값. A → B → A 처럼 같은 검색어로 돌아와도 이전 검색의 늦은 응답을 버리기 위해 쓴다
+    private var searchGeneration = 0
+
     /**
      * 상위 스크린에서 선택된 기존 챌린저 목록을 수신하여 다이얼로그 내부 UI State로 동기화하는 메서드
      * 일정 수정 시 기존 참여 챌린저를 dialog에도 반영하기 위함
@@ -51,6 +54,7 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
     fun searchParticipants(query: String) {
         // 이전 검색 대기 작업이 존재하는 경우 즉시 취소
         searchJob?.cancel()
+        searchGeneration++
 
         // 검색어가 비어있는 경우 결과를 초기화하고 검색 취소
         if (query.isBlank()) {
@@ -85,6 +89,7 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
      */
     private fun fetchParticipants(isNextPage: Boolean) {
         val state = uiState.value
+        val generation = searchGeneration
 
         //API 호출중임을 표시
         updateState {
@@ -103,8 +108,8 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
                     name = state.searchQuery.ifBlank { null } // 빈 검색어는 null로 그 외는 searchParticipant에서 가져온 쿼리로
                 ),
                 successCallback = { response ->
-                    // 요청 이후 검색어가 바뀌었으면 늦게 도착한 이전 응답이므로 버린다
-                    if (uiState.value.searchQuery != state.searchQuery) return@resultResponse
+                    // 요청 이후 새 검색이 시작됐거나 검색어가 바뀌었으면 늦게 도착한 이전 응답이므로 버린다
+                    if (generation != searchGeneration || uiState.value.searchQuery != state.searchQuery) return@resultResponse
                     Log.d("log_home", "유저검색 성공: ${response.content}")
                     updateState {
                         copy(
@@ -124,7 +129,7 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
                 },
                 errorCallback = {
                     //검색 실패 시, 로딩 해제 및 다음 꺼 X
-                    if (uiState.value.searchQuery != state.searchQuery) return@resultResponse
+                    if (generation != searchGeneration || uiState.value.searchQuery != state.searchQuery) return@resultResponse
                     Log.d("log_home", "유저검색 실패: ${it.message}")
                     updateState { copy(isLoading = false, hasNext = false, hasSearched = true, isSearchFailed = true) }
                 }
@@ -176,6 +181,7 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
      */
     fun clearParticipantSearch() {
         searchJob?.cancel()
+        searchGeneration++
         updateState {
             copy(
                 searchResults = emptyList(), // 혹은 초기 리스트(allChallengers)

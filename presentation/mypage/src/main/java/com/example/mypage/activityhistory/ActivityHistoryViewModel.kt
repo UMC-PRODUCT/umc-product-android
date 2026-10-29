@@ -58,7 +58,8 @@ class ActivityHistoryViewModel @Inject constructor(
      * 서버에서 내 프로필 정보를 받아 활동 이력을 만드는 메서드
      */
     private fun loadActivityHistory() {
-        updateState { copy(isLoading = true) }
+        // 재시도 중에는 이전 실패 안내 대신 진행 표시를 보이고, 다시 실패하면 errorCallback 이 실패 상태로 되돌린다
+        updateState { copy(isLoading = true, isLoadFailed = false) }
         viewModelScope.launch {
             resultResponse(
                 response = getMyProfileUseCase(),
