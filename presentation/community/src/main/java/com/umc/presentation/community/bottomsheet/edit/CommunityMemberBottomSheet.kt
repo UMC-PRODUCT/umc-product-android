@@ -44,7 +44,7 @@ import coil.compose.AsyncImage
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
-import com.umc.component.component.UTextField
+import com.umc.presentation.community.component.CommunityMemberSearchField
 import com.umc.component.component.UToastData
 import com.umc.component.component.UToastHost
 import com.umc.component.component.UToastState
@@ -52,7 +52,6 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
-import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
@@ -166,23 +165,9 @@ fun CommunityMemberBottomSheet(
              * 실제 검색 API 호출과 300ms 디바운스 처리는
              * ViewModel에서 수행합니다.
              */
-            UTextField(
+            CommunityMemberSearchField(
                 value = state.query,
                 onValueChange = viewModel::searchMembers,
-                placeholder = "이름을 입력하세요",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                prevIcon = painterResource(
-                    id = R.drawable.ic_search,
-                ),
-                prevIconTint = grey500(),
-                prevIconSize = 24.dp,
-                backgroundColor = grey100(),
-                focusBackgroundColor = grey000(),
-                strokeColor = grey100(),
-                focusStrokeColor = grey900(),
-                cornerRadius = 8.dp,
             )
 
             Spacer(

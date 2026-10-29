@@ -1085,6 +1085,7 @@ class CommunityChattingViewModel @Inject constructor(
                 messages = emptyList(),
                 departureNotices = emptyList(),
                 members = emptyMap(),
+                memberProfiles = emptyMap(),
                 localImageUrisByMessageId = emptyMap(),
                 readWatermarks = emptyMap(),
                 unreadSummary = null,
@@ -1133,19 +1134,30 @@ class CommunityChattingViewModel @Inject constructor(
                 val membersWithProfiles = coroutineScope {
                     members.map { member ->
                         async {
-                            val memberId = member.memberId.toLongOrNull() ?: return@async member
+                            val memberId = member.memberId.toLongOrNull() ?: return@async (member to null)
                             when (val profile = memberRepository.getMemberProfile(memberId)) {
                                 is ApiState.Success -> member.copy(
                                     profileImageUrl = profile.data.profileImageLink,
+                                ) to CommunityParticipantProfile(
+                                    nickname = profile.data.nickname,
+                                    roleLabel = profile.data.currentGisuMemberInfo?.roleTypes.orEmpty()
+                                        .map { com.umc.domain.model.enums.UserChallengerRole.from(it) }
+                                        .firstOrNull { it.isVisible }?.displayName.orEmpty(),
                                 )
-                                is ApiState.Fail -> member
+                                is ApiState.Fail -> member to null
                             }
                         }
                     }.awaitAll()
                 }
                 if (generation != accessGeneration || loadGeneration != memberLoadGeneration) return@launch
                 updateState {
-                    copy(members = membersWithProfiles.filter { it.state == CommunityThreadMemberState.ACTIVE }.associateBy(CommunityThreadMember::memberId))
+                    val activeMembers = membersWithProfiles.filter { it.first.state == CommunityThreadMemberState.ACTIVE }
+                    copy(
+                        members = activeMembers.associate { it.first.memberId to it.first },
+                        memberProfiles = activeMembers.mapNotNull { (member, profile) ->
+                            (profile ?: memberProfiles[member.memberId])?.let { member.memberId to it }
+                        }.toMap(),
+                    )
                 }
             }
             is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode() || result.failState.hasThreadUnavailableCode()) showAccessDenied()

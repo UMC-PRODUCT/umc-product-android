@@ -4,7 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,11 +45,11 @@ import com.umc.component.R
 import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UDialog
+import com.umc.presentation.community.component.CommunityMemberSearchField
 import com.umc.component.component.UToastData
 import com.umc.component.component.UToastHost
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey100
-import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
@@ -66,13 +66,11 @@ import com.umc.domain.model.community.thread.CommunityThreadMember
 import com.umc.domain.model.community.thread.CommunityThreadRole
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.presentation.community.component.chatting.CommunityChatProfileImage
-import com.umc.presentation.community.component.chatting.communityChatPartTag
 
 @Composable
 internal fun CommunityThreadInfoScreen(
-    title: String,
-    description: String,
     members: List<CommunityThreadMember>,
+    memberProfiles: Map<String, CommunityParticipantProfile>,
     memberCount: String,
     myMemberId: String,
     isOwner: Boolean,
@@ -86,11 +84,15 @@ internal fun CommunityThreadInfoScreen(
     BackHandler(onBack = onBack)
     var pendingKickMember by remember { mutableStateOf<CommunityThreadMember?>(null) }
     var pendingOwnershipMember by remember { mutableStateOf<CommunityThreadMember?>(null) }
+    var query by rememberSaveable { mutableStateOf("") }
     val sortedMembers = remember(members) {
         members.sortedWith(
             compareBy<CommunityThreadMember> { it.role != CommunityThreadRole.OWNER }
                 .thenBy { it.name },
         )
+    }
+    val displayedMembers = remember(sortedMembers, memberProfiles, query) {
+        filterCommunityParticipants(sortedMembers, memberProfiles, query)
     }
 
     Scaffold(
@@ -117,6 +119,7 @@ internal fun CommunityThreadInfoScreen(
                             painter = painterResource(R.drawable.ic_back),
                             contentDescription = AppStrings.CHAT_CD_BACK,
                             tint = grey950(),
+                            modifier = Modifier.size(24.dp),
                         )
                     }
                     Text(
@@ -134,13 +137,9 @@ internal fun CommunityThreadInfoScreen(
             contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 64.dp),
         ) {
             item {
-                ThreadInfoField(AppStrings.CHAT_THREAD_INFO_TITLE, title)
-            }
-            item {
-                ThreadInfoField(
-                    AppStrings.CHAT_THREAD_INFO_DESCRIPTION,
-                    description,
-                    modifier = Modifier.padding(top = 32.dp),
+                CommunityMemberSearchField(
+                    value = query,
+                    onValueChange = { query = it },
                 )
             }
             item {
@@ -163,9 +162,10 @@ internal fun CommunityThreadInfoScreen(
                     )
                 }
             }
-            items(sortedMembers, key = { it.memberId }) { member ->
+            items(displayedMembers, key = { it.memberId }) { member ->
                 ParticipantRow(
                     member = member,
+                    profile = memberProfiles[member.memberId],
                     isMe = member.memberId == myMemberId,
                     showManagement = canManage,
                     canTransfer = isOwner,
@@ -248,26 +248,9 @@ internal fun CommunityThreadInfoScreen(
 }
 
 @Composable
-private fun ThreadInfoField(label: String, value: String, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(text = label, color = grey950(), style = UmcTypographyTokens.HeadlineBold)
-        Text(
-            text = value,
-            modifier = Modifier.fillMaxWidth()
-                .border(1.dp, grey200(), RoundedCornerShape(8.dp))
-                .padding(16.dp),
-            color = grey800(),
-            style = UmcTypographyTokens.Body,
-        )
-    }
-}
-
-@Composable
 private fun ParticipantRow(
     member: CommunityThreadMember,
+    profile: CommunityParticipantProfile?,
     isMe: Boolean,
     showManagement: Boolean,
     canTransfer: Boolean,
@@ -289,7 +272,7 @@ private fun ParticipantRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
-                    text = member.name.ifBlank { AppStrings.CHAT_UNKNOWN_USER },
+                    text = communityParticipantDisplayName(member, profile),
                     modifier = Modifier.weight(1f, fill = false),
                     color = grey950(),
                     style = UmcTypographyTokens.CalloutBold,
@@ -304,10 +287,11 @@ private fun ParticipantRow(
                 }
                 if (isMe) ParticipantBadge(AppStrings.CHAT_ME, indigo100(), indigo500())
             }
-            val part = member.part?.let { communityChatPartTag(it).first }.orEmpty()
-            if (part.isNotBlank()) {
+            val subtitle = listOfNotNull(member.part?.label, profile?.roleLabel?.takeIf { it.isNotBlank() })
+                .joinToString(" · ")
+            if (subtitle.isNotBlank()) {
                 Text(
-                    text = part,
+                    text = subtitle,
                     color = grey600(),
                     style = UmcTypographyTokens.Footnote,
                     maxLines = 1,
@@ -323,6 +307,7 @@ private fun ParticipantRow(
                         painter = painterResource(R.drawable.ic_menu_kebab),
                         contentDescription = AppStrings.CHAT_CD_PARTICIPANT_MENU,
                         tint = grey400(),
+                        modifier = Modifier.size(24.dp),
                     )
                 }
                 DropdownMenu(

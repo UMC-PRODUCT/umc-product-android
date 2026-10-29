@@ -948,9 +948,8 @@ fun CommunityChattingScreen(
 
     if (showThreadInfo) {
         CommunityThreadInfoScreen(
-            title = state.thread?.title.orEmpty(),
-            description = state.thread?.description.orEmpty(),
             members = state.members.values.toList(),
+            memberProfiles = state.memberProfiles,
             memberCount = state.thread?.memberCount.orEmpty(),
             myMemberId = state.myMemberId,
             isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,

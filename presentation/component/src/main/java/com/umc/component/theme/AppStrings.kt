@@ -666,7 +666,7 @@ object AppStrings {
     const val CHAT_DATE_MONTH_DAY_FORMAT = "%d월 %d일"
     const val CHAT_DATE_YEAR_MONTH_DAY_FORMAT = "%d년 %d월 %d일"
     const val CHAT_PARTICIPANT_MANAGEMENT = "참여자 관리"
-    const val CHAT_THREAD_INFO = "스레드 정보"
+    const val CHAT_THREAD_INFO = "참여자 관리"
     const val CHAT_THREAD_INFO_TITLE = "제목"
     const val CHAT_THREAD_INFO_DESCRIPTION = "스레드 특징"
     const val CHAT_THREAD_INFO_ADMIN_BADGE = "관리자"
