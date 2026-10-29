@@ -76,18 +76,14 @@ fun GroupCreateMemberBottomSheet(
      * 바텀시트가 열릴 때 기존 선택 멤버를 초기화합니다.
      *
      * resolvePreSelectedFromApi가 true인 경우에는
-     * 기존 memberId를 기준으로 API에서 사용자 정보를 다시 조회합니다.
+     * 기존 멤버를 유지한 채 API에서 찾은 멤버의 정보만 다시 채웁니다.
      */
     LaunchedEffect(
         preSelected,
         resolvePreSelectedFromApi,
     ) {
         if (resolvePreSelectedFromApi) {
-            viewModel.loadSelectedMembers(
-                memberIds = preSelected.map { member ->
-                    member.id
-                }
-            )
+            viewModel.loadSelectedMembers(preSelected)
         } else {
             viewModel.setSelected(preSelected)
         }

@@ -1,5 +1,6 @@
 package com.umc.data.response.challenger
 
+import com.google.gson.annotations.SerializedName
 import com.umc.data.response.base.CursorResponse
 
 data class ChallengerSearchV2Response(
@@ -55,6 +56,8 @@ data class ChallengerSearchV2ItemResponse(
     val profileImageLink: String? = null,
     val challengerId: Long,
     val gisuId: Long,
+    // 회원 검색(api/v1/member/search)은 같은 값을 gisu 로 보낸다
+    @SerializedName(value = "generation", alternate = ["gisu"])
     val generation: Long,
     val part: String? = null,
     val roleTypes: List<String>? = null

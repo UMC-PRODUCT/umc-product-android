@@ -20,6 +20,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 /**
@@ -56,6 +57,14 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
 
     /** 검색 디바운스 처리를 위한 Job */
     private var searchJob: Job? = null
+
+    /**
+     * 초대 가능 멤버 조회 Job
+     *
+     * 본인 학교 회원만 남기려고 서버 페이지를 여러 번 받을 수 있어,
+     * 검색어가 바뀌거나 검색을 닫으면 진행 중인 조회를 바로 멈춥니다.
+     */
+    private var loadJob: Job? = null
     private var sessionGeneration = 0
 
     /**
@@ -108,6 +117,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         }
 
         searchJob?.cancel()
+        loadJob?.cancel()
 
         updateState {
             CommunityMemberBottomSheetState(
@@ -283,6 +293,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         query: String,
     ) {
         searchJob?.cancel()
+        loadJob?.cancel()
 
         val trimmedQuery = query.trim()
         val currentState = uiState.value
@@ -379,7 +390,8 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         cursor: Long?,
         append: Boolean,
     ) {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             updateState {
                 if (append) {
                     copy(
@@ -396,36 +408,50 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
 
             val generation = sessionGeneration
             val threadId = uiState.value.threadId
-            val result = threadRepository.getInvitableMembers(
-                threadId = threadId, query = keyword, offset = cursor?.toInt() ?: 0, limit = PAGE_SIZE,
-            )
-            if (generation != sessionGeneration || uiState.value.threadId != threadId || uiState.value.query.trim() != keyword) return@launch
-            when (result) {
-                is ApiState.Success -> {
-                    val page = result.data
-                    val candidates = page.items.mapNotNull { member ->
-                        val id = member.memberId.toLongOrNull() ?: return@mapNotNull null
-                        if (id == myMemberId || id in uiState.value.ownerMemberIds) return@mapNotNull null
-                        CommunityChallengerUiModel(
-                            memberId = id, name = member.name, nickname = "", school = "",
-                            generation = member.generation?.toLongOrNull() ?: 0L,
-                            partLabel = UserPart.from(member.part.orEmpty()).label, profileImage = "",
-                        )
+            var offset = cursor?.toInt() ?: 0
+            var appendPage = append
+            while (true) {
+                val result = threadRepository.getInvitableMembers(
+                    threadId = threadId, query = keyword, offset = offset, limit = PAGE_SIZE,
+                )
+                // 네트워크 호출부가 취소를 실패 응답으로 바꿔 돌려주므로, 취소된 조회가 상태를 덮어쓰지 않게 여기서 멈춘다
+                ensureActive()
+                if (generation != sessionGeneration || uiState.value.threadId != threadId || uiState.value.query.trim() != keyword) return@launch
+                when (result) {
+                    is ApiState.Success -> {
+                        val page = result.data
+                        val candidates = page.items.mapNotNull { member ->
+                            val id = member.memberId.toLongOrNull() ?: return@mapNotNull null
+                            if (id == myMemberId || id in uiState.value.ownerMemberIds) return@mapNotNull null
+                            CommunityChallengerUiModel(
+                                memberId = id, name = member.name, nickname = "", school = "",
+                                generation = member.generation?.toLongOrNull() ?: 0L,
+                                partLabel = UserPart.from(member.part.orEmpty()).label, profileImage = "",
+                            )
+                        }
+                        val nextOffset = page.nextOffset?.toIntOrNull()
+                        // 본인 학교만 남기느라 이번 페이지에 보여줄 사람이 없으면, 빈 목록에서는 스크롤로 다음 페이지를 부를 수 없으므로 바로 이어 받는다
+                        val continueScan = candidates.isEmpty() && nextOffset != null
+                        updateState {
+                            copy(
+                                searchResults = ((if (appendPage) searchResults else emptyList()) + candidates)
+                                    .distinctBy { it.memberId }.toImmutableList(),
+                                nextCursor = page.nextOffset?.toLongOrNull(), hasNext = page.nextOffset != null,
+                                isLoading = if (continueScan) isLoading else false,
+                                isLoadingMore = if (continueScan) isLoadingMore else false,
+                            )
+                        }
+                        if (!continueScan) return@launch
+                        offset = nextOffset ?: return@launch
+                        appendPage = true
                     }
-                    updateState {
-                        copy(
-                            searchResults = ((if (append) searchResults else emptyList()) + candidates)
-                                .distinctBy { it.memberId }.toImmutableList(),
-                            nextCursor = page.nextOffset?.toLongOrNull(), hasNext = page.nextOffset != null,
-                            isLoading = false, isLoadingMore = false,
-                        )
-                    }
-                }
-                is ApiState.Fail -> {
-                    updateState { copy(isLoading = false, isLoadingMore = false, errorMessage = "초대 가능한 멤버를 불러오지 못했어요.") }
-                    if (result.failState.code in setOf("403", "409", "COMMUNITY-0034") ||
-                        result.failState.code.endsWith("-403") || result.failState.code.endsWith("-409")) {
-                        loadCurrentMembers(threadId)
+                    is ApiState.Fail -> {
+                        updateState { copy(isLoading = false, isLoadingMore = false, errorMessage = "초대 가능한 멤버를 불러오지 못했어요.") }
+                        if (result.failState.code in setOf("403", "409", "COMMUNITY-0034") ||
+                            result.failState.code.endsWith("-403") || result.failState.code.endsWith("-409")) {
+                            loadCurrentMembers(threadId)
+                        }
+                        return@launch
                     }
                 }
             }
@@ -647,6 +673,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      */
     fun clearSearchOnly() {
         searchJob?.cancel()
+        loadJob?.cancel()
 
         updateState {
             copy(
@@ -671,6 +698,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
     fun resetAfterDismiss() {
         sessionGeneration++
         searchJob?.cancel()
+        loadJob?.cancel()
 
         updateState {
             CommunityMemberBottomSheetState()

@@ -20,6 +20,7 @@ import com.umc.presentation.act.ActManageRoute
 import com.umc.presentation.act.admin.challenger.AdminChallengerDetailRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
+import com.example.mypage.activityhistory.ActivityHistoryRoute
 import com.example.mypage.profile.ProfileRoute
 import com.example.mypage.qrcode.QrCodeRoute
 import com.example.mypage.receivedcard.ReceivedCardRoute
@@ -567,6 +568,9 @@ fun MainNavHost(
                         .getOrNull()
                         ?.savedStateHandle
                         ?.set(ACT_OPEN_STUDY_TAB_KEY, true)
+                },
+                onNavigateToActivityHistory = {
+                    navHostController.navigate(MainDestination.ActivityHistory)
                 }
             )
         }
@@ -607,6 +611,15 @@ fun MainNavHost(
         //내 프로필
         composable<MainDestination.MyProfile> {
             ProfileRoute(
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
+        }
+
+        //활동 이력
+        composable<MainDestination.ActivityHistory> {
+            ActivityHistoryRoute(
                 onNavigateToBack = {
                     navHostController.popBackStack()
                 }

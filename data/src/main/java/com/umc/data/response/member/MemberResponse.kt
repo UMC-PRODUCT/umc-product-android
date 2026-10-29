@@ -30,7 +30,8 @@ data class MemberResponse(
     @SerializedName("hasLocalCredential") val hasLocalCredential: Boolean?,
     @SerializedName("totalActivityDays") val totalActivityDays: Long?,
     @SerializedName("currentGisuMemberInfo") val currentGisuMemberInfo: CurrentGisuMemberInfoResponse?,
-    @SerializedName("challengerHistory") val challengerHistory: List<ChallengerHistoryResponse>?
+    @SerializedName("challengerHistory") val challengerHistory: List<ChallengerHistoryResponse>?,
+    @SerializedName("isSuperAdmin") val isSuperAdmin: Boolean? = null
 
 )
 {
@@ -90,7 +91,8 @@ data class MemberResponse(
                 // 🌟 [v2 신규 필드 전달]
                 hasLocalCredential = hasLocalCredential ?: false,
                 totalActivityDays = totalActivityDays ?: 0L,
-                currentGisuMemberInfo = currentGisuMemberInfo?.toDomain()
+                currentGisuMemberInfo = currentGisuMemberInfo?.toDomain(),
+                isSuperAdmin = isSuperAdmin ?: false
             )
 
         }

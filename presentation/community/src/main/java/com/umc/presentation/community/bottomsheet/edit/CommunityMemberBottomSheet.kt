@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -267,6 +268,7 @@ fun CommunityMemberBottomSheet(
                             maxCount = state.maxMemberCount,
                             isLoadingMore = state.isLoadingMore,
                             hasNext = state.hasNext,
+                            errorMessage = state.errorMessage,
                             onToggleClick = { member ->
                                 viewModel.toggleMember(
                                     member = member,
@@ -459,6 +461,7 @@ private fun CommunityMemberSearchContent(
     maxCount: Int,
     isLoadingMore: Boolean,
     hasNext: Boolean,
+    errorMessage: String? = null,
     onToggleClick: (CommunityChallengerUiModel) -> Unit,
     onLoadMore: () -> Unit,
 ) {
@@ -470,6 +473,12 @@ private fun CommunityMemberSearchContent(
             member.partLabel
         }
         .toList()
+
+    // derivedStateOf 는 처음 한 번만 만들어지므로, 파라미터를 직접 읽으면 처음 값에 묶여 다음 페이지를 영영 부르지 못한다
+    val currentHasNext by rememberUpdatedState(hasNext)
+    val currentIsLoadingMore by rememberUpdatedState(isLoadingMore)
+    // 추가 페이지 요청이 실패하면 hasNext 가 남아 같은 요청을 쉬지 않고 반복하므로, 오류가 있는 동안은 자동으로 부르지 않는다(검색어를 바꾸면 오류가 지워진다)
+    val currentHasError by rememberUpdatedState(errorMessage != null)
 
     /**
      * 리스트 마지막 영역에 가까워졌을 때
@@ -485,8 +494,9 @@ private fun CommunityMemberSearchContent(
             lastVisibleItemIndex != null &&
                     lastVisibleItemIndex >=
                     listState.layoutInfo.totalItemsCount - 3 &&
-                    hasNext &&
-                    !isLoadingMore
+                    currentHasNext &&
+                    !currentIsLoadingMore &&
+                    !currentHasError
         }
     }
 

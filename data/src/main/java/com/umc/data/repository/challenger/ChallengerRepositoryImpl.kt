@@ -2,6 +2,7 @@ package com.umc.data.repository.challenger
 
 import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSource
 import com.umc.data.request.challenger.AddChallengerPointRequest
+import com.umc.data.response.challenger.ChallengerCursorResponse
 import com.umc.data.response.challenger.ChallengerResponse.Companion.toManageModel
 import com.umc.data.response.challenger.ChallengerResponse.Companion.toModel
 import com.umc.data.response.member.MemberResponse.Companion.toDomain
@@ -19,8 +20,38 @@ import com.umc.domain.repository.ChallengerRepository
 import javax.inject.Inject
 
 class ChallengerRepositoryImpl @Inject constructor(
-    private val challengerRemoteDataSource: ChallengerRemoteDataSource
+    private val challengerRemoteDataSource: ChallengerRemoteDataSource,
+    private val searchScopeProvider: ChallengerSearchScopeProvider,
 ) : ChallengerRepository {
+
+    // 챌린저 검색은 모두 여기를 거친다. 중앙운영사무국만 운영진 검색으로 전 학교를 보고,
+    // 나머지는 회원 검색에 본인 학교를 넣어 부른다(운영진 검색은 일반 챌린저에게 403).
+    private suspend fun searchInScope(
+        cursor: Long?,
+        size: Int,
+        schoolId: Long? = null,
+        gisuId: Long? = null,
+        part: String? = null,
+        keyword: String? = null,
+    ): ApiState<ChallengerCursorResponse> {
+        val scope = when (val result = searchScopeProvider.current()) {
+            is ApiState.Success -> result.data
+            is ApiState.Fail -> return result
+        }
+        return when (scope) {
+            ChallengerSearchScope.AllSchools -> challengerRemoteDataSource.getChallengerList(
+                cursor = cursor, size = size,
+                schoolId = schoolId, gisuId = gisuId,
+                part = part, keyword = keyword
+            )
+
+            is ChallengerSearchScope.OwnSchool -> challengerRemoteDataSource.searchMembers(
+                cursor = cursor, size = size,
+                schoolId = scope.schoolId, gisuId = gisuId ?: scope.activeGisuId,
+                part = part, keyword = keyword
+            )
+        }
+    }
     override suspend fun getChallengerInfo(id: Long): ApiState<ChallengerInfoDialogModel> {
         return challengerRemoteDataSource.getChallengerDetail(id).map {
             it.toModel()
@@ -49,7 +80,7 @@ class ChallengerRepositoryImpl @Inject constructor(
         size: Int,
         keyword: String?
     ): ApiState<ParticipantSearchPage> {
-        return challengerRemoteDataSource.getChallengerList(
+        return searchInScope(
             cursor = cursor,
             size = size,
             keyword = keyword
@@ -63,7 +94,7 @@ class ChallengerRepositoryImpl @Inject constructor(
         schoolId: Long?, gisuId: Long?,
         keyword: String?, part: String?
     ): ApiState<ChallengerList> {
-        return challengerRemoteDataSource.getChallengerList(
+        return searchInScope(
             cursor = cursor, size = size,
             schoolId = schoolId, gisuId = gisuId,
             keyword = keyword, part = part
@@ -75,7 +106,7 @@ class ChallengerRepositoryImpl @Inject constructor(
         schoolId: Long?, gisuId: Long?,
         keyword: String?, part: String?
     ): ApiState<AdminChallengerList> {
-        return challengerRemoteDataSource.getChallengerList(
+        return searchInScope(
             cursor = cursor, size = size,
             schoolId = schoolId, gisuId = gisuId,
             keyword = keyword, part = part
@@ -98,7 +129,7 @@ class ChallengerRepositoryImpl @Inject constructor(
         part: String?,
         keyword: String?
     ): ApiState<ChallengerList> {
-        return challengerRemoteDataSource.getChallengerList(
+        return searchInScope(
             cursor = cursor,
             size = size,
             schoolId = schoolId,
