@@ -125,7 +125,7 @@ fun CommunityFilterMenu(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // 파트공지 카테고리
+            // 프로젝트 카테고리
             CommunityFilterMenuItem(
                 text = CommunityCategory.PROJECT.label,
                 isSelected = selectedCategory == CommunityCategory.PROJECT,

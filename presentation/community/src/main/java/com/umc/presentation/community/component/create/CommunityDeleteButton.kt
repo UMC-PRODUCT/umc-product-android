@@ -17,6 +17,8 @@ import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.tooling.preview.Preview
 
 /**
  * 스레드 수정 화면에서 사용하는 삭제 버튼
@@ -61,4 +63,16 @@ fun CommunityDeleteButton(
             color = red500(),
         )
     }
+}
+
+/**
+ * 스레드 삭제 버튼 Preview
+ */
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun CommunityDeleteButtonPreview() {
+    CommunityDeleteButton(
+        onClick = {},
+        modifier = Modifier.padding(16.dp),
+    )
 }

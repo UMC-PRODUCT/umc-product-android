@@ -1,5 +1,6 @@
 package com.umc.presentation.community.create
 
+import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 
 /**
@@ -45,4 +46,9 @@ sealed interface CommunityCreateAction {
 
     /** 스레드 아이콘 변경 버튼 클릭 */
     data object OnChangeEmojiClick : CommunityCreateAction
+
+    /** 아이콘 선택 영역에서 카테고리 직접 선택 */
+    data class OnCategorySelected(
+        val category: CommunityCategory,
+    ) : CommunityCreateAction
 }

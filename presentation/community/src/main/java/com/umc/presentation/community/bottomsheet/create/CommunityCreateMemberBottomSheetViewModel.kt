@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.usecase.community.SearchCommunityCreateMembersUseCase
@@ -200,7 +201,7 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
             emitEvent(
                 CommunityCreateMemberBottomSheetEvent.ShowToast(
                     message =
-                        "챌린저는 최대 ${currentState.maxMemberCount}명까지 추가할 수 있어요.",
+                        AppStrings.COMMUNITY_CREATE_MEMBER_MAX_COUNT_FORMAT.format(currentState.maxMemberCount),
                 )
             )
             return
@@ -335,13 +336,13 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
                         isLoading = false,
                         isLoadingMore = false,
                         errorMessage =
-                            "챌린저 검색 결과를 불러오지 못했어요.",
+                            AppStrings.COMMUNITY_CREATE_MEMBER_SEARCH_FAILED,
                     )
                 }
 
                 emitEvent(
                     CommunityCreateMemberBottomSheetEvent.ShowToast(
-                        message = "챌린저 검색 결과를 불러오지 못했어요.",
+                        message = AppStrings.COMMUNITY_CREATE_MEMBER_SEARCH_FAILED,
                     )
                 )
             }

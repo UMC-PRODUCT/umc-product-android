@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadMember
+import com.umc.domain.model.community.canEditThread
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.usecase.ai.CommunityCategoryRules
@@ -122,6 +123,12 @@ class CommunityEditViewModel @Inject constructor(
                 requestClassification()
             }
 
+            is CommunityEditAction.OnCategorySelected -> {
+                selectCategory(
+                    category = action.category,
+                )
+            }
+
             CommunityEditAction.OnChangeEmojiClick -> {
                 sendEvent(
                     CommunityEditEvent.NavigateToEmojiPicker
@@ -176,7 +183,7 @@ class CommunityEditViewModel @Inject constructor(
             getCommunityThreadDetailUseCase(
                 threadId = threadId,
             ).onSuccess { thread ->
-                if (thread.myRole != com.umc.domain.model.community.CommunityThreadRole.OWNER || thread.deletedAt != null) {
+                if (!thread.myRole.canEditThread() || thread.deletedAt != null) {
                     _state.update { it.copy(isLoading = false, canEdit = false, errorMessage = "스레드를 수정할 권한이 없어요.") }
                     sendEvent(CommunityEditEvent.ShowToast("스레드를 수정할 권한이 없어요."))
                     return@onSuccess
@@ -190,7 +197,9 @@ class CommunityEditViewModel @Inject constructor(
                         currentChallengerCount = thread.memberCount,
                         maxChallengerCount = thread.maxMembers,
                         aiState = CommunityAiState.SUCCESS,
-                        classifiedCategory =
+                        aiCategory =
+                            thread.category.toUiCategory(),
+                        selectedCategory =
                             thread.category.toUiCategory(),
                         selectedIcon = thread.icon,
                         isLoading = false,
@@ -338,13 +347,36 @@ class CommunityEditViewModel @Inject constructor(
                         CommunityAiState.GUIDE
                     }
 
-                    it.classifiedCategory != null -> {
+                    it.aiCategory != null -> {
                         CommunityAiState.NEEDS_RECLASSIFICATION
                     }
 
                     else -> {
                         CommunityAiState.GUIDE
                     }
+                },
+            )
+        }
+    }
+
+    /**
+     * 사용자가 아이콘 선택 영역에서 카테고리를 직접 선택합니다.
+     *
+     * 진행 중인 AI 재분류가 선택값을 덮어쓰지 않도록 취소하고,
+     * 분류 중이었다면 재분류 필요 상태로 되돌립니다.
+     */
+    private fun selectCategory(
+        category: CommunityCategory,
+    ) {
+        classificationJob?.cancel()
+
+        _state.update {
+            it.copy(
+                selectedCategory = category,
+                aiState = if (it.aiState == CommunityAiState.LOADING) {
+                    CommunityAiState.NEEDS_RECLASSIFICATION
+                } else {
+                    it.aiState
                 },
             )
         }
@@ -399,7 +431,9 @@ class CommunityEditViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     aiState = result.aiState,
-                    classifiedCategory = result.category,
+                    // AI가 분류하면 실제 선택값도 함께 갱신
+                    aiCategory = result.category,
+                    selectedCategory = result.category,
                 )
             }
         }
@@ -474,7 +508,7 @@ class CommunityEditViewModel @Inject constructor(
         }
 
         val category =
-            currentState.classifiedCategory ?: run {
+            currentState.selectedCategory ?: run {
                 sendEvent(
                     CommunityEditEvent.ShowToast(
                         message = "카테고리를 선택해주세요.",

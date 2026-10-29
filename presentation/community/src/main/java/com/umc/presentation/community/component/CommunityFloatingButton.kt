@@ -11,10 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.umc.presentation.community.R
 import com.umc.component.component.UText
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.indigo500
@@ -63,3 +65,14 @@ fun CommunityFloatingButton(
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun CommunityFloatingButtonPreview() {
+    UmcTheme {
+        CommunityFloatingButton(
+            onClick = {},
+        )
+    }
+}
+
