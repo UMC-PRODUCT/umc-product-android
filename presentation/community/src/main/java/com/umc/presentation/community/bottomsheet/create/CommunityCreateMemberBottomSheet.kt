@@ -51,6 +51,7 @@ import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
@@ -191,9 +192,9 @@ private fun CommunityCreateMemberSheetContent(
     ) {
         CommunityCreateMemberHeader(
             title = if (state.isSearching) {
-                "챌린저를 검색하세요"
+                AppStrings.COMMUNITY_CREATE_MEMBER_SEARCH_TITLE
             } else {
-                "챌린저를 추가하세요"
+                AppStrings.COMMUNITY_CREATE_MEMBER_ADD_TITLE
             },
             showConfirmButton = state.isSearching,
             isConfirmEnabled = state.selectedMembers.isNotEmpty(),
@@ -213,7 +214,7 @@ private fun CommunityCreateMemberSheetContent(
         UTextField(
             value = state.query,
             onValueChange = onQueryChange,
-            placeholder = "이름을 입력하세요",
+            placeholder = AppStrings.COMMUNITY_CREATE_MEMBER_SEARCH_PLACEHOLDER,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
@@ -261,7 +262,7 @@ private fun CommunityCreateMemberSheetContent(
                 state.isSearching &&
                         state.searchResults.isEmpty() -> {
                     CommunityCreateMemberEmptyContent(
-                        text = "검색 결과가 없어요",
+                        text = AppStrings.COMMUNITY_CREATE_MEMBER_NO_RESULT,
                     )
                 }
 
@@ -281,7 +282,7 @@ private fun CommunityCreateMemberSheetContent(
                 // 선택된 챌린저가 없는 경우
                 state.selectedMembers.isEmpty() -> {
                     CommunityCreateMemberEmptyContent(
-                        text = "아직 추가한 챌린저가 없어요",
+                        text = AppStrings.COMMUNITY_CREATE_MEMBER_EMPTY,
                     )
                 }
 
@@ -338,7 +339,7 @@ private fun CommunityCreateMemberHeader(
             )
 
             UButton(
-                text = "확인",
+                text = AppStrings.COMMON_CONFIRM,
                 onClick = onConfirmClick,
                 enabled = isConfirmEnabled,
                 modifier = Modifier
@@ -541,9 +542,9 @@ private fun CommunityCreateMemberSearchRow(
                     }
 
                     if (member.generation > 0) {
-                        append("(")
-                        append(member.generation)
-                        append("기)")
+                        append(
+                            AppStrings.COMMUNITY_CREATE_MEMBER_GENERATION_FORMAT.format(member.generation)
+                        )
                     }
                 },
                 style = UmcTypographyTokens.SubheadlineBold,
@@ -579,9 +580,9 @@ private fun CommunityCreateMemberSearchRow(
                 },
             ),
             contentDescription = if (isChecked) {
-                "선택됨"
+                AppStrings.COMMUNITY_CREATE_MEMBER_CD_CHECKED
             } else {
-                "선택되지 않음"
+                AppStrings.COMMUNITY_CREATE_MEMBER_CD_UNCHECKED
             },
             tint = Color.Unspecified,
             modifier = Modifier.size(24.dp),
@@ -679,9 +680,9 @@ private fun CommunityCreateSelectedMemberRow(
                     }
 
                     if (member.generation > 0) {
-                        append("(")
-                        append(member.generation)
-                        append("기)")
+                        append(
+                            AppStrings.COMMUNITY_CREATE_MEMBER_GENERATION_FORMAT.format(member.generation)
+                        )
                     }
                 },
                 style = UmcTypographyTokens.SubheadlineBold,
@@ -701,7 +702,7 @@ private fun CommunityCreateSelectedMemberRow(
         }
 
         UButton(
-            text = "삭제",
+            text = AppStrings.COMMUNITY_CREATE_MEMBER_DELETE,
             onClick = onRemoveClick,
             modifier = Modifier
                 .width(50.dp)
