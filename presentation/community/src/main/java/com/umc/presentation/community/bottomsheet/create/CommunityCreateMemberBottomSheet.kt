@@ -895,6 +895,7 @@ private fun CommunityCreateMemberSheetSearchPreview() {
         onLoadMore = {},
         onInviteClick = {},
         onCsvUploadClick = {},
+        isSearchFieldFocused = true,
     )
 }
 
@@ -916,6 +917,7 @@ private fun CommunityCreateMemberSheetMaxCountToastPreview() {
         onLoadMore = {},
         onInviteClick = {},
         onCsvUploadClick = {},
+        isSearchFieldFocused = true,
         toastData = UToastData(
             message = AppStrings.COMMUNITY_CREATE_MEMBER_MAX_COUNT_FORMAT.format(99),
             state = UToastState.ERROR,
