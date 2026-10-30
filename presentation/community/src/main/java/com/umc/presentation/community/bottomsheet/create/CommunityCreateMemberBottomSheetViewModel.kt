@@ -177,8 +177,7 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
      *
      * - 이미 선택된 챌린저를 누르면 선택 해제
      * - 선택되지 않은 챌린저를 누르면 선택
-     *
-     * 최대 인원은 여기서 막지 않고 [onInviteClick]에서 검사합니다.
+     * - 이미 최대 인원만큼 선택했다면 추가 선택을 막고 Toast 표시 (멤버 관리 BottomSheet와 동일)
      */
     fun toggleMember(
         member: CommunityChallengerUiModel,
@@ -188,8 +187,25 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
             return
         }
 
-        val isSelected = uiState.value.selectedMembers.any { selectedMember ->
+        val currentState = uiState.value
+
+        val isSelected = currentState.selectedMembers.any { selectedMember ->
             selectedMember.memberId == member.memberId
+        }
+
+        // 최대 선택 가능 인원을 초과하는 추가 선택 방지 (해제는 항상 허용)
+        if (
+            !isSelected &&
+            currentState.selectedMembers.size >=
+            currentState.maxMemberCount
+        ) {
+            emitEvent(
+                CommunityCreateMemberBottomSheetEvent.ShowToast(
+                    message =
+                        AppStrings.COMMUNITY_CREATE_MEMBER_MAX_COUNT_FORMAT.format(currentState.maxMemberCount),
+                )
+            )
+            return
         }
 
         updateState {
@@ -202,7 +218,11 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
             }
 
             copy(
-                selectedMembers = updatedMembers.toImmutableList(),
+                selectedMembers = updatedMembers
+                    .distinctBy { selectedMember ->
+                        selectedMember.memberId
+                    }
+                    .toImmutableList(),
             )
         }
     }
@@ -210,8 +230,9 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
     /**
      * 초대 버튼 클릭
      *
-     * - 선택 인원이 최대 인원을 넘으면 Toast만 띄우고 반영하지 않음
-     * - 통과하면 선택 목록을 스레드 생성 화면에 반영하도록 이벤트 전달
+     * 선택 단계에서 이미 최대 인원을 막지만,
+     * 다른 경로로 초과 상태가 되더라도 반영하지 않도록 한 번 더 검사합니다.
+     * 통과하면 선택 목록을 스레드 생성 화면에 반영하도록 이벤트를 전달합니다.
      */
     fun onInviteClick() {
         val currentState = uiState.value

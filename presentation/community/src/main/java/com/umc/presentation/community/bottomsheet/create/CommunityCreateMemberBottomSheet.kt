@@ -52,7 +52,7 @@ import kotlinx.collections.immutable.toImmutableList
  *
  * - 챌린저 이름 검색
  * - 검색 결과 체크박스로 챌린저 선택/해제 (선택 목록에는 삭제 버튼을 두지 않음)
- * - 초대 시 최대 인원 검사 (통과해야 스레드 생성 화면에 반영)
+ * - 최대 인원까지만 선택 가능 (초과 선택 시 Toast, 초대 버튼을 눌러야 스레드 생성 화면에 반영)
  * - 검색 결과 페이지네이션
  * - 프로필 이미지 표시
  *
@@ -234,7 +234,7 @@ private fun CommunityCreateMemberSheetContent(
                     )
                 }
 
-                // 챌린저 검색 결과 (최대 인원은 초대 버튼에서 검사하므로 선택은 막지 않음)
+                // 챌린저 검색 결과 (최대 인원 초과 선택은 ViewModel이 막고 Toast를 띄움)
                 state.isSearching -> {
                     CommunityMemberSearchContent(
                         members = state.searchResults,
