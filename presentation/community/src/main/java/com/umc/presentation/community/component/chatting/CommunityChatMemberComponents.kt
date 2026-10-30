@@ -46,17 +46,17 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.domain.model.enums.UserPart
 
 @Composable
-internal fun CommunityChatProfileImage(imageUrl: String?) {
+internal fun CommunityChatProfileImage(imageUrl: String?, useThreadStyle: Boolean = false) {
     Box(
         modifier = Modifier
-            .size(34.dp)
+            .size(if (useThreadStyle) 32.dp else 34.dp)
             .clip(CircleShape)
             .background(white(), CircleShape)
             .border(1.dp, grey200(), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Image(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = if (useThreadStyle) Modifier.size(20.dp) else Modifier.fillMaxWidth(),
             painter = painterResource(R.drawable.ic_person),
             contentDescription = null,
             contentScale = ContentScale.Fit,

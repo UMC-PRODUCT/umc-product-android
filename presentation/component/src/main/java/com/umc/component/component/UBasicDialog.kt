@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -19,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.umc.component.R
@@ -36,6 +39,7 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
+import com.umc.component.theme.grey950
 
 /**
  * 경고 / 반려 / 성공 등을 나타내는 AlertDialog입니다.
@@ -81,6 +85,8 @@ fun UBasicDialog(
     positiveBackgroundColor: Color? = null,
     positiveBorderColor: Color? = null,
     positiveTextColor: Color? = null,
+    useCompactStyle: Boolean = false,
+    iconResOverride: Int? = null,
 ) {
 
     //type에 따라 시각적 요소(색상, 아이콘)를 결정
@@ -115,13 +121,21 @@ fun UBasicDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(0.9f).wrapContentHeight(),
-            shape = RoundedCornerShape(16.dp),
+            modifier = if (useCompactStyle) {
+                Modifier.widthIn(max = 340.dp).fillMaxWidth().wrapContentHeight()
+            } else {
+                Modifier.fillMaxWidth(0.9f).wrapContentHeight()
+            },
+            shape = RoundedCornerShape(if (useCompactStyle) 12.dp else 16.dp),
             color = grey000()
         ) {
             Column(
                 modifier = Modifier.padding(
-                    top = 16.dp, bottom = 24.dp, start = 24.dp, end = 24.dp),
+                    top = 16.dp,
+                    bottom = if (useCompactStyle) 16.dp else 24.dp,
+                    start = if (useCompactStyle) 16.dp else 24.dp,
+                    end = if (useCompactStyle) 16.dp else 24.dp,
+                ),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
@@ -153,7 +167,7 @@ fun UBasicDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = iconRes as Int),
+                        painter = painterResource(id = iconResOverride ?: iconRes as Int),
                         contentDescription = null,
                         tint = iconTintColor as Color,
                         modifier = Modifier.size(24.dp)
@@ -165,23 +179,27 @@ fun UBasicDialog(
                 //타이틀 & 내용
                 Text(
                     text = title,
-                    style = UmcTypographyTokens.Title3Bold,
-                    color = grey800())
+                    style = if (useCompactStyle) {
+                        UmcTypographyTokens.Title2Bold.copy(fontSize = 20.sp, lineHeight = 25.sp, letterSpacing = 0.38.sp)
+                    } else UmcTypographyTokens.Title3Bold,
+                    textAlign = if (useCompactStyle) TextAlign.Center else TextAlign.Start,
+                    color = if (useCompactStyle) grey950() else grey800())
 
                 content?.let { text ->
                     Spacer(
                         modifier = Modifier
-                        .height(16.dp)
+                        .height(if (useCompactStyle) 8.dp else 16.dp)
                     )
 
                     Text(
                         text = text,
                         style = UmcTypographyTokens.Subheadline,
+                        textAlign = if (useCompactStyle) TextAlign.Center else TextAlign.Start,
                         color = grey600()
                     )
                 }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(if (useCompactStyle) 32.dp else 40.dp))
 
                 // 하단 버튼
                 Row(modifier = Modifier
@@ -193,10 +211,11 @@ fun UBasicDialog(
                         text = negativeText,
                         modifier = Modifier
                             .weight(1f)
-                            .height(52.dp),
+                            .height(if (useCompactStyle) 42.dp else 52.dp),
                         backgroundColor = negativeBackgroundColor,
                         borderColor = negativeBorderColor,
                         textColor = negativeTextColor,
+                        textStyle = if (useCompactStyle) UmcTypographyTokens.CalloutBold else UmcTypographyTokens.SubheadlineBold,
                         borderWidth = 1.dp,
                         onClick = onNegative
                     )
@@ -204,10 +223,11 @@ fun UBasicDialog(
                     //확인
                     UButton(
                         text = positiveText,
-                        modifier = Modifier.weight(1f).height(52.dp),
+                        modifier = Modifier.weight(1f).height(if (useCompactStyle) 42.dp else 52.dp),
                         backgroundColor = resolvedPositiveBackgroundColor,
                         borderColor = resolvedPositiveBorderColor,
                         textColor = resolvedPositiveTextColor,
+                        textStyle = if (useCompactStyle) UmcTypographyTokens.CalloutBold else UmcTypographyTokens.SubheadlineBold,
                         borderWidth = 1.dp,
                         onClick = {
                             onPositive()

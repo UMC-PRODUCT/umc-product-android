@@ -730,6 +730,9 @@ fun MainNavHost(
                         if (!navHostController.popBackStack<MainDestination.CommunityChatting>(inclusive = true)) {
                             navHostController.popBackStack()
                         }
+                        navHostController.navigate(MainDestination.Community) {
+                            launchSingleTop = true
+                        }
                     }
                 },
             )
@@ -771,6 +774,7 @@ fun MainNavHost(
                 .collectAsStateWithLifecycle()
 
             CommunityChattingRoute(
+                onViewMemberProfile = { memberId -> navHostController.navigate(MainDestination.Mycard(memberId)) },
                 onBack = {
                     navHostController.popBackStack()
                 },
@@ -787,10 +791,15 @@ fun MainNavHost(
                         ?.set(COMMUNITY_REFRESH_KEY, true)
                 },
                 onThreadDeleted = {
-                    navHostController.previousBackStackEntry
+                    if (!navHostController.popBackStack<MainDestination.Community>(inclusive = false)) {
+                        navHostController.navigate(MainDestination.Community) {
+                            popUpTo<MainDestination.CommunityChatting> { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                    navHostController.currentBackStackEntry
                         ?.savedStateHandle
                         ?.set(COMMUNITY_REFRESH_KEY, true)
-                    navHostController.popBackStack()
                 },
             )
         }

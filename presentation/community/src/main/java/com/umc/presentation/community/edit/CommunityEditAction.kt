@@ -52,6 +52,6 @@ sealed interface CommunityEditAction {
     /** 스레드 삭제 확정 */
     data object OnConfirmDeleteClick : CommunityEditAction
 
-    /** 챌린저 추가/삭제 완료 */
+    /** 챌린저 초대 완료 */
     data object OnMemberInviteSuccess : CommunityEditAction
 }
