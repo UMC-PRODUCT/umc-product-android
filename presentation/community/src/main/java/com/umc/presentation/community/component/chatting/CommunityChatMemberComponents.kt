@@ -27,8 +27,8 @@ import com.umc.component.theme.green700
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey600
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main100
+import com.umc.component.theme.main600
 import com.umc.component.theme.red100
 import com.umc.component.theme.red600
 import com.umc.component.theme.white
@@ -37,7 +37,7 @@ import com.umc.component.theme.yellow500
 import com.umc.component.theme.yellow600
 import com.umc.component.theme.green500
 import com.umc.component.theme.yellow400
-import com.umc.component.theme.indigo800
+import com.umc.component.theme.main800
 import com.umc.component.theme.yellow800
 import com.umc.component.theme.mint100
 import com.umc.component.theme.teal600
@@ -46,17 +46,17 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.domain.model.enums.UserPart
 
 @Composable
-internal fun CommunityChatProfileImage(imageUrl: String?) {
+internal fun CommunityChatProfileImage(imageUrl: String?, useThreadStyle: Boolean = false) {
     Box(
         modifier = Modifier
-            .size(34.dp)
+            .size(if (useThreadStyle) 32.dp else 34.dp)
             .clip(CircleShape)
             .background(white(), CircleShape)
             .border(1.dp, grey200(), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Image(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = if (useThreadStyle) Modifier.size(20.dp) else Modifier.fillMaxWidth(),
             painter = painterResource(R.drawable.ic_person),
             contentDescription = null,
             contentScale = ContentScale.Fit,
@@ -95,8 +95,8 @@ internal fun communityChatPartTag(part: UserPart): Triple<String, Color, Color> 
     // 라벨은 UserPart 하나만 쓰고, 여기서는 색만 고른다.
     val (background, foreground) = when (part) {
         // 지난 기수 파트. 파트 칩(UInfoChip)과 같은 색을 쓴다.
-        UserPart.ADMIN -> indigo100() to indigo600()
-        UserPart.PLAN -> indigo100() to indigo800()
+        UserPart.ADMIN -> main100() to main600()
+        UserPart.PLAN -> main100() to main800()
         UserPart.DESIGN -> red100() to red600()
         UserPart.WEB -> yellow100() to yellow800()
         UserPart.ANDROID -> mint100() to teal600()

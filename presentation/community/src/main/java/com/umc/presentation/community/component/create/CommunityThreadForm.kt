@@ -20,7 +20,7 @@ import com.umc.component.component.UTextField
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
@@ -125,7 +125,7 @@ private fun CommunityThreadFormLabel(
         )
 
         // 현재 글자 수만 강조색, "/최대 글자 수"는 회색
-        val countColor = indigo500()
+        val countColor = main500()
         UText(
             text = buildAnnotatedString {
                 withStyle(SpanStyle(color = countColor)) {

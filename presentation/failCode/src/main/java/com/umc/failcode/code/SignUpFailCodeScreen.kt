@@ -44,8 +44,8 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo700
+import com.umc.component.theme.main500
+import com.umc.component.theme.main700
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 import android.content.Intent
@@ -192,8 +192,8 @@ fun SignUpFailCodeScreen(
             text = AppStrings.SIGN_UP_FAIL_CODE_SUBMIT,
             onClick = onClickRegister,
             enabled = !uiState.isSubmitting,
-            backgroundColor = if (uiState.isSubmitting) grey100() else indigo500(),
-            pressedColor = indigo700(),
+            backgroundColor = if (uiState.isSubmitting) grey100() else main500(),
+            pressedColor = main700(),
             textColor = if (uiState.isSubmitting) grey300() else grey000(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             contentPadding = PaddingValues(vertical = 16.dp),

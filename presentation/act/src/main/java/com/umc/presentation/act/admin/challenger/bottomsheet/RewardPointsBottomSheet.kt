@@ -39,7 +39,7 @@ import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
@@ -140,7 +140,7 @@ fun RewardPointsScreen(
             enabled = isSubmitEnabled && !uiState.isPointSubmitting,
             textStyle = HeadlineBold,
             textColor = if (isSubmitEnabled) grey000() else grey300(),
-            backgroundColor = if (isSubmitEnabled) indigo500() else grey100(),
+            backgroundColor = if (isSubmitEnabled) main500() else grey100(),
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
             cornerRadius = 8.dp,
             onClick = onSubmitClick
@@ -245,7 +245,7 @@ private fun RewardRow(
                 if (selected) R.drawable.ic_radio_button_checked else R.drawable.ic_radio_button_unchecked
             ),
             contentDescription = null,
-            tint = if (selected) indigo500() else grey400()
+            tint = if (selected) main500() else grey400()
         )
     }
 }

@@ -24,7 +24,7 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 
 /**
  * 커뮤니티 스레드 목록 조회에 실패했을 때 표시하는 에러 화면
@@ -88,7 +88,7 @@ fun CommunityErrorContent(
                     width = 364.dp,
                     height = 52.dp,
                 ),
-            backgroundColor = indigo500(),
+            backgroundColor = main500(),
         )
     }
 }

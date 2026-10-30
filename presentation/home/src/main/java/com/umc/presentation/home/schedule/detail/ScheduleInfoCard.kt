@@ -27,7 +27,7 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 
 
 /**
@@ -111,7 +111,7 @@ fun InfoRow(
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            tint = indigo500(),
+            tint = main500(),
             modifier = Modifier
                 .size(24.dp)
                 .align(Alignment.CenterVertically)
@@ -157,7 +157,7 @@ fun InfoRow(
                 UText(
                     text = AppStrings.HOME_PLAN_DETAIL_SHOW_MAP,
                     style = UmcTypographyTokens.Footnote,
-                    color = indigo500(),
+                    color = main500(),
                     modifier = Modifier
                         .clickable { onMapClick?.invoke() }
                 )

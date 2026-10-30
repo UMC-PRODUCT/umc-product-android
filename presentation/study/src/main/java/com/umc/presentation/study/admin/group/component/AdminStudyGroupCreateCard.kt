@@ -57,7 +57,7 @@ fun AdminStudyGroupCreateCard(
                 R.drawable.ic_book_filled
             ),
             contentDescription = null,
-            tint = indigo500(),
+            tint = main500(),
             modifier = Modifier.size(24.dp)
         )
 

@@ -22,7 +22,7 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.white
 import com.umc.domain.model.mypage.UserCard
 import com.umc.component.R
@@ -99,7 +99,7 @@ fun CardExchangeSuccessOverlay(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                backgroundColor = indigo500(),
+                backgroundColor = main500(),
                 textColor = grey000(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 12.dp,

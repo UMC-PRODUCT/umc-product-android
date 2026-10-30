@@ -28,8 +28,8 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main500
+import com.umc.component.theme.main600
 import com.umc.component.theme.white
 import com.umc.component.R
 import kotlinx.coroutines.flow.collectLatest
@@ -114,8 +114,8 @@ fun SplashScreen(
                         .widthIn(max = 350.dp)
                         .fillMaxWidth()
                         .height(58.dp),
-                    backgroundColor = indigo500(),
-                    pressedColor = indigo600(),
+                    backgroundColor = main500(),
+                    pressedColor = main600(),
                     textColor = white(),
                     textStyle = UmcTypographyTokens.HeadlineBold,
                     cornerRadius = 12.dp,

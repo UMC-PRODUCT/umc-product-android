@@ -43,8 +43,8 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.presentation.notice.NoticeCard
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -168,7 +168,7 @@ fun AdminNoticeScreen(
                         .weight(1f),
                     contentAlignment = Alignment.Center,
                 ) {
-                    CircularProgressIndicator(color = indigo500(), trackColor = indigo100())
+                    CircularProgressIndicator(color = main500(), trackColor = main100())
                 }
             }
 
@@ -232,7 +232,7 @@ private fun AdminNoticeChip(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(if (isSelected) indigo500() else grey100())
+            .background(if (isSelected) main500() else grey100())
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {

@@ -86,7 +86,7 @@ import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.red500
 import com.umc.component.theme.red100
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main600
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
@@ -96,8 +96,8 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import com.umc.component.theme.yellow100
@@ -519,7 +519,7 @@ private fun AvailableSessionExpandedContent(
                     enabled = canRequestAttendance,
                     cornerRadius = 8.dp,
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
-                    backgroundColor = if(canRequestAttendance) indigo500() else grey100(),
+                    backgroundColor = if(canRequestAttendance) main500() else grey100(),
                     text = if (isRequesting) {
                         AppStrings.ATTENDANCE_REQUESTING
                     } else {
@@ -547,7 +547,7 @@ private fun AvailableSessionExpandedContent(
                     Spacer(modifier = Modifier.width(3.dp))
                     UText(
                         text = AppStrings.ATTENDANCE_FAIL_REASON_ACTION,
-                        color = indigo600(),
+                        color = main600(),
                         style = Footnote,
                         modifier = Modifier.clickable(
                             onClick = onReasonClick
@@ -664,7 +664,7 @@ private fun AvailableSessionExpandedContent(
                         enabled = canRequestAttendance,
                         cornerRadius = 8.dp,
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
-                        backgroundColor = if(canRequestAttendance) indigo500() else grey100(),
+                        backgroundColor = if(canRequestAttendance) main500() else grey100(),
                         text = if (isRequesting) {
                             AppStrings.ATTENDANCE_REQUESTING
                         } else {
@@ -757,9 +757,9 @@ private fun AttendanceLocationMap(
                 CircleOverlay(
                     center = attendancePosition,
                     radius = ATTENDANCE_RADIUS_METERS,
-                    color = indigo500().copy(alpha = 0.15f),
+                    color = main500().copy(alpha = 0.15f),
                     outlineWidth = 1.dp,
-                    outlineColor = indigo500(),
+                    outlineColor = main500(),
                 )
             }
 
@@ -792,14 +792,14 @@ private fun OnlineSessionLocation() {
         Icon(
             painter = painterResource(id = R.drawable.ic_location),
             contentDescription = null,
-            tint = indigo500(),
+            tint = main500(),
             modifier = Modifier.size(15.dp),
         )
         Spacer(modifier = Modifier.width(8.dp))
         UText(
             text = AppStrings.ATTENDANCE_ONLINE_SESSION,
             style = Caption1Bold,
-            color = indigo500(),
+            color = main500(),
         )
     }
 }
@@ -915,13 +915,13 @@ private fun SessionIcon() {
     Box(
         modifier = Modifier
             .size(40.dp)
-            .background(indigo100(), RoundedCornerShape(8.dp)),
+            .background(main100(), RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_people_color),
             contentDescription = null,
-            tint = indigo500(),
+            tint = main500(),
             modifier = Modifier.size(22.dp)
         )
     }

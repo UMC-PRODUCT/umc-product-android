@@ -60,7 +60,7 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main600
 import com.umc.component.theme.mint100
 import com.umc.component.theme.teal600
 import com.umc.component.util.ULog
@@ -265,7 +265,7 @@ fun LoginScreen(
                     UText(
                         text = AppStrings.LOGIN_HELP_CENTER,
                         style = UmcTypographyTokens.Footnote,
-                        color = indigo600(),
+                        color = main600(),
                         textDecoration = TextDecoration.Underline,
                         modifier = Modifier.clickable { onClickHelpCenter() },
                     )

@@ -67,7 +67,7 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.red500
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 import kotlinx.collections.immutable.ImmutableList
@@ -268,7 +268,7 @@ private fun CommunityCreateMemberSheetContent(
                             modifier = Modifier.align(
                                 Alignment.Center
                             ),
-                            color = indigo500(),
+                            color = main500(),
                         )
                     }
 
@@ -378,7 +378,7 @@ private fun CommunityCreateMemberHeader(
                 .width(52.dp)
                 .height(32.dp),
             backgroundColor = if (isInviteEnabled) {
-                indigo500()
+                main500()
             } else {
                 grey100()
             },
@@ -520,7 +520,7 @@ private fun CommunityCreateMemberSearchContent(
                 ) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = indigo500(),
+                        color = main500(),
                         strokeWidth = 2.dp,
                     )
                 }

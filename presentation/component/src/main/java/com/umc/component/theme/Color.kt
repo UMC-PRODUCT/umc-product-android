@@ -7,27 +7,27 @@ import androidx.compose.ui.graphics.Color
 // Light palette (values/colors.xml)
 internal val lightBlack = Color(0xFF000000)
 internal val lightWhite = Color(0xFFFFFFFF)
-internal val lightIndigo100 = Color(0xFFEBF2FF)
-internal val lightIndigo200 = Color(0xFFC7D7FE)
-internal val lightIndigo300 = Color(0xFFA4BCFD)
-internal val lightIndigo400 = Color(0xFF728EFD)
-internal val lightIndigo500 = Color(0xFF5468FC)
-internal val lightIndigo600 = Color(0xFF444CE7)
-internal val lightIndigo700 = Color(0xFF3538CD)
-internal val lightIndigo800 = Color(0xFF2C2FA0)
-internal val lightIndigo900 = Color(0xFF222663)
+internal val lightMain100 = Color(0xFFE8F7F5)
+internal val lightMain200 = Color(0xFFC1EBE8)
+internal val lightMain300 = Color(0xFF7AC7C1)
+internal val lightMain400 = Color(0xFF39A9A1)
+internal val lightMain500 = Color(0xFF008A80)
+internal val lightMain600 = Color(0xFF02746C)
+internal val lightMain700 = Color(0xFF015A54)
+internal val lightMain800 = Color(0xFF01423D)
+internal val lightMain900 = Color(0xFF013733)
 internal val lightGrey000 = Color(0xFFFFFFFF)
-internal val lightGrey50 = Color(0xFFF7F8FA)
-internal val lightGrey100 = Color(0xFFF2F5F8)
-internal val lightGrey200 = Color(0xFFDDE1E9)
-internal val lightGrey300 = Color(0xFFC3CBD5)
-internal val lightGrey400 = Color(0xFFA6B2BF)
-internal val lightGrey500 = Color(0xFF8B97A7)
-internal val lightGrey600 = Color(0xFF657081)
-internal val lightGrey700 = Color(0xFF4A5464)
-internal val lightGrey800 = Color(0xFF202939)
-internal val lightGrey900 = Color(0xFF161C27)
-internal val lightGrey950 = Color(0xFF0D121C)
+internal val lightGrey50 = Color(0xFFF7F8F8)
+internal val lightGrey100 = Color(0xFFF4F5F5)
+internal val lightGrey200 = Color(0xFFE5E6E6)
+internal val lightGrey300 = Color(0xFFCCCCCC)
+internal val lightGrey400 = Color(0xFFADADAD)
+internal val lightGrey500 = Color(0xFF7E7F7F)
+internal val lightGrey600 = Color(0xFF606262)
+internal val lightGrey700 = Color(0xFF3F4141)
+internal val lightGrey800 = Color(0xFF282A2A)
+internal val lightGrey900 = Color(0xFF0F1010)
+internal val lightGrey950 = Color(0xFF070808)
 internal val lightGreen100 = Color(0xFFE4FCEC)
 internal val lightGreen200 = Color(0xFFABEFC6)
 internal val lightGreen300 = Color(0xFF75E0A7)
@@ -64,27 +64,27 @@ internal val lightGeofenceStroke = Color(0x4D51A2FF)
 // Dark palette (values-night/colors.xml)
 internal val darkBlack = Color(0xFF000000)
 internal val darkWhite = Color(0xFFFFFFFF)
-internal val darkIndigo100 = Color(0xFF1F235B)
-internal val darkIndigo200 = Color(0xFF2A2D98)
-internal val darkIndigo300 = Color(0xFF3538CD)
-internal val darkIndigo400 = Color(0xFF444CE7)
-internal val darkIndigo500 = Color(0xFF5E71FD)
-internal val darkIndigo600 = Color(0xFF728EFD)
-internal val darkIndigo700 = Color(0xFFA4BCFD)
-internal val darkIndigo800 = Color(0xFFC3D4FE)
-internal val darkIndigo900 = Color(0xFFDBE8FF)
-internal val darkGrey000 = Color(0xFF121212)
-internal val darkGrey50 = Color(0xFF0D121C)
-internal val darkGrey100 = Color(0xFF1C2331)
-internal val darkGrey200 = Color(0xFF333D4D)
-internal val darkGrey300 = Color(0xFF485161)
-internal val darkGrey400 = Color(0xFF657081)
-internal val darkGrey500 = Color(0xFF8B97A7)
-internal val darkGrey600 = Color(0xFFA0ADBB)
-internal val darkGrey700 = Color(0xFFBDC6D1)
-internal val darkGrey800 = Color(0xFFDDE1E9)
-internal val darkGrey900 = Color(0xFFF2F5F8)
-internal val darkGrey950 = Color(0xFFF7F8FA)
+internal val darkMain100 = Color(0xFF013733)
+internal val darkMain200 = Color(0xFF01423D)
+internal val darkMain300 = Color(0xFF015A54)
+internal val darkMain400 = Color(0xFF02746C)
+internal val darkMain500 = Color(0xFF008A80)
+internal val darkMain600 = Color(0xFF39A9A1)
+internal val darkMain700 = Color(0xFF7AC7C1)
+internal val darkMain800 = Color(0xFFC1EBE8)
+internal val darkMain900 = Color(0xFFE8F7F5)
+internal val darkGrey000 = Color(0xFFFFFFFF)
+internal val darkGrey50 = Color(0xFFF7F8F8)
+internal val darkGrey100 = Color(0xFFF4F5F5)
+internal val darkGrey200 = Color(0xFFE5E6E6)
+internal val darkGrey300 = Color(0xFFCCCCCC)
+internal val darkGrey400 = Color(0xFFADADAD)
+internal val darkGrey500 = Color(0xFF7E7F7F)
+internal val darkGrey600 = Color(0xFF606262)
+internal val darkGrey700 = Color(0xFF3F4141)
+internal val darkGrey800 = Color(0xFF282A2A)
+internal val darkGrey900 = Color(0xFF0F1010)
+internal val darkGrey950 = Color(0xFF070808)
 internal val darkGreen100 = Color(0xFF042A1B)
 internal val darkGreen200 = Color(0xFF085D3A)
 internal val darkGreen300 = Color(0xFF067647)
@@ -123,31 +123,31 @@ fun black(): Color = if (isSystemInDarkTheme()) darkBlack else lightBlack
 fun white(): Color = if (isSystemInDarkTheme()) darkWhite else lightWhite
 
 @Composable
-fun indigo100(): Color = if (isSystemInDarkTheme()) darkIndigo100 else lightIndigo100
+fun main100(): Color = if (isSystemInDarkTheme()) darkMain100 else lightMain100
 
 @Composable
-fun indigo200(): Color = if (isSystemInDarkTheme()) darkIndigo200 else lightIndigo200
+fun main200(): Color = if (isSystemInDarkTheme()) darkMain200 else lightMain200
 
 @Composable
-fun indigo300(): Color = if (isSystemInDarkTheme()) darkIndigo300 else lightIndigo300
+fun main300(): Color = if (isSystemInDarkTheme()) darkMain300 else lightMain300
 
 @Composable
-fun indigo400(): Color = if (isSystemInDarkTheme()) darkIndigo400 else lightIndigo400
+fun main400(): Color = if (isSystemInDarkTheme()) darkMain400 else lightMain400
 
 @Composable
-fun indigo500(): Color = if (isSystemInDarkTheme()) darkIndigo500 else lightIndigo500
+fun main500(): Color = if (isSystemInDarkTheme()) darkMain500 else lightMain500
 
 @Composable
-fun indigo600(): Color = if (isSystemInDarkTheme()) darkIndigo600 else lightIndigo600
+fun main600(): Color = if (isSystemInDarkTheme()) darkMain600 else lightMain600
 
 @Composable
-fun indigo700(): Color = if (isSystemInDarkTheme()) darkIndigo700 else lightIndigo700
+fun main700(): Color = if (isSystemInDarkTheme()) darkMain700 else lightMain700
 
 @Composable
-fun indigo800(): Color = if (isSystemInDarkTheme()) darkIndigo800 else lightIndigo800
+fun main800(): Color = if (isSystemInDarkTheme()) darkMain800 else lightMain800
 
 @Composable
-fun indigo900(): Color = if (isSystemInDarkTheme()) darkIndigo900 else lightIndigo900
+fun main900(): Color = if (isSystemInDarkTheme()) darkMain900 else lightMain900
 
 @Composable
 fun grey000(): Color = if (isSystemInDarkTheme()) darkGrey000 else lightGrey000

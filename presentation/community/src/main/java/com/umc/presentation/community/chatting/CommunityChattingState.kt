@@ -5,6 +5,7 @@ import com.umc.domain.model.community.chatting.CommunityChatConnectionState
 import com.umc.domain.model.community.thread.CommunityMessageType
 import com.umc.domain.model.community.thread.CommunityThreadDetail
 import com.umc.domain.model.community.thread.CommunityThreadMember
+import com.umc.domain.model.community.thread.CommunityThreadRole
 import com.umc.domain.model.community.thread.CommunityThreadMessage
 import com.umc.domain.model.enums.AiFeatureStatus
 
@@ -13,7 +14,12 @@ data class CommunityChattingState(
     val thread: CommunityThreadDetail? = null,
     val myMemberId: String = "",
     val members: Map<String, CommunityThreadMember> = emptyMap(),
+    val memberProfiles: Map<String, CommunityParticipantProfile> = emptyMap(),
     val messages: List<CommunityThreadMessage> = emptyList(),
+    val isManagingParticipants: Boolean = false,
+    val participantManagementRevision: Int = 0,
+    val managedParticipantIds: Set<String> = emptySet(),
+    val knownDeletedMessageIds: Set<String> = emptySet(),
     val unreadMessagesAtEntry: List<CommunityThreadMessage> = emptyList(),
     val unreadCountAtEntry: Int = 0,
     val summaryCandidateMessages: List<CommunityThreadMessage> = emptyList(),
@@ -23,6 +29,7 @@ data class CommunityChattingState(
     val connectionState: CommunityChatConnectionState = CommunityChatConnectionState.DISCONNECTED,
     val draft: String = "",
     val mentionedMembers: Map<String, String> = emptyMap(),
+    val draftMentions: List<CommunityDraftMention> = emptyList(),
     val editingMessageId: String? = null,
     val editDraft: String = "",
     val editCommandId: String? = null,
@@ -55,6 +62,12 @@ data class CommunityChattingState(
     /** 강퇴 확인 API 요청 중 여부 (중복 클릭 방지) */
     val isAcknowledgingKick: Boolean = false,
 ) : UiState {
+    val isLastRemainingOwner: Boolean
+        get() = thread?.myRole == CommunityThreadRole.OWNER && thread.memberCount.toIntOrNull() == 1
+
+    val canSummarize: Boolean
+        get() = aiFeatureStatus?.isUsable == true
+
     internal fun acknowledgeEdit(commandId: String): CommunityChattingState =
         if (editCommandId == commandId) {
             copy(editingMessageId = null, editDraft = "", editCommandId = null, editError = null)

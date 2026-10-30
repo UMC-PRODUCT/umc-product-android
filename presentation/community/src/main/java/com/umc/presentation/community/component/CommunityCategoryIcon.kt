@@ -14,14 +14,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.umc.component.theme.indigo100
+import com.umc.component.theme.main100
 import com.umc.presentation.community.R
 
 /**
  * 카테고리 아이콘
  *
  * Figma `Icon/Category`를 구현합니다.
- * indigo100 배경의 48dp 상자 가운데에 24dp 아이콘을 원본 색상 그대로 표시합니다.
+ * main100 배경의 48dp 상자 가운데에 24dp 아이콘을 원본 색상 그대로 표시합니다.
  *
  * @param iconRes 표시할 24dp 아이콘 리소스
  */
@@ -34,7 +34,7 @@ fun CommunityCategoryIcon(
         modifier = modifier
             .size(48.dp)
             .background(
-                color = indigo100(),
+                color = main100(),
                 shape = RoundedCornerShape(8.dp),
             ),
         contentAlignment = Alignment.Center,

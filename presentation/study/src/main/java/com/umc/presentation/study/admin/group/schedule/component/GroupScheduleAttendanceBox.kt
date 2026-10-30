@@ -106,7 +106,7 @@ private fun AttendanceRow(
             Box(
                 modifier = Modifier
                     .background(
-                        indigo100(),
+                        main100(),
                         RoundedCornerShape(999.dp)
                     )
                     .padding(
@@ -117,7 +117,7 @@ private fun AttendanceRow(
                 UText(
                     text = value,
                     style = HeadlineBold,
-                    color = indigo500(),
+                    color = main500(),
                 )
             }
         }

@@ -46,7 +46,7 @@ fun StudyTimelineColumn(
                 modifier = Modifier
                     .size(20.dp)
                     .clip(CircleShape)
-                    .background(indigo500()),
+                    .background(main500()),
                 contentAlignment = Alignment.Center
             ) {
                 UText(

@@ -733,6 +733,9 @@ fun MainNavHost(
                         if (!navHostController.popBackStack<MainDestination.CommunityChatting>(inclusive = true)) {
                             navHostController.popBackStack()
                         }
+                        navHostController.navigate(MainDestination.Community) {
+                            launchSingleTop = true
+                        }
                     }
                 },
             )
@@ -784,6 +787,7 @@ fun MainNavHost(
                 .collectAsStateWithLifecycle()
 
             CommunityChattingRoute(
+                onViewMemberProfile = { memberId -> navHostController.navigate(MainDestination.Mycard(memberId)) },
                 onBack = {
                     navHostController.popBackStack()
                 },
@@ -800,10 +804,15 @@ fun MainNavHost(
                         ?.set(COMMUNITY_REFRESH_KEY, true)
                 },
                 onThreadDeleted = {
-                    navHostController.previousBackStackEntry
+                    if (!navHostController.popBackStack<MainDestination.Community>(inclusive = false)) {
+                        navHostController.navigate(MainDestination.Community) {
+                            popUpTo<MainDestination.CommunityChatting> { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                    navHostController.currentBackStackEntry
                         ?.savedStateHandle
                         ?.set(COMMUNITY_REFRESH_KEY, true)
-                    navHostController.popBackStack()
                 },
                 onKickAcknowledged = {
                     // 목록은 복귀 시 폴링으로 다시 받아오고, 검색 결과는 갱신되지 않으므로 직접 제거하게 알린다

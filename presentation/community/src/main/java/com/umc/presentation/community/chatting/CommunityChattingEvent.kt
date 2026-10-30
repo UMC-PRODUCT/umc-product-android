@@ -15,4 +15,8 @@ sealed interface CommunityChattingEvent : UiEvent {
     data object ThreadUnavailable : CommunityChattingEvent
     /** 강퇴 확인이 서버에 저장됨 (목록에서 제외되므로 갱신 후 돌아간다) */
     data object KickAcknowledged : CommunityChattingEvent
+    data object OwnershipTransferred : CommunityChattingEvent
+    data class MemberAdminChanged(val isAdmin: Boolean) : CommunityChattingEvent
+    data class ParticipantsManaged(val message: String, val hasFailures: Boolean) : CommunityChattingEvent
+    data class OpenMemberProfile(val memberId: String) : CommunityChattingEvent
 }

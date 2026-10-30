@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
  * - 현재 참여 중인 챌린저 조회
  * - 제목 및 스레드 특징 수정
  * - AI 카테고리 재분류
- * - 챌린저 추가/삭제 후 목록 갱신
+ * - 챌린저 초대 후 목록 갱신
  * - 스레드 수정 및 삭제
  * - 화면 이동 및 Toast 이벤트 전달
  */
@@ -103,13 +103,7 @@ class CommunityEditViewModel @Inject constructor(
             }
 
             CommunityEditAction.OnMemberInviteSuccess -> {
-                _state.update {
-                    it.copy(
-                        showChallengerBottomSheet = false,
-                    )
-                }
-
-                // 추가/삭제 후 수정 화면의 챌린저 목록도 다시 조회
+                // 초대 후 수정 화면의 챌린저 목록도 다시 조회
                 loadCurrentMembers(
                     threadId = _state.value.threadId,
                 )
@@ -195,6 +189,7 @@ class CommunityEditViewModel @Inject constructor(
                         title = thread.title,
                         description = thread.description,
                         currentChallengerCount = thread.memberCount,
+                        totalMemberCount = thread.memberCount,
                         maxChallengerCount = thread.maxMembers,
                         aiState = CommunityAiState.SUCCESS,
                         aiCategory =
@@ -276,6 +271,7 @@ class CommunityEditViewModel @Inject constructor(
                 it.copy(
                     selectedChallengers = members.toImmutableList(),
                     currentChallengerCount = members.size,
+                    totalMemberCount = memberPage.total,
                 )
             }
         }

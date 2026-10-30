@@ -60,9 +60,9 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
+import com.umc.component.theme.main600
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.home.PlanDetailItem
 import com.umc.presentation.home.schedule.ScheduleTagChipItems
@@ -200,7 +200,7 @@ fun ScheduleDetailScreen(
                             .fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = indigo500())
+                        CircularProgressIndicator(color = main500())
                     }
                 }
 
@@ -242,8 +242,8 @@ fun ScheduleDetailScreen(
                         ) {
                             UButton(
                                 text = uiState.dDay,
-                                backgroundColor = indigo100(),
-                                textColor = indigo500(),
+                                backgroundColor = main100(),
+                                textColor = main500(),
                                 textStyle = UmcTypographyTokens.FootnoteBold,
                                 onClick = {},
                                 modifier = Modifier

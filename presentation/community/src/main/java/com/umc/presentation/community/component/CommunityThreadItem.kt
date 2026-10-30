@@ -37,8 +37,8 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityThreadUiModel
 
@@ -94,7 +94,7 @@ fun CommunityThreadItem(
             Surface(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(8.dp),
-                color = indigo100(),
+                color = main100(),
                 shadowElevation = 0.dp,
             ) {
                 androidx.compose.foundation.layout.Box(
@@ -105,7 +105,7 @@ fun CommunityThreadItem(
                             id = categoryIconRes(thread.category),
                         ),
                         contentDescription = null,
-                        tint = indigo500(),
+                        tint = main500(),
                         modifier = Modifier.size(if (useUpdatedListStyle) 24.dp else 22.dp),
                     )
                 }
@@ -261,7 +261,7 @@ private fun CommunityKickedThreadItem(
             Surface(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(8.dp),
-                color = indigo100(),
+                color = main100(),
                 shadowElevation = 0.dp,
             ) {
                 androidx.compose.foundation.layout.Box(
@@ -272,7 +272,7 @@ private fun CommunityKickedThreadItem(
                             id = categoryIconRes(thread.category),
                         ),
                         contentDescription = null,
-                        tint = indigo500(),
+                        tint = main500(),
                         modifier = Modifier.size(24.dp),
                     )
                 }

@@ -77,10 +77,10 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo400
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main100
+import com.umc.component.theme.main400
+import com.umc.component.theme.main500
+import com.umc.component.theme.main600
 import com.umc.component.theme.white
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UserType
@@ -412,8 +412,8 @@ private fun MycardProfileLoadError(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                backgroundColor = indigo500(),
-                pressedColor = indigo600(),
+                backgroundColor = main500(),
+                pressedColor = main600(),
                 textColor = white(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 12.dp,
@@ -491,8 +491,8 @@ fun MycardProfileCard(
         label = "CardFlipAnimation"
     )
 
-    val color1 = indigo400()
-    val color2 = indigo500()
+    val color1 = main400()
+    val color2 = main500()
 
     //원형 그라데이션 배경
     val radialGradient = remember {
@@ -588,7 +588,7 @@ private fun CardFrontContent(
                 Box(
                     modifier = Modifier
                         .clip(CircleShape)
-                        .background(indigo400())
+                        .background(main400())
                         .clickable { onFlipClick() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -638,13 +638,13 @@ private fun CardFrontContent(
                     UText(
                         text = uiState.userInfo.schoolName,
                         style = UmcTypographyTokens.Subheadline,
-                        color = indigo100()
+                        color = main100()
                     )
                     //내 최신 커리어
                     UText(
                         text = uiState.myRecentInfoString,
                         style = UmcTypographyTokens.Subheadline,
-                        color = indigo100()
+                        color = main100()
                     )
                 }
             }
@@ -707,7 +707,7 @@ private fun CardBackContent(
             Box(
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(indigo400())
+                    .background(main400())
                     .clickable { onFlipClick() },
                 contentAlignment = Alignment.Center
             ) {
@@ -794,11 +794,11 @@ private fun CardBottomButtons(
                 .weight(1f)
                 .height(42.dp),
             backgroundColor = grey000(),
-            textColor = indigo500(),
+            textColor = main500(),
             textStyle = UmcTypographyTokens.CalloutBold,
             cornerRadius = 8.dp,
             prevIcon = painterResource(R.drawable.ic_wifi), // 추후 아이콘 리소스 연결
-            prevIconTint = indigo500(),
+            prevIconTint = main500(),
             onClick = onExchangeCardClick
         )
 
@@ -809,11 +809,11 @@ private fun CardBottomButtons(
                 .weight(1f)
                 .height(42.dp),
             backgroundColor = grey000(),
-            textColor = indigo500(),
+            textColor = main500(),
             textStyle = UmcTypographyTokens.CalloutBold,
             cornerRadius = 8.dp,
             prevIcon = painterResource(R.drawable.ic_qrcode), // 추후 아이콘 리소스 연결
-            prevIconTint = indigo500(),
+            prevIconTint = main500(),
             onClick = onMyQrcodeClick
         )
     }
@@ -925,8 +925,8 @@ fun MycardListItem(
             UButton(
                 text = "${cardCount}장",
                 enabled = false,
-                backgroundColor = indigo100(),
-                textColor = indigo500(),
+                backgroundColor = main100(),
+                textColor = main500(),
                 textStyle = UmcTypographyTokens.Caption1Bold,
                 cornerRadius = 4.dp,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),

@@ -11,13 +11,13 @@ sealed interface CommunityChattingAction {
     data object OnDismissUnreadSummary : CommunityChattingAction
     data object OnCameraClick : CommunityChattingAction
     data class OnSendImages(val uris: List<String>) : CommunityChattingAction
-    data class OnDraftChanged(val value: String) : CommunityChattingAction
+    data class OnDraftChanged(val value: String, val changeStart: Int, val changeEnd: Int) : CommunityChattingAction
     data class OnSendClick(val replyToId: String?) : CommunityChattingAction
     data class OnStartEdit(val messageId: String) : CommunityChattingAction
     data class OnEditDraftChanged(val value: String) : CommunityChattingAction
     data object OnSaveEdit : CommunityChattingAction
     data object OnDismissEdit : CommunityChattingAction
-    data class OnMentionSelected(val memberId: String) : CommunityChattingAction
+    data class OnMentionSelected(val memberId: String, val start: Int, val end: Int) : CommunityChattingAction
     data class OnMentionRemoved(val memberId: String) : CommunityChattingAction
     data class OnVisibleMessage(val messageId: String) : CommunityChattingAction
     data object OnLoadPrevious : CommunityChattingAction
@@ -28,7 +28,7 @@ sealed interface CommunityChattingAction {
     ) : CommunityChattingAction
     data class OnReportMessage(
         val messageId: String,
-        val reason: CommunityMessageReportReason,
+        val reasons: Set<CommunityMessageReportReason>,
     ) : CommunityChattingAction
     data object OnToggleMuted : CommunityChattingAction
     data object OnTogglePinned : CommunityChattingAction
@@ -46,4 +46,7 @@ sealed interface CommunityChattingAction {
     data object OnConfirmDeleteThread : CommunityChattingAction
     data class OnKickMember(val memberId: String) : CommunityChattingAction
     data class OnTransferOwnership(val memberId: String) : CommunityChattingAction
+    data class OnToggleMemberAdmin(val memberId: String) : CommunityChattingAction
+    data class OnViewMemberProfile(val memberId: String) : CommunityChattingAction
+    data class OnManageParticipants(val memberIds: Set<String>, val action: CommunityParticipantBatchAction) : CommunityChattingAction
 }

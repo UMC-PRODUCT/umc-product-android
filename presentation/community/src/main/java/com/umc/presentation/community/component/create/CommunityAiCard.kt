@@ -41,8 +41,8 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.presentation.community.component.CommunityActionButton
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
@@ -71,7 +71,7 @@ fun CommunityAiCard(
                 clip = false,
             ),
         shape = RoundedCornerShape(12.dp),
-        color = indigo100(),
+        color = main100(),
         shadowElevation = 0.dp,
     ) {
         // AI 분류 진행 상태에 따라 카드 내부 UI 변경
@@ -145,7 +145,7 @@ private fun CommunityAiGuideContent(
                 UText(
                     text = "Galaxy AI로 도와드릴게요",
                     style = UmcTypographyTokens.HeadlineBold,
-                    color = indigo500(),
+                    color = main500(),
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -273,7 +273,7 @@ private fun CommunityAiProgressLine(
                 .background(
                     brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
                         colors = listOf(
-                            indigo500(),
+                            main500(),
                             green500(),
                         ),
                     ),
@@ -312,7 +312,7 @@ private fun CommunityAiResultContent(
             UText(
                 text = "카테고리 분류",
                 style = UmcTypographyTokens.SubheadlineBold,
-                color = indigo500(),
+                color = main500(),
             )
         }
 
@@ -336,7 +336,7 @@ private fun CommunityAiResultContent(
                             id = categoryIconRes(category),
                         ),
                         contentDescription = null,
-                        tint = indigo500(),
+                        tint = main500(),
                         modifier = Modifier.size(24.dp),
                     )
                 }
@@ -435,7 +435,7 @@ private fun CommunityAiResultButton(
     // 버튼 활성화 여부에 따라 배경색 결정
     val backgroundColor = when {
         !enabled -> grey100()
-        isPrimary -> indigo500()
+        isPrimary -> main500()
         else -> grey950()
     }
 
