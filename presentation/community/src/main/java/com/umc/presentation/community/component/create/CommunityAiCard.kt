@@ -41,8 +41,9 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
+import com.umc.presentation.community.component.CommunityActionButton
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 
@@ -70,13 +71,15 @@ fun CommunityAiCard(
                 clip = false,
             ),
         shape = RoundedCornerShape(12.dp),
-        color = indigo100(),
+        color = main100(),
         shadowElevation = 0.dp,
     ) {
         // AI 분류 진행 상태에 따라 카드 내부 UI 변경
         when (aiState) {
             CommunityAiState.GUIDE -> {
-                CommunityAiGuideContent()
+                CommunityAiGuideContent(
+                    onRequestClassificationClick = onRequestClassificationClick,
+                )
             }
 
             CommunityAiState.LOADING -> {
@@ -120,34 +123,48 @@ fun CommunityAiCard(
  * AI 분류 전 최초 안내 화면
  */
 @Composable
-private fun CommunityAiGuideContent() {
-    Row(
+private fun CommunityAiGuideContent(
+    onRequestClassificationClick: () -> Unit,
+) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        verticalAlignment = Alignment.Top,
     ) {
-        AiIcon()
-
-        Spacer(modifier = Modifier.width(10.dp))
-
-        Column(
-            modifier = Modifier.weight(1f),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
         ) {
-            UText(
-                text = "Galaxy AI로 도와드릴게요",
-                style = UmcTypographyTokens.HeadlineBold,
-                color = indigo500(),
-            )
+            AiIcon()
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
-            UText(
-                text = "스레드 특징을 입력하면\nAI가 카테고리, 아이콘을 정해줘요",
-                style = UmcTypographyTokens.Footnote,
-                color = grey600(),
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
+                UText(
+                    text = "Galaxy AI로 도와드릴게요",
+                    style = UmcTypographyTokens.HeadlineBold,
+                    color = main500(),
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                UText(
+                    text = "스레드 특징을 입력하면\nAI가 카테고리, 아이콘을 정해줘요",
+                    style = UmcTypographyTokens.Footnote,
+                    color = grey600(),
+                )
+            }
         }
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // 입력값이 부족하면 ViewModel이 안내 토스트를 띄우므로 항상 활성화
+        CommunityActionButton(
+            text = "카테고리 분류",
+            onClick = onRequestClassificationClick,
+        )
     }
 }
 
@@ -256,7 +273,7 @@ private fun CommunityAiProgressLine(
                 .background(
                     brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
                         colors = listOf(
-                            indigo500(),
+                            main500(),
                             green500(),
                         ),
                     ),
@@ -295,7 +312,7 @@ private fun CommunityAiResultContent(
             UText(
                 text = "카테고리 분류",
                 style = UmcTypographyTokens.SubheadlineBold,
-                color = indigo500(),
+                color = main500(),
             )
         }
 
@@ -319,7 +336,7 @@ private fun CommunityAiResultContent(
                             id = categoryIconRes(category),
                         ),
                         contentDescription = null,
-                        tint = indigo500(),
+                        tint = main500(),
                         modifier = Modifier.size(24.dp),
                     )
                 }
@@ -331,7 +348,7 @@ private fun CommunityAiResultContent(
                 modifier = Modifier.weight(1f),
             ) {
                 UText(
-                    text = categoryLabel(category),
+                    text = category.label,
                     style = UmcTypographyTokens.Title3Bold,
                     color = grey950(),
                 )
@@ -418,7 +435,7 @@ private fun CommunityAiResultButton(
     // 버튼 활성화 여부에 따라 배경색 결정
     val backgroundColor = when {
         !enabled -> grey100()
-        isPrimary -> indigo500()
+        isPrimary -> main500()
         else -> grey950()
     }
 
@@ -463,22 +480,6 @@ private fun AiIcon() {
         tint = Color.Unspecified,
         modifier = Modifier.size(32.dp),
     )
-}
-
-/**
- * CommunityCategory를 화면에 표시할 한글 카테고리명으로 변환
- */
-private fun categoryLabel(
-    category: CommunityCategory,
-): String {
-    return when (category) {
-        CommunityCategory.ALL -> "전체"
-        CommunityCategory.UNREAD -> "안읽음"
-        CommunityCategory.PROJECT -> "파트공지"
-        CommunityCategory.STUDY -> "스터디"
-        CommunityCategory.QNA -> "질문"
-        CommunityCategory.FREE -> "자유"
-    }
 }
 
 /**
@@ -541,6 +542,23 @@ private fun categoryIconRes(
             R.drawable.ic_community_chat
         }
     }
+}
+
+/**
+ * AI 분류 전 안내 상태 확인용 Preview
+ */
+@Preview
+@Composable
+private fun CommunityAiGuidePreview() {
+    CommunityAiCard(
+        aiState = CommunityAiState.GUIDE,
+        classifiedCategory = null,
+        canRequestClassification = true,
+        onRequestClassificationClick = {},
+        onRetryClassificationClick = {},
+        onChangeEmojiClick = {},
+        modifier = Modifier.padding(24.dp),
+    )
 }
 
 /**

@@ -22,6 +22,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -47,12 +49,17 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.presentation.study.ActStudyRoute
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 private data class ManageTab(
     val title: String,
     val content: @Composable (isActive: Boolean) -> Unit
 )
+
+// 챌린저 모드의 '스터디/활동' 탭 위치. 운영진 모드 목록이면 -1
+private fun List<ManageTab>.indexOfStudyTab(): Int =
+    indexOfFirst { it.title == AppStrings.TAB_STUDY_USER }
 
 @Composable
 fun ActManageRoute(
@@ -64,6 +71,9 @@ fun ActManageRoute(
         groupTitle: String,
         groupPart: String,
     ) -> Unit = { _, _, _ -> },
+    // 마이페이지 '나의 스터디'에서 들어왔을 때 스터디 탭을 열어 달라는 일회성 요청
+    openStudyTab: Boolean = false,
+    onStudyTabOpened: () -> Unit = {},
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
 
@@ -77,6 +87,8 @@ fun ActManageRoute(
         onNavigateToChallengerDetail = onNavigateToChallengerDetail,
         onNavigateCreateStudyGroup = onNavigateCreateStudyGroup,
         onNavigateAddStudySchedule = onNavigateAddStudySchedule,
+        openStudyTab = openStudyTab,
+        onStudyTabOpened = onStudyTabOpened,
     )
 }
 
@@ -91,14 +103,18 @@ fun ActManageScreen(
         groupTitle: String,
         groupPart: String,
     ) -> Unit = { _, _, _ -> },
+    openStudyTab: Boolean = false,
+    onStudyTabOpened: () -> Unit = {},
 ) {
+    // '나의 스터디' 요청을 처리하는 동안에는 운영진 모드여도 챌린저 탭 목록을 써서 운영진 탭 화면의 조회가 먼저 돌지 않게 한다
+    val showAdminTabs = uiState.isAdmin && !openStudyTab
     val tabs = remember(
-        uiState.isAdmin,
+        showAdminTabs,
         onNavigateToChallengerDetail,
         onNavigateCreateStudyGroup,
         onNavigateAddStudySchedule,
         ) {
-        if (uiState.isAdmin) {
+        if (showAdminTabs) {
             listOf(
                 ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { isActive ->
                     AttendanceRoute(isActive = isActive)
@@ -134,7 +150,8 @@ fun ActManageScreen(
     }
 
     val pagerState = rememberPagerState(
-        initialPage = 0,
+        // 마이페이지 '나의 스터디'로 처음 들어오면 출석 탭을 거치지 않고 스터디 탭에서 시작한다
+        initialPage = if (openStudyTab) tabs.indexOfStudyTab().coerceAtLeast(0) else 0,
         pageCount = { tabs.size }
     )
 
@@ -143,6 +160,24 @@ fun ActManageScreen(
     LaunchedEffect(tabs.size) {
         if (pagerState.currentPage >= tabs.size) {
             pagerState.scrollToPage(tabs.lastIndex)
+        }
+    }
+
+    val isAdmin by rememberUpdatedState(uiState.isAdmin)
+
+    // 마이페이지 '나의 스터디'에서 들어오면 챌린저 모드의 '스터디/활동' 탭(나의 커리큘럼)을 연다.
+    // 운영진 모드의 스터디 탭은 그룹 관리 화면이라 그때만 챌린저 모드로 돌린다.
+    LaunchedEffect(openStudyTab) {
+        if (!openStudyTab) return@LaunchedEffect
+        try {
+            if (isAdmin) onAdminCheckedChange(false)
+            // 요청을 처리하는 동안 tabs 는 챌린저 탭 목록이다
+            pagerState.scrollToPage(tabs.indexOfStudyTab().coerceAtLeast(0))
+            // 모드 전환이 반영된 뒤에 요청을 지워야 운영진 탭 목록으로 잠깐 돌아가지 않는다
+            snapshotFlow { isAdmin }.first { !it }
+        } finally {
+            // 사용자 스와이프 등으로 스크롤이 취소돼도 신호를 지워야, 나중에 하단 탭으로 복원될 때 스터디 탭이 다시 열리지 않는다
+            onStudyTabOpened()
         }
     }
 
@@ -203,7 +238,10 @@ fun ActManageScreen(
                 .fillMaxSize()
                 .background(grey100())
         ) { page ->
-            tabs[page].content(page == pagerState.currentPage)
+            // '나의 스터디' 요청을 처리하는 동안에는 복원된 다른 탭이 조회를 시작하지 않도록 스터디 탭만 활성으로 넘긴다
+            val isActive = page == pagerState.currentPage &&
+                (!openStudyTab || page == tabs.indexOfStudyTab())
+            tabs[page].content(isActive)
         }
     }
 }

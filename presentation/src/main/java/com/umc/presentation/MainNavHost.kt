@@ -20,6 +20,7 @@ import com.umc.presentation.act.ActManageRoute
 import com.umc.presentation.act.admin.challenger.AdminChallengerDetailRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
+import com.example.mypage.activityhistory.ActivityHistoryRoute
 import com.example.mypage.profile.ProfileRoute
 import com.example.mypage.qrcode.QrCodeRoute
 import com.example.mypage.receivedcard.ReceivedCardRoute
@@ -54,6 +55,9 @@ import com.umc.component.base.CollectUiEvents
 
 private const val COMMUNITY_REFRESH_KEY = "community_refresh"
 private const val NOTICE_REFRESH_KEY = "notice_refresh"
+
+// 마이페이지 '나의 스터디'에서 활동 탭으로 갈 때 스터디 탭을 열어 달라는 일회성 신호
+private const val ACT_OPEN_STUDY_TAB_KEY = "act_open_study_tab"
 private const val COMMUNITY_THREAD_DEEP_LINK_BASE =
     "https://api.university.neordinary.com/community/threads"
 
@@ -365,8 +369,17 @@ fun MainNavHost(
         }
 
         /**활동 화면**/
-        composable<MainDestination.Act> {
+        composable<MainDestination.Act> { backStackEntry ->
+            val openStudyTab by backStackEntry
+                .savedStateHandle
+                .getStateFlow(ACT_OPEN_STUDY_TAB_KEY, false)
+                .collectAsStateWithLifecycle()
+
             ActManageRoute(
+                openStudyTab = openStudyTab,
+                onStudyTabOpened = {
+                    backStackEntry.savedStateHandle[ACT_OPEN_STUDY_TAB_KEY] = false
+                },
                 onNavigateToChallengerDetail = { challengerId ->
                     navHostController.navigate(
                         MainDestination.AdminChallengerDetail(challengerId)
@@ -539,6 +552,25 @@ fun MainNavHost(
                 },
                 onNavigateToReceivedCard = {
                     navHostController.navigate(MainDestination.ReceivedCard)
+                },
+                onNavigateToMyStudy = {
+                    // 하단 탭에서 활동을 누른 것과 같은 스택을 만든 뒤, 스터디 탭을 열어 달라는 신호를 남긴다
+                    navHostController.navigate(MainDestination.Act) {
+                        popUpTo(MainDestination.Home) {
+                            // 딥링크로 연 타인 명함까지 저장하면 MY 탭을 누를 때 그 명함이 복원되므로 내 명함일 때만 저장한다
+                            saveState = targetMemberId == null
+                            inclusive = false
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                    runCatching { navHostController.getBackStackEntry(MainDestination.Act) }
+                        .getOrNull()
+                        ?.savedStateHandle
+                        ?.set(ACT_OPEN_STUDY_TAB_KEY, true)
+                },
+                onNavigateToActivityHistory = {
+                    navHostController.navigate(MainDestination.ActivityHistory)
                 }
             )
         }
@@ -579,6 +611,15 @@ fun MainNavHost(
         //내 프로필
         composable<MainDestination.MyProfile> {
             ProfileRoute(
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
+        }
+
+        //활동 이력
+        composable<MainDestination.ActivityHistory> {
+            ActivityHistoryRoute(
                 onNavigateToBack = {
                     navHostController.popBackStack()
                 }

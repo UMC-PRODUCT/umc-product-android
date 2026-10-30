@@ -11,13 +11,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.umc.presentation.community.R
 import com.umc.component.component.UText
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 
 /**
  * 새로운 커뮤니티 스레드를 생성할 때 사용하는 플로팅 버튼
@@ -36,7 +38,7 @@ fun CommunityFloatingButton(
             height = 48.dp,
         ),
         shape = RoundedCornerShape(24.dp),
-        color = indigo500(),
+        color = main500(),
         shadowElevation = 2.dp,
     ) {
         // 새 스레드 아이콘과 텍스트 표시
@@ -63,3 +65,14 @@ fun CommunityFloatingButton(
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun CommunityFloatingButtonPreview() {
+    UmcTheme {
+        CommunityFloatingButton(
+            onClick = {},
+        )
+    }
+}
+

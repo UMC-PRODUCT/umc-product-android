@@ -33,8 +33,8 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 
 /**일정 등록에서 일시를 선택하는 섹션
  *
@@ -144,10 +144,10 @@ fun DateTimeRow(
                     text = if (showTime) {
                         "${dateText} · ${timeText}"
                     } else dateText,
-                    backgroundColor = indigo100(),
+                    backgroundColor = main100(),
                     borderColor = grey200(),
                     borderWidth = 0.dp,
-                    textColor = indigo500(),
+                    textColor = main500(),
                     textStyle = UmcTypographyTokens.SubheadlineBold,
                     onClick =  { onDateTimeClick()}
                 )

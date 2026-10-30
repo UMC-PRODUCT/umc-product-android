@@ -22,7 +22,9 @@ import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.tooling.preview.Preview
 
 /**
  * 스레드 생성/수정 화면에서 사용하는 상단바
@@ -98,11 +100,38 @@ fun CommunityCreateTopBar(
                 text = actionText,
                 style = UmcTypographyTokens.CalloutBold,
                 color = if (isActionEnabled) {
-                    indigo500()
+                    main500()
                 } else {
                     grey400()
                 },
             )
         }
+    }
+}
+
+/**
+ * 액션 버튼 활성/비활성 상태 확인용 Preview
+ */
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun CommunityCreateTopBarPreview() {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+    ) {
+        CommunityCreateTopBar(
+            title = "스레드 만들기",
+            actionText = "등록",
+            isActionEnabled = false,
+            onBackClick = {},
+            onActionClick = {},
+        )
+
+        CommunityCreateTopBar(
+            title = "스레드 수정",
+            actionText = "수정",
+            isActionEnabled = true,
+            onBackClick = {},
+            onActionClick = {},
+        )
     }
 }

@@ -130,6 +130,10 @@ sealed interface MainDestination {
     @Serializable
     data object MyProfile : MainDestination
 
+    //활동 이력 페이지
+    @Serializable
+    data object ActivityHistory : MainDestination
+
     /**내 qr코드 페이지**/
     @Serializable
     data object Qrcode : MainDestination

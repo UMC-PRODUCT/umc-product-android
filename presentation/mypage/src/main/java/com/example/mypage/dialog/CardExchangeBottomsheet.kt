@@ -44,8 +44,8 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.white
 import com.umc.domain.model.mypage.NearbyUserInfo
 import kotlinx.collections.immutable.ImmutableList
@@ -238,7 +238,7 @@ fun CardExchangeBottomSheet(
 @Composable
 private fun ExchangeOptionCard(
     iconRes: Int,
-    iconColor: Color = indigo500(),
+    iconColor: Color = main500(),
     title: String,
     subtitle: String,
     onClick: () -> Unit
@@ -259,7 +259,7 @@ private fun ExchangeOptionCard(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(indigo100()),
+                    .background(main100()),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

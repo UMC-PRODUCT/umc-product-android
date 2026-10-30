@@ -1,23 +1,17 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-/.idea/misc.xml
 .DS_Store
 /build
 **/build/
 app/release/
-.idea/firebender/
-.idea/inspectionProfiles/
 /captures
 .externalNativeBuild
 .cxx
 local.properties
+
+# IDE 설정 — Android Studio 가 Gradle 동기화 때 기기마다 다시 만든다
+.idea/
 
 # Keystore files
 umc_release_key.jks

@@ -27,15 +27,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import com.umc.domain.model.mypage.StoredCard
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,6 +40,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -59,6 +53,7 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.black
 import com.umc.component.theme.grey000
@@ -69,11 +64,12 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.white
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.model.mypage.UserCardPartType
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 수신된 명함 파트별(Android, iOS, Server 등) 메인 컬러와 투명도 기반 그라데이션 브러시를 보관하는 데이터 클래스
@@ -122,12 +118,6 @@ fun ReceivedCardRoute(
         onBackClick = onNavigateToBack,
         onSearchQueryChange = { query -> viewModel.onSearchQueryChanged(query) },
         onClearSearch = { viewModel.clearSearchQuery() },
-        onSelectCard = viewModel::selectCard,
-        onCloseDetail = viewModel::closeDetail,
-        onEditNote = viewModel::editNote,
-        onSaveNote = viewModel::saveNote,
-        onConfirmDelete = viewModel::confirmDelete,
-        onDeleteCard = viewModel::deleteCard,
         onRetry = viewModel::retry,
     )
 
@@ -139,34 +129,10 @@ fun ReceivedCardScreen(
     onBackClick: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onClearSearch: () -> Unit,
-    onSelectCard: (String) -> Unit = {},
-    onCloseDetail: () -> Unit = {},
-    onEditNote: (String) -> Unit = {},
-    onSaveNote: () -> Unit = {},
-    onConfirmDelete: (Boolean) -> Unit = {},
-    onDeleteCard: () -> Unit = {},
     onRetry: () -> Unit = {},
 
 ){
-
-    uiState.selectedId?.let { id ->
-        uiState.entries[id]?.takeUnless { it.pendingDelete }?.let { entry ->
-            ReceivedCardDetail(uiState.noteDraft, uiState.isSaving, uiState.mutationError,
-                entry, onCloseDetail, onEditNote, onSaveNote, onConfirmDelete)
-        }
-    }
-    if (uiState.showDeleteConfirmation && uiState.selectedId != null) {
-        AlertDialog(
-            onDismissRequest = { if (!uiState.isSaving) onConfirmDelete(false) },
-            title = { UText("명함을 삭제할까요?") },
-            text = { Column {
-                UText("이 명함을 명함첩에서 삭제합니다.")
-                uiState.mutationError?.let { UText(it) }
-            } },
-            confirmButton = { TextButton(enabled = !uiState.isSaving, onClick = onDeleteCard) { UText("삭제") } },
-            dismissButton = { TextButton(enabled = !uiState.isSaving, onClick = { onConfirmDelete(false) }) { UText("취소") } },
-        )
-    }
+    // 명함 상세(메모·삭제) 팝업은 디자인이 나오면 다시 붙인다. 메모 저장·삭제 로직은 ReceivedCardViewModel 에 남아 있다.
 
     val focusManager = LocalFocusManager.current
     val interactionSource = remember { MutableInteractionSource() } //상호작용 수집
@@ -274,7 +240,6 @@ fun ReceivedCardScreen(
             ) { card ->
                 ReceivedCardItem(
                     card = card,
-                    onClick = { onSelectCard(card.cardId) },
                 )
             }
         }
@@ -323,7 +288,6 @@ fun ReceivedCardScreenTopBar(
 @Composable
 private fun ReceivedCardItem(
     card: UserCard,
-    onClick: () -> Unit,
 ) {
     val partTheme = getPartTheme(card.partType)
 
@@ -332,7 +296,6 @@ private fun ReceivedCardItem(
             .fillMaxWidth()
             .heightIn(min = 160.dp)
             .clip(RoundedCornerShape(16.dp))
-            .clickable(onClickLabel = "명함 상세 보기", onClick = onClick)
             .background(partTheme.backgroundBrush)
             .padding(16.dp)
     ) {
@@ -420,36 +383,20 @@ private fun ReceivedCardItem(
         }
     }
 }
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 640)
 @Composable
-private fun ReceivedCardDetail(
-    noteDraft: String,
-    isSaving: Boolean,
-    mutationError: String?,
-    entry: StoredCard,
-    onClose: () -> Unit,
-    onEditNote: (String) -> Unit,
-    onSave: () -> Unit,
-    onConfirmDelete: (Boolean) -> Unit,
-) {
-    var showBack by rememberSaveable(entry.card.cardId) { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = onClose,
-        title = { UText("${entry.card.name.ifBlank { "이름 없음" }} 명함") },
-        text = { Column(Modifier.verticalScroll(rememberScrollState())) {
-            TextButton(onClick = { showBack = !showBack }) { UText(if (showBack) "앞면 보기" else "뒷면 보기") }
-            if (!showBack) {
-                UText("${entry.card.name} / ${entry.card.nickname}")
-                UText(entry.card.university)
-                UText("${entry.card.part.ifBlank { "파트 미정" }} · ${entry.card.generation}기")
-            } else {
-                UText("최초 수신: " + java.text.DateFormat.getDateTimeInstance().format(java.util.Date(entry.receivedAt)))
-            }
-            UText("개인 메모")
-            UTextField(value = noteDraft, onValueChange = onEditNote, placeholder = "메모를 입력하세요")
-            mutationError?.let { UText(it) }
-            TextButton(enabled = !isSaving, onClick = { onConfirmDelete(true) }) { UText("명함 삭제") }
-        } },
-        confirmButton = { TextButton(enabled = !isSaving, onClick = onSave) { UText(if (isSaving) "저장 중…" else "메모 저장") } },
-        dismissButton = { TextButton(enabled = !isSaving, onClick = onClose) { UText("닫기") } },
+private fun ReceivedCardScreenPreview() {
+    val cards = persistentListOf(
+        UserCard(name = "김유엠", nickname = "유엠", university = "중앙대학교", part = "ANDROID", generation = "11", memberNo = "1"),
+        UserCard(name = "이유엠", nickname = "이엠", university = "숙명여자대학교", part = "WEB_PRODUCT_ENGINEER", generation = "11", memberNo = "2"),
     )
+    UmcTheme {
+        ReceivedCardScreen(
+            uiState = ReceivedCardUiState(allCards = cards, filteredCards = cards),
+            onBackClick = {},
+            onSearchQueryChange = {},
+            onClearSearch = {},
+        )
+    }
 }

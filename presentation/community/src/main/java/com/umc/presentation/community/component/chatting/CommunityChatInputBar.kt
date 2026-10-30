@@ -60,7 +60,7 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey950
 import com.umc.component.theme.grey600
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.white
 import com.umc.domain.model.community.thread.CommunityMessageType
 import com.umc.domain.model.community.thread.CommunityThreadMessage
@@ -91,7 +91,7 @@ internal fun CommunityChatInputBar(
     var fieldValue by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
     var cursorAfterMention by remember { mutableStateOf<Int?>(null) }
     val focusRequester = remember { FocusRequester() }
-    val mentionColor = indigo500()
+    val mentionColor = main500()
     LaunchedEffect(value) {
         if (fieldValue.text != value) {
             fieldValue = TextFieldValue(value, TextRange((cursorAfterMention ?: value.length).coerceIn(0, value.length)))
@@ -290,7 +290,7 @@ internal fun CommunityChatInputBar(
                                     lineHeight = 21.sp,
                                 ),
                                 cursorBrush = SolidColor(
-                                    if (isReplying) indigo500() else black(),
+                                    if (isReplying) main500() else black(),
                                 ),
                                 maxLines = if (isReplying) 3 else 4,
                             )
@@ -314,7 +314,7 @@ internal fun CommunityChatInputBar(
                                 },
                                 modifier = if (isReplying) Modifier.size(34.dp) else Modifier,
                                 tint = when {
-                                    enabled && value.isNotBlank() -> indigo500()
+                                    enabled && value.isNotBlank() -> main500()
                                     isReplying -> grey400()
                                     else -> grey300()
                                 },

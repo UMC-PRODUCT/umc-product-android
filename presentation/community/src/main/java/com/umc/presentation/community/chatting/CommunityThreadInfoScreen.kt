@@ -56,8 +56,8 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red400
 import com.umc.component.theme.red500
@@ -234,8 +234,8 @@ internal fun CommunityThreadInfoScreen(
             negativeBackgroundColor = grey100(),
             negativeBorderColor = grey100(),
             negativeTextColor = grey800(),
-            positiveBackgroundColor = indigo500(),
-            positiveBorderColor = indigo500(),
+            positiveBackgroundColor = main500(),
+            positiveBorderColor = main500(),
             positiveTextColor = white(),
             onNegative = { pendingOwnershipMember = null },
             onPositive = {
@@ -285,7 +285,7 @@ private fun ParticipantRow(
                 if (member.role == CommunityThreadRole.ADMIN) {
                     ParticipantBadge(AppStrings.CHAT_THREAD_INFO_ADMIN_BADGE, grey800(), white())
                 }
-                if (isMe) ParticipantBadge(AppStrings.CHAT_ME, indigo100(), indigo500())
+                if (isMe) ParticipantBadge(AppStrings.CHAT_ME, main100(), main500())
             }
             val subtitle = listOfNotNull(member.part?.label, profile?.roleLabel?.takeIf { it.isNotBlank() })
                 .joinToString(" · ")

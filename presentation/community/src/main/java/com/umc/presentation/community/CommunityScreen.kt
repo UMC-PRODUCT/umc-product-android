@@ -104,7 +104,11 @@ fun CommunityScreen(
                     }
 
                     state.isEmpty -> {
-                        CommunityEmptyContent()
+                        CommunityEmptyContent(
+                            onCreateThreadClick = {
+                                onAction(CommunityAction.OnCreateThreadClick)
+                            },
+                        )
                     }
 
                     else -> {
@@ -126,8 +130,9 @@ fun CommunityScreen(
             }
         }
 
-        // 로딩 또는 에러 상태가 아닐 때 새 스레드 생성 버튼 표시
-        if (!state.isLoading && !state.isError) {
+        // 로딩·에러·빈 화면이 아닐 때 새 스레드 생성 버튼 표시
+        // 빈 화면은 CommunityEmptyContent에 같은 생성 버튼이 있어 겹치지 않도록 숨김
+        if (!state.isLoading && !state.isError && !state.isEmpty) {
             CommunityFloatingButton(
                 onClick = {
                     onAction(CommunityAction.OnCreateThreadClick)
@@ -308,6 +313,24 @@ private fun CommunityListPreview() {
                         isJoined = true,
                     )
                 }.toImmutableList(),
+            ),
+            onAction = {},
+        )
+    }
+}
+
+/**
+ * 스레드가 없는 빈 화면 Preview
+ *
+ * 높이가 낮은 화면에서도 플로팅 버튼 없이 빈 화면의 생성 버튼만 보이는지 확인합니다.
+ */
+@Preview(name = "커뮤니티 빈 화면 · 낮은 높이", widthDp = 412, heightDp = 480, showBackground = true)
+@Composable
+private fun CommunityEmptyPreview() {
+    UmcTheme(darkTheme = false) {
+        CommunityScreen(
+            state = CommunityState(
+                isLoading = false,
             ),
             onAction = {},
         )

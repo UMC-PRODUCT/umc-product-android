@@ -66,9 +66,9 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo300
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main300
+import com.umc.component.theme.main500
 import com.umc.domain.model.enums.UserPart
 import kotlinx.collections.immutable.persistentListOf
 
@@ -148,7 +148,7 @@ private fun ChallengerLoading() {
             .padding(top = 64.dp),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = indigo500())
+        CircularProgressIndicator(color = main500())
     }
 }
 
@@ -192,7 +192,7 @@ private fun ChallengerLoadError(
                 .fillMaxWidth()
                 .height(52.dp)
                 .padding(horizontal = 24.dp),
-            backgroundColor = indigo500()
+            backgroundColor = main500()
         )
     }
 }
@@ -338,7 +338,7 @@ private fun NormalChallengerPartBottomSheet(
                     UText(
                         text = part.label,
                         style = Body,
-                        color = if (selectedPart == part) indigo500() else grey800(),
+                        color = if (selectedPart == part) main500() else grey800(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onPartSelected(part) }
@@ -455,15 +455,15 @@ private fun ChallengerMemberRow(
                     .widthIn(min = 39.dp)
                     .height(24.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(indigo100())
-                    .border(1.dp, indigo300(), RoundedCornerShape(4.dp))
+                    .background(main100())
+                    .border(1.dp, main300(), RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 UText(
                     text = role,
                     style = Caption1Bold,
-                    color = indigo500()
+                    color = main500()
                 )
             }
             Spacer(Modifier.width(10.dp))

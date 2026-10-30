@@ -43,7 +43,7 @@ fun GroupScheduleInfoCard(
                 R.drawable.ic_notification
             ),
             contentDescription = null,
-            tint = indigo500(),
+            tint = main500(),
             modifier = Modifier.size(22.dp),
         )
 
@@ -62,12 +62,12 @@ fun GroupScheduleInfoCard(
         Box(
             modifier = Modifier
                 .background(
-                    indigo100(),
+                    main100(),
                     RoundedCornerShape(4.dp)
                 )
                 .border(
                     1.dp,
-                    indigo100(),
+                    main100(),
                     RoundedCornerShape(4.dp)
                 )
                 .padding(
@@ -78,7 +78,7 @@ fun GroupScheduleInfoCard(
             UText(
                 text = groupPart,
                 style = Caption1Bold,
-                color = indigo500(),
+                color = main500(),
             )
         }
     }

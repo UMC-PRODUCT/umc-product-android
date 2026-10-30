@@ -37,7 +37,7 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.domain.model.home.CategoryItem
 import com.umc.presentation.home.schedule.add.ScheduleAddViewModel
 
@@ -98,7 +98,7 @@ fun ScheduleCategoryBottomSheet(
                 //확인 버튼
                 UButton(
                     text = AppStrings.CONFIRM,
-                    backgroundColor = indigo500(),
+                    backgroundColor = main500(),
                     textColor = grey000(),
                     onClick = onConfirm,
                     modifier = Modifier
@@ -171,7 +171,7 @@ fun CategoryItemRow(
             checked = item.isChecked,
             onCheckedChange = { onToggle(item) },
             colors = CheckboxDefaults.colors(
-                checkedColor = indigo500(),
+                checkedColor = main500(),
                 uncheckedColor = grey300(),
                 checkmarkColor = grey000()
             )

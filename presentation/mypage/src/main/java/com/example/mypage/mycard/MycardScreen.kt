@@ -77,10 +77,10 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo400
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main100
+import com.umc.component.theme.main400
+import com.umc.component.theme.main500
+import com.umc.component.theme.main600
 import com.umc.component.theme.white
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UserType
@@ -111,6 +111,8 @@ fun MycardRoute(
     onNavigateToMyqrCode:() -> Unit, // QR 코드 화면으로 이동
     onNavigateToEditCard: () -> Unit, //명함 편집
     onNavigateToReceivedCard: () -> Unit, //받은 명함 이동
+    onNavigateToMyStudy: () -> Unit, //나의 스터디(활동 탭 > 스터디 커리큘럼)로 이동
+    onNavigateToActivityHistory: () -> Unit, //활동 이력 화면으로 이동
 
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -128,9 +130,6 @@ fun MycardRoute(
     // 차단 지점: 홈 배너 진입(openExchangeDialog), 명함 교환 버튼, 내 QR 코드, QR 딥링크 수신.
     // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 각 지점의 원래 호출을 주석에서 되살린다.
     var showExchangeBlockedDialog by remember { mutableStateOf(false) }
-
-    // 나의 스터디·나의 활동·프로젝트는 이동할 화면이 아직 없어 개발 중 안내 다이얼로그만 띄운다.
-    var showFeatureInDevelopmentDialog by remember { mutableStateOf(false) }
 
 
     // 화면 복귀(ON_RESUME) 라이프사이클 시 최신 내 정보를 동기화하는 관찰자
@@ -214,8 +213,8 @@ fun MycardRoute(
         onNavigateToMyqrCode = { showExchangeBlockedDialog = true },
         onNavigateToReceivedCard = onNavigateToReceivedCard,
         onNavigateToEditCard = onNavigateToEditCard,
-        onNavigateToMyStudy = { showFeatureInDevelopmentDialog = true },
-        onNavigateToMyActivity = { showFeatureInDevelopmentDialog = true },
+        onNavigateToMyStudy = onNavigateToMyStudy,
+        onNavigateToActivityHistory = onNavigateToActivityHistory,
         onRetryProfile = viewModel::getUserInfo,
         // [임시] 명함 교환 차단 — 원래 동작: { nearbyViewModel.openBottomSheet() }
         onOpenExchangeBottomSheet = { showExchangeBlockedDialog = true },
@@ -229,16 +228,6 @@ fun MycardRoute(
             onDismissRequest = { showExchangeBlockedDialog = false },
             confirmText = AppStrings.CONFIRM,
             onConfirm = { showExchangeBlockedDialog = false },
-        )
-    }
-
-    if (showFeatureInDevelopmentDialog) {
-        UDialog(
-            title = AppStrings.MYCARD_FEATURE_IN_DEVELOPMENT_TITLE,
-            content = AppStrings.MYCARD_FEATURE_IN_DEVELOPMENT_CONTENT,
-            onDismissRequest = { showFeatureInDevelopmentDialog = false },
-            confirmText = AppStrings.CONFIRM,
-            onConfirm = { showFeatureInDevelopmentDialog = false },
         )
     }
 
@@ -290,7 +279,7 @@ fun MycardScreen(
     onNavigateToReceivedCard: ()-> Unit, //받은 명함 이동
     onNavigateToEditCard: () -> Unit, //명함 편집 이동,
     onNavigateToMyStudy: () -> Unit, //나의 스터디 이동,
-    onNavigateToMyActivity: () -> Unit, //나의 활동 이동,
+    onNavigateToActivityHistory: () -> Unit, //활동 이력 이동,
     onOpenExchangeBottomSheet: () -> Unit, //명함 교환 BottomSheet 열기,
     onRetryProfile: () -> Unit, //내 프로필 조회 실패 시 다시 시도
 ){
@@ -354,13 +343,12 @@ fun MycardScreen(
                 MycardListItem(
                     iconRes = R.drawable.ic_my_study,
                     text = AppStrings.MYCARD_ACTVITY_MYSTUDY,
-                    studyCount = 0,
                     onClick = onNavigateToMyStudy
                 )
                 MycardListItem(
-                    iconRes = R.drawable.ic_my_actvity,
-                    text = AppStrings.MYCARD_ACTVITY_MYACTIVTY_PROJECT,
-                    onClick = onNavigateToMyActivity
+                    iconRes = R.drawable.ic_activity_history,
+                    text = AppStrings.MYCARD_ACTVITY_HISTORY,
+                    onClick = onNavigateToActivityHistory
                 )
             }
         }
@@ -424,8 +412,8 @@ private fun MycardProfileLoadError(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                backgroundColor = indigo500(),
-                pressedColor = indigo600(),
+                backgroundColor = main500(),
+                pressedColor = main600(),
                 textColor = white(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 12.dp,
@@ -503,8 +491,8 @@ fun MycardProfileCard(
         label = "CardFlipAnimation"
     )
 
-    val color1 = indigo400()
-    val color2 = indigo500()
+    val color1 = main400()
+    val color2 = main500()
 
     //원형 그라데이션 배경
     val radialGradient = remember {
@@ -600,7 +588,7 @@ private fun CardFrontContent(
                 Box(
                     modifier = Modifier
                         .clip(CircleShape)
-                        .background(indigo400())
+                        .background(main400())
                         .clickable { onFlipClick() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -650,13 +638,13 @@ private fun CardFrontContent(
                     UText(
                         text = uiState.userInfo.schoolName,
                         style = UmcTypographyTokens.Subheadline,
-                        color = indigo100()
+                        color = main100()
                     )
                     //내 최신 커리어
                     UText(
                         text = uiState.myRecentInfoString,
                         style = UmcTypographyTokens.Subheadline,
-                        color = indigo100()
+                        color = main100()
                     )
                 }
             }
@@ -719,7 +707,7 @@ private fun CardBackContent(
             Box(
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(indigo400())
+                    .background(main400())
                     .clickable { onFlipClick() },
                 contentAlignment = Alignment.Center
             ) {
@@ -806,11 +794,11 @@ private fun CardBottomButtons(
                 .weight(1f)
                 .height(42.dp),
             backgroundColor = grey000(),
-            textColor = indigo500(),
+            textColor = main500(),
             textStyle = UmcTypographyTokens.CalloutBold,
             cornerRadius = 8.dp,
             prevIcon = painterResource(R.drawable.ic_wifi), // 추후 아이콘 리소스 연결
-            prevIconTint = indigo500(),
+            prevIconTint = main500(),
             onClick = onExchangeCardClick
         )
 
@@ -821,11 +809,11 @@ private fun CardBottomButtons(
                 .weight(1f)
                 .height(42.dp),
             backgroundColor = grey000(),
-            textColor = indigo500(),
+            textColor = main500(),
             textStyle = UmcTypographyTokens.CalloutBold,
             cornerRadius = 8.dp,
             prevIcon = painterResource(R.drawable.ic_qrcode), // 추후 아이콘 리소스 연결
-            prevIconTint = indigo500(),
+            prevIconTint = main500(),
             onClick = onMyQrcodeClick
         )
     }
@@ -908,7 +896,6 @@ fun MycardListItem(
     text: String,
     showArrow: Boolean = true,
     cardCount: Int = -1,
-    studyCount: Int = -1,
     onClick: () -> Unit
 ) {
     Row(
@@ -938,23 +925,8 @@ fun MycardListItem(
             UButton(
                 text = "${cardCount}장",
                 enabled = false,
-                backgroundColor = indigo100(),
-                textColor = indigo500(),
-                textStyle = UmcTypographyTokens.Caption1Bold,
-                cornerRadius = 4.dp,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                onClick = {}
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-
-        if (studyCount> -1) {
-            UButton(
-                text = "${studyCount}건",
-                enabled = false,
-                backgroundColor = indigo100(),
-                textColor = indigo500(),
+                backgroundColor = main100(),
+                textColor = main500(),
                 textStyle = UmcTypographyTokens.Caption1Bold,
                 cornerRadius = 4.dp,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
@@ -986,7 +958,7 @@ private fun MycardScreenProfileLoadFailedPreview() {
             onNavigateToReceivedCard = {},
             onNavigateToEditCard = {},
             onNavigateToMyStudy = {},
-            onNavigateToMyActivity = {},
+            onNavigateToActivityHistory = {},
             onOpenExchangeBottomSheet = {},
             onRetryProfile = {},
         )

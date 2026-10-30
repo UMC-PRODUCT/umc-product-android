@@ -1,5 +1,6 @@
 package com.umc.data.repository.community
 
+import android.os.SystemClock
 import com.google.gson.Gson
 import com.google.gson.stream.MalformedJsonException
 import com.umc.domain.model.base.ApiResponse
@@ -14,6 +15,13 @@ import com.umc.data.mapper.community.toDomain
 import com.umc.data.request.community.CreateCommunityThreadRequest
 import com.umc.data.request.community.InviteCommunityThreadMembersRequest
 import com.umc.data.request.community.UpdateCommunityThreadRequest
+import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSource
+import com.umc.data.repository.challenger.ChallengerSearchScope
+import com.umc.data.repository.challenger.ChallengerSearchScopeProvider
+import com.umc.data.response.community.CommunityThreadInvitablePageResponse
+import com.umc.data.response.community.CommunityThreadInvitableResponse
+import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.base.FailState
 import com.umc.domain.model.community.CommunityInvitableMemberPage
 import com.umc.domain.model.community.CommunityThreadDetail
 import com.umc.domain.model.community.CommunityThreadInvitation
@@ -32,7 +40,135 @@ import kotlin.coroutines.cancellation.CancellationException
 
 class CommunityThreadRepositoryImpl @Inject constructor(
     private val communityThreadApi: CommunityThreadApi,
+    private val challengerRemoteDataSource: ChallengerRemoteDataSource,
+    private val searchScopeProvider: ChallengerSearchScopeProvider,
 ) : CommunityThreadRepository {
+
+    /**
+     * 초대 후보 API 에는 학교 조건이 없어 전 학교 회원이 나온다.
+     * 중앙운영사무국이 아니면 본인 학교 회원 검색 결과와 겹치는 사람만 남긴다.
+     * 이미 참여 중·강퇴·차단 같은 제외 조건은 서버 초대 후보 결과를 그대로 따른다.
+     *
+     * limit 만큼 모이거나 끝날 때까지 서버 페이지를 이어 받되, 한 번에 MAX_INVITABLE_SCAN_PAGES 까지만 받는다.
+     * 상한에 닿아 결과가 비어 있어도 nextOffset 을 돌려주므로 호출하는 쪽에서 이어 받을 수 있다.
+     */
+    private suspend fun getInvitableInScope(
+        threadId: String,
+        query: String?,
+        offset: Int,
+        limit: Int,
+    ): ApiResponse<CommunityThreadInvitablePageResponse> {
+        val schoolId = when (val scope = searchScopeProvider.current()) {
+            is ApiState.Fail -> return scope.failState.toFailResponse()
+            is ApiState.Success -> (scope.data as? ChallengerSearchScope.OwnSchool)?.schoolId
+        } ?: return communityThreadApi.getInvitableCommunityThreadMembers(
+            threadId = threadId,
+            query = query,
+            offset = offset,
+            limit = limit,
+        )
+
+        val schoolMemberIds = when (val ids = loadSchoolMemberIds(schoolId, query)) {
+            is ApiState.Fail -> return ids.failState.toFailResponse()
+            is ApiState.Success -> ids.data
+        }
+        // 검색어에 맞는 본인 학교 회원이 없으면 초대 후보를 훑지 않고 끝낸다
+        if (schoolMemberIds.isEmpty()) {
+            return ApiResponse(
+                success = true,
+                code = "",
+                message = "",
+                result = CommunityThreadInvitablePageResponse(),
+            )
+        }
+
+        val items = mutableListOf<CommunityThreadInvitableResponse>()
+        var nextOffset: Int? = offset
+        var lastResponse: ApiResponse<CommunityThreadInvitablePageResponse>? = null
+        var scannedPages = 0
+        // 한 번에 훑는 페이지 수를 제한하고, 상한에 닿으면 남은 nextOffset 을 돌려줘 다음 호출에서 이어 받게 한다
+        while (nextOffset != null && items.size < limit && scannedPages < MAX_INVITABLE_SCAN_PAGES) {
+            val requestOffset: Int = nextOffset
+            val response = communityThreadApi.getInvitableCommunityThreadMembers(
+                threadId = threadId,
+                query = query,
+                offset = requestOffset,
+                limit = INVITABLE_SCAN_LIMIT,
+            )
+            val page = response.result
+            if (!response.success || page == null) return response
+            items += page.items.filter { it.memberId.toLongOrNull() in schoolMemberIds }
+            // 서버가 앞으로 나아가지 않는 offset 을 주면 같은 요청을 반복하게 되므로 거기서 끝낸다
+            nextOffset = page.nextOffset?.toIntOrNull()?.takeIf { it > requestOffset }
+            lastResponse = response
+            scannedPages++
+        }
+
+        return ApiResponse(
+            success = true,
+            code = lastResponse?.code.orEmpty(),
+            message = lastResponse?.message.orEmpty(),
+            result = CommunityThreadInvitablePageResponse(
+                items = items,
+                nextOffset = nextOffset?.toString(),
+                total = items.size.toString(),
+            ),
+        )
+    }
+
+    // 다음 페이지를 부를 때 같은 학교 회원 id 를 다시 받지 않도록 마지막 결과를 잠깐 보관한다
+    @Volatile
+    private var schoolMemberIdsCache: SchoolMemberIdsCache? = null
+
+    private class SchoolMemberIdsCache(
+        val schoolId: Long,
+        val query: String?,
+        val ids: Set<Long>,
+        val savedAt: Long,
+    )
+
+    // 본인 학교 회원 id. 초대 후보와 같은 검색어로 좁혀 받고, 초대는 기수와 무관하므로 기수는 따지지 않는다
+    private suspend fun loadSchoolMemberIds(
+        schoolId: Long,
+        query: String?,
+    ): ApiState<Set<Long>> {
+        val keyword = query?.takeIf { it.isNotBlank() }
+        schoolMemberIdsCache
+            ?.takeIf { it.schoolId == schoolId && it.query == keyword }
+            ?.takeIf { SystemClock.elapsedRealtime() - it.savedAt < SCHOOL_MEMBER_CACHE_MILLIS }
+            ?.let { return ApiState.Success(it.ids) }
+
+        val ids = mutableSetOf<Long>()
+        var cursor: Long? = null
+        var isComplete = false
+        for (pageIndex in 0 until MAX_SCHOOL_MEMBER_PAGES) {
+            val page = challengerRemoteDataSource.searchMembers(
+                cursor = cursor,
+                size = SCHOOL_MEMBER_PAGE_SIZE,
+                schoolId = schoolId,
+                keyword = keyword,
+            )
+            when (page) {
+                is ApiState.Fail -> return page
+                is ApiState.Success -> {
+                    page.data.cursor.content.mapTo(ids) { it.memberId }
+                    cursor = page.data.cursor.nextCursor
+                    if (cursor == null) {
+                        isComplete = true
+                        break
+                    }
+                }
+            }
+        }
+        // 페이지 상한에서 잘린 목록을 캐시하면 30초 동안 같은 회원이 계속 빠지므로, 끝까지 받았을 때만 보관한다
+        if (isComplete) {
+            schoolMemberIdsCache = SchoolMemberIdsCache(schoolId, keyword, ids, SystemClock.elapsedRealtime())
+        }
+        return ApiState.Success(ids)
+    }
+
+    private fun FailState.toFailResponse(): ApiResponse<CommunityThreadInvitablePageResponse> =
+        ApiResponse(success = false, code = code, message = message)
 
     override suspend fun getCommunityThreads(
         filter: String,
@@ -80,7 +216,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
     ): Result<CommunityInvitableMemberPage> {
         return communityCall(fallback = "멤버 목록을 불러오지 못했어요.") {
             val response =
-                communityThreadApi.getInvitableCommunityThreadMembers(
+                getInvitableInScope(
                     threadId = threadId,
                     query = query,
                     offset = offset,
@@ -401,7 +537,7 @@ class CommunityThreadRepositoryImpl @Inject constructor(
 
     override suspend fun getInvitableMembers(threadId: String, query: String?, offset: Int, limit: Int) =
         apiCall {
-            communityThreadApi.getInvitableCommunityThreadMembers(
+            getInvitableInScope(
                 threadId = threadId,
                 query = query,
                 offset = offset,
@@ -484,5 +620,14 @@ class CommunityThreadRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             fallback
         }
+    }
+
+    private companion object {
+        // 초대 후보 API 의 limit 상한
+        const val INVITABLE_SCAN_LIMIT = 100
+        const val MAX_INVITABLE_SCAN_PAGES = 10
+        const val SCHOOL_MEMBER_PAGE_SIZE = 100
+        const val MAX_SCHOOL_MEMBER_PAGES = 20
+        const val SCHOOL_MEMBER_CACHE_MILLIS = 30_000L
     }
 }

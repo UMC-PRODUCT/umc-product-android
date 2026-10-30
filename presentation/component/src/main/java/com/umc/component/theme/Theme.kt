@@ -7,10 +7,10 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
 private val LightColors = lightColorScheme(
-    primary = lightIndigo500,
+    primary = lightMain500,
     onPrimary = lightWhite,
-    primaryContainer = lightIndigo100,
-    onPrimaryContainer = lightIndigo900,
+    primaryContainer = lightMain100,
+    onPrimaryContainer = lightMain900,
     // accent 팔레트 제거로 yellow(구 warning)로 대체
     secondary = lightYellow500,
     onSecondary = lightWhite,
@@ -34,10 +34,10 @@ private val LightColors = lightColorScheme(
 )
 
 private val DarkColors = darkColorScheme(
-    primary = darkIndigo600,
+    primary = darkMain600,
     onPrimary = darkGrey000,
-    primaryContainer = darkIndigo200,
-    onPrimaryContainer = darkIndigo900,
+    primaryContainer = darkMain200,
+    onPrimaryContainer = darkMain900,
     // accent 팔레트 제거로 yellow(구 warning)로 대체
     secondary = darkYellow500,
     onSecondary = darkGrey000,

@@ -37,8 +37,8 @@ import com.umc.component.theme.grey200
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main100
+import com.umc.component.theme.main600
 import com.umc.component.theme.red500
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow600
@@ -145,7 +145,7 @@ fun NoticeTags(target: NoticeTarget) {
         }
 
         if (target.targetSchoolId != null) {
-            NoticeTag(text = AppStrings.SCHOOL, backgroundColor = indigo100(), textColor = indigo600())
+            NoticeTag(text = AppStrings.SCHOOL, backgroundColor = main100(), textColor = main600())
             Spacer(modifier = Modifier.width(6.dp))
         }
 

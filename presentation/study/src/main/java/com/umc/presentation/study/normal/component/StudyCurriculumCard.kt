@@ -43,13 +43,13 @@ fun StudyCurriculumCard(
                     painter = painterResource(R.drawable.ic_document),
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
-                    tint = indigo500()
+                    tint = main500()
                 )
                 Spacer(Modifier.width(8.dp))
                 UText(
                     text = AppStrings.STUDY_PART_CURRICULUM.format(part.label.uppercase()),
                     style = UmcTypographyTokens.SubheadlineBold,
-                    color = indigo500(),
+                    color = main500(),
                     modifier = Modifier.weight(1f)
                 )
             }

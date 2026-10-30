@@ -19,7 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Density
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main600
 
 /**
  * 시스템 글자 크기 설정과 관계없이 디자인 스펙의 글자 크기를 유지하는 공용 텍스트입니다.
@@ -118,7 +118,7 @@ fun UText(
  */
 @Composable
 fun getGrowthText(day: Int): AnnotatedString = buildAnnotatedString {
-    withStyle(style = SpanStyle(color = indigo600())) {
+    withStyle(style = SpanStyle(color = main600())) {
         append("${day}일째")
     }
     withStyle(style = SpanStyle(color = grey800())) {

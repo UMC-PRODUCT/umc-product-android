@@ -99,10 +99,10 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo200
-import com.umc.component.theme.indigo300
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main200
+import com.umc.component.theme.main300
+import com.umc.component.theme.main500
 import com.umc.component.theme.red400
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
@@ -111,7 +111,7 @@ import com.umc.component.theme.grey50
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main600
 import com.umc.presentation.community.bottomsheet.ConversationSummaryBottomSheet
 import com.umc.presentation.community.component.chatting.CommunityChatMemberTag
 import com.umc.presentation.community.component.chatting.CommunityChatProfileImage
@@ -1066,8 +1066,8 @@ private fun ThreadUnavailableScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                backgroundColor = indigo500(),
-                pressedColor = indigo600(),
+                backgroundColor = main500(),
+                pressedColor = main600(),
                 textColor = white(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 8.dp,
@@ -1201,8 +1201,8 @@ private fun ChatLoadError(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(58.dp),
-            backgroundColor = indigo500(),
-            pressedColor = indigo600(),
+            backgroundColor = main500(),
+            pressedColor = main600(),
             textColor = white(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             cornerRadius = 12.dp,
@@ -1394,8 +1394,8 @@ private fun UnreadSummaryCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(indigo100())
-            .border(1.dp, indigo200(), RoundedCornerShape(8.dp))
+            .background(main100())
+            .border(1.dp, main200(), RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -1403,6 +1403,7 @@ private fun UnreadSummaryCard(
         Image(
             painter = painterResource(R.drawable.ic_community_ai),
             contentDescription = null,
+            tint = main500(),
             modifier = Modifier.size(32.dp),
         )
         Column(
@@ -1467,8 +1468,8 @@ private fun NewMessageButton(
 ) {
     Surface(
         modifier = modifier.clickable(onClick = onClick),
-        shape = CircleShape,
-        color = indigo500(),
+        shape = RoundedCornerShape(22.dp),
+        color = main500(),
         contentColor = white(),
         shadowElevation = 4.dp,
     ) {
@@ -1511,13 +1512,13 @@ private fun NewMessagesDivider() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        HorizontalDivider(Modifier.weight(1f), color = indigo500())
+        HorizontalDivider(Modifier.weight(1f), color = main300())
         Text(
             text = AppStrings.CHAT_NEW_MESSAGE_DIVIDER,
-            color = indigo500(),
+            color = main500(),
             style = UmcTypographyTokens.FootnoteBold,
         )
-        HorizontalDivider(Modifier.weight(1f), color = indigo500())
+        HorizontalDivider(Modifier.weight(1f), color = main300())
     }
 }
 
@@ -1623,16 +1624,13 @@ private fun MessageReactions(
             Surface(
                 modifier = Modifier
                     .padding(end = 5.dp)
-                    .clip(CircleShape)
-                    .semantics { selected = reaction.reactedByMe }
-                    .clickable(
-                        enabled = enabled,
-                        interactionSource = interactionSource,
-                        indication = androidx.compose.material3.ripple(),
-                    ) { onReactionClick(reaction.emoji) },
-                shape = CircleShape,
-                color = white(),
-                border = androidx.compose.foundation.BorderStroke(1.dp, grey200()),
+                    .clickable(enabled = enabled) { onReactionClick(reaction.emoji) },
+                shape = RoundedCornerShape(14.dp),
+                color = selectedColor,
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    if (reaction.reactedByMe) indigo200() else grey200(),
+                ),
             ) {
                 Text(
                     text = "${reaction.emoji} ${reaction.count}",
@@ -1796,7 +1794,7 @@ private fun MessageBubbleContent(
     }
     var imageViewerIndex by remember(message.messageId) { mutableStateOf<Int?>(null) }
     val foreground = if (isMine) white() else grey950()
-    val secondary = if (isMine) indigo100() else grey400()
+    val secondary = if (isMine) main100() else grey400()
     val divider = if (isMine) white().copy(alpha = 0.22f) else grey200()
     val reply = message.replyTo
 
@@ -2239,7 +2237,7 @@ private fun MessageReportSheet(
                         onCheckedChange = { selectedReason = reason },
                         modifier = Modifier.size(24.dp),
                         colors = CheckboxDefaults.colors(
-                            checkedColor = indigo500(),
+                            checkedColor = main500(),
                             uncheckedColor = grey400(),
                             checkmarkColor = white(),
                         ),
@@ -2370,7 +2368,7 @@ private fun PendingMessageRow(
                 color = when {
                     isImage -> Color.Transparent
                     failed -> red100()
-                    else -> indigo200()
+                    else -> main500()
                 },
                 shape = RoundedCornerShape(if (isImage) 16.dp else 12.dp),
                 border = if (failed) {

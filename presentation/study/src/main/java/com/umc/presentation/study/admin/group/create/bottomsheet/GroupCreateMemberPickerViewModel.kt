@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.create.bottomsheet
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
@@ -12,6 +13,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -44,6 +46,13 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
     private var searchJob: Job? = null
 
     /**
+     * 기존 선택 멤버 정보를 다시 조회하는 Job
+     *
+     * 검색과는 따로 두어, 조회 중에 검색을 시작해도 멤버 정보 갱신이 끊기지 않게 합니다.
+     */
+    private var selectedLoadJob: Job? = null
+
+    /**
      * 바텀시트를 처음 열 때 현재 선택된 멤버 목록을 설정합니다.
      *
      * 생성 화면에서 이미 선택되어 있던 스터디원이나
@@ -53,6 +62,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
         list: List<AdminStudyGroupCreateMemberUiModel>,
     ) {
         searchJob?.cancel()
+        selectedLoadJob?.cancel()
 
         updateState {
             copy(
@@ -203,18 +213,20 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
     }
 
     /**
-     * 기존에 선택되어 있던 멤버 ID를 기준으로
-     * 실제 챌린저 정보를 다시 조회합니다.
+     * 기존 선택 멤버를 그대로 둔 채,
+     * 챌린저 검색에서 찾은 멤버만 프로필 이미지 등 최신 정보로 바꿉니다.
      *
-     * 기존 멤버 정보에 프로필 이미지 등의 정보가 없는 경우
-     * API 응답과 매칭하여 완전한 UI 모델을 생성하기 위해 사용합니다.
+     * 검색 결과는 페이지 단위라 모든 멤버를 찾거나 마지막 페이지에 닿을 때까지 이어 받습니다.
+     * 끝내 찾지 못했거나 조회에 실패한 멤버는 기존 정보로 남겨,
+     * 바텀시트를 닫을 때 그룹에서 빠지지 않게 합니다.
      */
     fun loadSelectedMembers(
-        memberIds: List<Long>,
+        preSelected: List<AdminStudyGroupCreateMemberUiModel>,
     ) {
         searchJob?.cancel()
+        selectedLoadJob?.cancel()
 
-        if (memberIds.isEmpty()) {
+        if (preSelected.isEmpty()) {
             setSelected(
                 emptyList(),
             )
@@ -224,7 +236,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
         updateState {
             copy(
                 isLoading = true,
-                selectedMembers = persistentListOf(),
+                selectedMembers = preSelected.toImmutableList(),
                 pendingMembers = persistentListOf(),
                 query = "",
                 isSearching = false,
@@ -232,47 +244,67 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
             )
         }
 
-        viewModelScope.launch {
-            resultResponse(
-                response = searchChallengerScheduleUseCase(
-                    cursor = null,
-                    size = 50,
+        selectedLoadJob = viewModelScope.launch {
+            val remainingIds = preSelected.mapTo(mutableSetOf()) { member -> member.id }
+            val resolvedMembers = mutableMapOf<Long, AdminStudyGroupCreateMemberUiModel>()
+            var cursor: Long? = null
+
+            for (page in 0 until MAX_SELECTED_MEMBER_PAGES) {
+                var hasMore = false
+
+                val response = searchChallengerScheduleUseCase(
+                    cursor = cursor,
+                    size = SELECTED_MEMBER_PAGE_SIZE,
                     name = null,
-                ),
-                successCallback = { response ->
-                    val selectedIdSet = memberIds.toSet()
+                )
+                // 네트워크 호출부가 취소를 실패 응답으로 바꿔 돌려주므로, 시트를 닫았거나 다시 열었으면 여기서 멈춘다
+                ensureActive()
 
-                    val selectedMembers = response.content
-                        .filter { participant ->
-                            participant.id in selectedIdSet
-                        }
-                        .map { participant ->
-                            toMemberUiModel(
-                                id = participant.id,
-                                name = participant.name,
-                                nickname = participant.nickname,
-                                gisu = participant.gisu,
-                                partLabel = participant.userPart.label,
-                                school = participant.school,
-                                profileImageUrl = participant.profileImage,
-                            )
-                        }
+                resultResponse(
+                    response = response,
+                    successCallback = { response ->
+                        response.content
+                            .filter { participant ->
+                                participant.id in remainingIds
+                            }
+                            .forEach { participant ->
+                                resolvedMembers[participant.id] = toMemberUiModel(
+                                    id = participant.id,
+                                    name = participant.name,
+                                    nickname = participant.nickname,
+                                    gisu = participant.gisu,
+                                    partLabel = participant.userPart.label,
+                                    school = participant.school,
+                                    profileImageUrl = participant.profileImage,
+                                )
+                                remainingIds -= participant.id
+                            }
 
-                    updateState {
-                        copy(
-                            selectedMembers = selectedMembers.toImmutableList(),
-                            isLoading = false,
+                        cursor = response.nextCursor
+                        hasMore = response.hasNext && response.nextCursor != null
+                    },
+                    errorCallback = { failState ->
+                        // 실패해도 기존 선택 멤버는 그대로 두고 조회만 멈춘다. 정보가 갱신되지 않은 원인을 추적할 수 있게 남긴다
+                        Log.w(
+                            "GroupCreateMemberPicker",
+                            "선택 멤버 정보 재조회 실패(page=$page): ${failState.code} ${failState.message}"
                         )
-                    }
-                },
-                errorCallback = {
-                    updateState {
-                        copy(
-                            isLoading = false,
-                        )
-                    }
-                },
-            )
+                    },
+                )
+
+                if (remainingIds.isEmpty() || !hasMore) break
+            }
+
+            updateState {
+                copy(
+                    // 조회하는 동안 사용자가 지운 멤버는 다시 넣지 않는다
+                    selectedMembers = selectedMembers.map { member ->
+                        resolvedMembers[member.id] ?: member
+                    }.toImmutableList(),
+                    // 그 사이 검색을 시작했다면 검색 쪽 로딩 표시는 검색 요청이 정리한다
+                    isLoading = if (isSearching) isLoading else false,
+                )
+            }
         }
     }
 
@@ -449,10 +481,16 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
      */
     fun resetAfterDismiss() {
         searchJob?.cancel()
+        selectedLoadJob?.cancel()
 
         updateState {
             GroupCreateMemberPickerState()
         }
+    }
+
+    private companion object {
+        const val SELECTED_MEMBER_PAGE_SIZE = 100
+        const val MAX_SELECTED_MEMBER_PAGES = 20
     }
 }
 

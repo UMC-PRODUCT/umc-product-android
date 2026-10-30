@@ -92,7 +92,8 @@ class AppDataStore @Inject constructor(
 
             hasLocalCredential = prefs[KEY_HAS_LOCAL_CREDENTIAL] ?: false,
             totalActivityDays = prefs[KEY_TOTAL_ACTIVITY_DAYS] ?: 0L,
-            currentGisuMemberInfo = currentGisuData
+            currentGisuMemberInfo = currentGisuData,
+            isSuperAdmin = prefs[KEY_IS_SUPER_ADMIN] ?: false
         )
     }
 
@@ -114,6 +115,7 @@ class AppDataStore @Inject constructor(
             prefs[KEY_PROFILE] = gson.toJson(userInfo.profile)
             prefs[KEY_HAS_LOCAL_CREDENTIAL] = userInfo.hasLocalCredential
             prefs[KEY_TOTAL_ACTIVITY_DAYS] = userInfo.totalActivityDays
+            prefs[KEY_IS_SUPER_ADMIN] = userInfo.isSuperAdmin
             if (userInfo.currentGisuMemberInfo != null) {
                 prefs[KEY_CURRENT_GISU_INFO] = gson.toJson(userInfo.currentGisuMemberInfo)
             } else {
@@ -426,6 +428,7 @@ class AppDataStore @Inject constructor(
         val KEY_HAS_LOCAL_CREDENTIAL = booleanPreferencesKey("has_local_credential")
         val KEY_TOTAL_ACTIVITY_DAYS = longPreferencesKey("total_activity_days")
         val KEY_CURRENT_GISU_INFO = stringPreferencesKey("current_gisu_info")
+        val KEY_IS_SUPER_ADMIN = booleanPreferencesKey("is_super_admin")
 
 
         //유저 명하 목록 KEY

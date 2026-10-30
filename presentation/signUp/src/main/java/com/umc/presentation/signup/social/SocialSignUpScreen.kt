@@ -53,8 +53,8 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo700
+import com.umc.component.theme.main500
+import com.umc.component.theme.main700
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.domain.model.enums.EmailVerifyType
@@ -172,8 +172,8 @@ fun SocialSignUpScreen(
                 text = AppStrings.NEXT,
                 onClick = onClickNext,
                 enabled = uiState.enableNextButton,
-                backgroundColor = if (uiState.enableNextButton) indigo500() else grey100(),
-                pressedColor = indigo700(),
+                backgroundColor = if (uiState.enableNextButton) main500() else grey100(),
+                pressedColor = main700(),
                 textColor = if (uiState.enableNextButton) grey000() else grey300(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 10.dp,
@@ -253,8 +253,8 @@ private fun EmailVerifySection(
             text = AppStrings.SIGN_UP_VERIFY_REQUEST,
             onClick = onClickVerify,
             enabled = isVerifyEnabled,
-            backgroundColor = if (isVerifyEnabled) indigo500() else grey100(),
-            pressedColor = indigo700(),
+            backgroundColor = if (isVerifyEnabled) main500() else grey100(),
+            pressedColor = main700(),
             textColor = if (isVerifyEnabled) grey000() else grey300(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             cornerRadius = 10.dp,

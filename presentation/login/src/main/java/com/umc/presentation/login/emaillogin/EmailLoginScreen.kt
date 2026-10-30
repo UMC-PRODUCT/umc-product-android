@@ -50,7 +50,7 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import kotlinx.coroutines.flow.collectLatest
@@ -259,7 +259,7 @@ fun EmailLoginScreen(
                 text = AppStrings.LOGIN,
                 onClick = onClickLogin,
                 enabled = uiState.enableLoginButton,
-                backgroundColor = if (uiState.enableLoginButton) indigo500() else grey100(),
+                backgroundColor = if (uiState.enableLoginButton) main500() else grey100(),
                 textColor = if (uiState.enableLoginButton) grey000() else grey300(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 10.dp,

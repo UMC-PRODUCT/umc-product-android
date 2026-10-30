@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,6 +57,9 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
+import com.umc.component.theme.red100
+import com.umc.component.theme.red500
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 import kotlinx.collections.immutable.ImmutableList
 import com.umc.component.base.CollectUiEvents
@@ -186,7 +190,7 @@ fun CommunityMemberBottomSheet(
                             modifier = Modifier.align(
                                 Alignment.Center,
                             ),
-                            color = indigo500(),
+                            color = main500(),
                         )
                     }
 
@@ -217,6 +221,7 @@ fun CommunityMemberBottomSheet(
                             enabled = state.canManage && !state.isUpdatingMembers,
                             isLoadingMore = state.isLoadingMore,
                             hasNext = state.hasNext,
+                            errorMessage = state.errorMessage,
                             onToggleClick = { member ->
                                 viewModel.toggleMember(
                                     member = member,
@@ -279,7 +284,7 @@ private fun CommunityMemberBottomSheetHeader(
                     .width(64.dp)
                     .height(36.dp),
                 backgroundColor = if (isConfirmEnabled) {
-                    indigo500()
+                    main500()
                 } else {
                     grey100()
                 },
@@ -379,6 +384,7 @@ private fun CommunityMemberSearchContent(
     enabled: Boolean,
     isLoadingMore: Boolean,
     hasNext: Boolean,
+    errorMessage: String? = null,
     onToggleClick: (CommunityChallengerUiModel) -> Unit,
     onLoadMore: () -> Unit,
 ) {
@@ -390,6 +396,12 @@ private fun CommunityMemberSearchContent(
             member.partLabel
         }
         .toList()
+
+    // derivedStateOf 는 처음 한 번만 만들어지므로, 파라미터를 직접 읽으면 처음 값에 묶여 다음 페이지를 영영 부르지 못한다
+    val currentHasNext by rememberUpdatedState(hasNext)
+    val currentIsLoadingMore by rememberUpdatedState(isLoadingMore)
+    // 추가 페이지 요청이 실패하면 hasNext 가 남아 같은 요청을 쉬지 않고 반복하므로, 오류가 있는 동안은 자동으로 부르지 않는다(검색어를 바꾸면 오류가 지워진다)
+    val currentHasError by rememberUpdatedState(errorMessage != null)
 
     /**
      * 리스트 마지막 영역에 가까워졌을 때
@@ -405,8 +417,9 @@ private fun CommunityMemberSearchContent(
             lastVisibleItemIndex != null &&
                     lastVisibleItemIndex >=
                     listState.layoutInfo.totalItemsCount - 3 &&
-                    hasNext &&
-                    !isLoadingMore
+                    currentHasNext &&
+                    !currentIsLoadingMore &&
+                    !currentHasError
         }
     }
 
@@ -480,7 +493,7 @@ private fun CommunityMemberSearchContent(
                 ) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = indigo500(),
+                        color = main500(),
                         strokeWidth = 2.dp,
                     )
                 }
