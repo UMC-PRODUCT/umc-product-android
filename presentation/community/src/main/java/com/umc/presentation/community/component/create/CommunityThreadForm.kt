@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
@@ -17,6 +20,7 @@ import com.umc.component.component.UTextField
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey950
+import com.umc.component.theme.indigo500
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
@@ -120,8 +124,15 @@ private fun CommunityThreadFormLabel(
             color = grey950(),
         )
 
+        // 현재 글자 수만 강조색, "/최대 글자 수"는 회색
+        val countColor = indigo500()
         UText(
-            text = "$count/$maxCount",
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(color = countColor)) {
+                    append(count.toString())
+                }
+                append("/$maxCount")
+            },
             style = UmcTypographyTokens.Subheadline,
             color = grey400(),
         )

@@ -22,17 +22,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey950
 import com.umc.component.theme.indigo500
 import com.umc.presentation.community.R
+import com.umc.presentation.community.component.create.CommunityChallengerCard
+import com.umc.presentation.community.component.create.CommunityDeleteButton
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 스레드 생성/수정 화면이 함께 쓰는 입력 화면의 모드
@@ -293,7 +298,7 @@ private fun CommunityThreadEditorFields(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        _root_ide_package_.com.umc.presentation.community.component.create.CommunityChallengerCard(
+        CommunityChallengerCard(
             challengers = challengers,
             maxCount = maxChallengerCount,
             currentCount = currentChallengerCount,
@@ -304,7 +309,7 @@ private fun CommunityThreadEditorFields(
 
         // 스레드 삭제 버튼 (수정 모드 + 삭제 권한이 있을 때만)
         if (mode is CommunityThreadEditorMode.Edit && mode.canDelete) {
-            _root_ide_package_.com.umc.presentation.community.component.create.CommunityDeleteButton(
+            CommunityDeleteButton(
                 onClick = onDeleteClick,
             )
 
@@ -342,5 +347,67 @@ private fun CommunityCategory.previewIconRes(): Int {
         CommunityCategory.ALL,
         CommunityCategory.UNREAD,
             -> R.drawable.ic_category_study
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CommunityThreadEditorFieldsCreatePreview() {
+    UmcTheme {
+        CommunityThreadEditorFields(
+            mode = CommunityThreadEditorMode.Create,
+            title = "안드로이드 스터디",
+            description = "매주 과제를 인증하고 코드 리뷰를 주고받아요",
+            selectedCategory = CommunityCategory.STUDY,
+            challengers = persistentListOf(
+                CommunityChallengerUiModel(
+                    memberId = 1L,
+                    name = "김챌린저",
+                    nickname = "챌린",
+                    school = "UMC대학교",
+                    generation = 9L,
+                    partLabel = "Android",
+                    profileImage = "",
+                ),
+            ),
+            maxChallengerCount = 10,
+            currentChallengerCount = 1,
+            onTitleChanged = {},
+            onDescriptionChanged = {},
+            onCategorySelected = {},
+            onChallengerCardClick = {},
+            onDeleteClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CommunityThreadEditorFieldsEditPreview() {
+    UmcTheme {
+        CommunityThreadEditorFields(
+            mode = CommunityThreadEditorMode.Edit(canDelete = true),
+            title = "안드로이드 스터디",
+            description = "매주 과제를 인증하고 코드 리뷰를 주고받아요",
+            selectedCategory = CommunityCategory.FREE,
+            challengers = persistentListOf(
+                CommunityChallengerUiModel(
+                    memberId = 1L,
+                    name = "김챌린저",
+                    nickname = "챌린",
+                    school = "UMC대학교",
+                    generation = 9L,
+                    partLabel = "Android",
+                    profileImage = "",
+                ),
+            ),
+            maxChallengerCount = 10,
+            currentChallengerCount = 1,
+            onTitleChanged = {},
+            onDescriptionChanged = {},
+            onCategorySelected = {},
+            onChallengerCardClick = {},
+            onDeleteClick = {},
+        )
     }
 }
