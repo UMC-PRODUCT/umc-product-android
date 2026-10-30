@@ -86,6 +86,7 @@ fun UBasicDialog(
     positiveBorderColor: Color? = null,
     positiveTextColor: Color? = null,
     useCompactStyle: Boolean = false,
+    iconResOverride: Int? = null,
 ) {
 
     //type에 따라 시각적 요소(색상, 아이콘)를 결정
@@ -166,7 +167,7 @@ fun UBasicDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = iconRes as Int),
+                        painter = painterResource(id = iconResOverride ?: iconRes as Int),
                         contentDescription = null,
                         tint = iconTintColor as Color,
                         modifier = Modifier.size(24.dp)

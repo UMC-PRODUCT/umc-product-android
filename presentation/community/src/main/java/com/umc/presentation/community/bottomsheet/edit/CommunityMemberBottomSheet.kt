@@ -1,7 +1,18 @@
 package com.umc.presentation.community.bottomsheet.edit
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import com.umc.component.theme.grey950
+import com.umc.presentation.community.component.chatting.CommunityChatProfileImage
 import android.widget.Toast
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,9 +39,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -40,7 +48,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.umc.component.R
 import com.umc.component.base.CollectUiEvents
 import com.umc.component.component.UButton
@@ -54,7 +61,6 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.grey900
 import com.umc.component.theme.main500
 import com.umc.presentation.community.component.CommunityMemberSearchField
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -80,6 +86,8 @@ fun CommunityMemberBottomSheet(
     viewModel: CommunityMemberBottomSheetViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val searchFocusRequester = remember { FocusRequester() }
+    var searchFocused by remember { mutableStateOf(false) }
     val sheetHeight = LocalConfiguration.current.screenHeightDp.dp * 0.7f
     var toastData by remember(threadId) { mutableStateOf<UToastData?>(null) }
 
@@ -142,21 +150,22 @@ fun CommunityMemberBottomSheet(
                 .padding(horizontal = 16.dp),
         ) {
             CommunityMemberBottomSheetHeader(
-                title = if (state.isSearching) {
+                title = if (state.isSearching || searchFocused) {
                     "초대할 챌린저를 검색하세요"
                 } else {
                     "초대할 챌린저를 추가하세요"
                 },
-                showConfirmButton = state.isSearching,
-                isConfirmEnabled = state.isConfirmEnabled,
+                isSearching = state.isSearching || searchFocused,
+                isConfirmEnabled = if (state.isSearching || searchFocused) state.isConfirmEnabled else state.canManage && !state.isUpdatingMembers,
                 isUpdatingMembers = state.isUpdatingMembers,
                 onConfirmClick = {
-                    viewModel.updateMembers()
+                    if (state.isSearching || searchFocused) viewModel.updateMembers()
+                    else { searchFocusRequester.requestFocus(); keyboard?.show() }
                 },
             )
 
             Spacer(
-                modifier = Modifier.height(18.dp),
+                modifier = Modifier.height(24.dp),
             )
 
             /**
@@ -168,10 +177,14 @@ fun CommunityMemberBottomSheet(
             CommunityMemberSearchField(
                 value = state.query,
                 onValueChange = viewModel::searchMembers,
+                modifier = Modifier.focusRequester(searchFocusRequester).onFocusChanged { searchFocused = it.isFocused },
+                placeholder = "이름을 입력해주세요",
+                fieldHeight = 52.dp,
+                showClearButton = true,
             )
 
             Spacer(
-                modifier = Modifier.height(28.dp),
+                modifier = Modifier.height(24.dp),
             )
 
             Box(
@@ -202,10 +215,11 @@ fun CommunityMemberBottomSheet(
                     state.isEmpty -> {
                         CommunityMemberEmptyContent(
                             text = if (state.isSearching) {
-                                "검색 결과가 없어요"
+                                "검색 결과가 없습니다."
                             } else {
-                                "현재 참여 중인 챌린저가 없어요"
+                                "아직 초대한 챌린저가 없어요"
                             },
+                            iconRes = if (state.isSearching) R.drawable.ic_search else R.drawable.ic_community_invite_empty,
                         )
                     }
 
@@ -244,55 +258,38 @@ fun CommunityMemberBottomSheet(
 /**
  * BottomSheet 상단 Header입니다.
  *
- * 검색 중일 때만 확인 버튼을 표시합니다.
+ * 기본 화면은 추가, 검색/선택 화면은 초대 버튼을 표시합니다.
  */
 @Composable
 private fun CommunityMemberBottomSheetHeader(
     title: String,
-    showConfirmButton: Boolean,
+    isSearching: Boolean,
     isConfirmEnabled: Boolean,
     isUpdatingMembers: Boolean,
     onConfirmClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         UText(
             text = title,
             style = UmcTypographyTokens.Title3Bold,
-            color = grey800(),
-            modifier = Modifier.weight(1f),
+            color = grey950(),
+            modifier = Modifier.weight(1f).heightIn(min = 32.dp),
         )
-
-        if (showConfirmButton) {
-            UButton(
-                text = if (isUpdatingMembers) {
-                    "처리 중"
-                } else {
-                    "확인"
-                },
-                onClick = onConfirmClick,
-                enabled = isConfirmEnabled,
-                modifier = Modifier
-                    .width(64.dp)
-                    .height(36.dp),
-                backgroundColor = if (isConfirmEnabled) {
-                    main500()
-                } else {
-                    grey100()
-                },
-                textColor = if (isConfirmEnabled) {
-                    grey000()
-                } else {
-                    grey400()
-                },
-                textStyle = UmcTypographyTokens.SubheadlineBold,
-                cornerRadius = 8.dp,
-            )
-        }
+        UButton(
+            text = if (isUpdatingMembers) "처리 중" else if (isSearching) "초대" else "추가",
+            onClick = onConfirmClick,
+            enabled = isConfirmEnabled,
+            modifier = Modifier.widthIn(min = 50.dp).heightIn(min = 32.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+            backgroundColor = if (isConfirmEnabled) main500() else grey100(),
+            textColor = if (isConfirmEnabled) grey000() else grey400(),
+            textStyle = UmcTypographyTokens.SubheadlineBold,
+            cornerRadius = 8.dp,
+        )
     }
 }
 
@@ -305,6 +302,7 @@ private fun CommunityCurrentMemberContent(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         items(
             items = members,
@@ -329,7 +327,7 @@ private fun CommunityCurrentMemberRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .height(48.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CommunityMemberProfile(
@@ -428,6 +426,7 @@ private fun CommunityMemberSearchContent(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = listState,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         groupedMembers.forEach { (partLabel, partMembers) ->
             item(
@@ -435,13 +434,13 @@ private fun CommunityMemberSearchContent(
             ) {
                 UText(
                     text = partLabel,
-                    style = UmcTypographyTokens.BodyBold,
-                    color = grey900(),
+                    style = UmcTypographyTokens.Callout,
+                    color = grey950(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            top = 4.dp,
-                            bottom = 8.dp,
+                            top = 0.dp,
+                            bottom = 0.dp,
                         ),
                 )
             }
@@ -511,11 +510,9 @@ private fun CommunityMemberSearchRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
-                enabled = isEnabled,
-                onClick = onToggleClick,
-            )
-            .padding(vertical = 12.dp),
+            .toggleable(value = isChecked, enabled = isEnabled, role = Role.Checkbox,
+                onValueChange = { onToggleClick() })
+            .height(48.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CommunityMemberProfile(
@@ -548,7 +545,7 @@ private fun CommunityMemberSearchRow(
 
             UText(
                 text = member.school,
-                style = UmcTypographyTokens.Footnote,
+                style = UmcTypographyTokens.Caption1,
                 color = if (isEnabled) {
                     grey600()
                 } else {
@@ -583,29 +580,30 @@ private fun CommunityMemberSearchRow(
 @Composable
 private fun CommunityMemberEmptyContent(
     text: String,
+    @DrawableRes iconRes: Int = R.drawable.ic_community_invite_empty,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 28.dp),
+            .padding(top = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
             painter = painterResource(
-                id = R.drawable.ic_people,
+                id = iconRes,
             ),
             contentDescription = null,
             tint = grey400(),
-            modifier = Modifier.size(42.dp),
+            modifier = Modifier.size(48.dp),
         )
 
         Spacer(
-            modifier = Modifier.height(12.dp),
+            modifier = Modifier.height(16.dp),
         )
 
         UText(
             text = text,
-            style = UmcTypographyTokens.Body,
+            style = UmcTypographyTokens.Callout,
             color = grey600(),
         )
     }
@@ -618,28 +616,8 @@ private fun CommunityMemberEmptyContent(
  * URL이 없으면 기본 프로필 아이콘을 표시합니다.
  */
 @Composable
-private fun CommunityMemberProfile(
-    profileImage: String,
-) {
-    if (profileImage.isNotBlank()) {
-        AsyncImage(
-            model = profileImage,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape),
-        )
-    } else {
-        Icon(
-            painter = painterResource(
-                id = R.drawable.ic_profile_default,
-            ),
-            contentDescription = null,
-            tint = Color.Unspecified,
-            modifier = Modifier.size(32.dp),
-        )
-    }
+private fun CommunityMemberProfile(profileImage: String) {
+    CommunityChatProfileImage(profileImage, useThreadStyle = true)
 }
 
 /**

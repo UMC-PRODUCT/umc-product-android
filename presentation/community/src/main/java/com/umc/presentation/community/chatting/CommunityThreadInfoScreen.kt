@@ -289,42 +289,34 @@ internal fun CommunityThreadInfoScreen(
         )
     }
     pendingBatch?.let { (ids, action) ->
-        val removingAdmin = action == CommunityParticipantBatchAction.REMOVE_ADMIN
-        UDialog(
-            title = if (removingAdmin) AppStrings.CHAT_REMOVE_ADMIN else AppStrings.CHAT_KICK_SELECTED_TITLE_FORMAT.format(ids.size),
-            content = if (removingAdmin) AppStrings.CHAT_REMOVE_SELECTED_ADMIN_DESCRIPTION_FORMAT.format(ids.size) else AppStrings.CHAT_KICK_SELECTED_DESCRIPTION,
-            isTwoButton = true, useCompactStyle = true,
-            negativeText = AppStrings.CHAT_CANCEL,
-            positiveText = if (removingAdmin) AppStrings.CHAT_REMOVE_SELECTED_ADMIN_CONFIRM else AppStrings.CHAT_KICK,
-            negativeBackgroundColor = grey100(), negativeTextColor = grey700(),
-            positiveBackgroundColor = if (removingAdmin) main500() else red100(),
-            positiveTextColor = if (removingAdmin) white() else red500(),
-            onDismissRequest = { pendingBatch = null }, onNegative = { pendingBatch = null },
-            onPositive = { pendingBatch = null; onManageSelected(ids.intersect(manageableIds), action) },
-        )
+        if (action == CommunityParticipantBatchAction.REMOVE_ADMIN) {
+            UDialog(
+                title = AppStrings.CHAT_REMOVE_ADMIN,
+                content = AppStrings.CHAT_REMOVE_SELECTED_ADMIN_DESCRIPTION_FORMAT.format(ids.size),
+                isTwoButton = true, useCompactStyle = true,
+                negativeText = AppStrings.CHAT_CANCEL,
+                positiveText = AppStrings.CHAT_REMOVE_SELECTED_ADMIN_CONFIRM,
+                negativeBackgroundColor = grey100(), negativeTextColor = grey700(),
+                positiveBackgroundColor = main500(), positiveTextColor = white(),
+                onDismissRequest = { pendingBatch = null }, onNegative = { pendingBatch = null },
+                onPositive = { pendingBatch = null; onManageSelected(ids.intersect(manageableIds), action) },
+            )
+        } else {
+            ParticipantKickDialog(
+                title = AppStrings.CHAT_KICK_SELECTED_TITLE_FORMAT.format(ids.size),
+                content = AppStrings.CHAT_KICK_SELECTED_DESCRIPTION,
+                onConfirm = { pendingBatch = null; onManageSelected(ids.intersect(manageableIds), action) },
+                onDismiss = { pendingBatch = null },
+            )
+        }
     }
 
     pendingKickMember?.let { member ->
-        UBasicDialog(
-            title = AppStrings.CHAT_KICK_TITLE_FORMAT.format(
-                member.name.ifBlank { AppStrings.CHAT_PARTICIPANT_DEFAULT },
-            ),
+        ParticipantKickDialog(
+            title = AppStrings.CHAT_KICK_TITLE_FORMAT.format(member.name.ifBlank { AppStrings.CHAT_PARTICIPANT_DEFAULT }),
             content = AppStrings.CHAT_KICK_DESCRIPTION,
-            negativeText = AppStrings.CHAT_CANCEL,
-            positiveText = AppStrings.CHAT_KICK,
-            type = DialogType.WARNING,
-            showCloseButton = false,
-            negativeBackgroundColor = grey100(),
-            negativeBorderColor = grey100(),
-            positiveBackgroundColor = red100(),
-            positiveBorderColor = red100(),
-            positiveTextColor = red500(),
-            onPositive = {
-                onKickMember(member.memberId)
-                pendingKickMember = null
-            },
-            onNegative = { pendingKickMember = null },
-            onDismissRequest = { pendingKickMember = null },
+            onConfirm = { onKickMember(member.memberId); pendingKickMember = null },
+            onDismiss = { pendingKickMember = null },
         )
     }
 
@@ -350,6 +342,28 @@ internal fun CommunityThreadInfoScreen(
             onDismissRequest = { pendingOwnershipMember = null },
         )
     }
+}
+
+@Composable
+private fun ParticipantKickDialog(
+    title: String,
+    content: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    UBasicDialog(
+        title = title,
+        content = content,
+        negativeText = AppStrings.CHAT_CANCEL,
+        positiveText = AppStrings.CHAT_KICK,
+        type = DialogType.ERROR,
+        useCompactStyle = true,
+        showCloseButton = false,
+        iconResOverride = R.drawable.ic_toast_error,
+        negativeBackgroundColor = grey100(), negativeBorderColor = grey100(), negativeTextColor = grey700(),
+        positiveBackgroundColor = red100(), positiveBorderColor = red100(), positiveTextColor = red500(),
+        onPositive = onConfirm, onNegative = onDismiss, onDismissRequest = onDismiss,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

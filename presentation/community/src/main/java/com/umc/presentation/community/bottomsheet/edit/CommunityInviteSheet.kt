@@ -18,8 +18,8 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -49,9 +49,9 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import android.view.WindowManager
 import com.umc.component.theme.AppStrings
-import com.umc.component.theme.black
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey600
+import com.umc.component.theme.grey800
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -98,7 +98,7 @@ internal fun CommunityInviteSheet(
         }
         Box(Modifier.fillMaxSize()) {
             Box(
-                Modifier.fillMaxSize().background(black().copy(alpha = 0.32f))
+                Modifier.fillMaxSize().background(grey800().copy(alpha = 0.6f))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -139,7 +139,11 @@ internal fun CommunityInviteSheet(
                                 ),
                             contentAlignment = Alignment.Center,
                         ) {
-                            BottomSheetDefaults.DragHandle(color = grey600())
+                            Box(
+                                Modifier.align(Alignment.TopCenter).padding(top = 16.dp)
+                                    .size(width = 32.dp, height = 4.dp)
+                                    .background(grey600(), RoundedCornerShape(100.dp)),
+                            )
                         }
                         content()
                     }
