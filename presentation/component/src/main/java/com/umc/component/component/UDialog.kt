@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -102,6 +103,9 @@ fun UDialog(
     useCompactStyle: Boolean = false,
 ) {
     val description = subtitle ?: content
+    val buttonHeight = if (useCompactStyle) Modifier.heightIn(min = 42.dp) else Modifier
+    val buttonTextStyle = if (useCompactStyle) UmcTypographyTokens.CalloutBold else UmcTypographyTokens.SubheadlineBold
+    val buttonPadding = if (useCompactStyle) PaddingValues(0.dp) else PaddingValues(vertical = 14.dp)
 
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -176,10 +180,10 @@ fun UDialog(
                     UButton(
                         text = negativeText,
                         onClick = onNegative,
-                        modifier = Modifier.weight(1f).then(if (useCompactStyle) Modifier.height(42.dp) else Modifier),
+                        modifier = Modifier.weight(1f).then(buttonHeight),
                         backgroundColor = negativeBackgroundColor,
                         textColor = negativeTextColor,
-                        textStyle = if (useCompactStyle) UmcTypographyTokens.CalloutBold else UmcTypographyTokens.SubheadlineBold,
+                        textStyle = buttonTextStyle,
                         borderWidth = if (
                             negativeBorderColor == Color.Transparent
                         ) {
@@ -189,7 +193,7 @@ fun UDialog(
                         },
                         borderColor = negativeBorderColor,
                         cornerRadius = 8.dp,
-                        contentPadding = if (useCompactStyle) PaddingValues(0.dp) else PaddingValues(vertical = 14.dp),
+                        contentPadding = buttonPadding,
                     )
 
                     Spacer(
@@ -201,10 +205,10 @@ fun UDialog(
                     UButton(
                         text = positiveText,
                         onClick = onPositive,
-                        modifier = Modifier.weight(1f).then(if (useCompactStyle) Modifier.height(42.dp) else Modifier),
+                        modifier = Modifier.weight(1f).then(buttonHeight),
                         backgroundColor = positiveBackgroundColor,
                         textColor = positiveTextColor,
-                        textStyle = if (useCompactStyle) UmcTypographyTokens.CalloutBold else UmcTypographyTokens.SubheadlineBold,
+                        textStyle = buttonTextStyle,
                         borderWidth = if (
                             positiveBorderColor == Color.Transparent
                         ) {
@@ -214,7 +218,7 @@ fun UDialog(
                         },
                         borderColor = positiveBorderColor,
                         cornerRadius = 8.dp,
-                        contentPadding = if (useCompactStyle) PaddingValues(0.dp) else PaddingValues(vertical = 14.dp),
+                        contentPadding = buttonPadding,
                     )
                 }
             } else {
@@ -222,12 +226,12 @@ fun UDialog(
                     text = confirmText,
                     onClick = onConfirm,
                     modifier = Modifier.fillMaxWidth()
-                        .then(if (useCompactStyle) Modifier.height(42.dp) else Modifier),
+                        .then(buttonHeight),
                     backgroundColor = confirmBackgroundColor,
                     textColor = confirmTextColor,
-                    textStyle = if (useCompactStyle) UmcTypographyTokens.CalloutBold else UmcTypographyTokens.SubheadlineBold,
+                    textStyle = buttonTextStyle,
                     cornerRadius = 8.dp,
-                    contentPadding = if (useCompactStyle) PaddingValues(0.dp) else PaddingValues(vertical = 14.dp),
+                    contentPadding = buttonPadding,
                 )
             }
         }

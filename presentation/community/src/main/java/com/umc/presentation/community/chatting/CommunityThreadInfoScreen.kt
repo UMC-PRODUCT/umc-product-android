@@ -14,6 +14,10 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.ui.semantics.Role
 import com.umc.component.component.UButton
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -89,8 +93,8 @@ import com.umc.presentation.community.component.chatting.CommunityChatProfileIma
 
 @Composable
 internal fun CommunityThreadInfoScreen(
-    members: List<CommunityThreadMember>,
-    memberProfiles: Map<String, CommunityParticipantProfile>,
+    members: ImmutableList<CommunityThreadMember>,
+    memberProfiles: ImmutableMap<String, CommunityParticipantProfile>,
     memberCount: String,
     myMemberId: String,
     isOwner: Boolean,
@@ -103,7 +107,7 @@ internal fun CommunityThreadInfoScreen(
     onManageSelected: (Set<String>, CommunityParticipantBatchAction) -> Unit,
     isManagingParticipants: Boolean = false,
     managementRevision: Int = 0,
-    managedParticipantIds: Set<String> = emptySet(),
+    managedParticipantIds: ImmutableSet<String> = persistentSetOf(),
     toastGeneration: Int = 0,
     toastData: UToastData? = null,
     onToastDismiss: () -> Unit = {},
@@ -464,41 +468,66 @@ private fun ParticipantRow(
                         modifier = Modifier.size(24.dp),
                     )
                 }
-                if (menuExpanded) Popup(
-                    popupPositionProvider = remember {
-                        object : PopupPositionProvider {
-                            override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize,
-                                layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
-                                val x = (anchorBounds.right - popupContentSize.width).coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
-                                val y = if (anchorBounds.bottom + popupContentSize.height <= windowSize.height) anchorBounds.bottom
-                                    else (anchorBounds.top - popupContentSize.height).coerceAtLeast(0)
-                                return IntOffset(x, y)
-                            }
-                        }
-                    },
-                    onDismissRequest = { menuExpanded = false }, properties = PopupProperties(focusable = true),
-                ) {
-                    Surface(Modifier.width(160.dp), shape = RoundedCornerShape(16.dp), color = white(), shadowElevation = 8.dp) {
-                        Column {
-                    ParticipantMenuItem(AppStrings.CHAT_VIEW_PROFILE, R.drawable.ic_person) {
-                        menuExpanded = false; onViewProfile()
+                if (menuExpanded) ParticipantActionMenu(
+                    permissions = permissions,
+                    memberRole = member.role,
+                    onDismiss = { menuExpanded = false },
+                    onViewProfile = onViewProfile,
+                    onTransferOwnership = onTransferOwnership,
+                    onToggleAdmin = onToggleAdmin,
+                    onKick = onKick,
+                )
+            }
+        }
+    }
+}
+
+private object ParticipantMenuPositionProvider : PopupPositionProvider {
+    override fun calculatePosition(
+        anchorBounds: IntRect,
+        windowSize: IntSize,
+        layoutDirection: LayoutDirection,
+        popupContentSize: IntSize,
+    ): IntOffset {
+        val x = (anchorBounds.right - popupContentSize.width)
+            .coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
+        val y = if (anchorBounds.bottom + popupContentSize.height <= windowSize.height) anchorBounds.bottom
+            else (anchorBounds.top - popupContentSize.height).coerceAtLeast(0)
+        return IntOffset(x, y)
+    }
+}
+
+@Composable
+private fun ParticipantActionMenu(
+    permissions: CommunityParticipantMenuPermissions,
+    memberRole: CommunityThreadRole,
+    onDismiss: () -> Unit,
+    onViewProfile: () -> Unit,
+    onTransferOwnership: () -> Unit,
+    onToggleAdmin: () -> Unit,
+    onKick: () -> Unit,
+) {
+    Popup(
+        popupPositionProvider = ParticipantMenuPositionProvider,
+        onDismissRequest = onDismiss,
+        properties = PopupProperties(focusable = true),
+    ) {
+        Surface(Modifier.width(160.dp), shape = RoundedCornerShape(16.dp), color = white(), shadowElevation = 8.dp) {
+            Column {
+                ParticipantMenuItem(AppStrings.CHAT_VIEW_PROFILE, R.drawable.ic_person) { onDismiss(); onViewProfile() }
+                if (permissions.canTransfer) {
+                    ParticipantMenuItem(AppStrings.CHAT_TRANSFER_OWNER, R.drawable.ic_swap_horizontal) {
+                        onDismiss(); onTransferOwnership()
                     }
-                    if (permissions.canTransfer) {
-                        ParticipantMenuItem(AppStrings.CHAT_TRANSFER_OWNER, R.drawable.ic_swap_horizontal) {
-                            menuExpanded = false
-                            onTransferOwnership()
-                        }
-                    }
-                    if (permissions.canChangeAdmin) ParticipantMenuItem(
-                        if (member.role == CommunityThreadRole.ADMIN) AppStrings.CHAT_REMOVE_ADMIN else AppStrings.CHAT_ASSIGN_ADMIN,
+                }
+                if (permissions.canChangeAdmin) {
+                    ParticipantMenuItem(
+                        if (memberRole == CommunityThreadRole.ADMIN) AppStrings.CHAT_REMOVE_ADMIN else AppStrings.CHAT_ASSIGN_ADMIN,
                         R.drawable.ic_shield_check,
-                    ) { menuExpanded = false; onToggleAdmin() }
-                    if (permissions.canKick) ParticipantMenuItem(AppStrings.CHAT_KICK, R.drawable.ic_block, red500()) {
-                        menuExpanded = false
-                        onKick()
-                    }
-                        }
-                    }
+                    ) { onDismiss(); onToggleAdmin() }
+                }
+                if (permissions.canKick) {
+                    ParticipantMenuItem(AppStrings.CHAT_KICK, R.drawable.ic_block, red500()) { onDismiss(); onKick() }
                 }
             }
         }

@@ -227,9 +227,9 @@ class CommunityChattingViewModel @Inject constructor(
                 detail.data.unreadCount.toIntOrNull()?.coerceAtLeast(0) ?: 0
             }
             val entryDeletedMessageIds = communityDeletedMessageIds(loadedMessages, uiState.value.knownDeletedMessageIds)
-            val entryUnreadMessages = communityUnreadSummaryCandidates(
-                loadedMessages, entryDeletedMessageIds, unreadCount.coerceAtMost(MAX_SUMMARY_MESSAGE_COUNT),
-            )
+            val entryUnreadMessages = communityEntryUnreadMessages(
+                loadedMessages, entryDeletedMessageIds, unreadCount,
+            ).take(MAX_SUMMARY_MESSAGE_COUNT)
             val isInitialSummaryCandidateCapture = !hasCapturedEntryUnreadMessages
             updateState {
                 copy(

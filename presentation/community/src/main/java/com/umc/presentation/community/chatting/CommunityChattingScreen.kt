@@ -1,5 +1,8 @@
 package com.umc.presentation.community.chatting
 
+import kotlinx.collections.immutable.toImmutableMap
+import kotlinx.collections.immutable.toImmutableSet
+
 import android.app.Activity
 import android.content.ClipData
 import android.content.Context
@@ -418,14 +421,15 @@ fun CommunityChattingScreen(
         if (knownMessageIds.isEmpty()) {
             knownMessageIds = currentIds
             if (displayedMessages.isNotEmpty()) {
-                val entryUnreadCount = if (isViewOnly) 0 else {
-                    (state.unreadCountAtEntry - state.messages.take(state.unreadCountAtEntry)
-                        .count { it.messageId in deletedMessageIds }).coerceAtLeast(0)
-                }
-                val loadedUnreadCount = entryUnreadCount.coerceAtMost(displayedMessages.size)
+                val entryUnreadMessages = if (isViewOnly) emptyList() else communityEntryUnreadMessages(
+                    state.messages, deletedMessageIds, state.unreadCountAtEntry,
+                )
+                val loadedUnreadCount = entryUnreadMessages.size
                 val messageIndex = if (loadedUnreadCount > 0) {
-                    val firstUnreadMessageIndex = displayedMessages.size - loadedUnreadCount
-                    newMessageCount = entryUnreadCount
+                    val firstUnreadMessageIndex = displayedMessages.indexOfFirst {
+                        it.messageId == entryUnreadMessages.last().messageId
+                    }.coerceAtLeast(0)
+                    newMessageCount = loadedUnreadCount
                     unreadDividerMessageId = displayedMessages[firstUnreadMessageIndex].messageId
                     followsLatestMessage = false
                     (firstUnreadMessageIndex - 1).coerceAtLeast(0)
@@ -465,10 +469,10 @@ fun CommunityChattingScreen(
         } else {
             if (newMessageCount == 0) {
                 unreadDividerMessageId = newMessages
-                    .lastOrNull { it.senderId != state.myMemberId }
+                    .lastOrNull { it.senderId != state.myMemberId && !it.type.isSystemNotice }
                     ?.messageId
             }
-            newMessageCount += newMessages.count { it.senderId != state.myMemberId }
+            newMessageCount += newMessages.count { it.senderId != state.myMemberId && !it.type.isSystemNotice }
         }
     }
 
@@ -948,8 +952,8 @@ fun CommunityChattingScreen(
 
     if (showThreadInfo) {
         CommunityThreadInfoScreen(
-            members = state.members.values.toList(),
-            memberProfiles = state.memberProfiles,
+            members = remember(state.members) { state.members.values.toImmutableList() },
+            memberProfiles = remember(state.memberProfiles) { state.memberProfiles.toImmutableMap() },
             memberCount = state.thread?.memberCount.orEmpty(),
             myMemberId = state.myMemberId,
             isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
@@ -962,7 +966,7 @@ fun CommunityChattingScreen(
             onManageSelected = { ids, action -> onAction(CommunityChattingAction.OnManageParticipants(ids, action)) },
             isManagingParticipants = state.isManagingParticipants,
             managementRevision = state.participantManagementRevision,
-            managedParticipantIds = state.managedParticipantIds,
+            managedParticipantIds = remember(state.managedParticipantIds) { state.managedParticipantIds.toImmutableSet() },
             toastGeneration = toastGeneration,
             toastData = toastData,
             onToastDismiss = onToastDismiss,
@@ -2347,7 +2351,7 @@ private fun PendingMessageRow(
                         communityMentionText(
                             message.content,
                             communityMentionNameRanges(message.content, mentionNames),
-                            main500(),
+                            if (failed) main500() else main100(),
                         ),
                         modifier = Modifier
                             .widthIn(max = 256.dp)

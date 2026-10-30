@@ -6,6 +6,30 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CommunityMessagePresentationTest {
+    @Test fun entryUnreadRangeNeverIncludesAnAlreadyReadMessageToReplaceAnExcludedRecord() {
+        val records = listOf(
+            CommunityThreadMessage(messageId = "system", type = com.umc.domain.model.community.thread.CommunityMessageType.MEMBER_LEFT),
+            CommunityThreadMessage(messageId = "deleted", status = "DELETED"),
+            CommunityThreadMessage(messageId = "unread", content = "미읽음"),
+            CommunityThreadMessage(messageId = "read", content = "이미 읽음"),
+        )
+        val candidates = communityEntryUnreadMessages(records, communityDeletedMessageIds(records), 3)
+        assertEquals(listOf("unread"), candidates.map { it.messageId })
+        assertEquals(1, candidates.size)
+        assertTrue(communityEntryUnreadMessages(records, emptySet(), 0).isEmpty())
+        assertTrue(communityEntryUnreadMessages(records, emptySet(), -1).isEmpty())
+    }
+
+    @Test fun unreadRangeHandlesUnloadedHistoryAndKnownDeletedIdsWithoutExpandingTheBoundary() {
+        val records = listOf(
+            CommunityThreadMessage(messageId = "known"),
+            CommunityThreadMessage(messageId = "deleted", deletedAt = "2026-10-31T01:00:00Z"),
+            CommunityThreadMessage(messageId = "unread"),
+        )
+        assertTrue(communityEntryUnreadMessages(records, setOf("known"), 2).isEmpty())
+        assertEquals(listOf("unread"), communityEntryUnreadMessages(records, setOf("known"), 100).map { it.messageId })
+    }
+
     @Test fun deletedMessagesDoNotConsumeTheUnreadSummaryLimit() {
         val messages = listOf(
             CommunityThreadMessage(messageId = "known-deleted"),

@@ -709,7 +709,7 @@ object AppStrings {
     const val CHAT_MANAGE_PARTICIPANTS_COUNT_FORMAT = "%d명 관리"
     const val CHAT_ASSIGN_SELECTED_ADMIN = "관리자로 지정"
     const val CHAT_REMOVE_SELECTED_ADMIN_DESCRIPTION_FORMAT = "선택한 %d명의 관리자 권한을 해제할까요?\n선택한 참여자의 관리자 권한이 해제돼요."
-    const val CHAT_REMOVE_SELECTED_ADMIN_CONFIRM = "지정하기"
+    const val CHAT_REMOVE_SELECTED_ADMIN_CONFIRM = "해제하기"
     const val CHAT_PARTICIPANTS_ASSIGNED_ADMIN = "관리자로 지정되었습니다."
     const val CHAT_ADMIN_REMOVED = "관리자 지정이 해제되었습니다."
     const val CHAT_PARTICIPANTS_REMOVED = "선택한 참여자를 내보냈습니다."
@@ -738,7 +738,7 @@ object AppStrings {
     const val CHAT_CD_ATTACH_PHOTO = "사진 첨부"
     const val CHAT_CD_SEND = "전송"
     const val CHAT_NO_ACCESS_TITLE = "더 이상 참여할 수 없는 스레드예요"
-    const val CHAT_NO_ACCESS_DESCRIPTION = "운영진에 의해 참여가 종료되었어요."
-    const val CHAT_NO_ACCESS_BACK = "커뮤니티로 돌아가기"
+    const val CHAT_NO_ACCESS_DESCRIPTION = "스레드가 삭제되었거나 접근 권한이 없어요."
+    const val CHAT_NO_ACCESS_BACK = "뒤로가기"
     const val CHAT_LEAVE_SUCCESS = "스레드에서 나갔어요."
 }
