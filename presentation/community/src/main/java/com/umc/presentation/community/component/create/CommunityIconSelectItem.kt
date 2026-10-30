@@ -27,7 +27,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.presentation.community.R
 import com.umc.presentation.community.component.CommunityCategoryIcon
 
@@ -35,7 +35,7 @@ import com.umc.presentation.community.component.CommunityCategoryIcon
  * 스레드 아이콘(카테고리) 선택 항목
  *
  * Figma `스레드/아이콘 선택`을 구현합니다.
- * 선택 시 테두리와 라벨이 indigo500, 미선택 시 테두리 grey200·라벨 grey400으로 표시합니다.
+ * 선택 시 테두리와 라벨이 main500, 미선택 시 테두리 grey200·라벨 grey400으로 표시합니다.
  * 아이콘 영역은 [CommunityCategoryIcon]으로 표시합니다.
  * 여러 개를 Row에 균등 배치할 때는 Row에 `height(IntrinsicSize.Min)`, 각 항목에
  * `weight(1f).fillMaxHeight()`를 주면 라벨이 줄바꿈되어도 높이가 맞춰집니다.
@@ -59,8 +59,8 @@ fun CommunityIconSelectItem(
     val shape = RoundedCornerShape(8.dp)
 
     // 선택 여부에 따라 테두리와 라벨 색상 결정
-    val contentColor = if (selected) indigo500() else grey400()
-    val borderColor = if (selected) indigo500() else grey200()
+    val contentColor = if (selected) main500() else grey400()
+    val borderColor = if (selected) main500() else grey200()
 
     Column(
         modifier = modifier

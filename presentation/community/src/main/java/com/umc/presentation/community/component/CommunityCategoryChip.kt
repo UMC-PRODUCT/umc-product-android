@@ -20,9 +20,9 @@ import com.umc.component.theme.grey200
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo200
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main200
+import com.umc.component.theme.main500
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow200
 import com.umc.component.theme.yellow500
@@ -55,9 +55,9 @@ fun CommunityCategoryChip(
     // 카테고리별 칩 색상 설정
     when (category) {
         CommunityCategory.STUDY -> {
-            backgroundColor = indigo100()
-            borderColor = indigo200()
-            textColor = indigo500()
+            backgroundColor = main100()
+            borderColor = main200()
+            textColor = main500()
         }
 
         CommunityCategory.PROJECT -> {

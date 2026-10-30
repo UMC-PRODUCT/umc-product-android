@@ -53,10 +53,10 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo600
-import com.umc.component.theme.indigo700
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
+import com.umc.component.theme.main600
+import com.umc.component.theme.main700
 import com.umc.component.theme.white
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
@@ -192,7 +192,7 @@ fun PermissionScreen(
                     .background(grey000())
                     .border(
                         width = 1.dp,
-                        color = if (isAllChecked) indigo500() else grey300(),
+                        color = if (isAllChecked) main500() else grey300(),
                         shape = RoundedCornerShape(8.dp),
                     )
                     .clickable(onClick = onClickAllCheck)
@@ -204,14 +204,14 @@ fun PermissionScreen(
                 UText(
                     text = AppStrings.PERMISSION_ACCEPT_ALL,
                     style = UmcTypographyTokens.BodyBold,
-                    color = if (isAllChecked) indigo500() else grey950(),
+                    color = if (isAllChecked) main500() else grey950(),
                     modifier = Modifier.weight(1f),
                 )
 
                 Icon(
                     painter = painterResource(R.drawable.ic_check_box),
                     contentDescription = null,
-                    tint = if (isAllChecked) indigo500() else grey300(),
+                    tint = if (isAllChecked) main500() else grey300(),
                     modifier = Modifier
                         .padding(12.dp)
                         .size(24.dp),
@@ -257,8 +257,8 @@ fun PermissionScreen(
             text = AppStrings.SIGN_UP_COMPLETE,
             onClick = onClickSignUp,
             enabled = uiState.isAlarmCheck,
-            backgroundColor = if (uiState.isAlarmCheck) indigo500() else grey100(),
-            pressedColor = indigo700(),
+            backgroundColor = if (uiState.isAlarmCheck) main500() else grey100(),
+            pressedColor = main700(),
             textColor = if (uiState.isAlarmCheck) grey000() else grey300(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             modifier = Modifier
@@ -284,7 +284,7 @@ private fun PermissionItem(
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isChecked) indigo100() else grey100())
+            .background(if (isChecked) main100() else grey100())
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -322,7 +322,7 @@ private fun PermissionItem(
         Icon(
             painter = painterResource(R.drawable.ic_check_box),
             contentDescription = null,
-            tint = if (isChecked) indigo500() else grey300(),
+            tint = if (isChecked) main500() else grey300(),
             modifier = Modifier
                 .padding(12.dp)
                 .size(24.dp),

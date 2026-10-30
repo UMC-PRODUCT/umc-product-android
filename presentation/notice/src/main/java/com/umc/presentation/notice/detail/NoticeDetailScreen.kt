@@ -66,8 +66,8 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.red500
 import com.umc.domain.model.enums.NoticeVoteStatus
 import com.umc.domain.model.notice.NoticeDetail
@@ -217,7 +217,7 @@ fun NoticeDetailScreen(
                     .weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(color = indigo500(), trackColor = indigo100())
+                CircularProgressIndicator(color = main500(), trackColor = main100())
             }
             return@Column
         }
@@ -279,7 +279,7 @@ fun NoticeDetailScreen(
 
             // 본문 (작성 화면과 동일한 마크다운 렌더링)
             val markerColor = grey400()
-            val linkColor = indigo500()
+            val linkColor = main500()
             val quoteBarColor = grey300()
             val markdownRenderer = remember(markerColor, linkColor) {
                 MarkdownRenderer(markerColor = markerColor, linkColor = linkColor)
@@ -469,7 +469,7 @@ private fun NoticeDetailLinkCard(url: String) {
         Icon(
             painter = painterResource(id = R.drawable.ic_blog_link),
             contentDescription = null,
-            tint = indigo500(),
+            tint = main500(),
             modifier = Modifier.size(24.dp),
         )
 

@@ -47,7 +47,7 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey950
 import com.umc.component.theme.green500
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.red500
 import com.umc.domain.model.notice.ChallengerReadInfo
 import com.umc.domain.model.notice.NoticeReadStatistics
@@ -212,7 +212,7 @@ private fun ReadStatusSegment(
         UText(
             text = "$count",
             style = UmcTypographyTokens.CalloutBold,
-            color = if (isSelected) indigo500() else grey400(),
+            color = if (isSelected) main500() else grey400(),
         )
     }
 }

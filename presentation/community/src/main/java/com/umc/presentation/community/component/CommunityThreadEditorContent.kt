@@ -27,7 +27,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.presentation.community.R
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
@@ -119,7 +119,7 @@ fun CommunityThreadEditorContent(
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
-                    color = indigo500(),
+                    color = main500(),
                 )
             }
             return@Column

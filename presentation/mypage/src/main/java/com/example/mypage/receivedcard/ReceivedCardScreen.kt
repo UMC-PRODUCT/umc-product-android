@@ -64,8 +64,8 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.white
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.model.mypage.UserCardPartType

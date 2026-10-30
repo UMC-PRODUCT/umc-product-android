@@ -52,7 +52,7 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -237,7 +237,7 @@ fun CommunityMemberBottomSheet(
                             modifier = Modifier.align(
                                 Alignment.Center,
                             ),
-                            color = indigo500(),
+                            color = main500(),
                         )
                     }
 
@@ -337,7 +337,7 @@ private fun CommunityMemberBottomSheetHeader(
                     .width(64.dp)
                     .height(36.dp),
                 backgroundColor = if (isConfirmEnabled) {
-                    indigo500()
+                    main500()
                 } else {
                     grey100()
                 },
@@ -577,7 +577,7 @@ private fun CommunityMemberSearchContent(
                 ) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = indigo500(),
+                        color = main500(),
                         strokeWidth = 2.dp,
                     )
                 }

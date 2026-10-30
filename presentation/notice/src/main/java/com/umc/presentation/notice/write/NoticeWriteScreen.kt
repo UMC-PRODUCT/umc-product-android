@@ -94,8 +94,8 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.domain.model.enums.BoardChipType
 import com.umc.domain.model.enums.NoticeWriterRole
 import com.umc.domain.model.enums.UserPart
@@ -355,7 +355,7 @@ fun NoticeWriteScreen(
             UText(
                 text = AppStrings.REGISTER,
                 style = UmcTypographyTokens.HeadlineBold,
-                color = if (uiState.enableRegister) indigo500() else grey400(),
+                color = if (uiState.enableRegister) main500() else grey400(),
                 modifier = Modifier.clickable(enabled = uiState.enableRegister) { onClickRegister() },
             )
         }
@@ -502,7 +502,7 @@ fun NoticeWriteScreen(
 
             // 내용 입력. 마크다운 원문을 그대로 편집하고 스타일만 입혀서 보여줌
             val markerColor = grey400()
-            val linkColor = indigo500()
+            val linkColor = main500()
             val quoteBarColor = grey300()
             // 편집기와 인용구 세로선이 같은 파싱 결과를 공유하도록 렌더러를 하나만 둔다
             val markdownRenderer = remember(markerColor, linkColor) {
@@ -950,7 +950,7 @@ private fun MarkdownToolbarIcon(
     Icon(
         painter = painterResource(id = iconRes),
         contentDescription = null,
-        tint = if (isActive) indigo500() else grey600(),
+        tint = if (isActive) main500() else grey600(),
         modifier = Modifier
             .size(24.dp)
             .clickable { onClick() },
@@ -1022,7 +1022,7 @@ private fun NoticeLinkPanel(
             Icon(
                 painter = painterResource(id = R.drawable.ic_blog_link),
                 contentDescription = null,
-                tint = indigo500(),
+                tint = main500(),
                 modifier = Modifier.size(24.dp),
             )
 
@@ -1121,8 +1121,8 @@ private fun ProcessingDialog(message: String) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             CircularProgressIndicator(
-                color = indigo500(),
-                trackColor = indigo100(),
+                color = main500(),
+                trackColor = main100(),
                 strokeWidth = 5.dp,
                 modifier = Modifier.size(48.dp),
             )

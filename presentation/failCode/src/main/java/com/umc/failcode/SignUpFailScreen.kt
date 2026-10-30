@@ -54,8 +54,8 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo700
+import com.umc.component.theme.main500
+import com.umc.component.theme.main700
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.tasks.await
 import com.umc.component.base.CollectUiEvents
@@ -179,8 +179,8 @@ fun SignUpFailScreen(
         UButton(
             text = AppStrings.SIGN_UP_FAIL_PREV_USER,
             onClick = onClickNext,
-            backgroundColor = indigo500(),
-            pressedColor = indigo700(),
+            backgroundColor = main500(),
+            pressedColor = main700(),
             textColor = grey000(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             contentPadding = PaddingValues(vertical = 15.dp),

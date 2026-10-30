@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 
 /**
  * 활동 화면에서 일반/운영진 모드를 전환할 때 사용하는 공용 스위치입니다.
@@ -28,7 +28,7 @@ fun USwitch(
         modifier = modifier,
         colors = SwitchDefaults.colors(
             checkedThumbColor = grey000(),
-            checkedTrackColor = indigo500(),
+            checkedTrackColor = main500(),
             uncheckedThumbColor = grey300(),
             uncheckedTrackColor = grey100(),
             uncheckedBorderColor = grey300()

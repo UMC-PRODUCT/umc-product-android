@@ -27,7 +27,7 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 
 
 /**
@@ -101,7 +101,7 @@ fun AddCodeDialog(
                     .fillMaxWidth()
                     .height(52.dp),
                 enabled = !isSubmitting,
-                backgroundColor = if (isSubmitting) grey400() else indigo500(),
+                backgroundColor = if (isSubmitting) grey400() else main500(),
                 textColor = grey000(),
                 textStyle = UmcTypographyTokens.SubheadlineBold,
                 onClick = onConfirmClick

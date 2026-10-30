@@ -22,7 +22,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.tooling.preview.Preview
 
@@ -100,7 +100,7 @@ fun CommunityCreateTopBar(
                 text = actionText,
                 style = UmcTypographyTokens.CalloutBold,
                 color = if (isActionEnabled) {
-                    indigo500()
+                    main500()
                 } else {
                     grey400()
                 },

@@ -42,7 +42,7 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 
 /**
  * UMC 공용 텍스트 입력 컴포넌트.
@@ -60,7 +60,7 @@ import com.umc.component.theme.indigo500
  * @param backgroundColor 배경색. 기본값 grey000 (흰색)
  * @param focusBackgroundColor 포커스 상태의 배경색. 기본값은 backgroundColor와 동일
  * @param strokeColor 비포커스 상태의 테두리 색상. 기본값 grey300
- * @param focusStrokeColor 포커스 상태의 테두리 색상 및 커서 색상. 기본값 indigo500
+ * @param focusStrokeColor 포커스 상태의 테두리 색상 및 커서 색상. 기본값 main500
  * @param cornerRadius 모서리 둥글기. 기본값 8dp
  * @param enabled false 이면 입력 불가. strokeColor는 항상 strokeColor로 고정
  * @param keyboardOptions 키보드 타입·IME 액션 등 설정. Next/Done/Search 등 IME 액션을 지정하거나 Password 키보드를 쓰면 자동으로 한 줄 입력이 된다
@@ -89,7 +89,7 @@ fun UTextField(
     textStyle: TextStyle = UmcTypographyTokens.Callout,
     backgroundColor: Color = grey000(),
     strokeColor: Color = grey300(),
-    focusStrokeColor: Color = indigo500(),
+    focusStrokeColor: Color = main500(),
     cornerRadius: Dp = 8.dp,
     enabled: Boolean = true,
     focusBackgroundColor: Color = backgroundColor,

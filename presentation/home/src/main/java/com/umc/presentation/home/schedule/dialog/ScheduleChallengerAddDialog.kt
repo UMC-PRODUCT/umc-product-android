@@ -58,8 +58,8 @@ import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.domain.model.home.SearchResultItem
@@ -232,7 +232,7 @@ fun ScheduleChallengerAddBottomSheet(
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = indigo500()
+                        color = main500()
                     )
                 }
 
@@ -270,7 +270,7 @@ fun ChallengerHeader(
 
         UButton(
             text = AppStrings.CONFIRM,
-            backgroundColor = indigo500(),
+            backgroundColor = main500(),
             textColor = grey000(),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
             textStyle = UmcTypographyTokens.Caption1Bold,
@@ -503,7 +503,7 @@ fun SearchParticipantRow(
             checked = isChecked,
             onCheckedChange = { onToggleClick() },
             modifier = Modifier.size(24.dp),
-            colors = CheckboxDefaults.colors(checkedColor = indigo500())
+            colors = CheckboxDefaults.colors(checkedColor = main500())
         )
     }
 }

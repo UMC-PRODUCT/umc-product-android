@@ -69,8 +69,8 @@ import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.domain.model.act.check.AdminPendingUser
@@ -260,7 +260,7 @@ fun AdminSessionCard(
                         )
                         Surface(
                             color = if (session.status == AdminSessionStatus.IN_PROGRESS) {
-                                indigo100()
+                                main100()
                             } else {
                                 grey50()
                             },
@@ -270,7 +270,7 @@ fun AdminSessionCard(
                                 text = session.status.text,
                                 style = Caption2Bold,
                                 color = if (session.status == AdminSessionStatus.IN_PROGRESS) {
-                                    indigo500()
+                                    main500()
                                 } else {
                                     grey600()
                                 },
@@ -429,7 +429,7 @@ private fun CheckAttendanceListButton(
     UButton(
         modifier = Modifier.fillMaxWidth(),
         prevIcon = painterResource(id = R.drawable.ic_person),
-        prevIconTint = indigo500(),
+        prevIconTint = main500(),
         text = AppStrings.ADMIN_CHECK_PENDING_LIST_TRIGGER,
         textColor = black(),
         textStyle = CalloutBold,
@@ -516,7 +516,7 @@ private fun StatItem(
             UText(
                 text = highlightedValue,
                 style = SubheadlineBold,
-                color = indigo500()
+                color = main500()
             )
             UText(
                 text = trailingValue,

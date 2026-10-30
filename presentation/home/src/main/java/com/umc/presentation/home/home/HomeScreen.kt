@@ -68,9 +68,9 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
+import com.umc.component.theme.main600
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import com.umc.component.theme.grey400
@@ -78,7 +78,7 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo900
+import com.umc.component.theme.main900
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.home.SchedulePlanItem
@@ -441,8 +441,8 @@ fun HomeLoadError(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(42.dp),
-                backgroundColor = indigo500(),
-                pressedColor = indigo600(),
+                backgroundColor = main500(),
+                pressedColor = main600(),
                 textColor = grey000(),
                 textStyle = UmcTypographyTokens.CalloutBold,
                 cornerRadius = 8.dp,
@@ -466,7 +466,7 @@ fun HomeShareCardsRow(
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = indigo600()),
+        colors = CardDefaults.cardColors(containerColor = main600()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
 
@@ -510,7 +510,7 @@ fun HomeShareCardsRow(
                         .fillMaxWidth()
                         .height(42.dp),
                     textColor = grey000(),
-                    backgroundColor = indigo900(),
+                    backgroundColor = main900(),
                     textStyle = UmcTypographyTokens.CalloutBold,
                     cornerRadius = 8.dp,
                     contentPadding = PaddingValues(horizontal = 13.dp, vertical = 8.dp)
@@ -585,7 +585,7 @@ fun HomeProfileCardsRow(
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp,
-                            color = indigo500()
+                            color = main500()
                         )
                     } else {
                         // 글꼴을 키워도 숫자만 따라 커지고 단위(Days)는 UText 로 고정한다
@@ -593,7 +593,7 @@ fun HomeProfileCardsRow(
                             Text(
                                 text = "${uiState.growDay}",
                                 style = UmcTypographyTokens.Title3Bold,
-                                color = indigo500(),
+                                color = main500(),
                                 maxLines = 1,
                                 modifier = Modifier.alignByBaseline(),
                             )
@@ -649,7 +649,7 @@ fun HomeProfileCardsRow(
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp,
-                            color = indigo500()
+                            color = main500()
                         )
                     } else {
                         GisuGrid(gisuStrings = uiState.gisuTag)
@@ -710,13 +710,13 @@ fun GisuGrid(gisuStrings: List<String>){
                                     .size(18.dp),
                                 painter = painterResource(id = R.drawable.ic_add_filled),
                                 contentDescription = "Add",
-                                tint = indigo500()
+                                tint = main500()
                             )
 
                             UText(
                                 text = "$remainingCount",
                                 style = UmcTypographyTokens.Caption1Bold,
-                                color = indigo500()
+                                color = main500()
                             )
                         }
 
@@ -742,14 +742,14 @@ fun GisuGrid(gisuStrings: List<String>){
 fun GisuChip(gisuString: String) {
     Box(
         modifier = Modifier
-            .background(color = indigo100(), shape = RoundedCornerShape(4.dp))
+            .background(color = main100(), shape = RoundedCornerShape(4.dp))
             .padding(horizontal = 4.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         UText(
             text = gisuString,
             style = UmcTypographyTokens.Caption1Bold,
-            color = indigo500()
+            color = main500()
         )
     }
 }

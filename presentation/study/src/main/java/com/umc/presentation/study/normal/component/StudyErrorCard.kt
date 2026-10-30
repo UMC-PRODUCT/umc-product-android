@@ -25,7 +25,7 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 
 /**
  * 스터디 커리큘럼 조회에 실패했을 때 표시하는 오류 화면
@@ -78,7 +78,7 @@ fun StudyErrorCard(
                 .fillMaxWidth()
                 .height(52.dp)
                 .padding(horizontal = 24.dp),
-            backgroundColor = indigo500(),
+            backgroundColor = main500(),
         )
     }
 }

@@ -312,7 +312,7 @@ fun ScheduleAddScreen(
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = grey300(),
-                        focusedBorderColor = indigo500()
+                        focusedBorderColor = main500()
                     )
                 )
             }
@@ -430,7 +430,7 @@ fun ScheduleAddScreen(
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = grey300(),
-                        focusedBorderColor = indigo500()
+                        focusedBorderColor = main500()
                     )
                 )
             }
@@ -545,7 +545,7 @@ fun ScheduleAddTopBar(
         UText(
             text = if (editMode) AppStrings.EDIT else AppStrings.REGISTER,
             style = UmcTypographyTokens.HeadlineBold,
-            color = if (registerOk) indigo500() else grey400(),
+            color = if (registerOk) main500() else grey400(),
             modifier = Modifier
                 .clickable(enabled = registerOk) { onRegisterClick() }
                 .padding(horizontal = 22.dp)
@@ -713,10 +713,10 @@ fun AttendanceTimeRow(
             }
             else{
                 UChip(text = "${dateText} · ${timeText}",
-                    backgroundColor = indigo100(),
+                    backgroundColor = main100(),
                     borderColor = grey200(),
                     borderWidth = 0.dp,
-                    textColor = indigo500(),
+                    textColor = main500(),
                     textStyle = UmcTypographyTokens.SubheadlineBold,
                     onClick = {onDateTimeClick()}
 

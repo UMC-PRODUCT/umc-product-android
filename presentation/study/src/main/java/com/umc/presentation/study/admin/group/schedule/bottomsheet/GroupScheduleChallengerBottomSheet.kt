@@ -47,7 +47,7 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.red500
 
 /**
@@ -207,7 +207,7 @@ fun GroupScheduleChallengerBottomSheet(
                         modifier = Modifier.align(
                             Alignment.Center
                         ),
-                        color = indigo500()
+                        color = main500()
                     )
                 }
             }
@@ -249,7 +249,7 @@ fun GroupScheduleChallengerHeader(
                     .height(32.dp),
                 backgroundColor =
                     if (isConfirmEnabled) {
-                        indigo500()
+                        main500()
                     } else {
                         grey100()
                     },
