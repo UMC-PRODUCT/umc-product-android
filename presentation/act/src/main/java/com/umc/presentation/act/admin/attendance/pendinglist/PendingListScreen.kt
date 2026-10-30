@@ -53,7 +53,7 @@ import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
@@ -142,7 +142,7 @@ fun PendingListScreen(
                     textStyle = SubheadlineBold,
                     textColor = if(isConfirmEnabled) grey000() else grey300(),
                     enabled = isConfirmEnabled,
-                    backgroundColor = if (isConfirmEnabled) indigo500() else grey100(),
+                    backgroundColor = if (isConfirmEnabled) main500() else grey100(),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                     cornerRadius = 8.dp,
                     onClick = {
@@ -298,7 +298,7 @@ private fun PendingUserRow(
                 checked = isChecked,
                 onCheckedChange = onCheckedChange,
                 colors = CheckboxDefaults.colors(
-                    checkedColor = indigo500(),
+                    checkedColor = main500(),
                     uncheckedColor = grey400(),
                     checkmarkColor = grey000()
                 )

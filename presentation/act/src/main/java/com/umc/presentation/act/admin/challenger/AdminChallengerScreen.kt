@@ -65,7 +65,7 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow500
 import com.umc.domain.model.enums.UserPart
@@ -146,7 +146,7 @@ internal fun ChallengerLoading(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = indigo500())
+        CircularProgressIndicator(color = main500())
     }
 }
 
@@ -192,7 +192,7 @@ internal fun ChallengerLoadError(
                 .fillMaxWidth()
                 .height(52.dp)
                 .padding(horizontal = 24.dp),
-            backgroundColor = indigo500()
+            backgroundColor = main500()
         )
     }
 }
@@ -335,7 +335,7 @@ private fun AdminChallengerPartBottomSheet(
                     UText(
                         text = part.label,
                         style = Body,
-                        color = if (selectedPart == part) indigo500() else grey800(),
+                        color = if (selectedPart == part) main500() else grey800(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onPartSelected(part) }

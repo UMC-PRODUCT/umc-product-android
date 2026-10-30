@@ -376,7 +376,7 @@ fun GroupScheduleLocationHeaderAndSearchBar(
                 modifier = Modifier
                     .width(64.dp)
                     .height(40.dp),
-                backgroundColor = indigo500(),
+                backgroundColor = main500(),
                 textColor = grey000(),
                 textStyle =
                     UmcTypographyTokens.Caption1Bold,
@@ -478,7 +478,7 @@ fun GroupScheduleLocationNaverMapContent(
                 .size(36.dp)
                 .align(Alignment.Center)
                 .padding(bottom = 18.dp),
-            tint = indigo500()
+            tint = main500()
         )
     }
 }
@@ -548,7 +548,7 @@ fun GroupScheduleSelectedLocationCard(
                 modifier = Modifier
                     .width(64.dp)
                     .height(36.dp),
-                backgroundColor = indigo500(),
+                backgroundColor = main500(),
                 textColor = grey000(),
                 textStyle =
                     UmcTypographyTokens.Caption1Bold,

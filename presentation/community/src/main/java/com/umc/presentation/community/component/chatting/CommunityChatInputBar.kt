@@ -39,7 +39,7 @@ import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.white
 import com.umc.domain.model.community.thread.CommunityMessageType
 import com.umc.domain.model.community.thread.CommunityThreadMessage
@@ -143,7 +143,7 @@ internal fun CommunityChatInputBar(
                                     lineHeight = if (isReplying) 23.sp else 20.sp,
                                 ),
                                 cursorBrush = SolidColor(
-                                    if (isReplying) indigo500() else black(),
+                                    if (isReplying) main500() else black(),
                                 ),
                                 maxLines = if (isReplying) 3 else 4,
                             )
@@ -167,7 +167,7 @@ internal fun CommunityChatInputBar(
                                 },
                                 modifier = if (isReplying) Modifier.size(34.dp) else Modifier,
                                 tint = when {
-                                    enabled && value.isNotBlank() -> indigo500()
+                                    enabled && value.isNotBlank() -> main500()
                                     isReplying -> grey400()
                                     else -> grey300()
                                 },

@@ -39,9 +39,9 @@ import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
+import com.umc.component.theme.main600
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.Instant
@@ -362,8 +362,8 @@ private fun CalendarBody(
  * 오늘 날짜, 선택된 날짜, 일요일, 일정이 있는 날짜(Dot) 상태에 따라 배경 및 텍스트 스타일을 다르게 표현합니다.
  *
  * [스타일 규칙]:
- * - 오늘(`isToday`): Indigo500 원형 배경 + 흰색 텍스트
- * - 선택됨(`isSelected`): Indigo100 배경 + Indigo600 테두리 + Indigo500 텍스트
+ * - 오늘(`isToday`): Main500 원형 배경 + 흰색 텍스트
+ * - 선택됨(`isSelected`): Main100 배경 + Main600 테두리 + Main500 텍스트
  * - 일요일(`dayOfWeek == SUNDAY`): Red500 텍스트
  * - 일정 보유(`hasEvent`): 날짜 원과 바로 아래 행 원 사이의 정가운데에 Red500 점(Dot) 표시
  *
@@ -406,10 +406,10 @@ private fun DayItem(
                 .then(
                     when {
                         isToday -> Modifier
-                            .background(indigo500(), CircleShape)
+                            .background(main500(), CircleShape)
                         isSelected -> Modifier
-                            .background(indigo100(), CircleShape)
-                            .border(1.dp, indigo600(), CircleShape)
+                            .background(main100(), CircleShape)
+                            .border(1.dp, main600(), CircleShape)
                         else -> Modifier
                     }
                 ),
@@ -419,7 +419,7 @@ private fun DayItem(
                 text = date.dayOfMonth.toString(),
                 color = when {
                     isToday -> Color.White
-                    isSelected -> indigo500()
+                    isSelected -> main500()
                     date.dayOfWeek.value == 7 -> red500()
                     else -> grey800()
                 },

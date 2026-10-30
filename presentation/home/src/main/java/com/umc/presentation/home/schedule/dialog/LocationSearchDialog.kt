@@ -335,7 +335,7 @@ fun LocationNaverMapContent(
                 .size(36.dp)
                 .align(Alignment.Center)
                 .padding(bottom = 18.dp), //핀 뾰족한 끝단 조준 보정 패딩
-            tint = indigo500()
+            tint = main500()
         )
     }
 }
@@ -376,7 +376,7 @@ fun SelectedLocationCard(
             UButton(
                 text = "선택",
                 onClick = onConfirmClick,
-                backgroundColor = indigo500(),
+                backgroundColor = main500(),
                 textColor = grey000(),
                 textStyle = UmcTypographyTokens.Caption1Bold,
                 cornerRadius = 8.dp

@@ -48,8 +48,8 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.white
 import com.umc.domain.model.mypage.UserActiveItem
 import kotlinx.collections.immutable.ImmutableList
@@ -186,7 +186,7 @@ fun ActiveHistorySection(
                     ) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
-                            color = indigo500(),
+                            color = main500(),
                             strokeWidth = 2.dp
                         )
                     }
@@ -260,9 +260,9 @@ fun ActiveHistoryItem(
                 modifier = Modifier
                     .height(28.dp)
                     .widthIn(min = 56.dp),
-                backgroundColor = indigo100(),
+                backgroundColor = main100(),
                 borderWidth = 0.dp,
-                textColor = indigo500(),
+                textColor = main500(),
                 textStyle = UmcTypographyTokens.FootnoteBold,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 5.dp),
             )
@@ -305,7 +305,7 @@ private fun ActivityHistoryLoadError(isLoading: Boolean, onRetryClick: () -> Uni
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
-            backgroundColor = indigo500(),
+            backgroundColor = main500(),
             textColor = grey000(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             cornerRadius = 12.dp,

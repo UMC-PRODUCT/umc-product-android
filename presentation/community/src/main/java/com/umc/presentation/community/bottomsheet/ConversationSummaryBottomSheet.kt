@@ -48,7 +48,7 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.component.theme.green500
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.white
 import com.umc.presentation.community.chatting.CommunityChattingState
 import com.umc.presentation.community.chatting.formatCommunityDate
@@ -91,7 +91,7 @@ fun ConversationSummaryBottomSheet(
                 Icon(
                     painter = painterResource(R.drawable.ic_ai),
                     contentDescription = null,
-                    tint = indigo500(),
+                    tint = main500(),
                     modifier = Modifier.size(22.dp),
                 )
                 Text(
@@ -234,7 +234,7 @@ private fun SummaryProgressLine(progress: Float) {
                 .height(12.dp)
                 .background(
                     brush = Brush.horizontalGradient(
-                        colors = listOf(indigo500(), green500()),
+                        colors = listOf(main500(), green500()),
                     ),
                     shape = RoundedCornerShape(100.dp),
                 ),
@@ -292,7 +292,7 @@ private fun SummarySuccessContent(summary: String, messageCount: Int) {
                     painter = painterResource(R.drawable.ic_check),
                     contentDescription = null,
                     modifier = Modifier.size(10.dp),
-                    colorFilter = ColorFilter.tint(indigo500()),
+                    colorFilter = ColorFilter.tint(main500()),
                 )
                 Text(
                     text = line,

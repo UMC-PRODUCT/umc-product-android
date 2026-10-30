@@ -180,7 +180,7 @@ fun GroupCreateMemberBottomSheet(
                         modifier = Modifier.align(
                             Alignment.Center
                         ),
-                        color = indigo500()
+                        color = main500()
                     )
                 }
             }
@@ -319,7 +319,7 @@ fun GroupCreatePickerHeader(
                     .width(52.dp)
                     .height(32.dp),
                 backgroundColor = if (isConfirmEnabled) {
-                    indigo500()
+                    main500()
                 } else {
                     grey100()
                 },

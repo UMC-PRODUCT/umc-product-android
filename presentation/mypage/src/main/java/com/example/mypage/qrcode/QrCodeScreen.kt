@@ -68,9 +68,9 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo400
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main400
+import com.umc.component.theme.main500
 import com.umc.component.theme.white
 import com.umc.domain.model.mypage.UserCard
 import kotlinx.coroutines.flow.collectLatest
@@ -252,7 +252,7 @@ fun QrCodeScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(52.dp),
-                        backgroundColor = indigo500(),
+                        backgroundColor = main500(),
                         textColor = grey000(),
                         textStyle = UmcTypographyTokens.HeadlineBold,
                         cornerRadius = 8.dp,
@@ -324,8 +324,8 @@ fun MycardProfileCard(
     uiState: QrCodeUiState,
 ) {
 
-    val color1 = indigo400()
-    val color2 = indigo500()
+    val color1 = main400()
+    val color2 = main500()
 
     //원형 그라데이션 배경
     val radialGradient = remember {
@@ -381,13 +381,13 @@ fun MycardProfileCard(
                         UText(
                             text = uiState.userInfo.schoolName,
                             style = UmcTypographyTokens.Subheadline,
-                            color = indigo100()
+                            color = main100()
                         )
                         //내 최신 커리어
                         UText(
                             text = uiState.myRecentInfoString,
                             style = UmcTypographyTokens.Subheadline,
-                            color = indigo100()
+                            color = main100()
                         )
                     }
                 }

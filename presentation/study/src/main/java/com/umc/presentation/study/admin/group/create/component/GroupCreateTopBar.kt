@@ -85,7 +85,7 @@ fun GroupCreateTopBar(
             text = "등록",
             style = UmcTypographyTokens.SubheadlineBold,
             color = if (isRegisterEnabled) {
-                indigo500()
+                main500()
             } else {
                 grey400()
             },

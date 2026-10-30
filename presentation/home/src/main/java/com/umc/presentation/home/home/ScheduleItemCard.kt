@@ -35,8 +35,8 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.presentation.home.schedule.ScheduleTagChips
@@ -87,7 +87,7 @@ fun ActiveScheduleItem(
                 modifier = Modifier
                     .size(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = indigo100()
+                color = main100()
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -96,12 +96,12 @@ fun ActiveScheduleItem(
                     UText(
                         text = item.dayOfWeek,
                         style = UmcTypographyTokens.Caption2Bold,
-                        color = indigo500()
+                        color = main500()
                     )
                     UText(
                         text = item.day,
                         style = UmcTypographyTokens.CalloutBold,
-                        color = indigo500()
+                        color = main500()
                     )
                 }
             }

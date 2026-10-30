@@ -63,7 +63,7 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UploadFileCategory
 import kotlinx.collections.immutable.ImmutableList
@@ -291,14 +291,14 @@ fun ProfileTopbar(
                 modifier = Modifier
                     .padding(end = 16.dp)
                     .size(20.dp),
-                color = indigo500(),
+                color = main500(),
                 strokeWidth = 2.dp
             )
         } else {
             UText(
                 text = AppStrings.COMPLETE,
                 style = UmcTypographyTokens.CalloutBold,
-                color = indigo500(),
+                color = main500(),
                 modifier = Modifier
                     .clickable { onCompleteClick() }
                     .padding(end = 16.dp)
@@ -441,7 +441,7 @@ private fun ProfileLoadError(isLoading: Boolean, onRetryClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
-            backgroundColor = indigo500(),
+            backgroundColor = main500(),
             textColor = grey000(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             cornerRadius = 12.dp,

@@ -37,7 +37,7 @@ import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
@@ -151,7 +151,7 @@ fun MyContentScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(
-                                color = indigo500(),
+                                color = main500(),
                                 strokeWidth = 2.dp
                             )
                         }

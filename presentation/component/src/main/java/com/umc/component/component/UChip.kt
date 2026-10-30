@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey000
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.R
 
 /**
@@ -44,7 +44,7 @@ import com.umc.component.R
 fun UChip(
     text: String,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = indigo500(),
+    backgroundColor: Color = main500(),
     textColor: Color = grey000(),
     textStyle: TextStyle = UmcTypographyTokens.SubheadlineBold,
     cornerRadius: Dp = 100.dp,

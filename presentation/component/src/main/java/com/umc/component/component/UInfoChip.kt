@@ -11,8 +11,8 @@ import com.umc.component.theme.green700
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main100
+import com.umc.component.theme.main600
 import com.umc.component.theme.red100
 import com.umc.component.theme.red600
 import com.umc.component.theme.yellow100
@@ -21,7 +21,7 @@ import com.umc.component.theme.white
 import com.umc.component.theme.green500
 import com.umc.component.theme.yellow500
 import com.umc.component.theme.yellow400
-import com.umc.component.theme.indigo800
+import com.umc.component.theme.main800
 import com.umc.component.theme.yellow800
 import com.umc.component.theme.mint100
 import com.umc.component.theme.teal600
@@ -151,8 +151,8 @@ private fun partChipStyle(part: UserPart): UInfoChipStyle {
     return when (part) {
         // 지난 기수 파트. 디자인 지정색(Admin 보라 · PM 마젠타 · Web 브라운 · Android 시안 …)에
         // 가장 가까운 팔레트 계열을 쓰고, 칩 규칙대로 배경은 옅은 단계 · 글자는 진한 단계로 둔다.
-        UserPart.ADMIN -> UInfoChipStyle(indigo100(), indigo600())
-        UserPart.PLAN -> UInfoChipStyle(indigo100(), indigo800())
+        UserPart.ADMIN -> UInfoChipStyle(main100(), main600())
+        UserPart.PLAN -> UInfoChipStyle(main100(), main800())
         UserPart.DESIGN -> UInfoChipStyle(red100(), red600())
         UserPart.WEB -> UInfoChipStyle(yellow100(), yellow800())
         UserPart.ANDROID -> UInfoChipStyle(mint100(), teal600())

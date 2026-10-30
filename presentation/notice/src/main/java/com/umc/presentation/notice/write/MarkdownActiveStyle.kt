@@ -5,7 +5,7 @@ import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableSet
 
-/** 툴바에서 활성 표시(indigo500)를 할 수 있는 마크다운 스타일 */
+/** 툴바에서 활성 표시(main500)를 할 수 있는 마크다운 스타일 */
 enum class MarkdownStyle {
     BOLD, ITALIC, UNDERLINE, STRIKETHROUGH, HIGHLIGHT, CODE,
 }

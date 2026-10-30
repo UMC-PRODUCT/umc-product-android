@@ -51,9 +51,9 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo600
-import com.umc.component.theme.indigo700
+import com.umc.component.theme.main500
+import com.umc.component.theme.main600
+import com.umc.component.theme.main700
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.organization.GisuItem
@@ -174,7 +174,7 @@ fun NoticeScreen(
                     NoticeFilterChip(
                         text = chip.text,
                         isSelected = chip.isClicked,
-                        selectedColor = indigo500(),
+                        selectedColor = main500(),
                         hasDropdownIcon = chip.hanBottomSheet,
                         onClick = { onClickChip(chip) },
                     )
@@ -230,8 +230,8 @@ fun NoticeScreen(
             UButton(
                 text = AppStrings.NOTICE_WRITE,
                 onClick = onClickWriteNotice,
-                backgroundColor = indigo500(),
-                pressedColor = indigo700(),
+                backgroundColor = main500(),
+                pressedColor = main700(),
                 textColor = grey000(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 28.dp,
@@ -326,7 +326,7 @@ private fun NoticeHeader(
                         UText(
                             text = gisu.displayText,
                             style = if (isSelected) UmcTypographyTokens.HeadlineBold else UmcTypographyTokens.Headline,
-                            color = if (isSelected) indigo600() else grey800(),
+                            color = if (isSelected) main600() else grey800(),
                         )
 
                         if (isSelected) {
@@ -335,7 +335,7 @@ private fun NoticeHeader(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_check_white),
                                 contentDescription = null,
-                                tint = indigo500(),
+                                tint = main500(),
                             )
                         }
                     }
@@ -363,7 +363,7 @@ private fun NoticeHeader(
     }
 }
 
-/** 필터 칩. 1차(indigo)/2차(black)는 selectedColor로 구분 */
+/** 필터 칩. 1차(main)/2차(black)는 selectedColor로 구분 */
 @Composable
 private fun NoticeFilterChip(
     text: String,

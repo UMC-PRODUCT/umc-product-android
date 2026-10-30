@@ -46,8 +46,8 @@ import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.domain.model.notice.NoticeVoteForm
@@ -81,7 +81,7 @@ fun NoticeVoteSheetContent(
             Icon(
                 painter = painterResource(id = R.drawable.ic_vote),
                 contentDescription = null,
-                tint = indigo500(),
+                tint = main500(),
                 modifier = Modifier.size(24.dp),
             )
 
@@ -231,7 +231,7 @@ fun NoticeVoteSheetContent(
 
                 VoteBottomButton(
                     text = AppStrings.NOTICE_WRITE_VOTE_EDIT,
-                    backgroundColor = if (form.canSubmit) indigo500() else grey100(),
+                    backgroundColor = if (form.canSubmit) main500() else grey100(),
                     textColor = if (form.canSubmit) grey000() else grey400(),
                     onClick = { if (form.canSubmit) onComplete(form) },
                     modifier = Modifier.weight(1f),
@@ -240,7 +240,7 @@ fun NoticeVoteSheetContent(
         } else {
             VoteBottomButton(
                 text = AppStrings.NOTICE_WRITE_VOTE_CREATE,
-                backgroundColor = if (form.canSubmit) indigo500() else grey100(),
+                backgroundColor = if (form.canSubmit) main500() else grey100(),
                 textColor = if (form.canSubmit) grey000() else grey400(),
                 onClick = { if (form.canSubmit) onComplete(form) },
                 modifier = Modifier.fillMaxWidth(),
@@ -332,13 +332,13 @@ private fun VoteCheckOption(
                 id = if (isChecked) R.drawable.ic_check_box else R.drawable.ic_check_box_empty
             ),
             contentDescription = null,
-            tint = if (isChecked) indigo500() else grey300(),
+            tint = if (isChecked) main500() else grey300(),
             modifier = Modifier.size(24.dp),
         )
     }
 }
 
-/** 시작/종료 일시 행. 날짜 미설정 시 chevron, 설정 시 indigo 칩으로 표시 */
+/** 시작/종료 일시 행. 날짜 미설정 시 chevron, 설정 시 main 칩으로 표시 */
 @Composable
 private fun VoteDateRow(
     label: String,
@@ -369,13 +369,13 @@ private fun VoteDateRow(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(indigo100())
+                    .background(main100())
                     .padding(horizontal = 12.dp, vertical = 6.dp),
             ) {
                 UText(
                     text = dateText,
                     style = UmcTypographyTokens.SubheadlineBold,
-                    color = indigo500(),
+                    color = main500(),
                 )
             }
         }
@@ -427,7 +427,7 @@ fun NoticeVoteRow(
         Icon(
             painter = painterResource(id = R.drawable.ic_vote),
             contentDescription = null,
-            tint = indigo500(),
+            tint = main500(),
             modifier = Modifier.size(24.dp),
         )
 

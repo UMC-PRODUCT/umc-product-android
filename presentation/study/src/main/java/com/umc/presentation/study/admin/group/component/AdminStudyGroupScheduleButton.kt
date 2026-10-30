@@ -29,7 +29,7 @@ fun AdminStudyGroupScheduleButton(
             .fillMaxWidth()
             .border(
                 width = 1.dp,
-                color = indigo400(),
+                color = main400(),
                 shape = RoundedCornerShape(8.dp)
             )
             .clickable(
@@ -48,7 +48,7 @@ fun AdminStudyGroupScheduleButton(
                 R.drawable.ic_study_caendar
             ),
             contentDescription = null,
-            tint = indigo500(),
+            tint = main500(),
             modifier = Modifier.size(20.dp)
         )
 

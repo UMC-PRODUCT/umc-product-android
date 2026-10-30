@@ -346,7 +346,7 @@ fun AdminStudyGroupEditDialog(
                         .height(40.dp),
                     enabled = canConfirm,
                     backgroundColor = if (canConfirm) {
-                        indigo500()
+                        main500()
                     } else {
                         grey200()
                     },
