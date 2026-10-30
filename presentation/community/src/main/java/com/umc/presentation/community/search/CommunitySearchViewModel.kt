@@ -291,6 +291,21 @@ class CommunitySearchViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 검색 결과에서 스레드를 제거합니다. (강퇴 확인 후 목록에서 제외되는 스레드)
+     */
+    fun removeThread(
+        threadId: String,
+    ) {
+        _state.update {
+            it.copy(
+                searchResults = it.searchResults
+                    .filterNot { thread -> thread.id == threadId }
+                    .toImmutableList(),
+            )
+        }
+    }
+
     private fun clearAllRecentSearches() {
         _state.update {
             it.copy(

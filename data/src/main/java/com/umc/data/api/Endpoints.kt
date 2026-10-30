@@ -130,6 +130,9 @@ object Endpoints {
             "$THREAD_DETAIL/invite"
 
         const val THREAD_LEAVE = "$THREAD_DETAIL/leave"
+
+        // 강퇴 안내 확인 (확인 후 목록 조회에서 제외됨)
+        const val THREAD_KICK_ACKNOWLEDGE = "$THREAD_DETAIL/kick/acknowledge"
         const val THREAD_MUTE = "$THREAD_DETAIL/mute"
         const val THREAD_PIN = "$THREAD_DETAIL/pin"
 

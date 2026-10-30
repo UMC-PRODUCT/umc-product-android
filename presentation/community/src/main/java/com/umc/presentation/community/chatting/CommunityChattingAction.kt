@@ -33,6 +33,8 @@ sealed interface CommunityChattingAction {
     data object OnToggleMuted : CommunityChattingAction
     data object OnTogglePinned : CommunityChattingAction
     data object OnLeave : CommunityChattingAction
+    /** 참여 종료(강퇴) 안내에서 '커뮤니티로 돌아가기' 클릭 */
+    data object OnAcknowledgeKick : CommunityChattingAction
     data object OnDismissOwnershipTransferRequired : CommunityChattingAction
     data class OnRetryPending(val clientMessageId: String) : CommunityChattingAction
     data class OnDismissPending(val clientMessageId: String) : CommunityChattingAction

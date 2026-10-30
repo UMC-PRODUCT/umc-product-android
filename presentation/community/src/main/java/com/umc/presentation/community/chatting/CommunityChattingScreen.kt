@@ -162,7 +162,18 @@ fun CommunityChattingScreen(
     }
 
     // 강퇴된 스레드(목록의 강퇴 카드에서 진입)도 참여 종료 화면으로 안내
-    if (state.isKicked || state.isThreadUnavailable) {
+    if (state.isKicked) {
+        ThreadUnavailableScreen(
+            onBack = onBack,
+            onButtonClick = { onAction(CommunityChattingAction.OnAcknowledgeKick) },
+            isButtonEnabled = !state.isAcknowledgingKick,
+            toastData = toastData,
+            onToastDismiss = onToastDismiss,
+        )
+        return
+    }
+
+    if (state.isThreadUnavailable) {
         ThreadUnavailableScreen(onBack = onBack)
         return
     }
@@ -906,9 +917,20 @@ private fun ThreadUnavailableScreen(
     title: String = AppStrings.CHAT_UNAVAILABLE_TITLE,
     description: String = AppStrings.CHAT_UNAVAILABLE_DESCRIPTION,
     buttonText: String = AppStrings.CHAT_BACK_TO_COMMUNITY,
+    onButtonClick: () -> Unit = onBack,
+    isButtonEnabled: Boolean = true,
+    toastData: UToastData? = null,
+    onToastDismiss: () -> Unit = {},
 ) {
     Scaffold(
         containerColor = grey100(),
+        snackbarHost = {
+            UToastHost(
+                data = toastData,
+                onDismiss = onToastDismiss,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+        },
         topBar = {
             // Figma `TopBar/Community` 참여종료
             Surface(color = white()) {
@@ -975,7 +997,8 @@ private fun ThreadUnavailableScreen(
             Spacer(Modifier.height(40.dp))
             UButton(
                 text = buttonText,
-                onClick = onBack,
+                onClick = onButtonClick,
+                enabled = isButtonEnabled,
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
                     .fillMaxWidth()

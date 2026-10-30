@@ -13,4 +13,6 @@ sealed interface CommunityChattingEvent : UiEvent {
     data object MessageReported : CommunityChattingEvent
     data object ThreadDeleted : CommunityChattingEvent
     data object ThreadUnavailable : CommunityChattingEvent
+    /** 강퇴 확인이 서버에 저장됨 (목록에서 제외되므로 갱신 후 돌아간다) */
+    data object KickAcknowledged : CommunityChattingEvent
 }

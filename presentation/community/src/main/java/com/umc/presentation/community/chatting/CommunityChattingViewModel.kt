@@ -161,6 +161,7 @@ class CommunityChattingViewModel @Inject constructor(
             is CommunityChattingAction.OnRetryPending -> retryPendingMessage(action.clientMessageId)
             is CommunityChattingAction.OnDismissPending -> dismissPendingMessage(action.clientMessageId)
             CommunityChattingAction.OnRetryLoad -> bootstrap()
+            CommunityChattingAction.OnAcknowledgeKick -> acknowledgeKick()
             CommunityChattingAction.OnInviteParticipants -> emitEvent(
                 CommunityChattingEvent.OpenInviteParticipants
             )
@@ -922,6 +923,26 @@ class CommunityChattingViewModel @Inject constructor(
     private fun dismissDeleteThreadDialog() {
         if (uiState.value.isDeleting) return
         updateState { copy(showDeleteDialog = false) }
+    }
+
+    /**
+     * 강퇴 안내를 확인했음을 서버에 저장한다.
+     *
+     * 확인된 스레드는 목록 조회에서 제외되므로 성공하면 목록을 갱신하며 돌아가고,
+     * 실패하면 안내 화면에 남아 다시 시도할 수 있게 한다.
+     */
+    private fun acknowledgeKick() = viewModelScope.launch {
+        val state = uiState.value
+        if (!state.isKicked || state.isAcknowledgingKick) return@launch
+
+        updateState { copy(isAcknowledgingKick = true) }
+        when (val result = threadRepository.acknowledgeKick(state.threadId)) {
+            is ApiState.Success -> emitEvent(CommunityChattingEvent.KickAcknowledged)
+            is ApiState.Fail -> {
+                updateState { copy(isAcknowledgingKick = false) }
+                emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+            }
+        }
     }
 
     private fun deleteThread() = viewModelScope.launch {
