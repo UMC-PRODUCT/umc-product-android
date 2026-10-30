@@ -161,12 +161,12 @@ fun CommunityChattingScreen(
         onAction(CommunityChattingAction.OnTransferOwnership(it))
     }
 
-    // 강퇴된 스레드(목록의 강퇴 카드에서 진입)도 참여 종료 화면으로 안내
+    // 강퇴된 스레드(목록의 강퇴 카드에서 진입)는 참여 종료 안내 화면으로 이동
     if (state.isKicked) {
-        ThreadUnavailableScreen(
+        KickedThreadScreen(
             onBack = onBack,
-            onButtonClick = { onAction(CommunityChattingAction.OnAcknowledgeKick) },
-            isButtonEnabled = !state.isAcknowledgingKick,
+            onAcknowledge = { onAction(CommunityChattingAction.OnAcknowledgeKick) },
+            isAcknowledging = state.isAcknowledgingKick,
             toastData = toastData,
             onToastDismiss = onToastDismiss,
         )
@@ -917,8 +917,90 @@ private fun ThreadUnavailableScreen(
     title: String = AppStrings.CHAT_UNAVAILABLE_TITLE,
     description: String = AppStrings.CHAT_UNAVAILABLE_DESCRIPTION,
     buttonText: String = AppStrings.CHAT_BACK_TO_COMMUNITY,
-    onButtonClick: () -> Unit = onBack,
-    isButtonEnabled: Boolean = true,
+) {
+    Scaffold(
+        containerColor = grey100(),
+        topBar = {
+            Surface(color = white()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .height(72.dp)
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_back),
+                            contentDescription = AppStrings.CHAT_CD_BACK,
+                            tint = grey950(),
+                        )
+                    }
+                    Text(
+                        text = topBarTitle,
+                        modifier = Modifier.padding(start = 4.dp),
+                        color = grey950(),
+                        style = UmcTypographyTokens.Title2Bold
+                    )
+                }
+            }
+        },
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_block),
+                contentDescription = null,
+                modifier = Modifier.size(30.dp),
+                tint = grey400(),
+            )
+            Spacer(Modifier.height(14.dp))
+            Text(
+                text = title,
+                color = grey800(),
+                style = UmcTypographyTokens.HeadlineBold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = description,
+                color = grey400(),
+                style = UmcTypographyTokens.Subheadline
+            )
+            Spacer(Modifier.height(34.dp))
+            UButton(
+                text = buttonText,
+                onClick = onBack,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                backgroundColor = indigo500(),
+                pressedColor = indigo600(),
+                textColor = white(),
+                textStyle = UmcTypographyTokens.HeadlineBold,
+                cornerRadius = 8.dp,
+            )
+            Spacer(Modifier.height(100.dp))
+        }
+    }
+}
+
+/**
+ * 강퇴된 스레드에 진입했을 때의 참여 종료 안내 화면 (Figma `커뮤니티_스레드_강퇴`)
+ *
+ * '커뮤니티로 돌아가기'를 누르면 강퇴 확인을 서버에 저장하고, 뒤로가기는 확인 없이 돌아간다.
+ */
+@Composable
+private fun KickedThreadScreen(
+    onBack: () -> Unit,
+    onAcknowledge: () -> Unit,
+    isAcknowledging: Boolean,
     toastData: UToastData? = null,
     onToastDismiss: () -> Unit = {},
 ) {
@@ -951,7 +1033,7 @@ private fun ThreadUnavailableScreen(
                         )
                     }
                     UText(
-                        text = topBarTitle,
+                        text = AppStrings.CHAT_UNAVAILABLE_TOP_BAR,
                         color = grey950(),
                         style = UmcTypographyTokens.Title2Bold,
                     )
@@ -981,14 +1063,14 @@ private fun ThreadUnavailableScreen(
             }
             Spacer(Modifier.height(4.dp))
             UText(
-                text = title,
+                text = AppStrings.CHAT_UNAVAILABLE_TITLE,
                 color = grey600(),
                 style = UmcTypographyTokens.HeadlineBold,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(4.dp))
             UText(
-                text = description,
+                text = AppStrings.CHAT_KICKED_DESCRIPTION,
                 modifier = Modifier.fillMaxWidth(),
                 color = grey500(),
                 style = UmcTypographyTokens.Subheadline,
@@ -996,9 +1078,9 @@ private fun ThreadUnavailableScreen(
             )
             Spacer(Modifier.height(40.dp))
             UButton(
-                text = buttonText,
-                onClick = onButtonClick,
-                enabled = isButtonEnabled,
+                text = AppStrings.CHAT_BACK_TO_COMMUNITY,
+                onClick = onAcknowledge,
+                enabled = !isAcknowledging,
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
                     .fillMaxWidth()
