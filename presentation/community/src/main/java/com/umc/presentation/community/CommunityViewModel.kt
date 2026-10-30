@@ -515,6 +515,7 @@ private fun CommunityThread.toUiModel(
         isMine = myRole == CommunityThreadRole.OWNER,
         canEdit = myRole.canEditThread(),
         isJoined = isJoined,
+        isKicked = isKicked,
     )
 }
 

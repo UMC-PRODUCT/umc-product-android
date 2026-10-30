@@ -355,6 +355,7 @@ private fun CommunityThread.toSearchUiModel(
         isMine = myRole == CommunityThreadRole.OWNER,
         canEdit = myRole.canEditThread(),
         isJoined = isJoined,
+        isKicked = isKicked,
     )
 }
 

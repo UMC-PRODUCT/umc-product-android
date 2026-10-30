@@ -8,6 +8,7 @@ import com.umc.domain.model.community.CommunityThread
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadDetail
 import com.umc.domain.model.community.CommunityThreadLastMessage
+import com.umc.domain.model.community.CommunityThreadMembershipState
 import com.umc.domain.model.community.CommunityThreadPage
 import com.umc.domain.model.community.CommunityThreadRole
 
@@ -42,6 +43,7 @@ fun CommunityThreadSummaryResponse.toDomain(): CommunityThread {
         createdAt = createdAt,
         updatedAt = updatedAt,
         isJoined = isJoined,
+        membershipState = membershipState.toMembershipState(),
     )
 }
 
@@ -83,6 +85,17 @@ private fun String.toThreadCategory(): CommunityThreadCategory {
         "PROJECT" -> CommunityThreadCategory.PROJECT
         "FREE" -> CommunityThreadCategory.FREE
         else -> CommunityThreadCategory.UNKNOWN
+    }
+}
+
+// 참여한 적 없는 스레드(null)나 모르는 값은 상태 없음으로 본다
+private fun String?.toMembershipState(): CommunityThreadMembershipState? {
+    return when (this?.uppercase()) {
+        "ACTIVE" -> CommunityThreadMembershipState.ACTIVE
+        "LEFT" -> CommunityThreadMembershipState.LEFT
+        "KICKED" -> CommunityThreadMembershipState.KICKED
+        "KICKED_ACKNOWLEDGED" -> CommunityThreadMembershipState.KICKED_ACKNOWLEDGED
+        else -> null
     }
 }
 
