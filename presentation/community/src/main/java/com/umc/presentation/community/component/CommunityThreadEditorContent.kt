@@ -98,7 +98,7 @@ fun CommunityThreadEditorContent(
             .background(grey000())
             .navigationBarsPadding(),
     ) {
-        _root_ide_package_.com.umc.presentation.community.component.create.CommunityCreateTopBar(
+        com.umc.presentation.community.component.create.CommunityCreateTopBar(
             title = if (isEditMode) "스레드 수정하기" else "스레드 만들기",
             actionText = if (isEditMode) "저장" else "완료",
             isActionEnabled = isSubmitEnabled,
@@ -170,7 +170,7 @@ fun CommunityThreadEditorContent(
             ) {
                 aboveAiCardContent()
 
-                _root_ide_package_.com.umc.presentation.community.component.create.CommunityAiCard(
+                com.umc.presentation.community.component.create.CommunityAiCard(
                     aiState = aiState,
                     classifiedCategory = aiCategory,
                     canRequestClassification = canRequestClassification,
@@ -225,7 +225,7 @@ private fun CommunityThreadEditorFields(
         // 분류 전에는 아이콘 선택 기본값인 자유로 표시
         val previewCategory = selectedCategory ?: CommunityCategory.FREE
 
-        _root_ide_package_.com.umc.presentation.community.component.create.CommunityThreadPreview(
+        com.umc.presentation.community.component.create.CommunityThreadPreview(
             title = title,
             description = description,
             category = previewCategory,
@@ -235,7 +235,7 @@ private fun CommunityThreadEditorFields(
         Spacer(modifier = Modifier.height(32.dp))
 
         // 스레드 제목 및 특징 입력 영역
-        _root_ide_package_.com.umc.presentation.community.component.create.CommunityThreadForm(
+        com.umc.presentation.community.component.create.CommunityThreadForm(
             title = title,
             description = description,
             onTitleChanged = onTitleChanged,
@@ -245,7 +245,7 @@ private fun CommunityThreadEditorFields(
         Spacer(modifier = Modifier.height(32.dp))
 
         UText(
-            text = _root_ide_package_.com.umc.presentation.community.component.create.communityRequiredLabel(
+            text = com.umc.presentation.community.component.create.communityRequiredLabel(
                 "아이콘"
             ),
             style = UmcTypographyTokens.HeadlineBold,
@@ -264,7 +264,7 @@ private fun CommunityThreadEditorFields(
             iconSelectCategories.forEach { category ->
                 // 화면 폭을 넘지 않도록 폭을 균등하게 나누고,
                 // 라벨이 줄바꿈되어도 가장 높은 아이템에 높이를 맞춤
-                _root_ide_package_.com.umc.presentation.community.component.create.CommunityIconSelectItem(
+                com.umc.presentation.community.component.create.CommunityIconSelectItem(
                     label = category.label,
                     iconRes = category.previewIconRes(),
                     selected = previewCategory == category,
@@ -283,7 +283,7 @@ private fun CommunityThreadEditorFields(
             text = if (mode is CommunityThreadEditorMode.Edit) {
                 AnnotatedString("챌린저 명단")
             } else {
-                _root_ide_package_.com.umc.presentation.community.component.create.communityRequiredLabel(
+                com.umc.presentation.community.component.create.communityRequiredLabel(
                     "초대할 챌린저"
                 )
             },
@@ -293,7 +293,7 @@ private fun CommunityThreadEditorFields(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        _root_ide_package_.com.umc.presentation.community.component.create.CommunityChallengerCard(
+        com.umc.presentation.community.component.create.CommunityChallengerCard(
             challengers = challengers,
             maxCount = maxChallengerCount,
             currentCount = currentChallengerCount,
@@ -304,7 +304,7 @@ private fun CommunityThreadEditorFields(
 
         // 스레드 삭제 버튼 (수정 모드 + 삭제 권한이 있을 때만)
         if (mode is CommunityThreadEditorMode.Edit && mode.canDelete) {
-            _root_ide_package_.com.umc.presentation.community.component.create.CommunityDeleteButton(
+            com.umc.presentation.community.component.create.CommunityDeleteButton(
                 onClick = onDeleteClick,
             )
 

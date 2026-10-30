@@ -74,6 +74,7 @@ class CommunityChattingViewModel @Inject constructor(
     private var bufferingRecoveryEvents = false
     private val recoveryEvents = mutableListOf<CommunityChatEvent>()
     private val retryingMessageIds = hashSetOf<String>()
+    private val reportingMessageIds = hashSetOf<String>()
     private var accessGeneration = 0
     private var memberLoadGeneration = 0
     private var detailLoadGeneration = 0
@@ -161,7 +162,7 @@ class CommunityChattingViewModel @Inject constructor(
             is CommunityChattingAction.OnReact -> toggleReaction(action.message, action.emoji)
             is CommunityChattingAction.OnReportMessage -> reportMessage(
                 messageId = action.messageId,
-                reason = action.reason,
+                reasons = action.reasons,
             )
             CommunityChattingAction.OnToggleMuted -> toggleMuted()
             CommunityChattingAction.OnTogglePinned -> togglePinned()
@@ -180,6 +181,11 @@ class CommunityChattingViewModel @Inject constructor(
             CommunityChattingAction.OnConfirmDeleteThread -> deleteThread()
             is CommunityChattingAction.OnKickMember -> kickMember(action.memberId)
             is CommunityChattingAction.OnTransferOwnership -> transferOwnership(action.memberId)
+            is CommunityChattingAction.OnToggleMemberAdmin -> toggleMemberAdmin(action.memberId)
+            is CommunityChattingAction.OnViewMemberProfile -> viewModelScope.launch {
+                emitEvent(CommunityChattingEvent.OpenMemberProfile(action.memberId))
+            }
+            is CommunityChattingAction.OnManageParticipants -> manageParticipants(action.memberIds, action.action)
         }
     }
 
@@ -674,15 +680,22 @@ class CommunityChattingViewModel @Inject constructor(
         }
     }
 
-    fun reportMessage(messageId: String, reason: CommunityMessageReportReason) = viewModelScope.launch {
+    fun reportMessage(messageId: String, reasons: Set<CommunityMessageReportReason>) = viewModelScope.launch {
         val current = uiState.value
         val message = current.messages.find { it.messageId == messageId } ?: return@launch
         if (message.senderId == current.myMemberId || message.deletedAt != null || message.status == "DELETED") return@launch
-        resultResponse(
-            threadRepository.reportMessage(messageId, reason),
-            successCallback = { emitEvent(CommunityChattingEvent.MessageReported) },
-            errorCallback = { emitEvent(CommunityChattingEvent.ShowError(if (it.code.contains("409")) "이미 접수된 신고예요." else it.message)) },
-        )
+        if (reasons.isEmpty() || !reportingMessageIds.add(messageId)) return@launch
+        try {
+            val result = submitCommunityMessageReports(reasons) { reason -> threadRepository.reportMessage(messageId, reason) }
+            if (result.failures.isEmpty()) emitEvent(CommunityChattingEvent.MessageReported)
+            else {
+                val failure = result.failures.values.first()
+                val detail = if (failure.code.contains("409") || failure.code.contains("REPORT_ALREADY_EXISTS"))
+                    AppStrings.CHAT_REPORT_ALREADY_EXISTS else failure.message
+                emitEvent(CommunityChattingEvent.ShowError(if (reasons.size > 1)
+                    AppStrings.CHAT_REPORT_PARTIAL_RESULT_FORMAT.format(result.accepted.size, result.failures.size) + " " + detail else detail))
+            }
+        } finally { reportingMessageIds.remove(messageId) }
     }
 
     fun retryPendingMessage(clientMessageId: String) = viewModelScope.launch {
@@ -890,11 +903,10 @@ class CommunityChattingViewModel @Inject constructor(
         val state = uiState.value
         if (membershipMutationInProgress || state.thread?.myRole !in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN) || memberId == state.myMemberId || state.members[memberId]?.role == CommunityThreadRole.OWNER) return@launch
         membershipMutationInProgress = true
-        val requestId = UUID.randomUUID().toString()
         try {
             when (val result = threadRepository.kickMember(state.threadId, memberId)) {
                 is ApiState.Success -> updateState {
-                    withSuccessfulKickNotice(state, memberId, requestId, java.time.Instant.now().toString()).copy(
+                    copy(
                         members = members - memberId,
                         thread = thread?.copy(memberCount = result.data.memberCount),
                     )
@@ -930,11 +942,96 @@ class CommunityChattingViewModel @Inject constructor(
                         },
                         thread = thread?.copy(myRole = CommunityThreadRole.ADMIN),
                     )
-                }
+                }.also { emitEvent(CommunityChattingEvent.OwnershipTransferred) }
                 is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
             }
         } finally {
             membershipMutationInProgress = false
+            refreshThread()
+        }
+    }
+
+    private fun toggleMemberAdmin(memberId: String) = viewModelScope.launch {
+        val current = uiState.value
+        val target = current.members[memberId] ?: return@launch
+        if (membershipMutationInProgress || current.isAccessDenied || target.state != CommunityThreadMemberState.ACTIVE ||
+            !communityParticipantMenuPermissions(current.thread?.myRole ?: CommunityThreadRole.UNKNOWN,
+                target.role, memberId == current.myMemberId).canChangeAdmin) return@launch
+        membershipMutationInProgress = true
+        val generation = accessGeneration
+        try {
+            val role = if (target.role == CommunityThreadRole.ADMIN) CommunityThreadRole.MEMBER else CommunityThreadRole.ADMIN
+            when (val result = threadRepository.changeMemberRole(current.threadId, memberId, role)) {
+                is ApiState.Success -> if (generation == accessGeneration) {
+                    updateState { copy(members = members.mapValues { (id, member) ->
+                        if (id == memberId) member.copy(role = result.data.role) else member
+                    }) }
+                    emitEvent(CommunityChattingEvent.MemberAdminChanged(role == CommunityThreadRole.ADMIN))
+                }
+                is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+            }
+        } finally { membershipMutationInProgress = false; refreshThread() }
+    }
+
+    private fun manageParticipants(memberIds: Set<String>, action: CommunityParticipantBatchAction) = viewModelScope.launch {
+        val initial = uiState.value
+        val role = initial.thread?.myRole ?: return@launch
+        if (memberIds.isEmpty() || membershipMutationInProgress || initial.isAccessDenied ||
+            role !in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN) ||
+            (action != CommunityParticipantBatchAction.KICK && role != CommunityThreadRole.OWNER)) return@launch
+        membershipMutationInProgress = true
+        val generation = accessGeneration
+        updateState { copy(isManagingParticipants = true) }
+        try {
+            var failureMessage: String? = null
+            val result = applyCommunityParticipantBatch(memberIds) { memberId ->
+                val current = uiState.value
+                val target = current.members[memberId]
+                val currentRole = current.thread?.myRole ?: CommunityThreadRole.UNKNOWN
+                if (generation != accessGeneration || current.isAccessDenied || target == null ||
+                    communityManageableParticipants(listOf(target), currentRole, current.myMemberId).isEmpty() ||
+                    (action != CommunityParticipantBatchAction.KICK && currentRole != CommunityThreadRole.OWNER)) {
+                    false
+                } else {
+                    val requestedRole = when (action) {
+                        CommunityParticipantBatchAction.ASSIGN_ADMIN -> CommunityThreadRole.ADMIN
+                        CommunityParticipantBatchAction.REMOVE_ADMIN -> CommunityThreadRole.MEMBER
+                        CommunityParticipantBatchAction.KICK -> null
+                    }
+                    if (requestedRole != null && target.role == requestedRole) return@applyCommunityParticipantBatch true
+                    val response = if (requestedRole != null) threadRepository.changeMemberRole(current.threadId, memberId, requestedRole)
+                        else threadRepository.kickMember(current.threadId, memberId)
+                    when (response) {
+                        is ApiState.Success -> {
+                            if (generation != accessGeneration) return@applyCommunityParticipantBatch false
+                            updateState {
+                                if (action == CommunityParticipantBatchAction.KICK) copy(
+                                    members = members - memberId,
+                                    thread = thread?.copy(memberCount = response.data.memberCount),
+                                ) else copy(members = members.mapValues { (id, member) ->
+                                    if (id == memberId) member.copy(role = response.data.role) else member
+                                })
+                            }
+                            true
+                        }
+                        is ApiState.Fail -> { failureMessage = response.failState.message; false }
+                    }
+                }
+            }
+            if (generation != accessGeneration) return@launch
+            updateState { copy(managedParticipantIds = result.successfulIds,
+                participantManagementRevision = participantManagementRevision + 1) }
+            val message = when {
+                result.failedIds.isNotEmpty() -> "${result.successfulIds.size}명 완료, ${result.failedIds.size}명 미완료. " +
+                    (failureMessage ?: "실패한 참여자를 다시 확인해주세요.")
+                action == CommunityParticipantBatchAction.ASSIGN_ADMIN -> AppStrings.CHAT_PARTICIPANTS_ASSIGNED_ADMIN
+                action == CommunityParticipantBatchAction.REMOVE_ADMIN -> AppStrings.CHAT_ADMIN_REMOVED
+                else -> AppStrings.CHAT_PARTICIPANTS_REMOVED
+            }
+            emitEvent(CommunityChattingEvent.ParticipantsManaged(message, result.failedIds.isNotEmpty()))
+        } finally {
+            membershipMutationInProgress = false
+            updateState { copy(isManagingParticipants = false) }
             refreshThread()
         }
     }
@@ -1083,7 +1180,6 @@ class CommunityChattingViewModel @Inject constructor(
                 isAccessDenied = true,
                 thread = null,
                 messages = emptyList(),
-                departureNotices = emptyList(),
                 members = emptyMap(),
                 memberProfiles = emptyMap(),
                 localImageUrisByMessageId = emptyMap(),
@@ -1249,7 +1345,7 @@ class CommunityChattingViewModel @Inject constructor(
                 val isOwnMessage = receivedMessage.senderId == myMemberId || pending != null
                 val updatedSummaryCandidates = when (event.type) {
                     CommunityChatEvent.MessageChanged.Type.CREATED -> {
-                        if (isOwnMessage) {
+                        if (isOwnMessage || receivedMessage.type.isSystemNotice) {
                             summaryCandidateMessages
                         } else {
                             (listOf(receivedMessage) + summaryCandidateMessages)
@@ -1319,7 +1415,7 @@ class CommunityChattingViewModel @Inject constructor(
                     } else {
                         event.memberId?.let { memberId ->
                             updateState {
-                                withDepartureNotice(event).copy(
+                                copy(
                                     members = members - memberId,
                                     thread = event.memberCount?.let { count ->
                                         thread?.copy(memberCount = count)

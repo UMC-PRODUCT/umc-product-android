@@ -16,8 +16,9 @@ data class CommunityChattingState(
     val members: Map<String, CommunityThreadMember> = emptyMap(),
     val memberProfiles: Map<String, CommunityParticipantProfile> = emptyMap(),
     val messages: List<CommunityThreadMessage> = emptyList(),
-    // 실시간 퇴장 안내는 서버 메시지 ID가 없으므로 읽음/요약 대상과 별도로 보관한다.
-    val departureNotices: List<CommunityThreadMessage> = emptyList(),
+    val isManagingParticipants: Boolean = false,
+    val participantManagementRevision: Int = 0,
+    val managedParticipantIds: Set<String> = emptySet(),
     val knownDeletedMessageIds: Set<String> = emptySet(),
     val unreadMessagesAtEntry: List<CommunityThreadMessage> = emptyList(),
     val unreadCountAtEntry: Int = 0,

@@ -176,10 +176,10 @@ fun UDialog(
                     UButton(
                         text = negativeText,
                         onClick = onNegative,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).then(if (useCompactStyle) Modifier.height(42.dp) else Modifier),
                         backgroundColor = negativeBackgroundColor,
                         textColor = negativeTextColor,
-                        textStyle = UmcTypographyTokens.SubheadlineBold,
+                        textStyle = if (useCompactStyle) UmcTypographyTokens.CalloutBold else UmcTypographyTokens.SubheadlineBold,
                         borderWidth = if (
                             negativeBorderColor == Color.Transparent
                         ) {
@@ -189,22 +189,22 @@ fun UDialog(
                         },
                         borderColor = negativeBorderColor,
                         cornerRadius = 8.dp,
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = if (useCompactStyle) PaddingValues(0.dp) else PaddingValues(vertical = 14.dp),
                     )
 
                     Spacer(
                         modifier = Modifier.width(
-                            if (isAccept != null) 16.dp else 8.dp
+                            if (isAccept != null || useCompactStyle) 16.dp else 8.dp
                         )
                     )
 
                     UButton(
                         text = positiveText,
                         onClick = onPositive,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).then(if (useCompactStyle) Modifier.height(42.dp) else Modifier),
                         backgroundColor = positiveBackgroundColor,
                         textColor = positiveTextColor,
-                        textStyle = UmcTypographyTokens.SubheadlineBold,
+                        textStyle = if (useCompactStyle) UmcTypographyTokens.CalloutBold else UmcTypographyTokens.SubheadlineBold,
                         borderWidth = if (
                             positiveBorderColor == Color.Transparent
                         ) {
@@ -214,7 +214,7 @@ fun UDialog(
                         },
                         borderColor = positiveBorderColor,
                         cornerRadius = 8.dp,
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = if (useCompactStyle) PaddingValues(0.dp) else PaddingValues(vertical = 14.dp),
                     )
                 }
             } else {

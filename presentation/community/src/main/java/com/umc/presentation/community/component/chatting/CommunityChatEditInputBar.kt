@@ -25,7 +25,7 @@ import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.red400
 import com.umc.component.theme.white
 
@@ -114,7 +114,7 @@ internal fun CommunityChatEditInputBar(
                             .focusRequester(focusRequester)
                             .onFocusChanged { currentOnFocusChanged(it.isFocused) },
                         textStyle = UmcTypographyTokens.Body.copy(color = grey950()),
-                        cursorBrush = SolidColor(indigo500()),
+                        cursorBrush = SolidColor(main500()),
                         maxLines = 4,
                     )
                     IconButton(onClick = onSave, enabled = canSave) {
@@ -124,7 +124,7 @@ internal fun CommunityChatEditInputBar(
                             Icon(
                                 painterResource(R.drawable.ic_send),
                                 contentDescription = "메시지 수정 저장",
-                                tint = if (canSave) indigo500() else grey400(),
+                                tint = if (canSave) main500() else grey400(),
                                 modifier = Modifier.size(24.dp),
                             )
                         }

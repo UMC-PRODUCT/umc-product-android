@@ -15,7 +15,13 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import com.umc.presentation.community.component.chatting.CommunityChatMessageImage
+import com.umc.presentation.community.component.chatting.CommunityChatImageLoadingIndicator
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -149,6 +155,7 @@ import kotlinx.collections.immutable.toImmutableList
 fun CommunityChattingScreen(
     state: CommunityChattingState,
     toastData: UToastData? = null,
+    toastGeneration: Int = 0,
     onToastDismiss: () -> Unit = {},
     onAction: (CommunityChattingAction) -> Unit,
 ) {
@@ -165,7 +172,7 @@ fun CommunityChattingScreen(
     val onReact: (CommunityThreadMessage, String) -> Unit = { message, emoji ->
         onAction(CommunityChattingAction.OnReact(message, emoji))
     }
-    val onReportMessage: (String, CommunityMessageReportReason) -> Unit = { messageId, reason ->
+    val onReportMessage: (String, Set<CommunityMessageReportReason>) -> Unit = { messageId, reason ->
         onAction(CommunityChattingAction.OnReportMessage(messageId, reason))
     }
     val onToggleMuted = { onAction(CommunityChattingAction.OnToggleMuted) }
@@ -220,9 +227,9 @@ fun CommunityChattingScreen(
     val deletedMessageIds = remember(state.messages, state.knownDeletedMessageIds) {
         communityDeletedMessageIds(state.messages, state.knownDeletedMessageIds)
     }
-    val displayedMessages = remember(state.messages, state.departureNotices, deletedMessageIds) {
+    val displayedMessages = remember(state.messages, deletedMessageIds) {
         communityDisplayedMessages(
-            communityMessagesWithDepartureNotices(state.messages, state.departureNotices), deletedMessageIds,
+            state.messages, deletedMessageIds,
         )
     }
     // The load-more button may be the first visible item. Anchor to a message instead,
@@ -246,7 +253,7 @@ fun CommunityChattingScreen(
     var reportingMessageId by remember { mutableStateOf<String?>(null) }
     var showThreadInfo by remember { mutableStateOf(false) }
     var pendingReportConfirmation by remember {
-        mutableStateOf<Pair<String, CommunityMessageReportReason>?>(null)
+        mutableStateOf<Pair<String, Set<CommunityMessageReportReason>>?>(null)
     }
     // 참여하지 않았거나 나간 스레드는 읽기만 가능하다(서버 역할 없음 = UNKNOWN).
     val isViewOnly = state.thread?.myRole == CommunityThreadRole.UNKNOWN
@@ -465,14 +472,6 @@ fun CommunityChattingScreen(
         }
     }
 
-    LaunchedEffect(state.departureNotices.size) {
-        if (state.departureNotices.isNotEmpty() && followsLatestMessage) {
-            listState.animateScrollToItem(
-                latestListItemIndex(displayedMessages.size, state.pendingMessages.size, state.hasMore),
-            )
-        }
-    }
-
     LaunchedEffect(state.pendingMessages.keys) {
         val currentIds = state.pendingMessages.keys.toSet()
         val hasNewPendingMessage = currentIds.any { it !in knownPendingMessageIds }
@@ -542,11 +541,11 @@ fun CommunityChattingScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = grey100(),
         snackbarHost = {
-            UToastHost(
+            if (!showThreadInfo) key(toastGeneration) { UToastHost(
                 data = toastData,
                 onDismiss = onToastDismiss,
                 modifier = Modifier.padding(bottom = 8.dp),
-            )
+            ) }
         },
         topBar = {
             Column {
@@ -930,6 +929,7 @@ fun CommunityChattingScreen(
             title = AppStrings.CHAT_REPORT_CONFIRM_TITLE,
             subtitle = AppStrings.CHAT_REPORT_CONFIRM_DESCRIPTION,
             isTwoButton = true,
+            useCompactStyle = true,
             negativeText = AppStrings.CHAT_CANCEL,
             positiveText = AppStrings.CHAT_REPORT_ACTION,
             negativeBackgroundColor = grey100(),
@@ -957,6 +957,13 @@ fun CommunityChattingScreen(
             onBack = { showThreadInfo = false },
             onKickMember = onKickMember,
             onTransferOwnership = onTransferOwnership,
+            onToggleMemberAdmin = { onAction(CommunityChattingAction.OnToggleMemberAdmin(it)) },
+            onViewProfile = { onAction(CommunityChattingAction.OnViewMemberProfile(it)) },
+            onManageSelected = { ids, action -> onAction(CommunityChattingAction.OnManageParticipants(ids, action)) },
+            isManagingParticipants = state.isManagingParticipants,
+            managementRevision = state.participantManagementRevision,
+            managedParticipantIds = state.managedParticipantIds,
+            toastGeneration = toastGeneration,
             toastData = toastData,
             onToastDismiss = onToastDismiss,
         )
@@ -1403,7 +1410,6 @@ private fun UnreadSummaryCard(
         Image(
             painter = painterResource(R.drawable.ic_community_ai),
             contentDescription = null,
-            tint = main500(),
             modifier = Modifier.size(32.dp),
         )
         Column(
@@ -1542,7 +1548,7 @@ private fun ChatMessageRow(
     onReact: (String) -> Unit,
     onShowMoreEmojis: () -> Unit,
 ) {
-    if (message.type == CommunityMessageType.SYSTEM) {
+    if (message.type.isSystemNotice) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text(
                 text = message.content.orEmpty(),
@@ -1623,13 +1629,14 @@ private fun MessageReactions(
             val interactionSource = remember { MutableInteractionSource() }
             Surface(
                 modifier = Modifier
-                    .padding(end = 5.dp)
-                    .clickable(enabled = enabled) { onReactionClick(reaction.emoji) },
-                shape = RoundedCornerShape(14.dp),
-                color = selectedColor,
+                    .padding(end = 5.dp).clip(CircleShape)
+                    .clickable(enabled = enabled, interactionSource = interactionSource,
+                        indication = androidx.compose.material3.ripple()) { onReactionClick(reaction.emoji) },
+                shape = CircleShape,
+                color = white(),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,
-                    if (reaction.reactedByMe) indigo200() else grey200(),
+                    grey200(),
                 ),
             ) {
                 Text(
@@ -1750,8 +1757,8 @@ private fun MineMessage(
             modifier = bubbleModifier,
             color = when {
                 message.type == CommunityMessageType.IMAGE -> Color.Transparent
-                selected -> indigo600()
-                else -> indigo500()
+                selected -> main600()
+                else -> main500()
             },
             shape = RoundedCornerShape(12.dp),
         ) {
@@ -1815,14 +1822,10 @@ private fun MessageBubbleContent(
             )
         }
         if (models.size == 1) {
-            AsyncImage(
+            CommunityChatMessageImage(
                 model = models.first(),
-                contentDescription = AppStrings.CHAT_CD_IMAGE,
-                modifier = modifier
-                    .size(width = 220.dp, height = 180.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                modifier = modifier.width(256.dp).aspectRatio(1f)
                     .combinedClickable(onClick = { imageViewerIndex = 0 }, onLongClick = onLongClick),
-                contentScale = ContentScale.Crop,
             )
         } else if (models.isNotEmpty()) {
             ChatImageGrid(
@@ -1879,7 +1882,7 @@ private fun MessageBubbleContent(
             text = communityMentionText(
                 message.content.orEmpty(),
                 communityMentionNameRanges(message.content.orEmpty(), message.mentions.map { it.name }),
-                if (isMine) indigo100() else indigo500(),
+                if (isMine) main100() else main500(),
             ),
             color = foreground,
             style = UmcTypographyTokens.Subheadline
@@ -1894,32 +1897,37 @@ private fun ChatImageGrid(
     modifier: Modifier = Modifier,
     onImageClick: (Int) -> Unit = {},
     onLongClick: (() -> Unit)? = null,
+    showLoadingIndicator: Boolean = true,
 ) {
+    @Composable
+    fun Cell(model: String, modifier: Modifier, onLongClick: (() -> Unit)? = null, onClick: () -> Unit = {}) {
+        ChatGridImage(model, modifier, onLongClick, showLoadingIndicator, onClick)
+    }
     val images = models.take(COMMUNITY_CHAT_MAX_IMAGE_COUNT)
-    val containerModifier = modifier.width(220.dp).clip(RoundedCornerShape(16.dp))
+    val containerModifier = modifier.width(220.dp).clip(RoundedCornerShape(12.dp))
 
     when (images.size) {
         0 -> Unit
-        1 -> ChatGridImage(images.first(), containerModifier.height(180.dp), onLongClick) { onImageClick(0) }
+        1 -> Cell(images.first(), containerModifier.height(180.dp), onLongClick) { onImageClick(0) }
         2 -> Row(
             modifier = containerModifier.height(160.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             images.forEachIndexed { index, model ->
-                ChatGridImage(model, Modifier.weight(1f).fillMaxHeight(), onLongClick) { onImageClick(index) }
+                Cell(model, Modifier.weight(1f).fillMaxHeight(), onLongClick) { onImageClick(index) }
             }
         }
         3 -> Row(
             modifier = containerModifier.height(220.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            ChatGridImage(images.first(), Modifier.weight(1f).fillMaxHeight(), onLongClick) { onImageClick(0) }
+            Cell(images.first(), Modifier.weight(1f).fillMaxHeight(), onLongClick) { onImageClick(0) }
             Column(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 images.drop(1).forEachIndexed { index, model ->
-                    ChatGridImage(model, Modifier.weight(1f).fillMaxWidth(), onLongClick) { onImageClick(index + 1) }
+                    Cell(model, Modifier.weight(1f).fillMaxWidth(), onLongClick) { onImageClick(index + 1) }
                 }
             }
         }
@@ -1934,7 +1942,7 @@ private fun ChatImageGrid(
                 ) {
                     rowModels.forEachIndexed { columnIndex, model ->
                         val imageIndex = rowIndex * 2 + columnIndex
-                        ChatGridImage(model, Modifier.weight(1f).aspectRatio(1f), onLongClick) {
+                        Cell(model, Modifier.weight(1f).aspectRatio(1f), onLongClick) {
                             onImageClick(imageIndex)
                         }
                     }
@@ -1950,13 +1958,13 @@ private fun ChatGridImage(
     model: String,
     modifier: Modifier,
     onLongClick: (() -> Unit)? = null,
+    showLoadingIndicator: Boolean = true,
     onClick: () -> Unit = {},
 ) {
-    AsyncImage(
+    CommunityChatMessageImage(
         model = model,
-        contentDescription = AppStrings.CHAT_CD_IMAGE,
+        showLoadingIndicator = showLoadingIndicator,
         modifier = modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
-        contentScale = ContentScale.Crop,
     )
 }
 
@@ -2187,98 +2195,45 @@ private val MessageReportReasons = listOf(
 @Composable
 private fun MessageReportSheet(
     onDismiss: () -> Unit,
-    onReport: (CommunityMessageReportReason) -> Unit,
+    onReport: (Set<CommunityMessageReportReason>) -> Unit,
 ) {
-    var selectedReason by remember { mutableStateOf<CommunityMessageReportReason?>(null) }
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-    )
-
+    var selectedReasons by remember { mutableStateOf(emptySet<CommunityMessageReportReason>()) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = white(),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(537.dp)
-                .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
-        ) {
-            Text(
-                text = AppStrings.CHAT_REPORT_REASON_TITLE,
-                color = grey950(),
-                style = UmcTypographyTokens.Title3Bold
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = AppStrings.CHAT_REPORT_GUIDE,
-                color = grey600(),
-                style = UmcTypographyTokens.Subheadline
-            )
-            Spacer(Modifier.height(12.dp))
-            MessageReportReasons.forEach { (reason, label) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { selectedReason = reason }
-                        .padding(vertical = 13.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = label,
-                        modifier = Modifier.weight(1f),
-                        color = grey950(),
-                        style = UmcTypographyTokens.Body
-                    )
-                    Checkbox(
-                        checked = selectedReason == reason,
-                        onCheckedChange = { selectedReason = reason },
-                        modifier = Modifier.size(24.dp),
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = main500(),
-                            uncheckedColor = grey400(),
-                            checkmarkColor = white(),
-                        ),
-                    )
-                }
-                HorizontalDivider(color = grey200())
+        onDismissRequest = onDismiss, sheetState = sheetState, containerColor = white(),
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp), scrimColor = grey950().copy(alpha = 0.6f),
+        dragHandle = {
+            Box(Modifier.fillMaxWidth().height(52.dp)) {
+                Box(Modifier.align(Alignment.TopCenter).padding(top = 16.dp).size(32.dp, 4.dp)
+                    .background(grey600(), RoundedCornerShape(100.dp)))
             }
-            Spacer(Modifier.weight(1f))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = grey100(),
-                        contentColor = grey800(),
-                    ),
-                ) {
-                    Text(AppStrings.CHAT_REPORT_CANCEL, style = UmcTypographyTokens.HeadlineBold)
+        },
+    ) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
+            Text(AppStrings.CHAT_REPORT_REASON_TITLE, color = grey950(), style = UmcTypographyTokens.Title3Bold)
+            Spacer(Modifier.height(8.dp))
+            Text(AppStrings.CHAT_REPORT_GUIDE, color = grey600(), style = UmcTypographyTokens.Subheadline)
+            Spacer(Modifier.height(16.dp))
+            MessageReportReasons.forEach { (reason, label) ->
+                Column(Modifier.fillMaxWidth().height(56.dp)) {
+                    Row(Modifier.fillMaxWidth().weight(1f).toggleable(
+                        value = reason in selectedReasons, role = Role.Checkbox,
+                        onValueChange = { checked -> selectedReasons = if (checked) selectedReasons + reason else selectedReasons - reason },
+                    ), verticalAlignment = Alignment.CenterVertically) {
+                        Text(label, modifier = Modifier.weight(1f), color = grey950(), style = UmcTypographyTokens.Body)
+                        Checkbox(checked = reason in selectedReasons, onCheckedChange = null, modifier = Modifier.size(24.dp),
+                            colors = CheckboxDefaults.colors(checkedColor = main500(), uncheckedColor = grey400(), checkmarkColor = white()))
+                    }
+                    HorizontalDivider(color = grey200())
                 }
-                Button(
-                    onClick = { selectedReason?.let(onReport) },
-                    enabled = selectedReason != null,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = red100(),
-                        contentColor = red500(),
-                        disabledContainerColor = red100().copy(alpha = 0.55f),
-                        disabledContentColor = red500().copy(alpha = 0.45f),
-                    ),
-                ) {
-                    Text(AppStrings.CHAT_REPORT_ACTION, style = UmcTypographyTokens.HeadlineBold)
-                }
+            }
+            Spacer(Modifier.height(32.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                UButton(text = AppStrings.CHAT_REPORT_CANCEL, onClick = onDismiss, modifier = Modifier.weight(1f).height(52.dp),
+                    backgroundColor = grey100(), textColor = grey700(), textStyle = UmcTypographyTokens.HeadlineBold)
+                UButton(text = AppStrings.CHAT_REPORT_ACTION, onClick = { onReport(selectedReasons.toSet()) },
+                    enabled = selectedReasons.isNotEmpty(), modifier = Modifier.weight(1f).height(52.dp),
+                    backgroundColor = red100(), textColor = red500(), textStyle = UmcTypographyTokens.HeadlineBold)
             }
         }
     }
@@ -2361,7 +2316,7 @@ private fun PendingMessageRow(
             Text(
                 if (failed) AppStrings.CHAT_SEND_FAILED else AppStrings.CHAT_SENDING,
                 modifier = Modifier.padding(end = 8.dp, bottom = 2.dp),
-                color = if (failed) red500() else indigo500(),
+                color = if (failed) red500() else main500(),
                 style = UmcTypographyTokens.Footnote,
             )
             Surface(
@@ -2378,22 +2333,21 @@ private fun PendingMessageRow(
                 },
             ) {
                 if (message.type == CommunityMessageType.IMAGE && message.localUris.size == 1) {
-                    AsyncImage(
-                        model = message.localUris.first(),
-                        contentDescription = AppStrings.CHAT_CD_SEND_IMAGE,
-                        modifier = Modifier
-                            .size(width = 220.dp, height = 180.dp)
-                            .clip(RoundedCornerShape(16.dp)),
-                        contentScale = ContentScale.Crop,
+                    CommunityChatMessageImage(
+                        model = message.localUris.first(), modifier = Modifier.width(256.dp).aspectRatio(1f),
+                        isSending = !failed, transferFailed = failed,
                     )
                 } else if (message.type == CommunityMessageType.IMAGE) {
-                    ChatImageGrid(models = message.localUris)
+                    Box(contentAlignment = Alignment.Center) {
+                        ChatImageGrid(models = message.localUris, showLoadingIndicator = false)
+                        if (!failed) CommunityChatImageLoadingIndicator()
+                    }
                 } else {
                     Text(
                         communityMentionText(
                             message.content,
                             communityMentionNameRanges(message.content, mentionNames),
-                            indigo500(),
+                            main500(),
                         ),
                         modifier = Modifier
                             .widthIn(max = 256.dp)

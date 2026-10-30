@@ -1,5 +1,19 @@
 package com.umc.presentation.community.chatting
 
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.ui.semantics.Role
+import com.umc.component.component.UButton
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -21,7 +35,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -78,10 +98,41 @@ internal fun CommunityThreadInfoScreen(
     onBack: () -> Unit,
     onKickMember: (String) -> Unit,
     onTransferOwnership: (String) -> Unit,
+    onToggleMemberAdmin: (String) -> Unit,
+    onViewProfile: (String) -> Unit,
+    onManageSelected: (Set<String>, CommunityParticipantBatchAction) -> Unit,
+    isManagingParticipants: Boolean = false,
+    managementRevision: Int = 0,
+    managedParticipantIds: Set<String> = emptySet(),
+    toastGeneration: Int = 0,
     toastData: UToastData? = null,
     onToastDismiss: () -> Unit = {},
 ) {
-    BackHandler(onBack = onBack)
+    var isEditing by rememberSaveable { mutableStateOf(false) }
+    var selectedMemberIds by rememberSaveable(
+        stateSaver = listSaver<Set<String>, String>(save = { it.toList() }, restore = { it.toSet() }),
+    ) { mutableStateOf(emptySet<String>()) }
+    var showManagementSheet by remember { mutableStateOf(false) }
+    var pendingBatch by remember { mutableStateOf<Pair<Set<String>, CommunityParticipantBatchAction>?>(null) }
+    val viewerRole = if (isOwner) CommunityThreadRole.OWNER else if (canManage) CommunityThreadRole.ADMIN else CommunityThreadRole.MEMBER
+    val manageableIds = remember(members, viewerRole, myMemberId) {
+        communityManageableParticipants(members, viewerRole, myMemberId).mapTo(hashSetOf()) { it.memberId }
+    }
+    val cancelEditing = {
+        isEditing = false; selectedMemberIds = emptySet<String>(); showManagementSheet = false; pendingBatch = null
+    }
+    val handleBack = { if (!isManagingParticipants) { if (isEditing) cancelEditing() else onBack() } }
+    BackHandler(onBack = handleBack)
+    LaunchedEffect(manageableIds, canManage) {
+        selectedMemberIds = selectedMemberIds.intersect(manageableIds)
+        if (!canManage) cancelEditing()
+    }
+    LaunchedEffect(managementRevision) {
+        if (managementRevision > 0) {
+            selectedMemberIds = selectedMemberIds - managedParticipantIds
+            if (selectedMemberIds.isEmpty()) cancelEditing()
+        }
+    }
     var pendingKickMember by remember { mutableStateOf<CommunityThreadMember?>(null) }
     var pendingOwnershipMember by remember { mutableStateOf<CommunityThreadMember?>(null) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -98,11 +149,24 @@ internal fun CommunityThreadInfoScreen(
     Scaffold(
         containerColor = white(),
         snackbarHost = {
-            UToastHost(
+            key(toastGeneration) { UToastHost(
                 data = toastData,
                 onDismiss = onToastDismiss,
                 modifier = Modifier.padding(bottom = 8.dp),
-            )
+            ) }
+        },
+        bottomBar = {
+            if (isEditing) Row(
+                Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                UButton(text = AppStrings.CHAT_CANCEL, onClick = cancelEditing,
+                    enabled = !isManagingParticipants, modifier = Modifier.weight(1f).height(52.dp),
+                    backgroundColor = grey100(), textColor = grey700(), textStyle = UmcTypographyTokens.HeadlineBold)
+                UButton(text = if (isManagingParticipants) AppStrings.CHAT_MANAGING_PARTICIPANTS else AppStrings.CHAT_MANAGE_SELECTED_PARTICIPANTS,
+                    onClick = { showManagementSheet = true }, enabled = selectedMemberIds.isNotEmpty() && !isManagingParticipants,
+                    modifier = Modifier.weight(1f).height(52.dp), backgroundColor = main500(), textColor = white(), textStyle = UmcTypographyTokens.HeadlineBold)
+            }
         },
         topBar = {
             Surface(color = white()) {
@@ -114,7 +178,7 @@ internal fun CommunityThreadInfoScreen(
                         .padding(horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = handleBack) {
                         Icon(
                             painter = painterResource(R.drawable.ic_back),
                             contentDescription = AppStrings.CHAT_CD_BACK,
@@ -149,16 +213,17 @@ internal fun CommunityThreadInfoScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = AppStrings.CHAT_PARTICIPANT_MANAGEMENT,
-                        color = grey950(),
-                        style = UmcTypographyTokens.HeadlineBold,
+                        text = if (isEditing) AppStrings.CHAT_PARTICIPANT_MANAGEMENT else
+                            AppStrings.CHAT_PARTICIPANT_MANAGEMENT_COUNT_FORMAT.format(
+                                if (query.isNotBlank()) displayedMembers.size.toString() else memberCount.ifBlank { members.size.toString() }),
+                        color = grey950(), style = UmcTypographyTokens.HeadlineBold,
                     )
-                    Text(
-                        text = AppStrings.CHAT_PARTICIPANT_COUNT_FORMAT.format(
-                            memberCount.ifBlank { members.size.toString() },
-                        ),
-                        color = grey950(),
-                        style = UmcTypographyTokens.Body,
+                    if (canManage) Text(
+                        text = if (isEditing) AppStrings.CHAT_CLEAR_PARTICIPANT_SELECTION else AppStrings.CHAT_EDIT_PARTICIPANTS,
+                        color = main500(), style = UmcTypographyTokens.Body,
+                        modifier = Modifier.clickable(enabled = !isManagingParticipants) {
+                            if (isEditing) selectedMemberIds = emptySet() else isEditing = true
+                        },
                     )
                 }
             }
@@ -167,8 +232,15 @@ internal fun CommunityThreadInfoScreen(
                     member = member,
                     profile = memberProfiles[member.memberId],
                     isMe = member.memberId == myMemberId,
-                    showManagement = canManage,
-                    canTransfer = isOwner,
+                    viewerRole = viewerRole,
+                    isEditing = isEditing,
+                    isSelected = member.memberId in selectedMemberIds,
+                    isSelectable = member.memberId in manageableIds && !isManagingParticipants,
+                    onToggleSelection = {
+                        selectedMemberIds = if (member.memberId in selectedMemberIds) selectedMemberIds - member.memberId else selectedMemberIds + member.memberId
+                    },
+                    onViewProfile = { onViewProfile(member.memberId) },
+                    onToggleAdmin = { onToggleMemberAdmin(member.memberId) },
                     onKick = { pendingKickMember = member },
                     onTransferOwnership = { pendingOwnershipMember = member },
                 )
@@ -200,6 +272,34 @@ internal fun CommunityThreadInfoScreen(
         }
     }
 
+    if (showManagementSheet && selectedMemberIds.isNotEmpty() && !isManagingParticipants) {
+        SelectedParticipantManagementSheet(
+            count = selectedMemberIds.size,
+            actions = communityParticipantBatchActions(members.filter { it.memberId in selectedMemberIds }, viewerRole, myMemberId),
+            onDismiss = { showManagementSheet = false },
+            onAction = { action ->
+                showManagementSheet = false
+                if (action == CommunityParticipantBatchAction.ASSIGN_ADMIN) onManageSelected(selectedMemberIds.toSet(), action)
+                else pendingBatch = selectedMemberIds.toSet() to action
+            },
+        )
+    }
+    pendingBatch?.let { (ids, action) ->
+        val removingAdmin = action == CommunityParticipantBatchAction.REMOVE_ADMIN
+        UDialog(
+            title = if (removingAdmin) AppStrings.CHAT_REMOVE_ADMIN else AppStrings.CHAT_KICK_SELECTED_TITLE_FORMAT.format(ids.size),
+            content = if (removingAdmin) AppStrings.CHAT_REMOVE_SELECTED_ADMIN_DESCRIPTION_FORMAT.format(ids.size) else AppStrings.CHAT_KICK_SELECTED_DESCRIPTION,
+            isTwoButton = true, useCompactStyle = true,
+            negativeText = AppStrings.CHAT_CANCEL,
+            positiveText = if (removingAdmin) AppStrings.CHAT_REMOVE_SELECTED_ADMIN_CONFIRM else AppStrings.CHAT_KICK,
+            negativeBackgroundColor = grey100(), negativeTextColor = grey700(),
+            positiveBackgroundColor = if (removingAdmin) main500() else red100(),
+            positiveTextColor = if (removingAdmin) white() else red500(),
+            onDismissRequest = { pendingBatch = null }, onNegative = { pendingBatch = null },
+            onPositive = { pendingBatch = null; onManageSelected(ids.intersect(manageableIds), action) },
+        )
+    }
+
     pendingKickMember?.let { member ->
         UBasicDialog(
             title = AppStrings.CHAT_KICK_TITLE_FORMAT.format(
@@ -229,11 +329,12 @@ internal fun CommunityThreadInfoScreen(
             title = AppStrings.CHAT_TRANSFER_OWNER,
             subtitle = AppStrings.CHAT_TRANSFER_OWNER_DESCRIPTION,
             isTwoButton = true,
+            useCompactStyle = true,
             negativeText = AppStrings.CHAT_CANCEL,
             positiveText = AppStrings.CHAT_TRANSFER_ACTION,
             negativeBackgroundColor = grey100(),
             negativeBorderColor = grey100(),
-            negativeTextColor = grey800(),
+            negativeTextColor = grey700(),
             positiveBackgroundColor = main500(),
             positiveBorderColor = main500(),
             positiveTextColor = white(),
@@ -247,19 +348,67 @@ internal fun CommunityThreadInfoScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SelectedParticipantManagementSheet(
+    count: Int,
+    actions: Set<CommunityParticipantBatchAction>,
+    onDismiss: () -> Unit,
+    onAction: (CommunityParticipantBatchAction) -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss, sheetState = sheetState,
+        containerColor = white(), scrimColor = grey950().copy(alpha = 0.6f),
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        dragHandle = {
+            Box(Modifier.fillMaxWidth().height(48.dp)) {
+                Box(Modifier.align(Alignment.TopCenter).padding(top = 16.dp).size(32.dp, 4.dp)
+                    .background(grey600(), RoundedCornerShape(100.dp)))
+            }
+        },
+    ) {
+        Column(Modifier.fillMaxWidth().heightIn(min = 168.dp).verticalScroll(rememberScrollState())
+            .padding(start = 24.dp, end = 24.dp, bottom = 21.dp)) {
+            Text(AppStrings.CHAT_MANAGE_PARTICIPANTS_COUNT_FORMAT.format(count),
+                color = grey950(), style = UmcTypographyTokens.Title3Bold, modifier = Modifier.padding(bottom = 16.dp))
+            CommunityParticipantBatchAction.entries.filter { it in actions }.forEach { action ->
+                Text(
+                    text = when (action) {
+                        CommunityParticipantBatchAction.ASSIGN_ADMIN -> AppStrings.CHAT_ASSIGN_SELECTED_ADMIN
+                        CommunityParticipantBatchAction.REMOVE_ADMIN -> AppStrings.CHAT_REMOVE_ADMIN
+                        CommunityParticipantBatchAction.KICK -> AppStrings.CHAT_KICK
+                    },
+                    color = if (action == CommunityParticipantBatchAction.KICK) red500() else grey950(),
+                    style = UmcTypographyTokens.Body,
+                    modifier = Modifier.fillMaxWidth().clickable { onAction(action) }.padding(vertical = 16.dp),
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun ParticipantRow(
     member: CommunityThreadMember,
     profile: CommunityParticipantProfile?,
     isMe: Boolean,
-    showManagement: Boolean,
-    canTransfer: Boolean,
+    viewerRole: CommunityThreadRole,
+    isEditing: Boolean,
+    isSelected: Boolean,
+    isSelectable: Boolean,
+    onToggleSelection: () -> Unit,
+    onViewProfile: () -> Unit,
+    onToggleAdmin: () -> Unit,
     onKick: () -> Unit,
     onTransferOwnership: () -> Unit,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
+    val permissions = communityParticipantMenuPermissions(viewerRole, member.role, isMe)
     Row(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp).heightIn(min = 64.dp),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp).heightIn(min = 64.dp)
+            .then(if (isEditing) Modifier.toggleable(value = isSelected, enabled = isSelectable,
+                role = Role.Checkbox, onValueChange = { onToggleSelection() }) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CommunityChatProfileImage(member.profileImageUrl, useThreadStyle = true)
@@ -279,13 +428,13 @@ private fun ParticipantRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                if (isMe) ParticipantBadge(AppStrings.CHAT_ME, main100(), main500())
                 if (member.role == CommunityThreadRole.OWNER) {
                     ParticipantBadge(AppStrings.CHAT_OWNER_BADGE, grey50(), grey600())
                 }
                 if (member.role == CommunityThreadRole.ADMIN) {
                     ParticipantBadge(AppStrings.CHAT_THREAD_INFO_ADMIN_BADGE, grey800(), white())
                 }
-                if (isMe) ParticipantBadge(AppStrings.CHAT_ME, main100(), main500())
             }
             val subtitle = listOfNotNull(member.part?.label, profile?.roleLabel?.takeIf { it.isNotBlank() })
                 .joinToString(" · ")
@@ -299,8 +448,13 @@ private fun ParticipantRow(
                 )
             }
         }
-        // 관리 메뉴(방장 변경·내보내기)가 있는 행에만 ⋮ 를 보여 준다.
-        if (!isMe && showManagement && member.role != CommunityThreadRole.OWNER) {
+        // 일반 참여자도 프로필 보기에 접근할 수 있다.
+        if (isEditing) {
+            Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                Checkbox(checked = isSelected, onCheckedChange = null, enabled = isSelectable,
+                    colors = CheckboxDefaults.colors(checkedColor = main500(), uncheckedColor = grey400(), checkmarkColor = white()))
+            }
+        } else {
             Box(modifier = Modifier.size(48.dp)) {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(
@@ -310,23 +464,40 @@ private fun ParticipantRow(
                         modifier = Modifier.size(24.dp),
                     )
                 }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false },
-                    modifier = Modifier.width(160.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    containerColor = white(),
-                    shadowElevation = 8.dp,
+                if (menuExpanded) Popup(
+                    popupPositionProvider = remember {
+                        object : PopupPositionProvider {
+                            override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize,
+                                layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
+                                val x = (anchorBounds.right - popupContentSize.width).coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
+                                val y = if (anchorBounds.bottom + popupContentSize.height <= windowSize.height) anchorBounds.bottom
+                                    else (anchorBounds.top - popupContentSize.height).coerceAtLeast(0)
+                                return IntOffset(x, y)
+                            }
+                        }
+                    },
+                    onDismissRequest = { menuExpanded = false }, properties = PopupProperties(focusable = true),
                 ) {
-                    if (canTransfer) {
+                    Surface(Modifier.width(160.dp), shape = RoundedCornerShape(16.dp), color = white(), shadowElevation = 8.dp) {
+                        Column {
+                    ParticipantMenuItem(AppStrings.CHAT_VIEW_PROFILE, R.drawable.ic_person) {
+                        menuExpanded = false; onViewProfile()
+                    }
+                    if (permissions.canTransfer) {
                         ParticipantMenuItem(AppStrings.CHAT_TRANSFER_OWNER, R.drawable.ic_swap_horizontal) {
                             menuExpanded = false
                             onTransferOwnership()
                         }
                     }
-                    ParticipantMenuItem(AppStrings.CHAT_KICK, R.drawable.ic_block, red400()) {
+                    if (permissions.canChangeAdmin) ParticipantMenuItem(
+                        if (member.role == CommunityThreadRole.ADMIN) AppStrings.CHAT_REMOVE_ADMIN else AppStrings.CHAT_ASSIGN_ADMIN,
+                        R.drawable.ic_shield_check,
+                    ) { menuExpanded = false; onToggleAdmin() }
+                    if (permissions.canKick) ParticipantMenuItem(AppStrings.CHAT_KICK, R.drawable.ic_block, red500()) {
                         menuExpanded = false
                         onKick()
+                    }
+                        }
                     }
                 }
             }
@@ -342,8 +513,7 @@ private fun ParticipantMenuItem(
     onClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 13.dp),
+        modifier = Modifier.fillMaxWidth().height(48.dp).clickable(onClick = onClick).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -352,7 +522,7 @@ private fun ParticipantMenuItem(
             painter = painterResource(iconRes),
             contentDescription = null,
             tint = color,
-            modifier = Modifier.size(21.dp),
+            modifier = Modifier.size(20.dp),
         )
     }
 }

@@ -28,7 +28,7 @@ sealed interface CommunityChattingAction {
     ) : CommunityChattingAction
     data class OnReportMessage(
         val messageId: String,
-        val reason: CommunityMessageReportReason,
+        val reasons: Set<CommunityMessageReportReason>,
     ) : CommunityChattingAction
     data object OnToggleMuted : CommunityChattingAction
     data object OnTogglePinned : CommunityChattingAction
@@ -44,4 +44,7 @@ sealed interface CommunityChattingAction {
     data object OnConfirmDeleteThread : CommunityChattingAction
     data class OnKickMember(val memberId: String) : CommunityChattingAction
     data class OnTransferOwnership(val memberId: String) : CommunityChattingAction
+    data class OnToggleMemberAdmin(val memberId: String) : CommunityChattingAction
+    data class OnViewMemberProfile(val memberId: String) : CommunityChattingAction
+    data class OnManageParticipants(val memberIds: Set<String>, val action: CommunityParticipantBatchAction) : CommunityChattingAction
 }

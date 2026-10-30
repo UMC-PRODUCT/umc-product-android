@@ -774,6 +774,7 @@ fun MainNavHost(
                 .collectAsStateWithLifecycle()
 
             CommunityChattingRoute(
+                onViewMemberProfile = { memberId -> navHostController.navigate(MainDestination.Mycard(memberId)) },
                 onBack = {
                     navHostController.popBackStack()
                 },
