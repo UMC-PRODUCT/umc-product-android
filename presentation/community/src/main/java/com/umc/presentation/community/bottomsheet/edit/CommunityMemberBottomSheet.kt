@@ -537,7 +537,7 @@ internal fun CommunityMemberSearchContent(
  * 검색 결과의 챌린저 한 명을 표시하는 Row입니다.
  */
 @Composable
-private fun CommunityMemberSearchRow(
+internal fun CommunityMemberSearchRow(
     member: CommunityChallengerUiModel,
     isChecked: Boolean,
     isEnabled: Boolean,

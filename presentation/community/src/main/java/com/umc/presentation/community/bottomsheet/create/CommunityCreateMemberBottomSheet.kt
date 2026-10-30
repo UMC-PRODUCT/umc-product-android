@@ -1,11 +1,15 @@
 package com.umc.presentation.community.bottomsheet.create
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -33,11 +37,11 @@ import com.umc.component.component.UToastHost
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.main500
-import com.umc.presentation.community.bottomsheet.edit.CommunityCurrentMemberContent
 import com.umc.presentation.community.bottomsheet.edit.CommunityInviteSheet
 import com.umc.presentation.community.bottomsheet.edit.CommunityMemberBottomSheetHeader
 import com.umc.presentation.community.bottomsheet.edit.CommunityMemberEmptyContent
 import com.umc.presentation.community.bottomsheet.edit.CommunityMemberSearchContent
+import com.umc.presentation.community.bottomsheet.edit.CommunityMemberSearchRow
 import com.umc.presentation.community.bottomsheet.edit.CommunityMemberSheetPreviewFrame
 import com.umc.presentation.community.component.CommunityMemberSearchField
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -51,7 +55,8 @@ import kotlinx.collections.immutable.toImmutableList
  * 스레드 멤버 관리 BottomSheet(CommunityMemberBottomSheet)와 같은 시트·헤더·목록 UI를 씁니다.
  *
  * - 챌린저 이름 검색
- * - 검색 결과 체크박스로 챌린저 선택/해제 (선택 목록에는 삭제 버튼을 두지 않음)
+ * - 검색 결과·선택 목록의 체크박스로 챌린저 선택/해제 (선택 목록에서 해제해도 행은 남아 다시 체크 가능)
+ * - 기존 선택에서 해제한 멤버는 그냥 닫아도 스레드 생성 화면에서 빠짐 (새로 고른 멤버는 초대 버튼으로만 반영)
  * - 최대 인원까지만 선택 가능 (초과 선택 시 Toast, 초대 버튼을 눌러야 스레드 생성 화면에 반영)
  * - 검색 결과 페이지네이션
  * - 프로필 이미지 표시
@@ -90,8 +95,8 @@ fun CommunityCreateMemberBottomSheet(
     }
 
     /**
-     * 바텀시트를 그냥 닫으면 선택 변경 사항은 버리고
-     * 스레드 생성 화면의 기존 선택을 유지합니다.
+     * 바텀시트를 그냥 닫으면 검색으로 새로 고른 멤버는 버리고 스레드 생성 화면의 기존 선택을 유지합니다.
+     * 단, 기존 선택 중 체크를 해제한 멤버(선택 목록 행·검색 결과)가 있으면 그 멤버만 뺀 목록을 반영합니다.
      */
     CommunityInviteSheet(
         height = sheetHeight,
@@ -99,6 +104,7 @@ fun CommunityCreateMemberBottomSheet(
             UToastHost(data = toastData, onDismiss = { toastData = null })
         },
         onDismissRequest = {
+            viewModel.membersToApplyOnDismiss()?.let(onConfirm)
             viewModel.resetAfterDismiss()
             onDismissRequest()
         },
@@ -135,6 +141,7 @@ fun CommunityCreateMemberBottomSheet(
                 else { searchFocusRequester.requestFocus(); keyboard?.show() }
             },
             onToggleMember = viewModel::toggleMember,
+            onToggleListedMember = viewModel::toggleListedMember,
             onLoadMore = viewModel::loadMoreMembers,
             modifier = Modifier.weight(1f),
             searchFieldModifier = Modifier.focusRequester(searchFocusRequester).onFocusChanged { searchFocused = it.isFocused },
@@ -155,6 +162,7 @@ private fun CommunityCreateMemberSheetContent(
     onQueryChange: (String) -> Unit,
     onConfirmClick: () -> Unit,
     onToggleMember: (CommunityChallengerUiModel) -> Unit,
+    onToggleListedMember: (CommunityChallengerUiModel) -> Unit,
     onLoadMore: () -> Unit,
     modifier: Modifier = Modifier,
     searchFieldModifier: Modifier = Modifier,
@@ -248,20 +256,57 @@ private fun CommunityCreateMemberSheetContent(
                     )
                 }
 
-                // 선택된 챌린저가 없는 경우
-                state.selectedMembers.isEmpty() -> {
+                // 선택 목록에 표시할 챌린저가 없는 경우
+                state.listedMembers.isEmpty() -> {
                     CommunityMemberEmptyContent(
                         text = AppStrings.COMMUNITY_CREATE_MEMBER_EMPTY,
                     )
                 }
 
-                // 현재 선택된 챌린저 목록
+                // 선택 목록 (행에서 체크를 풀어도 목록에 남아 다시 체크할 수 있음)
                 else -> {
-                    CommunityCurrentMemberContent(
-                        members = state.selectedMembers,
+                    CommunityCreateSelectedMemberContent(
+                        members = state.listedMembers,
+                        selectedMembers = state.selectedMembers,
+                        onToggleClick = onToggleListedMember,
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * 검색 중이 아닐 때 표시하는 선택 목록
+ *
+ * 검색 결과와 같은 체크박스 행을 써서, 검색이 실패해도 여기서 선택을 해제할 수 있습니다.
+ */
+@Composable
+private fun CommunityCreateSelectedMemberContent(
+    members: ImmutableList<CommunityChallengerUiModel>,
+    selectedMembers: ImmutableList<CommunityChallengerUiModel>,
+    onToggleClick: (CommunityChallengerUiModel) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        items(
+            items = members,
+            key = { member ->
+                member.memberId
+            },
+        ) { member ->
+            CommunityMemberSearchRow(
+                member = member,
+                isChecked = selectedMembers.any { selectedMember ->
+                    selectedMember.memberId == member.memberId
+                },
+                isEnabled = true,
+                onToggleClick = {
+                    onToggleClick(member)
+                },
+            )
         }
     }
 }
@@ -311,6 +356,7 @@ private fun CommunityCreateMemberSheetPreviewContent(
         onQueryChange = {},
         onConfirmClick = {},
         onToggleMember = {},
+        onToggleListedMember = {},
         onLoadMore = {},
         modifier = modifier,
     )
@@ -331,7 +377,7 @@ private fun CommunityCreateMemberSheetEmptyPreview() {
 }
 
 /**
- * 챌린저를 추가한 상태 Preview (삭제 버튼 없이 목록만 표시)
+ * 챌린저를 추가한 상태 Preview (체크박스 행으로 선택 목록 표시)
  */
 @Preview(showBackground = true)
 @Composable
@@ -339,7 +385,27 @@ private fun CommunityCreateMemberSheetSelectedPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityCreateMemberSheetPreviewContent(
             state = CommunityCreateMemberBottomSheetState(
+                selectedMembers = previewChallengers,
+                initialMembers = previewChallengers,
+                listedMembers = previewChallengers,
+            ),
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+/**
+ * 선택 목록 행에서 한 명의 체크를 해제한 상태 Preview (행은 목록에 남음)
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityCreateMemberSheetListUncheckedPreview() {
+    CommunityMemberSheetPreviewFrame {
+        CommunityCreateMemberSheetPreviewContent(
+            state = CommunityCreateMemberBottomSheetState(
                 selectedMembers = previewChallengers.take(2).toImmutableList(),
+                initialMembers = previewChallengers,
+                listedMembers = previewChallengers,
             ),
             modifier = Modifier.weight(1f),
         )
@@ -356,6 +422,8 @@ private fun CommunityCreateMemberSheetSearchFocusedPreview() {
         CommunityCreateMemberSheetPreviewContent(
             state = CommunityCreateMemberBottomSheetState(
                 selectedMembers = previewChallengers.take(2).toImmutableList(),
+                initialMembers = previewChallengers.take(2).toImmutableList(),
+                listedMembers = previewChallengers.take(2).toImmutableList(),
             ),
             modifier = Modifier.weight(1f),
             isSearchFieldFocused = true,
