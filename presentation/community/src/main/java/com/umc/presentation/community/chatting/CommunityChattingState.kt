@@ -50,6 +50,8 @@ data class CommunityChattingState(
     val errorMessage: String? = null,
     val isThreadUnavailable: Boolean = false,
     val isAccessDenied: Boolean = false,
+    /** 목록의 강퇴 카드(membershipState = KICKED)에서 진입했는지 여부 */
+    val isKicked: Boolean = false,
 ) : UiState {
     internal fun acknowledgeEdit(commandId: String): CommunityChattingState =
         if (editCommandId == commandId) {

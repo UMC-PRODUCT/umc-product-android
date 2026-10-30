@@ -616,7 +616,7 @@ object AppStrings {
     const val CHAT_LOAD_ERROR_DESCRIPTION = "네트워크 연결을 확인하고 다시 시도해주세요."
     const val CHAT_UNAVAILABLE_TOP_BAR = "참여 종료"
     const val CHAT_UNAVAILABLE_TITLE = "더 이상 참여할 수 없는 스레드예요"
-    const val CHAT_UNAVAILABLE_DESCRIPTION = "운영진에 의해 참여가 종료되었어요."
+    const val CHAT_UNAVAILABLE_DESCRIPTION = "스레드 관리자에 의해 참여가 종료되었어요."
     const val CHAT_BACK_TO_COMMUNITY = "커뮤니티로 돌아가기"
     const val CHAT_OWNERSHIP_REQUIRED_TITLE = "스레드를 나갈 수 없어요"
     const val CHAT_OWNERSHIP_REQUIRED_DESCRIPTION = "현재 방장인 경우 스레드를 나갈 수 없습니다.\n다른 참여자에게 권한을 넘긴 후 다시 시도해주세요."

@@ -85,7 +85,8 @@ class CommunityChattingViewModel @Inject constructor(
     init {
         observeCurrentMember()
         checkAiAvailability()
-        if (state.value.threadId.isNotBlank()) {
+        // 강퇴된 스레드는 상세·메시지를 불러올 수 없으므로 바로 참여 종료 화면을 보여준다
+        if (state.value.threadId.isNotBlank() && !state.value.isKicked) {
             bootstrap()
         } else {
             stopRealtime()
@@ -1427,5 +1428,6 @@ private fun createInitialChattingState(savedStateHandle: SavedStateHandle): Comm
     return CommunityChattingState(
         threadId = threadId,
         isThreadUnavailable = threadId.isBlank(),
+        isKicked = savedStateHandle.get<Boolean>("isKicked") ?: false,
     )
 }

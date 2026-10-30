@@ -16,7 +16,7 @@ import com.umc.component.base.CollectUiEvents
 @Composable
 fun CommunitySearchRoute(
     onNavigateBack: () -> Unit,
-    onNavigateToThreadDetail: (String) -> Unit,
+    onNavigateToThreadDetail: (threadId: String, isKicked: Boolean) -> Unit,
     viewModel: CommunitySearchViewModel =
         hiltViewModel<CommunitySearchViewModel>(),
 ) {
@@ -31,6 +31,7 @@ fun CommunitySearchRoute(
             is CommunitySearchEvent.NavigateToThreadDetail -> {
                 onNavigateToThreadDetail(
                     event.threadId,
+                    event.isKicked,
                 )
             }
         }

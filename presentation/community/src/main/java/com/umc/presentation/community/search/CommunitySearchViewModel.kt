@@ -103,6 +103,9 @@ class CommunitySearchViewModel @Inject constructor(
                 sendEvent(
                     CommunitySearchEvent.NavigateToThreadDetail(
                         threadId = action.threadId,
+                        isKicked = _state.value.searchResults.any { thread ->
+                            thread.id == action.threadId && thread.isKicked
+                        },
                     )
                 )
             }

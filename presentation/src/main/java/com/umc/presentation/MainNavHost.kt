@@ -651,10 +651,11 @@ fun MainNavHost(
         /** 커뮤니티 화면 **/
         composable<MainDestination.Community> {
             CommunityRoute(
-                onNavigateToThreadDetail = { threadId ->
+                onNavigateToThreadDetail = { threadId, isKicked ->
                     navHostController.navigate(
                         MainDestination.CommunityChatting(
                             threadId = threadId,
+                            isKicked = isKicked,
                         )
                     )
                 },
@@ -741,10 +742,11 @@ fun MainNavHost(
                 onNavigateBack = {
                     navHostController.popBackStack()
                 },
-                onNavigateToThreadDetail = { threadId ->
+                onNavigateToThreadDetail = { threadId, isKicked ->
                     navHostController.navigate(
                         MainDestination.CommunityChatting(
                             threadId = threadId,
+                            isKicked = isKicked,
                         )
                     )
                 },

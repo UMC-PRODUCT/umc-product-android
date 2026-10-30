@@ -87,6 +87,9 @@ class CommunityViewModel @Inject constructor(
                 sendEvent(
                     CommunityEvent.NavigateToThreadDetail(
                         threadId = action.threadId,
+                        isKicked = _state.value.threads.any { thread ->
+                            thread.id == action.threadId && thread.isKicked
+                        },
                     )
                 )
             }

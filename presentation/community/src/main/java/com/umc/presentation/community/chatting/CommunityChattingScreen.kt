@@ -48,6 +48,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
@@ -160,7 +161,8 @@ fun CommunityChattingScreen(
         onAction(CommunityChattingAction.OnTransferOwnership(it))
     }
 
-    if (state.isThreadUnavailable) {
+    // 강퇴된 스레드(목록의 강퇴 카드에서 진입)도 참여 종료 화면으로 안내
+    if (state.isKicked || state.isThreadUnavailable) {
         ThreadUnavailableScreen(onBack = onBack)
         return
     }
@@ -908,27 +910,28 @@ private fun ThreadUnavailableScreen(
     Scaffold(
         containerColor = grey100(),
         topBar = {
+            // Figma `TopBar/Community` 참여종료
             Surface(color = white()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .height(72.dp)
-                        .padding(horizontal = 8.dp),
+                        .padding(horizontal = 4.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(onClick = onBack) {
                         Icon(
-                            painter = painterResource(R.drawable.ic_back),
+                            painter = painterResource(R.drawable.ic_community_back),
                             contentDescription = AppStrings.CHAT_CD_BACK,
+                            modifier = Modifier.size(24.dp),
                             tint = grey950(),
                         )
                     }
-                    Text(
+                    UText(
                         text = topBarTitle,
-                        modifier = Modifier.padding(start = 4.dp),
                         color = grey950(),
-                        style = UmcTypographyTokens.Title2Bold
+                        style = UmcTypographyTokens.Title2Bold,
                     )
                 }
             }
@@ -938,42 +941,51 @@ private fun ThreadUnavailableScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 64.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_block),
-                contentDescription = null,
-                modifier = Modifier.size(30.dp),
-                tint = grey400(),
-            )
-            Spacer(Modifier.height(14.dp))
-            Text(
+            // 아이콘 + 제목
+            Box(
+                modifier = Modifier.size(48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_community_block),
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = grey400(),
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            UText(
                 text = title,
-                color = grey800(),
-                style = UmcTypographyTokens.HeadlineBold
+                color = grey600(),
+                style = UmcTypographyTokens.HeadlineBold,
+                textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(4.dp))
-            Text(
+            UText(
                 text = description,
-                color = grey400(),
-                style = UmcTypographyTokens.Subheadline
+                modifier = Modifier.fillMaxWidth(),
+                color = grey500(),
+                style = UmcTypographyTokens.Subheadline,
+                textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(34.dp))
+            Spacer(Modifier.height(40.dp))
             UButton(
                 text = buttonText,
                 onClick = onBack,
                 modifier = Modifier
+                    .padding(horizontal = 8.dp)
                     .fillMaxWidth()
-                    .height(48.dp),
+                    .height(52.dp),
                 backgroundColor = indigo500(),
                 pressedColor = indigo600(),
                 textColor = white(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 8.dp,
             )
-            Spacer(Modifier.height(100.dp))
         }
     }
 }
@@ -2394,6 +2406,18 @@ private fun CommunityChattingScreenViewOnlyEmptyPreview() {
 private fun CommunityChattingScreenNoAccessPreview() {
     CommunityChattingScreen(
         state = CommunityChattingState(threadId = "1", isAccessDenied = true),
+        onAction = {},
+    )
+}
+
+/**
+ * 강퇴된 스레드에 진입했을 때의 참여 종료 화면 Preview (Figma `커뮤니티_스레드_강퇴`)
+ */
+@Preview(showBackground = true, widthDp = 412, heightDp = 917)
+@Composable
+private fun CommunityChattingScreenKickedPreview() {
+    CommunityChattingScreen(
+        state = CommunityChattingState(threadId = "1", isKicked = true),
         onAction = {},
     )
 }
