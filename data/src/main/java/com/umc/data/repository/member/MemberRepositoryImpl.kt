@@ -3,7 +3,10 @@ package com.umc.data.repository.member
 import com.umc.data.dataSource.local.AppDataStore
 import com.umc.domain.model.base.FailState
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSource
+import com.umc.data.request.member.BusinessCardContactRequest
+import com.umc.data.request.member.BusinessCardLinkRequest
 import com.umc.data.request.member.DeleteUserRequest
+import com.umc.data.request.member.EditBusinessCardRequest as EditBusinessCardRequestBody
 import com.umc.data.request.member.LinkItemRequest
 import com.umc.data.request.member.UpdateMyLinkRequest
 import com.umc.data.request.member.UpdateMyProfileRequest
@@ -13,6 +16,8 @@ import com.umc.domain.model.JwtToken
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
+import com.umc.domain.model.mypage.BusinessCard
+import com.umc.domain.model.request.member.EditBusinessCardRequest
 import com.umc.domain.model.request.member.RegisterEmailRequest
 import com.umc.domain.model.request.member.RegisterRequest
 import com.umc.domain.model.request.member.UpdateLinkRequest
@@ -99,4 +104,40 @@ class MemberRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun blockMember(memberId: Long): ApiState<Boolean> {
+        return memberRemoteDataSource.blockMember(memberId).map { it.isBlocked }
+    }
+
+    override suspend fun unblockMember(memberId: Long): ApiState<Boolean> {
+        return memberRemoteDataSource.unblockMember(memberId).map { it.isBlocked }
+    }
+
+    override suspend fun getBlockedMemberIds(): ApiState<List<Long>> {
+        return memberRemoteDataSource.getBlockedMembers().map { response ->
+            response.members.orEmpty().map { it.memberId }
+        }
+    }
+
+    override suspend fun getMyBusinessCard(): ApiState<BusinessCard> {
+        return memberRemoteDataSource.getMyBusinessCard().map { it.toDomain() }
+    }
+
+    override suspend fun getMyBusinessCardEdit(): ApiState<BusinessCard> {
+        return memberRemoteDataSource.getMyBusinessCardEdit().map { it.toDomain() }
+    }
+
+    override suspend fun editMyBusinessCard(request: EditBusinessCardRequest): ApiState<BusinessCard> {
+        // 빈 값은 null 로 보내 서버에서 지우게 한다
+        val body = EditBusinessCardRequestBody(
+            profileImageId = request.profileImageId,
+            contact = BusinessCardContactRequest(
+                email = request.contact.email.trim().ifBlank { null },
+                isPublic = request.contact.isPublic
+            ),
+            links = request.links.map {
+                BusinessCardLinkRequest(type = it.type.label, link = it.link.trim().ifBlank { null }, isPublic = it.isPublic)
+            }
+        )
+        return memberRemoteDataSource.editMyBusinessCard(body).map { it.toDomain() }
+    }
 }
