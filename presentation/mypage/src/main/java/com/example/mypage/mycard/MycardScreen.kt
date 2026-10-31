@@ -297,7 +297,9 @@ fun MycardScreen(
 
         item{
             MycardTopBar(
-                onMypageClick = onNavigateToMypage
+                onMypageClick = onNavigateToMypage,
+                showBackButton = uiState.isViewingMemberProfile,
+                onBackClick = onNavigateBack,
             )
         }
 
@@ -434,7 +436,9 @@ private fun MycardProfileLoadError(
  */
 @Composable
 fun MycardTopBar(
-    onMypageClick: () -> Unit //마이페이지 클릭
+    onMypageClick: () -> Unit, //마이페이지 클릭
+    showBackButton: Boolean = false,
+    onBackClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -442,17 +446,27 @@ fun MycardTopBar(
             .background(grey50())
         .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = if (showBackButton) Arrangement.Start else Arrangement.SpaceBetween
     ) {
+        if (showBackButton) {
+            androidx.compose.material3.IconButton(onClick = onBackClick) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_back),
+                    contentDescription = "뒤로가기",
+                    tint = grey950(),
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
         UText(
-            text = AppStrings.MYPAGE_TITLE,
+            text = if (showBackButton) "프로필" else AppStrings.MYPAGE_TITLE,
             style = UmcTypographyTokens.Title2Bold,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
 
         )
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        if (!showBackButton) Row(verticalAlignment = Alignment.CenterVertically) {
             //설정 버튼
             Box(
                 modifier = Modifier
