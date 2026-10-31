@@ -76,6 +76,8 @@ class MycardViewModel @Inject constructor(
                         isSuccessOverlayOpen = if (ownerChanged) false else isSuccessOverlayOpen,
                         myQrcodeData = if (ownerChanged) "" else myQrcodeData,
                         myRecentInfoString = if (ownerChanged) "" else myRecentInfoString,
+                        cardPartText = if (ownerChanged) "" else cardPartText,
+                        cardGeneration = if (ownerChanged) null else cardGeneration,
                         githubLink = if (ownerChanged) "" else githubLink,
                         linkedinLink = if (ownerChanged) "" else linkedinLink,
                         blogLink = if (ownerChanged) "" else blogLink,
@@ -141,6 +143,8 @@ class MycardViewModel @Inject constructor(
             linkedinLink = userInfo.profile.linkedIn,
             blogLink = userInfo.profile.blog,
             myRecentInfoString = "",
+            cardPartText = "",
+            cardGeneration = null,
         ) }
         val gisuSummaryList = userInfo.getGisuSummaryList()
 
@@ -151,23 +155,23 @@ class MycardViewModel @Inject constructor(
             // 운영진/대표 역할(fromRoles) 또는 참가 기록(fromRecords) 중 대표 항목 추출
             val representativeItem = summary.fromRoles.firstOrNull() ?: summary.fromRecords.firstOrNull()
 
-            val positionString = representativeItem?.let { item ->
-                //파트명 변환 (UserPart Enum 활용, 없으면 빈 문자열)
-                // from() 은 모르는 값에도 UNKNOWN("미정")을 돌려주므로 걸러서 '파트 없음'으로 다룬다
-                val partLabel = UserPart.from(item.responsiblePart)
-                    .takeUnless { it == UserPart.UNKNOWN }?.let { "${it.label} " } ?: ""
+            //파트명 변환 (UserPart Enum 활용). from() 은 모르는 값에도 UNKNOWN("미정")을 돌려주므로 걸러서 '파트 없음'으로 다룬다
+            val part = representativeItem?.let { UserPart.from(it.responsiblePart) }
+                ?.takeUnless { it == UserPart.UNKNOWN }
+            //직함명 변환 (displayName이 null이면 원본 role 사용)
+            val roleLabel = representativeItem?.let { UserChallengerRole.from(it.role).displayName ?: it.role }
 
-                //직함명 변환 (displayName이 null이면 원본 role 사용)
-                val roleEnum = UserChallengerRole.from(item.role)
-                val roleLabel = roleEnum.displayName ?: item.role
-
-                //최종 포맷: "N기 Part Role"
-                "$partLabel$roleLabel·${summary.gisu}기"
+            val positionString = roleLabel?.let { role ->
+                //최종 포맷: "Part Role·N기"
+                "${part?.let { "${it.label} " } ?: ""}$role·${summary.gisu}기"
             } ?: "챌린저·${summary.gisu}기" // 예외 상황 대비 기본값
 
             updateState {
                 copy(
                     myRecentInfoString = positionString,
+                    // 명함 앞면은 파트를 보여주고, 파트가 없는 운영진은 직함을 대신 보여준다
+                    cardPartText = part?.label ?: roleLabel.orEmpty(),
+                    cardGeneration = summary.gisu,
                     githubLink = userInfo.profile.github,
                     linkedinLink = userInfo.profile.linkedIn,
                     blogLink = userInfo.profile.blog
@@ -293,6 +297,8 @@ data class MycardUiState(
 
     //명함 관련 정보
     val myRecentInfoString: String = "",
+    val cardPartText: String = "", //명함 앞면 파트 (파트가 없으면 직함)
+    val cardGeneration: Long? = null, //명함 앞면 기수 (GEN.N)
     val myQrcodeData: String = "",
     val githubLink: String = "",
     val linkedinLink: String = "",
