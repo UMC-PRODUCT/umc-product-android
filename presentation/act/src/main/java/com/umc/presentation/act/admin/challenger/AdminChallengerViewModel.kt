@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.act.challenger.AdminChallenger
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.domain.model.base.ApiState
@@ -292,7 +293,7 @@ class AdminChallengerViewModel @Inject constructor(
     fun grantCustomPoint(challengerId: Long) {
         val state = uiState.value
         if (state.customRewardScore > 0 && state.customPunishScore > 0) {
-            emitEvent(AdminChallengerEvent.ShowToast("상점과 벌점을 동시에 입력할 수 없습니다."))
+            emitEvent(AdminChallengerEvent.ShowToast(AppStrings.CHALLENGER_POINTS_CONFLICT_TOAST))
             return
         }
 
@@ -411,8 +412,8 @@ sealed interface AdminChallengerEvent : UiEvent {
 private fun AdminChallenger.toMemberUi(): AdminChallengerMemberUi {
     return AdminChallengerMemberUi(
         id = id.toLong(),
-        nicknameWithName = "$name($nickname)",
-        generation = "${generation}기",
+        nicknameWithName = AppStrings.CHALLENGER_NAME_NICKNAME_FORMAT.format(nickname, name),
+        generation = AppStrings.CHALLENGER_INFO_FORMAT_GENERATION.format(generation),
         totalScore = warningCount + outCount
     )
 }

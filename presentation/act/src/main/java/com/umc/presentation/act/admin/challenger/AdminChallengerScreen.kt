@@ -285,7 +285,7 @@ private fun SearchBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             UText(
-                text = selectedPart?.label ?: "파트",
+                text = selectedPart?.label ?: AppStrings.COMMON_PART,
                 style = Footnote,
                 color = if (selectedPart == null) grey600() else grey50(),
             )
@@ -322,7 +322,7 @@ private fun AdminChallengerPartBottomSheet(
                 .padding(bottom = 24.dp),
         ) {
             UText(
-                text = "파트를 선택하세요",
+                text = AppStrings.CHALLENGER_PART_SELECT_TITLE,
                 style = Title3Bold,
                 color = grey800(),
                 modifier = Modifier.padding(top = 8.dp),
@@ -368,7 +368,7 @@ private fun ChallengerSection(
             )
             Spacer(Modifier.width(6.dp))
             UText(
-                text = "(${section.members.size})",
+                text = AppStrings.CHALLENGER_MEMBER_COUNT_FORMAT.format(section.members.size),
                 style = Subheadline,
                 color = grey800()
             )

@@ -138,13 +138,13 @@ fun NormalChallengerInfoDialog(
             ) {
                 InfoStatCard(
                     modifier = Modifier.weight(1f),
-                    title = "활동 기수",
-                    value = if (model.generation > 0) "${model.generation}기" else "-"
+                    title = AppStrings.CHALLENGER_INFO_GENERATION_LABEL,
+                    value = if (model.generation > 0) AppStrings.CHALLENGER_INFO_FORMAT_GENERATION.format(model.generation) else "-"
                 )
 
                 InfoStatCard(
                     modifier = Modifier.weight(1f),
-                    title = "총점수",
+                    title = AppStrings.CHALLENGER_INFO_WARNING_LABEL,
                     value = formatPoint(model.totalPoints)
                 )
             }

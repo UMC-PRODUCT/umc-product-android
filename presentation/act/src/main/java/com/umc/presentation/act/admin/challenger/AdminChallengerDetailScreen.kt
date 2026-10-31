@@ -379,7 +379,9 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             UText(
-                text = "${ui.nicknameWithName.split("(").first()}님의 총점수는 ${ui.totalScore}점입니다.",
+                text = AppStrings.CHALLENGER_TOTAL_SCORE_DESCRIPTION_FORMAT.format(
+                    ui.nicknameWithName.split("(").first(), ui.totalScore
+                ),
                 style = Body,
                 color = grey800()
             )
@@ -552,12 +554,12 @@ private fun HistorySection(
             )
 
             ScoreCountChip(
-                text = "${AppStrings.REWARD} $totalRewardScore",
+                text = AppStrings.CHALLENGER_REWARD_SCORE_FORMAT.format(totalRewardScore),
                 bgColor = green100(),
                 textColor = green500()
             )
             ScoreCountChip(
-                text = "${AppStrings.COMMON_PUNISH} $totalPenaltyScore",
+                text = AppStrings.CHALLENGER_PENALTY_SCORE_FORMAT.format(totalPenaltyScore),
                 bgColor = red100(),
                 textColor = red500()
             )
@@ -720,8 +722,8 @@ private data class HistoryDetail(
 
 private fun ChallengerManageDialogModel.toDetailUi(): ChallengerDetailUi {
     return ChallengerDetailUi(
-        nicknameWithName = "$name($nickname)",
-        generation = "${gisu}기",
+        nicknameWithName = AppStrings.CHALLENGER_NAME_NICKNAME_FORMAT.format(nickname, name),
+        generation = AppStrings.CHALLENGER_INFO_FORMAT_GENERATION.format(gisu),
         totalScore = totalScore.toInt(),
         school = university,
         part = part,

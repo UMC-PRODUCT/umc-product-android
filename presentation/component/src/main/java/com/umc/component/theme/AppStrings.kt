@@ -444,6 +444,7 @@ object AppStrings {
     const val SIGN_UP_FAIL_DELETE_USER_DIALOG_CONTENT = COMMON_ACCOUNT_DELETE_CONTENT
     // 활동 관리 화면
     const val ACTIVITY_MANAGEMENT_TITLE = "활동 관리"
+    const val ACTIVITY_COMING_SOON_MESSAGE = "준비 중인 화면입니다."
     const val ADMIN_LABEL = "Admin"
     const val TAB_ATTENDANCE_USER = COMMON_ATTENDANCE_CHECK
     const val TAB_STUDY_USER = "스터디/활동"
@@ -458,6 +459,13 @@ object AppStrings {
     const val ATTENDANCE_REQUEST_BUTTON = "현 위치로 출석 요청"
     const val ATTENDANCE_REQUEST_AGAIN_BUTTON = "현 위치로 출석 재요청"
     const val ATTENDANCE_REQUESTING = "출석 요청 중..."
+    const val ATTENDANCE_TIME_RANGE_FORMAT = "%1\$s - %2\$s"
+    const val ATTENDANCE_LOCATION_PERMISSION_REQUEST_TOAST = "출석 위치 확인을 위해 정확한 위치 권한이 필요합니다."
+    const val ATTENDANCE_LOCATION_PERMISSION_REQUIRED_TOAST = "정확한 위치 권한이 필요합니다."
+    const val ATTENDANCE_LOCATION_MISSING_TOAST = "출석 위치 정보가 없습니다."
+    const val ACT_CURRENT_LOCATION_UNAVAILABLE_TOAST = "현재 위치를 확인할 수 없습니다."
+    const val ATTENDANCE_LOCATION_LOOKUP_FAILED_TOAST = "현재 위치 확인에 실패했습니다."
+    const val ATTENDANCE_LOCATION_DISTANCE_FORMAT = "출석 위치에서 %dm 떨어져 있습니다."
 
     const val ATTENDANCE_FAIL_REASON_QNA = "위치 인증이 안 되나요?"
     const val ATTENDANCE_FAIL_REASON_ACTION = "사유 제출하기"
@@ -477,7 +485,7 @@ object AppStrings {
     // 관리자 출석 관리 화면
     const val ADMIN_CHECK_CHANGE_LOCATION = "변경"
     const val ADMIN_CHECK_DELETE_SESSION_CONTENT_DESCRIPTION = "세션 삭제"
-    const val ADMIN_CHECK_TIME_RANGE_FORMAT = "%1\$s - %2\$s"
+    const val ADMIN_CHECK_TIME_RANGE_FORMAT = ATTENDANCE_TIME_RANGE_FORMAT
     const val ADMIN_CHECK_STATS_ATTENDANCE_RATE = "출석률"
     const val ADMIN_CHECK_STATS_ATTENDANCE_COUNT = "출석 인원"
     const val ADMIN_CHECK_STATS_PENDING_COUNT = "승인 대기"
@@ -499,10 +507,13 @@ object AppStrings {
     const val ADMIN_APPROVE_SUCCESS = "출석 요청을 승인했습니다."
     const val ADMIN_REJECT_SUCCESS = "출석 요청을 거절했습니다."
     const val ADMIN_PENDING_USER_REQUEST_TIME_FORMAT = "%1\$s 요청"
+    const val ADMIN_PENDING_SCHOOL_REQUEST_TIME_FORMAT = "%1\$s  %2\$s 요청"
     const val ATTENDANCE_EMPTY_ADMIN_SESSIONS = "아직 출석을 진행할 세션이 없어요"
     // 챌린저 목록 화면
     const val CHALLENGER_LIST_TITLE = "챌린저 리스트"
     const val CHALLENGER_SEARCH_PLACEHOLDER = "이름으로 멤버 검색"
+    const val CHALLENGER_PART_SELECT_TITLE = "파트를 선택하세요"
+    const val CHALLENGER_MEMBER_COUNT_FORMAT = "(%d)"
     const val ADMIN_CHALLENGER_OUT_COUNT = "아웃 %d"
     const val ADMIN_CHALLENGER_WARNING_COUNT = "경고 %d"
     const val CHALLENGER_NAME_NICKNAME_FORMAT = "%2\$s(%1\$s)"
@@ -640,6 +651,10 @@ object AppStrings {
     const val CHALLENGER_MANAGE_ACTION_OUT = "아웃 부여"
     const val CHALLENGER_MANAGE_ACTION_EDIT_HISTORY = "기록 수정하기"
     const val CHALLENGER_MANAGE_REASON_PLACEHOLDER = "사유를 입력하세요"
+    const val CHALLENGER_TOTAL_SCORE_DESCRIPTION_FORMAT = "%s님의 총점수는 %d점입니다."
+    const val CHALLENGER_REWARD_SCORE_FORMAT = "상점 %d"
+    const val CHALLENGER_PENALTY_SCORE_FORMAT = "벌점 %d"
+    const val CHALLENGER_POINTS_CONFLICT_TOAST = "상점과 벌점을 동시에 입력할 수 없습니다."
     // 상벌점 부여 화면
     const val REWARD_ETC_TITLE = "기타 상벌점 부여하기"
     const val REWARD_ETC_CONTENT = "기타 상벌점 사유와 점수를 입력해 주세요."
@@ -690,6 +705,9 @@ object AppStrings {
     const val ACT_LOCATION_SELECT_BUTTON = COMMON_SELECT
     const val ACT_LOCATION_UPDATE = "지도에서 새로운 출석 체크 위치를 지정해주세요.\n이 위치 반경 50m 이내에서만 출석할 수 있습니다."
     const val ACT_LOCATION_SEARCH_PLACEHOLDER = COMMON_LOCATION_PLACEHOLDER
+    const val ACT_LOCATION_PERMISSION_REQUIRED_TOAST = "현재 위치를 확인하려면 위치 권한이 필요합니다."
+    const val ACT_LOCATION_LOOKUP_FAILED_TOAST = "현재 위치를 확인하지 못했습니다."
+    const val ACT_LOCATION_SELECTED_PLACE = "선택한 위치"
     const val EMPTY_SEARCH_RESULT = "검색 결과가 없습니다"
     const val LOADING_DEFAULT_MESSAGE = "로딩 중입니다."
 

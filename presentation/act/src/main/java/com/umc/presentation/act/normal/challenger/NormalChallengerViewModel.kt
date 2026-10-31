@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.UserChallenger
 import com.umc.domain.model.base.ApiState
@@ -192,8 +193,8 @@ sealed interface NormalChallengerEvent : UiEvent {
 private fun UserChallenger.toMemberUi(): NormalChallengerMemberUi {
     return NormalChallengerMemberUi(
         id = id,
-        nicknameWithName = "$name($nickname)",
-        generation = "${generation}기",
+        nicknameWithName = AppStrings.CHALLENGER_NAME_NICKNAME_FORMAT.format(nickname, name),
+        generation = AppStrings.CHALLENGER_INFO_FORMAT_GENERATION.format(generation),
         roleBadge = role.displayName?.takeIf { role.isVisible }
     )
 }
