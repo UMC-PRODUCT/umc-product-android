@@ -222,7 +222,7 @@ fun FindPasswordScreen(
 
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
             UButton(
-                text = AppStrings.COMPLETE,
+                text = AppStrings.COMMON_COMPLETE,
                 onClick = onClickComplete,
                 enabled = uiState.enableCompleteButton,
                 backgroundColor = if (uiState.enableCompleteButton) main500() else grey100(),

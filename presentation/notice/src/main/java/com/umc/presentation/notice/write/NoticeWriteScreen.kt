@@ -353,7 +353,7 @@ fun NoticeWriteScreen(
             Spacer(modifier = Modifier.width(18.dp))
 
             UText(
-                text = AppStrings.REGISTER,
+                text = AppStrings.COMMON_REGISTER,
                 style = UmcTypographyTokens.HeadlineBold,
                 color = if (uiState.enableRegister) main500() else grey400(),
                 modifier = Modifier.clickable(enabled = uiState.enableRegister) { onClickRegister() },
@@ -433,7 +433,7 @@ fun NoticeWriteScreen(
                         uiState.boardChips.forEach { chipType ->
                             when (chipType) {
                                 BoardChipType.ALL -> WriteBoardChip(
-                                    text = AppStrings.ALL,
+                                    text = AppStrings.COMMON_ALL,
                                     isSelected = uiState.isAllSelected,
                                     onClick = onToggleAll,
                                 )
@@ -445,21 +445,21 @@ fun NoticeWriteScreen(
                                 )
 
                                 BoardChipType.PART -> WriteBoardChip(
-                                    text = uiState.selectedPart?.label ?: AppStrings.PART,
+                                    text = uiState.selectedPart?.label ?: AppStrings.COMMON_PART,
                                     isSelected = uiState.selectedPart != null,
                                     hasDropdownIcon = true,
                                     onClick = onClickPartChip,
                                 )
 
                                 BoardChipType.CHAPTER -> WriteBoardChip(
-                                    text = uiState.selectedChapter?.name ?: AppStrings.BRANCH,
+                                    text = uiState.selectedChapter?.name ?: AppStrings.COMMON_BRANCH,
                                     isSelected = uiState.selectedChapter != null,
                                     hasDropdownIcon = true,
                                     onClick = onClickChapterChip,
                                 )
 
                                 BoardChipType.SCHOOL -> WriteBoardChip(
-                                    text = uiState.selectedSchool?.schoolName ?: AppStrings.SCHOOL,
+                                    text = uiState.selectedSchool?.schoolName ?: AppStrings.COMMON_SCHOOL,
                                     isSelected = uiState.selectedSchool != null,
                                     hasDropdownIcon = true,
                                     onClick = onClickSchoolChip,
@@ -1098,7 +1098,7 @@ private fun VoteMaxDialog(
         },
         confirmButton = {
             UButton(
-                text = AppStrings.CONFIRM,
+                text = AppStrings.COMMON_CONFIRM,
                 onClick = onDismiss,
                 backgroundColor = grey100(),
                 textColor = grey800(),

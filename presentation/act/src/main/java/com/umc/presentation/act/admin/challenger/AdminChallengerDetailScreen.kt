@@ -267,7 +267,7 @@ fun AdminChallengerDetailScreen(
             onDismissRequest = onDismissDelete,
             isTwoButton = true,
             negativeText = AppStrings.COMMON_CANCEL,
-            positiveText = AppStrings.DELETE,
+            positiveText = AppStrings.COMMON_DELETE_ACTION,
             onNegative = onDismissDelete,
             onPositive = onConfirmDelete
         )
@@ -557,7 +557,7 @@ private fun HistorySection(
                 textColor = green500()
             )
             ScoreCountChip(
-                text = "${AppStrings.PUNISH} $totalPenaltyScore",
+                text = "${AppStrings.COMMON_PUNISH} $totalPenaltyScore",
                 bgColor = red100(),
                 textColor = red500()
             )
@@ -793,7 +793,7 @@ private fun previewDeleteDialog() {
             onDismissRequest = { },
             isTwoButton = true,
             negativeText = AppStrings.COMMON_CANCEL,
-            positiveText = AppStrings.DELETE,
+            positiveText = AppStrings.COMMON_DELETE_ACTION,
             onNegative = { },
             onPositive = { })
     }

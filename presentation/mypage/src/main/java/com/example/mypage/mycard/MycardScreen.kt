@@ -226,7 +226,7 @@ fun MycardRoute(
             title = AppStrings.EXCHANGE_CARD_BLOCKED_TITLE,
             content = AppStrings.EXCHANGE_CARD_BLOCKED_CONTENT,
             onDismissRequest = { showExchangeBlockedDialog = false },
-            confirmText = AppStrings.CONFIRM,
+            confirmText = AppStrings.COMMON_CONFIRM,
             onConfirm = { showExchangeBlockedDialog = false },
         )
     }

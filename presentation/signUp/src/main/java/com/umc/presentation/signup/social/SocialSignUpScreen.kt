@@ -136,7 +136,7 @@ fun SocialSignUpScreen(
         )
 
         UText(
-            text = AppStrings.SIGN_UP,
+            text = AppStrings.COMMON_SIGN_UP,
             style = UmcTypographyTokens.Title1Bold,
             color = grey950(),
             modifier = Modifier.padding(start = 24.dp, top = 16.dp),
@@ -169,7 +169,7 @@ fun SocialSignUpScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             UButton(
-                text = AppStrings.NEXT,
+                text = AppStrings.COMMON_NEXT,
                 onClick = onClickNext,
                 enabled = uiState.enableNextButton,
                 backgroundColor = if (uiState.enableNextButton) main500() else grey100(),
@@ -212,7 +212,7 @@ private fun EmailVerifySection(
         }
     }
 
-    FieldLabel(text = AppStrings.EMAIL)
+    FieldLabel(text = AppStrings.COMMON_EMAIL)
 
     Spacer(modifier = Modifier.height(8.dp))
 

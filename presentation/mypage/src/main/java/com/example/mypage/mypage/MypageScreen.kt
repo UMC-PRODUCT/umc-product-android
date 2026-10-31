@@ -297,7 +297,7 @@ fun MypageRoute(
             content = AppStrings.MYPAGE_ADDCODE_USED_CONTENT,
             isTwoButton = true,
             positiveText = AppStrings.MYPAGE_ADDCODE_INQUIRE,
-            negativeText = AppStrings.CONFIRM,
+            negativeText = AppStrings.COMMON_CONFIRM,
             positiveTextColor = grey800(),
             onPositive = {
                 showUsedCodeDialog = false
@@ -527,17 +527,17 @@ fun MypageScreen(
                 MypageListCard {
                     MypageListItem(
                         R.drawable.ic_github_link,
-                        AppStrings.GITHUB,
+                        AppStrings.MYPAGE_OUT_LINK_GITHUB,
                         onClick = onGithubClick
                     )
                     MypageListItem(
                         R.drawable.ic_linkedin_link,
-                        AppStrings.LINKEDIN,
+                        AppStrings.MYPAGE_OUT_LINK_LINKEDIN,
                         onClick = onLinkedinClick
                     )
                     MypageListItem(
                         R.drawable.ic_blog_link,
-                        AppStrings.BLOG,
+                        AppStrings.MYPAGE_OUT_LINK_BLOG,
                         onClick = onBlogClick
                     )
                 }
@@ -546,7 +546,7 @@ fun MypageScreen(
             item {
                 //지원 섹션
                 MypageSectionTitle(
-                    text = AppStrings.ASSIST
+                    text = AppStrings.MYPAGE_ASSIST
                 )
                 MypageListCard {
                     MypageListItem(
@@ -560,7 +560,7 @@ fun MypageScreen(
             item {
                 //설정 섹션
                 MypageSectionTitle(
-                    text = AppStrings.SETTING
+                    text = AppStrings.COMMON_SETTING
                 )
                 MypageListCard {
                     MypageListItem(
@@ -593,7 +593,7 @@ fun MypageScreen(
             item {
                 //법률 섹션
                 MypageSectionTitle(
-                    text = AppStrings.LAW
+                    text = AppStrings.MYPAGE_LAW
                 )
                 MypageListCard {
                     MypageListItem(
@@ -619,7 +619,7 @@ fun MypageScreen(
                 ) {
                     //회원 탈퇴
                     UButton(
-                        text = AppStrings.DELETE_USER,
+                        text = AppStrings.MYPAGE_DELETE_USER,
                         modifier = Modifier
                             .weight(1f)
                             .height(54.dp),
@@ -631,7 +631,7 @@ fun MypageScreen(
                     )
                     //로그아웃
                     UButton(
-                        text = AppStrings.LOGOUT,
+                        text = AppStrings.COMMON_LOGOUT,
                         modifier = Modifier
                             .weight(1f)
                             .height(54.dp),
@@ -692,7 +692,7 @@ fun MypageTopBar(
         )
 
         UText(
-            text = AppStrings.SETTING,
+            text = AppStrings.COMMON_SETTING,
             style = UmcTypographyTokens.Title2Bold,
             modifier = Modifier
                 .padding(horizontal = 6.dp)

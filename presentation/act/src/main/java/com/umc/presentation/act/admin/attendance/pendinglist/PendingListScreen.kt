@@ -138,7 +138,7 @@ fun PendingListScreen(
 
             if(isSelectApproveMode) {
                 UButton(
-                    text = AppStrings.CONFIRM,
+                    text = AppStrings.COMMON_CONFIRM,
                     textStyle = SubheadlineBold,
                     textColor = if(isConfirmEnabled) grey50() else grey300(),
                     enabled = isConfirmEnabled,

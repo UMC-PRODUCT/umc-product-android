@@ -135,22 +135,22 @@ fun NoticeTags(target: NoticeTarget) {
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (isCentral) {
-            NoticeTag(text = AppStrings.CENTRAL, backgroundColor = yellow100(), textColor = yellow600())
+            NoticeTag(text = AppStrings.COMMON_CENTRAL, backgroundColor = yellow100(), textColor = yellow600())
             Spacer(modifier = Modifier.width(6.dp))
         }
 
         if (target.targetChapterId != null) {
-            NoticeTag(text = AppStrings.BRANCH, backgroundColor = grey100(), textColor = grey600())
+            NoticeTag(text = AppStrings.COMMON_BRANCH, backgroundColor = grey100(), textColor = grey600())
             Spacer(modifier = Modifier.width(6.dp))
         }
 
         if (target.targetSchoolId != null) {
-            NoticeTag(text = AppStrings.SCHOOL, backgroundColor = main100(), textColor = main600())
+            NoticeTag(text = AppStrings.COMMON_SCHOOL, backgroundColor = main100(), textColor = main600())
             Spacer(modifier = Modifier.width(6.dp))
         }
 
         if (target.targetParts.isNotEmpty()) {
-            NoticeTag(text = AppStrings.PART, backgroundColor = green100(), textColor = green600())
+            NoticeTag(text = AppStrings.COMMON_PART, backgroundColor = green100(), textColor = green600())
         }
     }
 }

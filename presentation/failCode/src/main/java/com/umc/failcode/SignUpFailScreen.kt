@@ -234,8 +234,8 @@ internal fun SignUpFailAccountLinks(
             title = AppStrings.SIGN_UP_FAIL_DELETE_USER_DIALOG_TITLE,
             content = AppStrings.SIGN_UP_FAIL_DELETE_USER_DIALOG_CONTENT,
             isTwoButton = true,
-            positiveText = AppStrings.DELETE,
-            negativeText = AppStrings.CANCEL,
+            positiveText = AppStrings.COMMON_DELETE_ACTION,
+            negativeText = AppStrings.COMMON_CANCEL,
             onPositive = {
                 showDeleteDialog = false
                 onDeleteUserConfirm()

@@ -130,7 +130,7 @@ fun OtherPointsScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             ScoreStepper(
-                label = AppStrings.PUNISH,
+                label = AppStrings.COMMON_PUNISH,
                 value = uiState.customPunishScore,
                 valueColor = red500(),
                 onMinusClick = onPunishMinusClick,

@@ -1,13 +1,101 @@
 package com.umc.component.theme
 
 object AppStrings {
+    // 앱 기본 정보
     const val APP_NAME = "UMC product"
     const val COMPOSE_ROOT_TITLE = "UMC Compose Migration"
     const val COMPOSE_ROOT_DESCRIPTION = "Compose 기반 화면 마이그레이션 중입니다."
 
+    // 공통 문구
+    const val COMMON_CANCEL = "취소"
+    const val COMMON_CONFIRM = "확인"
+    const val COMMON_UNKNOWN = "알 수 없음"
+    const val COMMON_COPY = "복사"
+    const val COMMON_CUT = "잘라내기"
+    const val COMMON_APPROVE = "승인하기"
+    const val COMMON_REJECT = "반려하기"
+    const val COMMON_SUBMIT = "제출하기"
+    const val COMMON_BACK = "뒤로가기"
+    const val COMMON_SIGN_UP = "회원가입"
+    const val COMMON_NAME = "이름"
+    const val COMMON_NICKNAME = "닉네임"
+    const val COMMON_EMAIL = "이메일"
+    const val COMMON_ALLDAY = "하루 종일"
+    const val COMMON_START = "시작"
+    const val COMMON_END = "종료"
+    const val COMMON_SCHOOL = "학교"
+    const val COMMON_NEXT = "다음"
+    const val COMMON_SETTING = "설정"
+    const val COMMON_INFORMATION = "정보"
+    const val COMMON_LOGOUT = "로그아웃"
+    const val COMMON_COMPLETE = "완료"
+    const val COMMON_REGISTER = "등록"
+    const val COMMON_REGION = "지역"
+    const val COMMON_ALL = "전체"
+    const val COMMON_SOFT = "Soft"
+    const val COMMON_HARD = "Hard"
+    const val COMMON_QNA = "질문"
+    const val COMMON_CENTRAL = "중앙"
+    const val COMMON_PART = "파트"
+    const val COMMON_BRANCH = "지부"
+    const val COMMON_UNCONFIRM = "미확인"
+    const val COMMON_EDIT = "수정"
+    const val COMMON_SEE = "보기"
+    const val COMMON_START_TIME = "일시"
+    const val COMMON_START_LOCATION = "장소"
+    const val COMMON_START_PARTICIPANT = "인원"
+    const val COMMON_SELECT = "선택"
+    const val COMMON_TIME_AM = "오전"
+    const val COMMON_TIME_PM = "오후"
+    const val COMMON_LOGIN = "로그인"
+    const val COMMON_PASSWORD = "비밀번호"
+    const val COMMON_PUNISH = "벌점"
+    const val COMMON_MEMO_PLACEHOLDER = "메모를 입력해주세요."
+    const val COMMON_DELETE_ACTION = "삭제하기"
+    const val COMMON_DELETE = "삭제"
+    const val COMMON_EDIT_ACTION = "수정하기"
+    const val COMMON_DELETE_ALL_ACTION = "전체 삭제"
+    const val COMMON_RETRY = "다시 시도하기"
+    const val COMMON_NETWORK_ERROR_DESCRIPTION = "네트워크 연결을 확인하고 다시 시도해주세요."
+    const val COMMON_NO_SEARCH_RESULTS = "검색 결과가 없어요"
+    const val COMMON_RECENT_SEARCH_TITLE = "최근 검색어"
+    const val COMMON_TITLE_CONTENT_SEARCH_PLACEHOLDER = "제목, 내용 검색"
+    const val COMMON_TITLE_PLACEHOLDER = "제목을 입력하세요."
+    const val COMMON_CONTENT_PLACEHOLDER = "내용을 입력하세요."
+    const val COMMON_LOCATION_PLACEHOLDER = "위치를 입력하세요"
+    const val COMMON_NAME_PLACEHOLDER = "이름을 입력하세요"
+    const val COMMON_SELECT_CATEGORY = "카테고리를 선택하세요"
+    const val COMMON_SIX_DIGIT_CODE_PLACEHOLDER = "6자리 코드를 입력하세요"
+    const val COMMON_VERIFICATION_CODE_PLACEHOLDER = "인증번호 6자리 입력"
+    const val COMMON_GENERATION_FORMAT = "%d기"
+    const val COMMON_ACCOUNT_DELETE_TITLE = "계정 삭제"
+    const val COMMON_ACCOUNT_DELETE_CONTENT = "계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 정말 삭제하시겠습니까?"
+    const val COMMON_PROFILE_LOAD_ERROR = "내 정보를 불러오지 못했어요"
+    const val COMMON_MY_POSTS_TITLE = "내가 쓴 글"
+    const val COMMON_CHANGE_ACTION = "변경하기"
+    const val COMMON_VERIFICATION_CODE_LABEL = "인증코드"
+    const val COMMON_SUGGESTION_BOX_TITLE = "중앙 건의함"
+    const val COMMON_ATTENDANCE_CHECK = "출석 체크"
+    const val COMMON_CANCEL_ACTION = "취소하기"
+    const val COMMON_QR_CODE = "QR 코드"
+
+    const val CANCEL = COMMON_CANCEL
+    const val CONFIRM = COMMON_CONFIRM
+    const val PUNISH = COMMON_PUNISH
+    const val EDIT = COMMON_EDIT
+    const val REGISTER = COMMON_REGISTER
+    const val ALLDAY = COMMON_ALLDAY
+    const val END = COMMON_END
+    const val START = COMMON_START
+    const val DELETE = COMMON_DELETE_ACTION
+    const val TIME_AM = COMMON_TIME_AM
+    const val TIME_PM = COMMON_TIME_PM
+
+    // 공용 컴포넌트 및 다이얼로그
     const val DIALOG_DATETIME_TITLE = "날짜와 시간을 선택해주세요"
     const val DIALOG_DATETIME_DATE = "날짜"
     const val DIALOG_DATETIME_TIME = "시간"
+    // 홈 화면
     const val HOME_NOW_CARD_MAIN_TITLE = "내 활동 상태"
 
     const val HOME_PLAN_TITLE = "다가오는 일정"
@@ -16,45 +104,50 @@ object AppStrings {
 
     const val HOME_ACTIVATE_DAY = "누적 활동일"
     const val HOME_ATTEND_GISU = "참여 기수"
-    const val HOME_PROFILE_LOAD_ERROR_TITLE = "내 정보를 불러오지 못했어요"
-    const val HOME_SCHEDULE_LOAD_ERROR_TITLE = "일정을 불러오지 못했어요"
+    const val HOME_PROFILE_LOAD_ERROR_TITLE = COMMON_PROFILE_LOAD_ERROR
+    const val HOME_SCHEDULE_LOAD_ERROR = "일정을 불러오지 못했어요"
+    const val HOME_SCHEDULE_LOAD_ERROR_TITLE = HOME_SCHEDULE_LOAD_ERROR
     const val HOME_LOAD_ERROR_DESCRIPTION = "잠시 후 다시 시도해주세요."
-    const val HOME_RETRY = "다시 시도하기"
+    const val HOME_RETRY = COMMON_RETRY
     const val HOME_PLAN_EMPTY_TITLE = "일정이 없어요"
     const val HOME_PLAN_EMPTY_CONTENT = "일정이 등록되면 이곳에 표시됩니다."
     const val HOME_NOTIFICATION_NO_TITLE = "알림 내역이 없어요"
     const val HOME_NOTIFICATION_NO_CONTENT = "새로운 소식이 도착하면 이곳에 표시됩니다."
+    // 일정 상세 화면
     const val HOME_PLAN_DETAIL_TITLE = "일정 상세"
-    const val HOME_PLAN_DETAIL_CALENDAR = "일시"
-    const val HOME_PLAN_DETAIL_LOCATION = "장소"
+    const val HOME_PLAN_DETAIL_CALENDAR = COMMON_START_TIME
+    const val HOME_PLAN_DETAIL_LOCATION = COMMON_START_LOCATION
     const val HOME_PLAN_DETAIL_SHOW_MAP = "지도 보기"
-    const val HOME_PLAN_DETAIL_PLAN_NOTICE = "상세 안내"
-    const val HOME_PLAN_DETAIL_CHECK_CONFIRM = "출석 체크"
+    const val HOME_PLAN_DETAIL_GUIDE = "상세 안내"
+    const val HOME_PLAN_DETAIL_PLAN_NOTICE = HOME_PLAN_DETAIL_GUIDE
+    const val HOME_PLAN_DETAIL_CHECK_CONFIRM = COMMON_ATTENDANCE_CHECK
     const val HOME_PLAN_DETAIL_DELETE_DIALOG_TITLE = "해당 일정을 삭제하시겠습니까"
     const val HOME_PLAN_DETAIL_DELETE_DIALOG_CONTENT = "삭제된 일정은 복구할 수 없습니다."
-    const val HOME_PLAN_DETAIL_DELETE_DIALOG_CONFIRM = "삭제하기"
+    const val HOME_PLAN_DETAIL_DELETE_DIALOG_CONFIRM = COMMON_DELETE_ACTION
     const val HOME_PLAN_DETAIL_MAP_ERROR = "지도를 열 수 없습니다."
-    const val HOME_PLAN_DETAIL_LOAD_ERROR = "일정을 불러오지 못했어요"
+    const val HOME_PLAN_DETAIL_LOAD_ERROR = HOME_SCHEDULE_LOAD_ERROR
     const val HOME_PLAN_DETAIL_DELETE_ERROR = "일정을 삭제하지 못했어요"
+    // 일정 등록 및 수정 화면
     const val HOME_PLAN_ADD_TITLE = "일정 등록"
     const val HOME_PLAN_ADD_PLAN_NAME = "일정 제목"
     const val HOME_PLAN_ADD_ONLINE_TITLE = "대면으로 진행하기"
     const val HOME_PLAN_ADD_ATTENDANCE_TITLE = "출석부 생성하기"
     const val HOME_PLAN_ADD_PLAN_NAME_PLACEHOLDER = "일정 제목을 입력하세요"
-    const val HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER = "위치를 입력하세요"
-    const val HOME_PLAN_ADD_PLAN_CHALLENGER_PLACEHOLDER = "챌린저를 선택하세요"
+    const val HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER = COMMON_LOCATION_PLACEHOLDER
+    const val HOME_PLAN_SELECT_CHALLENGER = "챌린저를 선택하세요"
+    const val HOME_PLAN_ADD_PLAN_CHALLENGER_PLACEHOLDER = HOME_PLAN_SELECT_CHALLENGER
     const val HOME_PLAN_ADD_PLAN_TAG_PLACEHOLDER = "태그를 선택하세요"
     const val HOME_PLAN_ADD_PLAN_TAG_BOTTOMSHEET_TITLE = "태그를 추가하세요"
     const val HOME_PLAN_ADD_PLAN_TAG_BOTTOMSHEET_CONTENT = "중복 선택이 가능합니다"
     const val HOME_PLAN_ADD_PLAN_PARTICIPANT_TITLE = "초대할 챌린저를 추가하세요"
     const val HOME_PLAN_ADD_PLAN_PARTICIPANT_NO_CHALLENGER = "아직 초대한 챌린저가 없어요"
-    const val HOME_PLAN_ADD_PLAN_PARTICIPANT_NO_RESULT = "검색 결과가 없어요"
+    const val HOME_PLAN_ADD_PLAN_PARTICIPANT_NO_RESULT = COMMON_NO_SEARCH_RESULTS
     const val HOME_PLAN_ADD_PLAN_PARTICIPANT_SEARCH_ERROR = "챌린저 목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요."
-    const val HOME_PLAN_ADD_PLAN_PARTICIPANT_PLACEHOLDER = "챌린저를 선택하세요"
+    const val HOME_PLAN_ADD_PLAN_PARTICIPANT_PLACEHOLDER = HOME_PLAN_SELECT_CHALLENGER
     const val HOME_PLAN_ADD_PLAN_DETAIL_PLACEHOLDER = "상세 내용을 입력하세요"
     const val HOME_PLAN_ADD_PLAN_SEARCH_PLACEHOLDER = "이름, 닉네임 또는 학교 검색"
     const val HOME_PLAN_ADD_PLAN_ATTEND = "챌린저 명단"
-    const val HOME_PLAN_ADD_PLAN_DETAIL_INFORMATION = "상세 안내"
+    const val HOME_PLAN_ADD_PLAN_DETAIL_INFORMATION = HOME_PLAN_DETAIL_GUIDE
     const val HOME_PLAN_ADD_PLAN_CATEGORY = "태그"
     const val HOME_PLAN_ADD_ATTENDANCE_CHECKIN_TITLE = "체크인 시작"
     const val HOME_PLAN_ADD_ATTENDANCE_ONTIMEEND_TITLE = "정시 종료"
@@ -70,27 +163,32 @@ object AppStrings {
     const val HOME_PLAN_ADD_DIALOG_ADD_ATTENDANCE_CONTENT = "출석부와 함께 일정을 생성하시겠습니까?"
     const val HOME_PLAN_ADD_DIALOG_ADD_ATTENDANCE_YES = "네, 출석부도 같이 생성할게요"
     const val HOME_PLAN_ADD_DIALOG_ADD_ATTENDANCE_NO = "아니요, 일정만 생성할게요"
+    // 일정 장소 선택 화면
 
+    // 내 명함 화면
     const val MYCARD_INTRODUCE = "Business card"
     const val MYCARD_EXCHANGE_CARD = "명함 교환"
-    const val MYCARD_QRCODE = "QR 코드"
+    const val MYCARD_QRCODE = COMMON_QR_CODE
     const val MYCARD_CARD_TITLE = "명함 관리"
-    const val MYCARD_CARD_CONTENT_RECEIVED = "받은 명함"
+    const val RECEIVED_CARD_TITLE = "받은 명함"
+    const val MYCARD_CARD_CONTENT_RECEIVED = RECEIVED_CARD_TITLE
     const val MYCARD_CARD_EDIT = "명함 편집"
     const val MYCARD_ACTVITY_TITLE = "나의 활동"
     const val MYCARD_ACTVITY_MYSTUDY = "나의 스터디"
-    const val MYCARD_ACTVITY_HISTORY = "활동 이력"
-    const val MYCARD_PROFILE_LOAD_ERROR_TITLE = "내 정보를 불러오지 못했어요"
-    const val MYCARD_PROFILE_LOAD_ERROR_DESCRIPTION = "네트워크 연결을 확인하고 다시 시도해주세요."
-    const val MYCARD_RETRY = "다시 시도하기"
+    const val ACTIVITY_HISTORY_TITLE = "활동 이력"
+    const val MYCARD_ACTVITY_HISTORY = ACTIVITY_HISTORY_TITLE
+    const val MYCARD_PROFILE_LOAD_ERROR_TITLE = COMMON_PROFILE_LOAD_ERROR
+    const val MYCARD_PROFILE_LOAD_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
+    const val MYCARD_RETRY = COMMON_RETRY
 
+    // 명함 교환 화면
     const val EXCHANGE_CARD_TITLE = "명함 교환하기"
     const val EXCHANGE_CARD_CONTENT = "방식을 선택해 주변 멤버와 명함을 주고받으세요."
     const val EXCHANGE_CARD_WIFI_TITLE = "Wi-Fi Aware 고속 교환"
     const val EXCHANGE_CARD_WIFI_CONTENT = "사진, USDZ 명함까지 즉시 전송 · Nearby"
-    const val EXCHANGE_CARD_QR_TITLE = "QR 코드"
+    const val EXCHANGE_CARD_QR_TITLE = COMMON_QR_CODE
     const val EXCHANGE_CARD_QR_CONTENT = "카메라로 스캔 · 크로스 플랫폼"
-    const val EXCHANGE_CARD_CANCEL = "취소하기"
+    const val EXCHANGE_CARD_CANCEL = COMMON_CANCEL_ACTION
     const val EXCHANGE_CARD_WIFI_USER_TITLE = "교환하고 싶은 유저를 선택해 연결하세요."
     const val EXCHANGE_CARD_WIFI_USER_SEARCH = "주변 유저를 찾는 중입니다..."
     const val EXCHANGE_CARD_WIFI_USER_SEARCH_PAUSE = "탐색 중단하기"
@@ -102,20 +200,22 @@ object AppStrings {
     const val EXCHANGE_CARD_BLOCKED_TITLE = "명함 교환은 개발 중이에요"
     const val EXCHANGE_CARD_BLOCKED_CONTENT = "지금 열심히 준비하고 있어요.\n완료되면 안내드릴게요."
     
-    const val RECEIVED_CARD_TITLE = "받은 명함"
+    // 받은 명함 화면
     const val RECEIVED_CARD_TEXTHOLDER = "이름, 파트 검색"
 
+    // 명함 QR 공유 화면
     const val QRCODE_TITLE = "명함 공유하기"
     const val QRCODE_CONTENT = "QR을 스캔하면 내 명함이 저장돼요"
     const val QRCODE_SHARE = "공유하기"
     const val QRCODE_SAVE = "이미지 저장"
+    // 마이페이지 화면
     const val MYPAGE_TITLE = "마이페이지"
     const val MYPAGE_MODIFY_PROFILE = "프로필"
-    const val MYPAGE_LOGOUT = "로그아웃"
-    const val MYPAGE_SUGGEST = "중앙 건의함"
+    const val MYPAGE_LOGOUT = COMMON_LOGOUT
+    const val MYPAGE_SUGGEST = COMMON_SUGGESTION_BOX_TITLE
     const val MYPAGE_SUGGEST_COTNET = "익명으로 자유롭게 의견을 남길 수 있어요."
     const val MYPAGE_MYACTIVITY = "내 활동"
-    const val MYPAGE_MYPOST = "내가 쓴 글"
+    const val MYPAGE_MYPOST = COMMON_MY_POSTS_TITLE
     const val MYPAGE_MYCOMMENT = "댓글 단 글"
     const val MYPAGE_MYSCRAP = "스크랩"
     const val MYPAGE_ADDACTIVITY = "챌린저 기록 추가"
@@ -127,62 +227,72 @@ object AppStrings {
     const val MYPAGE_OPENSOURCE = "오픈소스 라이선스"
     const val MYPAGE_UMC_OUT_CHANNEL = "UMC 외부 채널"
     const val MYPAGE_OUT_LINK = "외부 링크"
+    const val MYPAGE_OUT_LINK_GITHUB = "Github"
+    const val MYPAGE_OUT_LINK_LINKEDIN = "Linked in"
+    const val MYPAGE_OUT_LINK_BLOG = "Blog"
+    const val MYPAGE_ASSIST = "지원"
+    const val MYPAGE_LAW = "법률"
+    const val MYPAGE_DELETE_USER = "회원탈퇴"
     const val MYPAGE_PERSONAL_INFORMATION = "개인정보처리 방침"
     const val MYPAGE_USE_MANUAL = "이용 약관"
     const val MYPAGE_INQUIRE_UMC_KAKAO = "UMC 카카오톡 문의"
 
-    const val MYPAGE_LOGOUT_TITLE = "로그아웃"
+    const val MYPAGE_LOGOUT_TITLE = COMMON_LOGOUT
     const val MYPAGE_LOGOUT_CONTENT = "정말 로그아웃을 하시겠습니까?"
-    const val MYPAGE_DELTE_USER_TITLE = "계정 삭제"
+    const val MYPAGE_DELTE_USER_TITLE = COMMON_ACCOUNT_DELETE_TITLE
     const val MYPAGE_DELETE_USER_FAIL = "계정 삭제에 실패했습니다. 잠시 후 다시 시도해주세요."
-    const val MYPAGE_DELTE_USER_CONTENT = "계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 정말 삭제하시겠습니까?"
+    const val MYPAGE_DELTE_USER_CONTENT = COMMON_ACCOUNT_DELETE_CONTENT
     const val MYPAGE_ADDCODE_TITLE = "운영진에게 발급받은\n6자리 인증코드를 입력해주세요."
-    const val MYPAGE_ADDCODE_CONTENT = "6자리 코드를 입력하세요"
-    const val MYPAGE_ADDCODE_CODE = "인증코드"
+    const val MYPAGE_ADDCODE_CONTENT = COMMON_SIX_DIGIT_CODE_PLACEHOLDER
+    const val MYPAGE_ADDCODE_CODE = COMMON_VERIFICATION_CODE_LABEL
     const val MYPAGE_ADDCODE_CONFIRM = "추가하기"
     const val MYPAGE_ADDCODE_SUBMITTING = "추가하는 중..."
     const val MYPAGE_ADDCODE_USED_TITLE = "이미 사용된 코드예요"
     const val MYPAGE_ADDCODE_USED_CONTENT = "이미 사용된 코드는 다시 쓸 수 없어요. 새 코드가 필요하면 UMC 카카오톡 채널로 문의해 주세요."
     const val MYPAGE_ADDCODE_INQUIRE = "문의하기"
     const val MYPAGE_TERMS_LOAD_FAIL_TITLE = "약관을 불러오지 못했어요"
-    const val MYPAGE_TERMS_LOAD_FAIL_CONTENT = "네트워크 연결을 확인하고 다시 시도해 주세요."
+    const val MYPAGE_TERMS_LOAD_FAIL_CONTENT = COMMON_NETWORK_ERROR_DESCRIPTION
     const val MYPAGE_TERMS_RETRY = "다시 시도"
     const val MYPAGE_PROFILE_LOAD_FAIL = "정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."
     const val MYPAGE_LINK_OPEN_FAIL = "링크를 열 수 있는 앱이 없어요."
     const val MYPAGE_SOCIAL_LINK_SUCCESS = "소셜 계정이 연동되었어요."
     const val MYPAGE_SOCIAL_LINK_FAIL = "소셜 계정 연동에 실패했어요. 잠시 후 다시 시도해 주세요."
     const val MYPAGE_SOCIAL_LINK_ALREADY_REGISTERED = "이미 UMC 계정에 연동된 소셜 계정이에요."
+    // 프로필 화면
     const val PROFILE_CONNECT_ACCOUNT = "연동된 계정"
     const val PROFILE_GIVE_LOGIN = "로그인 제공자"
     const val PROFILE_NAME_NICKNAME = "닉네임/이름"
-    const val PROFILE_SCHOOL = "학교"
+    const val PROFILE_SCHOOL = COMMON_SCHOOL
     const val PROFILE_PART = "기수/파트"
     const val PROFILE_GITHUB_URL = "Github URL"
     const val PROFILE_LINKEDIN_URL = "LinkedIn URL"
     const val PROFILE_BLOG_URL = "Blog URL"
     const val PROFILE_HTTP_START_PLACEHOLDER = "http://-"
     const val PROFILE_LOAD_ERROR_TITLE = "프로필 정보를 불러오지 못했어요"
-    const val PROFILE_LOAD_ERROR_DESCRIPTION = "네트워크 연결을 확인하고 다시 시도해주세요."
-    const val PROFILE_RETRY = "다시 시도하기"
+    const val PROFILE_LOAD_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
+    const val PROFILE_RETRY = COMMON_RETRY
     const val PROFILE_LINK_INVALID = "올바른 URL 형식(https://...)으로 입력해주세요."
     const val PROFILE_SAVE_FAIL = "저장하지 못했어요. 네트워크 연결을 확인해주세요."
-    const val ACTIVITY_HISTORY_TITLE = "활동 이력"
+    // 활동 이력 화면
     const val ACTIVITY_HISTORY_EMPTY = "아직 활동 이력이 없어요"
     const val ACTIVITY_HISTORY_LOAD_ERROR_TITLE = "활동 이력을 불러오지 못했어요"
-    const val ACTIVITY_HISTORY_LOAD_ERROR_DESCRIPTION = "네트워크 연결을 확인하고 다시 시도해주세요."
-    const val ACTIVITY_HISTORY_RETRY = "다시 시도하기"
-    const val MYPOST_TITLE = "내가 쓴 글"
+    const val ACTIVITY_HISTORY_LOAD_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
+    const val ACTIVITY_HISTORY_RETRY = COMMON_RETRY
+    // 내가 쓴 글과 댓글 화면
+    const val MYPOST_TITLE = COMMON_MY_POSTS_TITLE
     const val MYCOMMENT_TITLE = "댓글 단 글\""
+    // 건의함 화면
     const val SUGGEST_TITLE = "내 건의 내역"
     const val SUGGEST_ASK_TITLE = "새로운 의견이 있나요?"
     const val SUGGEST_ASK_CONTENT = "익명으로 자유롭게 의견을 남겨주세요."
     const val SUGGEST_BTN_CONTENT = "건의하기"
-    const val SUGGEST_WRITE_TITLE = "중앙 건의함"
+    const val SUGGEST_WRITE_TITLE = COMMON_SUGGESTION_BOX_TITLE
     const val SUGGEST_ADMIN_ANSWER = "운영진 답변"
     const val SUGGEST_WRITE_ANOMY_TITLE = "익명으로 건의하기"
     const val SUGGEST_WRITE_ANOMY_CONTENT = "익명 해제 시 회원님의 학교와 이름(닉네임) 정보가 건의 내용과 함께 운영진에게 전달됩니다."
-    const val SUGGEST_WRITE_ANOMY_TITLE_PLACEHOLDER = "제목을 입력하세요."
-    const val SUGGEST_WRITE_ANOMY_CONTENT_PLACEHOLDER = "내용을 입력하세요."
+    const val SUGGEST_WRITE_ANOMY_TITLE_PLACEHOLDER = COMMON_TITLE_PLACEHOLDER
+    const val SUGGEST_WRITE_ANOMY_CONTENT_PLACEHOLDER = COMMON_CONTENT_PLACEHOLDER
+    // 커뮤니티 화면
     const val COMMUNITY_TITLE = "커뮤니티"
     const val COMMUNITY_TOP = "명예의 전당"
     const val COMMUNITY_RECRUTING = "모집중"
@@ -194,60 +304,22 @@ object AppStrings {
     const val COMMUNITY_WRITE_TITLE = "글쓰기"
     const val COMMUNITY_WRITE_CATEGORY = "카테고리"
     const val COMMUNITY_WRITE_CATEGORY_SELECT = "카테고리 선택"
-    const val COMMUNITY_WRITE_CATEGORY_SELECT_LONG = "카테고리를 선택하세요"
+    const val COMMUNITY_WRITE_CATEGORY_SELECT_LONG = COMMON_SELECT_CATEGORY
     const val COMMUNITY_WRITE_LIGHT_TITLE = "번개 설정하기"
     const val COMMUNITY_WRITE_LIGHT_TIME = "날짜/시간"
     const val COMMUNITY_WRITE_LIGHT_TIME_PLACEHOLDER = "예: 2026.01.01 13:00"
     const val COMMUNITY_WRITE_LIGHT_PEOPLE = "최대 인원"
     const val COMMUNITY_WRITE_LIGHT_PEOPLE_PLACEHOLDER = "예: 4"
-    const val COMMUNITY_WRITE_LIGHT_PLACE = "장소"
+    const val COMMUNITY_WRITE_LIGHT_PLACE = COMMON_START_LOCATION
     const val COMMUNITY_WRITE_LIGHT_PLACE_PLACEHOLDER = "예: 강남역 3번 출구"
     const val COMMUNITY_WRITE_LIGHT_OPENCHAT = "오픈 채팅 링크"
     const val COMMUNITY_WRITE_LIGHT_OPENCHAT_PLACEHOLDER = "링크를 입력해주세요"
     const val COMMUNITY_WRITE_LIGHT_OPENCHAT_ERROR = "https://open.kakao.com/로 시작해야 합니다"
-    const val COMMUNITY_SEARCH_PLACEHOLD = "제목, 내용 검색"
+    const val COMMUNITY_SEARCH_PLACEHOLD = COMMON_TITLE_CONTENT_SEARCH_PLACEHOLDER
     const val COMMUNITY_SEARCH_RECENT = "최근 검색"
-    const val COMMUNITY_SEARCH_DELETEALL = "전체 삭제"
+    const val COMMUNITY_SEARCH_DELETEALL = COMMON_DELETE_ALL_ACTION
     const val COMMUNITY_TOP_NO_RESULT = "게시글이 존재하지 않습니다"
-    const val SIGN_UP = "회원가입"
-    const val NAME = "이름"
-    const val NICKNAME = "닉네임"
-    const val EMAIL = "이메일"
-    const val ALLDAY = "하루 종일"
-    const val START = "시작"
-    const val END = "종료"
-    const val CANCEL = "취소"
-    const val SCHOOL = "학교"
-    const val NEXT = "다음"
-    const val GITHUB = "Github"
-    const val LINKEDIN = "Linked in"
-    const val BLOG = "Blog"
-    const val SETTING = "설정"
-    const val INFORMATION = "정보"
-    const val LOGOUT = "로그아웃"
-    const val DELETE_USER = "회원탈퇴"
-    const val COMPLETE = "완료"
-    const val REGISTER = "등록"
-    const val REGION = "지역"
-    const val ALL = "전체"
-    const val SOFT = "Soft"
-    const val HARD = "Hard"
-    const val QNA = "질문"
-    const val CENTRAL = "중앙"
-    const val PART = "파트"
-    const val BRANCH = "지부"
-    const val CONFIRM = "확인"
-    const val UNCONFIRM = "미확인"
-    const val EDIT = "수정"
-    const val SEE = "보기"
-    const val START_TIME = "일시"
-    const val START_LOCATION = "장소"
-    const val START_PARTICIPANT = "인원"
-    const val SELECT = "선택"
-    const val LAW = "법률"
-    const val ASSIST = "지원"
-    const val TIME_AM = "오전"
-    const val TIME_PM = "오후"
+    // 로그인 화면
     const val LOGIN_TITLE = "동아리 활동을 한 곳에서"
     const val LOGIN_SUBTITLE = "Focus on Growth, We Handle the Ops"
     const val LOGIN_UMC_ACCOUNT = "UMC 계정 로그인"
@@ -257,15 +329,15 @@ object AppStrings {
     const val LOGIN_GOOGLE_NO_ACCOUNT = "기기에 Google 계정이 없어요. 계정을 추가한 뒤 다시 시도해주세요."
     const val LOGIN_GOOGLE_FAILED = "Google 로그인에 실패했어요. 잠시 후 다시 시도해주세요."
     const val LOGIN_KAKAO_FAILED = "카카오 로그인에 실패했어요. 잠시 후 다시 시도해주세요."
-    const val LOGIN = "로그인"
-    const val PASSWORD = "비밀번호"
     const val EMAIL_LOGIN_EMAIL_PLACEHOLDER = "이메일을 입력하세요"
     const val EMAIL_LOGIN_PASSWORD_PLACEHOLDER = "비밀번호를 입력하세요"
     const val EMAIL_LOGIN_FIND_PASSWORD = "비밀번호 찾기"
     const val EMAIL_LOGIN_FAIL_MESSAGE = "입력한 계정 정보를 확인 후 다시 시도해주세요."
+    // 스플래시 화면
     const val SPLASH_NETWORK_ERROR_TITLE = "이용 상태를 확인하지 못했어요"
-    const val SPLASH_NETWORK_ERROR_DESCRIPTION = "네트워크 연결을 확인하고 다시 시도해주세요."
-    const val SPLASH_RETRY = "다시 시도하기"
+    const val SPLASH_NETWORK_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
+    const val SPLASH_RETRY = COMMON_RETRY
+    // 회원가입 화면
     const val SIGN_UP_SUB_TITLE = "동아리 활동을 위해 정보를 입력해주세요."
     const val SIGN_UP_NAME_PLACEHOLDER = "이름 입력"
     const val SIGN_UP_NICKNAME_PLACEHOLDER = "한글 1~5자"
@@ -276,18 +348,19 @@ object AppStrings {
     const val SIGN_UP_VERIFY_REQUEST = "인증 요청"
     const val SIGN_UP_VERIFY_CONFIRM = "인증 확인"
     const val SIGN_UP_ERROR_EMAIL = "유효하지 않은 계정입니다"
-    const val SIGN_UP_VERIFY_CODE_PLACEHOLDER = "인증번호 6자리 입력"
+    const val SIGN_UP_VERIFY_CODE_PLACEHOLDER = COMMON_VERIFICATION_CODE_PLACEHOLDER
     const val SIGN_UP_SELECT_SCHOOL_PLACEHOLDER = "학교를 선택하세요"
     const val SIGN_UP_SELECT_SCHOOL_HINT = "가나다순으로 정렬되어 있어요"
     const val SIGN_UP_COMPLETE = "가입 완료"
     const val SIGN_UP_SOCIAL_SUB_TITLE = "이메일 인증을 완료해 주세요."
     const val SIGN_UP_EMAIL_SUB_TITLE = "이메일 인증 후 비밀번호를 설정해 주세요."
-    const val SIGN_UP_VERIFY_CODE_6_PLACEHOLDER = "인증번호 6자리 입력"
+    const val SIGN_UP_VERIFY_CODE_6_PLACEHOLDER = COMMON_VERIFICATION_CODE_PLACEHOLDER
     const val SIGN_UP_CODE_SENT_TOAST = "인증 번호가 발송 되었습니다."
     const val REMOTE_NOTICE_EXIT_APP = "앱 종료"
     const val SIGN_UP_PASSWORD_PLACEHOLDER = "8자 이상 입력"
     const val SIGN_UP_PASSWORD_CHECK_PLACEHOLDER = "비밀번호 다시 입력"
     const val PASSWORD_CHECK = "비밀번호 확인"
+    // 비밀번호 재설정 화면
     const val FIND_PASSWORD_SUB_TITLE = "가입한 이메일 정보를 입력해주세요."
     const val FIND_PASSWORD_EMAIL_LABEL = "이메일 입력"
     const val CHANGE_PASSWORD_TITLE = "비밀번호 변경"
@@ -296,19 +369,20 @@ object AppStrings {
     const val CHANGE_PASSWORD_COMPLETE_TITLE = "비밀번호 변경 완료"
     const val CHANGE_PASSWORD_COMPLETE_CONTENT = "비밀번호가 성공적으로 변경되었어요.\n새로운 비밀번호로 다시 로그인해주세요."
     const val GO_LOGIN = "로그인하기"
+    // 공지 화면 공통 문구
     const val NOTICE_STAFF_CHIP = "운영진 공지"
     const val NOTICE_CENTRAL_CHIP = "중앙운영사무국"
     const val NOTICE_VIEW_COUNT = "조회"
-    const val NOTICE_SEARCH_RECENT = "최근 검색어"
-    const val NOTICE_SEARCH_DELETE_ALL = "전체 삭제"
+    const val NOTICE_SEARCH_RECENT = COMMON_RECENT_SEARCH_TITLE
+    const val NOTICE_SEARCH_DELETE_ALL = COMMON_DELETE_ALL_ACTION
     const val ADMIN_NOTICE_CENTRAL = "중앙운영사무국 공지"
     // 지부장 공지: 서버 noticeTab에 지부 등급이 없어 보류
     // const val ADMIN_NOTICE_CHAPTER = "지부장 공지"
     const val ADMIN_NOTICE_SCHOOL_CORE = "교내 회장단 공지"
     const val ADMIN_NOTICE_PART_LEADER = "파트장 공지"
-    const val NOTICE_WRITE_CATEGORY_PLACEHOLDER = "카테고리를 선택하세요"
-    const val NOTICE_WRITE_TITLE_PLACEHOLDER = "제목을 입력하세요."
-    const val NOTICE_WRITE_CONTENT_PLACEHOLDER = "내용을 입력하세요."
+    const val NOTICE_WRITE_CATEGORY_PLACEHOLDER = COMMON_SELECT_CATEGORY
+    const val NOTICE_WRITE_TITLE_PLACEHOLDER = COMMON_TITLE_PLACEHOLDER
+    const val NOTICE_WRITE_CONTENT_PLACEHOLDER = COMMON_CONTENT_PLACEHOLDER
     const val NOTICE_WRITE_ALL_GISU = "전체 기수"
     const val NOTICE_WRITE_CATEGORY_CENTRAL = "중앙운영진"
     // const val NOTICE_WRITE_CATEGORY_CHAPTER = "지부장"  // 위와 동일 사유로 보류
@@ -320,6 +394,7 @@ object AppStrings {
     const val NOTICE_EMPTY_CONTENT = "운영진 공지사항이 등록되면 이곳에 표시됩니다."
     const val NOTICE_NO_ACCESS_TITLE = "접근 권한이 없어요"
     const val NOTICE_NO_ACCESS_CONTENT = "이 공지는 특정 운영진에게만 보여요.\n권한이 바뀌었다면 잠시 후 다시 확인해 주세요."
+    // 권한 요청 화면
     const val PERMISSION_TITLE = "권한 요청"
     const val PERMISSION_SUBTITLE = "원활한 앱 사용을 위해 권한을 허용해주세요."
     const val PERMISSION_NOTIFICATION = "알림 (필수)"
@@ -329,6 +404,7 @@ object AppStrings {
     const val PERMISSION_LOCATION_CONTENT = "출석 체크를 위해 위치 정보를 사용합니다."
     const val PERMISSION_PHOTO_CONTENT = "게시글 작성을 위해 사진을 접근합니다."
     const val PERMISSION_ACCEPT_ALL = "모두 허용합니다."
+    // 챌린저 인증 실패 화면
     const val SIGN_UP_FAIL_TITLE = "UMC 챌린저 인증 실패"
     const val SIGN_UP_FAIL_CONTENT = "죄송합니다. 입력하신 정보로 등록된\nUMC 챌린저 정보를 찾을 수 없습니다."
     const val SIGN_UP_FAIL_HOMEPAGE = "UMC 공식 홈페이지 방문"
@@ -337,19 +413,21 @@ object AppStrings {
     const val SIGN_UP_FAIL_QA_EMAIL = "카카오톡으로 문의하기"
     const val SIGN_UP_FAIL_LOGOUT = "로그아웃하기"
     const val SIGN_UP_FAIL_DELETE_USER = "회원탈퇴하기"
-    const val SIGN_UP_FAIL_DELETE_USER_DIALOG_TITLE = "계정 삭제"
-    const val SIGN_UP_FAIL_CODE_LABEL = "인증코드"
-    const val SIGN_UP_FAIL_CODE_PLACEHOLDER = "6자리 코드를 입력하세요"
+    const val SIGN_UP_FAIL_DELETE_USER_DIALOG_TITLE = COMMON_ACCOUNT_DELETE_TITLE
+    const val SIGN_UP_FAIL_CODE_LABEL = COMMON_VERIFICATION_CODE_LABEL
+    const val SIGN_UP_FAIL_CODE_PLACEHOLDER = COMMON_SIX_DIGIT_CODE_PLACEHOLDER
     const val SIGN_UP_FAIL_CODE_SUBMIT = "인증하기"
-    const val SIGN_UP_FAIL_DELETE_USER_DIALOG_CONTENT = "계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 정말 삭제하시겠습니까?"
+    const val SIGN_UP_FAIL_DELETE_USER_DIALOG_CONTENT = COMMON_ACCOUNT_DELETE_CONTENT
+    // 활동 관리 화면
     const val ACTIVITY_MANAGEMENT_TITLE = "활동 관리"
     const val ADMIN_LABEL = "Admin"
-    const val TAB_ATTENDANCE_USER = "출석 체크"
+    const val TAB_ATTENDANCE_USER = COMMON_ATTENDANCE_CHECK
     const val TAB_STUDY_USER = "스터디/활동"
     const val TAB_CHALLENGE_USER = "챌린저"
     const val TAB_ATTENDANCE_ADMIN = "출석 관리"
     const val TAB_STUDY_ADMIN = "스터디 관리"
     const val TAB_CHALLENGE_ADMIN = "챌린저 관리"
+    // 출석 화면
     const val ATTENDANCE_HEADER_AVAILABLE = "출석 가능한 세션"
     const val ATTENDANCE_HEADER_HISTORY = "나의 출석 현황"
     const val ATTENDANCE_COUNT_REMAINING_FORMAT = "%d개 남음"
@@ -372,6 +450,7 @@ object AppStrings {
     const val ATTENDANCE_LOCATION_PERMISSION_CONTENT = "설정 > 권한에서 위치를 허용하면 출석 위치를 확인할 수 있어요.\n위치 인증이 어려우면 '사유 제출하기'로 출석을 요청하거나 UMC 운영진에게 문의해 주세요."
     const val ATTENDANCE_LOCATION_PERMISSION_SETTINGS = "설정으로 이동"
     const val LOCATION_VERIFICATION_GUIDE = "출석 위치 반경 50m 이내에서 인증"
+    // 관리자 출석 관리 화면
     const val ADMIN_CHECK_CHANGE_LOCATION = "변경"
     const val ADMIN_CHECK_DELETE_SESSION_CONTENT_DESCRIPTION = "세션 삭제"
     const val ADMIN_CHECK_TIME_RANGE_FORMAT = "%1\$s - %2\$s"
@@ -397,19 +476,21 @@ object AppStrings {
     const val ADMIN_REJECT_SUCCESS = "출석 요청을 거절했습니다."
     const val ADMIN_PENDING_USER_REQUEST_TIME_FORMAT = "%1\$s 요청"
     const val ATTENDANCE_EMPTY_ADMIN_SESSIONS = "아직 출석을 진행할 세션이 없어요"
+    // 챌린저 목록 화면
     const val CHALLENGER_LIST_TITLE = "챌린저 리스트"
     const val CHALLENGER_SEARCH_PLACEHOLDER = "이름으로 멤버 검색"
     const val ADMIN_CHALLENGER_OUT_COUNT = "아웃 %d"
     const val ADMIN_CHALLENGER_WARNING_COUNT = "경고 %d"
     const val CHALLENGER_NAME_NICKNAME_FORMAT = "%2\$s(%1\$s)"
     const val CHALLENGER_LIST_LOAD_ERROR_TITLE = "챌린저 목록을 불러오지 못했어요"
-    const val CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION = "네트워크 연결을 확인하고 다시 시도해주세요."
-    const val CHALLENGER_RETRY = "다시 시도하기"
+    const val CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
+    const val CHALLENGER_RETRY = COMMON_RETRY
+    // 공지 목록 및 작성 화면
     const val NOTICE_TITLE = "%d기 공지사항"
-    const val NOTICE_WRITE = "공지 작성"
-    const val NOTICE_SEARCH_PLACEHOLDER = "제목, 내용 검색"
-    const val NOTICE_BOTTOMSHEET_TITLE = "파트를 선택하세요"
     const val NOTICE_WRITE_TITLE = "공지 작성"
+    const val NOTICE_WRITE = NOTICE_WRITE_TITLE
+    const val NOTICE_SEARCH_PLACEHOLDER = COMMON_TITLE_CONTENT_SEARCH_PLACEHOLDER
+    const val NOTICE_BOTTOMSHEET_TITLE = "파트를 선택하세요"
     const val NOTICE_WRITE_CATEGORY_TITLE = "공지 카테고리"
     const val NOTICE_WRITE_CLASS_TITLE = "게시판 분류"
     const val NOTICE_WRITE_TARGET_TITLE = "수신 대상"
@@ -419,8 +500,8 @@ object AppStrings {
     const val NOTICE_WRITE_PART_HINT = "선택하지 않으면 전체 파트원에게 전송됩니다"
     const val NOTICE_WRITE_SENT_NOTIFICATION = "알림 발송"
     const val NOTICE_WRITE_VOTE_CREATE = "생성하기"
-    const val NOTICE_WRITE_VOTE_DELETE = "삭제하기"
-    const val NOTICE_WRITE_VOTE_EDIT = "수정하기"
+    const val NOTICE_WRITE_VOTE_DELETE = COMMON_DELETE_ACTION
+    const val NOTICE_WRITE_VOTE_EDIT = COMMON_EDIT_ACTION
     const val NOTICE_WRITE_COMPLETE = "작성 완료"
     const val NOTICE_WRITE_LINK_TITLE = "링크 첨부"
     const val NOTICE_WRITE_LINK_HINT = "링크를 첨부해주세요."
@@ -435,7 +516,7 @@ object AppStrings {
     const val NOTICE_WRITE_VOTE_OPTION_PLACEHOLDER = "항목을 입력하세요"
     const val NOTICE_WRITE_VOTE_TITLE_PLACEHOLDER = "투표 제목을 입력하세요"
     const val NOTICE_WRITE_VOTE = "투표"
-    const val NOTICE_WRITE_VOTE_MODIFY = "수정"
+    const val NOTICE_WRITE_VOTE_MODIFY = COMMON_EDIT
     const val NOTICE_WRITE_VOTE_MAX = "최대 1개까지 생성할 수 있어요"
     const val NOTICE_WRITE_VOTE_ANONYMOUS = "익명"
     const val NOTICE_WRITE_VOTE_REAL_NAME = "실명"
@@ -446,9 +527,10 @@ object AppStrings {
     const val NOTICE_WRITE_IMAGE_UPLOAD_FAIL = "이미지 업로드에 실패했습니다"
     const val NOTICE_WRITE_SUCCESS = "공지사항이 작성되었습니다"
     const val NOTICE_WRITE_PARTIAL_FAIL = "일부 항목 추가에 실패했습니다"
+    // 공지 상세 화면
     const val NOTICE_DETAIL_ABOUT_LINK_TITLE = "관련 링크 바로가기"
-    const val NOTICE_DETAIL_MENU_EDIT = "수정하기"
-    const val NOTICE_DETAIL_MENU_DELETE = "삭제하기"
+    const val NOTICE_DETAIL_MENU_EDIT = COMMON_EDIT_ACTION
+    const val NOTICE_DETAIL_MENU_DELETE = COMMON_DELETE_ACTION
     const val NOTICE_DETAIL_REVOTE = "다시 투표하기"
     const val NOTICE_DETAIL_VOTE_SINGLE_CHOICE = "단일 선택"
     const val NOTICE_DETAIL_VOTE_MULTIPLE_CHOICE = "복수 선택"
@@ -459,8 +541,8 @@ object AppStrings {
     const val NOTICE_DETAIL_VOTE_PARTICIPANT_COUNT = "%d명 참여"
     const val NOTICE_DETAIL_RECEIVER_FORMAT = "수신대상: %s"
     const val NOTICE_DETAIL_READ_MANAGE = "터치하여 미확인 인원 관리하기"
-    const val NOTICE_DETAIL_READ_TAB_UNCONFIRMED = "미확인"
-    const val NOTICE_DETAIL_READ_TAB_CONFIRMED = "확인"
+    const val NOTICE_DETAIL_READ_TAB_UNCONFIRMED = COMMON_UNCONFIRM
+    const val NOTICE_DETAIL_READ_TAB_CONFIRMED = COMMON_CONFIRM
     const val NOTICE_DETAIL_NAME_NICKNAME_FORMAT = "%1\$s(%2\$s)"
     const val NOTICE_DETAIL_REMINDER_SUCCESS = "재알림을 보냈습니다"
     const val NOTICE_DETAIL_DELETE_SUCCESS = "공지사항이 삭제되었습니다"
@@ -477,22 +559,21 @@ object AppStrings {
     const val NOTICE_VOTE_PARTICIPANTS_TITLE = "투표 현황"
     const val NOTICE_VOTE_PARTICIPANTS_EMPTY = "참여자가 없습니다"
     const val NOTICE_VOTE_PEOPLE_COUNT = "%1\$d명"
-    const val COMMON_CANCEL = "취소"
-    const val COMMON_CONFIRM = "확인"
-    const val COMMON_COPY = "복사"
-    const val COMMON_CUT = "잘라내기"
+    // 공지 작성 AI 도구
     const val AI_MENU_REFINE = "본문 다듬기"
     const val AI_MENU_SUMMARIZE = "붙여넣고 요약"
     const val AI_PROCESSING = "AI가 처리하고 있어요"
     const val AI_MODEL_DOWNLOADING = "AI 모델을 준비하고 있어요 %d%%"
     const val AI_EMPTY_CONTENT = "다듬을 내용을 입력해주세요"
     const val AI_EMPTY_CLIPBOARD = "복사한 공지 내용이 없어요"
+    // 공지 목록 및 검색 화면
     const val NOTICE_LIST_EMPTY_TITLE = "공지가 없어요"
     const val NOTICE_LIST_EMPTY_CONTENT = "아직 등록된 공지가 없습니다."
     const val NOTICE_LIST_ERROR = "공지를 불러오지 못했어요"
-    const val NOTICE_SEARCH_EMPTY_TITLE = "검색 결과가 없어요"
+    const val NOTICE_SEARCH_EMPTY_TITLE = COMMON_NO_SEARCH_RESULTS
     const val NOTICE_SEARCH_EMPTY_CONTENT = "다른 검색어로 다시 시도해보세요."
     const val NOTICE_SEARCH_ERROR = "검색에 실패했어요"
+    // 공지 작성 서식 도구
     const val NOTICE_WRITE_HIGHLIGHT_NEEDS_SELECTION = "형광펜을 칠할 텍스트를 먼저 선택해주세요."
     const val HIGHLIGHT_PURPLE = "보라색"
     const val HIGHLIGHT_PINK = "분홍색"
@@ -501,26 +582,26 @@ object AppStrings {
     const val HIGHLIGHT_YELLOW = "노란색"
     const val HIGHLIGHT_GREEN = "초록색"
     const val HIGHLIGHT_BLUE = "파란색"
-    const val COMMON_APPROVE = "승인하기"
-    const val COMMON_REJECT = "반려하기"
-    const val COMMON_SUBMIT = "제출하기"
-    const val COMMON_BACK = "뒤로가기"
+    // 관리자 출석 요청 처리 화면
     const val ADMIN_APPROVE_TITLE = "출석 요청을 승인하시겠습니까?"
     const val ADMIN_APPROVE_CONTENT = "이 작업은 되돌릴 수 없습니다"
     const val ADMIN_REJECT_TITLE = "출석 요청을 반려하시겠습니까?"
     const val ADMIN_REASON_CHECK_TITLE = "출석 사유 확인"
     const val ADMIN_REASON_CHECK_SUBTITLE = "%1\$s님이 작성하신 사유입니다."
     const val ADMIN_PENDING_CONTENT_FORMAT = "%1\$s | 요청 시간: %2\$s"
+    // 출석 사유 작성 다이얼로그
     const val ATTENDANCE_REASON_DIALOG_TITLE = "출석 사유 작성"
     const val ATTENDANCE_REASON_GUIDE = "위치 인증이 어려운 경우 사유를 작성하여\n출석을 요청할 수 있습니다.\n(예: GPS 오류, 지각, 개인 사정 등)"
     const val ATTENDANCE_WRITE_REASON = "사유 입력"
     const val ATTENDANCE_WRITE_REASON_DESCRIPTION = "사유를 입력하세요."
     const val ATTENDANCE_REASON_SUBMITTING = "제출 중..."
-    const val LOCATION_DIALOG_CHANGE = "변경하기"
+    const val LOCATION_DIALOG_CHANGE = COMMON_CHANGE_ACTION
+    // 챌린저 정보 화면
     const val CHALLENGER_INFO_GENERATION_LABEL = "활동 기수"
     const val CHALLENGER_INFO_WARNING_LABEL = "총점수"
     const val CHALLENGER_INFO_HISTORY_LABEL = "출석/활동 기록"
-    const val CHALLENGER_INFO_FORMAT_GENERATION = "%d기"
+    const val CHALLENGER_INFO_FORMAT_GENERATION = COMMON_GENERATION_FORMAT
+    // 챌린저 관리 화면
     const val CHALLENGER_MANAGE_PROFILE_TITLE = "프로필 상세 보기"
     const val CHALLENGER_DETAIL_LOAD_ERROR_TITLE = "프로필을 불러오지 못했어요"
     const val CHALLENGER_MANAGE_HISTORY_TITLE = "히스토리"
@@ -535,18 +616,20 @@ object AppStrings {
     const val CHALLENGER_MANAGE_ACTION_OUT = "아웃 부여"
     const val CHALLENGER_MANAGE_ACTION_EDIT_HISTORY = "기록 수정하기"
     const val CHALLENGER_MANAGE_REASON_PLACEHOLDER = "사유를 입력하세요"
+    // 상벌점 부여 화면
     const val REWARD_ETC_TITLE = "기타 상벌점 부여하기"
     const val REWARD_ETC_CONTENT = "기타 상벌점 사유와 점수를 입력해 주세요."
     const val REWARD = "상점"
+    // 커뮤니티 스레드 생성 화면
     const val COMMUNITY_CREATE_SELF_NOT_ALLOWED = "본인은 참여자로 추가할 수 없어요."
     const val COMMUNITY_CREATE_FAILED = "스레드를 생성하지 못했어요. 다시 시도해 주세요."
     const val COMMUNITY_CREATE_MEMBER_ADD_TITLE = "챌린저를 추가하세요"
     const val COMMUNITY_CREATE_MEMBER_SEARCH_TITLE = "챌린저를 검색하세요"
-    const val COMMUNITY_CREATE_MEMBER_SEARCH_PLACEHOLDER = "이름을 입력하세요"
-    const val COMMUNITY_CREATE_MEMBER_NO_RESULT = "검색 결과가 없어요"
+    const val COMMUNITY_CREATE_MEMBER_SEARCH_PLACEHOLDER = COMMON_NAME_PLACEHOLDER
+    const val COMMUNITY_CREATE_MEMBER_NO_RESULT = COMMON_NO_SEARCH_RESULTS
     const val COMMUNITY_CREATE_MEMBER_EMPTY = "아직 추가한 챌린저가 없어요"
     const val COMMUNITY_CREATE_MEMBER_GENERATION_FORMAT = "(%d기)"
-    const val COMMUNITY_CREATE_MEMBER_DELETE = "삭제"
+    const val COMMUNITY_CREATE_MEMBER_DELETE = COMMON_DELETE
     const val COMMUNITY_CREATE_MEMBER_CD_CHECKED = "선택됨"
     const val COMMUNITY_CREATE_MEMBER_CD_UNCHECKED = "선택되지 않음"
     const val COMMUNITY_CREATE_MEMBER_MAX_COUNT_FORMAT = "챌린저는 최대 %d명까지 추가할 수 있어요."
@@ -554,7 +637,7 @@ object AppStrings {
     const val COMMUNITY_CREATE_AI_GUIDE_TITLE = "Galaxy AI로 도와드릴게요"
     const val COMMUNITY_CREATE_AI_GUIDE_DESCRIPTION = "스레드 특징을 입력하면\nAI가 카테고리, 아이콘을 정해줘요"
     const val COMMUNITY_CREATE_AI_CLASSIFY = "카테고리 분류"
-    const val PUNISH = "벌점"
+    // 상벌점 부여 화면
     const val HAB = "총합"
     const val REWARD_ETC_REASON = "사유"
     const val REWARD_TITLE = "상점 부여하기"
@@ -563,32 +646,35 @@ object AppStrings {
     const val PUNISH_TITLE = "벌점 부여하기"
     const val PUNISH_CONTENT = "챌린저의 활동 내역에 맞는 벌점 항목을 선택해 주세요."
     const val MEMO = "메모"
-    const val MEMO_PLACEHOLDER = "메모를 입력해주세요."
     const val REWARD_SUBMIT = "등록하기"
     const val REWARD_SUBMITTING = "등록 중..."
+    // 임시 화면
     const val HELLO_BLANK_FRAGMENT = "Hello blank fragment"
+
+    // 베스트 워크북 설정 화면
     const val ADMIN_BEST_TITLE = "베스트 워크북 설정"
     const val ADMIN_BEST_DESC = "우수한 스터디를 명예의 전당에 등록하고\\n%1\$s님의 경고 점수를 차감할 수 있습니다."
+    // 스터디 그룹 관리 화면
     const val STUDY_MEMBER_ADD_PLACEHOLDER = "스터디원을 추가하세요"
     const val STUDY_MEMBER_SEARCH_TITLE = "스터디원을 검색하세요"
-    const val STUDY_MEMBER_SEARCH_HINT = "이름을 입력하세요"
+    const val STUDY_MEMBER_SEARCH_HINT = COMMON_NAME_PLACEHOLDER
     const val STUDY_LEADER_ADD_PLACEHOLDER = "담당 파트장을 추가하세요"
     const val STUDY_LEADER_SEARCH_TITLE = "담당 파트장을 검색하세요"
-    const val DELETE = "삭제하기"
+    // 출석 위치 변경 화면
     const val ACT_LOCATION_TITLE="출석 위치 변경"
     const val ACT_LOCATION_SELECT_TITLE = "위치를 선택하세요"
-    const val ACT_LOCATION_SELECT_BUTTON = "선택"
+    const val ACT_LOCATION_SELECT_BUTTON = COMMON_SELECT
     const val ACT_LOCATION_UPDATE = "지도에서 새로운 출석 체크 위치를 지정해주세요.\n이 위치 반경 50m 이내에서만 출석할 수 있습니다."
-    const val ACT_LOCATION_SEARCH_PLACEHOLDER = "위치를 입력하세요"
+    const val ACT_LOCATION_SEARCH_PLACEHOLDER = COMMON_LOCATION_PLACEHOLDER
     const val EMPTY_SEARCH_RESULT = "검색 결과가 없습니다"
     const val LOADING_DEFAULT_MESSAGE = "로딩 중입니다."
 
-    // Study/Act 화면
+    // 스터디 및 활동 화면
     const val STUDY_PART_CURRICULUM = "%s PART CURRICULUM"
     const val STUDY_EMPTY = "아직 진행된 스터디/활동이 없어요"
     const val STUDY_LOAD_ERROR_TITLE = "스터디/활동을 불러오지 못했어요"
-    const val STUDY_LOAD_ERROR_DESCRIPTION = "네트워크 연결을 확인하고 다시 시도해주세요."
-    const val STUDY_RETRY = "다시 시도하기"
+    const val STUDY_LOAD_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
+    const val STUDY_RETRY = COMMON_RETRY
     const val STUDY_GROUP_CREATE_FAIL = "스터디 그룹 생성에 실패했어요."
     const val STUDY_GROUP_NO_PERMISSION = "스터디 그룹을 관리할 권한이 없어요"
     const val STUDY_CONFIRM_TITLE = "학습을 완료하셨나요?"
@@ -597,24 +683,24 @@ object AppStrings {
     const val STUDY_WEEK_FORMAT = "Week %d"
     const val STUDY_LOCKED_WEEK_DESCRIPTION = "미공개 주차"
 
-    // Community Chatting
+    // 커뮤니티 채팅 화면
     const val CHAT_ROOM_DEFAULT = "채팅방"
-    const val CHAT_UNKNOWN_USER = "알 수 없음"
+    const val CHAT_UNKNOWN_USER = COMMON_UNKNOWN
     const val CHAT_ME = "나"
-    const val CHAT_CONFIRM = "확인"
-    const val CHAT_CANCEL = "취소"
-    const val CHAT_DELETE = "삭제"
-    const val CHAT_DELETE_ACTION = "삭제하기"
+    const val CHAT_CONFIRM = COMMON_CONFIRM
+    const val CHAT_CANCEL = COMMON_CANCEL
+    const val CHAT_DELETE = COMMON_DELETE
+    const val CHAT_DELETE_ACTION = COMMON_DELETE_ACTION
     const val CHAT_LEAVE = "나가기"
     const val CHAT_REPORT_ACTION = "신고하기"
-    const val CHAT_RETRY = "다시 시도하기"
+    const val CHAT_RETRY = COMMON_RETRY
     const val CHAT_SHARE_CHOOSER_TITLE = "스레드 링크 공유"
     const val CHAT_LOAD_MORE = "이전 메시지 보기"
     const val CHAT_LOADING_MORE = "불러오는 중..."
     const val CHAT_NO_MESSAGES_TITLE = "아직 메시지가 없어요"
     const val CHAT_NO_MESSAGES_DESCRIPTION = "첫 메시지를 남겨 대화를 시작해보세요."
     const val CHAT_LOAD_ERROR_TITLE = "메시지를 불러오지 못했어요"
-    const val CHAT_LOAD_ERROR_DESCRIPTION = "네트워크 연결을 확인하고 다시 시도해주세요."
+    const val CHAT_LOAD_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
     const val CHAT_UNAVAILABLE_TOP_BAR = "참여 종료"
     const val CHAT_UNAVAILABLE_TITLE = "더 이상 참여할 수 없는 스레드예요"
     const val CHAT_UNAVAILABLE_DESCRIPTION = "운영진에 의해 참여가 종료되었어요."
@@ -634,7 +720,8 @@ object AppStrings {
     const val CHAT_REPORT_PARTIAL_RESULT_FORMAT = "신고 사유 %d개 접수, %d개 미접수."
     const val CHAT_REPORT_SUCCESS = "신고가 정상적으로 접수되었습니다."
     const val CHAT_MENU_SUMMARY_SETTINGS = "요약 및 설정"
-    const val CHAT_MENU_SUMMARY = "대화 요약"
+    const val CHAT_SUMMARY = "대화 요약"
+    const val CHAT_MENU_SUMMARY = CHAT_SUMMARY
     const val CHAT_MENU_NOTIFICATION_ON = "알림 켜기"
     const val CHAT_MENU_NOTIFICATION_OFF = "알림 끄기"
     const val CHAT_MENU_UNPIN = "고정 해제"
@@ -649,7 +736,7 @@ object AppStrings {
     const val CHAT_MENU_DELETE_THREAD = "스레드 삭제"
     const val CHAT_UNREAD_COUNT_FORMAT = "읽지 않은 메시지 %s개"
     const val CHAT_UNREAD_SUMMARY_DESCRIPTION = "Galaxy AI로 핵심만 요약해 드려요"
-    const val CHAT_AI_SHEET_TITLE = "대화 요약"
+    const val CHAT_AI_SHEET_TITLE = CHAT_SUMMARY
     const val CHAT_AI_SUMMARIZING_DESCRIPTION = "대화를 읽고 핵심을 요약하고 있어요."
     const val CHAT_AI_SUMMARY_COUNT_FORMAT = "안 읽은 메시지 %d개"
     const val CHAT_AI_SUMMARY_FAILED = "요약을 만들지 못했어요"
@@ -662,11 +749,11 @@ object AppStrings {
     const val CHAT_MESSAGE_CONTENT = "메시지 내용"
     const val CHAT_REPLY_TO_FORMAT = "%s님에게 답장"
     const val CHAT_ACTION_REPLY = "답장"
-    const val CHAT_ACTION_COPY = "복사"
+    const val CHAT_ACTION_COPY = COMMON_COPY
     const val CHAT_ACTION_REPORT = "신고"
     const val CHAT_REPORT_REASON_TITLE = "신고 사유"
     const val CHAT_REPORT_GUIDE = "신고 내용은 운영진만 확인하며, 익명으로 처리돼요."
-    const val CHAT_REPORT_CANCEL = "취소하기"
+    const val CHAT_REPORT_CANCEL = COMMON_CANCEL_ACTION
     const val CHAT_EMOJI_SELECT = "이모지 선택"
     const val CHAT_SEND_FAILED = "전송 실패"
     const val CHAT_SENDING = "전송 중"
@@ -683,7 +770,7 @@ object AppStrings {
     const val CHAT_DATE_MONTH_DAY_FORMAT = "%d월 %d일"
     const val CHAT_DATE_YEAR_MONTH_DAY_FORMAT = "%d년 %d월 %d일"
     const val CHAT_PARTICIPANT_MANAGEMENT = "참여자 관리"
-    const val CHAT_THREAD_INFO = "참여자 관리"
+    const val CHAT_THREAD_INFO = CHAT_PARTICIPANT_MANAGEMENT
     const val CHAT_THREAD_INFO_TITLE = "제목"
     const val CHAT_THREAD_INFO_DESCRIPTION = "스레드 특징"
     const val CHAT_THREAD_INFO_ADMIN_BADGE = "관리자"
@@ -719,7 +806,7 @@ object AppStrings {
     const val CHAT_KICK_SELECTED_TITLE_FORMAT = "선택한 %d명을 내보낼까요?"
     const val CHAT_KICK_SELECTED_DESCRIPTION = "내보낸 참여자는 더 이상 스레드에\n참여할 수 없어요"
     const val CHAT_OWNERSHIP_TRANSFERRED = "방장이 변경되었습니다."
-    const val CHAT_TRANSFER_ACTION = "변경하기"
+    const val CHAT_TRANSFER_ACTION = COMMON_CHANGE_ACTION
     const val CHAT_LOAD_FAILED = "채팅을 불러오지 못했습니다."
     const val CHAT_SEND_MESSAGE_FAILED = "메시지를 전송하지 못했습니다."
     const val CHAT_MESSAGE_TOO_LONG = "메시지는 2,000자까지 입력할 수 있습니다."
@@ -727,7 +814,7 @@ object AppStrings {
     const val CHAT_RETRY_DISCONNECTED = "연결되지 않아 재전송하지 못했습니다."
     const val CHAT_ACTION_DISCONNECTED = "연결되지 않아 요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요."
     const val CHAT_ACTION_FAILED = "요청을 처리하지 못했습니다."
-    const val CHAT_CD_BACK = "뒤로가기"
+    const val CHAT_CD_BACK = COMMON_BACK
     const val CHAT_CD_MORE = "더보기"
     const val CHAT_CD_PARTICIPANT_MENU = "참여자 관리 메뉴"
     const val CHAT_CD_IMAGE = "채팅 이미지"
@@ -740,8 +827,8 @@ object AppStrings {
     const val CHAT_CD_CANCEL_REPLY = "답장 취소"
     const val CHAT_CD_ATTACH_PHOTO = "사진 첨부"
     const val CHAT_CD_SEND = "전송"
-    const val CHAT_NO_ACCESS_TITLE = "더 이상 참여할 수 없는 스레드예요"
+    const val CHAT_NO_ACCESS_TITLE = CHAT_UNAVAILABLE_TITLE
     const val CHAT_NO_ACCESS_DESCRIPTION = "스레드가 삭제되었거나 접근 권한이 없어요."
-    const val CHAT_NO_ACCESS_BACK = "뒤로가기"
+    const val CHAT_NO_ACCESS_BACK = COMMON_BACK
     const val CHAT_LEAVE_SUCCESS = "스레드에서 나갔어요."
 }

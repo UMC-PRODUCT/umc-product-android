@@ -258,7 +258,7 @@ private fun MemoInput(
     UTextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = AppStrings.MEMO_PLACEHOLDER,
+        placeholder = AppStrings.COMMON_MEMO_PLACEHOLDER,
         placeholderColor = grey400(),
         textColor = grey800(),
         textStyle = Callout,

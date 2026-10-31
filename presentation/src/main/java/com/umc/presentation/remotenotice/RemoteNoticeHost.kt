@@ -50,7 +50,7 @@ fun RemoteNoticeHost(
         RemoteNoticeTemplate.INFO -> UDialog(
             title = notice.title,
             content = notice.body,
-            confirmText = AppStrings.CONFIRM,
+            confirmText = AppStrings.COMMON_CONFIRM,
             onDismissRequest = { viewModel.dismiss(notice) },
         )
 
