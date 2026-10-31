@@ -1,5 +1,6 @@
 package com.umc.data.api
 
+import com.google.gson.annotations.SerializedName
 import com.umc.data.request.community.CreateCommunityThreadRequest
 import com.umc.data.request.community.InviteCommunityThreadMembersRequest
 import com.umc.data.request.community.UpdateCommunityThreadRequest
@@ -190,5 +191,5 @@ interface CommunityThreadApi {
     ): ApiResponse<CommunityMessageReportReceipt>
 }
 
-data class ChangeMemberRoleRequest(val role: CommunityThreadRole)
-data class ReportMessageRequest(val reason: CommunityMessageReportReason)
+data class ChangeMemberRoleRequest(@field:SerializedName("role") val role: CommunityThreadRole)
+data class ReportMessageRequest(@field:SerializedName("reason") val reason: CommunityMessageReportReason)
