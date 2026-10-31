@@ -73,6 +73,8 @@ object AppStrings {
 
     const val MYCARD_INTRODUCE = "BUSINESS CARD"
     const val MYCARD_GENERATION_FORMAT = "GEN.%d"
+    const val MYCARD_BACK_EMPTY_TITLE = "등록된 연락처와 소개 링크가 없어요"
+    const val MYCARD_BACK_EMPTY_DESCRIPTION = "프로필 정보 편집에서 정보를 추가해 명함을 완성해 보세요."
     const val MYCARD_EXCHANGE_CARD = "명함 교환"
     const val MYCARD_QRCODE = "QR 코드"
     const val MYCARD_CARD_TITLE = "명함 관리"

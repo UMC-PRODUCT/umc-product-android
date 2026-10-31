@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -654,7 +655,8 @@ private fun CardFrontContent(
 /**
  * 명함 카드 뒷면 레이아웃 컴포저블
  *
- * 프로필 이미지 옆에 이메일, GitHub, LinkedIn, URL(블로그·개인 사이트)을 아이콘과 함께 나열한다 (비어 있는 항목은 빼고 보여준다)
+ * 프로필 이미지 옆에 이메일, GitHub, LinkedIn, URL(블로그·개인 사이트)을 아이콘과 함께 나열한다 (비어 있는 항목은 빼고 보여준다).
+ * 보여줄 항목이 하나도 없으면 프로필 이미지 대신 빈 상태 안내를 가운데에 둔다
  */
 @Composable
 private fun CardBackContent(
@@ -664,6 +666,10 @@ private fun CardBackContent(
     onMyQrcodeClick: () -> Unit, //내 QR 코드 화면으로 이동
 ) {
     val profile = uiState.userInfo.profile
+    // 행마다 비어 있거나 열 수 없는 값은 숨기므로, 같은 기준으로 보여줄 항목이 남는지 본다
+    val hasContent = uiState.userInfo.email.isNotBlank() ||
+        listOf(profile.github, profile.linkedIn, profile.blog, profile.personal)
+            .any { com.umc.domain.model.mypage.validCardWebLink(it) != null }
 
     Column {
         CardHeader(onFlipClick = onFlipClick)
@@ -672,6 +678,9 @@ private fun CardBackContent(
             modifier = Modifier.height(16.dp)
         )
 
+        if (!hasContent) {
+            CardBackEmptyContent(showGuide = !uiState.isViewingMemberProfile)
+        } else
         // [중단 Info] 프로필 이미지 + 이메일·링크 리스트
         Row(verticalAlignment = Alignment.CenterVertically) {
             CardProfileImage(imageUrl = uiState.userInfo.profileImageLink)
@@ -693,6 +702,38 @@ private fun CardBackContent(
         //     onExchangeCardClick = onExchangeCardClick,
         //     onMyQrcodeClick = onMyQrcodeClick
         // )
+    }
+}
+
+/**
+ * 명함 뒷면에 보여줄 연락처·링크가 없을 때의 안내
+ *
+ * @param showGuide 내 명함일 때만 프로필 정보 편집으로 채우라는 설명을 덧붙인다
+ */
+@Composable
+private fun CardBackEmptyContent(showGuide: Boolean) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 70.dp), // 앞면 프로필 이미지 높이와 맞춰 뒤집어도 카드 높이가 크게 변하지 않게 한다
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        UText(
+            text = AppStrings.MYCARD_BACK_EMPTY_TITLE,
+            style = UmcTypographyTokens.CalloutBold,
+            color = white(),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        if (showGuide) {
+            Spacer(modifier = Modifier.height(4.dp))
+            UText(
+                text = AppStrings.MYCARD_BACK_EMPTY_DESCRIPTION,
+                style = UmcTypographyTokens.Footnote,
+                color = white(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
     }
 }
 
@@ -968,6 +1009,25 @@ fun MycardListItem(
     }
 }
 
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun CardBackEmptyPreview() {
+    UmcTheme {
+        Box(
+            modifier = Modifier
+                .background(main500())
+                .padding(20.dp)
+        ) {
+            CardBackContent(
+                uiState = MycardUiState(),
+                onFlipClick = {},
+                onExchangeCardClick = {},
+                onMyQrcodeClick = {},
+            )
+        }
+    }
+}
 
 @PreviewScreenSizes
 @Composable
