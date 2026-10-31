@@ -857,7 +857,7 @@ private fun CardEmailItem(email: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            painter = painterResource(id = R.drawable.ic_email),
+            painter = painterResource(id = R.drawable.ic_mail),
             contentDescription = null,
             tint = white(),
             modifier = Modifier.size(16.dp)
