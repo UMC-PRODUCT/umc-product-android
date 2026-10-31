@@ -58,7 +58,7 @@ class SignUpFailViewModel @Inject constructor(
             response = deleteUserUseCase(kakaoToken, googleToken),
             successCallback = {
                 viewModelScope.launch {
-                    clearAllDataUseCase()
+                    tokenSynchronizer.logout { clearAllDataUseCase() }
                     emitEvent(SignUpFailEvent.MoveToLogin)
                 }
             },

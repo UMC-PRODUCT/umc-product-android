@@ -18,9 +18,6 @@ import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.Job
@@ -223,7 +220,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
              * 스레드 멤버 조회 API에는 일부 화면 정보가 없을 수 있으므로
              * 검색 API를 이용해 상세 정보를 다시 매칭합니다.
              */
-            val currentMembers = memberPage.items
+            val activeMembers = memberPage.items
                 .filter { it.state.equals("ACTIVE", ignoreCase = true) }
                 .filterNot { member ->
                     member.role.equals(
@@ -231,12 +228,10 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                         ignoreCase = true,
                     )
                 }
-                .map { threadMember ->
-                    findChallengerDetail(
-                        threadMember = threadMember,
-                    )
-                }
-                .toImmutableList()
+            val fallbackMembers = activeMembers.map { it to it.toFallbackUiModel() }
+            val currentMembers = enrichCommunityProfilesWithinBudget(fallbackMembers) { (source, _) ->
+                source to findChallengerDetail(source)
+            }.map { it.second }.toImmutableList()
 
             if (generation != sessionGeneration) return@launch
             updateState {
@@ -454,9 +449,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                                 partLabel = UserPart.from(member.part.orEmpty()).label, profileImage = "",
                             )
                         }
-                        val detailedCandidates = coroutineScope {
-                            candidates.map { candidate -> async { enrichChallengerProfile(candidate) } }.awaitAll()
-                        }
+                        val detailedCandidates = enrichCommunityProfilesWithinBudget(candidates, enrich = ::enrichChallengerProfile)
                         if (generation != sessionGeneration || uiState.value.threadId != threadId || uiState.value.query.trim() != keyword) return@launch
                         val nextOffset = page.nextOffset?.toIntOrNull()
                         // 본인 학교만 남기느라 이번 페이지에 보여줄 사람이 없으면, 빈 목록에서는 스크롤로 다음 페이지를 부를 수 없으므로 바로 이어 받는다

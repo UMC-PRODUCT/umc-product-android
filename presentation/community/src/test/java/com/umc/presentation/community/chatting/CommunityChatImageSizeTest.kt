@@ -7,6 +7,17 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class CommunityChatImageSizeTest {
+    @Test fun aSmallReportedSizeCannotHideALargerStream() {
+        val measured = measureCommunityChatImageSize(reportedSize = 1, limit = 10_000) {
+            ByteArrayInputStream(ByteArray(20_000))
+        }
+        assertEquals(10_001L, measured)
+        assertNull(measureCommunityChatImageSize(reportedSize = 1) { null })
+        assertEquals(20_000L, measureCommunityChatImageSize(reportedSize = 20_000, limit = 10_000) {
+            error("크기가 이미 초과하면 스트림을 열지 않는다")
+        })
+    }
+
     @Test fun fourImagesAllowExactlyFortyMiBAndRejectOneExtraByte() {
         val tenMiB = UploadFileCategory.ETC.maxSizeBytes
         assertNull(validateCommunityChatImageSizes(List(4) { tenMiB }))

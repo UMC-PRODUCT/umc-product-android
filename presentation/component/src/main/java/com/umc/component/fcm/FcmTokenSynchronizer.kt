@@ -15,6 +15,7 @@ import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -54,15 +55,15 @@ class FcmTokenSynchronizer @Inject constructor(
                         val task = deletion ?: messaging.deleteToken().also { deletion = it }
                         try {
                             withTimeout(8_000) { task.awaitResult() }
-                        } catch (e: Exception) {
+                        } finally {
                             if (task.isComplete) deletion = null
-                            throw e
                         }
-                        deletion = null
                         preferences.edit().putBoolean("delete_pending", false).commit()
                     }
                     messaging.isAutoInitEnabled = true
                     registerToken(withTimeout(8_000) { messaging.token.awaitResult() }, generation)
+                } catch (_: TimeoutCancellationException) {
+                    Log.w("log_fcm", "FCM token refresh timed out; will retry on foreground")
                 } catch (cancelled: CancellationException) {
                     throw cancelled
                 } catch (_: Exception) {

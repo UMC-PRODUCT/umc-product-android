@@ -29,10 +29,18 @@ internal fun communityChatImageSize(resolver: ContentResolver, uri: Uri): Long? 
             if (cursor.moveToFirst() && column >= 0 && !cursor.isNull(column)) cursor.getLong(column) else null
         }
     }.getOrNull()?.takeIf { it >= 0 }
-    if (size != null) return size
-    // 클라우드 사진처럼 크기를 제공하지 않는 경우에도 한도까지만 읽어 확인한다.
+    return measureCommunityChatImageSize(size) { resolver.openInputStream(uri) }
+}
+
+internal fun measureCommunityChatImageSize(
+    reportedSize: Long?,
+    limit: Long = UploadFileCategory.ETC.maxSizeBytes,
+    openStream: () -> InputStream?,
+): Long? {
+    if (reportedSize != null && reportedSize > limit) return reportedSize
+    // 한도 이하라는 메타데이터도 신뢰하지 않고 실제 스트림을 한도+1까지만 확인한다.
     return runCatching {
-        resolver.openInputStream(uri)?.use { readCommunityChatImageSize(it, UploadFileCategory.ETC.maxSizeBytes) }
+        openStream()?.use { readCommunityChatImageSize(it, limit) }
     }.getOrNull()
 }
 

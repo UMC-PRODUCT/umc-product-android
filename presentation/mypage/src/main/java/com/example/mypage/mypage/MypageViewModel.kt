@@ -311,7 +311,7 @@ class MypageViewModel @Inject constructor(
                 successCallback = {
                     viewModelScope.launch {
                         // 회원 탈퇴 성공 시 dataStore의 모든 데이터 삭제
-                        clearAllDataUseCase()
+                        tokenSynchronizer.logout { clearAllDataUseCase() }
                         emitEvent(MypageEvent.MoveToOnBoardPage)
                     }
                 },

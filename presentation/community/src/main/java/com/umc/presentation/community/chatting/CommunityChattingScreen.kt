@@ -335,8 +335,10 @@ fun CommunityChattingScreen(
             maxItems = COMMUNITY_CHAT_MAX_IMAGE_COUNT,
         ),
     ) { uris ->
-        val selected = uris.take(COMMUNITY_CHAT_MAX_IMAGE_COUNT)
-        if (selected.isNotEmpty()) scope.launch {
+        if (uris.size > COMMUNITY_CHAT_MAX_IMAGE_COUNT) {
+            onSendImages(uris.map { it.toString() })
+        } else if (uris.isNotEmpty()) scope.launch {
+            val selected = uris
             val error = withContext(Dispatchers.IO) {
                 validateCommunityChatImageSizes(selected.map { communityChatImageSize(context.contentResolver, it) })
             }
