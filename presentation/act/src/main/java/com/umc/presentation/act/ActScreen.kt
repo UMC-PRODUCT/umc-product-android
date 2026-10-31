@@ -43,7 +43,7 @@ import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title2Bold
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
@@ -184,7 +184,7 @@ fun ActManageScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(grey50())
     ) {
         ActHeader(
             hasAdminAccess = uiState.hasAdminAccess,
@@ -197,7 +197,7 @@ fun ActManageScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 55.dp),
-            containerColor = grey000(),
+            containerColor = grey50(),
             contentColor = grey800(),
             indicator = { tabPositions ->
                 TabRowDefaults.SecondaryIndicator(

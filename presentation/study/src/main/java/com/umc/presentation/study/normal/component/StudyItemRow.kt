@@ -21,8 +21,9 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
+import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey800
 import com.umc.presentation.study.normal.NormalStudyItemUiModel
@@ -64,9 +65,9 @@ fun StudyItemRow(
          *
          * 주차 번호를 표시하고, 아래 주차와 연결되는 세로선을 함께 표시합니다.
          */
+        // 좌우 여백은 화면(UserStudyScreen)의 16dp 하나로만 둔다
         Column(
             modifier = Modifier
-                .padding(start = 16.dp)
                 .width(32.dp)
                 .fillMaxHeight(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -91,7 +92,7 @@ fun StudyItemRow(
                 modifier = Modifier
                     .width(2.dp)
                     .weight(1f)
-                    .background(grey200()),
+                    .background(grey300()),
             )
         }
 
@@ -103,11 +104,9 @@ fun StudyItemRow(
          * 오른쪽 커리큘럼 상세 카드 영역
          */
         Surface(
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 16.dp),
+            modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(8.dp),
-            color = grey000(),
+            color = grey50(),
             tonalElevation = 0.dp,
             shadowElevation = 0.dp,
         ) {

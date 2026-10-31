@@ -32,9 +32,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.green500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
@@ -43,6 +44,7 @@ import com.umc.component.theme.grey700
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main100
 import com.umc.component.theme.main500
+import com.umc.component.theme.main600
 import com.umc.presentation.community.component.CommunityActionButton
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
@@ -143,15 +145,15 @@ private fun CommunityAiGuideContent(
                 modifier = Modifier.weight(1f),
             ) {
                 UText(
-                    text = "Galaxy AI로 도와드릴게요",
+                    text = AppStrings.COMMUNITY_CREATE_AI_GUIDE_TITLE,
                     style = UmcTypographyTokens.HeadlineBold,
-                    color = main500(),
+                    color = main600(),
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 UText(
-                    text = "스레드 특징을 입력하면\nAI가 카테고리, 아이콘을 정해줘요",
+                    text = AppStrings.COMMUNITY_CREATE_AI_GUIDE_DESCRIPTION,
                     style = UmcTypographyTokens.Footnote,
                     color = grey600(),
                 )
@@ -162,7 +164,7 @@ private fun CommunityAiGuideContent(
 
         // 입력값이 부족하면 ViewModel이 안내 토스트를 띄우므로 항상 활성화
         CommunityActionButton(
-            text = "카테고리 분류",
+            text = AppStrings.COMMUNITY_CREATE_AI_CLASSIFY,
             onClick = onRequestClassificationClick,
         )
     }
@@ -179,7 +181,7 @@ private fun CommunityAiLoadingContent() {
             .padding(16.dp),
     ) {
         UText(
-            text = "카테고리 분류",
+            text = AppStrings.COMMUNITY_CREATE_AI_CLASSIFY,
             style = UmcTypographyTokens.HeadlineBold,
             color = grey950(),
         )
@@ -310,7 +312,7 @@ private fun CommunityAiResultContent(
             Spacer(modifier = Modifier.width(10.dp))
 
             UText(
-                text = "카테고리 분류",
+                text = AppStrings.COMMUNITY_CREATE_AI_CLASSIFY,
                 style = UmcTypographyTokens.SubheadlineBold,
                 color = main500(),
             )
@@ -325,7 +327,7 @@ private fun CommunityAiResultContent(
             Surface(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(8.dp),
-                color = grey000(),
+                color = grey50(),
                 shadowElevation = 0.dp,
             ) {
                 Box(
@@ -441,7 +443,7 @@ private fun CommunityAiResultButton(
 
     val textColor = when {
         !enabled -> grey300()
-        else -> grey000()
+        else -> grey50()
     }
 
     Box(

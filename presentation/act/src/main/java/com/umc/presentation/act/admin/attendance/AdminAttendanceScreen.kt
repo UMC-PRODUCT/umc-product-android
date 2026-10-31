@@ -60,12 +60,11 @@ import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.black
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
-import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
@@ -227,7 +226,7 @@ fun AdminSessionCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -456,7 +455,7 @@ private fun SuccessCheckAllAttendanceButton() {
         prevIconMargin = 8.dp,
         textColor = grey600(),
         textStyle = SubheadlineBold,
-        backgroundColor = grey000(),
+        backgroundColor = grey50(),
         borderColor = grey200(),
         borderWidth = 1.dp,
         onClick = {},

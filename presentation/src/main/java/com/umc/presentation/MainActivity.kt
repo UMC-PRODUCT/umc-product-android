@@ -44,7 +44,7 @@ import androidx.navigation.toRoute
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
@@ -148,8 +148,8 @@ private fun UmcApp() {
 
         Box(modifier = Modifier.fillMaxSize()) {
             Scaffold(
-                // 상태바 뒤 영역 색. 홈은 헤더 없이 grey100 배경이라 같은 색으로 맞추고, 나머지는 grey000
-                containerColor = if (currentTab == MainTab.Home) grey100() else grey000(),
+                // 상태바 뒤 영역 색. 홈은 헤더 없이 grey100 배경이라 같은 색으로 맞추고, 나머지는 grey50
+                containerColor = if (currentTab == MainTab.Home) grey100() else grey50(),
                 bottomBar = {
                     if (showBottomBar) {
                         UmcBottomNavigationBar(
@@ -202,7 +202,7 @@ private fun UmcBottomNavigationBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(grey50())
             .navigationBarsPadding()
     ) {
         HorizontalDivider(thickness = 1.dp, color = grey200())

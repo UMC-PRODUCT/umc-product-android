@@ -26,7 +26,7 @@ import androidx.compose.ui.window.PopupProperties
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey800
@@ -79,7 +79,7 @@ fun CommunityFilterMenu(
                     clip = false,
                 )
                 .background(
-                    color = grey000(),
+                    color = grey50(),
                     shape = RoundedCornerShape(12.dp),
                 )
                 .border(

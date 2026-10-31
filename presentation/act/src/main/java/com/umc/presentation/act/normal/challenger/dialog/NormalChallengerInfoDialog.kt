@@ -38,7 +38,7 @@ import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
@@ -64,7 +64,7 @@ fun NormalChallengerInfoDialog(
             modifier = modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(grey000())
+                .background(grey50())
                 .padding(16.dp)
         ) {
             Row(
@@ -77,7 +77,7 @@ fun NormalChallengerInfoDialog(
                         .size(52.dp)
                         .clip(CircleShape)
                         .border(1.dp, grey200(), CircleShape)
-                        .background(grey000()),
+                        .background(grey50()),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -176,7 +176,7 @@ fun NormalChallengerInfoDialog(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
                         .border(1.dp, grey200(), RoundedCornerShape(12.dp))
-                        .background(grey000())
+                        .background(grey50())
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -199,7 +199,7 @@ private fun InfoStatCard(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .border(1.dp, grey200(), RoundedCornerShape(12.dp))
-            .background(grey000())
+            .background(grey50())
             .padding(vertical = 18.dp, horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)

@@ -39,10 +39,10 @@ import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.black
-import com.umc.component.theme.grey000
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
@@ -83,7 +83,7 @@ fun ActivityHistoryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(grey50())
     ) {
         ActivityHistoryTopBar(
             onBackClick = onBackClick
@@ -122,7 +122,7 @@ fun ActivityHistoryTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(grey50())
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -306,7 +306,7 @@ private fun ActivityHistoryLoadError(isLoading: Boolean, onRetryClick: () -> Uni
                 .fillMaxWidth()
                 .height(48.dp),
             backgroundColor = main500(),
-            textColor = grey000(),
+            textColor = grey50(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             cornerRadius = 12.dp,
         )

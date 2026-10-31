@@ -41,7 +41,7 @@ import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -107,7 +107,7 @@ fun SignUpRoute(
             ModalBottomSheet(
                 onDismissRequest = { showSchoolBottomSheet = false },
                 sheetState = sheetState,
-                containerColor = grey000(),
+                containerColor = grey50(),
             ) {
                 SchoolSelectBottomSheetContent(
                     schoolList = uiState.schoolList,
@@ -190,7 +190,7 @@ private fun SchoolItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .background(grey000())
+            .background(grey50())
             .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -223,7 +223,7 @@ fun SignUpScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Icon(
             modifier = Modifier
@@ -332,7 +332,7 @@ fun SignUpScreen(
                 enabled = uiState.enableNextButton,
                 backgroundColor = if (uiState.enableNextButton) main500() else grey100(),
                 pressedColor = main700(),
-                textColor = if (uiState.enableNextButton) grey000() else grey300(),
+                textColor = if (uiState.enableNextButton) grey50() else grey300(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 10.dp,
                 modifier = Modifier

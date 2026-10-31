@@ -29,9 +29,8 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
-import com.umc.component.theme.grey200
 import com.umc.component.theme.grey50
+import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
@@ -81,7 +80,7 @@ fun CommunityThreadItem(
                 onLongClick = onLongClick,
             ),
         shape = RoundedCornerShape(if (useUpdatedListStyle) 12.dp else 10.dp),
-        color = grey000(),
+        color = grey50(),
         border = BorderStroke(1.dp, grey200()),
         shadowElevation = 0.dp,
     ) {
@@ -222,7 +221,7 @@ fun CommunityThreadItem(
                             UText(
                                 text = thread.unreadCount.toString(),
                                 style = if (useUpdatedListStyle) UmcTypographyTokens.Caption1Bold else UmcTypographyTokens.Caption2Bold,
-                                color = grey000(),
+                                color = grey50(),
                             )
                         }
                     }

@@ -31,7 +31,7 @@ import com.umc.component.R
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -79,7 +79,7 @@ fun UDialog(
     confirmText: String = "확인",
     onConfirm: () -> Unit = onDismissRequest,
     confirmBackgroundColor: Color = grey800(),
-    confirmTextColor: Color = grey000(),
+    confirmTextColor: Color = grey50(),
     negativeText: String = "취소",
     positiveText: String = "",
     onNegative: () -> Unit = onDismissRequest,
@@ -92,7 +92,7 @@ fun UDialog(
     positiveBackgroundColor: Color = when (isAccept) {
         true -> green100()
         false -> red100()
-        null -> grey000()
+        null -> grey50()
     },
     positiveTextColor: Color = when (isAccept) {
         true -> green500()
@@ -115,7 +115,7 @@ fun UDialog(
             modifier = modifier
                 .then(if (useCompactStyle) Modifier.widthIn(max = 340.dp) else Modifier)
                 .fillMaxWidth()
-                .background(grey000(), RoundedCornerShape(12.dp))
+                .background(grey50(), RoundedCornerShape(12.dp))
                 .padding(16.dp),
             horizontalAlignment = if (useCompactStyle) Alignment.Start else Alignment.CenterHorizontally,
         ) {
@@ -251,7 +251,7 @@ private fun UDialogSingleButtonPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .background(grey000(), RoundedCornerShape(16.dp))
+                .background(grey50(), RoundedCornerShape(16.dp))
                 .padding(
                     top = 24.dp,
                     start = 24.dp,
@@ -272,7 +272,7 @@ private fun UDialogSingleButtonPreview() {
                 onClick = {},
                 modifier = Modifier.fillMaxWidth(),
                 backgroundColor = grey800(),
-                textColor = grey000(),
+                textColor = grey50(),
                 textStyle = UmcTypographyTokens.SubheadlineBold,
                 cornerRadius = 8.dp,
                 contentPadding = PaddingValues(vertical = 14.dp),
@@ -294,7 +294,7 @@ private fun UDialogTwoButtonPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .background(grey000(), RoundedCornerShape(16.dp))
+                .background(grey50(), RoundedCornerShape(16.dp))
                 .padding(
                     top = 24.dp,
                     start = 24.dp,
@@ -323,7 +323,7 @@ private fun UDialogTwoButtonPreview() {
                     text = "취소",
                     onClick = {},
                     modifier = Modifier.weight(1f),
-                    backgroundColor = grey000(),
+                    backgroundColor = grey50(),
                     textColor = grey800(),
                     textStyle = UmcTypographyTokens.SubheadlineBold,
                     borderWidth = 1.dp,
@@ -338,7 +338,7 @@ private fun UDialogTwoButtonPreview() {
                     text = "탈퇴",
                     onClick = {},
                     modifier = Modifier.weight(1f),
-                    backgroundColor = grey000(),
+                    backgroundColor = grey50(),
                     textColor = red500(),
                     textStyle = UmcTypographyTokens.SubheadlineBold,
                     borderWidth = 1.dp,

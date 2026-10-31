@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,9 +50,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import android.view.WindowManager
 import com.umc.component.theme.AppStrings
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
-import com.umc.component.theme.grey800
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -98,7 +98,7 @@ internal fun CommunityInviteSheet(
         }
         Box(Modifier.fillMaxSize()) {
             Box(
-                Modifier.fillMaxSize().background(grey800().copy(alpha = 0.6f))
+                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -115,7 +115,7 @@ internal fun CommunityInviteSheet(
                             dismiss { dismissSheet(); true }
                         },
                     shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-                    color = grey000(),
+                    color = grey50(),
                 ) {
                     Column(Modifier.navigationBarsPadding().height(height)) {
                         Box(

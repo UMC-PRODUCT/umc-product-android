@@ -56,7 +56,7 @@ import com.umc.component.component.UToastHost
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey900
@@ -146,7 +146,7 @@ fun LoginScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         // ic_logo + 22dp spacer + 타이틀/서브타이틀 높이 추정값
         val logoBlockHeight = 120.dp

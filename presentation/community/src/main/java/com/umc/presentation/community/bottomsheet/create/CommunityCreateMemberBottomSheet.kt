@@ -53,7 +53,7 @@ import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
@@ -146,7 +146,7 @@ fun CommunityCreateMemberBottomSheet(
     ModalBottomSheet(
         onDismissRequest = ::dismissWithApply,
         sheetState = sheetState,
-        containerColor = grey000(),
+        containerColor = grey50(),
         dragHandle = {
             BottomSheetDefaults.DragHandle(
                 color = grey600(),
@@ -224,7 +224,7 @@ private fun CommunityCreateMemberSheetContent(
             prevIconTint = grey500(),
             prevIconSize = 24.dp,
             backgroundColor = grey100(),
-            focusBackgroundColor = grey000(),
+            focusBackgroundColor = grey50(),
             strokeColor = grey100(),
             focusStrokeColor = grey900(),
             cornerRadius = 8.dp,
@@ -352,7 +352,7 @@ private fun CommunityCreateMemberHeader(
                     grey100()
                 },
                 textColor = if (isConfirmEnabled) {
-                    grey000()
+                    grey50()
                 } else {
                     grey400()
                 },

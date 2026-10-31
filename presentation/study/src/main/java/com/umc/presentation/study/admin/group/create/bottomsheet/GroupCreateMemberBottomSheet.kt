@@ -94,7 +94,7 @@ fun GroupCreateMemberBottomSheet(
         sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = true
         ),
-        containerColor = grey000(),
+        containerColor = grey50(),
         dragHandle = {
             BottomSheetDefaults.DragHandle(
                 color = grey600()
@@ -144,7 +144,7 @@ fun GroupCreateMemberBottomSheet(
                 prevIconTint = grey500(),
                 prevIconSize = 24.dp,
                 backgroundColor = grey100(),
-                focusBackgroundColor = grey000(),
+                focusBackgroundColor = grey50(),
                 strokeColor = grey100(),
                 focusStrokeColor = grey900(),
                 cornerRadius = 8.dp,
@@ -324,7 +324,7 @@ fun GroupCreatePickerHeader(
                     grey100()
                 },
                 textColor = if (isConfirmEnabled) {
-                    grey000()
+                    grey50()
                 } else {
                     grey400()
                 },
