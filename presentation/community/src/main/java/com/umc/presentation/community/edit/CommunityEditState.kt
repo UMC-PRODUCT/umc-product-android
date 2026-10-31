@@ -78,12 +78,11 @@ data class CommunityEditState(
     /**
      * 수정 완료 버튼 활성화 여부
      *
-     * 제목과 특징이 입력되어 있고 카테고리가 존재하며,
+     * 제목이 입력되어 있고(특징은 선택 입력) 카테고리가 존재하며,
      * 현재 수정 요청 중이 아닐 때 활성화됩니다.
      */
     val isSaveEnabled: Boolean
         get() = canEdit && !isLoading && !isDeleting && isCommunityThreadInputValid(title, description) && title.isNotBlank() &&
-                description.isNotBlank() &&
                 selectedCategory != null &&
                 !isSaving
 

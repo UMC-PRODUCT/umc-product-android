@@ -68,20 +68,15 @@ data class CommunityCreateState(
     val isTitleValid: Boolean
         get() = title.isNotBlank()
 
-    /** 스레드 특징 입력 여부 */
-    val isDescriptionValid: Boolean
-        get() = description.isNotBlank()
-
     /**
      * 완료 버튼 활성화 여부
      *
-     * 제목, 특징, 챌린저가 모두 존재하고
+     * 제목과 챌린저가 존재하고(특징은 선택 입력)
      * 현재 생성 요청 중이 아니고 AI 분류 중이 아닐 때 활성화됩니다.
      * (재분류 중에는 이전 카테고리가 남아 있으므로 분류 중에는 막는다)
      */
     val isCompleteEnabled: Boolean
         get() = isCommunityThreadInputValid(title, description) && isTitleValid &&
-                isDescriptionValid &&
                 myMemberId > 0L &&
                 selectedChallengers.isNotEmpty() &&
                 selectedChallengers.all { it.memberId > 0L && it.memberId != myMemberId } &&

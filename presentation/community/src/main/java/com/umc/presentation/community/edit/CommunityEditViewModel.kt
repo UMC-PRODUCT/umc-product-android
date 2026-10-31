@@ -497,7 +497,7 @@ class CommunityEditViewModel @Inject constructor(
         if (!currentState.isSaveEnabled) {
             sendEvent(
                 CommunityEditEvent.ShowToast(
-                    message = "제목 1~80자·특징 1~500자와 수정 권한을 확인해주세요.",
+                    message = "제목 1~80자·특징 500자 이하와 수정 권한을 확인해주세요.",
                 )
             )
             return
