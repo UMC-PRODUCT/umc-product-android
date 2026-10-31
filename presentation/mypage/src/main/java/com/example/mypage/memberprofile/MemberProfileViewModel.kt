@@ -103,13 +103,16 @@ class MemberProfileViewModel @Inject constructor(
         }
     }
 
-    /** 내가 이 회원을 차단했는지 확인해 메뉴(사용자 차단 / 차단 해제)를 정한다 */
+    /**
+     * 내가 이 회원을 차단했는지 확인해 메뉴(사용자 차단 / 차단 해제)를 정한다.
+     * 서버는 이미 차단한 회원을 다시 차단하면 오류를 내므로, 확인하지 못했으면 차단 메뉴를 막아 둔다
+     */
     private fun loadBlockState() {
         val id = memberId ?: return
         viewModelScope.launch {
             when (val result = getBlockedMemberIdsUseCase()) {
-                is ApiState.Success -> updateState { copy(isBlocked = id in result.data) }
-                is ApiState.Fail -> Unit // 확인하지 못하면 차단하지 않은 상태로 둔다
+                is ApiState.Success -> updateState { copy(isBlocked = id in result.data, isBlockStateKnown = true) }
+                is ApiState.Fail -> updateState { copy(isBlockStateKnown = false) }
             }
         }
     }
@@ -129,12 +132,19 @@ class MemberProfileViewModel @Inject constructor(
 
     // ---------------- 메뉴 ----------------
 
-    fun onClickMenu() = updateState { copy(isMenuOpen = true) }
+    fun onClickMenu() {
+        updateState { copy(isMenuOpen = true) }
+        // 차단 여부를 아직 확인하지 못했으면 메뉴를 열 때 다시 확인한다
+        if (!uiState.value.isBlockStateKnown) loadBlockState()
+    }
     fun onDismissMenu() = updateState { copy(isMenuOpen = false) }
 
-    /** 메뉴의 사용자 차단 / 차단 해제 */
-    fun onClickBlockMenu() = updateState {
-        copy(isMenuOpen = false, dialog = if (isBlocked) MemberProfileDialog.UNBLOCK else MemberProfileDialog.BLOCK)
+    /** 메뉴의 사용자 차단 / 차단 해제 (차단 여부를 확인한 뒤에만 동작) */
+    fun onClickBlockMenu() {
+        if (!uiState.value.isBlockStateKnown) return
+        updateState {
+            copy(isMenuOpen = false, dialog = if (isBlocked) MemberProfileDialog.UNBLOCK else MemberProfileDialog.BLOCK)
+        }
     }
 
     /** 메뉴의 사용자 신고 → 신고 사유 시트 */
@@ -157,7 +167,7 @@ class MemberProfileViewModel @Inject constructor(
             resultResponse(
                 response = if (unblocking) unblockMemberUseCase(id) else blockMemberUseCase(id),
                 successCallback = { blocked ->
-                    updateState { copy(isBlocked = blocked, isProcessing = false) }
+                    updateState { copy(isBlocked = blocked, isBlockStateKnown = true, isProcessing = false) }
                     emitEvent(
                         MemberProfileEvent.ShowToast(
                             message = if (blocked) AppStrings.MEMBER_BLOCK_DONE else AppStrings.MEMBER_UNBLOCK_DONE,
@@ -212,6 +222,7 @@ data class MemberProfileUiState(
     val isMine: Boolean = false, //내 프로필이면 차단·신고 메뉴를 숨긴다
 
     val isBlocked: Boolean = false,
+    val isBlockStateKnown: Boolean = false, //차단 여부를 서버에서 확인했는지 (확인 전에는 차단 메뉴를 막는다)
     val isMenuOpen: Boolean = false,
     val dialog: MemberProfileDialog? = null,
     val isProcessing: Boolean = false, //차단·해제 요청 진행 중

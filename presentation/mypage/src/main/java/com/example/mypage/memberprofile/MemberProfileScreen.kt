@@ -87,6 +87,7 @@ import com.umc.component.theme.white
 import com.umc.domain.model.ProfileInfo
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.mypage.UserActiveItem
+import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 
@@ -219,6 +220,7 @@ fun MemberProfileScreen(
             showMenu = !uiState.isMine && !uiState.isLoadFailed && !uiState.isLoading,
             isMenuOpen = uiState.isMenuOpen,
             isBlocked = uiState.isBlocked,
+            isBlockMenuEnabled = uiState.isBlockStateKnown,
             onBackClick = onBackClick,
             onMenuClick = onMenuClick,
             onDismissMenu = onDismissMenu,
@@ -310,9 +312,10 @@ private fun MemberProfileContent(uiState: MemberProfileUiState) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 // 회원 조회(MEMBER-101)는 비공개 링크를 null 로 내려줘 미입력과 구분되지 않고, 연락처 이메일은 내려주지 않는다.
-                // 우선 값이 없으면 모두 비공개 항목으로 안내한다
+                // 우선 값이 없으면 모두 비공개 항목으로 안내한다.
+                // 응답의 email 은 연락처가 아니라 로그인 이메일이라, 공개 설정과 상관없이 드러나지 않게 쓰지 않는다
                 // TODO 서버가 공개 여부나 연락처를 함께 내려주면 미입력과 비공개를 나눠 보여준다
-                MemberProfileField(AppStrings.PROFILE_LINK_EMAIL, userInfo.email.orPrivateLabel())
+                MemberProfileField(AppStrings.PROFILE_LINK_EMAIL, AppStrings.MEMBER_PROFILE_PRIVATE)
                 MemberProfileField(AppStrings.PROFILE_LINK_GITHUB, profile.github.orPrivateLabel())
                 MemberProfileField(AppStrings.PROFILE_LINK_LINKEDIN, profile.linkedIn.orPrivateLabel())
                 MemberProfileField(AppStrings.PROFILE_LINK_BLOG, profile.blog.orPrivateLabel())
@@ -335,6 +338,7 @@ private fun MemberProfileTopBar(
     showMenu: Boolean,
     isMenuOpen: Boolean,
     isBlocked: Boolean,
+    isBlockMenuEnabled: Boolean,
     onBackClick: () -> Unit,
     onMenuClick: () -> Unit,
     onDismissMenu: () -> Unit,
@@ -377,6 +381,7 @@ private fun MemberProfileTopBar(
                 if (isMenuOpen) {
                     MemberProfileMenu(
                         isBlocked = isBlocked,
+                        isBlockMenuEnabled = isBlockMenuEnabled,
                         onDismiss = onDismissMenu,
                         onBlockClick = onBlockMenuClick,
                         onReportClick = onReportMenuClick,
@@ -395,6 +400,7 @@ private fun MemberProfileTopBar(
 @Composable
 private fun MemberProfileMenu(
     isBlocked: Boolean,
+    isBlockMenuEnabled: Boolean,
     onDismiss: () -> Unit,
     onBlockClick: () -> Unit,
     onReportClick: () -> Unit,
@@ -409,6 +415,7 @@ private fun MemberProfileMenu(
     ) {
         MemberProfileMenuContent(
             isBlocked = isBlocked,
+            isBlockMenuEnabled = isBlockMenuEnabled,
             onBlockClick = onBlockClick,
             onReportClick = onReportClick,
         )
@@ -418,6 +425,7 @@ private fun MemberProfileMenu(
 @Composable
 private fun MemberProfileMenuContent(
     isBlocked: Boolean,
+    isBlockMenuEnabled: Boolean,
     onBlockClick: () -> Unit,
     onReportClick: () -> Unit,
 ) {
@@ -428,9 +436,11 @@ private fun MemberProfileMenuContent(
         shadowElevation = 8.dp,
     ) {
         Column(modifier = Modifier.padding(vertical = 2.dp)) {
+            // 차단 여부를 확인하기 전에는 누를 수 없게 흐리게 둔다
             MemberProfileMenuItem(
                 text = if (isBlocked) AppStrings.MEMBER_PROFILE_MENU_UNBLOCK else AppStrings.MEMBER_PROFILE_MENU_BLOCK,
-                color = grey950(),
+                color = if (isBlockMenuEnabled) grey950() else grey400(),
+                enabled = isBlockMenuEnabled,
                 onClick = onBlockClick,
             )
             MemberProfileMenuItem(
@@ -447,12 +457,13 @@ private fun MemberProfileMenuItem(
     text: String,
     color: Color,
     onClick: () -> Unit,
+    enabled: Boolean = true,
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
@@ -555,7 +566,7 @@ private fun MemberProfileLoadError(onRetryClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MemberReportBottomSheet(
-    selectedReasons: Set<MemberReportReason>,
+    selectedReasons: ImmutableSet<MemberReportReason>,
     detail: String,
     canSubmit: Boolean,
     onToggleReason: (MemberReportReason) -> Unit,
@@ -601,7 +612,7 @@ private fun MemberReportBottomSheet(
 
 @Composable
 private fun MemberReportSheetContent(
-    selectedReasons: Set<MemberReportReason>,
+    selectedReasons: ImmutableSet<MemberReportReason>,
     detail: String,
     canSubmit: Boolean,
     onToggleReason: (MemberReportReason) -> Unit,
@@ -836,7 +847,7 @@ private fun MemberReportSheetPreview() {
 private fun MemberProfileMenuPreview() {
     UmcTheme {
         Box(modifier = Modifier.padding(16.dp)) {
-            MemberProfileMenuContent(isBlocked = false, onBlockClick = {}, onReportClick = {})
+            MemberProfileMenuContent(isBlocked = false, isBlockMenuEnabled = true, onBlockClick = {}, onReportClick = {})
         }
     }
 }

@@ -16,12 +16,13 @@ data class BusinessCardResponse(
     @SerializedName("contact") val contact: BusinessCardContactResponse?,
     @SerializedName("links") val links: List<BusinessCardLinkResponse>?,
 ) {
+    // 공개 여부가 빠지면 비공개로 본다 (공개로 보면 저장할 때 비공개 설정이 조용히 풀린다)
     fun toDomain(): BusinessCard = BusinessCard(
-        contact = contact?.let { BusinessCardContact(email = it.email.orEmpty(), isPublic = it.isPublic ?: true) },
+        contact = contact?.let { BusinessCardContact(email = it.email.orEmpty(), isPublic = it.isPublic ?: false) },
         // 앱이 모르는 링크 타입은 건너뛴다
         links = links.orEmpty().mapNotNull { link ->
             val type = LinkType.entries.firstOrNull { it.label == link.type } ?: return@mapNotNull null
-            BusinessCardLink(type = type, link = link.link.orEmpty(), isPublic = link.isPublic ?: true)
+            BusinessCardLink(type = type, link = link.link.orEmpty(), isPublic = link.isPublic ?: false)
         }
     )
 }

@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -448,7 +449,7 @@ private fun LinkVisibilityChip(
             .clip(RoundedCornerShape(6.dp))
             .background(grey50())
             .border(1.dp, grey200(), RoundedCornerShape(6.dp))
-            .clickable(onClickLabel = AppStrings.PROFILE_LINK_VISIBILITY_CHANGE) { onClick() }
+            .clickable(onClickLabel = AppStrings.PROFILE_LINK_VISIBILITY_CHANGE, role = Role.Button) { onClick() }
             .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)

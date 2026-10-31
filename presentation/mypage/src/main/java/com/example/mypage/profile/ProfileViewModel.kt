@@ -102,8 +102,16 @@ class ProfileViewModel @Inject constructor(
                     )
                 }
             } else {
-                updateState { copy(isProfileLoading = false, isProfileLoadFailed = true) }
-                emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_LOAD_ERROR_TITLE))
+                // 실패 응답은 공통 처리(토큰 만료 시 재로그인 안내 등)를 거친다
+                val failure = (profile as? ApiState.Fail) ?: (card as ApiState.Fail)
+                resultResponse(
+                    response = failure,
+                    successCallback = {},
+                    errorCallback = {
+                        updateState { copy(isProfileLoading = false, isProfileLoadFailed = true) }
+                        emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_LOAD_ERROR_TITLE))
+                    }
+                )
             }
         }
     }

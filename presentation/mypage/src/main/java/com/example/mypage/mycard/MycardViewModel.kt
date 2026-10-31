@@ -101,7 +101,6 @@ class MycardViewModel @Inject constructor(
         // 재시도 연타·중복 요청 방지
         if (uiState.value.isProfileLoading) return
         updateState { copy(isProfileLoading = true) }
-        if (!viewProfileOnly) loadPublicCard()
         viewModelScope.launch {
             resultResponse(
                 response = if (viewProfileOnly) {
@@ -122,6 +121,8 @@ class MycardViewModel @Inject constructor(
                     }
                     if (!viewProfileOnly) generateMyUserCardQr(userInfo)
                     settingUserInfoToUI(userInfo)
+                    // 내 정보를 받은 뒤에 불러온다. 먼저 받으면 명함첩 수신이 아직 빈 내 정보를 계정 변경으로 보고 지운다
+                    if (!viewProfileOnly) loadPublicCard()
 
                 },
                 errorCallback = {
@@ -139,13 +140,13 @@ class MycardViewModel @Inject constructor(
     /**
      * 내 명함 뒷면에 실을 연락처·링크를 조회하는 메서드 (다른 회원에게 보이는 그대로, 공개 항목만)
      *
-     * 실패하면 null 로 두고, 뒷면은 내 프로필 정보로 그린다
+     * 다시 불러오다 실패하면 이전에 받은 값을 그대로 둔다. 한 번도 못 받았으면 뒷면은 항목 없이 그린다
      */
     private fun loadPublicCard() {
         viewModelScope.launch {
             when (val result = getMyBusinessCardUseCase()) {
                 is ApiState.Success -> updateState { copy(publicCard = result.data) }
-                is ApiState.Fail -> updateState { copy(publicCard = null) }
+                is ApiState.Fail -> Unit
             }
         }
     }
@@ -324,7 +325,7 @@ data class MycardUiState(
     val githubLink: String = "",
     val linkedinLink: String = "",
     val blogLink: String = "",
-    // 내 명함 뒷면의 연락처·링크 (공개 항목만). null 이면 조회 전이거나 실패라 프로필 정보로 그린다
+    // 내 명함 뒷면의 연락처·링크 (공개 항목만). null 이면 아직 못 받은 상태라 뒷면에 항목을 그리지 않는다
     val publicCard: BusinessCard? = null,
 
     val cardCount: Int = 0,

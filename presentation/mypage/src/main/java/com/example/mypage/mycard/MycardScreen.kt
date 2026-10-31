@@ -657,7 +657,8 @@ private fun CardFrontContent(
  * 명함 카드 뒷면 레이아웃 컴포저블
  *
  * 프로필 이미지 옆에 이메일, GitHub, LinkedIn, URL(블로그·개인 사이트)을 아이콘과 함께 나열한다 (비어 있는 항목은 빼고 보여준다).
- * 보여줄 항목이 하나도 없으면 프로필 이미지 대신 빈 상태 안내를 가운데에 둔다
+ * 보여줄 항목이 하나도 없으면 프로필 이미지 대신 빈 상태 안내를 가운데에 둔다.
+ * 내 명함은 다른 회원에게 보이는 그대로(공개 명함 조회 결과만) 그리고, 조회 전·실패면 항목 없이 프로필 이미지만 둔다
  */
 @Composable
 private fun CardBackContent(
@@ -667,13 +668,16 @@ private fun CardBackContent(
     onMyQrcodeClick: () -> Unit, //내 QR 코드 화면으로 이동
 ) {
     val profile = uiState.userInfo.profile
-    // 내 명함은 다른 회원에게 보이는 그대로(공개 항목만) 그린다. 명함 조회 전·실패면 프로필 정보로 그린다
     val card = uiState.publicCard
-    val email = if (card != null) card.contact?.email.orEmpty() else uiState.userInfo.email
-    val github = card?.linkOf(LinkType.GITHUB)?.link ?: profile.github
-    val linkedIn = card?.linkOf(LinkType.LINKEDIN)?.link ?: profile.linkedIn
-    val blog = card?.linkOf(LinkType.BLOG)?.link ?: profile.blog
-    val personal = card?.linkOf(LinkType.PERSONAL)?.link ?: profile.personal
+    // 공개 명함을 아직 못 받은 내 명함 (로그인 이메일·비공개 링크가 드러나지 않게 프로필 정보로 대신 그리지 않는다)
+    val isCardPending = !uiState.isViewingMemberProfile && card == null
+    fun linkOf(type: LinkType, memberValue: String): String =
+        if (uiState.isViewingMemberProfile) memberValue else card?.linkOf(type)?.link.orEmpty()
+    val email = if (uiState.isViewingMemberProfile) uiState.userInfo.email else card?.contact?.email.orEmpty()
+    val github = linkOf(LinkType.GITHUB, profile.github)
+    val linkedIn = linkOf(LinkType.LINKEDIN, profile.linkedIn)
+    val blog = linkOf(LinkType.BLOG, profile.blog)
+    val personal = linkOf(LinkType.PERSONAL, profile.personal)
     // 행마다 비어 있거나 열 수 없는 값은 숨기므로, 같은 기준으로 보여줄 항목이 남는지 본다
     val hasContent = email.isNotBlank() ||
         listOf(github, linkedIn, blog, personal)
@@ -686,7 +690,7 @@ private fun CardBackContent(
             modifier = Modifier.height(16.dp)
         )
 
-        if (!hasContent) {
+        if (!hasContent && !isCardPending) {
             CardBackEmptyContent(showGuide = !uiState.isViewingMemberProfile)
         } else
         // [중단 Info] 프로필 이미지 + 이메일·링크 리스트
@@ -1028,7 +1032,8 @@ private fun CardBackEmptyPreview() {
                 .padding(20.dp)
         ) {
             CardBackContent(
-                uiState = MycardUiState(),
+                // 공개 명함을 받았지만 공개 항목이 하나도 없는 상태
+                uiState = MycardUiState(publicCard = com.umc.domain.model.mypage.BusinessCard()),
                 onFlipClick = {},
                 onExchangeCardClick = {},
                 onMyQrcodeClick = {},
@@ -1060,6 +1065,14 @@ private fun MycardScreenPreview() {
                 ),
                 cardPartText = "Mobile PE",
                 cardGeneration = 11,
+                publicCard = com.umc.domain.model.mypage.BusinessCard(
+                    contact = com.umc.domain.model.mypage.BusinessCardContact(email = "abcdefg@gmail.com"),
+                    links = listOf(
+                        com.umc.domain.model.mypage.BusinessCardLink(LinkType.GITHUB, "https://github.com/umc"),
+                        com.umc.domain.model.mypage.BusinessCardLink(LinkType.LINKEDIN, "https://linkedin.com/in/umc"),
+                        com.umc.domain.model.mypage.BusinessCardLink(LinkType.BLOG, "https://blog.umc.com"),
+                    ),
+                ),
             ),
             onNavigateToMypage = {},
             onNavigateToMyqrCode = {},

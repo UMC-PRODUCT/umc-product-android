@@ -38,10 +38,14 @@ class ActivityHistoryViewModel @Inject constructor(
         loadActivityHistory()
     }
 
+    // 마지막으로 시작한 활동 이력 조회 번호 (늦게 끝난 이전 조회가 최신 결과를 덮어쓰지 않게 한다)
+    private var loadRequestId = 0
+
     /**
      * 서버에서 내 프로필 정보를 받아 활동 이력을 만드는 메서드
      */
     private fun loadActivityHistory() {
+        val requestId = ++loadRequestId
         // 재시도 중에는 이전 실패 안내 대신 진행 표시를 보이고, 다시 실패하면 errorCallback 이 실패 상태로 되돌린다
         updateState { copy(isLoading = true, isLoadFailed = false) }
         viewModelScope.launch {
@@ -50,6 +54,8 @@ class ActivityHistoryViewModel @Inject constructor(
                 successCallback = { userInfo ->
                     viewModelScope.launch {
                         val histories = activityHistoryBuilder.build(userInfo)
+                        // 그사이 새 조회가 시작됐으면 이 결과는 버린다
+                        if (requestId != loadRequestId) return@launch
                         //모든 데이터가 수집된 후 UI 업데이트
                         updateState {
                             copy(
@@ -61,7 +67,7 @@ class ActivityHistoryViewModel @Inject constructor(
                     }
                 },
                 errorCallback = {
-                    updateState { copy(isLoading = false, isLoadFailed = true) }
+                    if (requestId == loadRequestId) updateState { copy(isLoading = false, isLoadFailed = true) }
                 }
             )
         }
@@ -96,10 +102,11 @@ class ActivityHistoryViewModel @Inject constructor(
                     loadActivityHistory()
                 },
                 errorCallback = { failState ->
+                    // 그 밖의 오류는 다시 시도할 수 있게 입력한 코드를 남겨 둔다
                     updateState { copy(isAddingCode = false, isAddCodeSheetOpen = false) }
                     if (failState.code == CODE_ALREADY_USED) {
-                        // 이미 사용된 코드는 다시 입력해도 소용없으므로 문의 채널을 안내한다
-                        updateState { copy(isUsedCodeDialogOpen = true) }
+                        // 이미 사용된 코드는 다시 입력해도 소용없으므로 입력을 비우고 문의 채널을 안내한다
+                        updateState { copy(isUsedCodeDialogOpen = true, code = "") }
                     } else {
                         emitEvent(ActivityHistoryEvent.ShowToast(failState.message))
                     }
