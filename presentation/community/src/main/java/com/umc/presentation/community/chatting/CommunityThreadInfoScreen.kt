@@ -141,11 +141,8 @@ internal fun CommunityThreadInfoScreen(
     var pendingKickMember by remember { mutableStateOf<CommunityThreadMember?>(null) }
     var pendingOwnershipMember by remember { mutableStateOf<CommunityThreadMember?>(null) }
     var query by rememberSaveable { mutableStateOf("") }
-    val sortedMembers = remember(members) {
-        members.sortedWith(
-            compareBy<CommunityThreadMember> { it.role != CommunityThreadRole.OWNER }
-                .thenBy { it.name },
-        )
+    val sortedMembers = remember(members, myMemberId, memberProfiles) {
+        sortCommunityParticipants(members, myMemberId, memberProfiles)
     }
     val displayedMembers = remember(sortedMembers, memberProfiles, query) {
         filterCommunityParticipants(sortedMembers, memberProfiles, query)
@@ -426,7 +423,7 @@ private fun ParticipantRow(
     val permissions = communityParticipantMenuPermissions(viewerRole, member.role, isMe)
     Row(
         modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp).heightIn(min = 64.dp)
-            .then(if (isEditing) Modifier.toggleable(value = isSelected, enabled = isSelectable,
+            .then(if (isEditing && !isMe) Modifier.toggleable(value = isSelected, enabled = isSelectable,
                 role = Role.Checkbox, onValueChange = { onToggleSelection() }) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -470,7 +467,7 @@ private fun ParticipantRow(
         // 일반 참여자도 프로필 보기에 접근할 수 있다.
         if (isEditing) {
             Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                Checkbox(checked = isSelected, onCheckedChange = null, enabled = isSelectable,
+                if (!isMe) Checkbox(checked = isSelected, onCheckedChange = null, enabled = isSelectable,
                     colors = CheckboxDefaults.colors(checkedColor = main500(), uncheckedColor = grey400(), checkmarkColor = white()))
             }
         } else {
