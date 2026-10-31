@@ -1058,7 +1058,7 @@ private fun MycardScreenPreview() {
                         personal = "",
                     ),
                 ),
-                cardPartText = "Mobile Product Engineer",
+                cardPartText = "Mobile PE",
                 cardGeneration = 11,
             ),
             onNavigateToMypage = {},
