@@ -25,11 +25,12 @@ fun StudyCurriculumCard(
     modifier: Modifier = Modifier,
 ) {
     Card(
+        // 좌우 여백은 화면(UserStudyScreen)의 16dp 하나로만 둔다
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(vertical = 16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = white()),
         elevation = CardDefaults.cardElevation(0.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
