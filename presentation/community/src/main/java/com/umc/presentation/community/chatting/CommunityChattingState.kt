@@ -57,6 +57,10 @@ data class CommunityChattingState(
     val errorMessage: String? = null,
     val isThreadUnavailable: Boolean = false,
     val isAccessDenied: Boolean = false,
+    /** 목록의 강퇴 카드(membershipState = KICKED)에서 진입했는지 여부 */
+    val isKicked: Boolean = false,
+    /** 강퇴 확인 API 요청 중 여부 (중복 클릭 방지) */
+    val isAcknowledgingKick: Boolean = false,
 ) : UiState {
     val isLastRemainingOwner: Boolean
         get() = thread?.myRole == CommunityThreadRole.OWNER && thread.memberCount.toIntOrNull() == 1

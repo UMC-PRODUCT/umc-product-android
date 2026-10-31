@@ -89,17 +89,21 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
     ) {
         searchJob?.cancel()
 
+        val initialMembers = preSelected
+            .filterNot { member ->
+                member.memberId == myMemberId
+            }
+            .distinctBy { member ->
+                member.memberId
+            }
+            .take(maxCount)
+            .toImmutableList()
+
         updateState {
             CommunityCreateMemberBottomSheetState(
-                selectedMembers = preSelected
-                    .filterNot { member ->
-                        member.memberId == myMemberId
-                    }
-                    .distinctBy { member ->
-                        member.memberId
-                    }
-                    .take(maxCount)
-                    .toImmutableList(),
+                selectedMembers = initialMembers,
+                initialMembers = initialMembers,
+                listedMembers = initialMembers,
                 maxMemberCount = maxCount,
             )
         }
@@ -173,11 +177,11 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
     }
 
     /**
-     * 챌린저 선택 또는 선택 해제
+     * 검색 결과에서 챌린저 선택 또는 선택 해제
      *
-     * - 이미 선택된 챌린저를 누르면 선택 해제
-     * - 선택되지 않은 챌린저를 누르면 선택
-     * - 최대 선택 가능 인원을 초과하면 Toast 표시
+     * - 이미 선택된 챌린저를 누르면 선택 해제 (선택 목록에서도 빠짐)
+     * - 선택되지 않은 챌린저를 누르면 선택 (선택 목록 끝에 추가)
+     * - 이미 최대 인원만큼 선택했다면 추가 선택을 막고 Toast 표시 (멤버 관리 BottomSheet와 동일)
      */
     fun toggleMember(
         member: CommunityChallengerUiModel,
@@ -187,17 +191,126 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
             return
         }
 
+        val isSelected = isSelected(member)
+        if (!isSelected && !ensureCanSelectMore()) return
+
+        updateState {
+            copy(
+                selectedMembers = selectedMembers.toggled(member, isSelected),
+                listedMembers = if (isSelected) {
+                    listedMembers.filterNot { listedMember ->
+                        listedMember.memberId == member.memberId
+                    }.toImmutableList()
+                } else {
+                    (listedMembers + member)
+                        .distinctBy { listedMember ->
+                            listedMember.memberId
+                        }
+                        .toImmutableList()
+                },
+            )
+        }
+    }
+
+    /**
+     * 선택 목록의 행에서 챌린저 선택 또는 선택 해제
+     *
+     * 검색 실패 등으로 검색 결과를 쓸 수 없어도 선택을 뺄 수 있게 하는 경로입니다.
+     * 체크를 풀어도 행은 목록에 그대로 남아 다시 체크할 수 있습니다.
+     */
+    fun toggleListedMember(
+        member: CommunityChallengerUiModel,
+    ) {
+        val isSelected = isSelected(member)
+        if (!isSelected && !ensureCanSelectMore()) return
+
+        updateState {
+            copy(
+                selectedMembers = selectedMembers.toggled(member, isSelected),
+            )
+        }
+    }
+
+    /**
+     * 바텀시트를 초대 없이 닫을 때 스레드 생성 화면에 넘길 선택 목록
+     *
+     * 기존 선택 중 해제한 멤버(선택 목록 행·검색 결과 어느 쪽에서 풀었든)가 있을 때만
+     * 그 멤버를 뺀 목록을 반환하고, 그 외에는 null을 반환해 기존 선택을 유지합니다.
+     * 검색으로 새로 고른 멤버는 초대 버튼으로만 반영합니다.
+     */
+    fun membersToApplyOnDismiss(): List<CommunityChallengerUiModel>? {
         val currentState = uiState.value
 
-        val isSelected = currentState.selectedMembers.any { selectedMember ->
-            selectedMember.memberId == member.memberId
+        val selectedIds = currentState.selectedMembers
+            .map { member ->
+                member.memberId
+            }
+            .toSet()
+
+        val remainingMembers = currentState.initialMembers.filter { member ->
+            member.memberId in selectedIds
         }
 
-        // 최대 인원에 도달한 상태에서 추가 선택하는 경우 제한
-        if (
-            !isSelected &&
-            currentState.selectedMembers.size >= currentState.maxMemberCount
-        ) {
+        return remainingMembers.takeIf { members ->
+            members.size != currentState.initialMembers.size
+        }
+    }
+
+    private fun isSelected(
+        member: CommunityChallengerUiModel,
+    ): Boolean = uiState.value.selectedMembers.any { selectedMember ->
+        selectedMember.memberId == member.memberId
+    }
+
+    /** 최대 선택 가능 인원에 도달했다면 Toast를 띄우고 false를 반환합니다. (해제는 항상 허용) */
+    private fun ensureCanSelectMore(): Boolean {
+        val currentState = uiState.value
+        if (currentState.selectedMembers.size < currentState.maxMemberCount) return true
+
+        emitEvent(
+            CommunityCreateMemberBottomSheetEvent.ShowToast(
+                message =
+                    AppStrings.COMMUNITY_CREATE_MEMBER_MAX_COUNT_FORMAT.format(currentState.maxMemberCount),
+            )
+        )
+        return false
+    }
+
+    private fun ImmutableList<CommunityChallengerUiModel>.toggled(
+        member: CommunityChallengerUiModel,
+        isSelected: Boolean,
+    ): ImmutableList<CommunityChallengerUiModel> {
+        val updatedMembers = if (isSelected) {
+            filterNot { selectedMember ->
+                selectedMember.memberId == member.memberId
+            }
+        } else {
+            this + member
+        }
+
+        return updatedMembers
+            .distinctBy { selectedMember ->
+                selectedMember.memberId
+            }
+            .toImmutableList()
+    }
+
+    /**
+     * 초대 버튼 클릭
+     *
+     * 선택 단계에서 이미 최대 인원을 막지만,
+     * 다른 경로로 초과 상태가 되더라도 반영하지 않도록 한 번 더 검사합니다.
+     * 통과하면 선택 목록을 스레드 생성 화면에 반영하도록 이벤트를 전달합니다.
+     */
+    fun onInviteClick() {
+        val currentState = uiState.value
+
+        val members = currentState.selectedMembers
+            .distinctBy { member ->
+                member.memberId
+            }
+
+        if (members.size > currentState.maxMemberCount) {
             emitEvent(
                 CommunityCreateMemberBottomSheetEvent.ShowToast(
                     message =
@@ -207,19 +320,11 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
             return
         }
 
-        updateState {
-            val updatedMembers = if (isSelected) {
-                selectedMembers.filterNot { selectedMember ->
-                    selectedMember.memberId == member.memberId
-                }
-            } else {
-                selectedMembers + member
-            }
-
-            copy(
-                selectedMembers = updatedMembers.toImmutableList(),
+        emitEvent(
+            CommunityCreateMemberBottomSheetEvent.InviteMembers(
+                members = members,
             )
-        }
+        )
     }
 
     /**
@@ -365,6 +470,16 @@ data class CommunityCreateMemberBottomSheetState(
     /** 현재 선택된 챌린저 */
     val selectedMembers: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
 
+    /** 바텀시트를 열 때 스레드 생성 화면에서 넘어온 선택 */
+    val initialMembers: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
+
+    /**
+     * 검색 중이 아닐 때 선택 목록에 표시할 챌린저
+     *
+     * 목록 행에서 체크를 풀어도 바로 사라지지 않도록 selectedMembers와 따로 관리합니다.
+     */
+    val listedMembers: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
+
     /** 현재 입력된 검색어 */
     val query: String = "",
 
@@ -416,6 +531,11 @@ sealed interface CommunityCreateMemberBottomSheetEvent : UiEvent {
     /** Toast 메시지 출력 */
     data class ShowToast(
         val message: String,
+    ) : CommunityCreateMemberBottomSheetEvent
+
+    /** 인원 검사를 통과한 선택 목록을 스레드 생성 화면에 반영 */
+    data class InviteMembers(
+        val members: List<CommunityChallengerUiModel>,
     ) : CommunityCreateMemberBottomSheetEvent
 }
 

@@ -54,6 +54,8 @@ import com.umc.presentation.study.admin.group.schedule.AdminStudyGroupScheduleRo
 import com.umc.component.base.CollectUiEvents
 
 private const val COMMUNITY_REFRESH_KEY = "community_refresh"
+// 강퇴 확인을 마친 스레드 ID (검색 결과에서 제거하는 데 사용)
+private const val COMMUNITY_KICK_ACKNOWLEDGED_KEY = "community_kick_acknowledged"
 private const val NOTICE_REFRESH_KEY = "notice_refresh"
 
 // 마이페이지 '나의 스터디'에서 활동 탭으로 갈 때 스터디 탭을 열어 달라는 일회성 신호
@@ -663,10 +665,11 @@ fun MainNavHost(
         /** 커뮤니티 화면 **/
         composable<MainDestination.Community> {
             CommunityRoute(
-                onNavigateToThreadDetail = { threadId ->
+                onNavigateToThreadDetail = { threadId, isKicked ->
                     navHostController.navigate(
                         MainDestination.CommunityChatting(
                             threadId = threadId,
+                            isKicked = isKicked,
                         )
                     )
                 },
@@ -751,15 +754,25 @@ fun MainNavHost(
         }
 
         /** 커뮤니티 검색 화면 **/
-        composable<MainDestination.CommunitySearch> {
+        composable<MainDestination.CommunitySearch> { backStackEntry ->
+            val acknowledgedKickThreadId by backStackEntry
+                .savedStateHandle
+                .getStateFlow<String?>(COMMUNITY_KICK_ACKNOWLEDGED_KEY, null)
+                .collectAsStateWithLifecycle()
+
             CommunitySearchRoute(
+                acknowledgedKickThreadId = acknowledgedKickThreadId,
+                onKickAcknowledgedHandled = {
+                    backStackEntry.savedStateHandle[COMMUNITY_KICK_ACKNOWLEDGED_KEY] = null
+                },
                 onNavigateBack = {
                     navHostController.popBackStack()
                 },
-                onNavigateToThreadDetail = { threadId ->
+                onNavigateToThreadDetail = { threadId, isKicked ->
                     navHostController.navigate(
                         MainDestination.CommunityChatting(
                             threadId = threadId,
+                            isKicked = isKicked,
                         )
                     )
                 },
@@ -812,6 +825,13 @@ fun MainNavHost(
                     navHostController.currentBackStackEntry
                         ?.savedStateHandle
                         ?.set(COMMUNITY_REFRESH_KEY, true)
+                },
+                onKickAcknowledged = {
+                    // 목록은 복귀 시 폴링으로 다시 받아오고, 검색 결과는 갱신되지 않으므로 직접 제거하게 알린다
+                    navHostController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(COMMUNITY_KICK_ACKNOWLEDGED_KEY, destination.threadId)
+                    navHostController.popBackStack()
                 },
             )
         }

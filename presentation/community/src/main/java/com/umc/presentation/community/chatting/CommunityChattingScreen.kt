@@ -66,6 +66,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
@@ -189,6 +190,19 @@ fun CommunityChattingScreen(
     val onKickMember: (String) -> Unit = { onAction(CommunityChattingAction.OnKickMember(it)) }
     val onTransferOwnership: (String) -> Unit = {
         onAction(CommunityChattingAction.OnTransferOwnership(it))
+    }
+
+    // 강퇴된 스레드(목록의 강퇴 카드에서 진입)는 참여 종료 안내 화면으로 이동
+    if (state.isKicked) {
+        KickedThreadScreen(
+            onBack = onBack,
+            onAcknowledge = { onAction(CommunityChattingAction.OnAcknowledgeKick) },
+            isAcknowledging = state.isAcknowledgingKick,
+            toastData = toastData,
+            toastGeneration = toastGeneration,
+            onToastDismiss = onToastDismiss,
+        )
+        return
     }
 
     if (state.isThreadUnavailable) {
@@ -1083,6 +1097,113 @@ private fun ThreadUnavailableScreen(
                 cornerRadius = 8.dp,
             )
             Spacer(Modifier.height(100.dp))
+        }
+    }
+}
+
+/**
+ * 강퇴된 스레드에 진입했을 때의 참여 종료 안내 화면 (Figma `커뮤니티_스레드_강퇴`)
+ *
+ * '커뮤니티로 돌아가기'를 누르면 강퇴 확인을 서버에 저장하고, 뒤로가기는 확인 없이 돌아간다.
+ */
+@Composable
+private fun KickedThreadScreen(
+    onBack: () -> Unit,
+    onAcknowledge: () -> Unit,
+    isAcknowledging: Boolean,
+    toastData: UToastData? = null,
+    toastGeneration: Int = 0,
+    onToastDismiss: () -> Unit = {},
+) {
+    Scaffold(
+        containerColor = grey100(),
+        snackbarHost = {
+            key(toastGeneration) {
+                UToastHost(
+                    data = toastData,
+                    onDismiss = onToastDismiss,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+            }
+        },
+        topBar = {
+            // Figma `TopBar/Community` 참여종료
+            Surface(color = white()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 4.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_community_back),
+                            contentDescription = AppStrings.CHAT_CD_BACK,
+                            modifier = Modifier.size(24.dp),
+                            tint = grey950(),
+                        )
+                    }
+                    UText(
+                        text = AppStrings.CHAT_UNAVAILABLE_TOP_BAR,
+                        color = grey950(),
+                        style = UmcTypographyTokens.Title2Bold,
+                    )
+                }
+            }
+        },
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 64.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            // 아이콘 + 제목
+            Box(
+                modifier = Modifier.size(48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_community_block),
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = grey400(),
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            UText(
+                text = AppStrings.CHAT_UNAVAILABLE_TITLE,
+                color = grey600(),
+                style = UmcTypographyTokens.HeadlineBold,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(4.dp))
+            UText(
+                text = AppStrings.CHAT_KICKED_DESCRIPTION,
+                modifier = Modifier.fillMaxWidth(),
+                color = grey500(),
+                style = UmcTypographyTokens.Subheadline,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(40.dp))
+            UButton(
+                text = AppStrings.CHAT_BACK_TO_COMMUNITY,
+                onClick = onAcknowledge,
+                enabled = !isAcknowledging,
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .fillMaxWidth()
+                    .height(52.dp),
+                backgroundColor = main500(),
+                pressedColor = main600(),
+                textColor = white(),
+                textStyle = UmcTypographyTokens.HeadlineBold,
+                cornerRadius = 8.dp,
+            )
         }
     }
 }
@@ -2593,6 +2714,18 @@ private fun CommunityChattingScreenViewOnlyEmptyPreview() {
 private fun CommunityChattingScreenNoAccessPreview() {
     CommunityChattingScreen(
         state = CommunityChattingState(threadId = "1", isAccessDenied = true),
+        onAction = {},
+    )
+}
+
+/**
+ * 강퇴된 스레드에 진입했을 때의 참여 종료 화면 Preview (Figma `커뮤니티_스레드_강퇴`)
+ */
+@Preview(showBackground = true, widthDp = 412, heightDp = 917)
+@Composable
+private fun CommunityChattingScreenKickedPreview() {
+    CommunityChattingScreen(
+        state = CommunityChattingState(threadId = "1", isKicked = true),
         onAction = {},
     )
 }

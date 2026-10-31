@@ -17,9 +17,14 @@ data class CommunityThread(
     val createdBy: String,
     val createdAt: String,
     val updatedAt: String,
+    val membershipState: CommunityThreadMembershipState? = null,
 ) {
     val isMine: Boolean
         get() = myRole == CommunityThreadRole.OWNER
+
+    /** 강퇴됐지만 아직 확인하지 않은 스레드 (목록에 비활성 카드로 표시) */
+    val isKicked: Boolean
+        get() = membershipState == CommunityThreadMembershipState.KICKED
 
     val isNotificationEnabled: Boolean
         get() = !isMuted

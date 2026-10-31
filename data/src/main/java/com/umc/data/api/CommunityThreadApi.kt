@@ -72,6 +72,13 @@ interface CommunityThreadApi {
         threadId: String,
     ): ApiResponse<CommunityThreadMemberMutationResponse>
 
+    // 강퇴 안내 확인
+    @POST(Endpoints.Community.THREAD_KICK_ACKNOWLEDGE)
+    suspend fun acknowledgeCommunityThreadKick(
+        @Path("threadId")
+        threadId: String,
+    ): ApiResponse<CommunityThreadMemberMutationResponse>
+
     @DELETE(Endpoints.Community.THREAD_DETAIL)
     suspend fun deleteCommunityThread(
         @Path("threadId")

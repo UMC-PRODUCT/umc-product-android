@@ -16,7 +16,9 @@ import com.umc.component.base.CollectUiEvents
 @Composable
 fun CommunitySearchRoute(
     onNavigateBack: () -> Unit,
-    onNavigateToThreadDetail: (String) -> Unit,
+    onNavigateToThreadDetail: (threadId: String, isKicked: Boolean) -> Unit,
+    acknowledgedKickThreadId: String? = null,
+    onKickAcknowledgedHandled: () -> Unit = {},
     viewModel: CommunitySearchViewModel =
         hiltViewModel<CommunitySearchViewModel>(),
 ) {
@@ -31,9 +33,17 @@ fun CommunitySearchRoute(
             is CommunitySearchEvent.NavigateToThreadDetail -> {
                 onNavigateToThreadDetail(
                     event.threadId,
+                    event.isKicked,
                 )
             }
         }
+    }
+
+    // 참여 종료 화면에서 강퇴 확인을 마친 스레드는 검색 결과에서도 뺀다
+    LaunchedEffect(acknowledgedKickThreadId) {
+        val threadId = acknowledgedKickThreadId ?: return@LaunchedEffect
+        viewModel.removeThread(threadId)
+        onKickAcknowledgedHandled()
     }
 
     CommunitySearchScreen(

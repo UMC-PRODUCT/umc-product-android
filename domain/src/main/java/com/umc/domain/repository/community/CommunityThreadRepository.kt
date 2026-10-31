@@ -112,6 +112,8 @@ interface CommunityThreadRepository {
     suspend fun inviteMembers(threadId: String, memberIds: List<Long>): ApiState<ThreadCommunityThreadInvitation>
     suspend fun kickMember(threadId: String, memberId: String): ApiState<CommunityThreadMemberMutation>
     suspend fun leaveThread(threadId: String): ApiState<CommunityThreadMemberMutation>
+    /** 강퇴 안내를 확인했음을 서버에 저장한다. 이후 해당 스레드는 목록 조회에서 제외된다. */
+    suspend fun acknowledgeKick(threadId: String): ApiState<CommunityThreadMemberMutation>
     suspend fun changeMemberRole(threadId: String, memberId: String, role: CommunityThreadRole): ApiState<CommunityThreadMemberMutation>
     suspend fun reportMessage(messageId: String, reason: CommunityMessageReportReason): ApiState<CommunityMessageReportReceipt>
 }

@@ -162,5 +162,7 @@ sealed interface MainDestination {
     @Serializable
     data class CommunityChatting(
         val threadId: String,
+        // 목록의 강퇴 카드에서 진입하면 true (채팅 대신 참여 종료 화면 표시)
+        val isKicked: Boolean = false,
     ) : MainDestination
 }

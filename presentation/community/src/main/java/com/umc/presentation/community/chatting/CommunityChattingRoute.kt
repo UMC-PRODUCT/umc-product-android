@@ -29,6 +29,8 @@ import com.umc.component.base.CollectUiEvents
 fun CommunityChattingRoute(
     onBack: () -> Unit,
     onThreadDeleted: () -> Unit = onBack,
+    // 강퇴 확인 후 목록에서 빠지므로 삭제와 같이 목록을 갱신하며 돌아간다
+    onKickAcknowledged: () -> Unit = onThreadDeleted,
     onMore: () -> Unit = {},
     onUnreadSummary: () -> Unit = {},
     onCamera: () -> Unit = {},
@@ -91,6 +93,7 @@ fun CommunityChattingRoute(
                 Toast.makeText(context, AppStrings.CHAT_LEAVE_SUCCESS, Toast.LENGTH_SHORT).show()
                 onThreadDeleted()
             }
+            CommunityChattingEvent.KickAcknowledged -> onKickAcknowledged()
             CommunityChattingEvent.OpenMore -> onMore()
             CommunityChattingEvent.OpenUnreadSummary -> onUnreadSummary()
             CommunityChattingEvent.OpenCamera -> onCamera()

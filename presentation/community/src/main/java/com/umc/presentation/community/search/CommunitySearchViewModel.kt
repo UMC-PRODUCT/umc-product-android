@@ -52,6 +52,14 @@ class CommunitySearchViewModel @Inject constructor(
     val event = _event.receiveAsFlow()
     private var searchGeneration = 0L
 
+    /**
+     * 강퇴 확인을 마쳐 검색 결과에서 뺀 스레드 ID
+     *
+     * 확인 전에 보낸 검색·추가 로드 요청이 늦게 도착하면 응답에 해당 스레드가 남아 있으므로,
+     * 진행 중인 요청을 끊지 않고 결과를 기록할 때마다 걸러 냅니다.
+     */
+    private val removedThreadIds = mutableSetOf<String>()
+
     fun onAction(
         action: CommunitySearchAction,
     ) {
@@ -103,6 +111,9 @@ class CommunitySearchViewModel @Inject constructor(
                 sendEvent(
                     CommunitySearchEvent.NavigateToThreadDetail(
                         threadId = action.threadId,
+                        isKicked = _state.value.searchResults.any { thread ->
+                            thread.id == action.threadId && thread.isKicked
+                        },
                     )
                 )
             }
@@ -201,6 +212,8 @@ class CommunitySearchViewModel @Inject constructor(
                     )
                 }.distinctBy { thread ->
                     thread.id
+                }.filterNot { thread ->
+                    thread.id in removedThreadIds
                 }
 
                 _state.update { currentState ->
@@ -259,8 +272,9 @@ class CommunitySearchViewModel @Inject constructor(
                 .mapCatching { page -> page to validatedSearchOffset(page.nextOffset, offset) }
                 .onSuccess { (page, nextOffset) ->
                     if (generation != searchGeneration) return@onSuccess
-                    val incoming = page.pinnedThreads.map { it.toSearchUiModel(true) } +
-                        page.threads.map { it.toSearchUiModel(false) }
+                    val incoming = (page.pinnedThreads.map { it.toSearchUiModel(true) } +
+                        page.threads.map { it.toSearchUiModel(false) })
+                        .filterNot { row -> row.id in removedThreadIds }
                     _state.update {
                         it.copy(
                             searchResults = (it.searchResults + incoming).distinctBy { row -> row.id }.toImmutableList(),
@@ -284,6 +298,24 @@ class CommunitySearchViewModel @Inject constructor(
                     currentState.recentSearches.filterNot {
                         it == query
                     }.toImmutableList(),
+            )
+        }
+    }
+
+    /**
+     * 검색 결과에서 스레드를 제거합니다. (강퇴 확인 후 목록에서 제외되는 스레드)
+     *
+     * 이후 도착하는 검색·추가 로드 응답에서도 다시 나타나지 않도록 ID를 기억해 둡니다.
+     */
+    fun removeThread(
+        threadId: String,
+    ) {
+        removedThreadIds += threadId
+        _state.update {
+            it.copy(
+                searchResults = it.searchResults
+                    .filterNot { thread -> thread.id == threadId }
+                    .toImmutableList(),
             )
         }
     }
@@ -355,6 +387,7 @@ private fun CommunityThread.toSearchUiModel(
         isMine = myRole == CommunityThreadRole.OWNER,
         canEdit = myRole.canEditThread(),
         isJoined = isJoined,
+        isKicked = isKicked,
     )
 }
 
