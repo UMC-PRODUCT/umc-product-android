@@ -656,22 +656,8 @@ private fun CommunityMemberProfile(profileImage: String) {
     CommunityChatProfileImage(profileImage, useThreadStyle = true)
 }
 
-/**
- * 챌린저 이름/닉네임과 기수 정보를 화면 표시용 문자열로 변환합니다.
- */
-private fun buildMemberTitle(
-    member: CommunityChallengerUiModel,
-): String {
-    return buildString {
-        append(member.displayName)
-
-        if (member.generation > 0) {
-            append("(")
-            append(member.generation)
-            append("기)")
-        }
-    }
-}
+/** 이름/닉네임을 표시하며 기수는 이름 뒤에 붙이지 않는다. */
+private fun buildMemberTitle(member: CommunityChallengerUiModel): String = member.displayName
 
 /**
  * Preview용 시트 틀입니다.
