@@ -73,6 +73,26 @@ private fun NavHostController.notifyNoticeListRefresh() {
         ?.set(NOTICE_REFRESH_KEY, true)
 }
 
+/**
+ * 로그아웃·세션 만료·가입 실패로 인증 흐름(스플래시·로그인)으로 돌아간다.
+ *
+ * 하단 탭은 popUpTo(Home) { saveState = true }로 화면을 ViewModel째 보관하는데, popUpTo(0)은 현재 스택만
+ * 비우고 이 보관분은 남긴다. 남겨 두면 이전 계정의 ViewModel(예: 공지 목록)이 토큰 없이 요청을 반복해
+ * 로그인 화면이 계속 처음으로 되돌아가고, 다음 계정이 그 탭을 열면 이전 계정의 화면이 복원된다.
+ * 그래서 이동 전에 보관된 스택을 모두 지운다. 남은 항목이 있어도 뒤이은 popUpTo(0)이 함께 걷어낸다
+ */
+private fun NavHostController.navigateToAuth(destination: MainDestination) {
+    val (home, others) = graph.partition { it.hasRoute<MainDestination.Home>() }
+    others.forEach { clearBackStack(it.id) }
+    // Home은 popUpTo 대상이라, 첫 항목이 이미 다른 스택에 묶여 있으면 보관 스택이 Home에만 매핑된다.
+    // Home을 지우면 현재 스택의 Home까지 함께 꺼내므로 반드시 마지막에, navigate 전에 지운다
+    home.forEach { clearBackStack(it.id) }
+    navigate(destination) {
+        popUpTo(0) { inclusive = true }
+        launchSingleTop = true
+    }
+}
+
 @Composable
 fun MainNavHost(
     navHostController: NavHostController,
@@ -88,10 +108,7 @@ fun MainNavHost(
         if (navHostController.currentDestination?.hasRoute<MainDestination.Login>() == true) {
             return@CollectUiEvents
         }
-        navHostController.navigate(MainDestination.Login) {
-            popUpTo(0) { inclusive = true }
-            launchSingleTop = true
-        }
+        navHostController.navigateToAuth(MainDestination.Login)
     }
 
     NavHost(
@@ -248,9 +265,7 @@ fun MainNavHost(
             SignUpFailRoute(
                 navigateToCode = { navHostController.navigate(MainDestination.SignUpFailCode) },
                 navigateToLogin = {
-                    navHostController.navigate(MainDestination.Login) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    navHostController.navigateToAuth(MainDestination.Login)
                 },
             )
         }
@@ -264,9 +279,7 @@ fun MainNavHost(
                     }
                 },
                 navigateToLogin = {
-                    navHostController.navigate(MainDestination.Login) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    navHostController.navigateToAuth(MainDestination.Login)
                 },
             )
         }
@@ -585,9 +598,8 @@ fun MainNavHost(
                     navHostController.navigate(MainDestination.MyContent(showType = type))
                 },
                 onNavigateToLogin = {
-                    navHostController.navigate(MainDestination.Splash) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    // 로그아웃·회원탈퇴 모두 이 경로로 온다
+                    navHostController.navigateToAuth(MainDestination.Splash)
                 },
                 onNavigateToQrCode = {
                     navHostController.navigate(MainDestination.Qrcode)

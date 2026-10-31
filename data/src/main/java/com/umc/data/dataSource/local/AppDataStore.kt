@@ -95,7 +95,9 @@ class AppDataStore @Inject constructor(
             currentGisuMemberInfo = currentGisuData,
             isSuperAdmin = prefs[KEY_IS_SUPER_ADMIN] ?: false
         )
-    }
+    // store.data는 사용자 정보와 무관한 값(토큰, 읽은 공지, 검색 기록 등)이 바뀌어도 방출한다.
+    // 같은 사용자 정보를 다시 내보내면 이를 구독해 목록을 다시 불러오는 화면이 매번 재조회한다
+    }.distinctUntilChanged()
 
     // 유저 정보를 저장 (User Class 이용)
     suspend fun saveUserInfo(userInfo: UserInfo, expected: CardSession? = null) {
