@@ -33,6 +33,9 @@ import javax.inject.Inject
 // 서버가 이미 사용된 챌린저 기록 추가 코드에 내려주는 에러 코드
 internal const val CODE_ALREADY_USED = "CHALLENGER-0012"
 
+// UMC 카카오톡 문의 채널 (설정의 문의하기, 활동 이력의 사용된 코드 안내에서 함께 쓴다)
+internal const val UMC_KAKAO_CHANNEL_ID = "_MDxhqX"
+
 @HiltViewModel
 class MypageViewModel @Inject constructor(
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
@@ -428,7 +431,7 @@ data class MypageUiState(
     // UMC 외부 링크
     val websiteUMC : String = "https://umc.it.kr",
     val instagramUMC : String = "https://www.instagram.com/uni_makeus_challenge/",
-    val kakaoInquireChannelId : String = "_MDxhqX", //카카오 문의 채널
+    val kakaoInquireChannelId : String = UMC_KAKAO_CHANNEL_ID, //카카오 문의 채널
 
     //구글 토큰
     val googleToken : String = "",

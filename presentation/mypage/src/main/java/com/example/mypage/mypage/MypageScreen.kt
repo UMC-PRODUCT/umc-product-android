@@ -460,7 +460,7 @@ private fun openPermissionPage(context: Context) {
 /**
  * 카카오톡 앱 채널 채팅창을 호출하거나 웹 링크로 라우팅하는 메서드
  */
-private fun openKakaoChannel(context: Context, channelId: String){
+internal fun openKakaoChannel(context: Context, channelId: String){
 
     if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
         // 카카오톡이 설치되어 있다면 앱 내 채널 채팅창으로 이동
@@ -529,19 +529,20 @@ fun MypageScreen(
         ) {
 
 
-            item {
-                //내 활동 섹션 - 운영진에게 받은 6자리 코드로 기수 활동 기록을 계정에 붙인다
-                MypageSectionTitle(
-                    text = AppStrings.MYPAGE_MYACTIVITY
-                )
-                MypageListCard {
-                    MypageListItem(
-                        R.drawable.ic_plus_circle,
-                        AppStrings.MYPAGE_ADDACTIVITY,
-                        onClick = onAddActivityClick
-                    )
-                }
-            }
+            // 챌린저 기록 추가는 마이페이지 > 활동 이력 화면으로 옮겼다 (설정 시안에는 내 활동 섹션이 없다)
+            // item {
+            //     //내 활동 섹션 - 운영진에게 받은 6자리 코드로 기수 활동 기록을 계정에 붙인다
+            //     MypageSectionTitle(
+            //         text = AppStrings.MYPAGE_MYACTIVITY
+            //     )
+            //     MypageListCard {
+            //         MypageListItem(
+            //             R.drawable.ic_plus_circle,
+            //             AppStrings.MYPAGE_ADDACTIVITY,
+            //             onClick = onAddActivityClick
+            //         )
+            //     }
+            // }
 
             item {
                 //외부 링크 5종 섹션 (외부 앱·웹으로 나가는 행은 오른쪽에 외부 이동 화살표)

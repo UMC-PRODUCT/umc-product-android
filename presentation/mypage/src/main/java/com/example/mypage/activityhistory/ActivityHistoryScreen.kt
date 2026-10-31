@@ -35,8 +35,15 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.example.mypage.dialog.AddCodeDialog
+import com.example.mypage.mypage.UMC_KAKAO_CHANNEL_ID
+import com.example.mypage.mypage.openKakaoChannel
 import com.umc.component.R
+import com.umc.component.base.CollectUiEvents
 import com.umc.component.component.UButton
+import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey50
@@ -45,6 +52,8 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.black
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey800
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
@@ -66,12 +75,51 @@ fun ActivityHistoryRoute(
     onNavigateToBack: () -> Unit, //뒤로가기
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is ActivityHistoryEvent.RecordAdded ->
+                Toast.makeText(context, AppStrings.ACTIVITY_HISTORY_RECORD_ADDED, Toast.LENGTH_SHORT).show()
+            is ActivityHistoryEvent.ShowToast ->
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     ActivityHistoryScreen(
         uiState = uiState,
         onBackClick = onNavigateToBack,
         onRetryClick = viewModel::onClickRetry,
+        onAddRecordClick = viewModel::onClickAddRecord,
     )
+
+    //챌린저 기록 추가 - 6자리 코드 입력
+    if (uiState.isAddCodeSheetOpen) {
+        AddCodeDialog(
+            code = uiState.code,
+            onCodeChanged = viewModel::onCodeChanged,
+            onConfirmClick = viewModel::addChallengerCode,
+            isSubmitting = uiState.isAddingCode,
+            onDismissRequest = viewModel::onDismissAddCode
+        )
+    }
+
+    //이미 사용된 코드 안내 (문의하기 = UMC 카카오톡 채널)
+    if (uiState.isUsedCodeDialogOpen) {
+        UDialog(
+            title = AppStrings.MYPAGE_ADDCODE_USED_TITLE,
+            content = AppStrings.MYPAGE_ADDCODE_USED_CONTENT,
+            isTwoButton = true,
+            positiveText = AppStrings.MYPAGE_ADDCODE_INQUIRE,
+            negativeText = AppStrings.CONFIRM,
+            positiveTextColor = grey800(),
+            onPositive = {
+                viewModel.onDismissUsedCodeDialog()
+                openKakaoChannel(context, UMC_KAKAO_CHANNEL_ID)
+            },
+            onDismissRequest = viewModel::onDismissUsedCodeDialog
+        )
+    }
 }
 
 @Composable
@@ -79,6 +127,7 @@ fun ActivityHistoryScreen(
     uiState: ActivityHistoryUiState,
     onBackClick: () -> Unit,
     onRetryClick: () -> Unit,
+    onAddRecordClick: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -107,7 +156,52 @@ fun ActivityHistoryScreen(
                     histories = uiState.histories,
                     isLoading = uiState.isLoading
                 )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                AddRecordButton(onClick = onAddRecordClick)
             }
+        }
+    }
+}
+
+/**
+ * 운영진에게 받은 6자리 코드로 챌린저 기록을 추가하는 행 (설정 > 내 활동에서 옮겨 왔다)
+ */
+@Composable
+private fun AddRecordButton(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, grey200()),
+        colors = CardDefaults.cardColors(containerColor = white())
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_plus_circle),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = grey800()
+            )
+            UText(
+                text = AppStrings.MYPAGE_ADDACTIVITY,
+                style = UmcTypographyTokens.Body,
+                color = grey800(),
+                modifier = Modifier
+                    .padding(start = 12.dp)
+                    .weight(1f)
+            )
+            Icon(
+                painter = painterResource(id = R.drawable.ic_arrow_next),
+                contentDescription = null,
+                tint = grey400()
+            )
         }
     }
 }
@@ -170,7 +264,7 @@ fun ActiveHistorySection(
         ) {
             Column(
                 modifier = Modifier
-                    .padding(vertical = 16.dp)
+                    .padding(vertical = 13.dp)
             ) {
                 when {
                     histories.isNotEmpty() -> histories.forEach { history ->
