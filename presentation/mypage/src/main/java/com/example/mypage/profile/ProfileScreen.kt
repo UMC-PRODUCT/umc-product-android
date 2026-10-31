@@ -68,6 +68,7 @@ import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UploadFileCategory
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
@@ -129,12 +130,8 @@ fun ProfileRoute(
 
     ProfileScreen(
         uiState = uiState,
-        githubText = uiState.githubLink,
-        onGithubChange = { viewModel.updateGithubLink(it) },
-        linkedinText = uiState.linkedinLink,
-        onLinkedinChange = { viewModel.updateLinkedinLink(it) },
-        blogText = uiState.blogLink,
-        onBlogChange = { viewModel.updateBlogLink(it) },
+        onLinkChange = viewModel::updateLink,
+        onToggleLinkVisibility = viewModel::toggleLinkVisibility,
         onBackPressed = viewModel::onClickBackPressed,
         onCompleteClick = viewModel::onClickComplete,
         onProfileImageClick = viewModel::onClickProfileImage,
@@ -149,12 +146,8 @@ fun ProfileRoute(
 @Composable
 fun ProfileScreen(
     uiState: ProfileUiState,
-    githubText: String,
-    onGithubChange: (String) -> Unit,
-    linkedinText: String,
-    onLinkedinChange: (String) -> Unit,
-    blogText: String,
-    onBlogChange: (String) -> Unit,
+    onLinkChange: (ProfileLinkField, String) -> Unit,
+    onToggleLinkVisibility: (ProfileLinkField) -> Unit,
     onBackPressed: () -> Unit,
     onCompleteClick: () -> Unit,
     onProfileImageClick: () -> Unit,
@@ -223,13 +216,24 @@ fun ProfileScreen(
                     )
                 }
 
-                // 대외 링크 입력 (UTextField 적용)
+                // 이메일·대외 링크 입력 (항목마다 오른쪽 위에서 공개·비공개를 고른다)
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                        LinkInputSection("GitHub URL", githubText, onGithubChange)
-                        LinkInputSection("LinkedIn URL", linkedinText, onLinkedinChange)
-                        LinkInputSection("블로그 URL", blogText, onBlogChange)
+                        ProfileLinkField.entries.forEach { field ->
+                            LinkInputSection(
+                                field = field,
+                                value = uiState.linkOf(field),
+                                isPublic = field !in uiState.privateLinkFields,
+                                onValueChange = { onLinkChange(field, it) },
+                                onToggleVisibility = { onToggleLinkVisibility(field) }
+                            )
+                        }
                     }
+                }
+
+                // 공개 범위 안내
+                item {
+                    LinkVisibilityGuide()
                 }
             }
 
@@ -389,24 +393,90 @@ fun ProfileInfoSection(title: String, content: String, platforms: ImmutableList<
 }
 
 /**
- * 외부 링크 수정을 위한 UTextField 입력 컴포저블
+ * 링크 항목 하나: 제목 + 공개·비공개 선택 버튼 + 입력 칸
  */
 @Composable
-fun LinkInputSection(title: String, value: String, onValueChange: (String) -> Unit) {
+fun LinkInputSection(
+    field: ProfileLinkField,
+    value: String,
+    isPublic: Boolean,
+    onValueChange: (String) -> Unit,
+    onToggleVisibility: () -> Unit,
+) {
     Column {
-        UText(
-            text = title,
-            style = UmcTypographyTokens.HeadlineBold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            UText(
+                text = field.title,
+                style = UmcTypographyTokens.HeadlineBold,
+                modifier = Modifier.weight(1f)
+            )
+            LinkVisibilityChip(
+                isPublic = isPublic,
+                onClick = onToggleVisibility
+            )
+        }
         UTextField(
             value = value,
             onValueChange = onValueChange,
-            placeholder = "http://-",
+            placeholder = field.placeholder,
+            enabled = field.editable,
             modifier = Modifier
                 .padding(top = 8.dp)
                 .fillMaxWidth()
         )
     }
+}
+
+/**
+ * 링크 항목의 공개(열린 자물쇠)·비공개(잠긴 자물쇠) 선택 버튼
+ */
+@Composable
+private fun LinkVisibilityChip(
+    isPublic: Boolean,
+    onClick: () -> Unit,
+) {
+    val label = if (isPublic) AppStrings.PROFILE_LINK_PUBLIC else AppStrings.PROFILE_LINK_PRIVATE
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(grey50())
+            .border(1.dp, grey200(), RoundedCornerShape(6.dp))
+            .clickable(onClickLabel = AppStrings.PROFILE_LINK_VISIBILITY_CHANGE) { onClick() }
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = if (isPublic) R.drawable.ic_unlocked else R.drawable.ic_locked),
+            contentDescription = null,
+            tint = grey600(),
+            modifier = Modifier.size(16.dp)
+        )
+        UText(
+            text = label,
+            style = UmcTypographyTokens.Caption1,
+            color = grey600()
+        )
+    }
+}
+
+/**
+ * 링크 공개 범위 안내 박스
+ */
+@Composable
+private fun LinkVisibilityGuide() {
+    UText(
+        text = AppStrings.PROFILE_LINK_VISIBILITY_GUIDE,
+        style = UmcTypographyTokens.Footnote,
+        color = grey600(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(grey50(), RoundedCornerShape(8.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    )
 }
 
 /**
@@ -449,20 +519,18 @@ private fun ProfileLoadError(isLoading: Boolean, onRetryClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Preview(showBackground = true, widthDp = 360, heightDp = 1400)
 @Composable
 private fun ProfileScreenPreview() {
     UmcTheme {
         ProfileScreen(
             uiState = ProfileUiState(
                 linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.APPLE),
+                githubLink = "https://github.com/umc",
+                privateLinkFields = persistentSetOf(ProfileLinkField.GITHUB, ProfileLinkField.LINKEDIN, ProfileLinkField.PERSONAL),
             ),
-            githubText = "https://github.com/umc",
-            onGithubChange = {},
-            linkedinText = "",
-            onLinkedinChange = {},
-            blogText = "",
-            onBlogChange = {},
+            onLinkChange = { _, _ -> },
+            onToggleLinkVisibility = {},
             onBackPressed = {},
             onCompleteClick = {},
             onProfileImageClick = {},
@@ -477,12 +545,8 @@ private fun ProfileScreenLoadFailedPreview() {
     UmcTheme {
         ProfileScreen(
             uiState = ProfileUiState(isProfileLoadFailed = true),
-            githubText = "",
-            onGithubChange = {},
-            linkedinText = "",
-            onLinkedinChange = {},
-            blogText = "",
-            onBlogChange = {},
+            onLinkChange = { _, _ -> },
+            onToggleLinkVisibility = {},
             onBackPressed = {},
             onCompleteClick = {},
             onProfileImageClick = {},

@@ -23,8 +23,11 @@ import com.umc.domain.usecase.member.UpdateMyProfileUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -78,6 +81,8 @@ class ProfileViewModel @Inject constructor(
                             githubLink = userInfo.profile.github,
                             linkedinLink = userInfo.profile.linkedIn,
                             blogLink = userInfo.profile.blog,
+                            instagramLink = userInfo.profile.instagram,
+                            personalLink = userInfo.profile.personal,
                             isProfileLoadFailed = false
                         )
                     }
@@ -150,13 +155,20 @@ class ProfileViewModel @Inject constructor(
 
         //바뀐 칸만 URL 형식 검사 (예전에 저장된 값 때문에 완료가 막히지 않도록)
         val profile = state.userInfo.profile
-        val github = state.githubLink.trim()
-        val linkedin = state.linkedinLink.trim()
-        val blog = state.blogLink.trim()
+        val links = ProfileInfo(
+            id = profile.id,
+            linkedIn = state.linkedinLink.trim(),
+            instagram = state.instagramLink.trim(),
+            github = state.githubLink.trim(),
+            blog = state.blogLink.trim(),
+            personal = state.personalLink.trim(),
+        )
         val hasInvalidLink = listOf(
-            github to profile.github,
-            linkedin to profile.linkedIn,
-            blog to profile.blog
+            links.github to profile.github,
+            links.linkedIn to profile.linkedIn,
+            links.blog to profile.blog,
+            links.instagram to profile.instagram,
+            links.personal to profile.personal
         ).any { (now, saved) -> now != saved && now.isNotBlank() && !now.isValidWebUrl() }
         if (hasInvalidLink) {
             emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_LINK_INVALID))
@@ -164,7 +176,8 @@ class ProfileViewModel @Inject constructor(
         }
 
         updateState { copy(isSaving = true) }
-        saveUserOutLink(github, linkedin, blog, state.userInfo.profile, state.userProfileImageUri)
+        // TODO 서버에 링크별 공개 범위 API가 생기면 privateLinkFields 도 함께 저장한다 (지금은 화면에서만 바뀐다)
+        saveUserOutLink(links, state.userProfileImageUri)
     }
 
     /**
@@ -172,20 +185,16 @@ class ProfileViewModel @Inject constructor(
      * 성공하면 선택된 프로필 이미지가 있을 때 이미지 업로드로 이어가고, 없으면 화면을 닫는다.
      */
     private fun saveUserOutLink(
-        github: String,
-        linkedin: String,
-        blog: String,
-        savedProfile: ProfileInfo,
+        links: ProfileInfo,
         imageUri: Uri
     ) {
-        // 화면에서 수정하지 않는 Instagram/개인 링크는 서버 저장값을 그대로 보내 덮어쓰기를 막는다
         val request = UpdateLinkRequest(
             links = listOf(
-                LinkItem(LinkType.GITHUB.label, github),
-                LinkItem(LinkType.LINKEDIN.label, linkedin),
-                LinkItem(LinkType.BLOG.label, blog),
-                LinkItem(LinkType.PERSONAL.label, savedProfile.personal),
-                LinkItem(LinkType.INSTAGRAM.label, savedProfile.instagram)
+                LinkItem(LinkType.GITHUB.label, links.github),
+                LinkItem(LinkType.LINKEDIN.label, links.linkedIn),
+                LinkItem(LinkType.BLOG.label, links.blog),
+                LinkItem(LinkType.PERSONAL.label, links.personal),
+                LinkItem(LinkType.INSTAGRAM.label, links.instagram)
             )
         )
 
@@ -255,19 +264,29 @@ class ProfileViewModel @Inject constructor(
     }
 
 
-    fun updateGithubLink(github: String){
+    /**
+     * 링크 입력값을 항목별로 반영하는 메서드 (이메일은 수정하지 않는다)
+     */
+    fun updateLink(field: ProfileLinkField, value: String) {
         updateState {
-            copy(githubLink = github)
+            when (field) {
+                ProfileLinkField.EMAIL -> this
+                ProfileLinkField.GITHUB -> copy(githubLink = value)
+                ProfileLinkField.LINKEDIN -> copy(linkedinLink = value)
+                ProfileLinkField.BLOG -> copy(blogLink = value)
+                ProfileLinkField.INSTAGRAM -> copy(instagramLink = value)
+                ProfileLinkField.PERSONAL -> copy(personalLink = value)
+            }
         }
     }
-    fun updateLinkedinLink(linkedin: String){
+
+    /**
+     * 항목의 공개·비공개를 전환하는 메서드
+     */
+    fun toggleLinkVisibility(field: ProfileLinkField) {
         updateState {
-            copy(linkedinLink = linkedin)
-        }
-    }
-    fun updateBlogLink(blog: String){
-        updateState {
-            copy(blogLink = blog)
+            val updated = if (field in privateLinkFields) privateLinkFields - field else privateLinkFields + field
+            copy(privateLinkFields = updated.toImmutableSet())
         }
     }
 
@@ -293,6 +312,11 @@ data class ProfileUiState(
     val githubLink: String = "",
     val linkedinLink: String = "",
     val blogLink: String = "",
+    val instagramLink: String = "",
+    val personalLink: String = "",
+
+    // 비공개로 고른 링크 항목 (나머지는 공개). 서버에 공개 범위 API가 없어 아직 저장하지 않는다
+    val privateLinkFields: ImmutableSet<ProfileLinkField> = persistentSetOf(),
 
     // 프로필 조회 실패 여부 (true 면 빈 정보 대신 실패 안내 + 다시 시도 표시)
     val isProfileLoadFailed: Boolean = false,
@@ -300,7 +324,18 @@ data class ProfileUiState(
     // '완료' 저장 진행 중 여부 (중복 탭 방지, 진행 표시)
     val isSaving: Boolean = false,
 
-    ) : UiState
+    ) : UiState {
+
+    /** 항목별 화면 표시값 (이메일은 계정 이메일을 그대로 보여준다) */
+    fun linkOf(field: ProfileLinkField): String = when (field) {
+        ProfileLinkField.EMAIL -> userInfo.email
+        ProfileLinkField.GITHUB -> githubLink
+        ProfileLinkField.LINKEDIN -> linkedinLink
+        ProfileLinkField.BLOG -> blogLink
+        ProfileLinkField.INSTAGRAM -> instagramLink
+        ProfileLinkField.PERSONAL -> personalLink
+    }
+}
 
 sealed interface ProfileEvent : UiEvent {
 
