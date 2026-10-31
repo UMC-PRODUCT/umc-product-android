@@ -26,6 +26,10 @@ data class CommunityThread(
     val isKicked: Boolean
         get() = membershipState == CommunityThreadMembershipState.KICKED
 
+    /** 초대된 적 없는 스레드 (참여 중이 아니고 멤버십 이력도 없음). 목록·검색에 노출하지 않는다. */
+    val isUninvited: Boolean
+        get() = !isJoined && membershipState == null
+
     val isNotificationEnabled: Boolean
         get() = !isMuted
 }

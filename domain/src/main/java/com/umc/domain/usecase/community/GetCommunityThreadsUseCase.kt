@@ -20,6 +20,12 @@ class GetCommunityThreadsUseCase @Inject constructor(
             query = query,
             offset = offset,
             limit = limit,
-        )
+        ).map { page ->
+            // 서버가 초대되지 않은 스레드도 내려주므로 목록·검색에서 걸러낸다. nextOffset 은 서버 기준이라 그대로 둔다.
+            page.copy(
+                pinnedThreads = page.pinnedThreads.filterNot { it.isUninvited },
+                threads = page.threads.filterNot { it.isUninvited },
+            )
+        }
     }
 }

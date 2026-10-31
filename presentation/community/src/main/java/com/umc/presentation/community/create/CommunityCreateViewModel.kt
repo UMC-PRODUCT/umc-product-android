@@ -451,7 +451,7 @@ class CommunityCreateViewModel @Inject constructor(
         if (!currentState.isCompleteEnabled) {
             sendEvent(
                 CommunityCreateEvent.ShowToast(
-                    message = "제목 1~80자·특징 1~500자와 초대 대상을 확인해주세요.",
+                    message = "제목 1~80자·특징 500자 이하와 초대 대상을 확인해주세요.",
                 )
             )
             return
