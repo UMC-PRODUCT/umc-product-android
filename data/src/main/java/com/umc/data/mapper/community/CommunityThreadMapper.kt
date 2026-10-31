@@ -78,32 +78,14 @@ private fun CommunityThreadLastMessageResponse.toDomain(): CommunityThreadLastMe
     )
 }
 
-private fun String.toThreadCategory(): CommunityThreadCategory {
-    return when (uppercase()) {
-        "STUDY" -> CommunityThreadCategory.STUDY
-        "QNA" -> CommunityThreadCategory.QNA
-        "PROJECT" -> CommunityThreadCategory.PROJECT
-        "FREE" -> CommunityThreadCategory.FREE
-        else -> CommunityThreadCategory.UNKNOWN
-    }
-}
+private fun String.toThreadCategory(): CommunityThreadCategory =
+    CommunityThreadCategory.entries.firstOrNull { it.name == uppercase() }
+        ?: CommunityThreadCategory.UNKNOWN
 
 // 참여한 적 없는 스레드(null)나 모르는 값은 상태 없음으로 본다
-private fun String?.toMembershipState(): CommunityThreadMembershipState? {
-    return when (this?.uppercase()) {
-        "ACTIVE" -> CommunityThreadMembershipState.ACTIVE
-        "LEFT" -> CommunityThreadMembershipState.LEFT
-        "KICKED" -> CommunityThreadMembershipState.KICKED
-        "KICKED_ACKNOWLEDGED" -> CommunityThreadMembershipState.KICKED_ACKNOWLEDGED
-        else -> null
-    }
-}
+private fun String?.toMembershipState(): CommunityThreadMembershipState? =
+    CommunityThreadMembershipState.entries.firstOrNull { it.name == this?.uppercase() }
 
-private fun String?.toThreadRole(): CommunityThreadRole {
-    return when (this?.uppercase()) {
-        "OWNER" -> CommunityThreadRole.OWNER
-        "ADMIN" -> CommunityThreadRole.ADMIN
-        "MEMBER" -> CommunityThreadRole.MEMBER
-        else -> CommunityThreadRole.UNKNOWN
-    }
-}
+private fun String?.toThreadRole(): CommunityThreadRole =
+    CommunityThreadRole.entries.firstOrNull { it.name == this?.uppercase() }
+        ?: CommunityThreadRole.UNKNOWN
