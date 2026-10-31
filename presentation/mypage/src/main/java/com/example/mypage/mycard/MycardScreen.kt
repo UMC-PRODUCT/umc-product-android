@@ -683,8 +683,9 @@ private fun CardBackContent(
                 SocialLinkItem(iconRes = R.drawable.ic_github_link, text = profile.github)
                 SocialLinkItem(iconRes = R.drawable.ic_linkedin_link, text = profile.linkedIn)
                 SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = profile.blog)
-                SocialLinkItem(iconRes = R.drawable.ic_open_link, text = profile.instagram)
-                SocialLinkItem(iconRes = R.drawable.ic_go_website, text = profile.personal)
+                // TODO Instagram 아이콘을 받으면 교체 (지금은 기존 링크 아이콘으로 대신 표시)
+                SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = profile.instagram)
+                SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = profile.personal)
             }
         }
 

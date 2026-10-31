@@ -72,6 +72,8 @@ class MypageViewModel @Inject constructor(
                             githubUrl = userInfo.profile.github,
                             linkedinUrl = userInfo.profile.linkedIn,
                             blogUrl = userInfo.profile.blog,
+                            instagramUrl = userInfo.profile.instagram,
+                            personalUrl = userInfo.profile.personal,
                             isProfileLoadFailed = false
                         )
                     }
@@ -116,6 +118,12 @@ class MypageViewModel @Inject constructor(
     }
     fun navigateToBlog(){
         openOutLink(MypageEvent.NavigateToBlog)
+    }
+    fun navigateToInstagramLink(){
+        openOutLink(MypageEvent.NavigateToInstagramLink)
+    }
+    fun navigateToPersonalSite(){
+        openOutLink(MypageEvent.NavigateToPersonalSite)
     }
 
     /**
@@ -414,6 +422,8 @@ data class MypageUiState(
     val githubUrl : String = "",
     val blogUrl : String = "",
     val linkedinUrl : String = "",
+    val instagramUrl : String = "",
+    val personalUrl : String = "",
 
     // UMC 외부 링크
     val websiteUMC : String = "https://umc.it.kr",
@@ -453,6 +463,8 @@ sealed interface MypageEvent : UiEvent {
     object NavigateToGithub : MypageEvent //깃허브 링크
     object NavigateToBlog : MypageEvent //블로그 링크
     object NavigateToLinkedin : MypageEvent //리으드인 링크
+    object NavigateToInstagramLink : MypageEvent //내 인스타그램 링크 (UMC 인스타그램은 NavigateToInstagramUmc)
+    object NavigateToPersonalSite : MypageEvent //개인 사이트 링크
 
     object NavigateToEditProfile : MypageEvent //프로필 수정
 
