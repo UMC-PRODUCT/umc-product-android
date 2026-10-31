@@ -34,7 +34,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main500
 import com.umc.presentation.community.R
@@ -104,7 +104,7 @@ fun CommunityThreadEditorContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(white())
+            .background(grey50())
             .navigationBarsPadding(),
     ) {
         CommunityCreateTopBar(

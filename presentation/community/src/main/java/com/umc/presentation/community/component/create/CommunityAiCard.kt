@@ -35,7 +35,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.green500
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
@@ -327,7 +327,7 @@ private fun CommunityAiResultContent(
             Surface(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(8.dp),
-                color = white(),
+                color = grey50(),
                 shadowElevation = 0.dp,
             ) {
                 Box(
@@ -443,7 +443,7 @@ private fun CommunityAiResultButton(
 
     val textColor = when {
         !enabled -> grey300()
-        else -> white()
+        else -> grey50()
     }
 
     Box(

@@ -60,11 +60,11 @@ import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.black
 import com.umc.component.theme.kakaoColor
-import com.umc.component.theme.white
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.base.CollectUiEvents
@@ -623,7 +623,7 @@ fun MypageScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(54.dp),
-                        backgroundColor = white(),
+                        backgroundColor = grey50(),
                         textColor = red500(),
                         textStyle = UmcTypographyTokens.Body,
                         cornerRadius = 12.dp,
@@ -635,7 +635,7 @@ fun MypageScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(54.dp),
-                        backgroundColor = white(),
+                        backgroundColor = grey50(),
                         textColor = grey800(),
                         textStyle = UmcTypographyTokens.Body,
                         cornerRadius = 12.dp,
@@ -676,7 +676,7 @@ fun MypageTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(white())
+            .background(grey50())
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -729,7 +729,7 @@ fun MypageListCard(content: @Composable ColumnScope.() -> Unit) {
             .fillMaxWidth()
             .padding(top = 16.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = white()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp),
         content = content
     )

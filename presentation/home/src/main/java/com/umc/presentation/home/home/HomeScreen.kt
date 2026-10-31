@@ -62,7 +62,7 @@ import com.umc.component.theme.UmcTypography
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
@@ -74,7 +74,6 @@ import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
-import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main900
@@ -261,7 +260,7 @@ fun HomeScreen(
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                color = if (uiState.viewMode == HomeViewMode.CALENDAR) white() else grey100(),
+                color = if (uiState.viewMode == HomeViewMode.CALENDAR) grey50() else grey100(),
                 shadowElevation = 0.dp
             ) {
                 Column(modifier = Modifier
@@ -407,7 +406,7 @@ fun HomeLoadError(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = white()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
@@ -442,7 +441,7 @@ fun HomeLoadError(
                     .height(42.dp),
                 backgroundColor = main500(),
                 pressedColor = main600(),
-                textColor = white(),
+                textColor = grey50(),
                 textStyle = UmcTypographyTokens.CalloutBold,
                 cornerRadius = 8.dp,
                 contentPadding = PaddingValues(horizontal = 13.dp, vertical = 8.dp)
@@ -486,7 +485,7 @@ fun HomeShareCardsRow(
                 ) {
                     UText(
                         text = if (isTypeA) "오늘 만난 인연,\n명함으로 이어가세요" else "디지털 명함,\n이제 UMC 앱에서",
-                        color = white(),
+                        color = grey50(),
                         style = UmcTypographyTokens.Title3Bold
                     )
 
@@ -494,7 +493,7 @@ fun HomeShareCardsRow(
 
                     UText(
                         text = "디지털 명함으로 간편하게 교환하세요",
-                        color = white(),
+                        color = grey50(),
                         style = UmcTypographyTokens.Footnote
                     )
                 }
@@ -508,7 +507,7 @@ fun HomeShareCardsRow(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(42.dp),
-                    textColor = white(),
+                    textColor = grey50(),
                     backgroundColor = main900(),
                     textStyle = UmcTypographyTokens.CalloutBold,
                     cornerRadius = 8.dp,
@@ -552,7 +551,7 @@ fun HomeProfileCardsRow(
                 .weight(1f)
                 .height(108.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = white())
+            colors = CardDefaults.cardColors(containerColor = grey50())
         ){
             Box(modifier = Modifier.fillMaxSize()) {
 
@@ -618,7 +617,7 @@ fun HomeProfileCardsRow(
                 .weight(1f)
                 .height(108.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = white())
+            colors = CardDefaults.cardColors(containerColor = grey50())
         ){
             Box(modifier = Modifier.fillMaxSize()) {
                 Image(
@@ -763,7 +762,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = white()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
@@ -941,7 +940,7 @@ fun HomePlanHeader(
 
             //뷰 전환 선택기
             Surface(
-                color = white(),
+                color = grey50(),
                 shape = RoundedCornerShape(4.dp)
             ) {
 
@@ -954,7 +953,7 @@ fun HomePlanHeader(
                             .size(32.dp)
                             .clip(RoundedCornerShape(4.dp))
                             .background(
-                                color = if (viewMode == HomeViewMode.CALENDAR) grey800() else white()
+                                color = if (viewMode == HomeViewMode.CALENDAR) grey800() else grey50()
                             )
                             .clickable { onChangeViewMode(HomeViewMode.CALENDAR) },
                         contentAlignment = Alignment.Center
@@ -963,7 +962,7 @@ fun HomePlanHeader(
                             painter = painterResource(id = R.drawable.ic_home_grid_base),
                             contentDescription = "Calendar Mode",
                             modifier = Modifier.size(26.dp),
-                            tint = if (viewMode == HomeViewMode.CALENDAR) white() else grey400()
+                            tint = if (viewMode == HomeViewMode.CALENDAR) grey50() else grey400()
                         )
                     }
                     Spacer(modifier = Modifier
@@ -976,7 +975,7 @@ fun HomePlanHeader(
                             .size(32.dp)
                             .clip(RoundedCornerShape(4.dp))
                             .background(
-                                color = if (viewMode == HomeViewMode.LIST) grey800() else white()
+                                color = if (viewMode == HomeViewMode.LIST) grey800() else grey50()
                             )
                             .clickable { onChangeViewMode(HomeViewMode.LIST) },
                         contentAlignment = Alignment.Center
@@ -985,7 +984,7 @@ fun HomePlanHeader(
                             painter = painterResource(id = R.drawable.ic_home_list_base),
                             contentDescription = "List Mode",
                             modifier = Modifier.size(26.dp),
-                            tint = if (viewMode == HomeViewMode.LIST) white() else grey400()
+                            tint = if (viewMode == HomeViewMode.LIST) grey50() else grey400()
                         )
                     }
                 }

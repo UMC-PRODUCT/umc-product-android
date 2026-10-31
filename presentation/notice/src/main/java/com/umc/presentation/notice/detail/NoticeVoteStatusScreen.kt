@@ -27,7 +27,7 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
@@ -50,7 +50,7 @@ fun NoticeVoteStatusScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(white()),
+            .background(grey50()),
     ) {
         Row(
             modifier = Modifier

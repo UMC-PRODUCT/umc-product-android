@@ -22,7 +22,7 @@ import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
@@ -54,7 +54,7 @@ fun AddCodeDialog(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = white(),
+        containerColor = grey50(),
         dragHandle = {
             BottomSheetDefaults.DragHandle(color = grey600())
         },
@@ -102,7 +102,7 @@ fun AddCodeDialog(
                     .height(52.dp),
                 enabled = !isSubmitting,
                 backgroundColor = if (isSubmitting) grey400() else main500(),
-                textColor = white(),
+                textColor = grey50(),
                 textStyle = UmcTypographyTokens.SubheadlineBold,
                 onClick = onConfirmClick
             )

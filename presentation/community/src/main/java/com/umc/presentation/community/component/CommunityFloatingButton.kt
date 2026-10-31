@@ -18,7 +18,7 @@ import com.umc.presentation.community.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.main500
 
 /**
@@ -53,14 +53,14 @@ fun CommunityFloatingButton(
             Icon(
                 painter = painterResource(id = R.drawable.ic_community_create),
                 contentDescription = null,
-                tint = white(),
+                tint = grey50(),
                 modifier = Modifier.size(24.dp),
             )
 
             UText(
                 text = "새 스레드",
                 style = UmcTypographyTokens.HeadlineBold.copy(letterSpacing = (-0.41).sp),
-                color = white(),
+                color = grey50(),
             )
         }
     }

@@ -23,7 +23,7 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
@@ -46,7 +46,7 @@ fun ScheduleInfoCard(
             .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, grey300()),
-        color = white()
+        color = grey50()
     ) {
         Column(
             modifier = Modifier

@@ -57,7 +57,7 @@ import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.green600
 import com.umc.component.theme.green500
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -143,7 +143,7 @@ fun NoticeDetailRoute(
         ModalBottomSheet(
             onDismissRequest = { showReadStatusSheet = false },
             sheetState = readStatusSheetState,
-            containerColor = white(),
+            containerColor = grey50(),
         ) {
             NoticeReadStatusSheetContent(
                 statistics = uiState.readStatistics,
@@ -174,7 +174,7 @@ fun NoticeDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(white()),
+            .background(grey50()),
     ) {
         // 상단 바: 뒤로가기 + 타이틀 + (작성자 전용) 케밥 메뉴
         Row(
@@ -387,7 +387,7 @@ private fun NoticeDetailMenu(
         DropdownMenu(
             expanded = isMenuVisible,
             onDismissRequest = { isMenuVisible = false },
-            containerColor = white(),
+            containerColor = grey50(),
             shape = RoundedCornerShape(16.dp),
         ) {
             NoticeDetailMenuItem(

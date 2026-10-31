@@ -36,6 +36,7 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -89,7 +90,7 @@ fun CardExchangeBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = white(),
+        containerColor = grey50(),
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
         Column(
@@ -149,7 +150,7 @@ fun CardExchangeBottomSheet(
                             .fillMaxWidth()
                             .height(52.dp),
                         backgroundColor = grey800(),
-                        textColor = white(),
+                        textColor = grey50(),
                         textStyle = UmcTypographyTokens.HeadlineBold,
                         cornerRadius = 12.dp,
                         onClick = onDismissRequest

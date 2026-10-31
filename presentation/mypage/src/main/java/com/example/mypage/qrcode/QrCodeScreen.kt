@@ -58,6 +58,7 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
@@ -161,7 +162,7 @@ fun QrCodeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(white())
+            .background(grey50())
         
     ) {
         
@@ -252,7 +253,7 @@ fun QrCodeScreen(
                             .weight(1f)
                             .height(52.dp),
                         backgroundColor = main500(),
-                        textColor = white(),
+                        textColor = grey50(),
                         textStyle = UmcTypographyTokens.HeadlineBold,
                         cornerRadius = 8.dp,
                         onClick = onShareClick
@@ -287,7 +288,7 @@ fun QrCodeScreenTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(white())
+            .background(grey50())
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -370,7 +371,7 @@ fun MycardProfileCard(
                         UText(
                             text = "${uiState.userInfo.name}/${uiState.userInfo.nickname}",
                             style = UmcTypographyTokens.Title3Bold,
-                            color = white()
+                            color = grey50()
                         )
 
                         Spacer(

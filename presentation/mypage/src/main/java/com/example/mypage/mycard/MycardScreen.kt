@@ -66,6 +66,7 @@ import com.umc.component.component.UText
 import com.umc.component.component.UToast
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey100
@@ -376,7 +377,7 @@ private fun MycardProfileLoadError(
             .padding(horizontal = 16.dp)
             .padding(top = 16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = white()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
@@ -431,7 +432,7 @@ fun MycardTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(white())
+            .background(grey50())
         .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -570,7 +571,7 @@ private fun CardFrontContent(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_logo_umc),
                         contentDescription = "UMC Logo",
-                        tint = white()
+                        tint = grey50()
                     )
 
                     Spacer(
@@ -579,7 +580,7 @@ private fun CardFrontContent(
                     UText(
                         text = AppStrings.MYCARD_INTRODUCE,
                         style = UmcTypographyTokens.Caption2,
-                        color = white()
+                        color = grey50()
                     )
                 }
 
@@ -595,7 +596,7 @@ private fun CardFrontContent(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_flip),
                         contentDescription = "flip",
-                        tint = white(),
+                        tint = grey50(),
                         modifier = Modifier
                             .padding(6.dp)
                     )
@@ -627,7 +628,7 @@ private fun CardFrontContent(
                     UText(
                         text = "${uiState.userInfo.name}/${uiState.userInfo.nickname}",
                         style = UmcTypographyTokens.Title3Bold,
-                        color = white()
+                        color = grey50()
                     )
 
                     Spacer(
@@ -690,7 +691,7 @@ private fun CardBackContent(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_logo_umc),
                     contentDescription = "UMC Logo",
-                    tint = white()
+                    tint = grey50()
                 )
 
                 Spacer(
@@ -699,7 +700,7 @@ private fun CardBackContent(
                 UText(
                     text = AppStrings.MYCARD_INTRODUCE,
                     style = UmcTypographyTokens.Caption2,
-                    color = white()
+                    color = grey50()
                 )
             }
 
@@ -714,7 +715,7 @@ private fun CardBackContent(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_flip),
                     contentDescription = "flip",
-                    tint = white(),
+                    tint = grey50(),
                     modifier = Modifier
                         .padding(6.dp)
                 )
@@ -793,7 +794,7 @@ private fun CardBottomButtons(
             modifier = Modifier
                 .weight(1f)
                 .height(42.dp),
-            backgroundColor = white(),
+            backgroundColor = grey50(),
             textColor = main500(),
             textStyle = UmcTypographyTokens.CalloutBold,
             cornerRadius = 8.dp,
@@ -808,7 +809,7 @@ private fun CardBottomButtons(
             modifier = Modifier
                 .weight(1f)
                 .height(42.dp),
-            backgroundColor = white(),
+            backgroundColor = grey50(),
             textColor = main500(),
             textStyle = UmcTypographyTokens.CalloutBold,
             cornerRadius = 8.dp,
@@ -836,7 +837,7 @@ private fun SocialLinkItem(
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            tint = white(),
+            tint = grey50(),
             modifier = Modifier.size(16.dp)
         )
 
@@ -850,7 +851,7 @@ private fun SocialLinkItem(
             maxLines = 1,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             style = UmcTypographyTokens.Footnote,
-            color = white()
+            color = grey50()
         )
     }
 }
@@ -881,7 +882,7 @@ fun MycardListCard(content: @Composable ColumnScope.() -> Unit) {
             .padding(top = 16.dp)
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = white()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp),
         content = content
     )

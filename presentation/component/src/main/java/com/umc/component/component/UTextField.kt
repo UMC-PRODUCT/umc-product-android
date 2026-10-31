@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey800
@@ -57,7 +57,7 @@ import com.umc.component.theme.main500
  * @param placeholderColor 힌트 텍스트 색상. 기본값 grey400
  * @param textColor 입력 텍스트 색상. 기본값 grey800
  * @param textStyle 입력 텍스트 스타일. 기본값 Callout
- * @param backgroundColor 배경색. 기본값 white (라이트 흰색, 다크 검정)
+ * @param backgroundColor 배경색. 기본값 grey50
  * @param focusBackgroundColor 포커스 상태의 배경색. 기본값은 backgroundColor와 동일
  * @param strokeColor 비포커스 상태의 테두리 색상. 기본값 grey300
  * @param focusStrokeColor 포커스 상태의 테두리 색상 및 커서 색상. 기본값 main500
@@ -87,7 +87,7 @@ fun UTextField(
     placeholderColor: Color = grey400(),
     textColor: Color = grey800(),
     textStyle: TextStyle = UmcTypographyTokens.Callout,
-    backgroundColor: Color = white(),
+    backgroundColor: Color = grey50(),
     strokeColor: Color = grey300(),
     focusStrokeColor: Color = main500(),
     cornerRadius: Dp = 8.dp,

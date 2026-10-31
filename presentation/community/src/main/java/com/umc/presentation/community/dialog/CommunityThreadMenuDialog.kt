@@ -18,7 +18,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey800
 import androidx.compose.ui.tooling.preview.Preview
 import com.umc.component.theme.UmcTheme
@@ -80,7 +80,7 @@ private fun CommunityThreadMenuContent(
             .padding(horizontal = 24.dp)
             .widthIn(max = 370.dp),
         shape = RoundedCornerShape(12.dp),
-        color = white(),
+        color = grey50(),
         shadowElevation = 12.dp,
     ) {
         Column(

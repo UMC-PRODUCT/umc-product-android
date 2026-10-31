@@ -24,7 +24,7 @@ fun AdminStudyGroupMemberChip(
 ) {
     Row(
         modifier = Modifier
-            .background(white(), CircleShape)
+            .background(grey50(), CircleShape)
             .border(
                 1.dp,
                 grey200(),

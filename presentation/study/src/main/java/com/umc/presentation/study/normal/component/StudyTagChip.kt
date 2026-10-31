@@ -22,7 +22,7 @@ fun StudyTagChip(
 ) {
     Surface(
         shape = RoundedCornerShape(6.dp),
-        color = white(),
+        color = grey50(),
         modifier = modifier.border(1.dp, grey200(), RoundedCornerShape(6.dp))
     ) {
         UText(

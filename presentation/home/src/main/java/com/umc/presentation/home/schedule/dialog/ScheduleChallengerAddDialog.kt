@@ -53,7 +53,7 @@ import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.component.R
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
@@ -144,7 +144,7 @@ fun ScheduleChallengerAddBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = white(),
+        containerColor = grey50(),
         dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
 
@@ -271,7 +271,7 @@ fun ChallengerHeader(
         UButton(
             text = AppStrings.CONFIRM,
             backgroundColor = main500(),
-            textColor = white(),
+            textColor = grey50(),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
             textStyle = UmcTypographyTokens.Caption1Bold,
             cornerRadius = 4.dp,

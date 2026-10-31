@@ -41,7 +41,7 @@ fun GroupScheduleAttendanceBox(
                 grey300(),
                 RoundedCornerShape(12.dp)
             )
-            .background(white()),
+            .background(grey50()),
     ) {
         AttendanceRow(
             title = "체크인 시작",

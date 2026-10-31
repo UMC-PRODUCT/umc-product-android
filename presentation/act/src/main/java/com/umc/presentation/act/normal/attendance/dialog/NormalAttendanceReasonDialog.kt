@@ -36,7 +36,7 @@ import com.umc.component.theme.UmcTypographyTokens.BodyBold
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
@@ -88,7 +88,7 @@ private fun AttendanceReasonDialogContent(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(white())
+            .background(grey50())
             .padding(16.dp),
     ) {
         Box(
@@ -135,7 +135,7 @@ private fun AttendanceReasonDialogContent(
             placeholderColor = grey400(),
             textColor = grey800(),
             textStyle = Body,
-            backgroundColor = white(),
+            backgroundColor = grey50(),
             strokeColor = grey300(),
             focusStrokeColor = grey300(),
             interactionSource = reasonInteractionSource
@@ -170,7 +170,7 @@ private fun AttendanceReasonDialogContent(
                 modifier = Modifier
                     .weight(1f),
                 backgroundColor = grey800(),
-                textColor = white(),
+                textColor = grey50(),
                 textStyle = CalloutBold,
                 cornerRadius = 8.dp,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 13.dp)

@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
@@ -106,7 +106,7 @@ fun StudyItemRow(
         Surface(
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(8.dp),
-            color = white(),
+            color = grey50(),
             tonalElevation = 0.dp,
             shadowElevation = 0.dp,
         ) {

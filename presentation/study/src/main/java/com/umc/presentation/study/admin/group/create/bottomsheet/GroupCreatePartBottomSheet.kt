@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.main500
@@ -44,7 +44,7 @@ fun GroupCreatePartBottomSheet(
         sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
         ),
-        containerColor = white(),
+        containerColor = grey50(),
         dragHandle = {
             BottomSheetDefaults.DragHandle(
                 color = grey600(),

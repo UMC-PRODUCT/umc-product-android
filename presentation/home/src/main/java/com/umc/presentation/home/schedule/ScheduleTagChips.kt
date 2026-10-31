@@ -19,7 +19,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey700
 import com.umc.domain.model.enums.CategoryType
@@ -36,7 +36,7 @@ fun ScheduleTagChip(
         modifier = modifier
             .heightIn(min = 24.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(white())
+            .background(grey50())
             .border(1.dp, grey200(), RoundedCornerShape(8.dp))
             .padding(horizontal = 8.dp, vertical = 2.dp),
         contentAlignment = Alignment.Center

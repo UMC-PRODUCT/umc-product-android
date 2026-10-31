@@ -45,6 +45,7 @@ import com.umc.component.component.UToastData
 import com.umc.component.component.UToastHost
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
@@ -56,7 +57,6 @@ import com.umc.component.theme.main100
 import com.umc.component.theme.main500
 import com.umc.component.theme.main600
 import com.umc.component.theme.main700
-import com.umc.component.theme.white
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
@@ -147,7 +147,7 @@ fun PermissionScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(white())
+            .background(grey50())
     ) {
         Column(
             modifier = Modifier
@@ -188,7 +188,7 @@ fun PermissionScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(white())
+                    .background(grey50())
                     .border(
                         width = 1.dp,
                         color = if (isAllChecked) main500() else grey300(),
@@ -258,7 +258,7 @@ fun PermissionScreen(
             enabled = uiState.isAlarmCheck,
             backgroundColor = if (uiState.isAlarmCheck) main500() else grey100(),
             pressedColor = main700(),
-            textColor = if (uiState.isAlarmCheck) white() else grey300(),
+            textColor = if (uiState.isAlarmCheck) grey50() else grey300(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             modifier = Modifier
                 .fillMaxWidth()

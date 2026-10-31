@@ -52,7 +52,7 @@ fun StudyTimelineColumn(
                 UText(
                     text = week.toString(),
                     style = UmcTypographyTokens.Caption1Bold,
-                    color = white(),
+                    color = grey50(),
                     textAlign = TextAlign.Center
                 )
             }

@@ -59,7 +59,7 @@ fun GroupCreateSelectRow(
                     onClick()
                 },
             shape = RoundedCornerShape(8.dp),
-            color = white(),
+            color = grey50(),
             border = BorderStroke(
                 width = 1.dp,
                 color = grey200()

@@ -29,7 +29,7 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -143,7 +143,7 @@ fun NoticeDetailVoteSection(
                 UText(
                     text = if (hasVoted) AppStrings.NOTICE_DETAIL_REVOTE else AppStrings.NOTICE_DETAIL_VOTE,
                     style = UmcTypographyTokens.HeadlineBold,
-                    color = if (enabled) white() else grey400(),
+                    color = if (enabled) grey50() else grey400(),
                 )
             }
         }
@@ -187,11 +187,11 @@ private fun VoteStatusBadge(status: NoticeVoteStatus) {
         )
 
         NoticeVoteStatus.CLOSED -> VoteBadgeStyle(
-            AppStrings.NOTICE_DETAIL_VOTE_BADGE_CLOSED, white(), grey200(), grey600(),
+            AppStrings.NOTICE_DETAIL_VOTE_BADGE_CLOSED, grey50(), grey200(), grey600(),
         )
 
         NoticeVoteStatus.NOT_STARTED -> VoteBadgeStyle(
-            AppStrings.NOTICE_DETAIL_VOTE_BADGE_NOT_STARTED, white(), grey200(), grey600(),
+            AppStrings.NOTICE_DETAIL_VOTE_BADGE_NOT_STARTED, grey50(), grey200(), grey600(),
         )
     }
 
@@ -253,7 +253,7 @@ private fun VoteOptionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(white())
+            .background(grey50())
             .border(
                 width = 1.dp,
                 color = if (highlight) main400() else grey300(),

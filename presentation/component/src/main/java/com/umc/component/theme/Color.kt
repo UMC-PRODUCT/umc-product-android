@@ -61,7 +61,7 @@ internal val lightGeofenceFill = Color(0x0D51A2FF)
 internal val lightGeofenceStroke = Color(0x4D51A2FF)
 
 // Dark palette (values-night/colors.xml)
-// white·black은 다크 모드에서 서로 뒤바뀐다 (white = 화면 바탕색, black = 그 위의 기본 전경색)
+// white·black은 다크 모드에서 서로 뒤바뀐다 (white는 다크에서 검정, black은 다크에서 흰색)
 internal val darkBlack = Color(0xFFFFFFFF)
 internal val darkWhite = Color(0xFF000000)
 internal val darkMain100 = Color(0xFF013733)

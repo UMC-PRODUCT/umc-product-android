@@ -105,7 +105,7 @@ fun UDateTimePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = white(),
+        containerColor = grey50(),
         shape = RoundedCornerShape(12.dp),
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -326,7 +326,7 @@ fun UDateTimePickerDialog(
                             onConfirm(utcResult)
                         }
                     },
-                    backgroundColor = if (isConfirmEnabled) main500() else white(),
+                    backgroundColor = if (isConfirmEnabled) main500() else grey50(),
                     textColor = if (isConfirmEnabled) grey100() else grey300(),
                     modifier = Modifier
                         .weight(1f)

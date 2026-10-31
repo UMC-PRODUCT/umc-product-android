@@ -92,7 +92,7 @@ fun AdminStudyGroupEditDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = white(),
+                    color = grey50(),
                     shape = RoundedCornerShape(16.dp)
                 )
                 .padding(
@@ -155,7 +155,7 @@ fun AdminStudyGroupEditDialog(
                     .fillMaxWidth()
                     .height(48.dp)
                     .background(
-                        color = white(),
+                        color = grey50(),
                         shape = RoundedCornerShape(8.dp)
                     )
                     .border(
@@ -226,7 +226,7 @@ fun AdminStudyGroupEditDialog(
                             }
                         }
                         .background(
-                            color = white(),
+                            color = grey50(),
                             shape = RoundedCornerShape(8.dp)
                         )
                         .border(
@@ -277,7 +277,7 @@ fun AdminStudyGroupEditDialog(
                     },
                     modifier = Modifier
                         .width(dropdownWidth)
-                        .background(white())
+                        .background(grey50())
                 ) {
                     parts.forEach { part ->
                         DropdownMenuItem(
@@ -351,7 +351,7 @@ fun AdminStudyGroupEditDialog(
                         grey200()
                     },
                     textColor = if (canConfirm) {
-                        white()
+                        grey50()
                     } else {
                         grey400()
                     },

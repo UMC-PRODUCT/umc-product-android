@@ -47,7 +47,7 @@ fun UDatePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = white(),
+        containerColor = grey50(),
         shape = RoundedCornerShape(12.dp),
         text = {
             Column(
@@ -155,7 +155,7 @@ fun UDatePickerDialog(
                         grey200()
                     },
                     textColor = if (isConfirmEnabled) {
-                        white()
+                        grey50()
                     } else {
                         grey400()
                     },

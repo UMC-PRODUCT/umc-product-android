@@ -49,7 +49,7 @@ import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.red500
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
@@ -126,7 +126,7 @@ fun SignUpFailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(white()),
+            .background(grey50()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(modifier = Modifier.height(8.dp))
@@ -181,7 +181,7 @@ fun SignUpFailScreen(
             onClick = onClickNext,
             backgroundColor = main500(),
             pressedColor = main700(),
-            textColor = white(),
+            textColor = grey50(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             contentPadding = PaddingValues(vertical = 15.dp),
             modifier = Modifier
@@ -194,7 +194,7 @@ fun SignUpFailScreen(
         UButton(
             text = AppStrings.SIGN_UP_FAIL_HOMEPAGE,
             onClick = onClickHomePage,
-            backgroundColor = white(),
+            backgroundColor = grey50(),
             textColor = grey800(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             borderWidth = 1.dp,

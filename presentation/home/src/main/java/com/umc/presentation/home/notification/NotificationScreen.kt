@@ -34,7 +34,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypography
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
@@ -76,7 +76,7 @@ fun NotificationScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(white())
+            .background(grey50())
     ) {
 
         //1. 상단 바
@@ -182,7 +182,7 @@ fun NotificationRow(item: NotificationItem) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(white())
+            .background(grey50())
     ) {
 
         HorizontalDivider(

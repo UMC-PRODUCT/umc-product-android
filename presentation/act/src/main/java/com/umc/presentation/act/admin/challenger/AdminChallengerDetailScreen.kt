@@ -338,7 +338,7 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
             contentAlignment = Alignment.Center
         ) {
             UText(
-                text = "UMC", style = BodyBold, color = white()
+                text = "UMC", style = BodyBold, color = grey50()
             )
         }
 
@@ -568,7 +568,7 @@ private fun HistorySection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(white())
+                    .background(grey50())
                     .border(1.dp, grey200(), RoundedCornerShape(12.dp))
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)

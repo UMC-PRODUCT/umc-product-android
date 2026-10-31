@@ -38,7 +38,7 @@ fun GroupScheduleSelectRow(
             .fillMaxWidth()
             .height(52.dp)
             .background(
-                white(),
+                grey50(),
                 RoundedCornerShape(8.dp)
             )
             .border(

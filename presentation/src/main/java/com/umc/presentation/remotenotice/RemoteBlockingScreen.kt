@@ -25,7 +25,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
@@ -48,7 +48,7 @@ fun RemoteBlockingScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(white())
+            .background(grey50())
             // 아래 화면으로 터치가 새지 않도록 모든 입력을 소비한다
             .pointerInput(Unit) {
                 awaitPointerEventScope {
@@ -92,7 +92,7 @@ fun RemoteBlockingScreen(
             text = AppStrings.REMOTE_NOTICE_EXIT_APP,
             onClick = onExitApp,
             backgroundColor = grey800(),
-            textColor = white(),
+            textColor = grey50(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             contentPadding = PaddingValues(vertical = 16.dp),
             modifier = Modifier

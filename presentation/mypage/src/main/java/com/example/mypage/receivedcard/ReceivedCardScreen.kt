@@ -53,6 +53,7 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.black
@@ -65,7 +66,6 @@ import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main100
 import com.umc.component.theme.main500
-import com.umc.component.theme.white
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.model.mypage.UserCardPartType
 import kotlinx.collections.immutable.persistentListOf
@@ -141,7 +141,7 @@ fun ReceivedCardScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(white())
+            .background(grey50())
 
     ) {
 
@@ -256,7 +256,7 @@ fun ReceivedCardScreenTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(white())
+            .background(grey50())
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -359,7 +359,7 @@ private fun ReceivedCardItem(
                     text = card.part,
                     enabled = false,
                     backgroundColor = partTheme.badgeColor,
-                    textColor = white(),
+                    textColor = grey50(),
                     textStyle = UmcTypographyTokens.Caption1,
                     cornerRadius = 4.dp,
                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
@@ -371,7 +371,7 @@ private fun ReceivedCardItem(
                     text = "${card.generation}기",
                     enabled = false,
                     backgroundColor = partTheme.badgeColor,
-                    textColor = white(),
+                    textColor = grey50(),
                     textStyle = UmcTypographyTokens.Caption1,
                     cornerRadius = 4.dp,
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),

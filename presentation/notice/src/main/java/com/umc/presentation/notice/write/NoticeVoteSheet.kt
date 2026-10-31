@@ -36,7 +36,7 @@ import com.umc.component.component.UDateTimePickerDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -232,7 +232,7 @@ fun NoticeVoteSheetContent(
                 VoteBottomButton(
                     text = AppStrings.NOTICE_WRITE_VOTE_EDIT,
                     backgroundColor = if (form.canSubmit) main500() else grey100(),
-                    textColor = if (form.canSubmit) white() else grey400(),
+                    textColor = if (form.canSubmit) grey50() else grey400(),
                     onClick = { if (form.canSubmit) onComplete(form) },
                     modifier = Modifier.weight(1f),
                 )
@@ -241,7 +241,7 @@ fun NoticeVoteSheetContent(
             VoteBottomButton(
                 text = AppStrings.NOTICE_WRITE_VOTE_CREATE,
                 backgroundColor = if (form.canSubmit) main500() else grey100(),
-                textColor = if (form.canSubmit) white() else grey400(),
+                textColor = if (form.canSubmit) grey50() else grey400(),
                 onClick = { if (form.canSubmit) onComplete(form) },
                 modifier = Modifier.fillMaxWidth(),
             )

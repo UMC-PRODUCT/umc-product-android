@@ -50,7 +50,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import android.view.WindowManager
 import com.umc.component.theme.AppStrings
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -115,7 +115,7 @@ internal fun CommunityInviteSheet(
                             dismiss { dismissSheet(); true }
                         },
                     shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-                    color = white(),
+                    color = grey50(),
                 ) {
                     Column(Modifier.navigationBarsPadding().height(height)) {
                         Box(

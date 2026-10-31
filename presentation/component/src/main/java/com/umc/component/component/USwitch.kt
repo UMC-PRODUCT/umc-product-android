@@ -4,7 +4,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
 import com.umc.component.theme.main500
@@ -27,7 +27,7 @@ fun USwitch(
         onCheckedChange = onCheckedChange,
         modifier = modifier,
         colors = SwitchDefaults.colors(
-            checkedThumbColor = white(),
+            checkedThumbColor = grey50(),
             checkedTrackColor = main500(),
             uncheckedThumbColor = grey300(),
             uncheckedTrackColor = grey100(),

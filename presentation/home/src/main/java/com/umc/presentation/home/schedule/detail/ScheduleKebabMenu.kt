@@ -28,7 +28,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.red500
-import com.umc.component.theme.white
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey800
 
@@ -58,7 +58,7 @@ fun ScheduleKebabMenu(
                 .width(180.dp),
             shape = RoundedCornerShape(16.dp),
             shadowElevation = 8.dp,
-            color = white()
+            color = grey50()
         ) {
             Column(modifier = Modifier
                 .padding(8.dp)
