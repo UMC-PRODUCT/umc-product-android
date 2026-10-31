@@ -152,6 +152,15 @@ class CommunityChattingViewModel @Inject constructor(
             }
             CommunityChattingAction.OnCameraClick -> emitEvent(CommunityChattingEvent.OpenCamera)
             is CommunityChattingAction.OnSendImages -> sendImages(action.uris)
+            CommunityChattingAction.OnImageSizeExceeded -> emitEvent(
+                CommunityChattingEvent.ShowError("이미지는 한 장당 최대 10MiB까지 전송할 수 있어요.")
+            )
+            CommunityChattingAction.OnImageTotalSizeExceeded -> emitEvent(
+                CommunityChattingEvent.ShowError("이미지는 총합 40MiB까지 전송할 수 있어요.")
+            )
+            CommunityChattingAction.OnImageSizeUnreadable -> emitEvent(
+                CommunityChattingEvent.ShowError("이미지 용량을 확인할 수 없어요. 다시 선택해주세요.")
+            )
             is CommunityChattingAction.OnDraftChanged -> updateDraft(action.value, action.changeStart, action.changeEnd)
             is CommunityChattingAction.OnSendClick -> sendText(
                 content = state.value.draft,
@@ -163,7 +172,7 @@ class CommunityChattingViewModel @Inject constructor(
             is CommunityChattingAction.OnReact -> toggleReaction(action.message, action.emoji)
             is CommunityChattingAction.OnReportMessage -> reportMessage(
                 messageId = action.messageId,
-                reasons = action.reasons,
+                reason = action.reason,
             )
             CommunityChattingAction.OnToggleMuted -> toggleMuted()
             CommunityChattingAction.OnTogglePinned -> togglePinned()
@@ -682,22 +691,24 @@ class CommunityChattingViewModel @Inject constructor(
         }
     }
 
-    fun reportMessage(messageId: String, reasons: Set<CommunityMessageReportReason>) = viewModelScope.launch {
+    fun reportMessage(messageId: String, reason: CommunityMessageReportReason) = viewModelScope.launch {
         val current = uiState.value
         val message = current.messages.find { it.messageId == messageId } ?: return@launch
         if (message.senderId == current.myMemberId || message.deletedAt != null || message.status == "DELETED") return@launch
-        if (reasons.isEmpty() || !reportingMessageIds.add(messageId)) return@launch
+        if (!reportingMessageIds.add(messageId)) return@launch
         try {
-            val result = submitCommunityMessageReports(reasons) { reason -> threadRepository.reportMessage(messageId, reason) }
-            if (result.failures.isEmpty()) emitEvent(CommunityChattingEvent.MessageReported)
-            else {
-                val failure = result.failures.values.first()
-                val detail = if (failure.code.contains("409") || failure.code.contains("REPORT_ALREADY_EXISTS"))
-                    AppStrings.CHAT_REPORT_ALREADY_EXISTS else failure.message
-                emitEvent(CommunityChattingEvent.ShowError(if (reasons.size > 1)
-                    AppStrings.CHAT_REPORT_PARTIAL_RESULT_FORMAT.format(result.accepted.size, result.failures.size) + " " + detail else detail))
+            when (val result = threadRepository.reportMessage(messageId, reason)) {
+                is ApiState.Success -> emitEvent(CommunityChattingEvent.MessageReported)
+                is ApiState.Fail -> {
+                    val failure = result.failState
+                    val detail = if (failure.code == "COMMUNITY-0016" || failure.code.contains("409") ||
+                        failure.code.contains("REPORT_ALREADY_EXISTS")) AppStrings.CHAT_REPORT_ALREADY_EXISTS else failure.message
+                    emitEvent(CommunityChattingEvent.ShowError(detail))
+                }
             }
-        } finally { reportingMessageIds.remove(messageId) }
+        } finally {
+            reportingMessageIds.remove(messageId)
+        }
     }
 
     fun retryPendingMessage(clientMessageId: String) = viewModelScope.launch {
@@ -1039,7 +1050,7 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun openDeleteThreadDialog() {
-        if (uiState.value.thread?.myRole != CommunityThreadRole.OWNER) return
+        if (!uiState.value.thread?.myRole.canManageCommunityThread()) return
         updateState { copy(showDeleteDialog = true) }
     }
 
@@ -1070,7 +1081,7 @@ class CommunityChattingViewModel @Inject constructor(
 
     private fun deleteThread() = viewModelScope.launch {
         val state = uiState.value
-        if (state.thread?.myRole != CommunityThreadRole.OWNER || state.isDeleting) return@launch
+        if (!state.thread?.myRole.canManageCommunityThread() || state.isDeleting) return@launch
 
         updateState { copy(showDeleteDialog = false, isDeleting = true) }
         when (val result = threadRepository.deleteThread(state.threadId)) {

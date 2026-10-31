@@ -633,7 +633,6 @@ object AppStrings {
     const val CHAT_REPORT_CONFIRM_TITLE = "신고하시겠습니까?"
     const val CHAT_REPORT_CONFIRM_DESCRIPTION = "신고하신 내용은 관리자 검토 후\n운영 정책에 따라 처리됩니다."
     const val CHAT_REPORT_ALREADY_EXISTS = "이미 접수된 신고예요."
-    const val CHAT_REPORT_PARTIAL_RESULT_FORMAT = "신고 사유 %d개 접수, %d개 미접수."
     const val CHAT_REPORT_SUCCESS = "신고가 정상적으로 접수되었습니다."
     const val CHAT_MENU_SUMMARY_SETTINGS = "요약 및 설정"
     const val CHAT_MENU_SUMMARY = "대화 요약"
