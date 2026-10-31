@@ -11,6 +11,9 @@ sealed interface CommunityChattingAction {
     data object OnDismissUnreadSummary : CommunityChattingAction
     data object OnCameraClick : CommunityChattingAction
     data class OnSendImages(val uris: List<String>) : CommunityChattingAction
+    data object OnImageSizeExceeded : CommunityChattingAction
+    data object OnImageTotalSizeExceeded : CommunityChattingAction
+    data object OnImageSizeUnreadable : CommunityChattingAction
     data class OnDraftChanged(val value: String, val changeStart: Int, val changeEnd: Int) : CommunityChattingAction
     data class OnSendClick(val replyToId: String?) : CommunityChattingAction
     data class OnStartEdit(val messageId: String) : CommunityChattingAction
@@ -28,7 +31,7 @@ sealed interface CommunityChattingAction {
     ) : CommunityChattingAction
     data class OnReportMessage(
         val messageId: String,
-        val reasons: Set<CommunityMessageReportReason>,
+        val reason: CommunityMessageReportReason,
     ) : CommunityChattingAction
     data object OnToggleMuted : CommunityChattingAction
     data object OnTogglePinned : CommunityChattingAction

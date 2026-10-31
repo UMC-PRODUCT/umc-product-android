@@ -2,7 +2,7 @@ package com.umc.presentation.community.chatting
 
 import com.umc.domain.model.community.thread.CommunityThreadMessage
 
-internal const val DELETED_REPLY_SNIPPET = "삭제된 메시지입니다."
+internal const val DELETED_MESSAGE_NOTICE = "삭제된 메시지입니다."
 
 /** 서버 미읽음 개수는 삭제·시스템 기록을 포함한 최신 메시지 범위다. */
 internal fun communityEntryUnreadMessages(
@@ -32,15 +32,21 @@ internal fun communityDeletedMessageIds(
     .map { it.messageId }
     .toSet()
 
-/** Keep tombstones in state for reconciliation, but display only their existing replies. */
+/** 삭제 원문은 안내로 표시하고, 기존 답장에 담긴 인용 원문은 유지한다. */
 internal fun communityDisplayedMessages(
     messages: List<CommunityThreadMessage>,
     deletedIds: Set<String>,
 ): List<CommunityThreadMessage> = messages.asReversed()
-    .filterNot { it.messageId in deletedIds }
     .map { message ->
-        val reply = message.replyTo
-        if (reply != null && reply.messageId in deletedIds) {
-            message.copy(replyTo = reply.copy(snippet = DELETED_REPLY_SNIPPET))
+        if (message.messageId in deletedIds || message.deletedAt != null || message.status == "DELETED") {
+            message.copy(
+                status = "DELETED",
+                content = DELETED_MESSAGE_NOTICE,
+                fileMetadataIds = emptyList(),
+                files = emptyList(),
+                mentions = emptyList(),
+                replyTo = null,
+                reactions = emptyList(),
+            )
         } else message
     }

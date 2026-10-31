@@ -10,6 +10,7 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.usecase.community.GetCommunityThreadMembersUseCase
 import com.umc.domain.usecase.community.SearchCommunityCreateMembersUseCase
+import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +18,8 @@ import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -37,6 +40,7 @@ import kotlinx.coroutines.launch
  */
 @HiltViewModel
 class CommunityMemberBottomSheetViewModel @Inject constructor(
+    private val getMemberProfileUseCase: GetMemberProfileUseCase,
     private val threadRepository: CommunityThreadRepository,
     private val getCommunityThreadMembersUseCase:
     GetCommunityThreadMembersUseCase,
@@ -51,6 +55,21 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
     CommunityMemberBottomSheetState()
 ) {
 
+    private suspend fun enrichChallengerProfile(member: CommunityChallengerUiModel): CommunityChallengerUiModel {
+        if (member.nickname.isNotBlank()) return member
+        return profileRequests.withPermit {
+            when (val result = getMemberProfileUseCase(member.memberId)) {
+                is ApiState.Success -> member.copy(
+                    name = result.data.name.ifBlank { member.name },
+                    nickname = result.data.nickname,
+                    school = result.data.schoolName.ifBlank { member.school },
+                    profileImage = result.data.profileImageLink.ifBlank { member.profileImage },
+                )
+                is ApiState.Fail -> member
+            }
+        }
+    }
+
     /** 검색 디바운스 처리를 위한 Job */
     private var searchJob: Job? = null
 
@@ -62,6 +81,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      */
     private var loadJob: Job? = null
     private var sessionGeneration = 0
+    private val profileRequests = Semaphore(4)
 
     /**
      * 현재 로그인한 사용자의 memberId
@@ -200,7 +220,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
              * 스레드 멤버 조회 API에는 일부 화면 정보가 없을 수 있으므로
              * 검색 API를 이용해 상세 정보를 다시 매칭합니다.
              */
-            val currentMembers = memberPage.items
+            val activeMembers = memberPage.items
                 .filter { it.state.equals("ACTIVE", ignoreCase = true) }
                 .filterNot { member ->
                     member.role.equals(
@@ -208,12 +228,10 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                         ignoreCase = true,
                     )
                 }
-                .map { threadMember ->
-                    findChallengerDetail(
-                        threadMember = threadMember,
-                    )
-                }
-                .toImmutableList()
+            val fallbackMembers = activeMembers.map { it to it.toFallbackUiModel() }
+            val currentMembers = enrichCommunityProfilesWithinBudget(fallbackMembers) { (source, _) ->
+                source to findChallengerDetail(source)
+            }.map { it.second }.toImmutableList()
 
             if (generation != sessionGeneration) return@launch
             updateState {
@@ -260,7 +278,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
             return threadMember.toFallbackUiModel()
         }
 
-        return when (
+        val detail = when (
             val response = searchCommunityCreateMembersUseCase(
                 cursor = null,
                 size = MEMBER_MATCH_PAGE_SIZE,
@@ -280,6 +298,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 threadMember.toFallbackUiModel()
             }
         }
+        return enrichChallengerProfile(detail)
     }
 
     /**
@@ -430,12 +449,14 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                                 partLabel = UserPart.from(member.part.orEmpty()).label, profileImage = "",
                             )
                         }
+                        val detailedCandidates = enrichCommunityProfilesWithinBudget(candidates, enrich = ::enrichChallengerProfile)
+                        if (generation != sessionGeneration || uiState.value.threadId != threadId || uiState.value.query.trim() != keyword) return@launch
                         val nextOffset = page.nextOffset?.toIntOrNull()
                         // 본인 학교만 남기느라 이번 페이지에 보여줄 사람이 없으면, 빈 목록에서는 스크롤로 다음 페이지를 부를 수 없으므로 바로 이어 받는다
                         val continueScan = candidates.isEmpty() && nextOffset != null
                         updateState {
                             copy(
-                                searchResults = ((if (appendPage) searchResults else emptyList()) + candidates)
+                                searchResults = ((if (appendPage) searchResults else emptyList()) + detailedCandidates)
                                     .distinctBy { it.memberId }.toImmutableList(),
                                 nextCursor = page.nextOffset?.toLongOrNull(), hasNext = page.nextOffset != null,
                                 isLoading = if (continueScan) isLoading else false,

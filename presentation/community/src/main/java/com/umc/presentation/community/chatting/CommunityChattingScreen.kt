@@ -18,7 +18,8 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.ui.semantics.Role
 import com.umc.presentation.community.component.chatting.CommunityChatMessageImage
 import com.umc.presentation.community.component.chatting.CommunityChatImageLoadingIndicator
@@ -146,6 +147,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.net.URI
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.collections.immutable.toImmutableList
 
@@ -175,7 +178,7 @@ fun CommunityChattingScreen(
     val onReact: (CommunityThreadMessage, String) -> Unit = { message, emoji ->
         onAction(CommunityChattingAction.OnReact(message, emoji))
     }
-    val onReportMessage: (String, Set<CommunityMessageReportReason>) -> Unit = { messageId, reason ->
+    val onReportMessage: (String, CommunityMessageReportReason) -> Unit = { messageId, reason ->
         onAction(CommunityChattingAction.OnReportMessage(messageId, reason))
     }
     val onToggleMuted = { onAction(CommunityChattingAction.OnToggleMuted) }
@@ -269,7 +272,7 @@ fun CommunityChattingScreen(
     var reportingMessageId by remember { mutableStateOf<String?>(null) }
     var showThreadInfo by remember { mutableStateOf(false) }
     var pendingReportConfirmation by remember {
-        mutableStateOf<Pair<String, Set<CommunityMessageReportReason>>?>(null)
+        mutableStateOf<Pair<String, CommunityMessageReportReason>?>(null)
     }
     // 참여하지 않았거나 나간 스레드는 읽기만 가능하다(서버 역할 없음 = UNKNOWN).
     val isViewOnly = state.thread?.myRole == CommunityThreadRole.UNKNOWN
@@ -332,7 +335,20 @@ fun CommunityChattingScreen(
             maxItems = COMMUNITY_CHAT_MAX_IMAGE_COUNT,
         ),
     ) { uris ->
-        onSendImages(uris.take(COMMUNITY_CHAT_MAX_IMAGE_COUNT).map { it.toString() })
+        if (uris.size > COMMUNITY_CHAT_MAX_IMAGE_COUNT) {
+            onSendImages(uris.map { it.toString() })
+        } else if (uris.isNotEmpty()) scope.launch {
+            val selected = uris
+            val error = withContext(Dispatchers.IO) {
+                validateCommunityChatImageSizes(selected.map { communityChatImageSize(context.contentResolver, it) })
+            }
+            when (error) {
+                CommunityChatImageSizeError.IMAGE_TOO_LARGE -> onAction(CommunityChattingAction.OnImageSizeExceeded)
+                CommunityChatImageSizeError.TOTAL_TOO_LARGE -> onAction(CommunityChattingAction.OnImageTotalSizeExceeded)
+                CommunityChatImageSizeError.UNREADABLE -> onAction(CommunityChattingAction.OnImageSizeUnreadable)
+                null -> onSendImages(selected.map { it.toString() })
+            }
+        }
     }
 
     if (state.showOwnershipTransferRequiredDialog) {
@@ -573,8 +589,7 @@ fun CommunityChattingScreen(
                     onBack = onBack,
                     isMuted = state.thread?.isMuted == true,
                     isPinned = state.thread?.isPinned == true,
-                    isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
-                    canManage = state.thread?.myRole in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN),
+                    canManage = state.thread?.myRole.canManageCommunityThread(),
                     showMoreMenu = state.thread != null && !isViewOnly,
                     onSummary = onUnreadSummary,
                     onToggleMuted = onToggleMuted,
@@ -1349,7 +1364,6 @@ private fun ChatTopBar(
     onBack: () -> Unit,
     isMuted: Boolean,
     isPinned: Boolean,
-    isOwner: Boolean,
     canManage: Boolean,
     showMoreMenu: Boolean,
     onSummary: () -> Unit,
@@ -1459,7 +1473,7 @@ private fun ChatTopBar(
                         menuExpanded = false
                         onThreadInfo()
                     }
-                    if (isOwner) {
+                    if (canManage) {
                         ThreadMenuItem(AppStrings.CHAT_MENU_EDIT_THREAD) {
                             menuExpanded = false
                             onEditThread()
@@ -1672,10 +1686,11 @@ private fun ChatMessageRow(
     onReact: (String) -> Unit,
     onShowMoreEmojis: () -> Unit,
 ) {
-    if (message.type.isSystemNotice) {
+    val isDeleted = message.deletedAt != null || message.status == "DELETED"
+    if (message.type.isSystemNotice || isDeleted) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text(
-                text = message.content.orEmpty(),
+                text = if (isDeleted) DELETED_MESSAGE_NOTICE else message.content.orEmpty(),
                 style = UmcTypographyTokens.Footnote,
                 color = grey500(),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -2321,9 +2336,9 @@ private val MessageReportReasons = listOf(
 @Composable
 private fun MessageReportSheet(
     onDismiss: () -> Unit,
-    onReport: (Set<CommunityMessageReportReason>) -> Unit,
+    onReport: (CommunityMessageReportReason) -> Unit,
 ) {
-    var selectedReasons by remember { mutableStateOf(emptySet<CommunityMessageReportReason>()) }
+    var selectedReason by remember { mutableStateOf<CommunityMessageReportReason?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss, sheetState = sheetState, containerColor = white(),
@@ -2340,25 +2355,27 @@ private fun MessageReportSheet(
             Spacer(Modifier.height(8.dp))
             Text(AppStrings.CHAT_REPORT_GUIDE, color = grey600(), style = UmcTypographyTokens.Subheadline)
             Spacer(Modifier.height(16.dp))
-            MessageReportReasons.forEach { (reason, label) ->
-                Column(Modifier.fillMaxWidth().height(56.dp)) {
-                    Row(Modifier.fillMaxWidth().weight(1f).toggleable(
-                        value = reason in selectedReasons, role = Role.Checkbox,
-                        onValueChange = { checked -> selectedReasons = if (checked) selectedReasons + reason else selectedReasons - reason },
-                    ), verticalAlignment = Alignment.CenterVertically) {
-                        Text(label, modifier = Modifier.weight(1f), color = grey950(), style = UmcTypographyTokens.Body)
-                        Checkbox(checked = reason in selectedReasons, onCheckedChange = null, modifier = Modifier.size(24.dp),
-                            colors = CheckboxDefaults.colors(checkedColor = main500(), uncheckedColor = grey400(), checkmarkColor = white()))
+            Column(Modifier.selectableGroup()) {
+                MessageReportReasons.forEach { (reason, label) ->
+                    Column(Modifier.fillMaxWidth().height(56.dp)) {
+                        Row(Modifier.fillMaxWidth().weight(1f).selectable(
+                            selected = reason == selectedReason, role = Role.RadioButton,
+                            onClick = { selectedReason = reason },
+                        ), verticalAlignment = Alignment.CenterVertically) {
+                            Text(label, modifier = Modifier.weight(1f), color = grey950(), style = UmcTypographyTokens.Body)
+                            RadioButton(selected = reason == selectedReason, onClick = null, modifier = Modifier.size(24.dp),
+                                colors = RadioButtonDefaults.colors(selectedColor = main500(), unselectedColor = grey400()))
+                        }
+                        HorizontalDivider(color = grey200())
                     }
-                    HorizontalDivider(color = grey200())
                 }
             }
             Spacer(Modifier.height(32.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 UButton(text = AppStrings.CHAT_REPORT_CANCEL, onClick = onDismiss, modifier = Modifier.weight(1f).height(52.dp),
                     backgroundColor = grey100(), textColor = grey700(), textStyle = UmcTypographyTokens.HeadlineBold)
-                UButton(text = AppStrings.CHAT_REPORT_ACTION, onClick = { onReport(selectedReasons.toSet()) },
-                    enabled = selectedReasons.isNotEmpty(), modifier = Modifier.weight(1f).height(52.dp),
+                UButton(text = AppStrings.CHAT_REPORT_ACTION, onClick = { selectedReason?.let(onReport) },
+                    enabled = selectedReason != null, modifier = Modifier.weight(1f).height(52.dp),
                     backgroundColor = red100(), textColor = red500(), textStyle = UmcTypographyTokens.HeadlineBold)
             }
         }
