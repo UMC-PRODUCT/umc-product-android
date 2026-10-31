@@ -654,7 +654,7 @@ private fun CardFrontContent(
 /**
  * 명함 카드 뒷면 레이아웃 컴포저블
  *
- * 프로필 이미지 옆에 이메일과 등록된 링크를 아이콘과 함께 나열한다 (비어 있는 링크는 빼고 보여준다)
+ * 프로필 이미지 옆에 이메일, GitHub, LinkedIn, URL(블로그·개인 사이트)을 아이콘과 함께 나열한다 (비어 있는 항목은 빼고 보여준다)
  */
 @Composable
 private fun CardBackContent(
@@ -683,8 +683,6 @@ private fun CardBackContent(
                 SocialLinkItem(iconRes = R.drawable.ic_github_link, text = profile.github)
                 SocialLinkItem(iconRes = R.drawable.ic_linkedin_link, text = profile.linkedIn)
                 SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = profile.blog)
-                // TODO Instagram 아이콘을 받으면 교체 (지금은 기존 링크 아이콘으로 대신 표시)
-                SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = profile.instagram)
                 SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = profile.personal)
             }
         }

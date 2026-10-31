@@ -567,9 +567,8 @@ fun MypageScreen(
                         trailingIconRes = R.drawable.ic_open_link,
                         onClick = onBlogClick
                     )
-                    // TODO Instagram 아이콘을 받으면 교체 (지금은 기존 링크 아이콘으로 대신 표시)
                     MypageListItem(
-                        R.drawable.ic_blog_link,
+                        R.drawable.ic_instagram,
                         AppStrings.INSTAGRAM,
                         trailingIconRes = R.drawable.ic_open_link,
                         onClick = onInstagramLinkClick
