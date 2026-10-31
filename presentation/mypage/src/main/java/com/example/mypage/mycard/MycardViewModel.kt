@@ -39,6 +39,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MycardViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val cardRepository: AppDataStoreRepository,
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val getUserCardUseCase: GetUserCardUseCase, //유저 명함 가져오기
@@ -46,7 +47,10 @@ class MycardViewModel @Inject constructor(
     private val SaveUserCardUseCase: SaveUserCardUseCase, //명함 저장
 
 ) : BaseViewModel<MycardUiState, MycardEvent>(
-    MycardUiState()){
+    MycardUiState(isViewingMemberProfile = savedStateHandle.get<Boolean>("viewProfileOnly") == true)){
+
+    private val profileMemberId = savedStateHandle.get<String>("memberId")
+    private val viewProfileOnly = savedStateHandle.get<Boolean>("viewProfileOnly") == true
 
 
     //초기 상태
@@ -57,7 +61,7 @@ class MycardViewModel @Inject constructor(
         }
 
         // DataStore 내에 저장되어 있는 명함 리스트를 실시간 수신하여 명함 수 갱신
-        viewModelScope.launch {
+        if (!viewProfileOnly) viewModelScope.launch {
             cardRepository.getCardBook().catch {
                 updateState { copy(cardStorageError = "보관 명함 수를 불러오지 못했어요.") }
             }.collect { state ->
@@ -92,7 +96,14 @@ class MycardViewModel @Inject constructor(
         updateState { copy(isProfileLoading = true) }
         viewModelScope.launch {
             resultResponse(
-                response = getMyProfileUseCase(),
+                response = if (viewProfileOnly) {
+                    val id = profileMemberId?.toLongOrNull()
+                    if (id == null || id <= 0) {
+                        updateState { copy(isProfileLoading = false, isProfileLoadFailed = true) }
+                        return@launch
+                    }
+                    getMemberProfileUseCase(id)
+                } else getMyProfileUseCase(),
                 successCallback = { userInfo ->
                     updateState {
                         copy(
@@ -101,7 +112,7 @@ class MycardViewModel @Inject constructor(
                             isProfileLoadFailed = false,
                         )
                     }
-                    generateMyUserCardQr(userInfo)
+                    if (!viewProfileOnly) generateMyUserCardQr(userInfo)
                     settingUserInfoToUI(userInfo)
 
                 },
@@ -270,6 +281,7 @@ class MycardViewModel @Inject constructor(
 
 
 data class MycardUiState(
+    val isViewingMemberProfile: Boolean = false,
 
     val userInfo: UserInfo = UserInfo(),
 

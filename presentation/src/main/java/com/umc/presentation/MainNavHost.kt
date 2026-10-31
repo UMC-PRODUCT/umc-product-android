@@ -556,6 +556,8 @@ fun MainNavHost(
             MycardRoute(
                 targetMemberId = targetMemberId,
                 openExchangeDialog = openExchangeDialog,
+                viewProfileOnly = mycardDestination.viewProfileOnly,
+                onNavigateBack = { navHostController.popBackStack() },
                 onNavigateToMypage = {
                     navHostController.navigate(MainDestination.Mypage)
                 },
@@ -799,7 +801,7 @@ fun MainNavHost(
                 .collectAsStateWithLifecycle()
 
             CommunityChattingRoute(
-                onViewMemberProfile = { memberId -> navHostController.navigate(MainDestination.Mycard(memberId)) },
+                onViewMemberProfile = { memberId -> navHostController.navigate(MainDestination.Mycard(memberId = memberId, viewProfileOnly = true)) },
                 onBack = {
                     navHostController.popBackStack()
                 },

@@ -104,6 +104,8 @@ import com.umc.component.base.CollectUiEvents
 @Composable
 fun MycardRoute(
     targetMemberId: String? = null, //유저 qr 딥링크로 받았을 때
+    viewProfileOnly: Boolean = false,
+    onNavigateBack: () -> Unit = {},
     openExchangeDialog: Boolean = false, //홈에서 명함 교환 받을 시
     viewModel: MycardViewModel = hiltViewModel(),
     nearbyViewModel: NearbyViewModel = hiltViewModel(), //nearbyConnection 전용 관리 viewModel
@@ -150,7 +152,7 @@ fun MycardRoute(
 
     // QR 딥링크로 전달된 상대방 회원 ID 존재 시 회원 조회 수행
     LaunchedEffect(targetMemberId) {
-        if (!targetMemberId.isNullOrEmpty()) {
+        if (!viewProfileOnly && !targetMemberId.isNullOrEmpty()) {
             // [임시] 명함 교환 차단 — 원래 동작: viewModel.searchUser(targetMemberId.toLong())
             showExchangeBlockedDialog = true
         }
@@ -158,7 +160,7 @@ fun MycardRoute(
 
     // 홈 화면 등 외부에서 명함 교환 요청 플래그를 가지고 진입 시 다이얼로그 즉시 오픈
     LaunchedEffect(openExchangeDialog) {
-        if (openExchangeDialog && !hasOpenedExchangeDialog) {
+        if (!viewProfileOnly && openExchangeDialog && !hasOpenedExchangeDialog) {
             // [임시] 명함 교환 차단 — 원래 동작: nearbyViewModel.openBottomSheet()
             showExchangeBlockedDialog = true
             hasOpenedExchangeDialog = true //오픈 후 즉시 처리 완료 상태로 변경!
@@ -168,7 +170,7 @@ fun MycardRoute(
 
     //내 프로필 정보가 업데이트 될 때 NearbyViewModel에도 이를 반영
     LaunchedEffect(uiState.userInfo) {
-        if (uiState.userInfo.name.isNotEmpty()) {
+        if (!viewProfileOnly && uiState.userInfo.name.isNotEmpty()) {
             val nearbyInfo = NearbyUserInfo(
                 name = uiState.userInfo.name,
                 info = "${uiState.userInfo.schoolName} · ${uiState.myRecentInfoString.ifEmpty { "0기" }}",
@@ -208,6 +210,7 @@ fun MycardRoute(
 
     MycardScreen(
         uiState = uiState,
+        onNavigateBack = onNavigateBack,
         onNavigateToMypage = onNavigateToMypage,
         // [임시] 명함 교환 차단 — 원래 동작: onNavigateToMyqrCode (QR 공유도 교환 경로라 함께 막는다)
         onNavigateToMyqrCode = { showExchangeBlockedDialog = true },
@@ -281,6 +284,7 @@ fun MycardScreen(
     onNavigateToMyStudy: () -> Unit, //나의 스터디 이동,
     onNavigateToActivityHistory: () -> Unit, //활동 이력 이동,
     onOpenExchangeBottomSheet: () -> Unit, //명함 교환 BottomSheet 열기,
+    onNavigateBack: () -> Unit = {},
     onRetryProfile: () -> Unit, //내 프로필 조회 실패 시 다시 시도
 ){
 
@@ -293,7 +297,9 @@ fun MycardScreen(
 
         item{
             MycardTopBar(
-                onMypageClick = onNavigateToMypage
+                onMypageClick = onNavigateToMypage,
+                showBackButton = uiState.isViewingMemberProfile,
+                onBackClick = onNavigateBack,
             )
         }
 
@@ -317,40 +323,43 @@ fun MycardScreen(
             }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
-            MycardSectionTitle(AppStrings.MYCARD_CARD_TITLE)
-            uiState.cardStorageError?.let { UText(it, modifier = Modifier.padding(horizontal = 16.dp)) }
-            MycardListCard {
-                MycardListItem(
-                    iconRes = R.drawable.ic_received_card,
-                    text = AppStrings.MYCARD_CARD_CONTENT_RECEIVED,
-                    cardCount = if (uiState.cardStorageError == null && uiState.cardStatistics != null) uiState.cardCount else -1,
-                    onClick = onNavigateToReceivedCard
-                )
-                MycardListItem(
-                    iconRes = R.drawable.ic_edit_card,
-                    text = AppStrings.MYCARD_CARD_EDIT,
-                    onClick = onNavigateToEditCard
-                )
+        if (!uiState.isViewingMemberProfile) {
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                MycardSectionTitle(AppStrings.MYCARD_CARD_TITLE)
+                uiState.cardStorageError?.let { UText(it, modifier = Modifier.padding(horizontal = 16.dp)) }
+                MycardListCard {
+                    MycardListItem(
+                        iconRes = R.drawable.ic_received_card,
+                        text = AppStrings.MYCARD_CARD_CONTENT_RECEIVED,
+                        cardCount = if (uiState.cardStorageError == null && uiState.cardStatistics != null) uiState.cardCount else -1,
+                        onClick = onNavigateToReceivedCard
+                    )
+                    MycardListItem(
+                        iconRes = R.drawable.ic_edit_card,
+                        text = AppStrings.MYCARD_CARD_EDIT,
+                        onClick = onNavigateToEditCard
+                    )
+                }
             }
-        }
 
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
-            MycardSectionTitle(AppStrings.MYCARD_ACTVITY_TITLE)
-            MycardListCard {
-                MycardListItem(
-                    iconRes = R.drawable.ic_my_study,
-                    text = AppStrings.MYCARD_ACTVITY_MYSTUDY,
-                    onClick = onNavigateToMyStudy
-                )
-                MycardListItem(
-                    iconRes = R.drawable.ic_activity_history,
-                    text = AppStrings.MYCARD_ACTVITY_HISTORY,
-                    onClick = onNavigateToActivityHistory
-                )
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                MycardSectionTitle(AppStrings.MYCARD_ACTVITY_TITLE)
+                MycardListCard {
+                    MycardListItem(
+                        iconRes = R.drawable.ic_my_study,
+                        text = AppStrings.MYCARD_ACTVITY_MYSTUDY,
+                        onClick = onNavigateToMyStudy
+                    )
+                    MycardListItem(
+                        iconRes = R.drawable.ic_activity_history,
+                        text = AppStrings.MYCARD_ACTVITY_HISTORY,
+                        onClick = onNavigateToActivityHistory
+                    )
+                }
             }
+
         }
 
         // 바닥 여백
@@ -427,7 +436,9 @@ private fun MycardProfileLoadError(
  */
 @Composable
 fun MycardTopBar(
-    onMypageClick: () -> Unit //마이페이지 클릭
+    onMypageClick: () -> Unit, //마이페이지 클릭
+    showBackButton: Boolean = false,
+    onBackClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -435,17 +446,27 @@ fun MycardTopBar(
             .background(grey50())
         .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = if (showBackButton) Arrangement.Start else Arrangement.SpaceBetween
     ) {
+        if (showBackButton) {
+            androidx.compose.material3.IconButton(onClick = onBackClick) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_back),
+                    contentDescription = "뒤로가기",
+                    tint = grey950(),
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
         UText(
-            text = AppStrings.MYPAGE_TITLE,
+            text = if (showBackButton) "프로필" else AppStrings.MYPAGE_TITLE,
             style = UmcTypographyTokens.Title2Bold,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
 
         )
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        if (!showBackButton) Row(verticalAlignment = Alignment.CenterVertically) {
             //설정 버튼
             Box(
                 modifier = Modifier
@@ -652,7 +673,7 @@ private fun CardFrontContent(
             Spacer(modifier = Modifier.height(24.dp))
 
             //명함 교환 & QR 코드 버튼
-            CardBottomButtons(
+            if (!uiState.isViewingMemberProfile) CardBottomButtons(
                 onExchangeCardClick = onExchangeCardClick,
                 onMyQrcodeClick = onMyQrcodeClick
             )
@@ -731,7 +752,7 @@ private fun CardBackContent(
         // [중단 Info] QR 코드 이미지 + 소셜/연락처 리스트
         Row(verticalAlignment = Alignment.CenterVertically) {
             //QR 코드 공간
-            Box(
+            if (!uiState.isViewingMemberProfile) Box(
                 modifier = Modifier
                     .size(70.dp)
                     .clip(RoundedCornerShape(12.dp))
@@ -768,7 +789,7 @@ private fun CardBackContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        CardBottomButtons(
+        if (!uiState.isViewingMemberProfile) CardBottomButtons(
             onExchangeCardClick = onExchangeCardClick,
             onMyQrcodeClick = onMyQrcodeClick
         )
