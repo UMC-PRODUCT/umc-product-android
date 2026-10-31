@@ -199,6 +199,7 @@ fun CommunityChattingScreen(
             onAcknowledge = { onAction(CommunityChattingAction.OnAcknowledgeKick) },
             isAcknowledging = state.isAcknowledgingKick,
             toastData = toastData,
+            toastGeneration = toastGeneration,
             onToastDismiss = onToastDismiss,
         )
         return
@@ -1111,16 +1112,19 @@ private fun KickedThreadScreen(
     onAcknowledge: () -> Unit,
     isAcknowledging: Boolean,
     toastData: UToastData? = null,
+    toastGeneration: Int = 0,
     onToastDismiss: () -> Unit = {},
 ) {
     Scaffold(
         containerColor = grey100(),
         snackbarHost = {
-            UToastHost(
-                data = toastData,
-                onDismiss = onToastDismiss,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
+            key(toastGeneration) {
+                UToastHost(
+                    data = toastData,
+                    onDismiss = onToastDismiss,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+            }
         },
         topBar = {
             // Figma `TopBar/Community` 참여종료
