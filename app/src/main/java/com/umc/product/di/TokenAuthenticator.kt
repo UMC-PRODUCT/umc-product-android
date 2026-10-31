@@ -54,17 +54,17 @@ class TokenAuthenticator @Inject constructor(
             mutex.withLock {
                 val currentToken = appDataStoreRepository.getAccessToken()
 
-                // 토큰 없이 보낸 요청(로그아웃 상태)의 401은 세션 만료가 아니다. 지울 토큰도 없고,
-                // 만료 신호를 보내면 로그인·회원가입 화면에 있는 사용자를 로그인 첫 화면으로 되돌린다.
-                // clearTokens()는 호출마다 저장소를 갱신하므로, 저장소를 구독해 재조회하는 화면이 있으면
-                // 401 -> clearTokens -> 재조회 -> 401 루프가 된다
-                if (usedToken.isEmpty() && currentToken.isEmpty()) {
+                // 토큰 없이 보낸 요청(로그아웃 상태, 로그인 실패 등)의 401은 세션 만료가 아니므로 그대로 실패시킨다.
+                // - 만료 신호를 보내면 로그인·회원가입 화면에 있는 사용자를 로그인 첫 화면으로 되돌린다.
+                // - clearTokens()는 호출마다 저장소를 갱신하므로, 저장소를 구독해 재조회하는 화면이 있으면
+                //   401 -> clearTokens -> 재조회 -> 401 루프가 된다.
+                // - 그사이 다른 계정으로 로그인했더라도 그 토큰으로 재시도하지 않는다.
+                if (usedToken.isEmpty()) {
                     Log.d(TAG, "TokenAuthenticator - 토큰 없이 보낸 요청. 세션 만료로 처리하지 않는다")
                     return@withLock null
                 }
 
                 // 대기하는 사이 다른 요청이 갱신을 끝냈다면 그 토큰으로 바로 재시도한다.
-                // 토큰 없이 보낸 요청이 그사이 로그인으로 저장된 토큰을 만나는 경우도 여기서 재시도한다.
                 if (usedToken != currentToken && currentToken.isNotEmpty()) {
                     Log.d(TAG, "TokenAuthenticator - 다른 요청이 이미 갱신함. 새 토큰으로 재요청")
                     return@withLock response.retryWith(currentToken)
