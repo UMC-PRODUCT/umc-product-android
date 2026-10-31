@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.presentation.study.admin.group.schedule.component.*
 
 /**
@@ -34,7 +34,7 @@ fun AdminStudyGroupScheduleScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(white())
     ) {
 
         // 상단 뒤로가기 및 일정 등록 버튼

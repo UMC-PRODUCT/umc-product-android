@@ -34,7 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.black
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey800
 
@@ -75,7 +75,7 @@ fun UButton(
     enabled: Boolean = true,
     backgroundColor: Color = black(),
     pressedColor: Color = backgroundColor,
-    textColor: Color = grey000(),
+    textColor: Color = white(),
     textStyle: TextStyle = UmcTypographyTokens.SubheadlineBold,
     cornerRadius: Dp = 8.dp,
     borderWidth: Dp = 0.dp,
@@ -183,7 +183,7 @@ private fun UButtonOutlinedPreview() {
                 text = "취소",
                 onClick = {},
                 modifier = Modifier.fillMaxWidth(),
-                backgroundColor = grey000(),
+                backgroundColor = white(),
                 textColor = grey800(),
                 borderWidth = 1.dp,
                 borderColor = grey300(),

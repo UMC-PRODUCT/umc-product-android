@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey900
@@ -76,7 +76,7 @@ fun CommunitySearchBar(
         // 검색어 입력 영역
         Surface(
             modifier = Modifier.weight(1f),
-            color = grey000(),
+            color = white(),
             border = BorderStroke(
                 width = 1.dp,
                 color = grey200(),

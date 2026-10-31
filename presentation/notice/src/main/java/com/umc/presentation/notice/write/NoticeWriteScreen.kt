@@ -84,7 +84,7 @@ import com.umc.component.component.UTextActionItem
 import com.umc.component.component.uTextActionMenu
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -218,7 +218,7 @@ fun NoticeWriteRoute(
         ModalBottomSheet(
             onDismissRequest = { sheetType = null },
             sheetState = sheetState,
-            containerColor = grey000(),
+            containerColor = white(),
         ) {
             when (type) {
                 WriteSheetType.CATEGORY -> WriteSelectSheetContent(
@@ -312,7 +312,7 @@ fun NoticeWriteScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(white())
             .imePadding(),
     ) {
         Row(
@@ -857,7 +857,7 @@ private fun MarkdownMenu(
     ) {
         Surface(
             shape = RoundedCornerShape(12.dp),
-            color = grey000(),
+            color = white(),
             shadowElevation = 8.dp,
         ) {
             // Popup 안에서는 최대 폭이 화면 전체라 항목의 fillMaxWidth가 화면을 다 채운다.
@@ -903,7 +903,7 @@ private fun MarkdownMenuItem(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_check),
                         contentDescription = null,
-                        tint = grey000(),
+                        tint = white(),
                         modifier = Modifier.size(11.dp),
                     )
                 }
@@ -994,7 +994,7 @@ private fun AttachedImageThumbnail(
             Icon(
                 painter = painterResource(id = R.drawable.ic_close_big),
                 contentDescription = null,
-                tint = grey000(),
+                tint = white(),
                 modifier = Modifier.size(10.dp),
             )
         }
@@ -1051,7 +1051,7 @@ private fun NoticeLinkPanel(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(10.dp))
-                .background(grey000())
+                .background(white())
                 .border(1.dp, grey200(), RoundedCornerShape(10.dp))
                 .padding(horizontal = 16.dp, vertical = 15.dp),
         ) {
@@ -1087,7 +1087,7 @@ private fun VoteMaxDialog(
 ) {
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = grey000(),
+        containerColor = white(),
         shape = RoundedCornerShape(20.dp),
         text = {
             UText(
@@ -1116,7 +1116,7 @@ private fun ProcessingDialog(message: String) {
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(20.dp))
-                .background(grey000())
+                .background(white())
                 .padding(horizontal = 48.dp, vertical = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -1157,7 +1157,7 @@ private fun WriteBoardChip(
         UText(
             text = text,
             style = UmcTypographyTokens.SubheadlineBold,
-            color = if (isSelected) grey000() else grey500(),
+            color = if (isSelected) white() else grey500(),
         )
 
         if (hasDropdownIcon) {
@@ -1167,7 +1167,7 @@ private fun WriteBoardChip(
             Icon(
                 painter = painterResource(id = R.drawable.ic_dropdown_down),
                 contentDescription = null,
-                tint = if (isSelected) grey000() else grey500(),
+                tint = if (isSelected) white() else grey500(),
                 modifier = Modifier.size(16.dp),
             )
         }

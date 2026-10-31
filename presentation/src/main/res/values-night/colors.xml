@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FFFFFFFF</color>
+    <color name="white">#FF000000</color>
 
 
     <color name="main100">#013733</color>
@@ -15,18 +15,17 @@
     <color name="main900">#E8F7F5</color>
 
 
-    <color name="grey000">#FFFFFF</color>
-    <color name="grey50">#F7F8F8</color>
-    <color name="grey100">#F4F5F5</color>
-    <color name="grey200">#E5E6E6</color>
-    <color name="grey300">#CCCCCC</color>
-    <color name="grey400">#ADADAD</color>
+    <color name="grey50">#0F1010</color>
+    <color name="grey100">#070808</color>
+    <color name="grey200">#282A2A</color>
+    <color name="grey300">#3F4141</color>
+    <color name="grey400">#606262</color>
     <color name="grey500">#7E7F7F</color>
-    <color name="grey600">#606262</color>
-    <color name="grey700">#3F4141</color>
-    <color name="grey800">#282A2A</color>
-    <color name="grey900">#0F1010</color>
-    <color name="grey950">#070808</color>
+    <color name="grey600">#ADADAD</color>
+    <color name="grey700">#CCCCCC</color>
+    <color name="grey800">#E5E6E6</color>
+    <color name="grey900">#F4F5F5</color>
+    <color name="grey950">#F7F8F8</color>
 
 
     <color name="green100">#042A1B</color>

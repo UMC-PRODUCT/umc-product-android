@@ -42,7 +42,7 @@ fun AdminStudyGroupDeleteDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = grey000(),
+                    color = white(),
                     shape = RoundedCornerShape(16.dp)
                 )
                 .padding(20.dp)
@@ -135,7 +135,7 @@ fun AdminStudyGroupDeleteDialog(
                         modifier = Modifier
                             .weight(1f)
                             .height(40.dp),
-                        backgroundColor = grey000(),
+                        backgroundColor = white(),
                         textColor = grey700(),
                         textStyle = SubheadlineBold,
                         borderWidth = 1.dp,

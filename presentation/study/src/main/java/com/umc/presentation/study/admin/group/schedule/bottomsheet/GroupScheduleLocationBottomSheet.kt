@@ -190,7 +190,7 @@ fun GroupScheduleLocationBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = grey000(),
+        containerColor = white(),
         dragHandle = {
             BottomSheetDefaults.DragHandle(
                 color = grey600()
@@ -377,7 +377,7 @@ fun GroupScheduleLocationHeaderAndSearchBar(
                     .width(64.dp)
                     .height(40.dp),
                 backgroundColor = main500(),
-                textColor = grey000(),
+                textColor = white(),
                 textStyle =
                     UmcTypographyTokens.Caption1Bold,
                 cornerRadius = 8.dp
@@ -549,7 +549,7 @@ fun GroupScheduleSelectedLocationCard(
                     .width(64.dp)
                     .height(36.dp),
                 backgroundColor = main500(),
-                textColor = grey000(),
+                textColor = white(),
                 textStyle =
                     UmcTypographyTokens.Caption1Bold,
                 cornerRadius = 8.dp

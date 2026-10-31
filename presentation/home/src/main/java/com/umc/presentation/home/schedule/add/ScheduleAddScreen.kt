@@ -276,7 +276,7 @@ fun ScheduleAddScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(white())
 
     ) {
         //1. 상단 바
@@ -602,7 +602,7 @@ fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit, i
             .clickable(enabled = !isDisabled) { onClick() },
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, if (isDisabled) grey200() else grey300()),
-        color = if (isDisabled) grey100() else grey000()
+        color = if (isDisabled) grey100() else white()
     ) {
         Row(
             modifier = Modifier
@@ -639,7 +639,7 @@ fun AttendanceDateCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, grey300()),
-        color = grey000()
+        color = white()
     ) {
         Column {
             //체크인 시간

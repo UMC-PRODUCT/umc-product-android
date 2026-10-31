@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey800
@@ -74,7 +74,7 @@ fun CommunityChallengerCard(
                 indication = null,
                 onClick = onClick,
             ),
-        color = grey000(),
+        color = white(),
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(
             width = 1.dp,

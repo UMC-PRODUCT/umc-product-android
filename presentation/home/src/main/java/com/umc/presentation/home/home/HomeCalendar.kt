@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.red500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
@@ -163,7 +163,7 @@ fun HomeCalendar(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(grey000())
+            .background(white())
             // 아래쪽은 비워 둔다. 마지막 주 칸이 이미 점 아래 14dp(날짜 아래 24dp)를 갖고 있어,
             // 바로 이어지는 일정 리스트와의 간격이 그 값 그대로 유지된다.
             .padding(start = 16.dp, end = 16.dp, top = 16.dp)
@@ -487,13 +487,13 @@ fun CalendarDatePickerDialog(
             TextButton(onClick = onDismiss) { UText(AppStrings.CANCEL) }
         },
         colors = DatePickerDefaults.colors(
-            containerColor = grey000(),
+            containerColor = white(),
         )
     ) {
         DatePicker(
             state = datePickerState,
             colors = DatePickerDefaults.colors(
-                containerColor = grey000()
+                containerColor = white()
             )
         )
     }

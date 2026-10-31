@@ -16,7 +16,6 @@ internal val lightMain600 = Color(0xFF02746C)
 internal val lightMain700 = Color(0xFF015A54)
 internal val lightMain800 = Color(0xFF01423D)
 internal val lightMain900 = Color(0xFF013733)
-internal val lightGrey000 = Color(0xFFFFFFFF)
 internal val lightGrey50 = Color(0xFFF7F8F8)
 internal val lightGrey100 = Color(0xFFF4F5F5)
 internal val lightGrey200 = Color(0xFFE5E6E6)
@@ -62,8 +61,9 @@ internal val lightGeofenceFill = Color(0x0D51A2FF)
 internal val lightGeofenceStroke = Color(0x4D51A2FF)
 
 // Dark palette (values-night/colors.xml)
-internal val darkBlack = Color(0xFF000000)
-internal val darkWhite = Color(0xFFFFFFFF)
+// white·black은 다크 모드에서 서로 뒤바뀐다 (white = 화면 바탕색, black = 그 위의 기본 전경색)
+internal val darkBlack = Color(0xFFFFFFFF)
+internal val darkWhite = Color(0xFF000000)
 internal val darkMain100 = Color(0xFF013733)
 internal val darkMain200 = Color(0xFF01423D)
 internal val darkMain300 = Color(0xFF015A54)
@@ -73,18 +73,17 @@ internal val darkMain600 = Color(0xFF39A9A1)
 internal val darkMain700 = Color(0xFF7AC7C1)
 internal val darkMain800 = Color(0xFFC1EBE8)
 internal val darkMain900 = Color(0xFFE8F7F5)
-internal val darkGrey000 = Color(0xFFFFFFFF)
-internal val darkGrey50 = Color(0xFFF7F8F8)
-internal val darkGrey100 = Color(0xFFF4F5F5)
-internal val darkGrey200 = Color(0xFFE5E6E6)
-internal val darkGrey300 = Color(0xFFCCCCCC)
-internal val darkGrey400 = Color(0xFFADADAD)
+internal val darkGrey50 = Color(0xFF0F1010)
+internal val darkGrey100 = Color(0xFF070808)
+internal val darkGrey200 = Color(0xFF282A2A)
+internal val darkGrey300 = Color(0xFF3F4141)
+internal val darkGrey400 = Color(0xFF606262)
 internal val darkGrey500 = Color(0xFF7E7F7F)
-internal val darkGrey600 = Color(0xFF606262)
-internal val darkGrey700 = Color(0xFF3F4141)
-internal val darkGrey800 = Color(0xFF282A2A)
-internal val darkGrey900 = Color(0xFF0F1010)
-internal val darkGrey950 = Color(0xFF070808)
+internal val darkGrey600 = Color(0xFFADADAD)
+internal val darkGrey700 = Color(0xFFCCCCCC)
+internal val darkGrey800 = Color(0xFFE5E6E6)
+internal val darkGrey900 = Color(0xFFF4F5F5)
+internal val darkGrey950 = Color(0xFFF7F8F8)
 internal val darkGreen100 = Color(0xFF042A1B)
 internal val darkGreen200 = Color(0xFF085D3A)
 internal val darkGreen300 = Color(0xFF067647)
@@ -148,9 +147,6 @@ fun main800(): Color = if (isSystemInDarkTheme()) darkMain800 else lightMain800
 
 @Composable
 fun main900(): Color = if (isSystemInDarkTheme()) darkMain900 else lightMain900
-
-@Composable
-fun grey000(): Color = if (isSystemInDarkTheme()) darkGrey000 else lightGrey000
 
 @Composable
 fun grey50(): Color = if (isSystemInDarkTheme()) darkGrey50 else lightGrey50

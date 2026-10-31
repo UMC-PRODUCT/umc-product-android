@@ -60,7 +60,7 @@ fun UTimePickerDialog(
                 .fillMaxWidth(0.8f)
                 .wrapContentHeight(),
             shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = grey000()),
+            colors = CardDefaults.cardColors(containerColor = white()),
             elevation = CardDefaults.cardElevation(0.dp)
         ) {
             Column(

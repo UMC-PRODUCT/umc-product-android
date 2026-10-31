@@ -32,7 +32,7 @@ fun GroupScheduleTextField(
             .fillMaxWidth()
             .height(52.dp)
             .background(
-                grey000(),
+                white(),
                 RoundedCornerShape(8.dp)
             )
             .border(

@@ -55,7 +55,7 @@ import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.yellow500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
@@ -175,7 +175,7 @@ fun ScheduleDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(white())
 
     ) {
 
@@ -322,7 +322,7 @@ fun ScheduleDetailScreen(
                             UButton(
                                 text = AppStrings.HOME_PLAN_DETAIL_CHECK_CONFIRM,
                                 backgroundColor = grey950(), // accent 팔레트 제거로 yellow(구 warning)로 대체
-                                textColor = grey000(),
+                                textColor = white(),
                                 textStyle = UmcTypographyTokens.HeadlineBold,
                                 modifier = Modifier
                                     .fillMaxWidth()

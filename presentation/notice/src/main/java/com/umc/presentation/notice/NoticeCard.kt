@@ -31,7 +31,7 @@ import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.green100
 import com.umc.component.theme.green600
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey500
@@ -56,7 +56,7 @@ fun NoticeCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(grey000())
+            .background(white())
             .border(1.dp, grey200(), RoundedCornerShape(12.dp))
             .clickable { onClick() }
             .padding(16.dp),

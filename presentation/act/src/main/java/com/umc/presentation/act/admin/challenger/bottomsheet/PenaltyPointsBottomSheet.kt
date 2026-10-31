@@ -46,7 +46,7 @@ import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.component.theme.main500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -101,7 +101,7 @@ fun PenaltyPointsScreen(
             .fillMaxWidth()
             .height(600.dp)
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .background(grey000())
+            .background(white())
             .padding(horizontal = 16.dp)
     ) {
         DragHeader()
@@ -164,7 +164,7 @@ fun PenaltyPointsScreen(
                 text = if (uiState.isPointSubmitting) AppStrings.REWARD_SUBMITTING else AppStrings.REWARD_SUBMIT,
                 enabled = isSubmitEnabled && !uiState.isPointSubmitting,
                 textStyle = HeadlineBold,
-                textColor = if (isSubmitEnabled) grey000() else grey300(),
+                textColor = if (isSubmitEnabled) white() else grey300(),
                 backgroundColor = if (isSubmitEnabled) main500() else grey100(),
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
                 cornerRadius = 8.dp,
@@ -208,7 +208,7 @@ private fun FilterTabs(
             UChip(
                 text = filter.label,
                 backgroundColor = if (selected) grey900() else grey100(),
-                textColor = if (selected) grey000() else grey500(),
+                textColor = if (selected) white() else grey500(),
                 textStyle = SubheadlineBold,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                 onClick = { onFilterSelected(filter) }
@@ -306,7 +306,7 @@ private fun MemoInput(
         placeholderColor = grey400(),
         textColor = grey800(),
         textStyle = Callout.copy(color = grey800()),
-        backgroundColor = grey000(),
+        backgroundColor = white(),
         strokeColor = grey300(),
         focusStrokeColor = grey900(),
         verticalAlignment = Alignment.Top,

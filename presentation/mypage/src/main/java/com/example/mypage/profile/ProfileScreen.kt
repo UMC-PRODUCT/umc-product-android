@@ -53,7 +53,7 @@ import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -259,7 +259,7 @@ fun ProfileTopbar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(white())
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -343,7 +343,7 @@ fun ProfileImageSection(imageUri: Uri, defaultUrl: String, onImageClick: () -> U
                     .size(36.dp)
                     .align(Alignment.BottomEnd),
                 shape = CircleShape,
-                color = grey000(),
+                color = white(),
                 border = BorderStroke(1.dp, grey200())
             ) {
                 Icon(
@@ -442,7 +442,7 @@ private fun ProfileLoadError(isLoading: Boolean, onRetryClick: () -> Unit) {
                 .fillMaxWidth()
                 .height(48.dp),
             backgroundColor = main500(),
-            textColor = grey000(),
+            textColor = white(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             cornerRadius = 12.dp,
         )

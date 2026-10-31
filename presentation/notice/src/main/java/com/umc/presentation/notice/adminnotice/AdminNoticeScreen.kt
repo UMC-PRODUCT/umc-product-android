@@ -37,7 +37,7 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
@@ -95,7 +95,7 @@ fun AdminNoticeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(white()),
     ) {
         Row(
             modifier = Modifier
@@ -239,7 +239,7 @@ private fun AdminNoticeChip(
         UText(
             text = text,
             style = UmcTypographyTokens.SubheadlineBold,
-            color = if (isSelected) grey000() else grey500(),
+            color = if (isSelected) white() else grey500(),
         )
     }
 }

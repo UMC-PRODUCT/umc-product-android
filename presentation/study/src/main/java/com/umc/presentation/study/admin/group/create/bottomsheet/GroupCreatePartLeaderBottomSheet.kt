@@ -31,7 +31,7 @@ import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
@@ -89,7 +89,7 @@ fun GroupCreatePartLeaderBottomSheet(
     ModalBottomSheet(
         onDismissRequest = ::dismissWithApply,
         sheetState = sheetState,
-        containerColor = grey000(),
+        containerColor = white(),
         dragHandle = {
             BottomSheetDefaults.DragHandle(
                 color = grey600()
@@ -134,7 +134,7 @@ fun GroupCreatePartLeaderBottomSheet(
                 prevIconTint = grey500(),
                 prevIconSize = 24.dp,
                 backgroundColor = grey100(),
-                focusBackgroundColor = grey000(),
+                focusBackgroundColor = white(),
                 strokeColor = grey100(),
                 focusStrokeColor = grey900(),
                 cornerRadius = 8.dp

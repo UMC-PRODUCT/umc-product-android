@@ -58,7 +58,7 @@ import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
@@ -257,7 +257,7 @@ private fun SearchBar(
 ) {
     Column(
         modifier = Modifier
-            .background(grey000())
+            .background(white())
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .fillMaxWidth()
             .wrapContentHeight()
@@ -290,13 +290,13 @@ private fun SearchBar(
             UText(
                 text = selectedPart?.label ?: "파트",
                 style = Footnote,
-                color = if (selectedPart == null) grey600() else grey000(),
+                color = if (selectedPart == null) grey600() else white(),
             )
             Spacer(modifier = Modifier.width(4.dp))
             Icon(
                 painter = painterResource(R.drawable.ic_dropdown_down),
                 contentDescription = "파트 선택",
-                tint = if (selectedPart == null) grey600() else grey000(),
+                tint = if (selectedPart == null) grey600() else white(),
                 modifier = Modifier.size(12.dp),
             )
         }
@@ -313,7 +313,7 @@ private fun NormalChallengerPartBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = grey000(),
+        containerColor = white(),
         dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
@@ -403,7 +403,7 @@ private fun ChallengerMemberRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(grey000())
+            .background(white())
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -414,7 +414,7 @@ private fun ChallengerMemberRow(
                 .border(1.dp, grey200(), CircleShape)
                 .padding(1.dp)
                 .clip(CircleShape)
-                .background(grey000()),
+                .background(white()),
             contentAlignment = Alignment.Center
         ) {
             Icon(

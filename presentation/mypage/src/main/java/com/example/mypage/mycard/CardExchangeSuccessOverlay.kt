@@ -27,7 +27,6 @@ import com.umc.component.theme.white
 import com.umc.domain.model.mypage.UserCard
 import com.umc.component.R
 import com.umc.component.theme.AppStrings
-import com.umc.component.theme.grey000
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey950
@@ -49,7 +48,7 @@ fun CardExchangeSuccessOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(white())
             .padding(horizontal = 20.dp, vertical = 24.dp)
     ) {
 
@@ -100,7 +99,7 @@ fun CardExchangeSuccessOverlay(
                     .fillMaxWidth()
                     .height(52.dp),
                 backgroundColor = main500(),
-                textColor = grey000(),
+                textColor = white(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 12.dp,
                 onClick = onContinueExchange

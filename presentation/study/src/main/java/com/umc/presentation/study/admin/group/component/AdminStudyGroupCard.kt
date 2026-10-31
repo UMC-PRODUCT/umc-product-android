@@ -57,7 +57,7 @@ fun AdminStudyGroupCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    grey000(),
+                    white(),
                     RoundedCornerShape(12.dp)
                 )
                 .padding(16.dp)
@@ -156,7 +156,7 @@ fun AdminStudyGroupCard(
                         modifier = Modifier
                             .width(208.dp)
                             .background(
-                                grey000(),
+                                white(),
                                 RoundedCornerShape(16.dp)
                             )
                     ) {
@@ -240,7 +240,7 @@ fun AdminStudyGroupCard(
                 Box(
                     modifier = Modifier
                         .background(
-                            grey000(),
+                            white(),
                             RoundedCornerShape(4.dp)
                         )
                         .border(

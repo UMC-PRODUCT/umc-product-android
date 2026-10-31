@@ -56,7 +56,6 @@ import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.black
-import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -142,7 +141,7 @@ fun ReceivedCardScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(white())
 
     ) {
 
@@ -257,7 +256,7 @@ fun ReceivedCardScreenTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(white())
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -360,7 +359,7 @@ private fun ReceivedCardItem(
                     text = card.part,
                     enabled = false,
                     backgroundColor = partTheme.badgeColor,
-                    textColor = grey000(),
+                    textColor = white(),
                     textStyle = UmcTypographyTokens.Caption1,
                     cornerRadius = 4.dp,
                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
@@ -372,7 +371,7 @@ private fun ReceivedCardItem(
                     text = "${card.generation}기",
                     enabled = false,
                     backgroundColor = partTheme.badgeColor,
-                    textColor = grey000(),
+                    textColor = white(),
                     textStyle = UmcTypographyTokens.Caption1,
                     cornerRadius = 4.dp,
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),

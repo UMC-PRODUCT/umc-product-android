@@ -33,7 +33,7 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
@@ -57,7 +57,7 @@ fun ScheduleCategoryBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = grey000(),
+        containerColor = white(),
         dragHandle = {
             BottomSheetDefaults.DragHandle(color = grey600())
         },
@@ -99,7 +99,7 @@ fun ScheduleCategoryBottomSheet(
                 UButton(
                     text = AppStrings.CONFIRM,
                     backgroundColor = main500(),
-                    textColor = grey000(),
+                    textColor = white(),
                     onClick = onConfirm,
                     modifier = Modifier
                         .padding(start = 8.dp),
@@ -173,7 +173,7 @@ fun CategoryItemRow(
             colors = CheckboxDefaults.colors(
                 checkedColor = main500(),
                 uncheckedColor = grey300(),
-                checkmarkColor = grey000()
+                checkmarkColor = white()
             )
         )
     }

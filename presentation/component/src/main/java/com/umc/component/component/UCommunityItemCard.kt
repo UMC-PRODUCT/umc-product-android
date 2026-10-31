@@ -26,7 +26,7 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow200
 import com.umc.component.theme.yellow500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.domain.model.community.ContentItem
@@ -53,7 +53,7 @@ fun UCommunityItemCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = white()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

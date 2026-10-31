@@ -32,7 +32,7 @@ fun GroupScheduleMemoBox(
             .fillMaxWidth()
             .height(140.dp)
             .background(
-                grey000(),
+                white(),
                 RoundedCornerShape(8.dp)
             )
             .border(

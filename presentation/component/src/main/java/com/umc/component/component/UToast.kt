@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey800
 import kotlinx.coroutines.delay
 
@@ -45,7 +45,7 @@ data class UToastData(
  * @param state 아이콘 종류. CHECK=체크, ERROR=에러, NONE=아이콘 없음
  * @param modifier 외부 레이아웃 지정
  * @param backgroundColor 토스트 배경색. 기본값 grey800
- * @param textColor 메시지 글자색. 기본값 grey000
+ * @param textColor 메시지 글자색. 기본값 white
  */
 @Composable
 fun UToast(
@@ -53,7 +53,7 @@ fun UToast(
     state: UToastState,
     modifier: Modifier = Modifier,
     backgroundColor: Color = grey800(),
-    textColor: Color = grey000(),
+    textColor: Color = white(),
 ) {
     Row(
         modifier = modifier
@@ -101,7 +101,7 @@ fun UToast(
  * @param modifier 위치/여백 지정
  * @param durationMillis 토스트 표시 유지 시간 (밀리초). 기본값 2000ms
  * @param backgroundColor 토스트 배경색. 기본값 grey800
- * @param textColor 메시지 글자색. 기본값 grey000
+ * @param textColor 메시지 글자색. 기본값 white
  */
 @Composable
 fun UToastHost(
@@ -110,7 +110,7 @@ fun UToastHost(
     modifier: Modifier = Modifier,
     durationMillis: Long = 2000L,
     backgroundColor: Color = grey800(),
-    textColor: Color = grey000(),
+    textColor: Color = white(),
 ) {
     LaunchedEffect(data) {
         if (data != null) {

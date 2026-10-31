@@ -144,7 +144,7 @@ fun LocationSearchBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = grey000(),
+        containerColor = white(),
         dragHandle = {
             BottomSheetDefaults.DragHandle(color = grey600())
         },
@@ -377,7 +377,7 @@ fun SelectedLocationCard(
                 text = "선택",
                 onClick = onConfirmClick,
                 backgroundColor = main500(),
-                textColor = grey000(),
+                textColor = white(),
                 textStyle = UmcTypographyTokens.Caption1Bold,
                 cornerRadius = 8.dp
             )

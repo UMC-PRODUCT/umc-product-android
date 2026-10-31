@@ -43,7 +43,7 @@ import com.umc.component.component.UToastHost
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -116,7 +116,7 @@ fun EmailLoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(white()),
     ) {
         Icon(
             modifier = Modifier
@@ -152,7 +152,7 @@ fun EmailLoginScreen(
                 placeholder = AppStrings.EMAIL_LOGIN_EMAIL_PLACEHOLDER,
                 textStyle = UmcTypographyTokens.Headline,
                 textColor = if (uiState.isLoginFailed) red500() else grey950(),
-                backgroundColor = if (uiState.isLoginFailed) red100() else grey000(),
+                backgroundColor = if (uiState.isLoginFailed) red100() else white(),
                 strokeColor = if (uiState.isLoginFailed) red500() else grey200(),
                 focusStrokeColor = if (uiState.isLoginFailed) red500() else grey900(),
                 cornerRadius = 10.dp,
@@ -186,7 +186,7 @@ fun EmailLoginScreen(
                 placeholder = AppStrings.EMAIL_LOGIN_PASSWORD_PLACEHOLDER,
                 textStyle = UmcTypographyTokens.Headline,
                 textColor = if (uiState.isLoginFailed) red500() else grey950(),
-                backgroundColor = if (uiState.isLoginFailed) red100() else grey000(),
+                backgroundColor = if (uiState.isLoginFailed) red100() else white(),
                 strokeColor = if (uiState.isLoginFailed) red500() else grey200(),
                 focusStrokeColor = if (uiState.isLoginFailed) red500() else grey900(),
                 cornerRadius = 10.dp,
@@ -260,7 +260,7 @@ fun EmailLoginScreen(
                 onClick = onClickLogin,
                 enabled = uiState.enableLoginButton,
                 backgroundColor = if (uiState.enableLoginButton) main500() else grey100(),
-                textColor = if (uiState.enableLoginButton) grey000() else grey300(),
+                textColor = if (uiState.enableLoginButton) white() else grey300(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 10.dp,
                 modifier = Modifier

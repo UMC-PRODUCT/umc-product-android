@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.Dp
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.R
 import com.umc.component.component.UTextField
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey900
@@ -37,7 +37,7 @@ internal fun CommunityMemberSearchField(
         nextIcon = if (showClearButton && value.isNotEmpty()) painterResource(R.drawable.ic_clear_circle) else null,
         onClickNextIcon = if (showClearButton && value.isNotEmpty()) ({ onValueChange("") }) else null,
         backgroundColor = grey100(),
-        focusBackgroundColor = grey000(),
+        focusBackgroundColor = white(),
         strokeColor = grey100(),
         focusStrokeColor = grey900(),
         cornerRadius = 8.dp,

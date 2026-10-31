@@ -26,7 +26,7 @@ import com.umc.domain.model.enums.UserType
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.white
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey700
@@ -60,7 +60,7 @@ fun HomeTopBar(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .background(color = grey000(), shape = CircleShape)
+                    .background(color = white(), shape = CircleShape)
                     .clip(CircleShape)
                     .clickable(
                         onClick = onNotificationClick

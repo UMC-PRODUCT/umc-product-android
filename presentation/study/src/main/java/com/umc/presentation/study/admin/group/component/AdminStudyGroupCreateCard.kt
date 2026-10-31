@@ -34,12 +34,12 @@ fun AdminStudyGroupCreateCard(
                 bottom = 16.dp
             )
             .background(
-                grey000(),
+                white(),
                 RoundedCornerShape(8.dp)
             )
             .border(
                 1.dp,
-                grey000(),
+                white(),
                 RoundedCornerShape(8.dp)
             )
             .clickable {
