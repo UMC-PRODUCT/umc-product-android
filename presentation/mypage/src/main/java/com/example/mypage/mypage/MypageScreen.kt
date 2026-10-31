@@ -152,6 +152,24 @@ fun MypageRoute(
                     openWebpage(context, uiState.linkedinUrl)
                 }
             }
+            //인스타그램 누를 때
+            is MypageEvent.NavigateToInstagramLink -> {
+                if (uiState.instagramUrl.isBlank()) {
+                    selectedOutLinkType = OutLinkType.INSTAGRAM
+                    showOutLinkDialog = true
+                } else {
+                    openWebpage(context, uiState.instagramUrl)
+                }
+            }
+            //개인 사이트 누를 때
+            is MypageEvent.NavigateToPersonalSite -> {
+                if (uiState.personalUrl.isBlank()) {
+                    selectedOutLinkType = OutLinkType.PERSONAL
+                    showOutLinkDialog = true
+                } else {
+                    openWebpage(context, uiState.personalUrl)
+                }
+            }
             //프로필 누를 때 (이동)
             is MypageEvent.NavigateToEditProfile -> onNavigateToEditProfile()
             //챌린저 기록 추가 누를 때 (이동)
@@ -227,6 +245,8 @@ fun MypageRoute(
         onGithubClick = viewModel::navigateToGithub, //깃허브 이동
         onLinkedinClick = viewModel::navigateToLinkedin, //링크드인 이동
         onBlogClick = viewModel::navigateToBlog, //블로그 이동
+        onInstagramLinkClick = viewModel::navigateToInstagramLink, //내 인스타그램 이동
+        onPersonalSiteClick = viewModel::navigateToPersonalSite, //개인 사이트 이동
         onAddActivityClick = viewModel::navigateToAddActivity, //챌린저 기록 추가(코드 입력)
         onAssistClick = viewModel::navigateToAssistUmc, //UMC 어시스트(카톡) 이동
         onNoticeSettingClick = viewModel::navigateToSettingNotice, //알림 설정 이동
@@ -260,6 +280,8 @@ fun MypageRoute(
             OutLinkType.GITHUB -> "Github를"
             OutLinkType.LINKEDIN -> "LinkedIn을"
             OutLinkType.BLOG -> "Blog를"
+            OutLinkType.INSTAGRAM -> "Instagram을"
+            OutLinkType.PERSONAL -> "개인 사이트를"
             else -> ""
         }
 
@@ -438,7 +460,7 @@ private fun openPermissionPage(context: Context) {
 /**
  * 카카오톡 앱 채널 채팅창을 호출하거나 웹 링크로 라우팅하는 메서드
  */
-private fun openKakaoChannel(context: Context, channelId: String){
+internal fun openKakaoChannel(context: Context, channelId: String){
 
     if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
         // 카카오톡이 설치되어 있다면 앱 내 채널 채팅창으로 이동
@@ -470,6 +492,8 @@ fun MypageScreen(
     onGithubClick: () -> Unit,
     onLinkedinClick: () -> Unit,
     onBlogClick: () -> Unit,
+    onInstagramLinkClick: () -> Unit,
+    onPersonalSiteClick: () -> Unit,
     onAddActivityClick: () -> Unit,
     onAssistClick: () -> Unit,
     onNoticeSettingClick: () -> Unit,
@@ -505,22 +529,23 @@ fun MypageScreen(
         ) {
 
 
-            item {
-                //내 활동 섹션 - 운영진에게 받은 6자리 코드로 기수 활동 기록을 계정에 붙인다
-                MypageSectionTitle(
-                    text = AppStrings.MYPAGE_MYACTIVITY
-                )
-                MypageListCard {
-                    MypageListItem(
-                        R.drawable.ic_plus_circle,
-                        AppStrings.MYPAGE_ADDACTIVITY,
-                        onClick = onAddActivityClick
-                    )
-                }
-            }
+            // 챌린저 기록 추가는 마이페이지 > 활동 이력 화면으로 옮겼다 (설정 시안에는 내 활동 섹션이 없다)
+            // item {
+            //     //내 활동 섹션 - 운영진에게 받은 6자리 코드로 기수 활동 기록을 계정에 붙인다
+            //     MypageSectionTitle(
+            //         text = AppStrings.MYPAGE_MYACTIVITY
+            //     )
+            //     MypageListCard {
+            //         MypageListItem(
+            //             R.drawable.ic_plus_circle,
+            //             AppStrings.MYPAGE_ADDACTIVITY,
+            //             onClick = onAddActivityClick
+            //         )
+            //     }
+            // }
 
             item {
-                //외부 링크 3종 섹션
+                //외부 링크 5종 섹션 (외부 앱·웹으로 나가는 행은 오른쪽에 외부 이동 화살표)
                 MypageSectionTitle(
                     text = AppStrings.MYPAGE_OUT_LINK
                 )
@@ -528,17 +553,32 @@ fun MypageScreen(
                     MypageListItem(
                         R.drawable.ic_github_link,
                         AppStrings.GITHUB,
+                        trailingIconRes = R.drawable.ic_open_link,
                         onClick = onGithubClick
                     )
                     MypageListItem(
                         R.drawable.ic_linkedin_link,
                         AppStrings.LINKEDIN,
+                        trailingIconRes = R.drawable.ic_open_link,
                         onClick = onLinkedinClick
                     )
                     MypageListItem(
                         R.drawable.ic_blog_link,
                         AppStrings.BLOG,
+                        trailingIconRes = R.drawable.ic_open_link,
                         onClick = onBlogClick
+                    )
+                    MypageListItem(
+                        R.drawable.ic_instagram,
+                        AppStrings.INSTAGRAM,
+                        trailingIconRes = R.drawable.ic_open_link,
+                        onClick = onInstagramLinkClick
+                    )
+                    MypageListItem(
+                        R.drawable.ic_blog_link,
+                        AppStrings.PERSONAL_SITE,
+                        trailingIconRes = R.drawable.ic_open_link,
+                        onClick = onPersonalSiteClick
                     )
                 }
             }
@@ -552,6 +592,7 @@ fun MypageScreen(
                     MypageListItem(
                         R.drawable.ic_inquire_umc,
                         AppStrings.MYPAGE_INQUIRE_UMC_KAKAO,
+                        trailingIconRes = R.drawable.ic_open_link,
                         onClick = onAssistClick
                     )
                 }
@@ -566,11 +607,13 @@ fun MypageScreen(
                     MypageListItem(
                         R.drawable.ic_bottom_nav_notice,
                         AppStrings.MYPAGE_SETTING_NOTICE,
+                        trailingIconRes = R.drawable.ic_open_link,
                         onClick = onNoticeSettingClick
                     )
                     MypageListItem(
                         R.drawable.ic_location,
                         AppStrings.MYPAGE_SETTING_LOCATION,
+                        trailingIconRes = R.drawable.ic_open_link,
                         onClick = onLocationSettingClick
                     )
                 }
@@ -743,6 +786,7 @@ fun MypageListItem(
     iconRes: Int,
     text: String,
     showArrow: Boolean = true,
+    trailingIconRes: Int = R.drawable.ic_arrow_next, //오른쪽 아이콘. 외부 앱·웹으로 나가는 행은 R.drawable.ic_open_link
     onClick: () -> Unit
 ) {
     Row(
@@ -769,7 +813,7 @@ fun MypageListItem(
         )
         if (showArrow) {
             Icon(
-                painter = painterResource(id = R.drawable.ic_arrow_next),
+                painter = painterResource(id = trailingIconRes),
                 contentDescription = null,
                 tint = grey400()
             )
@@ -898,6 +942,8 @@ private fun MypageScreenPreviewContent(uiState: MypageUiState) {
             onGithubClick = {},
             onLinkedinClick = {},
             onBlogClick = {},
+            onInstagramLinkClick = {},
+            onPersonalSiteClick = {},
             onAddActivityClick = {},
             onAssistClick = {},
             onNoticeSettingClick = {},

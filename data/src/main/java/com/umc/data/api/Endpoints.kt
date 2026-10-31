@@ -62,6 +62,10 @@ object Endpoints {
         const val MEMBER_REGISTER_EMAIL = "$MEMBER/register/email"
         const val MEMBER_PROFILE_LINK = "$MEMBER/profile/links"
         const val MEMBER_SEARCH = "$MEMBER/search"
+        const val MEMBER_BLOCKS = "$MEMBER/blocks"
+        const val MEMBER_BLOCK = "$MEMBER_BLOCKS/{memberId}"
+        const val MY_BUSINESS_CARD = "$MYPROFILE/business-card"
+        const val MY_BUSINESS_CARD_EDIT = "$MY_BUSINESS_CARD/edit"
     }
 
     object Kakao {

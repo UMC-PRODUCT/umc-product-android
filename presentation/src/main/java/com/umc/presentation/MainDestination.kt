@@ -119,6 +119,10 @@ sealed interface MainDestination {
         val viewProfileOnly: Boolean = false,
     ) : MainDestination
 
+    //타인 프로필 조회 (스레드 > 프로필 정보 보기)
+    @Serializable
+    data class MemberProfile(val memberId: String) : MainDestination
+
     //(구 마이페이지) -> (신 설정)
     @Serializable
     data object Mypage : MainDestination

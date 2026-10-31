@@ -3,9 +3,13 @@ package com.umc.data.dataSource.remote.member
 import com.umc.data.api.MemberApi
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.request.member.DeleteUserRequest
+import com.umc.data.request.member.EditBusinessCardRequest
 import com.umc.data.request.member.UpdateMyLinkRequest
 import com.umc.data.request.member.UpdateMyProfileRequest
 import com.umc.data.response.JwtLoginResponse
+import com.umc.data.response.member.BlockedMemberListResponse
+import com.umc.data.response.member.BusinessCardResponse
+import com.umc.data.response.member.MemberBlockResponse
 import com.umc.data.response.member.MemberResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.member.RegisterEmailRequest
@@ -41,5 +45,29 @@ class MemberRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun deleteUser(request: DeleteUserRequest): ApiState<Unit> {
         return apiCall { memberApi.deleteUser() }
+    }
+
+    override suspend fun blockMember(memberId: Long): ApiState<MemberBlockResponse> {
+        return apiCall { memberApi.blockMember(memberId) }
+    }
+
+    override suspend fun unblockMember(memberId: Long): ApiState<MemberBlockResponse> {
+        return apiCall { memberApi.unblockMember(memberId) }
+    }
+
+    override suspend fun getBlockedMembers(): ApiState<BlockedMemberListResponse> {
+        return apiCall { memberApi.getBlockedMembers() }
+    }
+
+    override suspend fun getMyBusinessCard(): ApiState<BusinessCardResponse> {
+        return apiCall { memberApi.getMyBusinessCard() }
+    }
+
+    override suspend fun getMyBusinessCardEdit(): ApiState<BusinessCardResponse> {
+        return apiCall { memberApi.getMyBusinessCardEdit() }
+    }
+
+    override suspend fun editMyBusinessCard(request: EditBusinessCardRequest): ApiState<BusinessCardResponse> {
+        return apiCall { memberApi.editMyBusinessCard(request) }
     }
 }

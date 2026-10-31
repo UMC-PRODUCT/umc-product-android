@@ -11,11 +11,13 @@ import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.mypage.NearbyUserInfo
+import com.umc.domain.model.mypage.BusinessCard
 import com.umc.domain.model.mypage.CardWriteContext
 import com.umc.domain.model.mypage.CardSession
 import com.umc.domain.model.mypage.CardStatistics
@@ -31,6 +33,7 @@ import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
 import com.umc.domain.usecase.challenger.AddChallengerRecordMemberUseCase
 import com.umc.domain.usecase.member.DeleteUserUseCase
 import com.umc.domain.usecase.member.GetMemberProfileUseCase
+import com.umc.domain.usecase.member.GetMyBusinessCardUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,6 +48,7 @@ class MycardViewModel @Inject constructor(
     private val getUserCardUseCase: GetUserCardUseCase, //유저 명함 가져오기
     private val getMemberProfileUseCase: GetMemberProfileUseCase, //유저 검색하기
     private val SaveUserCardUseCase: SaveUserCardUseCase, //명함 저장
+    private val getMyBusinessCardUseCase: GetMyBusinessCardUseCase, //내 명함 연락처·링크 (공개 항목만)
 
 ) : BaseViewModel<MycardUiState, MycardEvent>(
     MycardUiState(isViewingMemberProfile = savedStateHandle.get<Boolean>("viewProfileOnly") == true)){
@@ -76,9 +80,12 @@ class MycardViewModel @Inject constructor(
                         isSuccessOverlayOpen = if (ownerChanged) false else isSuccessOverlayOpen,
                         myQrcodeData = if (ownerChanged) "" else myQrcodeData,
                         myRecentInfoString = if (ownerChanged) "" else myRecentInfoString,
+                        cardPartText = if (ownerChanged) "" else cardPartText,
+                        cardGeneration = if (ownerChanged) null else cardGeneration,
                         githubLink = if (ownerChanged) "" else githubLink,
                         linkedinLink = if (ownerChanged) "" else linkedinLink,
                         blogLink = if (ownerChanged) "" else blogLink,
+                        publicCard = if (ownerChanged) null else publicCard,
                         processedTargetMemberId = if (ownerChanged) null else processedTargetMemberId,
                         isProfileLoadFailed = if (ownerChanged) true else isProfileLoadFailed,
                     )
@@ -114,6 +121,8 @@ class MycardViewModel @Inject constructor(
                     }
                     if (!viewProfileOnly) generateMyUserCardQr(userInfo)
                     settingUserInfoToUI(userInfo)
+                    // 내 정보를 받은 뒤에 불러온다. 먼저 받으면 명함첩 수신이 아직 빈 내 정보를 계정 변경으로 보고 지운다
+                    if (!viewProfileOnly) loadPublicCard()
 
                 },
                 errorCallback = {
@@ -124,6 +133,21 @@ class MycardViewModel @Inject constructor(
                     emitEvent(MycardEvent.ProfileLoadFailed)
                 }
             )
+        }
+    }
+
+
+    /**
+     * 내 명함 뒷면에 실을 연락처·링크를 조회하는 메서드 (다른 회원에게 보이는 그대로, 공개 항목만)
+     *
+     * 다시 불러오다 실패하면 이전에 받은 값을 그대로 둔다. 한 번도 못 받았으면 뒷면은 항목 없이 그린다
+     */
+    private fun loadPublicCard() {
+        viewModelScope.launch {
+            when (val result = getMyBusinessCardUseCase()) {
+                is ApiState.Success -> updateState { copy(publicCard = result.data) }
+                is ApiState.Fail -> Unit
+            }
         }
     }
 
@@ -141,6 +165,8 @@ class MycardViewModel @Inject constructor(
             linkedinLink = userInfo.profile.linkedIn,
             blogLink = userInfo.profile.blog,
             myRecentInfoString = "",
+            cardPartText = "",
+            cardGeneration = null,
         ) }
         val gisuSummaryList = userInfo.getGisuSummaryList()
 
@@ -151,23 +177,23 @@ class MycardViewModel @Inject constructor(
             // 운영진/대표 역할(fromRoles) 또는 참가 기록(fromRecords) 중 대표 항목 추출
             val representativeItem = summary.fromRoles.firstOrNull() ?: summary.fromRecords.firstOrNull()
 
-            val positionString = representativeItem?.let { item ->
-                //파트명 변환 (UserPart Enum 활용, 없으면 빈 문자열)
-                // from() 은 모르는 값에도 UNKNOWN("미정")을 돌려주므로 걸러서 '파트 없음'으로 다룬다
-                val partLabel = UserPart.from(item.responsiblePart)
-                    .takeUnless { it == UserPart.UNKNOWN }?.let { "${it.label} " } ?: ""
+            //파트명 변환 (UserPart Enum 활용). from() 은 모르는 값에도 UNKNOWN("미정")을 돌려주므로 걸러서 '파트 없음'으로 다룬다
+            val part = representativeItem?.let { UserPart.from(it.responsiblePart) }
+                ?.takeUnless { it == UserPart.UNKNOWN }
+            //직함명 변환 (displayName이 null이면 원본 role 사용)
+            val roleLabel = representativeItem?.let { UserChallengerRole.from(it.role).displayName ?: it.role }
 
-                //직함명 변환 (displayName이 null이면 원본 role 사용)
-                val roleEnum = UserChallengerRole.from(item.role)
-                val roleLabel = roleEnum.displayName ?: item.role
-
-                //최종 포맷: "N기 Part Role"
-                "$partLabel$roleLabel·${summary.gisu}기"
+            val positionString = roleLabel?.let { role ->
+                //최종 포맷: "Part Role·N기"
+                "${part?.let { "${it.label} " } ?: ""}$role·${summary.gisu}기"
             } ?: "챌린저·${summary.gisu}기" // 예외 상황 대비 기본값
 
             updateState {
                 copy(
                     myRecentInfoString = positionString,
+                    // 명함 앞면은 파트를 보여주고, 파트가 없는 운영진은 직함을 대신 보여준다
+                    cardPartText = part?.label ?: roleLabel.orEmpty(),
+                    cardGeneration = summary.gisu,
                     githubLink = userInfo.profile.github,
                     linkedinLink = userInfo.profile.linkedIn,
                     blogLink = userInfo.profile.blog
@@ -293,10 +319,14 @@ data class MycardUiState(
 
     //명함 관련 정보
     val myRecentInfoString: String = "",
+    val cardPartText: String = "", //명함 앞면 파트 (파트가 없으면 직함)
+    val cardGeneration: Long? = null, //명함 앞면 기수 (GEN.N)
     val myQrcodeData: String = "",
     val githubLink: String = "",
     val linkedinLink: String = "",
     val blogLink: String = "",
+    // 내 명함 뒷면의 연락처·링크 (공개 항목만). null 이면 아직 못 받은 상태라 뒷면에 항목을 그리지 않는다
+    val publicCard: BusinessCard? = null,
 
     val cardCount: Int = 0,
     val cardStatistics: CardStatistics? = null,

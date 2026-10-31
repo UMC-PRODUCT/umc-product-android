@@ -15,6 +15,7 @@ import androidx.navigation.navDeepLink
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.mypage.memberprofile.MemberProfileRoute
 import com.example.mypage.mycard.MycardRoute
 import com.umc.presentation.act.ActManageRoute
 import com.umc.presentation.act.admin.challenger.AdminChallengerDetailRoute
@@ -592,6 +593,13 @@ fun MainNavHost(
             )
         }
 
+        //타인 프로필 조회 (스레드 > 프로필 정보 보기)
+        composable<MainDestination.MemberProfile> {
+            MemberProfileRoute(
+                onNavigateBack = { navHostController.popBackStack() }
+            )
+        }
+
         //구 마이페이지 -> 신 설정
         composable<MainDestination.Mypage>{
             MypageRoute(
@@ -801,7 +809,7 @@ fun MainNavHost(
                 .collectAsStateWithLifecycle()
 
             CommunityChattingRoute(
-                onViewMemberProfile = { memberId -> navHostController.navigate(MainDestination.Mycard(memberId = memberId, viewProfileOnly = true)) },
+                onViewMemberProfile = { memberId -> navHostController.navigate(MainDestination.MemberProfile(memberId = memberId)) },
                 onBack = {
                     navHostController.popBackStack()
                 },
