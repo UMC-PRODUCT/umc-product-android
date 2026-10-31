@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.example.mypage.nearby.NearbyViewModel
 import com.kakao.sdk.auth.TokenManagerProvider
+import com.umc.component.fcm.FcmTokenSynchronizer
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
@@ -35,6 +36,7 @@ internal const val CODE_ALREADY_USED = "CHALLENGER-0012"
 
 @HiltViewModel
 class MypageViewModel @Inject constructor(
+    private val tokenSynchronizer: FcmTokenSynchronizer,
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val clearAllDataUseCase : ClearAllDataUseCase, //모든 정보 삭제하기
     private val deleteUserUseCase: DeleteUserUseCase, //회원 탈퇴
@@ -393,8 +395,7 @@ class MypageViewModel @Inject constructor(
     //로그아웃 확인 후 실제 로그아웃 처리
     fun logout(){
         viewModelScope.launch {
-            // 로그아웃 시 dataStore의 모든 데이터 삭제
-            clearAllDataUseCase()
+            tokenSynchronizer.logout { clearAllDataUseCase() }
             emitEvent(MypageEvent.MoveToOnBoardPage)
         }
     }

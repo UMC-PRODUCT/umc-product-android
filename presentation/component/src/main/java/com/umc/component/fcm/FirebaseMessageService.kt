@@ -18,10 +18,8 @@ import com.umc.domain.model.home.NotificationItem
 import com.umc.domain.usecase.appDataStore.notification.AddNotificationUseCase
 import com.umc.component.R
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CancellationException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -42,7 +40,6 @@ class FirebaseMessageService : FirebaseMessagingService() {
 
     @Inject lateinit var tokenSynchronizer: FcmTokenSynchronizer
 
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     //새로운 토큰이 생성될 때 호출
     override fun onNewToken(token: String) {
@@ -52,40 +49,44 @@ class FirebaseMessageService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        val route = CommunityNotification.parse(message.data)
-        val debugLogging = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
-        if (debugLogging) {
-            val routingFields = message.data.filterKeys {
-                it in setOf("schemaVersion", "type", "threadId", "deepLink", "deeplink", "deep_link")
-            }.mapValues { (_, value) -> value.take(500).replace('\n', ' ').replace('\r', ' ') }
-            Log.d("log_fcm", "received keys=${message.data.keys.sorted()} routing=$routingFields " +
-                "parsedThread=${route?.threadId} activeThread=${ActiveCommunityThread.threadId}")
-        }
-        val eventId = route?.eventId ?: message.messageId
-        if (eventId != null) {
-            val prefs = getSharedPreferences("fcm_events", Context.MODE_PRIVATE)
-            synchronized(FirebaseMessageService::class.java) {
-                val seen = prefs.getStringSet("displayed", emptySet()).orEmpty()
-                if (eventId in seen) {
-                    if (debugLogging) Log.d("log_fcm", "suppressed: duplicate event")
-                    return
+        runBlocking {
+            tokenSynchronizer.withActiveSession {
+                val route = CommunityNotification.parse(message.data)
+                val debugLogging = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+                if (debugLogging) {
+                    val routingFields = message.data.filterKeys {
+                        it in setOf("schemaVersion", "type", "threadId", "deepLink", "deeplink", "deep_link")
+                    }.mapValues { (_, value) -> value.take(500).replace('\n', ' ').replace('\r', ' ') }
+                    Log.d("log_fcm", "received keys=${message.data.keys.sorted()} routing=$routingFields " +
+                        "parsedThread=${route?.threadId} activeThread=${ActiveCommunityThread.threadId}")
                 }
-                prefs.edit().putStringSet("displayed", (seen.toList().takeLast(199) + eventId).toSet()).commit()
+                val eventId = route?.eventId ?: message.messageId
+                if (eventId != null) {
+                    val prefs = getSharedPreferences("fcm_events", Context.MODE_PRIVATE)
+                    synchronized(FirebaseMessageService::class.java) {
+                        val seen = prefs.getStringSet("displayed", emptySet()).orEmpty()
+                        if (eventId in seen) {
+                            if (debugLogging) Log.d("log_fcm", "suppressed: duplicate event")
+                            return@withActiveSession
+                        }
+                        prefs.edit().putStringSet("displayed", (seen.toList().takeLast(199) + eventId).toSet()).commit()
+                    }
+                }
+                val title = message.data["title"] ?: message.notification?.title ?: "UMC"
+                val body = message.data["body"] ?: message.notification?.body ?: "새 알림이 도착했어요."
+                saveNotificationToDataStore(title, body)
+                if (route != null && ActiveCommunityThread.threadId == route.threadId) {
+                    if (debugLogging) Log.d("log_fcm", "suppressed: active thread")
+                    return@withActiveSession
+                }
+                if (debugLogging) Log.d("log_fcm", "notification requested: routePresent=${route != null}")
+                showNotification(title, body, route)
             }
         }
-        val title = message.data["title"] ?: message.notification?.title ?: "UMC"
-        val body = message.data["body"] ?: message.notification?.body ?: "새 알림이 도착했어요."
-        saveNotificationToDataStore(title, body)
-        if (route != null && ActiveCommunityThread.threadId == route.threadId) {
-            if (debugLogging) Log.d("log_fcm", "suppressed: active thread")
-            return
-        }
-        if (debugLogging) Log.d("log_fcm", "notification requested: routePresent=${route != null}")
-        showNotification(title, body, route)
     }
 
     // DataStore에 알림 저장
-    private fun saveNotificationToDataStore(title: String, body: String) {
+    private suspend fun saveNotificationToDataStore(title: String, body: String) {
         val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
         val notificationItem = NotificationItem(
             title = title,
@@ -93,13 +94,13 @@ class FirebaseMessageService : FirebaseMessagingService() {
             date = currentTime
         )
 
-        serviceScope.launch {
-            try {
-                addNotificationUseCase(notificationItem)
-                Log.d("log_fcm", "알림 DataStore 저장 성공: $title")
-            } catch (e: Exception) {
-                Log.e("log_fcm", "알림 DataStore 저장 실패: ${e.message}")
-            }
+        try {
+            addNotificationUseCase(notificationItem)
+            Log.d("log_fcm", "알림 DataStore 저장 성공: $title")
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (e: Exception) {
+            Log.e("log_fcm", "알림 DataStore 저장 실패: ${e.message}")
         }
     }
 

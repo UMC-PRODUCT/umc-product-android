@@ -5,4 +5,5 @@ import com.umc.domain.model.request.notification.FcmTokenRequest
 
 interface NotificationRemoteDataSource {
     suspend fun registerFcmToken(request: FcmTokenRequest): ApiState<Unit>
+    suspend fun unregisterFcmInstallation(installationId: String): ApiState<Unit>
 }

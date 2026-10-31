@@ -16,13 +16,16 @@ class NotificationRepositoryImpl @Inject constructor(
     private val notificationRemoteDataSource: NotificationRemoteDataSource
 ) : NotificationRepository {
 
+    override suspend fun unregisterFcmInstallation(): ApiState<Unit> = try {
+        notificationRemoteDataSource.unregisterFcmInstallation(getInstallationId())
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        ApiState.Fail(FailState(code = "FCM_UNREGISTRATION_FAILED", message = "알림 기기 등록 해제에 실패했습니다."))
+    }
+
     override suspend fun registerFcmToken(fcmToken: String): ApiState<Unit> = try {
-        val installationId = suspendCancellableCoroutine<String> { continuation ->
-            FirebaseInstallations.getInstance().id
-                .addOnSuccessListener { continuation.resume(it) }
-                .addOnFailureListener { continuation.resumeWithException(it) }
-                .addOnCanceledListener { continuation.cancel() }
-        }
+        val installationId = getInstallationId()
         notificationRemoteDataSource.registerFcmToken(
             FcmTokenRequest(fcmToken = fcmToken, installationId = installationId)
         )
@@ -30,5 +33,12 @@ class NotificationRepositoryImpl @Inject constructor(
         throw e
     } catch (e: Exception) {
         ApiState.Fail(FailState(code = "FCM_REGISTRATION_FAILED", message = "알림 기기 등록에 실패했습니다."))
+    }
+
+    private suspend fun getInstallationId(): String = suspendCancellableCoroutine { continuation ->
+        FirebaseInstallations.getInstance().id
+            .addOnSuccessListener { if (continuation.isActive) continuation.resume(it) }
+            .addOnFailureListener { if (continuation.isActive) continuation.resumeWithException(it) }
+            .addOnCanceledListener { continuation.cancel() }
     }
 }
