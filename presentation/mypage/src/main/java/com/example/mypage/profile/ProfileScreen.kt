@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -422,7 +424,9 @@ fun LinkInputSection(
             value = value,
             onValueChange = onValueChange,
             placeholder = field.placeholder,
-            enabled = field.editable,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = if (field == ProfileLinkField.EMAIL) KeyboardType.Email else KeyboardType.Uri
+            ),
             modifier = Modifier
                 .padding(top = 8.dp)
                 .fillMaxWidth()
@@ -471,10 +475,10 @@ private fun LinkVisibilityGuide() {
     UText(
         text = AppStrings.PROFILE_LINK_VISIBILITY_GUIDE,
         style = UmcTypographyTokens.Footnote,
-        color = grey600(),
+        color = grey700(),
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey50(), RoundedCornerShape(8.dp))
+            .background(grey100(), RoundedCornerShape(8.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp)
     )
 }
@@ -526,6 +530,7 @@ private fun ProfileScreenPreview() {
         ProfileScreen(
             uiState = ProfileUiState(
                 linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.APPLE),
+                contactEmail = "example@email.com",
                 githubLink = "https://github.com/umc",
                 privateLinkFields = persistentSetOf(ProfileLinkField.GITHUB, ProfileLinkField.LINKEDIN, ProfileLinkField.PERSONAL),
             ),

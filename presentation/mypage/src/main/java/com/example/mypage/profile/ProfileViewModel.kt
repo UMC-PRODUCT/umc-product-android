@@ -7,18 +7,21 @@ import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.component.theme.AppStrings
+import com.umc.component.util.isValidEmail
 import com.umc.component.util.isValidWebUrl
-import com.umc.domain.model.ProfileInfo
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.LinkType
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UploadFileCategory
-import com.umc.domain.model.request.member.LinkItem
-import com.umc.domain.model.request.member.UpdateLinkRequest
-import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.model.mypage.BusinessCard
+import com.umc.domain.model.mypage.BusinessCardContact
+import com.umc.domain.model.mypage.BusinessCardLink
+import com.umc.domain.model.request.member.EditBusinessCardRequest
 import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
+import com.umc.domain.usecase.member.EditMyBusinessCardUseCase
+import com.umc.domain.usecase.member.GetMyBusinessCardEditUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
-import com.umc.domain.usecase.member.UpdateMyLinkUseCase
 import com.umc.domain.usecase.member.UpdateMyProfileUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,6 +31,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -36,7 +40,8 @@ class ProfileViewModel @Inject constructor(
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val uploadFileUseCase: UploadFileUseCase, //파일 업로드 하기(이미지 업로드)
     private val updateMyProfileUseCase: UpdateMyProfileUseCase, //프로필 정보 업데이트
-    private val updateMyLinkUseCase: UpdateMyLinkUseCase, //링크 정보 업데이트
+    private val getMyBusinessCardEditUseCase: GetMyBusinessCardEditUseCase, //연락처·링크·공개 여부 가져오기
+    private val editMyBusinessCardUseCase: EditMyBusinessCardUseCase, //연락처·링크·공개 여부 저장
     private val getMyOAuthUseCase: GetMyOAuthUseCase, //내 OAuth 가져오기
 ) : BaseViewModel<ProfileUiState, ProfileEvent>(
     ProfileUiState()){
@@ -66,32 +71,40 @@ class ProfileViewModel @Inject constructor(
     }
 
     /**
-     * 서버에서 내 프로필 정보를 수신하여 UI State에 바인딩하는 메서드
+     * 서버에서 내 프로필(사진·이름·학교)과 명함 정보(연락처·링크·공개 여부)를 함께 받아 UI State에 바인딩하는 메서드.
+     * 명함 저장은 링크 전체 교체라, 둘 중 하나라도 못 받으면 실패로 두고 저장을 막는다
      */
     private fun getUserInfo() {
         updateState { copy(isProfileLoading = true) }
         viewModelScope.launch {
-            resultResponse(
-                response = getMyProfileUseCase(),
-                successCallback = { userInfo ->
-                    updateState {
-                        copy(
-                            isProfileLoading = false,
-                            userInfo = userInfo,
-                            githubLink = userInfo.profile.github,
-                            linkedinLink = userInfo.profile.linkedIn,
-                            blogLink = userInfo.profile.blog,
-                            instagramLink = userInfo.profile.instagram,
-                            personalLink = userInfo.profile.personal,
-                            isProfileLoadFailed = false
-                        )
-                    }
-                },
-                errorCallback = {
-                    updateState { copy(isProfileLoading = false, isProfileLoadFailed = true) }
-                    emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_LOAD_ERROR_TITLE))
+            val profileResult = async { getMyProfileUseCase() }
+            val cardResult = async { getMyBusinessCardEditUseCase() }
+            val profile = profileResult.await()
+            val card = cardResult.await()
+
+            if (profile is ApiState.Success && card is ApiState.Success) {
+                val savedCard = card.data
+                updateState {
+                    copy(
+                        isProfileLoading = false,
+                        userInfo = profile.data,
+                        savedCard = savedCard,
+                        contactEmail = savedCard.contact?.email.orEmpty(),
+                        githubLink = savedCard.linkOf(LinkType.GITHUB).link,
+                        linkedinLink = savedCard.linkOf(LinkType.LINKEDIN).link,
+                        blogLink = savedCard.linkOf(LinkType.BLOG).link,
+                        instagramLink = savedCard.linkOf(LinkType.INSTAGRAM).link,
+                        personalLink = savedCard.linkOf(LinkType.PERSONAL).link,
+                        privateLinkFields = ProfileLinkField.entries
+                            .filterNot { savedCard.isPublic(it) }
+                            .toImmutableSet(),
+                        isProfileLoadFailed = false
+                    )
                 }
-            )
+            } else {
+                updateState { copy(isProfileLoading = false, isProfileLoadFailed = true) }
+                emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_LOAD_ERROR_TITLE))
+            }
         }
     }
 
@@ -138,7 +151,7 @@ class ProfileViewModel @Inject constructor(
 
 
     /**
-     * 상단 완료 버튼 클릭 시 외부 링크 검증 -> 저장 -> (선택된 경우) 프로필 이미지 업로드 순으로 진행하는 메서드.
+     * 상단 완료 버튼 클릭 시 연락처·링크 검증 -> 명함(연락처·링크·공개 여부) 저장 -> (선택된 경우) 프로필 이미지 업로드 순으로 진행하는 메서드.
      * 모두 성공했을 때만 화면을 닫고, 실패하면 안내만 하고 화면과 입력값을 유지한다.
      */
     fun onClickComplete(){
@@ -147,61 +160,62 @@ class ProfileViewModel @Inject constructor(
         //진행 중에는 재진입 차단 (연타 시 업로드/PATCH 중복 방지)
         if (state.isSaving) return
 
-        //프로필 조회에 실패했거나 아직 불러오지 못한(id == 0) 빈 상태에서 저장하면 서버 링크가 빈 값으로 덮어써지므로 차단
-        if (state.isProfileLoadFailed || state.userInfo.id == 0L) {
+        //조회에 실패했거나 아직 불러오지 못한 빈 상태에서 저장하면 서버의 연락처·링크가 빈 값으로 덮어써지므로 차단
+        val savedCard = state.savedCard
+        if (state.isProfileLoadFailed || state.userInfo.id == 0L || savedCard == null) {
             emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_LOAD_ERROR_TITLE))
             return
         }
 
-        //바뀐 칸만 URL 형식 검사 (예전에 저장된 값 때문에 완료가 막히지 않도록)
-        val profile = state.userInfo.profile
-        val links = ProfileInfo(
-            id = profile.id,
-            linkedIn = state.linkedinLink.trim(),
-            instagram = state.instagramLink.trim(),
-            github = state.githubLink.trim(),
-            blog = state.blogLink.trim(),
-            personal = state.personalLink.trim(),
-        )
-        val hasInvalidLink = listOf(
-            links.github to profile.github,
-            links.linkedIn to profile.linkedIn,
-            links.blog to profile.blog,
-            links.instagram to profile.instagram,
-            links.personal to profile.personal
-        ).any { (now, saved) -> now != saved && now.isNotBlank() && !now.isValidWebUrl() }
+        //바뀐 칸만 형식 검사 (예전에 저장된 값 때문에 완료가 막히지 않도록)
+        val email = state.contactEmail.trim()
+        if (email != savedCard.contact?.email.orEmpty() && email.isNotBlank() && !email.isValidEmail()) {
+            emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_EMAIL_INVALID))
+            return
+        }
+        val hasInvalidLink = ProfileLinkField.entries.any { field ->
+            val type = field.linkType ?: return@any false
+            val now = state.linkOf(field).trim()
+            now != savedCard.linkOf(type).link && now.isNotBlank() && !now.isValidWebUrl()
+        }
         if (hasInvalidLink) {
             emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_LINK_INVALID))
             return
         }
 
+        //링크는 전체 교체라 5개 타입을 모두 담는다
+        val request = EditBusinessCardRequest(
+            contact = BusinessCardContact(
+                email = email,
+                isPublic = ProfileLinkField.EMAIL !in state.privateLinkFields
+            ),
+            links = ProfileLinkField.entries.mapNotNull { field ->
+                field.linkType?.let { type ->
+                    BusinessCardLink(
+                        type = type,
+                        link = state.linkOf(field).trim(),
+                        isPublic = field !in state.privateLinkFields
+                    )
+                }
+            }
+        )
+
         updateState { copy(isSaving = true) }
-        // TODO 서버에 링크별 공개 범위 API가 생기면 privateLinkFields 도 함께 저장한다 (지금은 화면에서만 바뀐다)
-        saveUserOutLink(links, state.userProfileImageUri)
+        saveBusinessCard(request, state.userProfileImageUri)
     }
 
     /**
-     * 외부 링크 5종 정보를 서버에 전송하여 업데이트하는 메서드.
+     * 연락처·링크와 항목별 공개 여부를 서버에 저장하는 메서드.
      * 성공하면 선택된 프로필 이미지가 있을 때 이미지 업로드로 이어가고, 없으면 화면을 닫는다.
      */
-    private fun saveUserOutLink(
-        links: ProfileInfo,
+    private fun saveBusinessCard(
+        request: EditBusinessCardRequest,
         imageUri: Uri
     ) {
-        val request = UpdateLinkRequest(
-            links = listOf(
-                LinkItem(LinkType.GITHUB.label, links.github),
-                LinkItem(LinkType.LINKEDIN.label, links.linkedIn),
-                LinkItem(LinkType.BLOG.label, links.blog),
-                LinkItem(LinkType.PERSONAL.label, links.personal),
-                LinkItem(LinkType.INSTAGRAM.label, links.instagram)
-            )
-        )
-
         viewModelScope.launch {
             // 서버에 저장하기
             resultResponse(
-                response = updateMyLinkUseCase(request),
+                response = editMyBusinessCardUseCase(request),
                 successCallback = {
                     //이미지를 바꿀 경우 = Uri가 empty가 아닐 경우만 업로드 진행
                     if (imageUri != Uri.EMPTY) {
@@ -265,12 +279,12 @@ class ProfileViewModel @Inject constructor(
 
 
     /**
-     * 링크 입력값을 항목별로 반영하는 메서드 (이메일은 수정하지 않는다)
+     * 연락처·링크 입력값을 항목별로 반영하는 메서드
      */
     fun updateLink(field: ProfileLinkField, value: String) {
         updateState {
             when (field) {
-                ProfileLinkField.EMAIL -> this
+                ProfileLinkField.EMAIL -> copy(contactEmail = value)
                 ProfileLinkField.GITHUB -> copy(githubLink = value)
                 ProfileLinkField.LINKEDIN -> copy(linkedinLink = value)
                 ProfileLinkField.BLOG -> copy(blogLink = value)
@@ -309,14 +323,18 @@ data class ProfileUiState(
     //유저 정보 (가변)
     val userProfileImageUri : Uri = Uri.EMPTY, //이미지 수정 시 먼저 보여주는 Uri (보내기 용도)
 
+    val contactEmail: String = "", //명함 연락처 이메일 (로그인 이메일과 별개)
     val githubLink: String = "",
     val linkedinLink: String = "",
     val blogLink: String = "",
     val instagramLink: String = "",
     val personalLink: String = "",
 
-    // 비공개로 고른 링크 항목 (나머지는 공개). 서버에 공개 범위 API가 없어 아직 저장하지 않는다
+    // 비공개로 고른 항목 (나머지는 공개). 완료를 누르면 연락처·링크와 함께 저장한다
     val privateLinkFields: ImmutableSet<ProfileLinkField> = persistentSetOf(),
+
+    // 서버에 저장되어 있는 연락처·링크·공개 여부 (바뀐 칸 검사용). null 이면 아직 못 받아 저장할 수 없다
+    val savedCard: BusinessCard? = null,
 
     // 프로필 조회 실패 여부 (true 면 빈 정보 대신 실패 안내 + 다시 시도 표시)
     val isProfileLoadFailed: Boolean = false,
@@ -326,15 +344,21 @@ data class ProfileUiState(
 
     ) : UiState {
 
-    /** 항목별 화면 표시값 (이메일은 계정 이메일을 그대로 보여준다) */
+    /** 항목별 화면 표시값 */
     fun linkOf(field: ProfileLinkField): String = when (field) {
-        ProfileLinkField.EMAIL -> userInfo.email
+        ProfileLinkField.EMAIL -> contactEmail
         ProfileLinkField.GITHUB -> githubLink
         ProfileLinkField.LINKEDIN -> linkedinLink
         ProfileLinkField.BLOG -> blogLink
         ProfileLinkField.INSTAGRAM -> instagramLink
         ProfileLinkField.PERSONAL -> personalLink
     }
+}
+
+/** 서버에 저장된 항목의 공개 여부 (연락처를 아직 입력하지 않았으면 공개) */
+private fun BusinessCard.isPublic(field: ProfileLinkField): Boolean {
+    val type = field.linkType ?: return contact?.isPublic ?: true
+    return linkOf(type).isPublic
 }
 
 sealed interface ProfileEvent : UiEvent {

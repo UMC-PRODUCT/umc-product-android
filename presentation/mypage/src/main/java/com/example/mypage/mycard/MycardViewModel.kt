@@ -11,11 +11,13 @@ import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.mypage.NearbyUserInfo
+import com.umc.domain.model.mypage.BusinessCard
 import com.umc.domain.model.mypage.CardWriteContext
 import com.umc.domain.model.mypage.CardSession
 import com.umc.domain.model.mypage.CardStatistics
@@ -31,6 +33,7 @@ import com.umc.domain.usecase.authentication.GetMyOAuthUseCase
 import com.umc.domain.usecase.challenger.AddChallengerRecordMemberUseCase
 import com.umc.domain.usecase.member.DeleteUserUseCase
 import com.umc.domain.usecase.member.GetMemberProfileUseCase
+import com.umc.domain.usecase.member.GetMyBusinessCardUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,6 +48,7 @@ class MycardViewModel @Inject constructor(
     private val getUserCardUseCase: GetUserCardUseCase, //유저 명함 가져오기
     private val getMemberProfileUseCase: GetMemberProfileUseCase, //유저 검색하기
     private val SaveUserCardUseCase: SaveUserCardUseCase, //명함 저장
+    private val getMyBusinessCardUseCase: GetMyBusinessCardUseCase, //내 명함 연락처·링크 (공개 항목만)
 
 ) : BaseViewModel<MycardUiState, MycardEvent>(
     MycardUiState(isViewingMemberProfile = savedStateHandle.get<Boolean>("viewProfileOnly") == true)){
@@ -81,6 +85,7 @@ class MycardViewModel @Inject constructor(
                         githubLink = if (ownerChanged) "" else githubLink,
                         linkedinLink = if (ownerChanged) "" else linkedinLink,
                         blogLink = if (ownerChanged) "" else blogLink,
+                        publicCard = if (ownerChanged) null else publicCard,
                         processedTargetMemberId = if (ownerChanged) null else processedTargetMemberId,
                         isProfileLoadFailed = if (ownerChanged) true else isProfileLoadFailed,
                     )
@@ -96,6 +101,7 @@ class MycardViewModel @Inject constructor(
         // 재시도 연타·중복 요청 방지
         if (uiState.value.isProfileLoading) return
         updateState { copy(isProfileLoading = true) }
+        if (!viewProfileOnly) loadPublicCard()
         viewModelScope.launch {
             resultResponse(
                 response = if (viewProfileOnly) {
@@ -126,6 +132,21 @@ class MycardViewModel @Inject constructor(
                     emitEvent(MycardEvent.ProfileLoadFailed)
                 }
             )
+        }
+    }
+
+
+    /**
+     * 내 명함 뒷면에 실을 연락처·링크를 조회하는 메서드 (다른 회원에게 보이는 그대로, 공개 항목만)
+     *
+     * 실패하면 null 로 두고, 뒷면은 내 프로필 정보로 그린다
+     */
+    private fun loadPublicCard() {
+        viewModelScope.launch {
+            when (val result = getMyBusinessCardUseCase()) {
+                is ApiState.Success -> updateState { copy(publicCard = result.data) }
+                is ApiState.Fail -> updateState { copy(publicCard = null) }
+            }
         }
     }
 
@@ -316,6 +337,8 @@ data class MycardUiState(
     val githubLink: String = "",
     val linkedinLink: String = "",
     val blogLink: String = "",
+    // 내 명함 뒷면의 연락처·링크 (공개 항목만). null 이면 조회 전이거나 실패라 프로필 정보로 그린다
+    val publicCard: BusinessCard? = null,
 
     val cardCount: Int = 0,
     val cardStatistics: CardStatistics? = null,

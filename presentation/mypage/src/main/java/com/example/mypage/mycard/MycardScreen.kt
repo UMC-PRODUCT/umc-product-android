@@ -82,6 +82,7 @@ import com.umc.component.theme.main400
 import com.umc.component.theme.main500
 import com.umc.component.theme.main600
 import com.umc.component.theme.white
+import com.umc.domain.model.enums.LinkType
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.mypage.NearbyUserInfo
@@ -666,9 +667,16 @@ private fun CardBackContent(
     onMyQrcodeClick: () -> Unit, //내 QR 코드 화면으로 이동
 ) {
     val profile = uiState.userInfo.profile
+    // 내 명함은 다른 회원에게 보이는 그대로(공개 항목만) 그린다. 명함 조회 전·실패면 프로필 정보로 그린다
+    val card = uiState.publicCard
+    val email = if (card != null) card.contact?.email.orEmpty() else uiState.userInfo.email
+    val github = card?.linkOf(LinkType.GITHUB)?.link ?: profile.github
+    val linkedIn = card?.linkOf(LinkType.LINKEDIN)?.link ?: profile.linkedIn
+    val blog = card?.linkOf(LinkType.BLOG)?.link ?: profile.blog
+    val personal = card?.linkOf(LinkType.PERSONAL)?.link ?: profile.personal
     // 행마다 비어 있거나 열 수 없는 값은 숨기므로, 같은 기준으로 보여줄 항목이 남는지 본다
-    val hasContent = uiState.userInfo.email.isNotBlank() ||
-        listOf(profile.github, profile.linkedIn, profile.blog, profile.personal)
+    val hasContent = email.isNotBlank() ||
+        listOf(github, linkedIn, blog, personal)
             .any { com.umc.domain.model.mypage.validCardWebLink(it) != null }
 
     Column {
@@ -688,11 +696,11 @@ private fun CardBackContent(
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                CardEmailItem(email = uiState.userInfo.email)
-                SocialLinkItem(iconRes = R.drawable.ic_github_link, text = profile.github)
-                SocialLinkItem(iconRes = R.drawable.ic_linkedin_link, text = profile.linkedIn)
-                SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = profile.blog)
-                SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = profile.personal)
+                CardEmailItem(email = email)
+                SocialLinkItem(iconRes = R.drawable.ic_github_link, text = github)
+                SocialLinkItem(iconRes = R.drawable.ic_linkedin_link, text = linkedIn)
+                SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = blog)
+                SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = personal)
             }
         }
 
