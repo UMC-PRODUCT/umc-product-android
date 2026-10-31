@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -26,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.umc.component.R
 import com.umc.component.theme.AppStrings
-import com.umc.component.theme.black
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main100
@@ -78,7 +78,8 @@ internal fun CommunityChatMessageImage(
 @Composable
 internal fun CommunityChatImageLoadingIndicator(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.size(64.dp).background(black().copy(alpha = 0.2f), CircleShape),
+        // 사진 위에 까는 딤이라 모드와 상관없이 어두워야 한다 (black()은 다크 모드에서 흰색)
+        modifier = modifier.size(64.dp).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.2f), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator(

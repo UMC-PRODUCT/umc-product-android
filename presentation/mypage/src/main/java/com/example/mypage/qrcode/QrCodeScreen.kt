@@ -59,7 +59,6 @@ import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -162,7 +161,7 @@ fun QrCodeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(white())
         
     ) {
         
@@ -200,8 +199,8 @@ fun QrCodeScreen(
                     Card(
                         modifier = Modifier.size(280.dp),
                         shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = grey000())
-                        ,
+                        // QR 판독에 필요한 흰 여백이라 다크 모드에서도 흰색으로 둔다 (white()는 다크 모드에서 검정)
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(1.dp),
                         border = BorderStroke(1.dp, grey300())
                     ) {
@@ -253,7 +252,7 @@ fun QrCodeScreen(
                             .weight(1f)
                             .height(52.dp),
                         backgroundColor = main500(),
-                        textColor = grey000(),
+                        textColor = white(),
                         textStyle = UmcTypographyTokens.HeadlineBold,
                         cornerRadius = 8.dp,
                         onClick = onShareClick
@@ -288,7 +287,7 @@ fun QrCodeScreenTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(white())
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -371,7 +370,7 @@ fun MycardProfileCard(
                         UText(
                             text = "${uiState.userInfo.name}/${uiState.userInfo.nickname}",
                             style = UmcTypographyTokens.Title3Bold,
-                            color = grey000()
+                            color = white()
                         )
 
                         Spacer(

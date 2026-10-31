@@ -100,7 +100,6 @@ import com.umc.component.component.UDialog
 import com.umc.component.component.UToastData
 import com.umc.component.component.UToastHost
 import com.umc.component.theme.AppStrings
-import com.umc.component.theme.black
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
@@ -1991,10 +1990,12 @@ private fun ChatImageViewer(
             decorFitsSystemWindows = false,
         ),
     ) {
+        // 사진 전체 보기는 모드와 상관없이 검은 바탕에 흰 버튼으로 둔다.
+        // white()·black()은 다크 모드에서 뒤바뀌므로 여기서는 고정색을 쓴다
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(black()),
+                .background(Color.Black),
         ) {
             HorizontalPager(
                 state = pagerState,
@@ -2018,7 +2019,7 @@ private fun ChatImageViewer(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = AppStrings.CHAT_CD_BACK,
-                    tint = white(),
+                    tint = Color.White,
                 )
             }
             if (models.size > 1) {
@@ -2027,7 +2028,7 @@ private fun ChatImageViewer(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 32.dp),
-                    color = white(),
+                    color = Color.White,
                     style = UmcTypographyTokens.SubheadlineBold,
                 )
             }
@@ -2205,7 +2206,7 @@ private fun MessageReportSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss, sheetState = sheetState, containerColor = white(),
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp), scrimColor = grey950().copy(alpha = 0.6f),
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp), scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f),
         dragHandle = {
             Box(Modifier.fillMaxWidth().height(52.dp)) {
                 Box(Modifier.align(Alignment.TopCenter).padding(top = 16.dp).size(32.dp, 4.dp)
