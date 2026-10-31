@@ -97,7 +97,7 @@ fun ScheduleCategoryBottomSheet(
 
                 //확인 버튼
                 UButton(
-                    text = AppStrings.CONFIRM,
+                    text = AppStrings.COMMON_CONFIRM,
                     backgroundColor = main500(),
                     textColor = grey50(),
                     onClick = onConfirm,

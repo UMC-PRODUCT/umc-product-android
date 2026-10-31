@@ -1,5 +1,6 @@
 package com.umc.component.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -51,7 +52,7 @@ fun UInfoChip(
     modifier: Modifier = Modifier,
 ) {
     val chipText = when (type) {
-        UInfoChipType.SCHOOL -> text.ifBlank { "알수없음" }
+        UInfoChipType.SCHOOL -> text.ifBlank { AppStrings.COMMON_UNKNOWN }
         UInfoChipType.PART -> text.toPartLabel()
     }
     val style = when (type) {

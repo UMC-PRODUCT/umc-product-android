@@ -1,5 +1,6 @@
 package com.umc.presentation.home.schedule.dialog
 
+import com.umc.component.theme.AppStrings
 import android.view.MotionEvent
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -247,7 +248,7 @@ fun LocationHeaderAndSearchBar(
 
     Column(modifier = Modifier.fillMaxWidth()) {
         UText(
-            text = "장소를 선택하세요",
+            text = AppStrings.HOME_LOCATION_SELECT_TITLE,
             style = UmcTypographyTokens.Title3Bold,
             color = grey800(),
             modifier = Modifier
@@ -263,7 +264,7 @@ fun LocationHeaderAndSearchBar(
             UTextField(
                 value = searchQuery,
                 onValueChange = onQueryChanged,
-                placeholder = "위치를 입력하세요",
+                placeholder = AppStrings.HOME_PLAN_ADD_PLAN_LOCATION_PLACEHOLDER,
                 modifier = Modifier
                     .weight(1f),
                 backgroundColor = grey100(),
@@ -361,20 +362,20 @@ fun SelectedLocationCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 UText(
-                    text = selectedPlace.title.ifBlank { "지정된 장소" },
+                    text = selectedPlace.title.ifBlank { AppStrings.HOME_LOCATION_UNSPECIFIED_PLACE },
                     style = UmcTypographyTokens.BodyBold,
                     color = grey800()
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 UText(
-                    text = selectedPlace.address.ifBlank { "지도를 움직여 장소를 지정해 주세요." },
+                    text = selectedPlace.address.ifBlank { AppStrings.HOME_LOCATION_MOVE_MAP_PLACE },
                     style = UmcTypographyTokens.Subheadline,
                     color = grey600()
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
             UButton(
-                text = "선택",
+                text = AppStrings.COMMON_SELECT,
                 onClick = onConfirmClick,
                 backgroundColor = main500(),
                 textColor = grey50(),
@@ -395,7 +396,7 @@ fun RecentSearchList(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         UText(
-            text = "최근 검색어",
+            text = AppStrings.HOME_LOCATION_RECENT_SEARCH,
             style = UmcTypographyTokens.Title3Bold,
             color = grey800(),
             modifier = Modifier.padding(bottom = 12.dp)
@@ -459,7 +460,7 @@ fun SearchResultList(
                     Spacer(modifier = Modifier.width(8.dp))
 
                     UButton(
-                        text = "선택",
+                        text = AppStrings.COMMON_SELECT,
                         onClick = { onItemClick(placeItem) },
                         backgroundColor = grey100(),
                         textColor = grey700(),

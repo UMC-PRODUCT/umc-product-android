@@ -183,7 +183,7 @@ constructor(
                 isTodayCheck = checkTodayTime(item)
             }
             finalDDayValue > 31 -> {
-                dDayString = "참여 예정"
+                dDayString = AppStrings.HOME_SCHEDULE_UPCOMING
                 isTodayCheck = false
             }
             finalDDayValue > 0 -> {
@@ -191,7 +191,7 @@ constructor(
                 isTodayCheck = false
             }
             else -> { // 음수 (이미 종료된 날짜)
-                dDayString = "종료된 일정"
+                dDayString = AppStrings.HOME_SCHEDULE_ENDED
                 isTodayCheck = false
             }
         }

@@ -1,4 +1,6 @@
 package com.umc.presentation.home.schedule.dialog
+
+import com.umc.component.theme.AppStrings
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
@@ -37,7 +39,7 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
             val summaryText = when {
                 list.isEmpty() -> ""
                 list.size == 1 -> list[0].name
-                else -> "${list[0].name} 외 ${list.size - 1}명"
+                else -> AppStrings.HOME_SCHEDULE_PARTICIPANT_SUMMARY_FORMAT.format(list[0].name, list.size - 1)
             }
             copy(
                 selectedParticipants = list,
@@ -166,7 +168,7 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
             val summaryText = when {
                 newList.isEmpty() -> ""
                 newList.size == 1 -> newList[0].name
-                else -> "${newList[0].name} 외 ${newList.size - 1}명"
+                else -> AppStrings.HOME_SCHEDULE_PARTICIPANT_SUMMARY_FORMAT.format(newList[0].name, newList.size - 1)
             }
 
             copy(selectedParticipants = newList,

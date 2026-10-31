@@ -235,7 +235,7 @@ private fun CalendarHeader(
 
         // 년.월 타이틀 (클릭 시 DatePicker 오픈)
         UText(
-            text = "${currentMonth.year}. ${String.format("%02d", currentMonth.monthValue)}",
+            text = AppStrings.HOME_CALENDAR_MONTH_FORMAT.format(currentMonth.year, currentMonth.monthValue),
             color = grey800(),
             style = UmcTypographyTokens.HeadlineBold,
             modifier = Modifier
@@ -481,10 +481,10 @@ fun CalendarDatePickerDialog(
                 datePickerState.selectedDateMillis?.let { millis ->
                     onDateSelected(millis.toLocalDate())
                 }
-            }) { UText(AppStrings.CONFIRM) }
+            }) { UText(AppStrings.COMMON_CONFIRM) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { UText(AppStrings.CANCEL) }
+            TextButton(onClick = onDismiss) { UText(AppStrings.COMMON_CANCEL) }
         },
         colors = DatePickerDefaults.colors(
             containerColor = grey50(),

@@ -1,5 +1,6 @@
 package com.umc.component.util
 
+import com.umc.component.theme.AppStrings
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -25,9 +26,9 @@ object UTimeFormat{
     fun formatToAmPm(time: String): String {
         return try {
             val date = SimpleDateFormat("HH:mm", Locale.KOREAN).parse(time) // "HH:mm" 포맷으로 읽기
-            date?.let { SimpleDateFormat("a h:mm", Locale.KOREAN).format(it) } ?: "시간 선택"
+            date?.let { SimpleDateFormat("a h:mm", Locale.KOREAN).format(it) } ?: AppStrings.COMPONENT_TIME_SELECT
         } catch (e: Exception) {
-            "시간 선택"
+            AppStrings.COMPONENT_TIME_SELECT
         }
     }
     

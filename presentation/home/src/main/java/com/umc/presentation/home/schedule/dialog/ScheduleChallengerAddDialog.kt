@@ -269,7 +269,7 @@ fun ChallengerHeader(
         )
 
         UButton(
-            text = AppStrings.CONFIRM,
+            text = AppStrings.COMMON_CONFIRM,
             backgroundColor = main500(),
             textColor = grey50(),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
@@ -410,7 +410,7 @@ fun AddedParticipantRow(
             .weight(1f)
         ) {
             UText(
-                text = "${item.displayName()} (${item.gisu}기)",
+                text = AppStrings.HOME_SCHEDULE_PARTICIPANT_ITEM_FORMAT.format(item.displayName(), item.gisu),
                 style = UmcTypographyTokens.SubheadlineBold,
                 color = grey800()
             )
@@ -432,7 +432,7 @@ fun AddedParticipantRow(
 
         //삭제 버튼 (빨간색 테두리 및 텍스트)
         UButton(
-            text = AppStrings.DELETE,
+            text = AppStrings.COMMON_DELETE_ACTION,
             onClick = onRemoveClick,
             backgroundColor = red100(),
             textColor = red500(),
@@ -480,7 +480,7 @@ fun SearchParticipantRow(
             .weight(1f)
         ) {
             UText(
-                text = "${item.displayName()} (${item.gisu}기)",
+                text = AppStrings.HOME_SCHEDULE_PARTICIPANT_ITEM_FORMAT.format(item.displayName(), item.gisu),
                 style = UmcTypographyTokens.SubheadlineBold,
                 color = grey800()
             )

@@ -1,5 +1,6 @@
 package com.umc.component.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,11 +77,11 @@ fun UDialog(
     isAccept: Boolean? = null,
     subtitle: String? = null,
     isTwoButton: Boolean = false,
-    confirmText: String = "확인",
+    confirmText: String = AppStrings.COMMON_CONFIRM,
     onConfirm: () -> Unit = onDismissRequest,
     confirmBackgroundColor: Color = grey800(),
     confirmTextColor: Color = grey50(),
-    negativeText: String = "취소",
+    negativeText: String = AppStrings.COMMON_CANCEL,
     positiveText: String = "",
     onNegative: () -> Unit = onDismissRequest,
     onPositive: () -> Unit = {},

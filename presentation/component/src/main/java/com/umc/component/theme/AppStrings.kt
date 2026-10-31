@@ -79,22 +79,17 @@ object AppStrings {
     const val COMMON_CANCEL_ACTION = "취소하기"
     const val COMMON_QR_CODE = "QR 코드"
 
-    const val CANCEL = COMMON_CANCEL
-    const val CONFIRM = COMMON_CONFIRM
-    const val PUNISH = COMMON_PUNISH
-    const val EDIT = COMMON_EDIT
-    const val REGISTER = COMMON_REGISTER
-    const val ALLDAY = COMMON_ALLDAY
-    const val END = COMMON_END
-    const val START = COMMON_START
-    const val DELETE = COMMON_DELETE_ACTION
-    const val TIME_AM = COMMON_TIME_AM
-    const val TIME_PM = COMMON_TIME_PM
-
     // 공용 컴포넌트 및 다이얼로그
     const val DIALOG_DATETIME_TITLE = "날짜와 시간을 선택해주세요"
     const val DIALOG_DATETIME_DATE = "날짜"
     const val DIALOG_DATETIME_TIME = "시간"
+    const val DIALOG_DATE_PICKER_TITLE = "날짜를 선택해주세요."
+    const val DIALOG_DATE_FORMAT_HINT = "YYYY . MM . DD"
+    const val DIALOG_TIME_FORMAT_HINT = "12:00"
+    const val DIALOG_MINUTE = "분"
+    const val COMPONENT_TIME_SELECT = "시간 선택"
+    const val COMPONENT_GROWTH_DAY_FORMAT = "%d일째"
+    const val COMPONENT_GROWTH_SUFFIX = " 성장하고 있어요"
     // 홈 화면
     const val HOME_NOW_CARD_MAIN_TITLE = "내 활동 상태"
 
@@ -109,6 +104,14 @@ object AppStrings {
     const val HOME_SCHEDULE_LOAD_ERROR_TITLE = HOME_SCHEDULE_LOAD_ERROR
     const val HOME_LOAD_ERROR_DESCRIPTION = "잠시 후 다시 시도해주세요."
     const val HOME_RETRY = COMMON_RETRY
+    const val HOME_ACTIVITY_STATUS_FORMAT = "%d기 활동 상태"
+    const val HOME_GENERATION_FORMAT = COMMON_GENERATION_FORMAT
+    const val HOME_CARD_BANNER_TITLE_A = "오늘 만난 인연,\n명함으로 이어가세요"
+    const val HOME_CARD_BANNER_TITLE_B = "디지털 명함,\n이제 UMC 앱에서"
+    const val HOME_CARD_BANNER_DESCRIPTION = "디지털 명함으로 간편하게 교환하세요"
+    const val HOME_ACTIVITY_DAYS_UNIT = "Days"
+    const val HOME_POINT_UNIT = "point"
+    const val HOME_CALENDAR_MONTH_FORMAT = "%d. %02d"
     const val HOME_PLAN_EMPTY_TITLE = "일정이 없어요"
     const val HOME_PLAN_EMPTY_CONTENT = "일정이 등록되면 이곳에 표시됩니다."
     const val HOME_NOTIFICATION_NO_TITLE = "알림 내역이 없어요"
@@ -127,6 +130,16 @@ object AppStrings {
     const val HOME_PLAN_DETAIL_MAP_ERROR = "지도를 열 수 없습니다."
     const val HOME_PLAN_DETAIL_LOAD_ERROR = HOME_SCHEDULE_LOAD_ERROR
     const val HOME_PLAN_DETAIL_DELETE_ERROR = "일정을 삭제하지 못했어요"
+    const val HOME_SCHEDULE_UPCOMING = "참여 예정"
+    const val HOME_SCHEDULE_ENDED = "종료된 일정"
+    const val HOME_SCHEDULE_D_DAY = "D-Day"
+    const val HOME_SCHEDULE_D_DAY_FORMAT = "D-%d"
+    const val HOME_SCHEDULE_REMOTE = "비대면 일정입니다"
+    const val HOME_SCHEDULE_MORE_TAGS_FORMAT = "+%d"
+    const val HOME_SCHEDULE_DATE_TIME_FORMAT = "%s · %s"
+    const val HOME_SCHEDULE_CATEGORY_SUMMARY_FORMAT = "%s 외 %d개"
+    const val HOME_SCHEDULE_PARTICIPANT_SUMMARY_FORMAT = "%s 외 %d명"
+    const val HOME_SCHEDULE_PARTICIPANT_ITEM_FORMAT = "%s (%d기)"
     // 일정 등록 및 수정 화면
     const val HOME_PLAN_ADD_TITLE = "일정 등록"
     const val HOME_PLAN_ADD_PLAN_NAME = "일정 제목"
@@ -164,6 +177,17 @@ object AppStrings {
     const val HOME_PLAN_ADD_DIALOG_ADD_ATTENDANCE_YES = "네, 출석부도 같이 생성할게요"
     const val HOME_PLAN_ADD_DIALOG_ADD_ATTENDANCE_NO = "아니요, 일정만 생성할게요"
     // 일정 장소 선택 화면
+    const val HOME_LOCATION_SELECT_TITLE = "장소를 선택하세요"
+    const val HOME_LOCATION_RECENT_SEARCH = COMMON_RECENT_SEARCH_TITLE
+    const val HOME_LOCATION_CURRENT_TITLE = "현재 설정된 위치"
+    const val HOME_LOCATION_MOVE_MAP_GUIDE = "지도를 움직이거나 검색하여 장소를 선택하세요."
+    const val HOME_LOCATION_UNSPECIFIED_TITLE = "지정된 위치"
+    const val HOME_LOCATION_UNSPECIFIED_PLACE = "지정된 장소"
+    const val HOME_LOCATION_MOVE_MAP_PLACE = "지도를 움직여 장소를 지정해 주세요."
+    const val HOME_LOCATION_SELECTED_POINT_TITLE = "선택한 지점"
+    const val HOME_LOCATION_ADDRESS_UNAVAILABLE = "상세 주소를 불러올 수 없습니다."
+    const val HOME_LOCATION_SEARCH_EMPTY = "검색 결과가 없습니다."
+    const val HOME_LOCATION_SEARCH_FAILED = "장소 검색에 실패했습니다."
 
     // 내 명함 화면
     const val MYCARD_INTRODUCE = "Business card"

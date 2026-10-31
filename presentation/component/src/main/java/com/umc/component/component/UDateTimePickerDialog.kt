@@ -147,7 +147,7 @@ fun UDateTimePickerDialog(
                         dateInput = digits
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    placeholder = { UText("YYYY . MM . DD", color = grey400()) },
+                    placeholder = { UText(AppStrings.DIALOG_DATE_FORMAT_HINT, color = grey400()) },
                     modifier = Modifier
                         .fillMaxWidth()
                         ,
@@ -194,7 +194,7 @@ fun UDateTimePickerDialog(
                             .padding(bottom = 12.dp)
                     ) {
                         AmPmToggleButton(
-                            text = AppStrings.TIME_AM,
+                            text = AppStrings.COMMON_TIME_AM,
                             isSelected = isAm,
                             onClick = { isAm = true }
                         )
@@ -203,7 +203,7 @@ fun UDateTimePickerDialog(
                                 .width(8.dp)
                         )
                         AmPmToggleButton(
-                            text = AppStrings.TIME_PM,
+                            text = AppStrings.COMMON_TIME_PM,
                             isSelected = !isAm,
                             onClick = { isAm = false }
                         )
@@ -231,7 +231,7 @@ fun UDateTimePickerDialog(
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         placeholder = {
-                            UText("12:00", color = grey400())
+                            UText(AppStrings.DIALOG_TIME_FORMAT_HINT, color = grey400())
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
@@ -251,7 +251,7 @@ fun UDateTimePickerDialog(
                 .padding(horizontal = 8.dp, vertical = 8.dp)) {
                 // 취소 버튼
                 UButton(
-                    text = AppStrings.CANCEL,
+                    text = AppStrings.COMMON_CANCEL,
                     onClick = onDismiss,
                     backgroundColor = grey100(),
                     textColor = grey700(),
@@ -264,7 +264,7 @@ fun UDateTimePickerDialog(
                 )
                 // 확인 버튼
                 UButton(
-                    text = AppStrings.CONFIRM,
+                    text = AppStrings.COMMON_CONFIRM,
                     onClick = {
                         if (isConfirmEnabled) {
                             //1. 날짜 데이터 추출(년 월 일)

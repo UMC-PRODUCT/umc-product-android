@@ -1,5 +1,6 @@
 package com.umc.presentation.home.schedule
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -62,7 +63,7 @@ fun FlowRowScope.ScheduleTagChipItems(
     }
     val hiddenCount = tags.size - maxVisible
     if (hiddenCount > 0) {
-        ScheduleTagChip(text = "+$hiddenCount", textColor = textColor, textStyle = textStyle)
+        ScheduleTagChip(text = AppStrings.HOME_SCHEDULE_MORE_TAGS_FORMAT.format(hiddenCount), textColor = textColor, textStyle = textStyle)
     }
 }
 

@@ -140,7 +140,7 @@ fun UTimePickerDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         UText(
-                            text = "시간",
+                            text = AppStrings.DIALOG_DATETIME_TIME,
                             style = UmcTypographyTokens.Caption1,
                             color = grey800(),
                             modifier = Modifier.width(100.dp),
@@ -161,7 +161,7 @@ fun UTimePickerDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         UText(
-                            text = "분",
+                            text = AppStrings.DIALOG_MINUTE,
                             style = UmcTypographyTokens.Caption1,
                             color = grey800(),
                             modifier = Modifier.width(100.dp),
@@ -182,7 +182,7 @@ fun UTimePickerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     UText(
-                        text = AppStrings.CANCEL,
+                        text = AppStrings.COMMON_CANCEL,
                         color = main500(),
                         style = UmcTypographyTokens.Subheadline,
                         modifier = Modifier
@@ -195,7 +195,7 @@ fun UTimePickerDialog(
                     )
 
                     UText(
-                        text = AppStrings.CONFIRM,
+                        text = AppStrings.COMMON_CONFIRM,
                         color = main500(),
                         style = UmcTypographyTokens.Subheadline,
                         modifier = Modifier

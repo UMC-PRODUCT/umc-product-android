@@ -1,5 +1,6 @@
 package com.umc.presentation.home.home
 
+import com.umc.component.theme.AppStrings
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -168,7 +169,7 @@ class HomeViewModel @Inject constructor(
                 userNickName = userInfo.nickname,
                 userMemberId = userInfo.id,
                 gisuTag = gisuTags.toImmutableList(),
-                activeString = "${latestGisu?.gisu ?: 0}기 활동 상태",
+                activeString = AppStrings.HOME_ACTIVITY_STATUS_FORMAT.format(latestGisu?.gisu ?: 0),
                 growDay = userInfo.totalActivityDays.toInt()
             )
         }
@@ -186,7 +187,7 @@ class HomeViewModel @Inject constructor(
      * 입력된 기수 정보들을 오름차순 정렬하여 ["8기", "9기", "10기"] 형태의 문자열 리스트로 변환합니다.
      */
     private fun extractGisuTags(summaryList: List<GisuSummary>): List<String> {
-        return summaryList.sortedBy { it.gisu }.map { "${it.gisu}기" }
+        return summaryList.sortedBy { it.gisu }.map { AppStrings.HOME_GENERATION_FORMAT.format(it.gisu) }
     }
 
     /**
@@ -410,9 +411,9 @@ class HomeViewModel @Inject constructor(
                         day = targetDate.dayOfMonth.toString().padStart(2, '0'),
                         dDay = when {
                             isPast -> null
-                            serverDDay + i == 0 -> "D-Day"
-                            serverDDay + i > 31 -> "참여 예정"
-                            else -> "D-${serverDDay + i}"
+                            serverDDay + i == 0 -> AppStrings.HOME_SCHEDULE_D_DAY
+                            serverDDay + i > 31 -> AppStrings.HOME_SCHEDULE_UPCOMING
+                            else -> AppStrings.HOME_SCHEDULE_D_DAY_FORMAT.format(serverDDay + i)
                         },
                         isPast = isPast,
                         plusDay = i,
@@ -480,7 +481,7 @@ data class HomeUiState(
     val alarmExist: Boolean = false,
 
     //상태에 따른 텍스트
-    val activeString: String = "0기 활동 상태",
+    val activeString: String = AppStrings.HOME_ACTIVITY_STATUS_FORMAT.format(0),
     val sangjum: Int = 0,
     val buljum: Int = 0,
     val total: Int = 0,
