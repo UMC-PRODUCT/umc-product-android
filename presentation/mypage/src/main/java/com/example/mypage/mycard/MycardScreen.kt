@@ -612,7 +612,7 @@ private fun CardFrontContent(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     androidx.compose.material3.HorizontalDivider(
                         thickness = 1.dp,
@@ -642,13 +642,12 @@ private fun CardFrontContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            //명함 교환 & QR 코드 버튼
-            if (!uiState.isViewingMemberProfile) CardBottomButtons(
-                onExchangeCardClick = onExchangeCardClick,
-                onMyQrcodeClick = onMyQrcodeClick
-            )
+            // [임시] 명함 교환·QR 코드 버튼 숨김. 다시 열 때 아래 주석을 되살린다
+            // Spacer(modifier = Modifier.height(24.dp))
+            // if (!uiState.isViewingMemberProfile) CardBottomButtons(
+            //     onExchangeCardClick = onExchangeCardClick,
+            //     onMyQrcodeClick = onMyQrcodeClick
+            // )
         }
     }
 
@@ -689,12 +688,12 @@ private fun CardBackContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        if (!uiState.isViewingMemberProfile) CardBottomButtons(
-            onExchangeCardClick = onExchangeCardClick,
-            onMyQrcodeClick = onMyQrcodeClick
-        )
+        // [임시] 명함 교환·QR 코드 버튼 숨김. 다시 열 때 아래 주석을 되살린다
+        // Spacer(modifier = Modifier.height(24.dp))
+        // if (!uiState.isViewingMemberProfile) CardBottomButtons(
+        //     onExchangeCardClick = onExchangeCardClick,
+        //     onMyQrcodeClick = onMyQrcodeClick
+        // )
     }
 }
 
@@ -714,7 +713,8 @@ private fun CardHeader(onFlipClick: () -> Unit) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_logo_umc),
                 contentDescription = "UMC Logo",
-                tint = white()
+                tint = white(),
+                modifier = Modifier.size(width = 47.dp, height = 15.16.dp)
             )
 
             Spacer(
@@ -991,7 +991,7 @@ private fun MycardScreenPreview() {
                         personal = "",
                     ),
                 ),
-                cardPartText = "Mobile PE",
+                cardPartText = "Mobile Product Engineer",
                 cardGeneration = 11,
             ),
             onNavigateToMypage = {},

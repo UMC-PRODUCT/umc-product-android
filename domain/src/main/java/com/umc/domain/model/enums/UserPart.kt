@@ -43,6 +43,17 @@ enum class UserPart(val label: String) {
     /** 서버 요청·응답에 쓰는 값 */
     val serverValue: String get() = name
 
+    /**
+     * 명함에 쓰는 영문 이름. 신규 두 파트만 줄이지 않고 풀어 쓰고, 나머지는 [label] 을 그대로 쓴다
+     * (iOS 명함의 partDisplayName 과 같은 규칙)
+     */
+    val cardLabel: String
+        get() = when (this) {
+            WEB_PRODUCT_ENGINEER -> "Web Product Engineer"
+            MOBILE_PRODUCT_ENGINEER -> "Mobile Product Engineer"
+            else -> label
+        }
+
     companion object {
         /** 서버 `ChallengerPart` 와 1:1. 파트를 주고받는 API 는 이 목록 안에서만 골라야 한다. */
         val parts: List<UserPart>

@@ -169,8 +169,8 @@ class MycardViewModel @Inject constructor(
             updateState {
                 copy(
                     myRecentInfoString = positionString,
-                    // 명함 앞면은 파트를 보여주고, 파트가 없는 운영진은 직함을 대신 보여준다
-                    cardPartText = part?.label ?: roleLabel.orEmpty(),
+                    // 명함 앞면은 영문으로 적는다. 운영진이면 직책(School President 등), 챌린저면 파트(Mobile Product Engineer 등)
+                    cardPartText = cardTitleOf(representativeItem?.role, part),
                     cardGeneration = summary.gisu,
                     githubLink = userInfo.profile.github,
                     linkedinLink = userInfo.profile.linkedIn,
@@ -182,6 +182,19 @@ class MycardViewModel @Inject constructor(
 
     }
 
+
+    /**
+     * 명함 앞면의 영문 직책·파트 문구
+     *
+     * 운영진 역할이 있으면 직책 영문명, 챌린저면 파트 영문명, 둘 다 없으면 Challenger 를 쓴다
+     */
+    private fun cardTitleOf(role: String?, part: UserPart?): String {
+        val roleEnum = UserChallengerRole.from(role)
+        val isStaffRole = roleEnum != UserChallengerRole.CHALLENGER && roleEnum != UserChallengerRole.MEMBER
+        return roleEnum.englishName?.takeIf { isStaffRole }
+            ?: part?.cardLabel
+            ?: UserChallengerRole.CHALLENGER.englishName.orEmpty()
+    }
 
     /**
      * 명함 뒷면에 표시될 내 회원 고유 QR 코드 인텐트 딥링크 URL을 생성하는 메서드
@@ -297,7 +310,7 @@ data class MycardUiState(
 
     //명함 관련 정보
     val myRecentInfoString: String = "",
-    val cardPartText: String = "", //명함 앞면 파트 (파트가 없으면 직함)
+    val cardPartText: String = "", //명함 앞면 영문 직책 또는 파트
     val cardGeneration: Long? = null, //명함 앞면 기수 (GEN.N)
     val myQrcodeData: String = "",
     val githubLink: String = "",
