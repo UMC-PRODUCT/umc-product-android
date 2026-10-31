@@ -22,7 +22,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import com.umc.component.component.UText
 import androidx.compose.ui.unit.dp
 import com.umc.component.theme.UmcTheme
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.presentation.community.component.CommunityErrorContent
 import com.umc.presentation.community.component.CommunityLoadingContent
 import com.umc.presentation.community.component.CommunityThreadItem
@@ -64,7 +64,7 @@ fun CommunitySearchScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         CommunitySearchBar(
             query = state.query,

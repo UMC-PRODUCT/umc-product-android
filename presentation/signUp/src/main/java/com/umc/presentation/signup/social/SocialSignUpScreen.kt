@@ -45,7 +45,7 @@ import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -123,7 +123,7 @@ fun SocialSignUpScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Icon(
             modifier = Modifier
@@ -174,7 +174,7 @@ fun SocialSignUpScreen(
                 enabled = uiState.enableNextButton,
                 backgroundColor = if (uiState.enableNextButton) main500() else grey100(),
                 pressedColor = main700(),
-                textColor = if (uiState.enableNextButton) grey000() else grey300(),
+                textColor = if (uiState.enableNextButton) grey50() else grey300(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 10.dp,
                 modifier = Modifier
@@ -236,7 +236,7 @@ private fun EmailVerifySection(
             backgroundColor = when {
                 isEmailError -> red100()
                 isEmailLocked -> grey100()
-                else -> grey000()
+                else -> grey50()
             },
             strokeColor = if (isEmailError) red500() else grey200(),
             focusStrokeColor = if (isEmailError) red500() else grey900(),
@@ -255,7 +255,7 @@ private fun EmailVerifySection(
             enabled = isVerifyEnabled,
             backgroundColor = if (isVerifyEnabled) main500() else grey100(),
             pressedColor = main700(),
-            textColor = if (isVerifyEnabled) grey000() else grey300(),
+            textColor = if (isVerifyEnabled) grey50() else grey300(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             cornerRadius = 10.dp,
             contentPadding = PaddingValues(horizontal = 16.dp),
@@ -288,7 +288,7 @@ private fun EmailVerifySection(
                 placeholder = AppStrings.SIGN_UP_VERIFY_CODE_6_PLACEHOLDER,
                 textStyle = UmcTypographyTokens.Headline,
                 textColor = if (isVerified) grey400() else grey950(),
-                backgroundColor = if (isVerified) grey100() else grey000(),
+                backgroundColor = if (isVerified) grey100() else grey50(),
                 strokeColor = grey200(),
                 focusStrokeColor = grey900(),
                 cornerRadius = 10.dp,

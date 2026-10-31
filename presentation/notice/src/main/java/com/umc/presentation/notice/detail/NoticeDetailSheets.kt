@@ -39,7 +39,7 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -176,7 +176,7 @@ fun NoticeReadStatusSheetContent(
                 UText(
                     text = AppStrings.NOTICE_DETAIL_SEND_NOTIFICATION,
                     style = UmcTypographyTokens.HeadlineBold,
-                    color = if (enabled) grey000() else grey400(),
+                    color = if (enabled) grey50() else grey400(),
                 )
             }
         }
@@ -195,7 +195,7 @@ private fun ReadStatusSegment(
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
-            .background(if (isSelected) grey000() else Color.Transparent)
+            .background(if (isSelected) grey50() else Color.Transparent)
             .clickable { onClick() }
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.Center,
@@ -288,7 +288,7 @@ internal fun ProfileImage(url: String, size: Int) {
         modifier = Modifier
             .size(size.dp)
             .clip(CircleShape)
-            .background(grey000())
+            .background(grey50())
             .border(1.dp, grey200(), CircleShape),
         contentAlignment = Alignment.Center,
     ) {

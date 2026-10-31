@@ -27,7 +27,7 @@ import com.umc.component.component.USwitch
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
@@ -53,7 +53,7 @@ fun ScheduleDateCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, grey300()),
-        color = grey000()
+        color = grey50()
     ) {
         Column {
             //하루 종일 파트

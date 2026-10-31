@@ -39,7 +39,7 @@ import com.umc.component.component.UToastHost
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey600
@@ -142,7 +142,7 @@ fun SignUpFailCodeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Icon(
             modifier = Modifier
@@ -194,7 +194,7 @@ fun SignUpFailCodeScreen(
             enabled = !uiState.isSubmitting,
             backgroundColor = if (uiState.isSubmitting) grey100() else main500(),
             pressedColor = main700(),
-            textColor = if (uiState.isSubmitting) grey300() else grey000(),
+            textColor = if (uiState.isSubmitting) grey300() else grey50(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             contentPadding = PaddingValues(vertical = 16.dp),
             modifier = Modifier

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 홈 일러스트 그라데이션용 알파 변형. 색 값은 토큰을 그대로 참조한다 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="0" android:color="@android:color/white" />
+</selector>

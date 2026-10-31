@@ -12,7 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UButton
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
 import com.umc.component.theme.main500
@@ -39,7 +39,7 @@ fun CommunityActionButton(
         modifier = modifier.fillMaxWidth(),
         enabled = enabled,
         backgroundColor = if (enabled) main500() else grey100(),
-        textColor = if (enabled) grey000() else grey300(),
+        textColor = if (enabled) grey50() else grey300(),
         textStyle = textStyle,
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 13.dp),
     )

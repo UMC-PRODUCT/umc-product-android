@@ -26,7 +26,6 @@ import com.umc.component.R
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
-import com.umc.component.theme.grey000
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
@@ -64,7 +63,7 @@ fun UReasonDialog(
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .background(grey000(), RoundedCornerShape(12.dp))
+                .background(grey50(), RoundedCornerShape(12.dp))
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -116,7 +115,7 @@ fun UReasonDialog(
                 onClick = onConfirm,
                 modifier = Modifier.fillMaxWidth(),
                 backgroundColor = grey800(),
-                textColor = grey000(),
+                textColor = grey50(),
                 textStyle = UmcTypographyTokens.SubheadlineBold,
                 cornerRadius = 8.dp,
                 contentPadding = PaddingValues(vertical = 14.dp),

@@ -40,7 +40,7 @@ import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.main500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -88,7 +88,7 @@ fun RewardPointsScreen(
             .fillMaxWidth()
             .height(600.dp)
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .background(grey000())
+            .background(grey50())
             .padding(horizontal = 16.dp)
     ) {
         DragHeader()
@@ -139,7 +139,7 @@ fun RewardPointsScreen(
             text = if (uiState.isPointSubmitting) AppStrings.REWARD_SUBMITTING else AppStrings.REWARD_SUBMIT,
             enabled = isSubmitEnabled && !uiState.isPointSubmitting,
             textStyle = HeadlineBold,
-            textColor = if (isSubmitEnabled) grey000() else grey300(),
+            textColor = if (isSubmitEnabled) grey50() else grey300(),
             backgroundColor = if (isSubmitEnabled) main500() else grey100(),
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
             cornerRadius = 8.dp,
@@ -179,7 +179,7 @@ private fun RewardListCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(grey50())
     ) {
         rewards.forEachIndexed { index, item ->
             RewardRow(
@@ -262,7 +262,7 @@ private fun MemoInput(
         placeholderColor = grey400(),
         textColor = grey800(),
         textStyle = Callout,
-        backgroundColor = grey000(),
+        backgroundColor = grey50(),
         verticalAlignment = Alignment.Top,
         strokeColor = grey300(),
         focusStrokeColor = grey900(),

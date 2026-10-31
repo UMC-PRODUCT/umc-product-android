@@ -27,7 +27,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.umc.component.R
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import androidx.compose.material3.Icon
@@ -78,7 +78,7 @@ fun UBasicDialog(
     onDismissRequest: () -> Unit,
     showCloseButton: Boolean = true,
 
-    negativeBackgroundColor: Color = grey000(),
+    negativeBackgroundColor: Color = grey50(),
     negativeBorderColor: Color = grey300(),
     negativeTextColor: Color = grey800(),
 
@@ -107,7 +107,7 @@ fun UBasicDialog(
     }
 
     val resolvedPositiveBackgroundColor =
-        positiveBackgroundColor ?: grey000()
+        positiveBackgroundColor ?: grey50()
 
     val resolvedPositiveBorderColor =
         positiveBorderColor ?: positiveColor as Color
@@ -127,7 +127,7 @@ fun UBasicDialog(
                 Modifier.fillMaxWidth(0.9f).wrapContentHeight()
             },
             shape = RoundedCornerShape(if (useCompactStyle) 12.dp else 16.dp),
-            color = grey000()
+            color = grey50()
         ) {
             Column(
                 modifier = Modifier.padding(

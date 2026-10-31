@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -74,7 +74,7 @@ fun ActiveScheduleItem(
 
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
@@ -170,7 +170,7 @@ fun DefaultScheduleItem(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
@@ -182,7 +182,7 @@ fun DefaultScheduleItem(
                 modifier = Modifier
                     .size(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = grey000(),
+                color = grey50(),
                 border = BorderStroke(1.dp, grey200())
             ) {
                 Column(

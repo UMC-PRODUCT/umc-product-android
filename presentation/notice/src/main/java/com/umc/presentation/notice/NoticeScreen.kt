@@ -45,7 +45,7 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
@@ -118,7 +118,7 @@ fun NoticeRoute(
             ModalBottomSheet(
                 onDismissRequest = { showPartBottomSheet = false },
                 sheetState = sheetState,
-                containerColor = grey000(),
+                containerColor = grey50(),
             ) {
                 PartSelectBottomSheetContent(
                     parts = uiState.partFilters.toImmutableList(),
@@ -149,7 +149,7 @@ fun NoticeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             NoticeHeader(
@@ -232,11 +232,11 @@ fun NoticeScreen(
                 onClick = onClickWriteNotice,
                 backgroundColor = main500(),
                 pressedColor = main700(),
-                textColor = grey000(),
+                textColor = grey50(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 28.dp,
                 prevIcon = painterResource(id = R.drawable.ic_plus_circle),
-                prevIconTint = grey000(),
+                prevIconTint = grey50(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -289,7 +289,7 @@ private fun NoticeHeader(
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(if (uiState.isShowDropDown) grey100() else grey000())
+                    .background(if (uiState.isShowDropDown) grey100() else grey50())
                     .clickable { onClickShowDropDown() }
                     .padding(horizontal = 4.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -312,7 +312,7 @@ private fun NoticeHeader(
             DropdownMenu(
                 expanded = uiState.isShowDropDown,
                 onDismissRequest = onClickShowDropDown,
-                modifier = Modifier.background(grey000()),
+                modifier = Modifier.background(grey50()),
             ) {
                 uiState.dropdownList.forEach { gisu ->
                     val isSelected = gisu.gisuId.toLong() == uiState.selectedGisu
@@ -383,7 +383,7 @@ private fun NoticeFilterChip(
         UText(
             text = text,
             style = UmcTypographyTokens.SubheadlineBold,
-            color = if (isSelected) grey000() else grey500(),
+            color = if (isSelected) grey50() else grey500(),
         )
 
         if (hasDropdownIcon) {
@@ -393,7 +393,7 @@ private fun NoticeFilterChip(
             Icon(
                 painter = painterResource(id = R.drawable.ic_dropdown_down),
                 contentDescription = null,
-                tint = if (isSelected) grey000() else grey500(),
+                tint = if (isSelected) grey50() else grey500(),
                 modifier = Modifier.size(16.dp),
             )
         }

@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main500
 import com.umc.presentation.community.R
@@ -109,7 +109,7 @@ fun CommunityThreadEditorContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(grey50())
             .navigationBarsPadding(),
     ) {
         CommunityCreateTopBar(

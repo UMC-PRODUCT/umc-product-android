@@ -26,7 +26,7 @@ import com.umc.presentation.community.model.CommunityThreadUiModel
 import kotlinx.collections.immutable.toImmutableList
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey950
 import com.umc.presentation.community.component.CommunityEmptyContent
 import com.umc.presentation.community.component.CommunityErrorContent
@@ -57,7 +57,7 @@ fun CommunityScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),

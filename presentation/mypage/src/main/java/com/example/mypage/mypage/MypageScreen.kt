@@ -60,9 +60,11 @@ import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.black
+import com.umc.component.theme.kakaoColor
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.base.CollectUiEvents
@@ -621,7 +623,7 @@ fun MypageScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(54.dp),
-                        backgroundColor = grey000(),
+                        backgroundColor = grey50(),
                         textColor = red500(),
                         textStyle = UmcTypographyTokens.Body,
                         cornerRadius = 12.dp,
@@ -633,7 +635,7 @@ fun MypageScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(54.dp),
-                        backgroundColor = grey000(),
+                        backgroundColor = grey50(),
                         textColor = grey800(),
                         textStyle = UmcTypographyTokens.Body,
                         cornerRadius = 12.dp,
@@ -674,7 +676,7 @@ fun MypageTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(grey50())
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -727,7 +729,7 @@ fun MypageListCard(content: @Composable ColumnScope.() -> Unit) {
             .fillMaxWidth()
             .padding(top = 16.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp),
         content = content
     )
@@ -780,7 +782,9 @@ fun MypageListItem(
  */
 @Composable
 fun SocialBadge(platform: LoginType) {
-    val bgColor = if (platform == LoginType.KAKAO) Color(0xFFFEE500) else grey100()
+    val bgColor = if (platform == LoginType.KAKAO) kakaoColor() else grey100()
+    // 카카오 노랑은 다크 모드에서도 그대로라, 그 위 글자도 모드와 상관없이 카카오 가이드의 레이블색(검정 85%)으로 둔다
+    val textColor = if (platform == LoginType.KAKAO) Color.Black.copy(alpha = 0.85f) else grey700()
 
     Surface(
         modifier = Modifier
@@ -798,7 +802,7 @@ fun SocialBadge(platform: LoginType) {
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             style = UmcTypographyTokens.Caption1Bold,
-            color = grey700()
+            color = textColor
         )
     }
 }
@@ -824,7 +828,8 @@ fun MypageSocialLinkCard(
                     id = if (targetPlatform == LoginType.KAKAO) R.drawable.ic_kakao else R.drawable.ic_google
                 ),
                 contentDescription = null,
-                tint = Color.Unspecified,
+                // 카카오 아이콘은 단색이라 black으로 칠해 다크 모드에서 흰색으로 보이게 하고, 구글은 로고 색을 그대로 쓴다
+                tint = if (targetPlatform == LoginType.KAKAO) black() else Color.Unspecified,
                 modifier = Modifier.size(24.dp)
             )
             UText(

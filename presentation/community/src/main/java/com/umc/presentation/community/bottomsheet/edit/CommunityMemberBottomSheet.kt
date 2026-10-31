@@ -59,7 +59,7 @@ import com.umc.component.component.UToastData
 import com.umc.component.component.UToastHost
 import com.umc.component.component.UToastState
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
@@ -322,7 +322,7 @@ internal fun CommunityMemberBottomSheetHeader(
             modifier = Modifier.widthIn(min = 50.dp).heightIn(min = 32.dp),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
             backgroundColor = if (isConfirmEnabled) main500() else grey100(),
-            textColor = if (isConfirmEnabled) grey000() else grey400(),
+            textColor = if (isConfirmEnabled) grey50() else grey400(),
             textStyle = UmcTypographyTokens.SubheadlineBold,
             cornerRadius = 8.dp,
         )
@@ -688,7 +688,7 @@ internal fun CommunityMemberSheetPreviewFrame(
         modifier = Modifier
             .fillMaxWidth()
             .height(560.dp)
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Column(
             modifier = Modifier
