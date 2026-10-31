@@ -1672,10 +1672,11 @@ private fun ChatMessageRow(
     onReact: (String) -> Unit,
     onShowMoreEmojis: () -> Unit,
 ) {
-    if (message.type.isSystemNotice) {
+    val isDeleted = message.deletedAt != null || message.status == "DELETED"
+    if (message.type.isSystemNotice || isDeleted) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text(
-                text = message.content.orEmpty(),
+                text = if (isDeleted) DELETED_MESSAGE_NOTICE else message.content.orEmpty(),
                 style = UmcTypographyTokens.Footnote,
                 color = grey500(),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
