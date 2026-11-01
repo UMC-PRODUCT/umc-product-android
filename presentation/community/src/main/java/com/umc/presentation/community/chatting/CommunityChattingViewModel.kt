@@ -96,6 +96,7 @@ class CommunityChattingViewModel @Inject constructor(
 
     fun onAction(action: CommunityChattingAction) {
         when (action) {
+            CommunityChattingAction.OnRetryBlockedMembers -> refreshBlockedMembers()
             is CommunityChattingAction.OnToggleBlockedMessage -> updateState { toggleBlockedMessage(action.messageId) }
             is CommunityChattingAction.OnStartEdit -> {
                 val message = state.value.messages.find { it.messageId == action.messageId }
@@ -138,7 +139,7 @@ class CommunityChattingViewModel @Inject constructor(
                 summarizeUnreadMessages()
             CommunityChattingAction.OnRetryUnreadSummary -> {
                 updateState { copy(aiFeatureStatus = null) }
-                summarizeUnreadMessages(requestedMessages = lastSummaryMessages)
+                summarizeUnreadMessages(requestedMessages = lastSummaryMessages.takeIf { it.isNotEmpty() })
             }
             CommunityChattingAction.OnDismissUnreadSummary -> {
                 summaryGeneration++
@@ -320,7 +321,11 @@ class CommunityChattingViewModel @Inject constructor(
                 requestedMessages != null -> requestedMessages
                 else -> current.summaryCandidateMessages
             }
-            val input = SummarizeUnreadChatUseCase.prepareInput(boundedMessages.asReversed())
+            if (current.blockedMembersStatus != BlockedMembersStatus.LOADED) {
+                updateState { copy(unreadSummaryError = AppStrings.CHAT_BLOCK_STATUS_REQUIRED) }
+                return@launch
+            }
+            val input = SummarizeUnreadChatUseCase.prepareInput(current.summaryInputMessages(boundedMessages).asReversed())
             val targetMessages = input.messages
 
             if (targetMessages.isEmpty()) {
@@ -1540,13 +1545,22 @@ class CommunityChattingViewModel @Inject constructor(
 
     private fun refreshBlockedMembers() {
         blockedMembersJob?.cancel()
+        // 조회 중에도 프로필에서 새로 차단한 메시지가 이전 요약에 노출되지 않게 한다.
+        summaryGeneration++
+        updateState { withoutUnreadSummary().copy(blockedMembersStatus = BlockedMembersStatus.LOADING) }
         blockedMembersJob = viewModelScope.launch {
             when (val result = memberRepository.getBlockedMemberIds()) {
-                is ApiState.Success -> updateState {
-                    copy(blockedMemberIds = result.data.map { it.toString() }.toSet(),
-                        revealedBlockedMessageIds = emptySet())
+                is ApiState.Success -> {
+                    val ids = result.data.map { it.toString() }.toSet()
+                    if (ids != state.value.blockedMemberIds) summaryGeneration++
+                    updateState {
+                        withoutUnreadSummary().copy(
+                            blockedMembersStatus = BlockedMembersStatus.LOADED,
+                            blockedMemberIds = ids, revealedBlockedMessageIds = emptySet(),
+                        )
+                    }
                 }
-                is ApiState.Fail -> Unit // 조회 실패 시 기존 차단 상태를 유지한다.
+                is ApiState.Fail -> updateState { copy(blockedMembersStatus = BlockedMembersStatus.FAILED) }
             }
         }
     }

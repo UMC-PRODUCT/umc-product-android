@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState != null) {
             PendingDeepLink.uri = savedInstanceState.getString("pendingDeepLink")?.let(android.net.Uri::parse)
         }
-        if (savedInstanceState == null) acceptDeepLink(intent)
+        acceptDeepLink(intent)
         // 자동 딥링크 처리는 막고 인증 상태에 맞춰 MainNavHost에서 소비한다.
         intent?.data = null
         // 상태바는 투명으로 두고 뒤에 비치는 Scaffold 배경색(UmcApp)이 화면별로 칠한다.
@@ -106,6 +106,9 @@ class MainActivity : ComponentActivity() {
             preferences.edit().putStringSet("consumed", (seen.toList().takeLast(199) + eventId).toSet()).apply()
         }
         PendingDeepLink.uri = link
+        // 같은 Activity의 회전/복원에서 처리한 알림 payload를 다시 소비하지 않는다.
+        listOf("schemaVersion", "type", "threadId", "notificationEventId", "deepLink", "deeplink")
+            .forEach { incoming?.removeExtra(it) }
     }
 
 }

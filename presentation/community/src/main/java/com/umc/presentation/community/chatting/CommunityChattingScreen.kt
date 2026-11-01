@@ -126,6 +126,7 @@ import com.umc.presentation.community.bottomsheet.ConversationSummaryBottomSheet
 import com.umc.presentation.community.component.chatting.CommunityChatProfileImage
 import com.umc.presentation.community.component.chatting.CommunityChatInputBar
 import com.umc.presentation.community.component.chatting.CommunityChatEditInputBar
+import com.umc.presentation.community.component.chatting.CommunityMessageText
 import com.umc.presentation.community.component.chatting.communityMentionText
 import com.umc.presentation.community.component.chatting.communityMentionNameRanges
 import com.umc.domain.model.community.thread.CommunityMessageReportReason
@@ -244,6 +245,7 @@ fun CommunityChattingScreen(
     val deletedMessageIds = remember(state.messages, state.knownDeletedMessageIds) {
         communityDeletedMessageIds(state.messages, state.knownDeletedMessageIds)
     }
+    val replySources = remember(state.messages) { state.messages.associateBy { it.messageId } }
     val displayedMessages = remember(state.messages, deletedMessageIds) {
         communityDisplayedMessages(
             state.messages, deletedMessageIds,
@@ -615,6 +617,23 @@ fun CommunityChattingScreen(
                     onEditThread = onEditThread,
                     onDeleteThread = onDeleteThread,
                 )
+                if (state.blockedMembersStatus != BlockedMembersStatus.LOADED) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            if (state.blockedMembersStatus == BlockedMembersStatus.FAILED) AppStrings.CHAT_BLOCK_STATUS_FAILED
+                            else AppStrings.CHAT_BLOCK_STATUS_LOADING,
+                            modifier = Modifier.weight(1f), color = grey600(), style = UmcTypographyTokens.Footnote,
+                        )
+                        if (state.blockedMembersStatus == BlockedMembersStatus.FAILED) {
+                            TextButton(onClick = { onAction(CommunityChattingAction.OnRetryBlockedMembers) }) {
+                                Text("다시 시도", color = main500())
+                            }
+                        }
+                    }
+                }
                 if (showUnreadSummary) {
                     UnreadSummaryCard(
                         unreadCount = newMessageCount,
@@ -735,6 +754,8 @@ fun CommunityChattingScreen(
                         member = message.senderId?.let(state.members::get),
                         isMine = isMine,
                         isBlocked = !isMine && message.senderId in state.blockedMemberIds,
+                        isVisibilityPending = !isMine && state.blockedMembersStatus != BlockedMembersStatus.LOADED,
+                        showReplySnippet = state.canShowReplySnippet(replySources[message.replyTo?.messageId]),
                         isBlockedMessageRevealed = message.messageId in state.revealedBlockedMessageIds,
                         onToggleBlockedMessage = { onAction(CommunityChattingAction.OnToggleBlockedMessage(message.messageId)) },
                         isViewOnly = isViewOnly,
@@ -868,7 +889,11 @@ fun CommunityChattingScreen(
                             onAction(CommunityChattingAction.OnMentionSelected(memberId, start, end))
                         },
                         enabled = true,
-                        replyingMessage = replyingMessage,
+                        replyingMessage = replyingMessage?.let { source ->
+                            val canShow = state.canShowReplySnippet(source) ||
+                                (state.blockedMembersStatus == BlockedMembersStatus.LOADED && source.messageId in state.revealedBlockedMessageIds)
+                            if (canShow) source else source.copy(content = AppStrings.CHAT_REPLY_PREVIEW_HIDDEN)
+                        },
                         onValueChange = onDraftChange,
                         onCamera = {
                             onCamera()
@@ -1674,6 +1699,8 @@ private fun ChatMessageRow(
     member: CommunityThreadMember?,
     isMine: Boolean,
     isBlocked: Boolean,
+    isVisibilityPending: Boolean,
+    showReplySnippet: Boolean,
     isBlockedMessageRevealed: Boolean,
     onToggleBlockedMessage: () -> Unit,
     isViewOnly: Boolean,
@@ -1715,13 +1742,13 @@ private fun ChatMessageRow(
     Box(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth()) {
             if (isMine) {
-                MineMessage(message, imageUris, openMenu, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick)
+                MineMessage(message, imageUris, openMenu, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick, showReplySnippet = showReplySnippet)
             } else {
                 OtherMessage(message, imageUris, member, openMenu, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick,
-                    isBlocked = isBlocked, isBlockedMessageRevealed = isBlockedMessageRevealed,
+                    isBlocked = isBlocked, isVisibilityPending = isVisibilityPending, showReplySnippet = showReplySnippet, isBlockedMessageRevealed = isBlockedMessageRevealed,
                     onToggleBlockedMessage = onToggleBlockedMessage)
             }
-            if (!isBlocked && message.reactions.isNotEmpty()) {
+            if (!isVisibilityPending && (!isBlocked || isBlockedMessageRevealed) && message.reactions.isNotEmpty()) {
                 MessageReactions(
                     reactions = message.reactions,
                     isMine = isMine,
@@ -1731,7 +1758,7 @@ private fun ChatMessageRow(
             }
         }
         val anchor = bubbleBounds
-        if (!isBlocked && menuExpanded && anchor != null && message.deletedAt == null && message.status != "DELETED") {
+        if (!isVisibilityPending && (!isBlocked || isBlockedMessageRevealed) && menuExpanded && anchor != null && message.deletedAt == null && message.status != "DELETED") {
             MessageActionPopup(
                 messageBounds = anchor,
                 isMine = isMine,
@@ -1806,6 +1833,8 @@ private fun OtherMessage(
     bubbleModifier: Modifier = Modifier,
     onReplySourceClick: () -> Unit = {},
     isBlocked: Boolean = false,
+    isVisibilityPending: Boolean = false,
+    showReplySnippet: Boolean = true,
     isBlockedMessageRevealed: Boolean = false,
     onToggleBlockedMessage: () -> Unit = {},
 ) {
@@ -1829,19 +1858,24 @@ private fun OtherMessage(
                 Surface(
                     modifier = Modifier.weight(1f, fill = false).then(bubbleModifier),
                     color = when {
-                        !isBlocked && message.type == CommunityMessageType.IMAGE -> Color.Transparent
+                        !isBlocked && !isVisibilityPending && message.type == CommunityMessageType.IMAGE -> Color.Transparent
                         selected -> grey200()
                         else -> white()
                     },
                     shape = RoundedCornerShape(12.dp),
                 ) {
-                    if (isBlocked) {
-                        BlockedMessageBubble(message, imageUris, isBlockedMessageRevealed, onToggleBlockedMessage)
+                    if (isVisibilityPending) {
+                        Text(AppStrings.CHAT_BLOCK_STATUS_REQUIRED, color = grey500(),
+                            style = UmcTypographyTokens.Subheadline, modifier = Modifier.padding(12.dp))
+                    } else if (isBlocked) {
+                        BlockedMessageBubble(message, imageUris, isBlockedMessageRevealed, onToggleBlockedMessage, onLongClick)
                     } else MessageBubbleContent(
                         message = message,
+                        showReplySnippet = showReplySnippet,
                         imageUris = imageUris,
                         isMine = false,
                         onLongClick = onLongClick,
+                        onBodyClick = { if (message.replyTo != null) onReplySourceClick() },
                         modifier = Modifier
                             .widthIn(max = 256.dp)
                             .combinedClickable(
@@ -1873,6 +1907,7 @@ private fun BlockedMessageBubble(
     imageUris: List<String>,
     revealed: Boolean,
     onToggle: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier.widthIn(max = 256.dp).width(256.dp).padding(12.dp),
@@ -1882,9 +1917,13 @@ private fun BlockedMessageBubble(
             Text(AppStrings.CHAT_BLOCKED_MESSAGE, color = grey950(), style = UmcTypographyTokens.Subheadline)
             if (revealed) {
                 if (message.type == CommunityMessageType.IMAGE) {
-                    MessageBubbleContent(message = message, imageUris = imageUris, isMine = false)
+                    MessageBubbleContent(message = message, imageUris = imageUris, isMine = false, onLongClick = onLongClick, showReplySnippet = false)
                 } else {
-                    Text(message.content.orEmpty(), color = grey400(), style = UmcTypographyTokens.Footnote)
+                    CommunityMessageText(
+                        text = androidx.compose.ui.text.AnnotatedString(message.content.orEmpty()),
+                        color = grey400(), linkColor = grey400(), style = UmcTypographyTokens.Footnote,
+                        onLongClick = onLongClick,
+                    )
                 }
             }
         }
@@ -1911,6 +1950,7 @@ private fun MineMessage(
     selected: Boolean = false,
     bubbleModifier: Modifier = Modifier,
     onReplySourceClick: () -> Unit = {},
+    showReplySnippet: Boolean = true,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1933,9 +1973,11 @@ private fun MineMessage(
         ) {
             MessageBubbleContent(
                 message = message,
+                showReplySnippet = showReplySnippet,
                 imageUris = imageUris,
                 isMine = true,
                 onLongClick = onLongClick,
+                onBodyClick = { if (message.replyTo != null) onReplySourceClick() },
                 modifier = Modifier
                     .widthIn(max = 256.dp)
                     .combinedClickable(
@@ -1963,6 +2005,8 @@ private fun MessageBubbleContent(
     isMine: Boolean,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
+    onBodyClick: () -> Unit = {},
+    showReplySnippet: Boolean = true,
 ) {
     if (message.deletedAt != null || message.status == "DELETED") {
         UText("삭제된 메시지예요.", modifier = modifier.padding(12.dp))
@@ -2034,7 +2078,7 @@ private fun MessageBubbleContent(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = reply.snippet.ifBlank { AppStrings.CHAT_MESSAGE_CONTENT },
+                text = if (showReplySnippet) reply.snippet.ifBlank { AppStrings.CHAT_MESSAGE_CONTENT } else AppStrings.CHAT_REPLY_PREVIEW_HIDDEN,
                 modifier = Modifier.padding(top = 3.dp),
                 color = secondary,
                 style = UmcTypographyTokens.Footnote,
@@ -2047,14 +2091,17 @@ private fun MessageBubbleContent(
                 color = divider,
             )
         }
-        Text(
+        CommunityMessageText(
             text = communityMentionText(
                 message.content.orEmpty(),
                 communityMentionNameRanges(message.content.orEmpty(), message.mentions.map { it.name }),
                 if (isMine) main100() else main500(),
             ),
             color = foreground,
-            style = UmcTypographyTokens.Subheadline
+            linkColor = if (isMine) white() else main500(),
+            style = UmcTypographyTokens.Subheadline,
+            onClick = onBodyClick,
+            onLongClick = onLongClick,
         )
     }
 }

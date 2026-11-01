@@ -31,12 +31,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -134,6 +136,7 @@ fun MemberProfileRoute(
 
     if (uiState.isReportSheetOpen) {
         MemberReportBottomSheet(
+            isProcessing = uiState.isProcessing,
             selectedReasons = uiState.reportReasons,
             detail = uiState.reportDetail,
             canSubmit = uiState.canSubmitReport,
@@ -569,6 +572,7 @@ private fun MemberProfileLoadError(onRetryClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MemberReportBottomSheet(
+    isProcessing: Boolean,
     selectedReasons: ImmutableSet<MemberReportReason>,
     detail: String,
     canSubmit: Boolean,
@@ -577,7 +581,11 @@ private fun MemberReportBottomSheet(
     onCancel: () -> Unit,
     onSubmit: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val processing by rememberUpdatedState(isProcessing)
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        confirmValueChange = { it != SheetValue.Hidden || !processing },
+    )
     ModalBottomSheet(
         onDismissRequest = onCancel,
         sheetState = sheetState,

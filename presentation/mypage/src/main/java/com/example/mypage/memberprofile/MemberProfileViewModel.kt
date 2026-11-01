@@ -200,7 +200,7 @@ class MemberProfileViewModel @Inject constructor(
         if (isProcessing || text.length > MEMBER_REPORT_DETAIL_MAX_LENGTH) this else copy(reportDetail = text)
     }
 
-    fun onDismissReportSheet() = updateState { copy(isReportSheetOpen = false) }
+    fun onDismissReportSheet() = updateState { dismissReportSheet() }
 
     /** 시트의 신고하기 → 신고 확인 창 */
     fun onClickReportSubmit() {
@@ -257,6 +257,9 @@ data class MemberProfileUiState(
     val reportReasons: ImmutableSet<MemberReportReason> = persistentSetOf(),
     val reportDetail: String = "",
 ) : UiState {
+    internal fun dismissReportSheet(): MemberProfileUiState =
+        if (isProcessing) this else copy(isReportSheetOpen = false)
+
     /** 사유를 하나 이상 고르고 상세 내용을 입력해야 신고할 수 있다 */
     val canSubmitReport: Boolean
         get() = !isProcessing && !isMine && reportReasons.isNotEmpty() && reportDetail.isNotBlank() && reportDetail.length <= MEMBER_REPORT_DETAIL_MAX_LENGTH

@@ -4,6 +4,7 @@ import com.umc.domain.model.community.thread.CommunityMessageReportReason
 import com.umc.domain.model.community.thread.CommunityThreadMessage
 
 sealed interface CommunityChattingAction {
+    data object OnRetryBlockedMembers : CommunityChattingAction
     data object OnBackClick : CommunityChattingAction
     data object OnMoreClick : CommunityChattingAction
     data object OnUnreadSummaryClick : CommunityChattingAction

@@ -19,4 +19,13 @@ class MemberReportValidationTest {
         assertFalse(valid.copy(isMine = true).canSubmitReport)
         assertFalse(valid.copy(isProcessing = true).canSubmitReport)
     }
+    @Test fun reportSheetCannotDismissWhileRequestIsInProgress() {
+        val submitting = valid.copy(isProcessing = true, isReportSheetOpen = true)
+        assertEquals(submitting, submitting.dismissReportSheet())
+        val failed = submitting.copy(isProcessing = false)
+        val dismissed = failed.dismissReportSheet()
+        assertFalse(dismissed.isReportSheetOpen)
+        assertEquals(failed.reportDetail, dismissed.reportDetail)
+        assertEquals(failed.reportReasons, dismissed.reportReasons)
+    }
 }
