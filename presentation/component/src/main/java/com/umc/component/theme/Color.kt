@@ -57,6 +57,48 @@ internal val lightRed900 = Color(0xFF55160C)
 internal val lightKakaoColor = Color(0xFFFEE500)
 internal val lightMint100 = Color(0xFFE5F5F2)
 internal val lightTeal600 = Color(0xFF0E8179)
+
+// 칩·태그 팔레트 (디자인 시스템 Tag). 다크 모드 값이 정해지기 전까지 라이트와 같은 값을 쓴다
+// PM
+internal val lightViolet50 = Color(0xFFF6F0FF)
+internal val lightViolet100 = Color(0xFFEEE3FC)
+internal val lightViolet500 = Color(0xFFAD6FEB)
+internal val lightViolet600 = Color(0xFF7F39C6)
+// Design
+internal val lightPink50 = Color(0xFFFFF0F7)
+internal val lightPink100 = Color(0xFFFFE0F1)
+internal val lightPink500 = Color(0xFFEE63A9)
+internal val lightPink600 = Color(0xFFD92680)
+// Mobile PE
+internal val lightCobalt50 = Color(0xFFF0F4FF)
+internal val lightCobalt100 = Color(0xFFE0E8FF)
+internal val lightCobalt500 = Color(0xFF5E7FF2)
+internal val lightCobalt600 = Color(0xFF385CDC)
+// Web PE (경고·상태용 yellow 와 별개인 칩 전용 노랑)
+internal val lightTagYellow50 = Color(0xFFFFF7E0)
+internal val lightTagYellow100 = Color(0xFFFFF0C2)
+internal val lightTagYellow500 = Color(0xFFF59B00)
+internal val lightTagYellow600 = Color(0xFFED8002)
+// 총괄 · 부총괄 · 중앙 운영진
+internal val lightPurple50 = Color(0xFFF5F3FC)
+internal val lightPurple100 = Color(0xFFEAE5FB)
+internal val lightPurple500 = Color(0xFF8771E0)
+internal val lightPurple600 = Color(0xFF634AC9)
+// 지부장
+internal val lightBrown50 = Color(0xFFF8F5F1)
+internal val lightBrown100 = Color(0xFFEEE6DD)
+internal val lightBrown500 = Color(0xFFAC835D)
+internal val lightBrown600 = Color(0xFF886544)
+// 교내 회장 · 부회장 · 파트장 · 운영진
+internal val lightBlue50 = Color(0xFFEBF4FF)
+internal val lightBlue100 = Color(0xFFDBECFF)
+internal val lightBlue500 = Color(0xFF2E8FFF)
+internal val lightBlue600 = Color(0xFF0068E0)
+// Product
+internal val lightTealgrey50 = Color(0xFFF7F8F8)
+internal val lightTealgrey100 = Color(0xFFEFF0F0)
+internal val lightTealgrey500 = Color(0xFF606262)
+internal val lightTealgrey600 = Color(0xFF3F4141)
 internal val lightGeofenceFill = Color(0x0D51A2FF)
 internal val lightGeofenceStroke = Color(0x4D51A2FF)
 
@@ -114,6 +156,39 @@ internal val darkRed900 = Color(0xFFFEE5E2)
 internal val darkKakaoColor = Color(0xFFFEE500)
 internal val darkMint100 = Color(0xFFE5F5F2)
 internal val darkTeal600 = Color(0xFF0E8179)
+
+internal val darkViolet50 = Color(0xFFF6F0FF)
+internal val darkViolet100 = Color(0xFFEEE3FC)
+internal val darkViolet500 = Color(0xFFAD6FEB)
+internal val darkViolet600 = Color(0xFF7F39C6)
+internal val darkPink50 = Color(0xFFFFF0F7)
+internal val darkPink100 = Color(0xFFFFE0F1)
+internal val darkPink500 = Color(0xFFEE63A9)
+internal val darkPink600 = Color(0xFFD92680)
+internal val darkCobalt50 = Color(0xFFF0F4FF)
+internal val darkCobalt100 = Color(0xFFE0E8FF)
+internal val darkCobalt500 = Color(0xFF5E7FF2)
+internal val darkCobalt600 = Color(0xFF385CDC)
+internal val darkTagYellow50 = Color(0xFFFFF7E0)
+internal val darkTagYellow100 = Color(0xFFFFF0C2)
+internal val darkTagYellow500 = Color(0xFFF59B00)
+internal val darkTagYellow600 = Color(0xFFED8002)
+internal val darkPurple50 = Color(0xFFF5F3FC)
+internal val darkPurple100 = Color(0xFFEAE5FB)
+internal val darkPurple500 = Color(0xFF8771E0)
+internal val darkPurple600 = Color(0xFF634AC9)
+internal val darkBrown50 = Color(0xFFF8F5F1)
+internal val darkBrown100 = Color(0xFFEEE6DD)
+internal val darkBrown500 = Color(0xFFAC835D)
+internal val darkBrown600 = Color(0xFF886544)
+internal val darkBlue50 = Color(0xFFEBF4FF)
+internal val darkBlue100 = Color(0xFFDBECFF)
+internal val darkBlue500 = Color(0xFF2E8FFF)
+internal val darkBlue600 = Color(0xFF0068E0)
+internal val darkTealgrey50 = Color(0xFFF7F8F8)
+internal val darkTealgrey100 = Color(0xFFEFF0F0)
+internal val darkTealgrey500 = Color(0xFF606262)
+internal val darkTealgrey600 = Color(0xFF3F4141)
 
 @Composable
 fun black(): Color = if (isSystemInDarkTheme()) darkBlack else lightBlack
@@ -270,6 +345,119 @@ fun mint100(): Color = if (isSystemInDarkTheme()) darkMint100 else lightMint100
 
 @Composable
 fun teal600(): Color = if (isSystemInDarkTheme()) darkTeal600 else lightTeal600
+
+// ---------------- 칩·태그 팔레트 (디자인 시스템 Tag) ----------------
+
+// PM
+@Composable
+fun violet50(): Color = if (isSystemInDarkTheme()) darkViolet50 else lightViolet50
+
+@Composable
+fun violet100(): Color = if (isSystemInDarkTheme()) darkViolet100 else lightViolet100
+
+@Composable
+fun violet500(): Color = if (isSystemInDarkTheme()) darkViolet500 else lightViolet500
+
+@Composable
+fun violet600(): Color = if (isSystemInDarkTheme()) darkViolet600 else lightViolet600
+
+
+// Design
+@Composable
+fun pink50(): Color = if (isSystemInDarkTheme()) darkPink50 else lightPink50
+
+@Composable
+fun pink100(): Color = if (isSystemInDarkTheme()) darkPink100 else lightPink100
+
+@Composable
+fun pink500(): Color = if (isSystemInDarkTheme()) darkPink500 else lightPink500
+
+@Composable
+fun pink600(): Color = if (isSystemInDarkTheme()) darkPink600 else lightPink600
+
+
+// Mobile PE
+@Composable
+fun cobalt50(): Color = if (isSystemInDarkTheme()) darkCobalt50 else lightCobalt50
+
+@Composable
+fun cobalt100(): Color = if (isSystemInDarkTheme()) darkCobalt100 else lightCobalt100
+
+@Composable
+fun cobalt500(): Color = if (isSystemInDarkTheme()) darkCobalt500 else lightCobalt500
+
+@Composable
+fun cobalt600(): Color = if (isSystemInDarkTheme()) darkCobalt600 else lightCobalt600
+
+
+// Web PE (경고·상태용 yellow 와 별개인 칩 전용 노랑)
+@Composable
+fun tagYellow50(): Color = if (isSystemInDarkTheme()) darkTagYellow50 else lightTagYellow50
+
+@Composable
+fun tagYellow100(): Color = if (isSystemInDarkTheme()) darkTagYellow100 else lightTagYellow100
+
+@Composable
+fun tagYellow500(): Color = if (isSystemInDarkTheme()) darkTagYellow500 else lightTagYellow500
+
+@Composable
+fun tagYellow600(): Color = if (isSystemInDarkTheme()) darkTagYellow600 else lightTagYellow600
+
+
+// 총괄 · 부총괄 · 중앙 운영진
+@Composable
+fun purple50(): Color = if (isSystemInDarkTheme()) darkPurple50 else lightPurple50
+
+@Composable
+fun purple100(): Color = if (isSystemInDarkTheme()) darkPurple100 else lightPurple100
+
+@Composable
+fun purple500(): Color = if (isSystemInDarkTheme()) darkPurple500 else lightPurple500
+
+@Composable
+fun purple600(): Color = if (isSystemInDarkTheme()) darkPurple600 else lightPurple600
+
+
+// 지부장
+@Composable
+fun brown50(): Color = if (isSystemInDarkTheme()) darkBrown50 else lightBrown50
+
+@Composable
+fun brown100(): Color = if (isSystemInDarkTheme()) darkBrown100 else lightBrown100
+
+@Composable
+fun brown500(): Color = if (isSystemInDarkTheme()) darkBrown500 else lightBrown500
+
+@Composable
+fun brown600(): Color = if (isSystemInDarkTheme()) darkBrown600 else lightBrown600
+
+
+// 교내 회장 · 부회장 · 파트장 · 운영진
+@Composable
+fun blue50(): Color = if (isSystemInDarkTheme()) darkBlue50 else lightBlue50
+
+@Composable
+fun blue100(): Color = if (isSystemInDarkTheme()) darkBlue100 else lightBlue100
+
+@Composable
+fun blue500(): Color = if (isSystemInDarkTheme()) darkBlue500 else lightBlue500
+
+@Composable
+fun blue600(): Color = if (isSystemInDarkTheme()) darkBlue600 else lightBlue600
+
+
+// Product
+@Composable
+fun tealgrey50(): Color = if (isSystemInDarkTheme()) darkTealgrey50 else lightTealgrey50
+
+@Composable
+fun tealgrey100(): Color = if (isSystemInDarkTheme()) darkTealgrey100 else lightTealgrey100
+
+@Composable
+fun tealgrey500(): Color = if (isSystemInDarkTheme()) darkTealgrey500 else lightTealgrey500
+
+@Composable
+fun tealgrey600(): Color = if (isSystemInDarkTheme()) darkTealgrey600 else lightTealgrey600
 
 @Composable
 fun geofence_fill(): Color = lightGeofenceFill

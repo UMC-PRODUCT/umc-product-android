@@ -91,6 +91,7 @@ import com.umc.component.theme.red500
 import com.umc.component.theme.white
 import com.umc.domain.model.ProfileInfo
 import com.umc.domain.model.UserInfo
+import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.mypage.UserActiveItem
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
@@ -798,8 +799,8 @@ private fun MemberProfileScreenPreview() {
                 userInfo = previewUserInfo,
                 gisuPartText = "12기/PM",
                 histories = persistentListOf(
-                    UserActiveItem("12기", "Web Part", "파트장"),
-                    UserActiveItem("12기", "Web Part", "파트장"),
+                    UserActiveItem("12기", "Web Part", "교내 파트장", UserChallengerRole.SCHOOL_PART_LEADER),
+                    UserActiveItem("12기", "Web Part", "교내 파트장", UserChallengerRole.SCHOOL_PART_LEADER),
                 ),
                 isLoading = false,
                 isHistoryLoading = false,
@@ -825,7 +826,7 @@ private fun MemberProfileScreenPrivatePreview() {
                     profile = previewUserInfo.profile.copy(blog = "", instagram = "", personal = "")
                 ),
                 gisuPartText = "12기/PM",
-                histories = persistentListOf(UserActiveItem("12기", "Web Part", "파트장")),
+                histories = persistentListOf(UserActiveItem("12기", "Web Part", "교내 파트장", UserChallengerRole.SCHOOL_PART_LEADER)),
                 isLoading = false,
                 isHistoryLoading = false,
             ),
