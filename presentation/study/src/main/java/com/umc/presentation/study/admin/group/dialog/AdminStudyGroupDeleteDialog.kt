@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.dialog
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -88,7 +89,7 @@ fun AdminStudyGroupDeleteDialog(
                  * 삭제 확인 제목
                  */
                 UText(
-                    text = "그룹을 삭제하시겠습니까?",
+                    text = AppStrings.STUDY_GROUP_DELETE_TITLE,
                     style = SubheadlineBold,
                     color = grey900(),
                     modifier = Modifier.fillMaxWidth(),
@@ -106,8 +107,7 @@ fun AdminStudyGroupDeleteDialog(
                  * 연결된 스터디 데이터 역시 삭제된다는 내용을 안내합니다.
                  */
                 UText(
-                    text = "삭제된 스터디 그룹 정보는 복구할 수 없으며,\n" +
-                            "연결된 모든 스터디 데이터가 삭제됩니다.",
+                    text = AppStrings.STUDY_GROUP_DELETE_DESCRIPTION,
                     style = Caption1,
                     color = grey600(),
                     modifier = Modifier.fillMaxWidth(),
@@ -130,7 +130,7 @@ fun AdminStudyGroupDeleteDialog(
                 ) {
                     // 삭제 취소 버튼
                     UButton(
-                        text = "취소",
+                        text = AppStrings.COMMON_CANCEL,
                         onClick = onDismiss,
                         modifier = Modifier
                             .weight(1f)
@@ -145,7 +145,7 @@ fun AdminStudyGroupDeleteDialog(
 
                     // 그룹 삭제 버튼
                     UButton(
-                        text = "삭제하기",
+                        text = AppStrings.COMMON_DELETE_ACTION,
                         onClick = onDelete,
                         modifier = Modifier
                             .weight(1f)

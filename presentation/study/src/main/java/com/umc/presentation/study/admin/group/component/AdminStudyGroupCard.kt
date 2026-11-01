@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -120,7 +121,7 @@ fun AdminStudyGroupCard(
                     // 그룹 생성일 및 현재 멤버 수
                     UText(
                         text =
-                            "${item.createdAtText}  |  멤버 ${item.memberCount}명",
+                            AppStrings.STUDY_GROUP_CARD_META_FORMAT.format(item.createdAtText, item.memberCount),
                         style = Footnote,
                         color = grey500()
                     )
@@ -180,7 +181,7 @@ fun AdminStudyGroupCard(
 
             // 담당 파트장 영역
             UText(
-                text = "담당 파트장",
+                text = AppStrings.STUDY_GROUP_LEADER_LABEL,
                 style = CalloutBold,
                 color = grey800()
             )
@@ -226,7 +227,7 @@ fun AdminStudyGroupCard(
                 // 담당 파트장 학교
                 UText(
                     text = item.leaderUniv.ifBlank {
-                        "중앙대"
+                        AppStrings.STUDY_GROUP_UNIVERSITY_FALLBACK
                     },
                     style = Footnote,
                     color = grey500()
@@ -254,7 +255,7 @@ fun AdminStudyGroupCard(
                         )
                 ) {
                     UText(
-                        text = "Leader",
+                        text = AppStrings.STUDY_GROUP_LEADER_BADGE,
                         style = Caption1Bold,
                         color = grey600()
                     )
@@ -267,7 +268,7 @@ fun AdminStudyGroupCard(
 
             // 스터디원 영역
             UText(
-                text = "스터디원",
+                text = AppStrings.STUDY_GROUP_MEMBER_LABEL,
                 style = CalloutBold,
                 color = grey800()
             )

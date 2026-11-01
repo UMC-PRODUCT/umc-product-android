@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.create.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -59,7 +60,7 @@ fun GroupCreateTopBar(
 
         // 화면 제목
         UText(
-            text = "스터디 그룹 생성",
+            text = AppStrings.STUDY_GROUP_CREATE_TITLE,
             style = UmcTypographyTokens.Title3Bold,
             color = grey800(),
             modifier = Modifier.weight(1f)
@@ -82,7 +83,7 @@ fun GroupCreateTopBar(
 
         // 스터디 그룹 등록 버튼
         UText(
-            text = "등록",
+            text = AppStrings.STUDY_GROUP_REGISTER,
             style = UmcTypographyTokens.SubheadlineBold,
             color = if (isRegisterEnabled) {
                 main500()

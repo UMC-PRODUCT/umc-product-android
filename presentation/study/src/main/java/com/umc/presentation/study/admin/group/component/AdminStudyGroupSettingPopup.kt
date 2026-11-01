@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -30,7 +31,7 @@ fun AdminStudyGroupSettingPopupContent(
     ) {
         // 그룹 정보 수정
         SettingPopupItem(
-            text = "정보 수정",
+            text = AppStrings.STUDY_GROUP_SETTING_EDIT,
             iconRes = R.drawable.ic_study_edit,
             textColor = grey800(),
             iconTint = grey700(),
@@ -47,7 +48,7 @@ fun AdminStudyGroupSettingPopupContent(
 
         // 그룹 삭제
         SettingPopupItem(
-            text = "그룹 삭제",
+            text = AppStrings.STUDY_GROUP_SETTING_DELETE,
             iconRes = R.drawable.ic_study_delete,
             textColor = red500(),
             iconTint = red500(),

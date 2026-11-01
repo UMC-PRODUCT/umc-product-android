@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.bottomsheet
 
+import com.umc.component.theme.AppStrings
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
@@ -165,9 +166,7 @@ class AdminStudyGroupMemberEditViewModel @Inject constructor(
                                     }
 
                                     if (participant.gisu > 0L) {
-                                        append("(")
-                                        append(participant.gisu)
-                                        append("기)")
+                                        append(AppStrings.STUDY_MEMBER_GENERATION_FORMAT.format(participant.gisu))
                                     }
                                 },
 

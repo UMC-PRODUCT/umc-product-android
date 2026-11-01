@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.schedule.bottomsheet
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -59,7 +60,7 @@ fun GroupScheduleWeekBottomSheet(
         ) {
             // 주차 선택 안내 문구
             UText(
-                text = "확인할 주차를 선택하세요",
+                text = AppStrings.STUDY_SCHEDULE_WEEK_SELECT_TITLE,
                 style = Title3Bold,
                 color = grey800(),
                 modifier = Modifier.padding(
@@ -83,7 +84,7 @@ fun GroupScheduleWeekBottomSheet(
                             .padding(vertical = 16.dp),
                     ) {
                         UText(
-                            text = "${weekItem.week}주차",
+                            text = AppStrings.STUDY_SCHEDULE_WEEK_FORMAT.format(weekItem.week),
                             style = Body,
                             color = grey800(),
                         )

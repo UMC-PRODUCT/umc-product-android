@@ -180,7 +180,7 @@ class NoticeWriteViewModel @Inject constructor(
             NoticeWriterRole.SUPER_ADMIN -> buildList {
                 add(WriteCategory(WriteCategoryType.ALL_GISU, AppStrings.NOTICE_WRITE_ALL_GISU))
                 currentGeneration?.let {
-                    add(WriteCategory(WriteCategoryType.GISU, "${it}기"))
+                    add(WriteCategory(WriteCategoryType.GISU, AppStrings.COMMON_GENERATION_FORMAT.format(it)))
                 }
                 add(WriteCategory(WriteCategoryType.CENTRAL_STAFF, AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL))
                 add(WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE))

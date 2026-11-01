@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.create
 
+import com.umc.component.theme.AppStrings
 import com.umc.component.base.UiState
 import com.umc.domain.model.enums.UserPart
 import kotlinx.collections.immutable.ImmutableList
@@ -103,7 +104,7 @@ data class AdminStudyGroupCreateState(
                 selectedMembers.first().name
 
             else ->
-                "${selectedMembers.first().name} 외 ${selectedMembers.size - 1}명"
+                AppStrings.STUDY_GROUP_MEMBER_SUMMARY_FORMAT.format(selectedMembers.first().name, selectedMembers.size - 1)
         }
 
     /**

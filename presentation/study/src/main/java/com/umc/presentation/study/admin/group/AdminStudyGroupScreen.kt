@@ -194,7 +194,7 @@ fun AdminStudyGroupScreen(
             ) {
                 UText(
                     text = if (state.hasReadAccess) {
-                        "생성된 스터디 그룹이 없어요"
+                        AppStrings.STUDY_GROUP_EMPTY
                     } else {
                         AppStrings.STUDY_GROUP_NO_PERMISSION
                     },

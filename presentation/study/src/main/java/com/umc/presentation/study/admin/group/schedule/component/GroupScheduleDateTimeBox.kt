@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.schedule.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -64,7 +65,7 @@ fun GroupScheduleDateTimeBox(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             UText(
-                text = "하루 종일",
+                text = AppStrings.STUDY_SCHEDULE_ALL_DAY,
                 style = Body,
                 color = grey600(),
                 modifier = Modifier.weight(1f),
@@ -82,7 +83,7 @@ fun GroupScheduleDateTimeBox(
 
         // 시작 일시
         DateTimeRow(
-            title = "시작",
+            title = AppStrings.STUDY_SCHEDULE_START,
             value = displayedStartText,
             onClick = onStartClick,
         )
@@ -91,7 +92,7 @@ fun GroupScheduleDateTimeBox(
 
         // 종료 일시
         DateTimeRow(
-            title = "종료",
+            title = AppStrings.STUDY_SCHEDULE_END,
             value = displayedEndText,
             onClick = onEndClick,
         )

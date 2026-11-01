@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.schedule.bottomsheet
 
+import com.umc.component.theme.AppStrings
 import android.content.Context
 import android.location.Address
 import android.location.Geocoder
@@ -82,9 +83,9 @@ class GroupScheduleLocationViewModel @Inject constructor(
         updateState {
             copy(
                 selectedPlace = LocationItem(
-                    title = "현재 설정된 위치",
+                    title = AppStrings.STUDY_SCHEDULE_LOCATION_CURRENT_TITLE,
                     address =
-                        "지도를 움직이거나 검색하여 장소를 선택하세요.",
+                        AppStrings.STUDY_SCHEDULE_LOCATION_MOVE_MAP_GUIDE,
                     latitude = lat,
                     longitude = lng,
                 )
@@ -158,7 +159,7 @@ class GroupScheduleLocationViewModel @Inject constructor(
                     if (locationList.isEmpty()) {
                         emitEvent(
                             GroupScheduleLocationEvent.ShowToast(
-                                "검색 결과가 없습니다."
+                                AppStrings.STUDY_SCHEDULE_LOCATION_SEARCH_EMPTY
                             )
                         )
                     } else {
@@ -175,7 +176,7 @@ class GroupScheduleLocationViewModel @Inject constructor(
 
                     emitEvent(
                         GroupScheduleLocationEvent.ShowToast(
-                            "장소 검색에 실패했습니다."
+                            AppStrings.STUDY_SCHEDULE_LOCATION_SEARCH_ERROR
                         )
                     )
                 },
@@ -271,7 +272,7 @@ class GroupScheduleLocationViewModel @Inject constructor(
                     LocationItem(
                         title =
                             address.featureName
-                                ?: "지정된 위치",
+                                ?: AppStrings.STUDY_SCHEDULE_LOCATION_UNSPECIFIED_TITLE,
                         address =
                             address.getAddressLine(0)
                                 ?: "",
@@ -295,9 +296,9 @@ class GroupScheduleLocationViewModel @Inject constructor(
             copy(
                 selectedPlace =
                     LocationItem(
-                        title = "선택한 지점",
+                        title = AppStrings.STUDY_SCHEDULE_LOCATION_SELECTED_POINT_TITLE,
                         address =
-                            "상세 주소를 불러올 수 없습니다.",
+                            AppStrings.STUDY_SCHEDULE_LOCATION_ADDRESS_UNAVAILABLE,
                         latitude = lat,
                         longitude = lng,
                     ),
@@ -353,7 +354,7 @@ class GroupScheduleLocationViewModel @Inject constructor(
         if (!uiState.value.isPlaceSelected) {
             emitEvent(
                 GroupScheduleLocationEvent.ShowToast(
-                    "지도를 움직이거나 검색하여 장소를 선택하세요."
+                    AppStrings.STUDY_SCHEDULE_LOCATION_MOVE_MAP_GUIDE
                 )
             )
             return

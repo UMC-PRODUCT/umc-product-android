@@ -177,7 +177,7 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
                 updateState {
                     copy(
                         weekText =
-                            "${action.week}주차",
+                            AppStrings.STUDY_SCHEDULE_WEEK_FORMAT.format(action.week),
 
                         selectedWeeklyCurriculumId =
                             action.weeklyCurriculumId,
@@ -380,7 +380,7 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
                         is ApiState.Fail -> {
                             emitEvent(
                                 AdminStudyGroupScheduleEvent.ShowToast(
-                                    "주차 정보를 불러오지 못했어요."
+                                    AppStrings.STUDY_SCHEDULE_WEEK_LOAD_ERROR
                                 )
                             )
                         }
@@ -390,7 +390,7 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
                 is ApiState.Fail -> {
                     emitEvent(
                         AdminStudyGroupScheduleEvent.ShowToast(
-                            "현재 기수 정보를 불러오지 못했어요."
+                            AppStrings.STUDY_SCHEDULE_GISU_LOAD_ERROR
                         )
                     )
                 }
@@ -553,7 +553,7 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
 
                     emitEvent(
                         AdminStudyGroupScheduleEvent.ShowToast(
-                            "일정 등록에 실패했어요."
+                            AppStrings.STUDY_SCHEDULE_CREATE_ERROR
                         )
                     )
                 }
@@ -594,7 +594,7 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
 
                 emitEvent(
                     AdminStudyGroupScheduleEvent.ShowToast(
-                        "일정이 등록됐어요."
+                        AppStrings.STUDY_SCHEDULE_CREATE_SUCCESS
                     )
                 )
 
@@ -612,7 +612,7 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
 
                 emitEvent(
                     AdminStudyGroupScheduleEvent.ShowToast(
-                        "스터디 그룹 일정 연결에 실패했어요."
+                        AppStrings.STUDY_SCHEDULE_LINK_ERROR
                     )
                 )
             }

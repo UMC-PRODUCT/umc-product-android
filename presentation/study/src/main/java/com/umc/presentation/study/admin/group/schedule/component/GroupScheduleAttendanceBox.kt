@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.schedule.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,7 +45,7 @@ fun GroupScheduleAttendanceBox(
             .background(grey50()),
     ) {
         AttendanceRow(
-            title = "체크인 시작",
+            title = AppStrings.STUDY_SCHEDULE_CHECKIN_START,
             value = checkInStartText,
             onClick = onCheckInStartClick,
         )
@@ -52,7 +53,7 @@ fun GroupScheduleAttendanceBox(
         DividerLine()
 
         AttendanceRow(
-            title = "정시 종료",
+            title = AppStrings.STUDY_SCHEDULE_ON_TIME_END,
             value = onTimeEndText,
             onClick = onOnTimeEndClick,
         )
@@ -60,7 +61,7 @@ fun GroupScheduleAttendanceBox(
         DividerLine()
 
         AttendanceRow(
-            title = "지각 종료",
+            title = AppStrings.STUDY_SCHEDULE_LATE_END,
             value = lateEndText,
             onClick = onLateEndClick,
         )
