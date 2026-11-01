@@ -1,8 +1,9 @@
 package com.umc.presentation.community.chatting
 
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.community.thread.CommunityThreadMessage
 
-internal const val DELETED_REPLY_SNIPPET = "삭제된 메시지입니다."
+internal const val DELETED_REPLY_SNIPPET = AppStrings.CHAT_DELETED_REPLY_SNIPPET
 
 /** 서버 미읽음 개수는 삭제·시스템 기록을 포함한 최신 메시지 범위다. */
 internal fun communityEntryUnreadMessages(

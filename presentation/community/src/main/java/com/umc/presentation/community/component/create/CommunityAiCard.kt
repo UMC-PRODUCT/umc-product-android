@@ -102,7 +102,7 @@ fun CommunityAiCard(
                 CommunityAiResultContent(
                     category = classifiedCategory ?: CommunityCategory.FREE,
                     canRetry = true,
-                    warningMessage = "특징이 바뀌었어요. 다시 분류를 추천해요",
+                    warningMessage = AppStrings.COMMUNITY_AI_CHANGED_DESCRIPTION,
                     onRetryClassificationClick = onRetryClassificationClick,
                     onChangeEmojiClick = onChangeEmojiClick,
                 )
@@ -112,7 +112,7 @@ fun CommunityAiCard(
                 CommunityAiResultContent(
                     category = CommunityCategory.FREE,
                     canRetry = false,
-                    warningMessage = "이 기기에서는 AI 재분류를 할 수 없어요",
+                    warningMessage = AppStrings.COMMUNITY_AI_UNAVAILABLE_DESCRIPTION,
                     onRetryClassificationClick = onRetryClassificationClick,
                     onChangeEmojiClick = onChangeEmojiClick,
                 )
@@ -189,7 +189,7 @@ private fun CommunityAiLoadingContent() {
         Spacer(modifier = Modifier.height(4.dp))
 
         UText(
-            text = "특징을 분석해 카테고리, 아이콘을 정하고 있어요",
+            text = AppStrings.COMMUNITY_AI_PROCESSING_DESCRIPTION,
             style = UmcTypographyTokens.Footnote,
             color = grey600(),
         )
@@ -371,9 +371,9 @@ private fun CommunityAiResultContent(
         // AI 재분류 버튼
         CommunityAiResultButton(
             text = if (canRetry) {
-                "다시 분류하기"
+                AppStrings.COMMUNITY_AI_RETRY_ACTION
             } else {
-                "재분류 불가"
+                AppStrings.COMMUNITY_AI_UNAVAILABLE_ACTION
             },
             enabled = canRetry,
             isPrimary = true,
@@ -492,25 +492,25 @@ private fun categoryResultDescription(
 ): String {
     return when (category) {
         CommunityCategory.STUDY -> {
-            "\"과제 인증 및 코드 피드백\" 성격으로 분류했어요"
+            AppStrings.COMMUNITY_AI_STUDY_RESULT
         }
 
         CommunityCategory.PROJECT -> {
-            "\"공지 및 일정 안내\" 성격으로 분류했어요"
+            AppStrings.COMMUNITY_AI_PROJECT_RESULT
         }
 
         CommunityCategory.QNA -> {
-            "\"질문과 답변\" 성격으로 분류했어요"
+            AppStrings.COMMUNITY_AI_QNA_RESULT
         }
 
         CommunityCategory.FREE -> {
-            "미지정 기기, 오프라인일 땐 기본 분류(자유)로 \n만들어요"
+            AppStrings.COMMUNITY_AI_FREE_RESULT
         }
 
         CommunityCategory.ALL,
         CommunityCategory.UNREAD,
             -> {
-            "카테고리를 분류했어요"
+            AppStrings.COMMUNITY_AI_DEFAULT_RESULT
         }
     }
 }

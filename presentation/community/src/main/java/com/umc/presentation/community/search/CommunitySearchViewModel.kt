@@ -2,6 +2,7 @@ package com.umc.presentation.community.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.community.CommunityThread
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadRole
@@ -225,7 +226,7 @@ class CommunitySearchViewModel @Inject constructor(
                         hasSearched = true,
                         isLoading = false,
                         errorMessage = throwable.message
-                            ?: "검색 결과를 불러오지 못했어요.",
+                            ?: AppStrings.COMMUNITY_SEARCH_RESULTS_LOAD_ERROR,
                     )
                 }
             }
@@ -270,7 +271,7 @@ class CommunitySearchViewModel @Inject constructor(
                     }
                 }.onFailure {
                     if (generation != searchGeneration) return@onFailure
-                    _state.update { it.copy(isLoadingMore = false, loadMoreError = "추가 결과를 불러오지 못했어요. 다시 시도해주세요.") }
+                    _state.update { it.copy(isLoadingMore = false, loadMoreError = AppStrings.COMMUNITY_SEARCH_MORE_LOAD_ERROR) }
                 }
         }
     }

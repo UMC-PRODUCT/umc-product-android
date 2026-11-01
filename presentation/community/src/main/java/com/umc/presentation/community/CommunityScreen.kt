@@ -1,5 +1,6 @@
 package com.umc.presentation.community
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -208,7 +209,7 @@ private fun CommunityThreadList(
                 key = "pinned_title",
             ) {
                 CommunitySectionTitle(
-                    text = "고정",
+                    text = AppStrings.COMMUNITY_PINNED_TITLE,
                 )
             }
 

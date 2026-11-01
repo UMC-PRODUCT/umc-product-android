@@ -1,5 +1,7 @@
 package com.umc.presentation.community.model
 
+import com.umc.component.theme.AppStrings
+
 /**
  * 커뮤니티 스레드에서 사용하는 카테고리
  *
@@ -9,11 +11,11 @@ package com.umc.presentation.community.model
 enum class CommunityCategory(
     val label: String,
 ) {
-    ALL("전체"),
-    UNREAD("안읽음"),
+    ALL(AppStrings.COMMON_ALL),
+    UNREAD(AppStrings.COMMUNITY_CATEGORY_UNREAD),
 
-    STUDY("스터디"),
-    QNA("질문"),
-    PROJECT("프로젝트"),
-    FREE("자유"),
+    STUDY(AppStrings.COMMUNITY_CATEGORY_STUDY),
+    QNA(AppStrings.COMMON_QNA),
+    PROJECT(AppStrings.COMMUNITY_CATEGORY_PROJECT),
+    FREE(AppStrings.COMMUNITY_CATEGORY_FREE),
 }

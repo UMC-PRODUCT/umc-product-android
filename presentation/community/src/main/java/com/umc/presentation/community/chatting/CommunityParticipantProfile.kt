@@ -1,5 +1,7 @@
 package com.umc.presentation.community.chatting
 
+import com.umc.component.theme.AppStrings
+
 import com.umc.domain.model.community.thread.CommunityThreadMember
 
 data class CommunityParticipantProfile(
@@ -11,10 +13,10 @@ internal fun communityParticipantDisplayName(
     member: CommunityThreadMember,
     profile: CommunityParticipantProfile?,
 ): String {
-    val name = member.name.ifBlank { "알 수 없는 사용자" }
+    val name = member.name.ifBlank { AppStrings.CHAT_PARTICIPANT_UNKNOWN }
     val nickname = profile?.nickname?.trim().orEmpty()
-    return if (nickname.isNotBlank() && nickname != name && !name.endsWith("($nickname)")) {
-        "$name($nickname)"
+    return if (nickname.isNotBlank() && nickname != name && !name.endsWith(AppStrings.CHAT_NICKNAME_SUFFIX_FORMAT.format(nickname))) {
+        AppStrings.CHAT_PARTICIPANT_NAME_NICKNAME_FORMAT.format(name, nickname)
     } else name
 }
 

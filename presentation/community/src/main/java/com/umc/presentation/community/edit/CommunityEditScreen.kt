@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
@@ -95,10 +96,10 @@ fun CommunityEditScreen(
     // 스레드 삭제 확인 Dialog
     if (state.showDeleteDialog) {
         UBasicDialog(
-            title = "스레드를 삭제하시겠습니까?",
-            content = "이 작업은 되돌릴 수 없어요.",
-            negativeText = "취소",
-            positiveText = "삭제하기",
+            title = AppStrings.CHAT_DELETE_THREAD_TITLE,
+            content = AppStrings.CHAT_DELETE_THREAD_DESCRIPTION,
+            negativeText = AppStrings.COMMON_CANCEL,
+            positiveText = AppStrings.COMMON_DELETE_ACTION,
             type = DialogType.ERROR,
             showCloseButton = false,
             negativeBackgroundColor = grey100(),

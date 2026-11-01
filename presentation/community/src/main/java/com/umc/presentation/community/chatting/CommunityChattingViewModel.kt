@@ -111,7 +111,7 @@ class CommunityChattingViewModel @Inject constructor(
             is CommunityChattingAction.OnMentionSelected -> {
                 val member = state.value.members[action.memberId]
                 if (member?.state == CommunityThreadMemberState.ACTIVE) updateState {
-                    val label = member.name.ifBlank { "참여자" }
+                    val label = member.name.ifBlank { AppStrings.CHAT_PARTICIPANT_FALLBACK }
                     val query = communityMentionQuery(draft, action.end)
                     if (query == null || query.start != action.start) return@updateState this
                     val updated = withMentionDraft(
@@ -424,7 +424,7 @@ class CommunityChattingViewModel @Inject constructor(
         if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return
         if (trimmed.isEmpty()) return
         if (mentionedMemberIds.any { uiState.value.members[it.toString()]?.state != CommunityThreadMemberState.ACTIVE }) {
-            emitEvent(CommunityChattingEvent.ShowError("태그 대상이 더 이상 참여 중이 아니에요. 참여자를 다시 선택해주세요."))
+            emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_MENTION_PARTICIPANT_UNAVAILABLE_ERROR))
             loadMembers()
             return
         }
@@ -512,7 +512,7 @@ class CommunityChattingViewModel @Inject constructor(
         val message = current.messages.find { it.messageId == messageId }
         if (message == null || message.senderId != current.myMemberId || message.deletedAt != null ||
             message.status == "DELETED" || message.type != CommunityMessageType.TEXT) {
-            updateState { copy(editError = "더 이상 편집할 수 없는 메시지예요.") }
+            updateState { copy(editError = AppStrings.CHAT_EDIT_UNAVAILABLE_ERROR) }
             return
         }
         if (content.isBlank() || isCommunityChatMessageTooLong(content)) return
@@ -522,10 +522,10 @@ class CommunityChattingViewModel @Inject constructor(
                 updateState { copy(editCommandId = commandId, editError = null) }
                 viewModelScope.launch {
                     delay(PENDING_ACK_TIMEOUT_MILLIS)
-                    failEdit(commandId, "저장 확인이 지연되고 있어요. 내용을 유지했으니 다시 시도해주세요.")
+                    failEdit(commandId, AppStrings.CHAT_EDIT_CONFIRM_DELAY_ERROR)
                 }
             }.onFailure {
-                updateState { copy(editError = "저장하지 못했어요. 다시 시도해주세요.") }
+                updateState { copy(editError = AppStrings.CHAT_EDIT_SAVE_ERROR) }
             }
     }
 
@@ -546,7 +546,7 @@ class CommunityChattingViewModel @Inject constructor(
         if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return@launch
         val generation = accessGeneration
         if (uriStrings.size > COMMUNITY_CHAT_MAX_IMAGE_COUNT) {
-            emitEvent(CommunityChattingEvent.ShowError("사진은 최대 4장까지 전송할 수 있어요."))
+            emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_IMAGE_LIMIT_ERROR))
             return@launch
         }
         val uploadUris = uriStrings
@@ -1022,8 +1022,11 @@ class CommunityChattingViewModel @Inject constructor(
             updateState { copy(managedParticipantIds = result.successfulIds,
                 participantManagementRevision = participantManagementRevision + 1) }
             val message = when {
-                result.failedIds.isNotEmpty() -> "${result.successfulIds.size}명 완료, ${result.failedIds.size}명 미완료. " +
-                    (failureMessage ?: "실패한 참여자를 다시 확인해주세요.")
+                result.failedIds.isNotEmpty() -> AppStrings.CHAT_PARTICIPANTS_PARTIAL_RESULT_FORMAT.format(
+                    result.successfulIds.size,
+                    result.failedIds.size,
+                    failureMessage ?: AppStrings.CHAT_PARTICIPANTS_RETRY_DESCRIPTION,
+                )
                 action == CommunityParticipantBatchAction.ASSIGN_ADMIN -> AppStrings.CHAT_PARTICIPANTS_ASSIGNED_ADMIN
                 action == CommunityParticipantBatchAction.REMOVE_ADMIN -> AppStrings.CHAT_ADMIN_REMOVED
                 else -> AppStrings.CHAT_PARTICIPANTS_REMOVED
@@ -1093,7 +1096,7 @@ class CommunityChattingViewModel @Inject constructor(
                             // 끊기기 전에 보낸 미확인 메시지는 더 이상 확인이 오지 않으므로 실패 처리한다.
                             failUnacknowledgedPending()
                             readReceipt.pending?.first?.let { readReceipt.failed(it) }
-                            failEdit(uiState.value.editCommandId, "연결이 끊겼어요. 내용을 유지했으니 다시 시도해주세요.")
+                            failEdit(uiState.value.editCommandId, AppStrings.CHAT_EDIT_DISCONNECTED_ERROR)
                             if (!manualReconnectInProgress) ensureReconnectLoop()
                         }
                     }

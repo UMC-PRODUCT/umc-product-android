@@ -1,5 +1,6 @@
 package com.umc.presentation.community.bottomsheet.edit
 
+import com.umc.component.theme.AppStrings
 import com.umc.domain.repository.community.CommunityThreadRepository
 import com.umc.domain.model.community.thread.CommunityThreadRole
 import androidx.lifecycle.viewModelScope
@@ -106,7 +107,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         if (threadId.isBlank()) {
             emitEvent(
                 CommunityMemberBottomSheetEvent.ShowToast(
-                    message = "스레드 정보를 확인할 수 없어요.",
+                    message = AppStrings.COMMUNITY_MEMBER_INFO_ERROR,
                 )
             )
             return
@@ -143,7 +144,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
             val detail = threadRepository.getThread(threadId)
             if (generation != sessionGeneration) return@launch
             if (detail !is ApiState.Success || detail.data.myRole !in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN)) {
-                updateState { copy(isLoading = false, canManage = false, currentMembers = persistentListOf(), selectedMembers = persistentListOf(), errorMessage = "멤버를 관리할 권한이 없어요.") }
+                updateState { copy(isLoading = false, canManage = false, currentMembers = persistentListOf(), selectedMembers = persistentListOf(), errorMessage = AppStrings.COMMUNITY_MEMBER_NO_PERMISSION_ERROR) }
                 return@launch
             }
             updateState {
@@ -169,7 +170,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                         isLoading = false,
                         canManage = false,
                         currentMembers = persistentListOf(), selectedMembers = persistentListOf(),
-                        errorMessage = "현재 스레드 멤버를 불러오지 못했어요.",
+                        errorMessage = AppStrings.COMMUNITY_MEMBER_LOAD_ERROR,
                     )
                 }
                 return@launch
@@ -447,7 +448,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                         appendPage = true
                     }
                     is ApiState.Fail -> {
-                        updateState { copy(isLoading = false, isLoadingMore = false, errorMessage = "초대 가능한 멤버를 불러오지 못했어요.") }
+                        updateState { copy(isLoading = false, isLoadingMore = false, errorMessage = AppStrings.COMMUNITY_MEMBER_INVITABLE_LOAD_ERROR) }
                         if (result.failState.code in setOf("403", "409", "COMMUNITY-0034") ||
                             result.failState.code.endsWith("-403") || result.failState.code.endsWith("-409")) {
                             loadCurrentMembers(threadId)
@@ -497,7 +498,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
             emitEvent(
                 CommunityMemberBottomSheetEvent.ShowToast(
                     message =
-                        "최대 ${currentState.maxMemberCount}명까지 초대할 수 있습니다.",
+                        AppStrings.COMMUNITY_MEMBER_LIMIT_FORMAT.format(currentState.maxMemberCount),
                 )
             )
             return
@@ -579,7 +580,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
             }
             if (failedCount > 0) {
                 emitEvent(CommunityMemberBottomSheetEvent.ShowToast(
-                    "초대 ${addedCount}명 완료, ${failedCount}명 미완료(${failedNames.joinToString()}). 현재 멤버 목록을 다시 확인해주세요."
+                    AppStrings.COMMUNITY_MEMBER_PARTIAL_RESULT_FORMAT.format(addedCount, failedCount, failedNames.joinToString())
                 ))
             }
         }

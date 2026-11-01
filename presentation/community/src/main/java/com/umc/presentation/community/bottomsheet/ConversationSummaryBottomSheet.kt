@@ -121,7 +121,7 @@ fun ConversationSummaryBottomSheet(
                     SummarizeUnreadChatUseCase.MAX_SOURCE_LENGTH,
                     if (state.summaryTruncated) AppStrings.CHAT_AI_PARTIAL_SOURCE else "",
                 ))
-                TextButton(onClick = onShowSource) { UText("요약 원문 보기") }
+                TextButton(onClick = onShowSource) { UText(AppStrings.CHAT_SOURCE_VIEW_ACTION) }
             }
 
             when {

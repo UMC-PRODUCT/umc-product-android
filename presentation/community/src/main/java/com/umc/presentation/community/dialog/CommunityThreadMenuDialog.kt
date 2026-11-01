@@ -21,6 +21,7 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey800
 import androidx.compose.ui.tooling.preview.Preview
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.grey950
 import com.umc.presentation.community.model.CommunityCategory
@@ -104,9 +105,9 @@ private fun CommunityThreadMenuContent(
             // 스레드 고정 또는 고정 해제
             CommunityThreadMenuItem(
                 text = if (thread.isPinned) {
-                    "고정 해제"
+                    AppStrings.CHAT_MENU_UNPIN
                 } else {
-                    "고정"
+                    AppStrings.CHAT_MENU_PIN
                 },
                 onClick = {
                     onTogglePinClick()
@@ -117,9 +118,9 @@ private fun CommunityThreadMenuContent(
             // 스레드 알림 켜기 또는 끄기
             CommunityThreadMenuItem(
                 text = if (thread.isNotificationEnabled) {
-                    "알림 끄기"
+                    AppStrings.CHAT_MENU_NOTIFICATION_OFF
                 } else {
-                    "알림 켜기"
+                    AppStrings.CHAT_MENU_NOTIFICATION_ON
                 },
                 onClick = {
                     onToggleNotificationClick()
@@ -130,7 +131,7 @@ private fun CommunityThreadMenuContent(
             // 방장 또는 관리자일 때만 편집 메뉴 표시
             if (thread.canEdit) {
                 CommunityThreadMenuItem(
-                    text = "편집",
+                    text = AppStrings.COMMON_EDIT,
                     onClick = {
                         onEditClick()
                         onDismissRequest()
@@ -140,7 +141,7 @@ private fun CommunityThreadMenuContent(
 
             // 현재 스레드에서 나가기
             CommunityThreadMenuItem(
-                text = "나가기",
+                text = AppStrings.CHAT_LEAVE,
                 textColor = grey950(),
                 onClick = onLeaveClick,
             )

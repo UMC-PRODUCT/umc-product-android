@@ -17,6 +17,7 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.R
+import com.umc.component.theme.AppStrings
 
 /**
  * 커뮤니티 검색 결과가 없을 때 표시하는 Empty 화면
@@ -43,7 +44,7 @@ fun CommunitySearchEmptyContent(
         Spacer(modifier = Modifier.height(12.dp))
 
         UText(
-            text = "검색 결과가 없습니다.",
+            text = AppStrings.COMMUNITY_SEARCH_EMPTY,
             style = UmcTypographyTokens.HeadlineBold,
             color = grey500(),
         )

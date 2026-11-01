@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.umc.presentation.community.R
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
@@ -58,7 +59,7 @@ fun CommunityFloatingButton(
             )
 
             UText(
-                text = "새 스레드",
+                text = AppStrings.COMMUNITY_CREATE_FLOATING_ACTION,
                 style = UmcTypographyTokens.HeadlineBold.copy(letterSpacing = (-0.41).sp),
                 color = grey50(),
             )

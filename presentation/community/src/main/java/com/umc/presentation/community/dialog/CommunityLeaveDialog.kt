@@ -3,6 +3,7 @@ package com.umc.presentation.community.dialog
 import androidx.compose.runtime.Composable
 import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.red100
@@ -19,10 +20,10 @@ fun CommunityLeaveDialog(
     onConfirmClick: () -> Unit,
 ) {
     UBasicDialog(
-        title = "스레드에서 나가시겠습니까?",
-        content = "대화 목록에서 사라지고 알림도 꺼져요.",
-        negativeText = "취소",
-        positiveText = "나가기",
+        title = AppStrings.CHAT_LEAVE_THREAD_TITLE,
+        content = AppStrings.CHAT_LEAVE_THREAD_DESCRIPTION,
+        negativeText = AppStrings.COMMON_CANCEL,
+        positiveText = AppStrings.CHAT_LEAVE,
         type = DialogType.ERROR,
 
         // 나가기 확정

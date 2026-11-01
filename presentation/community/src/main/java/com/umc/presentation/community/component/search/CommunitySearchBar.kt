@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
@@ -117,7 +118,7 @@ fun CommunitySearchBar(
                             // 검색어가 없을 때 placeholder 표시
                             if (query.isBlank()) {
                                 UText(
-                                    text = "제목, 내용 검색",
+                                    text = AppStrings.COMMUNITY_SEARCH_PLACEHOLD,
                                     style = UmcTypographyTokens.Body,
                                     color = grey400(),
                                 )
@@ -154,7 +155,7 @@ fun CommunitySearchBar(
             Spacer(modifier = Modifier.width(12.dp))
 
             UText(
-                text = "취소",
+                text = AppStrings.COMMON_CANCEL,
                 style = UmcTypographyTokens.CalloutBold,
                 color = grey950(),
                 modifier = Modifier.clickable(

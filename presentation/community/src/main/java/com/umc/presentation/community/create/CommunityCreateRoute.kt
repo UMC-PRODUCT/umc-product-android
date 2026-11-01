@@ -48,7 +48,7 @@ fun CommunityCreateRoute(
             is CommunityCreateEvent.CreateSuccess -> {
                 Toast.makeText(
                     context,
-                    "스레드가 생성되었습니다.",
+                    AppStrings.COMMUNITY_CREATE_SUCCESS,
                     Toast.LENGTH_SHORT,
                 ).show()
 

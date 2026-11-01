@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
@@ -295,7 +296,7 @@ private fun CommunityKickedThreadItem(
                 )
 
                 UText(
-                    text = "더 이상 열람할 수 없는 스레드예요.",
+                    text = AppStrings.COMMUNITY_THREAD_UNAVAILABLE_DESCRIPTION,
                     style = UmcTypographyTokens.Footnote.copy(letterSpacing = (-0.08).sp),
                     color = grey500(),
                     maxLines = 1,

@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.tooling.preview.Preview
+import com.umc.component.theme.AppStrings
 
 /**
  * 스레드 생성/수정 화면의 기본 정보 입력 폼
@@ -43,7 +44,7 @@ fun CommunityThreadForm(
     ) {
         // 스레드 제목 입력 영역
         CommunityThreadFormLabel(
-            label = communityRequiredLabel("제목"),
+            label = communityRequiredLabel(AppStrings.CHAT_THREAD_INFO_TITLE),
             count = titleCount,
             maxCount = 80,
         )
@@ -59,7 +60,7 @@ fun CommunityThreadForm(
                 val count = communityCharacterCount(it)
                 count <= 80 || count < titleCount
             },
-            placeholder = "제목을 입력하세요",
+            placeholder = AppStrings.COMMUNITY_CREATE_TITLE_PLACEHOLDER,
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Next,
@@ -70,7 +71,7 @@ fun CommunityThreadForm(
 
         // AI 카테고리 분류 등에 사용되는 스레드 특징 입력 영역
         CommunityThreadFormLabel(
-            label = AnnotatedString("스레드 특징"),
+            label = AnnotatedString(AppStrings.CHAT_THREAD_INFO_DESCRIPTION),
             count = descriptionCount,
             maxCount = 500,
         )
@@ -86,7 +87,7 @@ fun CommunityThreadForm(
                 val count = communityCharacterCount(it)
                 count <= 500 || count < descriptionCount
             },
-            placeholder = "상세 내용을 입력하세요",
+            placeholder = AppStrings.COMMUNITY_CREATE_DESCRIPTION_PLACEHOLDER,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(144.dp),

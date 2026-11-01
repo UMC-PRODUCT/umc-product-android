@@ -2,6 +2,7 @@ package com.umc.presentation.community.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadMember
@@ -159,7 +160,7 @@ class CommunityEditViewModel @Inject constructor(
 
             sendEvent(
                 CommunityEditEvent.ShowToast(
-                    message = "스레드 정보를 확인할 수 없어요.",
+                    message = AppStrings.COMMUNITY_MEMBER_INFO_ERROR,
                 )
             )
             return
@@ -178,8 +179,8 @@ class CommunityEditViewModel @Inject constructor(
                 threadId = threadId,
             ).onSuccess { thread ->
                 if (!thread.myRole.canEditThread() || thread.deletedAt != null) {
-                    _state.update { it.copy(isLoading = false, canEdit = false, errorMessage = "스레드를 수정할 권한이 없어요.") }
-                    sendEvent(CommunityEditEvent.ShowToast("스레드를 수정할 권한이 없어요."))
+                    _state.update { it.copy(isLoading = false, canEdit = false, errorMessage = AppStrings.COMMUNITY_EDITOR_NO_PERMISSION_ERROR) }
+                    sendEvent(CommunityEditEvent.ShowToast(AppStrings.COMMUNITY_EDITOR_NO_PERMISSION_ERROR))
                     return@onSuccess
                 }
                 _state.update {
@@ -213,13 +214,13 @@ class CommunityEditViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         errorMessage = throwable.message
-                            ?: "스레드 정보를 불러오지 못했어요.",
+                            ?: AppStrings.COMMUNITY_EDITOR_INFO_LOAD_ERROR,
                     )
                 }
 
                 sendEvent(
                     CommunityEditEvent.ShowToast(
-                        message = "스레드 정보를 불러오지 못했어요.",
+                        message = AppStrings.COMMUNITY_EDITOR_INFO_LOAD_ERROR,
                     )
                 )
             }
@@ -400,7 +401,7 @@ class CommunityEditViewModel @Inject constructor(
         if (!currentState.canRequestClassification) {
             sendEvent(
                 CommunityEditEvent.ShowToast(
-                    message = "제목과 스레드 특징을 입력해주세요.",
+                    message = AppStrings.COMMUNITY_CREATE_REQUIRED_FIELDS_ERROR,
                 )
             )
             return
@@ -497,7 +498,7 @@ class CommunityEditViewModel @Inject constructor(
         if (!currentState.isSaveEnabled) {
             sendEvent(
                 CommunityEditEvent.ShowToast(
-                    message = "제목 1~80자·특징 1~500자와 수정 권한을 확인해주세요.",
+                    message = AppStrings.COMMUNITY_EDIT_VALIDATION_ERROR,
                 )
             )
             return
@@ -507,7 +508,7 @@ class CommunityEditViewModel @Inject constructor(
             currentState.selectedCategory ?: run {
                 sendEvent(
                     CommunityEditEvent.ShowToast(
-                        message = "카테고리를 선택해주세요.",
+                        message = AppStrings.COMMUNITY_EDITOR_CATEGORY_REQUIRED_ERROR,
                     )
                 )
                 return
@@ -543,7 +544,7 @@ class CommunityEditViewModel @Inject constructor(
                 sendEvent(
                     CommunityEditEvent.ShowToast(
                         message = throwable.message
-                            ?: "스레드를 수정하지 못했어요.",
+                            ?: AppStrings.COMMUNITY_EDITOR_UPDATE_ERROR,
                     )
                 )
             }
@@ -573,7 +574,7 @@ class CommunityEditViewModel @Inject constructor(
         if (currentState.threadId.isBlank()) {
             sendEvent(
                 CommunityEditEvent.ShowToast(
-                    message = "스레드 정보를 확인할 수 없어요.",
+                    message = AppStrings.COMMUNITY_MEMBER_INFO_ERROR,
                 )
             )
             return
@@ -610,7 +611,7 @@ class CommunityEditViewModel @Inject constructor(
                 sendEvent(
                     CommunityEditEvent.ShowToast(
                         message = throwable.message
-                            ?: "스레드를 삭제하지 못했어요.",
+                            ?: AppStrings.COMMUNITY_EDITOR_DELETE_ERROR,
                     )
                 )
             }

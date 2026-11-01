@@ -352,7 +352,7 @@ class CommunityCreateViewModel @Inject constructor(
         if (!currentState.canRequestClassification) {
             sendEvent(
                 CommunityCreateEvent.ShowToast(
-                    message = "제목과 스레드 특징을 입력해주세요.",
+                    message = AppStrings.COMMUNITY_CREATE_REQUIRED_FIELDS_ERROR,
                 )
             )
             return
@@ -451,7 +451,7 @@ class CommunityCreateViewModel @Inject constructor(
         if (!currentState.isCompleteEnabled) {
             sendEvent(
                 CommunityCreateEvent.ShowToast(
-                    message = "제목 1~80자·특징 1~500자와 초대 대상을 확인해주세요.",
+                    message = AppStrings.COMMUNITY_CREATE_VALIDATION_ERROR,
                 )
             )
             return

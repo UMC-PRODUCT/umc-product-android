@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
@@ -63,7 +64,7 @@ fun CommunityEmptyContent(
 
         // Empty 상태 제목
         UText(
-            text = "아직 스레드가 없어요",
+            text = AppStrings.COMMUNITY_EMPTY_TITLE,
             style = UmcTypographyTokens.HeadlineBold,
             color = grey600(),
             textAlign = TextAlign.Center,
@@ -73,7 +74,7 @@ fun CommunityEmptyContent(
 
         // 새로운 스레드 생성을 안내하는 설명
         UText(
-            text = "함께 이야기할 첫 공간을 만들어 보세요.",
+            text = AppStrings.COMMUNITY_EMPTY_DESCRIPTION,
             style = UmcTypographyTokens.Subheadline,
             color = grey500(),
             textAlign = TextAlign.Center,
@@ -84,7 +85,7 @@ fun CommunityEmptyContent(
 
         // 스레드 생성 화면으로 이동
         CommunityActionButton(
-            text = "스레드 만들기",
+            text = AppStrings.COMMUNITY_CREATE_TITLE,
             onClick = onCreateThreadClick,
             textStyle = UmcTypographyTokens.HeadlineBold,
             modifier = Modifier
