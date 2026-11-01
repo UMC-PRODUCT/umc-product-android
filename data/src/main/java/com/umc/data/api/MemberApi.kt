@@ -1,5 +1,8 @@
 package com.umc.data.api
 
+import com.umc.data.request.member.ReportMemberRequest
+import com.umc.data.response.member.ReportMemberResponse
+
 
 import com.umc.data.request.member.DeleteUserRequest
 import com.umc.data.request.member.EditBusinessCardRequest
@@ -62,6 +65,12 @@ interface MemberApi {
     suspend fun deleteUser(
         //@Body request: DeleteUserRequest
     ): ApiResponse<Unit>
+
+    @POST(Endpoints.Member.MEMBER_REPORT)
+    suspend fun reportMember(
+        @Path("memberId") memberId: Long,
+        @Body request: ReportMemberRequest,
+    ): ApiResponse<ReportMemberResponse>
 
     //회원 차단
     @POST(Endpoints.Member.MEMBER_BLOCK)

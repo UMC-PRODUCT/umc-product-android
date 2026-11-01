@@ -1,5 +1,8 @@
 package com.umc.data.repository.member
 
+import com.umc.domain.model.mypage.UserReportReason
+import com.umc.data.request.member.ReportMemberRequest
+
 import com.umc.data.dataSource.local.AppDataStore
 import com.umc.domain.model.base.FailState
 import com.umc.data.dataSource.remote.member.MemberRemoteDataSource
@@ -103,6 +106,9 @@ class MemberRepositoryImpl @Inject constructor(
             ApiState.Fail(FailState(code = "LOCAL_ERROR", message = "기기 데이터를 정리하지 못했어요. 다시 확인해주세요."))
         }
     }
+
+    override suspend fun reportMember(memberId: Long, reasons: Set<UserReportReason>, detail: String): ApiState<Unit> =
+        memberRemoteDataSource.reportMember(memberId, ReportMemberRequest(reasons.map { it.name }, detail)).map { Unit }
 
     override suspend fun blockMember(memberId: Long): ApiState<Boolean> {
         return memberRemoteDataSource.blockMember(memberId).map { it.isBlocked }

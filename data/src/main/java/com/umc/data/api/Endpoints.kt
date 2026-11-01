@@ -57,6 +57,7 @@ object Endpoints {
         const val MYPROFILE = "$MEMBER/me"
 
         const val MYPROFILE_V2 = "$MEMBER_V2/me"
+        const val MEMBER_REPORT = "api/v1/reports/members/{memberId}"
         const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
         const val MEMBER_REGISTER_OAUTH = "$MEMBER/register/oauth"
         const val MEMBER_REGISTER_EMAIL = "$MEMBER/register/email"

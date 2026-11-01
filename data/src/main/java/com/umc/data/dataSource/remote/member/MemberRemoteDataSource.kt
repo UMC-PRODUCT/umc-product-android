@@ -1,5 +1,8 @@
 package com.umc.data.dataSource.remote.member
 
+import com.umc.data.request.member.ReportMemberRequest
+import com.umc.data.response.member.ReportMemberResponse
+
 import com.umc.data.request.member.DeleteUserRequest
 import com.umc.data.request.member.EditBusinessCardRequest
 import com.umc.data.request.member.UpdateMyLinkRequest
@@ -22,6 +25,7 @@ interface MemberRemoteDataSource {
     suspend fun updateMyProfile(request: UpdateMyProfileRequest): ApiState<MemberResponse>
     suspend fun updateMyLink(request: UpdateMyLinkRequest): ApiState<MemberResponse>
     suspend fun deleteUser(request: DeleteUserRequest): ApiState<Unit>
+    suspend fun reportMember(memberId: Long, request: ReportMemberRequest): ApiState<ReportMemberResponse>
     suspend fun blockMember(memberId: Long): ApiState<MemberBlockResponse>
     suspend fun unblockMember(memberId: Long): ApiState<MemberBlockResponse>
     suspend fun getBlockedMembers(): ApiState<BlockedMemberListResponse>
