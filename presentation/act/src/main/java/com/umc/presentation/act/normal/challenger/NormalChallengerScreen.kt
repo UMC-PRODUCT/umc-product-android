@@ -66,9 +66,9 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
-import com.umc.component.theme.main100
-import com.umc.component.theme.main300
 import com.umc.component.theme.main500
+import com.umc.component.theme.tagColors
+import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import kotlinx.collections.immutable.persistentListOf
 
@@ -449,21 +449,22 @@ private fun ChallengerMemberRow(
         }
 
         member.roleBadge?.let { role ->
+            // 역할 태그 체계(100 배경 · 600 글자, 테두리 없음)
+            val roleColors = role.tagColors()
             Spacer(Modifier.width(8.dp))
             Box(
                 modifier = Modifier
                     .widthIn(min = 39.dp)
                     .height(24.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(main100())
-                    .border(1.dp, main300(), RoundedCornerShape(4.dp))
+                    .background(roleColors.base)
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 UText(
-                    text = role,
+                    text = role.tagLabel.orEmpty(),
                     style = Caption1Bold,
-                    color = main500()
+                    color = roleColors.strong
                 )
             }
             Spacer(Modifier.width(10.dp))
@@ -507,7 +508,7 @@ fun previewMainUnfocused() {
                                 id = 1L,
                                 nicknameWithName = "홍길동(길동)",
                                 generation = "11기",
-                                roleBadge = "회장"
+                                roleBadge = UserChallengerRole.SCHOOL_PRESIDENT
                             )
                         )
                     ),
@@ -518,7 +519,7 @@ fun previewMainUnfocused() {
                                 id = 2L,
                                 nicknameWithName = "김미정(미정)",
                                 generation = "11기",
-                                roleBadge = "부회장"
+                                roleBadge = UserChallengerRole.SCHOOL_VICE_PRESIDENT
                             )
                         )
                     )

@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.UserChallenger
 import com.umc.domain.model.base.ApiState
@@ -182,7 +183,7 @@ data class NormalChallengerMemberUi(
     val id: Long,
     val nicknameWithName: String,
     val generation: String,
-    val roleBadge: String? = null,
+    val roleBadge: UserChallengerRole? = null, //역할 배지로 보여줄 역할 (교내 회장 · 부회장 · 파트장)
 )
 
 sealed interface NormalChallengerEvent : UiEvent {
@@ -194,7 +195,7 @@ private fun UserChallenger.toMemberUi(): NormalChallengerMemberUi {
         id = id,
         nicknameWithName = "$name($nickname)",
         generation = "${generation}기",
-        roleBadge = role.displayName?.takeIf { role.isVisible }
+        roleBadge = role.takeIf { it.isVisible }
     )
 }
 
