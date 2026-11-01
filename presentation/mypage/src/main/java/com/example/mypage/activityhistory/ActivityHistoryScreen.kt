@@ -57,9 +57,10 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
-import com.umc.component.theme.main100
 import com.umc.component.theme.main500
+import com.umc.component.theme.tagColors
 import com.umc.component.theme.white
+import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.mypage.UserActiveItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -348,15 +349,17 @@ fun ActiveHistoryItem(
             )
 
             // 회장·챌린저처럼 두세 글자 직함은 같은 크기로 보이게 최소 너비를 맞추고, 더 긴 직함만 넓어진다
+            // 색은 역할 태그 체계(100 배경 · 600 글자)를 따른다
+            val roleColors = history.role.tagColors()
             UButton(
                 text = history.position,
                 onClick = {},
                 modifier = Modifier
                     .height(28.dp)
                     .widthIn(min = 56.dp),
-                backgroundColor = main100(),
+                backgroundColor = roleColors.base,
                 borderWidth = 0.dp,
-                textColor = main500(),
+                textColor = roleColors.strong,
                 textStyle = UmcTypographyTokens.FootnoteBold,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 5.dp),
             )
@@ -415,10 +418,12 @@ private fun ActivityHistoryScreenPreview() {
             uiState = ActivityHistoryUiState(
                 // 글자 폭이 다른 기수·직함이 섞여도 칩 크기가 같은지 보이도록 섞어 둔다
                 histories = persistentListOf(
-                    UserActiveItem("12기", "Web Part", "파트장"),
+                    UserActiveItem("12기", "Web Part", "교내 파트장", UserChallengerRole.SCHOOL_PART_LEADER),
                     UserActiveItem("11기", "PM Part", "챌린저"),
-                    UserActiveItem("10기", "중앙대학교 회장", "회장"),
-                    UserActiveItem("11기", "중앙대학교 교내 운영진", "교내 운영진"),
+                    UserActiveItem("10기", "중앙대학교 회장", "교내 회장", UserChallengerRole.SCHOOL_PRESIDENT),
+                    UserActiveItem("11기", "중앙대학교 교내 운영진", "교내 운영진", UserChallengerRole.SCHOOL_ETC_ADMIN),
+                    UserActiveItem("9기", "수달지부 지부장", "지부장", UserChallengerRole.CHAPTER_PRESIDENT),
+                    UserActiveItem("9기", "중앙운영사무국 총괄", "총괄", UserChallengerRole.CENTRAL_PRESIDENT),
                 ),
             ),
             onBackClick = {},

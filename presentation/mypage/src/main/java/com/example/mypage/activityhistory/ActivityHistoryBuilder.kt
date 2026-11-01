@@ -79,47 +79,46 @@ class ActivityHistoryBuilder @Inject constructor(
     ): UserActiveItem {
         val role = UserChallengerRole.from(roleItem.role)
         val roleLabel = role.displayName ?: roleItem.role
+        // 행 문구에는 직함(roleLabel), 오른쪽 역할 태그에는 태그 이름(교내 회장 등)과 역할별 색을 쓴다
+        fun item(partName: String) = UserActiveItem(
+            generation = generationText,
+            partName = partName,
+            position = role.tagLabel ?: roleLabel,
+            role = role,
+        )
 
         // v2 응답에는 역할의 조직 정보가 없어 모든 역할이 SCHOOL 로 복원되므로,
         // 학교 소속이 아닌 중앙 운영진·지부장은 역할 종류로 먼저 분기한다
         if (role in CENTRAL_ROLES) {
-            return UserActiveItem(generationText, roleLabel, roleLabel)
+            return item(roleLabel)
         }
         if (role == UserChallengerRole.CHAPTER_PRESIDENT) {
             val chapterName = userInfo.challengerRecords
                 .firstOrNull { it.challengerId == roleItem.challengerId }
                 ?.chapterName
-            return if (!chapterName.isNullOrBlank()) {
-                UserActiveItem(generationText, "${chapterName}지부 $roleLabel", roleLabel)
-            } else {
-                UserActiveItem(generationText, roleLabel, roleLabel)
-            }
+            return if (!chapterName.isNullOrBlank()) item("${chapterName}지부 $roleLabel") else item(roleLabel)
         }
 
         //담당 파트가 있는 경우 (ex. 안드로이드 파트장)
         if (roleItem.responsiblePart != null) {
-            return UserActiveItem(
-                generation = generationText,
-                partName = "${UserPart.from(roleItem.responsiblePart).label} Part",
-                position = roleLabel
-            )
+            return item("${UserPart.from(roleItem.responsiblePart).label} Part")
         }
         //그 외 - 학교 단위 운영진인 경우 (학교 이름을 못 불러오면 직함만 넣는다)
         if (roleItem.organizationType == "SCHOOL") {
             return when (val result = getSchoolNameUseCase(roleItem.organizationId)) {
-                is ApiState.Success -> UserActiveItem(generationText, "${result.data.schoolName} $roleLabel", roleLabel)
-                is ApiState.Fail -> UserActiveItem(generationText, roleLabel, roleLabel)
+                is ApiState.Success -> item("${result.data.schoolName} $roleLabel")
+                is ApiState.Fail -> item(roleLabel)
             }
         }
         //그 외 - 지부 단위 운영진인 경우 (지부 이름을 못 불러오면 직함만 넣는다)
         if (roleItem.organizationType == "CHAPTER") {
             return when (val result = getChapterDetailUseCase(roleItem.organizationId)) {
-                is ApiState.Success -> UserActiveItem(generationText, "${result.data.name}지부 $roleLabel", roleLabel)
-                is ApiState.Fail -> UserActiveItem(generationText, roleLabel, roleLabel)
+                is ApiState.Success -> item("${result.data.name}지부 $roleLabel")
+                is ApiState.Fail -> item(roleLabel)
             }
         }
         //그 외 - 중앙/총괄 운영진인 경우
-        return UserActiveItem(generationText, roleLabel, roleLabel)
+        return item(roleLabel)
     }
 
     /**
@@ -129,7 +128,8 @@ class ActivityHistoryBuilder @Inject constructor(
         return UserActiveItem(
             generation = generationText,
             partName = "${UserPart.from(recordItem.responsiblePart).label} Part",
-            position = "챌린저"
+            position = UserChallengerRole.CHALLENGER.tagLabel.orEmpty(),
+            role = UserChallengerRole.CHALLENGER,
         )
     }
 }
