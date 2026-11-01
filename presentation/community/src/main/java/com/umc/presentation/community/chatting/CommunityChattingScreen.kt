@@ -18,8 +18,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.semantics.Role
 import com.umc.presentation.community.component.chatting.CommunityChatMessageImage
 import com.umc.presentation.community.component.chatting.CommunityChatImageLoadingIndicator
@@ -177,8 +176,8 @@ fun CommunityChattingScreen(
     val onReact: (CommunityThreadMessage, String) -> Unit = { message, emoji ->
         onAction(CommunityChattingAction.OnReact(message, emoji))
     }
-    val onReportMessage: (String, CommunityMessageReportReason) -> Unit = { messageId, reason ->
-        onAction(CommunityChattingAction.OnReportMessage(messageId, reason))
+    val onReportMessage: (String, Set<CommunityMessageReportReason>) -> Unit = { messageId, reasons ->
+        onAction(CommunityChattingAction.OnReportMessage(messageId, reasons))
     }
     val onToggleMuted = { onAction(CommunityChattingAction.OnToggleMuted) }
     val onTogglePinned = { onAction(CommunityChattingAction.OnTogglePinned) }
@@ -272,7 +271,7 @@ fun CommunityChattingScreen(
     var reportingMessageId by remember { mutableStateOf<String?>(null) }
     var showThreadInfo by remember { mutableStateOf(false) }
     var pendingReportConfirmation by remember {
-        mutableStateOf<Pair<String, CommunityMessageReportReason>?>(null)
+        mutableStateOf<Pair<String, Set<CommunityMessageReportReason>>?>(null)
     }
     // 참여하지 않았거나 나간 스레드는 읽기만 가능하다(서버 역할 없음 = UNKNOWN).
     val isViewOnly = state.thread?.myRole == CommunityThreadRole.UNKNOWN
@@ -975,14 +974,14 @@ fun CommunityChattingScreen(
     reportingMessageId?.let { messageId ->
         MessageReportSheet(
             onDismiss = { reportingMessageId = null },
-            onReport = { reason ->
-                pendingReportConfirmation = messageId to reason
+            onReport = { reasons ->
+                pendingReportConfirmation = messageId to reasons.toSet()
                 reportingMessageId = null
             },
         )
     }
 
-    pendingReportConfirmation?.let { (messageId, reason) ->
+    pendingReportConfirmation?.let { (messageId, reasons) ->
         UDialog(
             title = AppStrings.CHAT_REPORT_CONFIRM_TITLE,
             subtitle = AppStrings.CHAT_REPORT_CONFIRM_DESCRIPTION,
@@ -997,7 +996,7 @@ fun CommunityChattingScreen(
             positiveTextColor = red500(),
             onNegative = { pendingReportConfirmation = null },
             onPositive = {
-                onReportMessage(messageId, reason)
+                onReportMessage(messageId, reasons)
                 pendingReportConfirmation = null
             },
             onDismissRequest = { pendingReportConfirmation = null },
@@ -2413,9 +2412,9 @@ private val MessageReportReasons = listOf(
 @Composable
 private fun MessageReportSheet(
     onDismiss: () -> Unit,
-    onReport: (CommunityMessageReportReason) -> Unit,
+    onReport: (Set<CommunityMessageReportReason>) -> Unit,
 ) {
-    var selectedReason by remember { mutableStateOf<CommunityMessageReportReason?>(null) }
+    var selectedReasons by remember { mutableStateOf<Set<CommunityMessageReportReason>>(emptySet()) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss, sheetState = sheetState, containerColor = white(),
@@ -2432,16 +2431,16 @@ private fun MessageReportSheet(
             Spacer(Modifier.height(8.dp))
             Text(AppStrings.CHAT_REPORT_GUIDE, color = grey600(), style = UmcTypographyTokens.Subheadline)
             Spacer(Modifier.height(16.dp))
-            Column(Modifier.selectableGroup()) {
+            Column {
                 MessageReportReasons.forEach { (reason, label) ->
                     Column(Modifier.fillMaxWidth().height(56.dp)) {
-                        Row(Modifier.fillMaxWidth().weight(1f).selectable(
-                            selected = reason == selectedReason, role = Role.RadioButton,
-                            onClick = { selectedReason = reason },
+                        Row(Modifier.fillMaxWidth().weight(1f).toggleable(
+                            value = reason in selectedReasons, role = Role.Checkbox,
+                            onValueChange = { checked -> selectedReasons = if (checked) selectedReasons + reason else selectedReasons - reason },
                         ), verticalAlignment = Alignment.CenterVertically) {
                             Text(label, modifier = Modifier.weight(1f), color = grey950(), style = UmcTypographyTokens.Body)
-                            RadioButton(selected = reason == selectedReason, onClick = null, modifier = Modifier.size(24.dp),
-                                colors = RadioButtonDefaults.colors(selectedColor = main500(), unselectedColor = grey400()))
+                            Checkbox(checked = reason in selectedReasons, onCheckedChange = null, modifier = Modifier.size(24.dp),
+                                colors = CheckboxDefaults.colors(checkedColor = main500(), uncheckedColor = grey400(), checkmarkColor = white()))
                         }
                         HorizontalDivider(color = grey200())
                     }
@@ -2451,8 +2450,8 @@ private fun MessageReportSheet(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 UButton(text = AppStrings.CHAT_REPORT_CANCEL, onClick = onDismiss, modifier = Modifier.weight(1f).height(52.dp),
                     backgroundColor = grey100(), textColor = grey700(), textStyle = UmcTypographyTokens.HeadlineBold)
-                UButton(text = AppStrings.CHAT_REPORT_ACTION, onClick = { selectedReason?.let(onReport) },
-                    enabled = selectedReason != null, modifier = Modifier.weight(1f).height(52.dp),
+                UButton(text = AppStrings.CHAT_REPORT_ACTION, onClick = { if (selectedReasons.isNotEmpty()) onReport(selectedReasons.toSet()) },
+                    enabled = selectedReasons.isNotEmpty(), modifier = Modifier.weight(1f).height(52.dp),
                     backgroundColor = red100(), textColor = red500(), textStyle = UmcTypographyTokens.HeadlineBold)
             }
         }

@@ -174,7 +174,7 @@ class CommunityChattingViewModel @Inject constructor(
             is CommunityChattingAction.OnReact -> toggleReaction(action.message, action.emoji)
             is CommunityChattingAction.OnReportMessage -> reportMessage(
                 messageId = action.messageId,
-                reason = action.reason,
+                reasons = action.reasons,
             )
             CommunityChattingAction.OnToggleMuted -> toggleMuted()
             CommunityChattingAction.OnTogglePinned -> togglePinned()
@@ -697,13 +697,14 @@ class CommunityChattingViewModel @Inject constructor(
         }
     }
 
-    fun reportMessage(messageId: String, reason: CommunityMessageReportReason) = viewModelScope.launch {
+    fun reportMessage(messageId: String, reasons: Set<CommunityMessageReportReason>) = viewModelScope.launch {
+        if (reasons.isEmpty()) return@launch
         val current = uiState.value
         val message = current.messages.find { it.messageId == messageId } ?: return@launch
         if (message.senderId == current.myMemberId || message.deletedAt != null || message.status == "DELETED") return@launch
         if (!reportingMessageIds.add(messageId)) return@launch
         try {
-            when (val result = threadRepository.reportMessage(messageId, reason)) {
+            when (val result = threadRepository.reportMessage(messageId, reasons)) {
                 is ApiState.Success -> emitEvent(CommunityChattingEvent.MessageReported)
                 is ApiState.Fail -> {
                     val failure = result.failState

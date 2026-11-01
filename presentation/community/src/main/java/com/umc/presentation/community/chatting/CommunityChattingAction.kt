@@ -32,7 +32,7 @@ sealed interface CommunityChattingAction {
     ) : CommunityChattingAction
     data class OnReportMessage(
         val messageId: String,
-        val reason: CommunityMessageReportReason,
+        val reasons: Set<CommunityMessageReportReason>,
     ) : CommunityChattingAction
     data object OnToggleMuted : CommunityChattingAction
     data object OnTogglePinned : CommunityChattingAction

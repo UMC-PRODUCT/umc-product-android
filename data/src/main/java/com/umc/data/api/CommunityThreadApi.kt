@@ -192,4 +192,4 @@ interface CommunityThreadApi {
 }
 
 data class ChangeMemberRoleRequest(@field:SerializedName("role") val role: CommunityThreadRole)
-data class ReportMessageRequest(@field:SerializedName("reason") val reason: CommunityMessageReportReason)
+data class ReportMessageRequest(@field:SerializedName("reasons") val reasons: List<CommunityMessageReportReason>)
