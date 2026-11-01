@@ -43,7 +43,7 @@ fun CardExchangeSuccessOverlay(
     onConfirm: () -> Unit           //[확인] -> 오버레이 닫고 MycardScreen으로 복귀
 ) {
     // 수신받은 카드 객체에서 상대방 이름을 파싱
-    val receivedName = receivedCard?.name?.ifEmpty { "테스트 이름" } ?: "null 이름"
+    val receivedName = receivedCard?.name?.ifEmpty { AppStrings.EXCHANGE_CARD_SUCCESS_NAME_FALLBACK } ?: AppStrings.EXCHANGE_CARD_SUCCESS_NULL_NAME
 
     Box(
         modifier = Modifier
@@ -79,7 +79,7 @@ fun CardExchangeSuccessOverlay(
 
             //서브 타이틀
             UText(
-                text = "${receivedName}님의 명함이 명함첩에 저장됐어요.",
+                text = AppStrings.EXCHANGE_CARD_SAVED_DESCRIPTION_FORMAT.format(receivedName),
                 style = UmcTypographyTokens.Subheadline,
                 color = grey600()
             )
@@ -94,7 +94,7 @@ fun CardExchangeSuccessOverlay(
         ) {
             // 계속 교환하기 (주요 버튼)
             UButton(
-                text = "계속 교환하기",
+                text = AppStrings.EXCHANGE_CARD_CONTINUE_ACTION,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -107,7 +107,7 @@ fun CardExchangeSuccessOverlay(
 
             // 확인 (보조 버튼)
             UButton(
-                text = "확인",
+                text = AppStrings.EXCHANGE_CARD_CONFIRM,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),

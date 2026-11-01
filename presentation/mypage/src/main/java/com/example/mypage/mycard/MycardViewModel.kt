@@ -1,5 +1,6 @@
 package com.example.mypage.mycard
 
+import com.umc.component.theme.AppStrings
 import androidx.lifecycle.viewModelScope
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
@@ -59,14 +60,14 @@ class MycardViewModel @Inject constructor(
         // DataStore 내에 저장되어 있는 명함 리스트를 실시간 수신하여 명함 수 갱신
         viewModelScope.launch {
             cardRepository.getCardBook().catch {
-                updateState { copy(cardStorageError = "보관 명함 수를 불러오지 못했어요.") }
+                updateState { copy(cardStorageError = AppStrings.MYCARD_STORAGE_COUNT_ERROR) }
             }.collect { state ->
                 updateState {
                     val ownerChanged = state.session?.ownerId != userInfo.id
                     copy(
                         cardCount = state.book.statistics.localStoredCount,
                         cardStatistics = if (state.storageUnavailable || state.session == null) null else state.book.statistics,
-                        cardStorageError = if (state.storageUnavailable) "보관 명함 수를 불러오지 못했어요." else null,
+                        cardStorageError = if (state.storageUnavailable) AppStrings.MYCARD_STORAGE_COUNT_ERROR else null,
                         userInfo = if (ownerChanged) UserInfo() else userInfo,
                         receivedUserCard = if (ownerChanged) null else receivedUserCard,
                         isSuccessOverlayOpen = if (ownerChanged) false else isSuccessOverlayOpen,
@@ -151,8 +152,8 @@ class MycardViewModel @Inject constructor(
                 val roleLabel = roleEnum.displayName ?: item.role
 
                 //최종 포맷: "N기 Part Role"
-                "$partLabel$roleLabel·${summary.gisu}기"
-            } ?: "챌린저·${summary.gisu}기" // 예외 상황 대비 기본값
+                AppStrings.MYCARD_ROLE_GENERATION_FORMAT.format(partLabel, roleLabel, summary.gisu)
+            } ?: AppStrings.MYCARD_CHALLENGER_GENERATION_FORMAT.format(summary.gisu) // 예외 상황 대비 기본값
 
             updateState {
                 copy(
@@ -215,7 +216,7 @@ class MycardViewModel @Inject constructor(
             val expected = runCatching { cardRepository.cardWriteContext() }.getOrElse {
                 if (it is CancellationException) throw it
                 updateState { copy(processedTargetMemberId = null) }
-                emitEvent(MycardEvent.ShowError("로그인 정보를 확인해주세요."))
+                emitEvent(MycardEvent.ShowError(AppStrings.MYCARD_LOGIN_REQUIRED_ERROR))
                 return@launch
             }
             resultResponse(
@@ -247,7 +248,7 @@ class MycardViewModel @Inject constructor(
                 throw cancelled
             } catch (_: Exception) {
                 updateState { copy(processedTargetMemberId = null) }
-                emitEvent(MycardEvent.ShowError("명함을 저장하지 못했어요. 다시 시도해주세요."))
+                emitEvent(MycardEvent.ShowError(AppStrings.MYCARD_SAVE_ERROR))
             }
         }
     }

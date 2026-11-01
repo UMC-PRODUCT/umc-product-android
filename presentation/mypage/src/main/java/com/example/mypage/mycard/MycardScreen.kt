@@ -171,7 +171,7 @@ fun MycardRoute(
         if (uiState.userInfo.name.isNotEmpty()) {
             val nearbyInfo = NearbyUserInfo(
                 name = uiState.userInfo.name,
-                info = "${uiState.userInfo.schoolName} · ${uiState.myRecentInfoString.ifEmpty { "0기" }}",
+                info = AppStrings.MYCARD_SCHOOL_GENERATION_FORMAT.format(uiState.userInfo.schoolName, uiState.myRecentInfoString.ifEmpty { AppStrings.MYCARD_UNKNOWN_GENERATION }),
                 profileImageLink = uiState.userInfo.profileImageLink
             )
             //내 카드 업데이트
@@ -749,7 +749,7 @@ private fun CardBackContent(
                 } else {
                     // QR 데이터 생성 중이거나 예외 발생 시 로딩/플래스홀더
                     UText(
-                        text = "QR",
+                        text = AppStrings.MYCARD_QR_LABEL,
                         style = UmcTypographyTokens.Caption1Bold,
                         color = Color.Gray
                     )
@@ -924,7 +924,7 @@ fun MycardListItem(
 
         if (cardCount > -1) {
             UButton(
-                text = "${cardCount}장",
+                text = AppStrings.MYCARD_COUNT_FORMAT.format(cardCount),
                 enabled = false,
                 backgroundColor = main100(),
                 textColor = main500(),

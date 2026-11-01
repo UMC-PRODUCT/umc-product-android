@@ -205,6 +205,15 @@ object AppStrings {
     const val MYCARD_PROFILE_LOAD_ERROR_TITLE = COMMON_PROFILE_LOAD_ERROR
     const val MYCARD_PROFILE_LOAD_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
     const val MYCARD_RETRY = COMMON_RETRY
+    const val MYCARD_SCHOOL_GENERATION_FORMAT = "%s · %s"
+    const val MYCARD_UNKNOWN_GENERATION = "0기"
+    const val MYCARD_COUNT_FORMAT = "%s장"
+    const val MYCARD_QR_LABEL = "QR"
+    const val MYCARD_STORAGE_COUNT_ERROR = "보관 명함 수를 불러오지 못했어요."
+    const val MYCARD_ROLE_GENERATION_FORMAT = "%s%s·%s기"
+    const val MYCARD_CHALLENGER_GENERATION_FORMAT = "챌린저·%s기"
+    const val MYCARD_LOGIN_REQUIRED_ERROR = "로그인 정보를 확인해주세요."
+    const val MYCARD_SAVE_ERROR = "명함을 저장하지 못했어요. 다시 시도해주세요."
 
     // 명함 교환 화면
     const val EXCHANGE_CARD_TITLE = "명함 교환하기"
@@ -219,6 +228,37 @@ object AppStrings {
     const val EXCHANGE_CARD_WIFI_USER_SEARCH_PAUSE = "탐색 중단하기"
     const val EXCHANGE_CARD_SEND_TITLE = "명함을 전송하시겠습니까?"
     const val EXCHANGE_CARD_SUCCESS_TITLE = "명함을 주고받았어요!"
+    const val EXCHANGE_CARD_SEND_CONFIRM_FORMAT = "%s님에게 명함을 전송합니다."
+    const val EXCHANGE_CARD_SEND_ACTION = "전송하기"
+    const val EXCHANGE_CARD_SUCCESS_NAME_FALLBACK = "테스트 이름"
+    const val EXCHANGE_CARD_SUCCESS_NULL_NAME = "null 이름"
+    const val EXCHANGE_CARD_SAVED_DESCRIPTION_FORMAT = "%s님의 명함이 명함첩에 저장됐어요."
+    const val EXCHANGE_CARD_CONTINUE_ACTION = "계속 교환하기"
+    const val EXCHANGE_CARD_CONFIRM = COMMON_CONFIRM
+    // 주변 명함 교환 상태
+    const val NEARBY_ADVERTISING = "광고가 시작되었습니다. (탐색 가능)"
+    const val NEARBY_ADVERTISING_ERROR_FORMAT = "광고 시작 실패: %s"
+    const val NEARBY_DISCOVERING = "주변 기기 탐색 중..."
+    const val NEARBY_DISCOVERY_ERROR_FORMAT = "탐색 시작 실패: %s"
+    const val NEARBY_ENDPOINT_UNKNOWN = "기기를 찾을 수 없습니다."
+    const val NEARBY_NETWORK_DISCONNECTED = "네트워크에 연결되지 않았습니다."
+    const val NEARBY_BLUETOOTH_ERROR = "블루투스 오류가 발생했습니다."
+    const val NEARBY_CONNECTION_ERROR_FORMAT = "연결 오류: %s"
+    const val NEARBY_UNKNOWN_ERROR = "알 수 없는 오류 발생"
+    const val NEARBY_SEND_COMPLETE = "카드 전송이 완료되었습니다. 연결을 종료합니다."
+    const val NEARBY_SEND_ERROR = "카드 전송에 실패했습니다."
+    const val NEARBY_CONNECTION_REJECTED = "연결이 거절되었거나 실패했습니다."
+    const val NEARBY_DISCONNECTED = "연결이 끊어졌습니다."
+    const val NEARBY_CARD_PARSE_ERROR = "유저카드 파싱에 실패했습니다."
+    const val NEARBY_TEST_INFO = "기본 테스트 정보"
+    const val NEARBY_CONNECTED = "연결 완료"
+    const val NEARBY_CONNECTION_SUCCESS = "연결에 성공했습니다."
+    const val NEARBY_ACCOUNT_MISSING = "명함을 저장할 계정을 확인할 수 없어요."
+    const val NEARBY_CARD_SAVE_ERROR = MYCARD_SAVE_ERROR
+    const val NEARBY_ACCOUNT_RECHECK = "명함을 저장할 계정을 다시 확인해주세요."
+    const val NEARBY_FALLBACK_NAME = "실패"
+    const val NEARBY_FALLBACK_INFO = "Connect 실패"
+    const val NEARBY_WAITING = "대기 중"
 
     // [임시] 명함 교환 차단 안내. iOS 구현이 끝나 교환을 다시 열 때 이 두 줄과 각 차단 지점을 함께 지운다.
     // 본문은 한 줄에 다 담기지 않아 끝 글자만 넘어가므로, 읽기 좋게 직접 끊어 둔다.
@@ -227,12 +267,29 @@ object AppStrings {
     
     // 받은 명함 화면
     const val RECEIVED_CARD_TEXTHOLDER = "이름, 파트 검색"
+    const val RECEIVED_CARD_COUNT_FORMAT = "%s장"
+    const val RECEIVED_CARD_RETRY = "다시 시도"
+    const val RECEIVED_CARD_EMPTY = "보관한 명함이 없어요."
+    const val RECEIVED_CARD_SEARCH_EMPTY = "검색 결과가 없어요."
+    const val RECEIVED_CARD_GENERATION_FORMAT = "%s기"
+    const val RECEIVED_CARD_LOAD_ERROR = "명함을 불러오지 못했어요. 다시 시도해주세요."
+    const val RECEIVED_CARD_STORAGE_ERROR = "명함 저장소를 읽을 수 없어요. 원본을 보존했으니 다시 시도해주세요."
+    const val RECEIVED_CARD_SAVE_ERROR = "저장하지 못했어요. 내용을 유지했으니 다시 시도해주세요."
 
     // 명함 QR 공유 화면
     const val QRCODE_TITLE = "명함 공유하기"
     const val QRCODE_CONTENT = "QR을 스캔하면 내 명함이 저장돼요"
     const val QRCODE_SHARE = "공유하기"
     const val QRCODE_SAVE = "이미지 저장"
+    const val QRCODE_PERMISSION_REQUIRED = "주변 기기 연결을 위해 권한이 필요합니다."
+    const val QRCODE_SHARE_CHOOSER_TITLE = "명함 QR 코드 공유하기"
+    const val QRCODE_IMAGE_CREATE_ERROR = "공유용 이미지를 생성하지 못했습니다."
+    const val QRCODE_IMAGE_MISSING_ERROR = "공유할 QR 이미지 정보가 없습니다."
+    const val QRCODE_PROFILE_LOAD_ERROR = "프로필 정보를 불러오지 못했습니다."
+    const val QRCODE_ROLE_GENERATION_FORMAT = MYCARD_ROLE_GENERATION_FORMAT
+    const val QRCODE_CHALLENGER_GENERATION_FORMAT = MYCARD_CHALLENGER_GENERATION_FORMAT
+    const val QRCODE_SAVE_SUCCESS = "갤러리에 저장되었습니다."
+    const val QRCODE_SAVE_ERROR = "저장에 실패했습니다."
     // 마이페이지 화면
     const val MYPAGE_TITLE = "마이페이지"
     const val MYPAGE_MODIFY_PROFILE = "프로필"
@@ -283,6 +340,19 @@ object AppStrings {
     const val MYPAGE_SOCIAL_LINK_SUCCESS = "소셜 계정이 연동되었어요."
     const val MYPAGE_SOCIAL_LINK_FAIL = "소셜 계정 연동에 실패했어요. 잠시 후 다시 시도해 주세요."
     const val MYPAGE_SOCIAL_LINK_ALREADY_REGISTERED = "이미 UMC 계정에 연동된 소셜 계정이에요."
+    const val MYPAGE_ACTIVITY_ADDED = "활동기록이 추가되었습니다."
+    const val MYPAGE_GITHUB_OBJECT = "Github를"
+    const val MYPAGE_LINKEDIN_OBJECT = "LinkedIn을"
+    const val MYPAGE_BLOG_OBJECT = "Blog를"
+    const val MYPAGE_UNREGISTERED_LINK_TITLE_FORMAT = "%s 열 수 없어요."
+    const val MYPAGE_UNREGISTERED_LINK_DESCRIPTION = "아직 등록된 링크가 없습니다. 프로필에서 링크를 추가해 주세요."
+    const val MYPAGE_CLOSE = "닫기"
+    const val MYPAGE_DELETE_ACCOUNT_ACTION = "계정 삭제"
+    const val MYPAGE_GOOGLE_KOREAN = "구글"
+    const val MYPAGE_APPLE = "Apple"
+    const val MYPAGE_LINK_ACTION = "연동하기"
+    const val MYCONTENT_EMPTY = "게시글이 존재하지 않습니다."
+    const val MYCONTENT_LOAD_ERROR = "오류가 발생했습니다."
     // 프로필 화면
     const val PROFILE_CONNECT_ACCOUNT = "연동된 계정"
     const val PROFILE_GIVE_LOGIN = "로그인 제공자"
@@ -292,17 +362,24 @@ object AppStrings {
     const val PROFILE_GITHUB_URL = "Github URL"
     const val PROFILE_LINKEDIN_URL = "LinkedIn URL"
     const val PROFILE_BLOG_URL = "Blog URL"
+    const val PROFILE_GITHUB_URL_DISPLAY = "GitHub URL"
     const val PROFILE_HTTP_START_PLACEHOLDER = "http://-"
     const val PROFILE_LOAD_ERROR_TITLE = "프로필 정보를 불러오지 못했어요"
     const val PROFILE_LOAD_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
     const val PROFILE_RETRY = COMMON_RETRY
     const val PROFILE_LINK_INVALID = "올바른 URL 형식(https://...)으로 입력해주세요."
     const val PROFILE_SAVE_FAIL = "저장하지 못했어요. 네트워크 연결을 확인해주세요."
+    const val PROFILE_IMAGE_FORMAT_ERROR_FORMAT = "%s에 허용되지 않는 형식입니다."
+    const val PROFILE_IMAGE_SIZE_ERROR_FORMAT = "%s은 최대 %sMB까지 가능합니다."
+    const val PROFILE_BLOG_URL_DISPLAY = "블로그 URL"
     // 활동 이력 화면
     const val ACTIVITY_HISTORY_EMPTY = "아직 활동 이력이 없어요"
     const val ACTIVITY_HISTORY_LOAD_ERROR_TITLE = "활동 이력을 불러오지 못했어요"
     const val ACTIVITY_HISTORY_LOAD_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
     const val ACTIVITY_HISTORY_RETRY = COMMON_RETRY
+    const val ACTIVITY_HISTORY_GENERATION_FORMAT = "%s기"
+    const val ACTIVITY_HISTORY_CHAPTER_ROLE_FORMAT = "%s지부 %s"
+    const val ACTIVITY_HISTORY_CHALLENGER = "챌린저"
     // 내가 쓴 글과 댓글 화면
     const val MYPOST_TITLE = COMMON_MY_POSTS_TITLE
     const val MYCOMMENT_TITLE = "댓글 단 글\""

@@ -1,5 +1,6 @@
 package com.example.mypage.activityhistory
 
+import com.umc.component.theme.AppStrings
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
@@ -87,7 +88,7 @@ class ActivityHistoryViewModel @Inject constructor(
             //api 호출 시 coroutineScope를 사용하여 async를 호출 - 다 끝날때까지 기달
             val finalActiveHistory = coroutineScope {
                 gisuSummaryList.flatMap { summary ->
-                    val generationText = "${summary.gisu}기"
+                    val generationText = AppStrings.ACTIVITY_HISTORY_GENERATION_FORMAT.format(summary.gisu)
                     val hasRole = summary.fromRoles.isNotEmpty()
 
                     //운영진 기록
@@ -144,7 +145,7 @@ class ActivityHistoryViewModel @Inject constructor(
                 .firstOrNull { it.challengerId == roleItem.challengerId }
                 ?.chapterName
             return if (!chapterName.isNullOrBlank()) {
-                UserActiveItem(generationText, "${chapterName}지부 $roleLabel", roleLabel)
+                UserActiveItem(generationText, AppStrings.ACTIVITY_HISTORY_CHAPTER_ROLE_FORMAT.format(chapterName, roleLabel), roleLabel)
             } else {
                 UserActiveItem(generationText, roleLabel, roleLabel)
             }
@@ -185,7 +186,7 @@ class ActivityHistoryViewModel @Inject constructor(
                 successCallback = { chapterInfo ->
                     //지부 이름 넣기
                     val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
-                    itemResult = UserActiveItem(generationText, "${chapterInfo.name}지부 $label",label, )
+                    itemResult = UserActiveItem(generationText, AppStrings.ACTIVITY_HISTORY_CHAPTER_ROLE_FORMAT.format(chapterInfo.name, label),label, )
                 },
                 errorCallback = {
                     val label = UserChallengerRole.from(roleItem.role).displayName ?: roleItem.role
@@ -209,7 +210,7 @@ class ActivityHistoryViewModel @Inject constructor(
         return UserActiveItem(
             generation = generationText,
             partName = "${UserPart.from(recordItem.responsiblePart).label} Part",
-            position = "챌린저"
+            position = AppStrings.ACTIVITY_HISTORY_CHALLENGER
         )
     }
 }

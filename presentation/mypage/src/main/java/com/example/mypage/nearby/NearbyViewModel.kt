@@ -1,5 +1,6 @@
 package com.example.mypage.nearby
 
+import com.umc.component.theme.AppStrings
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -57,8 +58,8 @@ class NearbyViewModel @Inject constructor(
 
             // P2P 연결 성공 시 내 명함(UserCard)을 자동 전송
             is NearbyManagerEvent.ConnectionSuccess -> {
-                updateState { copy(connectedId = event.id, pendingAuth = null, status = "연결 완료") }
-                emitEvent(NearbyEvent.ShowToast("연결에 성공했습니다."))
+                updateState { copy(connectedId = event.id, pendingAuth = null, status = AppStrings.NEARBY_CONNECTED) }
+                emitEvent(NearbyEvent.ShowToast(AppStrings.NEARBY_CONNECTION_SUCCESS))
 
                 //전송 로직
                 /**
@@ -80,7 +81,7 @@ class NearbyViewModel @Inject constructor(
                 val expected = exchangeContext
                 stopExchange()
                 if (expected == null) {
-                    emitEvent(NearbyEvent.ShowToast("명함을 저장할 계정을 확인할 수 없어요."))
+                    emitEvent(NearbyEvent.ShowToast(AppStrings.NEARBY_ACCOUNT_MISSING))
                 } else viewModelScope.launch {
                     try {
                         cardRepository.saveUserCard(event.card, expected)
@@ -90,7 +91,7 @@ class NearbyViewModel @Inject constructor(
                     } catch (cancelled: CancellationException) {
                         throw cancelled
                     } catch (_: Exception) {
-                        emitEvent(NearbyEvent.ShowToast("명함을 저장하지 못했어요. 다시 시도해주세요."))
+                        emitEvent(NearbyEvent.ShowToast(AppStrings.NEARBY_CARD_SAVE_ERROR))
                     }
                 }
             }
@@ -151,7 +152,7 @@ class NearbyViewModel @Inject constructor(
      * 기기 광고(Advertising) 및 탐색(Discovery)을 동시에 개시하여 P2P 상호 감지를 시작하는 메서드
      */
     fun startAdvertisingAndDiscovery() {
-        val myInfo = uiState.value.myUserInfo ?: NearbyUserInfo(name = "실패", info = "Connect 실패")
+        val myInfo = uiState.value.myUserInfo ?: NearbyUserInfo(name = AppStrings.NEARBY_FALLBACK_NAME, info = AppStrings.NEARBY_FALLBACK_INFO)
 
         updateState { copy(exchangeStep = ExchangeStep.DISCOVER_USERS, devices = persistentListOf()) }
         withCardSession { manager.startAdvertisingAndDiscovery(myInfo) }
@@ -221,7 +222,7 @@ class NearbyViewModel @Inject constructor(
                 throw cancelled
             } catch (_: Exception) {
                 exchangeContext = null
-                emitEvent(NearbyEvent.ShowToast("명함을 저장할 계정을 다시 확인해주세요."))
+                emitEvent(NearbyEvent.ShowToast(AppStrings.NEARBY_ACCOUNT_RECHECK))
             }
         }
     }
@@ -298,7 +299,7 @@ data class NearbyUiState(
 
     val connectedId: String? = null,
     val receivedCard: UserCard? = null,
-    val status: String = "대기 중"
+    val status: String = AppStrings.NEARBY_WAITING
 ) : UiState
 
 sealed interface NearbyEvent : UiEvent {

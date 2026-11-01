@@ -120,7 +120,7 @@ fun MyContentScreen(
                 contentAlignment = Alignment.Center
             ) {
                 UText(
-                    text = "게시글이 존재하지 않습니다.",
+                    text = AppStrings.MYCONTENT_EMPTY,
                     style = UmcTypographyTokens.Footnote,
                     color = grey800()
                 )
@@ -181,9 +181,9 @@ fun MyContentTopBar(
 ){
 
     val title = when (showType) {
-        "MYPOST" -> "내가 쓴 글"
-        "MYCOMMENT" -> "댓글 단 글"
-        "MYSCRAP" -> "스크랩"
+        "MYPOST" -> AppStrings.MYPAGE_MYPOST
+        "MYCOMMENT" -> AppStrings.MYPAGE_MYCOMMENT
+        "MYSCRAP" -> AppStrings.MYPAGE_MYSCRAP
         else -> showType
     }
 

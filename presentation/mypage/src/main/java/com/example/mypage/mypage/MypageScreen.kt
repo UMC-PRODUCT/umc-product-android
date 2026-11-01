@@ -184,7 +184,7 @@ fun MypageRoute(
 
             //챌린저 기록 추가 시 (다이얼로그)
             is MypageEvent.ConfirmAddCode -> {
-                Toast.makeText(context, "활동기록이 추가되었습니다.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, AppStrings.MYPAGE_ACTIVITY_ADDED, Toast.LENGTH_SHORT).show()
                 showAddCodeDialog = false
             }
             //챌린저 기록 추가 실패 시(다이얼로그)
@@ -257,21 +257,21 @@ fun MypageRoute(
     // 외부 링크 미등록 안내 다이얼로그 컴포저블
     if(showOutLinkDialog && selectedOutLinkType != null){
         val name = when(selectedOutLinkType) {
-            OutLinkType.GITHUB -> "Github를"
-            OutLinkType.LINKEDIN -> "LinkedIn을"
-            OutLinkType.BLOG -> "Blog를"
+            OutLinkType.GITHUB -> AppStrings.MYPAGE_GITHUB_OBJECT
+            OutLinkType.LINKEDIN -> AppStrings.MYPAGE_LINKEDIN_OBJECT
+            OutLinkType.BLOG -> AppStrings.MYPAGE_BLOG_OBJECT
             else -> ""
         }
 
         UDialog(
-            title = "${name} 열 수 없어요.",
-            content = "아직 등록된 링크가 없습니다. 프로필에서 링크를 추가해 주세요.",
+            title = AppStrings.MYPAGE_UNREGISTERED_LINK_TITLE_FORMAT.format(name),
+            content = AppStrings.MYPAGE_UNREGISTERED_LINK_DESCRIPTION,
             onDismissRequest = {
                 showOutLinkDialog = false
                 selectedOutLinkType = null
             },
             isTwoButton = false,
-            confirmText = "확인"
+            confirmText = AppStrings.COMMON_CONFIRM
         )
 
     }
@@ -314,7 +314,7 @@ fun MypageRoute(
             content = AppStrings.MYPAGE_TERMS_LOAD_FAIL_CONTENT,
             isTwoButton = true,
             positiveText = AppStrings.MYPAGE_TERMS_RETRY,
-            negativeText = "닫기",
+            negativeText = AppStrings.MYPAGE_CLOSE,
             positiveTextColor = grey800(),
             onPositive = {
                 failedTermsType = null
@@ -336,8 +336,8 @@ fun MypageRoute(
             title = AppStrings.MYPAGE_LOGOUT_TITLE,
             content = AppStrings.MYPAGE_LOGOUT_CONTENT,
             isTwoButton = true,
-            positiveText = "로그아웃",
-            negativeText = "취소",
+            positiveText = AppStrings.MYPAGE_LOGOUT,
+            negativeText = AppStrings.COMMON_CANCEL,
             onPositive = {
                 showLogoutDialog = false
                 viewModel.logout()
@@ -358,8 +358,8 @@ fun MypageRoute(
             title = AppStrings.MYPAGE_DELTE_USER_TITLE,
             content = AppStrings.MYPAGE_DELTE_USER_CONTENT,
             isTwoButton = true,
-            positiveText = "계정 삭제",
-            negativeText = "취소",
+            positiveText = AppStrings.MYPAGE_DELETE_ACCOUNT_ACTION,
+            negativeText = AppStrings.COMMON_CANCEL,
             onPositive = {
                 /**TODO: 회원 탈퇴 로직 연결*/
                 showDeleteUserDialog = false
@@ -795,9 +795,9 @@ fun SocialBadge(platform: LoginType) {
     ) {
         UText(
             text = when (platform) {
-                LoginType.KAKAO -> "카카오"
-                LoginType.GOOGLE -> "구글"
-                LoginType.APPLE -> "Apple"
+                LoginType.KAKAO -> AppStrings.MYPAGE_KAKAO
+                LoginType.GOOGLE -> AppStrings.MYPAGE_GOOGLE_KOREAN
+                LoginType.APPLE -> AppStrings.MYPAGE_APPLE
             },
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -833,7 +833,7 @@ fun MypageSocialLinkCard(
                 modifier = Modifier.size(24.dp)
             )
             UText(
-                text = if (targetPlatform == LoginType.KAKAO) "카카오" else "구글",
+                text = if (targetPlatform == LoginType.KAKAO) AppStrings.MYPAGE_KAKAO else AppStrings.MYPAGE_GOOGLE_KOREAN,
                 modifier = Modifier
                     .padding(start = 12.dp)
                     .weight(1f),
@@ -841,7 +841,7 @@ fun MypageSocialLinkCard(
                 color = grey800()
             )
             UText(
-                text = "연동하기",
+                text = AppStrings.MYPAGE_LINK_ACTION,
                 style = UmcTypographyTokens.Subheadline,
                 color = grey800(),
                 modifier = Modifier

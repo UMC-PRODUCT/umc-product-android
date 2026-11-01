@@ -1,5 +1,6 @@
 package com.example.mypage.qrcode
 
+import com.umc.component.theme.AppStrings
 import android.app.Application
 import android.os.Build
 import android.util.Log
@@ -46,7 +47,7 @@ class QrCodeViewModel @Inject constructor(
                     settingUserInfoToUI(userInfo)
                 },
                 errorCallback = {
-                    emitEvent(QrCodeEvent.ShowToast("프로필 정보를 불러오지 못했습니다."))
+                    emitEvent(QrCodeEvent.ShowToast(AppStrings.QRCODE_PROFILE_LOAD_ERROR))
                     generateMyUserCardQr(null)
                 }
             )
@@ -81,8 +82,8 @@ class QrCodeViewModel @Inject constructor(
                 val roleLabel = roleEnum.displayName ?: item.role
 
                 //최종 포맷: "N기 Part Role"
-                "$partLabel$roleLabel·${summary.gisu}기"
-            } ?: "챌린저·${summary.gisu}기" // 예외 상황 대비 기본값
+                AppStrings.QRCODE_ROLE_GENERATION_FORMAT.format(partLabel, roleLabel, summary.gisu)
+            } ?: AppStrings.QRCODE_CHALLENGER_GENERATION_FORMAT.format(summary.gisu) // 예외 상황 대비 기본값
 
             updateState {
                 copy(
@@ -140,9 +141,9 @@ class QrCodeViewModel @Inject constructor(
         if (bitmap == null) return
         val success = QrCodeUtils.saveImageToGallery(application, bitmap, "MyUserCard_QR")
         if (success) {
-            emitEvent(QrCodeEvent.ShowToast("갤러리에 저장되었습니다."))
+            emitEvent(QrCodeEvent.ShowToast(AppStrings.QRCODE_SAVE_SUCCESS))
         } else {
-            emitEvent(QrCodeEvent.ShowToast("저장에 실패했습니다."))
+            emitEvent(QrCodeEvent.ShowToast(AppStrings.QRCODE_SAVE_ERROR))
         }
     }
 

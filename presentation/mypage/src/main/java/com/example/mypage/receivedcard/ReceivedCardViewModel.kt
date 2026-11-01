@@ -1,5 +1,6 @@
 package com.example.mypage.receivedcard
 
+import com.umc.component.theme.AppStrings
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
@@ -40,7 +41,7 @@ class ReceivedCardViewModel @Inject constructor(
         updateState { copy(isLoading = true, error = null) }
         observer = viewModelScope.launch {
             repository.getCardBook().catch {
-                updateState { copy(isLoading = false, error = "명함을 불러오지 못했어요. 다시 시도해주세요.") }
+                updateState { copy(isLoading = false, error = AppStrings.RECEIVED_CARD_LOAD_ERROR) }
             }.collect { state ->
                 val changedAccount = if (receivedInitialState) session != state.session else
                     savedStateHandle.get<Long>("cardSearchOwner")?.let { it != (state.session?.ownerId ?: 0L) } ?: false
@@ -55,7 +56,7 @@ class ReceivedCardViewModel @Inject constructor(
                     copy(
                         searchQuery = query, allCards = cards, filteredCards = filterCards(cards, query),
                         isLoading = false,
-                        error = if (state.storageUnavailable) "명함 저장소를 읽을 수 없어요. 원본을 보존했으니 다시 시도해주세요." else null,
+                        error = if (state.storageUnavailable) AppStrings.RECEIVED_CARD_STORAGE_ERROR else null,
                         hasLegacyRecords = state.hasLegacyRecords,
                         selectedId = if (changedAccount || book.cards[selectedId]?.pendingDelete != false) null else selectedId,
                         noteDraft = if (changedAccount) "" else noteDraft,
@@ -102,7 +103,7 @@ class ReceivedCardViewModel @Inject constructor(
                 throw cancelled
             } catch (_: Exception) {
                 if (session == expectedSession) updateState {
-                    copy(isSaving = false, mutationError = "저장하지 못했어요. 내용을 유지했으니 다시 시도해주세요.")
+                    copy(isSaving = false, mutationError = AppStrings.RECEIVED_CARD_SAVE_ERROR)
                 }
             }
         }

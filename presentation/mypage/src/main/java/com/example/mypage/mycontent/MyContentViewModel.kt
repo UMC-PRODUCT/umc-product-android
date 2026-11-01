@@ -1,5 +1,6 @@
 package com.example.mypage.mycontent
 
+import com.umc.component.theme.AppStrings
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
@@ -51,7 +52,7 @@ constructor(
     fun initShowType(showType: String){
         //오류 핸들
         if (showType.isBlank()) {
-            emitEvent(MyContentEvent.ShowErrorToast("오류가 발생했습니다."))
+            emitEvent(MyContentEvent.ShowErrorToast(AppStrings.MYCONTENT_LOAD_ERROR))
             return
         }
         updateState { copy(showType = showType) }

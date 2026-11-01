@@ -97,7 +97,7 @@ fun ProfileRoute(
             when {
                 // 허용되지 않은 파일 확장자 검증
                 category.alloweType.isNotEmpty() && !category.alloweType.contains(extension.lowercase()) -> {
-                    Toast.makeText(context, "${category.label}에 허용되지 않는 형식입니다.", Toast.LENGTH_SHORT)
+                    Toast.makeText(context, AppStrings.PROFILE_IMAGE_FORMAT_ERROR_FORMAT.format(category.label), Toast.LENGTH_SHORT)
                         .show()
                 }
                 // 용량 제한(MB) 초과 검증
@@ -105,7 +105,7 @@ fun ProfileRoute(
                     val maxSizeMb = category.maxSizeBytes / (1024 * 1024)
                     Toast.makeText(
                         context,
-                        "${category.label}은 최대 ${maxSizeMb}MB까지 가능합니다.",
+                        AppStrings.PROFILE_IMAGE_SIZE_ERROR_FORMAT.format(category.label, maxSizeMb),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -201,8 +201,8 @@ fun ProfileScreen(
                 //연동 정보 (고정형)
                 item {
                     ProfileInfoSection(
-                        title = "연동된 계정",
-                        content = "로그인 제공자",
+                        title = AppStrings.PROFILE_CONNECT_ACCOUNT,
+                        content = AppStrings.PROFILE_GIVE_LOGIN,
                         platforms = uiState.linkedPlatforms
                     )
                 }
@@ -210,7 +210,7 @@ fun ProfileScreen(
                 //이름/닉네임 (고정형)
                 item {
                     ProfileInfoSection(
-                        title = "닉네임/이름",
+                        title = AppStrings.PROFILE_NAME_NICKNAME,
                         content = "${uiState.userInfo.nickname} / ${uiState.userInfo.name}"
                     )
                 }
@@ -218,7 +218,7 @@ fun ProfileScreen(
                 //학교 정보 (고정형)
                 item {
                     ProfileInfoSection(
-                        title = "학교",
+                        title = AppStrings.PROFILE_SCHOOL,
                         content = uiState.userInfo.schoolName
                     )
                 }
@@ -226,9 +226,9 @@ fun ProfileScreen(
                 // 대외 링크 입력 (UTextField 적용)
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                        LinkInputSection("GitHub URL", githubText, onGithubChange)
-                        LinkInputSection("LinkedIn URL", linkedinText, onLinkedinChange)
-                        LinkInputSection("블로그 URL", blogText, onBlogChange)
+                        LinkInputSection(AppStrings.PROFILE_GITHUB_URL_DISPLAY, githubText, onGithubChange)
+                        LinkInputSection(AppStrings.PROFILE_LINKEDIN_URL, linkedinText, onLinkedinChange)
+                        LinkInputSection(AppStrings.PROFILE_BLOG_URL_DISPLAY, blogText, onBlogChange)
                     }
                 }
             }
@@ -401,7 +401,7 @@ fun LinkInputSection(title: String, value: String, onValueChange: (String) -> Un
         UTextField(
             value = value,
             onValueChange = onValueChange,
-            placeholder = "http://-",
+            placeholder = AppStrings.PROFILE_HTTP_START_PLACEHOLDER,
             modifier = Modifier
                 .padding(top = 8.dp)
                 .fillMaxWidth()
