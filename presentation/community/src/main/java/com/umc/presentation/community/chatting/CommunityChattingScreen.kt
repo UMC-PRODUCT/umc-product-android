@@ -1828,7 +1828,7 @@ private fun OtherMessage(
                 }
                 member?.part?.takeUnless { it == UserPart.ADMIN }?.let { part ->
                     val tag = communityChatPartTag(part)
-                    CommunityChatMemberTag(tag.first, tag.second, tag.third)
+                    CommunityChatMemberTag(tag.label, tag.colors.background, tag.colors.text, tag.colors.border)
                 }
             }
             Spacer(Modifier.height(8.dp))
