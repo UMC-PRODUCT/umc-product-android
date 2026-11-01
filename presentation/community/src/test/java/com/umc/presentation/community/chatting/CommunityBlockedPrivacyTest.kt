@@ -46,8 +46,30 @@ class CommunityBlockedPrivacyTest {
         assertFalse(state.summaryTruncated)
     }
 
-    @Test fun cannotRevealMessagesBeforeBlockListIsConfirmed() {
-        val state = loaded.copy(blockedMembersStatus = BlockedMembersStatus.FAILED, messages = listOf(source), blockedMemberIds = setOf("2"))
+    @Test fun cannotRevealUnknownSendersBeforeBlockListIsConfirmed() {
+        val state = loaded.copy(blockedMembersStatus = BlockedMembersStatus.FAILED, messages = listOf(source))
         assertEquals(state, state.toggleBlockedMessage("source"))
+    }
+    @Test fun refreshFailureKeepsConfirmedUnblockedSendersReadable() {
+        val initial = loaded.copy(messages = listOf(source, own))
+        val failed = initial.copy(blockedMembersStatus = BlockedMembersStatus.FAILED,
+            verifiedUnblockedMemberIds = initial.confirmedUnblockedSenders())
+        assertFalse(failed.isSenderVisibilityPending("2"))
+        assertTrue(failed.canShowReplySnippet(source))
+        assertTrue(failed.isSenderVisibilityPending("new-member"))
+    }
+
+    @Test fun immediateBlockChangeInvalidatesOnlyTheChangedSender() {
+        val state = loaded.copy(blockedMembersStatus = BlockedMembersStatus.FAILED,
+            messages = listOf(source), verifiedUnblockedMemberIds = setOf("2", "3"),
+            revealedBlockedMessageIds = setOf("source"), unreadSummary = "원문 요약")
+        val blocked = state.withMemberBlockChange("2", true)
+        assertFalse("2" in blocked.verifiedUnblockedMemberIds)
+        assertTrue("2" in blocked.blockedMemberIds)
+        assertFalse(blocked.canShowReplySnippet(source))
+        assertFalse(blocked.isSenderVisibilityPending("3"))
+        assertTrue(blocked.revealedBlockedMessageIds.isEmpty())
+        assertNull(blocked.unreadSummary)
+        assertTrue(blocked.withMemberBlockChange("2", false).canShowReplySnippet(source))
     }
 }

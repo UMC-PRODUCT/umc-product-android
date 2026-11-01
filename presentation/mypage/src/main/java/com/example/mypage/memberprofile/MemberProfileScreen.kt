@@ -125,7 +125,7 @@ fun MemberProfileRoute(
             onRetryClick = viewModel::onClickRetry,
         )
 
-        UToastHost(
+        if (!uiState.isReportSheetOpen) UToastHost(
             data = toastData,
             onDismiss = { toastData = null },
             modifier = Modifier
@@ -137,6 +137,8 @@ fun MemberProfileRoute(
 
     if (uiState.isReportSheetOpen) {
         MemberReportBottomSheet(
+            toastData = toastData,
+            onDismissToast = { toastData = null },
             isProcessing = uiState.isProcessing,
             selectedReasons = uiState.reportReasons,
             detail = uiState.reportDetail,
@@ -573,6 +575,8 @@ private fun MemberProfileLoadError(onRetryClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MemberReportBottomSheet(
+    toastData: UToastData?,
+    onDismissToast: () -> Unit,
     isProcessing: Boolean,
     selectedReasons: ImmutableSet<MemberReportReason>,
     detail: String,
@@ -610,15 +614,23 @@ private fun MemberReportBottomSheet(
             }
         },
     ) {
-        MemberReportSheetContent(
-            selectedReasons = selectedReasons,
-            detail = detail,
-            canSubmit = canSubmit,
-            onToggleReason = onToggleReason,
-            onDetailChange = onDetailChange,
-            onCancel = onCancel,
-            onSubmit = onSubmit,
-        )
+        Box {
+            MemberReportSheetContent(
+                selectedReasons = selectedReasons,
+                detail = detail,
+                canSubmit = canSubmit,
+                onToggleReason = onToggleReason,
+                onDetailChange = onDetailChange,
+                onCancel = onCancel,
+                onSubmit = onSubmit,
+            )
+            UToastHost(
+                data = toastData,
+                onDismiss = onDismissToast,
+                modifier = Modifier.align(Alignment.BottomCenter).imePadding()
+                    .navigationBarsPadding().padding(horizontal = 16.dp, vertical = 24.dp),
+            )
+        }
     }
 }
 

@@ -28,4 +28,9 @@ class CommunityMessageLinksTest {
         assertTrue(communityTextLinks("javascript:alert(1) intent://example file:///etc/passwd https://").isEmpty())
         assertTrue(communityTextLinks("@www.example.com 일반 메시지").isEmpty())
     }
+    @Test fun customSchemeOnlyOpensSupportedThreadHost() {
+        assertTrue(communityTextLinks("umc://other/42 umc://card?memberId=42 umc://thread:123/42").isEmpty())
+        assertEquals("umc://thread/42", communityTextLinks("umc://thread/42").single().url)
+        assertEquals("https://other.test/x", communityTextLinks("https://other.test/x").single().url)
+    }
 }

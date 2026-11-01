@@ -15,6 +15,8 @@ import com.umc.data.request.member.UpdateMyLinkRequest
 import com.umc.data.request.member.UpdateMyProfileRequest
 import com.umc.data.response.JwtLoginResponse.Companion.toModel
 import com.umc.data.response.member.MemberResponse.Companion.toDomain
+import com.umc.domain.model.member.MemberBlockChange
+import com.umc.domain.model.member.MemberBlockChanges
 import com.umc.domain.model.JwtToken
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
@@ -111,11 +113,21 @@ class MemberRepositoryImpl @Inject constructor(
         memberRemoteDataSource.reportMember(memberId, ReportMemberRequest(reasons.map { it.name }, detail)).map { Unit }
 
     override suspend fun blockMember(memberId: Long): ApiState<Boolean> {
-        return memberRemoteDataSource.blockMember(memberId).map { it.isBlocked }
+        val session = appDataStore.profileSession()
+        val result = memberRemoteDataSource.blockMember(memberId).map { it.isBlocked }
+        if (result is ApiState.Success && session.ownerId > 0 && appDataStore.profileSession() == session) {
+            MemberBlockChanges.publish(MemberBlockChange(session.ownerId, memberId, result.data))
+        }
+        return result
     }
 
     override suspend fun unblockMember(memberId: Long): ApiState<Boolean> {
-        return memberRemoteDataSource.unblockMember(memberId).map { it.isBlocked }
+        val session = appDataStore.profileSession()
+        val result = memberRemoteDataSource.unblockMember(memberId).map { it.isBlocked }
+        if (result is ApiState.Success && session.ownerId > 0 && appDataStore.profileSession() == session) {
+            MemberBlockChanges.publish(MemberBlockChange(session.ownerId, memberId, result.data))
+        }
+        return result
     }
 
     override suspend fun getBlockedMemberIds(): ApiState<List<Long>> {

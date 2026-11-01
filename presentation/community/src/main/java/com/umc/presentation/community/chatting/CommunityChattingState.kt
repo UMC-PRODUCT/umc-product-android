@@ -19,6 +19,7 @@ data class CommunityChattingState(
     val memberProfiles: Map<String, CommunityParticipantProfile> = emptyMap(),
     val messages: List<CommunityThreadMessage> = emptyList(),
     val blockedMembersStatus: BlockedMembersStatus = BlockedMembersStatus.LOADING,
+    val verifiedUnblockedMemberIds: Set<String> = emptySet(),
     val blockedMemberIds: Set<String> = emptySet(),
     val revealedBlockedMessageIds: Set<String> = emptySet(),
     val isManagingParticipants: Boolean = false,
@@ -69,7 +70,7 @@ data class CommunityChattingState(
 ) : UiState {
     internal fun toggleBlockedMessage(messageId: String): CommunityChattingState {
         val message = messages.firstOrNull { it.messageId == messageId } ?: return this
-        if (blockedMembersStatus != BlockedMembersStatus.LOADED || message.senderId == myMemberId || message.senderId !in blockedMemberIds ||
+        if (message.senderId == myMemberId || message.senderId !in blockedMemberIds ||
             message.type.isSystemNotice || message.deletedAt != null || message.status == "DELETED") return this
         return copy(revealedBlockedMessageIds = if (messageId in revealedBlockedMessageIds)
             revealedBlockedMessageIds - messageId else revealedBlockedMessageIds + messageId)
@@ -77,7 +78,21 @@ data class CommunityChattingState(
 
     internal fun canShowReplySnippet(source: CommunityThreadMessage?): Boolean =
         source?.senderId?.let { sender -> sender == myMemberId ||
-            (blockedMembersStatus == BlockedMembersStatus.LOADED && sender !in blockedMemberIds) } == true
+            (!isSenderVisibilityPending(sender) && sender !in blockedMemberIds) } == true
+
+    internal fun isSenderVisibilityPending(senderId: String?): Boolean =
+        senderId != myMemberId && blockedMembersStatus != BlockedMembersStatus.LOADED &&
+            senderId !in blockedMemberIds && senderId !in verifiedUnblockedMemberIds
+
+    internal fun confirmedUnblockedSenders(): Set<String> =
+        (verifiedUnblockedMemberIds + messages.mapNotNull { it.senderId } + members.keys) - blockedMemberIds
+
+    internal fun withMemberBlockChange(memberId: String, blocked: Boolean): CommunityChattingState =
+        withoutUnreadSummary().copy(
+            blockedMemberIds = if (blocked) blockedMemberIds + memberId else blockedMemberIds - memberId,
+            verifiedUnblockedMemberIds = if (blocked) verifiedUnblockedMemberIds - memberId else verifiedUnblockedMemberIds + memberId,
+            revealedBlockedMessageIds = revealedBlockedMessageIds - messages.filter { it.senderId == memberId }.map { it.messageId }.toSet(),
+        )
 
     internal fun summaryInputMessages(candidates: List<CommunityThreadMessage>): List<CommunityThreadMessage> =
         if (blockedMembersStatus != BlockedMembersStatus.LOADED) emptyList()

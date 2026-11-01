@@ -1,5 +1,7 @@
 package com.umc.presentation
 
+import com.umc.component.fcm.NotificationEventHistory
+import com.umc.component.fcm.isSupportedAppLink
 import com.umc.component.fcm.CommunityNotification
 import com.umc.component.fcm.FcmTokenSynchronizer
 import javax.inject.Inject
@@ -99,11 +101,18 @@ class MainActivity : ComponentActivity() {
         val route = CommunityNotification.parse(payload)
         val eventId = incoming?.getStringExtra("notificationEventId") ?: route?.eventId
         val preferences = getSharedPreferences("fcm_routes", MODE_PRIVATE)
-        val seen = preferences.getStringSet("consumed", emptySet()).orEmpty()
+        val encoded = preferences.getString("consumed_ordered", null)
+        val legacy = preferences.getStringSet("consumed", emptySet()).orEmpty()
+        val seen = NotificationEventHistory.decode(encoded, legacy)
+        if (encoded == null || preferences.contains("consumed")) {
+            preferences.edit().putString("consumed_ordered", NotificationEventHistory.encode(seen))
+                .remove("consumed").apply()
+        }
         if (eventId != null && eventId in seen) return
-        val link = route?.uri() ?: incoming?.data ?: return
+        val link = (route?.uri() ?: incoming?.data)?.takeIf { isSupportedAppLink(it.toString()) } ?: return
         if (eventId != null) {
-            preferences.edit().putStringSet("consumed", (seen.toList().takeLast(199) + eventId).toSet()).apply()
+            preferences.edit().putString("consumed_ordered",
+                NotificationEventHistory.encode(NotificationEventHistory.record(seen, eventId))).apply()
         }
         PendingDeepLink.uri = link
         // 같은 Activity의 회전/복원에서 처리한 알림 payload를 다시 소비하지 않는다.
