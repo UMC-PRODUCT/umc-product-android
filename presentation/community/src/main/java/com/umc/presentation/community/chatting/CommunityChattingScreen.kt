@@ -1572,8 +1572,7 @@ private fun UnreadSummaryCard(
     }
 }
 
-private const val COMMUNITY_DEEP_LINK_HOST = "https://api.university.neordinary.com"
-private const val COMMUNITY_DEEP_LINK_PATH = "/community/threads"
+private const val COMMUNITY_THREAD_SHARE_LINK_BASE = "umc://thread"
 private val INITIAL_UNREAD_SCROLL_OFFSET = 96.dp
 private val MESSAGE_TIME_MIN_WIDTH = 32.dp
 
@@ -1602,7 +1601,7 @@ internal fun buildCommunityThreadDeepLink(shareUrl: String): String {
 
     if (threadId.isBlank()) return rawUrl
 
-    return "$COMMUNITY_DEEP_LINK_HOST$COMMUNITY_DEEP_LINK_PATH?threadId=$threadId"
+    return "$COMMUNITY_THREAD_SHARE_LINK_BASE?threadId=$threadId"
 }
 
 @Composable
