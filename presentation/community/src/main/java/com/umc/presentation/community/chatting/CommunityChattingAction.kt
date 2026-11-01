@@ -50,6 +50,7 @@ sealed interface CommunityChattingAction {
     data class OnKickMember(val memberId: String) : CommunityChattingAction
     data class OnTransferOwnership(val memberId: String) : CommunityChattingAction
     data class OnToggleMemberAdmin(val memberId: String) : CommunityChattingAction
+    data class OnToggleBlockedMessage(val messageId: String) : CommunityChattingAction
     data class OnViewMemberProfile(val memberId: String) : CommunityChattingAction
     data class OnManageParticipants(val memberIds: Set<String>, val action: CommunityParticipantBatchAction) : CommunityChattingAction
 }

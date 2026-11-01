@@ -123,11 +123,9 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.main600
 import com.umc.presentation.community.bottomsheet.ConversationSummaryBottomSheet
-import com.umc.presentation.community.component.chatting.CommunityChatMemberTag
 import com.umc.presentation.community.component.chatting.CommunityChatProfileImage
 import com.umc.presentation.community.component.chatting.CommunityChatInputBar
 import com.umc.presentation.community.component.chatting.CommunityChatEditInputBar
-import com.umc.presentation.community.component.chatting.communityChatPartTag
 import com.umc.presentation.community.component.chatting.communityMentionText
 import com.umc.presentation.community.component.chatting.communityMentionNameRanges
 import com.umc.domain.model.community.thread.CommunityMessageReportReason
@@ -736,6 +734,9 @@ fun CommunityChattingScreen(
                         imageUris = state.localImageUrisByMessageId[message.messageId].orEmpty(),
                         member = message.senderId?.let(state.members::get),
                         isMine = isMine,
+                        isBlocked = !isMine && message.senderId in state.blockedMemberIds,
+                        isBlockedMessageRevealed = message.messageId in state.revealedBlockedMessageIds,
+                        onToggleBlockedMessage = { onAction(CommunityChattingAction.OnToggleBlockedMessage(message.messageId)) },
                         isViewOnly = isViewOnly,
                         canDelete = isMine || state.thread?.myRole in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN),
                         onEdit = {
@@ -1673,6 +1674,9 @@ private fun ChatMessageRow(
     imageUris: List<String>,
     member: CommunityThreadMember?,
     isMine: Boolean,
+    isBlocked: Boolean,
+    isBlockedMessageRevealed: Boolean,
+    onToggleBlockedMessage: () -> Unit,
     isViewOnly: Boolean,
     canDelete: Boolean,
     onEdit: () -> Unit,
@@ -1714,9 +1718,11 @@ private fun ChatMessageRow(
             if (isMine) {
                 MineMessage(message, imageUris, openMenu, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick)
             } else {
-                OtherMessage(message, imageUris, member, openMenu, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick)
+                OtherMessage(message, imageUris, member, openMenu, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick,
+                    isBlocked = isBlocked, isBlockedMessageRevealed = isBlockedMessageRevealed,
+                    onToggleBlockedMessage = onToggleBlockedMessage)
             }
-            if (message.reactions.isNotEmpty()) {
+            if (!isBlocked && message.reactions.isNotEmpty()) {
                 MessageReactions(
                     reactions = message.reactions,
                     isMine = isMine,
@@ -1726,7 +1732,7 @@ private fun ChatMessageRow(
             }
         }
         val anchor = bubbleBounds
-        if (menuExpanded && anchor != null && message.deletedAt == null && message.status != "DELETED") {
+        if (!isBlocked && menuExpanded && anchor != null && message.deletedAt == null && message.status != "DELETED") {
             MessageActionPopup(
                 messageBounds = anchor,
                 isMine = isMine,
@@ -1800,6 +1806,9 @@ private fun OtherMessage(
     selected: Boolean = false,
     bubbleModifier: Modifier = Modifier,
     onReplySourceClick: () -> Unit = {},
+    isBlocked: Boolean = false,
+    isBlockedMessageRevealed: Boolean = false,
+    onToggleBlockedMessage: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1811,38 +1820,25 @@ private fun OtherMessage(
                 .weight(1f)
                 .padding(start = 16.dp),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
-            ) {
-                Text(
-                    message.senderName.orEmpty().ifBlank { AppStrings.CHAT_UNKNOWN_USER },
-                    color = grey950(),
-                    style = UmcTypographyTokens.SubheadlineBold
-                )
-                if (
-                    member?.role == CommunityThreadRole.ADMIN ||
-                    member?.part == UserPart.ADMIN
-                ) {
-                    CommunityChatMemberTag(AppStrings.CHAT_ADMIN_BADGE, grey950(), white())
-                }
-                member?.part?.takeUnless { it == UserPart.ADMIN }?.let { part ->
-                    val tag = communityChatPartTag(part)
-                    CommunityChatMemberTag(tag.first, tag.second, tag.third)
-                }
-            }
+            Text(
+                message.senderName.orEmpty().ifBlank { AppStrings.CHAT_UNKNOWN_USER },
+                color = grey950(),
+                style = UmcTypographyTokens.SubheadlineBold,
+            )
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 Surface(
                     modifier = Modifier.weight(1f, fill = false).then(bubbleModifier),
                     color = when {
-                        message.type == CommunityMessageType.IMAGE -> Color.Transparent
+                        !isBlocked && message.type == CommunityMessageType.IMAGE -> Color.Transparent
                         selected -> grey200()
                         else -> white()
                     },
                     shape = RoundedCornerShape(12.dp),
                 ) {
-                    MessageBubbleContent(
+                    if (isBlocked) {
+                        BlockedMessageBubble(message, imageUris, isBlockedMessageRevealed, onToggleBlockedMessage)
+                    } else MessageBubbleContent(
                         message = message,
                         imageUris = imageUris,
                         isMine = false,
@@ -1868,6 +1864,41 @@ private fun OtherMessage(
                     modifier = Modifier.padding(start = 8.dp, bottom = 2.dp),
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun BlockedMessageBubble(
+    message: CommunityThreadMessage,
+    imageUris: List<String>,
+    revealed: Boolean,
+    onToggle: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.widthIn(max = 256.dp).width(256.dp).padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(AppStrings.CHAT_BLOCKED_MESSAGE, color = grey950(), style = UmcTypographyTokens.Subheadline)
+            if (revealed) {
+                if (message.type == CommunityMessageType.IMAGE) {
+                    MessageBubbleContent(message = message, imageUris = imageUris, isMine = false)
+                } else {
+                    Text(message.content.orEmpty(), color = grey400(), style = UmcTypographyTokens.Footnote)
+                }
+            }
+        }
+        Box(
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+                .background(grey100()).clickable(onClick = onToggle)
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                if (revealed) AppStrings.CHAT_HIDE_BLOCKED_MESSAGE else AppStrings.CHAT_SHOW_BLOCKED_MESSAGE,
+                color = grey700(), style = UmcTypographyTokens.SubheadlineBold,
+            )
         }
     }
 }

@@ -96,6 +96,7 @@ class CommunityChattingViewModel @Inject constructor(
 
     fun onAction(action: CommunityChattingAction) {
         when (action) {
+            is CommunityChattingAction.OnToggleBlockedMessage -> updateState { toggleBlockedMessage(action.messageId) }
             is CommunityChattingAction.OnStartEdit -> {
                 val message = state.value.messages.find { it.messageId == action.messageId }
                 if (message != null && state.value.editCommandId == null) updateState {
@@ -1535,10 +1536,28 @@ class CommunityChattingViewModel @Inject constructor(
         }
     }
 
+    private var blockedMembersJob: Job? = null
+
+    private fun refreshBlockedMembers() {
+        blockedMembersJob?.cancel()
+        blockedMembersJob = viewModelScope.launch {
+            when (val result = memberRepository.getBlockedMemberIds()) {
+                is ApiState.Success -> updateState {
+                    copy(blockedMemberIds = result.data.map { it.toString() }.toSet(),
+                        revealedBlockedMessageIds = emptySet())
+                }
+                is ApiState.Fail -> Unit // 조회 실패 시 기존 차단 상태를 유지한다.
+            }
+        }
+    }
+
     fun onForegroundChanged(active: Boolean) {
         if (foreground == active) return
         foreground = active
-        if (active) onNetworkAvailable()
+        if (active) {
+            refreshBlockedMembers()
+            onNetworkAvailable()
+        }
     }
 
     fun onNetworkAvailable() {
