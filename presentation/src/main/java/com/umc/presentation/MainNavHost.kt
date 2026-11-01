@@ -12,6 +12,8 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import com.umc.domain.session.SessionExpiryBus
 import androidx.navigation.navDeepLink
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.umc.component.fcm.CommunityNotification
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
@@ -112,6 +114,23 @@ fun MainNavHost(
             return@CollectUiEvents
         }
         navHostController.navigateToAuth(MainDestination.Login)
+    }
+
+    val pendingLink by PendingDeepLink.updates.collectAsStateWithLifecycle()
+    val currentEntry by navHostController.currentBackStackEntryAsState()
+    LaunchedEffect(pendingLink, currentEntry) {
+        val link = pendingLink ?: return@LaunchedEffect
+        // Home은 인증 완료 후에만 스택에 들어온다. 로그인·가입 중에는 목적지를 보관한다.
+        val authenticated = runCatching { navHostController.getBackStackEntry(MainDestination.Home) }.isSuccess
+        if (!authenticated) return@LaunchedEffect
+        val target = CommunityNotification.parse(mapOf("deepLink" to link.toString()))
+        val currentThreadId = currentEntry
+            ?.takeIf { it.destination.hasRoute<MainDestination.CommunityChatting>() }
+            ?.toRoute<MainDestination.CommunityChatting>()?.threadId
+        PendingDeepLink.consume()
+        if (target != null && target.threadId == currentThreadId) return@LaunchedEffect
+        runCatching { navHostController.navigate(link) }
+            .onFailure { android.util.Log.w("DeepLink", "Unable to navigate to pending link", it) }
     }
 
     NavHost(
@@ -456,14 +475,6 @@ fun MainNavHost(
 
         //홈 화면
         composable<MainDestination.Home> {
-            // 외부 링크로 열렸다면 인증 판정을 거쳐 홈에 도착한 지금 원래 목적지로 이동한다.
-            // 매칭되는 destination 이 없는 링크는 무시한다.
-            LaunchedEffect(Unit) {
-                PendingDeepLink.consume()?.let { uri ->
-                    runCatching { navHostController.navigate(uri) }
-                }
-            }
-
             HomeRoute(
                 onNavigateToNotice = {
                     navHostController.navigate(MainDestination.Notice)
